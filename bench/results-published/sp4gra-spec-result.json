@@ -1,0 +1,34 @@
+{
+  "arm": "spec",
+  "runid": "sp4gra",
+  "target": "grafana",
+  "flow": "sp4gr.json",
+  "flowName": "fwgr27",
+  "skillsDir": "/home/user/sitelooper/bench/results/sp4gr-skills",
+  "compiled": true,
+  "flowFile": "bench/results/sp4gra-spec-tmp/fwgr27.flow.ts",
+  "specFile": "bench/results/sp4gra-spec-tmp/fwgr27.spec.ts",
+  "wallMs": 36025,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwgr27",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 32443,
+      "error": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('textbox', { name: 'New tag (enter key to add)' }).first()\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('textbox', { name: 'New tag (enter key to add)' }).first()\u001b[22m\n",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "logTail": "\nRunning 1 test using 1 worker\n\n  ✘  1 fwgr27.spec.ts:4:1 › fwgr27 (32.4s)\n\n\n  1) fwgr27.spec.ts:4:1 › fwgr27 ───────────────────────────────────────────────────────────────────\n\n    Error: expect(locator).toBeVisible() failed\n\n    Locator: getByRole('textbox', { name: 'New tag (enter key to add)' }).first()\n    Expected: visible\n    Timeout: 5000ms\n    Error: element(s) not found\n\n    Call log:\n      - Expect \"toBeVisible\" with timeout 5000ms\n      - waiting for getByRole('textbox', { name: 'New tag (enter key to add)' }).first()\n\n\n       at fwgr27.flow.ts:4190\n\n      4188 |     // the step's recorded effect must show — any one of these, as replay's effect gate has it:\n      4189 |     //   - textbox \"New tag (enter key to add)\": bench\n    > 4190 |     await expect(page.getByRole('textbox', { name: 'New tag (enter key to add)', exact: false }).first()).toBeVisible();\n           |                                                                                                           ^\n      4191 |\n      4192 |     // @step 04-add s_0c4807/3\n      4193 |     await settle(page);\n        at Object.04-add (/home/user/sitelooper/bench/results/sp4gra-spec-tmp/fwgr27.flow.ts:4190:107)\n        at runFlow (/home/user/sitelooper/bench/results/sp4gra-spec-tmp/fwgr27.flow.ts:4550:3)\n        at /home/user/sitelooper/bench/results/sp4gra-spec-tmp/fwgr27.spec.ts:5:19\n\n    Error Context: ../../../test-results/fwgr27-fwgr27/error-context.md\n\n  1 failed\n    fwgr27.spec.ts:4:1 › fwgr27 ────────────────────────────────────────────────────────────────────\n[sitelooper skip] 03-add s_e4d3e5/11 target: read target not found — value left empty\n"
+}

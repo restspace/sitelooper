@@ -1,0 +1,37 @@
+
+Running 1 test using 1 worker
+
+  ✘  1 fwgr27.spec.ts:4:1 › fwgr27 (32.1s)
+
+
+  1) fwgr27.spec.ts:4:1 › fwgr27 ───────────────────────────────────────────────────────────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('textbox', { name: 'New tag[spec-replay] sp4grx: 0/1 passed, exit=1, 35s, 0 drift line(s) — result written
+r: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByRole('textbox', { name: 'New tag (enter key to add)' }).first()
+
+
+       at fwgr27.flow.ts:4208
+
+      4206 |     // the step's recorded effect must show — any one of these, as replay's effect gate has it:
+      4207 |     //   - textbox "New tag (enter key to add)": bench
+    > 4208 |     await expect(page.getByRole('textbox', { name: 'New tag (enter key to add)', exact: false }).first()).toBeVisible();
+           |                                                                                                           ^
+      4209 |
+      4210 |     // @step 04-add s_0c4807/3
+      4211 |     await settle(page);
+        at Object.04-add (/home/user/sitelooper/bench/results/sp4grx-spec-tmp/fwgr27.flow.ts:4208:107)
+        at runFlow (/home/user/sitelooper/bench/results/sp4grx-spec-tmp/fwgr27.flow.ts:4568:3)
+        at /home/user/sitelooper/bench/results/sp4grx-spec-tmp/fwgr27.spec.ts:5:19
+
+    Error Context: ../../../test-results/fwgr27-fwgr27/error-context.md
+
+  1 failed
+    fwgr27.spec.ts:4:1 › fwgr27 ────────────────────────────────────────────────────────────────────
+[sitelooper skip] 03-add s_e4d3e5/11 target: read target not found — value left empty
+EXIT=1

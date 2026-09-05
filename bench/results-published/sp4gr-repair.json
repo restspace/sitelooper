@@ -1,0 +1,88 @@
+{
+  "file": "bench/results/sp4gr-spec/fwgr27.flow.ts",
+  "flow": "fwgr27",
+  "workspace": "/tmp/sitelooper-repair-7RsCuM",
+  "run": {
+    "status": "success",
+    "passed": 5,
+    "total": 5,
+    "drift": 4
+  },
+  "tickets": 4,
+  "promoted": [
+    {
+      "skill": "s_939c34",
+      "step": "2",
+      "from": "elementAt(99, 165) /* heading */",
+      "to": "page.locator('[data-testid=\"header-container\"] h2')"
+    }
+  ],
+  "patched": [
+    {
+      "skill": "s_b80251",
+      "step": "3",
+      "key": "target",
+      "variant": "s_ec4dc8",
+      "locator": "page.getByRole('heading', { name: 'Error count', exact: true })",
+      "url": "http://127.0.0.1:3000/d/bench-service-health/service-health?from=now-6h&to=now&timezone=browser",
+      "model": "z-ai/glm-5.3"
+    }
+  ],
+  "reRecord": [],
+  "skipped": [
+    {
+      "skill": "s_b80251",
+      "step": "2",
+      "why": "no-proposal",
+      "url": "http://127.0.0.1:3000/d/bench-service-health/service-health?from=now-6h&to=now&timezone=browser",
+      "snapshotRows": 8,
+      "snapshotBytes": 230,
+      "modelReply": ""
+    },
+    {
+      "skill": "s_b80251",
+      "step": "4",
+      "why": "no-proposal",
+      "url": "http://127.0.0.1:3000/d/bench-service-health/service-health?from=now-6h&to=now&timezone=browser",
+      "snapshotRows": 102,
+      "snapshotBytes": 3907,
+      "modelReply": "null"
+    }
+  ],
+  "changes": [
+    "01-open: candidate promoted: page.locator('[data-testid=\"header-container\"] h2').nth(0) now primary (was #1) — s_b80251 step 2 target",
+    "01-open: new locator: page.getByRole('heading', { name: 'Error count', exact: true }) (model-proposed) — s_b80251 step 3 target",
+    "01-open: candidate promoted: page.locator('[data-testid=\"header-container\"] h2').nth(2) now primary (was #1) — s_b80251 step 4 target",
+    "02-create: candidate promoted: page.locator('[data-testid=\"header-container\"] h2') now primary (was #1) — s_939c34 step 2 target",
+    "03-add: no change",
+    "04-add: no change",
+    "05-report: no change",
+    "candidate retired: elementAt(68, 165) /* heading */ — missed 2 run(s), never hit; now last — s_b80251 step 2 target",
+    "candidate retired: elementAt(1036, 165) /* heading */ — missed 2 run(s), never hit; now last — s_b80251 step 4 target"
+  ],
+  "evidence": [
+    "candidate retired: elementAt(68, 165) /* heading */ — missed 2 run(s), never hit; now last — s_b80251 step 2 target",
+    "candidate retired: elementAt(1036, 165) /* heading */ — missed 2 run(s), never hit; now last — s_b80251 step 4 target"
+  ],
+  "droppedExpectations": [],
+  "weakenedByVariant": [],
+  "specCheck": {
+    "ran": true,
+    "skipped": null,
+    "passed": false,
+    "durationMs": 34395.706,
+    "exitCode": 1,
+    "timedOut": false,
+    "error": "Error: expect(locator).toBeVisible() failed\n\nLocator: getByRole('textbox', { name: 'New tag (enter key to add)' }).first()\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"toBeVisible\" with timeout 5000ms\n  - waiting for getByRole('textbox', { name: 'New tag (enter key to add)' }).first()",
+    "anchor": "04-add s_0c4807/2",
+    "errorFile": "/home/user/sitelooper/bench/results/sp4gr-spec/.sitelooper-check-2zQoyA/fwgr27.flow.ts",
+    "errorLine": 4208,
+    "drift": [],
+    "driftCount": 0,
+    "workspace": "/home/user/sitelooper/bench/results/sp4gr-spec/.sitelooper-check-2zQoyA",
+    "specFile": "/home/user/sitelooper/bench/results/sp4gr-spec/fwgr27.spec.ts",
+    "verdict": "spec check: FAILED at @step 04-add s_0c4807/2 — Error: expect(locator).toBeVisible() failed Locator: getByRole('textbox', { name: 'New tag (enter key to add)' }).first() — this is an emitter defect, not drift: the live replay passed this step"
+  },
+  "wrote": "bench/results/sp4gr-spec/fwgr27.flow.ts",
+  "converged": true
+}

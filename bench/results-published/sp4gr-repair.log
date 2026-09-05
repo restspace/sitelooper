@@ -1,0 +1,5 @@
+  spec check reset: node --input-type=module -e "import {resetTarget} from './bench/app-reset.mjs'; await resetTarget('grafana')"
+  spec check: /opt/node22/bin/node /home/user/sitelooper/node_modules/@playwright/test/cli.js test --config /home/user/sitelooper/bench/results/sp4gr-spec/.sitelooper-check-2zQoyA/playwright.config.mjs
+the emitted spec fails under plain Playwright: spec check: FAILED at @step 04-add s_0c4807/2 — Error: expect(locator).toBeVisible() failed Locator: getByRole('textbox', { name: 'New tag (enter key to add)' }).first() — this is an emitter defect, not drift: the live replay passed this step
+bench/results/sp4gr-spec/fwgr27.flow.ts was still written — review the diff, then fix the emitter (not the app)
+EXIT=4
