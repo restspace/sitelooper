@@ -807,6 +807,28 @@ function urlExpectSource(pattern: string): string | null {
 }
 
 /**
+ * The roles the daemon gives an <input>/<textarea> (roleOf in
+ * src/daemon/diff.ts), plus `combobox`, which an app can also put on an input
+ * by hand. These are the roles whose recorded NAME can disagree with
+ * Playwright's accessible name for the very same element.
+ *
+ * WHY. The daemon's `nameOf` names an element aria-label -> aria-labelledby ->
+ * alt -> title -> placeholder -> ancestor <label> -> innerText, and never looks
+ * at a `<label for=id>`. Playwright computes the real accessible name, which
+ * PREFERS that label over title and placeholder. So an input carrying both —
+ * grafana's tag field, `<label for>` "Tags" over placeholder "New tag (enter
+ * key to add)" — is recorded under the placeholder and is unfindable by
+ * `getByRole(name)`. That is exactly how the compiled spec died in cloud run
+ * sp4gr, deterministically, on a step whose live replay passed (replay compares
+ * daemon lines to daemon lines, so it never asks Playwright to find the name).
+ *
+ * The fix is a union over the three ways the name could have been minted, in
+ * the daemon's own order of preference. Only these roles get it: a
+ * button/link/heading name has no placeholder to disagree with.
+ */
+const INPUT_LIKE_ROLES = new Set(['textbox', 'searchbox', 'combobox', 'spinbutton']);
+
+/**
  * A Playwright locator for one recorded page line (`- role "name"`,
  * `- text: foo`). Null when the line names nothing findable — an unnamed
  * control, or a value with no role — in which case the caller leaves the
@@ -843,7 +865,10 @@ function lineLocator(line: string, exact = false): string | null {
     if (!matcher) return null;
     // `exact` rides along as it always has; Playwright ignores it for a RegExp
     // name, where the anchoring above carries the same decision.
-    return `page.getByRole(${q(roled[1])}, { name: ${matcher}, exact: ${exact} })`;
+    const role = `page.getByRole(${q(roled[1])}, { name: ${matcher}, exact: ${exact} })`;
+    return INPUT_LIKE_ROLES.has(roled[1].toLowerCase())
+      ? `${role}.or(page.getByTitle(${matcher}, { exact: ${exact} })).or(page.getByPlaceholder(${matcher}, { exact: ${exact} }))`
+      : role;
   }
   const text = /^-?\s*(?:text:)?\s*(.+?)\s*$/.exec(line);
   const value = text?.[1];

@@ -465,6 +465,36 @@ describe('expectations', () => {
     );
   });
 
+  it('finds an input by placeholder or title as well as by role name (the grafana failure)', () => {
+    const out = withExpect({ addedContains: ['- textbox "New tag (enter key to add)": bench'] });
+    // the daemon named this input by its PLACEHOLDER; Playwright's accessible
+    // name for the very same element is its `<label for>` ("Tags"), so the role
+    // name alone found nothing and the compiled spec failed every run
+    expect(out).toContain(
+      "await expect(page.getByRole('textbox', { name: 'New tag (enter key to add)', exact: false })" +
+        ".or(page.getByTitle('New tag (enter key to add)', { exact: false }))" +
+        ".or(page.getByPlaceholder('New tag (enter key to add)', { exact: false })).first()).toBeVisible();",
+    );
+    // the recorded VALUE after the colon is still not asserted
+    expect(out).not.toContain("'bench'");
+    expect(syntaxErrors(out)).toEqual([]);
+  });
+
+  it('leaves a non-input role alone: a button name has no placeholder to disagree with', () => {
+    const out = withExpect({ addedContains: ['- button "Save dashboard"'] });
+    expect(out).toContain("await expect(page.getByRole('button', { name: 'Save dashboard', exact: false }).first()).toBeVisible();");
+    expect(out).not.toContain('getByPlaceholder');
+    expect(out).not.toContain('getByTitle');
+  });
+
+  it('gives the placeholder half of the union the same masked matcher as the role half', () => {
+    const out = withExpect({ addedContains: ['- searchbox "Search {{*}}"'] });
+    const matcher = 'new RegExp(`Search ' + VOLATILE_TOKEN_SHAPE.replace(/\\/g, '\\\\') + '`)';
+    expect(out).toContain(`page.getByRole('searchbox', { name: ${matcher}, exact: false })`);
+    expect(out).toContain(`.or(page.getByPlaceholder(${matcher}, { exact: false }))`);
+    expect(syntaxErrors(out)).toEqual([]);
+  });
+
   it('drops a fill echo in favour of the consequential change', () => {
     const out = withExpect({ addedContains: ['- textbox "": {{v1}}', '- heading "{{v1}}"'] }, 'fill', { target: '@e1', value: '{{v1}}' });
     expect(out).toContain("page.getByRole('heading'");
