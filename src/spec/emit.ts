@@ -54,6 +54,17 @@ const PICK_POLL_MS = 100;
  */
 const URL_WAIT_MS = 5_000;
 
+/**
+ * What the inlined `settle` waits, mirroring replay's `settleDom` constants
+ * exactly (SETTLE_QUIET_MS / SETTLE_MAX_MS / SETTLE_PROBE_MS in
+ * src/skills/replay.ts): a page shows it is busy within the probe, must then
+ * be mutation-free for the quiet window, and is called quiet after the cap
+ * whatever it is still doing.
+ */
+const SETTLE_QUIET_MS = 250;
+const SETTLE_MAX_MS = 2_000;
+const SETTLE_PROBE_MS = 60;
+
 /** Playwright's own default; only a different timeout is worth carrying over. */
 const DEFAULT_WAIT_MS = 10_000;
 
@@ -111,6 +122,66 @@ const HELPERS: { token: string; source: string[] }[] = [
     // POLL constant, because that is the one BOTH of them name.
     token: 'PICK_POLL_MS',
     source: [`const PICK_WAIT_MS = ${PICK_WAIT_MS};`, `const PICK_POLL_MS = ${PICK_POLL_MS};`],
+  },
+  {
+    token: 'await settle(',
+    source: [
+      `const SETTLE_QUIET_MS = ${SETTLE_QUIET_MS};`,
+      `const SETTLE_MAX_MS = ${SETTLE_MAX_MS};`,
+      `const SETTLE_PROBE_MS = ${SETTLE_PROBE_MS};`,
+      '/**',
+      ' * Let the DOM go quiet before this step looks at the page at all.',
+      ' *',
+      " * WHICH REPLAY RULE THIS MIRRORS. runOneStep's very first act, before the",
+      ' * already-in-effect check and before any chain is resolved, is',
+      ' * `await settleDom(page)` (src/skills/replay.ts): the agent that recorded',
+      ' * the flow had observation turns, which were implicit waits, and a replay',
+      ' * — or a spec — has none. Same constants: a page gets SETTLE_PROBE_MS to',
+      ' * show it is busy at all, then must be mutation-free for SETTLE_QUIET_MS,',
+      ' * and is called quiet regardless after SETTLE_MAX_MS. Instant on a static',
+      ' * page, which is why it can sit on every step.',
+      ' *',
+      ' * WHY EVERY STEP NEEDS IT, not just the resolving ones. The odoo recording',
+      " * toggles the home menu open and shut seven times before clicking `Sales`.",
+      ' * Each toggle click is an opener, so each is guarded by "is the recorded',
+      ' * popup already showing?" — and asked in the same tick as the CLOSING click',
+      ' * that preceded it, that question is answered off a DOM still mid-transition:',
+      ' * the menu is on its way out but still visible, the guard says "already in',
+      ' * effect", the opening click is skipped, and eight steps later there is no',
+      " * `Sales` menuitem because the menu is shut. Replay never sees this, because",
+      ' * its own presence check happens only AFTER settleDom. So the settle goes',
+      ' * ahead of the guard, not merely ahead of the action.',
+      ' *',
+      ' * Errors are swallowed: a page that is navigating or detached cannot be',
+      ' * scripted, and that is the locator resolution\'s failure to report, not this.',
+      ' */',
+      'async function settle(page: Page): Promise<void> {',
+      '  try {',
+      '    await page.evaluate(',
+      '      ({ probe, quiet, max }: { probe: number; quiet: number; max: number }) =>',
+      '        new Promise<void>((resolve) => {',
+      '          let timer = setTimeout(resolve, probe);',
+      '          const stop = setTimeout(() => {',
+      '            observer.disconnect();',
+      '            resolve();',
+      '          }, max);',
+      '          const observer = new MutationObserver(() => {',
+      '            clearTimeout(timer);',
+      '            timer = setTimeout(() => {',
+      '              observer.disconnect();',
+      '              clearTimeout(stop);',
+      '              resolve();',
+      '            }, quiet);',
+      '          });',
+      '          observer.observe(document, { childList: true, subtree: true, attributes: true, characterData: true });',
+      '        }),',
+      '      { probe: SETTLE_PROBE_MS, quiet: SETTLE_QUIET_MS, max: SETTLE_MAX_MS },',
+      '    );',
+      '  } catch {',
+      '    // navigating / detached — the locator resolution will report it',
+      '  }',
+      '}',
+    ],
   },
   {
     token: 'urlPart(',
@@ -419,6 +490,43 @@ const HELPERS: { token: string; source: string[] }[] = [
       '    `none of ${candidates.length} recorded locators resolved at ${where} (page is at ${page.url()}): ` +',
       "      candidates.slice(0, 3).map((c) => String(c)).join(' | '),",
       '  );',
+      '}',
+    ],
+  },
+  {
+    token: 'readOptional(',
+    source: [
+      '/**',
+      ' * A recorded READ, which never fails the flow.',
+      ' *',
+      ' * WHICH REPLAY RULE THIS MIRRORS. runOneStep treats `read`/`read_all` as an',
+      ' * OBSERVATION, not a state change: a read whose target cannot be resolved —',
+      ' * or whose read itself errors — is skipped with a warning and the replay',
+      ' * CONTINUES ("skipped read — no element matched any known locator"). Failing',
+      ' * to re-capture a value says nothing about whether the procedure ran; the',
+      ' * step after it is exactly as valid as it was. A spec that threw here turned',
+      " * a missing observation into a failed test: grafana's `panel_content` read is",
+      ' * a freshly applied text panel whose body the verifier goes on to confirm,',
+      ' * and none of the three recorded ways of naming it resolved inside the pick',
+      ' * window — one lost value, and the run reported as a broken procedure.',
+      ' *',
+      ' * So: the pick and the read together, and on any failure one grep-able line',
+      ' * and an EMPTY value. Assertions and outputs built from an empty read are',
+      ' * left exactly as they were — the emptiness is the honest report.',
+      ' */',
+      'async function readOptional(',
+      '  page: Page,',
+      '  candidates: Locator[],',
+      '  where: string,',
+      '  read: (loc: Locator) => Promise<string>,',
+      '  opts: { any?: boolean } = {},',
+      '): Promise<string> {',
+      '  try {',
+      '    return await read(await pick(page, candidates, where, opts));',
+      '  } catch {',
+      '    console.warn(`[sitelooper skip] ${where}: read target not found — value left empty`);',
+      "    return '';",
+      '  }',
       '}',
     ],
   },
@@ -856,6 +964,11 @@ function emitSkillStep(step: SkillStep, segment: SpecSegment, index: number, ctx
   // "<stepId> <segmentId>/<stepIndex>" shape) can be mapped back to the
   // recorded step that produced it.
   out.push(`// @step ${ctx.stepId} ${segment.id}/${index}`);
+  // Ahead of EVERYTHING this step does — the already-in-effect guard, the pick,
+  // a bare locator action — because that is where replay's own settleDom sits
+  // (runOneStep). See the helper's comment for the odoo toggle sequence this
+  // ordering is what saves.
+  out.push('await settle(page);');
   ctx.segmentId = segment.id;
   ctx.stepIndex = index;
   const args = step.args ?? {};
@@ -867,6 +980,11 @@ function emitSkillStep(step: SkillStep, segment: SpecSegment, index: number, ctx
   switch (step.tool) {
     case 'goto':
       out.push(`await page.goto(${src(str('url'))});`);
+      // A navigation renders a route skeleton first: replay lets it hydrate
+      // before its effect gates look for the recorded content (runOneStep's
+      // `if (page.url() !== urlBefore) await settleDom(page)`), and the
+      // assertions and url reads below are exactly those gates.
+      out.push('await settle(page);');
       effectLines(step, ctx, out);
       // page.goto awaits its own navigation: the url is already the landed one.
       derivedLines(segment, index, ctx, out);
@@ -938,6 +1056,13 @@ function emitSkillStep(step: SkillStep, segment: SpecSegment, index: number, ctx
       return out;
     }
     out.push(waitForLine(`(${union}).first()`, args, num('timeout_ms')));
+    return out;
+  }
+  // A read resolves and reads through `readOptional`, which cannot throw: see
+  // its comment. It never goes through `actionTarget`, because a `pick` emitted
+  // as its own statement would throw before the read could catch anything.
+  if (isRead) {
+    out.push(...readLines(step, ctx, { any, first }));
     return out;
   }
   // The url this step starts from, so a value it mints is read off the url it
@@ -1022,10 +1147,6 @@ function emitSkillStep(step: SkillStep, segment: SpecSegment, index: number, ctx
     case 'wait_for':
       out.push(waitForLine(target, args, num('timeout_ms')));
       break;
-    case 'read':
-    case 'read_all':
-      out.push(...readLine(target, step, ctx));
-      break;
     default:
       out.push(`// TODO: recorded tool ${step.tool} has no Tier 2 form.`);
       ctx.warnings.push(`${ctx.stepId}: step ${index} uses tool ${step.tool}, which has no Tier 2 form`);
@@ -1071,19 +1192,45 @@ function waitForLine(target: string, args: Record<string, unknown>, timeout?: nu
   }
 }
 
-/** A read publishes the value later steps reference by `<stepId>.<label>`; an unlabelled one never reaches here. */
-function readLine(target: string, step: SkillStep, ctx: Ctx): string[] {
+/**
+ * A read publishes the value later steps reference by `<stepId>.<label>`; an
+ * unlabelled one never reaches here.
+ *
+ * Resolution and read go through `readOptional` TOGETHER, single candidate or
+ * many, so that neither half can fail the flow: replay skips a read it cannot
+ * resolve — and one whose read errors — and carries on, because an observation
+ * that could not be re-captured says nothing about whether the procedure ran.
+ * Emitting the single-candidate case as a bare `await loc.textContent()` would
+ * have thrown on exactly the same page where the multi-candidate case does.
+ */
+function readLines(step: SkillStep, ctx: Ctx, opts: { any?: boolean; first?: boolean }): string[] {
   const what = String(step.args?.what ?? 'text');
   const out = `outputs[${q(`${ctx.stepId}.${step.label ?? ''}`)}]`;
-  if (what === 'value') return [`${out} = await ${target}.inputValue();`];
-  if (what === 'text') {
-    // read_all legitimately matches many elements, so textContent's strict
-    // mode would throw where replay read every match.
-    return step.tool === 'read_all'
-      ? [`${out} = (await ${target}.allTextContents()).join('\\n');`]
-      : [`${out} = (await ${target}.textContent()) ?? '';`];
+  const loc = opts.first ? 'loc.first()' : 'loc';
+  let read: string | null = null;
+  if (what === 'value') read = `async (loc: Locator) => await ${loc}.inputValue()`;
+  // read_all legitimately matches many elements, so textContent's strict mode
+  // would throw where replay read every match.
+  else if (what === 'text') {
+    read =
+      step.tool === 'read_all'
+        ? `async (loc: Locator) => (await ${loc}.allTextContents()).join('\\n')`
+        : `async (loc: Locator) => (await ${loc}.textContent()) ?? ''`;
   }
-  return [`// TODO: read what=${commentSafe(what)} has no Tier 2 form (label ${commentSafe(step.label ?? '')}).`];
+  if (!read) return [`// TODO: read what=${commentSafe(what)} has no Tier 2 form (label ${commentSafe(step.label ?? '')}).`];
+
+  const chain = step.locators?.target ?? [];
+  noteSlots(chain, ctx);
+  const { sources } = candidateSources(chain, { slot: slotAsParam });
+  if (!sources.length) {
+    ctx.warnings.push(`${ctx.stepId}: step ${ctx.stepIndex} (${step.tool}) has no locator a spec can express`);
+    return [`// TODO: no locator this compiler can express for ${step.tool} — fill it in by hand.`];
+  }
+  const where = `${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex} target`;
+  const lines = [`${out} = await readOptional(page, [`];
+  for (const source of sources) lines.push(`${CONT_INDENT}${source},`);
+  lines.push(`], ${q(where)}, ${read}${opts.any ? ', { any: true }' : ''});`);
+  return lines;
 }
 
 /**

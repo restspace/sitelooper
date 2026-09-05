@@ -169,11 +169,13 @@ describe('step bodies', () => {
 
   it('writes a labelled read into outputs, by kind', () => {
     const loc = { target: [{ kind: 'id' as const, selector: '#total' }] };
+    // A read goes through readOptional even with ONE candidate: an observation
+    // that cannot be re-captured must not fail the flow (see readLines).
     expect(one({ tool: 'read', args: { target: '@e1', what: 'text' }, locators: loc, label: 'total' })).toContain(
-      "outputs['01-do.total'] = (await page.locator('#total').textContent()) ?? '';",
+      "outputs['01-do.total'] = await readOptional(page, [\n      page.locator('#total'),\n    ], '01-do s_test1/1 target', async (loc: Locator) => (await loc.textContent()) ?? '');",
     );
     expect(one({ tool: 'read', args: { target: '@e1', what: 'value' }, locators: loc, label: 'name' })).toContain(
-      "outputs['01-do.name'] = await page.locator('#total').inputValue();",
+      "'01-do s_test1/1 target', async (loc: Locator) => await loc.inputValue());",
     );
     expect(one({ tool: 'read', args: { what: 'url' }, locators: {}, label: 'here' })).toContain("outputs['01-do.here'] = page.url();");
     expect(one({ tool: 'read_all', args: { target: '@e1', what: 'text' }, locators: loc, label: 'rows' })).toContain('.allTextContents()).join(');
@@ -301,9 +303,12 @@ describe('step bodies', () => {
     expect(stepLines).toEqual(['// @step 01-do s_test1/1', '// @step 01-do s_test1/2']);
     // each @step comment is the line immediately above its own statement
     const i1 = lines.findIndex((l) => l.trim() === '// @step 01-do s_test1/1');
-    expect(lines[i1 + 1]).toContain("await click(page.locator('#a'));");
+    // the settle replay does at the top of runOneStep, then the step itself
+    expect(lines[i1 + 1].trim()).toBe('await settle(page);');
+    expect(lines[i1 + 2]).toContain("await click(page.locator('#a'));");
     const i2 = lines.findIndex((l) => l.trim() === '// @step 01-do s_test1/2');
-    expect(lines[i2 + 1]).toContain("await click(page.locator('#b'));");
+    expect(lines[i2 + 1].trim()).toBe('await settle(page);');
+    expect(lines[i2 + 2]).toContain("await click(page.locator('#b'));");
   });
 
   it('drops a duplicate candidate expression rather than resolving it twice', () => {
@@ -338,7 +343,7 @@ describe('step bodies', () => {
       locators: { target: [{ kind: 'id', selector: '#rows' }, { kind: 'css', selector: '.row' }] },
       label: 'rows',
     });
-    expect(out).toMatch(/], '[^']+', \{ any: true \}\);/);
+    expect(out).toMatch(/], '[^']+', async \(loc: Locator\) => \(await loc\.allTextContents\(\)\)[^\n]*, \{ any: true \}\);/);
   });
 
   it('names what Tier 2 loses when a point candidate is dropped', () => {
@@ -746,7 +751,7 @@ describe('wait_for on an absent target', () => {
  * the only way to test what it DOES rather than what it says.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function runnableHelpers(source: string): Record<string, any> {
+function runnableHelpers(source: string, con: unknown = { warn: () => {} }): Record<string, any> {
   const block = /export const DRIFT: string\[\] = \[\];\n([\s\S]*?)\nexport const steps = \{/.exec(source);
   if (!block) throw new Error('helper block not found in the emitted source');
   const js = ts.transpileModule(block[1], {
@@ -755,7 +760,7 @@ function runnableHelpers(source: string): Record<string, any> {
   const names = [...block[1].matchAll(/^(?:async )?function (\w+)/gm)].map((m) => m[1]);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const build = new Function('DRIFT', 'console', `${js}\nreturn { ${names.join(', ')} };`) as (d: string[], c: unknown) => Record<string, any>;
-  return build([], { warn: () => {} });
+  return build([], con);
 }
 
 /** A Page stub whose url() answers from a script, one call at a time. */
@@ -1024,5 +1029,133 @@ describe('a click that an overlay intercepts', () => {
     expect(right).not.toContain('async function click');
     const mod = emit(specOf([{ tool: 'modifier_click', args: { target: '@e1', modifiers: ['Shift'] }, locators: loc }]));
     expect(mod).toContain("await page.locator('#r').click({ modifiers: ['Shift'] });");
+  });
+});
+
+/**
+ * A read is an OBSERVATION: replay skips one it cannot resolve and carries on
+ * (runOneStep's isRead branch), because a value that could not be re-captured
+ * says nothing about whether the procedure ran. The emitted spec has to make
+ * the same distinction, or a grafana panel the verifier goes on to confirm
+ * fails the whole flow.
+ */
+describe('a read never fails the flow', () => {
+  const multi: SkillStep = {
+    tool: 'read',
+    args: { target: '@e1', what: 'text' },
+    locators: { target: [{ kind: 'text', text: 'Notes for run sp3gra' }, { kind: 'css', selector: '.panel-content' }] },
+    label: 'panel_content',
+  };
+  const source = emit(specOf([multi]));
+
+  it('routes a multi-candidate read through readOptional, not a bare pick', () => {
+    expect(source).toContain("outputs['01-do.panel_content'] = await readOptional(page, [");
+    expect(source).toContain("], '01-do s_test1/1 target', async (loc: Locator) => (await loc.textContent()) ?? '');");
+    // the pick is INSIDE the helper, so nothing at the call site can throw
+    expect(source).not.toContain('= await pick(page, [');
+    expect(source).toContain('async function readOptional(');
+    expect(source).toContain('async function pick(page: Page');
+    expect(syntaxErrors(source)).toEqual([]);
+  });
+
+  it('routes a single-candidate read the same way, so it cannot throw either', () => {
+    const out = emit(
+      specOf([{ tool: 'read', args: { target: '@e1', what: 'text' }, locators: { target: [{ kind: 'id', selector: '#total' }] }, label: 'total' }]),
+    );
+    expect(out).toContain("outputs['01-do.total'] = await readOptional(page, [\n      page.locator('#total'),\n    ], ");
+    expect(out).not.toContain(".textContent()) ?? '';");
+    expect(syntaxErrors(out)).toEqual([]);
+  });
+
+  it('leaves the value empty and says so when no candidate resolves', async () => {
+    const warned: string[] = [];
+    const { readOptional } = runnableHelpers(source, { warn: (line: string) => warned.push(line) });
+    const value = await readOptional(
+      pageStub(),
+      [locatorStub(() => 0), locatorStub(() => 0)],
+      '03-add s_e4d3e5/11 target',
+      async () => 'never read',
+    );
+    expect(value).toBe('');
+    expect(warned).toEqual(['[sitelooper skip] 03-add s_e4d3e5/11 target: read target not found — value left empty']);
+  });
+
+  it('swallows a failing read too, as replay does when the read itself errors', async () => {
+    const warned: string[] = [];
+    const { readOptional } = runnableHelpers(source, { warn: (line: string) => warned.push(line) });
+    const value = await readOptional(pageStub(), [locatorStub(() => 1)], 'x y/1 target', async () => {
+      throw new Error('element is not an <input>');
+    });
+    expect(value).toBe('');
+    expect(warned).toHaveLength(1);
+  });
+
+  it('returns what the read read when the target is there', async () => {
+    const { readOptional } = runnableHelpers(source);
+    expect(await readOptional(pageStub(), [locatorStub(() => 1)], 'x y/1 target', async () => 'Notes for run sp3gra')).toBe(
+      'Notes for run sp3gra',
+    );
+  });
+});
+
+/**
+ * runOneStep settles the DOM BEFORE anything else it does — the
+ * already-in-effect check included. Without it the odoo home-menu toggles ask
+ * "is the popup showing?" of a menu that is still mid-close, skip the opening
+ * click, and leave the `Sales` menuitem unreachable eight steps later.
+ */
+describe('every step settles first', () => {
+  const click: SkillStep = { tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'id', selector: '#a' }] } };
+  const source = emit(specOf([click, { ...click, locators: { target: [{ kind: 'id', selector: '#b' }] } }]));
+
+  it('inlines settle once, with replay’s own constants', () => {
+    expect(source.match(/async function settle\(page: Page\)/g)).toHaveLength(1);
+    expect(source).toContain('const SETTLE_QUIET_MS = 250;');
+    expect(source).toContain('const SETTLE_MAX_MS = 2000;');
+    expect(source).toContain('const SETTLE_PROBE_MS = 60;');
+    expect(source).toContain('observer.observe(document, { childList: true, subtree: true, attributes: true, characterData: true });');
+    expect(syntaxErrors(source)).toEqual([]);
+  });
+
+  it('calls it at the top of every step', () => {
+    expect(source.match(/await settle\(page\);/g)).toHaveLength(2);
+  });
+
+  it('settles ahead of the already-in-effect guard, not after it', () => {
+    const opener: SkillStep = { ...click, expect: { addedContains: ['- menu "Apps"'] } };
+    const lines = emit(specOf([opener])).split('\n').map((l) => l.trim());
+    const settled = lines.indexOf('await settle(page);');
+    const guard = lines.findIndex((l) => l.startsWith('if (await page.getByRole('));
+    expect(settled).toBeGreaterThan(-1);
+    expect(settled).toBeLessThan(guard);
+  });
+
+  it('settles again after a goto, before the assertions that gate it', () => {
+    const goto: SkillStep = { tool: 'goto', args: { url: 'http://app.test/x' }, locators: {}, expect: { addedContains: ['- heading "Items"'] } };
+    const lines = emit(specOf([goto])).split('\n').map((l) => l.trim());
+    const nav = lines.indexOf("await page.goto('http://app.test/x');");
+    expect(lines[nav + 1]).toBe('await settle(page);');
+  });
+
+  it('resolves on a page that answers evaluate', async () => {
+    const { settle } = runnableHelpers(source);
+    let seen: unknown;
+    await settle({
+      evaluate: async (_fn: unknown, arg: unknown) => {
+        seen = arg;
+      },
+    });
+    expect(seen).toEqual({ probe: 60, quiet: 250, max: 2000 });
+  });
+
+  it('swallows the error a navigating or detached page throws', async () => {
+    const { settle } = runnableHelpers(source);
+    await expect(
+      settle({
+        evaluate: async () => {
+          throw new Error('Execution context was destroyed');
+        },
+      }),
+    ).resolves.toBeUndefined();
   });
 });
