@@ -1025,56 +1025,66 @@ function urlExpectSource(pattern: string): string | null {
 const INPUT_LIKE_ROLES = new Set(['textbox', 'searchbox', 'combobox', 'spinbutton']);
 
 /**
- * The ARIA roles whose accessible name may be computed FROM THEIR CONTENT
- * (the "name from author, contents" set of the ARIA spec). For any other role
- * the subtree text is NOT the name, so a `getByRole(role, { name })` built
- * from the daemon's line can never match.
+ * WHY EVERY ROLED LINE GETS A `hasText` UNION.
  *
- * WHY THIS EXISTS. `describeInPage` (src/daemon/diff.ts) falls back to
- * `innerText` (up to 80 chars) whenever aria-label/labelledby/alt/title/
- * placeholder/<label> give it nothing — for EVERY role, because a recorded
- * line is a description for a human and a diff, not a locator. Grafana's
- * refresh-interval popup is recorded as
- *   - menu "Off Auto 5s 10s 30s 1m 5m 15m 30m 1h 2h 1d"
- * and Playwright's accessible name for that same `role=menu` element is the
- * empty string: cloud run sp5gr failed at `04-add s_0c4807/5` on exactly that
- * locator, every attempt. The odoo home menu (`- menu "6 3 YourCompany"`) is
- * the same defect.
+ * `describeInPage` (src/daemon/diff.ts) falls back to `innerText` (up to 80
+ * chars) whenever aria-label/labelledby/alt/title/placeholder/<label> give it
+ * nothing — for EVERY role, because a recorded line is a description for a
+ * human and a diff, not a locator. Playwright's `getByRole(role, { name })`
+ * matches the real ACCESSIBLE NAME. The two readings diverge in two distinct
+ * ways, and a locator built off the recorded line has to survive both.
  *
- * The repair is a union with `filter({ hasText })` — but hasText is NOT
- * `clean(innerText)`, which is what the first cut of this assumed and why
- * sp6gr failed identically with the union in place. Playwright matches hasText
- * against `textContent`, which puts no separator between block children, so
- * the recorded "Off Auto 5s …" was compared against "OffAuto5s…" and matched
- * nothing. The hasText half therefore goes through `looseText` (see the
- * helper), which turns each recorded space back into `\s*` — the only form
- * that matches both readings of the same subtree. It is inherently a
- * SUBSTRING test — `exact` cannot be expressed on it — so the guard callers
- * (wrapAlreadyInEffect, which reads presence as a reason NOT to act) keep
- * their anchored matcher on the role half and accept the looser hasText half.
- * That is deliberate: the alternative is a guard whose role half never
- * matches at all, which is the bug being fixed.
+ *   1. The role is not named from its contents at all. Grafana's
+ *      refresh-interval popup is recorded as
+ *        - menu "Off Auto 5s 10s 30s 1m 5m 15m 30m 1h 2h 1d"
+ *      and Playwright's accessible name for that `role=menu` is the empty
+ *      string: cloud run sp5gr failed at `04-add s_0c4807/5` on exactly that
+ *      locator, every attempt. The odoo home menu (`- menu "6 3 YourCompany"`)
+ *      is the same defect.
+ *
+ *   2. The role IS named from its contents — but the element contains FORM
+ *      CONTROLS, and the accessible-name computation substitutes each
+ *      control's VALUE where innerText renders nothing. This is why the first
+ *      cut of this restricted the union to a "name from author, contents"
+ *      allow-list and cloud run sp7od still died at `04-open s_059a1e/1`. That
+ *      step clicks an odoo quotation's quantity cell, which puts the order
+ *      line into inline edit mode; measured against the local bench odoo, the
+ *      same `<tr>` reads
+ *        innerText (daemon)  "20% £ 36.00"
+ *        accessible name     "Chair floor protection Chair floor protection
+ *                             Office chairs can harm your floor: protect it.
+ *                             3.00 12.00 20% Delete £ 36.00 Delete row"
+ *      — the product combobox, the description textbox and the qty/price
+ *      textboxes contribute their values, and a Delete link even lands
+ *      BETWEEN "20%" and "£ 36.00", so the recorded name is not so much as a
+ *      SUBSTRING of the accessible name. `getByRole('row', { name: '20% £
+ *      36.00' })` counted 0. The identical line shape passes in step 02-create
+ *      because the row is read-only there and the two readings agree.
+ *
+ * Both failures are repaired by the same union, so there is no allow-list any
+ * more: any roled line may have been named from innerText, and hasText is the
+ * only half that reads the element the way the daemon did.
+ *
+ * But hasText is NOT `clean(innerText)` either, which is what an earlier cut
+ * assumed and why sp6gr failed identically with a union already in place.
+ * Playwright matches hasText against `textContent`, which puts no separator
+ * between block children, so the recorded "Off Auto 5s …" was compared against
+ * "OffAuto5s…" and matched nothing — and the odoo row's textContent is
+ * "20%£ 36.00", no space, so a plain string hasText misses it too. The hasText
+ * half therefore goes through `looseText` (see the helper), which turns each
+ * recorded space back into `\s*` — the only form that matches both readings
+ * of the same subtree. Verified live: `getByRole('row').filter({ hasText:
+ * /20%\s*£\s*36\.00/i })` counts 1 on that edit-mode row.
+ *
+ * The union is inherently a SUBSTRING test — `exact` cannot be expressed on
+ * the hasText half — so the guard callers (wrapAlreadyInEffect, which reads
+ * presence as a reason NOT to act) keep their anchored matcher on the role
+ * half and accept the looser hasText half. That is deliberate: the alternative
+ * is a guard whose role half never matches at all, which is the bug being
+ * fixed. Guards are built from POPUP lines only (menu/dialog/listbox), whose
+ * roles were already taking the union before this change, so widening the
+ * allow-list does not widen any guard.
  */
-const NAME_FROM_CONTENT_ROLES = new Set([
-  'button',
-  'cell',
-  'checkbox',
-  'columnheader',
-  'gridcell',
-  'heading',
-  'link',
-  'menuitem',
-  'menuitemcheckbox',
-  'menuitemradio',
-  'option',
-  'radio',
-  'row',
-  'rowheader',
-  'switch',
-  'tab',
-  'tooltip',
-  'treeitem',
-]);
 
 /**
  * A Playwright locator for one recorded page line (`- role "name"`,
@@ -1118,18 +1128,22 @@ function lineLocator(line: string, exact = false): string | null {
     if (INPUT_LIKE_ROLES.has(roleName)) {
       return `${role}.or(page.getByTitle(${matcher}, { exact: ${exact} })).or(page.getByPlaceholder(${matcher}, { exact: ${exact} }))`;
     }
-    // A role that ARIA does not name from its contents: the daemon named it
-    // from innerText anyway, so the same text has to be looked for as TEXT.
-    // Same matcher in both halves, so the two can never disagree about what
-    // the line said; hasText is a substring test whatever `exact` says.
+    // Every other role: the daemon named this element from innerText, so the
+    // same text also has to be looked for as TEXT. Same matcher in both
+    // halves, so the two can never disagree about what the line said; hasText
+    // is a substring test whatever `exact` says.
+    //
+    // Not restricted to the roles ARIA names from their contents. A row/cell
+    // that holds form controls IS named from its contents, and the accessible
+    // name still diverges from innerText because the controls' VALUES are
+    // substituted in — see the block comment above for the odoo edit-mode row
+    // that killed sp7od with the allow-list in place.
     //
     // Through `looseText`, because the two halves read the element's text by
     // DIFFERENT rules: the daemon's innerText separates block children, the
     // hasText Playwright compares against (textContent) does not. See the
     // helper — this is the half that has to survive that gap.
-    return NAME_FROM_CONTENT_ROLES.has(roleName)
-      ? role
-      : `${role}.or(page.getByRole(${q(roled[1])}).filter({ hasText: looseText(${matcher}) }))`;
+    return `${role}.or(page.getByRole(${q(roled[1])}).filter({ hasText: looseText(${matcher}) }))`;
   }
   const text = /^-?\s*(?:text:)?\s*(.+?)\s*$/.exec(line);
   const value = text?.[1];
@@ -1898,6 +1912,16 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
     '  [key: string]: string;',
     '}',
     '/**',
+    ' * The wall-clock budget one run of this flow needs under a test runner: every',
+    ' * recorded step may spend a settle window, a pick, three click tiers and a 5s',
+    " * expectation, so a flow is budgeted per recorded step, never at the runner's",
+    ' * 60s default. fwod34 (odoo, 9 flow steps, ~80 recorded steps) ran ~63s to',
+    " * its 06-open before that default cut a click's retry short of the force",
+    ' * tier that replay reaches. The generated `.spec.ts` applies it with',
+    ' * `test.setTimeout(BUDGET_MS)`; your own spec can do the same or override it.',
+    ' */',
+    `export const BUDGET_MS = ${budgetMs(spec)};`,
+    '/**',
     ' * Every `[sitelooper drift] …` line this run logged (see `pick` below):',
     ' * a primary locator that missed and the recorded fallback that covered for',
     ' * it. Always exported — even a flow with no multi-candidate step today may',
@@ -1941,13 +1965,25 @@ function envName(name: string): string {
  * thin: the call, and an invitation to assert whatever this suite cares
  * about. Everything the tool regenerates lives in the `.flow.ts` beside it.
  */
+/** Per-step budget: settle (≤2s) + pick + three 5s click tiers + a 5s expectation, with headroom. */
+const STEP_BUDGET_MS = 30_000;
+const MIN_BUDGET_MS = 120_000;
+
+/** The test budget for one run of the whole flow, from its recorded step count. */
+export function budgetMs(spec: SpecFlow): number {
+  const steps = spec.steps.reduce((n, st) => n + st.segments.reduce((m, seg) => m + seg.steps.length, 0), 0);
+  return Math.max(MIN_BUDGET_MS, steps * STEP_BUDGET_MS);
+}
+
 export function emitSpecFile(spec: SpecFlow): string {
   const varFields = spec.vars.map((v) => `${key(v)}: process.env.${envName(v)} ?? ''`).join(', ');
   return [
     "import { test, expect } from '@playwright/test';",
-    `import { runFlow, steps, DRIFT } from './${spec.name}.flow';`,
+    `import { runFlow, steps, DRIFT, BUDGET_MS } from './${spec.name}.flow';`,
     '',
     `test(${q(spec.name)}, async ({ page }) => {`,
+    '  // One test runs the whole flow: budget it by its recorded steps, not the 60s default.',
+    '  test.setTimeout(BUDGET_MS);',
     `  const outputs = await runFlow(page, ${varFields ? `{ ${varFields} }` : '{}'});`,
     '  // Add your own assertions here; this file is yours and sitelooper never rewrites it.',
     '  // `outputs` holds every value the flow read back, keyed "<stepId>.<output>";',

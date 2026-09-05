@@ -6,7 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Flow } from '../src/skills/flow.js';
 import { SkillStore, type Skill, type SkillStep } from '../src/skills/store.js';
 import { VOLATILE_TOKEN_SHAPE } from '../src/shared/text.js';
-import { emitFlowFile, emitSpecFile } from '../src/spec/emit.js';
+import { budgetMs, emitFlowFile, emitSpecFile } from '../src/spec/emit.js';
 import { flowToSpec, type SpecFlow, type SpecSegment, type SpecStep } from '../src/spec/ir.js';
 import { compileFlow } from '../src/spec/index.js';
 
@@ -450,10 +450,16 @@ describe('expectations', () => {
       addedContains: ['- heading "{{v1}} Widget"', '- status "Loading…"', '- generic "sidebar"', '- tab "New Project"'],
     });
     // the parameterised group is its own assertion: those lines are the hard gate
-    expect(out).toContain("await expect(page.getByRole('heading', { name: `${p.v1} Widget`, exact: false }).first()).toBeVisible();");
+    expect(out).toContain(
+      "await expect(page.getByRole('heading', { name: `${p.v1} Widget`, exact: false })" +
+        ".or(page.getByRole('heading').filter({ hasText: looseText(`${p.v1} Widget`) })).first()).toBeVisible();",
+    );
     // the plain lines are ONE union, not one assertion each — replay stops only when none of them shows
     expect(out).toContain("await expect(page.getByRole('generic', { name: 'sidebar', exact: false })");
-    expect(out).toContain(".or(page.getByRole('tab', { name: 'New Project', exact: false }))");
+    expect(out).toContain(
+      ".or(page.getByRole('tab', { name: 'New Project', exact: false })" +
+        ".or(page.getByRole('tab').filter({ hasText: looseText('New Project') })))",
+    );
     expect(out.split('\n').filter((l) => l.includes('toBeVisible')).length).toBe(2);
     // a transient line never becomes an assertion (the FLOW constant still records it)
     expect(out).not.toContain("getByRole('status'");
@@ -461,7 +467,8 @@ describe('expectations', () => {
 
   it('names the presence check loosely, because a recorded line is not a Playwright name', () => {
     expect(withExpect({ addedContains: ['- menuitem "View Details"'] })).toContain(
-      "await expect(page.getByRole('menuitem', { name: 'View Details', exact: false }).first()).toBeVisible();",
+      "await expect(page.getByRole('menuitem', { name: 'View Details', exact: false })" +
+        ".or(page.getByRole('menuitem').filter({ hasText: looseText('View Details') })).first()).toBeVisible();",
     );
   });
 
@@ -502,12 +509,44 @@ describe('expectations', () => {
   });
 
   it('carries the emitted looseText only into bodies that use it', () => {
-    expect(withExpect({ addedContains: ['- button "Save"'] })).not.toContain('function looseText');
+    // an INPUT_LIKE role takes the title/placeholder union instead, and a bare
+    // text line takes getByText — neither reaches for the helper
+    expect(withExpect({ addedContains: ['- textbox "Tags"'] })).not.toContain('function looseText');
+    expect(withExpect({ addedContains: ['- text: Saved'] })).not.toContain('function looseText');
   });
 
-  it('leaves a name-from-content role alone: a button IS named by its text', () => {
-    const out = withExpect({ addedContains: ['- button "Save dashboard"', '- link "Home"', '- heading "Widgets"', '- tab "New"'] });
-    expect(out).not.toContain('filter({ hasText:');
+  it('gives a name-from-content role the union too: its accname absorbs the values of controls inside it', () => {
+    // sp7od died at `04-open s_059a1e/1` with the union restricted to the roles
+    // ARIA does NOT name from their contents. `row` was on the wrong side of
+    // that line. The step clicks an odoo quotation's quantity cell, which puts
+    // the order line into inline edit mode; measured on the local bench odoo
+    // (2026-09-05) the same <tr> then reads
+    //   innerText (what the daemon recorded)  "20% £ 36.00"
+    //   accessible name (what getByRole sees) "Chair floor protection … 3.00
+    //                                          12.00 20% Delete £ 36.00 Delete row"
+    // because each contained control contributes its VALUE and a Delete link
+    // lands between "20%" and "£ 36.00". The recorded name is not even a
+    // substring of the accname, so the role half counted 0 — while
+    // getByRole('row').filter({ hasText: /20%\s*£\s*36\.00/i }) counted 1.
+    const out = withExpect({ addedContains: ['- row "20% £ 36.00"'] });
+    expect(out).toContain(
+      "await expect(page.getByRole('row', { name: '20% £ 36.00', exact: false })" +
+        ".or(page.getByRole('row').filter({ hasText: looseText('20% £ 36.00') })).first()).toBeVisible();",
+    );
+    expect(syntaxErrors(out)).toEqual([]);
+  });
+
+  it('gives every other name-from-content role the union as well, not just row', () => {
+    for (const [role, name] of [
+      ['button', 'Save dashboard'],
+      ['link', 'Home'],
+      ['heading', 'Widgets'],
+      ['cell', '3.00'],
+      ['tab', 'New'],
+    ] as const) {
+      const out = withExpect({ addedContains: [`- ${role} "${name}"`] });
+      expect(out).toContain(`.or(page.getByRole('${role}').filter({ hasText: looseText('${name}') }))`);
+    }
   });
 
   it('gives the hasText half of the union the same masked matcher as the role half', () => {
@@ -533,9 +572,16 @@ describe('expectations', () => {
     expect(syntaxErrors(out)).toEqual([]);
   });
 
-  it('leaves a non-input role alone: a button name has no placeholder to disagree with', () => {
+  it('keeps title/placeholder for INPUT_LIKE roles only: a button name has no placeholder to disagree with', () => {
     const out = withExpect({ addedContains: ['- button "Save dashboard"'] });
-    expect(out).toContain("await expect(page.getByRole('button', { name: 'Save dashboard', exact: false }).first()).toBeVisible();");
+    // it still gets the role/hasText union (the daemon named it from innerText
+    // like everything else) — but NOT the title/placeholder halves, which
+    // exist only because an <input>'s `<label for>` outranks both in the real
+    // accessible-name computation while the daemon never looks at that label.
+    expect(out).toContain(
+      "await expect(page.getByRole('button', { name: 'Save dashboard', exact: false })" +
+        ".or(page.getByRole('button').filter({ hasText: looseText('Save dashboard') })).first()).toBeVisible();",
+    );
     expect(out).not.toContain('getByPlaceholder');
     expect(out).not.toContain('getByTitle');
   });
@@ -714,11 +760,27 @@ describe('flow-level wiring', () => {
 describe('emitSpecFile', () => {
   it('is a thin user-owned scaffold that imports the generated half', () => {
     const source = emitSpecFile(specOf([{ tool: 'back', args: {}, locators: {} }]));
-    expect(source).toContain("import { runFlow, steps, DRIFT } from './demo.flow';");
+    expect(source).toContain("import { runFlow, steps, DRIFT, BUDGET_MS } from './demo.flow';");
     expect(source).toContain("const outputs = await runFlow(page, { name: process.env.NAME ?? '' });");
     expect(source).toContain('sitelooper never rewrites it');
     expect(source).toContain("DRIFT.length");
     expect(syntaxErrors(source, 'demo.spec.ts')).toEqual([]);
+  });
+
+  /**
+   * One test runs the whole flow. fwod34 (odoo) needed ~63s to reach its
+   * 06-open and the runner's 60s default cut a click's retry short of the
+   * force tier replay reaches, so the flow file exports a budget from its
+   * recorded step count and the scaffold applies it.
+   */
+  it('budgets the single test by the recorded step count, never the 60s default', () => {
+    const one = specOf([{ tool: 'back', args: {}, locators: {} }]);
+    expect(budgetMs(one)).toBe(120_000);
+    expect(emitFlowFile(one, { tier: 'plain' }).source).toContain('export const BUDGET_MS = 120000;');
+    expect(emitSpecFile(one)).toContain('test.setTimeout(BUDGET_MS);');
+    const many = specOf(Array.from({ length: 9 }, () => ({ tool: 'back' as const, args: {}, locators: {} })));
+    expect(budgetMs(many)).toBe(270_000);
+    expect(emitFlowFile(many, { tier: 'plain' }).source).toContain('export const BUDGET_MS = 270000;');
   });
 });
 

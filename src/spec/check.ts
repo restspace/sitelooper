@@ -388,7 +388,7 @@ export function runSpecCheck(o: SpecCheckOptions): SpecCheckResult {
 export default {
   testDir: ${JSON.stringify(work)},
   testMatch: ${JSON.stringify(`${base}.spec.ts`)},
-  timeout: 60_000,
+  timeout: 600_000,
   retries: 0,
   workers: 1,
   reporter: [['json', { outputFile: ${JSON.stringify(reportFile)} }], ['list']],
@@ -419,7 +419,7 @@ export default {
     encoding: 'utf8',
     cwd: work,
     env,
-    timeout: o.timeoutMs ?? 300_000,
+    timeout: o.timeoutMs ?? 900_000,
     shell: !pw.cli && process.platform === 'win32',
   });
   const wallMs = Date.now() - started;
