@@ -1,0 +1,28 @@
+repairing bench/results/sp5od-spec/fwod34.flow.ts (9 step(s)) in /tmp/sitelooper-repair-PGIt6H
+  reset (run 1): node --input-type=module -e "import {resetTarget} from './bench/app-reset.mjs'; await resetTarget('odoo')"
+run 1: 9/9 step(s) success, 1 drift ticket(s)
+  [OK] 01-signin (tier A)
+  [OK] 02-create (tier A)
+  [OK] 03-open (tier A) — fell back: s_d654ba stopped at step 4 — no element matched any known locator for target (tried 3: page.getByRole('button', { name: 'Confirm', exact: true }).nth(1), page.locator('#dialog_0 > div > div > div > footer > button:nth-of-type(1)'), elementAt(202, 734) /* button */)
+  [OK] 04-open (tier A)
+  [OK] 05-open (tier A)
+  [OK] 06-open (tier none) — fell back: every candidate refused — s_e7d322: the page at http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form does not show "fwod34-n2" — it matches this procedure's page template but is a different record — nothing was run
+  [OK] 07-open (tier A)
+  [OK] 08-open (tier none) — fell back: every candidate refused — s_c86522: failed at step 1 before touching the page — no element matched any known locator for target (tried 3: page.getByRole('button', { name: 'Cancel', exact: true }).nth(0), page.locator('div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(4)'), elementAt(357, 129) /* button */)
+  [OK] 09-change (tier A)
+  reset (converge 1/2): node --input-type=module -e "import {resetTarget} from './bench/app-reset.mjs'; await resetTarget('odoo')"
+  evidence         candidate retired: page.getByRole('button', { name: 'Confirm', exact: true }).nth(1) — missed 2 run(s), never hit; now last — s_d654ba step 4 target
+  [OK] 01-signin (tier A)
+  [OK] 02-create (tier A)
+  [OK] 03-open (tier A) — fell back: s_d654ba stopped at step 4 — no element matched any known locator for target (tried 3: page.getByRole('button', { name: 'Confirm', exact: true }).nth(1), page.locator('#dialog_0 > div > div > div > footer > button:nth-of-type(1)'), elementAt(202, 734) /* button */)
+  [OK] 04-open (tier A)
+  [OK] 05-open (tier A)
+  [OK] 06-open (tier A) — fell back: s_f46900 stopped at step ? — not on the page this procedure starts from (expects http://127.0.0.1:8069/web#action=:id&cids=:id&menu_id=:id&model=sale.order&view_type=list, browser is at http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form; the url shape is close but the page structure is not — similarity 0.265) — nothing was run
+  [OK] 07-open (tier A)
+  [OK] 08-open (tier A)
+  [OK] 09-change (tier A)
+converge 1/2: 9/9 step(s) success, 2 drift ticket(s)
+  ticket: 03-open s_d654ba/4 target: page.getByRole('button', { name: 'Confirm', exact: true }).nth(1) → nothing resolved
+  ticket: 06-open s_37158b/1 target: page.locator('html > body > header > nav > div:nth-of-type(2)') → used elementAt(1162, 23) /* menu */
+not converged: 06-open (drift (page.locator('html > body > header > nav > div:nth-of-type(2)')))
+EXIT=3

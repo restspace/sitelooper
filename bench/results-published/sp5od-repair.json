@@ -1,0 +1,229 @@
+{
+  "file": "bench/results/sp5od-spec/fwod34.flow.ts",
+  "flow": "fwod34",
+  "workspace": "/tmp/sitelooper-repair-PGIt6H",
+  "run": {
+    "status": "success",
+    "passed": 9,
+    "total": 9,
+    "drift": 1
+  },
+  "runs": [
+    {
+      "label": "run 1",
+      "passed": 9,
+      "total": 9,
+      "status": "success",
+      "tickets": 1,
+      "steps": [
+        {
+          "id": "01-signin",
+          "status": "success",
+          "tier": "A",
+          "summary": "Replayed stored procedure s_017161 (2 steps).",
+          "recovered": false
+        },
+        {
+          "id": "02-create",
+          "status": "success",
+          "tier": "A",
+          "summary": "Replayed stored procedure s_c925b1 (5 steps).",
+          "recovered": false
+        },
+        {
+          "id": "03-open",
+          "status": "success",
+          "tier": "A",
+          "summary": "Opened draft quotation S00022 for sp5odr-0 Bench Customer. A second order line was added: \"Conference Chair\" (E-COM12) at unit price £33.00, quantity 2, line subtotal £66.00. The first line (Chair floor protection, qty 3, £12.00 each, £36.00) remained unchanged. The total Untaxed Amount for the order is now £102.00. Quotation was saved successfully.",
+          "recovered": true,
+          "fellBack": "s_d654ba stopped at step 4 — no element matched any known locator for target (tried 3: page.getByRole('button', { name: 'Confirm', exact: true }).nth(1), page.locator('#dialog_0 > div > div > div > footer > button:nth-of-type(1)'), elementAt(202, 734) /* button */)"
+        },
+        {
+          "id": "04-open",
+          "status": "success",
+          "tier": "A",
+          "summary": "Replayed stored procedure s_059a1e (6 steps).",
+          "recovered": false
+        },
+        {
+          "id": "05-open",
+          "status": "success",
+          "tier": "A",
+          "summary": "Replayed stored procedure s_f1434f (4 steps).",
+          "recovered": false
+        },
+        {
+          "id": "06-open",
+          "status": "success",
+          "tier": null,
+          "summary": "Opened confirmed sales order S00022 (customer sp5odr-0 Bench Customer) and cancelled it. The previous attempt had left a \"Cancel Sales Order\" confirmation wizard open along with a stray contact-edit dialog; I discarded the contact dialog and clicked the wizard's \"Cancel\" button to complete the cancellation. The form's statusbar now shows \"Cancelled\" as the active/checked state (verified via snapshot; screenshot saved to /tmp/odoo_s00022_cancelled.png). Order lines and totals (£126.00 untaxed) remain visible on the record, and a \"Set to Quotation\" button is now offered, consistent with a cancelled order.",
+          "recovered": true,
+          "fellBack": "every candidate refused — s_e7d322: the page at http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form does not show \"fwod34-n2\" — it matches this procedure's page template but is a different record — nothing was run"
+        },
+        {
+          "id": "07-open",
+          "status": "success",
+          "tier": "A",
+          "summary": "Replayed stored procedure s_04d970 (2 steps).",
+          "recovered": false
+        },
+        {
+          "id": "08-open",
+          "status": "success",
+          "tier": null,
+          "summary": "Opened sales order S00022 (sp5odr-0 Bench Customer). The order was already cancelled by a prior session — the statusbar radiogroup shows \"Cancelled\" as the checked/active value (with Sales Order, Quotation Sent, and Quotation as disabled options). The \"Set to Quotation\" button is now visible, confirming the cancelled state. No further cancellation action was needed.",
+          "recovered": true,
+          "fellBack": "every candidate refused — s_c86522: failed at step 1 before touching the page — no element matched any known locator for target (tried 3: page.getByRole('button', { name: 'Cancel', exact: true }).nth(0), page.locator('div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(4)'), elementAt(357, 129) /* button */)"
+        },
+        {
+          "id": "09-change",
+          "status": "success",
+          "tier": "A",
+          "summary": "Replayed stored procedure s_4634ba (3 steps).",
+          "recovered": false
+        }
+      ]
+    },
+    {
+      "label": "converge 1/2",
+      "passed": 9,
+      "total": 9,
+      "status": "success",
+      "tickets": 2,
+      "steps": [
+        {
+          "id": "01-signin",
+          "status": "success",
+          "tier": "A",
+          "summary": "Replayed stored procedure s_017161 (2 steps).",
+          "recovered": false
+        },
+        {
+          "id": "02-create",
+          "status": "success",
+          "tier": "A",
+          "summary": "Replayed stored procedure s_c925b1 (5 steps).",
+          "recovered": false
+        },
+        {
+          "id": "03-open",
+          "status": "success",
+          "tier": "A",
+          "summary": "Opened existing draft quotation S00023 for sp5odr-1 Bench Customer. Added a second order line with product \"Conference Chair\" (qty 2, unit price £33.00 auto-filled by the app). The chair floor protection line (qty 3, £12.00 each = £36.00 subtotal) remained unchanged. Saved the quotation. The total untaxed amount is now £102.00 (£36.00 + £66.00).",
+          "recovered": true,
+          "fellBack": "s_d654ba stopped at step 4 — no element matched any known locator for target (tried 3: page.getByRole('button', { name: 'Confirm', exact: true }).nth(1), page.locator('#dialog_0 > div > div > div > footer > button:nth-of-type(1)'), elementAt(202, 734) /* button */)"
+        },
+        {
+          "id": "04-open",
+          "status": "success",
+          "tier": "A",
+          "summary": "Replayed stored procedure s_059a1e (6 steps).",
+          "recovered": false
+        },
+        {
+          "id": "05-open",
+          "status": "success",
+          "tier": "A",
+          "summary": "Replayed stored procedure s_f1434f (4 steps).",
+          "recovered": false
+        },
+        {
+          "id": "06-open",
+          "status": "success",
+          "tier": "A",
+          "summary": "Opened the confirmed sales order S00023 for 'sp5odr-1 Bench Customer' and cancelled it. The Cancel action opened a \"Cancel Sales Order\" wizard dialog; I clicked the plain \"Cancel\" button in the dialog footer (not \"Send and cancel\", so no email was sent, and not \"Close\" which merely dismisses). The order's status bar now shows \"Cancelled\" as the current state (verified via the checked radio in the statusbar and a screenshot). The order retains its two lines (Chair floor protection qty 5 @ £12.00, Conference Chair qty 2 @ £33.00, Untaxed £126.00) but is no longer active.",
+          "recovered": true,
+          "fellBack": "s_f46900 stopped at step ? — not on the page this procedure starts from (expects http://127.0.0.1:8069/web#action=:id&cids=:id&menu_id=:id&model=sale.order&view_type=list, browser is at http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form; the url shape is close but the page structure is not — similarity 0.265) — nothing was run"
+        },
+        {
+          "id": "07-open",
+          "status": "success",
+          "tier": "A",
+          "summary": "Replayed stored procedure s_04d970 (2 steps).",
+          "recovered": false
+        },
+        {
+          "id": "08-open",
+          "status": "success",
+          "tier": "A",
+          "summary": "Replayed stored procedure s_fcb896; observed order_status_2=Cancelled\nSales Order\nQuotation Sent\nQuotation, order_reference=S00023.",
+          "recovered": false
+        },
+        {
+          "id": "09-change",
+          "status": "success",
+          "tier": "A",
+          "summary": "Replayed stored procedure s_4634ba (3 steps).",
+          "recovered": false
+        }
+      ]
+    }
+  ],
+  "tickets": 1,
+  "promoted": [],
+  "patched": [],
+  "reRecord": [],
+  "skipped": [
+    {
+      "skill": "s_d654ba",
+      "step": "4",
+      "why": "proposal-does-not-resolve: page.getByRole('button', { name: 'Save manually', exact: true }) matched 0 element(s)",
+      "url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22",
+      "snapshotRows": 94,
+      "snapshotBytes": 2699,
+      "modelReply": "{\"kind\":\"role\",\"role\":\"button\",\"name\":\"Save manually\"}"
+    }
+  ],
+  "changes": [
+    "01-signin: no change",
+    "02-create: no change",
+    "03-open: no change",
+    "04-open: no change",
+    "05-open: no change",
+    "06-open: no change",
+    "07-open: no change",
+    "08-open: no change",
+    "09-change: no change",
+    "candidate retired: page.getByRole('button', { name: 'Confirm', exact: true }).nth(1) — missed 2 run(s), never hit; now last — s_d654ba step 4 target"
+  ],
+  "evidence": [
+    "candidate retired: page.getByRole('button', { name: 'Confirm', exact: true }).nth(1) — missed 2 run(s), never hit; now last — s_d654ba step 4 target"
+  ],
+  "droppedExpectations": [],
+  "weakenedByVariant": [],
+  "specCheck": null,
+  "wrote": null,
+  "converged": false,
+  "notConverged": [
+    "06-open (drift (page.locator('html > body > header > nav > div:nth-of-type(2)')))"
+  ],
+  "convergeTickets": [
+    {
+      "flow": "fwod34",
+      "step": "03-open",
+      "skill": "s_d654ba",
+      "atStep": "4",
+      "key": "target",
+      "similarity": null,
+      "missedLocator": "page.getByRole('button', { name: 'Confirm', exact: true }).nth(1)",
+      "fallbackUsed": null,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=23"
+    },
+    {
+      "flow": "fwod34",
+      "step": "06-open",
+      "skill": "s_37158b",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.265,
+      "missedLocator": "page.locator('html > body > header > nav > div:nth-of-type(2)')",
+      "fallbackUsed": "elementAt(1162, 23) /* menu */",
+      "fallbackIndex": 1,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=23"
+    }
+  ]
+}
