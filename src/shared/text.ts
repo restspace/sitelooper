@@ -27,9 +27,15 @@ const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
  * another time, another date — and nothing else, so the rest of the name is
  * still matched exactly.
  */
-const TOKEN_SHAPE = '(?:\\d{1,2}:\\d{2}(?::\\d{2})?|\\d{1,4}[/.-]\\d{1,2}[/.-]\\d{1,4})';
+/**
+ * What one masked token stood for, as regex SOURCE. Exported because a
+ * compiled spec has to rebuild the same matcher from a line the store already
+ * masked (see spec/locators.ts, maskedMatcherSource) and a second copy of this
+ * shape would be free to drift away from this one.
+ */
+export const VOLATILE_TOKEN_SHAPE = '(?:\\d{1,2}:\\d{2}(?::\\d{2})?|\\d{1,4}[/.-]\\d{1,2}[/.-]\\d{1,4})';
 export function volatileMatcher(text: string): string | RegExp {
   const masked = maskVolatile(text);
   if (masked === text) return text;
-  return new RegExp(`^${masked.split(WILDCARD).map(escapeRe).join(TOKEN_SHAPE)}$`);
+  return new RegExp(`^${masked.split(WILDCARD).map(escapeRe).join(VOLATILE_TOKEN_SHAPE)}$`);
 }

@@ -5,6 +5,7 @@ import ts from 'typescript';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Flow } from '../src/skills/flow.js';
 import { SkillStore, type Skill, type SkillStep } from '../src/skills/store.js';
+import { VOLATILE_TOKEN_SHAPE } from '../src/shared/text.js';
 import { emitFlowFile, emitSpecFile } from '../src/spec/emit.js';
 import { flowToSpec, type SpecFlow, type SpecSegment, type SpecStep } from '../src/spec/ir.js';
 import { compileFlow } from '../src/spec/index.js';
@@ -370,6 +371,65 @@ describe('expectations', () => {
     expect(withExpect({ urlPattern: 'http://app.test/a?q=1#/detail' })).toContain('(?:\\\\?[^#]*)?#/detail$');
   });
 
+  it('matches a query-shaped hash as unordered STATE, the way urlMatches does (the odoo failure)', () => {
+    const out = withExpect({ urlPattern: 'http://app.test/web#action=:id&cids=1&menu_id={{v1}}' });
+    expect(out).toContain('await expect(page).toHaveURL((url: URL) => hashMatch(url, new RegExp(');
+    expect(out).toContain("[['action', null], ['cids', '1'], ['menu_id', `${p.v1}`]]));");
+    expect(out).toContain('function hashState(href: string): Map<string, string> | null {');
+    // a hash ROUTE is ordered, and keeps the regex form
+    const route = withExpect({ urlPattern: 'http://app.test/a#/detail/:id' });
+    expect(route).toContain('toHaveURL(new RegExp(');
+    expect(route).not.toContain('hashMatch');
+    // and so does a url with no fragment at all
+    expect(withExpect({ urlPattern: 'http://app.test/items/:id' })).not.toContain('hashMatch');
+  });
+
+  it('accepts the recorded state in any order, with extra pairs, and refuses a wrong value', () => {
+    const { hashMatch } = runnableHelpers(withExpect({ urlPattern: 'http://app.test/web#action=316&cids=1' }));
+    const head = /^http:\/\/app\.test\/web$/;
+    const want: [string, string | null][] = [
+      ['action', '316'],
+      ['cids', '1'],
+    ];
+    // the SECOND cloud run's url, pair for pair, in another order
+    expect(hashMatch(new URL('http://app.test/web#cids=1&model=sale.order&action=316'), head, want)).toBe(true);
+    expect(hashMatch(new URL('http://app.test/web#action=317&cids=1'), head, want)).toBe(false);
+    // a pair the pattern names with a LITERAL must be there
+    expect(hashMatch(new URL('http://app.test/web#action=316'), head, want)).toBe(false);
+    // a :id/:var one is app-minted state: anything, or absent
+    expect(
+      hashMatch(new URL('http://app.test/web#action=316'), head, [
+        ['action', '316'],
+        ['cids', null],
+      ]),
+    ).toBe(true);
+    // another page, or a route where state was recorded, is not this page
+    expect(hashMatch(new URL('http://app.test/other#action=316&cids=1'), head, want)).toBe(false);
+    expect(hashMatch(new URL('http://app.test/web#/action/316'), head, want)).toBe(false);
+  });
+
+  it('rebuilds a masked line name as the token shape it stood for, not as a literal (the kanboard failure)', () => {
+    const out = withExpect({ addedContains: ['- heading "Due {{*}}"'] });
+    // the literal '{{*}}' matched nothing on any page, which is what failed
+    expect(out).not.toContain("name: 'Due {{*}}'");
+    expect(out).toContain("page.getByRole('heading', { name: new RegExp(`Due ");
+    // the token shape, because the mask only ever covered a clock or a date:
+    // '.*' would let a heading called "Due date" satisfy it
+    // (doubled: the shape is regex source living inside a template literal)
+    expect(out).toContain(VOLATILE_TOKEN_SHAPE.replace(/\\/g, '\\\\'));
+    // a presence check stays a substring match (Playwright ignores `exact` for
+    // a RegExp, so the anchoring has to carry that decision)
+    expect(out).not.toContain('new RegExp(`^Due ');
+    expect(syntaxErrors(out)).toEqual([]);
+  });
+
+  it('leaves a line that is nothing BUT wildcards as an observation: it names no element', () => {
+    const out = withExpect({ addedContains: ['- textbox "{{*}} {{*}}": {{*}}'] });
+    expect(out).toContain('// observed (nothing nameable in it): - textbox "{{*}} {{*}}": {{*}}');
+    expect(out).not.toContain('toBeVisible');
+    expect(out).not.toContain('getByRole');
+  });
+
   it('inlines escapeRe only when a body uses it', () => {
     expect(withExpect({ urlPattern: 'http://app.test/items/{{v1}}' })).toContain('function escapeRe(s: string): string {');
     expect(withExpect({ urlPattern: 'http://app.test/items/:id' })).not.toContain('function escapeRe');
@@ -487,6 +547,35 @@ describe('flow-level wiring', () => {
     expect(source).toContain('v3: `literal-${vars.name}`');
     expect(source).toContain("v4: process.env.BENCH_PASSWORD ?? ''");
     expect(syntaxErrors(source)).toEqual([]);
+  });
+
+  it('publishes the end-url outputs a later step refers to (the grafana failure)', () => {
+    const step: SkillStep = { tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'id', selector: '#save' }] } };
+    const producer: SpecStep = { id: '02-create', instruction: 'create it', params: { v1: 'x' }, outputs: [], segments: [segment([step])] };
+    const consumer: SpecStep = {
+      id: '03-add',
+      instruction: 'add to it',
+      params: { v1: 'http://app.test/d/{{02-create.url.p1}}/notes' },
+      outputs: [],
+      segments: [segment([step])],
+    };
+    const out = emit({ version: 1, name: 'demo', origin: 'http://app.test', startUrl: 'http://app.test/', vars: [], steps: [producer, consumer] });
+    // the producing step's body publishes it; the consuming call site reads it
+    expect(out).toContain("outputs['02-create.url.p1'] = await urlPartWhen(page, 'p1');");
+    expect(out).toContain("v1: `http://app.test/d/${outputs['02-create.url.p1'] ?? ''}/notes`");
+    // and only what something reads: an output nobody consumes is noise
+    expect(out).not.toContain("outputs['03-add.url");
+    expect(out).not.toContain("outputs['02-create.url']");
+    expect(syntaxErrors(out)).toEqual([]);
+  });
+
+  it('publishes the whole end url too when that is what a later step names', () => {
+    const step: SkillStep = { tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'id', selector: '#save' }] } };
+    const producer: SpecStep = { id: '02-create', instruction: 'create it', params: {}, outputs: [], segments: [segment([step])] };
+    const consumer: SpecStep = { id: '03-add', instruction: 'add', params: { v1: '{{02-create.url}}' }, outputs: [], segments: [segment([step])] };
+    const out = emit({ version: 1, name: 'demo', origin: 'http://app.test', startUrl: 'http://app.test/', vars: [], steps: [producer, consumer] });
+    expect(out).toContain("outputs['02-create.url'] = page.url();");
+    expect(out).toContain("v1: outputs['02-create.url'] ?? ''");
   });
 
   it('inlines a recorded value with a warning when the flow binds no slot', () => {
@@ -708,7 +797,8 @@ describe('a derived value is read after the navigation lands', () => {
   });
 
   it('inlines urlPartWhen and the urlPart it depends on, and only when a step mints', () => {
-    expect(source).toContain('async function urlPartWhen(page: Page, label: string, urlBefore: string): Promise<string> {');
+    expect(source).toContain("async function urlPartWhen(page: Page, label: string, urlBefore = ''): Promise<string> {");
+    expect(source).toContain("async function urlPartsWhen(page: Page, labels: string[], urlBefore = ''): Promise<string[]> {");
     expect(source).toContain('function urlPart(url: string, label: string): string {');
     expect(source).toContain('const PICK_WAIT_MS = 3000;');
     const plain = emit(specOf([minting]));
@@ -738,13 +828,58 @@ describe('a derived value is read after the navigation lands', () => {
     const before = 'http://app.test/web#action=7';
     const { page, waits } = urlPageStub([before]);
     expect(await urlPartWhen(page, 'q.action', before)).toBe('7');
-    expect(waits.length).toBe(3000 / 100);
+    // replay's own allowance for a url: settleDom (2s) and then expectedUrl's
+    // own 3s resolve window, not pick's 3s
+    expect(waits.length).toBe(5000 / 100);
+  });
+
+  it('binds every part of a step in ONE wait, so none is read off a half-built url', async () => {
+    const two = specOf([minting], {
+      segments: [
+        segment([minting], {
+          derived: { d1: { step: 1, at: 'q.action', example: '123' }, d2: { step: 1, at: 'q.cids', example: '1' } },
+        }),
+      ],
+    });
+    const out = emit(two);
+    expect(out).toContain("const bound1 = await urlPartsWhen(page, ['q.action', 'q.cids'], urlBefore1);");
+    expect(out).toContain('p.d1 = bound1[0]; // recorded example: 123');
+    expect(out).toContain('p.d2 = bound1[1]; // recorded example: 1');
+    expect(syntaxErrors(out)).toEqual([]);
+
+    const { urlPartsWhen } = runnableHelpers(out);
+    // odoo's shape: cids lands first and action arrives a beat later. Bound
+    // one at a time, action would have been read as '' off the middle url.
+    const before = 'http://app.test/web';
+    const { page, waits } = urlPageStub([before, 'http://app.test/web#cids=1', 'http://app.test/web#action=123&cids=1']);
+    expect(await urlPartsWhen(page, ['q.action', 'q.cids'], before)).toEqual(['123', '1']);
+    expect(waits).toEqual([100, 100]);
+  });
+
+  it('waits the window replay effectively allows a url, not the shorter one pick uses', () => {
+    expect(source).toContain('const URL_WAIT_MS = 5000;');
   });
 
   it('publishes the minted id when nothing else reads the settled url', () => {
     const mints: SkillStep = { ...minting, mints: { at: 'p2' } };
     const out = emit(specOf([mints]));
     expect(out).toContain("outputs['01-do.minted'] = await urlPartWhen(page, 'p2', urlBefore1);");
+  });
+});
+
+describe('the diagnostics a cloud run has to read the failure from', () => {
+  const step: SkillStep = { tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'id', selector: '#a' }, { kind: 'css', selector: '.b' }] } };
+
+  it('says where the step was and where the browser was when no locator resolved', () => {
+    const out = emit(specOf([step]));
+    expect(out).toContain('resolved at ${where} (page is at ${page.url()}): ');
+  });
+
+  it('logs a skipped opener click, so a bench log shows the click that never happened', () => {
+    const opener: SkillStep = { ...step, expect: { addedContains: ['- dialog "Save dashboard"'] } };
+    expect(emit(specOf([opener]))).toContain(
+      "console.log('[sitelooper skip] 01-do s_test1/1: recorded popup already showing — click skipped');",
+    );
   });
 });
 

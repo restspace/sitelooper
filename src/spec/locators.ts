@@ -15,7 +15,7 @@
  */
 import type { LocatorCandidate } from '../daemon/recorder.js';
 import { specOf } from '../skills/replay.js';
-import { volatileMatcher } from '../shared/text.js';
+import { VOLATILE_TOKEN_SHAPE, WILDCARD, volatileMatcher } from '../shared/text.js';
 
 export interface SourceOptions {
   /** expression for the page, default 'page' */
@@ -139,6 +139,52 @@ export function matcherSource(text: string, o: SourceOptions = {}): string {
     })
     .join('');
   return `new RegExp(\`${body}\`)`;
+}
+
+/** Regex SOURCE for one piece of recorded text: literals escaped, slots spliced in as
+ *  `${escapeRe(p.vN)}` (a bound parameter is DATA, so its own metacharacters must not
+ *  become pattern), all of it safe to sit inside a template literal. */
+function patternBody(text: string, o: SourceOptions): string {
+  return text
+    .split(SLOT_G)
+    .map((p, i) => {
+      if (i % 2 === 0) return escapeTemplate(reEscape(p));
+      const expr = slotExpr(p, o);
+      return expr === null ? (o.slot ?? defaultSlot)(p) : '${escapeRe(' + expr + ')}';
+    })
+    .join('');
+}
+
+const reEscape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/**
+ * Source for a matcher over a recorded PAGE LINE - one whose volatile tokens the
+ * STORE already replaced with `{{*}}` (maskVolatile), unlike a locator name, which
+ * arrives verbatim and is masked here by `matcherSource`/`volatileMatcher`.
+ *
+ * Rendered as the literal string it looks like, `{{*}}` can never match anything:
+ * kanboard's `textbox "{{*}} {{*}}"` (a due-date field the app names after the
+ * current date and time) failed on every replay of the compiled spec. So each
+ * wildcard becomes the token shape it stood for - NOT `.*`. The mask is only ever
+ * applied to a clock or calendar token, so the token shape is exactly what was
+ * masked out, and it is what `volatileMatcher` would have produced from the
+ * unmasked line; `.*` would let `textbox "Due date"` satisfy an assertion recorded
+ * for a dated field, which is an assertion looser than the evidence behind it.
+ *
+ * `anchor` mirrors the caller's `exact`: a presence check is a substring match
+ * (Playwright ignores `exact` for a RegExp name, so the anchoring has to carry it),
+ * while the already-in-effect guard reads presence as a reason NOT to act and must
+ * stay line-exact. Null when the text is nothing BUT wildcards: that names no
+ * element at all, and the caller leaves it as an observation.
+ */
+export function maskedMatcherSource(text: string, o: SourceOptions & { anchor?: boolean } = {}): string | null {
+  if (!text.includes(WILDCARD)) return matcherSource(text, o);
+  const parts = text.split(WILDCARD);
+  if (!parts.some((p) => p.trim())) return null;
+  // The shape goes through escapeTemplate too: it is regex source living inside
+  // a template literal, and `\d` there is just "d".
+  const body = parts.map((p) => patternBody(p, o)).join(escapeTemplate(VOLATILE_TOKEN_SHAPE));
+  return `new RegExp(\`${o.anchor ? `^${body}$` : body}\`)`;
 }
 
 /** Playwright Locator expression for ONE candidate, mirroring makeLocator kind by kind

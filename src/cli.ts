@@ -19,6 +19,7 @@ import { emitFlowFile } from './spec/emit.js';
 import { flowToSpec, type SpecFlow } from './spec/ir.js';
 import { LiftError, liftFlowFile } from './spec/lift.js';
 import { diffSpecChanges, foldPatchedVariants, reloadStaged, stageRepair } from './spec/repair.js';
+import { runSpecCheck, type SpecCheckResult } from './spec/check.js';
 import os from 'node:os';
 
 const USAGE = `sitelooper — agent-in-the-loop Playwright CLI
@@ -44,7 +45,8 @@ Usage:
                                           # (signed into nothing). Prefer "sitelooper repair" below,
                                           # which drains the same tickets on the live, signed-in page.
   sitelooper repair <name.flow.ts> [--var k=v ...] [--out <file>] [--converge <n>]
-                                   [--reset-cmd "<shell command>"] [--dry-run] [--model M] [--json]
+                                   [--reset-cmd "<shell command>"] [--check-spec] [--dry-run]
+                                   [--model M] [--json]
                                           # self-updating spec: replay a compiled flow file against
                                           # the live app in an ISOLATED temp store, let the recovery
                                           # ladder adapt it, fold the adaptation back into the owned
@@ -58,6 +60,18 @@ Usage:
                                           # --reset-cmd, which runs a shell command before run 1 and
                                           # before every converge run and aborts if it exits non-zero
                                           # (--reset-cmd "curl -s -X POST http://localhost:3000/__reset").
+                                          # --check-spec runs the sibling .spec.ts ONCE under plain
+                                          # @playwright/test after the file is written, because repair
+                                          # replays the IR through the daemon and so cannot see an
+                                          # EMITTER defect. A failed check does not un-write the file
+                                          # (the diff is still yours) but exits 4.
+  sitelooper check <name.flow.ts> [--var k=v ...] [--reset-cmd "<cmd>"] [--json]
+                                          # run the sibling .spec.ts once under plain @playwright/test
+                                          # (minimal config, headless, one worker, 60 s per test) and
+                                          # report pass/fail, the nearest @step to the failure, and any
+                                          # [sitelooper drift] lines. No daemon, no model. Exit 4 when
+                                          # the spec fails; skipped (exit 0) when @playwright/test
+                                          # cannot be resolved from the project.
   sitelooper var <name>=<value>          # EXPERIMENTAL: declare a run variable (becomes {{name}} in a flow)
   sitelooper flow list | show <name>     # EXPERIMENTAL: saved flows (recorded sessions you can replay with run)
   sitelooper run <flow> [--var k=v ...]  # EXPERIMENTAL: replay a saved flow, repairing drifted steps
@@ -136,7 +150,8 @@ Environment:
   SITELOOPER_SCRIPT=1        record actions as a Playwright script (see the script command)
   SITELOOPER_SKILLS=1        learning mode (see --learn); SITELOOPER_SKILLS_DIR relocates the store
 
-Exit codes: 0 instruction succeeded · 1 failed/blocked · 2 infra error`;
+Exit codes: 0 instruction succeeded · 1 failed/blocked · 2 infra error · 3 repair did not converge
+            · 4 the emitted .spec.ts failed its --check-spec run (the .flow.ts was still written)`;
 
 interface ParsedArgs {
   command: string;
@@ -187,6 +202,7 @@ function parseArgv(argv: string[]): ParsedArgs {
     'headed',
     'help',
     'interactive',
+    'check-spec',
     'json',
     'learn',
     'no-escalate',
@@ -406,6 +422,10 @@ async function main(): Promise<void> {
   }
   if (command === 'repair') {
     await repairFlowCommand(positional, flags, json, onProgress);
+    return;
+  }
+  if (command === 'check') {
+    checkSpecCommand(positional, flags, json, onProgress);
     return;
   }
   if (command === 'session') {
@@ -906,6 +926,44 @@ async function compileCommand(positional: string[], flags: Map<string, string | 
   }
 }
 
+/**
+ * `sitelooper check <name.flow.ts>` — run the emitted spec once, as a user would.
+ *
+ * The standalone half of `repair --check-spec`, and the same code underneath.
+ * It exists on its own because the question ("does the compiled spec actually
+ * pass under plain Playwright?") is worth asking about a file nobody is
+ * repairing: after a `compile`, after a hand edit to the `.spec.ts`, or in CI
+ * next to the sitelooper-free artifacts it is supposed to have produced.
+ *
+ * No daemon and no model are involved: this spawns `npx playwright test` over
+ * a copy of the two files with a config of its own, and reports the report.
+ */
+function checkSpecCommand(
+  positional: string[],
+  flags: Map<string, string | boolean>,
+  json: boolean,
+  onProgress?: (m: string) => void,
+): void {
+  const file = positional[0];
+  if (!file) fail('usage: check <name.flow.ts> [--var k=v ...] [--reset-cmd "<cmd>"] [--json]', 2);
+  if (!fs.existsSync(file)) fail(`could not read ${file}`, 2);
+  const result = runSpecCheck({
+    flowFile: file,
+    vars: varFlags(),
+    resetCmd: flags.get('reset-cmd') ? String(flags.get('reset-cmd')) : undefined,
+    liveReplayPassed: false,
+    onProgress: onProgress ?? ((m) => console.error(m)),
+  });
+  if (json) console.log(JSON.stringify({ file, specCheck: result }, null, 2));
+  else {
+    console.log(result.verdict);
+    for (const d of result.drift) console.log(`  ${d}`);
+    if (result.workspace) console.log(`  workspace: ${result.workspace}`);
+  }
+  // A skip is not a verdict about the spec, so it is not a failure either.
+  if (result.ran && !result.passed) process.exit(4);
+}
+
 function allSessionNames(): string[] {
   try {
     return fs
@@ -1290,6 +1348,9 @@ async function repairFlowCommand(
   }
   printChanges('--- changes ---', diff);
 
+  // Filled in only by --check-spec, after the owned file is written: it is a
+  // verdict about the EMITTED spec, which does not exist until then.
+  let specCheck: SpecCheckResult | null = null;
   const report = () => ({
     file,
     flow: before.name,
@@ -1304,6 +1365,7 @@ async function repairFlowCommand(
     evidence: evidenceLines,
     droppedExpectations: diff.droppedExpectations,
     weakenedByVariant: diff.weakenedByVariant,
+    specCheck,
   });
 
   // Never weaken an expectation: an assertion that no longer holds is a test
@@ -1378,9 +1440,40 @@ async function repairFlowCommand(
   // both the FLOW constant and the generated step body.
   const emitted = emitFlowFile(finalSpec, { tier: 'plain' });
   fs.writeFileSync(outFile, emitted.source);
-  if (json) console.log(JSON.stringify({ ...report(), wrote: outFile, converged: true }, null, 2));
-  else {
+  if (!json) {
     for (const w of emitted.warnings) console.error(`  warning: ${w}`);
     console.log(`wrote ${outFile} (${changed.length} change(s); the .spec.ts was not touched)`);
+  }
+
+  // The blind spot this closes: everything above ran the IR through the
+  // DAEMON, so a defect in the emitter — a chain that lowers fine for replay
+  // and transpiles to a Playwright call that never resolves — passes every
+  // gate and still ships a spec that fails on the first run. The only way to
+  // see it is to run the emitted spec the way a user will. It is one more real
+  // run against the app, so it gets its own {n} slot and its own reset.
+  if (flags.has('check-spec')) {
+    specCheck = runSpecCheck({
+      flowFile: outFile,
+      vars: mintVars(vars, converge + 1),
+      resetCmd,
+      liveReplayPassed: true,
+      onProgress: (m) => (json ? console.error(m) : console.log(m)),
+    });
+  }
+
+  if (json) console.log(JSON.stringify({ ...report(), wrote: outFile, converged: true }, null, 2));
+  else if (specCheck) {
+    console.log(specCheck.verdict);
+    for (const d of specCheck.drift) console.log(`  ${d}`);
+    if (specCheck.workspace) console.log(`  workspace: ${specCheck.workspace}`);
+  }
+  // The file STAYS written — the diff is the reviewer's, and a repair that
+  // adapted a locator correctly is not undone by the emitter mis-spelling it.
+  // What changes is the exit code, so a script cannot mistake this for a clean
+  // repair.
+  if (specCheck?.ran && !specCheck.passed) {
+    console.error(`the emitted spec fails under plain Playwright: ${specCheck.verdict}`);
+    console.error(`${outFile} was still written — review the diff, then fix the emitter (not the app)`);
+    process.exit(4);
   }
 }

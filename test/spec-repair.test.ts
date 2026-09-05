@@ -16,6 +16,7 @@ import {
   stageRepair,
   ticketIsNews,
 } from '../src/spec/repair.js';
+import { envName, errorSites, findStepAnchor, parseSpecReport, verdictFor } from '../src/spec/check.js';
 import { candidateExpr, type LocatorCandidate } from '../src/daemon/recorder.js';
 import type { DriftTicket } from '../src/skills/repair.js';
 
@@ -748,5 +749,276 @@ describe('cli: --reset-cmd and the evidence codemod wiring', () => {
 
   it('puts the tickets themselves in the --json report, not just how many', () => {
     expect(cliSource).toMatch(/\r?\n    tickets,\r?\n/);
+  });
+});
+
+// --- the spec check ----------------------------------------------------------
+//
+// `repair` replays the IR through the daemon, so an EMITTER defect is invisible
+// to it: cloud set 2 reported "converged, 5/5, no changes" on kanboard and wrote
+// the owned file while the emitted spec failed deterministically under plain
+// Playwright. `--check-spec` closes that by running the spec once for real; what
+// is unit-testable about it is the parsing that turns a Playwright JSON report
+// into a sentence a reviewer can act on.
+
+/** The shape the JSON reporter actually emits, trimmed to what check.ts reads. */
+function pwReport(
+  t: { status: string; duration?: number; error?: Record<string, unknown>; stdout?: unknown[]; stderr?: unknown[] },
+  title = 'fwrd42',
+) {
+  return {
+    stats: { duration: t.duration ?? 9123 },
+    suites: [
+      {
+        title: 'fwrd42.spec.ts',
+        specs: [
+          {
+            title,
+            tests: [
+              {
+                status: t.status,
+                results: [{ duration: t.duration ?? 9123, error: t.error, stdout: t.stdout ?? [], stderr: t.stderr ?? [] }],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  };
+}
+
+describe('spec check: the Playwright JSON report', () => {
+  it('reads a pass, its duration, and no error', () => {
+    const r = parseSpecReport(pwReport({ status: 'expected', duration: 9123 }));
+    expect(r.passed).toBe(true);
+    expect(r.durationMs).toBe(9123);
+    expect(r.error).toBeNull();
+    expect(r.drift).toEqual([]);
+    expect(r.tests[0].title).toBe('fwrd42');
+  });
+
+  it('reads a failure with its message and the flow-file line the stack blames', () => {
+    const r = parseSpecReport(
+      pwReport({
+        status: 'unexpected',
+        error: {
+          message:
+            '\u001b[31mError:\u001b[39m expect(locator).toBeVisible() failed\n\nLocator: heading "Nope"\nTimeout: 5000ms',
+          stack:
+            'Error: expect(locator).toBeVisible() failed\n    at Object.step (/tmp/x/fwrd42.flow.ts:412:26)\n    at runFlow (/tmp/x/fwrd42.flow.ts:980:3)\n    at /tmp/x/fwrd42.spec.ts:6:19',
+        },
+      }),
+      ['/tmp/x/fwrd42.flow.ts', '/tmp/x/fwrd42.spec.ts'],
+    );
+    expect(r.passed).toBe(false);
+    // ANSI stripped: the verdict is a sentence, not a terminal painting.
+    expect(r.error).toContain('expect(locator).toBeVisible() failed');
+    expect(r.error).not.toContain('\u001b[31m');
+    expect(r.errorFile).toBe('/tmp/x/fwrd42.flow.ts');
+    expect(r.errorLine).toBe(412);
+  });
+
+  it('prefers Playwright own error.location to scraping the stack', () => {
+    const r = parseSpecReport(
+      pwReport({
+        status: 'unexpected',
+        error: { message: 'boom', location: { file: 'C:\\tmp\\x\\fwrd42.flow.ts', line: 77, column: 4 }, stack: 'Error: boom\n    at nowhere.js:1:1' },
+      }),
+      ['C:\\tmp\\x\\fwrd42.flow.ts', 'C:\\tmp\\x\\fwrd42.spec.ts'],
+    );
+    expect(r.errorFile).toBe('C:\\tmp\\x\\fwrd42.flow.ts');
+    expect(r.errorLine).toBe(77);
+  });
+
+  it('collects [sitelooper drift] lines from stdout and stderr, base64 chunks included', () => {
+    const r = parseSpecReport(
+      pwReport({
+        status: 'expected',
+        stdout: [{ text: 'something ordinary\n[sitelooper drift] 03-add s_1/2: primary missed; used #2\n' }],
+        stderr: [{ buffer: Buffer.from('[sitelooper drift] 04-open s_2/1: primary missed; used #3\n').toString('base64') }],
+      }),
+    );
+    expect(r.drift).toEqual([
+      '[sitelooper drift] 03-add s_1/2: primary missed; used #2',
+      '[sitelooper drift] 04-open s_2/1: primary missed; used #3',
+    ]);
+  });
+
+  it('does NOT call an empty report a pass: a spec that never loaded ran nothing', () => {
+    expect(parseSpecReport({ stats: { duration: 12 }, suites: [] }).passed).toBe(false);
+    expect(parseSpecReport(null).passed).toBe(false);
+  });
+
+  it('walks nested suites', () => {
+    const nested = { suites: [{ suites: [pwReport({ status: 'expected' }).suites[0]] }] };
+    expect(parseSpecReport(nested).tests).toHaveLength(1);
+  });
+});
+
+describe('spec check: the @step anchor', () => {
+  const source = [
+    "import { expect, type Page } from '@playwright/test';", // 1
+    '', // 2
+    '// @step 03-add s_9c11a4/2', // 3
+    'await page.click();', // 4
+    '', // 5
+    '// @step 04-open s_1e46d8/10', // 6
+    'const target = pick(page, [', // 7
+    '  page.heading,', // 8
+    ']);', // 9
+    'await expect(target).toBeVisible();', // 10
+  ].join('\n');
+
+  it('finds the nearest marker above the failing line', () => {
+    expect(findStepAnchor(source, 10)).toBe('04-open s_1e46d8/10');
+    expect(findStepAnchor(source, 4)).toBe('03-add s_9c11a4/2');
+  });
+
+  it('counts the marker line itself as its own anchor', () => {
+    expect(findStepAnchor(source, 6)).toBe('04-open s_1e46d8/10');
+  });
+
+  it('returns null above the first marker, rather than inventing one', () => {
+    expect(findStepAnchor(source, 2)).toBeNull();
+  });
+
+  it('survives CRLF and a line number past the end of the file', () => {
+    expect(findStepAnchor(source.split('\n').join('\r\n'), 10)).toBe('04-open s_1e46d8/10');
+    expect(findStepAnchor(source, 9999)).toBe('04-open s_1e46d8/10');
+  });
+});
+
+describe('spec check: the verdict', () => {
+  const base = {
+    ran: true,
+    skipped: null,
+    passed: true,
+    durationMs: 9123,
+    exitCode: 0,
+    timedOut: false,
+    error: null as string | null,
+    anchor: null as string | null,
+    errorFile: null as string | null,
+    errorLine: null as number | null,
+    drift: [] as string[],
+    driftCount: 0,
+    workspace: '/tmp/w',
+    specFile: '/tmp/w/fwrd42.spec.ts',
+  };
+
+  it('says how long a pass took and how much drift it logged', () => {
+    expect(verdictFor(base, true)).toBe('spec check: passed in 9 s, 0 drift');
+    expect(verdictFor({ ...base, driftCount: 2 }, true)).toBe('spec check: passed in 9 s, 2 drift');
+  });
+
+  it('names the @step and blames the EMITTER when the live replay had just passed', () => {
+    const v = verdictFor(
+      {
+        ...base,
+        passed: false,
+        exitCode: 1,
+        anchor: '04-open s_1e46d8/10',
+        error: 'expect(locator).toBeVisible() failed\nLocator: heading "Nope"',
+      },
+      true,
+    );
+    expect(v).toContain('spec check: FAILED at @step 04-open s_1e46d8/10');
+    expect(v).toContain('expect(locator).toBeVisible() failed');
+    expect(v).toContain('emitter defect, not drift: the live replay passed this step');
+  });
+
+  it('makes no emitter claim from the standalone check, which has no live replay behind it', () => {
+    const v = verdictFor({ ...base, passed: false, anchor: '04-open s_1/2', error: 'boom' }, false);
+    expect(v).toContain('FAILED at @step 04-open s_1/2');
+    expect(v).not.toContain('emitter defect');
+  });
+
+  it('falls back to file:line when no @step marker sits above the failure', () => {
+    const v = verdictFor({ ...base, passed: false, error: 'boom', errorFile: '/tmp/w/fwrd42.flow.ts', errorLine: 412 }, true);
+    expect(v).toContain('at fwrd42.flow.ts:412');
+  });
+
+  it('says a skip is a skip: an un-run spec is not a failing one', () => {
+    const v = verdictFor({ ...base, ran: false, passed: false, skipped: '@playwright/test could not be resolved' }, true);
+    expect(v).toBe('spec check: skipped \u2014 @playwright/test could not be resolved');
+  });
+
+  it('mentions the timeout when the runner was killed', () => {
+    expect(verdictFor({ ...base, passed: false, timedOut: true, exitCode: null, error: 'boom' }, false)).toContain('killed on timeout');
+  });
+});
+
+describe('spec check: run vars reach the scaffold under the name it reads', () => {
+  it('uppercases and underscores, exactly as emitSpecFile spells process.env.<VAR>', () => {
+    expect(envName('runid')).toBe('RUNID');
+    expect(envName('order-id')).toBe('ORDER_ID');
+    expect(envName('v1')).toBe('V1');
+  });
+});
+
+describe('cli: --check-spec and the check command', () => {
+  const cliSource = fs.readFileSync(path.resolve(__dirname, '../src/cli.ts'), 'utf8');
+
+  it('documents exit 4 and the check command in USAGE', () => {
+    expect(cliSource).toContain('sitelooper check <name.flow.ts>');
+    expect(cliSource).toMatch(/4 the emitted \.spec\.ts failed its --check-spec run/);
+  });
+
+  it('takes --check-spec as a boolean flag and dispatches check without a daemon', () => {
+    const booleanFlags = cliSource.match(/const booleanFlags = new Set\(\[([\s\S]*?)\]\);/);
+    expect(booleanFlags![1]).toMatch(/'check-spec'/);
+    expect(cliSource).toMatch(/if \(command === 'check'\) \{\s*\n\s*checkSpecCommand\(positional, flags, json, onProgress\);/);
+  });
+
+  it('runs the check AFTER the file is written, and does not un-write it on failure', () => {
+    const write = cliSource.indexOf('fs.writeFileSync(outFile, emitted.source);');
+    const check = cliSource.indexOf("if (flags.has('check-spec')) {");
+    expect(write).toBeGreaterThan(0);
+    expect(check).toBeGreaterThan(write);
+    expect(cliSource).toContain('was still written');
+    expect(cliSource).toMatch(/if \(specCheck\?\.ran && !specCheck\.passed\) \{[\s\S]*?process\.exit\(4\);/);
+  });
+
+  it('gives the check its own {n} slot and the same reset, being one more real run', () => {
+    expect(cliSource).toContain('vars: mintVars(vars, converge + 1)');
+    expect(cliSource).toContain('liveReplayPassed: true,');
+  });
+
+  it('puts the verdict in the --json report as specCheck', () => {
+    expect(cliSource).toMatch(/\r?\n    specCheck,\r?\n/);
+    expect(cliSource).toContain('console.log(JSON.stringify({ file, specCheck: result }, null, 2))');
+  });
+});
+
+describe('spec check: which stack frame gets named', () => {
+  // pick() throws from the helper block at the TOP of the flow file, hundreds
+  // of lines above the first `// @step`. Naming that frame tells a reviewer
+  // nothing, so every emitted-file frame is kept, topmost first, and the
+  // caller is the one that carries an anchor.
+  const stack = [
+    'Error: none of 1 recorded locators resolved: getByTestId(x)',
+    '    at pick (/w/fwrd42.flow.ts:3981:11)',
+    '    at Object.step (/w/fwrd42.flow.ts:4089:23)',
+    '    at /w/fwrd42.spec.ts:6:19',
+    '    at /w/node_modules/playwright/lib/worker.js:100:5',
+  ].join(String.fromCharCode(10));
+
+  it('keeps every emitted-file frame in stack order and drops the runner frames', () => {
+    expect(errorSites({ stack }, ['/w/fwrd42.flow.ts', '/w/fwrd42.spec.ts'])).toEqual([
+      { file: '/w/fwrd42.flow.ts', line: 3981 },
+      { file: '/w/fwrd42.flow.ts', line: 4089 },
+      { file: '/w/fwrd42.spec.ts', line: 6 },
+    ]);
+  });
+
+  it('lets the caller anchor a frame the helper frame cannot', () => {
+    const source = ['function pick() {', '  throw new Error();', '}', '// @step 01-open s_8d7c18/2', 'await el.fill(x);'].join(String.fromCharCode(10));
+    const sites = errorSites({ stack: ['at pick (/w/f.flow.ts:2:3)', ' at step (/w/f.flow.ts:5:3)'].join(String.fromCharCode(10)) }, ['/w/f.flow.ts']);
+    expect(findStepAnchor(source, sites[0].line)).toBeNull();
+    expect(findStepAnchor(source, sites[1].line)).toBe('01-open s_8d7c18/2');
+  });
+
+  it('reports no site at all when the failure never touches the emitted files', () => {
+    expect(errorSites({ stack: 'at Object.<anonymous> (/w/other.js:3:1)' }, ['/w/fwrd42.flow.ts'])).toEqual([]);
   });
 });

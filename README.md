@@ -171,9 +171,33 @@ the fallthrough that names it stops counting against `--converge`: the spec now 
 fact, so re-observing it is not new drift. Without that rule one chronically volatile locator
 keeps the gate from ever clearing.
 
+One thing `repair` cannot see on its own: every gate above runs the *IR* through the daemon, so a
+defect in the **emitter** — a locator that lowers fine for replay and transpiles to a Playwright
+call that never resolves — passes convergence and still ships a red spec. (That is exactly what
+happened on kanboard: "converged, 5/5, no changes", file written, spec failing deterministically
+under plain Playwright.) `--check-spec` closes it: after the owned file is written, the sibling
+`.spec.ts` is run **once** under plain `@playwright/test` — a minimal generated config, headless,
+one worker, 60 s per test, `--var` values passed in as `process.env.<VAR>` the way the scaffold
+reads them, the same `--reset-cmd` first — and the JSON report is turned into one line:
+
+```
+spec check: passed in 8 s, 0 drift
+spec check: FAILED at @step 01-open s_8d7c18/2 — Error: none of 1 recorded locators resolved:
+getByTestId('field-nonsense-broken') — this is an emitter defect, not drift: the live replay
+passed this step
+```
+
+A failed check does **not** un-write the file — the repair may well have adapted the locator
+correctly, and the diff is still yours to review — but the exit code becomes `4`. When
+`@playwright/test` can't be resolved from the project the check says so and is skipped, never
+failed. The same run is available on its own as `sitelooper check <name.flow.ts> --var k=v
+[--reset-cmd "<cmd>"] [--json]`, which needs no daemon and no model; `--json` puts the whole
+verdict under `specCheck`, in `repair`'s report too.
+
 Exit codes matter here: `2` means the file was hand-edited or otherwise refused outright (not a
 sitelooper flow file, or a missing `--var`); `3` means the repair itself worked but the convergence
-gate didn't hold; `1` covers both "the repair would have dropped an expectation" (refused — an
+gate didn't hold; `4` means it converged and the file was written but the emitted `.spec.ts` failed
+its `--check-spec` run; `1` covers both "the repair would have dropped an expectation" (refused — an
 assertion that no longer holds is a test failure for a human, not drift) and "nothing could be
 repaired without re-recording". The intended workflow is a pull request, not a background daemon:
 CI runs the spec and fails loud on drift; a developer, or a scheduled agent picking up the failure,
@@ -190,6 +214,11 @@ $ sitelooper repair fwrd42.flow.ts --var runid=fix-{n} --converge 1 \
   02-add: candidate promoted: page.getByRole('button', { name: 'Add part', exact: true }) now primary (was #1)
   candidate retired: page.getByText('{{v4}}', { exact: true }) — missed 2 run(s), never hit; now last — s_640d6e step 4 target
   wrote fwrd42.flow.ts (14 change(s); the .spec.ts was not touched)
+$ sitelooper repair fwrd42.flow.ts --var runid=fix-{n} --converge 1 --check-spec \
+    --reset-cmd "curl -s -X POST http://127.0.0.1:4180/__reset"
+  ...
+  wrote fwrd42.flow.ts (14 change(s); the .spec.ts was not touched)
+  spec check: passed in 8 s, 0 drift
 ```
 
 Be honest about what the loop still doesn't give back, even after `repair`: this stays Tier 2 —
@@ -221,10 +250,16 @@ sitelooper script [out.spec.ts]                  # emit a plain Playwright spec 
 sitelooper compile <flow-name-or-path> [--out <dir>] [--force] [--json]
                                                   # compile a converged flow to a standalone spec
 sitelooper repair <name.flow.ts> [--var k=v ...] [--out <file>] [--converge <n>]
-                                 [--reset-cmd "<shell command>"] [--dry-run] [--model M] [--json]
+                                 [--reset-cmd "<shell command>"] [--check-spec] [--dry-run]
+                                 [--model M] [--json]
                                                   # replay a compiled flow against the live app and
                                                   # fold the adaptation back into the owned .flow.ts;
-                                                  # --reset-cmd runs before run 1 and every converge run
+                                                  # --reset-cmd runs before run 1 and every converge run;
+                                                  # --check-spec then runs the emitted .spec.ts once
+                                                  # under plain Playwright (exit 4 if it fails)
+sitelooper check <name.flow.ts> [--var k=v ...] [--reset-cmd "<cmd>"] [--json]
+                                                  # run the emitted .spec.ts once under plain
+                                                  # @playwright/test and report the verdict
 sitelooper session list | stop [--all] [--save-flow <name>]
 sitelooper doctor | config | config set <key> <value>
 ```

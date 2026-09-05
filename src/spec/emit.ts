@@ -21,7 +21,7 @@ import type { LocatorCandidate } from '../daemon/recorder.js';
 import { TRANSIENT_LINE } from '../skills/compile.js';
 import { OPENER_LINE, consequentialExpectations, waitsForAbsence } from '../skills/replay.js';
 import type { SkillStep } from '../skills/store.js';
-import { candidateSources, chainSource, matcherSource, stringSource } from './locators.js';
+import { candidateSources, chainSource, maskedMatcherSource, matcherSource, stringSource } from './locators.js';
 import type { SpecFlow, SpecSegment, SpecStep } from './ir.js';
 
 export interface EmitOptions {
@@ -40,6 +40,19 @@ const END_MARKER = '// @sitelooper-flow-end';
  */
 const PICK_WAIT_MS = 3_000;
 const PICK_POLL_MS = 100;
+
+/**
+ * What the inlined `urlPartsWhen` waits for the url a step navigated TO.
+ *
+ * Longer than `pick`'s window because that is what replay effectively allows a
+ * url: runOneStep lets the DOM go quiet first (settleDom, capped at 2s) and
+ * only then does `expectedUrl` poll for another resolveWaitMs (3s) before it
+ * judges the url wrong. A spec that gave up after 3s bound an EMPTY part and
+ * built a pattern that could never match — odoo populates `action=` late, and
+ * fwod34's 01-signin asserted `#action=&cids=1&menu_id=81` against a browser
+ * that was, a beat later, exactly where the recording left it.
+ */
+const URL_WAIT_MS = 5_000;
 
 /** Playwright's own default; only a different timeout is worth carrying over. */
 const DEFAULT_WAIT_MS = 10_000;
@@ -94,8 +107,9 @@ const CLICK_TIER_MS = 5_000;
 /** The inlined helpers, keyed by the token that proves the body (or another helper) uses one. */
 const HELPERS: { token: string; source: string[] }[] = [
   {
-    // Shared by `pick` and `urlPartWhen`: one poll cadence, one window.
-    token: 'PICK_WAIT_MS',
+    // Shared by `pick` and `urlPartsWhen`: one poll cadence. The token is the
+    // POLL constant, because that is the one BOTH of them name.
+    token: 'PICK_POLL_MS',
     source: [`const PICK_WAIT_MS = ${PICK_WAIT_MS};`, `const PICK_POLL_MS = ${PICK_POLL_MS};`],
   },
   {
@@ -137,10 +151,11 @@ const HELPERS: { token: string; source: string[] }[] = [
     ],
   },
   {
-    token: 'urlPartWhen(',
+    token: 'urlPartsWhen(',
     source: [
+      `const URL_WAIT_MS = ${URL_WAIT_MS};`,
       '/**',
-      ' * A url part read AFTER the navigation the step started has landed.',
+      ' * The url parts a step mints, read AFTER the navigation it started has landed.',
       ' *',
       ' * WHICH REPLAY RULE THIS MIRRORS. runOneStep captures the url before the',
       ' * action and, when the action changed it, awaits settleDom before binding',
@@ -149,19 +164,98 @@ const HELPERS: { token: string; source: string[] }[] = [
       ' * click still says where the page came FROM. Bound empty, every pattern',
       ' * built from these parts (`toHaveURL`, an identity marker) can only fail.',
       ' *',
-      ' * A spec has no settleDom, so it polls on the same cadence and within the',
-      ' * same window `pick` uses, and takes one last reading at the deadline: a',
-      ' * step whose url genuinely does not change (the part was already there)',
-      ' * must still bind what is there rather than hang or throw.',
+      ' * ALL of them together, not one at a time, because they are read into ONE',
+      ' * pattern: an app is free to populate its state fragment key by key (odoo',
+      ' * lands on `#cids=1&menu_id=81` and adds `action=` a beat later), so a part',
+      ' * that binds the instant IT is non-empty can be bound off a half-built url',
+      ' * while its neighbour is still missing. The step is not where it was',
+      ' * recorded until every part is there.',
+      ' *',
+      ' * A spec has no settleDom, so it polls on `pick`\'s cadence within the window',
+      ' * replay effectively allows a url (URL_WAIT_MS), and takes one last reading',
+      ' * at the deadline: a step whose url genuinely does not change (the parts were',
+      ' * already there) must still bind what is there rather than hang or throw.',
       ' */',
-      'async function urlPartWhen(page: Page, label: string, urlBefore: string): Promise<string> {',
-      '  for (let waited = 0; waited < PICK_WAIT_MS; waited += PICK_POLL_MS) {',
+      "async function urlPartsWhen(page: Page, labels: string[], urlBefore = ''): Promise<string[]> {",
+      '  for (let waited = 0; waited < URL_WAIT_MS; waited += PICK_POLL_MS) {',
       '    const url = page.url();',
-      '    const value = urlPart(url, label);',
-      '    if (value && url !== urlBefore) return value;',
+      '    const values = labels.map((label) => urlPart(url, label));',
+      '    if (url !== urlBefore && values.every(Boolean)) return values;',
       '    await page.waitForTimeout(PICK_POLL_MS);',
       '  }',
-      '  return urlPart(page.url(), label);',
+      '  const url = page.url();',
+      '  return labels.map((label) => urlPart(url, label));',
+      '}',
+    ],
+  },
+  {
+    token: 'urlPartWhen(',
+    source: [
+      '/** One part, on the same terms. `urlBefore` is omitted where no action of this step',
+      "  * moved the page: then the wait is simply for the part to be there at all, which is",
+      '  * what the flow runner does before it publishes a step\'s url outputs (consumedUrlOutputs). */',
+      "async function urlPartWhen(page: Page, label: string, urlBefore = ''): Promise<string> {",
+      '  return (await urlPartsWhen(page, [label], urlBefore))[0];',
+      '}',
+    ],
+  },
+  {
+    token: 'hashState(',
+    source: [
+      '/**',
+      ' * A query-shaped hash fragment (`#action=1&cids=2`, which is odoo) as its',
+      ' * key/value state, or null when the fragment is a route (`#/orders/7`) or',
+      ' * absent. Mirrors urlShapeOf in src/skills/compile.ts, decoding included.',
+      ' */',
+      'function hashState(href: string): Map<string, string> | null {',
+      '  let u: URL;',
+      '  try {',
+      '    u = new URL(href);',
+      '  } catch {',
+      '    return null;',
+      '  }',
+      "  const body = u.hash.length > 1 ? u.hash.slice(1).split('?')[0] : '';",
+      "  if (!body || body.startsWith('/') || !body.includes('=')) return null;",
+      '  const out = new Map<string, string>();',
+      "  for (const pair of body.split('&').filter(Boolean)) {",
+      "    const eq = pair.indexOf('=');",
+      '    const k = eq < 0 ? pair : pair.slice(0, eq);',
+      "    let v = eq < 0 ? '' : pair.slice(eq + 1);",
+      '    try {',
+      '      v = decodeURIComponent(v);',
+      '    } catch {',
+      '      // an invalid escape is data too: keep it raw',
+      '    }',
+      '    if (!out.has(k)) out.set(k, v);',
+      '  }',
+      '  return out;',
+      '}',
+    ],
+  },
+  {
+    token: 'hashMatch(',
+    source: [
+      '/**',
+      ' * A url expectation whose pattern carries a query-shaped hash, checked the',
+      ' * way replay checks it (urlDiff/urlMatches in src/skills/compile.ts) rather',
+      ' * than as one regex over the whole url.',
+      ' *',
+      ' * A state fragment is application STATE, and state has no ORDER: odoo emits',
+      " * `#action=316&cids=1&menu_id=194&model=sale.order` on one run and",
+      ' * `#action=316&model=sale.order&view_type=list&cids=1&menu_id=194` on the',
+      ' * next, and a regex fails on the reordering alone — which is the only thing',
+      " * wrong with fwod34's second cloud run. So: every pair the recording named",
+      ' * must be present with the same value, extra live pairs are fine (state',
+      ' * accumulates), and order means nothing. A `null` value is a `:id`/`:var`',
+      ' * wildcard — app-minted state, which urlDiff lets be anything or absent.',
+      ' *',
+      ' * The head (origin + path) keeps the regex form: a path IS ordered.',
+      ' */',
+      'function hashMatch(url: URL, head: RegExp, want: [string, string | null][]): boolean {',
+      '  if (!head.test(url.origin + url.pathname)) return false;',
+      '  const state = hashState(url.href);',
+      '  if (!state) return false;',
+      '  return want.every(([k, v]) => v === null || state.get(k) === v);',
       '}',
     ],
   },
@@ -318,7 +412,11 @@ const HELPERS: { token: string; source: string[] }[] = [
       '    await page.waitForTimeout(PICK_POLL_MS);',
       '  }',
       '  throw new Error(',
-      '    `none of ${candidates.length} recorded locators resolved: ` +',
+      '    // The url and the recorded step are half the answer whenever a chain',
+      '    // misses wholesale: a locator that named the control on the day it was',
+      '    // recorded usually misses because the page is not the page the step',
+      '    // expected, and the log otherwise says only that nothing resolved.',
+      '    `none of ${candidates.length} recorded locators resolved at ${where} (page is at ${page.url()}): ` +',
       "      candidates.slice(0, 3).map((c) => String(c)).join(' | '),",
       '  );',
       '}',
@@ -376,6 +474,8 @@ interface Ctx {
   loops: number;
   /** Pre-action url captures emitted so far, so each minting step names its own. */
   urls: number;
+  /** Batched derived-value reads emitted so far, so each names its own local. */
+  binds: number;
 }
 
 const src = (text: string) => stringSource(text, { slot: slotAsParam });
@@ -393,22 +493,73 @@ function urlRegexSource(pattern: string): string | null {
   const head = hashAt < 0 ? pattern : pattern.slice(0, hashAt);
   const hash = hashAt < 0 ? '' : pattern.slice(hashAt);
   const queryAt = head.indexOf('?');
-  const body = (piece: string): string => {
-    let out = '';
-    let last = 0;
-    const token = /\{\{([vd]\d+)\}\}|:id\b|:var\b/g;
-    for (const m of piece.matchAll(token)) {
-      const at = m.index ?? 0;
-      out += templateSafe(escapeRe(piece.slice(last, at)));
-      out += m[1] ? '${escapeRe(p.' + m[1] + ')}' : '[^/]+';
-      last = at + m[0].length;
-    }
-    return out + templateSafe(escapeRe(piece.slice(last)));
-  };
-  const headSource = body(queryAt < 0 ? head : head.slice(0, queryAt));
+  const headSource = urlPatternBody(queryAt < 0 ? head : head.slice(0, queryAt));
   // The query is dropped from the pattern, so the live url may still carry
   // one: allow it exactly where it would sit, before the hash route.
-  return hash ? `^${headSource}(?:\\\\?[^#]*)?${body(hash)}$` : `^${headSource}(?:[?#].*)?$`;
+  return hash ? `^${headSource}(?:\\\\?[^#]*)?${urlPatternBody(hash)}$` : `^${headSource}(?:[?#].*)?$`;
+}
+
+/** One piece of a url pattern as regex source: `:id`/`:var` any segment, a slot this run's own value. */
+function urlPatternBody(piece: string): string {
+  let out = '';
+  let last = 0;
+  const token = /\{\{([vd]\d+)\}\}|:id\b|:var\b/g;
+  for (const m of piece.matchAll(token)) {
+    const at = m.index ?? 0;
+    out += templateSafe(escapeRe(piece.slice(last, at)));
+    out += m[1] ? '${escapeRe(p.' + m[1] + ')}' : '[^/]+';
+    last = at + m[0].length;
+  }
+  return out + templateSafe(escapeRe(piece.slice(last)));
+}
+
+const safeDecode = (s: string): string => {
+  try {
+    return decodeURIComponent(s);
+  } catch {
+    return s;
+  }
+};
+
+/**
+ * The argument `toHaveURL` is given for a recorded url pattern, or null when
+ * the pattern is not a url at all.
+ *
+ * A regex for a path-shaped url, because a path IS ordered. But a QUERY-SHAPED
+ * hash (`#action=1&cids=2`, which is odoo) is application state, and `urlMatches`
+ * — the rule replay judges by — compares it as an unordered SET of pairs: every
+ * pair the recording named must be present with the same value, extra live pairs
+ * are fine, order means nothing. A regex cannot say that, and the whole of what
+ * was wrong with fwod34's second cloud run was the ordering: every value right,
+ * `#action=…&model=…&cids=…` where the recording saw `#action=…&cids=…&model=…`.
+ * Playwright takes a `(url: URL) => boolean` predicate, so that case is emitted
+ * as one, over the same inlined comparison replay makes.
+ */
+function urlExpectSource(pattern: string): string | null {
+  if (!/^[a-z]+:\/\//i.test(pattern)) return null;
+  const hashAt = pattern.indexOf('#');
+  const body = hashAt < 0 ? '' : pattern.slice(hashAt + 1).split('?')[0];
+  if (!body || body.startsWith('/') || !body.includes('=')) {
+    const re = urlRegexSource(pattern);
+    return re ? `new RegExp(\`${re}\`)` : null;
+  }
+  const head = pattern.slice(0, hashAt);
+  const queryAt = head.indexOf('?');
+  const headSource = urlPatternBody(queryAt < 0 ? head : head.slice(0, queryAt));
+  const pairs = body
+    .split('&')
+    .filter(Boolean)
+    .map((pair) => {
+      const eq = pair.indexOf('=');
+      const k = eq < 0 ? pair : pair.slice(0, eq);
+      const value = eq < 0 ? '' : pair.slice(eq + 1);
+      // `:id`/`:var` is app-minted state: urlDiff lets such a key hold anything,
+      // or be absent altogether. Anything else — a literal, or a slot this run
+      // binds — must be there and equal.
+      if (value === ':id' || value === ':var') return `[${q(k)}, null]`;
+      return `[${q(k)}, ${src(safeDecode(value))}]`;
+    });
+  return `(url: URL) => hashMatch(url, new RegExp(\`^${headSource}$\`), [${pairs.join(', ')}])`;
 }
 
 /**
@@ -432,16 +583,34 @@ function lineLocator(line: string, exact = false): string | null {
   // whole rendered line, quotes and all, so a `button "6"` never matches a
   // button called "17.6". Loose is safe when it only widens the evidence a
   // step accepts; it is not safe when it decides the step is unnecessary.
+  //
+  // A recorded line has ALREADY been through maskVolatile, so its clock and
+  // calendar tokens arrive as the `{{*}}` wildcard. Rendered as the literal
+  // string it looks like, that names nothing on any page — kanboard's
+  // `textbox "{{*}} {{*}}"` is a due-date field the app titles with the
+  // current date and time — so it comes back as a RegExp instead (see
+  // maskedMatcherSource), and a line that is nothing but wildcards names no
+  // element at all and is left to the caller's observation comment.
   const roled = /^-?\s*([a-zA-Z]+)\s+"((?:[^"\\]|\\.)*)"/.exec(line);
   if (roled) {
     const name = roled[2].replace(/\\(.)/g, '$1');
     if (!name.trim()) return null;
-    return `page.getByRole(${q(roled[1])}, { name: ${match(name)}, exact: ${exact} })`;
+    const matcher = lineName(name, exact);
+    if (!matcher) return null;
+    // `exact` rides along as it always has; Playwright ignores it for a RegExp
+    // name, where the anchoring above carries the same decision.
+    return `page.getByRole(${q(roled[1])}, { name: ${matcher}, exact: ${exact} })`;
   }
   const text = /^-?\s*(?:text:)?\s*(.+?)\s*$/.exec(line);
   const value = text?.[1];
   if (!value || value.includes('"')) return null;
-  return `page.getByText(${match(value)}, { exact: ${exact} })`;
+  const matcher = lineName(value, exact);
+  return matcher ? `page.getByText(${matcher}, { exact: ${exact} })` : null;
+}
+
+/** The name matcher for one recorded line, wildcards included; null when the line names nothing. */
+function lineName(text: string, exact: boolean): string | null {
+  return maskedMatcherSource(text, { slot: slotAsParam, anchor: exact });
 }
 
 /**
@@ -513,8 +682,8 @@ function effectLines(step: SkillStep, ctx: Ctx, out: string[]): void {
   const pattern = step.expect?.urlPattern;
   if (pattern && pattern !== ctx.lastUrl) {
     ctx.lastUrl = pattern;
-    const re = urlRegexSource(pattern);
-    if (re) out.push(`await expect(page).toHaveURL(new RegExp(\`${re}\`));`);
+    const check = urlExpectSource(pattern);
+    if (check) out.push(`await expect(page).toHaveURL(${check});`);
     else out.push(`// expected url ${commentSafe(pattern)} (not a url pattern this compiler can express)`);
   }
   // Toasts are volatile: recorded soft in replay, and a spec that asserted
@@ -547,11 +716,12 @@ function noteSlots(value: unknown, ctx: Ctx): void {
  * and the click together, because resolving a control under an open modal is
  * no more meaningful than clicking it.
  */
-function wrapAlreadyInEffect(step: SkillStep, out: string[], actionStart: number): void {
+function wrapAlreadyInEffect(step: SkillStep, ctx: Ctx, out: string[], actionStart: number): void {
   const opener = openerExpectations(step);
   if (!opener.length) return;
   const { source, listed, count } = lineUnion(opener, true);
   if (!source) return;
+  const where = `${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`;
   const acted = out
     .splice(actionStart)
     .flatMap((l) => l.split('\n'))
@@ -564,6 +734,12 @@ function wrapAlreadyInEffect(step: SkillStep, out: string[], actionStart: number
     ...listed.map((l) => `//   ${commentSafe(l)}`),
     `if (await ${source}${count === 1 ? '' : `\n${CONT_INDENT}`}.first().isVisible().catch(() => false)) {`,
     '  // already in effect: the popup is on the page, so the recorded click has nothing left to do.',
+    // A skipped click is invisible in a passing-until-it-isn't spec, and a
+    // guard that fires for the WRONG reason (one of these lines is on the page
+    // for some other reason than "the popup is open") silently drops the step
+    // that everything after it depends on. One line on stdout is what makes
+    // that legible in a bench log.
+    `  console.log(${q(`[sitelooper skip] ${where}: recorded popup already showing — click skipped`)});`,
     '} else {',
     ...acted,
     '}',
@@ -633,11 +809,24 @@ function derivedHere(segment: SpecSegment, index: number): [string, { at: string
  * `#action=&cids=&menu_id=` did on the first cloud run.
  */
 function derivedLines(segment: SpecSegment, index: number, ctx: Ctx, out: string[], urlBefore = ''): void {
-  for (const [name, d] of derivedHere(segment, index)) {
-    ctx.slots.add(name);
-    const read = urlBefore ? `await urlPartWhen(page, ${q(d.at)}, ${urlBefore})` : `urlPart(page.url(), ${q(d.at)})`;
-    out.push(`p.${name} = ${read}; // recorded example: ${commentSafe(d.example)}`);
+  const here = derivedHere(segment, index);
+  for (const [name] of here) ctx.slots.add(name);
+  if (!here.length) return;
+  const example = (d: { example: string }) => `// recorded example: ${commentSafe(d.example)}`;
+  if (!urlBefore) {
+    for (const [name, d] of here) out.push(`p.${name} = urlPart(page.url(), ${q(d.at)}); ${example(d)}`);
+    return;
   }
+  if (here.length === 1) {
+    out.push(`p.${here[0][0]} = await urlPartWhen(page, ${q(here[0][1].at)}, ${urlBefore}); ${example(here[0][1])}`);
+    return;
+  }
+  // ONE wait for ALL of them: a part bound the instant IT is non-empty can be
+  // read off a half-built url while its neighbour is still missing, and the
+  // pattern the three of them go into is then unmatchable by construction.
+  const name = `bound${++ctx.binds}`;
+  out.push(`const ${name} = await urlPartsWhen(page, [${here.map(([, d]) => q(d.at)).join(', ')}], ${urlBefore});`);
+  here.forEach(([slot, d], i) => out.push(`p.${slot} = ${name}[${i}]; ${example(d)}`));
 }
 
 /**
@@ -843,7 +1032,7 @@ function emitSkillStep(step: SkillStep, segment: SpecSegment, index: number, ctx
       break;
   }
 
-  wrapAlreadyInEffect(step, out, actionStart);
+  wrapAlreadyInEffect(step, ctx, out, actionStart);
   derivedLines(segment, index, ctx, out, urlBefore);
   if (step.mints) {
     out.push(`// This step CREATES a record (its id is url part ${q(step.mints.at)}) — clean it up in your teardown.`);
@@ -1033,14 +1222,62 @@ function callArgs(step: SpecStep, slots: string[], vars: Set<string>, warnings: 
   return `{ ${fields.join(', ')} }`;
 }
 
+/**
+ * The `{{<stepId>.url}}` / `{{<stepId>.url.<part>}}` references this flow's own
+ * params make, grouped by the step that has to publish them.
+ *
+ * WHICH REPLAY RULE THIS MIRRORS. The flow runner publishes every step's END
+ * URL as outputs — the whole url and each identifier-like part (`urlOutputs`
+ * in skills/flow.ts) — and that is how a later step's param
+ * `http://…/d/{{02-create.url.p1}}/…` gets a value. A compiled body published
+ * none of them: it binds what the step mints into its own `p.dN`, which is
+ * segment-local, while `refExpr` resolves the flow-level reference out of
+ * `outputs`. So fwgr27's 03-add did `page.goto('http://127.0.0.1:3000/d//fwgr27-…')`
+ * — the uid segment simply empty — and every locator after it missed on a page
+ * that was not the dashboard. Only the consumed refs are published: an output
+ * nothing reads is noise, and this is exactly what `consumedUrlOutputs` asks.
+ */
+function consumedUrlRefs(spec: SpecFlow): Map<string, string[]> {
+  const wanted = new Map<string, Set<string>>();
+  for (const step of spec.steps) {
+    for (const value of Object.values(step.params)) {
+      for (const m of value.matchAll(/\{\{([\w-]+)\.(url(?:\.[\w.-]+)?)\}\}/g)) {
+        const set = wanted.get(m[1]) ?? new Set<string>();
+        set.add(m[2]);
+        wanted.set(m[1], set);
+      }
+    }
+  }
+  // `url` first: it is the one output every step can publish without a read.
+  return new Map([...wanted].map(([id, outs]) => [id, [...outs].sort()]));
+}
+
+/** The lines that publish one step's end-url outputs, or none. */
+function urlOutputLines(stepId: string, outs: string[] | undefined): string[] {
+  if (!outs?.length) return [];
+  const lines = ['// Later steps refer to this step by where it left the browser, so publish its'];
+  lines.push('// end url the way the flow runner does (urlOutputs / consumedUrlOutputs in');
+  lines.push('// src/skills/flow.ts) — unpublished, `{{' + stepId + '.' + outs[0] + '}}` resolves to nothing.');
+  for (const out of outs) {
+    const key = `${stepId}.${out}`;
+    if (out === 'url') lines.push(`outputs[${q(key)}] = page.url();`);
+    // No urlBefore: nothing here acted, so the wait is simply for the part to
+    // be there at all — an SPA can update its url a beat after the page itself
+    // settles, which is what consumedUrlOutputs waits out.
+    else lines.push(`outputs[${q(key)}] = await urlPartWhen(page, ${q(out.slice('url.'.length))});`);
+  }
+  return lines;
+}
+
 export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; warnings: string[] } {
   if (o.tier !== 'plain') throw new Error(`unknown emit tier ${String(o.tier)}`);
   const warnings: string[] = [];
   const vars = new Set(spec.vars);
+  const urlRefs = consumedUrlRefs(spec);
 
   // Bodies first: which helpers the file needs is decided by what they use.
   const bodies = spec.steps.map((step) => {
-    const ctx: Ctx = { stepId: step.id, slots: new Set(), warnings, downloads: 0, lastUrl: null, loops: 0, picks: 0, urls: 0, segmentId: '', stepIndex: 0 };
+    const ctx: Ctx = { stepId: step.id, slots: new Set(), warnings, downloads: 0, lastUrl: null, loops: 0, picks: 0, urls: 0, binds: 0, segmentId: '', stepIndex: 0 };
     const lines: string[] = [];
     if (!step.segments.length) {
       lines.push(`// TODO: no converged procedure for ${JSON.stringify(commentSafe(step.instruction))}`);
@@ -1050,6 +1287,8 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
         if (i) lines.push('');
         lines.push(...emitSegment(segment, ctx));
       }
+      const published = urlOutputLines(step.id, urlRefs.get(step.id));
+      if (published.length) lines.push('', ...published);
     }
     return { step, lines, slots: slotsOf(step, ctx.slots) };
   });
