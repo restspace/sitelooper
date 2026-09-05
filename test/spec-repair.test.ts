@@ -13,6 +13,7 @@ import {
   orderByEvidence,
   reloadStaged,
   reorderByEvidence,
+  notConverged,
   stageRepair,
   ticketIsNews,
 } from '../src/spec/repair.js';
@@ -328,6 +329,17 @@ describe('in-session drain wiring', () => {
     expect(body).toMatch(/this\.recoveryProvider\(model\)/); // --model M reaches the proposer
   });
 
+  it('the run puts the fallback cause on the STEP, not only on a ticket', () => {
+    // A ticket is filed only when a pinned skill was actually INVOKED, so a
+    // skill that refused the page it was handed (sp4od 06-open) recovered,
+    // learned a new skill and left no record of why anywhere.
+    expect(protocolSource).toMatch(/export interface FlowStepResult \{/);
+    expect(protocolSource).toMatch(/recovered\?: boolean;/);
+    expect(protocolSource).toMatch(/fellBack\?: string;/);
+    const push = serverSource.slice(serverSource.indexOf('      stepResults.push({\n        id: step.id,'));
+    expect(push.slice(0, 900)).toContain('...(recovered ? { fellBack } : {})');
+  });
+
   it('the run writes the concrete url onto every ticket it files', () => {
     expect(serverSource).toMatch(/const pageUrl = sk\.replayUrl;/);
     expect(serverSource).toMatch(/\.\.\.\(pageUrl \? \{ pageUrl \} : \{\}\)/);
@@ -344,7 +356,7 @@ describe('in-session drain wiring', () => {
   });
 
   it('repair patches on the SAME connection, before the session is stopped', () => {
-    const body = cliSource.slice(cliSource.indexOf('async function runStagedFlow'), cliSource.indexOf('function notConverged'));
+    const body = cliSource.slice(cliSource.indexOf('async function runStagedFlow'), cliSource.indexOf('function runResetCmd'));
     const runAt = body.indexOf("request(conn, 'run'");
     const patchAt = body.indexOf("'patch',");
     const stopAt = body.indexOf('stopSessionQuietly(session)');
@@ -744,11 +756,63 @@ describe('cli: --reset-cmd and the evidence codemod wiring', () => {
 
   it('gates the converge run on the store, so a retired candidate stops counting', () => {
     expect(cliSource).toContain('notConverged(check, dryRun ? undefined : staged.store)');
-    expect(cliSource).toContain('if (store && !ticketIsNews(store, t)) continue;');
+    // The gate itself lives in spec/repair.ts (unit-tested below); the CLI only wires it up.
+    const repairSource = fs.readFileSync(path.resolve(__dirname, '../src/spec/repair.ts'), 'utf8');
+    expect(repairSource).toContain('if (store && !ticketIsNews(store, t)) continue;');
   });
 
   it('puts the tickets themselves in the --json report, not just how many', () => {
     expect(cliSource).toMatch(/\r?\n    tickets,\r?\n/);
+  });
+
+  it('says every progress line under --json too, on stderr so stdout stays parseable', () => {
+    expect(cliSource).toMatch(/const say = \(m: string\) => \{\s*\r?\n\s*if \(json\) console\.error\(m\);\s*\r?\n\s*else console\.log\(m\);/);
+  });
+
+  it('records every run in the --json report, run 1 and each converge run', () => {
+    expect(cliSource).toMatch(/\r?\n    runs,\r?\n/);
+    expect(cliSource).toContain("noteRun('run 1', run, tickets.length);");
+    expect(cliSource).toContain('noteRun(`converge ${i}/${converge}`, check, checkTickets.length);');
+  });
+
+  it('carries the per-step cause into the run report', () => {
+    const note = cliSource.slice(cliSource.indexOf('const noteRun ='), cliSource.indexOf('runResetCmd(resetCmd,'));
+    expect(note).toContain('recovered: Boolean(st.recovered)');
+    expect(note).toContain('...(st.fellBack ? { fellBack: st.fellBack } : {})');
+  });
+});
+
+// The convergence gate's vocabulary. It moved out of cli.ts so it can be
+// called directly: importing src/cli.ts runs main().
+describe('notConverged', () => {
+  const step = (id: string, extra: Record<string, unknown> = {}) => ({ id, status: 'success', tier: 'A', ...extra }) as never;
+
+  it('says nothing about a clean tier-A run', () => {
+    expect(notConverged({ steps: [step('01-open'), step('02-add')], total: 2 })).toEqual([]);
+  });
+
+  it('names a step that did not succeed by its status', () => {
+    expect(notConverged({ steps: [step('01-open', { status: 'blocked' })], total: 1 })).toEqual(['01-open (blocked)']);
+  });
+
+  it('names the tier of a step that needed the model', () => {
+    expect(notConverged({ steps: [step('06-open', { tier: 'B' })], total: 1 })).toEqual(['06-open (tier B)']);
+    expect(notConverged({ steps: [step('06-open', { tier: null })], total: 1 })).toEqual(['06-open (tier none)']);
+  });
+
+  it('adds WHY the step fell back when the run recorded it', () => {
+    const steps = [step('06-open', { tier: 'B', recovered: true, fellBack: 'not on the page this procedure starts from' })];
+    expect(notConverged({ steps, total: 1 })).toEqual(['06-open (tier B — not on the page this procedure starts from)']);
+  });
+
+  it('counts a drift ticket on an otherwise clean step, and lets the step verdict win', () => {
+    const t = { flow: 'f', step: '03-open', skill: 's_a', similarity: 0.9, missedLocator: 'getByRole(button)', fallbackUsed: null, recovered: false } as DriftTicket;
+    expect(notConverged({ steps: [step('03-open')], total: 1, driftTickets: [t] })).toEqual(['03-open (drift (getByRole(button)))']);
+    expect(notConverged({ steps: [step('03-open', { status: 'blocked' })], total: 1, driftTickets: [t] })).toEqual(['03-open (blocked)']);
+  });
+
+  it('reports the steps a halted run never reached', () => {
+    expect(notConverged({ steps: [step('01-open')], total: 3 })).toEqual(['(unreached) (2 step(s) the run never got to)']);
   });
 });
 

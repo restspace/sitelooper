@@ -115,6 +115,14 @@ function escapeRe(s: string): string {
  */
 const CLICK_TIER_MS = 5_000;
 
+/**
+ * What the inlined `fill` waits, mirroring reactSafeFill in
+ * src/daemon/inputs.ts: the field must be visible (its own 10s), and the focus
+ * click is a best-effort 5s that some widgets need and most ignore.
+ */
+const FILL_WAIT_MS = 10_000;
+const FILL_FOCUS_MS = 5_000;
+
 /** The inlined helpers, keyed by the token that proves the body (or another helper) uses one. */
 const HELPERS: { token: string; source: string[] }[] = [
   {
@@ -394,6 +402,134 @@ const HELPERS: { token: string; source: string[] }[] = [
       '    // what a normal click was actually waiting for.',
       '    throw firstFailure;',
       '  }',
+      '}',
+    ],
+  },
+  {
+    token: 'await fill(',
+    source: [
+      '/**',
+      ' * A fill the app actually SEES — mirror of daemon/inputs.ts reactSafeFill',
+      " * (which is how replay executes every recorded `fill`): Playwright's fill",
+      ' * fires only `input`, and apps that commit on `change` (Odoo, React',
+      " * controlled inputs) never see a plain fill. Odoo's sp4od run failed",
+      ' * deterministically on exactly that: `02-create s_c99d6c/6` filled a',
+      ' * quantity of 3, the field never committed, and the recorded row',
+      ' * ("20% £ 36.00") that the next expectation waits for never appeared.',
+      ' *',
+      ' * Same waits and the same event order as the daemon: visible, scrolled',
+      ' * into view, clicked for focus (both best-effort), then the NATIVE',
+      " * prototype value setter — the one React's value tracker cannot see",
+      ' * through — clear-then-set (a number input otherwise appends), an `input`',
+      ' * event after each set and a `change` after the last. An element with no',
+      ' * value property or no prototype setter (contenteditable, a custom',
+      " * widget) falls back to Playwright's own fill, exactly as the daemon does.",
+      ' */',
+      `const FILL_WAIT_MS = ${FILL_WAIT_MS};`,
+      `const FILL_FOCUS_MS = ${FILL_FOCUS_MS};`,
+      'async function fill(loc: Locator, value: string): Promise<void> {',
+      "  await loc.waitFor({ state: 'visible', timeout: FILL_WAIT_MS });",
+      '  await loc.scrollIntoViewIfNeeded().catch(() => {});',
+      '  await loc.click({ timeout: FILL_FOCUS_MS }).catch(() => {}); // focus; some widgets need it',
+      '  const handled = await loc.evaluate((el: Element, val: string) => {',
+      '    const input = el as HTMLInputElement | HTMLTextAreaElement;',
+      "    if (!('value' in input)) return false;",
+      '    const proto =',
+      '      input instanceof HTMLTextAreaElement',
+      '        ? HTMLTextAreaElement.prototype',
+      '        : input instanceof HTMLInputElement',
+      '          ? HTMLInputElement.prototype',
+      '          : null;',
+      '    if (!proto) return false;',
+      "    const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;",
+      '    if (!setter) return false;',
+      "    setter.call(input, ''); // clear-then-set: number inputs otherwise append",
+      "    input.dispatchEvent(new Event('input', { bubbles: true }));",
+      '    setter.call(input, val);',
+      "    input.dispatchEvent(new Event('input', { bubbles: true }));",
+      "    input.dispatchEvent(new Event('change', { bubbles: true }));",
+      '    return true;',
+      '  }, value);',
+      '  if (!handled) {',
+      '    // contenteditable or non-standard widget — fall back to Playwright fill',
+      '    await loc.fill(value);',
+      '  }',
+      '}',
+    ],
+  },
+  {
+    token: 'await select(',
+    source: [
+      '/**',
+      ' * An option chosen the way the daemon chooses it — mirror of',
+      ' * daemon/inputs.ts reactSafeSelect, which is how replay executes every',
+      ' * recorded `select`.',
+      ' *',
+      ' * The LABEL is what the procedure means ("the project I just created");',
+      " * the VALUE is whatever the app keys that option by, and apps mint those",
+      ' * per record as often as not — fwat3 03-add selected a project by its id,',
+      ' * and both replays timed out looking for an id that run never minted. So',
+      ' * the recording carries the visible label as `option` and the value it saw',
+      ' * only as `optionValue`, a last resort.',
+      ' *',
+      ' * Same order as the daemon, and it LOOKS before it waits: an option that',
+      ' * is present right now is taken at once (by label, else by value, else by',
+      ' * the recorded fallback value), so a stale fallback is never paid for with',
+      " * the label matcher's full timeout. Only when nothing matches yet does the",
+      ' * label form wait for options that may still be loading, and a plain',
+      ' * `selectOption(label)` — value/index matching — is the final attempt.',
+      ' */',
+      'async function select(loc: Locator, label: string, fallbackValue?: string): Promise<void> {',
+      '  const present = await loc',
+      '    .evaluate(',
+      '      (el: Element, [v, f]: [string, string]) => {',
+      '        if (!(el instanceof HTMLSelectElement)) return null;',
+      '        const opts = Array.from(el.options);',
+      "        if (opts.some((o) => o.label.trim() === v)) return 'label';",
+      "        if (opts.some((o) => o.value === v)) return 'value';",
+      "        if (f && opts.some((o) => o.value === f)) return 'fallback';",
+      '        return null;',
+      '      },',
+      "      [label, fallbackValue ?? ''] as [string, string],",
+      '    )',
+      '    .catch(() => null);',
+      "  if (present === 'fallback') {",
+      '    await loc.selectOption(fallbackValue!);',
+      '    return;',
+      '  }',
+      "  if (present === 'value') {",
+      '    await loc.selectOption(label);',
+      '    return;',
+      '  }',
+      '  const result = await loc.selectOption({ label }).catch(() => null);',
+      '  if (result) return;',
+      '  await loc.selectOption(label); // fall back to value/index matching',
+      '}',
+    ],
+  },
+  {
+    token: 'await hover(',
+    source: [
+      '/**',
+      ' * A hover the widget actually notices — mirror of daemon/inputs.ts',
+      ' * syntheticHover, which is how replay executes every recorded `hover`.',
+      ' *',
+      " * Playwright's own hover moves the mouse, and CSS `:hover` follows; an",
+      ' * autocomplete or listbox that opens on `mouseenter` (or a menu that keys',
+      ' * off `pointerover`) may never see an event at all when the element is',
+      ' * covered, or when the pointer was already inside it. So the real move is',
+      ' * best-effort, and the events are then dispatched at the element itself.',
+      ' * `mouseenter` does not bubble — that is the one difference between it and',
+      ' * its neighbours, and a bubbling `mouseenter` would fire delegated',
+      ' * handlers no real pointer ever fires.',
+      ' */',
+      'async function hover(loc: Locator): Promise<void> {',
+      '  await loc.hover().catch(() => {});',
+      '  await loc.evaluate((el: Element) => {',
+      "    for (const type of ['pointerover', 'mouseover', 'mouseenter', 'mousemove']) {",
+      "      el.dispatchEvent(new MouseEvent(type, { bubbles: type !== 'mouseenter' }));",
+      '    }',
+      '  });',
       '}',
     ],
   },
@@ -1101,7 +1237,8 @@ function emitSkillStep(step: SkillStep, segment: SpecSegment, index: number, ctx
       break;
     }
     case 'fill':
-      out.push(`await ${target}.fill(${src(str('value'))});`);
+      // Through the inlined helper, never `locator.fill`: see its comment.
+      out.push(`await fill(${target}, ${src(str('value'))});`);
       break;
     case 'type': {
       const delay = num('delay_ms');
@@ -1111,16 +1248,21 @@ function emitSkillStep(step: SkillStep, segment: SpecSegment, index: number, ctx
     case 'press':
       out.push(`await ${target}.press(${src(str('key'))});`);
       break;
-    case 'select':
-      // By label, not value: the recording watched a human pick the option
-      // they could read, and an app is free to renumber its values.
-      out.push(`await ${target}.selectOption({ label: ${src(str('option'))} });`);
+    case 'select': {
+      // By label first, not value: the recording watched a human pick the
+      // option they could read, and an app is free to renumber its values.
+      // Through the inlined helper, never `locator.selectOption` alone — the
+      // recorded `optionValue` is the last resort replay itself keeps.
+      const fallback = typeof args.optionValue === 'string' && args.optionValue ? `, ${src(str('optionValue'))}` : '';
+      out.push(`await select(${target}, ${src(str('option'))}${fallback});`);
       break;
+    }
     case 'check':
       out.push(`await ${target}.${args.checked === false ? 'uncheck' : 'check'}();`);
       break;
     case 'hover':
-      out.push(`await ${target}.hover();`);
+      // Through the inlined helper, never `locator.hover` alone: see its comment.
+      out.push(`await hover(${target});`);
       break;
     case 'scroll_into_view':
       out.push(`await ${target}.scrollIntoViewIfNeeded();`);

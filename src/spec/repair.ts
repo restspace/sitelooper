@@ -22,6 +22,7 @@ import { retired, stepByTag, type DriftTicket } from '../skills/repair.js';
 import { structural } from '../skills/replay.js';
 import type { Flow } from '../skills/flow.js';
 import { SkillStore, type Skill, type SkillStep } from '../skills/store.js';
+import type { FlowRunResult } from '../shared/protocol.js';
 import { flowToSpec, type SpecFlow, type SpecSegment, type SpecStep } from './ir.js';
 import { stageForReplay } from './lower.js';
 
@@ -521,4 +522,40 @@ export function ticketIsNews(store: Pick<SkillStore, 'get'>, t: DriftTicket): bo
   const named = chain.filter((c) => candidateMatchesExpr(c, t.missedLocator!));
   if (named.length !== 1) return true;
   return !retired(named[0]);
+}
+
+/**
+ * Steps that are not "clean tier A", in the convergence gate's own vocabulary:
+ * a step that did not succeed, a step that needed the model (any tier but A),
+ * or a step that succeeded but still filed a drift ticket. A run that halted
+ * reports its unreached steps too — silence about them would read as success.
+ *
+ * A tier that is not A is only half an answer: sp4od's `06-open (tier B)` said
+ * nothing about the pinned skill having refused the page it was handed. When
+ * the run recorded WHY it fell back, that reason is named here too.
+ *
+ * Lives beside the rest of the repair vocabulary rather than in cli.ts so it
+ * can be unit-tested without spawning the CLI (importing cli.ts runs main()).
+ */
+export function notConverged(
+  run: Pick<FlowRunResult, 'steps' | 'total'> & { driftTickets?: DriftTicket[] },
+  store?: Pick<SkillStore, 'get'>,
+): string[] {
+  const bad = new Map<string, string>();
+  for (const st of run.steps) {
+    if (st.status !== 'success') bad.set(st.id, st.status);
+    else if (st.tier !== 'A') bad.set(st.id, `tier ${st.tier ?? 'none'}${st.fellBack ? ` — ${st.fellBack}` : ''}`);
+  }
+  for (const t of run.driftTickets ?? []) {
+    // Not every ticket is drift. A fallthrough whose missed candidate the
+    // evidence has already RETIRED is the run re-observing something the spec
+    // now records — the codemod has moved that candidate to the back of its
+    // chain, and there is nothing left to learn from it. Counting it would
+    // leave `--converge n` permanently unclearable on any flow with one
+    // chronically volatile locator (fwrd42's 06-report). See ticketIsNews.
+    if (store && !ticketIsNews(store, t)) continue;
+    if (!bad.has(t.step)) bad.set(t.step, `drift (${t.missedLocator ?? t.reason ?? t.fellBack ?? 'recovered'})`);
+  }
+  if (run.steps.length < run.total) bad.set('(unreached)', `${run.total - run.steps.length} step(s) the run never got to`);
+  return [...bad].map(([id, why]) => `${id} (${why})`);
 }

@@ -259,7 +259,10 @@ const run = spawnSync(testCmd[0], testCmd.slice(1), {
   encoding: 'utf8',
   timeout: 600_000,
   cwd: tmpDir,
-  env: process.env,
+  // The emitted .spec.ts reads RUNID for the flow's runid var; a run without
+  // it passes green while every record it made carries an empty prefix and
+  // the verifier scores 0/6. Default it to the tag so the arm cannot do that.
+  env: { ...process.env, RUNID: process.env.RUNID ?? tag },
   shell: process.platform === 'win32',
 });
 const runOut = `${run.stdout || ''}${run.stderr || ''}`;

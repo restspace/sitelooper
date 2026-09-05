@@ -18,7 +18,7 @@ import type { LocatorCandidate } from './recorder.js';
 import { generateScript } from './codegen.js';
 import { snapshot, waitForContent } from './refs.js';
 import { ScriptRecorder } from './recorder.js';
-import { encodeFrame, LineDecoder, type CommandName, type Frame, type Request } from '../shared/protocol.js';
+import { encodeFrame, LineDecoder, type CommandName, type FlowStepResult, type Frame, type Request } from '../shared/protocol.js';
 import { aliasLegacyEnv, ensureSessionDir, socketPath, validateSessionName } from '../shared/paths.js';
 import { BrowserSession } from './browser.js';
 import { SessionState } from './state.js';
@@ -850,7 +850,7 @@ ${describeLeaks(leaks.slice(0, 10))}`);
     // below waits (bounded) for those to appear in the URL. See
     // consumedUrlOutputs for the SPA-updates-the-url-late failure this closes.
     const wantedUrlOuts = consumedUrlOutputs(flow.steps);
-    const stepResults: Array<Record<string, unknown>> = [];
+    const stepResults: FlowStepResult[] = [];
     const driftTickets: DriftTicket[] = [];
     const started = Date.now();
     // Inner-model spend across the whole flow run. A pure tier-A replay is
@@ -889,7 +889,7 @@ ${describeLeaks(leaks.slice(0, 10))}`);
 
     for (const step of flow.steps) {
       if (opts.signal.aborted) {
-        stepResults.push({ id: step.id, status: 'blocked', reason: 'run stopped' });
+        stepResults.push({ id: step.id, status: 'blocked', reason: 'run stopped', recovered: false });
         halted = true;
         break;
       }
@@ -1024,7 +1024,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote,
           // complete, the priced usage, and the halt point are the result.
           // fwgr2-n2/n3 died this way on an OpenRouter 429 and left nothing.
           const message = err instanceof Error ? err.message : String(err);
-          stepResults.push({ id: step.id, status: 'blocked', summary: `recovery failed before completing: ${message.slice(0, 300)}`, values: {}, tier: null, replayed: null, repaired: false, turns: 0 });
+          stepResults.push({ id: step.id, status: 'blocked', summary: `recovery failed before completing: ${message.slice(0, 300)}`, values: {}, tier: null, replayed: null, repaired: false, turns: 0, recovered: true, fellBack });
           halted = true;
           break;
         }
@@ -1196,6 +1196,11 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote,
         summary: result.report.summary,
         values,
         tier: sk?.tier ?? null,
+        // Why the model was needed, on the STEP — a ticket is only filed when
+        // a pinned skill was actually invoked, so a skill that refused before
+        // replaying left no record of the cause anywhere (sp4od 06-open).
+        recovered,
+        ...(recovered ? { fellBack } : {}),
         replayed: sk?.invoked ? `${sk.stepsReplayed}/${sk.stepsTotal}` : null,
         repaired: Boolean(sk?.repaired),
         turns: result.turns,

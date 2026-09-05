@@ -6,7 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { AnthropicProvider, OpenAICompatProvider, globalConfigPath, resolveProviderConfig, writeGlobalConfig, type Provider } from './agent/llm.js';
 import type { Report } from './agent/report.js';
-import { encodeFrame, LineDecoder, type Frame, type Request, type ResultFrame } from './shared/protocol.js';
+import { encodeFrame, LineDecoder, type FlowRunResult, type Frame, type Request, type ResultFrame } from './shared/protocol.js';
 import { aliasLegacyEnv, sessionsDir, socketPath, validateSessionName } from './shared/paths.js';
 import { candidateExpr } from './daemon/recorder.js';
 import { fillParams } from './skills/compile.js';
@@ -14,7 +14,7 @@ import { SkillStore, successRate, type Skill } from './skills/store.js';
 import { listFlows, loadFlow } from './skills/flow.js';
 import { drainDrift, llmProposer, triage, type DrainSummary, type DriftTicket } from './skills/repair.js';
 import { compileFlow } from './spec/index.js';
-import { foldTicketEvidence, mintVars, reorderByEvidence, ticketIsNews } from './spec/repair.js';
+import { foldTicketEvidence, mintVars, notConverged, reorderByEvidence } from './spec/repair.js';
 import { emitFlowFile } from './spec/emit.js';
 import { flowToSpec, type SpecFlow } from './spec/ir.js';
 import { LiftError, liftFlowFile } from './spec/lift.js';
@@ -1081,15 +1081,6 @@ function varFlags(): Record<string, string> {
   return vars;
 }
 
-interface FlowRunResult {
-  flow: string;
-  status: string;
-  passed: number;
-  total: number;
-  steps: Array<{ id: string; status: string; summary?: string; tier?: string | null; repinned?: string }>;
-  driftTickets?: DriftTicket[];
-  wallMs: number;
-}
 
 /** Best-effort shutdown of a throwaway repair session (its browser is the only thing holding that profile open). */
 async function stopSessionQuietly(name: string): Promise<void> {
@@ -1202,32 +1193,6 @@ function runResetCmd(cmd: string | undefined, label: string, say: (m: string) =>
 }
 
 /**
- * Steps that are not "clean tier A", in the convergence gate's own vocabulary:
- * a step that did not succeed, a step that needed the model (any tier but A),
- * or a step that succeeded but still filed a drift ticket. A run that halted
- * reports its unreached steps too — silence about them would read as success.
- */
-function notConverged(run: FlowRunResult, store?: Pick<SkillStore, 'get'>): string[] {
-  const bad = new Map<string, string>();
-  for (const st of run.steps) {
-    if (st.status !== 'success') bad.set(st.id, st.status);
-    else if (st.tier !== 'A') bad.set(st.id, `tier ${st.tier ?? 'none'}`);
-  }
-  for (const t of run.driftTickets ?? []) {
-    // Not every ticket is drift. A fallthrough whose missed candidate the
-    // evidence has already RETIRED is the run re-observing something the spec
-    // now records — the codemod has moved that candidate to the back of its
-    // chain, and there is nothing left to learn from it. Counting it would
-    // leave `--converge n` permanently unclearable on any flow with one
-    // chronically volatile locator (fwrd42's 06-report). See ticketIsNews.
-    if (store && !ticketIsNews(store, t)) continue;
-    if (!bad.has(t.step)) bad.set(t.step, `drift (${t.missedLocator ?? t.reason ?? t.fellBack ?? 'recovered'})`);
-  }
-  if (run.steps.length < run.total) bad.set('(unreached)', `${run.total - run.steps.length} step(s) the run never got to`);
-  return [...bad].map(([id, why]) => `${id} (${why})`);
-}
-
-/**
  * `sitelooper repair <name.flow.ts>` — the self-updating half of the compiled
  * runner (PLAN-self-updating-spec.md, "The loop").
  *
@@ -1275,10 +1240,47 @@ async function repairFlowCommand(
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sitelooper-repair-'));
   const staged = stageRepair(before, dir);
   const stamp = Date.now().toString(36);
+  // Progress is never silent, only redirected: under --json stdout has to stay
+  // parseable, so every line goes to stderr instead of being dropped. sp4od's
+  // repair.log had nothing but the final ticket lines because these were
+  // discarded, and the per-step tier/status of each run is exactly what a
+  // reader of that log needs.
   const say = (m: string) => {
-    if (!json) console.log(m);
+    if (json) console.error(m);
+    else console.log(m);
   };
   say(`repairing ${file} (${before.steps.length} step(s)) in ${dir}`);
+
+  // Every run this repair made, in order, with the per-step verdict that
+  // decides the convergence gate. The prose version goes to stderr under
+  // --json (see `say`); this is the same thing structured, so a reader does
+  // not have to parse the log to learn which step needed the model and why.
+  type RunReport = {
+    label: string;
+    passed: number;
+    total: number;
+    status: string;
+    tickets: number;
+    steps: Array<{ id: string; status: string; tier: string | null; summary?: string; recovered: boolean; fellBack?: string }>;
+  };
+  const runs: RunReport[] = [];
+  const noteRun = (label: string, r: FlowRunResult, ticketCount: number): void => {
+    runs.push({
+      label,
+      passed: r.passed,
+      total: r.total,
+      status: r.status,
+      tickets: ticketCount,
+      steps: r.steps.map((st) => ({
+        id: st.id,
+        status: st.status,
+        tier: st.tier ?? null,
+        ...(st.summary ? { summary: st.summary } : {}),
+        recovered: Boolean(st.recovered),
+        ...(st.fellBack ? { fellBack: st.fellBack } : {}),
+      })),
+    });
+  };
 
   // Every line the evidence codemod produced, across run 1 and every converge
   // run. Kept beside the IR diff rather than inside it because a retirement is
@@ -1301,9 +1303,10 @@ async function repairFlowCommand(
   });
   const tickets = run.driftTickets ?? [];
   const summary: DrainSummary = drained ?? { promoted: [], patched: [], reRecord: [], skipped: [] };
+  noteRun('run 1', run, tickets.length);
   say(`run 1: ${run.passed}/${run.total} step(s) ${run.status}, ${tickets.length} drift ticket(s)`);
   for (const st of run.steps) {
-    say(`  [${st.status === 'success' ? 'OK' : st.status.toUpperCase()}] ${st.id} (tier ${st.tier ?? 'none'})${st.status === 'success' ? '' : ` — ${st.summary ?? ''}`}`);
+    say(`  [${st.status === 'success' ? 'OK' : st.status.toUpperCase()}] ${st.id} (tier ${st.tier ?? 'none'})${st.fellBack ? ` — fell back: ${st.fellBack}` : ''}${st.status === 'success' ? '' : ` — ${st.summary ?? ''}`}`);
   }
 
   // A patch the daemon verified on the live page is a proposal about THIS
@@ -1356,6 +1359,10 @@ async function repairFlowCommand(
     flow: before.name,
     workspace: dir,
     run: { status: run.status, passed: run.passed, total: run.total, drift: tickets.length },
+    // Every run, not just run 1: the gate is a verdict about the LAST run, and
+    // "which step needed the model, on which pass, and why" is unanswerable
+    // from a single aggregate.
+    runs,
     // The tickets themselves, not just how many: "15 drift ticket(s)" cannot be
     // acted on, and the one question a stuck converge loop asks is WHICH
     // locator keeps missing and what won instead.
@@ -1401,6 +1408,10 @@ async function repairFlowCommand(
       const moved = reorderByEvidence(staged.store, retirementsReported);
       evidenceLines.push(...moved);
       for (const line of moved) say(`  evidence         ${line}`);
+    }
+    noteRun(`converge ${i}/${converge}`, check, checkTickets.length);
+    for (const st of check.steps) {
+      say(`  [${st.status === 'success' ? 'OK' : st.status.toUpperCase()}] ${st.id} (tier ${st.tier ?? 'none'})${st.fellBack ? ` — fell back: ${st.fellBack}` : ''}${st.status === 'success' ? '' : ` — ${st.summary ?? ''}`}`);
     }
     const bad = notConverged(check, dryRun ? undefined : staged.store);
     say(`converge ${i}/${converge}: ${check.passed}/${check.total} step(s) ${check.status}, ${checkTickets.length} drift ticket(s)${bad.length ? '' : ' — clean'}`);

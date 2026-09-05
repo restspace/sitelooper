@@ -149,10 +149,15 @@ describe('step bodies', () => {
     expect(one({ tool: 'click', args: { target: '@e1' }, locators: loc })).toContain("await click(page.getByTestId('save'));");
     expect(one({ tool: 'dblclick', args: { target: '@e1' }, locators: loc })).toContain(", { dbl: true });");
     expect(one({ tool: 'right_click', args: { target: '@e1' }, locators: loc })).toContain(".click({ button: 'right' });");
-    expect(one({ tool: 'fill', args: { target: '@e1', value: '{{v1}}' }, locators: loc })).toContain('.fill(`${p.v1}`);');
+    // through the inlined helper, never Playwright's own fill (which fires no `change`)
+    expect(one({ tool: 'fill', args: { target: '@e1', value: '{{v1}}' }, locators: loc })).toContain(
+      "await fill(page.getByTestId('save'), `${p.v1}`);",
+    );
     expect(one({ tool: 'type', args: { target: '@e1', text: 'abc', delay_ms: 50 }, locators: loc })).toContain(".pressSequentially('abc', { delay: 50 });");
     expect(one({ tool: 'press', args: { target: '@e1', key: 'Enter' }, locators: loc })).toContain(".press('Enter');");
-    expect(one({ tool: 'select', args: { target: '@e1', option: 'Client One' }, locators: loc })).toContain(".selectOption({ label: 'Client One' });");
+    expect(one({ tool: 'select', args: { target: '@e1', option: 'Client One' }, locators: loc })).toContain(
+      "await select(page.getByTestId('save'), 'Client One');",
+    );
     expect(one({ tool: 'check', args: { target: '@e1', checked: true }, locators: loc })).toContain('.check();');
     expect(one({ tool: 'check', args: { target: '@e1', checked: false }, locators: loc })).toContain('.uncheck();');
     expect(one({ tool: 'goto', args: { url: 'http://app.test/x' }, locators: {} })).toContain("await page.goto('http://app.test/x');");
@@ -200,7 +205,7 @@ describe('step bodies', () => {
     });
     expect(out).toContain('const el1 = await pick(page, [');
     expect(out).toContain("  page.locator('#login-email'),");
-    expect(out).toContain('await el1.fill(');
+    expect(out).toContain('await fill(el1, ');
     // a union would be a strict-mode violation the moment a fallback matched two inputs
     expect(out).not.toContain('.or(page');
     expect(out).toContain('async function pick(page: Page, candidates: Locator[]');
@@ -977,6 +982,76 @@ describe('a click that an overlay intercepts', () => {
     expect(source).toContain('const CLICK_TIER_MS = 5000;');
     const filled: SkillStep = { tool: 'fill', args: { target: '@e1', value: 'x' }, locators: { target: [{ kind: 'id', selector: '#i' }] } };
     expect(emit(specOf([filled]))).not.toContain('async function click');
+  });
+
+  it('inlines the fill helper only when a step fills, and mirrors reactSafeFill', () => {
+    // The odoo sp4od failure: `locator.fill` fires only `input`, so a form
+    // that commits on `change` never sees the value and the recorded effect
+    // ("20% £ 36.00") never appears. The daemon has always executed a
+    // recorded `fill` through reactSafeFill; the spec now says the same thing.
+    const filled: SkillStep = { tool: 'fill', args: { target: '@e1', value: '3' }, locators: { target: [{ kind: 'id', selector: '#qty' }] } };
+    const out = emit(specOf([filled]));
+    expect(out).toContain("await fill(page.locator('#qty'), '3');");
+    expect(out).toContain('async function fill(loc: Locator, value: string): Promise<void> {');
+    // the same waits, the same order, the same events as daemon/inputs.ts
+    expect(out).toContain("await loc.waitFor({ state: 'visible', timeout: FILL_WAIT_MS });");
+    expect(out).toContain('const FILL_WAIT_MS = 10000;');
+    expect(out).toContain('await loc.scrollIntoViewIfNeeded().catch(() => {});');
+    expect(out).toContain("const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;");
+    expect(out).toContain("input.dispatchEvent(new Event('input', { bubbles: true }));");
+    expect(out).toContain("input.dispatchEvent(new Event('change', { bubbles: true }));");
+    // and the same fallback for a widget with no native value setter
+    expect(out).toContain('    await loc.fill(value);');
+    expect(syntaxErrors(out)).toEqual([]);
+    // a flow that never fills carries none of it
+    const clicked: SkillStep = { tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'id', selector: '#go' }] } };
+    expect(emit(specOf([clicked]))).not.toContain('async function fill');
+  });
+
+  it('inlines the select helper only when a step selects, and mirrors reactSafeSelect', () => {
+    // fwat3 03-add: the app keyed the option by a per-record id, so a spec
+    // that selected by the RECORDED value could only ever miss. The daemon
+    // tries the visible label first and keeps the recorded value as the last
+    // resort (`optionValue`); the spec now says the same thing.
+    const selected: SkillStep = {
+      tool: 'select',
+      args: { target: '@e1', option: 'Client One', optionValue: '17' },
+      locators: { target: [{ kind: 'id', selector: '#client' }] },
+    };
+    const out = emit(specOf([selected]));
+    expect(out).toContain("await select(page.locator('#client'), 'Client One', '17');");
+    expect(out).toContain('async function select(loc: Locator, label: string, fallbackValue?: string): Promise<void> {');
+    // the same order as daemon/inputs.ts: look first, then the label wait, then value/index
+    expect(out).toContain("if (opts.some((o) => o.label.trim() === v)) return 'label';");
+    expect(out).toContain("if (opts.some((o) => o.value === v)) return 'value';");
+    expect(out).toContain("if (f && opts.some((o) => o.value === f)) return 'fallback';");
+    expect(out).toContain('  const result = await loc.selectOption({ label }).catch(() => null);');
+    expect(out).toContain('  await loc.selectOption(label); // fall back to value/index matching');
+    expect(syntaxErrors(out)).toEqual([]);
+    // no recorded fallback value, no third argument
+    const bare: SkillStep = { tool: 'select', args: { target: '@e1', option: 'Client One' }, locators: { target: [{ kind: 'id', selector: '#client' }] } };
+    expect(emit(specOf([bare]))).toContain("await select(page.locator('#client'), 'Client One');");
+    // a flow that never selects carries none of it
+    const clicked: SkillStep = { tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'id', selector: '#go' }] } };
+    expect(emit(specOf([clicked]))).not.toContain('async function select');
+  });
+
+  it('inlines the hover helper only when a step hovers, and mirrors syntheticHover', () => {
+    // A listbox that opens on `mouseenter` never sees Playwright's own hover
+    // when the pointer was already inside the element: the daemon dispatches
+    // the events at the element too, and so does the spec.
+    const hovered: SkillStep = { tool: 'hover', args: { target: '@e1' }, locators: { target: [{ kind: 'id', selector: '#menu' }] } };
+    const out = emit(specOf([hovered]));
+    expect(out).toContain("await hover(page.locator('#menu'));");
+    expect(out).toContain('async function hover(loc: Locator): Promise<void> {');
+    expect(out).toContain('  await loc.hover().catch(() => {});');
+    expect(out).toContain("    for (const type of ['pointerover', 'mouseover', 'mouseenter', 'mousemove']) {");
+    // mouseenter is the one that does not bubble
+    expect(out).toContain("      el.dispatchEvent(new MouseEvent(type, { bubbles: type !== 'mouseenter' }));");
+    expect(syntaxErrors(out)).toEqual([]);
+    // a flow that never hovers carries none of it
+    const clicked: SkillStep = { tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'id', selector: '#go' }] } };
+    expect(emit(specOf([clicked]))).not.toContain('async function hover');
   });
 
   it('bounds every tier so all of them fit inside one test timeout', () => {
