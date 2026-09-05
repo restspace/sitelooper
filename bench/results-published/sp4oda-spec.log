@@ -1,0 +1,38 @@
+
+Running 1 test using 1 worker
+
+  ✘  1 fwod34.spec.ts:4:1 › fwod34 (18.8s)
+
+
+  1) fwod34.spec.ts:4:1 › fwod34 ───────────────────────────────────────────────────────────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('row', { name: '20% £ 36.00' }).or(getByRole('cell', { name: '£ 36.00' })).or(getByRole('row', { name: 'Untaxed Amount £ 36.00' })).first()
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "[spec-replay] sp4oda: 0/1 passed, exit=1, 22s, 0 drift line(s) — result written
+ £ 36.00' }).or(getByRole('cell', { name: '£ 36.00' })).or(getByRole('row', { name: 'Untaxed Amount £ 36.00' })).first()
+
+
+       at fwod34.flow.ts:5253
+
+      5251 |       .or(page.getByRole('cell', { name: '£ 36.00', exact: false }))
+      5252 |       .or(page.getByRole('row', { name: 'Untaxed Amount £ 36.00', exact: false }))
+    > 5253 |       .first()).toBeVisible();
+           |                 ^
+      5254 |
+      5255 |     // @step 02-create s_c99d6c/7
+      5256 |     await settle(page);
+        at Object.02-create (/home/user/sitelooper/bench/results/sp4oda-spec-tmp/fwod34.flow.ts:5253:17)
+        at runFlow (/home/user/sitelooper/bench/results/sp4oda-spec-tmp/fwod34.flow.ts:5990:3)
+        at /home/user/sitelooper/bench/results/sp4oda-spec-tmp/fwod34.spec.ts:5:19
+
+    Error Context: ../../../test-results/fwod34-fwod34/error-context.md
+
+  1 failed
+    fwod34.spec.ts:4:1 › fwod34 ────────────────────────────────────────────────────────────────────
+EXIT=1
