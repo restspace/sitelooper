@@ -305,18 +305,26 @@ sitelooper runtime in the loop at all, then replayed under the real Playwright t
 | target | sitelooper replay (r1, r2) | agent re-run | authored script | codegen | Tier 2 spec |
 |---|---|---|---|---|---|
 | repairdesk | **7/7, 7/7** · $0.00, $0.00 · 24s, 23s (set 28) | 6/6 · $0.19 · 67s every time | 1/6, 1/6 · $0 | 6/6, 6/6 · $0 | **6/6** · $0.00 · 9s (fwrd42 store, sprd5; 48 assertions, 10-entry mutation log) |
-| kanboard | **4/4 checkable, same** · $0.00, $0.00 · 23s, 23s (set 28; two objectives are report-based and a zero-model replay writes no report) | 2/6 · $0.77 · 118s every time | 5/6, 5/6 · $0 | 4/4 (+2 n/a) · $0 | not yet run |
-| grafana | **6/6, 6/6** · $0.00, $0.00 · 47s, 47s (set 28, zero model turns); set 26 as recorded: 5/6, 5/6 · $0.18, $0.55 · 661s, 1864s | 6/6 · $1.05 · 448s every time | 0/6, 0/6 · $0 | 0/6, 0/6 · $0 | not yet run |
-| odoo | **6/6, 6/6** · $0.03, $0.00 · 664s, 243s (set 28d; the create step at tier A on both replays) | 6/6 · $1.51 · 302s every time | 1/6, 1/6 · $0 | 0/6, 0/6 · $0 | not yet run |
+| kanboard | **4/4 checkable, same** · $0.00, $0.00 · 23s, 23s (set 28; two objectives are report-based and a zero-model replay writes no report) | 2/6 · $0.77 · 118s every time | 5/6, 5/6 · $0 | 4/4 (+2 n/a) · $0 | **4/4 checkable** · $0.00 · 11s (sp3kb; repair converged, 0 tickets; repaired spec passed again) |
+| grafana | **6/6, 6/6** · $0.00, $0.00 · 47s, 47s (set 28, zero model turns); set 26 as recorded: 5/6, 5/6 · $0.18, $0.55 · 661s, 1864s | 6/6 · $1.05 · 448s every time | 0/6, 0/6 · $0 | 0/6, 0/6 · $0 | **4/6** · $0.00 · 37s (sp7gr, 57e1415; 0 drift; objectives 1 and 6 unverifiable by design, the spec arm writes no finalText; repair 5/5 with 4 tickets, converged in two rounds to 0 tickets, repaired spec 1/1, 4/6) |
+| odoo | **6/6, 6/6** · $0.03, $0.00 · 664s, 243s (set 28d; the create step at tier A on both replays) | 6/6 · $1.51 · 302s every time | 1/6, 1/6 · $0 | 0/6, 0/6 · $0 | **6/6** · $0.00 · 86s, 80s (sp8od, f226d7f; the test itself halts at 08-open, a demoted pin that clicks a Cancel the order no longer has — a store defect, every objective is already done by then; repair 9/9 ×3 with 0 tickets, spec check halts at the same step, repaired spec 6/6 in 81s) |
 | atelyr | 12/12 flow steps · $0.13, $0.43 · 710s, 1002s (set 28e; 114 then 134 model turns; nine of twelve steps at zero turns on the second replay, the three re-pinned steps among them) | — | — | — | not yet run |
 
 **Tier 2 spec, status.** `bench/spec-replay.mjs` compiles a published flow + skill store
 (`sitelooper compile <flow> --out <tmp>` with `SITELOOPER_SKILLS_DIR` pointing at the store) and
 runs the emitted `<name>.spec.ts` under `npx playwright test`, scored by the same app-side
-verifiers as every other arm (`<tag>-spec-result.json`, `arm: "spec"`). Repairdesk is run:
-`bench/results-published/flows/fwrd42.json` (reconstructed from the published fwrd42 store and
-flowrun) compiled against `fwrd42-skills` and verified 6/6 by `verify-repairdesk.mjs` with the
-clean-run mutation log. The other targets are cloud-hosted and not yet run.
+verifiers as every other arm (`<tag>-spec-result.json`, `arm: "spec"`). Repairdesk ran locally
+(`fwrd42` store/flowrun, verified 6/6 with the clean-run mutation log); kanboard, grafana, and
+odoo ran on the bench's cloud environment across sets 1-8, with results published to
+`origin/results/sp<N><target>` branches (`sp3kb`, `sp7gr`, `sp7od`/`sp8od`). Kanboard's compiled
+spec passed 4/4 checkable objectives on both runs and repair converged with 0 tickets. Grafana's
+compiled spec ran 1/1 with 0 drift on both runs (verifier 4/6, the other two objectives
+unverifiable by design since the spec arm writes no report) and repair converged in two rounds
+to a spec that still passes and still scores 4/6. Odoo's compiled spec verifies 6/6 on the cloud
+(`sp8od`, f226d7f, 86s and 80s) after seven sets of emitter fixes, though the test itself halts at
+08-open, a demoted pin whose Cancel click can never land because 06-open already cancelled the
+order — a store/recording defect, not an emitter bug; repair replays 9/9 with 0 tickets and its
+spec check halts at the same step.
 
 Set 24 also caught two engine regressions of its own (kanboard's replays at 22 and 37 turns
 where set 15 needed none; grafana's replays losing objective 1 and recovering one step at 19 and

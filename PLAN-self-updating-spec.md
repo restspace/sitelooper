@@ -100,8 +100,10 @@ That last rule is what keeps a green build meaning something (PLAN-compile-to-co
 
 ## Status 2026-09-05
 
-Phases 0, 1, 3, 4 are on the `compile-to-spec` branch and demonstrated end to end on the
-local repairdesk app with OpenRouter (z-ai/glm-5.3) as the repair model.
+Phases 0, 1, 3, 4 are on the `compile-to-spec` branch, demonstrated end to end on the local
+repairdesk app with OpenRouter (z-ai/glm-5.3) as the repair model, and then run on the bench's
+cloud environment across sets 1-8 for kanboard, grafana, and odoo (results on
+`origin/results/sp<N><target>` branches: `sp3kb`, `sp7gr`, `sp8od`).
 
 Closed since 2026-09-04:
 
@@ -122,12 +124,66 @@ Closed since 2026-09-04:
    recorded with no locator, never reach the model, and the gate ignores their tickets.
 5. **Scoped row race** fixed in `pick()` by re-sampling the candidates ahead of a hit.
 
+Emitter and repair fixes shipped across cloud sets 1-8, driving kanboard, grafana, and odoo
+to compile and (kanboard, grafana) pass:
+
+Matching and settling:
+
+6. `pick()` takes the first-unique candidate, with drift telemetry on the choice.
+7. `click()` tiers mirror `robustClick`; `settle()` runs before every step.
+8. URL parts are bound only after settle (`urlPartsWhen`) and hash checks compare unordered
+   sets.
+9. `readOptional` covers reads that may legitimately find nothing.
+10. Opener/toggle guards count only popup lines (fixed in replay too).
+11. Any-of effect unions use exact:false; input-role lines match role/title/placeholder;
+    every roled line also matches `getByRole(role).filter({ hasText: looseText(name) })`
+    because the daemon names by innerText and Playwright's accessible name diverges (block
+    boundaries, embedded control values).
+
+Recorded-shape parity:
+
+12. `fill()`/`select()`/`hover()` mirror the daemon's `reactSafeFill`/`reactSafeSelect`/
+    `syntheticHover`; `fill()` runs the component editor recipes (Monaco, etc.) first.
+13. Identity markers poll `present()` (text or input value).
+14. `compile` rethreads literal step params from the instruction template, with a warning.
+15. `BUDGET_MS` per recorded step is applied via the scaffold's `test.setTimeout`.
+
+Tooling:
+
+16. `repair --json` mirrors progress to stderr and carries `runs[]` with per-step
+    tier/recovered/fellBack.
+17. `bench` spec-replay defaults `RUNID` to the tag.
+
+Per-target cloud outcome:
+
+- **repairdesk**: Tier 2 spec 6/6, $0.00, 9s (sprd5) — unchanged, run locally.
+- **kanboard** (sp3kb): compiled spec passed both runs, verifier 4/4 checkable objectives (the
+  other two are report-based and the spec arm writes no report); repair converged with 0
+  tickets and the repaired spec passed again. ~11s wall per spec run.
+- **grafana** (sp7gr, 57e1415): compiled spec 1/1 on both runs, 0 drift, verifier 4/6 (objectives
+  1 and 6 unverifiable by design — report-based, and the spec arm writes no finalText); 37s
+  wall vs 47s for the sitelooper replay. Repair: run 1 5/5 with 4 tickets, converge 1/2 5/5 with
+  1 ticket, converge 2/2 5/5 with 0 tickets, converged; spec check passed (exit 0) with two
+  promotions and two model-proposed locators in 01-open, one promotion in 02-create, and one
+  retirement. Repaired spec: 1/1, 4/6.
+- **odoo** (sp8od, f226d7f): after seven sets of emitter fixes the compiled spec verifies 6/6
+  on both cloud runs (86s, 80s) and on the repaired spec (81s), and the test itself stops at
+  08-open s_c86522/1 every time — that step is pinned to a DEMOTED skill whose Cancel click can
+  never land because 06-open already cancelled the order, a recording/store defect (the engine
+  covers it every run with a learned read-only skill that `canAdoptPin` refuses to pin over a
+  mutating one). Repair: 9/9 on run 1 and both converge runs with 0 tickets, converged; the spec
+  check halts at the same 08-open step (exit 4). Set 7 before it: spec failed at 04-open (fixed
+  in f226d7f), repair 9/9 ×3 but 06-open fell back to the model once after a stray Edit dialog.
+
 Still open:
 
 1. **Expectations that no longer hold** (a dialog renamed from "Add part" to "Attach part")
    fail the spec and are refused by repair by design; the "re-record one segment" path that
    would regenerate them is reported, not automated.
-2. **Only repairdesk is run.** The other Matrix-2 targets are cloud-hosted.
-3. **Phase 2 (runtime extraction) not started.** Survey in the session scratchpad
+2. **Odoo's 08-open store defect**: options are re-recording 08-open, or letting repair adopt a
+   validated read-only skill over a DEMOTED mutating pin.
+3. **Odoo 06-open occasionally falls back** to the model ("pinned skill bound no params" once
+   in 3 runs) — a replay-engine flake, not an emitter bug.
+4. **Phase 2 (runtime extraction) not started.** Survey in the session scratchpad
    (RUNTIME-EXTRACTION.md): almost everything needed is already pure; the one real rewrite
    is StepDiff assembly out of `agent/tools.ts`.
