@@ -1,0 +1,36 @@
+
+Running 1 test using 1 worker
+
+  ✘  1 fwod34.spec.ts:4:1 › fwod34 (22.9s)
+
+
+  1) fwod34.spec.ts:4:1 › fwod34 ───────────────────────────────────────────────────────────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('row', { name: '20% £ 36.00' }).first()
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByRole('row', { name: '20% £ 36.00' }).first()
+
+
+       at fwod34.flow.ts:5606
+
+      5604 |     // the step's recorded effect must show — any one of these, as replay's effect gate has it:
+      5605 |     //   - row "20% £ 36.00"
+    > 5606 |     await expect(page.getByRole('row', { name: '20% £ 36.00', exact: false }).first()).toBeVisible();
+           |                                                                                  [spec-replay] sp7oda: 0/1 passed, exit=1, 26s, 0 drift line(s) — result written
+ await settle(page);
+        at Object.04-open (/home/user/sitelooper/bench/results/sp7oda-spec-tmp/fwod34.flow.ts:5606:88)
+        at runFlow (/home/user/sitelooper/bench/results/sp7oda-spec-tmp/fwod34.flow.ts:6055:3)
+        at /home/user/sitelooper/bench/results/sp7oda-spec-tmp/fwod34.spec.ts:5:19
+
+    Error Context: ../../../test-results/fwod34-fwod34/error-context.md
+
+  1 failed
+    fwod34.spec.ts:4:1 › fwod34 ────────────────────────────────────────────────────────────────────
+EXIT=1
