@@ -1,0 +1,29 @@
+
+Running 1 test using 1 worker
+
+[sitelooper skip] 02-create s_d595d3/3: recorded popup already showing — click skipped
+  ✘  1 fwod34.spec.ts:4:1 › fwod34 (8.2s)
+
+
+  1) fwod34.spec.ts:4:1 › fwod34 ───────────────────────────────────────────────────────────────────
+
+    Error: none of 2 recorded locators resolved at 02-create s_d595d3/8 target (page is at http://127.0.0.1:8069/web#cids=1&menu_id=109&action=156&model=res.partner&view_type=form&id=45): getByRole('menuitem', { name: 'Sales', exact: true })[spec-replay] sp3odb: 0/1 passed, exit=1, 11s, 0 drift line(s) — result written
+      at fwod34.flow.ts:4224
+
+      4222 |     await page.waitForTimeout(PICK_POLL_MS);
+      4223 |   }
+    > 4224 |   throw new Error(
+           |         ^
+      4225 |     // The url and the recorded step are half the answer whenever a chain
+      4226 |     // misses wholesale: a locator that named the control on the day it was
+      4227 |     // recorded usually misses because the page is not the page the step
+        at pick (/home/user/sitelooper/bench/results/sp3odb-spec-tmp/fwod34.flow.ts:4224:9)
+        at Object.02-create (/home/user/sitelooper/bench/results/sp3odb-spec-tmp/fwod34.flow.ts:4998:19)
+        at runFlow (/home/user/sitelooper/bench/results/sp3odb-spec-tmp/fwod34.flow.ts:5782:3)
+        at /home/user/sitelooper/bench/results/sp3odb-spec-tmp/fwod34.spec.ts:5:19
+
+    Error Context: ../../../test-results/fwod34-fwod34/error-context.md
+
+  1 failed
+    fwod34.spec.ts:4:1 › fwod34 ────────────────────────────────────────────────────────────────────
+EXIT=1
