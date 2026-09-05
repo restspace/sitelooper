@@ -1,4 +1,5 @@
 import type { Flow } from '../skills/flow.js';
+import { rethreadParams } from './rethread.js';
 import type { Skill, SkillParam, SkillStep, SkillStore } from '../skills/store.js';
 
 /**
@@ -110,10 +111,19 @@ export function flowToSpec(flow: Flow, store: SkillStore): { spec: SpecFlow; war
         warnings.push(`step ${step.id} compiles a demoted skill (${member.id}) — its last replays failed at the same step`);
       }
     }
+    // A literal binding on a step whose instruction threads references is
+    // replay debt (an adoption froze that run's values into the pin): align
+    // the pinned template against the instruction and rebind what it can.
+    let params = step.params ?? {};
+    if (skill) {
+      const threaded = rethreadParams(step.id, step.instruction, skill.template, params);
+      params = threaded.params;
+      warnings.push(...threaded.warnings);
+    }
     steps.push({
       id: step.id,
       instruction: step.instruction,
-      params: step.params ?? {},
+      params,
       outputs: step.outputs ?? [],
       segments,
     });

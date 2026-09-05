@@ -460,9 +460,34 @@ describe('expectations', () => {
   });
 
   it('names the presence check loosely, because a recorded line is not a Playwright name', () => {
-    expect(withExpect({ addedContains: ['- menu "View Details Remove"'] })).toContain(
-      "await expect(page.getByRole('menu', { name: 'View Details Remove', exact: false }).first()).toBeVisible();",
+    expect(withExpect({ addedContains: ['- menuitem "View Details"'] })).toContain(
+      "await expect(page.getByRole('menuitem', { name: 'View Details', exact: false }).first()).toBeVisible();",
     );
+  });
+
+  it('finds a role ARIA does not name from its contents by its TEXT as well (the grafana menu failure)', () => {
+    const out = withExpect({ addedContains: ['- menu "View Details Remove"'] });
+    // the daemon named this menu by its innerText; Playwright's accessible name
+    // for a role=menu is NOT computed from contents, so the role half alone
+    // matched nothing and sp5gr failed at 04-add s_0c4807/5 on every attempt
+    expect(out).toContain(
+      "await expect(page.getByRole('menu', { name: 'View Details Remove', exact: false })" +
+        ".or(page.getByRole('menu').filter({ hasText: 'View Details Remove' })).first()).toBeVisible();",
+    );
+    expect(syntaxErrors(out)).toEqual([]);
+  });
+
+  it('leaves a name-from-content role alone: a button IS named by its text', () => {
+    const out = withExpect({ addedContains: ['- button "Save dashboard"', '- link "Home"', '- heading "Widgets"', '- tab "New"'] });
+    expect(out).not.toContain('filter({ hasText:');
+  });
+
+  it('gives the hasText half of the union the same masked matcher as the role half', () => {
+    const out = withExpect({ addedContains: ['- menu "Refreshed {{*}}"'] });
+    const matcher = 'new RegExp(`Refreshed ' + VOLATILE_TOKEN_SHAPE.replace(/\\/g, '\\\\') + '`)';
+    expect(out).toContain(`page.getByRole('menu', { name: ${matcher}, exact: false })`);
+    expect(out).toContain(`.or(page.getByRole('menu').filter({ hasText: ${matcher} }))`);
+    expect(syntaxErrors(out)).toEqual([]);
   });
 
   it('finds an input by placeholder or title as well as by role name (the grafana failure)', () => {
@@ -529,11 +554,35 @@ describe('preconditions, minting and loops', () => {
   it('checks a bound identity marker at segment entry and skips an unbound one', () => {
     const step: SkillStep = { tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'id', selector: '#b' }] } };
     const bound = emit(specOf([step], { segments: [segment([step], { preconditions: { urlPattern: 'http://app.test/x', requireText: ['{{v1}}'] } })] }));
-    expect(bound).toContain('await expect(page.getByText(`${p.v1}`).first()).toBeVisible();');
+    // getByText alone could not see a marker that is an <input>'s VALUE, which
+    // is what an odoo form in edit mode shows and what sp5odb died on
+    expect(bound).toContain(
+      "await expect.poll(() => present(page, `${p.v1}`), { timeout: 5000, message: 'identity: {{v1}} is not on this page' }).toBe(true);",
+    );
+    expect(bound).toContain('async function present(page: Page, text: string): Promise<boolean> {');
+    expect(bound).toContain(".locator('input, textarea, select')");
+    expect(syntaxErrors(bound)).toEqual([]);
     const unbound = emit(
       specOf([step], { segments: [segment([step], { params: {}, preconditions: { urlPattern: 'http://app.test/x', requireText: ['{{v9}}'] } })] }),
     );
     expect(unbound).toContain('is unbound here — nothing to check.');
+    // and the helper is inlined only where a marker actually needs it
+    expect(unbound).not.toContain('async function present(');
+  });
+
+  it("re-reads a minted url part after the DOM settles, so a second redirect cannot strand it (the odoo signin failure)", () => {
+    const step: SkillStep = { tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'id', selector: '#save' }] }, mints: { at: 'p1' } };
+    const out = emit(specOf([step], { segments: [segment([step], { derived: { d1: { step: 1, at: 'q.action', example: '123' } } })] }));
+    const helper = /\nasync function urlPartsWhen\(page: Page[\s\S]*?\n\}\n/.exec(out);
+    expect(helper).not.toBeNull();
+    // replay binds derived values only AFTER settleDom on a url change; without
+    // that, odoo's second redirect left d1..d3 bound off an intermediate url and
+    // the following toHaveURL waited for a url that never came back
+    expect(helper![0]).toContain('await settle(page);');
+    expect(helper![0].indexOf('await settle(page);')).toBeGreaterThan(helper![0].indexOf('values.every(Boolean)'));
+    // and the transitive dependency is inlined
+    expect(out).toContain('async function settle(page: Page): Promise<void> {');
+    expect(syntaxErrors(out)).toEqual([]);
   });
 
   it('comments the precondition url rather than asserting it', () => {
@@ -939,7 +988,9 @@ describe('a click that opens a popup is a toggle', () => {
     // skips the click, so the guard is as strict as replay's own line-exact
     // lineShows is.
     expect(source).toContain(
-      'if (await page.getByRole(\'dialog\', { name: \'Edit the task\', exact: true })\n' +
+      'if (await page.getByRole(\'dialog\', { name: \'Edit the task\', exact: true })' +
+        // a dialog is not named from its contents, so the text half rides along
+        '.or(page.getByRole(\'dialog\').filter({ hasText: \'Edit the task\' }))\n' +
         '      .or(page.getByRole(\'button\', { name: \'Save\', exact: true }))\n' +
         '      .first().isVisible().catch(() => false)) {',
     );

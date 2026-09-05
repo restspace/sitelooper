@@ -54,6 +54,9 @@ const PICK_POLL_MS = 100;
  */
 const URL_WAIT_MS = 5_000;
 
+/** How long a segment's identity marker has to appear before the segment is on the wrong record. */
+const IDENTITY_WAIT_MS = 5_000;
+
 /**
  * What the inlined `settle` waits, mirroring replay's `settleDom` constants
  * exactly (SETTLE_QUIET_MS / SETTLE_MAX_MS / SETTLE_PROBE_MS in
@@ -256,14 +259,27 @@ const HELPERS: { token: string; source: string[] }[] = [
       ' * already there) must still bind what is there rather than hang or throw.',
       ' */',
       "async function urlPartsWhen(page: Page, labels: string[], urlBefore = ''): Promise<string[]> {",
+      '  const read = (url: string) => labels.map((label) => urlPart(url, label));',
       '  for (let waited = 0; waited < URL_WAIT_MS; waited += PICK_POLL_MS) {',
       '    const url = page.url();',
-      '    const values = labels.map((label) => urlPart(url, label));',
-      '    if (url !== urlBefore && values.every(Boolean)) return values;',
+      '    const values = read(url);',
+      '    if (url !== urlBefore && values.every(Boolean)) {',
+      '      // The parts are there — but an app is free to redirect AGAIN from',
+      '      // the url that first carried them, and the value that matters is',
+      '      // the one on the url the step SETTLES on. Replay never sees this,',
+      '      // because it binds derived values only after settleDom absorbs the',
+      '      // whole redirect chain. So: let the DOM go quiet, and if the url',
+      '      // moved while it did, settle once more before reading.',
+      '      for (let pass = 0; pass < 2; pass++) {',
+      '        const before = page.url();',
+      '        await settle(page);',
+      '        if (page.url() === before) break;',
+      '      }',
+      '      return read(page.url());',
+      '    }',
       '    await page.waitForTimeout(PICK_POLL_MS);',
       '  }',
-      '  const url = page.url();',
-      '  return labels.map((label) => urlPart(url, label));',
+      '  return read(page.url());',
       '}',
     ],
   },
@@ -667,6 +683,49 @@ const HELPERS: { token: string; source: string[] }[] = [
     ],
   },
   {
+    token: 'present(page, ',
+    source: [
+      '/**',
+      ' * Is `text` on the page — as TEXT, or as the current VALUE of a field?',
+      ' *',
+      " * WHICH REPLAY RULE THIS MIRRORS. checkIdentity (src/skills/replay.ts) asks",
+      ' * `presentOnPage`, which captures a fresh daemon SNAPSHOT and substring-matches',
+      ' * the marker against its lines. Those lines carry field values —',
+      ' * `textbox "Name": sp5odb Bench Customer` — so on a form in EDIT mode the',
+      " * marker is found in an <input>'s value, where `getByText` can never see it:",
+      ' * the DOM has no text node for it at all. Cloud run sp5odb died on exactly',
+      ' * that, at the very first gate of `03-open`, on an odoo customer form.',
+      ' *',
+      ' * So this is the snapshot line test in the two dialects a spec has: visible',
+      ' * text, or the live value of a visible input/textarea/select (a select',
+      ' * reports its selected option label, which is what the snapshot shows).',
+      ' * Whitespace-normalised and case-insensitive on the value half, because the',
+      " * snapshot's own comparison is whitespace-insensitive and a rendered value",
+      ' * is not always cased as it was typed.',
+      ' */',
+      'async function present(page: Page, text: string): Promise<boolean> {',
+      "  const want = text.replace(/\\s+/g, ' ').trim();",
+      '  if (!want) return false;',
+      '  if (await page.getByText(text).first().isVisible().catch(() => false)) return true;',
+      '  return await page',
+      "    .locator('input, textarea, select')",
+      '    .evaluateAll((els, needle: string) => {',
+      "      const norm = (s: string) => s.replace(/\\s+/g, ' ').trim().toLowerCase();",
+      '      const target = norm(needle);',
+      '      return els.some((el) => {',
+      '        const e = el as HTMLElement & { checkVisibility?: () => boolean };',
+      "        const shown = typeof e.checkVisibility === 'function' ? e.checkVisibility() : e.getClientRects().length > 0;",
+      '        if (!shown) return false;',
+      "        if (el instanceof HTMLSelectElement) return norm(el.selectedOptions[0]?.textContent ?? '').includes(target);",
+      '        const v = (el as HTMLInputElement | HTMLTextAreaElement).value;',
+      "        return typeof v === 'string' && norm(v).includes(target);",
+      '      });',
+      '    }, want)',
+      '    .catch(() => false);',
+      '}',
+    ],
+  },
+  {
     token: 'escapeRe(',
     source: [
       '/** A value interpolated into a pattern is DATA: its own metacharacters must not become pattern. */',
@@ -829,6 +888,54 @@ function urlExpectSource(pattern: string): string | null {
 const INPUT_LIKE_ROLES = new Set(['textbox', 'searchbox', 'combobox', 'spinbutton']);
 
 /**
+ * The ARIA roles whose accessible name may be computed FROM THEIR CONTENT
+ * (the "name from author, contents" set of the ARIA spec). For any other role
+ * the subtree text is NOT the name, so a `getByRole(role, { name })` built
+ * from the daemon's line can never match.
+ *
+ * WHY THIS EXISTS. `describeInPage` (src/daemon/diff.ts) falls back to
+ * `innerText` (up to 80 chars) whenever aria-label/labelledby/alt/title/
+ * placeholder/<label> give it nothing — for EVERY role, because a recorded
+ * line is a description for a human and a diff, not a locator. Grafana's
+ * refresh-interval popup is recorded as
+ *   - menu "Off Auto 5s 10s 30s 1m 5m 15m 30m 1h 2h 1d"
+ * and Playwright's accessible name for that same `role=menu` element is the
+ * empty string: cloud run sp5gr failed at `04-add s_0c4807/5` on exactly that
+ * locator, every attempt. The odoo home menu (`- menu "6 3 YourCompany"`) is
+ * the same defect.
+ *
+ * The repair is a union with `filter({ hasText })`, which is the closest
+ * Playwright has to the daemon's `clean(innerText)`: a STRING hasText is a
+ * case-insensitive substring match after whitespace normalisation, and a
+ * RegExp one is tested against the element's text. It is inherently a
+ * SUBSTRING test — `exact` cannot be expressed on it — so the guard callers
+ * (wrapAlreadyInEffect, which reads presence as a reason NOT to act) keep
+ * their anchored matcher on the role half and accept the looser hasText half.
+ * That is deliberate: the alternative is a guard whose role half never
+ * matches at all, which is the bug being fixed.
+ */
+const NAME_FROM_CONTENT_ROLES = new Set([
+  'button',
+  'cell',
+  'checkbox',
+  'columnheader',
+  'gridcell',
+  'heading',
+  'link',
+  'menuitem',
+  'menuitemcheckbox',
+  'menuitemradio',
+  'option',
+  'radio',
+  'row',
+  'rowheader',
+  'switch',
+  'tab',
+  'tooltip',
+  'treeitem',
+]);
+
+/**
  * A Playwright locator for one recorded page line (`- role "name"`,
  * `- text: foo`). Null when the line names nothing findable — an unnamed
  * control, or a value with no role — in which case the caller leaves the
@@ -865,10 +972,18 @@ function lineLocator(line: string, exact = false): string | null {
     if (!matcher) return null;
     // `exact` rides along as it always has; Playwright ignores it for a RegExp
     // name, where the anchoring above carries the same decision.
+    const roleName = roled[1].toLowerCase();
     const role = `page.getByRole(${q(roled[1])}, { name: ${matcher}, exact: ${exact} })`;
-    return INPUT_LIKE_ROLES.has(roled[1].toLowerCase())
-      ? `${role}.or(page.getByTitle(${matcher}, { exact: ${exact} })).or(page.getByPlaceholder(${matcher}, { exact: ${exact} }))`
-      : role;
+    if (INPUT_LIKE_ROLES.has(roleName)) {
+      return `${role}.or(page.getByTitle(${matcher}, { exact: ${exact} })).or(page.getByPlaceholder(${matcher}, { exact: ${exact} }))`;
+    }
+    // A role that ARIA does not name from its contents: the daemon named it
+    // from innerText anyway, so the same text has to be looked for as TEXT.
+    // Same matcher in both halves, so the two can never disagree about what
+    // the line said; hasText is a substring test whatever `exact` says.
+    return NAME_FROM_CONTENT_ROLES.has(roleName)
+      ? role
+      : `${role}.or(page.getByRole(${q(roled[1])}).filter({ hasText: ${matcher} }))`;
   }
   const text = /^-?\s*(?:text:)?\s*(.+?)\s*$/.exec(line);
   const value = text?.[1];
@@ -1464,7 +1579,13 @@ function emitSegment(segment: SpecSegment, ctx: Ctx): string[] {
     }
     noteSlots(marker, ctx);
     out.push(`// identity: this must be the record the flow is working on, not another of the same shape.`);
-    out.push(`await expect(page.getByText(${src(marker)}).first()).toBeVisible();`);
+    // Polled, not asserted once: replay reaches this gate after its own
+    // settleDom, and a spec arrives on a page that may still be rendering.
+    out.push(
+      `await expect.poll(() => present(page, ${src(marker)}), { timeout: ${IDENTITY_WAIT_MS}, message: ${q(
+        `identity: ${commentSafe(marker)} is not on this page`,
+      )} }).toBe(true);`,
+    );
   }
   for (const [i, step] of segment.steps.entries()) {
     out.push('');
