@@ -1,0 +1,39 @@
+
+Running 1 test using 1 worker
+
+  ✘  1 fwgr27.spec.ts:4:1 › fwgr27 (33.6s)
+
+
+  1) fwgr27.spec.ts:4:1 › fwgr27 ───────────────────────────────────────────────────────────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('menu', { name: 'Off Auto 5s 10s 30s 1m 5m 15m 30m 1h 2h 1d' }).first()
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Ex[spec-replay] sp5grb: 0/1 passed, exit=1, 37s, 1 drift line(s) — result written
+e: 'Off Auto 5s 10s 30s 1m 5m 15m 30m 1h 2h 1d' }).first()
+
+
+       at fwgr27.flow.ts:4303
+
+      4301 |     // the step's recorded effect must show — any one of these, as replay's effect gate has it:
+      4302 |     //   - menu "Off Auto 5s 10s 30s 1m 5m 15m 30m 1h 2h 1d"
+    > 4303 |     await expect(page.getByRole('menu', { name: 'Off Auto 5s 10s 30s 1m 5m 15m 30m 1h 2h 1d', exact: false }).first()).toBeVisible();
+           |                                                                                                                        ^
+      4304 |
+      4305 |     // @step 04-add s_0c4807/6
+      4306 |     await settle(page);
+        at Object.04-add (/home/user/sitelooper/bench/results/sp5grb-spec-tmp/fwgr27.flow.ts:4303:120)
+        at runFlow (/home/user/sitelooper/bench/results/sp5grb-spec-tmp/fwgr27.flow.ts:4598:3)
+        at /home/user/sitelooper/bench/results/sp5grb-spec-tmp/fwgr27.spec.ts:5:19
+
+    Error Context: ../../../test-results/fwgr27-fwgr27/error-context.md
+
+  1 failed
+    fwgr27.spec.ts:4:1 › fwgr27 ────────────────────────────────────────────────────────────────────
+[sitelooper drift] 03-add s_e4d3e5/11 target: primary getByText('Notes for run sp5grb', { exact: true }) missed; used #2 locator('[data-testid="TextPanel-converted-content"] p')
+EXIT=1

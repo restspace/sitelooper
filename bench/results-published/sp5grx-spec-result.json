@@ -1,0 +1,38 @@
+{
+  "arm": "spec",
+  "runid": "sp5grx",
+  "target": "grafana",
+  "flow": "sp5gr.json",
+  "flowName": "fwgr27",
+  "skillsDir": "/home/user/sitelooper/bench/results/sp5gr-skills",
+  "compiled": true,
+  "flowFile": "bench/results/sp5grx-spec-tmp/fwgr27.flow.ts",
+  "specFile": "bench/results/sp5grx-spec-tmp/fwgr27.spec.ts",
+  "wallMs": 36146,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwgr27",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 33261,
+      "error": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('menu', { name: 'Off Auto 5s 10s 30s 1m 5m 15m 30m 1h 2h 1d' }).first()\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('menu', { name: 'Off Auto 5s 10s 30s 1m 5m 15m 30m 1h 2h 1d' }).first()\u001b[22m\n",
+      "drift": [
+        "[sitelooper drift] 03-add s_e4d3e5/11 target: primary getByText('Notes for run sp5grx', { exact: true }) missed; used #2 locator('[data-testid=\"TextPanel-converted-content\"] p')"
+      ]
+    }
+  ],
+  "drift": [
+    "[sitelooper drift] 03-add s_e4d3e5/11 target: primary getByText('Notes for run sp5grx', { exact: true }) missed; used #2 locator('[data-testid=\"TextPanel-converted-content\"] p')"
+  ],
+  "driftCount": 1,
+  "logTail": "\nRunning 1 test using 1 worker\n\n  ✘  1 fwgr27.spec.ts:4:1 › fwgr27 (33.3s)\n\n\n  1) fwgr27.spec.ts:4:1 › fwgr27 ───────────────────────────────────────────────────────────────────\n\n    Error: expect(locator).toBeVisible() failed\n\n    Locator: getByRole('menu', { name: 'Off Auto 5s 10s 30s 1m 5m 15m 30m 1h 2h 1d' }).first()\n    Expected: visible\n    Timeout: 5000ms\n    Error: element(s) not found\n\n    Call log:\n      - Expect \"toBeVisible\" with timeout 5000ms\n      - waiting for getByRole('menu', { name: 'Off Auto 5s 10s 30s 1m 5m 15m 30m 1h 2h 1d' }).first()\n\n\n       at fwgr27.flow.ts:4315\n\n      4313 |     // the step's recorded effect must show — any one of these, as replay's effect gate has it:\n      4314 |     //   - menu \"Off Auto 5s 10s 30s 1m 5m 15m 30m 1h 2h 1d\"\n    > 4315 |     await expect(page.getByRole('menu', { name: 'Off Auto 5s 10s 30s 1m 5m 15m 30m 1h 2h 1d', exact: false }).first()).toBeVisible();\n           |                                                                                                                        ^\n      4316 |\n      4317 |     // @step 04-add s_0c4807/6\n      4318 |     await settle(page);\n        at Object.04-add (/home/user/sitelooper/bench/results/sp5grx-spec-tmp/fwgr27.flow.ts:4315:120)\n        at runFlow (/home/user/sitelooper/bench/results/sp5grx-spec-tmp/fwgr27.flow.ts:4610:3)\n        at /home/user/sitelooper/bench/results/sp5grx-spec-tmp/fwgr27.spec.ts:5:19\n\n    Error Context: ../../../test-results/fwgr27-fwgr27/error-context.md\n\n  1 failed\n    fwgr27.spec.ts:4:1 › fwgr27 ────────────────────────────────────────────────────────────────────\n[sitelooper drift] 03-add s_e4d3e5/11 target: primary getByText('Notes for run sp5grx', { exact: true }) missed; used #2 locator('[data-testid=\"TextPanel-converted-content\"] p')\n"
+}
