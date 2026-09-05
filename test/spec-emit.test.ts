@@ -472,9 +472,37 @@ describe('expectations', () => {
     // matched nothing and sp5gr failed at 04-add s_0c4807/5 on every attempt
     expect(out).toContain(
       "await expect(page.getByRole('menu', { name: 'View Details Remove', exact: false })" +
-        ".or(page.getByRole('menu').filter({ hasText: 'View Details Remove' })).first()).toBeVisible();",
+        ".or(page.getByRole('menu').filter({ hasText: looseText('View Details Remove') })).first()).toBeVisible();",
     );
     expect(syntaxErrors(out)).toEqual([]);
+  });
+
+  it("loosens the hasText half's spacing, because hasText reads textContent and the daemon read innerText", () => {
+    // Measured against the bench grafana (2026-09-05): the refresh menu's twelve
+    // <button> children give innerText "Off\nAuto\n5s\n…" — recorded as
+    // `menu "Off Auto 5s …"` — and textContent "OffAuto5s…". hasText compares
+    // against textContent, so the plain string counted 0 elements while
+    // getByRole('menu') counted 1, and sp5gr/sp6gr died at 04-add s_0c4807/5
+    // with the union already in place. Each recorded space stood for whitespace
+    // OR a block boundary, so it has to match both.
+    const out = withExpect({ addedContains: ['- menu "Off Auto 5s 10s"'] });
+    expect(out).toContain(".or(page.getByRole('menu').filter({ hasText: looseText('Off Auto 5s 10s') }))");
+    expect(out).toContain('function looseText(text: string | RegExp): RegExp {');
+    // and it does what it says: the loosened pattern matches BOTH readings
+    const loose = new Function(
+      'text',
+      "const escapeRe = (s) => s.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');" +
+        "const source = typeof text === 'string' ? escapeRe(text) : text.source;" +
+        "return new RegExp(source.replace(/ +/g, '\\\\s*'), typeof text === 'string' ? 'i' : text.flags);",
+    )('Off Auto 5s 10s') as RegExp;
+    expect(loose.test('Off Auto 5s 10s')).toBe(true);
+    expect(loose.test('OffAuto5s10s')).toBe(true);
+    expect(loose.test('Off\nAuto\n5s\n10s')).toBe(true);
+    expect(syntaxErrors(out)).toEqual([]);
+  });
+
+  it('carries the emitted looseText only into bodies that use it', () => {
+    expect(withExpect({ addedContains: ['- button "Save"'] })).not.toContain('function looseText');
   });
 
   it('leaves a name-from-content role alone: a button IS named by its text', () => {
@@ -486,7 +514,7 @@ describe('expectations', () => {
     const out = withExpect({ addedContains: ['- menu "Refreshed {{*}}"'] });
     const matcher = 'new RegExp(`Refreshed ' + VOLATILE_TOKEN_SHAPE.replace(/\\/g, '\\\\') + '`)';
     expect(out).toContain(`page.getByRole('menu', { name: ${matcher}, exact: false })`);
-    expect(out).toContain(`.or(page.getByRole('menu').filter({ hasText: ${matcher} }))`);
+    expect(out).toContain(`.or(page.getByRole('menu').filter({ hasText: looseText(${matcher}) }))`);
     expect(syntaxErrors(out)).toEqual([]);
   });
 
@@ -987,13 +1015,16 @@ describe('a click that opens a popup is a toggle', () => {
     // exact names, unlike the effect assertions below: a false positive HERE
     // skips the click, so the guard is as strict as replay's own line-exact
     // lineShows is.
+    // Only the popup line guards: the `button "Save"` the same click recorded
+    // is not what a second click would toggle away (it may be on the page for
+    // another reason entirely), so it must not decide the skip.
     expect(source).toContain(
       'if (await page.getByRole(\'dialog\', { name: \'Edit the task\', exact: true })' +
         // a dialog is not named from its contents, so the text half rides along
-        '.or(page.getByRole(\'dialog\').filter({ hasText: \'Edit the task\' }))\n' +
-        '      .or(page.getByRole(\'button\', { name: \'Save\', exact: true }))\n' +
-        '      .first().isVisible().catch(() => false)) {',
+        '.or(page.getByRole(\'dialog\').filter({ hasText: looseText(\'Edit the task\') }))' +
+        '.first().isVisible().catch(() => false)) {',
     );
+    expect(source).not.toMatch(/\.or\(page\.getByRole\('button', \{ name: 'Save', exact: true \}\)\)\n\s+\.first\(\)\.isVisible\(\)/);
     expect(source).toContain('} else {');
     // the action itself moved inside the else branch, indented with it
     expect(source).toContain("      await click(page.getByRole('button', { name: 'Edit the task', exact: true }));");
@@ -1083,6 +1114,41 @@ describe('a click that an overlay intercepts', () => {
     expect(out).toContain("input.dispatchEvent(new Event('change', { bubbles: true }));");
     // and the same fallback for a widget with no native value setter
     expect(out).toContain('    await loc.fill(value);');
+    expect(syntaxErrors(out)).toEqual([]);
+  });
+
+  it('runs the component set-value recipe ahead of the native setter, as tools.ts does', () => {
+    // The grafana `03-add s_e4d3e5/6` failure: the fill target was monaco's
+    // input textarea, the native setter wrote into a box the editor never
+    // reads, the step reported success and the saved panel kept grafana's
+    // default markdown. The daemon never had this bug, because `case 'fill'`
+    // asks tryRecipe (src/skills/components.ts) FIRST.
+    const filled: SkillStep = { tool: 'fill', args: { target: '@e1', value: 'Notes' }, locators: { target: [{ kind: 'id', selector: '#ed' }] } };
+    const out = emit(specOf([filled]));
+    // the FAMILIES recognition set, in components.ts order, minus aria-combobox
+    expect(out).toContain("root: '.monaco-editor',");
+    expect(out).toContain("root: '.cm-editor',");
+    expect(out).toContain("root: '.ProseMirror',");
+    expect(out).toContain('root: \'[contenteditable="true"]\',');
+    expect(out).not.toContain('role="combobox"');
+    // the editorSetValue step list itself
+    expect(out).toContain("await page.keyboard.press('ControlOrMeta+a');");
+    expect(out).toContain('await page.keyboard.insertText(value);');
+    expect(out).toContain('const EDITOR_SETTLE_MS = 400;');
+    expect(out).toContain("await page.keyboard.press('Escape');");
+    expect(out).toContain('const EDITOR_BLUR_SETTLE_MS = 200;');
+    expect(out).toContain('.evaluate((el: Element) => (el as HTMLElement).blur?.())');
+    // the seeds' own click/blur/verify targets
+    expect(out).toContain("read: '.view-lines',");
+    expect(out).toContain("click: '.cm-content',");
+    expect(out).toContain("blur: 'textarea',");
+    // verify-then-fall-back: the recipe only counts when it re-observes the payload
+    expect(out).toContain('return !value || squash(seen).includes(squash(value));');
+    expect(out).toContain('  if (await editorSetValue(loc, value)) return;');
+    // and the native setter is still what an ordinary input gets, unchanged
+    expect(out.indexOf('if (await editorSetValue(loc, value)) return;')).toBeLessThan(
+      out.indexOf("const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;"),
+    );
     expect(syntaxErrors(out)).toEqual([]);
     // a flow that never fills carries none of it
     const clicked: SkillStep = { tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'id', selector: '#go' }] } };

@@ -1331,8 +1331,18 @@ export const OPENER_LINE = /^-?\s*(dialog|alertdialog|menu|menubar|listbox|toolt
 export function openerLines(step: SkillStep, params: Record<string, string>): string[] {
   if (step.tool !== 'click' || !step.expect?.addedContains?.length) return [];
   const plain = step.expect.addedContains.filter((l) => !TRANSIENT_LINE.test(l) && !/\{\{v\d+\}\}/.test(l));
-  if (!plain.some((l) => OPENER_LINE.test(l))) return [];
-  return plain.map((l) => fillParams(maskMinted(maskVolatile(l)), params));
+  // Only the POPUP lines decide. A click recorded to open a dialog also
+  // records whatever else changed around it — the row it was about to fill,
+  // the combobox it typed into — and those are on the page BEFORE the click
+  // too. fwod34's 03-open picked "Conference Chair" from a product
+  // autocomplete: the recorded effect listed `row "£ 0.00"` (the empty line
+  // added one step earlier) beside `dialog ""`/`heading "Configure your
+  // product"`, lineShows is any-of, so the option click was skipped as
+  // "already in effect" on every replay and the dialog's Confirm at the next
+  // step had nothing to click.
+  const popup = plain.filter((l) => OPENER_LINE.test(l));
+  if (!popup.length) return [];
+  return popup.map((l) => fillParams(maskMinted(maskVolatile(l)), params));
 }
 
 /**

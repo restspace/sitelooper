@@ -126,6 +126,14 @@ const CLICK_TIER_MS = 5_000;
 const FILL_WAIT_MS = 10_000;
 const FILL_FOCUS_MS = 5_000;
 
+/**
+ * The two settles inside the editor recipe, taken from `editorSetValue` in
+ * src/skills/components.ts verbatim: 400ms for the insert to be absorbed
+ * before Escape, 200ms after the blur for the commit the app hangs off it.
+ */
+const EDITOR_SETTLE_MS = 400;
+const EDITOR_BLUR_SETTLE_MS = 200;
+
 /** The inlined helpers, keyed by the token that proves the body (or another helper) uses one. */
 const HELPERS: { token: string; source: string[] }[] = [
   {
@@ -440,12 +448,109 @@ const HELPERS: { token: string; source: string[] }[] = [
       ' * event after each set and a `change` after the last. An element with no',
       ' * value property or no prototype setter (contenteditable, a custom',
       " * widget) falls back to Playwright's own fill, exactly as the daemon does.",
+      ' *',
+      ' * But reactSafeFill is only the SECOND half of what replay does. The',
+      " * daemon's `case 'fill'` (src/agent/tools.ts) asks `tryRecipe(page, target,",
+      " * 'set-value', value)` FIRST (src/skills/components.ts), and only falls back",
+      ' * to reactSafeFill when no widget was recognised or the recipe could not',
+      ' * verify its own effect. That first half is what a keyboard-driven editor',
+      ' * needs: monaco has no value property to set — its `<textarea>` is an input',
+      ' * sink, and the text you see is a rendered `.view-lines` div — so the native',
+      ' * setter writes into a box the editor never reads. Local grafana run',
+      ' * `03-add s_e4d3e5/6` did exactly that: no error, and the saved text panel',
+      " * kept grafana's default markdown, so the objective failed on a step that",
+      ' * reported success. So the ladder is mirrored here too, recipe first.',
       ' */',
       `const FILL_WAIT_MS = ${FILL_WAIT_MS};`,
       `const FILL_FOCUS_MS = ${FILL_FOCUS_MS};`,
+      `const EDITOR_SETTLE_MS = ${EDITOR_SETTLE_MS};`,
+      `const EDITOR_BLUR_SETTLE_MS = ${EDITOR_BLUR_SETTLE_MS};`,
+      '/**',
+      ' * The widget families whose set-value recipe a fill goes through, in the',
+      ' * FAMILIES order of src/skills/components.ts (most specific first —',
+      " * CodeMirror's .cm-content IS contenteditable, and monaco embeds a",
+      ' * textarea), with each recipe\'s click/blur/verify targets as the seeds',
+      ' * name them. `aria-combobox` is deliberately absent: it carries a',
+      ' * select-option recipe only, and never a set-value one.',
+      ' *',
+      ' * `up` is the same `closest(root)` walk expressed as a locator, so the',
+      ' * root can be CLICKED and READ rather than merely detected; the class',
+      ' * test is token-wise (`" monaco-editor "`), because `contains(@class,',
+      ' * "monaco-editor")` would also match `monaco-editor-background`.',
+      ' */',
+      'const EDITORS: { root: string; up: string; click?: string; blur?: string; read?: string }[] = [',
+      '  {',
+      "    root: '.monaco-editor',",
+      '    up: \'xpath=ancestor-or-self::*[contains(concat(" ", normalize-space(@class), " "), " monaco-editor ")]\',',
+      "    blur: 'textarea',",
+      "    read: '.view-lines',",
+      '  },',
+      '  {',
+      "    root: '.cm-editor',",
+      '    up: \'xpath=ancestor-or-self::*[contains(concat(" ", normalize-space(@class), " "), " cm-editor ")]\',',
+      "    click: '.cm-content',",
+      "    blur: '.cm-content',",
+      "    read: '.cm-content',",
+      '  },',
+      '  {',
+      "    root: '.ProseMirror',",
+      '    up: \'xpath=ancestor-or-self::*[contains(concat(" ", normalize-space(@class), " "), " ProseMirror ")]\',',
+      '  },',
+      '  {',
+      '    root: \'[contenteditable="true"]\',',
+      '    up: \'xpath=ancestor-or-self::*[@contenteditable="true"]\',',
+      '  },',
+      '];',
+      '/**',
+      ' * The set-value recipe, run with Playwright primitives — a transcription of',
+      ' * `editorSetValue` in src/skills/components.ts (click, ControlOrMeta+a,',
+      ' * insertText, settle 400, Escape, blur, settle 200) followed by the',
+      ' * verification read `verifyRecipe` makes: the family\'s verifyRead node must',
+      ' * re-observe the payload, whitespace-squashed (monaco renders spaces as',
+      ' * NBSP and rewraps lines). True only when it did — a recipe that cannot',
+      ' * prove its own effect is a failure, and the caller falls back, exactly as',
+      ' * `tryRecipe` does.',
+      ' */',
+      'async function editorSetValue(loc: Locator, value: string): Promise<boolean> {',
+      '  const which = await loc',
+      '    .evaluate((el: Element, roots: string[]) => roots.findIndex((sel) => Boolean(el.closest(sel))), EDITORS.map((e) => e.root))',
+      '    .catch(() => -1);',
+      '  if (which < 0) return false;',
+      '  const ed = EDITORS[which];',
+      '  const page = loc.page();',
+      '  const root = loc.locator(ed.up).last(); // ancestor-or-self is document order: nearest is last',
+      '  const within = (sel?: string) => (sel ? root.locator(sel).first() : root);',
+      '  try {',
+      '    await within(ed.click).click({ timeout: FILL_FOCUS_MS });',
+      "    await page.keyboard.press('ControlOrMeta+a');",
+      '    await page.keyboard.insertText(value);',
+      '    await page.waitForTimeout(EDITOR_SETTLE_MS);',
+      "    await page.keyboard.press('Escape');",
+      '    // A blur target the recipe names but the widget does not have is simply',
+      '    // skipped (stepHandle returns null, and the daemon blurs nothing).',
+      '    await within(ed.blur)',
+      '      .evaluate((el: Element) => (el as HTMLElement).blur?.())',
+      '      .catch(() => {});',
+      '    await page.waitForTimeout(EDITOR_BLUR_SETTLE_MS);',
+      '  } catch {',
+      '    return false; // a step that could not run at all: fall back',
+      '  }',
+      '  const seen = await within(ed.read)',
+      '    .evaluate((el: Element) => {',
+      '      const v = (el as HTMLInputElement).value;',
+      "      return typeof v === 'string' ? v : ((el as HTMLElement).innerText ?? el.textContent ?? '');",
+      '    })',
+      '    .catch(() => null);',
+      '  if (seen === null) return false;',
+      "  const squash = (s: string) => s.replace(/\\u00a0/g, ' ').replace(/\\s+/g, ' ').trim();",
+      '  return !value || squash(seen).includes(squash(value));',
+      '}',
       'async function fill(loc: Locator, value: string): Promise<void> {',
       "  await loc.waitFor({ state: 'visible', timeout: FILL_WAIT_MS });",
       '  await loc.scrollIntoViewIfNeeded().catch(() => {});',
+      '  // The recipe half of the ladder, ahead of the native setter exactly as',
+      "  // tools.ts puts tryRecipe ahead of reactSafeFill. Verified, or nothing.",
+      '  if (await editorSetValue(loc, value)) return;',
       '  await loc.click({ timeout: FILL_FOCUS_MS }).catch(() => {}); // focus; some widgets need it',
       '  const handled = await loc.evaluate((el: Element, val: string) => {',
       '    const input = el as HTMLInputElement | HTMLTextAreaElement;',
@@ -734,6 +839,38 @@ const HELPERS: { token: string; source: string[] }[] = [
       '}',
     ],
   },
+  {
+    token: 'looseText(',
+    source: [
+      '/**',
+      " * A recorded NAME as a `hasText` matcher that tolerates the daemon's spacing.",
+      ' *',
+      " * WHY. The daemon names an element from `innerText` (describeInPage in",
+      ' * src/daemon/diff.ts), which inserts a line break at every BLOCK boundary,',
+      ' * and `clean()` collapses those to single spaces. Playwright matches',
+      ' * `hasText` against `textContent`, which inserts NOTHING between block',
+      ' * children. For a container named from its contents the two disagree by',
+      ' * exactly the separators — measured against the bench grafana, the refresh',
+      ' * menu (twelve <button> children) is',
+      ' *   innerText   "Off\\nAuto\\n5s\\n10s\\n…"   -> recorded "Off Auto 5s 10s …"',
+      ' *   textContent "OffAuto5s10s…"',
+      ' * so `filter({ hasText: \'Off Auto 5s …\' })` counted 0 while',
+      " * `getByRole('menu')` counted 1. Whitespace NORMALISATION cannot bridge",
+      ' * that, because the whitespace is not there to normalise; that is why cloud',
+      ' * runs sp5gr/sp6gr still died at `04-add s_0c4807/5` on the union that',
+      ' * already carried a hasText half.',
+      ' *',
+      ' * So every space the daemon put between two words becomes `\\s*`: it stood',
+      ' * for real whitespace OR for a block boundary, and the pattern has to accept',
+      ' * both. Everything else is escaped, so the matcher still says exactly what',
+      " * the line said, and `i` mirrors a string hasText's case-insensitivity.",
+      ' */',
+      'function looseText(text: string | RegExp): RegExp {',
+      "  const source = typeof text === 'string' ? escapeRe(text) : text.source;",
+      "  return new RegExp(source.replace(/ +/g, '\\\\s*'), typeof text === 'string' ? 'i' : text.flags);",
+      '}',
+    ],
+  },
 ];
 
 /**
@@ -904,10 +1041,14 @@ const INPUT_LIKE_ROLES = new Set(['textbox', 'searchbox', 'combobox', 'spinbutto
  * locator, every attempt. The odoo home menu (`- menu "6 3 YourCompany"`) is
  * the same defect.
  *
- * The repair is a union with `filter({ hasText })`, which is the closest
- * Playwright has to the daemon's `clean(innerText)`: a STRING hasText is a
- * case-insensitive substring match after whitespace normalisation, and a
- * RegExp one is tested against the element's text. It is inherently a
+ * The repair is a union with `filter({ hasText })` — but hasText is NOT
+ * `clean(innerText)`, which is what the first cut of this assumed and why
+ * sp6gr failed identically with the union in place. Playwright matches hasText
+ * against `textContent`, which puts no separator between block children, so
+ * the recorded "Off Auto 5s …" was compared against "OffAuto5s…" and matched
+ * nothing. The hasText half therefore goes through `looseText` (see the
+ * helper), which turns each recorded space back into `\s*` — the only form
+ * that matches both readings of the same subtree. It is inherently a
  * SUBSTRING test — `exact` cannot be expressed on it — so the guard callers
  * (wrapAlreadyInEffect, which reads presence as a reason NOT to act) keep
  * their anchored matcher on the role half and accept the looser hasText half.
@@ -981,9 +1122,14 @@ function lineLocator(line: string, exact = false): string | null {
     // from innerText anyway, so the same text has to be looked for as TEXT.
     // Same matcher in both halves, so the two can never disagree about what
     // the line said; hasText is a substring test whatever `exact` says.
+    //
+    // Through `looseText`, because the two halves read the element's text by
+    // DIFFERENT rules: the daemon's innerText separates block children, the
+    // hasText Playwright compares against (textContent) does not. See the
+    // helper — this is the half that has to survive that gap.
     return NAME_FROM_CONTENT_ROLES.has(roleName)
       ? role
-      : `${role}.or(page.getByRole(${q(roled[1])}).filter({ hasText: ${matcher} }))`;
+      : `${role}.or(page.getByRole(${q(roled[1])}).filter({ hasText: looseText(${matcher}) }))`;
   }
   const text = /^-?\s*(?:text:)?\s*(.+?)\s*$/.exec(line);
   const value = text?.[1];
@@ -1226,7 +1372,12 @@ function derivedLines(segment: SpecSegment, index: number, ctx: Ctx, out: string
 function openerExpectations(step: SkillStep): string[] {
   if (step.tool !== 'click' && step.tool !== 'dblclick') return [];
   const lines = (step.expect?.addedContains ?? []).filter((l) => !TRANSIENT_LINE.test(l) && !SLOT_LINE.test(l));
-  return lines.some((l) => OPENER_LINE.test(l)) ? lines : [];
+  // Only the popup lines decide, as replay's openerLines: the other effects
+  // a dialog-opening click recorded (the row it was about to fill, the
+  // combobox it typed into) were on the page BEFORE the click too, and an
+  // any-of guard over them skipped fwod34's product-option click on every
+  // run, so the configurator dialog its next step confirms never opened.
+  return lines.filter((l) => OPENER_LINE.test(l));
 }
 
 /**
