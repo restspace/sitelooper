@@ -83,6 +83,7 @@ describe('decideRepin', () => {
 
   it('graduates an adopted step on its first clean recovery, provisional or not', () => {
     expect(decideRepin({ ...base, step: { id: '01-open', adopted: true }, outcome: provisional })).toEqual({ skill: 's_new', graduated: true });
+    expect(decideRepin({ ...base, step: { id: '01-open', adopted: true }, outcome: validated })).toEqual({ skill: 's_new', graduated: true });
   });
 
   it('does nothing when the incumbent replayed, failed, or is the same skill', () => {

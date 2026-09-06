@@ -123,7 +123,17 @@ export function stepNote(line: string, stepId: string): string | null {
   return m && m[1] === stepId ? m[2] : null;
 }
 
-/** `run 2: 08-open  replay tier A (s_ab12cd)` / `run 1: 08-open  agent (12 turns) re-pinned s_ab12cd` */
+/**
+ * The daemon's `replayed` is "<steps run>/<steps total>" for the skill the
+ * step actually ran; older results and repair's facts carry a skill id there
+ * instead. Only an id is evidence that a DIFFERENT skill covered the step.
+ */
+export function replayedSkillId(replayed: string | null | undefined): string | null {
+  if (!replayed) return null;
+  return /^\d+\s*\/\s*\d+$/.test(replayed) ? null : replayed;
+}
+
+/** `run 2: 08-open  replay tier A (2/2)` / `run 1: 08-open  agent (12 turns) re-pinned s_ab12cd` */
 export function stepLine(stepId: string, run: RerecordRun): string {
   const st = run.step;
   if (!st) return `${run.label}: ${stepId}  not reached`;
@@ -199,10 +209,11 @@ export function rerecordVerdict(input: { file: string; stepId: string; runs: Rer
       { fix: `${fix} --runs 3` },
     );
   }
-  if (last.step.replayed && last.step.replayed !== pinned) {
+  const covering = replayedSkillId(last.step.replayed);
+  if (covering && covering !== pinned) {
     return bad(
-      `${stepId} only passes because the engine replays ${last.step.replayed} instead of its new pin ${pinned}`,
-      `the re-recording pinned ${pinned}, but ${last.label} replayed ${last.step.replayed}; a compiled spec emits the pin and halts here. ${trail}`,
+      `${stepId} only passes because the engine replays ${covering} instead of its new pin ${pinned}`,
+      `the re-recording pinned ${pinned}, but ${last.label} replayed ${covering}; a compiled spec emits the pin and halts here. ${trail}`,
       { fix: `${fix} --instruction "<an instruction that describes what this step should do>"` },
     );
   }

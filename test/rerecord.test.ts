@@ -288,3 +288,23 @@ describe('stepNote and refusal evidence', () => {
   });
 });
 
+describe('replayed as a fraction', () => {
+  // The local re-record of odoo 08-open: run 1 re-pinned s_04d970, run 2
+  // replayed it at tier A and the daemon reported `replayed: "2/2"` — a
+  // steps-run fraction, not a skill id — and the verdict called it a cover.
+  it("does not mistake the daemon's steps-run fraction for a covering skill", async () => {
+    const { rerecordVerdict, replayedSkillId } = await import('../src/spec/rerecord.js');
+    expect(replayedSkillId('2/2')).toBeNull();
+    expect(replayedSkillId('s_04d970')).toBe('s_04d970');
+    const v = rerecordVerdict({
+      file: 'flows/f.json',
+      stepId: '08-open',
+      runs: [
+        { label: 'run 1', step: { id: '08-open', status: 'success', tier: 'B', replayed: '2/2', turns: 2, repinned: 's_04d970' } as never },
+        { label: 'run 2', step: { id: '08-open', status: 'success', tier: 'A', replayed: '2/2', turns: 0 } as never },
+      ],
+    });
+    expect(v).toEqual({ ok: true, pinned: 's_04d970', runs: 2 });
+  });
+});
+

@@ -450,7 +450,11 @@ export function decideRepin(input: {
     return { refused: `not re-pinning ${outcome.skill} — its navigation carries an identifier this run made (${input.mintedLeaks.slice(0, 3).join(', ')}), so it would replay onto this run's record` };
   }
   if (input.reportStatus !== 'success' || !input.adoptable) return null;
-  if (outcome.status === 'validated') return { skill: outcome.skill, graduated: false };
+  // An adopted step graduates on its first clean recovery whatever the
+  // candidate's status: it now owns a skill that completed it, and keeping
+  // the flag would leave a pinned step on the model-first route (the local
+  // re-record of odoo 08-open onto validated s_04d970 kept `adopted: true`).
+  if (outcome.status === 'validated') return { skill: outcome.skill, graduated: Boolean(step.adopted) };
   if (step.adopted) return { skill: outcome.skill, graduated: true };
   return null;
 }
