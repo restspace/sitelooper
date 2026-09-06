@@ -102,21 +102,32 @@ for `do`. Work the failure like this:
    dropped assertion exits 1 rather than writing — but treat that refusal as final, not something
    to work around by editing the flow yourself; an assertion that stopped holding is a real test
    failure for a human to look at, not drift.
-6. If `repair` (or `compile`) prints a **needs-rerecord** / **demoted-pin** diagnostic rather than
-   proposing a fix, don't try to hand-patch the `.flow.ts` — it's regenerated in full on every
-   `compile`/`repair` and hand edits are detected and refused on the next repair anyway. Every such
-   diagnostic names its own fix command: `sitelooper rerecord <flow> <step-id> [--instruction
-   "<text>"] [--var k=v ...] [--runs n] [--reset-cmd "<cmd>"]`. It backs the flow file up, unpins
-   just that step (optionally swapping in a new instruction — the fix when the recorded ask no
-   longer makes sense, e.g. "cancel an order a previous step already cancelled"), and replays the
-   flow `--runs` times (default 2) in learning mode; it succeeds only when the last run replays the
-   step at tier A on the newly recorded pin, otherwise it prints why and exits 1.
+6. If `repair` (or `compile`) prints a **needs-rerecord** / **demoted-pin** / **noop-step** /
+   **contradicted-step** diagnostic rather than proposing a fix, don't try to hand-patch the
+   `.flow.ts` — it's regenerated in full on every `compile`/`repair` and hand edits are detected
+   and refused on the next repair anyway. Every such diagnostic names its own fix command:
+   `sitelooper rerecord <flow> <step-id> [--instruction "<text>"] [--var k=v ...] [--runs n]
+   [--reset-cmd "<cmd>"]`. It backs the flow file up, unpins just that step (optionally swapping in
+   a new instruction — the fix when the recorded ask no longer makes sense, e.g. "cancel an order a
+   previous step already cancelled"), and replays the flow `--runs` times (default 2) in learning
+   mode; it succeeds only when the last run replays the step at tier A on the newly recorded pin,
+   otherwise it prints why and exits 1. A `contradicted-step` diagnostic's `fix` points at the
+   *mutating* step (the one whose report a later read-only step disagreed with), not the step that
+   eventually failed because of it — re-record that one, not the one you saw fail.
 7. Once `repair` has written the file (`converged: true` / "wrote ... (N change(s); the .spec.ts
    was not touched)"), commit only the `.flow.ts` diff and open it as a PR, with the printed
    change list as the PR description — that list is already the reviewer-facing summary of what
    changed and why.
 
 Never touch the `.spec.ts` for this: it's the user's file and `repair` never rewrites it.
+
+A step whose printed line says `already satisfied` (a `run`) or whose emitted guard logs
+`[sitelooper satisfied] ...` (a compiled spec) is not a bug: a mutating step derives a `goal` at
+compile time — the visible text its own recording read back that was not there when it started —
+and the engine checks the live page for both identity and that goal before acting. When both
+already hold, the step succeeds having done nothing rather than repeating work (or failing to find
+a control that a prior step's retry already removed). Nothing to fix here; it is the retry-safety
+half of the same mechanism `contradicted-step` and `noop-step` flag the *unsafe* version of.
 `repair` itself never touches anything outside a throwaway temp store until the very last
 step (the file write) — the runs it performs against the live app to triage and converge are
 real runs, so treat `--converge n` as `n` additional real executions against the app, same as

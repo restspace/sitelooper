@@ -92,8 +92,8 @@ shape, everywhere.
 
 ```ts
 interface Diagnostic {
-  code: 'demoted-pin' | 'covered-pin' | 'noop-step' | 'needs-rerecord' | 'unthreaded-param'
-      | 'missing-skill' | 'no-procedure';
+  code: 'demoted-pin' | 'covered-pin' | 'noop-step' | 'contradicted-step' | 'satisfied-step'
+      | 'needs-rerecord' | 'unthreaded-param' | 'missing-skill' | 'no-procedure';
   step?: string;   // flow step id; omitted for flow-level diagnostics
   what: string;    // one sentence, in the user's terms
   why: string;     // the evidence: stats, tiers, skill ids
@@ -124,6 +124,23 @@ rerecord <flow file> <step> [--instruction "<text>"]`.
   `compile` re-surfaces as a `noop-step` diagnostic. This is the record-time half of the fwod34
   case: 08-open's instruction asked to cancel an order 06-open had already cancelled, and every
   fact needed to catch it was already in the recording at export time.
+- **Record time, the other half**: `buildFlow` also compares a mutating step that reported success
+  against the very next (no gap) read-only step's report — same label, or, failing that, any
+  label naming a status/state field — and warns, `contradicted-step:`-prefixed, when neither
+  value's first line contains the other. That is the earlier half of the SAME fwod34 case: if
+  06-open's cancel had not landed, 07-open (read-only, right after it) would have read the order's
+  status back as something other than "Cancelled", and this catches it at export time instead of
+  waiting for a much later step to take the blame. `compile` re-surfaces it the same way, `fix`
+  pointing at re-recording the mutating step.
+- **Goal-state steps**: a mutating skill's compile step also derives a `goal` — text the report
+  showed that was absent from the recording's own pre-state snapshot, i.e. what the page shows
+  once the work is done. Both replay (`goalSatisfied`, checked before the zero-model path even
+  runs) and the compiled spec (a `satisfied()` guard at the top of the step body) check identity
+  AND every goal text against the live page before a mutating step acts; if both already hold, the
+  step succeeds having done nothing and its report is synthesised from the template. This is what
+  makes a retry step (08-open again, on a replay where 06-open's cancel already landed) harmless
+  instead of fatal — a `satisfied-step` diagnostic records the fact for `repair`'s `--json`, and
+  `run`'s per-step line prints `satisfied` in place of `replay`/`agent`.
 - **`sitelooper rerecord <flow> <step> [--instruction "<text>"] [--var k=v ...] [--runs n]
   [--reset-cmd "<cmd>"] [--json]`**: the fix half. Backs the flow file up, unpins just that step
   (throwing away its pin, params and recorded values, keeping its outputs), optionally replaces its
@@ -156,6 +173,13 @@ repairdesk app with OpenRouter (z-ai/glm-5.3) as the repair model, and then run 
 cloud environment across sets 1-11 for kanboard, grafana, and odoo (results on
 `origin/results/sp<N><target>` branches: `sp3kb`, `sp7gr`, `sp8od`, `sp11od`). All four
 targets now pass the compiled spec end to end with repair converging and the spec check passing.
+
+Goal-state steps and the `contradicted-step` diagnostic (see "Surfacing problems" above) land the
+two fixes fwod34's 08-open motivated: a mutating step's compiled procedure and emitted guard now
+check whether its record is already in the state it exists to produce, and `buildFlow` warns at
+export time when a read-only step's value contradicts the mutating step right before it, so the
+earlier of the two failures (06-open's cancel not landing) is what gets flagged, not the later one
+(08-open failing to find a control that is no longer there).
 
 Closed since 2026-09-04:
 

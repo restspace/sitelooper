@@ -108,6 +108,28 @@ const HAND_BUILT_SPECS: SpecFlow[] = [
       }),
     ],
   },
+  // a mutating procedure that carries a goal: the guard's inputs have to
+  // survive lower -> replay -> re-emit, or a repair silently drops it
+  {
+    version: 1,
+    name: 'goal-bearing',
+    origin: 'http://localhost:5173',
+    startUrl: 'http://localhost:5173/orders/21',
+    vars: ['ref'],
+    steps: [
+      step('08-open', {
+        params: { v1: '{{ref}}' },
+        outputs: ['order_status'],
+        segments: [
+          segment('08-open-seg', {
+            preconditions: { urlPattern: 'http://localhost:5173/orders/21', requireText: ['{{v1}}'] },
+            goal: { requireText: ['Cancelled'] },
+            report: { summary: 'cancelled {{v1}}', values: { order_status: 'Cancelled' } },
+          }),
+        ],
+      }),
+    ],
+  },
   // no steps at all
   {
     version: 1,
@@ -212,6 +234,24 @@ describe('specToFlow: shape of the produced Flow/Skill[]', () => {
     const chainedSpec = HAND_BUILT_SPECS[2];
     const { flow } = specToFlow(chainedSpec);
     expect(flow.steps[0].skill).toBe(chainedSpec.steps[0].segments[0].id);
+  });
+
+  // The goal and the report template are part of the PROCEDURE, not
+  // bookkeeping: a repair lowers the spec, replays it and re-emits, and a
+  // lower that dropped them would quietly delete the already-satisfied guard.
+  it('rebuilds the goal and the report template the segment carried', () => {
+    const goalSpec = HAND_BUILT_SPECS.find((s) => s.name === 'goal-bearing')!;
+    const { skills } = specToFlow(goalSpec);
+    expect(skills[0].goal).toEqual({ requireText: ['Cancelled'] });
+    expect(skills[0].reportTemplate).toEqual({ summary: 'cancelled {{v1}}', values: { order_status: 'Cancelled' } });
+  });
+
+  it('invents neither on a segment that carried none', () => {
+    const { skills } = specToFlow(HAND_BUILT_SPECS[1]);
+    for (const skill of skills) {
+      expect(skill.goal).toBeUndefined();
+      expect(skill.reportTemplate).toBeUndefined();
+    }
   });
 
   it('leaves skill unset on a step with no converged procedure', () => {

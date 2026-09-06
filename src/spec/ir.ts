@@ -1,4 +1,5 @@
 import type { Flow } from '../skills/flow.js';
+import { mutates } from '../skills/learn.js';
 import { rethreadParams } from './rethread.js';
 import { diagnosticLine, rerecordFix, type Diagnostic } from './diagnostics.js';
 import type { Skill, SkillParam, SkillStep, SkillStore } from '../skills/store.js';
@@ -50,10 +51,29 @@ export interface SpecSegment {
   /** Verbatim, including locators[].seen evidence, expect, mints, loops. */
   steps: SkillStep[];
   derived?: Skill['derived'];
+  /**
+   * What the page shows once this step's work is DONE — the positive
+   * counterpart of `preconditions.requireText`, copied from `Skill.goal`.
+   *
+   * Carried on the LAST segment of a MUTATING procedure only: that segment is
+   * the one that finishes the work, and a read-only procedure has no state it
+   * could already be in. The emitter turns it into the `satisfied()` guard at
+   * the top of the step body, so a spec re-running a step whose work has
+   * already landed does nothing instead of hunting for a control that no
+   * longer exists — fwod34's 08-open, asked to cancel an order 06-open had
+   * already cancelled, and failing on a Cancel button that is not there.
+   */
+  goal?: { requireText: string[] };
+  /**
+   * The skill's report template, carried ONLY beside a `goal`: when the guard
+   * short-circuits the step, these are the values the step's read-backs would
+   * have published, and the steps after it must still see them.
+   */
+  report?: { summary: string; values: Record<string, string> };
 }
 
 /** A skill as the spec carries it: the procedure, none of the bookkeeping. */
-function toSegment(skill: Skill): SpecSegment {
+function toSegment(skill: Skill, goalBearing = false): SpecSegment {
   const seg: SpecSegment = {
     id: skill.id,
     template: skill.template,
@@ -66,6 +86,11 @@ function toSegment(skill: Skill): SpecSegment {
   // deliberately does not have.
   if (skill.preconditions.requireText?.length) seg.preconditions.requireText = skill.preconditions.requireText;
   if (skill.derived) seg.derived = skill.derived;
+  // The goal travels only where it can be acted on: see SpecSegment.goal.
+  if (goalBearing && skill.goal?.requireText?.length) {
+    seg.goal = { requireText: [...skill.goal.requireText] };
+    if (skill.reportTemplate) seg.report = skill.reportTemplate;
+  }
   return seg;
 }
 
@@ -108,32 +133,51 @@ function demotionWhy(skill: Skill): string {
 }
 
 /**
- * The record-time no-op warnings a flow carries, as diagnostics.
+ * The record-time warnings a flow carries, as diagnostics.
  *
- * `buildFlow` flags an instruction that is MUTATING by intent but changed
- * nothing (see CONTRACT-DIAG.md, agent D) and stores it on the flow prefixed
- * `noop-step:`. That is the same fact compile has to re-surface: fwod34's
- * 08-open asks to cancel an order step 06 already cancelled, and a step that
- * changed nothing at record time is a step whose recording — not the app — is
- * what a later failure is about.
+ * `buildFlow` flags two record-time problems and stores each on the flow with
+ * a code prefix: `noop-step:` — an instruction MUTATING by intent that
+ * changed nothing (fwod34's 08-open asks to cancel an order step 06 already
+ * cancelled) — and `contradicted-step:` — a read-only step that read a value
+ * contradicting the mutating step immediately before it (fwod34's 07-open
+ * read "Sales Order" right after 06-open reported "Cancelled" for the same
+ * order). Both are the same shape of fact: a step whose RECORDING, not the
+ * app, is what a later failure is about — so both re-surface here the same
+ * way, each pointing at the step whose re-recording fixes it.
  */
 function noopDiagnostics(flow: Flow, flowFile: string | undefined): Diagnostic[] {
   const ids = new Set(flow.steps.map((s) => s.id));
   const out: Diagnostic[] = [];
   for (const warning of flow.warnings ?? []) {
-    if (!warning.startsWith('noop-step:')) continue;
-    const text = warning.slice('noop-step:'.length).trim();
-    const first = text.split(/\s+/)[0] ?? '';
-    const step = ids.has(first) ? first : undefined;
-    out.push({
-      code: 'noop-step',
-      step,
-      what: step ? `${step} changed nothing when it was recorded, though its instruction asks for a change` : text,
-      why: text,
-      fix: step ? rerecordFix(flowFile ?? flow.name, step) : undefined,
-      severity: 'warning',
-      line: text,
-    });
+    if (warning.startsWith('noop-step:')) {
+      const text = warning.slice('noop-step:'.length).trim();
+      const first = text.split(/\s+/)[0] ?? '';
+      const step = ids.has(first) ? first : undefined;
+      out.push({
+        code: 'noop-step',
+        step,
+        what: step ? `${step} changed nothing when it was recorded, though its instruction asks for a change` : text,
+        why: text,
+        fix: step ? rerecordFix(flowFile ?? flow.name, step) : undefined,
+        severity: 'warning',
+        line: text,
+      });
+    } else if (warning.startsWith('contradicted-step:')) {
+      const text = warning.slice('contradicted-step:'.length).trim();
+      const first = text.split(/\s+/)[0] ?? '';
+      const step = ids.has(first) ? first : undefined;
+      const rerecordMatch = text.match(/Re-record (\S+?)\.?$/);
+      const rerecordStep = rerecordMatch && ids.has(rerecordMatch[1]) ? rerecordMatch[1] : undefined;
+      out.push({
+        code: 'contradicted-step',
+        step,
+        what: step ? `${step} read a value that contradicts what the previous step reported` : text,
+        why: text,
+        fix: rerecordStep ? rerecordFix(flowFile ?? flow.name, rerecordStep) : undefined,
+        severity: 'warning',
+        line: text,
+      });
+    }
   }
   return out;
 }
@@ -174,7 +218,13 @@ export function flowToSpec(
         line: `step ${step.id} refers to skill ${step.skill}, which is not in the store`,
       });
     }
-    const segments = skill ? chainOf(skill, store).map(toSegment) : [];
+    // A goal is a claim about STATE, so it is only meaningful on a procedure
+    // that changes state — `mutates` is the same gate the store uses to stop a
+    // read-only skill covering a mutating pin — and only on the last segment,
+    // the one that finishes the work.
+    const chain = skill ? chainOf(skill, store) : [];
+    const changes = chain.some((member) => mutates(store, member.id));
+    const segments = chain.map((member, i) => toSegment(member, changes && i === chain.length - 1));
     if (!segments.length) {
       diagnostics.push({
         code: 'no-procedure',
@@ -186,7 +236,7 @@ export function flowToSpec(
         line: `step ${step.id} has no converged procedure`,
       });
     }
-    for (const member of skill ? chainOf(skill, store) : []) {
+    for (const member of chain) {
       if (member.status === 'demoted') {
         diagnostics.push({
           code: 'demoted-pin',

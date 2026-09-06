@@ -26,6 +26,8 @@ export type DiagnosticCode =
   | 'demoted-pin' // the step's pinned skill is demoted
   | 'covered-pin' // repair: every converge run replayed the step with a skill other than its pin
   | 'noop-step' // record time: a mutating instruction changed nothing and its outcome matched the pre-state
+  | 'contradicted-step' // record time: a read-only step read a value contradicting the previous mutating step's report
+  | 'satisfied-step' // informational: a run/repair found a step already satisfied (goal-state) — repair's JSON only
   | 'needs-rerecord' // repair's verdict when the above mean a recording, not the app, is wrong
   | 'unthreaded-param' // compile could not rethread a literal param (existing warning, now typed)
   | 'missing-skill' // step refers to a skill not in the store

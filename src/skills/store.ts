@@ -30,6 +30,25 @@ export interface Skill {
      */
     requireText?: string[];
   };
+  /**
+   * What the page shows once this procedure's work is DONE, and did not show
+   * when its recording began: slot-substituted visible texts ("Cancelled"), the
+   * positive counterpart of preconditions.requireText. Only set on skills that
+   * mutate. Replay and the compiled spec check identity (requireText) AND every
+   * goal text before acting; when both hold the step is already satisfied.
+   *
+   * The point is that a RETRY is harmless. fwod34's 06-open asked for an order
+   * to be cancelled and its recording struggled; the orchestrator wrote a
+   * follow-up 08-open to cancel it again. On replay 06's skill cancels cleanly,
+   * so 08's Cancel button no longer exists and the step failed — a step failing
+   * because its work was already done. A goal is a POSITIVE text that appears
+   * only when the work is done ("Cancelled"), never the absence of a
+   * pre-state: Odoo's status bar lists every reachable state, so "Sales Order"
+   * is showing whether or not the order was cancelled. A false positive here
+   * would skip a step that never ran, so derivation only keeps text the
+   * recording's own before/after pair proves is new (see compile.ts).
+   */
+  goal?: { requireText: string[] };
   steps: SkillStep[];
   /** The report the original run produced, with slots, for the zero-LLM path. */
   reportTemplate?: { summary: string; values: Record<string, string> };

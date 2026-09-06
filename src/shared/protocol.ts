@@ -93,6 +93,8 @@ export interface FlowStepResult {
   recovered?: boolean;
   /** Why the zero-model path did not run it (only meaningful when `recovered`). */
   fellBack?: string;
+  /** The step's goal was already showing for this record, so nothing ran. */
+  satisfied?: true;
   values?: Record<string, string>;
   replayed?: string | null;
   repaired?: boolean;

@@ -52,6 +52,8 @@ export interface SpecTestRow {
    */
   errorSites: Array<{ file: string; line: number }>;
   drift: string[];
+  /** Every `[sitelooper satisfied] …` line this test logged. */
+  satisfied: string[];
 }
 
 export interface ParsedSpecReport {
@@ -65,6 +67,13 @@ export interface ParsedSpecReport {
   errorFile: string | null;
   errorLine: number | null;
   errorSites: Array<{ file: string; line: number }>;
+  /**
+   * Every `[sitelooper satisfied] …` line the run logged: a step that did
+   * NOTHING because the page already showed its goal for this record. A pass
+   * with one of these is a different fact from a pass without — the procedure
+   * itself was never exercised — so it is counted rather than swallowed.
+   */
+  satisfied: string[];
 }
 
 export interface SpecCheckResult {
@@ -83,6 +92,12 @@ export interface SpecCheckResult {
   errorLine: number | null;
   drift: string[];
   driftCount: number;
+  /**
+   * The steps that did nothing because their goal was already showing (the
+   * emitted `satisfied()` guard). Optional: a caller that builds this object
+   * by hand — and every result written before goals existed — has none.
+   */
+  satisfied?: string[];
   /** The one-paragraph sentence the CLI prints. */
   verdict: string;
   /** The scratch dir the run happened in — kept ONLY on failure, where the
@@ -119,15 +134,15 @@ function chunkText(c: unknown): string {
   return '';
 }
 
-/** Every `[sitelooper drift] …` line `pick()` warned for one test result. */
-function driftLines(result: Record<string, unknown> | undefined): string[] {
+/** Every `[sitelooper <tag>] …` line one test result logged, on either stream. */
+function taggedLines(result: Record<string, unknown> | undefined, tag: string): string[] {
   const chunks = [...((result?.stdout as unknown[]) ?? []), ...((result?.stderr as unknown[]) ?? [])];
   return chunks
     .map(chunkText)
     .join('')
     .split(/\r?\n/)
     .map((l) => plain(l).trim())
-    .filter((l) => l.startsWith('[sitelooper drift]'));
+    .filter((l) => l.startsWith(`[sitelooper ${tag}]`));
 }
 
 /** A filename, as a regex literal. */
@@ -211,7 +226,8 @@ function flattenTests(suite: Record<string, unknown>, files: string[], acc: Spec
         errorFile: sites[0]?.file ?? null,
         errorLine: sites[0]?.line ?? null,
         errorSites: sites,
-        drift: driftLines(r),
+        drift: taggedLines(r, 'drift'),
+        satisfied: taggedLines(r, 'satisfied'),
       });
     }
   }
@@ -238,6 +254,7 @@ export function parseSpecReport(report: unknown, files: string[] = []): ParsedSp
     passed: tests.length > 0 && tests.every((t) => t.ok),
     durationMs,
     drift: tests.flatMap((t) => t.drift),
+    satisfied: tests.flatMap((t) => t.satisfied),
     error: failing?.error ?? null,
     errorFile: failing?.errorFile ?? null,
     errorLine: failing?.errorLine ?? null,
@@ -291,7 +308,11 @@ export function verdictFor(
 ): string {
   if (!r.ran) return `spec check: skipped — ${r.skipped ?? 'the spec was not run'}`;
   const secs = Math.max(1, Math.round(r.durationMs / 1000));
-  if (r.passed) return `spec check: passed in ${secs} s, ${r.driftCount} drift`;
+  // A pass that skipped a step because its work was already done is not the
+  // same pass as one that ran everything, and the reader has to be told which
+  // it was: the procedure under test never executed for that step.
+  const already = r.satisfied?.length ? `, ${r.satisfied.length} already satisfied` : '';
+  if (r.passed) return `spec check: passed in ${secs} s, ${r.driftCount} drift${already}`;
   const where = r.anchor ? ` at @step ${r.anchor}` : r.errorLine ? ` at ${path.basename(r.errorFile ?? '')}:${r.errorLine}` : '';
   const why = flaggedStep(r.anchor, flagged)
     ? ` — the step's recording is the problem, not the emitter: ${flaggedStep(r.anchor, flagged)!.what}`
@@ -382,6 +403,7 @@ export function runSpecCheck(o: SpecCheckOptions): SpecCheckResult {
     errorLine: null,
     drift: [],
     driftCount: 0,
+    satisfied: [],
     workspace: null,
     specFile: null,
   };
@@ -508,6 +530,7 @@ export default {
     errorLine: site?.line ?? null,
     drift: parsed.drift,
     driftCount: parsed.drift.length,
+    satisfied: parsed.satisfied,
     workspace: work,
     specFile: specSrc,
   };

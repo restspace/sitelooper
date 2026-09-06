@@ -4,13 +4,13 @@ import path from 'node:path';
 import { AnthropicProvider, OpenAICompatProvider, resolveProviderConfig, type Provider } from '../agent/llm.js';
 import { runEscalatingInstruction, type InstructionResult, type SkillRecord } from '../agent/loop.js';
 import { executeTool } from '../agent/tools.js';
-import { urlPattern as compiledUrlPattern, stranded, urlParts } from '../skills/compile.js';
+import { urlPattern as compiledUrlPattern, fillParams, stranded, urlParts } from '../skills/compile.js';
 import type { DriftTicket } from '../skills/repair.js';
 import type { Page } from 'playwright-core';
 import { agentGesturesOutsideReplay, bindSkill, canAdoptPin, decideRepin, learnFromInstruction, matchTemplate, publishedOutputs, selectCandidates, synthesizeReport } from '../skills/learn.js';
 import { buildFlow, consumedUrlOutputs, ignorableRefs, lintFlowRefs, listFlows, loadFlow, loadFlowFile, lookupOutput, mutatingIntent, noteOutputEvidence, recoveryRoute, remapParams, resolveInstruction, resolveStepParams, softResolveInstruction, saveFlow, saveRejectedFlow, stableOutputs, staleInstructionIds, unbankedMutations, urlOutputs } from '../skills/flow.js';
 import { applyRelabelToEntries, applyRelabelToSkills, relabelCases, requestRelabelPlan } from '../skills/relabel.js';
-import { renderReplay } from '../skills/replay.js';
+import { goalSatisfied, renderReplay } from '../skills/replay.js';
 import { drainDrift, llmProposer, recordCandidateEvidence } from '../skills/repair.js';
 import { RunLedger, bindingKey, describeLeaks, fatal, scanForLeaks, type Leak } from '../skills/ledger.js';
 import { originOf, type Skill } from '../skills/store.js';
@@ -927,13 +927,76 @@ ${describeLeaks(leaks.slice(0, 10))}`);
       // missing). Only a genuine failure there halts.
       // ...unless the pinned skill cannot be affected by the reference at all
       // (see ignorableRefs): then the zero-model replay runs as pinned.
+      const pinned = step.skill ? (this.browser.learn?.get(step.skill) ?? null) : null;
       const allMissing = [...missing, ...(bound?.missing ?? [])];
-      const ignorable = ignorableRefs(allMissing, step, step.skill ? (this.browser.learn?.get(step.skill) ?? null) : null);
+      const ignorable = ignorableRefs(allMissing, step, pinned);
       const blocking = allMissing.filter((r) => !ignorable.includes(r));
       if (allMissing.length && !blocking.length) opts.progress(`[flow ${flow.name}] ${step.id}: reference(s) ${ignorable.join(', ')} unresolved but unused by the pinned procedure — replaying as pinned`);
       const unresolved = blocking.length > 0;
       const recoveryText = unresolved ? softResolveInstruction(step, varsIn, outputs, stable) : text;
       opts.progress(`[flow ${flow.name}] ${step.id}: ${(unresolved ? recoveryText : text).slice(0, 80)}`);
+
+      // Already satisfied? Before anything runs — before the zero-model replay
+      // and long before the model — ask whether this record is ALREADY in the
+      // state this step exists to produce. fwod34 is why: 06-open's recording
+      // struggled to cancel an order, so the orchestrator added 08-open to
+      // cancel it again; on replay 06's skill cancels cleanly and 08 then
+      // failed looking for a Cancel button that no longer exists. A retry step
+      // should be harmless, not fatal.
+      //
+      // Deliberately NOT gated on the skill's status: a demoted pin is exactly
+      // the skill this rescues. The gate that matters is the evidence —
+      // identity AND goal both visible (see goalSatisfied) — and bound params,
+      // since an unbound marker proves nothing about this run's record.
+      // The goal lives on the LAST segment of a chain (the one that finishes
+      // the work); identity is the head's, which is where a replay would start.
+      const tail = pinned?.seq && this.browser.learn
+        ? (this.browser.learn.list(pinned.origin).filter((s) => s.seq?.chain === pinned.seq!.chain).sort((a, b) => (a.seq!.index - b.seq!.index)).pop() ?? pinned)
+        : pinned;
+      if (pinned && tail?.goal?.requireText?.length && bound && !bound.missing.length) {
+        let done: { satisfied: boolean; shown: string[] } = { satisfied: false, shown: [] };
+        try {
+          done = await goalSatisfied(await this.browser.getPage(), { preconditions: pinned.preconditions, goal: tail.goal }, bound.params);
+        } catch {
+          /* browser gone or capture failed — fall through to the normal path */
+        }
+        if (done.satisfied) {
+          const idTexts = (pinned.preconditions.requireText ?? []).map((m) => fillParams(m, bound.params));
+          const values: Record<string, string> = {};
+          for (const [k, v] of Object.entries(tail.reportTemplate?.values ?? {})) {
+            const filled = fillParams(v, bound.params);
+            if (!/\{\{/.test(filled)) values[k] = filled;
+          }
+          const shown = done.shown.map((s) => JSON.stringify(s)).join(', ');
+          opts.progress(`[flow ${flow.name}] ${step.id}: already satisfied — page shows ${shown} for ${idTexts.join(', ')}; nothing to do`);
+          // Bank outputs exactly as a replayed step does, so a later step's
+          // {{step.output}} reference threads through a step that ran nothing.
+          const stepOutputs: Record<string, string> = { ...values };
+          try {
+            const urlOuts = await captureUrlOutputs(await this.browser.getPage(), wantedUrlOuts.get(step.id), step.id);
+            for (const [key, value] of Object.entries(urlOuts)) if (!(key in stepOutputs)) stepOutputs[key] = value;
+          } catch {
+            /* browser gone — nothing to bind */
+          }
+          outputs[step.id] = stepOutputs;
+          stepResults.push({
+            id: step.id,
+            status: 'success',
+            summary: `already satisfied: page shows ${done.shown.join(', ')}`,
+            values,
+            tier: 'A',
+            satisfied: true,
+            replayed: null,
+            repaired: false,
+            turns: 0,
+            recovered: false,
+          });
+          // No learning call, no re-pin, no drift ticket: nothing happened, so
+          // there is nothing to learn from and no evidence about the pin.
+          continue;
+        }
+      }
+
       const mark = this.browser.script?.mark() ?? 0;
       // Zero-model first: replay the step's pinned skill directly, binding its
       // params from the flow's stored bindings (robust to reworded steps)
@@ -941,7 +1004,10 @@ ${describeLeaks(leaks.slice(0, 10))}`);
       // A throw here (the browser died mid-replay) must not discard the steps
       // that DID complete: it becomes a fallback reason, and the recovery's
       // own guard below turns a dead browser into a halted flowrun.
-      const direct: Awaited<ReturnType<typeof this.replayDirect>> = step.skill && !unresolved
+      // `Daemon['replayDirect']`, not `typeof this.replayDirect`: a type query
+      // on `this` inside a loop body that can `continue` (the already-satisfied
+      // path below) stops resolving.
+      const direct: Awaited<ReturnType<Daemon['replayDirect']>> = step.skill && !unresolved
         ? await this.replayDirect(text, screenshotDir, opts.signal, opts.progress, { id: step.skill, params: bound?.params }).catch((err: unknown) => ({
             why: `replay threw before completing: ${(err instanceof Error ? err.message : String(err)).slice(0, 200)}`,
           }))

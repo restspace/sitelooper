@@ -9,6 +9,7 @@ import { VOLATILE_TOKEN_SHAPE } from '../src/shared/text.js';
 import { budgetMs, emitFlowFile, emitSpecFile } from '../src/spec/emit.js';
 import { flowToSpec, type SpecFlow, type SpecSegment, type SpecStep } from '../src/spec/ir.js';
 import { compileFlow } from '../src/spec/index.js';
+import { parseSpecReport, verdictFor } from '../src/spec/check.js';
 
 const FWAT2 = path.resolve('bench/results-published/fwat2-skills');
 const RDFLOW = path.resolve('bench/results-published/flows/rdflow.json');
@@ -1441,5 +1442,245 @@ describe('every step settles first', () => {
         },
       }),
     ).resolves.toBeUndefined();
+  });
+});
+
+/**
+ * A step whose work has already landed.
+ *
+ * fwod34 is the case: 06-open asked for an order to be cancelled and its
+ * recording did not land the cancel, so the orchestrator recorded 08-open
+ * asking for the same cancel again. On replay 06-open works — and 08-open then
+ * hunts for a Cancel button a cancelled order does not have. The compiled spec
+ * asks the same question replay asks (goalSatisfied): is this the right record,
+ * and is it already in the state this step produces?
+ */
+describe('emitFlowFile: the already-satisfied guard', () => {
+  const CLICK: SkillStep = { tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Cancel' }] } };
+
+  /** 08-open's shape: identity on the order ref and its status, goal "Cancelled". */
+  const cancelStep = (over: Partial<SpecSegment> = {}): SpecFlow =>
+    specOf([CLICK], {
+      id: '08-open',
+      instruction: "the sales order {{v1}} is currently in '{{v3}}' status and needs to be cancelled",
+      params: { v1: '{{02-create.quotation_ref}}', v3: 'Sales Order' },
+      outputs: ['order_status', 'order_reference'],
+      segments: [
+        segment([CLICK], {
+          id: 's_c86522',
+          params: {
+            v1: { example: 'S00021', usedIn: [1], known: true },
+            v3: { example: 'Sales Order', usedIn: [1], known: true },
+          },
+          preconditions: { urlPattern: 'http://app.test/odoo/sales/21', requireText: ['{{v1}}', '{{v3}}'] },
+          goal: { requireText: ['Cancelled'] },
+          report: { summary: 'cancelled {{v1}}', values: { order_status: 'Cancelled', order_reference: '{{v1}}' } },
+          ...over,
+        }),
+      ],
+    });
+
+  it('opens the step body with the guard, its log line and the report values', () => {
+    const source = emit(cancelStep());
+    const body = source.slice(source.indexOf("async '08-open'"));
+    const lines = body.split('\n').slice(1, 9).map((l) => l.trim());
+    expect(lines).toEqual([
+      '// goal: the page already showing "Cancelled" for this record means the step\'s work is done —',
+      '// the same check replay makes before it acts (goalSatisfied, src/skills/replay.ts).',
+      "if (new RegExp(`^http://app\\\\.test/odoo/sales/21(?:[?#].*)?$`).test(page.url()) && await satisfied(page, [`${p.v1}`, `${p.v3}`], ['Cancelled'])) {",
+      "console.log('[sitelooper satisfied] 08-open — page shows \"Cancelled\"; nothing to do');",
+      "outputs['08-open.order_status'] = 'Cancelled';",
+      "outputs['08-open.order_reference'] = p.v1;",
+      'return;',
+      '}',
+    ]);
+    expect(syntaxErrors(source)).toEqual([]);
+  });
+
+  it('inlines the satisfied helper, and the present helper it is built on', () => {
+    const source = emit(cancelStep());
+    expect(source).toContain('async function satisfied(page: Page, identity: string[], goal: string[]): Promise<boolean> {');
+    expect(source).toContain('async function present(page: Page, text: string): Promise<boolean> {');
+    // Helpers live between DRIFT and the steps object, like every other one.
+    expect(source.indexOf('async function satisfied(')).toBeGreaterThan(source.indexOf('export const DRIFT'));
+    expect(source.indexOf('async function satisfied(')).toBeLessThan(source.indexOf('export const steps = {'));
+  });
+
+  it('emits nothing at all for a segment with no goal', () => {
+    const source = emit(cancelStep({ goal: undefined, report: undefined }));
+    expect(source).not.toContain('satisfied(');
+    expect(source).not.toContain('sitelooper satisfied');
+  });
+
+  // An unbound marker proves nothing — replay skips it as identity, and a goal
+  // that cannot be filled must not be guessed at. No guard is the safe answer:
+  // the step simply runs, exactly as it does today.
+  it('emits nothing when the goal or the identity cannot be filled from this run', () => {
+    expect(emit(cancelStep({ goal: { requireText: ['{{v9}}'] } }))).not.toContain('satisfied(');
+    expect(emit(cancelStep({ preconditions: { urlPattern: 'http://app.test/x' } }))).not.toContain('satisfied(');
+  });
+
+  it('skips a report value it cannot fill, and publishes the rest', () => {
+    const source = emit(cancelStep({ report: { summary: 's', values: { order_status: 'Cancelled', stray: '{{v9}}' } } }));
+    expect(source).toContain("outputs['08-open.order_status'] = 'Cancelled';");
+    expect(source).not.toContain('08-open.stray');
+  });
+
+  it('guards the step once, ahead of the first segment identity check', () => {
+    const source = emit(cancelStep());
+    expect((source.match(/await satisfied\(page,/g) ?? []).length).toBe(1);
+    expect(source.indexOf('await satisfied(page,')).toBeLessThan(source.indexOf('identity: this must be the record'));
+  });
+
+  /**
+   * The helper's own semantics, cut out and run: identity AND goal, and never
+   * satisfied on an empty half. Being wrong the safe way costs a re-run; being
+   * wrong the other way skips work that never happened.
+   */
+  it('is satisfied only when every identity and every goal text is present', async () => {
+    const fn = /\nasync function satisfied\(page: Page[\s\S]*?\n\}\n/.exec(emit(cancelStep()));
+    expect(fn).not.toBeNull();
+    const js = ts.transpileModule(fn![0], {
+      compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext },
+    }).outputText;
+    const build = new Function('present', `${js}\nreturn satisfied;`) as (
+      p: (page: unknown, t: string) => Promise<boolean>,
+    ) => (page: unknown, identity: string[], goal: string[]) => Promise<boolean>;
+    const onPage = (shown: string[]) => build(async (_p, t) => shown.includes(t));
+    expect(await onPage(['S00021', 'Sales Order', 'Cancelled'])(null, ['S00021', 'Sales Order'], ['Cancelled'])).toBe(true);
+    // the right record, still in its old state
+    expect(await onPage(['S00021', 'Sales Order'])(null, ['S00021', 'Sales Order'], ['Cancelled'])).toBe(false);
+    // "Cancelled" somewhere on the page, but not on this record's page
+    expect(await onPage(['S00099', 'Cancelled'])(null, ['S00021'], ['Cancelled'])).toBe(false);
+    expect(await onPage(['S00021'])(null, ['S00021'], [])).toBe(false);
+    expect(await onPage(['Cancelled'])(null, [], ['Cancelled'])).toBe(false);
+  });
+});
+
+/**
+ * Where a goal is allowed to land. A goal is a claim about STATE, so a
+ * read-only procedure cannot have one (fwrd14l-n2's lesson in a new place: a
+ * read-only skill that "covers" a mutating step is the worst failure this
+ * system has), and in a chain only the last segment finishes the work.
+ */
+describe('flowToSpec: goals reach the segment that can act on one', () => {
+  let dir: string;
+  const skill = (over: Partial<Skill>): Skill => ({
+    id: 's_1',
+    origin: 'http://app.test',
+    template: 'cancel {{v1}}',
+    params: { v1: { example: 'S00021', usedIn: [1], known: true } },
+    preconditions: { urlPattern: 'http://app.test/o/1', requireText: ['{{v1}}'] },
+    steps: [{ tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Cancel' }] } }],
+    stats: { uses: 1, successes: 1, partial: 0, created: new Date(0).toISOString(), failedAtStep: {}, fallthroughs: 0 },
+    status: 'validated',
+    provenance: { session: 'test', instruction: 'cancel it', created: new Date(0).toISOString() },
+    goal: { requireText: ['Cancelled'] },
+    reportTemplate: { summary: 'cancelled {{v1}}', values: { order_status: 'Cancelled' } },
+    ...over,
+  });
+  const flowFor = (id: string): Flow => ({
+    name: 'goals',
+    origin: 'http://app.test',
+    startUrl: 'http://app.test/',
+    vars: [],
+    steps: [{ id: '01-do', instruction: 'cancel S00021', skill: id, outputs: [], recorded: {} }],
+    provenance: { session: 'test', created: new Date(0).toISOString() },
+  });
+
+  beforeAll(() => {
+    dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sl-goal-'));
+  });
+  afterAll(() => fs.rmSync(dir, { recursive: true, force: true }));
+
+  it('carries the goal and the report template a mutating skill declares', () => {
+    const store = new SkillStore(dir);
+    store.clear('http://app.test');
+    store.put(skill({}));
+    const seg = flowToSpec(flowFor('s_1'), store).spec.steps[0].segments[0];
+    expect(seg.goal).toEqual({ requireText: ['Cancelled'] });
+    expect(seg.report).toEqual({ summary: 'cancelled {{v1}}', values: { order_status: 'Cancelled' } });
+  });
+
+  it('drops a goal on a READ-ONLY procedure, however it got there', () => {
+    const store = new SkillStore(dir);
+    store.clear('http://app.test');
+    store.put(skill({ steps: [{ tool: 'read', label: 'status', args: { what: 'text' }, locators: { target: [{ kind: 'text', text: 'Cancelled' }] } }] }));
+    const seg = flowToSpec(flowFor('s_1'), store).spec.steps[0].segments[0];
+    expect(seg.goal).toBeUndefined();
+    expect(seg.report).toBeUndefined();
+  });
+
+  it('puts the goal on the LAST segment of a chain, never an earlier one', () => {
+    const store = new SkillStore(dir);
+    store.clear('http://app.test');
+    store.put(skill({ id: 's_a', seq: { chain: 's_a', index: 0, of: 2 } }));
+    store.put(skill({ id: 's_b', seq: { chain: 's_a', index: 1, of: 2 } }));
+    const segs = flowToSpec(flowFor('s_a'), store).spec.steps[0].segments;
+    expect(segs.map((s) => s.id)).toEqual(['s_a', 's_b']);
+    expect(segs[0].goal).toBeUndefined();
+    expect(segs[1].goal).toEqual({ requireText: ['Cancelled'] });
+  });
+});
+
+/**
+ * The other end of the guard: a spec check has to SAY when a step did nothing.
+ *
+ * A pass in which a step short-circuited is not the same pass as one that ran
+ * every gesture — the procedure under test was never exercised for that step —
+ * so the `[sitelooper satisfied]` lines are counted out of the run's stdout the
+ * same way the drift lines are, and the verdict names them.
+ */
+describe('runSpecCheck: a run in which a step was already satisfied', () => {
+  const report = (out: string) => ({
+    stats: { duration: 9123 },
+    suites: [
+      {
+        specs: [
+          {
+            tests: [
+              {
+                results: [{ status: 'passed', duration: 9123, stdout: [{ text: out }], stderr: [] }],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  });
+
+  it('collects the satisfied lines a test logged, beside its drift lines', () => {
+    const parsed = parseSpecReport(
+      report(
+        '[sitelooper satisfied] 08-open — page shows "Cancelled"; nothing to do\n' +
+          '[sitelooper drift] 03-open s_1/2 target: primary missed\n' +
+          'some other output\n',
+      ),
+    );
+    expect(parsed.satisfied).toEqual(['[sitelooper satisfied] 08-open — page shows "Cancelled"; nothing to do']);
+    expect(parsed.drift).toEqual(['[sitelooper drift] 03-open s_1/2 target: primary missed']);
+  });
+
+  it('names them in the verdict of a passing run, and says nothing when there are none', () => {
+    const base = {
+      ran: true,
+      skipped: null,
+      passed: true,
+      durationMs: 9123,
+      exitCode: 0,
+      timedOut: false,
+      error: null,
+      anchor: null,
+      errorFile: null,
+      errorLine: null,
+      drift: [],
+      driftCount: 0,
+      workspace: null,
+      specFile: null,
+    };
+    expect(verdictFor(base, true)).toBe('spec check: passed in 9 s, 0 drift');
+    expect(verdictFor({ ...base, satisfied: ['[sitelooper satisfied] 08-open — page shows "Cancelled"; nothing to do'] }, true)).toBe(
+      'spec check: passed in 9 s, 0 drift, 1 already satisfied',
+    );
   });
 });

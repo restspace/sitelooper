@@ -688,13 +688,15 @@ async function main(): Promise<void> {
         if (!res.ok) fail(res.error ?? 'unknown error', res.errorKind === 'infra' ? 2 : 1);
         const data = res.data as {
           flow: string; status: string; passed: number; total: number; repinned: number; wallMs: number;
-          steps: { id: string; status: string; summary?: string; tier?: string | null; replayed?: string | null; repaired?: boolean; turns?: number; repinned?: string }[];
+          steps: { id: string; status: string; summary?: string; tier?: string | null; replayed?: string | null; repaired?: boolean; turns?: number; repinned?: string; satisfied?: boolean }[];
         };
         if (json) console.log(JSON.stringify(data, null, 2));
         else {
           for (const st of data.steps) {
             const mark = st.status === 'success' ? 'OK' : st.status.toUpperCase();
-            const how = st.tier === 'A' ? 'replay' : st.replayed ? (st.repaired ? `replay+repair ${st.replayed}` : `replay ${st.replayed}`) : 'agent';
+            // `satisfied` is not a cheaper replay, it is no replay at all: the
+            // page already showed this step's goal for this record.
+            const how = st.satisfied ? 'satisfied' : st.tier === 'A' ? 'replay' : st.replayed ? (st.repaired ? `replay+repair ${st.replayed}` : `replay ${st.replayed}`) : 'agent';
             console.log(`[${mark}] ${st.id}  (${how}${st.turns ? `, ${st.turns} turns` : ''})${st.repinned ? ` re-pinned ${st.repinned}` : ''}`);
             if (st.status !== 'success' && st.summary) console.log(`       ${st.summary}`);
           }

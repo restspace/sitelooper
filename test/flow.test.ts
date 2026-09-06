@@ -1040,3 +1040,109 @@ describe('record-time no-op steps (fwod34 08-open)', () => {
     expect(warnings(session('Cancel order O-1.', [noDiff, read], { status: 'Cancelled' }))).toEqual([]);
   });
 });
+
+/**
+ * Record-time contradiction detection: a read-only step right after a
+ * mutating one reports a value that disagrees with it.
+ *
+ * fwod34's narrative motivates the shape (a step told to cancel an order
+ * reports "Cancelled"; the very next read-only step reads the same order's
+ * status back as "Sales Order", the value it carries whenever it is NOT
+ * cancelled) even though the published fixture's own 06-open recorded no
+ * values at all — its cancel never registered anything to contradict, which
+ * is exactly why 07/08 below asserts silence on that shape too.
+ */
+describe('record-time contradiction between a mutating step and the read right after it', () => {
+  /** Two instructions back to back: i mutates (or not), j reads. */
+  function pair(
+    iText: string,
+    iValues: Record<string, string>,
+    jText: string,
+    jValues: Record<string, string>,
+    iStatus: 'success' | 'blocked' = 'success',
+  ): Flow {
+    const entries: RecordedEntry[] = [
+      { k: 'step', tool: 'goto', args: { url: `${ORIGIN}/o/1` }, locators: {} },
+      { k: 'instruction', text: iText, url: `${ORIGIN}/o/1` },
+      { k: 'step', tool: 'click', args: { target: '@e1' }, locators: {}, diff: { url: `${ORIGIN}/o/1`, alerts: [], added: ['- alert "done"'] } },
+      { k: 'report', status: iStatus, summary: 'done', values: iValues, skill: 's_i' },
+      { k: 'instruction', text: jText, url: `${ORIGIN}/o/1` },
+      { k: 'step', tool: 'read', args: { target: '@e1', what: 'text' }, locators: {}, result: '"x"' },
+      { k: 'report', status: 'success', summary: 'done', values: jValues, skill: 's_j' },
+    ];
+    return buildFlow(entries, { name: 'f', origin: ORIGIN, startUrl: `${ORIGIN}/o/1`, vars: {}, session: 's' })!;
+  }
+
+  it('flags the read-only step when it contradicts the mutating step right before it (06/07 shape)', () => {
+    const flow = pair(
+      'Cancel order O-1 and report its status.',
+      { order_status: 'Cancelled' },
+      'Open order O-1 and report its status. Do not click anything or change it — this is a read-only check.',
+      { order_status: 'Sales Order' },
+    );
+    const [idI, idJ] = flow.steps.map((s) => s.id);
+    expect(flow.warnings).toContain(
+      `contradicted-step: ${idJ} read order_status "Sales Order" right after ${idI} reported "Cancelled"; ` +
+        `${idI}'s change may not have landed and a later step may be retrying it. Re-record ${idI}.`,
+    );
+  });
+
+  it('falls back to any status/state-named label when the two steps name the field differently', () => {
+    const flow = pair(
+      'Cancel order O-1 and report its status.',
+      { order_status: 'Cancelled' },
+      'Open order O-1 and report its status. Do not click anything or change it — this is a read-only check.',
+      { current_state: 'Sales Order' },
+    );
+    const [idI, idJ] = flow.steps.map((s) => s.id);
+    expect(flow.warnings).toContain(
+      `contradicted-step: ${idJ} read current_state "Sales Order" right after ${idI} reported "Cancelled"; ` +
+        `${idI}'s change may not have landed and a later step may be retrying it. Re-record ${idI}.`,
+    );
+  });
+
+  it('does not check a step that is itself mutating (07/08 shape: the second step is not read-only)', () => {
+    const entries: RecordedEntry[] = [
+      { k: 'step', tool: 'goto', args: { url: `${ORIGIN}/o/1` }, locators: {} },
+      { k: 'instruction', text: 'Open order O-1 and report its status. Do not click anything or change it — this is a read-only check.', url: `${ORIGIN}/o/1` },
+      { k: 'step', tool: 'read', args: { target: '@e1', what: 'text' }, locators: {}, result: '"x"' },
+      { k: 'report', status: 'success', summary: 'done', values: { order_status: 'Sales Order' }, skill: 's_i' },
+      { k: 'instruction', text: "The order O-1 is currently in 'Sales Order' status and needs to be cancelled; click Cancel and verify.", url: `${ORIGIN}/o/1` },
+      { k: 'step', tool: 'click', args: { target: '@e1' }, locators: {}, diff: { url: `${ORIGIN}/o/1`, alerts: [], added: ['- alert "done"'] } },
+      { k: 'report', status: 'success', summary: 'done', values: { order_status: 'Cancelled' }, skill: 's_j' },
+    ];
+    const flow = buildFlow(entries, { name: 'f', origin: ORIGIN, startUrl: `${ORIGIN}/o/1`, vars: {}, session: 's' })!;
+    expect(flow.warnings ?? []).toEqual([]);
+  });
+
+  it('stays silent on a legitimate change the next read confirms', () => {
+    const flow = pair(
+      'Confirm order O-1 and report its status.',
+      { order_status: 'Confirmed' },
+      'Open order O-1 and report its status. Do not click anything or change it — this is a read-only check.',
+      { order_status: 'Confirmed' },
+    );
+    expect(flow.warnings ?? []).toEqual([]);
+  });
+
+  it('does not warn when the values agree by containment (a fuller status-bar line next to a single value)', () => {
+    const flow = pair(
+      'Cancel order O-1 and report its status.',
+      { order_status: 'Cancelled' },
+      'Open order O-1 and report its status. Do not click anything or change it — this is a read-only check.',
+      { order_status: 'Cancelled\nSales Order\nQuotation Sent\nQuotation' },
+    );
+    expect(flow.warnings ?? []).toEqual([]);
+  });
+
+  it('does not check a mutating step that did not report success', () => {
+    const flow = pair(
+      'Cancel order O-1 and report its status.',
+      { order_status: 'Cancelled' },
+      'Open order O-1 and report its status. Do not click anything or change it — this is a read-only check.',
+      { order_status: 'Sales Order' },
+      'blocked',
+    );
+    expect(flow.warnings ?? []).toEqual([]);
+  });
+});

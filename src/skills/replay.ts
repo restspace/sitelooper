@@ -1346,6 +1346,43 @@ export function openerLines(step: SkillStep, params: Record<string, string>): st
 }
 
 /**
+ * Is this step's work already done on the record it names?
+ *
+ * Two halves, and both are load-bearing. `preconditions.requireText` says the
+ * page is showing THIS record (the url pattern and fingerprint only ever say
+ * "a page of this template"); `goal.requireText` says that record is in the
+ * state the procedure exists to produce. Identity without goal would skip a
+ * step because the right record is open; goal without identity would skip it
+ * because some OTHER record happens to read "Cancelled".
+ *
+ * Conservative by construction: a skill with no goal, or no identity, is never
+ * satisfied, and an unbound marker (one that still reads `{{v1}}`) proves
+ * nothing so it fails the check rather than passing it. Being wrong the other
+ * way costs one replay; being wrong this way skips work that never happened.
+ */
+export async function goalSatisfied(
+  page: Page,
+  skill: Pick<Skill, 'preconditions' | 'goal'>,
+  params: Record<string, string>,
+): Promise<{ satisfied: boolean; shown: string[] }> {
+  const fill = (markers: string[] | undefined) => (markers ?? []).map((m) => fillParams(m, params));
+  const identity = fill(skill.preconditions.requireText);
+  const goal = fill(skill.goal?.requireText);
+  if (!identity.length || !goal.length) return { satisfied: false, shown: [] };
+  if ([...identity, ...goal].some((t) => !t || /\{\{/.test(t))) return { satisfied: false, shown: [] };
+  // The goal was read on the page template the procedure ends on (single
+  // segment, so also where it starts): on any other template the same words
+  // mean nothing — a list row can show "Cancelled" for a different order.
+  if (!urlMatches(skill.preconditions.urlPattern, page.url(), params)) return { satisfied: false, shown: [] };
+  const sig = await captureSignature(page);
+  if (!sig) return { satisfied: false, shown: [] };
+  for (const want of [...identity, ...goal]) {
+    if (!lineShows(sig.lines, [want])) return { satisfied: false, shown: [] };
+  }
+  return { satisfied: true, shown: goal };
+}
+
+/**
  * A parameterised line that did not *appear* may still be *there*: filling a
  * field with the value it already held produces no diff. One extra capture on
  * the miss path settles it.

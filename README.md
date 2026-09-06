@@ -163,6 +163,59 @@ meaning) — the emitted file then carries the same diagnostic as a comment abov
 appended to that step's own locator-failure message, so a red CI run points straight back here
 instead of reading as ordinary drift.
 
+**Goal-state steps.** A recording that mutates the app also reads its own outcome back, so a
+step's compiled procedure carries a `goal`: the visible text ("Cancelled") that was NOT on the
+page when the instruction began and IS once it succeeded — the positive counterpart of
+`preconditions.requireText`. A goal is derived only when the instruction stayed on one page
+template, because only then is the pre-state the same page the outcome was read from. Both the replay engine (before it ever tries the zero-model path)
+and a compiled spec (a guard at the top of the step body) check identity AND every goal text
+against the LIVE page before a mutating step acts (and only on the page template the goal was
+read on, so a list row's "Cancelled" for some other order never counts); when both already hold, the step succeeds
+having done nothing, publishing the same values its read-backs would have from the stored report
+template:
+
+```
+[flow fwod34] 08-open: already satisfied — page shows "Cancelled" for "S00021"; nothing to do
+```
+
+`run`'s per-step line prints `satisfied` where it would otherwise print `replay` or `agent`. The
+emitted spec's guard is the same check, inlined at compile time so no model is needed to run it:
+
+```ts
+// goal: the page already showing "Cancelled" for this record means the step's work is done —
+// the same check replay makes before it acts (goalSatisfied, src/skills/replay.ts).
+if (await satisfied(page, [p.v1], ["Cancelled"])) {
+  console.log('[sitelooper satisfied] 08-open — page shows "Cancelled"; nothing to do');
+  outputs['08-open.order_status'] = 'Cancelled';
+  return;
+}
+```
+
+This is what turns a retry step harmless: fwod34's 08-open was recorded asking to cancel an order
+06-open had already cancelled; on replay 06-open's cancel lands cleanly and 08-open, told the same
+thing, now finds the goal already showing instead of hunting for a Cancel button that is not
+there. A false negative just runs the step as before — the check never skips work that has not
+actually happened.
+
+**Contradicted steps.** The same recording carries the fact that would have caught this at export
+time, if 06-open's cancel had *reported* landing when it did not: a read-only step immediately
+after a mutating one is a free check on that mutating step's own report. `buildFlow` compares
+them directly — same label (or, failing that, any label that names a status/state field) — and
+when neither value's first line contains the other, it is a real contradiction, not just a
+fuller status bar next to a short one:
+
+```
+warning 07-open: 07-open read a value that contradicts what the previous step reported
+  why: contradicted-step: 07-open read order_status "Sales Order" right after 06-open reported
+  "Cancelled"; 06-open's change may not have landed and a later step may be retrying it.
+  Re-record 06-open.
+  fix: sitelooper rerecord fwod34.json 06-open
+```
+
+Like a `noop-step`, this is a record-time fact riding on `flow.warnings` that `compile`
+re-surfaces as a `contradicted-step` diagnostic, `fix` pointing at re-recording the mutating step
+— the one whose recording, not the app, needs another look.
+
 **The loop.** Once compiled, the `.spec.ts` runs under plain `@playwright/test` — no sitelooper
 process, no model, nothing but the two generated files and Playwright itself. Each locator call is
 a `pick()` fallthrough over the candidates recorded at compile time, tried in recorded order; if

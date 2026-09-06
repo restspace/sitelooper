@@ -26,8 +26,8 @@ export interface Flow {
   provenance: { session: string; created: string; model?: string };
   /**
    * Record-time problems the build found in this flow, each prefixed with the
-   * diagnostic code it becomes (today only `noop-step:`). Compile re-surfaces
-   * them as Diagnostics — see CONTRACT-DIAG.md and src/spec/diagnostics.ts.
+   * diagnostic code it becomes (`noop-step:` or `contradicted-step:`). Compile
+   * re-surfaces them as Diagnostics — see src/spec/diagnostics.ts.
    */
   warnings?: string[];
 }
@@ -215,6 +215,8 @@ export function buildFlow(
   const seenUrl = new Set(urlParts(opts.startUrl).map((p) => p.value));
   const varEntries = Object.entries(opts.vars).filter(([, v]) => v.length >= 2).sort((a, b) => b[1].length - a[1].length);
 
+  let prevId: string | undefined;
+  let prevGroup: Group | undefined;
   groups.forEach((g, i) => {
     const id = stepId(g.instruction.text, i);
     // Read the RAW instruction, before references go in: a substituted
@@ -222,6 +224,12 @@ export function buildFlow(
     // ask outside the scan window.
     const noop = noopStepWarning(id, g);
     if (noop) warnings.push(noop);
+    if (prevId && prevGroup) {
+      const contradiction = contradictionWarning(prevId, prevGroup, id, g);
+      if (contradiction) warnings.push(contradiction);
+    }
+    prevId = id;
+    prevGroup = g;
     let text = g.instruction.text;
     for (const [name, value] of varEntries) text = replaceToken(text, value, `{{${name}}}`);
     // Reference earlier outputs (longest values first so nested ids resolve).
@@ -586,6 +594,61 @@ function noopStepWarning(id: string, g: Group): string | null {
   const shown = alreadyShown(g);
   const clause = shown ? `, and the page already showed '${shown}' before it ran` : '';
   return `noop-step: ${id} changed nothing: its instruction asks to ${verb}, ${evidence}${clause}. The step may be redundant.`;
+}
+
+/**
+ * A mutating step's report contradicted by the very next read-only step.
+ *
+ * fwod34's 06-open reported "Cancelled" for the sales order; 07-open, a
+ * read-only step immediately after it, read the same order's status back as
+ * "Sales Order" — the value the order carries whenever it is NOT cancelled.
+ * Nothing in the flow said this out loud: compile just kept both facts and
+ * let a much later step (08-open, told to cancel an order that was already
+ * cancelled) take the blame. The contradiction is visible at export time —
+ * this reads it directly off the two instructions' report values, the same
+ * way `noopStepWarning` reads a step's own report against its own pre-state.
+ *
+ * Scope is deliberately narrow: `i` must be mutating by intent and report
+ * success (a step that failed or was never asked to change anything cannot
+ * be "contradicted" — there is nothing for the next read to disagree with),
+ * and `j` must immediately follow `i` with no gap and be read-only by intent
+ * (a second mutating step is expected to change what the first one did, so
+ * comparing it would be noise, not a contradiction).
+ *
+ * Values are matched by label first (the natural case — the same field read
+ * twice), falling back to any label pair where BOTH names look like a status
+ * or state field, since an orchestrator's wording for the same field drifts
+ * step to step ("order_status" vs "current_status"). Only the first line of
+ * each value is compared: a status bar lists every reachable state on one
+ * line each, so the first line is the CURRENT one and the rest is noise the
+ * same way `alreadyShown` treats it. Containment either way counts as
+ * agreement (a single-line report next to a status bar's fuller line, or a
+ * value that reappeared verbatim, is not a contradiction) — only two first
+ * lines that share nothing warrant a warning.
+ */
+function contradictionWarning(idI: string, gi: Group, idJ: string, gj: Group): string | null {
+  if (gi.report?.status !== 'success') return null;
+  if (!mutatingIntent(gi.instruction.text)) return null;
+  if (mutatingIntent(gj.instruction.text)) return null;
+  const iValues = gi.report?.values ?? {};
+  const jValues = gj.report?.values ?? {};
+  for (const [label, jRaw] of Object.entries(jValues)) {
+    if (typeof jRaw !== 'string') continue;
+    let iLabel: string | undefined = typeof iValues[label] === 'string' ? label : undefined;
+    if (!iLabel && /status|state/i.test(label)) {
+      iLabel = Object.keys(iValues).find((k) => typeof iValues[k] === 'string' && /status|state/i.test(k));
+    }
+    if (!iLabel) continue;
+    const iRaw = iValues[iLabel] as string;
+    const jLine = jRaw.split('\n')[0].trim();
+    const iLine = iRaw.split('\n')[0].trim();
+    if (!jLine || !iLine) continue;
+    const lj = jLine.toLowerCase();
+    const li = iLine.toLowerCase();
+    if (lj.includes(li) || li.includes(lj)) continue;
+    return `contradicted-step: ${idJ} read ${label} "${jLine}" right after ${idI} reported "${iLine}"; ${idI}'s change may not have landed and a later step may be retrying it. Re-record ${idI}.`;
+  }
+  return null;
 }
 
 /** Tools that CHANGE the app, as opposed to observing it. */

@@ -330,6 +330,26 @@ export function compileSkills(input: CompileInput): Skill[] {
     summary: sub(input.report.summary),
     values: Object.fromEntries(Object.entries(reportValues).map(([k, v]) => [k, sub(String(v))])),
   };
+  // What the page shows once this procedure's work is done. Derived from the
+  // recording's own before/after pair: report text that was NOT on the page
+  // when the instruction began. See deriveGoal.
+  const goal = deriveGoal({
+    startText: head?.startText,
+    reportValues,
+    sub,
+    // Single-segment only: startText is the page the instruction BEGAN on,
+    // and only when no page-template seam was crossed is that the same page
+    // the report read its values from. A confirm that started on the list
+    // would otherwise take "Sales Order" — listed in Odoo's status bar before
+    // the confirm as well — for its goal, and skip the step on a form.
+    mutating: built.length === 1 && built.some((b) => mutatesSteps(b.folded)),
+    // Identities, not states: anything the caller vouched for, anything the
+    // run minted, and every slot's recorded value. "S00021" appearing in the
+    // report is the record's NAME — it was equally true before the work.
+    identities: new Set(
+      [...knownVals, ...minted.map((m) => m.value), ...slots.values()].map((v) => String(v ?? '').replace(/\s+/g, ' ').trim()).filter(Boolean),
+    ),
+  });
   const of = built.length;
   const chain = of > 1 ? newSkillId(origin, finalTemplate, now) : null;
 
@@ -357,6 +377,10 @@ export function compileSkills(input: CompileInput): Skill[] {
           ? { requireText: identityOf(b.sg.startText, keptSlots, knownVals) }
           : {}),
       },
+      // Only the LAST segment finishes the work, so only it can vouch for the
+      // end state — an earlier segment carrying the goal would let a chain be
+      // skipped from its head on evidence its tail produced.
+      ...(k === of - 1 && goal ? { goal } : {}),
       steps: b.folded,
       ...(segDerived[k] ? { derived: segDerived[k] } : {}),
       // Only the last segment can vouch for the instruction's end state.
@@ -368,6 +392,69 @@ export function compileSkills(input: CompileInput): Skill[] {
       provenance: { session: input.session, instruction: input.instruction, ...(input.model ? { model: input.model } : {}), created: now },
     };
   });
+}
+
+const MIN_GOAL_LEN = 3;
+const MAX_GOAL = 4;
+
+/** Does this procedure CHANGE anything? (learn.ts's `mutates`, at compile time.) */
+const MUTATING_TOOLS = new Set(['click', 'dblclick', 'right_click', 'modifier_click', 'fill', 'type', 'press', 'select', 'check', 'drag', 'upload']);
+
+function mutatesSteps(steps: SkillStep[]): boolean {
+  return steps.some((s) => MUTATING_TOOLS.has(s.tool) || (s.body ? mutatesSteps(s.body) : false));
+}
+
+/**
+ * The GOAL: what the page shows once this procedure's work is done.
+ *
+ * The evidence is the recording's own before/after pair — `startText` (what
+ * the page showed when the instruction began) against the report's read-back
+ * values (what it showed when the work was finished). A report line that was
+ * NOT in `startText` is text the procedure BROUGHT INTO EXISTENCE, which is
+ * exactly the signal "already done" needs: Odoo's status bar lists every
+ * reachable state, so "Sales Order" is showing whether or not the order was
+ * cancelled, while "Cancelled" is listed only once it was.
+ *
+ * Everything here is a filter against FALSE POSITIVES, because a false
+ * positive skips work that never happened while a false negative merely runs
+ * the step as before:
+ *  - text already in `startText` is not evidence of anything (it was true
+ *    before);
+ *  - an identity — a caller-vouched value, a minted id, a slot's recorded
+ *    literal — names the RECORD, not its state, and is equally true before
+ *    and after;
+ *  - a line that still carries a `{{slot}}` after substitution cannot be
+ *    checked against a live page without guessing what fills it;
+ *  - and no startText, no report values, or a read-only procedure means no
+ *    goal at all. Never guess one.
+ */
+function deriveGoal(opts: {
+  startText: string | undefined;
+  reportValues: Record<string, unknown>;
+  sub: (s: string) => string;
+  mutating: boolean;
+  identities: Set<string>;
+}): { requireText: string[] } | null {
+  if (!opts.mutating || !opts.startText) return null;
+  const before = opts.startText.replace(/\s+/g, ' ').toLowerCase();
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const raw of Object.values(opts.reportValues)) {
+    for (const rawLine of String(raw ?? '').split('\n')) {
+      const line = rawLine.replace(/\s+/g, ' ').trim();
+      if (line.length < MIN_GOAL_LEN) continue;
+      if (!/[A-Za-z]/.test(line)) continue; // digits and punctuation are ids and counts, not states
+      if (before.includes(line.toLowerCase())) continue;
+      if (opts.identities.has(line)) continue;
+      const subbed = opts.sub(line);
+      if (subbed.includes('{{')) continue;
+      if (seen.has(subbed.toLowerCase())) continue;
+      seen.add(subbed.toLowerCase());
+      out.push(subbed);
+      if (out.length >= MAX_GOAL) return { requireText: out };
+    }
+  }
+  return out.length ? { requireText: out } : null;
 }
 
 const MIN_IDENTITY_LEN = 4;

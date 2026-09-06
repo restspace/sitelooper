@@ -880,6 +880,33 @@ const HELPERS: { token: string; source: string[] }[] = [
     ],
   },
   {
+    token: 'satisfied(page, ',
+    source: [
+      '/**',
+      " * Is this step's work already DONE on the record it names?",
+      ' *',
+      " * WHICH REPLAY RULE THIS MIRRORS. `goalSatisfied` (src/skills/replay.ts):",
+      ' * two halves, and both are load-bearing. The IDENTITY texts say the page is',
+      ' * showing THIS record — the url and the page shape only ever say "a page of',
+      ' * this template" — and the GOAL texts say that record is already in the',
+      " * state this step exists to produce. Identity alone would skip a step",
+      ' * because the right record is open; a goal alone would skip it because some',
+      ' * OTHER record happens to read "Cancelled".',
+      ' *',
+      ' * Conservative by construction: no goal, or no identity, is never satisfied.',
+      ' * Being wrong the other way costs one re-run of a step that had already',
+      ' * happened; being wrong THIS way skips work that never happened at all.',
+      ' */',
+      'async function satisfied(page: Page, identity: string[], goal: string[]): Promise<boolean> {',
+      '  if (!identity.length || !goal.length) return false;',
+      '  for (const want of [...identity, ...goal]) {',
+      '    if (!(await present(page, want))) return false;',
+      '  }',
+      '  return true;',
+      '}',
+    ],
+  },
+  {
     token: 'escapeRe(',
     source: [
       '/** A value interpolated into a pattern is DATA: its own metacharacters must not become pattern. */',
@@ -1809,6 +1836,66 @@ function markerBound(marker: string, segment: SpecSegment): boolean {
   return slots.every((s) => s in segment.params || s in (segment.derived ?? {}));
 }
 
+/**
+ * A flow-step param value as it renders in the emitted body: a lone slot is the
+ * param itself (`p.v1`), anything else is recorded text with its slots filled.
+ */
+function valueSource(text: string): string {
+  const only = /^\{\{([vd]\d+)\}\}$/.exec(text);
+  return only ? `p.${only[1]}` : src(text);
+}
+
+/**
+ * The "already satisfied" guard at the top of a step body, when the step's
+ * procedure carries one.
+ *
+ * WHY A STEP MAY BE ASKED TO DO WHAT IS ALREADY DONE. A flow is a record of
+ * what the orchestrator did, and it retries: fwod34's 06-open asked for an
+ * order to be cancelled and its recording did not land the cancel, so 08-open
+ * was recorded asking for the same cancel again. On REPLAY 06-open works —
+ * and 08-open then goes looking for a Cancel button that a cancelled order
+ * does not have. The recorded procedure is fine; it is simply being run on a
+ * record that has already reached its destination.
+ *
+ * So: identity (this is the right record) AND the goal (it is already in the
+ * state the step produces) short-circuit the step, publishing the values its
+ * read-backs would have published so the steps after it see the same shape.
+ * Emitted only where every marker is BOUND — an unbound `{{v1}}` proves
+ * nothing, and a guard that cannot be sure is not emitted at all, which
+ * simply leaves the step running exactly as it does today.
+ */
+function satisfiedGuard(step: SpecStep, ctx: Ctx): string[] {
+  const head = step.segments[0];
+  const last = step.segments[step.segments.length - 1];
+  const goal = last?.goal?.requireText ?? [];
+  if (!head || !goal.length) return [];
+  const identity = (head.preconditions.requireText ?? []).filter((m) => markerBound(m, head));
+  if (!identity.length) return [];
+  if (!goal.every((g) => markerBound(g, last))) return [];
+  noteSlots([...identity, ...goal], ctx);
+  const shown = goal.map((g) => `"${g}"`).join(', ');
+  const say = `[sitelooper satisfied] ${step.id} — page shows ${shown}; nothing to do`;
+  // On the page template the goal was read on, or the words mean nothing
+  // (replay's goalSatisfied checks the same url pattern first).
+  const at = urlExpectSource(head.preconditions.urlPattern);
+  const onPage = at ? (at.startsWith('(url') ? `(${at})(new URL(page.url())) && ` : `${at}.test(page.url()) && `) : '';
+  const out = [
+    `// goal: the page already showing ${shown} for this record means the step's work is done —`,
+    '// the same check replay makes before it acts (goalSatisfied, src/skills/replay.ts).',
+    `if (${onPage}await satisfied(page, [${identity.map(src).join(', ')}], [${goal.map(src).join(', ')}])) {`,
+    `  console.log(${src(say)});`,
+  ];
+  // The read-backs never run, so the report template stands in for them: the
+  // same output keys, filled from this run's own params.
+  for (const [label, value] of Object.entries(last.report?.values ?? {})) {
+    if (!label || !value || !markerBound(value, last)) continue;
+    noteSlots(value, ctx);
+    out.push(`  outputs[${q(`${step.id}.${label}`)}] = ${valueSource(value)};`);
+  }
+  out.push('  return;', '}');
+  return out;
+}
+
 /** One segment: its preconditions, then its steps. */
 function emitSegment(segment: SpecSegment, ctx: Ctx): string[] {
   const out: string[] = [];
@@ -1965,6 +2052,8 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
       lines.push(`// TODO: no converged procedure for ${JSON.stringify(commentSafe(step.instruction))}`);
       lines.push(`throw new Error(${q(`step ${step.id} has no converged procedure — record it with sitelooper, then compile again`)});`);
     } else {
+      const guard = satisfiedGuard(step, ctx);
+      if (guard.length) lines.push(...guard, '');
       for (const [i, segment] of step.segments.entries()) {
         if (i) lines.push('');
         lines.push(...emitSegment(segment, ctx));
