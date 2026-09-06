@@ -149,12 +149,13 @@ rerecord <flow file> <step> [--instruction "<text>"]`.
 2. Emit Tier 2 for the set-28 flows; score with the existing verifiers.
 3. Round-trip test harness: `lift(emit(skill))` deep-equals `skill`.
 
-## Status 2026-09-05
+## Status 2026-09-06
 
 Phases 0, 1, 3, 4 are on the `compile-to-spec` branch, demonstrated end to end on the local
 repairdesk app with OpenRouter (z-ai/glm-5.3) as the repair model, and then run on the bench's
-cloud environment across sets 1-8 for kanboard, grafana, and odoo (results on
-`origin/results/sp<N><target>` branches: `sp3kb`, `sp7gr`, `sp8od`).
+cloud environment across sets 1-11 for kanboard, grafana, and odoo (results on
+`origin/results/sp<N><target>` branches: `sp3kb`, `sp7gr`, `sp8od`, `sp11od`). All four
+targets now pass the compiled spec end to end with repair converging and the spec check passing.
 
 Closed since 2026-09-04:
 
@@ -217,7 +218,19 @@ Per-target cloud outcome:
   1 ticket, converge 2/2 5/5 with 0 tickets, converged; spec check passed (exit 0) with two
   promotions and two model-proposed locators in 01-open, one promotion in 02-create, and one
   retirement. Repaired spec: 1/1, 4/6.
-- **odoo** (sp8od, f226d7f): after seven sets of emitter fixes the compiled spec verifies 6/6
+- **odoo passes end to end** (sp11od, f838bec, flow fwod34r3): `sitelooper rerecord fwod34r3.json
+  08-open` pinned the step to 07-open's validated read-only status check s_04d970 on run 1 and
+  replayed it at tier A on run 2 (9/9 both runs, exit 0); the compiled spec then ran 1/1 with 0
+  drift and 6/6 on both runs (78s each), repair replayed 9/9 at tier A on run 1 and both converge
+  runs with no change and its spec check passed (77s), and the repaired spec ran 1/1, 6/6 (78s).
+  Three re-record attempts were needed, each exposing an engine rule: rr1od — the adoption gate
+  forbade two steps sharing one skill (now only mutating skills are exclusive); rr2od — the
+  re-pin was refused because s_04d970's store entry carries no slot origins, and the refusal
+  went only to `--progress` (a re-pin onto a skill a sibling step pins now inherits that step's
+  flow bindings, and `rerecord` prints every daemon line about the step); and locally, the
+  verdict misread the daemon's `replayed: "2/2"` fraction as a covering skill id, and an
+  adopted step pinned onto a validated skill kept `adopted: true` (both fixed at f838bec).
+- **odoo before that** (sp8od, f226d7f): after seven sets of emitter fixes the compiled spec verifies 6/6
   on both cloud runs (86s, 80s) and on the repaired spec (81s), and the test itself stops at
   08-open s_c86522/1 every time — that step is pinned to a DEMOTED skill whose Cancel click can
   never land because 06-open already cancelled the order, a recording/store defect (the engine
@@ -231,10 +244,12 @@ Still open:
 1. **Expectations that no longer hold** (a dialog renamed from "Add part" to "Attach part")
    fail the spec and are refused by repair by design; the "re-record one segment" path that
    would regenerate them is reported, not automated.
-2. **Odoo's 08-open store defect** is now handled by `sitelooper rerecord`, not open: `repair`
-   flags it as `needs-rerecord` (see "Surfacing problems" above), and the fix is to re-record the
-   step with a read-only instruction rather than teach the engine to adopt a read-only skill over
-   a demoted mutating pin. The first cloud re-record run (sp9od) showed the engine replaying 07-open's read-only status skill for the step on every run but unable to pin it — the adoption gate forbade two steps sharing a skill — so the gate now lets read-only skills be shared; the confirming run (sp10od, on 70cf98f) uses `sitelooper rerecord` itself.
+2. **Odoo's 08-open store defect is closed** (sp11od, above): `repair` flags such a step as
+   `needs-rerecord` (see "Surfacing problems"), and `sitelooper rerecord` with a read-only
+   instruction fixed it without teaching the engine to adopt a read-only skill over a demoted
+   mutating pin. What remains is that the recording orchestrator wrote the bad instruction in the
+   first place; record-time `noop-step` warnings now catch the "mutating ask that changed
+   nothing" shape, but nothing yet stops the orchestrator issuing it.
 3. **Odoo 06-open occasionally falls back** to the model ("pinned skill bound no params" once
    in 3 runs) — a replay-engine flake, not an emitter bug.
 4. **Phase 2 (runtime extraction) not started.** Survey in the session scratchpad
