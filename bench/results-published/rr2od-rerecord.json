@@ -1,0 +1,37 @@
+{
+  "flow": "fwod34r2",
+  "file": "bench/results/flows/fwod34r2.json",
+  "step": "08-open",
+  "backup": "bench/results/flows/fwod34r2.bak-mtpmg7eh.json",
+  "ok": false,
+  "pinned": null,
+  "skill": null,
+  "runs": [
+    {
+      "label": "run 1",
+      "status": "success",
+      "tier": "B",
+      "replayed": "2/2",
+      "repinned": null,
+      "turns": 2
+    },
+    {
+      "label": "run 2",
+      "status": "success",
+      "tier": "B",
+      "replayed": "2/2",
+      "repinned": null,
+      "turns": 2
+    }
+  ],
+  "diagnostics": [
+    {
+      "code": "needs-rerecord",
+      "step": "08-open",
+      "what": "08-open has no procedure after re-recording — nothing was pinned to it",
+      "why": "the agent ran the step but the store's re-pin rule refused the result (a recovery that needed model gestures beyond its replay, or a locator carrying a value this run minted). run 1: 08-open  replay 2/2 (2 turns); run 2: 08-open  replay 2/2 (2 turns)",
+      "fix": "sitelooper rerecord bench/results/flows/fwod34r2.json 08-open --instruction \"<a clearer instruction for this step>\"",
+      "severity": "error"
+    }
+  ]
+}

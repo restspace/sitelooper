@@ -1,0 +1,12 @@
+re-recording fwod34r2 step 08-open (2 run(s))
+  unpinned s_c86522; old recording kept at bench/results/flows/fwod34r2.bak-mtpmg7eh.json
+  reset (run 1): node --input-type=module -e "import {resetTarget} from './bench/app-reset.mjs'; await resetTarget('odoo')"
+run 1: 08-open  replay 2/2 (2 turns)
+  fwod34r2: 9/9 step(s) success
+  reset (run 2): node --input-type=module -e "import {resetTarget} from './bench/app-reset.mjs'; await resetTarget('odoo')"
+run 2: 08-open  replay 2/2 (2 turns)
+  fwod34r2: 9/9 step(s) success
+error 08-open: 08-open has no procedure after re-recording — nothing was pinned to it
+  why: the agent ran the step but the store's re-pin rule refused the result (a recovery that needed model gestures beyond its replay, or a locator carrying a value this run minted). run 1: 08-open  replay 2/2 (2 turns); run 2: 08-open  replay 2/2 (2 turns)
+  fix: sitelooper rerecord bench/results/flows/fwod34r2.json 08-open --instruction "<a clearer instruction for this step>"
+EXIT=1
