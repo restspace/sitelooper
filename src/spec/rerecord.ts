@@ -107,6 +107,20 @@ export interface RerecordRun {
   /** "run 1", "run 2", … — printed verbatim. */
   label: string;
   step?: FlowStepResult;
+  /**
+   * What the daemon said about this step while the run was on it — above
+   * all a re-pin refusal ("not re-pinning s_… — slot(s) v2 identify the
+   * record but carry no origin to rebind from"). rr2od ran twice, pinned
+   * nothing, and printed nothing about why: the reason only ever went to
+   * --progress. It is the verdict's evidence, so it is kept per run.
+   */
+  notes?: string[];
+}
+
+/** Does a daemon progress line concern this flow step? `[flow <name>] <step>: …` */
+export function stepNote(line: string, stepId: string): string | null {
+  const m = /^\[flow [^\]]+\] ([^:]+): (.*)$/.exec(line);
+  return m && m[1] === stepId ? m[2] : null;
 }
 
 /** `run 2: 08-open  replay tier A (s_ab12cd)` / `run 1: 08-open  agent (12 turns) re-pinned s_ab12cd` */
@@ -141,6 +155,7 @@ export function rerecordVerdict(input: { file: string; stepId: string; runs: Rer
   const { file, stepId, runs } = input;
   const fix = rerecordCommand(file, stepId);
   const trail = runs.map((r) => stepLine(stepId, r)).join('; ');
+  const notes = runs.flatMap((r) => (r.notes ?? []).map((n) => `${r.label}: ${n}`));
   // The pin this rerecord made: the last re-pin any run reported. Later runs
   // replay it and report no re-pin of their own, which is the success shape.
   let pinned: string | undefined;
@@ -164,7 +179,9 @@ export function rerecordVerdict(input: { file: string; stepId: string; runs: Rer
   if (!pinned) {
     return bad(
       `${stepId} has no procedure after re-recording — nothing was pinned to it`,
-      `the agent ran the step but the store's re-pin rule refused the result (a recovery that needed model gestures beyond its replay, or a locator carrying a value this run minted). ${trail}`,
+      notes.length
+        ? `the store's re-pin rule refused the result — ${notes.join('; ')}. ${trail}`
+        : `the agent ran the step but the store's re-pin rule refused the result (a recovery that needed model gestures beyond its replay, or a locator carrying a value this run minted). ${trail}`,
       { fix: `${fix} --instruction "<a clearer instruction for this step>"` },
     );
   }

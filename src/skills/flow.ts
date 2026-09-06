@@ -934,9 +934,10 @@ export function ignorableRefs(missing: string[], step: FlowStep, skill: Skill | 
  * the old bindings as resolved, the declared vars, earlier steps' outputs —
  * and the matching template is carried over; a value containing a known
  * value is templated on that part; anything else stays literal, which is
- * what the recovery typed.
+ * what the recovery typed. `inherited` are the bindings a sibling step
+ * that already pins this skill stores, used for slots with no origin.
  */
-export function remapParams(skill: Skill): { params: Record<string, string>; unbound: string[] } {
+export function remapParams(skill: Skill, inherited: Record<string, string> = {}): { params: Record<string, string>; unbound: string[] } {
   // A binding key names where a value comes from: "runid" / "var:runid" (a
   // declared var), "01-open.landed_page" / "output:01-open:landed_page" (an
   // earlier step's output), "02-create.url.p1" / "url:02-create:p1" (a url
@@ -971,6 +972,15 @@ export function remapParams(skill: Skill): { params: Record<string, string>; unb
     const direct = p.binding ? templateOf(p.binding) : null;
     if (direct) {
       params[name] = direct;
+      continue;
+    }
+    // A slot the skill recorded no origin for, but which another step of
+    // the same flow already binds (the flow's `params` for that step are
+    // {{ref}} templates that resolve on every run): inherit that binding.
+    // rr2od's 08-open was covered by 07-open's read-only status check,
+    // whose store entry predates slot origins; the flow knew them all along.
+    if (inherited[name] !== undefined) {
+      params[name] = inherited[name];
       continue;
     }
     let text = ex;

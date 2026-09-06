@@ -893,6 +893,27 @@ describe('remapParams', () => {
     } as never;
     expect(remapParams(skill)).toEqual({ params: { v1: 'fwat2-n3 MTP Bench Project', v3: '25' }, unbound: ['v1'] });
   });
+
+  // rr2od: 08-open was re-recorded and covered by 07-open's read-only status
+  // check s_04d970, whose store entry predates slot origins (no `binding` on
+  // any slot). The flow's 07-open step already bound those slots as {{ref}}
+  // templates; a re-pin onto a skill a sibling step pins inherits them.
+  it("inherits a sibling step's flow bindings for slots that recorded no origin", async () => {
+    const { remapParams } = await import('../src/skills/flow.js');
+    const skill = {
+      params: {
+        v1: { example: 'S00021', usedIn: [], known: true },
+        v2: { example: '21', usedIn: [], known: true },
+        v3: { example: 'Sales Order', usedIn: [], known: true },
+        v4: { example: 'k9', usedIn: [1], known: true, binding: 'var:runid' },
+      },
+    } as never;
+    const sibling = { v1: '{{02-create.quotation_ref}}', v2: '{{02-create.url.q.id}}', v3: 'Sales Order', v4: 'stale' };
+    expect(remapParams(skill, sibling)).toEqual({
+      params: { v1: '{{02-create.quotation_ref}}', v2: '{{02-create.url.q.id}}', v3: 'Sales Order', v4: '{{runid}}' },
+      unbound: [],
+    });
+  });
 });
 
 /**

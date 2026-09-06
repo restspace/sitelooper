@@ -27,6 +27,7 @@ import {
   RerecordError,
   rerecordVerdict,
   stepLine,
+  stepNote,
   stepOf,
   unpinStep,
   type RerecordRun,
@@ -1724,11 +1725,21 @@ async function rerecordFlowCommand(
     // The same path `sitelooper run` takes — daemon, recovery ladder, learning
     // mode — pointed at the REAL skill store, because the whole point is that
     // the procedure this records survives into it.
+    // Whatever the daemon says about THIS step (a re-pin refusal above all)
+    // is printed whether or not --progress is on, and kept for the verdict.
+    const notes: string[] = [];
     const { run } = await runStagedFlow({ flowFile: file, skillsDir: skillsDir() }, mintVars(vars, i), `rerecord-${stamp}-${i}`, {
       headed: flags.has('headed'),
-      onProgress,
+      onProgress: (m) => {
+        const note = stepNote(m, stepId);
+        if (note) {
+          notes.push(note);
+          say(`  ${label}: ${stepId}  ${note}`);
+        }
+        onProgress?.(m);
+      },
     });
-    const entry: RerecordRun = { label, step: stepOf(run.steps, stepId) };
+    const entry: RerecordRun = { label, step: stepOf(run.steps, stepId), ...(notes.length ? { notes } : {}) };
     runs.push(entry);
     say(stepLine(stepId, entry));
     say(`  ${run.flow}: ${run.passed}/${run.total} step(s) ${run.status}`);

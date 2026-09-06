@@ -259,3 +259,32 @@ describe('cli: rerecord command', () => {
     expect(body).toMatch(/runStagedFlow\(\{ flowFile: file, skillsDir: skillsDir\(\) \}, mintVars\(vars, i\)/);
   });
 });
+
+describe('stepNote and refusal evidence', () => {
+  it('extracts the daemon line about the step being re-recorded and nothing else', async () => {
+    const { stepNote } = await import('../src/spec/rerecord.js');
+    const line = '[flow fwod34r2] 08-open: not re-pinning s_04d970 — slot(s) v1, v2, v3 identify the record but carry no origin to rebind from';
+    expect(stepNote(line, '08-open')).toBe('not re-pinning s_04d970 — slot(s) v1, v2, v3 identify the record but carry no origin to rebind from');
+    expect(stepNote(line, '07-open')).toBeNull();
+    expect(stepNote('  · clicking Cancel', '08-open')).toBeNull();
+  });
+
+  it("quotes the daemon's refusal in the verdict when nothing was pinned", async () => {
+    const { rerecordVerdict } = await import('../src/spec/rerecord.js');
+    const step = { id: '08-open', status: 'success', tier: 'B', replayed: 's_04d970', turns: 2 } as never;
+    const v = rerecordVerdict({
+      file: 'flows/f.json',
+      stepId: '08-open',
+      runs: [
+        { label: 'run 1', step, notes: ['not re-pinning s_04d970 — slot(s) v2 identify the record but carry no origin to rebind from'] },
+        { label: 'run 2', step },
+      ],
+    });
+    expect(v.ok).toBe(false);
+    if (!v.ok) {
+      expect(v.diagnostic.why).toContain('run 1: not re-pinning s_04d970 — slot(s) v2');
+      expect(v.diagnostic.why).not.toContain('needed model gestures');
+    }
+  });
+});
+

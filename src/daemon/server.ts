@@ -1103,7 +1103,11 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote,
           // no origin would replay as the learning run's literal — rpat2
           // named a live run's items after an earlier run that way — so
           // such a re-pin is refused and the incumbent keeps the step.
-          const remap = remapParams(candidate);
+          // A skill another step already pins (a shared read-only check)
+          // carries that step's flow bindings: inherit them for slots the
+          // store recorded no origin for.
+          const sibling = flow.steps.find((st) => st.id !== step.id && st.skill === candidate.id && st.params);
+          const remap = remapParams(candidate, sibling?.params ?? {});
           if (remap.unbound.length) {
             opts.progress(`[flow ${flow.name}] ${step.id}: not re-pinning ${candidate.id} — slot(s) ${remap.unbound.join(', ')} identify the record but carry no origin to rebind from`);
           } else {
