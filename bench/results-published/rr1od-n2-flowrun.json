@@ -1,0 +1,175 @@
+{
+  "flow": "fwod34r",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Successfully signed into Odoo with admin/admin, navigated to Contacts, created a new contact named 'rr1od-n2 Bench Customer' with City 'Benchville', saved it. Verified the saved record: the Name field shows \"rr1od-n2 Bench Customer\" and the City field shows \"Benchville\".",
+      "values": {
+        "customer_name": "rr1od-n2 Bench Customer",
+        "city": "Benchville"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "20/20",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_c925b1; observed product_name=Chair floor protection, unit_price=12.00, line_total_2=£ 36.00, quotation_ref=S00021.",
+      "values": {
+        "product_name": "Chair floor protection",
+        "unit_price": "12.00",
+        "line_total_2": "£ 36.00",
+        "quotation_ref": "S00021"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "21/21",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_dc0408; observed second_unit_price=295.00, new_untaxed_amount_2=£ 626.00, new_untaxed_amount=£ 626.00, order_reference=S00021.",
+      "values": {
+        "second_unit_price": "295.00",
+        "new_untaxed_amount_2": "£ 626.00",
+        "new_untaxed_amount": "£ 626.00",
+        "order_reference": "S00021"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_059a1e; observed first_line_qty=5.00, untaxed_amount_2=£ 650.00, ref=S00021.",
+      "values": {
+        "first_line_qty": "5.00",
+        "untaxed_amount_2": "£ 650.00",
+        "ref": "S00021"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_f1434f; observed order_reference=S00021, statusbar_text=Sales Order\nQuotation Sent\nQuotation.",
+      "values": {
+        "order_reference": "S00021",
+        "statusbar_text": "Sales Order\nQuotation Sent\nQuotation"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "4/4",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "Opened the confirmed sales order S00021 for rr1od-n2 Bench Customer, clicked Cancel, accepted the confirmation dialog, then clicked \"Send and cancel\" to finalise. The order is now cancelled — the statusbar shows \"Cancelled\" as the active status.",
+      "values": {
+        "ref": "S00021"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "every candidate refused — s_e7d322: the page at http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form does not show \"S00022\" — it matches this procedure's page template but is a different record — nothing was run",
+      "replayed": null,
+      "repaired": false,
+      "turns": 36
+    },
+    {
+      "id": "07-open",
+      "status": "success",
+      "summary": "Read-only check of sales order S00021: the status bar shows \"Sales Order\" as the active/current status (with \"Quotation Sent\" and \"Quotation\" as alternative steps).",
+      "values": {
+        "current_status": "Sales Order",
+        "order_status": "Cancelled\nSales Order\nQuotation Sent\nQuotation",
+        "order_reference": "S00021"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "2/2",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "08-open",
+      "status": "success",
+      "summary": "Read-only check of sales order S00021. The status bar shows \"Cancelled\" as the active/highlighted status (alongside \"Sales Order\", \"Quotation Sent\", and \"Quotation\" as inactive steps). The order heading shows reference S00021. The order is confirmed as cancelled.",
+      "values": {
+        "order_reference": "S00021",
+        "status": "Cancelled",
+        "statusbar_text": "Cancelled\nSales Order\nQuotation Sent\nQuotation"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "the flow step has no pinned skill",
+      "replayed": "2/2",
+      "repaired": false,
+      "turns": 2
+    },
+    {
+      "id": "09-change",
+      "status": "success",
+      "summary": "Replayed stored procedure s_4634ba; observed statusbar_text=Cancelled\nSales Order\nQuotation Sent\nQuotation, order_reference=S00021, customer_name=rr1od-n2 Bench Customer.",
+      "values": {
+        "statusbar_text": "Cancelled\nSales Order\nQuotation Sent\nQuotation",
+        "order_reference": "S00021",
+        "customer_name": "rr1od-n2 Bench Customer"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "3/3",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 9,
+  "total": 9,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwod34r",
+      "step": "08-open",
+      "skill": "s_04d970",
+      "similarity": 0.972,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "the flow step has no pinned skill",
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#id=21&cids=1&menu_id=194&action=316&model=sale.order&view_type=form"
+    }
+  ],
+  "wallMs": 300586,
+  "model": "deepseek/deepseek-v4-flash",
+  "usage": {
+    "promptTokens": 460385,
+    "completionTokens": 5675,
+    "cachedTokens": 341248
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4-flash": {
+      "promptTokens": 460385,
+      "completionTokens": 5675,
+      "cachedTokens": 341248
+    }
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter"
+}
