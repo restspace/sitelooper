@@ -24,6 +24,12 @@ export interface Flow {
   vars: string[];
   steps: FlowStep[];
   provenance: { session: string; created: string; model?: string };
+  /**
+   * Record-time problems the build found in this flow, each prefixed with the
+   * diagnostic code it becomes (today only `noop-step:`). Compile re-surfaces
+   * them as Diagnostics — see CONTRACT-DIAG.md and src/spec/diagnostics.ts.
+   */
+  warnings?: string[];
 }
 
 export interface FlowStep {
@@ -204,12 +210,18 @@ export function buildFlow(
   if (!groups.length) return null;
 
   const steps: FlowStep[] = [];
+  const warnings: string[] = [];
   const produced: { stepId: string; output: string; value: string }[] = [];
   const seenUrl = new Set(urlParts(opts.startUrl).map((p) => p.value));
   const varEntries = Object.entries(opts.vars).filter(([, v]) => v.length >= 2).sort((a, b) => b[1].length - a[1].length);
 
   groups.forEach((g, i) => {
     const id = stepId(g.instruction.text, i);
+    // Read the RAW instruction, before references go in: a substituted
+    // {{02-create.quotation_ref}} shifts every later word and can push the
+    // ask outside the scan window.
+    const noop = noopStepWarning(id, g);
+    if (noop) warnings.push(noop);
     let text = g.instruction.text;
     for (const [name, value] of varEntries) text = replaceToken(text, value, `{{${name}}}`);
     // Reference earlier outputs (longest values first so nested ids resolve).
@@ -340,6 +352,7 @@ export function buildFlow(
     vars: Object.keys(opts.vars),
     steps,
     provenance: { session: opts.session, created: opts.now ?? new Date().toISOString(), ...(opts.model ? { model: opts.model } : {}) },
+    ...(warnings.length ? { warnings } : {}),
   };
 }
 
@@ -350,6 +363,15 @@ interface Group {
   endUrl?: string;
   /** How many state-changing tool steps this instruction ran. */
   mutations: number;
+  /** Of those, how many carried a recorded page diff at all (learning mode). */
+  mutationsDiffed: number;
+  /**
+   * Of the diffed ones, how many VISIBLY did something: new signature lines,
+   * an alert, or a url away from where the instruction started. A mutating
+   * step whose diff is empty on all three touched the app's controls and
+   * moved nothing the recorder could see.
+   */
+  mutationsEffective: number;
   /** The tool of this instruction's first recorded step. */
   firstTool?: string;
   /** Set by resolveGroups: kept despite a non-success report — see there. */
@@ -367,13 +389,20 @@ function groupByInstruction(entries: RecordedEntry[]): Group[] {
       // predecessor (truncated recording) stands alone.
       const prev = groups[groups.length - 1];
       if (e.resume && prev?.instruction.text === e.text) continue;
-      groups.push({ instruction: e, mutations: 0 });
+      groups.push({ instruction: e, mutations: 0, mutationsDiffed: 0, mutationsEffective: 0 });
     } else if (e.k === 'report' && groups.length) groups[groups.length - 1].report = e;
     else if (e.k === 'step' && groups.length) {
       const g = groups[groups.length - 1];
       if (e.diff?.url) g.endUrl = e.diff.url;
       if (!g.firstTool) g.firstTool = e.tool;
-      if (MUTATING_TOOLS.has(e.tool)) g.mutations += 1;
+      if (MUTATING_TOOLS.has(e.tool)) {
+        g.mutations += 1;
+        if (e.diff) {
+          g.mutationsDiffed += 1;
+          const moved = Boolean(e.diff.url) && Boolean(g.instruction.url) && e.diff.url !== g.instruction.url;
+          if (e.diff.added?.length || e.diff.alerts?.length || moved) g.mutationsEffective += 1;
+        }
+      }
     }
   }
   return groups;
@@ -430,6 +459,133 @@ function resolveGroups(groups: Group[]): Group[] {
     kept[i] = true;
   }
   return groups.filter((_, i) => kept[i]);
+}
+
+/**
+ * Verbs whose presence makes an instruction MUTATING BY INTENT — the caller
+ * asked for the app to be different afterwards, not merely observed.
+ */
+const MUTATING_VERBS = [
+  'create', 'add', 'delete', 'remove', 'cancel', 'confirm', 'change', 'update',
+  'set', 'save', 'submit', 'move', 'archive', 'rename', 'upload',
+];
+
+/**
+ * One verb, in the shapes an orchestrator actually writes it. Spelled out
+ * rather than a `verb\w{0,4}` wildcard on purpose: the wildcard makes "set"
+ * match "settings" and "settled", and every false verb here becomes a false
+ * warning against a step that is fine.
+ */
+function verbForms(verb: string): string[] {
+  const noE = verb.replace(/e$/, '');
+  const last = verb[verb.length - 1];
+  return [verb, `${verb}s`, `${verb}es`, `${verb}d`, `${verb}ed`, `${verb}ing`, `${noE}ing`, `${verb}${last}ed`, `${verb}${last}ing`];
+}
+
+const MUTATING_VERB_RE = new RegExp(`^(?:${MUTATING_VERBS.flatMap(verbForms).join('|')})$`, 'i');
+
+/** A word that turns the verb after it into an instruction NOT to do the thing. */
+const NEGATOR_RE = /^(?:not|never|no|without|cannot|don't|dont|doesn't|isn't|avoid|skip)$/i;
+
+/**
+ * An instruction that says, anywhere, that it changes nothing. fwod34's
+ * 07-open and 09-change both do ("this is a read-only check", "Read-only
+ * check, do not change anything") while both quote a mutating verb — 09's
+ * step id is literally `09-change`. Cheap, exact, and it costs only warnings
+ * we would rather not have made.
+ */
+const READ_ONLY_RE = /read[- ]?only|do(?: not|n't|nt) (?:change|modify|edit|alter)|without (?:chang|modify|edit)/i;
+
+/**
+ * The verb this instruction asks for, or null if it asks for nothing that
+ * changes the app.
+ *
+ * Scans the opening of the instruction — where the orchestrator states the
+ * job, before the how-to prose and the reporting boilerplate. The window is
+ * WIDE (40 words) because real wording puts the ask late: fwod34's 08-open
+ * spends nineteen words identifying the record ("The sales order S00021
+ * (model sale.order, record id 21) is currently in 'Sales Order' status and
+ * needs to be") before it says "cancelled". A wide window is safe only
+ * because both guards above run first — a negated verb and a self-declared
+ * read-only instruction are dropped whatever the window.
+ */
+export function mutatingIntent(instruction: string): string | null {
+  if (READ_ONLY_RE.test(instruction)) return null;
+  const words = instruction.split(/\s+/).slice(0, 40).map((w) => w.replace(/^[^A-Za-z']+|[^A-Za-z']+$/g, ''));
+  for (let i = 0; i < words.length; i++) {
+    if (!MUTATING_VERB_RE.test(words[i])) continue;
+    if (words.slice(Math.max(0, i - 6), i).some((w) => NEGATOR_RE.test(w))) continue;
+    const lower = words[i].toLowerCase();
+    const verb = MUTATING_VERBS.find((v) => verbForms(v).some((f) => f === lower));
+    if (verb) return verb;
+  }
+  return null;
+}
+
+/**
+ * A value this instruction reported that the page was ALREADY showing before
+ * it ran — the strongest single line of evidence that the step's outcome was
+ * not the step's doing.
+ *
+ * Conservative by construction: single-line values only (a status bar's whole
+ * multi-line text is never a fair substring test), at least three characters,
+ * and an exact match against the pre-state snapshot. When nothing qualifies
+ * the caller omits the clause rather than guessing.
+ */
+function alreadyShown(g: Group): string | null {
+  const before = g.instruction.startText;
+  if (!before) return null;
+  for (const value of Object.values(g.report?.values ?? {})) {
+    if (typeof value !== 'string') continue;
+    const v = value.trim();
+    if (v.length < 3 || v.includes('\n')) continue;
+    if (before.includes(v)) return v;
+  }
+  return null;
+}
+
+/**
+ * A step whose instruction asked for a change and whose recording shows none.
+ *
+ * This is the record-time half of the fwod34 08-open failure. The recording
+ * orchestrator wrote an instruction to cancel an order a previous instruction
+ * had already been told to cancel; the step reported success, and every later
+ * replay halts there because the Cancel button its skill clicks does not
+ * exist once the order is cancelled. Every fact needed to say "re-record
+ * 08-open" was already in the recording at export time — this reads them.
+ *
+ * Two shapes count as "changed nothing", and both need the report to say
+ * SUCCESS (a blocked or failed instruction is reported elsewhere, and its
+ * emptiness is expected rather than suspicious):
+ *
+ *  1. the instruction ran no state-changing tool at all; or
+ *  2. it ran them and NONE of them moved the page — no signature line added,
+ *     no alert, no navigation. fwod34's 08-open is this one: five clicks and
+ *     an Escape against a form whose cancel dialog the previous instruction
+ *     had already left open, every diff empty on all three counts, while its
+ *     five genuinely mutating siblings (02-create through 05-open) each show
+ *     one to eighteen effective diffs.
+ *
+ * Shape 2 demands that diffs were being captured at all (`mutationsDiffed`),
+ * so a recording made without them cannot be read as a flow of no-ops.
+ *
+ * Warn-level, and worded as a suspicion: the flow still exports. What it buys
+ * is that whoever can cheaply re-record is told, and that the warning rides
+ * on the flow (`Flow.warnings`) for compile to raise again later.
+ */
+function noopStepWarning(id: string, g: Group): string | null {
+  if (g.report?.status !== 'success') return null;
+  const verb = mutatingIntent(g.instruction.text);
+  if (!verb) return null;
+  const noAction = g.mutations === 0;
+  const noEffect = g.mutations > 0 && g.mutationsDiffed > 0 && g.mutationsEffective === 0;
+  if (!noAction && !noEffect) return null;
+  const evidence = noAction
+    ? 'the recording made no state-changing action'
+    : `the recording's ${g.mutations} state-changing action${g.mutations === 1 ? '' : 's'} left the page unchanged`;
+  const shown = alreadyShown(g);
+  const clause = shown ? `, and the page already showed '${shown}' before it ran` : '';
+  return `noop-step: ${id} changed nothing: its instruction asks to ${verb}, ${evidence}${clause}. The step may be redundant.`;
 }
 
 /** Tools that CHANGE the app, as opposed to observing it. */

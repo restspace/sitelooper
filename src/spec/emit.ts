@@ -23,10 +23,53 @@ import { OPENER_LINE, consequentialExpectations, waitsForAbsence } from '../skil
 import type { SkillStep } from '../skills/store.js';
 import { candidateSources, chainSource, maskedMatcherSource, matcherSource, stringSource } from './locators.js';
 import type { SpecFlow, SpecSegment, SpecStep } from './ir.js';
+import { diagnosticNote, formatDiagnostic, type Diagnostic } from './diagnostics.js';
 
 export interface EmitOptions {
   /** Tier 2, no runtime. The only tier this module emits. */
   tier: 'plain';
+  /**
+   * What compile found wrong with this flow (spec/diagnostics.ts). A step
+   * flagged by one is emitted with the diagnostic as a comment block above it
+   * AND with its text carried on whatever the step throws — see `stepNote`.
+   */
+  diagnostics?: Diagnostic[];
+}
+
+/**
+ * The diagnostics that belong ABOVE a step's body, per flow step id.
+ *
+ * Only the record-level ones: a demoted pin and a record-time no-op are both
+ * "this recording is wrong", which is exactly what a reader of the generated
+ * file cannot otherwise tell from a locator error. A rethread warning is about
+ * a binding, not about the step's existence, and belongs in the compile
+ * report, not in every reviewer's diff.
+ */
+const FLAGGED: readonly Diagnostic['code'][] = ['demoted-pin', 'noop-step'];
+
+function flaggedByStep(diagnostics: Diagnostic[] | undefined): Map<string, Diagnostic[]> {
+  const out = new Map<string, Diagnostic[]>();
+  for (const d of diagnostics ?? []) {
+    if (!d.step || !FLAGGED.includes(d.code)) continue;
+    out.set(d.step, [...(out.get(d.step) ?? []), d]);
+  }
+  return out;
+}
+
+/**
+ * The one-line note a FLAGGED step's failure carries, or none.
+ *
+ * WHY. fwod34's 08-open is pinned to a demoted skill whose first action clicks
+ * a Cancel button that no longer exists, and the emitted spec said only "none
+ * of 3 recorded locators resolved" — which reads as app drift and sends the
+ * reader hunting for a changed selector. The step's own error is the one place
+ * the reader is guaranteed to look, so the reason and the fix go there too.
+ * Only a demoted pin: a no-op step still replays, so failing it with that note
+ * would be a guess about a failure it did not cause.
+ */
+function stepNote(flagged: Diagnostic[] | undefined): string | undefined {
+  const d = flagged?.find((x) => x.code === 'demoted-pin');
+  return d ? diagnosticNote(d) : undefined;
 }
 
 /** Markers LIFT reads the FLOW constant back out of. Changing either breaks the round trip. */
@@ -707,8 +750,13 @@ const HELPERS: { token: string; source: string[] }[] = [
       ' *    puts on every non-identity candidate.',
       " *  - `byEvidence` (retired candidates last): per-candidate replay evidence",
       ' *    lives in the skill store, not in the spec.',
+      ' *',
+      ' * `note` is passed only at a FLAGGED step (compile found the step itself',
+      ' * wrong — a demoted pin, say — see spec/diagnostics.ts). Appended to the',
+      ' * throw, it is what stops "none of 3 recorded locators resolved" from',
+      ' * reading as app drift when the recording is what needs redoing.',
       ' */',
-      'async function pick(page: Page, candidates: Locator[], where: string, opts: { any?: boolean } = {}): Promise<Locator> {',
+      'async function pick(page: Page, candidates: Locator[], where: string, opts: { any?: boolean } = {}, note?: string): Promise<Locator> {',
       '  const enough = (n: number) => (opts.any ? n > 0 : n === 1);',
       '  const hits = async (i: number) => enough(await candidates[i].count().catch(() => 0));',
       '  /** The first candidate ahead of `i` that is there after all — see the re-check below. */',
@@ -745,7 +793,8 @@ const HELPERS: { token: string; source: string[] }[] = [
       '    // recorded usually misses because the page is not the page the step',
       '    // expected, and the log otherwise says only that nothing resolved.',
       '    `none of ${candidates.length} recorded locators resolved at ${where} (page is at ${page.url()}): ` +',
-      "      candidates.slice(0, 3).map((c) => String(c)).join(' | '),",
+      "      candidates.slice(0, 3).map((c) => String(c)).join(' | ') +",
+      "      (note ? `\\n  ${note}` : ''),",
       '  );',
       '}',
     ],
@@ -916,6 +965,12 @@ interface Ctx {
   urls: number;
   /** Batched derived-value reads emitted so far, so each names its own local. */
   binds: number;
+  /**
+   * One line naming what compile found wrong with THIS flow step, when it
+   * found anything (see `stepNote`). Carried onto every way the step can
+   * fail: the `pick` throw, and a single-candidate action's rethrow.
+   */
+  note?: string;
 }
 
 const src = (text: string) => stringSource(text, { slot: slotAsParam });
@@ -1317,7 +1372,10 @@ function actionTarget(
   const where = `${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex} ${key}`;
   out.push(`const ${name} = await pick(page, [`);
   for (const source of sources) out.push(`${CONT_INDENT}${source},`);
-  out.push(`], ${q(where)}${opts.any ? ', { any: true }' : ''});`);
+  // `note` is the trailing argument, so a step with nothing wrong emits the
+  // call exactly as it always did.
+  const tail = ctx.note ? `, ${opts.any ? '{ any: true }' : '{}'}, ${q(ctx.note)}` : opts.any ? ', { any: true }' : '';
+  out.push(`], ${q(where)}${tail});`);
   return opts.first ? `${name}.first()` : name;
 }
 
@@ -1515,6 +1573,7 @@ function emitSkillStep(step: SkillStep, segment: SpecSegment, index: number, ctx
   // Everything from here to the action itself is what the already-in-effect
   // guard wraps, so remember where it starts.
   const actionStart = out.length;
+  const picksBefore = ctx.picks;
   const target = actionTarget(step, 'target', ctx, out, { first, any });
   if (!target) {
     ctx.warnings.push(`${ctx.stepId}: step ${index} (${step.tool}) has no locator a spec can express`);
@@ -1601,6 +1660,12 @@ function emitSkillStep(step: SkillStep, segment: SpecSegment, index: number, ctx
   }
 
   wrapAlreadyInEffect(step, ctx, out, actionStart);
+  // A flagged step whose target resolved to a SINGLE candidate emitted no
+  // `pick`, so there is no throw to carry the note: the action is a bare
+  // locator call whose Playwright timeout says only that a selector never
+  // resolved. Rethrow with the diagnostic appended, so every way a flagged
+  // step can fail says the same thing.
+  if (ctx.note && ctx.picks === picksBefore) noteRethrow(out, actionStart, ctx.note);
   derivedLines(segment, index, ctx, out, urlBefore);
   if (step.mints) {
     out.push(`// This step CREATES a record (its id is url part ${q(step.mints.at)}) — clean it up in your teardown.`);
@@ -1618,6 +1683,22 @@ function emitSkillStep(step: SkillStep, segment: SpecSegment, index: number, ctx
     expectationLines(step, out);
   }
   return out;
+}
+
+/**
+ * Wrap `out[from..]` in a try/catch that appends `note` to whatever it throws.
+ *
+ * The note is compile's diagnostic for this flow step, and a rethrow — not a
+ * swallow — is the point: the step still fails, it just stops lying about why.
+ */
+function noteRethrow(out: string[], from: number, note: string): void {
+  const inner = out.splice(from).map((l) =>
+    l
+      .split('\n')
+      .map((x) => (x ? `  ${x}` : x))
+      .join('\n'),
+  );
+  out.push('try {', ...inner, '} catch (err) {', `  if (err instanceof Error) err.message += ${q(`\n  ${note}`)};`, '  throw err;', '}');
 }
 
 function waitForLine(target: string, args: Record<string, unknown>, timeout?: number): string {
@@ -1874,10 +1955,11 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
   const warnings: string[] = [];
   const vars = new Set(spec.vars);
   const urlRefs = consumedUrlRefs(spec);
+  const flagged = flaggedByStep(o.diagnostics);
 
   // Bodies first: which helpers the file needs is decided by what they use.
   const bodies = spec.steps.map((step) => {
-    const ctx: Ctx = { stepId: step.id, slots: new Set(), warnings, downloads: 0, lastUrl: null, loops: 0, picks: 0, urls: 0, binds: 0, segmentId: '', stepIndex: 0 };
+    const ctx: Ctx = { stepId: step.id, slots: new Set(), warnings, downloads: 0, lastUrl: null, loops: 0, picks: 0, urls: 0, binds: 0, segmentId: '', stepIndex: 0, note: stepNote(flagged.get(step.id)) };
     const lines: string[] = [];
     if (!step.segments.length) {
       lines.push(`// TODO: no converged procedure for ${JSON.stringify(commentSafe(step.instruction))}`);
@@ -1936,6 +2018,12 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
   out.push('', 'export const steps = {');
   for (const [i, b] of bodies.entries()) {
     if (i) out.push('');
+    // Compile's verdict on this step, above the step, before its instruction:
+    // a reviewer reading the generated file sees WHY it is expected to fail
+    // and what to run, not a locator error they will read as app drift.
+    for (const d of flagged.get(b.step.id) ?? []) {
+      for (const line of formatDiagnostic(d).split('\n')) out.push(`  // ${commentSafe(line)}`);
+    }
     out.push(`  /** ${commentSafe(b.step.instruction)} */`);
     const p = b.slots.length ? `{ ${b.slots.map((s) => `${s}: string`).join('; ')} }` : 'Record<string, string>';
     out.push(`  async ${q(b.step.id)}(page: Page, p: ${p}, outputs: Outputs): Promise<void> {`);

@@ -894,3 +894,128 @@ describe('remapParams', () => {
     expect(remapParams(skill)).toEqual({ params: { v1: 'fwat2-n3 MTP Bench Project', v3: '25' }, unbound: ['v1'] });
   });
 });
+
+/**
+ * Record-time no-op detection, read off the recording that motivated it.
+ *
+ * fwod34's orchestrator wrote 08-open to cancel a sales order it had already
+ * told 06-open to cancel. The recording says so: 08-open's seven
+ * state-changing steps every one produced an empty diff (no signature line
+ * added, no alert, no navigation), and the pre-state snapshot already carried
+ * "Cancelled" before it ran. Its five genuinely mutating siblings do not look
+ * like that, and neither do the two read-only checks that quote a mutating
+ * verb ("Read-only check, do not change anything") — the whole point of the
+ * guards is that 09-change, whose step id is a mutating verb, stays quiet.
+ */
+describe('record-time no-op steps (fwod34 08-open)', () => {
+  const script = path.join(process.cwd(), 'bench/results-published/fwod34-n1-script.jsonl');
+
+  function fwod34(): Flow {
+    const entries = fs
+      .readFileSync(script, 'utf8')
+      .split(/\r?\n/)
+      .filter(Boolean)
+      .map((l) => JSON.parse(l) as RecordedEntry);
+    const flow = buildFlow(entries, {
+      name: 'fwod34',
+      origin: 'http://127.0.0.1:8069',
+      startUrl: 'http://127.0.0.1:8069/',
+      vars: { runid: 'fwod34-n1' },
+      session: 'fwod34-n1',
+      now: '2026-09-01T00:00:00Z',
+    })!;
+    return flow;
+  }
+
+  it('flags 08-open, and only 08-open, from the published recording', () => {
+    const flow = fwod34();
+    // The fixture is the real thing: the same nine steps the published flow has.
+    expect(flow.steps.map((s) => s.id)).toEqual([
+      '01-signin', '02-create', '03-open', '04-open', '05-open', '06-open', '07-open', '08-open', '09-change',
+    ]);
+    expect(flow.warnings).toHaveLength(1);
+    expect(flow.warnings![0]).toBe(
+      "noop-step: 08-open changed nothing: its instruction asks to cancel, the recording's 7 state-changing actions " +
+        "left the page unchanged, and the page already showed 'Cancelled' before it ran. The step may be redundant.",
+    );
+  });
+
+  it('stays silent on the steps that genuinely changed the app, and on the read-only checks', () => {
+    const warned = (fwod34().warnings ?? []).join('\n');
+    // The five mutating steps: each ran state-changing tools whose diffs
+    // added lines, raised alerts or navigated.
+    for (const id of ['02-create', '03-open', '04-open', '05-open', '06-open']) expect(warned).not.toContain(id);
+    // 01-signin mutated too; 07-open and 09-change quote a mutating verb
+    // ("change", "Cancelled") but declare themselves read-only.
+    for (const id of ['01-signin', '07-open', '09-change']) expect(warned).not.toContain(id);
+  });
+
+  /** A minimal session: one instruction, its steps, its report. */
+  function session(text: string, steps: RecordedEntry[], values: Record<string, string> = {}, startText?: string): RecordedEntry[] {
+    return [
+      { k: 'step', tool: 'goto', args: { url: `${ORIGIN}/o/1` }, locators: {} },
+      { k: 'instruction', text, url: `${ORIGIN}/o/1`, ...(startText ? { startText } : {}) },
+      ...steps,
+      { k: 'report', status: 'success', summary: 'done', values, skill: 's_x' },
+    ];
+  }
+
+  function warnings(entries: RecordedEntry[]): string[] {
+    const flow = buildFlow(entries, { name: 'f', origin: ORIGIN, startUrl: `${ORIGIN}/o/1`, vars: {}, session: 's', now: 'now' });
+    return flow?.warnings ?? [];
+  }
+
+  const read: RecordedEntry = { k: 'step', tool: 'read', args: { target: '@e1', what: 'text' }, locators: {}, result: '"Cancelled"' };
+  const inertClick: RecordedEntry = {
+    k: 'step',
+    tool: 'click',
+    args: { target: '@e1' },
+    locators: {},
+    diff: { url: `${ORIGIN}/o/1`, alerts: [], added: [] },
+  };
+  const realClick: RecordedEntry = {
+    k: 'step',
+    tool: 'click',
+    args: { target: '@e1' },
+    locators: {},
+    diff: { url: `${ORIGIN}/o/1`, alerts: [], added: ['- alert "Order cancelled"'] },
+  };
+
+  it('an instruction that changed the app is never flagged, however it is worded', () => {
+    expect(warnings(session('Cancel order O-1 and report its status.', [realClick, read], { status: 'Cancelled' }))).toEqual([]);
+  });
+
+  it('a mutating instruction that ran no state-changing tool at all is flagged', () => {
+    const w = warnings(session('Cancel order O-1 and report its status.', [read], { status: 'Cancelled' }));
+    expect(w).toHaveLength(1);
+    expect(w[0]).toContain('its instruction asks to cancel, the recording made no state-changing action.');
+  });
+
+  it('names the pre-state value only when the snapshot really showed it', () => {
+    const shown = warnings(session('Cancel order O-1.', [read], { status: 'Cancelled' }, '- radio "Cancelled"\n- heading "O-1"'));
+    expect(shown[0]).toContain("the page already showed 'Cancelled' before it ran.");
+    const notShown = warnings(session('Cancel order O-1.', [read], { status: 'Cancelled' }, '- radio "Sales Order"'));
+    expect(notShown[0]).toContain('made no state-changing action.');
+    expect(notShown[0]).not.toContain('already showed');
+  });
+
+  it('a read-only check that quotes a mutating verb is not flagged (fwod34 09-change)', () => {
+    expect(warnings(session('Read-only check, do not change anything: open order O-1 and report its status.', [read]))).toEqual([]);
+    expect(warnings(session('Open order O-1 and report its status. Do not click any buttons or change anything — this is a read-only check.', [read]))).toEqual([]);
+  });
+
+  it('an observing instruction with no mutating verb is not flagged', () => {
+    expect(warnings(session('Open order O-1 and report the status label shown on the form.', [read]))).toEqual([]);
+  });
+
+  it('a non-success report is left to the existing adoption reporting', () => {
+    const entries = session('Cancel order O-1.', [inertClick]);
+    (entries[entries.length - 1] as { status: string }).status = 'blocked';
+    expect(warnings(entries)).toEqual([]);
+  });
+
+  it('a recording with no diffs at all cannot be read as a flow of no-ops', () => {
+    const noDiff: RecordedEntry = { k: 'step', tool: 'click', args: { target: '@e1' }, locators: {} };
+    expect(warnings(session('Cancel order O-1.', [noDiff, read], { status: 'Cancelled' }))).toEqual([]);
+  });
+});

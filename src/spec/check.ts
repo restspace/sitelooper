@@ -28,6 +28,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
+import type { Diagnostic } from './diagnostics.js';
 
 /** One test result from the Playwright JSON reporter, flattened. */
 export interface SpecTestRow {
@@ -257,6 +258,18 @@ function shortError(message: string | null): string {
 }
 
 /**
+ * The diagnostic for the step a failing anchor names, if it has one.
+ *
+ * An anchor is `"08-open s_c86522/1"` — step id, pinned skill, step index —
+ * so the step id is its first token, and that is what the flagged map is
+ * keyed by.
+ */
+function flaggedStep(anchor: string | null, flagged?: ReadonlyMap<string, Diagnostic>): Diagnostic | null {
+  if (!anchor || !flagged?.size) return null;
+  return flagged.get(anchor.split(/\s+/)[0]) ?? null;
+}
+
+/**
  * The verdict, in one paragraph.
  *
  * The "emitter defect, not drift" clause is the whole point of the sentence
@@ -264,15 +277,27 @@ function shortError(message: string | null): string {
  * replayed cleanly through the daemon N times, so a failure HERE cannot be the
  * app moving — it is the compilation of that procedure into Playwright. The
  * standalone `check` command has no such evidence and does not claim it.
+ *
+ * And it is not claimed AT ALL for a step repair has already flagged as
+ * needing a re-record. sp8od is why: 08-open's demoted pin never ran, a
+ * read-only skill covered it, the live replay went 9/9 tier A — and this
+ * sentence then told the reviewer to go and fix the emitter. When `flagged`
+ * carries the failing anchor's step, the verdict names the recording instead.
  */
-export function verdictFor(r: Omit<SpecCheckResult, 'verdict'>, liveReplayPassed: boolean): string {
+export function verdictFor(
+  r: Omit<SpecCheckResult, 'verdict'>,
+  liveReplayPassed: boolean,
+  flagged?: ReadonlyMap<string, Diagnostic>,
+): string {
   if (!r.ran) return `spec check: skipped — ${r.skipped ?? 'the spec was not run'}`;
   const secs = Math.max(1, Math.round(r.durationMs / 1000));
   if (r.passed) return `spec check: passed in ${secs} s, ${r.driftCount} drift`;
   const where = r.anchor ? ` at @step ${r.anchor}` : r.errorLine ? ` at ${path.basename(r.errorFile ?? '')}:${r.errorLine}` : '';
-  const why = liveReplayPassed
-    ? ' — this is an emitter defect, not drift: the live replay passed this step'
-    : ' — run it yourself with the config in the workspace below to see the full trace';
+  const why = flaggedStep(r.anchor, flagged)
+    ? ` — the step's recording is the problem, not the emitter: ${flaggedStep(r.anchor, flagged)!.what}`
+    : liveReplayPassed
+      ? ' — this is an emitter defect, not drift: the live replay passed this step'
+      : ' — run it yourself with the config in the workspace below to see the full trace';
   const timeout = r.timedOut ? ' (the runner was killed on timeout)' : '';
   return `spec check: FAILED${where} — ${shortError(r.error)}${why}${timeout}`;
 }
@@ -318,6 +343,12 @@ export interface SpecCheckOptions {
   timeoutMs?: number;
   /** Only the repair path may claim "the live replay passed this step". */
   liveReplayPassed?: boolean;
+  /**
+   * Steps repair has already judged to need a re-record, by step id. A failure
+   * at one of these is a fact about the RECORDING, and the verdict says so
+   * instead of blaming the emitter.
+   */
+  flagged?: ReadonlyMap<string, Diagnostic>;
   onProgress?: (m: string) => void;
 }
 
@@ -356,7 +387,7 @@ export function runSpecCheck(o: SpecCheckOptions): SpecCheckResult {
   };
   const skip = (why: string): SpecCheckResult => {
     const r = { ...empty, skipped: why };
-    return { ...r, verdict: verdictFor(r, o.liveReplayPassed ?? false) };
+    return { ...r, verdict: verdictFor(r, o.liveReplayPassed ?? false, o.flagged) };
   };
 
   if (!fs.existsSync(specSrc)) return skip(`no ${base}.spec.ts beside ${path.basename(flowFile)} — compile it first`);
@@ -487,5 +518,5 @@ export default {
       /* left behind is harmless; it is dot-prefixed and named */
     }
   }
-  return { ...r, verdict: verdictFor(r, o.liveReplayPassed ?? false), workspace: r.passed ? null : work };
+  return { ...r, verdict: verdictFor(r, o.liveReplayPassed ?? false, o.flagged), workspace: r.passed ? null : work };
 }

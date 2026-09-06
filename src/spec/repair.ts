@@ -23,6 +23,8 @@ import { structural } from '../skills/replay.js';
 import type { Flow } from '../skills/flow.js';
 import { SkillStore, type Skill, type SkillStep } from '../skills/store.js';
 import type { FlowRunResult } from '../shared/protocol.js';
+import { mutates, selectCandidates } from '../skills/learn.js';
+import { rerecordFix, type Diagnostic } from './diagnostics.js';
 import { flowToSpec, type SpecFlow, type SpecSegment, type SpecStep } from './ir.js';
 import { stageForReplay } from './lower.js';
 
@@ -540,6 +542,7 @@ export function ticketIsNews(store: Pick<SkillStore, 'get'>, t: DriftTicket): bo
 export function notConverged(
   run: Pick<FlowRunResult, 'steps' | 'total'> & { driftTickets?: DriftTicket[] },
   store?: Pick<SkillStore, 'get'>,
+  flagged?: ReadonlyMap<string, Diagnostic>,
 ): string[] {
   const bad = new Map<string, string>();
   for (const st of run.steps) {
@@ -557,5 +560,193 @@ export function notConverged(
     if (!bad.has(t.step)) bad.set(t.step, `drift (${t.missedLocator ?? t.reason ?? t.fellBack ?? 'recovered'})`);
   }
   if (run.steps.length < run.total) bad.set('(unreached)', `${run.total - run.steps.length} step(s) the run never got to`);
+  // A step whose RECORDING is the problem is not converged however clean its
+  // tier looks — that is the whole sp8od lesson: 9/9 tier A on a step the pin
+  // never ran. The diagnostic's reason replaces whatever weaker one is here,
+  // because "tier A" is the misleading half of the answer.
+  for (const [id, d] of flagged ?? []) bad.set(id, `needs re-record — ${d.what}`);
   return [...bad].map(([id, why]) => `${id} (${why})`);
+}
+
+// --- is the RECORDING the problem? -------------------------------------------
+//
+// sp8od is the case this section exists for, and it is the most misleading
+// report the tool has produced. fwod34's step 08-open is pinned to a DEMOTED
+// skill: its instruction (written by the recording orchestrator) asks to
+// cancel an order that step 06 already cancelled, so the skill's first step
+// clicks a Cancel button that is never there again. Repair replayed the flow
+// three times and said `9/9 tier A, no change` — because `selectCandidates`
+// drops a demoted skill out of selection entirely and a DIFFERENT, learned,
+// READ-ONLY skill resolved on the same page and reported success. The pin
+// never ran. `canAdoptPin` then refused (correctly) to move the pin from a
+// mutating skill to a read-only one, so nothing was written down about it
+// either, and `--check-spec` went on to blame the emitter for a step whose
+// recording was wrong.
+//
+// Every fact needed to say "re-record 08-open" was already in hand: the pin's
+// status in the store, and the per-run tiers in `runs[]`. This turns them into
+// one `needs-rerecord` Diagnostic, and `notConverged` below refuses to call
+// such a step converged.
+
+/** One run's account of one flow step, exactly as `repair`'s run report records it. */
+export interface StepRunFact {
+  id: string;
+  status: string;
+  tier: string | null;
+  /** The skill the daemon says replayed, when it names one. */
+  replayed?: string | null;
+  recovered?: boolean;
+  fellBack?: string;
+  repinned?: string;
+}
+
+/** One repair run, labelled the way the log labels it ("run 1", "converge 2/2"). */
+export interface RunFacts {
+  label: string;
+  steps: StepRunFact[];
+}
+
+export interface CoverageInput {
+  /** The owned `.flow.ts` a reviewer would re-record from — it is what `fix` names. */
+  flowFile: string;
+  /** The staged flow's steps with their CURRENT pins (re-read after each run). */
+  steps: Array<{ id: string; instruction: string; skill?: string; params?: Record<string, string> }>;
+  /** Run 1 first, then the converge runs in order. */
+  runs: RunFacts[];
+  store: SkillStore;
+}
+
+/**
+ * The skill id a run reported replaying, when it reported one.
+ *
+ * The daemon currently puts a `"3/7"` steps-replayed FRACTION in this field,
+ * not an id (server.ts). That is not this module's to change, and it must not
+ * be read as a skill either — so a fraction reads as "the run did not name a
+ * skill" and the covering skill is derived from the store instead.
+ */
+export function replayedSkillId(replayed: string | null | undefined): string | null {
+  if (!replayed) return null;
+  return /^\d+\s*\/\s*\d+$/.test(replayed) ? null : replayed;
+}
+
+/**
+ * Which skill the engine would actually run for this step — by asking the
+ * engine's own selector, not by guessing.
+ *
+ * `selectCandidates` is the function the flow runner uses: the pin is a hint
+ * that defines the family, candidates are every NON-DEMOTED skill that binds
+ * the instruction or shares the hint's procedure, best track record first. So
+ * when the pin is demoted, the head of this list is precisely the skill that
+ * silently covered the step.
+ */
+export function coveringSkill(
+  store: Pick<SkillStore, 'all'>,
+  step: { id: string; instruction: string; skill?: string; params?: Record<string, string> },
+): string | null {
+  const picked = selectCandidates(store.all(), step.skill, step.instruction, step.params)[0];
+  return picked ? picked.skill.id : null;
+}
+
+/** The store's own account of why a pin is untrustworthy: status, stats, where it fails. */
+export function pinReason(store: Pick<SkillStore, 'get'>, id: string): string {
+  const skill = store.get(id);
+  if (!skill) return `${id} is not in the store`;
+  const st = skill.stats;
+  const bits = [`${st.uses} use(s), ${st.successes} success(es)`];
+  const worst = Object.entries(st.failedAtStep ?? {}).sort((a, b) => b[1] - a[1])[0];
+  if (worst) bits.push(`failed at step ${worst[0]} on ${worst[1]} replay(s)`);
+  if (st.lastUsed) bits.push(`last used ${st.lastUsed}`);
+  return `${id} is ${skill.status} — ${bits.join(', ')}`;
+}
+
+/** One step's clause in the evidence sentence: `converge 1/2: success, tier A`. */
+function runPhrase(label: string, f: StepRunFact | undefined): string {
+  if (!f) return `${label}: never reached`;
+  const tier = `tier ${f.tier ?? 'none'}`;
+  const named = replayedSkillId(f.replayed);
+  const who = named ? ` via ${named}` : '';
+  const how = f.recovered ? ` — recovered${f.fellBack ? `: ${clip(f.fellBack, 160)}` : ''}` : '';
+  const pin = f.repinned ? ` — re-pinned ${f.repinned}` : '';
+  return `${label}: ${f.status}, ${tier}${who}${how}${pin}`;
+}
+
+/** Cap a reason: replay writes paragraphs into `fellBack`, and this is one clause of one sentence. */
+function clip(text: string, n = 240): string {
+  const flat = text.replace(/\s+/g, ' ').trim();
+  return flat.length > n ? `${flat.slice(0, n - 1)}…` : flat;
+}
+
+/**
+ * The steps whose RECORDING is the problem, one `needs-rerecord` Diagnostic
+ * each — repair's verdict that no locator edit can help.
+ *
+ * A step is flagged when any of these hold:
+ *
+ *  1. Its pin is DEMOTED. `selectCandidates` will never run it again, so
+ *     whatever passed the step was something else, and the compiled spec —
+ *     which emits the PIN's procedure — has nothing to fall back to.
+ *  2. Every converge run named a skill other than the pin as the one it
+ *     replayed. The same conclusion, reached from the run report rather than
+ *     from the store.
+ *  3. The pin refused or failed and the skill that covered it is READ-ONLY
+ *     while the pin MUTATES. This is the fwrd14l-n2 failure mode reported
+ *     rather than merely prevented: a read chain resolving on a plausible
+ *     page and reporting success is a green run that changed nothing.
+ *
+ * Ordinary recovery is NOT any of these. A pin that fell back once and was
+ * covered by a skill doing the same (mutating) work is exactly what the repair
+ * loop is for, and it stays the repair loop's business.
+ */
+export function rerecordDiagnostics(input: CoverageInput): Map<string, Diagnostic> {
+  const out = new Map<string, Diagnostic>();
+  const [first, ...rest] = input.runs;
+  if (!first) return out;
+  const converge = rest.length ? rest : input.runs;
+
+  for (const step of input.steps) {
+    const pin = step.skill;
+    if (!pin) continue;
+    const pinned = input.store.get(pin);
+    const demoted = pinned?.status === 'demoted';
+    const factOf = (r: RunFacts) => r.steps.find((s) => s.id === step.id);
+
+    // Named coverage: the run itself said it replayed something else, on every
+    // converge run. One run out of three is a fallback, not a substitution.
+    const named = converge.map((r) => replayedSkillId(factOf(r)?.replayed));
+    const coveredByName = named.length > 0 && named.every((id) => Boolean(id) && id !== pin);
+
+    // Did the pin fail to carry the step anywhere? A recovery, a non-A tier, or
+    // any non-success is the pin not doing its job under its own power.
+    const refused = input.runs.some((r) => {
+      const f = factOf(r);
+      return Boolean(f && (f.recovered || f.status !== 'success' || f.tier !== 'A'));
+    });
+
+    if (!demoted && !coveredByName && !refused) continue;
+
+    // Unnamed coverage: the daemon does not put an id in `replayed` yet, so ask
+    // the engine's own selector who would have run instead.
+    const cover = named.find((id): id is string => Boolean(id) && id !== pin) ?? coveringSkill(input.store, step);
+    const covering = cover && cover !== pin ? cover : null;
+    const readOnlyCover = Boolean(covering && !mutates(input.store, covering) && mutates(input.store, pin));
+
+    if (!demoted && !coveredByName && !readOnlyCover) continue;
+
+    const kind = covering ? (mutates(input.store, covering) ? 'mutating' : 'read-only') : null;
+    const what = covering
+      ? `${step.id} only passes because the engine replays ${covering} (${kind}) instead of its ${demoted ? 'demoted ' : ''}pin ${pin}; a compiled spec halts here`
+      : `${step.id}'s pinned skill ${pin} is ${pinned?.status ?? 'missing'} and no other procedure covers it; a compiled spec halts here`;
+
+    const evidence = input.runs.map((r) => runPhrase(r.label, factOf(r))).join('; ');
+
+    out.set(step.id, {
+      code: 'needs-rerecord',
+      step: step.id,
+      what,
+      why: clip(`${evidence}. ${pinReason(input.store, pin)}.`, 700),
+      fix: rerecordFix(input.flowFile, step.id),
+      severity: 'error',
+    });
+  }
+  return out;
 }

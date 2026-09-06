@@ -10,16 +10,27 @@ import { encodeFrame, LineDecoder, type FlowRunResult, type Frame, type Request,
 import { aliasLegacyEnv, sessionsDir, socketPath, validateSessionName } from './shared/paths.js';
 import { candidateExpr } from './daemon/recorder.js';
 import { fillParams } from './skills/compile.js';
-import { SkillStore, successRate, type Skill } from './skills/store.js';
-import { listFlows, loadFlow } from './skills/flow.js';
+import { SkillStore, skillsDir, successRate, type Skill } from './skills/store.js';
+import { listFlows, loadFlow, loadFlowFile, saveFlow, type Flow } from './skills/flow.js';
 import { drainDrift, llmProposer, triage, type DrainSummary, type DriftTicket } from './skills/repair.js';
 import { compileFlow } from './spec/index.js';
 import { foldTicketEvidence, mintVars, notConverged, reorderByEvidence } from './spec/repair.js';
 import { emitFlowFile } from './spec/emit.js';
 import { flowToSpec, type SpecFlow } from './spec/ir.js';
 import { LiftError, liftFlowFile } from './spec/lift.js';
-import { diffSpecChanges, foldPatchedVariants, reloadStaged, stageRepair } from './spec/repair.js';
+import { diffSpecChanges, foldPatchedVariants, reloadStaged, rerecordDiagnostics, stageRepair } from './spec/repair.js';
+import { diagnosticLine, formatDiagnostic, type Diagnostic } from './spec/diagnostics.js';
 import { runSpecCheck, type SpecCheckResult } from './spec/check.js';
+import {
+  backupFlowFile,
+  formatRerecordDiagnostic,
+  RerecordError,
+  rerecordVerdict,
+  stepLine,
+  stepOf,
+  unpinStep,
+  type RerecordRun,
+} from './spec/rerecord.js';
 import os from 'node:os';
 
 const USAGE = `sitelooper — agent-in-the-loop Playwright CLI
@@ -35,7 +46,14 @@ Usage:
   sitelooper script [out.spec.ts] [--title T] [--clear]   # emit a Playwright spec from the recorded actions
   sitelooper compile <flow-name-or-path> [--out <dir>] [--force] [--json]
                                           # compile a converged flow to a standalone Playwright
-                                          # spec (Tier 2, no sitelooper runtime) — no daemon needed
+                                          # spec (Tier 2, no sitelooper runtime) — no daemon needed.
+                                          # Problems are printed first as diagnostics (what / why /
+                                          # fix). A step pinned to a DEMOTED skill is an error: its
+                                          # recording, not the app, is what is wrong, so nothing is
+                                          # written — re-record the step, or pass --force.
+                                          # --force: overwrite an existing .spec.ts AND compile a
+                                          # demoted pin anyway (the emitted file then carries the
+                                          # diagnostic above the step and in its failure message).
   sitelooper skills list [--origin <origin>]             # stored procedures (learning mode; no daemon needed)
   sitelooper skills show <id>
   sitelooper skills rm <id>
@@ -65,6 +83,26 @@ Usage:
                                           # replays the IR through the daemon and so cannot see an
                                           # EMITTER defect. A failed check does not un-write the file
                                           # (the diff is still yours) but exits 4.
+  sitelooper rerecord <flow-name-or-path> <step-id> [--instruction "<text>"] [--var k=v ...]
+                      [--runs n] [--reset-cmd "<cmd>"] [--json]
+                                          # re-record ONE step of a saved flow, when the step's
+                                          # recording is what is wrong (its pinned procedure is
+                                          # demoted, or the step only passes because the engine
+                                          # replays some other skill). Backs the flow file up as
+                                          # <file>.bak-<stamp>.json, throws that step's pin, params
+                                          # and recorded values away — keeping its outputs — and
+                                          # replays the flow --runs times (default 2) in learning
+                                          # mode, so the agent records the step afresh and the
+                                          # store's own re-pin rule decides whether to keep it.
+                                          # Succeeds only when the LAST run replays the step at
+                                          # tier A with the newly pinned procedure; otherwise it
+                                          # prints why and exits 1. Each run is a REAL run against
+                                          # the app: mint per-run values with {n} (--var
+                                          # runid=fix-{n} becomes fix-0, fix-1, ...) or reset the
+                                          # app with --reset-cmd, which runs before every run.
+                                          # --instruction replaces the step's instruction first,
+                                          # which is the fix when the recorded instruction asked
+                                          # for something the app is no longer in a state to do.
   sitelooper check <name.flow.ts> [--var k=v ...] [--reset-cmd "<cmd>"] [--json]
                                           # run the sibling .spec.ts once under plain @playwright/test
                                           # (minimal config, headless, one worker, 60 s per test) and
@@ -181,6 +219,8 @@ function parseArgv(argv: string[]): ParsedArgs {
     'out',
     'converge',
     'reset-cmd',
+    'instruction',
+    'runs',
   ]);
   /**
    * Every flag that takes no value. Unknown options are rejected rather than
@@ -426,6 +466,10 @@ async function main(): Promise<void> {
   }
   if (command === 'check') {
     checkSpecCommand(positional, flags, json, onProgress);
+    return;
+  }
+  if (command === 'rerecord') {
+    await rerecordFlowCommand(positional, flags, json, onProgress);
     return;
   }
   if (command === 'session') {
@@ -916,9 +960,24 @@ async function compileCommand(positional: string[], flags: Map<string, string | 
   if (json) {
     console.log(JSON.stringify(result, null, 2));
   } else {
-    console.log(`flow: ${result.flowFile}`);
-    console.log(result.specFile ? `spec: ${result.specFile}` : 'spec: unchanged (already exists — pass --force to overwrite)');
-    for (const w of result.warnings) console.error(`  warning: ${w}`);
+    // Diagnostics FIRST — what is wrong, the evidence, and the command that
+    // fixes it — ahead of the file list, which is not what a caller needs when
+    // the answer is "re-record 08-open".
+    for (const d of result.diagnostics) console.error(formatDiagnostic(d));
+    if (result.diagnostics.length) console.error('');
+    if (result.refused) {
+      console.error('nothing written: the error(s) above are about the RECORDING, not the app — a compiled spec would fail at a locator and read as drift.');
+      console.error('re-record the step(s) with the fix command above, or pass --force to compile the demoted pin anyway.');
+    } else {
+      console.log(`flow: ${result.flowFile}`);
+      console.log(result.specFile ? `spec: ${result.specFile}` : 'spec: unchanged (already exists — pass --force to overwrite)');
+    }
+    // Anything the emitter said that no diagnostic above already carries.
+    const reported = new Set(result.diagnostics.map(diagnosticLine));
+    for (const w of result.warnings) if (!reported.has(w)) console.error(`  warning: ${w}`);
+  }
+  if (result.refused) {
+    fail('refused: a step is pinned to a demoted skill — see the diagnostics above (--force compiles it anyway)', 2);
   }
   if (!result.compilable) {
     const missing = result.spec.steps.filter((s) => s.segments.length === 0).length;
@@ -1261,7 +1320,16 @@ async function repairFlowCommand(
     total: number;
     status: string;
     tickets: number;
-    steps: Array<{ id: string; status: string; tier: string | null; summary?: string; recovered: boolean; fellBack?: string }>;
+    steps: Array<{
+      id: string;
+      status: string;
+      tier: string | null;
+      summary?: string;
+      recovered: boolean;
+      fellBack?: string;
+      replayed?: string | null;
+      repinned?: string;
+    }>;
   };
   const runs: RunReport[] = [];
   const noteRun = (label: string, r: FlowRunResult, ticketCount: number): void => {
@@ -1278,8 +1346,44 @@ async function repairFlowCommand(
         ...(st.summary ? { summary: st.summary } : {}),
         recovered: Boolean(st.recovered),
         ...(st.fellBack ? { fellBack: st.fellBack } : {}),
+        // WHICH procedure actually ran, not only how well it went. sp8od read
+        // 9/9 tier A on a step whose pinned skill never ran at all, and the
+        // run report had no field that could have said so.
+        ...(st.replayed ? { replayed: st.replayed } : {}),
+        ...(st.repinned ? { repinned: st.repinned } : {}),
       })),
     });
+  };
+
+  // Steps whose RECORDING is the problem — a demoted pin, or a pin the engine
+  // silently replaced with another skill — by step id. Derived after run 1 and
+  // after every converge run, because the pin can move under us and because
+  // the evidence sentence names every run. See spec/repair.ts
+  // `rerecordDiagnostics` for the rules and for the sp8od case that forced
+  // them. Each one is printed FIRST, once, and refuses the write.
+  const flagged = new Map<string, Diagnostic>();
+  const refreshFlags = (): void => {
+    let staleFlow: Flow;
+    try {
+      staleFlow = JSON.parse(fs.readFileSync(staged.flowFile, 'utf8')) as Flow;
+    } catch {
+      return;
+    }
+    const fresh = rerecordDiagnostics({
+      // The .flow.ts the reviewer owns, not the staged JSON the run used: the
+      // fix command has to name a file that will still be there tomorrow.
+      flowFile: file,
+      steps: staleFlow.steps,
+      runs,
+      store: new SkillStore(staged.skillsDir),
+    });
+    for (const [id, d] of fresh) {
+      const seen = flagged.get(id);
+      flagged.set(id, d);
+      // Once per step, however many runs re-observe it — but the LATEST
+      // evidence wins, so the sentence names every run that has happened.
+      if (!seen) say(formatDiagnostic(d));
+    }
   };
 
   // Every line the evidence codemod produced, across run 1 and every converge
@@ -1328,6 +1432,11 @@ async function repairFlowCommand(
     for (const line of evidenceLines) say(`  evidence         ${line}`);
   }
 
+  // Diagnostics before counts, before the change list, before anything: a
+  // step the engine covered with someone else's skill makes every number
+  // below it mean something different.
+  refreshFlags();
+
   let diff = diffSpecChanges(before, reloadStaged(staged).spec);
   const printChanges = (heading: string, d: typeof diff) => {
     if (json) return;
@@ -1363,6 +1472,10 @@ async function repairFlowCommand(
     // "which step needed the model, on which pass, and why" is unanswerable
     // from a single aggregate.
     runs,
+    // Every problem this repair found, in the shape every surface reports one
+    // (spec/diagnostics.ts) — present in EVERY JSON shape the command prints,
+    // refusal, gate failure, dry run and success alike.
+    diagnostics: [...flagged.values()],
     // The tickets themselves, not just how many: "15 drift ticket(s)" cannot be
     // acted on, and the one question a stuck converge loop asks is WHICH
     // locator keeps missing and what won instead.
@@ -1387,6 +1500,32 @@ async function repairFlowCommand(
     fail('refusing to write: the repair would drop an expectation — that is a test failure for a human, not drift', 1);
   };
   gateExpectations();
+
+  /**
+   * Refuse the write when a step's RECORDING is the problem.
+   *
+   * The step is not converged however clean its tier looked — sp8od went 9/9
+   * tier A three times on a step whose demoted pin never ran once. No locator
+   * edit reaches this, so there is nothing to write: the file stays as it was,
+   * the exit code is the existing "needs re-record" 1, and what the reviewer
+   * gets is the diagnostic block plus the command that fixes it.
+   */
+  const gateRerecord = (): void => {
+    if (!flagged.size) return;
+    const ds = [...flagged.values()];
+    if (json) {
+      console.log(JSON.stringify({ ...report(), wrote: null, converged: false, refused: 'needs re-record', notConverged: [...flagged.keys()] }, null, 2));
+    } else {
+      // Printed once more here, next to the refusal, because the block above
+      // scrolled past several runs ago — and it is the whole reason for it.
+      for (const d of ds) console.error(formatDiagnostic(d));
+      printChanges('--- changes (not written) ---', diff);
+      console.error(
+        `refusing to write ${outFile}: ${ds.map((d) => d.step).join(', ')} need re-recording, not repair — the run only passed because another skill covered the step`,
+      );
+    }
+    process.exit(1);
+  };
 
   let changed = [...diff.lines.filter((l) => !l.endsWith(': no change')), ...evidenceLines];
   if (!changed.length && summary.reRecord.length) {
@@ -1413,9 +1552,16 @@ async function repairFlowCommand(
     for (const st of check.steps) {
       say(`  [${st.status === 'success' ? 'OK' : st.status.toUpperCase()}] ${st.id} (tier ${st.tier ?? 'none'})${st.fellBack ? ` — fell back: ${st.fellBack}` : ''}${st.status === 'success' ? '' : ` — ${st.summary ?? ''}`}`);
     }
-    const bad = notConverged(check, dryRun ? undefined : staged.store);
+    refreshFlags();
+    const bad = notConverged(check, dryRun ? undefined : staged.store, flagged);
+    // A flagged step is not converged, but it is not a CONVERGENCE failure
+    // either: no further run can clear it and no locator edit can repair it,
+    // so it exits through gateRerecord (1) below rather than the gate's own
+    // exit 3 — with every converge run's evidence in the sentence, which is
+    // why the loop is allowed to finish.
+    const others = bad.filter((line) => ![...flagged.keys()].some((id) => line.startsWith(`${id} (`)));
     say(`converge ${i}/${converge}: ${check.passed}/${check.total} step(s) ${check.status}, ${checkTickets.length} drift ticket(s)${bad.length ? '' : ' — clean'}`);
-    if (bad.length) {
+    if (others.length) {
       if (json) console.log(JSON.stringify({ ...report(), wrote: null, converged: false, notConverged: bad, convergeTickets: checkTickets }, null, 2));
       // The tickets, not just the step ids: a gate failure is only actionable
       // if it names the locator that missed and what resolved instead.
@@ -1439,6 +1585,11 @@ async function repairFlowCommand(
     printChanges('--- changes (after the convergence run(s) adopted what the repair proposed) ---', diff);
     gateExpectations();
   }
+
+  // The last word before the write, and ahead of --dry-run's own report: a
+  // dry run that says "0 change(s), nothing written" about a flow with a
+  // demoted pin is the same silence sp8od shipped.
+  gateRerecord();
 
   if (dryRun) {
     if (json) console.log(JSON.stringify({ ...report(), wrote: null, dryRun: true }, null, 2));
@@ -1468,6 +1619,11 @@ async function repairFlowCommand(
       vars: mintVars(vars, converge + 1),
       resetCmd,
       liveReplayPassed: true,
+      // A failure at a step whose recording is the problem is NOT an emitter
+      // defect, whatever the live replay reported (sp8od's --check-spec said
+      // exactly that, and was wrong). Unreachable while gateRerecord refuses
+      // the write, and passed anyway so the claim can never be made by accident.
+      flagged,
       onProgress: (m) => (json ? console.error(m) : console.log(m)),
     });
   }
@@ -1487,4 +1643,130 @@ async function repairFlowCommand(
     console.error(`${outFile} was still written — review the diff, then fix the emitter (not the app)`);
     process.exit(4);
   }
+}
+
+// --- rerecord one step of a saved flow (the recording is wrong, not the app) ---
+
+/**
+ * `sitelooper rerecord <flow> <step>` — the fix half of the diagnostics.
+ *
+ * `compile` and `repair` can both now SAY that a step's recording is the
+ * problem (a demoted pin, or a step that only passes because the engine
+ * replays a different skill than the one it is pinned to). Neither could do
+ * anything about it: repair adapts locators, and no amount of locator
+ * adaptation fixes a procedure whose first action was recorded against a state
+ * the flow no longer reaches. The only repair for a wrong recording is another
+ * recording — this command takes one, for one step, without re-recording the
+ * whole session by hand.
+ *
+ * It owns no cleverness of its own: it unpins the step (spec/rerecord.ts
+ * `unpinStep`), replays the flow the ordinary way in learning mode, and lets
+ * the store's re-pin rule decide. The verdict is the bar a compiled spec has
+ * to clear — the last run replays the step at tier A, with the pin the
+ * re-recording made.
+ */
+async function rerecordFlowCommand(
+  positional: string[],
+  flags: Map<string, string | boolean>,
+  json: boolean,
+  onProgress?: (m: string) => void,
+): Promise<void> {
+  const usage =
+    'usage: rerecord <flow-name-or-path> <step-id> [--instruction "<text>"] [--var k=v ...] [--runs n] [--reset-cmd "<cmd>"] [--json]';
+  const [nameOrPath, stepId] = positional;
+  if (!nameOrPath || !stepId) fail(usage, 2);
+
+  const loaded = loadFlowFile(nameOrPath);
+  if (!loaded) fail(`no flow "${nameOrPath}" — pass a path to a flow .json, or a name from "sitelooper flow list"`, 2);
+  const { flow, file } = loaded;
+
+  const runsWanted = flags.has('runs') ? Number(flags.get('runs')) : 2;
+  if (!Number.isInteger(runsWanted) || runsWanted < 1) fail('--runs takes a positive integer', 2);
+  const instruction = flags.get('instruction') ? String(flags.get('instruction')) : undefined;
+  const resetCmd = flags.get('reset-cmd') ? String(flags.get('reset-cmd')) : undefined;
+
+  // Everything that can refuse, refuses BEFORE a browser starts: an unknown
+  // step id or a missing --var costs a daemon spawn and a sign-in otherwise,
+  // and this command's runs are real runs against the app.
+  const previous = flow.steps.find((s) => s.id === stepId);
+  let patched: Flow;
+  try {
+    patched = unpinStep(flow, stepId, instruction);
+  } catch (err) {
+    if (err instanceof RerecordError) return fail(err.message, 2);
+    throw err;
+  }
+  const vars = varFlags();
+  const missingVars = flow.vars.filter((v) => !(v in vars));
+  if (missingVars.length) fail(`flow "${flow.name}" needs --var for: ${missingVars.join(', ')}`, 2);
+
+  const say = (m: string) => {
+    if (json) console.error(m);
+    else console.log(m);
+  };
+
+  const stamp = Date.now().toString(36);
+  let backup: string;
+  try {
+    backup = backupFlowFile(file, stamp);
+  } catch (err) {
+    if (err instanceof RerecordError) return fail(err.message, 2);
+    throw err;
+  }
+  saveFlow(patched, file);
+  say(`re-recording ${flow.name} step ${stepId} (${runsWanted} run(s))`);
+  say(`  unpinned ${previous?.skill ?? '(no procedure)'}${instruction ? ', with a new instruction' : ''}; old recording kept at ${backup}`);
+
+  const runs: RerecordRun[] = [];
+  for (let i = 0; i < runsWanted; i++) {
+    const label = `run ${i + 1}`;
+    runResetCmd(resetCmd, label, say);
+    // The same path `sitelooper run` takes — daemon, recovery ladder, learning
+    // mode — pointed at the REAL skill store, because the whole point is that
+    // the procedure this records survives into it.
+    const { run } = await runStagedFlow({ flowFile: file, skillsDir: skillsDir() }, mintVars(vars, i), `rerecord-${stamp}-${i}`, {
+      headed: flags.has('headed'),
+      onProgress,
+    });
+    const entry: RerecordRun = { label, step: stepOf(run.steps, stepId) };
+    runs.push(entry);
+    say(stepLine(stepId, entry));
+    say(`  ${run.flow}: ${run.passed}/${run.total} step(s) ${run.status}`);
+  }
+
+  const verdict = rerecordVerdict({ file, stepId, runs });
+  // The daemon writes re-pins back into the flow file it was given, so the
+  // authoritative answer to "what is this step pinned to now" is on disk.
+  const after = loadFlowFile(file)?.flow.steps.find((s) => s.id === stepId);
+  const pinned = after?.skill ?? verdict.pinned;
+  const skill = pinned ? new SkillStore().get(pinned) : null;
+  const payload = {
+    flow: flow.name,
+    file,
+    step: stepId,
+    backup,
+    ok: verdict.ok,
+    pinned: pinned ?? null,
+    skill: skill ? { id: skill.id, status: skill.status, steps: skill.steps.length } : null,
+    runs: runs.map((r) => ({
+      label: r.label,
+      status: r.step?.status ?? 'not-reached',
+      tier: r.step?.tier ?? null,
+      replayed: r.step?.replayed ?? null,
+      repinned: r.step?.repinned ?? null,
+      turns: r.step?.turns ?? null,
+    })),
+    diagnostics: verdict.ok ? [] : [verdict.diagnostic],
+  };
+
+  // Diagnostics first, before the counts and the file paths.
+  if (!verdict.ok) say(formatRerecordDiagnostic(verdict.diagnostic));
+  if (json) console.log(JSON.stringify(payload, null, 2));
+  else if (verdict.ok) {
+    say(`${stepId}: pinned ${pinned}${skill ? ` (${skill.status}, ${skill.steps.length} action(s))` : ''}`);
+    say(`${file} updated — the previous recording is at ${backup}`);
+  } else {
+    say(`${file} still holds the re-recorded step; restore the old one with: cp ${backup} ${file}`);
+  }
+  process.exit(verdict.ok ? 0 : 1);
 }

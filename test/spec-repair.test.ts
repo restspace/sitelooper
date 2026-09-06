@@ -6,17 +6,24 @@ import { SkillStore } from '../src/skills/store.js';
 import type { SpecFlow, SpecSegment, SpecStep } from '../src/spec/ir.js';
 import { flowToSpec } from '../src/spec/ir.js';
 import {
+  coveringSkill,
   describeSpecChanges,
   diffSpecChanges,
   foldPatchedVariants,
   foldTicketEvidence,
   orderByEvidence,
+  pinReason,
   reloadStaged,
   reorderByEvidence,
   notConverged,
+  replayedSkillId,
+  rerecordDiagnostics,
   stageRepair,
   ticketIsNews,
+  type RunFacts,
+  type StepRunFact,
 } from '../src/spec/repair.js';
+import type { Diagnostic } from '../src/spec/diagnostics.js';
 import { envName, errorSites, findStepAnchor, parseSpecReport, verdictFor } from '../src/spec/check.js';
 import { candidateExpr, type LocatorCandidate } from '../src/daemon/recorder.js';
 import type { DriftTicket } from '../src/skills/repair.js';
@@ -755,7 +762,7 @@ describe('cli: --reset-cmd and the evidence codemod wiring', () => {
   });
 
   it('gates the converge run on the store, so a retired candidate stops counting', () => {
-    expect(cliSource).toContain('notConverged(check, dryRun ? undefined : staged.store)');
+    expect(cliSource).toContain('notConverged(check, dryRun ? undefined : staged.store, flagged)');
     // The gate itself lives in spec/repair.ts (unit-tested below); the CLI only wires it up.
     const repairSource = fs.readFileSync(path.resolve(__dirname, '../src/spec/repair.ts'), 'utf8');
     expect(repairSource).toContain('if (store && !ticketIsNews(store, t)) continue;');
@@ -1007,6 +1014,34 @@ describe('spec check: the verdict', () => {
     expect(v).toBe('spec check: skipped \u2014 @playwright/test could not be resolved');
   });
 
+  it('blames the RECORDING, not the emitter, at a step repair already flagged', () => {
+    // sp8od's --check-spec said "this is an emitter defect, not drift: the live
+    // replay passed this step" about 08-open. The live replay HAD passed it —
+    // with a different skill than the one the spec emits. The claim was true
+    // and the conclusion was wrong, which is the worst kind of report.
+    const flagged = new Map<string, Diagnostic>([
+      [
+        '08-open',
+        {
+          code: 'needs-rerecord',
+          step: '08-open',
+          what: '08-open only passes because the engine replays s_fcb896 (read-only) instead of its demoted pin s_c86522; a compiled spec halts here',
+          why: 'run 1: recovered',
+          fix: 'sitelooper rerecord fwod34.flow.ts 08-open',
+          severity: 'error',
+        },
+      ],
+    ]);
+    const r = { ...base, passed: false, anchor: '08-open s_c86522/1', error: 'none of 3 recorded locators resolved' };
+    const v = verdictFor(r, true, flagged);
+    expect(v).toContain('spec check: FAILED at @step 08-open');
+    expect(v).toContain("the step's recording is the problem, not the emitter:");
+    expect(v).toContain('instead of its demoted pin s_c86522');
+    expect(v).not.toContain('emitter defect');
+    // An UNflagged step keeps the emitter wording it earned.
+    expect(verdictFor({ ...r, anchor: '04-open s_1/2' }, true, flagged)).toContain('emitter defect, not drift');
+  });
+
   it('mentions the timeout when the runner was killed', () => {
     expect(verdictFor({ ...base, passed: false, timedOut: true, exitCode: null, error: 'boom' }, false)).toContain('killed on timeout');
   });
@@ -1084,5 +1119,171 @@ describe('spec check: which stack frame gets named', () => {
 
   it('reports no site at all when the failure never touches the emitted files', () => {
     expect(errorSites({ stack: 'at Object.<anonymous> (/w/other.js:3:1)' }, ['/w/fwrd42.flow.ts'])).toEqual([]);
+  });
+});
+
+// The sp8od report is the fixture this whole block is written against: three
+// runs of fwod34, `9/9 tier A` every time, `no change`, file written — on a
+// step (08-open) whose PINNED skill is demoted, was therefore never offered to
+// selection, and never ran. What actually passed the step was a learned,
+// READ-ONLY skill that resolved on the same page. A compiled spec emits the
+// PIN's procedure, so the spec halts where the live replay sailed through.
+//
+// Everything below is that judgement as a pure function of two things the tool
+// already had: the per-run step facts, and the staged store.
+describe('rerecordDiagnostics: is the RECORDING the problem?', () => {
+  const dirs: string[] = [];
+  afterEach(() => {
+    for (const d of dirs.splice(0)) fs.rmSync(d, { recursive: true, force: true });
+  });
+
+  /** A staged store holding the pin s_1, plus whatever else the case needs. */
+  const staged = () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sitelooper-rerec-'));
+    dirs.push(dir);
+    const st = stageRepair(specOf([segment('s_1')]), dir);
+    return { st, store: new SkillStore(st.skillsDir) };
+  };
+
+  /** A read-only sibling: same page, binds the same instruction, changes nothing. */
+  const readOnlySibling = (store: SkillStore, id = 's_read'): void => {
+    const pin = store.get('s_1')!;
+    store.put({
+      ...clone(pin),
+      id,
+      template: 'add a part',
+      params: {},
+      // `mutates` walks the tools: no click, no fill, nothing that changes the page.
+      steps: [{ tool: 'read_text', args: { target: 'Parts' }, locators: { target: pin.steps[0].locators.target } }] as never,
+      status: 'validated',
+      stats: { ...pin.stats, uses: 3, successes: 3 },
+    });
+  };
+
+  const demote = (store: SkillStore, id = 's_1'): void => {
+    const pin = store.get(id)!;
+    pin.status = 'demoted';
+    pin.stats = { ...pin.stats, uses: 4, successes: 1, failedAtStep: { '1': 3 }, lastUsed: '2026-09-05T21:00:00.000Z' };
+    store.put(pin);
+  };
+
+  const fact = (over: Partial<StepRunFact> = {}): StepRunFact => ({ id: '02-add', status: 'success', tier: 'A', ...over });
+  const runs = (...steps: StepRunFact[][]): RunFacts[] =>
+    steps.map((s, i) => ({ label: i === 0 ? 'run 1' : `converge ${i}/${steps.length - 1}`, steps: s }));
+
+  const diagnose = (st: { flowFile: string }, store: SkillStore, rs: RunFacts[]) =>
+    rerecordDiagnostics({
+      flowFile: 'flows/fwod34.flow.ts',
+      steps: (JSON.parse(fs.readFileSync(st.flowFile, 'utf8')) as { steps: never[] }).steps,
+      runs: rs,
+      store,
+    });
+
+  it('flags a step that only passes because a READ-ONLY skill covered its demoted pin', () => {
+    const { st, store } = staged();
+    demote(store);
+    readOnlySibling(store);
+    const found = diagnose(st, store, runs(
+      [fact({ status: 'success', tier: null, recovered: true, fellBack: 'every candidate refused — s_1: failed at step 1 before touching the page' })],
+      [fact()],
+      [fact()],
+    ));
+    const d = found.get('02-add')!;
+    expect(d).toBeDefined();
+    expect(d.code).toBe('needs-rerecord');
+    expect(d.severity).toBe('error');
+    expect(d.what).toBe('02-add only passes because the engine replays s_read (read-only) instead of its demoted pin s_1; a compiled spec halts here');
+    // The evidence is every run, in order, plus the store's verdict on the pin.
+    expect(d.why).toContain('run 1: success, tier none — recovered');
+    expect(d.why).toContain('converge 1/2: success, tier A');
+    expect(d.why).toContain('converge 2/2: success, tier A');
+    expect(d.why).toContain('s_1 is demoted — 4 use(s), 1 success(es), failed at step 1 on 3 replay(s)');
+    expect(d.fix).toBe('sitelooper rerecord flows/fwod34.flow.ts 02-add');
+  });
+
+  it('names the covering skill from the run report when the run named one', () => {
+    const { st, store } = staged();
+    demote(store);
+    readOnlySibling(store, 's_fcb896');
+    const d = diagnose(st, store, runs([fact({ replayed: 's_fcb896' })], [fact({ replayed: 's_fcb896' })]))!.get('02-add')!;
+    expect(d.what).toContain('replays s_fcb896 (read-only)');
+    expect(d.why).toContain('via s_fcb896');
+  });
+
+  it('reads a "3/7" steps-replayed fraction as no skill at all, not as a skill id', () => {
+    expect(replayedSkillId('2/2')).toBeNull();
+    expect(replayedSkillId(null)).toBeNull();
+    expect(replayedSkillId(undefined)).toBeNull();
+    expect(replayedSkillId('s_c86522')).toBe('s_c86522');
+  });
+
+  it('says so plainly when the pin is demoted and nothing else covers the step', () => {
+    const { st, store } = staged();
+    demote(store);
+    const d = diagnose(st, store, runs([fact({ status: 'blocked', tier: null })], [fact({ status: 'blocked', tier: null })])).get('02-add')!;
+    expect(d.what).toBe("02-add's pinned skill s_1 is demoted and no other procedure covers it; a compiled spec halts here");
+  });
+
+  it('leaves a clean step alone: a healthy pin that replayed at tier A is not a re-recording', () => {
+    const { st, store } = staged();
+    readOnlySibling(store);
+    expect(diagnose(st, store, runs([fact()], [fact()], [fact()])).size).toBe(0);
+  });
+
+  it('leaves ORDINARY recovery alone: a pin that fell back, covered by a skill doing the same work', () => {
+    const { st, store } = staged();
+    // A mutating sibling — the repair loop's business, not a re-recording's.
+    const pin = store.get('s_1')!;
+    store.put({ ...clone(pin), id: 's_2', template: 'add a part', params: {}, status: 'validated' });
+    const found = diagnose(st, store, runs([fact({ tier: 'B', recovered: true, fellBack: 'a locator missed' })], [fact()]));
+    expect(found.size).toBe(0);
+  });
+
+  it('flags a mutating pin covered by a read-only skill even when the pin is not demoted', () => {
+    // fwrd14l-n2's failure mode, REPORTED rather than merely prevented: a read
+    // chain resolves on a plausible page and reports success, having changed
+    // nothing. `canAdoptPin` refuses the re-pin and says nothing; this does.
+    const { st, store } = staged();
+    readOnlySibling(store);
+    const pin = store.get('s_1')!;
+    // Out-ranks the pin on record, so selection reaches it first.
+    pin.stats = { ...pin.stats, uses: 5, successes: 1 };
+    pin.status = 'provisional';
+    store.put(pin);
+    const d = diagnose(st, store, runs([fact({ tier: null, recovered: true, fellBack: 'refused: wrong page' })], [fact()])).get('02-add')!;
+    expect(d.what).toContain('s_read (read-only) instead of its pin s_1');
+    expect(d.what).not.toContain('demoted pin');
+  });
+
+  it('asks the engine’s own selector who covered the step', () => {
+    const { st, store } = staged();
+    demote(store);
+    readOnlySibling(store);
+    const flow = JSON.parse(fs.readFileSync(st.flowFile, 'utf8')) as { steps: Array<{ id: string; instruction: string; skill?: string }> };
+    expect(coveringSkill(store, flow.steps[0])).toBe('s_read');
+  });
+
+  it('reports a pin that is not in the store at all rather than pretending to stats', () => {
+    const { store } = staged();
+    expect(pinReason(store, 's_gone')).toBe('s_gone is not in the store');
+  });
+});
+
+describe('notConverged: a flagged step is not converged, whatever its tier said', () => {
+  const flagged = new Map<string, Diagnostic>([
+    ['08-open', { code: 'needs-rerecord', step: '08-open', what: 'the engine replays s_fcb896 instead of its demoted pin', why: 'x', severity: 'error' }],
+  ]);
+
+  it('adds the step even when it reported success at tier A', () => {
+    const run = { steps: [{ id: '08-open', status: 'success', tier: 'A' }], total: 1 };
+    expect(notConverged(run)).toEqual([]);
+    expect(notConverged(run, undefined, flagged)).toEqual([
+      '08-open (needs re-record — the engine replays s_fcb896 instead of its demoted pin)',
+    ]);
+  });
+
+  it('replaces the weaker reason when the step also failed, because "tier B" is the misleading half', () => {
+    const run = { steps: [{ id: '08-open', status: 'success', tier: 'B' }], total: 1 };
+    expect(notConverged(run, undefined, flagged)[0]).toContain('needs re-record');
   });
 });

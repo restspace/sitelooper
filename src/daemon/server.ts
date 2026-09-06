@@ -8,7 +8,7 @@ import { urlPattern as compiledUrlPattern, stranded, urlParts } from '../skills/
 import type { DriftTicket } from '../skills/repair.js';
 import type { Page } from 'playwright-core';
 import { agentGesturesOutsideReplay, bindSkill, canAdoptPin, decideRepin, learnFromInstruction, matchTemplate, publishedOutputs, selectCandidates, synthesizeReport } from '../skills/learn.js';
-import { buildFlow, consumedUrlOutputs, ignorableRefs, lintFlowRefs, listFlows, loadFlow, loadFlowFile, lookupOutput, noteOutputEvidence, recoveryRoute, remapParams, resolveInstruction, resolveStepParams, softResolveInstruction, saveFlow, saveRejectedFlow, stableOutputs, staleInstructionIds, unbankedMutations, urlOutputs } from '../skills/flow.js';
+import { buildFlow, consumedUrlOutputs, ignorableRefs, lintFlowRefs, listFlows, loadFlow, loadFlowFile, lookupOutput, mutatingIntent, noteOutputEvidence, recoveryRoute, remapParams, resolveInstruction, resolveStepParams, softResolveInstruction, saveFlow, saveRejectedFlow, stableOutputs, staleInstructionIds, unbankedMutations, urlOutputs } from '../skills/flow.js';
 import { applyRelabelToEntries, applyRelabelToSkills, relabelCases, requestRelabelPlan } from '../skills/relabel.js';
 import { renderReplay } from '../skills/replay.js';
 import { drainDrift, llmProposer, recordCandidateEvidence } from '../skills/repair.js';
@@ -790,6 +790,14 @@ ${describeLeaks(leaks.slice(0, 10))}`);
     // runs against a clean app.
     for (const w of staleInstructionIds(entries, flow).reverse()) warnings.unshift(`warning: ${w}`);
     for (const m of unbankedMutations(entries).reverse()) warnings.unshift(`warning: ${m}`);
+    // Steps whose instruction asked for a change the recording never made
+    // (buildFlow's noop-step check). These ride ON the flow file as well, so
+    // compile can raise them again long after this session is gone — the
+    // saveFlow above already wrote them. Printing them here is what makes
+    // re-recording cheap: it costs one instruction now and a failed replay
+    // plus a repair sweep later (fwod34 08-open).
+    for (const w of (flow.warnings ?? []).slice().reverse()) warnings.unshift(`warning: ${w}`);
+    for (const w of flow.warnings ?? []) console.error(`[flow] ${w}`);
     const adopted = flow.steps.filter((s) => s.adopted);
     if (adopted.length) {
       warnings.unshift(
@@ -1063,7 +1071,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote,
         // run's own adoptions are invisible — fwrd16-n3 re-pinned 02-create
         // AND 10-open onto the same s_738ec0 in one pass.
         const owned = flow.steps.map((st) => ({ id: st.id, skill: pendingPins.get(st.id) ?? st.skill }));
-        const adoptable = Boolean(outcome && canAdoptPin(this.browser.learn, owned, step.id, step.skill, outcome.skill));
+        const adoptable = Boolean(outcome && canAdoptPin(this.browser.learn, owned, step.id, step.skill, outcome.skill, mutatingIntent(step.instruction) ? 'mutating' : 'read-only'));
         // A candidate whose navigation targets carry an identifier THIS
         // step's recovery minted (a url part first banked under this
         // instruction) would replay onto this run's record. An identifier

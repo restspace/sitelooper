@@ -879,7 +879,7 @@ describe('compileFlow', () => {
     expect(again.specFile).toBeNull();
     expect(fs.readFileSync(path.join(out, 'rdflow.spec.ts'), 'utf8')).toContain('// mine');
     // the generated half is regenerated every time
-    expect(fs.readFileSync(again.flowFile, 'utf8')).toContain('// @sitelooper-flow v1');
+    expect(fs.readFileSync(again.flowFile!, 'utf8')).toContain('// @sitelooper-flow v1');
 
     const forced = compileFlow(RDFLOW, { store: new SkillStore(FWAT2), outDir: out, force: true });
     expect(forced.specFile).not.toBeNull();

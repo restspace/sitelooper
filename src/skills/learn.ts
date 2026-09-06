@@ -341,7 +341,15 @@ export function agentGesturesOutsideReplay(entries: RecordedEntry[]): number {
 /** The most model-driven gestures a recovery may contain and still hand its replayed skill the pin. */
 export const MAX_STRAY_GESTURES_FOR_PIN = 2;
 
-function mutates(store: SkillStore, id: string | undefined): boolean {
+/**
+ * Does this skill's procedure CHANGE anything, anywhere in it (loop bodies
+ * included)? The one question that separates "a procedure that does this
+ * step's work" from "a procedure that merely resolves on this step's page" —
+ * see `canAdoptPin` for why that distinction is the most important gate in
+ * the store, and `spec/repair.ts` for the repair-time diagnostic that reports
+ * a step which only passes because a READ-ONLY skill covered a mutating pin.
+ */
+export function mutates(store: SkillStore, id: string | undefined): boolean {
   const skill = id ? store.get(id) : null;
   if (!skill) return false;
   const walk = (steps: Skill['steps']): boolean => steps.some((s) => MUTATING.has(s.tool) || (s.body ? walk(s.body) : false));
@@ -373,9 +381,24 @@ export function canAdoptPin(
   stepId: string,
   current: string | undefined,
   next: string,
+  /**
+   * What the step's own instruction asks for, when the caller knows it. A
+   * step that asks to change something must never settle for a procedure
+   * that reads — even when it has no pin yet to compare against, which is
+   * the gap rule 2 alone leaves open.
+   */
+  intent: 'mutating' | 'read-only' | null = null,
 ): boolean {
-  if (steps.some((s) => s.id !== stepId && s.skill === next)) return false;
-  return !(mutates(store, current) && !mutates(store, next));
+  const nextMutates = mutates(store, next);
+  // Rule 1, narrowed: a MUTATING procedure is one step's work and one step's
+  // only. A read-only procedure is a way of looking at a page, and two steps
+  // that look at the same page the same way may share it — fwod34r's 08-open
+  // ("open the order, report its status") replayed 07-open's validated status
+  // read at tier B on five straight runs and could not keep it, because the
+  // unnarrowed rule refused to let a second step own it.
+  if (nextMutates && steps.some((s) => s.id !== stepId && s.skill === next)) return false;
+  if (intent === 'mutating' && !nextMutates) return false;
+  return !(mutates(store, current) && !nextMutates);
 }
 
 /**
