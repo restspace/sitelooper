@@ -280,7 +280,17 @@ params and recorded values (keeping its declared outputs), and replays the flow 
 (default 2) in learning mode so the agent records the step afresh and the store's own re-pin rule
 decides whether to keep the new procedure. It only succeeds when the *last* run replays the step at
 tier A on the new pin; each run is a real run against the app, so mint per-run values with `{n}` or
-reset the app with `--reset-cmd`, same as `repair --converge`.
+reset the app with `--reset-cmd`, same as `repair --converge`. Whatever the daemon says about the
+step while a run is on it — above all a re-pin refusal such as `not re-pinning s_04d970 — slot(s)
+v2 identify the record but carry no origin to rebind from` — is printed under the run's line whether
+or not `--progress` is on, and quoted in the `needs-rerecord` diagnostic when nothing was pinned, so
+a refused re-record says *why* rather than just "no procedure".
+
+When the re-recorded step turns out to be a procedure another step of the same flow already pins
+(08-open, re-recorded as a read-only check, is covered by 07-open's status check), the new pin
+shares that skill and inherits the sibling step's bindings for any slot the store recorded no
+origin for. Read-only skills may be shared between steps; a mutating skill is still exclusive to
+one step, and a step whose instruction asks for a change never adopts a read.
 
 fwod34's step 08-open is exactly the demoted-pin case above: its instruction — written by the
 recording orchestrator — asks to cancel an order that step 06 had already cancelled, so the
