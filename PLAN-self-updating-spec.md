@@ -80,6 +80,57 @@ loop that needs no runtime. Then 2 to recover `point`, box yardstick, `ambiguous
 
 That last rule is what keeps a green build meaning something (PLAN-compile-to-code §1.4).
 
+## Surfacing problems
+
+Written 2026-09-06. The fwod34 08-open case (below) showed the tool had every fact needed to say
+"re-record this step" and spread them over four outputs instead, two pointing the wrong way:
+`compile` a quiet one-liner with no reason or fix; the emitted spec a bare locator error that reads
+as drift; `repair` "9/9 tier A, no change" (it silently replayed a different, read-only skill
+because `canAdoptPin` refuses to pin one over a mutating pin); `--check-spec` "this is an emitter
+defect, not drift" — wrong, the recording is the defect. `src/spec/diagnostics.ts` is the fix: one
+shape, everywhere.
+
+```ts
+interface Diagnostic {
+  code: 'demoted-pin' | 'covered-pin' | 'noop-step' | 'needs-rerecord' | 'unthreaded-param'
+      | 'missing-skill' | 'no-procedure';
+  step?: string;   // flow step id; omitted for flow-level diagnostics
+  what: string;    // one sentence, in the user's terms
+  why: string;     // the evidence: stats, tiers, skill ids
+  fix?: string;    // the exact command that fixes it
+  severity: 'warning' | 'error';
+}
+```
+
+Rule: every surface that reports a problem prints its diagnostics FIRST — before counts, file
+lists, change lists — one `formatDiagnostic` block each (`<severity> <step>: <what>` /
+`  why: ...` / `  fix: ...`), and carries them under `diagnostics` in every `--json`. `fix` names a
+real, runnable command; for a demoted or covered pin, or a record-time no-op, it is `sitelooper
+rerecord <flow file> <step> [--instruction "<text>"]`.
+
+- **`compile`**: a demoted pin is an error — nothing is written unless `--force`. The emitter also
+  puts the diagnostic above the flagged step as a comment and appends it to that step's own
+  locator-failure message, so a red CI run on a `--force`d spec points back here instead of reading
+  as ordinary drift.
+- **`repair`**: after run 1 and every converge run, a step is `needs-rerecord` when its pin is
+  demoted, OR every converge run replayed it with a non-pin skill, OR the pin refused/failed and a
+  read-only skill covered a mutating pin. Such a step does not count as converged: exit 1,
+  `wrote: null`, diagnostics printed first. `--check-spec`'s failure line says "the step's
+  recording is the problem, not the emitter: `<what>`" for a flagged anchor step instead of
+  "emitter defect".
+- **Record time**: `buildFlow` warns when an instruction is mutating by verb (create, cancel,
+  update, ...) but the recording made no state-changing action (or made one that changed nothing),
+  and the step still reported success — a `noop-step:`-prefixed entry on `flow.warnings`, which
+  `compile` re-surfaces as a `noop-step` diagnostic. This is the record-time half of the fwod34
+  case: 08-open's instruction asked to cancel an order 06-open had already cancelled, and every
+  fact needed to catch it was already in the recording at export time.
+- **`sitelooper rerecord <flow> <step> [--instruction "<text>"] [--var k=v ...] [--runs n]
+  [--reset-cmd "<cmd>"] [--json]`**: the fix half. Backs the flow file up, unpins just that step
+  (throwing away its pin, params and recorded values, keeping its outputs), optionally replaces its
+  instruction, and replays the flow `--runs` times (default 2) in learning mode so the store's own
+  re-pin rule decides whether to keep the fresh procedure. Succeeds only when the last run replays
+  the step at tier A on the new pin; otherwise prints why and exits 1.
+
 ## Risks
 
 1. **Owned-file representation.** Too blob-like and reviewers cannot read the diff (back to
@@ -180,8 +231,10 @@ Still open:
 1. **Expectations that no longer hold** (a dialog renamed from "Add part" to "Attach part")
    fail the spec and are refused by repair by design; the "re-record one segment" path that
    would regenerate them is reported, not automated.
-2. **Odoo's 08-open store defect**: options are re-recording 08-open, or letting repair adopt a
-   validated read-only skill over a DEMOTED mutating pin.
+2. **Odoo's 08-open store defect** is now handled by `sitelooper rerecord`, not open: `repair`
+   flags it as `needs-rerecord` (see "Surfacing problems" above), and the fix is to re-record the
+   step with a read-only instruction rather than teach the engine to adopt a read-only skill over
+   a demoted mutating pin. The first cloud re-record run (sp9od) showed the engine replaying 07-open's read-only status skill for the step on every run but unable to pin it — the adoption gate forbade two steps sharing a skill — so the gate now lets read-only skills be shared; the confirming run (sp10od, on 70cf98f) uses `sitelooper rerecord` itself.
 3. **Odoo 06-open occasionally falls back** to the model ("pinned skill bound no params" once
    in 3 runs) — a replay-engine flake, not an emitter bug.
 4. **Phase 2 (runtime extraction) not started.** Survey in the session scratchpad

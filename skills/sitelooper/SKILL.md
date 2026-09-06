@@ -72,8 +72,11 @@ step function per `FlowStep`, compiled straight from the stored locator chains) 
 scaffold written once and never overwritten. It is compile-time only: no live-page measurement, no
 point-candidate clicks, and no runtime recovery if a locator has since drifted — a drifted step fails
 the spec outright rather than reasoning its way to the moved control. `compile` exits 2 when a step
-never converged to a stored procedure. When a compiled spec later goes red or logs drift in CI,
-see "Repairing a compiled spec after a red CI run" below — that's a `repair` job, not a `do`.
+never converged to a stored procedure, and prints a `what`/`why`/`fix` diagnostic block, before
+anything else, for any step whose pin is demoted — refusing to write unless you pass `--force`
+(its recording, not the app, is what's broken; see step 6 below for the fix). When a compiled spec
+later goes red or logs drift in CI, see "Repairing a compiled spec after a red CI run" below —
+that's a `repair` job, not a `do`.
 
 ## Repairing a compiled spec after a red CI run
 
@@ -99,10 +102,15 @@ for `do`. Work the failure like this:
    dropped assertion exits 1 rather than writing — but treat that refusal as final, not something
    to work around by editing the flow yourself; an assertion that stopped holding is a real test
    failure for a human to look at, not drift.
-6. If `repair` reports a step **needs re-record** rather than proposing a fix, don't try to hand-
-   patch the `.flow.ts` — it's regenerated in full on every `compile`/`repair` and hand edits are
-   detected and refused on the next repair anyway. Instead, `--learn` a fresh session for that
-   segment, converge it, and `compile` again.
+6. If `repair` (or `compile`) prints a **needs-rerecord** / **demoted-pin** diagnostic rather than
+   proposing a fix, don't try to hand-patch the `.flow.ts` — it's regenerated in full on every
+   `compile`/`repair` and hand edits are detected and refused on the next repair anyway. Every such
+   diagnostic names its own fix command: `sitelooper rerecord <flow> <step-id> [--instruction
+   "<text>"] [--var k=v ...] [--runs n] [--reset-cmd "<cmd>"]`. It backs the flow file up, unpins
+   just that step (optionally swapping in a new instruction — the fix when the recorded ask no
+   longer makes sense, e.g. "cancel an order a previous step already cancelled"), and replays the
+   flow `--runs` times (default 2) in learning mode; it succeeds only when the last run replays the
+   step at tier A on the newly recorded pin, otherwise it prints why and exits 1.
 7. Once `repair` has written the file (`converged: true` / "wrote ... (N change(s); the .spec.ts
    was not touched)"), commit only the `.flow.ts` diff and open it as a PR, with the printed
    change list as the PR description — that list is already the reviewer-facing summary of what

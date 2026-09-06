@@ -138,6 +138,31 @@ giving up the LLM safety net.
 kept; flows are plain JSON under `~/.sitelooper/flows/`. A `run` prints per-step tier (A = zero
 model), turns spent and drift tickets, and `--json` returns all of it.
 
+**Diagnostics.** `compile` and `repair` both print problems as **diagnostics, first** — before
+counts, file lists or change lists — each as a `what` / `why` / `fix` block, and both carry the
+same list under `diagnostics` in `--json`. The point is that a broken *recording* and a broken
+*app* look completely different once said this way, instead of spreading across four surfaces as
+partial, sometimes contradictory hints. A step pinned to a **demoted** skill is an error: nothing
+is written, because the recording is what's wrong, not the app —
+
+```
+$ SITELOOPER_SKILLS_DIR=fwod34-skills sitelooper compile fwod34.json --out out/
+error 08-open: it is pinned to the demoted skill s_c86522 — the compiled spec inherits a procedure
+whose last replays failed at the same step
+  why: s_c86522 is demoted: 1 of 4 replays succeeded; replay failed at step 1 on 3 of them; the
+  demotion was two consecutive failures at step 1; last used 2026-09-04T14:38:34.394Z.
+  fix: sitelooper rerecord fwod34.json 08-open
+
+nothing written: the error(s) above are about the RECORDING, not the app — a compiled spec would
+fail at a locator and read as drift.
+re-record the step(s) with the fix command above, or pass --force to compile the demoted pin anyway.
+```
+
+`--force` compiles it anyway (it already overwrites an existing `.spec.ts`; this is its second
+meaning) — the emitted file then carries the same diagnostic as a comment above the step, and
+appended to that step's own locator-failure message, so a red CI run points straight back here
+instead of reading as ordinary drift.
+
 **The loop.** Once compiled, the `.spec.ts` runs under plain `@playwright/test` — no sitelooper
 process, no model, nothing but the two generated files and Playwright itself. Each locator call is
 a `pick()` fallthrough over the candidates recorded at compile time, tried in recorded order; if
@@ -194,6 +219,24 @@ failed. The same run is available on its own as `sitelooper check <name.flow.ts>
 [--reset-cmd "<cmd>"] [--json]`, which needs no daemon and no model; `--json` puts the whole
 verdict under `specCheck`, in `repair`'s report too.
 
+That "emitter defect" wording is only correct when the failing step is clean. When repair's own
+convergence runs already flagged the anchor step with a `needs-rerecord` diagnostic (see below),
+`--check-spec` says so instead:
+
+```
+spec check: FAILED at @step 08-open — the step's recording is the problem, not the emitter:
+08-open only passes because the engine replays s_fcb896 (read-only) instead of its demoted pin
+s_c86522; a compiled spec halts here
+```
+
+**When the recording, not the app, is what's wrong.** Sometimes every converge run passes —
+`repair` reports "9/9 tier A, no change" — only because the replay engine is quietly covering a
+broken pin with some *other* learned skill (it refuses to re-pin a read-only skill over a
+mutating one, `canAdoptPin`). A compiled spec has no such fallback, so it still halts. `repair`
+now catches this: a step whose pin is demoted, or whose converge runs are covered end-to-end by a
+skill other than its pin, gets a `needs-rerecord` diagnostic instead of counting as converged —
+printed first, `wrote: null`, exit `1` — instead of a silent, misleading "no change".
+
 Exit codes matter here: `2` means the file was hand-edited or otherwise refused outright (not a
 sitelooper flow file, or a missing `--var`); `3` means the repair itself worked but the convergence
 gate didn't hold; `4` means it converged and the file was written but the emitted `.spec.ts` failed
@@ -228,6 +271,36 @@ is invoked, never continuously; there's no loop cursor across records; and a mov
 fails the *run that discovered it* before repair can act — recovery in a compiled spec is a
 follow-up PR, never a live save.
 
+**Re-recording one step.** When a diagnostic's `fix` says `sitelooper rerecord`, that step's
+*recording* is the problem — not a locator, a candidate to promote, or the app — so `repair`'s
+locator-level machinery can't help. `sitelooper rerecord <flow-name-or-path> <step-id>
+[--instruction "<text>"] [--var k=v ...] [--runs n] [--reset-cmd "<cmd>"] [--json]` re-records just
+that one step: it backs the flow file up as `<file>.bak-<stamp>.json`, throws away the step's pin,
+params and recorded values (keeping its declared outputs), and replays the flow `--runs` times
+(default 2) in learning mode so the agent records the step afresh and the store's own re-pin rule
+decides whether to keep the new procedure. It only succeeds when the *last* run replays the step at
+tier A on the new pin; each run is a real run against the app, so mint per-run values with `{n}` or
+reset the app with `--reset-cmd`, same as `repair --converge`.
+
+fwod34's step 08-open is exactly the demoted-pin case above: its instruction — written by the
+recording orchestrator — asks to cancel an order that step 06 had already cancelled, so the
+skill's first action clicks a Cancel button that is never there on replay. `--instruction` replaces
+the recorded ask with a read-only one, so re-recording produces a check instead of repeating the
+mistake:
+
+```
+$ sitelooper rerecord fwod34.json 08-open \
+    --instruction "Open the sales order {{v1}} and report its current status; do not change it."
+re-recording fwod34 step 08-open (2 run(s))
+  unpinned s_c86522, with a new instruction; old recording kept at fwod34.json.bak-lz3x9k.json
+run 1: 08-open  agent (6 turns) re-pinned s_fcb9a1
+  fwod34: 6/6 step(s) success
+run 2: 08-open  replay tier A (s_fcb9a1)
+  fwod34: 6/6 step(s) success
+08-open: pinned s_fcb9a1 (active, 1 action(s))
+fwod34.json updated — the previous recording is at fwod34.json.bak-lz3x9k.json
+```
+
 **Sizing an instruction.** One `do` is one logical, verifiable step: a goal plus the check that it
 worked. Several UI actions inside one instruction is normal — that is the point. Too big (several
 unrelated goals) stalls on planning; too small (one click) pays an agent loop for what `peek` gives
@@ -248,7 +321,10 @@ sitelooper flow list | show <name>
 sitelooper run <flow> [--var k=v ...] [--json] [--progress]
 sitelooper script [out.spec.ts]                  # emit a plain Playwright spec from the recorded actions
 sitelooper compile <flow-name-or-path> [--out <dir>] [--force] [--json]
-                                                  # compile a converged flow to a standalone spec
+                                                  # compile a converged flow to a standalone spec;
+                                                  # diagnostics (what/why/fix) print first; a step
+                                                  # pinned to a demoted skill refuses to write unless
+                                                  # --force
 sitelooper repair <name.flow.ts> [--var k=v ...] [--out <file>] [--converge <n>]
                                  [--reset-cmd "<shell command>"] [--check-spec] [--dry-run]
                                  [--model M] [--json]
@@ -256,7 +332,15 @@ sitelooper repair <name.flow.ts> [--var k=v ...] [--out <file>] [--converge <n>]
                                                   # fold the adaptation back into the owned .flow.ts;
                                                   # --reset-cmd runs before run 1 and every converge run;
                                                   # --check-spec then runs the emitted .spec.ts once
-                                                  # under plain Playwright (exit 4 if it fails)
+                                                  # under plain Playwright (exit 4 if it fails); a step
+                                                  # whose recording, not the app, is broken gets a
+                                                  # needs-rerecord diagnostic and exit 1 instead
+sitelooper rerecord <flow-name-or-path> <step-id> [--instruction "<text>"] [--var k=v ...]
+                    [--runs n] [--reset-cmd "<cmd>"] [--json]
+                                                  # re-record ONE step whose pin is demoted or
+                                                  # covered by another skill; unpins it, optionally
+                                                  # replaces its instruction, and replays --runs
+                                                  # times (default 2) in learning mode
 sitelooper check <name.flow.ts> [--var k=v ...] [--reset-cmd "<cmd>"] [--json]
                                                   # run the emitted .spec.ts once under plain
                                                   # @playwright/test and report the verdict
