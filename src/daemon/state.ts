@@ -229,6 +229,22 @@ export class SessionState {
   }
 
   /**
+   * Tool calls whose result was not a `snapshot` call but carries one anyway:
+   * an action big enough to have moved the page comes back with the new page
+   * folded into its result (`[page: …]`), which mints a new ref registry and
+   * stales every earlier snapshot exactly as an explicit snapshot does. So
+   * elision has to see them as snapshots too — otherwise the result the agent
+   * is now working from is the one thing never cleaned up, and the snapshot it
+   * superseded stays in context claiming refs that no longer resolve.
+   */
+  private carriedSnapshots = new Set<string>();
+
+  /** Record that this tool call's result carries a fresh snapshot of the page. */
+  markSnapshot(callId: string): void {
+    this.carriedSnapshots.add(callId);
+  }
+
+  /**
    * Stub out snapshot tool-results that are no longer the current view. A
    * snapshot's `@ref` handles go stale the moment the page navigates or a newer
    * snapshot is taken, so an old full snapshot (up to ~2k tokens) is dead weight
@@ -238,7 +254,7 @@ export class SessionState {
    * output and the running trim in trimHistory are unaffected.
    */
   elideSnapshots(keep?: string): void {
-    const snapshotIds = new Set<string>();
+    const snapshotIds = new Set<string>(this.carriedSnapshots);
     for (const m of this.messages) {
       if (m.role === 'assistant' && m.tool_calls) {
         for (const c of m.tool_calls) if (c.function.name === 'snapshot') snapshotIds.add(c.id);

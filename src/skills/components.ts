@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { ElementHandle, Locator, Page } from 'playwright-core';
 import type { RecordedEntry, RecordedStep } from '../daemon/recorder.js';
+import { settleDom } from '../daemon/settle.js';
 import { rootDir } from '../shared/paths.js';
 import { countTokenOccurrences } from './compile.js';
 import { originOf } from './store.js';
@@ -345,7 +346,12 @@ export async function executeRecipe(page: Page, root: ElementHandle, recipe: Rec
         break;
       }
       case 'settle':
-        await page.waitForTimeout(s.ms ?? 300);
+        // The recipe's `ms` was an estimate of how long the editor takes to
+        // re-render; the re-render itself is observable, so wait for the DOM
+        // to go quiet instead. A component that reacted already costs ~60ms
+        // rather than the full estimate, and one that keeps re-rendering is
+        // followed to its own end rather than cut off at a guess.
+        await settleDom(page);
         break;
     }
   }

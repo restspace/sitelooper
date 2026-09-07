@@ -1594,7 +1594,10 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote,
   private async shutdown(): Promise<void> {
     await this.browser.close();
     this.server?.close();
-    // give the result frame time to flush before exiting
+    // Give the result frame time to flush before exiting. Stays a fixed
+    // wait: what is being waited on is the OS draining this process's stdout
+    // pipe, and node exposes no completion signal for that — process.exit()
+    // truncates whatever is still buffered.
     await new Promise((r) => setTimeout(r, 150));
     process.exit(0);
   }
@@ -1608,18 +1611,29 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote,
  * selector; in-skill dialogs are unaffected because this runs only at the
  * boundary. Returns false when a dialog would not go.
  */
+/** How long one Escape gets to take a modal off the screen before the next try. */
+const DIALOG_CLOSE_MS = 250;
+
 async function dismissBlockingDialogs(page: Page): Promise<boolean> {
   const blockers = page.locator('[role="dialog"], [aria-modal="true"]');
   const blocking = async () => (await blockers.count()) > 0 && (await blockers.first().isVisible().catch(() => false));
   for (let i = 0; i < 3 && (await blocking()); i++) {
     await page.keyboard.press('Escape');
-    await page.waitForTimeout(250);
+    // The condition, not a fixed sleep: a dialog that goes on the first
+    // Escape costs its own animation, and one that will not go still costs
+    // no more than the old 250ms before the next attempt.
+    await blockers
+      .first()
+      .waitFor({ state: 'hidden', timeout: DIALOG_CLOSE_MS })
+      .catch(() => {});
   }
   return !(await blocking());
 }
 
 /** How long a step's end-url capture waits for a consumed url output to appear. */
 const URL_OUTPUT_WAIT_MS = 5_000;
+/** Backstop cadence for a url the app changes without raising a navigation. */
+const URL_OUTPUT_POLL_MS = 500;
 
 /**
  * The outputs a step's end url publishes, under the same rule buildFlow used
@@ -1634,9 +1648,18 @@ async function captureUrlOutputs(page: Page, wanted: Set<string> | undefined, st
   let urlOuts = urlOutputs(page.url());
   if (!wanted?.size) return urlOuts;
   const deadline = Date.now() + URL_OUTPUT_WAIT_MS;
-  while ([...wanted].some((k) => !(k in urlOuts)) && Date.now() < deadline) {
-    await new Promise((r) => setTimeout(r, 250));
-    urlOuts = urlOutputs(page.url());
+  const arrived = (url: string) => {
+    urlOuts = urlOutputs(url);
+    return [...wanted].every((k) => k in urlOuts);
+  };
+  while (!arrived(page.url()) && Date.now() < deadline) {
+    // Wait on the url event, not on a clock: a route that lands 30ms after
+    // the step is seen 30ms later, not at the next poll tick. The short
+    // per-iteration budget is a backstop for a url the app rewrites without
+    // a history entry, which raises no navigation event to wake us.
+    await page
+      .waitForURL((u) => arrived(u.toString()), { timeout: Math.min(URL_OUTPUT_POLL_MS, Math.max(1, deadline - Date.now())) })
+      .catch(() => {});
   }
   const missing = [...wanted].filter((k) => !(k in urlOuts));
   if (missing.length) console.error(`[flow] ${stepId}: url output(s) never appeared: ${missing.join(', ')} (url: ${page.url().slice(0, 160)})`);

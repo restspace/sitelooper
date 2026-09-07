@@ -383,6 +383,30 @@ describe('history trimming', () => {
     expect(byId('r1').content).toBe('"Acme Ltd"');
   });
 
+  // An action big enough to have moved the page comes back with the new page
+  // folded into its result ([page: …]), which re-mints the ref registry just
+  // as an explicit snapshot does. Elision has to see it as one, or the result
+  // the agent is now working from is the only one never cleaned up.
+  it('elideSnapshots treats a marked tool result as the current snapshot', () => {
+    const state = new SessionState('t-snap-marked');
+    const call = (id: string, name: string, content: string) => [
+      { role: 'assistant' as const, content: null, tool_calls: [{ id, type: 'function' as const, function: { name, arguments: '{}' } }] },
+      { role: 'tool' as const, tool_call_id: id, content },
+    ];
+    state.messages.push(...call('s1', 'snapshot', `- button "Save" [@e1]\n`.repeat(300)));
+    state.messages.push(...call('c1', 'click', `clicked\n[state: url → /next]\n[page: …]\n` + `- button "Next" [@e9]\n`.repeat(300)));
+    const byId = (id: string) => state.messages.find((m) => m.role === 'tool' && m.tool_call_id === id)!;
+
+    state.markSnapshot('c1');
+    state.elideSnapshots('c1');
+    expect(byId('s1').content).toMatch(/superseded/);
+    expect(byId('c1').content).toMatch(/\[page:/);
+
+    // and once IT is superseded — by a later navigation — it goes too
+    state.elideSnapshots();
+    expect(byId('c1').content).toMatch(/superseded/);
+  });
+
   it('elides earlier instructions\' tool results when the next one starts', async () => {
     const state = new SessionState('t-boundary');
     const readCall = { id: 'r1', name: 'read', args: { target: '#a', what: 'text' }, rawArgs: '{}' };

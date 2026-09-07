@@ -24,6 +24,14 @@ describe('system prompt assembly', () => {
     expect(after.startsWith(before)).toBe(true);
   });
 
+  // The economy only pays if the model knows it can act on what it was handed:
+  // a diff line is a target, and a [page: …] block is the current snapshot.
+  it('tells the operator to act on diff lines and on a folded-in snapshot', () => {
+    expect(OPERATING_RULES).toContain('role=button[name="Save"]');
+    expect(OPERATING_RULES).toContain('[page: …]');
+    expect(OPERATING_RULES).toMatch(/earlier snapshot is now stale/);
+  });
+
   it('omits empty sections entirely', () => {
     const p = buildSystemPrompt({ briefing: '', notes: [] });
     expect(p).toBe(OPERATING_RULES);

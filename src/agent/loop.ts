@@ -6,6 +6,7 @@ import { fingerprintPage } from '../daemon/fingerprint.js';
 import { candidatesFor, renderCandidates, type ReplayResult } from '../skills/replay.js';
 import { componentsOnPage, renderComponents } from '../skills/components.js';
 import { originOf } from '../skills/store.js';
+import { siteModel } from '../skills/sitemap.js';
 import { buildSystemPrompt } from './prompt.js';
 import { addEvidenceValue, admitsIncompletion, backfillReadValues, flattenComposedValues, mergeReportValues, namingAskMessage, promoteLabelledReads, proseIdentifiers, unnamedReadValues, validateReport, type Report } from './report.js';
 import { executeTool, toolDefsFor, type ToolExecution } from './tools.js';
@@ -449,6 +450,9 @@ export async function runInstruction(
     if (skill.invoked && !skill.refused && skill.stepsReplayed < skill.stepsTotal && report.status === 'success') {
       skill.repaired = true;
     }
+    // One atomic write per instruction persists everything this run observed;
+    // observe() only ever touched memory.
+    siteModel().flush();
     return {
       report,
       turns,
@@ -734,8 +738,14 @@ export async function runInstruction(
       // Keep the re-sent context lean: a snapshot's @refs go stale on navigation
       // and when a newer snapshot arrives, so stub superseded snapshots now
       // rather than re-sending them (up to ~2k tokens each) every remaining turn.
+      // A result that carried its own `[page: …]` snapshot counts as the
+      // current snapshot: it is what the agent will act from, so it is the one
+      // that must survive while the ones it superseded are stubbed.
       if (!execution.isError) {
-        if (call.name === 'snapshot') state.elideSnapshots(call.id);
+        if (execution.snapshotIncluded) {
+          state.markSnapshot(call.id);
+          state.elideSnapshots(call.id);
+        } else if (call.name === 'snapshot') state.elideSnapshots(call.id);
         else if (NAVIGATION_TOOLS.has(call.name) && !(call.name === 'tabs' && call.args.switch_to === undefined)) {
           state.elideSnapshots();
         }
@@ -959,12 +969,16 @@ async function offerSkills(
     // plain fill/type/select on them is recipe-backed and self-verifying, so
     // it does not improvise long keyboard workarounds.
     const components = renderComponents(await componentsOnPage(page));
-    const text = [renderCandidates(candidates), components].filter(Boolean).join('\n');
     // Which RECORD this page showed when the instruction started, capped: the
     // evidence compile needs to give a skill an identity precondition (see
     // RecordedInstruction.startText).
     const sig = await captureSignature(page);
     const startText = sig ? sig.lines.join('\n').slice(0, START_TEXT_BUDGET) : undefined;
+    // What is known about this page TEMPLATE from every earlier session — its
+    // controls and where they lead — so turn one can act without observing.
+    const site = siteModel();
+    if (sig) site.observe(url, sig);
+    const text = [renderCandidates(candidates), components, site.render(url)].filter(Boolean).join('\n');
     return {
       ids: candidates.map((s) => s.id),
       text,

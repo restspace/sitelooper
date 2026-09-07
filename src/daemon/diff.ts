@@ -165,28 +165,115 @@ export function diffSignatures(
   /** A batch's combined diff spans several actions, so it raises this. */
   lineBudget: number = LIST_LINE_BUDGET,
 ): string {
-  const parts: string[] = [];
+  return describeChange(before, after, lineBudget).text;
+}
 
-  if (before.url !== after.url) {
-    parts.push(`url → ${after.url}` + (before.title !== after.title ? ` — ${JSON.stringify(after.title)}` : ''));
+/**
+ * The same diff, with the two facts a caller needs in order to decide whether
+ * the text is enough on its own: whether the page moved wholesale (so the
+ * agent's @refs and its mental model are both stale, and a fresh snapshot is
+ * worth more than a list of differences) and whether the url changed.
+ */
+export interface ChangeReport {
+  /** The full summary, as `[state: …]` has always carried it. */
+  text: string;
+  /**
+   * The url/alert facts only, plus a note that the page moved wholesale —
+   * what to say when a fresh snapshot is being attached and the line list
+   * would only duplicate it.
+   */
+  headline: string;
+  /** More lines differ than can usefully be listed. */
+  substantial: boolean;
+  urlChanged: boolean;
+  /** The two signatures are identical: the page has not reacted (yet). */
+  nothingChanged: boolean;
+}
+
+export function describeChange(
+  before: PageSignature,
+  after: PageSignature,
+  lineBudget: number = LIST_LINE_BUDGET,
+): ChangeReport {
+  const head: string[] = [];
+  const urlChanged = before.url !== after.url;
+
+  if (urlChanged) {
+    head.push(`url → ${after.url}` + (before.title !== after.title ? ` — ${JSON.stringify(after.title)}` : ''));
   }
 
   for (const alert of surplus(after.alerts, before.alerts)) {
-    parts.push(`alert: ${JSON.stringify(clip(alert, MAX_ALERT_CHARS))}`);
+    head.push(`alert: ${JSON.stringify(clip(alert, MAX_ALERT_CHARS))}`);
   }
 
-  const added = surplus(after.lines, before.lines);
-  const removed = surplus(before.lines, after.lines);
+  // Collapse BEFORE the substantial-change decision: a table that repainted
+  // its twenty rows is one fact ("the list refreshed"), not twenty, and left
+  // uncollapsed it blew the line budget and demoted the whole diff to
+  // "re-snapshot" — the expensive answer to the cheapest kind of change.
+  const added = collapseRuns(surplus(after.lines, before.lines));
+  const removed = collapseRuns(surplus(before.lines, after.lines));
   const changed = added.length + removed.length;
-  if (changed > lineBudget) {
+  const substantial = changed > lineBudget;
+
+  const parts = [...head];
+  if (substantial) {
     parts.push(`page changed substantially (~${changed} lines differ) — re-snapshot to see the new state`);
   } else {
     for (const line of added) parts.push(`+ ${clip(line, MAX_LINE_CHARS)}`);
     for (const line of removed) parts.push(`- ${clip(line, MAX_LINE_CHARS)}`);
   }
 
-  if (!parts.length) return 'no visible change';
-  return truncate(parts.join('; '), DIFF_BUDGET);
+  const text = parts.length ? truncate(parts.join('; '), DIFF_BUDGET) : 'no visible change';
+  const headParts = substantial
+    ? [...head, `page changed substantially (~${changed} lines differ)`]
+    : head;
+  return {
+    text,
+    headline: headParts.length ? truncate(headParts.join('; '), DIFF_BUDGET) : text,
+    substantial,
+    urlChanged,
+    nothingChanged: parts.length === 0,
+  };
+}
+
+/** More than this many lines of one role is repeated structure, not news. */
+const RUN_THRESHOLD = 6;
+/** How many of a collapsed run are still shown by name. */
+const RUN_KEEP = 3;
+
+/**
+ * Fold a run of same-role lines down to its first few plus a count. A grid
+ * that repaints emits one line per cell whose names differ only by the value
+ * in them; listing all of them says nothing the first three did not, and
+ * costs the budget that a genuinely new control further down would have used.
+ * Order is preserved and lines of any other role are untouched.
+ */
+function collapseRuns(lines: string[]): string[] {
+  const counts = new Map<string, number>();
+  for (const line of lines) {
+    const role = roleOfLine(line);
+    if (role) counts.set(role, (counts.get(role) ?? 0) + 1);
+  }
+  const shown = new Map<string, number>();
+  const out: string[] = [];
+  for (const line of lines) {
+    const role = roleOfLine(line);
+    const total = role ? (counts.get(role) ?? 0) : 0;
+    if (!role || total <= RUN_THRESHOLD) {
+      out.push(line);
+      continue;
+    }
+    const seen = (shown.get(role) ?? 0) + 1;
+    shown.set(role, seen);
+    if (seen <= RUN_KEEP) out.push(line);
+    else if (seen === RUN_KEEP + 1) out.push(`… and ${total - RUN_KEEP} more ${role}`);
+  }
+  return out;
+}
+
+/** `- cell "Widget 4": 12` → `cell`; anything not shaped like a line → null. */
+function roleOfLine(line: string): string | null {
+  return /^-\s+([a-z][a-z0-9-]*)/i.exec(line)?.[1] ?? null;
 }
 
 /** Items of `a` not matched one-for-one by an occurrence in `b`. */

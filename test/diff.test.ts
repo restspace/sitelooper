@@ -3,7 +3,7 @@ import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { executeTool } from '../src/agent/tools.js';
 import { BrowserSession } from '../src/daemon/browser.js';
-import { captureSignature, diffSignatures, type PageSignature } from '../src/daemon/diff.js';
+import { captureSignature, describeChange, diffSignatures, type PageSignature } from '../src/daemon/diff.js';
 import { snapshot } from '../src/daemon/refs.js';
 
 const sig = (over: Partial<PageSignature> = {}): PageSignature => ({
@@ -64,23 +64,74 @@ describe('diffSignatures', () => {
     expect(diffSignatures(before, after)).toBe('+ - cell "1"');
   });
 
+  // Roles spread thinly enough that the run-collapse below leaves them alone.
+  const ROLES = ['button', 'link', 'textbox', 'checkbox', 'tab', 'menuitem', 'heading'];
+  const spread = (n: number, tag: string) =>
+    Array.from({ length: n }, (_, i) => `- ${ROLES[i % ROLES.length]} "${tag} ${i}"`);
+
   it('falls back to a re-snapshot hint past the listing threshold', () => {
-    const before = sig({ lines: Array.from({ length: 10 }, (_, i) => `- old ${i}`) });
-    const after = sig({ lines: Array.from({ length: 10 }, (_, i) => `- new ${i}`) });
-    const out = diffSignatures(before, after);
-    expect(out).toBe('page changed substantially (~20 lines differ) — re-snapshot to see the new state');
+    const out = diffSignatures(sig(), sig({ lines: spread(14, 'new') }));
+    expect(out).toBe('page changed substantially (~14 lines differ) — re-snapshot to see the new state');
 
     // exactly at the threshold it still lists
-    const listed = diffSignatures(
-      sig({ lines: [] }),
-      sig({ lines: Array.from({ length: 12 }, (_, i) => `- new ${i}`) }),
-    );
-    expect(listed).toContain('+ - new 11');
+    const listed = diffSignatures(sig(), sig({ lines: spread(12, 'new') }));
+    expect(listed).toContain('+ - link "new 8"');
     expect(listed).not.toContain('substantially');
   });
 
+  // A table refresh is one fact, not forty. Before the collapse it read as
+  // "page changed substantially", which cost the agent a whole snapshot turn
+  // to learn that a list it was already looking at had repainted.
+  it('collapses a repeated run to its first three plus a count', () => {
+    const before = sig({ lines: Array.from({ length: 20 }, (_, i) => `- cell "old ${i}"`) });
+    const after = sig({ lines: Array.from({ length: 20 }, (_, i) => `- cell "new ${i}"`) });
+    const out = diffSignatures(before, after);
+    expect(out).toContain('+ - cell "new 0"');
+    expect(out).toContain('+ - cell "new 2"');
+    expect(out).not.toContain('new 3"');
+    expect(out).toContain('… and 17 more cell');
+    expect(out).toContain('- - cell "old 0"');
+    expect(out).toContain('… and 17 more cell');
+    // and, because the collapse happens first, this is a SMALL diff
+    expect(out).not.toContain('substantially');
+  });
+
+  it('leaves a run of six alone — only repetition past that is noise', () => {
+    const out = diffSignatures(sig(), sig({ lines: Array.from({ length: 6 }, (_, i) => `- cell "c${i}"`) }));
+    expect(out).toContain('+ - cell "c5"');
+    expect(out).not.toContain('more cell');
+  });
+
+  it('collapses per role, so a new control beside a refreshed list still shows', () => {
+    const after = sig({
+      lines: [...Array.from({ length: 9 }, (_, i) => `- row "r${i}"`), '- button "Save"'],
+    });
+    const out = diffSignatures(sig(), after);
+    expect(out).toContain('… and 6 more row');
+    expect(out).toContain('+ - button "Save"');
+  });
+
+  it('describeChange flags a wholesale change and keeps the url/alert facts for it', () => {
+    const change = describeChange(sig(), sig({ url: 'https://app.test/next', title: 'Next', lines: spread(14, 'new') }));
+    expect(change.substantial).toBe(true);
+    expect(change.urlChanged).toBe(true);
+    expect(change.headline).toContain('url → https://app.test/next');
+    expect(change.headline).toContain('page changed substantially');
+    // the headline replaces the line list, so it never carries one
+    expect(change.headline).not.toContain('+ -');
+
+    const small = describeChange(sig(), sig({ lines: ['- button "Save"'] }));
+    expect(small.substantial).toBe(false);
+    expect(small.urlChanged).toBe(false);
+    expect(small.nothingChanged).toBe(false);
+    expect(small.headline).toBe(small.text);
+
+    // "nothing changed" is the signal an action may simply not have landed yet
+    expect(describeChange(sig(), sig()).nothingChanged).toBe(true);
+  });
+
   it('clips long lines and the whole summary', () => {
-    const long = (n: number) => `- button ${String(n).repeat(400)}`;
+    const long = (n: number) => `- ${ROLES[n % ROLES.length]} ${String(n).repeat(400)}`;
     const out = diffSignatures(sig(), sig({ lines: Array.from({ length: 12 }, (_, i) => long(i)) }));
     expect(out.length).toBeLessThan(900); // 700 budget + truncate's own note
     expect(out).toContain('truncated');

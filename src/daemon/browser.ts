@@ -139,7 +139,8 @@ export class BrowserSession {
       // Polled, not awaited through a load state: an error page never
       // reports itself loaded, and a popup starts as about:blank.
       const poll = async () => {
-        for (let waited = 0; waited < 15_000 && !page.isClosed(); waited += 250) {
+        const deadline = Date.now() + 15_000;
+        while (!page.isClosed() && Date.now() < deadline) {
           const url = page.url();
           if (/^chrome-error:|^about:neterror/.test(url)) {
             if (this.activePage === page) this.activePage = previous.isClosed() ? null : previous;
@@ -147,7 +148,10 @@ export class BrowserSession {
             return;
           }
           if (url && url !== 'about:blank') return; // a real page: the agent's to keep
-          await new Promise((r) => setTimeout(r, 250));
+          // Woken by the navigation itself, so a tab that resolves in 20ms is
+          // judged in 20ms. The timeout is only a backstop for a tab that
+          // commits its url without a main-frame navigation event.
+          await page.waitForEvent('framenavigated', { timeout: Math.max(1, Math.min(250, deadline - Date.now())) }).catch(() => {});
         }
       };
       poll().catch(() => {});

@@ -3,11 +3,13 @@ import path from 'node:path';
 import type { Locator, Page } from 'playwright-core';
 import { inFlightRequests, type BrowserSession } from '../daemon/browser.js';
 import { clip } from '../shared/text.js';
-import { captureSignature, diffSignatures, type PageSignature } from '../daemon/diff.js';
+import { captureSignature, describeChange, type PageSignature } from '../daemon/diff.js';
 import { html5DragDrop, reactSafeFill, reactSafeSelect, selectedOption, syntheticHover } from '../daemon/inputs.js';
 import { tryRecipe } from '../skills/components.js';
 import { resolveSecretsDeep, scrubSecrets, scrubSecretsDeep } from '../shared/secrets.js';
-import { resolveTarget, snapshot, truncate } from '../daemon/refs.js';
+import { refHint, resolveTarget, snapshot, truncate } from '../daemon/refs.js';
+import { controlFromTarget, siteModel } from '../skills/sitemap.js';
+import { settleDom, settlePage } from '../daemon/settle.js';
 import { fingerprintPage } from '../daemon/fingerprint.js';
 import { isRecordable, type StepDiff } from '../daemon/recorder.js';
 import { urlPattern as compiledUrlPattern } from '../skills/compile.js';
@@ -32,8 +34,16 @@ const STATE_CHANGING = new Set([
   'select', 'check', 'drag', 'upload',
 ]);
 
-/** Beat given to async renders (React, in-flight fetches) before the after-capture. */
-const SETTLE_MS = 150;
+/**
+ * Tools whose result already IS a new page, so it carries a fresh snapshot the
+ * same way a substantial change does — the agent would otherwise spend its
+ * next turn asking what it just navigated to.
+ */
+const NAVIGATED = new Set(['goto', 'back']);
+/** Budget for a snapshot folded into an action result: enough to act from, not a whole page. */
+const AUTO_SNAPSHOT_CHARS = 3_500;
+/** How long an action that has visibly done nothing gets to show its first effect. */
+const REACTION_MS = 400;
 /** Tools whose effect may be a navigation the app performs on the answer to a request. */
 const NAVIGATING = new Set(['click', 'dblclick', 'press', 'submit', 'select']);
 /** How long a click's late navigation is given before its effect is captured as final. */
@@ -413,6 +423,12 @@ export interface ToolExecution {
   isError: boolean;
   /** Present for run_skill: what the replay did, for the loop's accounting. */
   replay?: ReplayResult;
+  /**
+   * This result carries a `[page: …]` snapshot, so it IS the current view and
+   * every earlier snapshot's @refs are now stale. The loop elides the older
+   * ones and keeps this result, exactly as it does after an explicit snapshot.
+   */
+  snapshotIncluded?: boolean;
 }
 
 /** Tool definitions for a session: run_skill only exists when a skill store is attached. */
@@ -442,10 +458,27 @@ export async function executeTool(
     const diffing = STATE_CHANGING.has(name) ? await session.getPage().catch(() => null) : null;
     const before: PageSignature | null = diffing ? await captureSignature(diffing) : null;
     const { result } = await runStep(session, name, args, screenshotDir, signal, { before });
-    const stateNote = diffing && before ? scrubSecrets(await stateDiff(diffing, before)) : '';
+    const observed = diffing && before ? await stateDiff(diffing, before) : EMPTY_OBSERVATION;
+    // goto/back report a url and a title, which is the one thing the agent
+    // already knew; what it needs is what is ON the page it asked for.
+    const landed = NAVIGATED.has(name) ? await landingSnapshot(session) : '';
+    // Site model: this action's own before-signature is a free observation of
+    // the page, and a url change past it is an edge in the app's graph. Both
+    // are best-effort — controlFromTarget yields null for a CSS selector,
+    // whose accessible name cannot be known, and the edge is then skipped.
+    if (diffing && before) {
+      const site = siteModel();
+      site.observe(before.url, before);
+      const after = diffing.url();
+      if (after !== before.url) {
+        const target = String(args.target ?? '');
+        site.transition(before.url, controlFromTarget(target, refHint(diffing, target)), after);
+      }
+    }
     return {
-      result: truncate(result + stateNote + dialogNote(session), TOOL_RESULT_BUDGET + 8200),
+      result: truncate(result + scrubSecrets(observed.note) + landed + dialogNote(session), TOOL_RESULT_BUDGET + 8200),
       isError: false,
+      snapshotIncluded: observed.snapshotIncluded || Boolean(landed),
     };
   } catch (err) {
     return { result: truncate(`ERROR: ${explainError(err, args)}`, TOOL_RESULT_BUDGET), isError: true };
@@ -510,9 +543,14 @@ async function executeSkill(
       if (changed) store.put(fresh);
     }
   }
-  const stateNote = before && replay.stepsRun ? scrubSecrets(await stateDiff(page, before, BATCH_LINE_BUDGET)) : '';
-  const body = scrubSecrets(renderReplay(skill, replay)) + stateNote + dialogNote(session);
-  return { result: truncate(body, TOOL_RESULT_BUDGET + 8200), isError: Boolean(replay.refused), replay };
+  const observed = before && replay.stepsRun ? await stateDiff(page, before, BATCH_LINE_BUDGET) : EMPTY_OBSERVATION;
+  const body = scrubSecrets(renderReplay(skill, replay)) + scrubSecrets(observed.note) + dialogNote(session);
+  return {
+    result: truncate(body, TOOL_RESULT_BUDGET + 8200),
+    isError: Boolean(replay.refused),
+    replay,
+    snapshotIncluded: observed.snapshotIncluded,
+  };
 }
 
 interface StepOptions {
@@ -636,7 +674,7 @@ export async function urlHeldStill(
 async function settledSignature(page: Page): Promise<PageSignature | null> {
   try {
     await page.waitForLoadState('domcontentloaded').catch(() => {});
-    await page.waitForTimeout(SETTLE_MS);
+    await settleDom(page);
     return await captureSignature(page);
   } catch {
     return null;
@@ -748,12 +786,16 @@ async function executeBatch(
     }
   }
 
-  const stateNote = page && before && (ran || failedAt >= 0) ? scrubSecrets(await stateDiff(page, before, BATCH_LINE_BUDGET)) : '';
-  const body = [...lines, ...notes].join('\n') + stateNote;
+  const observed = page && before && (ran || failedAt >= 0) ? await stateDiff(page, before, BATCH_LINE_BUDGET) : EMPTY_OBSERVATION;
+  const body = [...lines, ...notes].join('\n') + scrubSecrets(observed.note);
   // Nothing ran at all — either the first step failed or the budget expired
   // before it started; that IS an error result.
   if (!ran) return { result: truncate(body || 'ERROR: batch ran no steps.', TOOL_RESULT_BUDGET + 8200), isError: true };
-  return { result: truncate(body, TOOL_RESULT_BUDGET + 8200), isError: false };
+  return {
+    result: truncate(body, TOOL_RESULT_BUDGET + 8200),
+    isError: false,
+    snapshotIncluded: observed.snapshotIncluded,
+  };
 }
 
 /** "steps 4-5 not run" for the tail starting at index `from`, or '' if none. */
@@ -766,19 +808,116 @@ function summarize(args: Record<string, unknown>): string {
   return clip(JSON.stringify(args), 80);
 }
 
+/** What an action's result says about the page it left behind. */
+interface Observation {
+  /** `\n[state: …]`, plus a `\n[page: …]` snapshot when the page moved wholesale. Or ''. */
+  note: string;
+  /** The note carries a fresh snapshot, so @refs from earlier ones are stale. */
+  snapshotIncluded: boolean;
+}
+
+const EMPTY_OBSERVATION: Observation = { note: '', snapshotIncluded: false };
+
 /**
  * Summary of what the just-executed action changed, as `\n[state: …]`, or ''
  * if it could not be determined. The action already succeeded by the time this
  * runs, so nothing here may throw — a missing diff is the failure mode.
+ *
+ * When the change is too big to list, or the url moved, the summary is not
+ * enough on its own: the agent's @refs point at a page that is gone, and the
+ * old answer ("re-snapshot to see the new state") spent a whole turn asking
+ * for something we are already standing in front of. So the new state is
+ * attached instead. A small change deliberately does NOT do this: an
+ * ariaSnapshot re-mints Playwright's ref registry, and an agent halfway
+ * through filling a form by @ref must keep the refs it is holding.
  */
-async function stateDiff(page: Page, before: PageSignature, lineBudget?: number): Promise<string> {
+async function stateDiff(page: Page, before: PageSignature, lineBudget?: number): Promise<Observation> {
   try {
-    // One settle beat: DOM updates are usually async. Genuinely slow updates
+    // Settle first: DOM updates are usually async. Genuinely slow updates
     // are still wait_for's job — the diff is a hint, not proof.
     await page.waitForLoadState('domcontentloaded').catch(() => {});
-    await page.waitForTimeout(SETTLE_MS);
-    const after = await captureSignature(page);
-    return after ? `\n[state: ${diffSignatures(before, after, lineBudget)}]` : '';
+    // settlePage, not settleDom: the diff should carry the app's ANSWER to the
+    // action, so a fetch the click started within the last moments is given
+    // its (bounded) chance to land before the after-capture. Long-polls are
+    // excluded by the tracker, so an app that never goes idle still settles.
+    await settlePage(page);
+    let after = await captureSignature(page);
+    if (!after) return EMPTY_OBSERVATION;
+    let change = describeChange(before, after, lineBudget);
+    // Nothing at all changed — which is either the answer, or the app has not
+    // given it yet: a click's effect commonly lands a frame or a timer later.
+    // A diff taken before it does says "no visible change" and costs the agent
+    // the wait_for turn this diff exists to spare it, so give the page one
+    // bounded window to show its FIRST mutation. This is a condition, not a
+    // sleep: an action that already changed something never reaches it, and a
+    // late one returns the moment it lands.
+    if (change.nothingChanged && (await firstMutation(page, REACTION_MS))) {
+      await settleDom(page);
+      const settled = await captureSignature(page);
+      if (settled) {
+        after = settled;
+        change = describeChange(before, after, lineBudget);
+      }
+    }
+    const fresh = change.substantial || change.urlChanged ? await pageBlock(page) : '';
+    // With the page itself attached, the line-by-line list is noise; keep the
+    // url and alert facts, which the snapshot does not state.
+    const summary = fresh && change.substantial ? change.headline : change.text;
+    return { note: `\n[state: ${summary}]` + fresh, snapshotIncluded: Boolean(fresh) };
+  } catch {
+    return EMPTY_OBSERVATION;
+  }
+}
+
+/**
+ * Resolve on the page's first DOM mutation, or false at the budget. Bounded
+ * and best-effort: a page that cannot be evaluated against (navigating,
+ * detached) is not one to wait on.
+ */
+async function firstMutation(page: Page, budget: number): Promise<boolean> {
+  try {
+    return await page.evaluate(
+      (ms) =>
+        new Promise<boolean>((resolve) => {
+          const stop = setTimeout(() => {
+            observer.disconnect();
+            resolve(false);
+          }, ms);
+          const observer = new MutationObserver(() => {
+            observer.disconnect();
+            clearTimeout(stop);
+            resolve(true);
+          });
+          observer.observe(document, { childList: true, subtree: true, attributes: true, characterData: true });
+        }),
+      budget,
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * A fresh interactive-only snapshot to fold into an action's result, or '' if
+ * it could not be taken. Every failure here degrades to the old text-only
+ * result: this is an economy, never a correctness requirement.
+ */
+async function pageBlock(page: Page): Promise<string> {
+  try {
+    const text = await snapshot(page, { interactiveOnly: true, maxChars: AUTO_SNAPSHOT_CHARS });
+    if (!text.trim()) return '';
+    return `\n[page: the state now — these @refs are current; @refs from any earlier snapshot are stale]\n${text}`;
+  } catch {
+    return '';
+  }
+}
+
+/** The same block for a goto/back, once the page it landed on has settled. */
+async function landingSnapshot(session: BrowserSession): Promise<string> {
+  try {
+    const page = await session.getPage();
+    await settleDom(page);
+    return await pageBlock(page);
   } catch {
     return '';
   }

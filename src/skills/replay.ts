@@ -5,6 +5,7 @@ import { cosine, fingerprintPage } from '../daemon/fingerprint.js';
 import { candidateExpr, makeLocator, markPoint, type LocatorCandidate, type StepDiff } from '../daemon/recorder.js';
 import { retired } from './repair.js';
 import { isRefTarget } from '../daemon/refs.js';
+import { settleDom } from '../daemon/settle.js';
 import { TRANSIENT_LINE, WILDCARD, fillParams, fillParamsDeep, maskMinted, maskVolatile, softUrlMatch, urlMatches, urlPart, urlPattern } from './compile.js';
 
 /** Tools that look at or move to an element without setting or choosing anything. */
@@ -626,8 +627,15 @@ export async function replaySkill(
       // record — and then stop early on `cursor >= remaining`, leaving the
       // list part-cleared while reporting success.
       let after = await count();
-      for (let waited = 0; after >= remaining && waited < LOOP_SHRINK_WAIT_MS; waited += LOOP_SHRINK_POLL_MS) {
-        await page.waitForTimeout(LOOP_SHRINK_POLL_MS);
+      if (after >= remaining && remaining > 0) {
+        // "the count shrank" is exactly "the remaining-th match left the
+        // DOM", so wait on that element rather than re-counting on a timer:
+        // a row that goes immediately is seen immediately, and a row that
+        // never goes still costs no more than the old window.
+        await makeLocator(page, hit!.candidate)
+          .nth(remaining - 1)
+          .waitFor({ state: 'detached', timeout: LOOP_SHRINK_WAIT_MS })
+          .catch(() => {});
         after = await count();
       }
       if (after >= remaining) cursor++;
@@ -725,8 +733,19 @@ const expectedUrl: StepGate = async ({ step, page, params, tag, failIndex }) => 
   // step was judged at "/" on every replay and sent to recovery, whose
   // report then lacked the landing-page value every later step referred to.
   // Give a navigation in flight the resolve window before judging.
-  for (let waited = 0; waited < resolveWaitMs(); waited += RESOLVE_POLL_MS) {
-    await new Promise((r) => setTimeout(r, RESOLVE_POLL_MS));
+  const deadline = Date.now() + resolveWaitMs();
+  while (Date.now() < deadline) {
+    // Wait on the navigation, not on a clock: the route that was in flight
+    // is seen the moment it lands. The per-iteration budget is a backstop
+    // for an app that rewrites its url without a history entry, which raises
+    // no event to wake us.
+    const slice = Math.max(1, Math.min(URL_SETTLE_POLL_MS, deadline - Date.now()));
+    if (typeof page.waitForURL === 'function') {
+      await page.waitForURL((u) => urlMatches(pattern, u.toString(), params), { timeout: slice }).catch(() => {});
+    } else {
+      // A minimal page (tests stub only url/locator) has no navigation events.
+      await new Promise((r) => setTimeout(r, Math.min(slice, RESOLVE_POLL_MS)));
+    }
     if (urlMatches(pattern, page.url(), params)) return null;
   }
   const soft = softUrlMatch(pattern, page.url(), params);
@@ -1245,7 +1264,6 @@ async function linkToDestination(
 
 /** How long a loop iteration waits for its record to leave the guard's match set. */
 const LOOP_SHRINK_WAIT_MS = 1_000;
-const LOOP_SHRINK_POLL_MS = 100;
 
 /**
  * How long a step keeps re-trying its locator chain before calling the target
@@ -1262,7 +1280,15 @@ function resolveWaitMs(): number {
   const raw = Number(process.env.SITELOOPER_RESOLVE_WAIT_MS);
   return Number.isFinite(raw) && raw >= 0 ? raw : 3_000;
 }
+/**
+ * The locator chain has no single DOM condition to wait on — each rung is a
+ * different candidate and the preference order has to be re-read as a whole
+ * (see resolveChain) — so this one stays a poll. It runs only on a page that
+ * has already failed to answer, never on the fast path.
+ */
 const RESOLVE_POLL_MS = 100;
+/** Backstop cadence for a url an SPA rewrites without raising a navigation. */
+const URL_SETTLE_POLL_MS = 500;
 
 /**
  * Scroll the page end to end so a virtualised or lazily rendered UI paints
@@ -1279,44 +1305,6 @@ async function sweepPage(page: Page): Promise<boolean> {
     return true;
   } catch {
     return false;
-  }
-}
-
-const SETTLE_QUIET_MS = 250;
-const SETTLE_MAX_MS = 2_000;
-/**
- * How long a page gets to show it is busy before it is called quiet. The
- * quiet window used to be the floor too — 250ms per step even on a static
- * page, ~20s across an 80-step replay that was otherwise at the engine's
- * floor. Now the full quiet window is demanded only once a mutation shows.
- */
-const SETTLE_PROBE_MS = 60;
-
-/** Resolve once no DOM mutation has happened for SETTLE_QUIET_MS, or after SETTLE_MAX_MS. */
-async function settleDom(page: Page): Promise<void> {
-  try {
-    await page.evaluate(
-      ({ probe, quiet, max }) =>
-        new Promise<void>((resolve) => {
-          let timer = setTimeout(resolve, probe);
-          const stop = setTimeout(() => {
-            observer.disconnect();
-            resolve();
-          }, max);
-          const observer = new MutationObserver(() => {
-            clearTimeout(timer);
-            timer = setTimeout(() => {
-              observer.disconnect();
-              clearTimeout(stop);
-              resolve();
-            }, quiet);
-          });
-          observer.observe(document, { childList: true, subtree: true, attributes: true, characterData: true });
-        }),
-      { probe: SETTLE_PROBE_MS, quiet: SETTLE_QUIET_MS, max: SETTLE_MAX_MS },
-    );
-  } catch {
-    // navigating / detached — the locator resolution will report it
   }
 }
 
