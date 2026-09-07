@@ -451,28 +451,27 @@ sitelooper runtime in the loop at all, then replayed under the real Playwright t
 
 | target | sitelooper replay (r1, r2) | agent re-run | authored script | codegen | Tier 2 spec |
 |---|---|---|---|---|---|
-| repairdesk | **7/7, 7/7** · $0.00, $0.00 · 55s, 55s (set 30, m3rd on a7f0c6e; every step at tier A, zero model turns; set 28: 24s, 23s) | 6/6 · $0.19 · 67s every time | 1/6, 1/6 · $0 | 6/6, 6/6 · $0 | **6/6, 6/6** · $0.00 · 15s, 14s (set 30, m3rd; 0 drift; repair converged with 4 candidate promotions, spec check passed in 14s; repaired spec 6/6 in 14s) |
-| kanboard | **4/4 checkable, same** · $0.00, $0.00 · 45s, 45s (set 30, m3kb on a7f0c6e; all five steps at tier A, zero turns; two objectives are report-based and a zero-model replay writes no report; set 28: 23s, 23s) | 2/6 · $0.77 · 118s every time | 5/6, 5/6 · $0 | 4/4 (+2 n/a) · $0 | **4/4 checkable, same** · $0.00 · 16s, 15s (set 30, m3kb; 0 drift; repair converged with no change, spec check passed in 13s; repaired spec 4/4 in 15s) |
-| grafana | **6/6, 6/6** · $0.00, $0.00 · 79s, 79s (set 30, m3gr on a7f0c6e; every step at tier A, zero model turns; set 28: 47s, 47s) | 6/6 · $1.05 · 448s every time | 0/6, 0/6 · $0 | 0/6, 0/6 · $0 | **4/6, 4/6** · $0.00 · 31s, 31s (set 30, m3gr; 0 drift; objectives 1 and 6 unverifiable by design, the spec arm writes no finalText; repair converged with 5 changes: 2 promotions, 2 model-proposed heading locators, 1 retirement; spec check passed in 31s; repaired spec 4/6 in 32s) |
-| odoo | **6/6, 6/6** · $0.01, $0.02 · 258s, 568s (set 30, m3od on a7f0c6e, flow fwod34r3; eight of nine steps at tier A, but 06-open fell back to the model on both replays, 27 then 51 turns: its pinned skill's precondition names the order LIST page and the flow arrives on the order FORM, so the zero-model replay refuses before acting; the flake set 28d saw once is every run on this flow, a store defect in 06-open's recording, not the emitter; set 28d on fwod34: 664s, 243s) | 6/6 · $1.51 · 302s every time | 1/6, 1/6 · $0 | 0/6, 0/6 · $0 | **6/6, 6/6** · $0.00 · 77s, 77s (set 30, m3od; 0 drift both runs; repair 9/9 ×3 at tier A with no change, spec check passed in 75s; repaired spec 6/6 in 76s; sp11od on f838bec: 78s, 78s) |
+| repairdesk | **7/7, 7/7** · $0.00, $0.00 · 25s, 25s (set 31, m4rd on d28346a; every step at tier A, zero model turns; set 30 on a7f0c6e: 55s, 55s before the late-navigation fix; set 28: 24s, 23s) | 6/6 · $0.19 · 67s every time | 1/6, 1/6 · $0 | 6/6, 6/6 · $0 | **6/6, 6/6** · $0.00 · 15s, 15s (set 31, m4rd; 0 drift; repair converged with 4 candidate promotions, spec check passed in 14s; repaired spec 6/6 in 14s) |
+| kanboard | **4/4 checkable, same** · $0.00, $0.00 · 27s, 27s (set 31, m4kb on d28346a; all five steps at tier A, zero turns; two objectives are report-based and a zero-model replay writes no report; set 30: 45s, 45s; set 28: 23s, 23s) | 2/6 · $0.77 · 118s every time | 5/6, 5/6 · $0 | 4/4 (+2 n/a) · $0 | **4/4 checkable, same** · $0.00 · 15s, 14s (set 31, m4kb; 0 drift; repair converged with no change, spec check passed in 13s; repaired spec 4/4 in 14s) |
+| grafana | **6/6, 6/6** · $0.00, $0.00 · 54s, 54s (set 31, m4gr on d28346a; every step at tier A, zero model turns; set 30: 79s, 79s; set 28: 47s, 47s) | 6/6 · $1.05 · 448s every time | 0/6, 0/6 · $0 | 0/6, 0/6 · $0 | **4/6, 4/6** · $0.00 · 33s, 33s (set 31, m4gr; 0 drift; objectives 1 and 6 unverifiable by design, the spec arm writes no finalText; repair converged with 6 changes: 3 promotions, 1 model-proposed heading locator, 2 never-hit point candidates retired; spec check passed in 33s; repaired spec 4/6 in 34s) |
+| odoo | **6/6, 6/6** · $0.02, $0.01 · 787s, 556s (set 31, m4od2 on d28346a, flow fwod34r3; model-bound, so the click-wait fix barely shows: 06-open fell back to the model on both replays, 24 then 39 turns, because its pinned skill's precondition names the order LIST page while the flow arrives on the order FORM, a store defect in 06-open's recording; r1 also lost 16 turns to a one-off sign-in fallback; set 30: 258s, 568s; set 28d on fwod34: 664s, 243s) | 6/6 · $1.51 · 302s every time | 1/6, 1/6 · $0 | 0/6, 0/6 · $0 | **6/6, 6/6** · $0.00 · 79s, 79s (set 31, m4od2; 0 drift both runs; repair 9/9 ×3 at tier A with no change, spec check passed in 77s; repaired spec 6/6 in 78s; set 30: 77s, 77s) |
 | atelyr | 12/12 flow steps · $0.13, $0.43 · 710s, 1002s (set 28e; 114 then 134 model turns; nine of twelve steps at zero turns on the second replay, the three re-pinned steps among them) | — | — | — | not yet run |
 
-**Set 30 (a7f0c6e), the current build.** One cloud box per target, replaying the published
-recording twice with `bench/sweep.mjs --from` and then running the whole compiled-spec loop
-(spec twice, `repair --converge 2 --check-spec`, the repaired spec once), all scored by the
-app-side verifiers; results on `origin/results/m3rd`, `m3kb`, `m3gr`, `m3od`. Every compiled
-spec passed both runs with 0 drift, every repair converged with its spec check passing, and every
-repaired spec passed again at the same score. No goal-state guard fired anywhere: the published
-stores predate goals, so no skill carries one yet, and the contradicted-step check found nothing
-in these four recordings. Two things to be honest about. The zero-model replays took roughly
-twice the wall clock of set 28 on repairdesk, kanboard and grafana (55s vs 24s, 45s vs 23s, 79s
-vs 47s) with identical scores and zero turns. Bisected locally on the repairdesk recording to
-93ac1f7: the recorder's "give a click's late navigation a moment" made every click, press and
-select in learning mode wait the full 1.5s unless the url moved, and replays run in learning
-mode, so 50-odd non-navigating clicks cost 30s of nothing. Fixed after set 30: the wait ends as
-soon as the page has no request in flight (a late navigation always rides on one), which put the
-local replay back at 28s against set 28's 27.8s with the same 7/7. And odoo's 06-open fell back to
-the model on both replays because its recorded precondition names the wrong page.
+**Set 31 (d28346a), the current build.** The set 30 routine rerun on one fix. Set 30's zero-model
+replays had run at roughly twice set 28's wall clock; bisected locally on the repairdesk recording to
+93ac1f7, where the recorder's "give a click's late navigation a moment" made every click, press and
+select in learning mode wait 1.5s unless the url moved, and replays run in learning mode. d28346a
+ends that wait as soon as the page has no request in flight. Same boxes, same recordings, same
+scores, and the replay wall clocks came back: repairdesk 55s → 25s, kanboard 45s → 27s, grafana
+79s → 54s, all at zero model turns. Odoo did not move (258s, 568s → 787s, 556s) because its
+replays are model-bound: 06-open falls back to the model on every run of fwod34r3 (its recorded
+precondition names the order list page and the flow arrives on the order form), so the wall clock
+is model turns, not click waits; the first set 31 odoo box also ran the wrong flow (fwod34, whose
+demoted 08-open needs the model) because fwod34r3 was only on a results branch, so it was
+published on this branch at 16f9a4b and the target relaunched as m4od2. Every compiled spec passed
+both runs with 0 drift at the same scores as set 30, every repair converged with its spec check
+passing, and every repaired spec passed again. No goal-state guard fired and no diagnostic
+appeared: the published stores predate goals, so no skill carries one yet.
 
 **Tier 2 spec, status.** `bench/spec-replay.mjs` compiles a published flow + skill store
 (`sitelooper compile <flow> --out <tmp>` with `SITELOOPER_SKILLS_DIR` pointing at the store) and
