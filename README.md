@@ -464,11 +464,15 @@ app-side verifiers; results on `origin/results/m3rd`, `m3kb`, `m3gr`, `m3od`. Ev
 spec passed both runs with 0 drift, every repair converged with its spec check passing, and every
 repaired spec passed again at the same score. No goal-state guard fired anywhere: the published
 stores predate goals, so no skill carries one yet, and the contradicted-step check found nothing
-in these four recordings. Two things to be honest about: the zero-model replays took roughly
+in these four recordings. Two things to be honest about. The zero-model replays took roughly
 twice the wall clock of set 28 on repairdesk, kanboard and grafana (55s vs 24s, 45s vs 23s, 79s
-vs 47s) with identical scores and zero turns, which is not yet explained (the compiled specs did
-not slow down, so it is the daemon's replay path or the box, not the app); and odoo's 06-open
-fell back to the model on both replays because its recorded precondition names the wrong page.
+vs 47s) with identical scores and zero turns. Bisected locally on the repairdesk recording to
+93ac1f7: the recorder's "give a click's late navigation a moment" made every click, press and
+select in learning mode wait the full 1.5s unless the url moved, and replays run in learning
+mode, so 50-odd non-navigating clicks cost 30s of nothing. Fixed after set 30: the wait ends as
+soon as the page has no request in flight (a late navigation always rides on one), which put the
+local replay back at 28s against set 28's 27.8s with the same 7/7. And odoo's 06-open fell back to
+the model on both replays because its recorded precondition names the wrong page.
 
 **Tier 2 spec, status.** `bench/spec-replay.mjs` compiles a published flow + skill store
 (`sitelooper compile <flow> --out <tmp>` with `SITELOOPER_SKILLS_DIR` pointing at the store) and

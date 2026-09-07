@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import type { Locator, Page } from 'playwright-core';
-import type { BrowserSession } from '../daemon/browser.js';
+import { inFlightRequests, type BrowserSession } from '../daemon/browser.js';
 import { clip } from '../shared/text.js';
 import { captureSignature, diffSignatures, type PageSignature } from '../daemon/diff.js';
 import { html5DragDrop, reactSafeFill, reactSafeSelect, selectedOption, syntheticHover } from '../daemon/inputs.js';
@@ -40,6 +40,12 @@ const NAVIGATING = new Set(['click', 'dblclick', 'press', 'submit', 'select']);
 const LATE_NAV_MS = 1_500;
 /** A url that has not moved for this long, after moving, is where the step left the page. */
 const URL_STILL_MS = 500;
+/**
+ * How long "no request in flight" must hold before it means "no navigation
+ * coming". Zero: the DOM settle that precedes this wait (≥250ms quiet) is the
+ * grace, and a request the click started is already counted by then.
+ */
+const LATE_NAV_GRACE_MS = 0;
 
 const MAX_BATCH_STEPS = 10;
 
@@ -565,17 +571,7 @@ async function runStep(
     // a page the procedure was only passing through. So: wait until the url
     // has held still, whether it has moved yet or not.
     if (after && NAVIGATING.has(name)) {
-      const deadline = Date.now() + LATE_NAV_MS;
-      let seen = page!.url();
-      let stillSince = Date.now();
-      while (Date.now() < deadline) {
-        await new Promise((r) => setTimeout(r, 100));
-        const now = page!.url();
-        if (now !== seen) {
-          seen = now;
-          stillSince = Date.now();
-        } else if (now !== before.url && Date.now() - stillSince >= URL_STILL_MS) break;
-      }
+      const seen = await urlHeldStill(page!, before.url, () => inFlightRequests(page!));
       if (seen !== after.url) after = await settledSignature(page!);
     }
     if (after) {
@@ -594,6 +590,47 @@ async function runStep(
   }
   recorder?.commit(pending, result, { diff, via: opts.via, fingerprintAfter });
   return { result, diff };
+}
+
+/**
+ * Where a navigating tool left the url once it has held still. A late
+ * navigation rides on a request the tool started, so a page with no request
+ * in flight and the url it began on is not going anywhere: the wait ends
+ * there rather than at the deadline. Set 30's zero-model replays ran at
+ * twice set 28's wall clock because every non-navigating click sat out the
+ * full LATE_NAV_MS (78 actions, ~30s of nothing on repairdesk).
+ */
+export async function urlHeldStill(
+  page: Pick<Page, 'url'>,
+  beforeUrl: string,
+  inFlight: () => number,
+  timing: { lateNavMs?: number; stillMs?: number; graceMs?: number; pollMs?: number } = {},
+): Promise<string> {
+  const lateNavMs = timing.lateNavMs ?? LATE_NAV_MS;
+  const stillMs = timing.stillMs ?? URL_STILL_MS;
+  const graceMs = timing.graceMs ?? LATE_NAV_GRACE_MS;
+  const pollMs = timing.pollMs ?? 100;
+  const start = Date.now();
+  const deadline = start + lateNavMs;
+  let seen = page.url();
+  let stillSince = start;
+  // Check first, sleep after: the caller has already let the DOM settle, so
+  // a request the click started is registered by now, and the common case
+  // (a click that navigates nowhere) should cost nothing here.
+  for (;;) {
+    const now = page.url();
+    if (now !== seen) {
+      seen = now;
+      stillSince = Date.now();
+    } else if (now !== beforeUrl) {
+      if (Date.now() - stillSince >= stillMs) break;
+    } else if (Date.now() - start >= graceMs && inFlight() === 0) {
+      break; // nothing asked of the server, so nothing to route on
+    }
+    if (Date.now() >= deadline) break;
+    await new Promise((r) => setTimeout(r, pollMs));
+  }
+  return seen;
 }
 
 async function settledSignature(page: Page): Promise<PageSignature | null> {

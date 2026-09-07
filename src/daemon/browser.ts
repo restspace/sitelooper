@@ -119,6 +119,7 @@ export class BrowserSession {
 
   private adoptPage(page: Page): void {
     this.dialogs.attach(page);
+    trackRequests(page);
     const video = page.video();
     if (video) this.videos.add(video);
     const previous = this.activePage;
@@ -225,4 +226,26 @@ export class BrowserSession {
     const paths = await Promise.all(videos.map((v) => v.path().catch(() => null)));
     return paths.filter((p): p is string => Boolean(p));
   }
+}
+
+/**
+ * Requests in flight per page, so a tool can tell "the click did nothing" from
+ * "the click asked the server and will route on the answer" without waiting a
+ * fixed time for both. Counted from the page's own request events, so a page
+ * this session never adopted reads as idle.
+ */
+const inFlight = new WeakMap<Page, number>();
+
+function trackRequests(page: Page): void {
+  if (inFlight.has(page)) return;
+  inFlight.set(page, 0);
+  const bump = (delta: number) => () => inFlight.set(page, Math.max(0, (inFlight.get(page) ?? 0) + delta));
+  page.on('request', bump(1));
+  page.on('requestfinished', bump(-1));
+  page.on('requestfailed', bump(-1));
+}
+
+/** How many requests `page` has in flight right now (0 for a page not tracked). */
+export function inFlightRequests(page: Page): number {
+  return inFlight.get(page) ?? 0;
 }

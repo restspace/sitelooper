@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { evalMutation } from '../src/agent/tools.js';
+import { evalMutation, urlHeldStill } from '../src/agent/tools.js';
 
 // The eval tool is read-only: a mutation issued through it runs but can never
 // be replayed (eval steps carry no locator and are dropped at compile), which
@@ -29,3 +29,35 @@ describe('evalMutation', () => {
     expect(evalMutation("document.querySelector('[role=\"dialog\"]')?.textContent")).toBeNull();
   });
 });
+
+describe('urlHeldStill', () => {
+  const fast = { lateNavMs: 600, stillMs: 100, graceMs: 40, pollMs: 10 };
+
+  it('returns as soon as a non-navigating click has no request in flight', async () => {
+    const t0 = Date.now();
+    const seen = await urlHeldStill({ url: () => 'http://app/a' }, 'http://app/a', () => 0, fast);
+    expect(seen).toBe('http://app/a');
+    expect(Date.now() - t0).toBeLessThan(60);
+  });
+
+  it('keeps waiting while a request is in flight, and follows the navigation it brings', async () => {
+    let url = 'http://app/a';
+    let pending = 1;
+    setTimeout(() => {
+      url = 'http://app/b';
+      pending = 0;
+    }, 200);
+    const t0 = Date.now();
+    const seen = await urlHeldStill({ url: () => url }, 'http://app/a', () => pending, fast);
+    expect(seen).toBe('http://app/b');
+    expect(Date.now() - t0).toBeGreaterThanOrEqual(200);
+  });
+
+  it('gives up at the deadline when a request never settles', async () => {
+    const t0 = Date.now();
+    const seen = await urlHeldStill({ url: () => 'http://app/a' }, 'http://app/a', () => 1, fast);
+    expect(seen).toBe('http://app/a');
+    expect(Date.now() - t0).toBeGreaterThanOrEqual(600);
+  });
+});
+
