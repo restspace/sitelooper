@@ -473,6 +473,20 @@ both runs with 0 drift at the same scores as set 30, every repair converged with
 passing, and every repaired spec passed again. No goal-state guard fired and no diagnostic
 appeared: the published stores predate goals, so no skill carries one yet.
 
+| target | sitelooper replay r1, r2 (set 30 → set 31) | verifier | compiled spec a, b | repair | repaired spec | agent-browser, every run |
+|---|---|---|---|---|---|---|
+| repairdesk | 55s → **25s, 25s** · 0 turns · $0 | 7/7, 7/7 | 6/6, 6/6 · 15s, 15s | converged, 4 promotions, check passed | 6/6 · 14s | 6/6 · $0.19 · 67s |
+| kanboard | 45s → **27s, 27s** · 0 turns · $0 | 4/4 checkable ×2 | 4/4 ×2 · 15s, 14s | no change, check passed | 4/4 · 14s | 2/6 · $0.77 · 118s |
+| grafana | 79s → **54s, 54s** · 0 turns · $0 | 6/6, 6/6 | 4/6 ×2 · 33s, 33s | converged, 6 changes, check passed | 4/6 · 34s | 6/6 · $1.05 · 448s |
+| odoo | 258s, 568s → 787s, 556s · 40, 39 turns · $0.02, $0.01 | 6/6, 6/6 | 6/6, 6/6 · 79s, 79s | no change, check passed | 6/6 · 78s | 6/6 · $1.51 · 302s |
+
+Read across a row: the replay is the daemon re-running the recording with no orchestrator, the
+compiled spec is the same recording under plain Playwright with no sitelooper runtime and no model
+at all, and agent-browser is what it costs to have an agent do the task again from scratch. On the
+three targets whose replays need no model turns, the replay beats agent-browser by 2.7×, 4.4× and
+8.3× on wall clock at zero cost, and the compiled spec by 4.5×, 8.4× and 13.6×. Odoo's replay is
+the one still paying for model turns, and its compiled spec runs the same flow in 79s.
+
 **Tier 2 spec, status.** `bench/spec-replay.mjs` compiles a published flow + skill store
 (`sitelooper compile <flow> --out <tmp>` with `SITELOOPER_SKILLS_DIR` pointing at the store) and
 runs the emitted `<name>.spec.ts` under `npx playwright test`, scored by the same app-side
