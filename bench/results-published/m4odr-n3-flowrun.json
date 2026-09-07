@@ -1,0 +1,181 @@
+{
+  "flow": "m4odr",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Successfully signed into Odoo with admin/admin, navigated to Contacts, created a new contact named 'm4odr-n3 Bench Customer' with City 'Benchville', saved it. Verified the saved record: the Name field shows \"m4odr-n3 Bench Customer\" and the City field shows \"Benchville\".",
+      "values": {
+        "customer_name": "m4odr-n3 Bench Customer",
+        "city": "Benchville"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "20/20",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_c925b1; observed product_name=Chair floor protection, unit_price=12.00, line_total_2=£ 36.00, quotation_ref=S00022.",
+      "values": {
+        "product_name": "Chair floor protection",
+        "unit_price": "12.00",
+        "line_total_2": "£ 36.00",
+        "quotation_ref": "S00022"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "21/21",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_dc0408; observed second_unit_price=295.00, new_untaxed_amount_2=£ 626.00, new_untaxed_amount=£ 626.00, order_reference=S00022.",
+      "values": {
+        "second_unit_price": "295.00",
+        "new_untaxed_amount_2": "£ 626.00",
+        "new_untaxed_amount": "£ 626.00",
+        "order_reference": "S00022"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_059a1e; observed first_line_qty=5.00, untaxed_amount_2=£ 650.00, ref=S00022.",
+      "values": {
+        "first_line_qty": "5.00",
+        "untaxed_amount_2": "£ 650.00",
+        "ref": "S00022"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_f1434f; observed order_reference=S00022, statusbar_text=Sales Order\nQuotation Sent\nQuotation.",
+      "values": {
+        "order_reference": "S00022",
+        "statusbar_text": "Sales Order\nQuotation Sent\nQuotation"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "4/4",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "Opened the confirmed sales order S00022 for customer 'm4odr-n3 Bench Customer' in the Odoo Sales app and cancelled it. The previous attempt had failed because a stray \"Edit: m4odr-n3 Bench Customer\" dialog (z-index 1055) was stacked on top of the \"Cancel Sales Order\" wizard (z-index 1049), intercepting all clicks on the wizard's buttons. I closed that stray dialog via its Discard button, then clicked the plain \"Cancel\" button in the wizard (no email sent). The order's status bar now shows \"Cancelled\" as the active status (verified by reading the statusbar text: \"Cancelled / Sales Order / Quotation Sent / Quotation\", with \"Cancelled\" checked), and a \"Set to Quotation\" button appeared in the header, confirming the order is no longer active.",
+      "values": {
+        "order_reference": "S00022",
+        "status_after_cancel": "Cancelled",
+        "statusbar_text": "Sales Order\nQuotation Sent\nQuotation",
+        "statusbar_text_2": "Cancelled\nSales Order\nQuotation Sent\nQuotation"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "every candidate refused — s_e7d322: the page at http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form does not show \"fwod34-n2\" — it matches this procedure's page template but is a different record — nothing was run",
+      "replayed": "2/2",
+      "repaired": false,
+      "turns": 76
+    },
+    {
+      "id": "07-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_4634ba; observed statusbar_text=Cancelled\nSales Order\nQuotation Sent\nQuotation, order_reference=S00022, customer_name=m4odr-n3 Bench Customer.",
+      "values": {
+        "statusbar_text": "Cancelled\nSales Order\nQuotation Sent\nQuotation",
+        "order_reference": "S00022",
+        "customer_name": "m4odr-n3 Bench Customer"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "3/3",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "08-open",
+      "status": "success",
+      "summary": "Sales order S00022 was already in Cancelled status. The status bar shows \"Cancelled\" as the active (checked/disabled) radio — the cancel action had been performed in a previous step of this session, so nothing further was needed.",
+      "values": {
+        "statusbar_text": "Cancelled\nSales Order\nQuotation Sent\nQuotation",
+        "order_reference": "S00022"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "2/2",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "09-change",
+      "status": "success",
+      "summary": "Replayed stored procedure s_4634ba; observed statusbar_text=Cancelled\nSales Order\nQuotation Sent\nQuotation, order_reference=S00022, customer_name=m4odr-n3 Bench Customer.",
+      "values": {
+        "statusbar_text": "Cancelled\nSales Order\nQuotation Sent\nQuotation",
+        "order_reference": "S00022",
+        "customer_name": "m4odr-n3 Bench Customer"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "3/3",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 9,
+  "total": 9,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "m4odr",
+      "step": "06-open",
+      "skill": "s_3e0857",
+      "similarity": null,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "every candidate refused — s_e7d322: the page at http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form does not show \"fwod34-n2\" — it matches this procedure's page template but is a different record — nothing was run",
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#id=22&cids=1&menu_id=194&action=316&model=sale.order&view_type=form"
+    }
+  ],
+  "wallMs": 1223669,
+  "model": "deepseek/deepseek-v4-flash",
+  "usage": {
+    "promptTokens": 1076549,
+    "completionTokens": 11189,
+    "cachedTokens": 684053
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4-flash": {
+      "promptTokens": 782702,
+      "completionTokens": 5493,
+      "cachedTokens": 459157
+    },
+    "z-ai/glm-5.3": {
+      "promptTokens": 293847,
+      "completionTokens": 5696,
+      "cachedTokens": 224896
+    }
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter"
+}

@@ -1,0 +1,259 @@
+{
+  "flow": "m4odr",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Successfully signed into Odoo with admin/admin (the stored procedure had already filled the login fields so the page was already authenticated). Navigated to Sales app → Customers menu, created a new Individual customer named 'm4odr-n2 Bench Customer' with City 'Benchville', and saved it. The saved record was verified: the form shows Name = \"m4odr-n2 Bench Customer\" and City = \"Benchville\".",
+      "values": {
+        "customer_name": "m4odr-n2 Bench Customer",
+        "city": "Benchville"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_8ab698 stopped at step 3 — after step 3 none of the 5 recorded page change(s) appeared (e.g. \"- button \\\"Home Menu\\\"\") — the step ran but did not have its recorded effect",
+      "replayed": "2/3",
+      "repaired": false,
+      "turns": 25
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "The quotation was already created and saved by the previous attempt (S00021, record id 21) — I verified the saved record on its form view rather than duplicating it. Confirmed on the live page: customer 'm4odr-n2 Bench Customer' (selected via autocomplete dropdown, shown with its Benchville address), exactly ONE order line with product '[FURN_6666] Acoustic Bloc Screens' at quantity 3.00, auto-filled unit price 295.00, computed Untaxed Amount £885.00 (plus 20% tax £177.00, total £1,062.00), and quotation reference S00021 in draft 'Quotation' status.",
+      "values": {
+        "customer_name": "m4odr-n2 Bench Customer",
+        "product_name": "[FURN_6666] Acoustic Bloc Screens",
+        "quotation_reference": "S00021",
+        "quantity": "3.00",
+        "record_id": "21",
+        "status": "Quotation",
+        "taxes": "20% (£177.00)",
+        "total": "£1,062.00",
+        "unit_price": "295.00",
+        "untaxed_amount": "£ 885.00",
+        "untaxed_amount_2": "£ 885.00"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_cadcaa stopped at step ? — not on the page this procedure starts from (expects http://127.0.0.1:8069/web#action={{d1}}&cids=:id&menu_id={{d2}}&model=sale.order&view_type=list, browser is at http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=res.partner&view_type=form; the url shape is close but the page structure is not — similarity 0.296) — nothing was run",
+      "replayed": "0/1",
+      "repaired": false,
+      "turns": 31
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "Added a second order line to quotation S00021: product '[E-COM11] Cabinet with Doors' at quantity 2.00, auto-filled unit price 140.00. Saved the quotation. The new total Untaxed Amount is £1,165.00 (line 1: £885.00 + line 2: £280.00). Tax 20% is £233.00, Total £1,398.00.",
+      "values": {
+        "second_product_name": "[E-COM11] Cabinet with Doors",
+        "second_unit_price": "140.00",
+        "second_quantity": "2.00",
+        "total_untaxed_amount": "£ 1,165.00",
+        "quotation_reference": "S00021",
+        "total_untaxed_amount_2": "Untaxed Amount\t£ 1,165.00\nTAX 20%\t\n£ 233.00\n\nTotal\t£ 1,398.00"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 02-create.quotation_ref, 02-create.quotation_ref",
+      "replayed": null,
+      "repaired": false,
+      "turns": 18
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Updated quotation S00021: changed the first order line ([FURN_6666] Acoustic Bloc Screens) quantity from 3 to 5 and saved. The first line now shows quantity 5.00 with subtotal £1,475.00. The new total Untaxed Amount for the whole order is £1,755.00 (line 1: £1,475.00 + line 2: £280.00).",
+      "values": {
+        "first_line_quantity": "5.00",
+        "untaxed_amount": "£ 1,755.00",
+        "quotation_reference": "S00021",
+        "untaxed_amount_2": "£ 1,755.00"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 02-create.quotation_ref, 02-create.quotation_ref",
+      "replayed": null,
+      "repaired": false,
+      "turns": 10
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Confirmed quotation S00021 for customer 'm4odr-n2 Bench Customer' by clicking the Confirm button. The order is now in 'Sales Order' status (status bar shows Sales Order as the active state). The order reference remains S00021.",
+      "values": {
+        "order_reference": "S00021",
+        "status_label": "Sales Order",
+        "status_label_2": "Sales Order\nQuotation Sent\nQuotation"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 02-create.quotation_ref, 02-create.quotation_ref, 02-create.quotation_ref",
+      "replayed": "4/4",
+      "repaired": false,
+      "turns": 4
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "Successfully cancelled sales order S00021 for customer 'm4odr-n2 Bench Customer' by clicking Cancel, then confirming via the Cancel button in the modal dialog (without sending email). The order status now shows 'Cancelled' as the active/checked status in the status bar.",
+      "values": {
+        "order_reference": "S00021",
+        "status_label": "Cancelled",
+        "status_label_2": "Cancelled\nSales Order\nQuotation Sent\nQuotation"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "every candidate refused — s_e7d322: the page at http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form does not show \"S00022\" — it matches this procedure's page template but is a different record — nothing was run",
+      "replayed": null,
+      "repaired": false,
+      "turns": 44
+    },
+    {
+      "id": "07-open",
+      "status": "success",
+      "summary": "Read-only check on sales order S00021 for customer 'm4odr-n2 Bench Customer'. The status bar shows 'Cancelled' as the active status (full status bar: Cancelled > Sales Order > Quotation Sent > Quotation). No changes were made.",
+      "values": {
+        "order_reference": "S00021",
+        "status_label": "Cancelled",
+        "customer_name": "m4odr-n2 Bench Customer",
+        "order_status": "Cancelled\nSales Order\nQuotation Sent\nQuotation"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 02-create.quotation_ref, 02-create.url.q.id, 02-create.quotation_ref, 02-create.url.q.id",
+      "replayed": "3/3",
+      "repaired": false,
+      "turns": 2,
+      "repinned": "s_4634ba",
+      "repinParams": {
+        "v1": "{{02-create.quotation_ref}}"
+      }
+    },
+    {
+      "id": "08-open",
+      "status": "success",
+      "summary": "The sales order S00021 (record id 21, the order this chain created for 'm4odr-n2 Bench Customer') is already in 'Cancelled' status — the cancel was applied in an earlier step of this chain (via the Cancel button and the plain 'Cancel' confirmation in the modal, no email sent). I verified on the live form: the status bar shows 'Cancelled' as the active status (full bar: Cancelled > Sales Order > Quotation Sent > Quotation). No further action was needed; no duplicate cancel was attempted.",
+      "values": {
+        "order_reference": "S00021",
+        "status_label": "Cancelled",
+        "statusbar_text": "Cancelled\nSales Order\nQuotation Sent\nQuotation",
+        "table_tbody_tr_td_nth_ch": "Sales Order",
+        "table_tbody_tr_td_nth_ch_2": "Quotation",
+        "table_tbody_tr_td_nth_ch_3": "Quotation Sent"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 02-create.quotation_ref, 02-create.url.q.id, 02-create.quotation_ref, 02-create.quotation_ref",
+      "replayed": null,
+      "repaired": false,
+      "turns": 14
+    },
+    {
+      "id": "09-change",
+      "status": "success",
+      "summary": "Read-only check on sales order S00021 (record id 21). Status bar shows 'Cancelled' as the active status (full: Cancelled > Sales Order > Quotation Sent > Quotation). Customer name on the order is 'm4odr-n2 Bench Customer'. No changes were made.",
+      "values": {
+        "statusbar_text": "Cancelled\nSales Order\nQuotation Sent\nQuotation",
+        "order_reference": "S00021",
+        "customer_name": "m4odr-n2 Bench Customer"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 02-create.quotation_ref, 02-create.url.q.id, 02-create.quotation_ref",
+      "replayed": "3/3",
+      "repaired": false,
+      "turns": 2
+    }
+  ],
+  "passed": 9,
+  "total": 9,
+  "repinned": 1,
+  "drift": 5,
+  "driftTickets": [
+    {
+      "flow": "m4odr",
+      "step": "01-signin",
+      "skill": "s_8ab698",
+      "similarity": 0.859,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_8ab698 stopped at step 3 — after step 3 none of the 5 recorded page change(s) appeared (e.g. \"- button \\\"Home Menu\\\"\") — the step ran but did not have its recorded effect",
+      "reason": "after step 3 none of the 5 recorded page change(s) appeared (e.g. \"- button \\\"Home Menu\\\"\") — the step ran but did not have its recorded effect",
+      "pageUrlPattern": "http://127.0.0.1:8069/web#cids=:id",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1"
+    },
+    {
+      "flow": "m4odr",
+      "step": "02-create",
+      "skill": "s_d595d3",
+      "atStep": "8",
+      "key": "target",
+      "similarity": 0.296,
+      "missedLocator": "page.getByRole('menuitem', { name: 'Sales', exact: true })",
+      "fallbackUsed": "page.locator('body > header > nav > div:nth-of-type(1) > div > a:nth-of-type(3)')",
+      "fallbackIndex": 1,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=res.partner&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=199&action=288&model=res.partner&view_type=form&id=44"
+    },
+    {
+      "flow": "m4odr",
+      "step": "05-open",
+      "skill": "s_f1434f",
+      "similarity": 1.001,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 02-create.quotation_ref, 02-create.quotation_ref, 02-create.quotation_ref",
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=196&action=316&model=sale.order&view_type=form&id=21"
+    },
+    {
+      "flow": "m4odr",
+      "step": "07-open",
+      "skill": "s_4634ba",
+      "similarity": 1,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 02-create.quotation_ref, 02-create.url.q.id, 02-create.quotation_ref, 02-create.url.q.id",
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=196&action=316&model=sale.order&view_type=form&id=21"
+    },
+    {
+      "flow": "m4odr",
+      "step": "09-change",
+      "skill": "s_4634ba",
+      "similarity": 1,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 02-create.quotation_ref, 02-create.url.q.id, 02-create.quotation_ref",
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=196&action=316&model=sale.order&view_type=form&id=21"
+    }
+  ],
+  "wallMs": 2911985,
+  "model": "deepseek/deepseek-v4-flash",
+  "usage": {
+    "promptTokens": 3476860,
+    "completionTokens": 24583,
+    "cachedTokens": 1662272
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4-flash": {
+      "promptTokens": 3090089,
+      "completionTokens": 18078,
+      "cachedTokens": 1337088
+    },
+    "z-ai/glm-5.3": {
+      "promptTokens": 386771,
+      "completionTokens": 6505,
+      "cachedTokens": 325184
+    }
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter"
+}
