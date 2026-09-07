@@ -1,0 +1,28 @@
+repairing bench/results/m4gr-spec/fwgr27.flow.ts (5 step(s)) in /tmp/sitelooper-repair-XmymiP
+  reset (run 1): node --input-type=module -e "import {resetTarget} from './bench/app-reset.mjs'; await resetTarget('grafana')"
+run 1: 5/5 step(s) success, 4 drift ticket(s)
+  [OK] 01-open (tier A)
+  [OK] 02-create (tier A)
+  [OK] 03-add (tier A)
+  [OK] 04-add (tier A)
+  [OK] 05-report (tier A)
+  folded           s_b80251 step 4 target: page.getByRole('heading', { name: 'Latency by endpoint', exact: true }) folded in as primary (from variant s_19bcaa)
+  reset (converge 1/2): node --input-type=module -e "import {resetTarget} from './bench/app-reset.mjs'; await resetTarget('grafana')"
+  evidence         candidate retired: elementAt(68, 165) /* heading */ — missed 2 run(s), never hit; now last — s_b80251 step 2 target
+  evidence         candidate retired: elementAt(691, 165) /* heading */ — missed 2 run(s), never hit; now last — s_b80251 step 3 target
+  [OK] 01-open (tier A)
+  [OK] 02-create (tier A)
+  [OK] 03-add (tier A)
+  [OK] 04-add (tier A)
+  [OK] 05-report (tier A)
+converge 1/2: 5/5 step(s) success, 2 drift ticket(s) — clean
+  reset (converge 2/2): node --input-type=module -e "import {resetTarget} from './bench/app-reset.mjs'; await resetTarget('grafana')"
+  [OK] 01-open (tier A)
+  [OK] 02-create (tier A)
+  [OK] 03-add (tier A)
+  [OK] 04-add (tier A)
+  [OK] 05-report (tier A)
+converge 2/2: 5/5 step(s) success, 0 drift ticket(s) — clean
+  spec check reset: node --input-type=module -e "import {resetTarget} from './bench/app-reset.mjs'; await resetTarget('grafana')"
+  spec check: /opt/node22/bin/node /home/user/sitelooper/node_modules/@playwright/test/cli.js test --config /home/user/sitelooper/bench/results/m4gr-spec/.sitelooper-check-1HVLgf/playwright.config.mjs
+EXIT=0
