@@ -287,6 +287,10 @@ export async function runInstruction(
   // go in the user message, not the system prompt, so the cached prefix stays
   // byte-identical across instructions.
   const offered = await offerSkills(browser);
+  // Site knowledge is independent of learning mode: what earlier sessions saw
+  // of this page template — its controls and where they lead — is offered
+  // whenever the store knows the page, so turn one can act without observing.
+  const site = await offerSite(browser);
   const skill: SkillRecord = {
     listed: offered.ids,
     stepsReplayed: 0,
@@ -300,7 +304,7 @@ export async function runInstruction(
   };
   state.messages.push({
     role: 'user',
-    content: [instruction, location, offered.text].filter(Boolean).join('\n\n'),
+    content: [instruction, location, site, offered.text].filter(Boolean).join('\n\n'),
   });
   // Script recording (opt-in) groups this instruction's actions under one
   // test.step, so a generated spec reads as the plan that produced it.
@@ -953,6 +957,21 @@ const LOCATE_TOOL: ToolDef = {
 /** Cap on the recorded instruction-start page text (identity evidence, not a snapshot). */
 const START_TEXT_BUDGET = 8000;
 
+/** The [site] line for the current page, or '' — never launches a browser, never throws. */
+async function offerSite(browser: BrowserSession): Promise<string> {
+  if (!browser.isOpen) return '';
+  try {
+    const page = await browser.getPage();
+    const url = page.url();
+    const model = siteModel();
+    const sig = await captureSignature(page);
+    if (sig) model.observe(url, sig);
+    return model.render(url);
+  } catch {
+    return '';
+  }
+}
+
 async function offerSkills(
   browser: BrowserSession,
 ): Promise<{ ids: string[]; text: string; context: { url?: string; fingerprint?: number[]; startText?: string } }> {
@@ -974,11 +993,7 @@ async function offerSkills(
     // RecordedInstruction.startText).
     const sig = await captureSignature(page);
     const startText = sig ? sig.lines.join('\n').slice(0, START_TEXT_BUDGET) : undefined;
-    // What is known about this page TEMPLATE from every earlier session — its
-    // controls and where they lead — so turn one can act without observing.
-    const site = siteModel();
-    if (sig) site.observe(url, sig);
-    const text = [renderCandidates(candidates), components, site.render(url)].filter(Boolean).join('\n');
+    const text = [renderCandidates(candidates), components].filter(Boolean).join('\n');
     return {
       ids: candidates.map((s) => s.id),
       text,
