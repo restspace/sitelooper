@@ -15,7 +15,7 @@ database says happened.
 
 > Package and command are both `sitelooper`. State lives under `~/.sitelooper/`, env vars are
 > `SITELOOPER_*`. The project was previously called `sleep-walker`, and `browser-pilot` before
-> that; both old command names, env-var prefixes and home directories still work as aliases.
+> that; the old env-var prefixes and home directories still work as aliases, but the old command names do not.
 
 ## Why agent-driven browser automation does not rerun, and what sitelooper does about it
 
