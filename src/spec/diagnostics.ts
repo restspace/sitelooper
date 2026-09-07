@@ -43,6 +43,8 @@ export interface Diagnostic {
   why: string;
   /** The exact command or action that fixes it, when there is one. */
   fix?: string;
+  /** Structured equivalent of fix for agents; arguments are never shell source. */
+  action?: { command: string; args: string[]; step?: string };
   severity: 'warning' | 'error';
   /**
    * The verbatim one-line warning this diagnostic replaces, when it replaces
@@ -84,6 +86,10 @@ export function diagnosticNote(d: Diagnostic): string {
 export function rerecordFix(flowFile: string, stepId: string, instruction?: string): string {
   const tail = instruction ? ` --instruction ${JSON.stringify(instruction)}` : '';
   return `sitelooper rerecord ${quoteArg(flowFile)} ${stepId}${tail}`;
+}
+
+export function rerecordAction(flowFile: string, stepId: string): NonNullable<Diagnostic['action']> {
+  return { command: 'rerecord', args: [flowFile, stepId], step: stepId };
 }
 
 /** A shell-safe-enough argument: quoted only when it needs it. */

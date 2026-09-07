@@ -21,6 +21,11 @@ import { LiftError, liftFlowFile } from './spec/lift.js';
 import { diffSpecChanges, foldPatchedVariants, reloadStaged, rerecordDiagnostics, stageRepair } from './spec/repair.js';
 import { diagnosticLine, formatDiagnostic, type Diagnostic } from './spec/diagnostics.js';
 import { runSpecCheck, type SpecCheckResult } from './spec/check.js';
+import { runReadinessCheck } from './spec/readiness.js';
+import { applyProposal, saveProposal, sourceHash, stageProposal } from './spec/proposal.js';
+import { loadProjectConfig } from './project.js';
+import { exportFlowBundle } from './spec/index.js';
+import { resolveRerecordInput, stageRerecordInput, persistRerecordInput } from './spec/rerecord-input.js';
 import {
   backupFlowFile,
   formatRerecordDiagnostic,
@@ -34,163 +39,78 @@ import {
 } from './spec/rerecord.js';
 import os from 'node:os';
 
-const USAGE = `sitelooper — agent-in-the-loop Playwright CLI
+const USAGE = `sitelooper ? author browser tests with an agent; run compiled tests with Playwright
 
-Usage:
-  sitelooper do "<instruction>" [--json] [--max-turns N] [--timeout S] [--turn-timeout S] [--provider P] [--model M]
-                                   [--fallback-model M | --no-escalate]
-  sitelooper open <url>
-  sitelooper brief <file.md> [--append]
-  sitelooper note "<text>"
-  sitelooper reset                       # clear the LLM conversation only (browser/cookies/briefing/notes kept)
-  sitelooper peek [--selector <sel>] [--interactive]
-  sitelooper script [out.spec.ts] [--title T] [--clear]   # emit a Playwright spec from the recorded actions
-  sitelooper compile <flow-name-or-path> [--out <dir>] [--force] [--json]
-                                          # compile a converged flow to a standalone Playwright
-                                          # spec (Tier 2, no sitelooper runtime) — no daemon needed.
-                                          # Problems are printed first as diagnostics (what / why /
-                                          # fix). A step pinned to a DEMOTED skill is an error: its
-                                          # recording, not the app, is what is wrong, so nothing is
-                                          # written — re-record the step, or pass --force.
-                                          # --force: overwrite an existing .spec.ts AND compile a
-                                          # demoted pin anyway (the emitted file then carries the
-                                          # diagnostic above the step and in its failure message).
-  sitelooper skills list [--origin <origin>]             # stored procedures (learning mode; no daemon needed)
-  sitelooper skills show <id>
-  sitelooper skills rm <id>
-  sitelooper skills clear --origin <origin> | --all
-  sitelooper skills repair --drift <run-drift.json> [--dry-run] [--model M]
-                                          # post-session repair of a drift sidecar, in a COLD browser
-                                          # (signed into nothing). Prefer "sitelooper repair" below,
-                                          # which drains the same tickets on the live, signed-in page.
-  sitelooper repair <name.flow.ts> [--var k=v ...] [--out <file>] [--converge <n>]
-                                   [--reset-cmd "<shell command>"] [--check-spec] [--dry-run]
-                                   [--model M] [--json]
-                                          # self-updating spec: replay a compiled flow file against
-                                          # the live app in an ISOLATED temp store, let the recovery
-                                          # ladder adapt it, fold the adaptation back into the owned
-                                          # .flow.ts and re-emit it. Never touches the .spec.ts.
-                                          # --converge n re-runs the repaired flow n more times
-                                          # (default 1) and refuses to write unless every step is a
-                                          # clean tier-A replay with no drift. Each of those runs is
-                                          # a REAL run against the app: give a record-creating flow
-                                          # a per-run name with {n} (--var runid=fix-{n} becomes
-                                          # fix-0, fix-1, ...), or reset the app between runs with
-                                          # --reset-cmd, which runs a shell command before run 1 and
-                                          # before every converge run and aborts if it exits non-zero
-                                          # (--reset-cmd "curl -s -X POST http://localhost:3000/__reset").
-                                          # --check-spec runs the sibling .spec.ts ONCE under plain
-                                          # @playwright/test after the file is written, because repair
-                                          # replays the IR through the daemon and so cannot see an
-                                          # EMITTER defect. A failed check does not un-write the file
-                                          # (the diff is still yours) but exits 4.
-  sitelooper rerecord <flow-name-or-path> <step-id> [--instruction "<text>"] [--var k=v ...]
-                      [--runs n] [--reset-cmd "<cmd>"] [--json]
-                                          # re-record ONE step of a saved flow, when the step's
-                                          # recording is what is wrong (its pinned procedure is
-                                          # demoted, or the step only passes because the engine
-                                          # replays some other skill). Backs the flow file up as
-                                          # <file>.bak-<stamp>.json, throws that step's pin, params
-                                          # and recorded values away — keeping its outputs — and
-                                          # replays the flow --runs times (default 2) in learning
-                                          # mode, so the agent records the step afresh and the
-                                          # store's own re-pin rule decides whether to keep it.
-                                          # Succeeds only when the LAST run replays the step at
-                                          # tier A with the newly pinned procedure; otherwise it
-                                          # prints why and exits 1. Each run is a REAL run against
-                                          # the app: mint per-run values with {n} (--var
-                                          # runid=fix-{n} becomes fix-0, fix-1, ...) or reset the
-                                          # app with --reset-cmd, which runs before every run.
-                                          # --instruction replaces the step's instruction first,
-                                          # which is the fix when the recorded instruction asked
-                                          # for something the app is no longer in a state to do.
-  sitelooper check <name.flow.ts> [--var k=v ...] [--reset-cmd "<cmd>"] [--json]
-                                          # run the sibling .spec.ts once under plain @playwright/test
-                                          # (minimal config, headless, one worker, 60 s per test) and
-                                          # report pass/fail, the nearest @step to the failure, and any
-                                          # [sitelooper drift] lines. No daemon, no model. Exit 4 when
-                                          # the spec fails; skipped (exit 0) when @playwright/test
-                                          # cannot be resolved from the project.
-  sitelooper var <name>=<value>          # EXPERIMENTAL: declare a run variable (becomes {{name}} in a flow)
-  sitelooper flow list | show <name>     # EXPERIMENTAL: saved flows (recorded sessions you can replay with run)
-  sitelooper run <flow> [--var k=v ...]  # EXPERIMENTAL: replay a saved flow, repairing drifted steps
-  sitelooper screenshot [path]
-  sitelooper session list
-  sitelooper stop [--all] [--save-flow <name>]
-  sitelooper doctor                      # diagnose an install: node, browser, provider, key (no daemon needed)
-  sitelooper config                      # show resolved provider/model/paths
-  sitelooper config set <key> <value>    # persist a default (provider, model, fallbackModel, baseUrl, apiKey)
+Recommended test workflow:
+  sitelooper init                           # create project configuration
+  sitelooper --session test --learn open <url>
+  sitelooper --session test var runid=demo
+  sitelooper --session test do "<one outcome and its verification>"
+  sitelooper --session test stop --save-flow <name>
+  sitelooper flow export <name> --out .sitelooper/procedures.json
+  sitelooper build <name-or-bundle> --var runid=test-{n} --fixture-isolation
 
-Sizing an instruction:
-  One \`do\` = one logical, verifiable step: a goal plus the check that it worked
-  ("create a project named X, fill any required fields, submit, and report the row
-  that appears"). Several UI actions inside one instruction is normal — that is the
-  point of the tool.
-  Too big:   several unrelated goals or assertions in one string. The agent stalls on
-             planning and burns --max-turns. If a result comes back "blocked", split
-             it and retry the halves.
-  Too small: one click, one fill, one read. You pay for a whole agent loop to do what
-             \`peek\` gives you for free.
-  Do not drive the page by repeated \`peek\`/\`config\` polling. \`peek\` is for orienting
-  ONCE when a \`do\` reports something you did not expect. If you are about to issue the
-  same read a second time, issue a \`do\` instead.
+Authoring:
+  open <url>                               # deterministic navigation, no model
+  do "<instruction>"                      # one logical, verifiable outcome
+  do --instruction-file <file> | --stdin    # multiline input without shell quoting
+  brief <file.md> [--append]                # optional app conventions
+  note "<text>" | reset                   # session context; reset keeps browser state
+  peek [--selector <css>] [--interactive]
+  screenshot [path]
+  var <name>=<value>
+  session list | stop [--all] [--save-flow <name>]
 
-Escalation:
-  When the routine model reports an instruction "blocked", it is retried once on a
-  stronger fallback model, on the same live browser and history (told to verify state
-  before repeating anything). Verified "failure" results are NOT retried. Disable with
-  --no-escalate, or set the fallback model to "none".
+Compile and verify (no daemon or model):
+  compile <flow-or-bundle> [--out <dir>] [--allow-demoted] [--overwrite-spec]
+  build <flow-or-bundle> [--out <dir>]       # compile, then readiness gate (3 clean runs)
+  check <name.flow.ts>                      # one plain Playwright execution
+  check <name.flow.ts> --ready [--runs N]    # readiness for an existing artifact
+  flow list | show <name>
+  flow export <flow> --out <bundle.json>    # portable flow plus pinned procedures
 
-Learning (progressive automation):
-  Start a session with --learn (or SITELOOPER_SKILLS=1) and every instruction that
-  reports success is compiled into a stored procedure: its actions, durable locators
-  with fallbacks, the values it typed turned into parameters, and what each step
-  changed. On later instructions the procedures that start on the current page are
-  offered to the internal agent, which replays one deterministically (run_skill) and
-  only reasons when a step no longer works — the repair is stored as a variant. A
-  validated procedure whose template matches an instruction word for word is replayed
-  with no model call at all. Procedures live under ~/.sitelooper/skills/<origin>.json
-  (override with SITELOOPER_SKILLS_DIR); inspect with "sitelooper skills".
+Verification options:
+  --var k=v                               # repeatable; {n} supplies fresh per-run values
+  --reset-cmd "<command>"                 # prepare fresh state before each execution
+  --fixture-isolation                     # declare that project fixtures prepare fresh data
+  --config <playwright.config.ts> --project <name>
+  --target-url <url>                       # override the recorded entry URL
+  --negative-spec <file.spec.ts>           # explicit test asserting failure detection
+  --isolated                              # compiler smoke test; cannot establish readiness
+  Readiness requires distinct inputs for parameterized flows, all required steps executed,
+  no skipped tests, no already-satisfied shortcuts and no locator drift. Retries are disabled.
+  Missing setup or dependencies means unavailable, never a successful check.
 
-Global flags:
-  --session <name>   session name (default "default"; one daemon+browser per session)
-  --verbose          stream the internal agent's actions + token accounting while it works
-  --progress         stream the agent's actions to stderr (composes with --json)
-  --headed           launch the browser with a visible window (first call only)
-  --record           record the session to webm, one file per tab; paths are printed
-                     on stop, which is when Playwright writes them (first call only)
-  --script           record every action as a replayable Playwright step (first call
-                     only); write the spec out later with "sitelooper script"
-  --learn            learning mode: compile successful instructions into stored
-                     procedures and replay them on later instructions (first call only)
-  --json             machine-readable output
+Repair:
+  repair <name.flow.ts> --propose <proposal.json> [--converge N] [verification options]
+  repair apply <proposal.json>             # apply the exact checked candidate; no browser run
+  repair <name.flow.ts> [--out <file>] [--converge N] [--dry-run] [--no-check-spec]
+  rerecord <flow> <step-id> [--instruction "<text>" | --instruction-file <file> | --stdin]
+           [--runs N] [--var k=v] [--reset-cmd "<command>"]
+  Repair performs 1 triage run, N convergence runs (default 1), then a compiled-spec check.
+  --dry-run still executes against the app; it previews file changes. --propose stages a
+  checked candidate for review. Repair never rewrites your .spec.ts. --force is rejected:
+  use --allow-demoted or --overwrite-spec separately when compiling.
 
-Providers (presets; each field overridable by flag > env > config file):
-  zhipu (default)    glm-5.2 @ api.z.ai            key: GLM_API_KEY / ZHIPU_API_KEY
-  novita             deepseek/deepseek-v4-flash @ novita.ai   key: NOVITA_API_KEY
-                     escalates to zai-org/glm-5.3 when blocked
-  openrouter         z-ai/glm-5.2 @ openrouter.ai  key: OPENROUTER_API_KEY
-  openai             gpt-5-mini @ api.openai.com   key: OPENAI_API_KEY
-  anthropic          claude-sonnet-5 @ api.anthropic.com (native Messages API, not
-                     OpenAI-compatible — its own adapter)   key: ANTHROPIC_API_KEY
+Advanced:
+  run <flow> [--var k=v]                    # adaptive replay with agent recovery
+  script [out.spec.ts] [--title T] [--clear] # exploratory raw action export; use build for tests
+  skills list [--origin <origin>] | show <id> | rm <id> | clear --origin <origin> | --all
+  skills repair --drift <file.json> [--dry-run] [--model M]
+  doctor                                  # inspect browser, Node and provider setup
+  config | config set <key> <value>         # provider/model defaults
 
-Environment:
-  SITELOOPER_PROVIDER        provider preset name
-  SITELOOPER_MODEL           model id override
-  SITELOOPER_FALLBACK_MODEL  escalation model for blocked instructions ("none" disables)
-  SITELOOPER_BASE_URL        any OpenAI-compatible base URL
-  SITELOOPER_API_KEY         API key (works with any provider)
-  Secrets: write {{env:NAME}} in an instruction/briefing instead of a plaintext credential.
-  It resolves from the DAEMON's environment at the moment a tool runs — the model, transcript,
-  skills, and flows only ever carry the marker. Export NAME before the session's first call.
-  SITELOOPER_CHANNEL         browser channel (default chrome, falls back to msedge)
-  SITELOOPER_HEADED=1        headed browser
-  SITELOOPER_RECORD=1        record session video to <session dir>/video
-  SITELOOPER_SCRIPT=1        record actions as a Playwright script (see the script command)
-  SITELOOPER_SKILLS=1        learning mode (see --learn); SITELOOPER_SKILLS_DIR relocates the store
+Global options:
+  --session <name> --json --progress --verbose --headed --record --learn --script
+  --provider <name> --model <id> --fallback-model <id> --no-escalate
+  --max-turns N --timeout S --turn-timeout S
+  --json emits versioned results for authoring, compilation, checking and repair.
+  Provider presets: zhipu, novita, openrouter, openai, anthropic.
+  Credentials: use {{env:NAME}} in instructions; set NAME before starting the session.
+  Project defaults: sitelooper.config.json (nearest ancestor); CLI flags override them.
 
-Exit codes: 0 instruction succeeded · 1 failed/blocked · 2 infra error · 3 repair did not converge
-            · 4 the emitted .spec.ts failed its --check-spec run (the .flow.ts was still written)`;
+Exit codes: 0 success ? 1 agent/recording failure ? 2 unavailable/invalid input
+            ? 3 replay did not converge ? 4 compiled spec or readiness failed`;
 
 interface ParsedArgs {
   command: string;
@@ -222,6 +142,12 @@ function parseArgv(argv: string[]): ParsedArgs {
     'reset-cmd',
     'instruction',
     'runs',
+    'config',
+    'project',
+    'target-url',
+    'negative-spec',
+    'instruction-file',
+    'propose',
   ]);
   /**
    * Every flag that takes no value. Unknown options are rejected rather than
@@ -239,6 +165,13 @@ function parseArgv(argv: string[]): ParsedArgs {
     'clear',
     'dry-run',
     'force',
+    'allow-demoted',
+    'overwrite-spec',
+    'ready',
+    'isolated',
+    'fixture-isolation',
+    'stdin',
+    'no-check-spec',
     'full-page',
     'headed',
     'help',
@@ -403,7 +336,23 @@ function request(
 
 // --- output helpers ---
 
+let jsonWritten = false;
+let activeCommand = 'command';
+function emitJson(data: object, stage: string, outcome: string, nextActions: Array<{ command: string; args: string[]; step?: string }> = []): void {
+  jsonWritten = true;
+  console.log(JSON.stringify({ ...data, schemaVersion: 1, stage, outcome, nextActions }, null, 2));
+}
+
+function emitCommandJson(data: object): void {
+  const value = data as Record<string, any>;
+  const outcome = value.refused ? 'blocked' : value.converged === false ? 'not-converged' : value.dryRun ? 'previewed'
+    : value.specCheck && !value.specCheck.ran ? 'unavailable' : value.specCheck && !value.specCheck.passed ? 'failed'
+    : value.report?.status ?? value.status ?? (value.ok === false ? 'failed' : value.wrote ? 'written' : 'success');
+  emitJson(data, activeCommand, outcome);
+}
+
 function fail(message: string, code: 1 | 2 = 2): never {
+  if (process.argv.includes('--json') && !jsonWritten) emitJson({ error: { code: code === 2 ? 'unavailable' : 'failed', message } }, 'command', code === 2 ? 'unavailable' : 'failed');
   console.error(`sitelooper: ${message}`);
   process.exit(code);
 }
@@ -419,6 +368,7 @@ function printResult(res: ResultFrame, json: boolean): unknown {
 async function main(): Promise<void> {
   aliasLegacyEnv(); // honor legacy BROWSER_PILOT_* env vars — see paths.ts
   const { command, positional, flags } = parseArgv(process.argv.slice(2));
+  activeCommand = command;
   if (!command || flags.has('help') || command === 'help') {
     console.log(USAGE);
     process.exit(command ? 0 : 2);
@@ -431,7 +381,46 @@ async function main(): Promise<void> {
   // token accounting, so it composes with --json (JSON stays clean on stdout).
   const onProgress = verbose || flags.has('progress') ? (m: string) => console.error(`  · ${m}`) : undefined;
 
+  if (flags.has('force')) fail('--force was split: use --allow-demoted to permit a demoted pin, or --overwrite-spec to replace your spec', 2);
+  if (flags.has('instruction-file') || flags.has('stdin')) {
+    if (!['do', 'rerecord'].includes(command)) fail('--instruction-file and --stdin are supported by do and rerecord', 2);
+    if (flags.has('instruction-file') && flags.has('stdin')) fail('choose --instruction-file or --stdin', 2);
+    if ((command === 'do' && positional.length) || flags.has('instruction')) fail('supply the instruction only once', 2);
+    const instruction = fs.readFileSync(flags.has('stdin') ? 0 : String(flags.get('instruction-file')), 'utf8').trim();
+    if (!instruction) fail('instruction input is empty', 2);
+    if (command === 'do') positional.push(instruction);
+    else flags.set('instruction', instruction);
+  }
+
   // Commands that don't need (or must not start) a daemon:
+  if (command === 'init') {
+    const file = path.resolve('sitelooper.config.json');
+    const config = { vars: {}, requiredVars: [], outputDir: 'tests/sitelooper', snapshotFile: '.sitelooper/procedures.json', verificationRuns: 3, fixtureIsolation: false, playwright: {} };
+    fs.writeFileSync(file, JSON.stringify(config, null, 2) + '\n', { flag: 'wx' });
+    if (json) emitJson({ file, config }, 'project', 'created');
+    else console.log(`created ${file}; configure resetCommand or fixtureIsolation before build`);
+    return;
+  }
+  if (command === 'flow' && positional[0] === 'export') {
+    if (!positional[1] || !flags.get('out')) fail('usage: flow export <flow> --out <bundle.json>', 2);
+    const outFile = path.resolve(String(flags.get('out')));
+    const result = exportFlowBundle(positional[1], { outFile });
+    if (json) emitJson(result, 'recorded', result.missingSkills.length ? 'blocked' : 'exported');
+    else console.log(`exported ${outFile}`);
+    if (result.missingSkills.length) fail(`snapshot is incomplete; missing procedures: ${result.missingSkills.join(', ')}`, 2);
+    return;
+  }
+  if (command === 'build') {
+    await buildCommand(positional, flags, json, onProgress);
+    return;
+  }
+  if (command === 'repair' && positional[0] === 'apply') {
+    if (!positional[1]) fail('usage: repair apply <proposal.json>', 2);
+    const result = applyProposal(positional[1]);
+    if (json) emitJson(result, 'repair', 'applied');
+    else console.log(`applied ${result.target}; no browser executions`);
+    return;
+  }
   if (command === 'config' && positional[0] === 'set') {
     const [, key, value] = positional;
     if (!key || value === undefined) fail('usage: config set <provider|model|fallbackModel|baseUrl|apiKey> <value>', 2);
@@ -480,12 +469,14 @@ async function main(): Promise<void> {
   }
   if (command === 'stop') {
     const names = flags.has('all') ? allSessionNames() : [session];
+    const results: Array<{ session: string; status: string; error?: string; flow?: { path?: string }; [key: string]: unknown }> = [];
     for (const name of names) {
       let conn: net.Socket;
       try {
         conn = await connect(socketPath(name));
       } catch {
-        if (!flags.has('all')) console.log(`not running: ${name}`);
+        results.push({ session: name, status: 'not-running' });
+        if (!json && !flags.has('all')) console.log(`not running: ${name}`);
         continue;
       }
       try {
@@ -501,23 +492,31 @@ async function main(): Promise<void> {
         // detached daemon finished writing a perfectly good flow seconds
         // later. Reachable-and-working must be allowed to finish.
         // 150s: the relabel pass inside stop may ride out a full OpenRouter
-    // rate-limit wait (its own 100s timebox) and the export still needs room.
-    const stopTimeout = flags.get('save-flow') ? 150_000 : 20_000;
+        // rate-limit wait (its own 100s timebox) and the export still needs room.
+        const stopTimeout = flags.get('save-flow') ? 150_000 : 20_000;
         const res = await request(conn, 'stop', { saveFlow: flags.get('save-flow') || undefined }, undefined, stopTimeout);
+        if (!res.ok) throw new Error(res.error ?? 'stop failed');
         const data = res.data as { preempted?: boolean; videos?: string[]; flow?: { path?: string; name?: string; steps?: number; vars?: string[]; warnings?: string[]; error?: string } } | undefined;
-        console.log(`stopped: ${name}${data?.preempted ? ' (interrupted a running instruction)' : ''}`);
-        for (const video of data?.videos ?? []) console.log(`  video: ${video}`);
-        if (data?.flow?.error) console.error(`  flow not saved: ${data.flow.error}`);
-        else if (data?.flow?.path) {
-          console.log(`  flow "${data.flow.name}" saved: ${data.flow.steps} step(s)${data.flow.vars?.length ? `, vars ${data.flow.vars.join(', ')}` : ''} → ${data.flow.path}`);
-          for (const w of data.flow.warnings ?? []) console.error(`  warning: ${w}`);
+        results.push({ ...data, session: name, status: data?.flow?.error ? 'failed' : 'stopped' });
+        if (!json) {
+          console.log(`stopped: ${name}${data?.preempted ? ' (interrupted a running instruction)' : ''}`);
+          for (const video of data?.videos ?? []) console.log(`  video: ${video}`);
+          if (data?.flow?.error) console.error(`  flow not saved: ${data.flow.error}`);
+          else if (data?.flow?.path) {
+            console.log(`  flow "${data.flow.name}" saved: ${data.flow.steps} step(s)${data.flow.vars?.length ? `, vars ${data.flow.vars.join(', ')}` : ''} → ${data.flow.path}`);
+            for (const w of data.flow.warnings ?? []) console.error(`  warning: ${w}`);
+          }
         }
       } catch (err) {
+        results.push({ session: name, status: 'failed', error: (err as Error).message });
         console.error(`sitelooper: could not stop ${name}: ${(err as Error).message}`);
       } finally {
         conn.destroy();
       }
     }
+    const failed = results.some((result) => result.status === 'failed');
+    if (json) emitJson({ sessions: results, artifacts: results.flatMap((r) => r.flow?.path ? [r.flow.path] : []) }, 'recorded', failed ? 'failed' : 'success');
+    if (failed) process.exit(1);
     return;
   }
 
@@ -585,7 +584,7 @@ async function main(): Promise<void> {
           learned?: { compiled?: string; merged?: string; variantOf?: string; superseded?: string; outcome?: { skill: string; status: string; ok: boolean } };
         };
         if (json) {
-          console.log(JSON.stringify(data, null, 2));
+          emitCommandJson(data);
         } else {
           const mark = data.report.status === 'success' ? 'OK' : data.report.status.toUpperCase();
           console.log(`[${mark}] ${data.report.summary}`);
@@ -690,7 +689,7 @@ async function main(): Promise<void> {
           flow: string; status: string; passed: number; total: number; repinned: number; wallMs: number;
           steps: { id: string; status: string; summary?: string; tier?: string | null; replayed?: string | null; repaired?: boolean; turns?: number; repinned?: string; satisfied?: boolean }[];
         };
-        if (json) console.log(JSON.stringify(data, null, 2));
+        if (json) emitCommandJson(data);
         else {
           for (const st of data.steps) {
             const mark = st.status === 'success' ? 'OK' : st.status.toUpperCase();
@@ -952,16 +951,17 @@ function flowCommand(positional: string[], json: boolean): void {
 
 async function compileCommand(positional: string[], flags: Map<string, string | boolean>, json: boolean): Promise<void> {
   const flowNameOrPath = positional[0];
-  if (!flowNameOrPath) fail('usage: compile <flow-name-or-path> [--out <dir>] [--force] [--json]', 2);
-  const outDir = flags.get('out') ? String(flags.get('out')) : '.';
+  if (!flowNameOrPath) fail('usage: compile <flow-or-bundle> [--out <dir>] [--allow-demoted] [--overwrite-spec] [--json]', 2);
+  const project = loadProjectConfig();
+  const outDir = flags.get('out') ? String(flags.get('out')) : project.outputDir;
   let result: ReturnType<typeof compileFlow>;
   try {
-    result = compileFlow(flowNameOrPath, { outDir, force: flags.has('force') });
+    result = compileFlow(flowNameOrPath, { outDir, snapshotFile: fs.existsSync(project.snapshotFile) ? project.snapshotFile : undefined, allowDemoted: flags.has('allow-demoted'), overwriteSpec: flags.has('overwrite-spec') });
   } catch (err) {
     fail(`compile failed: ${(err as Error).message}`, 2);
   }
   if (json) {
-    console.log(JSON.stringify(result, null, 2));
+    emitJson(result, 'compiled', result.refused || !result.compilable ? 'blocked' : 'compiled', result.diagnostics.flatMap((d) => d.action ? [d.action] : []));
   } else {
     // Diagnostics FIRST — what is wrong, the evidence, and the command that
     // fixes it — ahead of the file list, which is not what a caller needs when
@@ -970,21 +970,20 @@ async function compileCommand(positional: string[], flags: Map<string, string | 
     if (result.diagnostics.length) console.error('');
     if (result.refused) {
       console.error('nothing written: the error(s) above are about the RECORDING, not the app — a compiled spec would fail at a locator and read as drift.');
-      console.error('re-record the step(s) with the fix command above, or pass --force to compile the demoted pin anyway.');
+      console.error('re-record the step(s) with the fix command above, or pass --allow-demoted to compile the demoted pin anyway.');
     } else {
       console.log(`flow: ${result.flowFile}`);
-      console.log(result.specFile ? `spec: ${result.specFile}` : 'spec: unchanged (already exists — pass --force to overwrite)');
+      console.log(result.specFile ? `spec: ${result.specFile}` : 'spec: unchanged (already exists — pass --overwrite-spec to overwrite)');
     }
     // Anything the emitter said that no diagnostic above already carries.
     const reported = new Set(result.diagnostics.map(diagnosticLine));
     for (const w of result.warnings) if (!reported.has(w)) console.error(`  warning: ${w}`);
   }
   if (result.refused) {
-    fail('refused: a step is pinned to a demoted skill — see the diagnostics above (--force compiles it anyway)', 2);
+    fail('refused: a step is pinned to a demoted skill — see the diagnostics above (--allow-demoted compiles it anyway)', 2);
   }
   if (!result.compilable) {
-    const missing = result.spec.steps.filter((s) => s.segments.length === 0).length;
-    fail(`not compilable: ${missing} step(s) have no converged procedure`, 2);
+    fail(`not compilable: ${result.compileBlockers.join('; ')}`, 2);
   }
 }
 
@@ -1009,21 +1008,78 @@ function checkSpecCommand(
   const file = positional[0];
   if (!file) fail('usage: check <name.flow.ts> [--var k=v ...] [--reset-cmd "<cmd>"] [--json]', 2);
   if (!fs.existsSync(file)) fail(`could not read ${file}`, 2);
+  if (flags.has('ready')) {
+    readinessCommand(file, flags, json, onProgress);
+    return;
+  }
   const result = runSpecCheck({
     flowFile: file,
-    vars: varFlags(),
-    resetCmd: flags.get('reset-cmd') ? String(flags.get('reset-cmd')) : undefined,
+    ...checkOptions(flags),
     liveReplayPassed: false,
     onProgress: onProgress ?? ((m) => console.error(m)),
   });
-  if (json) console.log(JSON.stringify({ file, specCheck: result }, null, 2));
+  if (json) emitJson({ file, specCheck: result }, 'spec-check', !result.ran ? 'unavailable' : result.passed ? 'passed' : 'failed');
   else {
     console.log(result.verdict);
     for (const d of result.drift) console.log(`  ${d}`);
     if (result.workspace) console.log(`  workspace: ${result.workspace}`);
   }
-  // A skip is not a verdict about the spec, so it is not a failure either.
+  if (!result.ran) process.exit(2);
   if (result.ran && !result.passed) process.exit(4);
+}
+
+function checkOptions(flags: Map<string, string | boolean>) {
+  const config = loadProjectConfig();
+  return {
+    vars: { ...config.vars, ...varFlags() },
+    resetCmd: flags.get('reset-cmd') ? String(flags.get('reset-cmd')) : config.resetCommand,
+    configFile: flags.get('config') ? path.resolve(String(flags.get('config'))) : config.playwright.config,
+    project: flags.get('project') ? String(flags.get('project')) : config.playwright.project,
+    isolated: flags.has('isolated'),
+    cwd: config.root,
+    env: { ...(flags.get('target-url') || config.targetUrl ? { SITELOOPER_TARGET_URL: String(flags.get('target-url') || config.targetUrl) } : {}) },
+  };
+}
+
+function readinessCommand(file: string, flags: Map<string, string | boolean>, json: boolean, onProgress?: (m: string) => void, compilation?: ReturnType<typeof compileFlow>): void {
+  const config = loadProjectConfig();
+  const result = runReadinessCheck({
+    flowFile: file,
+    ...checkOptions(flags),
+    runs: flags.has('runs') ? Number(flags.get('runs')) : config.verificationRuns,
+    fixtureIsolation: flags.has('fixture-isolation') || config.fixtureIsolation,
+    requiredInputs: config.requiredVars,
+    negativeSpec: flags.get('negative-spec') ? path.resolve(String(flags.get('negative-spec'))) : config.negativeSpec,
+    onProgress: onProgress ?? ((m: string) => console.error(m)),
+  });
+  if (json) emitJson({ ...(compilation ? { compilation } : {}), readiness: result }, result.state, result.outcome);
+  else {
+    console.log(`readiness: ${result.outcome} (${result.runs.length} execution(s))`);
+    console.log(`execution: ${result.executionVerified ? 'verified' : 'not verified'}`);
+    for (const blocker of result.blockers) console.error(`  ${blocker}`);
+    console.log(`failure detection: ${result.failureDetection}`);
+  }
+  if (result.outcome !== 'verified') process.exit(result.outcome === 'unavailable' || result.outcome === 'blocked' ? 2 : 4);
+}
+
+async function buildCommand(positional: string[], flags: Map<string, string | boolean>, json: boolean, onProgress?: (m: string) => void): Promise<void> {
+  if (!positional[0]) fail('usage: build <flow-or-bundle> [--var k=v] [--reset-cmd <cmd> | --fixture-isolation] [--json]', 2);
+  const config = loadProjectConfig();
+  const result = compileFlow(positional[0], {
+    outDir: flags.get('out') ? String(flags.get('out')) : config.outputDir,
+    snapshotFile: fs.existsSync(config.snapshotFile) ? config.snapshotFile : undefined,
+    allowDemoted: flags.has('allow-demoted'), overwriteSpec: flags.has('overwrite-spec'),
+  });
+  if (result.refused || !result.compilable || !result.flowFile) {
+    if (json) emitJson({ compilation: result }, 'compiled', 'blocked', result.diagnostics.flatMap((d) => d.action ? [d.action] : []));
+    else {
+      for (const d of result.diagnostics) console.error(formatDiagnostic(d));
+      for (const blocker of result.compileBlockers) console.error(`  ${blocker}`);
+    }
+    process.exit(2);
+  }
+  if (!json) console.log(`compiled ${result.flowFile}; verifying emitted Playwright code`);
+  readinessCommand(result.flowFile, flags, json, onProgress, result);
 }
 
 function allSessionNames(): string[] {
@@ -1290,13 +1346,16 @@ async function repairFlowCommand(
     throw err;
   }
 
-  const vars = varFlags();
+  const vars = { ...loadProjectConfig().vars, ...varFlags() };
   const missingVars = before.vars.filter((v) => !(v in vars));
   if (missingVars.length) fail(`flow "${before.name}" needs --var for: ${missingVars.join(', ')}`, 2);
   const converge = flags.has('converge') ? Number(flags.get('converge')) : 1;
   if (!Number.isInteger(converge) || converge < 0) fail('--converge takes a non-negative integer', 2);
   const dryRun = flags.has('dry-run');
-  const resetCmd = flags.get('reset-cmd') ? String(flags.get('reset-cmd')) : undefined;
+  const resetCmd = flags.get('reset-cmd') ? String(flags.get('reset-cmd')) : loadProjectConfig().resetCommand;
+  const proposalFile = flags.get('propose') ? path.resolve(String(flags.get('propose'))) : undefined;
+  if (proposalFile && (dryRun || flags.has('out') || flags.has('no-check-spec'))) fail('--propose cannot be combined with --dry-run, --out or --no-check-spec', 2);
+  if (proposalFile && fs.existsSync(proposalFile)) fail(`proposal already exists: ${proposalFile}`, 2);
   const outFile = flags.get('out') ? String(flags.get('out')) : file;
 
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sitelooper-repair-'));
@@ -1467,6 +1526,9 @@ async function repairFlowCommand(
   // verdict about the EMITTED spec, which does not exist until then.
   let specCheck: SpecCheckResult | null = null;
   const report = () => ({
+    schemaVersion: 1,
+    stage: 'repair',
+    liveExecutions: runs.length + (specCheck?.ran ? 1 : 0),
     file,
     flow: before.name,
     workspace: dir,
@@ -1498,7 +1560,7 @@ async function repairFlowCommand(
   const gateExpectations = () => {
     for (const w of diff.weakenedByVariant) console.error(`  review: ${w}`);
     if (!diff.droppedExpectations.length) return;
-    if (json) console.log(JSON.stringify({ ...report(), wrote: null, refused: 'expectation dropped' }, null, 2));
+    if (json) emitCommandJson({ ...report(), wrote: null, refused: 'expectation dropped' });
     for (const d of diff.droppedExpectations) console.error(`  expectation dropped: ${d}`);
     fail('refusing to write: the repair would drop an expectation — that is a test failure for a human, not drift', 1);
   };
@@ -1517,7 +1579,7 @@ async function repairFlowCommand(
     if (!flagged.size) return;
     const ds = [...flagged.values()];
     if (json) {
-      console.log(JSON.stringify({ ...report(), wrote: null, converged: false, refused: 'needs re-record', notConverged: [...flagged.keys()] }, null, 2));
+      emitCommandJson({ ...report(), wrote: null, converged: false, refused: 'needs re-record', notConverged: [...flagged.keys()] });
     } else {
       // Printed once more here, next to the refusal, because the block above
       // scrolled past several runs ago — and it is the whole reason for it.
@@ -1532,7 +1594,7 @@ async function repairFlowCommand(
 
   let changed = [...diff.lines.filter((l) => !l.endsWith(': no change')), ...evidenceLines];
   if (!changed.length && summary.reRecord.length) {
-    if (json) console.log(JSON.stringify({ ...report(), wrote: null, refused: 'needs re-record' }, null, 2));
+    if (json) emitCommandJson({ ...report(), wrote: null, refused: 'needs re-record' });
     else console.log('nothing could be repaired without re-recording — re-record the segment(s) listed above and compile again');
     process.exit(1);
   }
@@ -1565,7 +1627,7 @@ async function repairFlowCommand(
     const others = bad.filter((line) => ![...flagged.keys()].some((id) => line.startsWith(`${id} (`)));
     say(`converge ${i}/${converge}: ${check.passed}/${check.total} step(s) ${check.status}, ${checkTickets.length} drift ticket(s)${bad.length ? '' : ' — clean'}`);
     if (others.length) {
-      if (json) console.log(JSON.stringify({ ...report(), wrote: null, converged: false, notConverged: bad, convergeTickets: checkTickets }, null, 2));
+      if (json) emitCommandJson({ ...report(), wrote: null, converged: false, notConverged: bad, convergeTickets: checkTickets });
       // The tickets, not just the step ids: a gate failure is only actionable
       // if it names the locator that missed and what resolved instead.
       for (const t of checkTickets) {
@@ -1595,7 +1657,7 @@ async function repairFlowCommand(
   gateRerecord();
 
   if (dryRun) {
-    if (json) console.log(JSON.stringify({ ...report(), wrote: null, dryRun: true }, null, 2));
+    if (json) emitCommandJson({ ...report(), wrote: null, dryRun: true });
     else console.log(`dry run: ${changed.length} change(s), nothing written (would have written ${outFile})`);
     return;
   }
@@ -1604,6 +1666,36 @@ async function repairFlowCommand(
   // time, so a promoted candidate shows up in the diff as a reordered chain in
   // both the FLOW constant and the generated step body.
   const emitted = emitFlowFile(finalSpec, { tier: 'plain' });
+  if (proposalFile) {
+    const candidate = stageProposal(file, emitted.source);
+    try {
+      specCheck = runSpecCheck({
+        ...checkOptions(flags), flowFile: candidate.flowFile,
+        vars: mintVars(vars, converge + 1), resetCmd, liveReplayPassed: true, flagged,
+        onProgress: say,
+      });
+    } finally {
+      // Candidate scaffolds must not accidentally join the user's normal test suite.
+      fs.unlinkSync(candidate.specFile);
+    }
+    if (sourceHash(fs.readFileSync(candidate.originalSpec, 'utf8')) !== candidate.originalSpecHash) {
+      fail('the user spec changed during proposal verification; create a new proposal', 2);
+    }
+    const proposal = saveProposal(proposalFile, {
+      target: path.resolve(file), originalHash: sourceHash(source), source: emitted.source,
+      specFile: candidate.originalSpec, candidateFile: candidate.flowFile, candidateSpec: candidate.specFile,
+      changes: changed, liveExecutions: runs.length + (specCheck.ran ? 1 : 0), verification: specCheck,
+    });
+    const clean = specCheck.ran && specCheck.passed && !specCheck.driftCount && !specCheck.satisfied?.length;
+    if (json) emitJson({ ...report(), proposal: proposalFile, candidate: candidate.flowFile, wrote: null, converged: true }, 'repair', clean ? 'proposed' : 'not-verified', clean ? [{ command: 'repair', args: ['apply', proposalFile] }] : []);
+    else {
+      say(`proposal: ${proposalFile} (${proposal.liveExecutions} live executions)`);
+      say(specCheck.verdict);
+      say(clean ? `review the candidate and changes, then: sitelooper repair apply "${proposalFile}"` : 'proposal saved for inspection; apply requires clean compiled-spec verification');
+    }
+    if (!clean) process.exit(specCheck.ran ? 4 : 2);
+    return;
+  }
   fs.writeFileSync(outFile, emitted.source);
   if (!json) {
     for (const w of emitted.warnings) console.error(`  warning: ${w}`);
@@ -1616,8 +1708,9 @@ async function repairFlowCommand(
   // gate and still ships a spec that fails on the first run. The only way to
   // see it is to run the emitted spec the way a user will. It is one more real
   // run against the app, so it gets its own {n} slot and its own reset.
-  if (flags.has('check-spec')) {
+  if (!flags.has('no-check-spec')) {
     specCheck = runSpecCheck({
+      ...checkOptions(flags),
       flowFile: outFile,
       vars: mintVars(vars, converge + 1),
       resetCmd,
@@ -1631,7 +1724,7 @@ async function repairFlowCommand(
     });
   }
 
-  if (json) console.log(JSON.stringify({ ...report(), wrote: outFile, converged: true }, null, 2));
+  if (json) emitCommandJson({ ...report(), wrote: outFile, converged: true });
   else if (specCheck) {
     console.log(specCheck.verdict);
     for (const d of specCheck.drift) console.log(`  ${d}`);
@@ -1641,6 +1734,7 @@ async function repairFlowCommand(
   // adapted a locator correctly is not undone by the emitter mis-spelling it.
   // What changes is the exit code, so a script cannot mistake this for a clean
   // repair.
+  if (specCheck && !specCheck.ran) process.exit(2);
   if (specCheck?.ran && !specCheck.passed) {
     console.error(`the emitted spec fails under plain Playwright: ${specCheck.verdict}`);
     console.error(`${outFile} was still written — review the diff, then fix the emitter (not the app)`);
@@ -1679,14 +1773,14 @@ async function rerecordFlowCommand(
   const [nameOrPath, stepId] = positional;
   if (!nameOrPath || !stepId) fail(usage, 2);
 
-  const loaded = loadFlowFile(nameOrPath);
-  if (!loaded) fail(`no flow "${nameOrPath}" — pass a path to a flow .json, or a name from "sitelooper flow list"`, 2);
-  const { flow, file } = loaded;
+  const projectConfig = loadProjectConfig();
+  const input = resolveRerecordInput(nameOrPath, fs.existsSync(projectConfig.snapshotFile) ? projectConfig.snapshotFile : undefined);
+  const { flow, file } = input;
 
   const runsWanted = flags.has('runs') ? Number(flags.get('runs')) : 2;
   if (!Number.isInteger(runsWanted) || runsWanted < 1) fail('--runs takes a positive integer', 2);
   const instruction = flags.get('instruction') ? String(flags.get('instruction')) : undefined;
-  const resetCmd = flags.get('reset-cmd') ? String(flags.get('reset-cmd')) : undefined;
+  const resetCmd = flags.get('reset-cmd') ? String(flags.get('reset-cmd')) : loadProjectConfig().resetCommand;
 
   // Everything that can refuse, refuses BEFORE a browser starts: an unknown
   // step id or a missing --var costs a daemon spawn and a sign-in otherwise,
@@ -1699,7 +1793,7 @@ async function rerecordFlowCommand(
     if (err instanceof RerecordError) return fail(err.message, 2);
     throw err;
   }
-  const vars = varFlags();
+  const vars = { ...loadProjectConfig().vars, ...varFlags() };
   const missingVars = flow.vars.filter((v) => !(v in vars));
   if (missingVars.length) fail(`flow "${flow.name}" needs --var for: ${missingVars.join(', ')}`, 2);
 
@@ -1716,7 +1810,7 @@ async function rerecordFlowCommand(
     if (err instanceof RerecordError) return fail(err.message, 2);
     throw err;
   }
-  saveFlow(patched, file);
+  const stagedInput = stageRerecordInput(input, patched);
   say(`re-recording ${flow.name} step ${stepId} (${runsWanted} run(s))`);
   say(`  unpinned ${previous?.skill ?? '(no procedure)'}${instruction ? ', with a new instruction' : ''}; old recording kept at ${backup}`);
 
@@ -1730,7 +1824,7 @@ async function rerecordFlowCommand(
     // Whatever the daemon says about THIS step (a re-pin refusal above all)
     // is printed whether or not --progress is on, and kept for the verdict.
     const notes: string[] = [];
-    const { run } = await runStagedFlow({ flowFile: file, skillsDir: skillsDir() }, mintVars(vars, i), `rerecord-${stamp}-${i}`, {
+    const { run } = await runStagedFlow(stagedInput, mintVars(vars, i), `rerecord-${stamp}-${i}`, {
       headed: flags.has('headed'),
       onProgress: (m) => {
         const note = stepNote(m, stepId);
@@ -1750,14 +1844,17 @@ async function rerecordFlowCommand(
   const verdict = rerecordVerdict({ file, stepId, runs });
   // The daemon writes re-pins back into the flow file it was given, so the
   // authoritative answer to "what is this step pinned to now" is on disk.
-  const after = loadFlowFile(file)?.flow.steps.find((s) => s.id === stepId);
+  const after = loadFlowFile(stagedInput.flowFile)?.flow.steps.find((s) => s.id === stepId);
   const pinned = after?.skill ?? verdict.pinned;
-  const skill = pinned ? new SkillStore().get(pinned) : null;
+  const skill = pinned ? stagedInput.store.get(pinned) : null;
+  const persisted = persistRerecordInput(input, stagedInput, verdict.ok);
   const payload = {
     flow: flow.name,
     file,
     step: stepId,
     backup,
+    workspace: stagedInput.workspace,
+    wrote: input.kind === 'flow' || persisted.wrote,
     ok: verdict.ok,
     pinned: pinned ?? null,
     skill: skill ? { id: skill.id, status: skill.status, steps: skill.steps.length } : null,
@@ -1774,12 +1871,12 @@ async function rerecordFlowCommand(
 
   // Diagnostics first, before the counts and the file paths.
   if (!verdict.ok) say(formatRerecordDiagnostic(verdict.diagnostic));
-  if (json) console.log(JSON.stringify(payload, null, 2));
+  if (json) emitCommandJson(payload);
   else if (verdict.ok) {
     say(`${stepId}: pinned ${pinned}${skill ? ` (${skill.status}, ${skill.steps.length} action(s))` : ''}`);
     say(`${file} updated — the previous recording is at ${backup}`);
   } else {
-    say(`${file} still holds the re-recorded step; restore the old one with: cp ${backup} ${file}`);
+    say(input.kind !== 'flow' && !persisted.wrote ? `${file} was preserved; inspect the attempted recording in ${stagedInput.workspace}` : `${file} holds the attempted recording; the previous version is at ${backup}`);
   }
   process.exit(verdict.ok ? 0 : 1);
 }

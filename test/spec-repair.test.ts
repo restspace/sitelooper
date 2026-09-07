@@ -268,7 +268,7 @@ describe('cli: repair command wiring', () => {
   const cliSource = fs.readFileSync(path.resolve(__dirname, '../src/cli.ts'), 'utf8');
 
   it('documents the command in USAGE', () => {
-    expect(cliSource).toMatch(/sitelooper repair <name\.flow\.ts> \[--var k=v \.\.\.\] \[--out <file>\] \[--converge <n>\]/);
+    expect(cliSource).toContain('repair <name.flow.ts> --propose <proposal.json>');
   });
 
   it('takes --converge as a value flag', () => {
@@ -378,8 +378,8 @@ describe('in-session drain wiring', () => {
   });
 
   it('the standalone --drift path says it is the cold one', () => {
-    expect(cliSource).toMatch(/in a COLD browser/);
-    expect(cliSource).toMatch(/Prefer "sitelooper repair"/);
+    expect(cliSource).toContain('skills repair --drift');
+    expect(cliSource).toContain('repair <name.flow.ts> --propose');
   });
 });
 
@@ -735,7 +735,7 @@ describe('cli: --reset-cmd and the evidence codemod wiring', () => {
   });
 
   it('documents it next to {n}, the other answer to run-to-run state', () => {
-    expect(cliSource).toContain('--reset-cmd, which runs a shell command before run 1 and');
+    expect(cliSource).toContain('prepare fresh state before each execution');
   });
 
   it('runs it through a shell and refuses to continue when it fails', () => {
@@ -1009,9 +1009,9 @@ describe('spec check: the verdict', () => {
     expect(v).toContain('at fwrd42.flow.ts:412');
   });
 
-  it('says a skip is a skip: an un-run spec is not a failing one', () => {
+  it('reports missing prerequisites as unavailable', () => {
     const v = verdictFor({ ...base, ran: false, passed: false, skipped: '@playwright/test could not be resolved' }, true);
-    expect(v).toBe('spec check: skipped \u2014 @playwright/test could not be resolved');
+    expect(v).toBe('spec check: unavailable \u2014 @playwright/test could not be resolved');
   });
 
   it('blames the RECORDING, not the emitter, at a step repair already flagged', () => {
@@ -1059,8 +1059,8 @@ describe('cli: --check-spec and the check command', () => {
   const cliSource = fs.readFileSync(path.resolve(__dirname, '../src/cli.ts'), 'utf8');
 
   it('documents exit 4 and the check command in USAGE', () => {
-    expect(cliSource).toContain('sitelooper check <name.flow.ts>');
-    expect(cliSource).toMatch(/4 the emitted \.spec\.ts failed its --check-spec run/);
+    expect(cliSource).toContain('check <name.flow.ts>');
+    expect(cliSource).toContain('4 compiled spec or readiness failed');
   });
 
   it('takes --check-spec as a boolean flag and dispatches check without a daemon', () => {
@@ -1071,10 +1071,10 @@ describe('cli: --check-spec and the check command', () => {
 
   it('runs the check AFTER the file is written, and does not un-write it on failure', () => {
     const write = cliSource.indexOf('fs.writeFileSync(outFile, emitted.source);');
-    const check = cliSource.indexOf("if (flags.has('check-spec')) {");
+    const check = cliSource.indexOf("if (!flags.has('no-check-spec')) {");
     expect(write).toBeGreaterThan(0);
     expect(check).toBeGreaterThan(write);
-    expect(cliSource).toContain('was still written');
+    expect(cliSource).toContain('The file STAYS written');
     expect(cliSource).toMatch(/if \(specCheck\?\.ran && !specCheck\.passed\) \{[\s\S]*?process\.exit\(4\);/);
   });
 
@@ -1085,7 +1085,7 @@ describe('cli: --check-spec and the check command', () => {
 
   it('puts the verdict in the --json report as specCheck', () => {
     expect(cliSource).toMatch(/\r?\n    specCheck,\r?\n/);
-    expect(cliSource).toContain('console.log(JSON.stringify({ file, specCheck: result }, null, 2))');
+    expect(cliSource).toContain("emitJson({ file, specCheck: result }, 'spec-check'");
   });
 });
 

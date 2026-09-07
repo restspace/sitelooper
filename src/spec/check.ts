@@ -54,6 +54,7 @@ export interface SpecTestRow {
   drift: string[];
   /** Every `[sitelooper satisfied] …` line this test logged. */
   satisfied: string[];
+  executedSteps?: string[];
 }
 
 export interface ParsedSpecReport {
@@ -74,9 +75,15 @@ export interface ParsedSpecReport {
    * itself was never exercised — so it is counted rather than swallowed.
    */
   satisfied: string[];
+  executedSteps?: string[];
 }
 
 export interface SpecCheckResult {
+  /** Missing prerequisites are unavailable, never a successful validation. */
+  outcome?: 'passed' | 'failed' | 'unavailable';
+  tests?: SpecTestRow[];
+  skippedCount?: number;
+  executedSteps?: string[];
   /** false when the check was skipped (no @playwright/test) — never a failure. */
   ran: boolean;
   /** Why it was skipped, when it was. */
@@ -219,7 +226,7 @@ function flattenTests(suite: Record<string, unknown>, files: string[], acc: Spec
       acc.push({
         title: String(spec.title ?? ''),
         status: String(t.status ?? ''),
-        ok: t.status === 'expected',
+        ok: t.status === 'expected' && (!r?.status || r.status === 'passed') && (!t.expectedStatus || t.expectedStatus === 'passed'),
         durationMs: typeof r?.duration === 'number' ? r.duration : null,
         error: message,
         errorStack: typeof err?.stack === 'string' ? plain(err.stack) : null,
@@ -228,6 +235,7 @@ function flattenTests(suite: Record<string, unknown>, files: string[], acc: Spec
         errorSites: sites,
         drift: taggedLines(r, 'drift'),
         satisfied: taggedLines(r, 'satisfied'),
+        executedSteps: taggedLines(r, 'step').map((line) => line.slice('[sitelooper step]'.length).trim()),
       });
     }
   }
@@ -246,6 +254,8 @@ export function parseSpecReport(report: unknown, files: string[] = []): ParsedSp
   const root = (report ?? {}) as Record<string, unknown>;
   const tests = flattenTests(root, files);
   const failing = tests.find((t) => !t.ok && t.status !== 'skipped') ?? null;
+  const reportError = ((root.errors as Record<string, unknown>[]) ?? [])[0];
+  const reportSites = errorSites(reportError, files);
   const stats = root.stats as { duration?: unknown } | undefined;
   const durationMs =
     typeof stats?.duration === 'number' ? stats.duration : tests.reduce((n, t) => n + (t.durationMs ?? 0), 0);
@@ -255,10 +265,11 @@ export function parseSpecReport(report: unknown, files: string[] = []): ParsedSp
     durationMs,
     drift: tests.flatMap((t) => t.drift),
     satisfied: tests.flatMap((t) => t.satisfied),
-    error: failing?.error ?? null,
-    errorFile: failing?.errorFile ?? null,
-    errorLine: failing?.errorLine ?? null,
-    errorSites: failing?.errorSites ?? [],
+    executedSteps: tests.flatMap((t) => t.executedSteps ?? []),
+    error: failing?.error ?? (typeof reportError?.message === 'string' ? plain(reportError.message) : null),
+    errorFile: failing?.errorFile ?? reportSites[0]?.file ?? null,
+    errorLine: failing?.errorLine ?? reportSites[0]?.line ?? null,
+    errorSites: failing?.errorSites ?? reportSites,
   };
 }
 
@@ -306,7 +317,7 @@ export function verdictFor(
   liveReplayPassed: boolean,
   flagged?: ReadonlyMap<string, Diagnostic>,
 ): string {
-  if (!r.ran) return `spec check: skipped — ${r.skipped ?? 'the spec was not run'}`;
+  if (!r.ran) return `spec check: unavailable — ${r.skipped ?? 'the spec was not run'}`;
   const secs = Math.max(1, Math.round(r.durationMs / 1000));
   // A pass that skipped a step because its work was already done is not the
   // same pass as one that ran everything, and the reader has to be told which
@@ -357,6 +368,15 @@ export function resolvePlaywrightTest(fromDir: string): { main: string; cli: str
 export interface SpecCheckOptions {
   /** The owned `<name>.flow.ts`; its sibling `<name>.spec.ts` is what runs. */
   flowFile: string;
+  /** Optional separately authored spec, e.g. an explicit negative check. */
+  specFile?: string;
+  /** Existing project config; otherwise discover one above the original spec. */
+  configFile?: string;
+  project?: string;
+  cwd?: string;
+  /** Explicit compiler smoke test: copy files and ignore project fixtures/config. */
+  isolated?: boolean;
+  env?: Record<string, string>;
   vars?: Record<string, string>;
   /** Shell command run once before the spec, e.g. an app reset endpoint. */
   resetCmd?: string;
@@ -373,173 +393,126 @@ export interface SpecCheckOptions {
   onProgress?: (m: string) => void;
 }
 
-/**
- * Run the emitted spec once under plain `@playwright/test`, in a temp dir with
- * a minimal config, and report what happened.
- *
- * Copies rather than running in place, for the same reason spec-replay.mjs
- * does: the config names its own `testDir`/`testMatch`, so nothing in the
- * user's project (a root playwright.config, another spec, a global setup) can
- * change what this measures. Reset-command failure is fatal to the CHECK only
- * — it comes back as a skip, not a spec failure, because a spec that never ran
- * has said nothing about the emitter.
- */
+/** The scaffold uses normalized environment names; aliases cannot carry different inputs. */
+export function inputEnvCollisions(vars: Record<string, string>): string[] {
+  const names = new Map<string, string>();
+  const collisions: string[] = [];
+  for (const name of Object.keys(vars)) {
+    const env = envName(name);
+    const previous = names.get(env);
+    if (previous !== undefined && previous !== name) collisions.push(`inputs ${previous} and ${name} both map to environment variable ${env}`);
+    names.set(env, name);
+  }
+  return collisions;
+}
+
+/** Find the nearest Playwright configuration without changing the spec's imports. */
+export function findPlaywrightConfig(fromDir: string): string | null {
+  let dir = path.resolve(fromDir);
+  while (true) {
+    for (const ext of ['ts', 'js', 'mts', 'mjs', 'cts', 'cjs']) {
+      const candidate = path.join(dir, `playwright.config.${ext}`);
+      if (fs.existsSync(candidate)) return candidate;
+    }
+    const parent = path.dirname(dir);
+    if (parent === dir) return null;
+    dir = parent;
+  }
+}
+
+/** Run the original spec with project fixtures/configuration and zero retries. */
 export function runSpecCheck(o: SpecCheckOptions): SpecCheckResult {
   const flowFile = path.resolve(o.flowFile);
   const say = o.onProgress ?? (() => {});
   const base = path.basename(flowFile).replace(/\.flow\.ts$/, '');
   const dir = path.dirname(flowFile);
-  const specSrc = path.join(dir, `${base}.spec.ts`);
+  const specSrc = o.specFile ? path.resolve(o.specFile) : path.join(dir, `${base}.spec.ts`);
   const empty: Omit<SpecCheckResult, 'verdict'> = {
-    ran: false,
-    skipped: null,
-    passed: false,
-    durationMs: 0,
-    exitCode: null,
-    timedOut: false,
-    error: null,
-    anchor: null,
-    errorFile: null,
-    errorLine: null,
-    drift: [],
-    driftCount: 0,
-    satisfied: [],
-    workspace: null,
-    specFile: null,
+    outcome: 'unavailable', ran: false, skipped: null, passed: false, durationMs: 0,
+    exitCode: null, timedOut: false, error: null, anchor: null, errorFile: null,
+    errorLine: null, drift: [], driftCount: 0, satisfied: [], executedSteps: [],
+    tests: [], skippedCount: 0, workspace: null, specFile: specSrc,
   };
-  const skip = (why: string): SpecCheckResult => {
-    const r = { ...empty, skipped: why };
+  const unavailable = (why: string, work: string | null = null): SpecCheckResult => {
+    const r = { ...empty, skipped: why, workspace: work };
     return { ...r, verdict: verdictFor(r, o.liveReplayPassed ?? false, o.flagged) };
   };
-
-  if (!fs.existsSync(specSrc)) return skip(`no ${base}.spec.ts beside ${path.basename(flowFile)} — compile it first`);
+  if (!fs.existsSync(flowFile)) return unavailable('the compiled flow does not exist; compile it first');
+  if (!fs.existsSync(specSrc)) return unavailable(`no ${path.basename(specSrc)}; compile it first`);
+  const collisions = inputEnvCollisions(o.vars ?? {});
+  if (collisions.length) return unavailable(collisions.join('; '));
   const pw = resolvePlaywrightTest(dir);
-  if (!pw) {
-    return skip(
-      '@playwright/test could not be resolved from this project (`npm install -D @playwright/test`); the emitted spec imports it directly, so it was not run',
-    );
-  }
-
-  // Beside the owned file, NOT in os.tmpdir(): the copies have to keep the same
-  // node_modules ancestry as the original, or the spec's own first import fails
-  // and the check reports a module error as if it were an emitter defect. The
-  // directory is removed again when the spec passes, and kept when it does not
-  // — a failure is exactly when someone wants the config, the log and the trace.
-  const work = fs.mkdtempSync(path.join(dir, '.sitelooper-check-'));
-  const flowCopy = path.join(work, `${base}.flow.ts`);
-  const specCopy = path.join(work, `${base}.spec.ts`);
-  fs.copyFileSync(flowFile, flowCopy);
-  fs.copyFileSync(specSrc, specCopy);
-  const reportFile = path.join(work, 'pw-report.json');
-  const configFile = path.join(work, 'playwright.config.mjs');
-  // No `defineConfig` import: a plain object is a valid config module, and
-  // this way the config itself never depends on resolving @playwright/test
-  // from the temp dir. Same shape as bench/spec-replay.mjs.
-  fs.writeFileSync(
-    configFile,
-    `// GENERATED by sitelooper --check-spec — safe to delete.
-export default {
-  testDir: ${JSON.stringify(work)},
-  testMatch: ${JSON.stringify(`${base}.spec.ts`)},
-  timeout: 600_000,
-  retries: 0,
-  workers: 1,
-  reporter: [['json', { outputFile: ${JSON.stringify(reportFile)} }], ['list']],
-  use: { headless: true },
-};
-`,
-  );
-
-  if (o.resetCmd) {
-    say(`  spec check reset: ${o.resetCmd}`);
-    const reset = spawnSync(o.resetCmd, { shell: true, encoding: 'utf8', timeout: 120_000 });
-    if (reset.error || reset.status !== 0) {
-      return skip(`the --reset-cmd exited ${reset.status ?? reset.error?.message ?? 'by signal'} before the spec check could run`);
-    }
-  }
-
-  // The scaffold reads every run var from process.env under its uppercased
-  // name (emitSpecFile), so that is the only channel the values have.
-  const env: NodeJS.ProcessEnv = { ...process.env };
+  if (!pw?.cli) return unavailable('@playwright/test runner could not be resolved from this project; install @playwright/test');
+  const projectConfig = o.isolated ? null : o.configFile ? path.resolve(o.configFile) : findPlaywrightConfig(dir);
+  if (projectConfig && !fs.existsSync(projectConfig)) return unavailable(`Playwright config does not exist: ${projectConfig}`);
+  const cwd = path.resolve(o.cwd ?? (projectConfig ? path.dirname(projectConfig) : dir));
+  const env: NodeJS.ProcessEnv = { ...process.env, ...o.env };
   for (const [k, v] of Object.entries(o.vars ?? {})) env[envName(k)] = v;
-
-  const npx = process.platform === 'win32' ? 'npx.cmd' : 'npx';
-  const cmd = pw.cli ? [process.execPath, pw.cli] : [npx, 'playwright'];
-  const argv = [...cmd.slice(1), 'test', '--config', configFile];
-  say(`  spec check: ${cmd[0]} ${argv.join(' ')}`);
+  if (o.resetCmd) {
+    say('  spec check: preparing fresh application state');
+    const reset = spawnSync(o.resetCmd, { shell: true, encoding: 'utf8', timeout: 120_000, cwd, env });
+    if (reset.error || reset.status !== 0) return unavailable(`the reset command exited ${reset.status ?? reset.error?.message ?? 'by signal'} before validation`);
+  }
+  const work = fs.mkdtempSync(path.join(dir, '.sitelooper-check-'));
+  let checkedFlow = flowFile;
+  let checkedSpec = specSrc;
+  if (o.isolated) {
+    checkedFlow = path.join(work, path.basename(flowFile));
+    checkedSpec = path.join(work, path.basename(specSrc));
+    fs.copyFileSync(flowFile, checkedFlow);
+    fs.copyFileSync(specSrc, checkedSpec);
+  }
+  const reportFile = path.join(work, 'pw-report.json');
+  let configFile = projectConfig;
+  if (!configFile) {
+    configFile = path.join(work, 'playwright.config.mjs');
+    fs.writeFileSync(configFile, `export default ${JSON.stringify({
+      testDir: o.isolated ? work : dir, testMatch: path.basename(checkedSpec),
+      timeout: 600_000, retries: 0, workers: 1, use: { headless: true },
+    }, null, 2)};\n`);
+  }
+  env.PLAYWRIGHT_JSON_OUTPUT_FILE = reportFile;
+  // Playwright's positional filters are regular expressions against file paths.
+  const filter = escapeRe(checkedSpec.replace(/\\/g, '/')) + '$';
+  const argv = [pw.cli, 'test', filter, '--config', configFile, '--retries=0', '--repeat-each=1', '--workers=1', '--reporter=json', '--trace=retain-on-failure', '--output', path.join(work, 'test-results')];
+  if (o.project) argv.push('--project', o.project);
+  say(`  spec check: ${o.isolated ? 'isolated smoke test' : 'project test'} ${path.basename(specSrc)}${o.project ? ` (${o.project})` : ''}`);
   const started = Date.now();
-  const run = spawnSync(cmd[0], argv, {
-    encoding: 'utf8',
-    cwd: work,
-    env,
-    timeout: o.timeoutMs ?? 900_000,
-    shell: !pw.cli && process.platform === 'win32',
-  });
+  const run = spawnSync(process.execPath, argv, { encoding: 'utf8', cwd, env, timeout: o.timeoutMs ?? 900_000, maxBuffer: 16 * 1024 * 1024 });
   const wallMs = Date.now() - started;
   fs.writeFileSync(path.join(work, 'run.log'), `${run.stdout ?? ''}${run.stderr ?? ''}`);
-
+  if (run.error && (run.error as NodeJS.ErrnoException).code !== 'ETIMEDOUT') return unavailable(`could not start Playwright: ${run.error.message}`, work);
   let report: unknown = null;
-  try {
-    report = JSON.parse(fs.readFileSync(reportFile, 'utf8'));
-  } catch {
-    /* the spec crashed before the reporter could write — handled below */
-  }
-  const parsed = parseSpecReport(report, [flowCopy, specCopy]);
-  const timedOut = run.status === null;
-  // No report at all is a failure with the runner's own output as the message:
-  // a module that would not load never reaches the reporter.
-  const error =
-    parsed.error ??
-    (parsed.tests.length
-      ? null
-      : shortError(plain(`${run.stderr ?? ''}${run.stdout ?? ''}`).trim() || 'playwright wrote no JSON report'));
-  // The frame worth naming is the first with a `// @step` above it, not the
-  // topmost: pick() throws from the helper block at the top of the flow file,
-  // and "fwrd42.flow.ts:3981" tells a reviewer nothing.
+  try { report = JSON.parse(fs.readFileSync(reportFile, 'utf8')); } catch { /* report unavailable */ }
+  const parsed = parseSpecReport(report, [checkedFlow, checkedSpec]);
+  const timedOut = (run.error as NodeJS.ErrnoException | undefined)?.code === 'ETIMEDOUT';
+  const output = plain(`${run.stderr ?? ''}${run.stdout ?? ''}`).trim();
+  const error = parsed.error ?? (parsed.tests.length ? parsed.passed ? null : 'required tests did not all execute successfully' : shortError(output || 'Playwright wrote no test results'));
+  // Missing browser installations and global setup/config failures do not exercise the artifact.
+  const missingBrowser = /Executable doesn.t exist|Please run the following command to download new browsers/.test(JSON.stringify(report));
+  const artifactLoadFailure = parsed.errorSites.length > 0 || [path.basename(checkedFlow), path.basename(checkedSpec)].some((file) => parsed.error?.includes(file));
+  if ((!parsed.tests.length && !timedOut && !artifactLoadFailure) || missingBrowser) return unavailable(error ?? 'Playwright setup did not complete', work);
   let anchor: string | null = null;
   let site = parsed.errorSites[0] ?? null;
-  const sources = new Map<string, string>();
-  const read = (f: string): string => {
-    if (!sources.has(f)) {
-      try {
-        sources.set(f, fs.readFileSync(f, 'utf8'));
-      } catch {
-        sources.set(f, '');
-      }
-    }
-    return sources.get(f) ?? '';
-  };
   for (const frame of parsed.errorSites) {
-    const found = findStepAnchor(read(frame.file.endsWith('.spec.ts') ? specCopy : flowCopy), frame.line);
-    if (found) {
-      anchor = found;
-      site = frame;
-      break;
-    }
+    const source = fs.readFileSync(frame.file.endsWith('.spec.ts') ? checkedSpec : checkedFlow, 'utf8');
+    const found = findStepAnchor(source, frame.line);
+    if (found) { anchor = found; site = frame; break; }
   }
+  const passed = parsed.passed && run.status === 0;
   const r: Omit<SpecCheckResult, 'verdict'> = {
-    ran: true,
-    skipped: null,
-    passed: parsed.passed && run.status === 0,
-    durationMs: parsed.durationMs || wallMs,
-    exitCode: run.status,
-    timedOut,
-    error: parsed.passed && run.status === 0 ? null : error,
-    anchor,
-    errorFile: site?.file ?? null,
-    errorLine: site?.line ?? null,
-    drift: parsed.drift,
-    driftCount: parsed.drift.length,
-    satisfied: parsed.satisfied,
-    workspace: work,
-    specFile: specSrc,
+    outcome: passed ? 'passed' : 'failed', ran: true, skipped: null, passed,
+    durationMs: parsed.durationMs || wallMs, exitCode: run.status, timedOut,
+    error: passed ? null : error, anchor, errorFile: site?.file ?? null,
+    errorLine: site?.line ?? null, drift: parsed.drift, driftCount: parsed.drift.length,
+    satisfied: parsed.satisfied, executedSteps: parsed.executedSteps, tests: parsed.tests,
+    skippedCount: parsed.tests.filter((t) => t.status === 'skipped').length,
+    workspace: work, specFile: specSrc,
   };
-  if (r.passed) {
-    try {
-      fs.rmSync(work, { recursive: true, force: true });
-    } catch {
-      /* left behind is harmless; it is dot-prefixed and named */
-    }
+  if (passed) {
+    // work is an absolute mkdtemp child of dir; never remove a computed project path.
+    if (path.dirname(work) !== dir || !path.basename(work).startsWith('.sitelooper-check-')) throw new Error('Invalid check workspace');
+    fs.rmSync(work, { recursive: true, force: true });
   }
-  return { ...r, verdict: verdictFor(r, o.liveReplayPassed ?? false, o.flagged), workspace: r.passed ? null : work };
+  return { ...r, verdict: verdictFor(r, o.liveReplayPassed ?? false, o.flagged), workspace: passed ? null : work };
 }

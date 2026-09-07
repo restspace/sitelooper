@@ -1,13 +1,13 @@
 # sitelooper
 
-**Drive a web app from natural language once; replay it afterwards with no model in the loop.**
+**Author a browser test with an agent; verify and run the compiled test with plain Playwright.**
 
 sitelooper is a Playwright CLI with an LLM agent inside it. You give it one instruction at a
 time - "sign in as ops@example.com, create a ticket titled 'k7 Bench' and report its id" - and it
 works the live browser for you, then hands back one structured, verified result. Nothing about
 selectors, waits, dialogs or quoting reaches you or the outer agent that is calling it.
 
-Then, every instruction that succeeds is compiled into a **stored procedure**, and a whole session can be exported as a **flow**. The next time the same job runs,
+With `--learn`, every instruction that succeeds is compiled into a **stored procedure**, and a whole session can be exported as a **flow**. The next time the same job runs,
 sitelooper replays the procedure deterministically — no model call, no tokens — and calls the
 model only for a step the app has changed underneath. On the benchmark below, a converged flow
 replays a seven-step ticket workflow in 17 seconds for $0.00, verified against what the app's own
@@ -76,344 +76,149 @@ sitelooper's answer is to treat the recording as evidence to compile, not text t
 
 ## Getting started
 
-Requires Node 20+, an installed Chrome or Edge (or `SITELOOPER_EXECUTABLE`), and an API key for
-one OpenAI-compatible provider.
+Requires Node 20+, a browser, and an API key for authoring. The compiled tests need only
+`@playwright/test` and its browser installation; no Sitelooper daemon or model runs in CI.
 
 ```sh
-npm install -g sitelooper            # or, from a checkout: npm install && npm link
-export NOVITA_API_KEY=...              # any preset: zhipu, novita, openrouter, openai (see Providers)
-sitelooper config set provider novita
-sitelooper doctor                    # node, browser, provider, key — no daemon needed
+npm install -g sitelooper
+npm install -D @playwright/test
+npx playwright install chromium
+sitelooper config set provider openai
+# Set OPENAI_API_KEY in your shell, then:
+sitelooper doctor
+sitelooper init
 ```
 
-Drive a page:
+Record one logical outcome per instruction. App briefings are optional. Use `{{env:NAME}}` for
+credentials, set before starting the session, and declare values that should vary between runs.
 
 ```sh
-sitelooper open https://demo.playwright.dev/todomvc
-sitelooper do "Add two todos: 'write the report' and 'send it'. Tick the first one off, then report how many items the footer counter shows as left."
+sitelooper --session ticket --learn open http://localhost:3000
+sitelooper --session ticket var runid=demo
+sitelooper --session ticket do "Sign in as {{env:TEST_USER}} using {{env:TEST_PASSWORD}} and verify the dashboard opens"
+sitelooper --session ticket do "Create a ticket titled 'demo Test'; verify it appears and report its id"
+sitelooper --session ticket stop --save-flow ticket
+sitelooper flow export ticket --out .sitelooper/procedures.json
 ```
 
-`do` returns `{status, summary, evidence}`; the counter it reports was read back from the page.
-Add `--verbose` to watch the agent, `--headed` to watch the browser.
-
-Record a flow and replay it:
+Configure fresh test data in your Playwright fixtures or supply a reset command. Then build the test:
 
 ```sh
-# 1. record: one --learn session, the caller deciding each step as it goes
-sitelooper --session run1 --learn open http://app.local/
-sitelooper --session run1 var runid=k7          # what will differ next time → {{runid}}
-sitelooper --session run1 do "sign in as ops@example.com / {{env:APP_PASSWORD}} and create a ticket titled 'k7 Bench'; report its id"
-sitelooper --session run1 do "on that ticket add a part 'k7 Part A' cost 100 markup 25; report the price"
-sitelooper --session run1 stop --save-flow ticket-flow
-
-# 2. replay: no caller, new value, fresh app
-sitelooper run ticket-flow --var runid=m3 --progress
-#   [OK] 01-signin  (replay)   ← pinned procedure, zero model calls
-#   [OK] 02-add     (replay)
-#   ticket-flow: 2/2 steps, 8s — success
+sitelooper build ticket --var runid=test-{n} --reset-cmd "npm run reset:e2e"
+# If your Playwright fixtures already prepare fresh data:
+# sitelooper build ticket --var runid=test-{n} --fixture-isolation
+npx playwright test tests/sitelooper/ticket.spec.ts
 ```
 
-### Compile to a Playwright spec
+The generated `ticket.flow.ts` contains the procedures, typed input/output API, named Playwright
+steps, and effect checks. `ticket.spec.ts` is yours to add business assertions and fixture imports to.
+Compilation preserves it. Each run has its own drift state, which the scaffold attaches to the
+Playwright report even when a step fails. Recompile an existing flow to update its generated half;
+existing user scaffolds remain intact and can adopt the new API manually.
 
-`sitelooper compile <flow-name-or-path> [--out <dir>] [--force]` takes a saved flow whose steps
-have converged into stored procedures and emits two files: an owned `<name>.flow.ts` that carries
-the flow as a `FLOW` constant plus one generated `async` step function per `FlowStep` (durable
-locators, expectations, and parameter threading compiled to literal Playwright calls — no
-sitelooper process, daemon, or model call involved), and a `<name>.spec.ts` scaffold that imports
-`runFlow` and is written once and never touched again — it's yours to add assertions to. Re-running
-`compile` regenerates the `.flow.ts` file (with `repair` able to patch it against a live page later)
-but leaves an existing `.spec.ts` alone unless you pass `--force`.
+### Readiness means executing the emitted code
 
-Be honest about what this loses relative to a live `run`: this is Tier 2, compile-time only,
-generated from the locator evidence a session already recorded — it does not measure anything
-against the live page at compile time. A step whose stored procedure has no converged locator chain
-compiles to a `throw` with a `TODO` rather than a guess, and `compile` exits 2 when any step is not
-compilable. Point candidates (a last-resort click by screen position) are not expressible as a
-Playwright locator and are dropped with a comment. And unlike `run`, a compiled spec has no runtime
-recovery: if a locator has drifted since it was recorded, the spec fails outright instead of the
-agent reasoning its way to the moved control — you get speed and zero cost per run in exchange for
-giving up the LLM safety net.
+`build <flow-or-bundle>` compiles and runs the readiness gate. `check <name.flow.ts> --ready` runs
+the same gate on an existing artifact. Plain `compile` remains an offline operation, and plain
+`check` runs the spec once. Compilation alone never claims readiness.
 
-`sitelooper flow list | show <name>` and `sitelooper skills list | show <id>` show what was
-kept; flows are plain JSON under `~/.sitelooper/flows/`. A `run` prints per-step tier (A = zero
-model), turns spent and drift tickets, and `--json` returns all of it.
+The default gate requires three clean executions, with retries disabled. Every run starts from
+state prepared by the reset command or the fixtures you explicitly declared. Parameterized flows
+must use at least two distinct datasets (`{n}` becomes `1`, `2`, `3`). Every required flow step must
+complete, with no skipped tests, already-satisfied shortcuts, unresolved actions, or locator drift.
+The checker uses your actual Playwright config, project and relative fixture imports. Use `--config`
+and `--project` to select them. `--isolated` is a separate compiler smoke test and cannot earn readiness.
 
-**Diagnostics.** `compile` and `repair` both print problems as **diagnostics, first** — before
-counts, file lists or change lists — each as a `what` / `why` / `fix` block, and both carry the
-same list under `diagnostics` in `--json`. The point is that a broken *recording* and a broken
-*app* look completely different once said this way, instead of spreading across four surfaces as
-partial, sometimes contradictory hints. A step pinned to a **demoted** skill is an error: nothing
-is written, because the recording is what's wrong, not the app —
+Evidence is written to `<name>.readiness.json`, including the artifact hash, individual run verdicts,
+and distinct dataset count. The states are `compiled` and `spec-verified`; failures distinguish
+`blocked`, `unavailable`, and `failed`. A missing browser, dependency, or failed reset exits nonzero.
+Three clean runs establish an execution gate, not a statistical guarantee against flakiness.
 
-```
-$ SITELOOPER_SKILLS_DIR=fwod34-skills sitelooper compile fwod34.json --out out/
-error 08-open: it is pinned to the demoted skill s_c86522 — the compiled spec inherits a procedure
-whose last replays failed at the same step
-  why: s_c86522 is demoted: 1 of 4 replays succeeded; replay failed at step 1 on 3 of them; the
-  demotion was two consecutive failures at step 1; last used 2026-09-04T14:38:34.394Z.
-  fix: sitelooper rerecord fwod34.json 08-open
+Failure detection is a separate label. Supply `--negative-spec tests/ticket-fault.spec.ts` for an
+explicitly authored test that injects a known fault and asserts the intended outcome assertion fails.
+That test must pass to report `failureDetection: verified`. Omitting it reports `not-configured`;
+a configured negative test that fails reports `failed` and a nonzero exit while preserving the
+independent `executionVerified` result from the normal runs.
+See [project fixtures and negative checks](docs/testing-workflow.md).
 
-nothing written: the error(s) above are about the RECORDING, not the app — a compiled spec would
-fail at a locator and read as drift.
-re-record the step(s) with the fix command above, or pass --force to compile the demoted pin anyway.
-```
+### Portable project configuration
 
-`--force` compiles it anyway (it already overwrites an existing `.spec.ts`; this is its second
-meaning) — the emitted file then carries the same diagnostic as a comment above the step, and
-appended to that step's own locator-failure message, so a red CI run points straight back here
-instead of reading as ordinary drift.
+`sitelooper init` creates `sitelooper.config.json`. The nearest ancestor config supplies defaults;
+relative paths resolve from its directory and CLI flags override them.
 
-**Goal-state steps.** A recording that mutates the app also reads its own outcome back, so a
-step's compiled procedure carries a `goal`: the visible text ("Cancelled") that was NOT on the
-page when the instruction began and IS once it succeeded — the positive counterpart of
-`preconditions.requireText`. A goal is derived only when the instruction stayed on one page
-template, because only then is the pre-state the same page the outcome was read from. Both the replay engine (before it ever tries the zero-model path)
-and a compiled spec (a guard at the top of the step body) check identity AND every goal text
-against the LIVE page before a mutating step acts (and only on the page template the goal was
-read on, so a list row's "Cancelled" for some other order never counts); when both already hold, the step succeeds
-having done nothing, publishing the same values its read-backs would have from the stored report
-template:
-
-```
-[flow fwod34] 08-open: already satisfied — page shows "Cancelled" for "S00021"; nothing to do
-```
-
-`run`'s per-step line prints `satisfied` where it would otherwise print `replay` or `agent`. The
-emitted spec's guard is the same check, inlined at compile time so no model is needed to run it:
-
-```ts
-// goal: the page already showing "Cancelled" for this record means the step's work is done —
-// the same check replay makes before it acts (goalSatisfied, src/skills/replay.ts).
-if (await satisfied(page, [p.v1], ["Cancelled"])) {
-  console.log('[sitelooper satisfied] 08-open — page shows "Cancelled"; nothing to do');
-  outputs['08-open.order_status'] = 'Cancelled';
-  return;
+```json
+{
+  "targetUrl": "http://localhost:3000",
+  "vars": { "runid": "test-{n}" },
+  "requiredVars": ["runid"],
+  "resetCommand": "npm run reset:e2e",
+  "playwright": { "config": "playwright.config.ts", "project": "chromium" },
+  "verificationRuns": 3,
+  "outputDir": "tests/sitelooper",
+  "snapshotFile": ".sitelooper/procedures.json"
 }
 ```
 
-This is what turns a retry step harmless: fwod34's 08-open was recorded asking to cancel an order
-06-open had already cancelled; on replay 06-open's cancel lands cleanly and 08-open, told the same
-thing, now finds the goal already showing instead of hunting for a Cancel button that is not
-there. A false negative just runs the step as before — the check never skips work that has not
-actually happened.
+`targetUrl` overrides the entry URL of new scaffolds through `SITELOOPER_TARGET_URL`. It may also be
+a relative path resolved against Playwright's `baseURL`; recorded absolute navigations remain as
+recorded. `fixtureIsolation: true` declares fixture-managed fresh data instead of a reset command.
+`negativeSpec` can store the optional failure-detection spec path. Never put credentials in this file.
 
-**Contradicted steps.** The same recording carries the fact that would have caught this at export
-time, if 06-open's cancel had *reported* landing when it did not: a read-only step immediately
-after a mutating one is a free check on that mutating step's own report. `buildFlow` compares
-them directly — same label (or, failing that, any label that names a status/state field) — and
-when neither value's first line contains the other, it is a real contradiction, not just a
-fuller status bar next to a short one:
+`flow export` bundles the flow and its pinned procedures so another machine can compile without
+your user-level skill store. Commit the bundle, config and generated files when reproducible
+compilation is needed. Browser profiles and credentials remain outside the bundle. A bundle path
+can be passed directly to `compile` or `build`, or resolved by flow name from `snapshotFile`.
 
-```
-warning 07-open: 07-open read a value that contradicts what the previous step reported
-  why: contradicted-step: 07-open read order_status "Sales Order" right after 06-open reported
-  "Cancelled"; 06-open's change may not have landed and a later step may be retrying it.
-  Re-record 06-open.
-  fix: sitelooper rerecord fwod34.json 06-open
-```
+### Repair once, review, apply
 
-Like a `noop-step`, this is a record-time fact riding on `flow.warnings` that `compile`
-re-surfaces as a `contradicted-step` diagnostic, `fix` pointing at re-recording the mutating step
-— the one whose recording, not the app, needs another look.
-
-**The loop.** Once compiled, the `.spec.ts` runs under plain `@playwright/test` — no sitelooper
-process, no model, nothing but the two generated files and Playwright itself. Each locator call is
-a `pick()` fallthrough over the candidates recorded at compile time, tried in recorded order; if
-the primary misses and a later candidate resolves, that's drift, not failure — the test still
-passes, but `pick()` prints a `[sitelooper drift] ...` line and appends it to the `.flow.ts`'s
-exported `DRIFT` array, so a CI report or your own `.spec.ts` assertion can surface it without
-grepping stderr.
-
-When drift shows up (or the spec goes red outright), `sitelooper repair <name.flow.ts> --var k=v
-[--converge n]` closes the loop: it lifts the owned file back to its IR, replays it against the
-*live* app in an isolated temp store (never touching `~/.sitelooper`), and lets the recovery
-ladder adapt it — a resolved fallback is promoted with a pure codemod, no model; a chain that's
-gone dead gets one new locator proposed and verified by the model on the live page; a segment that
-needs re-recording is reported, never attempted. It then prints a reviewer-readable change list
-("candidate promoted", "new locator", "chain reordered"), and only if `--converge n` further real
-runs come back as clean tier-A replays with no drift does it rewrite the `.flow.ts` — the
-`.spec.ts` is never touched. A record-creating flow needs a fresh identity each of those runs;
-`{n}` in a `--var` value is replaced by the run number (`--var runid=fix-{n}` becomes `fix-0`,
-`fix-1`, ...). That gives each run its own records but not its own *app* — everything the
-previous run left behind is still there — so `--reset-cmd "<shell command>"` runs a command of
-your choosing before run 1 and before every converge run (`--reset-cmd "curl -s -X POST
-http://127.0.0.1:4180/__reset"`). It runs through a shell and a non-zero exit aborts the
-repair: a converge pass over an app that was not reset is a verdict about nothing.
-
-Repair also folds each run's evidence back into the chains as a pure codemod, no model: a
-candidate that has never resolved and has now missed on two runs is sorted to the *back* of its
-chain and reported as `candidate retired: <expr> — missed 2 run(s), never hit; now last`.
-Evidence outranks kind, with one exception — a structural css path never floats over an
-identity or handle candidate that has actually resolved. Once a candidate is retired this way
-the fallthrough that names it stops counting against `--converge`: the spec now records that
-fact, so re-observing it is not new drift. Without that rule one chronically volatile locator
-keeps the gate from ever clearing.
-
-One thing `repair` cannot see on its own: every gate above runs the *IR* through the daemon, so a
-defect in the **emitter** — a locator that lowers fine for replay and transpiles to a Playwright
-call that never resolves — passes convergence and still ships a red spec. (That is exactly what
-happened on kanboard: "converged, 5/5, no changes", file written, spec failing deterministically
-under plain Playwright.) `--check-spec` closes it: after the owned file is written, the sibling
-`.spec.ts` is run **once** under plain `@playwright/test` — a minimal generated config, headless,
-one worker, 60 s per test, `--var` values passed in as `process.env.<VAR>` the way the scaffold
-reads them, the same `--reset-cmd` first — and the JSON report is turned into one line:
-
-```
-spec check: passed in 8 s, 0 drift
-spec check: FAILED at @step 01-open s_8d7c18/2 — Error: none of 1 recorded locators resolved:
-getByTestId('field-nonsense-broken') — this is an emitter defect, not drift: the live replay
-passed this step
-```
-
-A failed check does **not** un-write the file — the repair may well have adapted the locator
-correctly, and the diff is still yours to review — but the exit code becomes `4`. When
-`@playwright/test` can't be resolved from the project the check says so and is skipped, never
-failed. The same run is available on its own as `sitelooper check <name.flow.ts> --var k=v
-[--reset-cmd "<cmd>"] [--json]`, which needs no daemon and no model; `--json` puts the whole
-verdict under `specCheck`, in `repair`'s report too.
-
-That "emitter defect" wording is only correct when the failing step is clean. When repair's own
-convergence runs already flagged the anchor step with a `needs-rerecord` diagnostic (see below),
-`--check-spec` says so instead:
-
-```
-spec check: FAILED at @step 08-open — the step's recording is the problem, not the emitter:
-08-open only passes because the engine replays s_fcb896 (read-only) instead of its demoted pin
-s_c86522; a compiled spec halts here
-```
-
-**When the recording, not the app, is what's wrong.** Sometimes every converge run passes —
-`repair` reports "9/9 tier A, no change" — only because the replay engine is quietly covering a
-broken pin with some *other* learned skill (it refuses to re-pin a read-only skill over a
-mutating one, `canAdoptPin`). A compiled spec has no such fallback, so it still halts. `repair`
-now catches this: a step whose pin is demoted, or whose converge runs are covered end-to-end by a
-skill other than its pin, gets a `needs-rerecord` diagnostic instead of counting as converged —
-printed first, `wrote: null`, exit `1` — instead of a silent, misleading "no change".
-
-Exit codes matter here: `2` means the file was hand-edited or otherwise refused outright (not a
-sitelooper flow file, or a missing `--var`); `3` means the repair itself worked but the convergence
-gate didn't hold; `4` means it converged and the file was written but the emitted `.spec.ts` failed
-its `--check-spec` run; `1` covers both "the repair would have dropped an expectation" (refused — an
-assertion that no longer holds is a test failure for a human, not drift) and "nothing could be
-repaired without re-recording". The intended workflow is a pull request, not a background daemon:
-CI runs the spec and fails loud on drift; a developer, or a scheduled agent picking up the failure,
-runs `repair` and opens the diff for review.
-
-```
-$ npx playwright test fwrd42.spec.ts
-  ✓ fwrd42 (6.0s)
-$ npx playwright test fwrd42.spec.ts        # after the app renamed a button
-  ✓ fwrd42 (6.1s)
-    [sitelooper drift] 02-add s_05e528/1 target: primary getByTestId('add-part') missed; used #2 getByRole('button', { name: 'Add part', exact: true })
-$ sitelooper repair fwrd42.flow.ts --var runid=fix-{n} --converge 1 \
-    --reset-cmd "curl -s -X POST http://127.0.0.1:4180/__reset"
-  02-add: candidate promoted: page.getByRole('button', { name: 'Add part', exact: true }) now primary (was #1)
-  candidate retired: page.getByText('{{v4}}', { exact: true }) — missed 2 run(s), never hit; now last — s_640d6e step 4 target
-  wrote fwrd42.flow.ts (14 change(s); the .spec.ts was not touched)
-$ sitelooper repair fwrd42.flow.ts --var runid=fix-{n} --converge 1 --check-spec \
-    --reset-cmd "curl -s -X POST http://127.0.0.1:4180/__reset"
-  ...
-  wrote fwrd42.flow.ts (14 change(s); the .spec.ts was not touched)
-  spec check: passed in 8 s, 0 drift
-```
-
-Be honest about what the loop still doesn't give back, even after `repair`: this stays Tier 2 —
-point candidates (a last-resort click by screen position) are still unexpressible and dropped at
-compile time; there's no live chain measurement, so the spec learns from a run only when `repair`
-is invoked, never continuously; there's no loop cursor across records; and a moved control still
-fails the *run that discovered it* before repair can act — recovery in a compiled spec is a
-follow-up PR, never a live save.
-
-**Re-recording one step.** When a diagnostic's `fix` says `sitelooper rerecord`, that step's
-*recording* is the problem — not a locator, a candidate to promote, or the app — so `repair`'s
-locator-level machinery can't help. `sitelooper rerecord <flow-name-or-path> <step-id>
-[--instruction "<text>"] [--var k=v ...] [--runs n] [--reset-cmd "<cmd>"] [--json]` re-records just
-that one step: it backs the flow file up as `<file>.bak-<stamp>.json`, throws away the step's pin,
-params and recorded values (keeping its declared outputs), and replays the flow `--runs` times
-(default 2) in learning mode so the agent records the step afresh and the store's own re-pin rule
-decides whether to keep the new procedure. It only succeeds when the *last* run replays the step at
-tier A on the new pin; each run is a real run against the app, so mint per-run values with `{n}` or
-reset the app with `--reset-cmd`, same as `repair --converge`. Whatever the daemon says about the
-step while a run is on it — above all a re-pin refusal such as `not re-pinning s_04d970 — slot(s)
-v2 identify the record but carry no origin to rebind from` — is printed under the run's line whether
-or not `--progress` is on, and quoted in the `needs-rerecord` diagnostic when nothing was pinned, so
-a refused re-record says *why* rather than just "no procedure".
-
-When the re-recorded step turns out to be a procedure another step of the same flow already pins
-(08-open, re-recorded as a read-only check, is covered by 07-open's status check), the new pin
-shares that skill and inherits the sibling step's bindings for any slot the store recorded no
-origin for. Read-only skills may be shared between steps; a mutating skill is still exclusive to
-one step, and a step whose instruction asks for a change never adopts a read.
-
-fwod34's step 08-open is exactly the demoted-pin case above: its instruction — written by the
-recording orchestrator — asks to cancel an order that step 06 had already cancelled, so the
-skill's first action clicks a Cancel button that is never there on replay. `--instruction` replaces
-the recorded ask with a read-only one, so re-recording produces a check instead of repeating the
-mistake:
-
-```
-$ sitelooper rerecord fwod34.json 08-open \
-    --instruction "Open the sales order {{v1}} and report its current status; do not change it."
-re-recording fwod34 step 08-open (2 run(s))
-  unpinned s_c86522, with a new instruction; old recording kept at fwod34.json.bak-lz3x9k.json
-run 1: 08-open  agent (6 turns) re-pinned s_fcb9a1
-  fwod34: 6/6 step(s) success
-run 2: 08-open  replay tier A (s_fcb9a1)
-  fwod34: 6/6 step(s) success
-08-open: pinned s_fcb9a1 (active, 1 action(s))
-fwod34.json updated — the previous recording is at fwod34.json.bak-lz3x9k.json
-```
-
-**Sizing an instruction.** One `do` is one logical, verifiable step: a goal plus the check that it
-worked. Several UI actions inside one instruction is normal — that is the point. Too big (several
-unrelated goals) stalls on planning; too small (one click) pays an agent loop for what `peek` gives
-free.
-
-**Briefing.** Everything the DOM will not tell an agent about your app goes in a page of markdown
-loaded with `brief <file.md>`: where things are, house conventions ("Apply only previews, Save
-persists"), credentials as `{{env:NAME}}` markers, what not to touch.
-
-### The full command set
+When a compiled spec fails or reports locator drift, make a repair proposal:
 
 ```sh
-sitelooper open <url> | brief <file.md> | note "<text>" | peek [--selector css] | screenshot [path]
-sitelooper do "<instruction>" [--json] [--progress] [--max-turns N] [--timeout S] [--no-escalate]
-sitelooper var <name>=<value>                    # declare a run variable (learning session)
-sitelooper skills list | show <id> | rm <id> | repair --drift <run-drift.json>
-sitelooper flow list | show <name>
-sitelooper run <flow> [--var k=v ...] [--json] [--progress]
-sitelooper script [out.spec.ts]                  # emit a plain Playwright spec from the recorded actions
-sitelooper compile <flow-name-or-path> [--out <dir>] [--force] [--json]
-                                                  # compile a converged flow to a standalone spec;
-                                                  # diagnostics (what/why/fix) print first; a step
-                                                  # pinned to a demoted skill refuses to write unless
-                                                  # --force
-sitelooper repair <name.flow.ts> [--var k=v ...] [--out <file>] [--converge <n>]
-                                 [--reset-cmd "<shell command>"] [--check-spec] [--dry-run]
-                                 [--model M] [--json]
-                                                  # replay a compiled flow against the live app and
-                                                  # fold the adaptation back into the owned .flow.ts;
-                                                  # --reset-cmd runs before run 1 and every converge run;
-                                                  # --check-spec then runs the emitted .spec.ts once
-                                                  # under plain Playwright (exit 4 if it fails); a step
-                                                  # whose recording, not the app, is broken gets a
-                                                  # needs-rerecord diagnostic and exit 1 instead
-sitelooper rerecord <flow-name-or-path> <step-id> [--instruction "<text>"] [--var k=v ...]
-                    [--runs n] [--reset-cmd "<cmd>"] [--json]
-                                                  # re-record ONE step whose pin is demoted or
-                                                  # covered by another skill; unpins it, optionally
-                                                  # replaces its instruction, and replays --runs
-                                                  # times (default 2) in learning mode
-sitelooper check <name.flow.ts> [--var k=v ...] [--reset-cmd "<cmd>"] [--json]
-                                                  # run the emitted .spec.ts once under plain
-                                                  # @playwright/test and report the verdict
-sitelooper session list | stop [--all] [--save-flow <name>]
-sitelooper doctor | config | config set <key> <value>
+sitelooper repair tests/sitelooper/ticket.flow.ts --propose ticket-repair.json \
+  --var runid=repair-{n} --reset-cmd "npm run reset:e2e"
+sitelooper repair apply ticket-repair.json
 ```
 
-Global flags: `--session <name>` (one daemon and browser per session), `--learn`, `--headed`,
-`--record` (webm per tab), `--script`, `--verbose`, `--progress`, `--json`. Exit codes: `0`
-succeeded, `1` failed or blocked, `2` infrastructure (no key, no browser, LLM unreachable).
+Proposal creation performs a live triage run, convergence runs (default one), then a plain Playwright
+check of a staged candidate beside your original spec, preserving fixture imports. It saves the
+candidate, change list, verification and execution count without replacing the original flow.
+Review those artifacts before applying. Apply writes the exact checked source without rerunning the
+browser, and refuses failed/drifted verification or a changed source, candidate or user spec.
+The user-owned `.spec.ts` is never rewritten. Proposal verification is one compiled-spec execution;
+run `check --ready` after applying when you need the full readiness evidence.
+
+Direct `repair <file>` still writes its result and now checks the emitted spec by default. A failed
+check leaves the diff available and exits nonzero. `--no-check-spec` explicitly opts out of checking.
+`--dry-run` previews file changes but still executes against the app; it is not an offline preview.
+If a diagnostic identifies a bad recording, use its `rerecord <flow> <step>` action instead.
+Repair refuses dropped expectations.
+
+`rerecord` accepts a flow JSON, a portable bundle, or a generated `.flow.ts`. Self-contained
+artifacts are re-recorded in an isolated procedure store and updated only when the requested step
+earns a clean replay. Failed attempts preserve the original bundle/compiled file and keep the
+staged evidence for inspection. The sibling user spec remains untouched.
+
+Compilation has two separate override flags: `--allow-demoted` permits a diagnosed demoted procedure;
+`--overwrite-spec` replaces the user scaffold. Neither implies the other. The old combined `--force`
+is rejected with migration guidance.
+
+### Calling from another agent
+
+Use `--json` for versioned authoring, compile, check and repair results. Existing result fields remain
+available alongside `schemaVersion`, `stage`, `outcome` and `nextActions`. Next actions use a command
+and argument array, avoiding shell-command parsing. Progress goes to stderr. For multiline instructions:
+
+```sh
+sitelooper --session ticket do --instruction-file tests/create-ticket.md --json
+# Or pipe text into: sitelooper --session ticket do --stdin --json
+```
+
+Exit codes: `0` success, `1` agent/recording failure, `2` invalid input or validation unavailable,
+`3` replay convergence failure, `4` compiled-spec/readiness failure. A green single `check` is a
+passing execution; only a successful readiness gate is `spec-verified`.
+
+Raw `--script` / `script` remains available for exploratory action exports. For committed tests,
+use the learned-flow build workflow above. Run `sitelooper --help` for the full command reference.
 
 ## Current matrix
 
