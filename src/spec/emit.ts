@@ -756,7 +756,7 @@ const HELPERS: { token: string; source: string[] }[] = [
       ' * throw, it is what stops "none of 3 recorded locators resolved" from',
       ' * reading as app drift when the recording is what needs redoing.',
       ' */',
-      'async function pick(page: Page, candidates: Locator[], where: string, opts: { any?: boolean } = {}, note?: string): Promise<Locator> {',
+      'async function pick(page: Page, candidates: Locator[], where: string, opts: { any?: boolean; drift?: string[] } = {}, note?: string): Promise<Locator> {',
       '  const enough = (n: number) => (opts.any ? n > 0 : n === 1);',
       '  const hits = async (i: number) => enough(await candidates[i].count().catch(() => 0));',
       '  /** The first candidate ahead of `i` that is there after all — see the re-check below. */',
@@ -779,7 +779,7 @@ const HELPERS: { token: string; source: string[] }[] = [
       '        if (won > 0) {',
       '          const line = `[sitelooper drift] ${where}: primary ${String(candidates[0])} missed; used #${won + 1} ${String(candidates[won])}`;',
       '          console.warn(line);',
-      '          DRIFT.push(line);',
+      '          (opts.drift ?? DRIFT).push(line);',
       '        }',
       '        return candidates[won];',
       '      }',
@@ -825,7 +825,7 @@ const HELPERS: { token: string; source: string[] }[] = [
       '  candidates: Locator[],',
       '  where: string,',
       '  read: (loc: Locator) => Promise<string>,',
-      '  opts: { any?: boolean } = {},',
+      '  opts: { any?: boolean; drift?: string[] } = {},',
       '): Promise<string> {',
       '  try {',
       '    return await read(await pick(page, candidates, where, opts));',
@@ -1399,9 +1399,11 @@ function actionTarget(
   const where = `${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex} ${key}`;
   out.push(`const ${name} = await pick(page, [`);
   for (const source of sources) out.push(`${CONT_INDENT}${source},`);
-  // `note` is the trailing argument, so a step with nothing wrong emits the
-  // call exactly as it always did.
-  const tail = ctx.note ? `, ${opts.any ? '{ any: true }' : '{}'}, ${q(ctx.note)}` : opts.any ? ', { any: true }' : '';
+  // Drift belongs to this invocation. `DRIFT` remains only as a compatibility
+  // view of the last completed run; helpers write into the run passed through
+  // the step instead of accumulating process-wide state.
+  const pickOpts = opts.any ? '{ any: true, drift: run.drift }' : '{ drift: run.drift }';
+  const tail = `, ${pickOpts}${ctx.note ? `, ${q(ctx.note)}` : ''}`;
   out.push(`], ${q(where)}${tail});`);
   return opts.first ? `${name}.first()` : name;
 }
@@ -1784,7 +1786,7 @@ function readLines(step: SkillStep, ctx: Ctx, opts: { any?: boolean; first?: boo
   const where = `${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex} target`;
   const lines = [`${out} = await readOptional(page, [`];
   for (const source of sources) lines.push(`${CONT_INDENT}${source},`);
-  lines.push(`], ${q(where)}, ${read}${opts.any ? ', { any: true }' : ''});`);
+  lines.push(`], ${q(where)}, ${read}, ${opts.any ? '{ any: true, drift: run.drift }' : '{ drift: run.drift }'});`);
   return lines;
 }
 
@@ -1964,7 +1966,7 @@ function refExpr(ref: string, vars: Set<string>): string {
   const secret = /^env:([A-Za-z_][A-Za-z0-9_]*)$/.exec(ref);
   if (secret) return `process.env.${secret[1]} ?? ''`;
   if (ref.includes('.')) return `outputs[${q(ref)}] ?? ''`;
-  if (vars.has(ref)) return `vars.${key(ref)}`.replace(`vars.'${ref}'`, `vars[${q(ref)}]`);
+  if (vars.has(ref)) return /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(ref) ? `vars.${ref}` : `vars[${q(ref)}]`;
   // A reference to something the flow never declared: honest at run time
   // rather than a compile-time guess at what the caller meant.
   return `(vars as Record<string, string>)[${q(ref)}] ?? ''`;
@@ -2037,11 +2039,58 @@ function urlOutputLines(stepId: string, outs: string[] | undefined): string[] {
   return lines;
 }
 
+/** Every output the generated body can publish or a later step can consume. */
+function outputKeys(spec: SpecFlow, urlRefs: Map<string, string[]>): string[] {
+  const keys = new Set<string>();
+  const visit = (stepId: string, steps: SkillStep[]) => {
+    for (const step of steps) {
+      if (step.label) keys.add(`${stepId}.${step.label}`);
+      if (step.mints) keys.add(`${stepId}.minted`);
+      if (step.body?.length) visit(stepId, step.body);
+    }
+  };
+  for (const step of spec.steps) {
+    for (const output of step.outputs) keys.add(`${step.id}.${output}`);
+    for (const segment of step.segments) {
+      visit(step.id, segment.steps);
+      for (const output of Object.keys(segment.report?.values ?? {})) keys.add(`${step.id}.${output}`);
+    }
+    // Include references even when their producer is absent. The compiler will
+    // diagnose that separately, while the emitted access remains useful and
+    // type-safe for a reviewer fixing the flow.
+    for (const value of Object.values(step.params)) {
+      for (const match of value.matchAll(/\{\{([\w-]+\.[\w.#-]+)\}\}/g)) keys.add(match[1]);
+    }
+  }
+  for (const [stepId, outputs] of urlRefs) for (const output of outputs) keys.add(`${stepId}.${output}`);
+  return [...keys].sort();
+}
+
+/** Environment-backed inputs named anywhere in the self-contained procedure. */
+function requiredEnvNames(spec: SpecFlow): string[] {
+  const names = new Set<string>();
+  const visit = (value: unknown) => {
+    if (typeof value === 'string') {
+      for (const match of value.matchAll(/\{\{env:([A-Za-z_][A-Za-z0-9_]*)\}\}/g)) names.add(match[1]);
+      return;
+    }
+    if (Array.isArray(value)) {
+      for (const item of value) visit(item);
+      return;
+    }
+    if (value && typeof value === 'object') for (const item of Object.values(value)) visit(item);
+  };
+  visit(spec);
+  return [...names].sort();
+}
+
 export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; warnings: string[] } {
   if (o.tier !== 'plain') throw new Error(`unknown emit tier ${String(o.tier)}`);
   const warnings: string[] = [];
   const vars = new Set(spec.vars);
   const urlRefs = consumedUrlRefs(spec);
+  const knownOutputs = outputKeys(spec, urlRefs);
+  const envInputs = requiredEnvNames(spec);
   const flagged = flaggedByStep(o.diagnostics);
 
   // Bodies first: which helpers the file needs is decided by what they use.
@@ -2071,16 +2120,32 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
     '// @sitelooper-flow v1',
     `// Generated by sitelooper from flow ${JSON.stringify(spec.name)} — do not edit by hand.`,
     '// Repair drift with `sitelooper repair <this file>`; the FLOW constant below is the source of truth.',
-    `import { expect, ${helpers.some((h) => h.source.some((l) => l.includes('Locator'))) ? 'type Locator, ' : ''}type Page } from '@playwright/test';`,
+    `import { expect, test, ${helpers.some((h) => h.source.some((l) => l.includes('Locator'))) ? 'type Locator, ' : ''}type Page } from '@playwright/test';`,
     '',
     BEGIN_MARKER,
     `export const FLOW = ${JSON.stringify(spec, null, 2)};`,
     END_MARKER,
     '',
+    `export const flowStepIds = ${JSON.stringify(spec.steps.map((step) => step.id))} as const;`,
+    `export const requiredInputNames = ${JSON.stringify(spec.vars)} as const;`,
+    `export const requiredEnvNames = ${JSON.stringify(envInputs)} as const;`,
+    '',
     `export type Vars = ${spec.vars.length ? `{ ${spec.vars.map((v) => `${key(v)}: string`).join('; ')} }` : 'Record<string, never>'};`,
-    '/** Values the steps read back, keyed "<stepId>.<output>". */',
-    'export interface Outputs {',
-    '  [key: string]: string;',
+    `export type OutputKey = ${knownOutputs.length ? knownOutputs.map(q).join(' | ') : 'never'};`,
+    '/** Known values the steps can read back, keyed "<stepId>.<output>". */',
+    'export type Outputs = Partial<Record<OutputKey, string>>;',
+    '/** Mutable state for one invocation. Pass it to runFlow to retain telemetry after a failure. */',
+    'export interface FlowRun {',
+    '  outputs: Outputs;',
+    '  drift: string[];',
+    '}',
+    'export interface RunOptions {',
+    '  /** Absolute URL, or a relative path resolved through the Playwright project baseURL. */',
+    '  startUrl?: string;',
+    '  run?: FlowRun;',
+    '}',
+    'export function createFlowRun(): FlowRun {',
+    '  return { outputs: {}, drift: [] };',
     '}',
     '/**',
     ' * The wall-clock budget one run of this flow needs under a test runner: every',
@@ -2094,15 +2159,28 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
     `export const BUDGET_MS = ${budgetMs(spec)};`,
     '/**',
     ' * Every `[sitelooper drift] …` line this run logged (see `pick` below):',
-    ' * a primary locator that missed and the recorded fallback that covered for',
+    ' * Compatibility view of the most recently completed run. New code should',
+    ' * use `createFlowRun()` and read `run.drift`, which is invocation-local.',
+    ' * A primary locator that missed and the recorded fallback that covered for',
     ' * it. Always exported — even a flow with no multi-candidate step today may',
     " * gain one after a repair — so a caller's assertion never has to guess",
     ' * whether it exists. Attach it from the user spec if you want it in the',
-    " * Playwright report: `test.info().attach('sitelooper-drift', { body: DRIFT.join('\\n') })`.",
+    " * Playwright report: `test.info().attach('sitelooper-drift', { body: run.drift.join('\\n') })`.",
     ' */',
     'export const DRIFT: string[] = [];',
   ];
   for (const helper of helpers) out.push('', ...helper.source);
+
+  out.push('', 'function validateInputs(vars: Vars): void {', '  const missing: string[] = [];');
+  for (const variable of spec.vars) {
+    const access = `vars[${q(variable)}]`;
+    out.push(`  if (typeof ${access} !== 'string' || !${access}.trim()) missing.push(${q(envName(variable))});`);
+  }
+  out.push('  for (const name of requiredEnvNames) {');
+  out.push("    if (!process.env[name]?.trim()) missing.push(name);");
+  out.push('  }');
+  out.push("  if (missing.length) throw new Error(`missing required flow input${missing.length === 1 ? '' : 's'}: ${[...new Set(missing)].join(', ')}`);");
+  out.push('}');
 
   out.push('', 'export const steps = {');
   for (const [i, b] of bodies.entries()) {
@@ -2115,19 +2193,32 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
     }
     out.push(`  /** ${commentSafe(b.step.instruction)} */`);
     const p = b.slots.length ? `{ ${b.slots.map((s) => `${s}: string`).join('; ')} }` : 'Record<string, string>';
-    out.push(`  async ${q(b.step.id)}(page: Page, p: ${p}, outputs: Outputs): Promise<void> {`);
+    out.push(`  async ${q(b.step.id)}(page: Page, p: ${p}, outputs: Outputs, run: FlowRun = createFlowRun()): Promise<void> {`);
     for (const line of b.lines) out.push(...line.split('\n').map((l) => (l ? '    ' + l : '')));
     out.push('  },');
   }
   out.push('};');
 
-  out.push('', '/** Runs every step in order. */', 'export async function runFlow(page: Page, vars: Vars): Promise<Outputs> {');
-  out.push('  const outputs: Outputs = {};');
-  out.push(`  await page.goto(${q(spec.startUrl)});`);
+  out.push('', '/** Runs every step in order. Each call owns its output and drift state. */');
+  out.push('export async function runFlow(page: Page, vars: Vars, options: RunOptions = {}): Promise<Outputs> {');
+  out.push('  validateInputs(vars);');
+  out.push('  const run = options.run ?? createFlowRun();');
+  out.push('  run.outputs = {};');
+  out.push('  run.drift.length = 0;');
+  out.push('  const outputs = run.outputs;');
+  out.push('  try {');
+  out.push(`    await page.goto(options.startUrl ?? ${q(spec.startUrl)});`);
   for (const b of bodies) {
-    out.push(`  await steps[${q(b.step.id)}](page, ${callArgs(b.step, b.slots, vars, warnings)}, outputs);`);
+    out.push(`    await test.step(${q(`${b.step.id}: ${b.step.instruction}`)}, async () => {`);
+    out.push(`      await steps[${q(b.step.id)}](page, ${callArgs(b.step, b.slots, vars, warnings)}, outputs, run);`);
+    out.push(`      console.log(${q(`[sitelooper step] ${b.step.id}`)});`);
+    out.push('    });');
   }
-  out.push('  return outputs;', '}', '');
+  out.push('    return outputs;');
+  out.push('  } finally {');
+  out.push('    DRIFT.splice(0, DRIFT.length, ...run.drift);');
+  out.push('  }');
+  out.push('}', '');
 
   return { source: out.join('\n'), warnings };
 }
@@ -2153,23 +2244,33 @@ export function budgetMs(spec: SpecFlow): number {
 }
 
 export function emitSpecFile(spec: SpecFlow): string {
-  const varFields = spec.vars.map((v) => `${key(v)}: process.env.${envName(v)} ?? ''`).join(', ');
+  const varFields = spec.vars.map((v) => `${key(v)}: process.env[${q(envName(v))}] ?? ''`).join(', ');
+  const filename = spec.name.replace(/[^A-Za-z0-9._-]+/g, '_') || 'flow';
   return [
-    "import { test, expect } from '@playwright/test';",
-    `import { runFlow, steps, DRIFT, BUDGET_MS } from './${spec.name}.flow';`,
+    "import { test } from '@playwright/test';",
+    `import { createFlowRun, runFlow, steps, BUDGET_MS } from './${filename}.flow';`,
     '',
     `test(${q(spec.name)}, async ({ page }) => {`,
     '  // One test runs the whole flow: budget it by its recorded steps, not the 60s default.',
     '  test.setTimeout(BUDGET_MS);',
-    `  const outputs = await runFlow(page, ${varFields ? `{ ${varFields} }` : '{}'});`,
-    '  // Add your own assertions here; this file is yours and sitelooper never rewrites it.',
-    '  // `outputs` holds every value the flow read back, keyed "<stepId>.<output>";',
-    '  // `steps` lets you run one step on its own. `DRIFT` accumulates one line per',
-    '  // recorded locator that missed and fell through to a later candidate — attach',
-    '  // it to the report if you want it visible without reading stderr:',
-    "  //   if (DRIFT.length) await test.info().attach('sitelooper-drift', { body: DRIFT.join('\\n') });",
-    '  expect(Object.keys(outputs).length >= 0).toBe(true);',
-    '  void steps;',
+    '  const run = createFlowRun();',
+    '  try {',
+    `    const outputs = await runFlow(page, ${varFields ? `{ ${varFields} }` : '{}'}, {`,
+    '      run,',
+    '      // Set SITELOOPER_TARGET_URL to an absolute URL, or a path resolved through project baseURL.',
+    '      startUrl: process.env.SITELOOPER_TARGET_URL,',
+    '    });',
+    '    // Add your own assertions here; this file is yours and sitelooper never rewrites it.',
+    '    // `outputs` has typed keys for every value this flow can publish.',
+    '    // `steps` lets you run one generated step on its own.',
+    '    void outputs;',
+    '    void steps;',
+    '  } finally {',
+    "    await test.info().attach('sitelooper-drift', {",
+    "      body: run.drift.join('\\n'),",
+    "      contentType: 'text/plain',",
+    '    });',
+    '  }',
     '});',
     '',
   ].join('\n');

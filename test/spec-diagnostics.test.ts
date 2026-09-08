@@ -179,7 +179,7 @@ describe('compileFlow: a demoted pin refuses to write', () => {
 
   it('writes nothing, and says why, when a step is pinned to a demoted skill', () => {
     const out = path.join(dir, 'refused');
-    const result = compileFlow(FWOD34, { store: new SkillStore(FWOD34_SKILLS), outDir: out, force: false });
+    const result = compileFlow(FWOD34, { store: new SkillStore(FWOD34_SKILLS), outDir: out });
     expect(result.refused).toBe(true);
     expect(result.flowFile).toBeNull();
     expect(result.specFile).toBeNull();
@@ -187,16 +187,16 @@ describe('compileFlow: a demoted pin refuses to write', () => {
     expect(result.diagnostics.some((d) => d.code === 'demoted-pin' && d.severity === 'error')).toBe(true);
   });
 
-  it('--force compiles it anyway, and the file carries the diagnostic', () => {
+  it('--allow-demoted compiles it anyway, and the file carries the diagnostic', () => {
     const out = path.join(dir, 'forced');
-    const result = compileFlow(FWOD34, { store: new SkillStore(FWOD34_SKILLS), outDir: out, force: true });
+    const result = compileFlow(FWOD34, { store: new SkillStore(FWOD34_SKILLS), outDir: out, allowDemoted: true });
     expect(result.refused).toBe(false);
     expect(result.flowFile).toBe(path.join(out, 'fwod34.flow.ts'));
     const source = fs.readFileSync(result.flowFile!, 'utf8');
     expect(source).toContain(`// error ${DEMOTED_STEP}: it is pinned to the demoted skill ${DEMOTED_SKILL}`);
     expect(source).toContain(`// fix: sitelooper rerecord ${FWOD34} ${DEMOTED_STEP}`);
     // and the step's own failure says it too
-    expect(source).toContain(`'08-open s_c86522/1 target', {}, 'it is pinned to the demoted skill s_c86522`);
+    expect(source).toContain(`'08-open s_c86522/1 target', { drift: run.drift }, 'it is pinned to the demoted skill s_c86522`);
   });
 });
 
@@ -250,7 +250,7 @@ function syntaxErrors(source: string): string[] {
 
 /** Just the step bodies: the inlined helpers have try/catch of their own. */
 function stepsBlock(source: string): string {
-  return source.slice(source.indexOf('export const steps = {'));
+  return source.slice(source.indexOf('export const steps = {'), source.indexOf('export async function runFlow'));
 }
 
 describe('the emitter on a flagged step', () => {
@@ -276,9 +276,9 @@ describe('the emitter on a flagged step', () => {
 
   it('hands the note to `pick`, as the trailing argument, so the throw carries it', () => {
     const { source } = emitFlowFile(specOf([twoWays]), { tier: 'plain', diagnostics: [FLAG] });
-    expect(source).toContain(`'01-do s_demo/1 target', {}, '${NOTE}'`);
+    expect(source).toContain(`'01-do s_demo/1 target', { drift: run.drift }, '${NOTE}'`);
     // and the helper appends it to the message it throws
-    expect(source).toContain('async function pick(page: Page, candidates: Locator[], where: string, opts: { any?: boolean } = {}, note?: string)');
+    expect(source).toContain('async function pick(page: Page, candidates: Locator[], where: string, opts: { any?: boolean; drift?: string[] } = {}, note?: string)');
     expect(source).toContain("(note ? `\\n  ${note}` : '')");
   });
 
@@ -303,7 +303,7 @@ describe('the emitter on a flagged step', () => {
 
   it('leaves an unflagged step exactly as it was: no note, no comment, no try', () => {
     const { source } = emitFlowFile(specOf([twoWays, oneWay]), { tier: 'plain' });
-    expect(source).toContain("], '01-do s_demo/1 target');");
+    expect(source).toContain("], '01-do s_demo/1 target', { drift: run.drift });");
     expect(stepsBlock(source)).not.toContain('try {');
     expect(source).not.toContain('// error 01-do');
     // the note parameter is still on the helper — it is simply never passed
@@ -314,7 +314,7 @@ describe('the emitter on a flagged step', () => {
     const noop: Diagnostic = { code: 'noop-step', step: '01-do', what: '01-do changed nothing', why: 'no mutation.', severity: 'warning' };
     const { source } = emitFlowFile(specOf([twoWays, oneWay]), { tier: 'plain', diagnostics: [noop] });
     expect(source).toContain('  // warning 01-do: 01-do changed nothing');
-    expect(source).toContain("], '01-do s_demo/1 target');");
+    expect(source).toContain("], '01-do s_demo/1 target', { drift: run.drift });");
     expect(stepsBlock(source)).not.toContain('try {');
   });
 

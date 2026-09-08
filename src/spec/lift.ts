@@ -1,7 +1,7 @@
 // Lifts an emitted `<name>.flow.ts` back to the `SpecFlow` IR it was generated
 // from. This is the other half of the round-trip emit.ts promises: repair
 // re-derives the FLOW literal from the live app and needs the OLD spec to
-// diff against, and `sitelooper compile --force` needs to know whether a
+// diff against, and `sitelooper compile --overwrite-spec` needs to know whether a
 // `.flow.ts` on disk is still a sitelooper-owned file worth overwriting
 // silently versus one a human edited past recognition (isOwnedFlowFile).
 //
@@ -21,7 +21,7 @@ export class LiftError extends Error {}
 
 /**
  * True when `source` carries the header comment + both region markers emit.ts
- * writes. Callers (repair, `compile --force`) use this to decide whether a
+ * writes. Callers (repair, `compile --overwrite-spec`) use this to decide whether a
  * `.flow.ts` on disk is still fully tool-owned; a file that has lost any of
  * these was edited past the point sitelooper can trust it, even if
  * `liftFlowFile` would still happen to parse what remains.

@@ -1,7 +1,7 @@
 import type { Flow } from '../skills/flow.js';
 import { mutates } from '../skills/learn.js';
 import { rethreadParams } from './rethread.js';
-import { diagnosticLine, rerecordFix, type Diagnostic } from './diagnostics.js';
+import { diagnosticLine, rerecordFix, rerecordAction, type Diagnostic } from './diagnostics.js';
 import type { Skill, SkillParam, SkillStep, SkillStore } from '../skills/store.js';
 
 /**
@@ -159,6 +159,7 @@ function noopDiagnostics(flow: Flow, flowFile: string | undefined): Diagnostic[]
         what: step ? `${step} changed nothing when it was recorded, though its instruction asks for a change` : text,
         why: text,
         fix: step ? rerecordFix(flowFile ?? flow.name, step) : undefined,
+        action: step ? rerecordAction(flowFile ?? flow.name, step) : undefined,
         severity: 'warning',
         line: text,
       });
@@ -174,6 +175,7 @@ function noopDiagnostics(flow: Flow, flowFile: string | undefined): Diagnostic[]
         what: step ? `${step} read a value that contradicts what the previous step reported` : text,
         why: text,
         fix: rerecordStep ? rerecordFix(flowFile ?? flow.name, rerecordStep) : undefined,
+        action: rerecordStep ? rerecordAction(flowFile ?? flow.name, rerecordStep) : undefined,
         severity: 'warning',
         line: text,
       });
@@ -214,6 +216,7 @@ export function flowToSpec(
         what: `its pinned skill ${step.skill} is not in the skill store`,
         why: 'the store this compile read has no such skill, so there is no procedure to emit — the store may be the wrong one (SITELOOPER_SKILLS_DIR), or the skill was cleared.',
         fix: rerecordFix(fixFile, step.id),
+        action: rerecordAction(fixFile, step.id),
         severity: 'warning',
         line: `step ${step.id} refers to skill ${step.skill}, which is not in the store`,
       });
@@ -232,6 +235,7 @@ export function flowToSpec(
         what: 'it has no converged procedure, so the compiled spec throws here',
         why: 'nothing in the store resolves to a recorded procedure for this step; the emitted body is a throw, not a silent skip.',
         fix: rerecordFix(fixFile, step.id),
+        action: rerecordAction(fixFile, step.id),
         severity: 'warning',
         line: `step ${step.id} has no converged procedure`,
       });
@@ -244,6 +248,7 @@ export function flowToSpec(
           what: `it is pinned to the demoted skill ${member.id} — the compiled spec inherits a procedure whose last replays failed at the same step`,
           why: demotionWhy(member),
           fix: rerecordFix(fixFile, step.id),
+        action: rerecordAction(fixFile, step.id),
           severity: 'error',
           line: `step ${step.id} compiles a demoted skill (${member.id}) — its last replays failed at the same step`,
         });

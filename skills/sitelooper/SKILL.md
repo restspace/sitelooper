@@ -1,20 +1,17 @@
 ---
 name: sitelooper
-description: Delegate a whole natural-language browser step — one with judgment or multiple assertions baked in — to an internal LLM agent loop that drives Playwright itself, instead of you clicking/filling/asserting element-by-element. Best for executing E2E test plans, multi-step flows, and app-specific verification against a written app briefing. Uses the `sitelooper` CLI. For low-level, deterministic single-action DOM poking (one click, one fill, one read), prefer the `browser-testing` skill / `agent-browser` CLI instead — cheaper and no LLM tokens spent per action.
+description: Delegate a whole natural-language browser step — one with judgment or multiple assertions baked in — to an internal LLM agent loop that drives Playwright itself, instead of you clicking/filling/asserting element-by-element. Best for executing E2E test plans, multi-step flows, and app-specific verification with an optional app briefing. Uses the `sitelooper` CLI. For low-level, deterministic single-action DOM poking (one click, one fill, one read), prefer the `browser-testing` skill / `agent-browser` CLI instead — cheaper and no LLM tokens spent per action.
 ---
 
 # sitelooper: agent-in-the-loop browser automation
 
 `sitelooper` takes one natural-language instruction and returns one concise
 structured result — `{status, summary, details?, evidence?}` — instead of you
-issuing 4-6 selector-aware, wait-aware calls per logical step. An internal LLM
-agent (GLM 5.2 via novita by default — already configured, `NOVITA_API_KEY` is
-set) translates the instruction into Playwright tool calls against a
-persistent browser, verifies the result, and reports back. You never touch
-selectors, waits, dialogs, or quoting for the delegated step.
-
-Check availability: `sitelooper --help`. Already installed/linked on this
-machine.
+issuing several selector-aware, wait-aware calls per logical step. A configured
+LLM provider translates the instruction into Playwright tool calls against a
+persistent browser, verifies the result, and reports back. Use `sitelooper
+doctor` to check the local browser and provider setup, and supply provider
+credentials through environment variables or `sitelooper config`.
 
 ## Core loop
 
@@ -27,7 +24,7 @@ sitelooper peek [--selector css] [--interactive]
 sitelooper screenshot [path]
 
 # the core verb — anything requiring judgment or multi-part assertions
-sitelooper do "log in as admin@example.com / pw123"
+sitelooper do "log in as {{env:TEST_USER}} using {{env:TEST_PASSWORD}}"
 sitelooper do "create a supplier organisation named 'k7x2 MTP Supplies Ltd' and confirm it appears in the Organisations list with the count incremented" --json
 
 # housekeeping — answered immediately, even while a `do` is running
@@ -37,7 +34,7 @@ sitelooper config
 ```
 
 - Exit codes: `0` succeeded · `1` failed/blocked · `2` infra error (no key, no browser, LLM unreachable).
-- `--json` gives `{report, turns, usage, model}`; on any bail-out it also carries `actions` (the
+- `--json` gives `{schemaVersion, stage, outcome, nextActions, report, turns, usage, model}`; on any bail-out it also carries `actions` (the
   ordered tool calls that ran — check before blindly repeating a mutation), `transcriptTail`, and
   `finalState` (where the browser was left).
 - `--verbose` / `--progress` stream the internal agent's turn-by-turn activity to stderr.
@@ -48,35 +45,58 @@ sitelooper config
 | `--timeout` | 300 | wall-clock seconds for the whole instruction |
 | `--turn-timeout` | 90 | wall-clock seconds for one LLM call — see below |
 
-## Turning a run into a Playwright spec
+## Authoring a Playwright test
 
-If the point of the run is to end up with a committed test, start the session with `--script`:
+Use the learned-flow path when the deliverable is a committed test. It records one procedure per
+logical outcome, snapshots everything needed to compile
+on another machine, and runs the emitted code under plain Playwright.
 
 ```sh
-sitelooper --session flow --script open http://localhost:5173
-sitelooper --session flow do "log in as admin@example.com / pw123"
-sitelooper --session flow script tests/login.spec.ts   # standalone @playwright/test spec
+sitelooper init
+sitelooper --session login --learn open http://localhost:5173
+sitelooper --session login do "log in as {{env:TEST_USER}} using {{env:TEST_PASSWORD}} and verify the dashboard opens"
+sitelooper --session login stop --save-flow login
+sitelooper flow export login --out .sitelooper/procedures.json
+sitelooper build login --fixture-isolation
 ```
 
-Every successful action is captured with a durable locator resolved from the live DOM (testid →
-role+name → label → id → text → CSS path) and verified against the page, so no `@ref` handles leak
-into the output. One `test.step` per `do`. `wait_for` becomes a real assertion; `read` becomes a
-commented-out one; anything unresolvable is a `TODO`, never a wrong selector. Review before
-committing — it replays the path the agent took, detours included. `script --clear` discards the
-recording; adding `--clear` to a write starts a fresh one.
+`build` compiles the flow, then runs the readiness gate against the generated `.spec.ts`. Readiness
+means three clean, retry-free executions by default, with fresh state and distinct parameter values;
+all required flow steps must execute, and no skip, already-satisfied shortcut, or locator drift may
+hide the behavior being tested. Use `--reset-cmd "<command>"` when a command prepares clean data, or
+`--fixture-isolation` when the selected Playwright project's fixtures do it. A setup failure or an
+unavailable Playwright installation is **not verified** and exits nonzero.
 
-For a flow whose steps have already converged into stored procedures (via `--learn`, see below),
-`sitelooper compile <flow-name-or-path> [--out <dir>] [--force]` is the other route to a spec: no
-session, no daemon, no model call — it emits an owned `<name>.flow.ts` (the flow plus one generated
-step function per `FlowStep`, compiled straight from the stored locator chains) and a `<name>.spec.ts`
-scaffold written once and never overwritten. It is compile-time only: no live-page measurement, no
-point-candidate clicks, and no runtime recovery if a locator has since drifted — a drifted step fails
-the spec outright rather than reasoning its way to the moved control. `compile` exits 2 when a step
-never converged to a stored procedure, and prints a `what`/`why`/`fix` diagnostic block, before
-anything else, for any step whose pin is demoted — refusing to write unless you pass `--force`
-(its recording, not the app, is what's broken; see step 6 below for the fix). When a compiled spec
-later goes red or logs drift in CI, see "Repairing a compiled spec after a red CI run" below —
-that's a `repair` job, not a `do`.
+Project defaults live in the nearest `sitelooper.config.json`. Paths are relative to that file:
+
+```json
+{
+  "targetUrl": "http://localhost:5173",
+  "requiredVars": ["runid"],
+  "vars": { "runid": "test-{n}" },
+  "resetCommand": "npm run reset:e2e",
+  "playwright": { "config": "playwright.config.ts", "project": "chromium" },
+  "outputDir": "tests/sitelooper",
+  "snapshotFile": ".sitelooper/procedures.json",
+  "verificationRuns": 3
+}
+```
+
+Keep passwords, tokens, and other secrets out of this file. Put `{{env:NAME}}` references in
+instructions and set those variables in the environment that authors and CI use. `requiredVars`
+names flow inputs, while generated specs validate their required environment references separately.
+
+`flow export` writes the flow, every pinned procedure segment, and compiler provenance to one
+portable snapshot. Commit it when another developer or CI must be able to reproduce compilation
+without `~/.sitelooper/skills`. The generated `<name>.flow.ts` is tool-owned and refreshed on compile;
+the `<name>.spec.ts` scaffold is user-owned and is created only once. Use `--overwrite-spec` only when
+you intentionally want a new scaffold. `--allow-demoted` only permits a diagnosed demoted procedure;
+it never overwrites the scaffold.
+
+Use `sitelooper check <name.flow.ts> --ready` to repeat the readiness gate for an existing artifact.
+Use plain `compile` only when you intentionally want an offline compiler pass without live readiness
+evidence. Raw `--script` recording remains useful for exploration, but it captures the agent's exact
+path, including detours, and is not the recommended test-authoring artifact.
 
 ## Repairing a compiled spec after a red CI run
 
@@ -88,13 +108,13 @@ for `do`. Work the failure like this:
    candidate missed but a recorded fallback covered — the test may still be green) and, on an
    actual failure, the `// @step <id> <segment>/<index>` anchor comment in the `.flow.ts` nearest
    the failing line — that's the step and candidate to focus on, not the whole flow.
-2. Dry-run the repair first: `sitelooper repair <name.flow.ts> --var k=v ... --dry-run`. This
-   performs the real triage and prints the change list without writing anything, so you can see
-   what it *would* do before it touches the file.
-3. If the change list looks right, run it for real with a convergence check and a fresh identity
-   per run: `sitelooper repair <name.flow.ts> --var k=v --var runid=fix-{n} --converge 1`. `{n}`
-   in a `--var` value becomes the run number, so a record-creating flow doesn't collide with
-   itself across the repair run and the converge run(s).
+2. Stage a repair proposal: `sitelooper repair <name.flow.ts> --var k=v --var runid=fix-{n}
+   --converge 1 --propose repair.json`. This performs the live triage and convergence runs once,
+   verifies the compiled candidate, and saves its exact source, source hash, change list, and
+   verification result. `{n}` becomes the run number, so record-creating flows do not collide.
+3. Review `repair.json` and its printed change list, then apply that exact candidate with
+   `sitelooper repair apply repair.json`. Apply refuses a changed source file or an unverified
+   proposal; it does not repeat browser work.
 4. Review the printed change list line by line ("candidate promoted", "new locator", "chain
    reordered", "step re-pinned to variant ..."). This is the diff a human would otherwise have to
    reconstruct from the `.flow.ts` diff by hand.
@@ -114,8 +134,8 @@ for `do`. Work the failure like this:
    otherwise it prints why and exits 1. A `contradicted-step` diagnostic's `fix` points at the
    *mutating* step (the one whose report a later read-only step disagreed with), not the step that
    eventually failed because of it — re-record that one, not the one you saw fail.
-7. Once `repair` has written the file (`converged: true` / "wrote ... (N change(s); the .spec.ts
-   was not touched)"), commit only the `.flow.ts` diff and open it as a PR, with the printed
+7. Once `repair apply` has written the file, commit only the `.flow.ts` diff and open it as a PR,
+   with the printed
    change list as the PR description — that list is already the reviewer-facing summary of what
    changed and why.
 
@@ -128,15 +148,14 @@ and the engine checks the live page for both identity and that goal before actin
 already hold, the step succeeds having done nothing rather than repeating work (or failing to find
 a control that a prior step's retry already removed). Nothing to fix here; it is the retry-safety
 half of the same mechanism `contradicted-step` and `noop-step` flag the *unsafe* version of.
-`repair` itself never touches anything outside a throwaway temp store until the very last
-step (the file write) — the runs it performs against the live app to triage and converge are
-real runs, so treat `--converge n` as `n` additional real executions against the app, same as
-any other run.
+`repair` itself never touches anything outside a throwaway temp store until `repair apply` writes
+the reviewed candidate. Its triage and convergence executions against the live app are real: one
+triage plus `--converge n` additional runs. A legacy `--dry-run` also performs real browser work;
+prefer a proposal when you may apply the result.
 
 ## Learning mode — repeated work gets cheaper
 
-If you will run the same kind of steps against a site more than once (a test plan you re-run, a flow
-across many similar records), start the session with `--learn`. Every `do` that succeeds is compiled
+Start a test-authoring session with `--learn`. Every `do` that succeeds is compiled
 into a stored, parameterised procedure; on later `do`s that start on the same page the internal agent
 is offered those procedures, replays one deterministically, and only reasons about steps that no longer
 work. A run that took 14 internal turns the first time typically takes 2–3 the next, with the same
@@ -144,7 +163,7 @@ report shape and every value still read back from the live page.
 
 ```sh
 sitelooper --session t1 --learn open http://localhost:5173
-sitelooper --session t1 do "sign in as admin@example.com / pw123 and create a project named 'k7 Demo'"
+sitelooper --session t1 do "sign in as {{env:TEST_USER}} using {{env:TEST_PASSWORD}} and create a project named 'k7 Demo'"
 sitelooper skills list                    # what has been learned for each site
 sitelooper skills show <id>               # the steps, their fallbacks, what is a parameter
 ```
