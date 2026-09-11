@@ -8,7 +8,7 @@ import { componentsOnPage, renderComponents } from '../skills/components.js';
 import { originOf } from '../skills/store.js';
 import { siteModel } from '../skills/sitemap.js';
 import { buildSystemPrompt } from './prompt.js';
-import { addEvidenceValue, admitsIncompletion, backfillReadValues, flattenComposedValues, mergeReportValues, namingAskMessage, promoteLabelledReads, proseIdentifiers, unnamedReadValues, validateReport, type Report } from './report.js';
+import { admitsIncompletion, backfillReadValues, flattenComposedValues, mergeReportValues, namingAskMessage, promoteLabelledReads, publishProseIdentifiers, unnamedReadValues, validateReport, type Report } from './report.js';
 import { executeTool, toolDefsFor, type ToolExecution } from './tools.js';
 import { captureReadBack, captureReadBackAt, setIdentityHints } from '../daemon/recorder.js';
 
@@ -356,27 +356,26 @@ export async function runInstruction(
       // S00021). Pin it on the live page as a real read, so it becomes a
       // published output a later step can reference and a replay re-reads its
       // OWN — fwod5 cancelled the recorded run's order for want of this.
-      if (browser.isOpen) {
-        try {
-          const page = await browser.getPage();
-          const pinned: string[] = [];
-          for (const value of proseIdentifiers(report)) {
-            const step = await captureReadBack(page, value);
-            if (!step) continue; // not uniquely on the page — it stays prose
-            browser.script.addStep(step);
-            // Named `ref`, not after the target. The target of a synthesized
-            // read-back is the literal "(read-back)" or, on the model-sourced
-            // path, a CSS selector — odoo published a value called
-            // `o_subtotal_o_total_name_`, slugged from
-            // `.o_subtotal, .o_total, [name="amount_untaxed"]`. A later step
-            // can only reference a name a human or a model would write.
-            pinned.push(addEvidenceValue(report, 'ref', value));
-          }
-          if (pinned.length) opts.onProgress?.(`[report] pinned ${pinned.length} prose-cited identifier(s) to the page: ${pinned.join(', ')}`);
-        } catch {
-          // a wedged/navigating page must never turn a good report into no report
-        }
-      }
+      //
+      // Named `ref`, not after the target. The target of a synthesized
+      // read-back is the literal "(read-back)" or, on the model-sourced path, a
+      // CSS selector — odoo published a value called `o_subtotal_o_total_name_`,
+      // slugged from `.o_subtotal, .o_total, [name="amount_untaxed"]`. A later
+      // step can only reference a name a human or a model would write.
+      //
+      // A value that cannot be pinned is published anyway: see
+      // publishProseIdentifiers for what leaving it as prose cost.
+      const script = browser.script;
+      const page = browser.isOpen ? await browser.getPage().catch(() => null) : null;
+      const { pinned, unpinned } = await publishProseIdentifiers(report, async (value) => {
+        if (!page) return false;
+        const step = await captureReadBack(page, value);
+        if (!step) return false;
+        script.addStep(step);
+        return true;
+      });
+      if (pinned.length) opts.onProgress?.(`[report] pinned ${pinned.length} prose-cited identifier(s) to the page: ${pinned.join(', ')}`);
+      if (unpinned.length) opts.onProgress?.(`[report] published ${unpinned.length} prose-cited identifier(s) no single element shows (a replay re-reads them through recovery): ${unpinned.join(', ')}`);
     }
     // This line is what survives once the instruction's tool results are
     // elided at the next boundary, so the facts the caller asked for ride

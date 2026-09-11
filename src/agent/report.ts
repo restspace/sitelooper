@@ -548,7 +548,11 @@ const MAX_PROSE_ID_LEN = 40;
  * captureReadBack) so a replay re-reads its own.
  */
 export function proseIdentifiers(report: Report): string[] {
-  const prose = `${report.summary} ${report.details ?? ''}`;
+  // A url in prose is an address, not a citation: its host ("127.0.0.1") and
+  // path segments are the app's, and one published as `ref` would turn every
+  // later url into a reference. Url parts have their own provenance path
+  // (flow.ts url outputs), so they are skipped here, not judged.
+  const prose = `${report.summary} ${report.details ?? ''}`.replace(/\b[a-z][a-z0-9+.-]*:\/\/\S+/gi, ' ');
   const present = new Set(Object.values(report.evidence?.values ?? {}).map((v) => String(v).trim()));
   const out: string[] = [];
   for (const m of prose.matchAll(/[A-Za-z0-9][A-Za-z0-9._-]*/g)) {
@@ -564,6 +568,38 @@ export function proseIdentifiers(report: Report): string[] {
     out.push(v);
   }
   return out;
+}
+
+/**
+ * Publish every prose-cited identifier as a `ref` output, pinned to the page
+ * where possible (`pin` returns false when the value cannot be located to one
+ * element) and published anyway where not.
+ *
+ * Unpinned used to mean "stays prose", and prose is invisible: fwrd44-n1's
+ * create step reported its ticket only as "…appears in the refreshed list as
+ * RD-1128", the detail page shows RD-1128 twice (breadcrumb and header), the
+ * pin refused, and RD-1128 went into four later flow instructions as a
+ * LITERAL — every replay naming the recording's ticket, with no guard able to
+ * see it because nothing had banked it. Published, it becomes a reference:
+ * a replay that cannot re-read it sends the consumer to recovery, which is
+ * told the name to report. Cost, never a wrong record.
+ */
+export async function publishProseIdentifiers(
+  report: Report,
+  pin: (value: string) => Promise<boolean>,
+): Promise<{ pinned: string[]; unpinned: string[] }> {
+  const pinned: string[] = [];
+  const unpinned: string[] = [];
+  for (const value of proseIdentifiers(report)) {
+    let ok = false;
+    try {
+      ok = await pin(value);
+    } catch {
+      ok = false; // a wedged page must not lose the citation
+    }
+    (ok ? pinned : unpinned).push(addEvidenceValue(report, 'ref', value));
+  }
+  return { pinned, unpinned };
 }
 
 /** Add a value to a report's evidence under a fresh name derived from `base`. */

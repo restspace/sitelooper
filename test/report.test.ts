@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addEvidenceValue, backfillReadValues, flattenComposedValues, promoteLabelledReads, proseIdentifiers, unnamedReadValues, validateReport, type Report } from '../src/agent/report.js';
+import { addEvidenceValue, backfillReadValues, flattenComposedValues, promoteLabelledReads, proseIdentifiers, publishProseIdentifiers, unnamedReadValues, validateReport, type Report } from '../src/agent/report.js';
 
 describe('report validation', () => {
   it('accepts a minimal valid report', () => {
@@ -188,6 +188,37 @@ describe('proseIdentifiers', () => {
   it('skips refs, ordinals and measurements so the real reference is not crowded out', () => {
     const report = { status: 'success' as const, summary: 'Clicked @e1234 on the 10th row (width 100px, took 30s) and confirmed order S00021.', evidence: { values: {} } };
     expect(proseIdentifiers(report)).toEqual(['S00021']);
+  });
+
+  it('does not cite a url as an identifier', () => {
+    // fwrd44-n1's report: the host 127.0.0.1 passes the shape test, and
+    // published as `ref` it would turn every later url into a reference.
+    const report = {
+      status: 'success' as const,
+      summary: 'Created it; it appears in the list as RD-1128. Its detail view at http://127.0.0.1:4180/#/tickets/t15 shows status Draft.',
+      evidence: { values: {} },
+    };
+    expect(proseIdentifiers(report)).toEqual(['RD-1128']);
+  });
+});
+
+describe('publishProseIdentifiers', () => {
+  it('publishes an identifier the page cannot pin, instead of leaving it as prose', async () => {
+    // fwrd44-n1: RD-1128 shown twice on the detail page, pin refused, and the
+    // literal rode into four flow instructions. Unpinned is still published.
+    const report: Report = { status: 'success', summary: 'Ticket RD-1128 created; order S00021 linked.', evidence: { values: {} } };
+    const out = await publishProseIdentifiers(report, async (v) => v === 'S00021');
+    expect(out).toEqual({ pinned: ['ref_2'], unpinned: ['ref'] });
+    expect(report.evidence?.values).toEqual({ ref: 'RD-1128', ref_2: 'S00021' });
+  });
+
+  it('keeps the citation when pinning throws', async () => {
+    const report: Report = { status: 'success', summary: 'Ticket RD-1128 created.', evidence: { values: {} } };
+    const out = await publishProseIdentifiers(report, async () => {
+      throw new Error('page navigated');
+    });
+    expect(out.unpinned).toEqual(['ref']);
+    expect(report.evidence?.values).toEqual({ ref: 'RD-1128' });
   });
 });
 

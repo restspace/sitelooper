@@ -5,7 +5,7 @@ import { ensureSessionDir } from '../shared/paths.js';
 import { volatileMatcher } from '../shared/text.js';
 import { isRefTarget, refHint, resolveTarget } from './refs.js';
 import { tagComponent } from '../skills/components.js';
-import { GENERATED_ID_HEX_RUN } from '../skills/shape.js';
+import { GENERATED_ID_HEX_RUN, skeleton } from '../skills/shape.js';
 
 /**
  * One way of finding an element, in a form that can be rebuilt into a Locator
@@ -850,6 +850,37 @@ export async function captureReadBack(page: Page, value: string, label?: string)
     const inHeading = page.locator('h1, h2, h3').getByText(v, { exact: true });
     if ((await inHeading.count().catch(() => 0)) === 1) {
       const handle = await inHeading.elementHandle({ timeout: 1_000 }).catch(() => null);
+      if (handle) {
+        try {
+          const step = await readBackFromHandle(page, handle, v);
+          if (step) return label ? { ...step, label } : step;
+        } finally {
+          await handle.dispose().catch(() => {});
+        }
+      }
+    }
+    // Ambiguous by text, but exactly one match is held by an element with a
+    // STABLE test hook — one whose testid names a role on the page, not a
+    // record (shape.ts `skeleton`: `ticket-ref` qualifies, a per-row
+    // `ticket-link-t15` does not). Same argument as the heading: the hook is
+    // the app naming what this page displays, so a replay that reaches the
+    // page re-reads its own record there. fwrd44-n1 is what refusing it cost:
+    // repair-desk shows a ticket's ref in the breadcrumb AND in
+    // `<p data-testid="ticket-ref">`, the pin bailed, and the recording's
+    // RD-1128 rode into four flow instructions as a literal. A list page with
+    // the same hook on every row matches it more than once and still refuses.
+    const hooked = await loc
+      .evaluateAll((els, want) =>
+        els.map((el) => {
+          const holder = (el as Element).closest('[data-testid]') as HTMLElement | null;
+          const own = holder ? (holder.innerText ?? holder.textContent ?? '').replace(/\s+/g, ' ').trim() : '';
+          return holder && own === want ? holder.getAttribute('data-testid') ?? '' : '';
+        }),
+      v)
+      .catch(() => [] as string[]);
+    const stable = hooked.map((t, i) => ({ t, i })).filter(({ t }) => t && skeleton(t) === t);
+    if (stable.length === 1) {
+      const handle = await loc.nth(stable[0].i).elementHandle({ timeout: 1_000 }).catch(() => null);
       if (handle) {
         try {
           const step = await readBackFromHandle(page, handle, v);

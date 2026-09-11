@@ -1499,3 +1499,49 @@ d('a text wait located through a positional candidate (fixture page)', () => {
     }
   }, 30_000);
 });
+
+d('prose read-back through a stable test hook (fixture page)', () => {
+  it('pins a value shown twice when exactly one showing is a stable-hooked element', async () => {
+    // fwrd44-n1: repair-desk's detail page shows the ticket ref in the
+    // breadcrumb AND in <p data-testid="ticket-ref">. The unique-text pin
+    // refused, and RD-1128 rode into four flow instructions as a literal.
+    const { captureReadBack } = await import('../src/daemon/recorder.js');
+    const session = new BrowserSession({ session: 'hookpin', persist: false });
+    try {
+      const page = await session.getPage();
+      await page.setContent(`
+        <nav class="breadcrumb"><a href="#">Tickets</a> / <span class="breadcrumb-current">RD-1128</span></nav>
+        <header><p class="eyebrow" data-testid="ticket-ref">RD-1128</p><h1>fwrd44-n1 RD Bench Ticket</h1></header>`);
+      const step = await captureReadBack(page, 'RD-1128');
+      expect(step).not.toBeNull();
+      const chain = step!.locators.target.chain ?? [];
+      expect(chain.some((c) => c.kind === 'testid' && (c as { value: string }).value === 'ticket-ref')).toBe(true);
+      // And nothing in the chain locates it BY the value it reads.
+      expect(JSON.stringify(chain)).not.toContain('RD-1128');
+    } finally {
+      await session.close();
+    }
+  }, 30_000);
+
+  it('still refuses when the hook is per-record or on every row', async () => {
+    const { captureReadBack } = await import('../src/daemon/recorder.js');
+    const session = new BrowserSession({ session: 'hookpin2', persist: false });
+    try {
+      const page = await session.getPage();
+      // Per-record hook: its skeleton differs from itself, so it names a record.
+      await page.setContent(`
+        <span>RD-1128</span>
+        <a data-testid="ticket-link-t15">RD-1128</a>`);
+      expect(await captureReadBack(page, 'RD-1128')).toBeNull();
+      // A stable hook on every row of a list: more than one hooked match.
+      await page.setContent(`
+        <table>
+          <tr><td data-testid="ticket-ref">RD-1128</td></tr>
+          <tr><td data-testid="ticket-ref">RD-1128</td></tr>
+        </table>`);
+      expect(await captureReadBack(page, 'RD-1128')).toBeNull();
+    } finally {
+      await session.close();
+    }
+  }, 30_000);
+});

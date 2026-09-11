@@ -170,6 +170,18 @@ const INVENTORY: { file: string; fn: Fn; calls: number; question: string; fails:
     note: 'cites(), with elastic whitespace.',
   },
   {
+    file: 'src/daemon/recorder.ts',
+    fn: 'skeleton',
+    calls: 1,
+    question: 'does this test hook name a role on the page, or a record?',
+    fails: 'cost',
+    note:
+      'captureReadBack pins an ambiguous value to its one stable-hooked match. A hook ' +
+      'wrongly judged per-record is refused (the value is still published unpinned and ' +
+      'goes through recovery); one wrongly judged stable still has to be the ONLY hooked ' +
+      'match, so a list with the hook on every row refuses either way.',
+  },
+  {
     file: 'src/skills/compile.ts',
     fn: 'skeleton',
     calls: 8,
@@ -238,7 +250,10 @@ function census(src: string): string[] {
 }
 
 const ALLOWLIST: Record<string, { hits: string[]; answers: string }> = {
-  'src/agent/report.ts': { hits: ['[A-Za-z0-9._-]*'], answers: 'tokenises prose for proseIdentifiers; digitDominant judges each token' },
+  'src/agent/report.ts': {
+    hits: ['[A-Za-z0-9._-]*', '[a-z0-9+.-]*'],
+    answers: 'tokenises prose for proseIdentifiers (digitDominant judges each token), and skips a url scheme (syntax) so a host is never cited',
+  },
   'src/daemon/diff.ts': { hits: ['[a-z0-9-]*'], answers: 'parses an aria-snapshot role name (syntax)' },
   'src/daemon/fingerprint.ts': { hits: ['[0-9a-f]{6'], answers: 'CLASS_HASH_HEX_RUN, page-side (decision 3C)' },
   'src/daemon/recorder.ts': {
