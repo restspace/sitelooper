@@ -288,8 +288,17 @@ export function compileSkills(input: CompileInput): Skill[] {
   // param that can never bind makes bindSkill refuse the skill's own source
   // instruction. Keep a known-value slot only when its marker survives.
   const tentative = sub(input.instruction);
+  // A declared var's slot is kept even when its marker survives only in
+  // expectations: it binds by origin, and a var is supplied on every run (see
+  // discoverSlots' varOnly — the reason the general rule excludes expectations
+  // does not apply to it).
+  const varValues = new Set(
+    Object.entries(input.knownValues ?? {})
+      .filter(([key]) => isVarOrigin(key))
+      .map(([, v]) => String(v ?? '').trim()),
+  );
   const keptSlots = new Map(
-    [...slots].filter(([n, v]) => usedNames.has(n) || (knownVals.has(v) && tentative.includes(`{{${n}}}`))),
+    [...slots].filter(([n, v]) => usedNames.has(n) || (knownVals.has(v) && tentative.includes(`{{${n}}}`)) || varValues.has(v)),
   );
   const finalTemplate = keptSlots.size === slots.size ? sub(input.instruction) : substitute(input.instruction, keptSlots);
   // The mirror hazard: a slot whose marker survives only in STEPS (its every
@@ -489,6 +498,15 @@ function derivesFromKnown(value: string, known: Set<string>): boolean {
   return false;
 }
 
+/**
+ * A known-value key that names a DECLARED VAR — `var:runid`, as bindingKey
+ * spells it. The flow runner passes its vars to a recovery's compile in the
+ * same form, so this is the one spelling to test for.
+ */
+export function isVarOrigin(key: string): boolean {
+  return key.startsWith('var:');
+}
+
 function identityOf(startText: string | undefined, slots: Map<string, string>, known: Set<string>): string[] {
   if (!startText) return [];
   const out: string[] = [];
@@ -629,8 +647,29 @@ export function discoverSlots(
     knownVals.push(v);
   }
   knownVals.sort((a, b) => instruction.indexOf(a) - instruction.indexOf(b) || b.length - a.length);
+  // A DECLARED VAR the instruction never names but the procedure still
+  // carries — in what it typed, how it found things, or what the page showed
+  // after. fwrd45's 06-change named its ticket only by reference, yet its
+  // expectations quoted the parts table: `row "fwrd45-n1 RD Part B … Acme
+  // Parts Co …"`. With no slot the runid stayed literal, the replay's row read
+  // fwrd45-n2, step 7 (whose only expectation that was) could never match,
+  // and both replays paid 15 recovery turns — the recovery then stored a
+  // procedure with n2's runid baked in instead.
+  //
+  // Vars only. A var is supplied on every run, so a slot bound to it by
+  // origin always binds. An earlier step's OUTPUT is not: f24bdf9 kept such
+  // slots on expectation evidence, and bindSkill refused whole skills
+  // whenever that output went unpublished (fwgr23 05-open, fwkb3-n3).
+  const carried = JSON.stringify(steps.map((s) => [s.args, s.locators, s.diff?.added ?? [], s.diff?.alerts ?? []]));
+  const varOnly: string[] = [];
+  for (const [key, raw] of Object.entries(known)) {
+    const v = String(raw ?? '').trim();
+    if (!isVarOrigin(key) || v.length < 2 || v.length > 200) continue;
+    if (knownVals.includes(v) || varOnly.includes(v) || !occursAsToken(carried, v)) continue;
+    varOnly.push(v);
+  }
   const ordered = [...values]
-    .filter((v) => !knownVals.includes(v))
+    .filter((v) => !knownVals.includes(v) && !varOnly.includes(v))
     // A value appearing twice in the instruction cannot be given a slot: one
     // slot name would stand for two roles. "sign in with email admin and
     // password admin" compiled to "email {{v1}} and password {{v1}}", and
@@ -646,7 +685,7 @@ export function discoverSlots(
     .filter((v) => countTokenOccurrences(instruction, v) === 1)
     .map((v) => ({ v, at: instruction.indexOf(v) }))
     .sort((a, b) => a.at - b.at || b.v.length - a.v.length)
-    .slice(0, Math.max(0, MAX_SLOT_VALUES - knownVals.length));
+    .slice(0, Math.max(0, MAX_SLOT_VALUES - knownVals.length - varOnly.length));
   // Third slot source, exempt from instruction anchoring: a navigation arg's
   // `id=` value that the ledger already banked from an EARLIER instruction's
   // url. The armdoc rightly forbids instructions naming database ids, so this
@@ -666,14 +705,14 @@ export function discoverSlots(
     for (const part of urlParts(step.args.url)) {
       if (!idPositionPart(part)) continue;
       if (!knownIdOrigins.has(part.value) || urlIdVals.includes(part.value)) continue;
-      if (knownVals.includes(part.value) || values.has(part.value)) continue;
+      if (knownVals.includes(part.value) || varOnly.includes(part.value) || values.has(part.value)) continue;
       urlIdVals.push(part.value);
     }
   }
   const slots = new Map<string, string>();
   // Known values first so a cap can never cut them: they are the slots that
   // decide whether the skill survives past the run that recorded it.
-  [...knownVals, ...ordered.map(({ v }) => v), ...urlIdVals].forEach((v, i) => slots.set(`v${i + 1}`, v));
+  [...knownVals, ...varOnly, ...ordered.map(({ v }) => v), ...urlIdVals].forEach((v, i) => slots.set(`v${i + 1}`, v));
   return slots;
 }
 

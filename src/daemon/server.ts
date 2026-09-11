@@ -12,7 +12,7 @@ import { buildFlow, consumedReportedOutputs, consumedUrlOutputs, ignorableRefs, 
 import { applyRelabelToEntries, applyRelabelToSkills, relabelCases, requestRelabelPlan } from '../skills/relabel.js';
 import { goalSatisfied, renderReplay } from '../skills/replay.js';
 import { drainDrift, llmProposer, recordCandidateEvidence } from '../skills/repair.js';
-import { RunLedger, bindingKey, describeLeaks, fatal, scanForLeaks, type Leak } from '../skills/ledger.js';
+import { RunLedger, bindingKey, describeLeaks, evidenced, fatal, scanForLeaks, type Leak } from '../skills/ledger.js';
 import { quarantineLeakedSteps } from '../spec/rerecord.js';
 import { rerecordFix } from '../spec/diagnostics.js';
 import { originOf, type Skill } from '../skills/store.js';
@@ -842,9 +842,18 @@ ${describeLeaks(leaks.slice(0, 6))}`);
     // into the flow. WARN for now — the ledger's coverage is what is being
     // measured, and a false alarm must not block an export.
     const leaks = this.leaksIn(flow, store);
-    if (leaks.length) {
-      warnings.unshift(`warning: ${leaks.length} run value(s) survived unslotted (non-fatal — a stale urlPattern fails loudly, a stale reportTemplate is caught by synthesizeReport):
-${describeLeaks(leaks.slice(0, 10))}`);
+    // Two lists, because one buried the other: the values evidence says are
+    // this run's (a var, an id= position, observed variance) in full, and the
+    // shape-only rest — mostly page copy — as a count and a sample.
+    const certain = leaks.filter(evidenced);
+    const guessed = leaks.filter((l) => !evidenced(l));
+    if (guessed.length) {
+      warnings.unshift(`warning: ${guessed.length} other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+${describeLeaks(guessed.slice(0, 5))}`);
+    }
+    if (certain.length) {
+      warnings.unshift(`warning: ${certain.length} value(s) KNOWN to be this run's survived unslotted — a replay will act on or wait for the recording's value (non-fatal outside locators):
+${describeLeaks(certain.slice(0, 30))}${certain.length > 30 ? `\n  … and ${certain.length - 30} more` : ''}`);
     }
     // Work the recording did that the flow does not contain. Loud, because a
     // flow missing its create step is unusable and looks fine until a replay
@@ -1209,7 +1218,14 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
           // Slot-by-policy inputs: this run's declared vars plus every url
           // provenance value minted so far, so a skill compiled from a repair
           // is generic across runs instead of baking in this run's ids.
-          vars: { ...varsIn, ...provenanceValues(outputs), ...referencedValues(step, outputs) },
+          // Vars keyed `var:<name>`, as the ledger keys them (bindingKey): a
+          // slot's `binding` is this key, and compile recognises a var — the
+          // one origin supplied on every run — by that spelling.
+          vars: {
+            ...Object.fromEntries(Object.entries(varsIn).map(([k, v]) => [`var:${k}`, v])),
+            ...provenanceValues(outputs),
+            ...referencedValues(step, outputs),
+          },
         });
         // Whether the pin moves is decideRepin's call (see it for the
         // lifecycle and graduation rules). The pin is a hint, not an

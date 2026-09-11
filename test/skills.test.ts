@@ -166,6 +166,44 @@ describe('volatile expectations and whitespace identity (fwkb3, fwod31)', () => 
     const markers = new Set(Array.from(JSON.stringify(s.steps).matchAll(/\{\{(v\d+)\}\}/g), (m) => m[1]));
     for (const m of markers) expect(s.params).toHaveProperty(m);
   });
+  it('slots a declared var the instruction never names but the expectations quote (fwrd45 06-change)', () => {
+    // The instruction names the ticket only by reference; the recording then
+    // saw the parts table, rows carrying the runid. Left literal, the replay's
+    // row (fwrd45-n2 …) could never match and the step paid 15 recovery turns
+    // on both replays.
+    const text = 'On the detail page of ticket RD-1015, set its status to Ready.';
+    const entries: RecordedEntry[] = [
+      { k: 'instruction', text, url: `${ORIGIN}/#/tickets/t15`, fingerprint: [1, 0, 0] },
+      step('click', { target: '@e13' }, [{ kind: 'role', role: 'button', name: 'Save part' }], {
+        diff: { url: `${ORIGIN}/#/tickets/t15`, alerts: ['Part "fwrd45-n1 RD Part B" has no supplier'], added: ['- row "fwrd45-n1 RD Part B $200.00 Acme Parts Co"'] },
+      }),
+    ];
+    const known = { 'var:runid': 'fwrd45-n1', 'output:i2:reference': 'RD-1015' };
+    const s = compileSkill({ entries, instruction: text, report, session: 's', model: 'm', now: '2026-09-11T00:00:00Z', knownValues: known })!;
+    const runidSlot = Object.entries(s.params).find(([, p]) => p.example === 'fwrd45-n1');
+    expect(runidSlot, 'the runid gets a slot').toBeTruthy();
+    const [name, param] = runidSlot!;
+    expect(param.binding).toBe('var:runid');
+    expect(s.steps[0].expect?.addedContains?.[0]).toBe(`- row "{{${name}}} RD Part B $200.00 Acme Parts Co"`);
+    expect(s.steps[0].expect?.alertContains).toContain(`{{${name}}}`);
+    expect(JSON.stringify(s)).not.toMatch(/"- row \\"fwrd45-n1/);
+    // And it binds on the NEXT run from the var, though the instruction never names it.
+    const bound = bindSkill(s, 'On the detail page of ticket RD-1016, set its status to Ready.', { 'var:runid': 'fwrd45-n2', 'output:i2:reference': 'RD-1016' });
+    expect(bound?.[name]).toBe('fwrd45-n2');
+  });
+
+  it('does not slot an earlier OUTPUT the expectations quote — it may not be published (f24bdf9)', () => {
+    const text = 'On the detail page, set its status to Ready.';
+    const entries: RecordedEntry[] = [
+      { k: 'instruction', text, url: `${ORIGIN}/#/tickets/t15`, fingerprint: [1, 0, 0] },
+      step('click', { target: '@e13' }, [{ kind: 'role', role: 'button', name: 'Mark Ready' }], {
+        diff: { url: `${ORIGIN}/#/tickets/t15`, alerts: [], added: ['- row "RD-1015 Ready"'] },
+      }),
+    ];
+    const s = compileSkill({ entries, instruction: text, report, session: 's', model: 'm', now: '2026-09-11T00:00:00Z', knownValues: { 'output:i2:reference': 'RD-1015' } })!;
+    expect(Object.values(s.params).map((p) => p.example)).not.toContain('RD-1015');
+  });
+
   it('labels a list read with the report value made from the whole list, not with one item (fwgr23 01-open)', () => {
     const text = 'Report the panel titles on the Service Health dashboard.';
     const entries: RecordedEntry[] = [

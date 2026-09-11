@@ -402,6 +402,22 @@ export function describeLeaks(leaks: Leak[]): string {
 }
 
 /**
+ * A leak whose value is KNOWN to be this run's, by evidence rather than
+ * shape: a declared var, a url `id=` position, a value a later run watched
+ * change. Every one of these is a replay acting on — or waiting for — the
+ * recording's value. A `shape` leak may be page copy the run merely saw
+ * ("Ready", the login email), and there are usually hundreds.
+ *
+ * The export lists these first and in full. fwrd45 printed "183 run value(s)
+ * survived unslotted" with the first ten, all noise; the runid baked into
+ * 06-change's expectations — which cost both replays 15 turns — was not
+ * among them.
+ */
+export function evidenced(leak: Leak): boolean {
+  return leak.basis !== 'shape';
+}
+
+/**
  * Which leaks are fatal.
  *
  * A leak in a LOCATOR or a precondition acts on the wrong record silently:

@@ -7,7 +7,7 @@
  * the finding.
  */
 import { describe, expect, it } from 'vitest';
-import { RunLedger, fatal, inLocator, occursAsToken, scanForLeaks } from '../src/skills/ledger.js';
+import { RunLedger, evidenced, fatal, inLocator, occursAsToken, scanForLeaks } from '../src/skills/ledger.js';
 import { looksLikeId } from '../src/skills/shape.js';
 import { primaryFor } from '../src/daemon/recorder.js';
 
@@ -390,5 +390,25 @@ describe('what earlier runs settled outranks what the characters say', () => {
     taught.seedVariance(['315']);
     expect(taught.addUrlIds('http://x/web#action=315', 'i1', [{ label: 'q.action', value: '315' }])
       .map((b) => [b.value, b.basis])).toEqual([['315', 'variance']]);
+  });
+});
+
+describe('evidenced leaks', () => {
+  it('separates a value known to be this run from one judged by shape', () => {
+    // fwrd45: 183 unslotted values, the first ten printed, all page copy — and
+    // the runid baked into 06-change's expectations was not among them.
+    const l = new RunLedger();
+    l.add('fwrd45-n1', { from: 'var', name: 'runid' }, { vouched: true });
+    l.add('Ready', { from: 'output', step: 'i5', name: 'status' });
+    l.addUrlIds('http://h/#id=44&model=sale.order', 'i2', [{ label: 'q.id', value: '44' }]);
+    const skill = {
+      template: 'x',
+      steps: [{ tool: 'click', args: {}, locators: {}, expect: { addedContains: ['- row "fwrd45-n1 RD Part B"', '- button "Ready"', '- cell "44"'] } }],
+    };
+    const leaks = scanForLeaks(skill, l, 's');
+    const byValue = (v: string) => leaks.find((x) => x.value === v)!;
+    expect(evidenced(byValue('fwrd45-n1'))).toBe(true);
+    expect(evidenced(byValue('44'))).toBe(true);
+    expect(evidenced(byValue('Ready'))).toBe(false);
   });
 });
