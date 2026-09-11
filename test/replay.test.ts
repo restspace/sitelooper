@@ -1439,3 +1439,63 @@ describe('consequentialExpectations — a fill echo is no evidence the RIGHT ele
     expect(consequentialExpectations(only, undefined)).toEqual(only);
   });
 });
+
+d('a text wait located through a positional candidate (fixture page)', () => {
+  it('is met when a later recorded candidate already shows the text', async () => {
+    // fwrd43 01-open: the wait's first candidate was `label "Tickets" >> nth=1`,
+    // which on replay resolved to an EMPTY element, while the chain's next
+    // candidate — the tickets section — already showed the new ticket. Both
+    // replays sent the create step to recovery over it.
+    const { replaySkill } = await import('../src/skills/replay.js');
+    const session = new BrowserSession({ session: 'textwait', persist: false });
+    try {
+      const page = await session.getPage();
+      await page.setContent(`
+        <nav aria-label="Tickets"><a href="#">Tickets</a></nav>
+        <section aria-label="Tickets"></section>
+        <section id="list"><table><tr><td>r7 RD Bench Ticket</td></tr></table></section>`);
+      // The positional primary must resolve — to the EMPTY element — or this
+      // test would not reach the path it is about.
+      expect(await page.getByLabel('Tickets').nth(1).count()).toBe(1);
+      expect(await page.getByLabel('Tickets').nth(1).innerText()).toBe('');
+      const skill = {
+        id: 's_wait',
+        steps: [
+          {
+            tool: 'wait_for',
+            args: { target: '@e1', state: 'text_contains', text: '{{v1}} RD Bench Ticket' },
+            // The recorded shape: a positional label, then a structural path.
+            locators: { target: [{ kind: 'label', label: 'Tickets', nth: 1 }, { kind: 'css', selector: 'body > section:nth-of-type(2)' }] },
+          },
+        ],
+        params: { v1: { example: 'r1', usedIn: [1] } },
+        preconditions: { urlPattern: page.url() },
+      } as unknown as Skill;
+      const out = await replaySkill(skill, { v1: 'r7' }, {
+        page,
+        exec: async (_tool, args, resolved) => {
+          const text = await resolved.target.first().innerText();
+          if (!text.includes(String(args.text))) throw new Error(`wait_for text_contains timed out after 100ms (last: text="${text}")`);
+          return { result: 'ok' };
+        },
+      });
+      expect(out.ok).toBe(true);
+      expect(out.fallthroughs).toBe(1);
+      expect(out.warnings.join('\n')).toMatch(/already showing in fallback #2/);
+
+      // And a text that is nowhere still fails, so the fallback cannot paper
+      // over a create that did not happen.
+      const miss = await replaySkill(skill, { v1: 'r8' }, {
+        page,
+        exec: async (_tool, args, resolved) => {
+          const text = await resolved.target.first().innerText();
+          if (!text.includes(String(args.text))) throw new Error('wait_for text_contains timed out after 100ms');
+          return { result: 'ok' };
+        },
+      });
+      expect(miss.ok).toBe(false);
+    } finally {
+      await session.close();
+    }
+  }, 30_000);
+});

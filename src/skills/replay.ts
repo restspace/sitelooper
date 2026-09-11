@@ -448,6 +448,23 @@ export async function replaySkill(
           res.lines.push(`${head} → skipped (${clip(message, 120)})`);
           return 'skipped';
         }
+        // A text wait is a condition on the PAGE, located through a chain.
+        // resolveChain took the first candidate that matched exactly one
+        // element, which for a positional candidate can be the wrong one:
+        // fwrd43's create step waited for the new ticket's title in `label
+        // "Tickets" >> nth=1`, which on replay was an empty element, while the
+        // chain's own next candidate — the tickets section — already showed
+        // it. Both replays of 01-open went to recovery over it. The condition
+        // holds if any recorded way of finding the target shows the text; the
+        // wait already gave the page its full timeout to paint.
+        const heldBy = await textHeldElsewhere(page, step, args, params);
+        if (heldBy) {
+          res.fallthroughs++;
+          res.misses.push({ step: tag, key: 'target', primary: candidateExpr((step.locators.target ?? [])[0]), used: candidateExpr(heldBy.candidate), usedIndex: heldBy.index });
+          res.warnings.push(`step ${tag}: ${clip(message, 120)}; the text was already showing in fallback #${heldBy.index + 1} ${candidateExpr(heldBy.candidate)}`);
+          res.lines.push(`${head} → condition met in fallback #${heldBy.index + 1}`);
+          return 'ran';
+        }
         res.failedAt = failIndex;
         res.reason = `${step.tool} failed: ${clip(message, 300)}`;
         res.lines.push(`${head} → FAILED: ${clip(message, 300)}`);
@@ -1274,6 +1291,37 @@ const LOOP_SHRINK_WAIT_MS = 1_000;
 export function waitsForAbsence(step: SkillStep, args: Record<string, unknown>): boolean {
   if (step.tool !== 'wait_for') return false;
   return args.state === 'hidden' || (args.state === 'count' && Number(args.count) === 0);
+}
+
+/**
+ * For a text wait that timed out: another recorded candidate for its target
+ * that shows the text right now, if there is one. Candidates are tried in
+ * recorded order after the primary; a point is skipped (it names a place, not
+ * an element with text), and a candidate must still match exactly one element.
+ */
+async function textHeldElsewhere(
+  page: Page,
+  step: SkillStep,
+  args: Record<string, unknown>,
+  params: Record<string, string>,
+): Promise<{ index: number; candidate: LocatorCandidate } | null> {
+  if (step.tool !== 'wait_for' || typeof args.text !== 'string' || !args.text.trim()) return null;
+  if (args.state !== 'text_contains' && args.state !== 'text_equals') return null;
+  const want = args.text.replace(/\s+/g, ' ').trim();
+  const chain = (fillParamsDeep(step.locators.target ?? [], params) as LocatorCandidate[]) ?? [];
+  for (let index = 1; index < chain.length; index++) {
+    const candidate = chain[index];
+    if (candidate.kind === 'point') continue;
+    try {
+      const locator = makeLocator(page, candidate);
+      if ((await locator.count()) !== 1) continue;
+      const text = ((await locator.textContent({ timeout: 1_000 })) ?? '').replace(/\s+/g, ' ').trim();
+      if (args.state === 'text_equals' ? text === want : text.includes(want)) return { index, candidate };
+    } catch {
+      continue;
+    }
+  }
+  return null;
 }
 
 function resolveWaitMs(): number {

@@ -8,7 +8,7 @@ import { urlPattern as compiledUrlPattern, dropDeadReadLocators, fillParams, str
 import type { DriftTicket } from '../skills/repair.js';
 import type { Page } from 'playwright-core';
 import { agentGesturesOutsideReplay, bindSkill, canAdoptPin, decideRepin, learnFromInstruction, matchTemplate, publishedOutputs, selectCandidates, synthesizeReport } from '../skills/learn.js';
-import { buildFlow, consumedUrlOutputs, ignorableRefs, jsonLeaves, lintFlowRefs, listFlows, loadFlow, loadFlowFile, lookupOutput, mutatingIntent, noteOutputEvidence, recoveryRoute, remapParams, resolveInstruction, resolveStepParams, softResolveInstruction, saveFlow, staleInstructionIds, unbankedMutations, urlOutputs, varyingValues, type RunSpecific } from '../skills/flow.js';
+import { buildFlow, consumedReportedOutputs, consumedUrlOutputs, ignorableRefs, jsonLeaves, lintFlowRefs, listFlows, loadFlow, loadFlowFile, lookupOutput, mutatingIntent, noteOutputEvidence, recoveryRoute, remapParams, resolveInstruction, resolveStepParams, softResolveInstruction, saveFlow, staleInstructionIds, unbankedMutations, urlOutputs, varyingValues, type RunSpecific } from '../skills/flow.js';
 import { applyRelabelToEntries, applyRelabelToSkills, relabelCases, requestRelabelPlan } from '../skills/relabel.js';
 import { goalSatisfied, renderReplay } from '../skills/replay.js';
 import { drainDrift, llmProposer, recordCandidateEvidence } from '../skills/repair.js';
@@ -1135,6 +1135,18 @@ ${describeLeaks(leaks.slice(0, 10))}`);
             `Work them out from the page when the goal itself is clear — but if a blank leaves the goal ambiguous ` +
             `(a destination, a target record, a value to set), STOP and report blocked instead of guessing.`
           : '';
+        // Later steps address this step's findings BY NAME. A recovery's model
+        // names its read-backs freely, and a name that is a different word
+        // (`reference` for `ticket_reference`) is beyond the cosmetic aliasing
+        // below — so say the names up front. Names only: a recorded value here
+        // is one the model could copy, which would publish the recording's
+        // record as this run's.
+        const consumed = consumedReportedOutputs(flow.steps, step.id);
+        const namesNote = consumed.length
+          ? `\n\n[replay] Later steps use what this step finds. In your report's evidence.values, include each of these ` +
+            `that you can observe on the page in THIS run, under exactly this name: ${consumed.join(', ')}. ` +
+            `Read each from the page; never copy a value from this instruction or from memory. Omit any you cannot observe.`
+          : '';
         const route = recoveryRoute(step, unresolved);
         const primary = route.easy ? opts.provider : opts.recovery;
         const escalation = route.easy && opts.recovery.model !== opts.provider.model ? opts.recovery : null;
@@ -1154,7 +1166,7 @@ ${describeLeaks(leaks.slice(0, 10))}`);
             this.state,
             (direct.prelude ? `${recoveryText}
 
-${direct.prelude}` : recoveryText) + blankNote + resetNote,
+${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
             {
               maxTurns: budget.maxTurns,
               timeoutMs: budget.timeoutMs,
@@ -1451,7 +1463,11 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote,
       usage,
       usageByModel: diffUsageByModel(usageBefore, this.state.usageByModel),
       recoveryModel: opts.recovery.model,
-      provider: this.provider().constructor.name === 'AnthropicProvider' ? 'anthropic' : (process.env.SITELOOPER_PROVIDER || 'zhipu'),
+      // The provider name the daemon actually resolved (flag > env > global
+      // config > default), not env-or-default: fwrd43's replays ran on
+      // openrouter from the global config, were labelled "zhipu", found no
+      // rate under that name, and the sweep priced 15–20 recovery turns at $0.
+      provider: resolveProviderConfig().provider,
     };
   }
 

@@ -967,6 +967,29 @@ export function consumedUrlOutputs(steps: FlowStep[]): Map<string, Set<string>> 
   return wanted;
 }
 
+/**
+ * The REPORTED outputs of `stepId` that some later step consumes — the names
+ * a recovery of that step must report under, or every consumer falls to
+ * recovery too. fwrd43-n3's recovered 01-open reported the ticket's reference
+ * as `reference`; four later steps asked for `ticket_reference` and one for
+ * `ticket_parts`, which it did not report at all, and 07-remove paid 16 turns.
+ * Url parts are excluded: they are captured from the browser, not reported. A
+ * `#path` suffix names a leaf of the output, so the output itself is listed.
+ */
+export function consumedReportedOutputs(steps: FlowStep[], stepId: string): string[] {
+  const out = new Set<string>();
+  const at = steps.findIndex((s) => s.id === stepId);
+  for (const s of steps.slice(at + 1)) {
+    for (const text of [s.instruction, ...Object.values(s.params ?? {})]) {
+      for (const m of text.matchAll(/\{\{([\w-]+)\.([\w.-]+?)(?:#[\w.-]+)?\}\}/g)) {
+        if (m[1] !== stepId || m[2] === 'url' || m[2].startsWith('url.')) continue;
+        out.add(m[2]);
+      }
+    }
+  }
+  return [...out];
+}
+
 export function lookupOutput(outputs: Record<string, Record<string, string>>, sid: string, out: string): string | undefined {
   const hash = out.indexOf('#');
   if (hash < 0) return outputs[sid]?.[out];

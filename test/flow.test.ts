@@ -5,7 +5,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { RecordedEntry } from '../src/daemon/recorder.js';
 import {
   ignorableRefs,
-  consumedUrlOutputs, buildFlow, lintFlowRefs, noteOutputEvidence, recoveryRoute, resolveInstruction, resolveStepParams, softResolveInstruction, unbankedMutations, urlOutputs, varyingValues, type Flow, type FlowStep } from '../src/skills/flow.js';
+  consumedReportedOutputs, consumedUrlOutputs, buildFlow, lintFlowRefs, noteOutputEvidence, recoveryRoute, resolveInstruction, resolveStepParams, softResolveInstruction, unbankedMutations, urlOutputs, varyingValues, type Flow, type FlowStep } from '../src/skills/flow.js';
 import { bindSkill, publishedOutputs, synthesizeReport } from '../src/skills/learn.js';
 import type { Skill } from '../src/skills/store.js';
 import { compileSkill } from '../src/skills/compile.js';
@@ -1268,5 +1268,21 @@ describe('record-time contradiction between a mutating step and the read right a
       'blocked',
     );
     expect(flow.warnings ?? []).toEqual([]);
+  });
+});
+
+describe('consumedReportedOutputs', () => {
+  it('lists the reported outputs later steps ask for, by name, and never url parts', () => {
+    // fwrd43-n3: a recovered 01-open reported `reference`, and every later
+    // step asked for `ticket_reference` — so recovery must be told the names.
+    const steps = [
+      { id: '01-open', instruction: 'x', outputs: [], recorded: {} },
+      { id: '02-add', instruction: 'On {{01-open.ticket_reference}} at {{01-open.url.h1}}', outputs: [], recorded: {} },
+      { id: '03-save', instruction: 'x', outputs: [], recorded: {}, params: { v1: '{{01-open.body#uid}}' } },
+      { id: '07-remove', instruction: 'until {{01-open.ticket_parts}}; see {{02-add.part}}', outputs: [], recorded: {} },
+    ] as FlowStep[];
+    expect(consumedReportedOutputs(steps, '01-open').sort()).toEqual(['body', 'ticket_parts', 'ticket_reference']);
+    expect(consumedReportedOutputs(steps, '02-add')).toEqual(['part']);
+    expect(consumedReportedOutputs(steps, '07-remove')).toEqual([]);
   });
 });
