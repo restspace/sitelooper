@@ -4,15 +4,17 @@ import path from 'node:path';
 import { AnthropicProvider, OpenAICompatProvider, resolveProviderConfig, type Provider } from '../agent/llm.js';
 import { runEscalatingInstruction, type InstructionResult, type SkillRecord } from '../agent/loop.js';
 import { executeTool } from '../agent/tools.js';
-import { urlPattern as compiledUrlPattern, fillParams, stranded, urlParts } from '../skills/compile.js';
+import { urlPattern as compiledUrlPattern, dropDeadReadLocators, fillParams, stranded, urlParts } from '../skills/compile.js';
 import type { DriftTicket } from '../skills/repair.js';
 import type { Page } from 'playwright-core';
 import { agentGesturesOutsideReplay, bindSkill, canAdoptPin, decideRepin, learnFromInstruction, matchTemplate, publishedOutputs, selectCandidates, synthesizeReport } from '../skills/learn.js';
-import { buildFlow, consumedUrlOutputs, ignorableRefs, lintFlowRefs, listFlows, loadFlow, loadFlowFile, lookupOutput, mutatingIntent, noteOutputEvidence, recoveryRoute, remapParams, resolveInstruction, resolveStepParams, softResolveInstruction, saveFlow, saveRejectedFlow, stableOutputs, staleInstructionIds, unbankedMutations, urlOutputs } from '../skills/flow.js';
+import { buildFlow, consumedUrlOutputs, ignorableRefs, jsonLeaves, lintFlowRefs, listFlows, loadFlow, loadFlowFile, lookupOutput, mutatingIntent, noteOutputEvidence, recoveryRoute, remapParams, resolveInstruction, resolveStepParams, softResolveInstruction, saveFlow, staleInstructionIds, unbankedMutations, urlOutputs, varyingValues, type RunSpecific } from '../skills/flow.js';
 import { applyRelabelToEntries, applyRelabelToSkills, relabelCases, requestRelabelPlan } from '../skills/relabel.js';
 import { goalSatisfied, renderReplay } from '../skills/replay.js';
 import { drainDrift, llmProposer, recordCandidateEvidence } from '../skills/repair.js';
 import { RunLedger, bindingKey, describeLeaks, fatal, scanForLeaks, type Leak } from '../skills/ledger.js';
+import { quarantineLeakedSteps } from '../spec/rerecord.js';
+import { rerecordFix } from '../spec/diagnostics.js';
 import { originOf, type Skill } from '../skills/store.js';
 import type { LocatorCandidate } from './recorder.js';
 import { generateScript } from './codegen.js';
@@ -68,6 +70,13 @@ export class Daemon {
    * See PLAN-provenance.md.
    */
   private ledger = new RunLedger();
+  /**
+   * The run's single source of "what did earlier runs settle about this
+   * value?", handed to every gate that used to read characters instead.
+   * Bound once so the ledger stays the only thing holding the verdicts —
+   * seeded by runFlow, empty on a first recording.
+   */
+  private readonly runSpecific: RunSpecific = (value) => this.ledger.runSpecific(value);
   /** Instruction counter, so a ledger entry can say where it first appeared. */
   private instructionIndex = 0;
 
@@ -89,7 +98,13 @@ export class Daemon {
       if (url) this.ledger.addUrlIds(url, stepId, urlParts(url));
       if (e.k === 'report') {
         for (const [name, value] of Object.entries(e.values ?? {})) {
-          this.ledger.add(String(value), { from: 'output', step: stepId, name }, { known: true });
+          // No `basis`: a reported value's KIND is settled by looksLikeId
+          // inside add(), so this is the shape prior and the entry says so.
+          // The run really did produce the value — that is what `from:
+          // 'output'` records — but "the run produced it" is not the same
+          // claim as "it is a record id", and only the second can refuse an
+          // export. This is the largest population reaching the ledger.
+          this.ledger.add(String(value), { from: 'output', step: stepId, name });
         }
       }
     }
@@ -157,6 +172,41 @@ ${describeLeaks(leaks.slice(0, 6))}`);
       if (touched) store.put(skill);
     }
     return removed;
+  }
+
+  /**
+   * Apply this step's freshly-updated cross-run evidence to the skill it
+   * replays: a read located by the very value it reported is retired once a
+   * run has shown that value change (see `dropDeadReadLocators`).
+   *
+   * Here rather than at compile time because the signal does not exist at
+   * compile time. The recording sees each value once; only a second run can
+   * say whether `£ 133.33` was this record's total or the page's own text.
+   * Run 1 proposes, run 2 decides — and run 1's store is never touched.
+   */
+  private retireDeadReadLocators(
+    flow: import('../skills/flow.js').Flow,
+    step: import('../skills/flow.js').FlowStep,
+    progress: (line: string) => void,
+  ): void {
+    const store = this.browser.learn;
+    const skill = step.skill ? store?.get(step.skill) : null;
+    if (!store || !skill) return;
+    // The value the RECORDING saw, for outputs a later run has contradicted.
+    // `differed > 0` is permanent: one demonstration that a value moves is
+    // not undone by later agreement.
+    const volatileValues: Record<string, string> = {};
+    for (const [name, ev] of Object.entries(step.outputEvidence ?? {})) {
+      if (ev.differed < 1) continue;
+      const recorded = step.recorded?.[name];
+      if (typeof recorded === 'string' && recorded) volatileValues[name] = recorded;
+    }
+    if (!Object.keys(volatileValues).length) return;
+    const copy: Skill = JSON.parse(JSON.stringify(skill)) as Skill;
+    const removed = dropDeadReadLocators(copy.steps, volatileValues);
+    if (!removed) return;
+    store.put(copy);
+    progress(`[flow ${flow.name}] ${step.id}: retired ${removed} read locator(s) in ${skill.id} — the value they look for has changed since recording`);
   }
 
   /**
@@ -729,7 +779,7 @@ ${describeLeaks(leaks.slice(0, 6))}`);
         this.browser.script.persist();
       }
     }
-    const flow = buildFlow(entries, {
+    let flow = buildFlow(entries, {
       name,
       origin,
       startUrl,
@@ -740,7 +790,10 @@ ${describeLeaks(leaks.slice(0, 6))}`);
         const sk = store.get(id);
         return sk ? bindSkill(sk, instr, this.knownValues()) : null;
       },
-
+      // Empty for a fresh recording. Populated when this export follows a run
+      // of an existing flow (runFlow seeds the ledger), which is exactly when
+      // there is a second run's worth of evidence to build on.
+      runSpecific: this.runSpecific,
     });
     if (!flow || !flow.steps.length) throw new Error('nothing to export — no successful instruction was recorded');
     // Before anything is written. The first cut of this ran after saveFlow,
@@ -758,19 +811,27 @@ ${describeLeaks(leaks.slice(0, 6))}`);
     // from the token's shape. A shape guess only ever demotes — see
     // `bookmarked` — and observation settles it.
     const stripped = this.stripLeakedCandidates(flow, store);
-    const fatalLeaks = this.leaksIn(flow, store).filter(fatal);
-    if (fatalLeaks.length) {
-      const detail =
-        `${fatalLeaks.length} value(s) this run made survived into a locator, ` +
-        `where they would silently move a step onto another record:
-${describeLeaks(fatalLeaks.slice(0, 10))}`;
-      // Kept, but somewhere nothing will replay it: the recording cost real
-      // time and money, and the fix is usually obvious from the leak list.
-      const kept = saveRejectedFlow(flow, detail);
-      throw new Error(`refusing to export: ${detail}
-
-the flow was written to ${kept} for inspection (it will not be replayed)`);
+    // What survives the strip and is still fatal poisons the STEPS that
+    // replay it, not the recording. This used to throw and write the whole
+    // flow to `.rejected.json`: one leaked locator voided every other step,
+    // and the poisoned skill stayed in the store, still matchable by the next
+    // instruction on that page. Now each poisoned skill is demoted — which
+    // takes it out of candidate selection everywhere (learn.ts, replay.ts) —
+    // and every step that replays it is unpinned the way `rerecord` unpins
+    // one. The flow exports; the damage is contained to where it is.
+    // Only skills carry locators (a flow has none of its own), so a fatal
+    // leak is always in one — scanning per skill keeps the attribution exact.
+    const poisoned = new Map<string, string[]>();
+    for (const sk of this.sessionSkills(flow, store)) {
+      const leaks = scanForLeaks(sk, this.ledger, sk.id).filter(fatal);
+      if (leaks.length) poisoned.set(sk.id, describeLeaks(leaks).split('\n').map((l) => l.trim()));
     }
+    const sealed = quarantineLeakedSteps(flow, store.list(flow.origin), poisoned);
+    for (const id of poisoned.keys()) {
+      const sk = store.get(id);
+      if (sk && sk.status !== 'demoted') store.put({ ...sk, status: 'demoted' });
+    }
+    flow = sealed.flow;
     const file = saveFlow(flow);
     // Reference lint (case 4a): warn now, while re-recording is still cheap,
     // about any {{step.output}} only model recovery could re-observe. A step's
@@ -806,6 +867,18 @@ ${describeLeaks(leaks.slice(0, 10))}`);
       );
     }
     if (stripped) warnings.unshift(`note: dropped ${stripped} locator candidate(s) carrying a value this run minted (known only by export time)`);
+    // Loudest of all, so first: a quarantined step is the one thing in this
+    // list that changes what `run` does. Each gets the command that fixes it.
+    const orphans = [...poisoned.keys()].filter((id) => !sealed.quarantined.some((q) => q.skills.includes(id)));
+    if (orphans.length) {
+      warnings.unshift(`note: demoted ${orphans.length} unpinned skill(s) this session compiled with a record leak in a locator (${orphans.join(', ')}), so no later instruction can select them`);
+    }
+    for (const q of sealed.quarantined.slice().reverse()) {
+      warnings.unshift(
+        `error: ${q.step} needs re-recording — its procedure (${q.skills.join(', ')}) locates an element by a value this run made, ` +
+          `so it was unpinned and its skill demoted; the rest of the flow exported normally. Fix: ${rerecordFix(file, q.step)}`,
+      );
+    }
     if (prior) warnings.unshift(`warning: ignored ${prior} entr${prior === 1 ? 'y' : 'ies'} from an earlier take in session '${this.opts.session}' — this flow covers only what this daemon recorded`);
     return { path: file, name: flow.name, steps: flow.steps.length, vars: flow.vars, ...(warnings.length ? { warnings } : {}) };
   }
@@ -841,6 +914,18 @@ ${describeLeaks(leaks.slice(0, 10))}`);
     const missingVars = flow.vars.filter((v) => !(v in varsIn));
     if (missingVars.length) throw new Error(`flow "${flow.name}" needs --var for: ${missingVars.join(', ')}`);
 
+    // Hand the ledger the values earlier runs of THIS flow watched CHANGE,
+    // before it banks anything. From here on each is kinded an identifier
+    // whatever its characters, so the leak guards stop asking `looksLikeId` a
+    // question it was never able to answer. Empty on a flow that has only
+    // ever run once, which is the design: run 1 proposes with shape, run 2
+    // adds what it saw.
+    const varying = varyingValues(flow);
+    if (varying.size) {
+      this.ledger.seedVariance(varying);
+      opts.progress(`[flow ${flow.name}] ${varying.size} value(s) earlier runs demonstrated are run-specific`);
+    }
+
     if (this.browser.learn) {
       // A run's own repairs should be learned, but not re-pin from a fresh
       // store elsewhere; the flow's pinned skills come from its own file.
@@ -874,16 +959,6 @@ ${describeLeaks(leaks.slice(0, 10))}`);
     const pendingPins = new Map<string, string>();
     /** Adopted steps that recovered cleanly this run and should shed `adopted`. */
     const graduated = new Set<string>();
-    /**
-     * Outputs an earlier run demonstrated are the app's, not this run's, so
-     * their recorded literal resolves instead of sending the step to recovery.
-     * Read once: a verdict reached mid-run applies from the NEXT run, so every
-     * step of one run sees the same evidence.
-     */
-    const stable = stableOutputs(flow);
-    if (Object.keys(stable).length) {
-      opts.progress(`[flow ${flow.name}] ${Object.keys(stable).length} output(s) demonstrated stable by an earlier run: ${Object.keys(stable).join(', ')}`);
-    }
     /** Steps whose output evidence this run changed, for the write-back below. */
     let evidenceChanged = 0;
 
@@ -918,8 +993,8 @@ ${describeLeaks(leaks.slice(0, 10))}`);
         }
       }
       prevRecovered = false;
-      const { text, missing } = resolveInstruction(step, varsIn, outputs, stable);
-      const bound = resolveStepParams(step, varsIn, outputs, stable);
+      const { text, missing } = resolveInstruction(step, varsIn, outputs);
+      const bound = resolveStepParams(step, varsIn, outputs);
       // A reference that could not be threaded (an output an earlier step did
       // not read back live) does NOT halt the flow: the zero-model replay is
       // skipped and the step goes to recovery on the strong model, built from
@@ -933,7 +1008,7 @@ ${describeLeaks(leaks.slice(0, 10))}`);
       const blocking = allMissing.filter((r) => !ignorable.includes(r));
       if (allMissing.length && !blocking.length) opts.progress(`[flow ${flow.name}] ${step.id}: reference(s) ${ignorable.join(', ')} unresolved but unused by the pinned procedure — replaying as pinned`);
       const unresolved = blocking.length > 0;
-      const recoveryText = unresolved ? softResolveInstruction(step, varsIn, outputs, stable) : text;
+      const recoveryText = unresolved ? softResolveInstruction(step, varsIn, outputs) : text;
       opts.progress(`[flow ${flow.name}] ${step.id}: ${(unresolved ? recoveryText : text).slice(0, 80)}`);
 
       // Already satisfied? Before anything runs — before the zero-model replay
@@ -973,7 +1048,7 @@ ${describeLeaks(leaks.slice(0, 10))}`);
           // {{step.output}} reference threads through a step that ran nothing.
           const stepOutputs: Record<string, string> = { ...values };
           try {
-            const urlOuts = await captureUrlOutputs(await this.browser.getPage(), wantedUrlOuts.get(step.id), step.id);
+            const urlOuts = await captureUrlOutputs(await this.browser.getPage(), wantedUrlOuts.get(step.id), step.id, this.runSpecific);
             for (const [key, value] of Object.entries(urlOuts)) if (!(key in stepOutputs)) stepOutputs[key] = value;
           } catch {
             /* browser gone — nothing to bind */
@@ -1214,7 +1289,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote,
       try {
         // A model-driven end state has no reason to carry the recorded url
         // shape, so a recovered step does not wait for the consumed parts.
-        const urlOuts = await captureUrlOutputs(await this.browser.getPage(), recovered ? undefined : wantedUrlOuts.get(step.id), step.id);
+        const urlOuts = await captureUrlOutputs(await this.browser.getPage(), recovered ? undefined : wantedUrlOuts.get(step.id), step.id, this.runSpecific);
         for (const [key, value] of Object.entries(urlOuts)) {
           if (!(key in stepOutputs)) stepOutputs[key] = value;
         }
@@ -1258,15 +1333,49 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote,
       // a blocked step's values describe how far it got, not what the app
       // shows.
       if (result.report.status === 'success') {
-        const changed = noteOutputEvidence(step, values);
+        // A read-back that is a JSON body publishes its scalar leaves under
+        // `<output>#<path>`, the same names buildFlow recorded them by. Without
+        // this expansion the replay reports only `body`, so a per-leaf verdict
+        // could never be reached: the whole body is one string and any volatile
+        // field in it makes every leaf look volatile.
+        // Built as its own map rather than mutated into `stepOutputs`, which
+        // was already handed to `outputs[step.id]` above: a later step resolves
+        // `{{sid.body#path}}` by parsing the body (lookupOutput), so adding the
+        // keys there would be redundant, and quietly changing a map another
+        // step reads is how the fold defects in PLAN-progressive-automation
+        // started.
+        const evidenceOutputs: Record<string, string> = { ...stepOutputs };
+        for (const [name, value] of Object.entries(stepOutputs)) {
+          if (name.includes('#')) continue;
+          for (const leaf of jsonLeaves(value, this.runSpecific)) {
+            const key = `${name}#${leaf.path}`;
+            if (!(key in evidenceOutputs)) evidenceOutputs[key] = leaf.value;
+          }
+        }
+        // `stepOutputs`, not `values`: a step's url parts are outputs too, and
+        // they are the population where shape was still deciding on its own.
+        // buildFlow admits a url part as a reference on `looksLikeId` — a
+        // 'first-run' prior with no evidence behind it (see shape.ts) — so a
+        // route word that squeaks past it was referenced forever and a minted
+        // id that did not look like one was left literal, with nothing that
+        // could ever correct either. Running them through the same evidence
+        // that judges reported values means a part a run contradicts is banked
+        // as run-specific from then on (varyingValues), whatever it looks like.
+        // Agreement is recorded but never acted on — see flow.ts RunSpecific.
+        // The route this replay actually ended on, so a step that recovered
+        // somewhere else contributes no verdict (FlowStep.route).
+        const replayRoute = evidenceOutputs.url ? compiledUrlPattern(evidenceOutputs.url) : undefined;
+        const changed = noteOutputEvidence(step, evidenceOutputs, replayRoute);
         if (changed.length) {
           evidenceChanged += changed.length;
           const verdict = (n: string) => {
             const ev = step.outputEvidence?.[n];
-            return ev && ev.differed === 0 ? 'stable' : 'volatile';
+            // Only `varies` is a verdict; "no change yet" decides nothing.
+            return ev && ev.differed === 0 ? 'no change yet' : 'varies';
           };
           opts.progress(`[flow ${flow.name}] ${step.id}: ${changed.map((n) => `${n}=${verdict(n)}`).join(', ')}`);
         }
+        this.retireDeadReadLocators(flow, step, opts.progress);
       }
       stepResults.push({
         id: step.id,
@@ -1644,12 +1753,12 @@ const URL_OUTPUT_POLL_MS = 500;
  * {{03-open.url.q.id}} to a snapshot taken before Odoo's hash gained the
  * freshly minted id.
  */
-async function captureUrlOutputs(page: Page, wanted: Set<string> | undefined, stepId: string): Promise<Record<string, string>> {
-  let urlOuts = urlOutputs(page.url());
+async function captureUrlOutputs(page: Page, wanted: Set<string> | undefined, stepId: string, runSpecific?: RunSpecific): Promise<Record<string, string>> {
+  let urlOuts = urlOutputs(page.url(), runSpecific);
   if (!wanted?.size) return urlOuts;
   const deadline = Date.now() + URL_OUTPUT_WAIT_MS;
   const arrived = (url: string) => {
-    urlOuts = urlOutputs(url);
+    urlOuts = urlOutputs(url, runSpecific);
     return [...wanted].every((k) => k in urlOuts);
   };
   while (!arrived(page.url()) && Date.now() < deadline) {

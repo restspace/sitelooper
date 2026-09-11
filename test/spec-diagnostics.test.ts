@@ -165,6 +165,22 @@ describe('flowToSpec: a step with nothing to compile', () => {
     expect(diagnostics.filter((d) => d.code === 'noop-step').length).toBe(1);
   });
 
+  it('turns an export quarantine into a needs-rerecord ERROR naming the step', () => {
+    const flow: Flow = {
+      ...base,
+      steps: [{ id: '06-open', instruction: 'open the order', outputs: [], recorded: {}, adopted: true }],
+      warnings: [
+        'leaked-step: 06-open was taken out of replay: its recorded procedure (s_aaa111) locates an element by a value the recording run made, so replaying it would act on the recording run record.',
+      ],
+    };
+    const { diagnostics } = flowToSpec(flow, new SkillStore(FWOD34_SKILLS), { flowFile: 'flows/gap.json' });
+    const leak = diagnostics.find((d) => d.code === 'needs-rerecord');
+    expect(leak).toMatchObject({ step: '06-open', severity: 'error', fix: 'sitelooper rerecord flows/gap.json 06-open' });
+    expect(leak!.why).toContain('s_aaa111');
+    // Unpinned, so it also has no procedure; the leak diagnostic is the one that says why.
+    expect(diagnostics.map((d) => d.code)).toContain('no-procedure');
+  });
+
   it('does not fall over on a flow with no warnings at all', () => {
     expect(flowToSpec(base, new SkillStore(FWOD34_SKILLS)).diagnostics.some((d) => d.code === 'noop-step')).toBe(false);
   });

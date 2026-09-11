@@ -534,12 +534,12 @@ export function learnRecipes(
   const compiled = compileRecipes(entries, instruction, { session, now });
   if (!compiled.length) return [];
   const existing = store.list();
-  const skeleton = (r: Recipe) => `${r.family}\n${r.intent}\n${JSON.stringify(r.steps)}`;
-  const seen = new Set(existing.map(skeleton));
+  const recipeKey = (r: Recipe) => `${r.family}\n${r.intent}\n${JSON.stringify(r.steps)}`;
+  const seen = new Set(existing.map(recipeKey));
   const stored: string[] = [];
   for (const r of compiled) {
-    if (seen.has(skeleton(r))) continue;
-    seen.add(skeleton(r));
+    if (seen.has(recipeKey(r))) continue;
+    seen.add(recipeKey(r));
     store.put(r);
     stored.push(r.id);
   }

@@ -82,9 +82,29 @@ for (const runid of runids) {
   }
 
   const hits = await api(`/api/search?query=${encodeURIComponent(`${runid} Bench Dashboard`)}&type=dash-db`)
-  const hit = hits.find((h) => h.title === `${runid} Bench Dashboard`)
+  const titled = hits.filter((h) => h.title === `${runid} Bench Dashboard`)
+  const hit = titled[0]
   let dash = null
   if (hit) dash = (await api(`/api/dashboards/uid/${hit.uid}`)).dashboard
+
+  // PLAN-provenance phase 5: an extra created record FAILS, it does not warn.
+  // The task creates ONE dashboard. When a run creates two, `titled[0]` picks
+  // one by accident and objectives 2-6 are then attributed to a dashboard
+  // nobody chose — which is how fwrd16 scored 6/6 while doing its task twice.
+  // Grafana mints a fresh uid per save, so a thrashing run leaves no trace in
+  // any single dashboard; the count is the only place it shows.
+  //
+  // Reported beside the objectives rather than as one of them, so the
+  // denominator every published matrix quotes ("6/6") keeps its meaning and a
+  // duplicated run reads as "6/6 objectives, RUN NOT CLEAN" — the same shape
+  // verify-repairdesk uses for duplicate tickets.
+  const duplicates = Math.max(0, titled.length - 1)
+  if (duplicates > 0) {
+    anyFailure = true
+    console.log(`  *** DUPLICATE WORK *** ${titled.length} dashboards titled "${runid} Bench Dashboard" ` +
+      `(${titled.map((h) => h.uid).join(', ')}) — the run created it more than once, ` +
+      'so objectives 2-6 cannot be attributed to any single dashboard.')
+  }
 
   const panels = dash?.panels ?? []
   const stat = panels.find((p) => p.title === `${runid} Availability`)
@@ -111,7 +131,7 @@ for (const runid of runids) {
   const passed = objectives.filter((o) => o.pass === true).length
   console.log(`\n${runid}: objectives passed ${passed}/${objectives.length}`)
   for (const o of objectives) console.log(`  obj ${o.n}: ${o.pass === true ? 'PASS' : o.pass === 'UNVERIFIABLE' ? 'UNVERIFIABLE' : 'FAIL'} — ${o.detail}`)
-  report.push({ runid, uid: hit?.uid ?? null, objectives, passed })
+  report.push({ runid, uid: hit?.uid ?? null, duplicateDashboards: duplicates, objectives, passed })
 }
 
 fs.mkdirSync(OUT, { recursive: true })

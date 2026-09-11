@@ -61,6 +61,9 @@ function pathsInPage(opts: { maxNodes: number; dims: number }): number[] {
     }
     return h;
   };
+  // The hex run is shape.ts CLASS_HASH_HEX_RUN, inlined because this runs in
+  // the page — six, not the id rule's eight, because a build hash in a class
+  // name is six; see shape.ts for why the hex rules stay three.
   const stableClass = (c: string) =>
     c.length >= 3 && c.length <= 32 && !/\d{3,}|[0-9a-f]{6,}|^(css|sc|jss|emotion)-/i.test(c) && !/^_/.test(c);
   const segment = (el: Element): string => {

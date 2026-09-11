@@ -5,6 +5,7 @@ import { ensureSessionDir } from '../shared/paths.js';
 import { volatileMatcher } from '../shared/text.js';
 import { isRefTarget, refHint, resolveTarget } from './refs.js';
 import { tagComponent } from '../skills/components.js';
+import { GENERATED_ID_HEX_RUN } from '../skills/shape.js';
 
 /**
  * One way of finding an element, in a form that can be rebuilt into a Locator
@@ -1229,7 +1230,7 @@ function cand(spec: LocatorCandidate): Candidate {
 export function isStableId(id: string): boolean {
   if (!id || id.length > 64) return false;
   if (/^[:\d]/.test(id)) return false;
-  if (/[0-9a-f]{8,}/i.test(id)) return false;
+  if (GENERATED_ID_HEX_RUN.test(id)) return false;
   // React's useId with the colons swapped for underscores (grafana does
   // this): `_rgl_`, `_r2u_`. Re-minted every render pass, so a primary built
   // on one misses on every replay — fwgr18 recorded `[id="_rgl_"]` and
@@ -1244,7 +1245,9 @@ function describeInPage(node: Node): ElementInfo {
   const attr = (name: string) => el.getAttribute(name) || null;
   // The same judgement as isStableId (which this page-side code cannot
   // call): a framework-minted id (React's `_r8b_`, radix, a hash) anchoring
-  // the structural path or a row container is dead on the next load.
+  // the structural path or a row container is dead on the next load. The hex
+  // literal is shape.ts GENERATED_ID_HEX_RUN, inlined because this runs in the
+  // page; test/shape-gate.test.ts holds the two equal.
   const stableId = (id: string): boolean =>
     Boolean(id) &&
     id.length <= 64 &&

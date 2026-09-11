@@ -188,7 +188,74 @@ defect that the re-pin gate already covers.
    the single resolver.
 5. **Verifier strictness** (independent, do first if cheap): extra mutations
    and extra created records fail a sweep instead of warning. fwrd16 scored
-   6/6 while doing the task twice.
+   6/6 while doing the task twice. **DONE 2026-09-10.** Every target now fails
+   a run that did its work more than once, and the count is reported beside
+   the objectives rather than as one of them, so the denominator the published
+   matrices quote keeps its meaning:
+   - repairdesk: duplicate part creates are a failed objective (they were a
+     `WARNING` string appended to a PASS, while `hits[0]` picked one of the
+     duplicates by accident); prior-run residue sets a non-zero exit instead
+     of printing a note, because a sweep whose runs did not start from a
+     common baseline is not a measurement. Duplicate tickets already failed.
+   - grafana: two dashboards with the run's title fail. `titled[0]` used to
+     pick one silently, and grafana mints a fresh uid per save, so a thrashing
+     run left no trace inside any single dashboard — the count was the only
+     place it showed.
+   - kanboard: duplicate tasks fail, and so does a second comment carrying the
+     runid — the extra-MUTATION half. Objective 4 passed on `some()` however
+     many there were, so a retried step whose first attempt did land scored
+     clean.
+   - odoo needed no change: `orders.length === 1` is objective 2, and
+     `lines.length === 2` is objective 3.
+
+## The refusal bar (2026-09-10)
+
+Refusing an export is the harshest thing the tool does — the recording goes to
+`.rejected.json`, nothing replays it, and 20-50 minutes plus real model spend
+is gone — and it was reachable from a regex. `fatal()` required only
+`kind: 'identifier'` in a locator, and `kind` was decided by `looksLikeId` for
+the largest population reaching the ledger (every value a step reported). An
+app constant the model mentioned, standing as a step's only locator, binned the
+run: `stripLeakedCandidates` skips a chain it would empty, so the leak survived
+to the gate.
+
+`LedgerEntry` now records the provenance of the KIND JUDGEMENT, not of the
+value:
+
+    basis: 'position' | 'var' | 'variance' | 'shape'
+
+and `fatal()` returns false for `'shape'`. The location test moved out to
+`inLocator()` so a REPORTER can keep the old bar: bench/verify-artifacts.mjs
+now flags every identifier that reached a locator and names how many were
+kinded by shape alone, because there a false positive costs a look rather than
+a run — the same reasoning that had already moved the navigation-target rule
+out of the product gate.
+
+This does not leave a shape-based leak unattended. The flow exports with the
+leak listed, and `stripLeakedCandidates` still deletes the candidate wherever
+the chain survives without it; only the last-candidate case changes, from
+refusal to warning. Nor is the gate permanently weaker — it is DEFERRED. Once
+cross-run variance reaches the ledger, a value a later run lands differently on
+carries `basis: 'variance'` and refuses again with evidence behind it. Run 1
+warns and strips; run 2 refuses.
+
+**Quarantine instead of rejection (2026-09-11).** A confident leak poisons
+one step, but the export used to void the whole recording — and it left the
+poisoned skill in the store, still matchable by the next instruction on that
+page. Export now demotes every session skill with a fatal leak (which removes
+it from candidate selection in learn.ts and replay.ts), unpins each flow step
+that replays one — directly or through a segment chain, via the same
+`unpinStep` that `sitelooper rerecord` uses — and writes a `leaked-step:`
+warning onto the flow. The flow exports; the CLI prints an `error:` line per
+quarantined step with the rerecord command; compile re-raises it as a
+`needs-rerecord` error diagnostic. The quarantined step replays model-first
+until a clean recovery earns a new pin. `saveRejectedFlow` has no caller left.
+
+`known` was deleted in the same change. It recorded whether the run produced
+the value — true of nearly everything banked, so it discriminated nothing — and
+its doc claimed an invariant ("known values are the only ones allowed to carry
+record IDENTITY") that no production code enforced: it was written by every
+caller and read only by a test. `basis` is the distinction it was reaching for.
 
 ## Risks
 

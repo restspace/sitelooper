@@ -3,8 +3,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { RecordedEntry, RecordedInstruction, RecordedReport } from '../daemon/recorder.js';
 import { rootDir } from '../shared/paths.js';
-import { escapeRe, urlParts } from './compile.js';
-import { idPositionPart, identifierLike } from './ledger.js';
+import { urlParts, urlPattern } from './compile.js';
+import { idPositionPart } from './ledger.js';
+import { MIN_ID_LEN, looksLikeId, tokenPattern } from './shape.js';
 
 /**
  * A flow is the resolved path a session took: the instructions the caller
@@ -68,25 +69,90 @@ export interface FlowStep {
    * `seen: {hit, miss}`; see PLAN-evidence-over-shape.md.
    */
   outputEvidence?: Record<string, { same: number; differed: number }>;
+  /**
+   * The url PATTERN the recording ended this step on (compile.ts urlPattern,
+   * so `/orders/1042` and `/orders/1043` are one route).
+   *
+   * Evidence about a value is only evidence if both runs were looking at the
+   * same thing. Measured on fwod20's n1/n2/n3: comparing url parts step by
+   * step, 21 parts "varied" — and the ones the shape gates had refused were
+   * `q.model = "sale.order" vs "res.partner"` and
+   * `q.view_type = "form" vs "kanban"`, which varied because a recovery turn
+   * navigated somewhere else, not because the app minted anything. Require
+   * the same route and 4 remain, every one of them `q.id`.
+   *
+   * So a comparison made from a different route is discarded rather than
+   * counted. It costs the evidence mechanism its sparsest runs — 7 of
+   * fwod20's 11 instructions diverged — but a verdict built from a different
+   * page is not a slower verdict, it is a wrong one.
+   */
+  route?: string;
 }
 
 /**
- * Outputs a later run may substitute as a LITERAL when the producing step did
- * not republish them: `{{sid.out}}` → the recorded value.
+ * Did an earlier run demonstrate that this value is specific to the run that
+ * made it? Produced by `varyingValues` below and carried by the ledger for
+ * the duration of a run.
  *
- * One demonstration of difference is permanent. A value that changed once
- * names a record, and being wrong in that direction is the silent failure —
- * a step acting on the recording run's record while reporting success —
- * whereas being wrong the other way costs a recovery turn. So `differed` is a
- * veto no amount of later agreement lifts.
+ * ONE DIRECTION, and the type is boolean so the other cannot be spelled.
+ *
+ * Disagreement is strong evidence: a run that produced a different value here
+ * proves the recorded one was not the app's. Agreement is NOT the converse,
+ * because a bench app reset between runs reproduces a minted record id
+ * exactly — every repair-desk recording in bench/results creates ticket
+ * `t15`, and `t15` is the canonical example of a value that MUST stay an
+ * identifier. An earlier cut of this let agreement suppress admission, which
+ * would have stopped banking t15 from run 2 on: no leak guard could see it,
+ * and the recording's ticket would ride into every replay silently.
+ *
+ * So evidence may only ever ADD to what shape and position admit, never take
+ * away. The last place that let agreement act — `stableOutputs`, which
+ * resolved an unpublished `{{step.output}}` to the recorded literal once a
+ * later run had reproduced it — was deleted for exactly this reason: two
+ * reset runs both minting `t15` made it "stable", and a third run whose
+ * create step went tier A and dropped the output would have edited run 1's
+ * ticket. An unresolved reference now always goes to recovery.
  */
-export function stableOutputs(flow: Flow): Record<string, string> {
-  const out: Record<string, string> = {};
+export type RunSpecific = (value: string) => boolean;
+
+/**
+ * Is this url part specific enough to publish as a reference?
+ *
+ * ONE function for the producer (buildFlow's minting) and the consumer
+ * (urlOutputs), because they disagreeing is a silent dead reference — the
+ * comment on urlOutputs has said so since it was written, and they had
+ * drifted anyway: minting admitted `idPositionPart`, urlOutputs did not, so
+ * odoo's `#id=44` was minted as `{{01-open.url.q.id}}` and then never
+ * published by any replay. Every step referencing it fell to recovery with
+ * the ref blank — the exact failure the length mismatch had caused before.
+ *
+ * Three arms, in order of what they know. A part an earlier run watched
+ * CHANGE is a reference whatever its characters — the only arm that can see a
+ * record pointer in an unnamed position, like a grafana uid at `p1`. Then the
+ * url's own vocabulary (position), then the characters (shape). Evidence only
+ * ever adds; see `RunSpecific` for why agreement may not take away.
+ */
+export function referencablePart(part: { label: string; value: string }, runSpecific?: RunSpecific): boolean {
+  return Boolean(runSpecific?.(part.value)) || (part.value.length >= MIN_ID_LEN && looksLikeId(part.value, 'first-run')) || idPositionPart(part);
+}
+
+/**
+ * The values this flow has WATCHED CHANGE — a later run produced something
+ * different for the output that recorded them — for the ledger to bank as
+ * identifiers instead of reading their characters (ledger.ts `seedVariance`).
+ *
+ * This is the only place in the product that answers "did the app make this,
+ * or was it this run's record?" by watching rather than by reading. A value
+ * that varied ANYWHERE is in the set, and nothing takes it back out: see
+ * `RunSpecific` for why the converse is not collected at all.
+ */
+export function varyingValues(flow: Flow): Set<string> {
+  const out = new Set<string>();
   for (const step of flow.steps) {
     for (const [name, ev] of Object.entries(step.outputEvidence ?? {})) {
-      if (ev.differed > 0 || ev.same < 1) continue;
+      if (ev.differed < 1) continue;
       const value = step.recorded?.[name];
-      if (typeof value === 'string' && value) out[`${step.id}.${name}`] = value;
+      if (typeof value === 'string' && value.trim()) out.add(value.trim());
     }
   }
   return out;
@@ -98,8 +164,13 @@ export function stableOutputs(flow: Flow): Record<string, string> {
  * drops what it could not re-observe, and silence is not disagreement.
  * Returns the names whose verdict changed, for progress reporting.
  */
-export function noteOutputEvidence(step: FlowStep, reported: Record<string, string>): string[] {
+export function noteOutputEvidence(step: FlowStep, reported: Record<string, string>, route?: string): string[] {
   const changed: string[] = [];
+  // Same route, or no verdict. See FlowStep.route: a replay that recovered
+  // onto a different page disagrees about where it is, not about what the
+  // value is, and counting that as `differed` is how a route word gets a
+  // permanent record-pointer verdict it never earned.
+  if (step.route && route && step.route !== route) return changed;
   for (const [name, recorded] of Object.entries(step.recorded ?? {})) {
     const seen = reported[name];
     if (typeof seen !== 'string' || !seen || typeof recorded !== 'string' || !recorded) continue;
@@ -204,6 +275,12 @@ export function buildFlow(
     now?: string;
     /** Given a skill id and the raw recorded instruction, return the slot bindings. */
     bind?: (skillId: string, instruction: string) => Record<string, string> | null;
+    /**
+     * Which values earlier runs demonstrated are run-specific (see
+     * `RunSpecific`). Absent on a first recording, which is the point: run 1
+     * has nothing to consult and falls back to position and shape.
+     */
+    runSpecific?: RunSpecific;
   },
 ): Flow | null {
   const groups = resolveGroups(groupByInstruction(entries));
@@ -234,7 +311,7 @@ export function buildFlow(
     for (const [name, value] of varEntries) text = replaceToken(text, value, `{{${name}}}`);
     // Reference earlier outputs (longest values first so nested ids resolve).
     for (const p of [...produced].sort((a, b) => b.value.length - a.value.length)) {
-      if (p.value.length >= 2 && !coincidental(text, p.value)) text = replaceToken(text, p.value, `{{${p.stepId}.${p.output}}}`);
+      if (p.value.length >= 2) text = replaceToken(text, p.value, `{{${p.stepId}.${p.output}}}`);
     }
     const outputs = Object.keys(g.report?.values ?? {});
     // Capture the skill's slot bindings, referencized like the instruction, so
@@ -248,7 +325,7 @@ export function buildFlow(
           let rv = v;
           for (const [name, value] of varEntries) rv = replaceToken(rv, value, `{{${name}}}`);
           for (const pr of [...produced].sort((a, b) => b.value.length - a.value.length)) {
-            if (pr.value.length >= 2 && !coincidental(rv, pr.value)) rv = replaceToken(rv, pr.value, `{{${pr.stepId}.${pr.output}}}`);
+            if (pr.value.length >= 2) rv = replaceToken(rv, pr.value, `{{${pr.stepId}.${pr.output}}}`);
           }
           params[k] = rv;
         }
@@ -296,20 +373,30 @@ export function buildFlow(
       for (const part of urlParts(g.endUrl)) {
         const fresh = !seenUrl.has(part.value);
         seenUrl.add(part.value);
-        // Looser than compile-level derived params, which demand a digit:
-        // grafana mints digitless uids ("cfwcsdxqdjabkf" sank fwgr2), so
-        // identifierLike() accepts a long word too. It still refuses short
-        // route words — "tickets" out of a url was being substituted into
-        // fwrd8's verify prose ("on the {{01-open.url.h0}} list").
-        // Position is evidence here too: a `q.id` part is a record id
-        // whatever its length — odoo's `#id=44` failed the shape test and the
-        // recording's record rode into fwod27's replays (see idPositionPart).
-        if (!fresh || (!identifierLike(part.value) && !idPositionPart(part))) continue;
+        // `referencablePart` is shared with urlOutputs, which is what a
+        // replay publishes: the two must admit exactly the same parts or the
+        // reference minted here resolves to nothing. See it for the arms and
+        // their order.
+        if (!fresh || !referencablePart(part, opts.runSpecific)) continue;
         if (produced.some((p) => p.value === part.value) || varEntries.some(([, v]) => v === part.value)) continue;
         minted.push({ stepId: id, output: `url.${part.label}`, value: part.value });
       }
     }
     produced.push(...minted);
+    // A minted url part is a RECORDED value of this step, not only a source
+    // for other steps' references. Without that, `noteOutputEvidence` had
+    // nothing to compare a replay's url parts against, so the whole url
+    // population sat outside the cross-run evidence mechanism — decided once,
+    // by shape, on the run least able to judge (see shape.ts). Now a later run
+    // that lands on the same part banks `same`, and one that lands on a
+    // different part banks `differed`, exactly as it does for reported values.
+    // Only `differed` is ever acted on (varyingValues, dead-read retirement);
+    // agreement is recorded and never used — see `RunSpecific`.
+    const step = steps[steps.length - 1];
+    if (g.endUrl) step.route = urlPattern(g.endUrl, new Map());
+    for (const m of minted) {
+      if (!(m.output in step.recorded)) step.recorded = { ...step.recorded, [m.output]: m.value };
+    }
     for (const [output, value] of Object.entries(g.report?.values ?? {})) {
       if (typeof value !== 'string' || !value) continue;
       if (minted.some((m) => m.value === value)) continue;
@@ -328,15 +415,16 @@ export function buildFlow(
       // — does the app produce this again, or was it specific to this run? —
       // is about behaviour ACROSS runs.
       //
-      // A previous cut of this gated on identifierLike, which reads the
+      // A previous cut of this gated on looksLikeId, which reads the
       // characters. That is the failure this plan exists to remove: a record
       // id that does not look like one would be left literal and every replay
       // would act on run 1's record while reporting success.
       //
       // So reference everything, which is the safe default (an unresolved
-      // reference costs a recovery turn, never a wrong record), and let run 2
-      // demote the ones it demonstrates are app furniture — see
-      // noteOutputEvidence/stableOutputs and PLAN-evidence-over-shape.md.
+      // reference costs a recovery turn, never a wrong record). A reference a
+      // replay cannot fill goes to recovery; there is no literal fallback,
+      // because agreement across runs does not show the app owns a value
+      // (see `RunSpecific` and PLAN-evidence-over-shape.md).
       produced.push({ stepId: id, output, value });
       // An id can be minted where no url ever carries it: an app that saves
       // over its own API answers with JSON, and the run reads that answer
@@ -346,9 +434,20 @@ export function buildFlow(
       // the cheap model on every replay. Publish the JSON's scalar leaves
       // under `{{step.output#path}}`: a tier-A replay re-observes the read,
       // so the path re-reads THIS run's value.
-      for (const leaf of jsonLeaves(value)) {
+      for (const leaf of jsonLeaves(value, opts.runSpecific)) {
         if (produced.some((p) => p.value === leaf.value) || varEntries.some(([, v]) => v === leaf.value)) continue;
-        produced.push({ stepId: id, output: `${output}#${leaf.path}`, value: leaf.value });
+        const name = `${output}#${leaf.path}`;
+        produced.push({ stepId: id, output: name, value: leaf.value });
+        // Per-LEAF evidence. `recorded` held the whole body under `output`, so
+        // noteOutputEvidence compared the entire JSON string as one value and
+        // a single volatile field vetoed every leaf in it at once — a response
+        // carrying both a minted uid and a timestamp could never demonstrate
+        // anything about either. Recording each published leaf under the name
+        // it is referenced by makes the comparison per-path, so a leaf that
+        // varies is known to vary without condemning its siblings. This does
+        // NOT widen which leaves are published — see jsonLeaves, where the
+        // shape prior stays, and shape.ts for why.
+        if (!(name in step.recorded)) step.recorded = { ...step.recorded, [name]: leaf.value };
       }
     }
   });
@@ -727,36 +826,20 @@ function stepId(text: string, i: number): string {
   return `${String(i + 1).padStart(2, '0')}-${verb}`;
 }
 
-/** Replace a value on token boundaries, leaving substrings of longer words alone. */
 /**
- * The value only LOOKS like this reference: a common word matching inside a
- * hyphenated compound that means something else.
+ * Replace a value on token boundaries — the product's one boundary rule,
+ * shape.ts `tokenPattern`.
  *
- * fwgr8 reported `tags: "bench"` and its dashboard slug was
- * `fwgr8-n1-bench-dashboard`, so four later steps had their url rewritten to
- * `{{runid}}-{{04-open.tags}}-dashboard`. The "bench" in that slug comes from
- * the dashboard's NAME, not from its tags; the two agreed by coincidence on
- * the recording run and would not on any other. Every one of those refs then
- * failed to resolve and cost its step the zero-model path.
- *
- * Hyphens deliberately do not bind in replaceToken, because a runid prefix in
- * `x7-bench-dashboard` IS worth threading. The distinction is what the value
- * is: a minted identifier is specific enough that matching inside a compound
- * is evidence, while a common word is not. So a non-identifier must stand
- * alone to be referencized.
+ * A word must stand alone: fwgr8 reported `tags: "bench"` beside the slug
+ * `fwgr8-n1-bench-dashboard`, and four later steps had their url rewritten to
+ * `{{runid}}-{{04-open.tags}}-dashboard` — a coincidence of one run that cost
+ * every one of them the zero-model path. Likewise "form" inside
+ * `o_form_view_group` (fwod5). A numeric value splits on '-' and '_', because
+ * a runid prefix in `x7-bench-dashboard` IS worth threading.
  */
-function coincidental(text: string, value: string): boolean {
-  if (identifierLike(value)) return false;
-  return new RegExp(`(?<![A-Za-z0-9_-])${escapeRe(value)}(?![A-Za-z0-9_-])`).test(text) === false;
-}
-
 function replaceToken(text: string, value: string, marker: string): string {
   if (!value) return text;
-  // Underscores bind: `o_form_view_group` is ONE identifier, so a var whose
-  // value is "form" must not rewrite its middle (fwod5 shipped exactly that
-  // corruption). Hyphens do not bind — a runid prefix in "x7-bench-dashboard"
-  // is a reference worth threading.
-  const re = new RegExp(`(?<![A-Za-z0-9_])${escapeRe(value)}(?![A-Za-z0-9_])`, 'g');
+  const re = tokenPattern(value, 'g');
   // Never substitute INSIDE a reference already placed by an earlier pass: a
   // provenance value that happens to be a common word ("form") rewrote the
   // middle of an output NAME, and fwod5 shipped steps referencing
@@ -838,16 +921,20 @@ export function lintFlowRefs(flow: Flow, publishes: (skillId: string) => string[
  *
  * ONE function, because the producer and the consumer disagreeing is a silent
  * dead reference. buildFlow mints `{{step.url.h1}}` for any part that is
- * `identifierLike` (three characters is enough — repair-desk's ids are "t15"),
+ * `looksLikeId` (three characters is enough — repair-desk's ids are "t15"),
  * while the daemon published parts at `length >= 4`. So every flow that named
  * a three-character record id minted a ref nothing would ever resolve, and the
  * four steps depending on it skipped the zero-model path on every replay.
+ *
+ * That is now enforced rather than asserted: both sides call
+ * `referencablePart`. They had drifted again in the meantime — minting
+ * admitted `idPositionPart` and this did not.
  */
-export function urlOutputs(url: string): Record<string, string> {
+export function urlOutputs(url: string, runSpecific?: RunSpecific): Record<string, string> {
   const out: Record<string, string> = { url };
   for (const part of urlParts(url)) {
     const key = `url.${part.label}`;
-    if (identifierLike(part.value) && !(key in out)) out[key] = part.value;
+    if (referencablePart(part, runSpecific) && !(key in out)) out[key] = part.value;
   }
   return out;
 }
@@ -902,20 +989,17 @@ export function lookupOutput(outputs: Record<string, Record<string, string>>, si
 interface RefSources {
   vars: Record<string, string>;
   outputs: Record<string, Record<string, string>>;
-  /** Outputs an earlier run demonstrated are app furniture; their recorded literal resolves. */
-  stable: Record<string, string>;
 }
 
-/** One reference's value: a `{{var}}` from the run's vars, a `{{step.output}}` from prior outputs, else the stable literal. */
+/**
+ * One reference's value: a `{{var}}` from the run's vars, a `{{step.output}}`
+ * from THIS run's outputs. Nothing else — a reference this run did not
+ * publish is missing and goes to recovery, never to a recorded literal.
+ */
 function lookupRef(ref: string, src: RefSources): string | undefined {
   if (!ref.includes('.')) return ref in src.vars ? src.vars[ref] : undefined;
   const dot = ref.indexOf('.');
-  const v = lookupOutput(src.outputs, ref.slice(0, dot), ref.slice(dot + 1));
-  // Demonstrated stable by an earlier run: the app produced this exact value
-  // again, so it is furniture and the recorded literal is right. Anything not
-  // demonstrated stays missing and goes to recovery.
-  if (v === undefined && ref in src.stable) return src.stable[ref];
-  return v;
+  return lookupOutput(src.outputs, ref.slice(0, dot), ref.slice(dot + 1));
 }
 
 /**
@@ -940,9 +1024,8 @@ export function resolveInstruction(
   step: FlowStep,
   vars: Record<string, string>,
   outputs: Record<string, Record<string, string>>,
-  stable: Record<string, string> = {},
 ): { text: string; missing: string[] } {
-  return resolveRefs(step.instruction, { vars, outputs, stable });
+  return resolveRefs(step.instruction, { vars, outputs });
 }
 
 /**
@@ -955,9 +1038,8 @@ export function softResolveInstruction(
   step: FlowStep,
   vars: Record<string, string>,
   outputs: Record<string, Record<string, string>>,
-  stable: Record<string, string> = {},
 ): string {
-  return resolveRefs(step.instruction, { vars, outputs, stable }, 'blank')
+  return resolveRefs(step.instruction, { vars, outputs }, 'blank')
     .text.replace(/[ \t]{2,}/g, ' ')
     .trim();
 }
@@ -1060,13 +1142,12 @@ export function resolveStepParams(
   step: FlowStep,
   vars: Record<string, string>,
   outputs: Record<string, Record<string, string>>,
-  stable: Record<string, string> = {},
 ): { params: Record<string, string>; missing: string[] } | null {
   if (!step.params) return null;
   const params: Record<string, string> = {};
   const missing: string[] = [];
   for (const [k, tmpl] of Object.entries(step.params)) {
-    const r = resolveRefs(tmpl, { vars, outputs, stable });
+    const r = resolveRefs(tmpl, { vars, outputs });
     params[k] = r.text;
     missing.push(...r.missing);
   }
@@ -1079,26 +1160,17 @@ const MAX_JSON_DEPTH = 4;
 
 
 /**
- * Url parts of `url` that are identifier-like and that this session has not
- * seen before — the values it just minted. First appearance wins, so the
- * start url's own parts (and anything already banked) never qualify.
+ * Scalar leaves of a JSON read value, as `path` (dot/index joined) + value.
+ *
+ * `runSpecific` is the same evidence arm the url parts use: a leaf an earlier
+ * run watched change is published whatever it looks like — the case this
+ * exists for, since fwgr5's dashboard uid lived only inside a response body
+ * and shape is all that stood between it and a literal. It only ever adds:
+ * without evidence the shape prior still decides, and that prior fails toward
+ * silence, since an unpublished leaf leaves the recording's literal in place
+ * with nothing that could ever correct it.
  */
-export function freshUrlIds(url: string, seen: Set<string>): { label: string; value: string }[] {
-  const out: { label: string; value: string }[] = [];
-  for (const part of urlParts(url)) {
-    // Three characters, not four: repair-desk's record ids are "t15", and at
-    // a four-character floor fwrd16 left a literal `#/tickets/t15` in six
-    // flow steps. identifierLike() still does the real work — a three-letter
-    // route word carries no digit and no separator, so it never qualifies.
-    if (seen.has(part.value) || !identifierLike(part.value)) continue;
-    seen.add(part.value);
-    out.push(part);
-  }
-  return out;
-}
-
-/** Scalar leaves of a JSON read value, as `path` (dot/index joined) + value. */
-export function jsonLeaves(text: string): { path: string; value: string }[] {
+export function jsonLeaves(text: string, runSpecific?: RunSpecific): { path: string; value: string }[] {
   const trimmed = text.trim();
   if (!(trimmed.startsWith('{') || trimmed.startsWith('['))) return [];
   let root: unknown;
@@ -1116,7 +1188,8 @@ export function jsonLeaves(text: string): { path: string; value: string }[] {
     }
     if (typeof node !== 'string' && typeof node !== 'number') return;
     const value = String(node);
-    if (value.length > 120 || !identifierLike(value)) return;
+    if (value.length > 120) return;
+    if (!runSpecific?.(value) && !(value.length >= MIN_ID_LEN && looksLikeId(value, 'first-run'))) return;
     if (!path) return;
     out.push({ path, value });
   };

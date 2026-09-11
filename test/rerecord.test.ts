@@ -8,7 +8,9 @@ import {
   RerecordError,
   backupFlowFile,
   backupPath,
+  LEAKED_STEP,
   formatRerecordDiagnostic,
+  quarantineLeakedSteps,
   rerecordCommand,
   rerecordVerdict,
   stepLine,
@@ -64,6 +66,51 @@ function flowFixture(): Flow {
 function result(over: Partial<FlowStepResult> = {}): FlowStepResult {
   return { id: '08-open', status: 'success', ...over };
 }
+
+describe('quarantineLeakedSteps', () => {
+  const skills = [
+    { id: 's_aaa111' },
+    // 08-open pins the HEAD of a two-segment chain; the leak is in segment 2.
+    { id: 's_c86522', seq: { chain: 'c_08', index: 0, of: 2 } },
+    { id: 's_c86523', seq: { chain: 'c_08', index: 1, of: 2 } },
+    { id: 's_orphan' },
+  ];
+
+  it('unpins only the step that replays the poisoned locator, and flags it', () => {
+    const poisoned = new Map([['s_aaa111', ['steps[1].locators.target[0].name: "S00021" (output)']]]);
+    const { flow, quarantined } = quarantineLeakedSteps(flowFixture(), skills, poisoned);
+    expect(quarantined.map((q) => q.step)).toEqual(['06-open']);
+    // Same operation `sitelooper rerecord` performs.
+    expect(flow.steps[0].skill).toBeUndefined();
+    expect(flow.steps[0].adopted).toBe(true);
+    // The other step keeps its pin: one leaked locator no longer voids a recording.
+    expect(flow.steps[1].skill).toBe('s_c86522');
+    expect(flow.warnings?.filter((w) => w.startsWith(LEAKED_STEP))).toHaveLength(1);
+    expect(flow.warnings![0]).toContain('06-open');
+    expect(flow.warnings![0]).toContain('S00021');
+  });
+
+  it('reaches a leak in a later chain segment through the step that pins the head', () => {
+    // A chain replays as a unit from its head, so a bad locator in segment 2
+    // is reached by 08-open even though 08-open never names s_c86523.
+    const poisoned = new Map([['s_c86523', ['steps[0].locators.row[0].hasText: "S00021" (output)']]]);
+    const { flow, quarantined } = quarantineLeakedSteps(flowFixture(), skills, poisoned);
+    expect(quarantined).toEqual([{ step: '08-open', skills: ['s_c86523'], leaks: [expect.stringContaining('S00021')] }]);
+    expect(flow.steps[1].skill).toBeUndefined();
+    expect(flow.steps[0].skill).toBe('s_aaa111');
+  });
+
+  it('quarantines no step for a poisoned skill nothing pins — the caller demotes it alone', () => {
+    const { flow, quarantined } = quarantineLeakedSteps(flowFixture(), skills, new Map([['s_orphan', ['x']]]));
+    expect(quarantined).toEqual([]);
+    expect(flow).toEqual(flowFixture());
+  });
+
+  it('returns the flow untouched when nothing is poisoned', () => {
+    const fixture = flowFixture();
+    expect(quarantineLeakedSteps(fixture, skills, new Map()).flow).toBe(fixture);
+  });
+});
 
 describe('unpinStep', () => {
   it('throws away the pin, its params and the recorded values, keeping the outputs', () => {

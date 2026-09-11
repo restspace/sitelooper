@@ -3,7 +3,6 @@ import type { Report } from '../agent/report.js';
 import type { RecordedEntry, RecordedInstruction } from '../daemon/recorder.js';
 import { compileSkills, escapeRe, fillParams, sameProcedure, urlMatches } from './compile.js';
 import { ComponentStore, learnRecipes } from './components.js';
-import { identifierLike } from './ledger.js';
 import { successRate, type Skill, type SkillStore } from './store.js';
 
 export interface LearnedRecord {
@@ -281,10 +280,30 @@ export function synthesizeReport(skill: Skill, params: Record<string, string>, l
     // as this run's finding, while publishing {} as their values. The run had
     // created S00023.
     //
-    // An identifier the prose names that no parameter supplied is a claim
-    // about the world made by a replay that looked at nothing.
-    (!Object.keys(liveValues).length &&
-      (summary.match(/[A-Za-z0-9][A-Za-z0-9._-]*/g) ?? []).some((tok) => identifierLike(tok) && !fromParams.includes(loose(tok))));
+    // A sentence NOTHING in this run vouches for.
+    //
+    // This used to scan the prose for tokens that LOOKED like identifiers and
+    // drop the summary only when it found one — the last site in the product
+    // where reading characters decided something that fails toward silence. A
+    // fabricated sentence naming an id the regex did not recognise ("Added a
+    // second order line to Order Alpha and saved") survived as the run's
+    // finding, and no widening of the regex fixes that: the property that
+    // matters is not how the id is spelled.
+    //
+    // What this run can vouch for is exactly two things, and both are known
+    // without reading anything. A value it OBSERVED (`liveValues`), and a
+    // value it SUPPLIED (a param that actually reached the prose). With
+    // neither, every specific in the sentence is the recording's, and which
+    // of those specifics name a record is the question shape was failing to
+    // answer.
+    //
+    // Fails toward COST: a replay that observed nothing and filled nothing
+    // has its true-but-unverified sentence replaced by a duller true one
+    // ("Saved the form and closed the dialog." becomes "Replayed stored
+    // procedure s_x"). The values the replay did observe are listed either
+    // way, and the step's status still says the procedure ran. That is a
+    // worse report, never a wrong one.
+    (!Object.keys(liveValues).length && summary === template.summary);
   const clean = dropped
     ? `Replayed stored procedure ${skill.id}${Object.keys(values).length ? `; observed ${Object.entries(values).map(([k, v]) => `${k}=${v}`).join(', ')}` : ''}.`
     : summary;

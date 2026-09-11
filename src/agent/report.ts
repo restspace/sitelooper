@@ -1,4 +1,5 @@
 import { Ajv, type ValidateFunction } from 'ajv';
+import { digitDominant, tokenPattern } from '../skills/shape.js';
 
 export interface Report {
   status: 'success' | 'failure' | 'blocked';
@@ -460,12 +461,7 @@ function uniqueName(base: string, taken: Record<string, unknown>): string {
  * order, only tolerant about how much space sits between them.
  */
 function cites(prose: string, value: string): boolean {
-  const body = escapeRegExp(value).replace(/\s+/g, '\\s*');
-  return new RegExp(`(?<![A-Za-z0-9])${body}(?![A-Za-z0-9])`).test(prose);
-}
-
-function escapeRegExp(s: string): string {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return tokenPattern(value, '', { elasticSpace: true }).test(prose);
 }
 
 /** Most scalars taken out of one composed value. A read_all dumped as JSON is a table, not evidence. */
@@ -538,9 +534,11 @@ const MAX_PROSE_ID_LEN = 40;
 /**
  * Identifier-like tokens the report's prose cites but `evidence.values` does
  * not carry: an order reference (S00021), a ticket ref (RD-1015), a generated
- * uid. Mixed letters AND digits is the test — it admits every app-minted
- * reference seen across the bench targets while rejecting prices ("125.00"),
- * counts, and ordinary words.
+ * uid. The test is the product's one shape predicate (shape.ts
+ * `digitDominant`, which already refuses prices, dates and times) minus bare
+ * integers — prose is full of counts ("added 2 lines", "1042 rows"), and a
+ * count pinned as `ref` is a wrong identity, where a missed ref costs the
+ * recovery turn it always did.
  *
  * These are the values later flow steps address the run's own record BY, so a
  * step that leaves one unstructured strands every later step on the RECORDED
@@ -557,8 +555,8 @@ export function proseIdentifiers(report: Report): string[] {
     if (out.length >= MAX_PROSE_IDS) break;
     const v = m[0].replace(/[.\-_]+$/, '');
     if (v.length < MIN_PROSE_ID_LEN || v.length > MAX_PROSE_ID_LEN) continue;
-    if (!/[A-Za-z]/.test(v) || !/\d/.test(v)) continue;
-    // Not references, though they pass the letter+digit shape: a snapshot ref
+    if (!digitDominant(v, 'proposal') || /^\d+$/.test(v)) continue;
+    // Not references, though they pass the shape: a snapshot ref
     // (e1234), an ordinal (10th), a measurement (100px, 30s). Each used to
     // take one of the three slots and crowd out the real S00021.
     if (/^e\d+$/.test(v) || /^\d+(st|nd|rd|th)$/i.test(v) || /^\d+(px|ms|s|m|h|d|kb|mb|gb|%)$/i.test(v)) continue;

@@ -167,7 +167,7 @@ The ledger already holds provenance for these. Shape is unnecessary.
 | `flow.ts:246` | **new gate** — reference or literal | run-2 stability check (the mechanism above) |
 | `flow.ts:326` | `coincidental` — may a value match inside a compound | producer republished it or not; else run 2 |
 | `flow.ts:426` | `urlOutputs` | same as `ledger.ts:147` |
-| `flow.ts:533` | `freshUrlIds` | freshness already computed here; drop the shape clause |
+| ~~`flow.ts:533`~~ | ~~`freshUrlIds`~~ | **REMOVED 2026-09-10** — the export had no production caller at all, so the site cost nothing to delete |
 | `flow.ts:559` | `jsonLeaves` — which leaves are threadable | publish all leaves; run 2 retires the stable ones |
 | `compile.ts:419` | `discoverMinted` floor | freshness + `mints` confirmed by run 2's url diff |
 | `learn.ts:287` | is a prose token an unbacked identity claim | compare against params and live values only |
@@ -270,6 +270,57 @@ permanent veto. `verify-artifacts` reports three states — stable, volatile
 persist its verdict. Change `flow.ts:246` to use it. This alone removes the
 dangerous site and proves the mechanism on the case that motivated it.
 
+**Stage 1.5 — the url population joins the mechanism (2026-09-10).** The
+reported-value path referenced everything and let evidence demote; the URL
+path did not, and could not, because nothing collected a variance signal for
+it. `buildFlow` now writes each minted url part into the step's `recorded`
+map, and the flow runner passes `stepOutputs` (values *and* url parts) to
+`noteOutputEvidence` instead of `values` alone. So a url part a later run
+reproduces is demoted to a literal, and one a later run contradicts is vetoed
+permanently — the same rule already governing reported values.
+
+The same conversion then landed for **JSON leaves** (2026-09-10). `recorded`
+held a read-back's whole body under one name, so `noteOutputEvidence` compared
+the entire JSON string and a single volatile field vetoed every leaf in it —
+a response carrying both a minted uid and an etag could never demonstrate
+anything about either. `buildFlow` now records each published leaf under the
+`<output>#<path>` name it is referenced by, and the flow runner expands a
+reported body into the same names before banking evidence. Verdicts are per
+path: the slug the app re-derives goes stable, the uid beside it stays a live
+reference.
+
+**Superseded 2026-09-11: `stableOutputs` is deleted.** Agreement between runs is
+not evidence that the app owns a value, because a harness that resets the app
+reproduces a minted id exactly. Two reset runs both creating `t15` made that
+output "stable". A third run on an app that wasn't reset, whose create step went
+tier A and dropped the output, would then have resolved the reference to run
+1's `t15` and edited the wrong ticket while reporting success. The literal
+fallback sat exactly on the path where a live value is missing, so "consulted
+only when a live lookup fails" was no mitigation. An unresolved reference now
+always goes to recovery. `outputEvidence` stays, but only `differed` is ever
+acted on (`varyingValues`, dead-read retirement). The per-leaf and per-url-part
+recording below still earns its keep, because it lets a volatile value be
+caught on its own evidence.
+
+Both were additive when written. Neither removes its shape gate — a value shape refuses is still never
+referenced and so still has no evidence — but both build the signal that
+removal needs. Widening those gates is the next step and wants a bench sweep,
+not a unit test, to price.
+
+**Why `jsonLeaves`' gate must not simply be dropped.** Publishing every scalar
+leaf is not the safe default that "reference everything" is for reported
+values, and the existing fixture shows why: a body of
+`{ status: 'success', uid: '…', slug: '…', version: 2 }` would publish
+`version: 2`, and `buildFlow` referencizes any standalone matching token in a
+later instruction. "Set the quantity to 2" compiles to
+`{{03-save.body#version}}`, and a replay whose body says `version: 3` executes
+"set the quantity to 3". That is a changed INSTRUCTION, not an unresolved
+reference, so it escapes this plan's safety argument ("an unresolved reference
+costs a recovery turn, never a wrong record"), and cross-run evidence does not
+rescue it either: a volatile leaf stays a live reference — precisely the
+corrupting case. A leaf population needs an admission rule narrower than "admit all"
+before its gate can go.
+
 **Stage 2 — population A.** Convert the remaining eleven sites to provenance
 or to the stage-1 verdict. Collapse the five thresholds into one place. Delete
 `identifierLike` from every site where it is a verdict; keep it, if at all, as
@@ -281,16 +332,134 @@ is a candidate id when it varies across runs — rather than five app-shaped
 patterns.
 
 **Stage 4 — the checker.** Import the product's rule into
-`verify-artifacts.mjs`. Replace the self-containment wording match with a
+`verify-artifacts.mjs`. *(Half done 2026-09-10: it now imports `looksLikeId`
+from `dist/skills/shape.js`, so there is one rule rather than a copy. The
+self-containment wording match is untouched.)* Replace the self-containment wording match with a
 behavioural one.
 
 Stages 1 and 4 are independently valuable and can land first.
 
 ## How we will know it worked
 
-- **A grep gate.** `identifierLike` and `isIdLike` appear only in their own
-  definitions and in sites explicitly marked as first-run priors. A test
-  asserts the call count does not grow.
+- **Variance reaches the ledger. DONE 2026-09-11** (`varyingValues` +
+  `FlowStep.route` in flow.ts, `RunLedger.seedVariance`, `basis: 'variance'`
+  finally produced). A flow run seeds the ledger with the values earlier runs
+  watched CHANGE; each is kinded `identifier` whatever its characters, which
+  is the "Order Alpha" / "abcd" case no regex reaches, and `fatal()` already
+  refused on `variance` while only warning on `shape`. Three things were
+  learned the hard way and are worth keeping written down:
+
+  1. **Evidence needs a route.** Comparing fwod20's n1/n2/n3 step by step made
+     21 url parts look volatile; the ones shape had refused were
+     `q.model = "sale.order" vs "res.partner"` and `q.view_type`, which varied
+     because a recovery turn navigated elsewhere. Require the same url pattern
+     and 4 remain, every one `q.id`. `noteOutputEvidence` now discards a
+     comparison made from a different route — at the cost of 7 of fwod20's 11
+     instructions contributing nothing.
+  2. **Variance is ONE-DIRECTIONAL.** The first cut let agreement across runs
+     demote a value to app furniture. That is wrong on a reset bench app,
+     which reproduces a minted record id exactly — every repair-desk recording
+     here creates ticket `t15` — so it would have stopped banking `t15` from
+     run 2 on, and an unbanked record id is one no guard can see. `RunSpecific`
+     is a boolean and the ledger holds a `Set`, so the unsafe direction has no
+     legal spelling, the same device as `ShapePrior` having no `verdict`.
+  3. **Widening `idPositionPart` by name is a dead end.** Swept every url in
+     bench/results: `.*_id` would newly admit 23 values of `q.menu_id`, odoo
+     routing constants — the fwod29 bill again — while the real record
+     pointers in grafana and repair-desk sit in *unnamed* path positions
+     (`p1`, `p2`) where there is no name to read. Position cannot grow; that
+     population is what the variance arm is for.
+
+  It also uncovered a live producer/consumer split: `buildFlow` minted a url
+  part on `looksLikeId || idPositionPart` while `urlOutputs` published on
+  `looksLikeId` alone, so odoo's `#id=44` was minted as
+  `{{01-open.url.q.id}}` and never published by any replay — the exact dead
+  reference `urlOutputs`' own comment warned about. Both now call
+  `referencablePart`.
+- **learn.ts's honesty gate: DELETED, not converted. 2026-09-11.** It scanned
+  a tier-A summary for identifier-shaped tokens and dropped the prose when it
+  found one — the last site failing toward silence, and unfixable by widening,
+  since "Added a second order line to Order Alpha and saved" names a record no
+  regex sees. The property that actually matters is whether the run can vouch
+  for the sentence, and that is known exactly: a value it OBSERVED
+  (`liveValues`) or SUPPLIED (a param that reached the prose). With neither,
+  no narrative. Fails toward cost — a true-but-unverified sentence becomes a
+  duller true one — and removes the judgement rather than improving it.
+- **The circular read. DONE 2026-09-11** (`dropDeadReadLocators` in
+  `compile.ts`, called from the daemon where `noteOutputEvidence` lands). A
+  read located by the text it reported — `getByText('£ 133.33')` for the
+  output `total` — cannot be judged by the recording, which saw the value
+  once. A blanket ban was written, measured and thrown away: across the 33
+  published recordings it hits 191 of 890 reads, 48 of those values have no
+  digit and are page furniture a text locator is the RIGHT way to find, 86
+  reads would be left findable only by position, and 9 chains would empty
+  outright — a recovery turn on every replay, forever. It also buys less than
+  it looks: replay takes the first candidate matching exactly one element, so
+  a candidate whose value moved simply misses and falls through to the next —
+  which is where deleting it would have sent it anyway. The only silent
+  failure is the old value surviving elsewhere on the page as the only match.
+  So evidence decides instead: a candidate goes only for an output
+  `outputEvidence` has actually seen change, whole-token, and only once a
+  second run exists to say so. Worst case, with every labelled read output
+  assumed volatile, that is 30 chains across all 33 recordings rather than
+  191 — and the list of what it would empty is mostly `"Column:"`,
+  `"Due date:"`, `"Status"`, values no run will ever contradict. Fails toward
+  cost: a read stripped to positional candidates is emptied, so replay skips
+  it and the value comes back absent rather than confidently wrong (fwrd16-n3).
+- **A grep gate. DONE 2026-09-10** (`src/skills/shape.ts`,
+  `test/shape-gate.test.ts`). Both functions moved to one module and were
+  renamed `looksLikeId` / `looksLikeIdSegment`; every caller must now pass a
+  `ShapePrior` naming what it is using the answer AS. The type has four
+  members — `first-run`, `ordering`, `proposal`, `diagnostic` — and
+  deliberately no `verdict`, so a site that wants one has no legal spelling.
+  The gate test pins the complete inventory file by file, with the direction
+  each population fails in, and asserts that no id-shape clause is
+  re-implemented anywhere else under any name. 18 call sites across four
+  files, down from 32 references and two definitions. Lowering the count is
+  free; raising it fails until someone writes the new site down, which is the
+  moment to ask whether evidence could decide it.
+
+  What the inventory then makes visible: `compile.ts` (10 sites) fails toward
+  cost — proposals `softUrlMatch` corrects, and orderings. `ledger.ts`,
+  `flow.ts` and `learn.ts` (8 sites) fail toward silence, and are the real
+  remaining work. Of those, `learn.ts`'s gates prose rather than a record
+  pointer; the other seven are the url population.
+
+  **2026-09-11: 15 sites.** `learn.ts` is at zero (gate deleted, above), and
+  `flow.ts`'s two url-part admissions became the one function they always
+  claimed to be. The five that remain in the silence direction all now sit
+  BEHIND the variance arm, so the characters decide only where no run has yet
+  been in a position to judge — asserted structurally by the gate test, not
+  by a comment, because that is what the previous three rounds of this had.
+
+  **2026-09-11 (evening): one predicate, 9 predicate sites.** Every
+  character-reading check now goes through shape.ts:
+
+  - `digitDominant`: digits ≥ other characters, or any '-'/'_' piece that
+    is. Measured quantities (one '.' with a digit on each side) and real
+    dates/times (range-checked) are never numeric. `looksLikeIdSegment` is
+    gone.
+  - `looksLikeId` = `digitDominant` + generated tokens (a digit anywhere in
+    one unbroken token; ≥12 chars or 8+ hex with no separator). This is one
+    rule in two directions. Sites where an ID answer *generalises* (url
+    `:id`, skeleton `*`, demotion, prose ref) take the narrow test, because
+    there a false yes is silent. Sites where it *admits* (banking,
+    references, the token boundary) take the generous one, because there a
+    false no is silent. Grafana's `afw6yy5xx9` (3 digits in 10) and the runid
+    `fr1` are why admission cannot use the narrow test.
+  - `tokenPattern`: the one whole-token boundary. A word's '-'/'_' bind; an
+    identifier's split. It replaced six copies, including report.ts `cites`.
+    `coincidental` is deleted.
+  - `skeleton`: the one id-blanking. It splits on every non-alphanumeric and
+    never blanks a `{{marker}}` or a token after '(' or '='. It replaced
+    `locatorShape`'s tokeniser, `stripIds`, and the `bookmarked`/`stableFirst`
+    test, and the old exemption for 1–2 digit numbers is dropped.
+  - Hex runs (decision 3C): three rules kept apart because they answer
+    different questions. Each has one constant, and the page-side literals
+    are held equal to those constants by the gate test.
+  - The gate inventories by question and fences every other alphanumeric
+    class in src/ behind an allowlist: 15 entries in 9 files, mostly syntax
+    parsers.
 - **A fourth target.** Every finding above is a prediction about an app we have
   not tried. The plan is not validated by the three targets passing — they
   passed while carrying all ten. It is validated by a new app with a

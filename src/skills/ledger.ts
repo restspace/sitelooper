@@ -19,6 +19,8 @@
  */
 
 /** How a later run obtains its own value for a slot. */
+import { MIN_ID_LEN, looksLikeId, tokenPattern } from './shape.js';
+
 export type Binding =
   /** The caller declared it (a flow var). */
   | { from: 'var'; name: string }
@@ -40,29 +42,39 @@ export interface LedgerEntry {
    */
   kind: 'identifier' | 'name' | 'text';
   /**
-   * The caller vouched for this value rather than the compiler inferring it.
-   * Known values are the only ones allowed to carry record IDENTITY, because
-   * a wrong guess there silently moves a procedure onto another record.
+   * WHAT ENTITLED this entry to its `kind` — the provenance of the JUDGEMENT,
+   * not of the value.
+   *
+   * This is the distinction `known` used to gesture at and could not make.
+   * `known` recorded whether the run produced the value, which is true of
+   * almost everything the ledger banks and so discriminated nothing; it was
+   * written by every caller, read by no production code, and its doc claimed
+   * an invariant ("known values are the only ones allowed to carry record
+   * IDENTITY") that nothing enforced. What actually matters downstream is how
+   * confident the `identifier` verdict is, because that verdict can refuse an
+   * export — see `fatal`.
+   *
+   *  - `position` — the url's own vocabulary said so (idPositionPart).
+   *  - `var`      — the caller declared it a run variable; a var's value is
+   *                 run-scoped by definition.
+   *  - `variance` — a later run landed a different value in the same place.
+   *                 The only arm reached by watching rather than by reading,
+   *                 and the only one that can see a record pointer in an
+   *                 unnamed position (a grafana uid at `p1`). Seeded from the
+   *                 flow's outputEvidence at the start of a flow run, so it
+   *                 is empty on a first recording by construction.
+   *  - `shape`    — nothing but the characters. A guess, and never enough on
+   *                 its own to bin a recording.
    */
-  known: boolean;
+  basis: 'position' | 'var' | 'variance' | 'shape';
   /** Where it first appeared, for ordering and for diagnostics. */
   firstSeen: { instruction: number; step: number };
 }
 
 /**
- * Identifier-like: specific enough to be a REFERENCE rather than a word the
- * app happens to use. A route word ("tickets", "dashboards") is a common
- * lowercase noun; a minted id carries a digit, a separator, or the length of
- * a generated uid.
- *
- * This is the ONE copy. It previously existed three times with two different
- * length floors, which is why repair-desk's "t15" was banked by one caller
- * and left literal by another.
- */
-/**
  * A url part that is an identifier by POSITION, whatever its characters.
  *
- * identifierLike reads the value's shape, and a shape gate has a floor: odoo's
+ * looksLikeId reads the value's shape, and a shape gate has a floor: odoo's
  * database ids are short integers (`#id=44`), invisible to it — and through
  * it, to the ledger, the leak guards, flow minting and compile slotting all at
  * once. fwod27 is the bill: the recording's contact id 44 rode into a flow
@@ -84,27 +96,6 @@ export function idPositionPart(part: { label: string; value: string }): boolean 
   return part.label === 'q.id' && /^\d{1,10}$/.test(part.value);
 }
 
-export function identifierLike(value: string): boolean {
-  if (value.length < MIN_ID_LEN) return false;
-  // No minted id contains whitespace. Without this the `length >= 12` clause
-  // — which exists for digitless uids like "afwfbbc2of6rkf" — swallows
-  // ordinary prose: fwrd23l reported the app's validation heading "Ticket is
-  // not ready" as a value, it was banked as an identifier, and the export gate
-  // then refused a clean 37-minute run because a text locator legitimately
-  // matched the app's own error message.
-  if (/\s/.test(value)) return false;
-  // A hyphenated pair of words is a SLUG, not a minted id: grafana's
-  // "bench-service-health", atelyr's "project-manager". Those are route
-  // segments every run shares, and banking them made the export gate refuse a
-  // whole recording. A separator only makes a reference when a digit comes
-  // with it ("RD-1015", "fwrd24l-n1"); a digitless opaque token still
-  // qualifies on length alone, which is what grafana's "cfwcsdxqdjabkf" needs.
-  if (/[-_]/.test(value)) return /\d/.test(value);
-  return /\d/.test(value) || value.length >= 12;
-}
-
-/** Three, not four: repair-desk's record ids are "t15". */
-const MIN_ID_LEN = 3;
 const MAX_VALUE_LEN = 200;
 
 /**
@@ -133,6 +124,44 @@ export class RunLedger {
   private seen = new Set<string>();
   private instruction = 0;
   private step = 0;
+  /**
+   * Values an EARLIER RUN watched change — the arm that finally outranks the
+   * characters.
+   *
+   * A flow accumulates, per step output, how often a later run reproduced the
+   * recording's value and how often it produced a different one (flow.ts
+   * outputEvidence). A value some run contradicted is a record pointer
+   * whatever it looks like, and that is the question shape has been standing
+   * in for all along: "did the app make this, or was it this run's record?"
+   *
+   * A SET, not a verdict map, and deliberately so. The converse does not
+   * follow: a bench app reset between runs reproduces a minted record id
+   * exactly — every repair-desk recording here creates ticket `t15` — so
+   * agreement across runs is not evidence that a value is the app's. Letting
+   * it suppress admission would have stopped banking t15 from run 2 on, and
+   * an unbanked record id is one no leak guard can see. Evidence may only add
+   * to what shape and position admit. See flow.ts `RunSpecific`.
+   *
+   * Empty on a first recording, which is correct and is the whole design: run
+   * 1 proposes with shape, run 2 adds what it has seen.
+   */
+  private variance = new Set<string>();
+
+  /**
+   * Hand the ledger the values earlier runs demonstrated are run-specific,
+   * before it starts banking. See `variance`.
+   */
+  seedVariance(values: Iterable<string>): void {
+    for (const value of values) {
+      const v = String(value ?? '').trim();
+      if (v) this.variance.add(v);
+    }
+  }
+
+  /** Did an earlier run watch this value change? */
+  runSpecific(value: string): boolean {
+    return this.variance.has(String(value ?? '').trim());
+  }
 
   /** Advance the cursor used to stamp `firstSeen`. */
   beginInstruction(index: number): void {
@@ -153,7 +182,7 @@ export class RunLedger {
   add(
     value: string,
     binding: Binding,
-    opts: { kind?: LedgerEntry['kind']; known?: boolean; vouched?: boolean } = {},
+    opts: { kind?: LedgerEntry['kind']; basis?: LedgerEntry['basis']; vouched?: boolean } = {},
   ): LedgerEntry | null {
     const v = String(value ?? '').trim();
     // The length floor guards against banking junk from shape-guessing
@@ -162,11 +191,46 @@ export class RunLedger {
     // what the floor was silently discarding: fwod27's contact id 44 never
     // banked, so no guard downstream could see it leak.
     if ((v.length < MIN_ID_LEN && !opts.vouched) || !v.length || v.length > MAX_VALUE_LEN || this.seen.has(v)) return null;
+    // What earlier runs demonstrated, where they demonstrated anything. It
+    // outranks the shape prior below and is outranked only by a caller that
+    // states the kind outright, because a caller that states it has read the
+    // url's own vocabulary (addUrlIds/idPositionPart) — position and variance
+    // are both evidence, and where they disagree the closer one wins.
+    const runSpecific = this.variance.has(v);
     const entry: LedgerEntry = {
       value: v,
       binding,
-      kind: opts.kind ?? (identifierLike(v) ? 'identifier' : 'text'),
-      known: opts.known ?? binding.from === 'var',
+      // A caller that KNOWS passes `kind` (addUrlIds always does). Where none
+      // does — a reported read-back, a var — run 1 has nothing but the
+      // characters to go on, so this is the shape rule's 'first-run' prior
+      // (see shape.ts).
+      //
+      // It fails toward SILENCE, and this is the sharpest instance of it in
+      // the product: `fatal()` refuses an export only for `kind: 'identifier'`
+      // in a locator. So a record id that does not LOOK like one is banked as
+      // 'text', the export gate declines to call its leak fatal, and the
+      // compiled locator carries the recording run's record into every replay
+      // while every check passes. `identifierLike("Order Alpha")` is false;
+      // so is `identifierLike("abcd")`. That is the exact case
+      // PLAN-evidence-over-shape.md was written for.
+      //
+      // Widening the shape test cannot fix it — fatal() already lost a
+      // release cycle to the opposite error (odoo's menu id 123 banked as a
+      // record, a clean 6/6 recording refused). The fix is a run-2 verdict,
+      // which `runSpecific` now is: a value an earlier run watched change is
+      // an identifier however ordinary it looks — "Order Alpha" and "abcd"
+      // included, the two cases named above that no regex reaches.
+      //
+      // It only ever ADDS. Agreement across runs does not demote an
+      // identifier back to text, because a bench app reset between runs
+      // reproduces a minted record id exactly; see `variance`.
+      kind: opts.kind ?? (runSpecific || looksLikeId(v, 'first-run') ? 'identifier' : 'text'),
+      // A declared run variable is run-scoped because the caller said so, which
+      // is evidence about the value's origin and not about its spelling.
+      // Everything else that reaches here without a stated basis got its kind
+      // from the line above — from evidence where a run supplied any, and
+      // otherwise from the characters.
+      basis: opts.basis ?? (binding.from === 'var' ? 'var' : !opts.kind && runSpecific ? 'variance' : 'shape'),
       firstSeen: { instruction: this.instruction, step: this.step },
     };
     this.seen.add(v);
@@ -178,18 +242,47 @@ export class RunLedger {
   addUrlIds(url: string, step: string, parts: { label: string; value: string }[]): LedgerEntry[] {
     const out: LedgerEntry[] = [];
     for (const part of parts) {
-      if (!identifierLike(part.value) && !idPositionPart(part)) continue;
+      // Shape proposes, position decides: idPositionPart is the evidence arm
+      // (a param NAMED id holds a record id whatever its characters) and the
+      // shape test is the 'first-run' prior beside it, for the parts no
+      // position vouches for. Fails toward SILENCE when it says no — an
+      // unbanked url id is one no leak guard can see (fwod27) — which is why
+      // this pair is the standing candidate for a variance-based replacement,
+      // not a site to widen with another regex clause.
+      //
+      // Evidence first, where there is any. A part earlier runs CONTRADICTED
+      // is a record pointer whatever its characters (this is the only arm
+      // that can catch a grafana uid in an unnamed path position — `p1`,
+      // where there is no name to read and shape is all that was left). A
+      // part every run REPRODUCED is app furniture whatever its characters,
+      // which is the honest form of the fwod29 patch below: odoo's
+      // `action=315` stops being banked because runs demonstrated the app
+      // reproduces it, not because we hard-coded a rule about digits.
+      const runSpecific = this.runSpecific(part.value);
+      if (!runSpecific && !looksLikeId(part.value, 'first-run') && !idPositionPart(part)) continue;
       // A pure-digit QUERY param the app does not call `id` is routing
       // vocabulary, not a record: fwod29 banked odoo's `action=315` and
       // `action=126` (window-action numbers, identical on every run) and the
       // navigation check flagged 16 "leaks" on a clean sweep. A digit run in
       // a PATH position (`/tickets/315`) still banks — there the position is
       // the app saying "this is the record".
-      if (/^\d+$/.test(part.value) && part.label.startsWith('q.') && !idPositionPart(part)) continue;
+      // Evidence overrides it: that patch is a standing guess about what
+      // digits in a query param mean, and a run that watched this exact value
+      // change is not guessing.
+      if (!runSpecific && /^\d+$/.test(part.value) && part.label.startsWith('q.') && !idPositionPart(part)) continue;
       const entry = this.add(
         part.value,
         { from: 'url', step, label: part.label },
-        { kind: 'identifier', known: true, vouched: idPositionPart(part) },
+        // The admission test above has three arms and they are not equally
+        // sure of themselves. Say which one let this part through, so a
+        // refusal downstream can require a confident one. Ranked as they are
+        // trusted: a run that watched the value change, then the url's own
+        // vocabulary, then the characters.
+        {
+          kind: 'identifier',
+          basis: runSpecific ? 'variance' : idPositionPart(part) ? 'position' : 'shape',
+          vouched: runSpecific || idPositionPart(part),
+        },
       );
       if (entry) out.push(entry);
     }
@@ -220,25 +313,22 @@ export class RunLedger {
   }
 
   /** The values themselves, for callers that only need strings (identity hints). */
-  values(opts: { known?: boolean } = {}): string[] {
-    return this.entries.filter((e) => (opts.known === undefined ? true : e.known === opts.known)).map((e) => e.value);
+  values(opts: { basis?: LedgerEntry['basis'] } = {}): string[] {
+    return this.entries.filter((e) => (opts.basis === undefined ? true : e.basis === opts.basis)).map((e) => e.value);
   }
 }
 
 /**
- * Whole-token occurrence. Underscores bind — `o_form_view_group` is ONE
- * identifier, so a value "form" must not match its middle (fwod5 shipped
- * exactly that corruption) — while hyphens do not, since a runid prefix in
- * "x7-bench-dashboard" is a reference worth threading.
+ * Whole-token occurrence, by the product's one boundary rule (shape.ts
+ * `tokenPattern`): a word's '-' and '_' bind — "form" never matches inside
+ * `o_form_view_group` (fwod5) — and a numeric value's split, so a runid
+ * prefix in "x7-bench-dashboard" is a reference worth threading.
  */
 export function occursAsToken(text: string, value: string): boolean {
   if (!value) return false;
-  return new RegExp(`(?<![A-Za-z0-9_])${escapeRe(value)}(?![A-Za-z0-9_])`).test(text);
+  return tokenPattern(value).test(text);
 }
 
-export function escapeRe(s: string): string {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
 
 /**
  * Fields whose CONTRACT is to hold the recording run's value: a param's
@@ -263,8 +353,10 @@ export interface Leak {
   where: string;
   value: string;
   binding: Binding;
-  /** The entry's kind. Only an `identifier` leak is fatal — see `fatal`. */
+  /** The entry's kind. Only an `identifier` leak can be fatal — see `fatal`. */
   kind: LedgerEntry['kind'];
+  /** How sure we are of that kind. A `shape` verdict never refuses — see `fatal`. */
+  basis: LedgerEntry['basis'];
   /** The surrounding text, trimmed, so a reader can see it in context. */
   context: string;
 }
@@ -286,7 +378,7 @@ export function scanForLeaks(artifact: unknown, ledger: RunLedger, where = ''): 
     if (exempt(path)) return;
     if (typeof node === 'string') {
       for (const entry of ledger.runValuesIn(node)) {
-        out.push({ where: path, value: entry.value, binding: entry.binding, kind: entry.kind, context: node.slice(0, 160) });
+        out.push({ where: path, value: entry.value, binding: entry.binding, kind: entry.kind, basis: entry.basis, context: node.slice(0, 160) });
       }
       return;
     }
@@ -347,7 +439,7 @@ export function fatal(leak: Leak): boolean {
   //   args.url: "123" in "http://127.0.0.1:8069/web#action=123&cids=1&menu_id=81"
   //
   // where 123 is Odoo's Discuss MENU id, present in the first post-login
-  // navigation and identical on every run. identifierLike("123") is true, so
+  // navigation and identical on every run. looksLikeId("123") is true, so
   // the ledger banked a permanent app constant as a record this run made, and
   // the whole export died. No record-time discriminator survives contact with
   // it: the navigation that reveals 123 is a click, and the step before it is
@@ -358,5 +450,48 @@ export function fatal(leak: Leak): boolean {
   // costs a look instead of a run. A gate may only enforce what a single run
   // can actually establish; see PLAN-evidence-over-shape.md, which makes the
   // deferred version -- run 1 proposes, run 2 decides -- stage 1.
+  // ...and only when something better than the token's spelling put it here.
+  //
+  // A fatal leak is the harshest verdict this tool reaches about a recording:
+  // the step that replays the locator is unpinned, its skill is demoted out
+  // of candidate selection, and the flow is flagged `needs-rerecord` (see
+  // quarantineLeakedSteps). It used to be harsher still — the whole flow went
+  // to `.rejected.json` and 20-50 minutes of babysitting plus real model spend
+  // was gone. Either way a verdict that throws work away has to be met by
+  // evidence, and `shape` is not evidence — it is the same regex that called
+  // Odoo's menu id a record above.
+  //
+  // The reachable false refusal, with nothing exotic in it: an app shows a
+  // constant catalogue code, the model reports it as a value, `looksLikeId`
+  // sees a separator and a digit and kinds it `identifier`, and the step's
+  // only locator is `getByRole('link', { name: 'SKU-4471' })` — a stable
+  // locator that would have worked forever. stripLeakedCandidates cannot drop
+  // it without emptying the chain, so it survives to here — and before
+  // quarantine existed, it binned the run.
+  //
+  // Demoting shape to a warning does not leave the leak unattended: the flow
+  // still exports with the leak listed, and stripLeakedCandidates still
+  // deletes the candidate wherever the chain survives without it. What
+  // changes is only the last-candidate case, which goes from "this step is
+  // quarantined" to "this leak is reported".
+  //
+  // The gate is not permanently weaker, it is DEFERRED. A value a later run
+  // demonstrates it lands differently on gets `basis: 'variance'` and refuses
+  // again, with something behind it. Run 1 warns and strips; run 2 refuses.
+  // That is PLAN-evidence-over-shape's "run 1 proposes, run 2 decides",
+  // applied to the most expensive action the tool can take.
+  if (leak.basis === 'shape') return false;
+  return inLocator(leak);
+}
+
+/**
+ * A run value sitting in a locator, whatever the ledger's confidence in it.
+ *
+ * The location half of `fatal`, on its own, because a REPORTER wants every
+ * one of these and a GATE wants only the sure ones. bench/verify-artifacts.mjs
+ * is the reporter: there a false positive costs a look, so it keeps flagging
+ * shape-based leaks that no longer refuse an export.
+ */
+export function inLocator(leak: Leak): boolean {
   return /(^|\.)locators(\.|\[)/.test(leak.where);
 }

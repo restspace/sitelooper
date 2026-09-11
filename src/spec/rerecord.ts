@@ -84,6 +84,62 @@ export function unpinStep(flow: Flow, stepId: string, instruction?: string): Flo
   return { ...flow, steps };
 }
 
+/** The flow-warning prefix a quarantined step carries; see `noopDiagnostics` in ir.ts. */
+export const LEAKED_STEP = 'leaked-step:';
+
+/**
+ * Take the steps whose recording carries a CONFIDENT record leak out of
+ * replay, instead of refusing the whole export.
+ *
+ * A fatal leak is a run value in a step's only locator — replaying it moves
+ * that step onto the recording run's record without saying so. That poisons
+ * ONE step. The export used to answer by writing the entire flow to
+ * `.rejected.json`, so a 12-step recording with one bad locator was worth
+ * nothing, and — the part nobody had noticed — the poisoned skill itself
+ * stayed in the store, still matchable by any later instruction on the same
+ * page. The response now matches the damage.
+ *
+ * A step is quarantined when its pin IS a poisoned skill or shares a segment
+ * chain with one (`seq.chain`): a chain replays as a unit from its head, so a
+ * bad locator in segment 3 is reached by the step that pins segment 1. Each
+ * quarantined step is stripped by `unpinStep` — the same operation
+ * `sitelooper rerecord` performs, so the step replays model-first until a
+ * clean recovery earns a new pin — and carries a `leaked-step:` warning on
+ * the flow file, so compile re-raises it long after this session is gone.
+ *
+ * Pure: the caller demotes the skills and writes the flow.
+ *
+ * @param poisoned skill id -> one line per fatal leak found in it
+ */
+export function quarantineLeakedSteps(
+  flow: Flow,
+  skills: { id: string; seq?: { chain: string } }[],
+  poisoned: Map<string, string[]>,
+): { flow: Flow; quarantined: { step: string; skills: string[]; leaks: string[] }[] } {
+  const chainKey = (id: string) => skills.find((s) => s.id === id)?.seq?.chain ?? id;
+  const byChain = new Map<string, string[]>();
+  for (const id of poisoned.keys()) byChain.set(chainKey(id), [...(byChain.get(chainKey(id)) ?? []), id]);
+
+  let next = flow;
+  const quarantined: { step: string; skills: string[]; leaks: string[] }[] = [];
+  const warnings = [...(flow.warnings ?? [])];
+  for (const step of flow.steps) {
+    if (!step.skill) continue;
+    const hit = byChain.get(chainKey(step.skill));
+    if (!hit) continue;
+    const leaks = hit.flatMap((id) => poisoned.get(id) ?? []);
+    next = unpinStep(next, step.id);
+    quarantined.push({ step: step.id, skills: hit, leaks });
+    warnings.push(
+      `${LEAKED_STEP} ${step.id} was taken out of replay: its recorded procedure ` +
+        `(${hit.join(', ')}) locates an element by a value the recording run made, so replaying it would act on ` +
+        `the recording's record. It now replays model-first until a clean recovery earns a new pin. ` +
+        `Leaked: ${leaks.slice(0, 3).join('; ')}`,
+    );
+  }
+  return { flow: quarantined.length ? { ...next, warnings } : flow, quarantined };
+}
+
 /** `<file>.bak-<stamp>.json` beside the flow — the recording this command discards. */
 export function backupPath(file: string, stamp: string = Date.now().toString(36)): string {
   const dir = path.dirname(file);

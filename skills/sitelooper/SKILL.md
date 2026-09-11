@@ -109,12 +109,12 @@ for `do`. Work the failure like this:
    actual failure, the `// @step <id> <segment>/<index>` anchor comment in the `.flow.ts` nearest
    the failing line — that's the step and candidate to focus on, not the whole flow.
 2. Stage a repair proposal: `sitelooper repair <name.flow.ts> --var k=v --var runid=fix-{n}
-   --converge 1 --propose repair.json`. This performs the live triage and convergence runs once,
-   verifies the compiled candidate, and saves its exact source, source hash, change list, and
+   --converge 1 --propose repair.json`. This performs one live triage run, one convergence run,
+   and one plain Playwright check of the compiled candidate, then saves its source, hash, change list, and
    verification result. `{n}` becomes the run number, so record-creating flows do not collide.
 3. Review `repair.json` and its printed change list, then apply that exact candidate with
-   `sitelooper repair apply repair.json`. Apply refuses a changed source file or an unverified
-   proposal; it does not repeat browser work.
+   `sitelooper repair apply repair.json`. Apply refuses a changed source, candidate, or user spec,
+   and requires clean compiled-spec verification; it does not repeat browser work.
 4. Review the printed change list line by line ("candidate promoted", "new locator", "chain
    reordered", "step re-pinned to variant ..."). This is the diff a human would otherwise have to
    reconstruct from the `.flow.ts` diff by hand.
@@ -124,8 +124,8 @@ for `do`. Work the failure like this:
    failure for a human to look at, not drift.
 6. If `repair` (or `compile`) prints a **needs-rerecord** / **demoted-pin** / **noop-step** /
    **contradicted-step** diagnostic rather than proposing a fix, don't try to hand-patch the
-   `.flow.ts` — it's regenerated in full on every `compile`/`repair` and hand edits are detected
-   and refused on the next repair anyway. Every such diagnostic names its own fix command:
+   `.flow.ts` — compile and repair regenerate it from embedded procedure data, so hand edits can
+   be overwritten. Every such diagnostic names its own fix command:
    `sitelooper rerecord <flow> <step-id> [--instruction "<text>"] [--var k=v ...] [--runs n]
    [--reset-cmd "<cmd>"]`. It backs the flow file up, unpins just that step (optionally swapping in
    a new instruction — the fix when the recorded ask no longer makes sense, e.g. "cancel an order a
@@ -134,10 +134,10 @@ for `do`. Work the failure like this:
    otherwise it prints why and exits 1. A `contradicted-step` diagnostic's `fix` points at the
    *mutating* step (the one whose report a later read-only step disagreed with), not the step that
    eventually failed because of it — re-record that one, not the one you saw fail.
-7. Once `repair apply` has written the file, commit only the `.flow.ts` diff and open it as a PR,
-   with the printed
-   change list as the PR description — that list is already the reviewer-facing summary of what
-   changed and why.
+7. After applying, run `sitelooper check <name.flow.ts> --ready` with the required fresh-state
+   setup and parameter values when readiness evidence is needed. Proposal verification checks
+   one compiled execution; it does not establish full readiness. For a requested repair PR,
+   include the `.flow.ts` diff and use the printed change list to explain what changed and why.
 
 Never touch the `.spec.ts` for this: it's the user's file and `repair` never rewrites it.
 
@@ -146,12 +146,26 @@ A step whose printed line says `already satisfied` (a `run`) or whose emitted gu
 compile time — the visible text its own recording read back that was not there when it started —
 and the engine checks the live page for both identity and that goal before acting. When both
 already hold, the step succeeds having done nothing rather than repeating work (or failing to find
-a control that a prior step's retry already removed). Nothing to fix here; it is the retry-safety
-half of the same mechanism `contradicted-step` and `noop-step` flag the *unsafe* version of.
-`repair` itself never touches anything outside a throwaway temp store until `repair apply` writes
-the reviewed candidate. Its triage and convergence executions against the live app are real: one
-triage plus `--converge n` additional runs. A legacy `--dry-run` also performs real browser work;
-prefer a proposal when you may apply the result.
+a control that a prior step's retry already removed). This supports retry safety, but does not
+prove that the action executed. A satisfied shortcut disqualifies proposal verification and
+readiness; reset application state or use fresh parameter values before checking again.
+
+Choose the repair mode according to when the generated file should change:
+
+- `repair <name.flow.ts> --propose repair.json` stages its procedure store in a temporary
+  directory, writes a candidate flow beside the original, and writes the proposal JSON. It checks
+  the candidate using a temporary sibling spec, preserving relative fixture imports, then removes
+  that temporary spec. The original flow and user spec remain unchanged until `repair apply`
+  writes the reviewed candidate. A successful proposal performs one triage run, `--converge n`
+  additional runs (default one), and one compiled-spec check against the live app.
+- Direct `repair <name.flow.ts>` writes the generated flow after convergence succeeds, then
+  checks the compiled spec by default. A failed check leaves the written diff available and exits
+  nonzero. `--no-check-spec` explicitly skips that check; the result is not spec-verified.
+- `repair <name.flow.ts> --dry-run` previews changes without writing the target flow or running
+  the post-write compiled-spec check. It still performs real triage and convergence executions
+  against the app. Prefer a proposal when you intend to review and apply the exact checked result.
+
+`--propose` cannot be combined with `--dry-run`, `--out`, or `--no-check-spec`.
 
 ## Learning mode — repeated work gets cheaper
 

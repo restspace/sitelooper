@@ -6,10 +6,11 @@ import type { InstructionResult } from '../src/agent/loop.js';
 import type { RecordedEntry, RecordedStep } from '../src/daemon/recorder.js';
 import { lineShows, specOf } from '../src/skills/replay.js';
 import { maskVolatile, stranded } from '../src/skills/compile.js';
+import { digitDominant } from '../src/skills/shape.js';
 import { volatileMatcher } from '../src/shared/text.js';
 import { recordCandidateEvidence, retired } from '../src/skills/repair.js';
 import { SkillStore } from '../src/skills/store.js';
-import { coalesceControls, compileSkill, dropDismissedDialogs, dropSupersededNavigation, compileSkills, discoverSlots, fillParams, fillParamsDeep, foldLoops, isIdLike, sameProcedure, softUrlMatch, stableFirst, substitute, substituteUrlParts, urlDiff, urlMatches, urlParts, urlPattern } from '../src/skills/compile.js';
+import { coalesceControls, compileSkill, dropDeadReadLocators, dropDismissedDialogs, dropSupersededNavigation, compileSkills, discoverSlots, fillParams, fillParamsDeep, foldLoops, sameProcedure, softUrlMatch, stableFirst, substitute, substituteUrlParts, urlDiff, urlMatches, urlParts, urlPattern } from '../src/skills/compile.js';
 import type { LocatorCandidate } from '../src/daemon/recorder.js';
 import type { SkillStep } from '../src/skills/store.js';
 import { bindSkill, canAdoptPin, learnFromInstruction, matchTemplate, publishedOutputs, selectCandidates, synthesizeReport } from '../src/skills/learn.js';
@@ -232,10 +233,14 @@ describe('url patterns', () => {
     expect(urlPattern('http://h:1/about')).toBe('http://h:1/about');
   });
   it('keeps ordinary words', () => {
-    expect(isIdLike('tickets')).toBe(false);
-    expect(isIdLike('new')).toBe(false);
-    expect(isIdLike('t15')).toBe(true);
-    expect(isIdLike('RD-1015')).toBe(true);
+    expect(digitDominant('tickets', 'proposal')).toBe(false);
+    expect(digitDominant('new', 'proposal')).toBe(false);
+    expect(digitDominant('t15', 'proposal')).toBe(true);
+    expect(digitDominant('RD-1015', 'proposal')).toBe(true);
+    // A long route word is not a uid in a url, however much it looks like one
+    // to the admission test: `/settings/notifications` must stay a route.
+    expect(urlPattern('http://h:1/settings/notifications')).toBe('http://h:1/settings/notifications');
+    expect(urlPattern('http://h:1/reports/2026-09-01')).toBe('http://h:1/reports/2026-09-01');
   });
   it('turns slot values in the url into markers and matches them back', () => {
     const slots = new Map([['v1', 'acme']]);
@@ -593,6 +598,69 @@ describe('foldLoops', () => {
     // The loop repeats the two delete clicks, guarded by the Delete button.
     expect(loops[0].body?.filter((b) => b.tool === 'click')).toHaveLength(2);
     expect(loops[0].while?.[0]).toMatchObject({ kind: 'role', name: 'Delete' });
+  });
+});
+
+describe('dropDeadReadLocators', () => {
+  const readStep = (label: string, chain: LocatorCandidate[]): SkillStep => ({
+    tool: 'read',
+    args: { what: 'text' },
+    locators: { target: chain },
+    label,
+  });
+
+  it('retires a read located by its own value, once a run has shown the value change', () => {
+    const steps = [readStep('total', [
+      { kind: 'text', text: '£ 133.33' },
+      { kind: 'id', selector: '#invoice-total' },
+    ])];
+    expect(dropDeadReadLocators(steps, { total: '£ 133.33' })).toBe(1);
+    expect(steps[0].locators.target).toEqual([{ kind: 'id', selector: '#invoice-total' }]);
+  });
+
+  it('leaves a read alone while nothing has contradicted its value', () => {
+    // Run 1 has no evidence at all, and an output a later run AGREED with is
+    // page furniture: `getByText('Recipients')` is the right way to find it.
+    const chain: LocatorCandidate[] = [{ kind: 'text', text: 'Recipients' }, { kind: 'css', selector: 'h3' }];
+    const steps = [readStep('heading', [...chain])];
+    expect(dropDeadReadLocators(steps, {})).toBe(0);
+    expect(steps[0].locators.target).toEqual(chain);
+  });
+
+  it('empties the chain rather than leave a read findable only by position', () => {
+    // fwrd16-n3: the read fell to `tbody > tr:nth-of-type(1) > td`, resolved
+    // instantly on a seed row and published a confidently wrong ref. Replay
+    // skips a read with no locator, so the value comes back absent instead.
+    const steps = [readStep('ref', [
+      { kind: 'text', text: 'RD-1015' },
+      { kind: 'css', selector: 'tbody > tr:nth-of-type(1) > td' },
+    ])];
+    expect(dropDeadReadLocators(steps, { ref: 'RD-1015' })).toBe(1);
+    expect(steps[0].locators.target).toEqual([]);
+  });
+
+  it('matches whole tokens, so a changed quantity does not condemn a price', () => {
+    const steps = [readStep('qty', [{ kind: 'text', text: '£ 425.00' }])];
+    expect(dropDeadReadLocators(steps, { qty: '5.00' })).toBe(0);
+    expect(steps[0].locators.target).toHaveLength(1);
+  });
+
+  it('ignores values too short to carry identity, and steps that are not reads', () => {
+    const short = [readStep('dash', [{ kind: 'text', text: '-- pending' }])];
+    expect(dropDeadReadLocators(short, { dash: '--' })).toBe(0);
+    // A CLICK carrying a run value is `stranded`'s business at compile time,
+    // where provenance says the run made it. This rule is about the circle
+    // between a read and the value it reported, and nothing else.
+    const click: SkillStep[] = [{ tool: 'click', args: {}, locators: { target: [{ kind: 'text', text: 'RD-1015' }] }, label: 'ref' }];
+    expect(dropDeadReadLocators(click, { ref: 'RD-1015' })).toBe(0);
+  });
+
+  it('reaches reads inside a loop body', () => {
+    const steps: SkillStep[] = [
+      { tool: 'loop', args: {}, locators: {}, body: [readStep('ref', [{ kind: 'text', text: 'RD-1015' }, { kind: 'role', role: 'cell', name: 'Ticket' }])] },
+    ];
+    expect(dropDeadReadLocators(steps, { ref: 'RD-1015' })).toBe(1);
+    expect(steps[0].body![0].locators.target).toEqual([{ kind: 'role', role: 'cell', name: 'Ticket' }]);
   });
 });
 
@@ -1218,6 +1286,22 @@ describe('provenance that arrives late', () => {
     expect(stranded(chain[1], ['t15'])).toBe(true);
     // ...and with nothing banked, compile could not have known.
     expect(stranded(chain[1], [])).toBe(false);
+  });
+});
+
+describe('stranded matches whole tokens, as the leak scanner does', () => {
+  it('no longer lets a quantity condemn a price that merely contains its characters', () => {
+    // fwod28: "5.00" deleted text("£ 425.00") and text("£ 1,015.00").
+    expect(stranded({ kind: 'text', text: '£ 425.00' }, ['5.00'])).toBe(false);
+    expect(stranded({ kind: 'text', text: '£ 1,015.00' }, ['5.00'])).toBe(false);
+    expect(stranded({ kind: 'text', text: '£ 113.00' }, ['3.00'])).toBe(false);
+  });
+
+  it('still catches every genuine run value, including ones inside test hooks', () => {
+    expect(stranded({ kind: 'testid', attr: 'data-testid', value: 'ticket-link-t15' }, ['t15'])).toBe(true);
+    expect(stranded({ kind: 'css', selector: '[data-testid="ticket-row-t15"] a' }, ['t15'])).toBe(true);
+    expect(stranded({ kind: 'role', role: 'link', name: 'RD-1015' }, ['RD-1015'])).toBe(true);
+    expect(stranded({ kind: 'text', text: '£ 425.00' }, ['£ 425.00'])).toBe(true);
   });
 });
 

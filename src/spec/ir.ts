@@ -2,6 +2,7 @@ import type { Flow } from '../skills/flow.js';
 import { mutates } from '../skills/learn.js';
 import { rethreadParams } from './rethread.js';
 import { diagnosticLine, rerecordFix, rerecordAction, type Diagnostic } from './diagnostics.js';
+import { LEAKED_STEP } from './rerecord.js';
 import type { Skill, SkillParam, SkillStep, SkillStore } from '../skills/store.js';
 
 /**
@@ -161,6 +162,24 @@ function noopDiagnostics(flow: Flow, flowFile: string | undefined): Diagnostic[]
         fix: step ? rerecordFix(flowFile ?? flow.name, step) : undefined,
         action: step ? rerecordAction(flowFile ?? flow.name, step) : undefined,
         severity: 'warning',
+        line: text,
+      });
+    } else if (warning.startsWith(LEAKED_STEP)) {
+      // Export quarantined this step: its recorded procedure located an
+      // element by a value the recording run made. It is unpinned, so it also
+      // reports `no-procedure` — this is the diagnostic that says WHY, and it
+      // is an error because the fix is a recording, not a rerun.
+      const text = warning.slice(LEAKED_STEP.length).trim();
+      const first = text.split(/\s+/)[0] ?? '';
+      const step = ids.has(first) ? first : undefined;
+      out.push({
+        code: 'needs-rerecord',
+        step,
+        what: step ? `${step} was taken out of replay at export: its procedure located an element by a value the recording run made` : text,
+        why: text,
+        fix: step ? rerecordFix(flowFile ?? flow.name, step) : undefined,
+        action: step ? rerecordAction(flowFile ?? flow.name, step) : undefined,
+        severity: 'error',
         line: text,
       });
     } else if (warning.startsWith('contradicted-step:')) {

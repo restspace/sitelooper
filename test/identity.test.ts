@@ -14,7 +14,7 @@ import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { RecordedEntry, RecordedStep } from '../src/daemon/recorder.js';
 import { compileSkills } from '../src/skills/compile.js';
-import { buildFlow, freshUrlIds, jsonLeaves, lookupOutput } from '../src/skills/flow.js';
+import { buildFlow, jsonLeaves, lookupOutput, noteOutputEvidence, varyingValues } from '../src/skills/flow.js';
 import { addEvidenceValue, proseIdentifiers } from '../src/agent/report.js';
 import { identityOfPrimary } from '../src/skills/replay.js';
 import type { Skill } from '../src/skills/store.js';
@@ -101,23 +101,6 @@ describe('identity precondition (compile)', () => {
 
 describe('session-minted url ids (fwgr6: the uid in the skill template)', () => {
   const UID = 'afwfbbc2of6rkf';
-
-  it('banks an identifier-like url part once, and ignores route words', () => {
-    const seen = new Set<string>();
-    const first = freshUrlIds(`http://127.0.0.1:3000/d/${UID}/r9-n2-bench-dashboard`, seen);
-    expect(first.map((p) => p.value)).toContain(UID);
-    // "d" is a route word, too short and not identifier-like.
-    expect(first.map((p) => p.value)).not.toContain('d');
-    // First appearance wins: the same uid on a later page is not minted twice.
-    expect(freshUrlIds(`http://127.0.0.1:3000/d/${UID}/settings`, seen).map((p) => p.value)).not.toContain(UID);
-  });
-
-  it('banks a three-character record id, which a four-character floor missed', () => {
-    // fwrd16 left a literal "#/tickets/t15" in six flow steps.
-    expect(freshUrlIds('http://127.0.0.1:4180/#/tickets/t15', new Set()).map((p) => p.value)).toContain('t15');
-    // Still not route words: no digit, no separator, under twelve characters.
-    expect(freshUrlIds('http://127.0.0.1:4180/#/tickets', new Set()).map((p) => p.value)).toEqual([]);
-  });
 
   it("slots a minted uid the NEXT instruction names, so the template is not pinned to the recording's record", () => {
     const instruction = `In Grafana at http://127.0.0.1:3000/d/${UID}/r9-n2-bench-dashboard, add a text panel.`;
@@ -267,6 +250,44 @@ describe('JSON-path provenance', () => {
     const flow = buildFlow(entries, { name: 'f', origin: ORIGIN, startUrl: `${ORIGIN}/dashboard/new`, vars: {}, session: 's', now: '2026-08-27T00:00:00.000Z' });
     expect(flow!.steps[1].instruction).toContain('#uid}}');
     expect(flow!.steps[1].instruction).not.toContain('dfwdzd27pk934b');
+  });
+
+  it('records each published leaf under its own name, so one volatile field cannot veto the rest', () => {
+    // Before this, `recorded` held the whole body under `body`, so
+    // noteOutputEvidence compared the entire JSON string: a response carrying
+    // a minted uid AND anything per-run (a timestamp, an etag) differed every
+    // run, and no leaf in it could ever be judged on its own.
+    const body = JSON.stringify({ uid: 'dfwdzd27pk934b', slug: 'r9-n2-bench-dashboard', etag: 'w-8891' });
+    const entries: RecordedEntry[] = [
+      { k: 'instruction', text: 'Save the dashboard over the API and report the response body.', url: `${ORIGIN}/dashboard/new` },
+      step('read', { target: '@e1', what: 'text' }, [], { result: body }),
+      { k: 'report', status: 'success', summary: 'saved', values: { body } } as RecordedEntry,
+    ];
+    const flow = buildFlow(entries, { name: 'f', origin: ORIGIN, startUrl: `${ORIGIN}/dashboard/new`, vars: {}, session: 's', now: '2026-08-27T00:00:00.000Z' })!;
+    const save = flow.steps[0];
+    expect(save.recorded['body#uid']).toBe('dfwdzd27pk934b');
+    expect(save.recorded['body#slug']).toBe('r9-n2-bench-dashboard');
+
+    // Run 2: the app re-derives the slug the same way and mints a new uid and
+    // etag. The body as a whole differs, so the per-body comparison learns
+    // nothing; per leaf, two verdicts are reachable.
+    noteOutputEvidence(save, {
+      body: JSON.stringify({ uid: 'kkq2m4vv91zzab', slug: 'r9-n2-bench-dashboard', etag: 'w-9042' }),
+      'body#uid': 'kkq2m4vv91zzab',
+      'body#slug': 'r9-n2-bench-dashboard',
+      'body#etag': 'w-9042',
+    });
+    expect(save.outputEvidence).toMatchObject({
+      body: { same: 0, differed: 1 },
+      'body#uid': { same: 0, differed: 1 },
+      'body#slug': { same: 1, differed: 0 },
+    });
+
+    // The minted uid is run-specific from now on, on its own evidence; the
+    // slug that merely agreed is not condemned by its volatile sibling.
+    const varying = varyingValues(flow);
+    expect(varying.has('dfwdzd27pk934b')).toBe(true);
+    expect(varying.has('r9-n2-bench-dashboard')).toBe(false);
   });
 
   it('does not referencize a route word out of a url (the {{01-open.url.h0}} = "tickets" bug)', () => {

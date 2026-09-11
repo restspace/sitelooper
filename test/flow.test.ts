@@ -5,7 +5,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { RecordedEntry } from '../src/daemon/recorder.js';
 import {
   ignorableRefs,
-  consumedUrlOutputs, buildFlow, lintFlowRefs, noteOutputEvidence, recoveryRoute, resolveInstruction, resolveStepParams, softResolveInstruction, stableOutputs, unbankedMutations, urlOutputs, type Flow, type FlowStep } from '../src/skills/flow.js';
+  consumedUrlOutputs, buildFlow, lintFlowRefs, noteOutputEvidence, recoveryRoute, resolveInstruction, resolveStepParams, softResolveInstruction, unbankedMutations, urlOutputs, varyingValues, type Flow, type FlowStep } from '../src/skills/flow.js';
 import { bindSkill, publishedOutputs, synthesizeReport } from '../src/skills/learn.js';
 import type { Skill } from '../src/skills/store.js';
 import { compileSkill } from '../src/skills/compile.js';
@@ -534,9 +534,28 @@ describe('a replay that observed nothing cannot narrate', () => {
     expect(r.summary).toBe("Renamed the record to 'n2 Widget'.");
   });
 
-  it('keeps prose that names nothing specific at all', () => {
+  it('drops even harmless prose when nothing in the run vouches for it', () => {
+    // This used to be kept, on the strength of a regex finding no
+    // identifier-shaped token in it. That regex was the last site in the
+    // product where characters decided something that fails toward silence:
+    // it also kept "Added a second order line to Order Alpha and saved",
+    // which names a record it cannot possibly know this run touched.
+    //
+    // Telling those two apart needs to know which strings name records, which
+    // is the question shape has never been able to answer. So the rule stopped
+    // trying: a replay that observed nothing and filled nothing keeps no
+    // narrative. This sentence is true and it is lost — the deliberate cost,
+    // against a wrong record id in a report, which is not recoverable by
+    // reading further.
     const r = synthesizeReport(stepless('Saved the form and closed the dialog.'), {}, {});
-    expect(r.summary).toBe('Saved the form and closed the dialog.');
+    expect(r.summary).toMatch(/Replayed stored procedure/);
+  });
+
+  it('keeps prose when the run SUPPLIED the specifics, even with no live read', () => {
+    // The other half of the rule: a param that actually reached the prose is
+    // this run's own value, so the sentence describes this run.
+    const skill = stepless("Renamed the record to '{{v1}}'.", { v1: { example: 'n1 Widget', usedIn: [1] } });
+    expect(synthesizeReport(skill, { v1: 'n2 Widget' }, {}).summary).toBe("Renamed the record to 'n2 Widget'.");
   });
 
   it('still narrates when the replay DID observe something', () => {
@@ -591,21 +610,24 @@ describe('run 1 proposes, run 2 decides', () => {
       quotation_reference: { same: 1, differed: 0 },
       order_ref: { same: 0, differed: 1 },
     });
-    // Only the one the app reproduced becomes substitutable.
-    expect(stableOutputs(flow)).toEqual({ '01-create.quotation_reference': 'New (unsaved)' });
+    // Only the contradiction is a verdict: S00021 is run-specific from now on.
+    expect([...varyingValues(flow)]).toEqual(['S00021']);
   });
 
-  it('run 3 resolves the stable one and still sends the record id to recovery', () => {
+  it('agreement never fills a reference with the recorded literal', () => {
+    // The hazard stableOutputs had. A harness that resets the app between runs
+    // reproduces a minted id exactly, so run 2 AGREES with run 1 on the order
+    // ref. Run 3 is on an app that was not reset, makes S00022, and its create
+    // step goes tier A and drops the output. A recorded-literal fallback would
+    // hand step 2 run 1's S00021 — editing the wrong order, reporting success.
     const flow = build();
-    noteOutputEvidence(flow.steps[0], { quotation_reference: 'New (unsaved)', order_ref: 'S00023' });
-    const stable = stableOutputs(flow);
-    // No outputs republished at all — the tier-A case that used to strand
-    // every reference on this step.
-    const { text, missing } = resolveInstruction(flow.steps[1], {}, {}, stable);
-    expect(text).toContain('New (unsaved)');
-    expect(missing).toEqual(['01-create.order_ref']);
-    // ...and the recovery text keeps what IS known, blanking only the id.
-    expect(softResolveInstruction(flow.steps[1], {}, {}, stable)).toContain('New (unsaved)');
+    noteOutputEvidence(flow.steps[0], { quotation_reference: 'New (unsaved)', order_ref: 'S00021' });
+    expect(flow.steps[0].outputEvidence!.order_ref).toEqual({ same: 1, differed: 0 });
+    const { text, missing } = resolveInstruction(flow.steps[1], {}, {});
+    expect(text).not.toContain('S00021');
+    expect(missing).toEqual(['01-create.quotation_reference', '01-create.order_ref']);
+    // Recovery gets a readable instruction with the unknowns blanked.
+    expect(softResolveInstruction(flow.steps[1], {}, {})).not.toContain('S00021');
   });
 
   it('one demonstration of difference is permanent', () => {
@@ -614,19 +636,121 @@ describe('run 1 proposes, run 2 decides', () => {
     noteOutputEvidence(create, { order_ref: 'S00023' }); // differed
     noteOutputEvidence(create, { order_ref: 'S00021' }); // agrees, by coincidence of a reset app
     expect(create.outputEvidence!.order_ref).toEqual({ same: 1, differed: 1 });
-    // Still never substituted: a value that changed once names a record, and
+    // Still run-specific: a value that changed once names a record, and
     // being wrong that way is silent.
-    expect(stableOutputs(flow)['01-create.order_ref']).toBeUndefined();
+    expect(varyingValues(flow).has('S00021')).toBe(true);
+  });
+
+  it('a minted url part is a recorded value, so evidence can judge it too', () => {
+    // The url population used to sit OUTSIDE this mechanism: buildFlow admitted
+    // a part as a reference on `looksLikeId` — a first-run shape prior with no
+    // evidence behind it (shape.ts) — and nothing ever revisited the call. A
+    // route word that squeaked past it stayed a reference forever, and there
+    // was no signal that could say so.
+    const flow = buildFlow(
+      [
+        { k: 'step', tool: 'goto', args: { url: `${ORIGIN}/` }, locators: {} },
+        { k: 'instruction', text: 'Open the ticket.', url: `${ORIGIN}/` },
+        {
+          k: 'step',
+          tool: 'click',
+          args: {},
+          locators: {},
+          diff: { url: `${ORIGIN}/app-v2/tickets/t15` },
+        },
+        { k: 'report', status: 'success', summary: 'Opened.', values: {}, skill: 's_open' },
+      ] as RecordedEntry[],
+      { name: 'f', origin: ORIGIN, startUrl: `${ORIGIN}/`, vars: {}, session: 's' },
+    )!;
+    const open = flow.steps[0];
+    // Both parts carry a digit and a separator or a route shape the prior
+    // admits, so run 1 references both — it cannot tell an api version segment
+    // from a record id, and says so by referencing each.
+    expect(open.recorded['url.p0']).toBe('app-v2');
+    expect(open.recorded['url.p2']).toBe('t15');
+
+    // Run 2 lands on the same version segment and a different record.
+    noteOutputEvidence(open, { 'url.p0': 'app-v2', 'url.p2': 't21' });
+    expect(open.outputEvidence).toMatchObject({
+      'url.p0': { same: 1, differed: 0 },
+      'url.p2': { same: 0, differed: 1 },
+    });
+
+    // The record id is run-specific from now on, whatever it looks like; the
+    // segment the app reproduced has only failed to vary, which decides
+    // nothing. That verdict is behaviour across runs, which shape cannot see.
+    const varying = varyingValues(flow);
+    expect(varying.has('t15')).toBe(true);
+    expect(varying.has('app-v2')).toBe(false);
+  });
+
+  it('a replay that recovered onto a different route votes neither way', () => {
+    // The hazard the route gate exists for, measured on fwod20's n1/n2/n3:
+    // comparing url parts step by step made `q.model = "sale.order" vs
+    // "res.partner"` look volatile, because a recovery turn navigated to a
+    // different menu. That is disagreement about WHERE the run is, not about
+    // what the value is — and `differed` is permanent, so counting it would
+    // give a route word a record-pointer verdict it can never lose.
+    const step: FlowStep = {
+      id: '01-open',
+      instruction: 'x',
+      outputs: [],
+      recorded: { 'url.q.model': 'sale.order' },
+      route: '/web#model=:var&view_type=:var',
+    };
+    expect(noteOutputEvidence(step, { 'url.q.model': 'res.partner' }, '/web#action=:id&menu_id=:id')).toEqual([]);
+    expect(step.outputEvidence).toBeUndefined();
+    // Same route: the comparison is between like and like, so it counts.
+    noteOutputEvidence(step, { 'url.q.model': 'res.partner' }, '/web#model=:var&view_type=:var');
+    expect(step.outputEvidence).toEqual({ 'url.q.model': { same: 0, differed: 1 } });
+  });
+
+  it('records the route it ended on, so a later run can tell like from like', () => {
+    const flow = buildFlow(
+      [
+        { k: 'step', tool: 'goto', args: { url: `${ORIGIN}/` }, locators: {} },
+        { k: 'instruction', text: 'Open the ticket.', url: `${ORIGIN}/` },
+        { k: 'step', tool: 'click', args: {}, locators: {}, diff: { url: `${ORIGIN}/app-v2/tickets/t15` } },
+        { k: 'report', status: 'success', summary: 'Opened.', values: {}, skill: 's_open' },
+      ] as RecordedEntry[],
+      { name: 'f', origin: ORIGIN, startUrl: `${ORIGIN}/`, vars: {}, session: 's' },
+    )!;
+    // The PATTERN, not the url: two runs opening different tickets are on the
+    // same route and must be able to compare.
+    expect(flow.steps[0].route).toBeTruthy();
+    expect(flow.steps[0].route).not.toContain('t15');
+  });
+
+  it('hands the ledger the values it watched change, so the next run stops reading characters', () => {
+    const flow = build();
+    const create = flow.steps[0];
+    noteOutputEvidence(create, { quotation_reference: 'New (unsaved)', order_ref: 'S00023' });
+    // The app contradicted one and reproduced the other. Only the
+    // contradiction is collected: see RunSpecific for why agreement is not
+    // the converse.
+    const varying = varyingValues(flow);
+    expect([...varying]).toEqual(['S00021']);
+    expect(varying.has('New (unsaved)')).toBe(false);
+  });
+
+  it('a value volatile anywhere is run-specific everywhere', () => {
+    // Being wrong toward "the app owns it" is the silent direction, so the
+    // step that saw it vary outvotes the one that saw it agree.
+    const flow = build();
+    const create = flow.steps[0];
+    create.recorded = { ...create.recorded, echo: 'S00021' };
+    create.outputEvidence = { order_ref: { same: 0, differed: 1 }, echo: { same: 3, differed: 0 } };
+    expect(varyingValues(flow).has('S00021')).toBe(true);
   });
 
   it('silence is not agreement — a tier-A replay that drops a value votes neither way', () => {
     const flow = build();
     noteOutputEvidence(flow.steps[0], {}); // republished nothing
     expect(flow.steps[0].outputEvidence).toBeUndefined();
-    expect(stableOutputs(flow)).toEqual({});
+    expect(varyingValues(flow).size).toBe(0);
   });
 
-  it('a param binding resolves from evidence too, not just the instruction', () => {
+  it('a param binding resolves from this run only, like the instruction', () => {
     const step: FlowStep = {
       id: '02-edit',
       instruction: 'x',
@@ -634,7 +758,7 @@ describe('run 1 proposes, run 2 decides', () => {
       recorded: {},
       params: { v1: '{{01-create.quotation_reference}}', v2: '{{01-create.order_ref}}' },
     };
-    const bound = resolveStepParams(step, {}, {}, { '01-create.quotation_reference': 'New (unsaved)' })!;
+    const bound = resolveStepParams(step, {}, { '01-create': { quotation_reference: 'New (unsaved)' } })!;
     expect(bound.params.v1).toBe('New (unsaved)');
     expect(bound.missing).toEqual(['01-create.order_ref']);
   });

@@ -84,11 +84,27 @@ for (const runid of runids) {
   }
 
   // The run's task, open or closed — a wrongly-closed task should still be found and judged.
-  let task = null
+  const titled = []
   for (const statusId of [1, 0]) {
-    task = ((await rpc('getAllTasks', { project_id: projectId, status_id: statusId })) ?? [])
-      .find((t) => t.title === `${runid} Bench Task`)
-    if (task) break
+    titled.push(...((await rpc('getAllTasks', { project_id: projectId, status_id: statusId })) ?? [])
+      .filter((t) => t.title === `${runid} Bench Task`))
+  }
+  const task = titled[0] ?? null
+
+  // PLAN-provenance phase 5: an extra created record FAILS, it does not warn.
+  // The task is created once. Two tasks with this title means the run did its
+  // work twice, and `titled[0]` then picks one by accident — every objective
+  // below is judged against a task nobody chose. fwrd16 scored 6/6 doing
+  // exactly this on repairdesk before its verifier learned to count.
+  //
+  // Reported beside the objectives rather than as one of them, so the
+  // denominator every published matrix quotes keeps its meaning.
+  const duplicateTasks = Math.max(0, titled.length - 1)
+  if (duplicateTasks > 0) {
+    anyFailure = true
+    console.log(`  *** DUPLICATE WORK *** ${titled.length} tasks titled "${runid} Bench Task" ` +
+      `(ids ${titled.map((t) => t.id).join(', ')}) — the run created it more than once, ` +
+      'so objectives 2-6 cannot be attributed to any single task.')
   }
 
   obj(2, Boolean(task && String(task.description ?? '').includes(runid)),
@@ -99,8 +115,19 @@ for (const runid of runids) {
       `column=${columns.find((c) => Number(c.id) === Number(task.column_id))?.title ?? task.column_id}`)
 
   const comments = task ? ((await rpc('getAllComments', { task_id: Number(task.id) })) ?? []) : []
-  obj(4, comments.some((c) => String(c.comment ?? '').includes(runid)),
-    !task ? 'no task' : `${comments.length} comment(s), runid present=${comments.some((c) => String(c.comment ?? '').includes(runid))}`)
+  const runComments = comments.filter((c) => String(c.comment ?? '').includes(runid))
+  obj(4, runComments.length > 0,
+    !task ? 'no task' : `${comments.length} comment(s), ${runComments.length} carrying the runid`)
+  // An EXTRA MUTATION, phase 5's other half: the task asks for one comment. A
+  // second is a retried step whose first attempt did land, which is the same
+  // "ran twice" defect as a duplicate record and was previously invisible —
+  // obj 4 passes on `some()` however many there are.
+  const extraComments = Math.max(0, runComments.length - 1)
+  if (extraComments > 0) {
+    anyFailure = true
+    console.log(`  *** EXTRA MUTATION *** ${runComments.length} comments carry the runid ` +
+      '— the run commented more than once, so a step ran twice with the first attempt landing.')
+  }
 
   // date_due comes back as a unix timestamp (string). The container runs UTC.
   const due = task && Number(task.date_due) ? new Date(Number(task.date_due) * 1000).toISOString().slice(0, 10) : null
@@ -117,7 +144,7 @@ for (const runid of runids) {
   const passed = objectives.filter((o) => o.pass === true).length
   console.log(`\n${runid}: objectives passed ${passed}/${objectives.length}`)
   for (const o of objectives) console.log(`  obj ${o.n}: ${o.pass === true ? 'PASS' : o.pass === 'UNVERIFIABLE' ? 'UNVERIFIABLE' : 'FAIL'} — ${o.detail}`)
-  report.push({ runid, taskId: task?.id ?? null, objectives, passed })
+  report.push({ runid, taskId: task?.id ?? null, duplicateTasks, extraComments, objectives, passed })
 }
 
 fs.mkdirSync(OUT, { recursive: true })

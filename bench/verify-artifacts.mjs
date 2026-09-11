@@ -16,7 +16,8 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import { RunLedger, scanForLeaks, fatal, describeLeaks, identifierLike } from '../dist/skills/ledger.js';
+import { RunLedger, scanForLeaks, inLocator, describeLeaks } from '../dist/skills/ledger.js';
+import { looksLikeId } from '../dist/skills/shape.js';
 import { publishedOutputs } from '../dist/skills/learn.js';
 import { positionalExpr } from '../dist/daemon/recorder.js';
 import { urlParts } from '../dist/skills/compile.js';
@@ -137,7 +138,7 @@ function recordingLedger() {
       // test hook and its `Mark Ready` button — flagging those would be the
       // over-slotting the plan warns about, where a run value and an app
       // constant happen to coincide.
-      if (typeof value === 'string' && identifierLike(value)) l.add(value, { from: 'output', step: st.id, name }, { known: true });
+      if (typeof value === 'string' && looksLikeId(value, 'first-run')) l.add(value, { from: 'output', step: st.id, name });
     }
   }
   for (const sk of store) {
@@ -163,12 +164,21 @@ const ledger = recordingLedger();
 const leaks = [];
 for (const sk of store) leaks.push(...scanForLeaks(sk, ledger, sk.id));
 leaks.push(...scanForLeaks(flow, ledger, 'flow'));
-const fatalLeaks = leaks.filter(fatal);
-if (fatalLeaks.length) {
-  fail(`${fatalLeaks.length} fatal leak(s) — a run value reached a locator or precondition`);
-  console.log(describeLeaks(fatalLeaks.slice(0, 12)));
+// `inLocator`, not the product's `fatal`: this is a REPORTER, and the two want
+// different bars. `fatal` now refuses only when something better than the
+// token's spelling kinded the value, because there a false positive bins a
+// recording. Here a false positive costs a look, so keep flagging every
+// identifier that reached a locator — including the shape-based ones the
+// export gate has stopped refusing over. Same reasoning as the navigation
+// check below, which lives here for exactly this reason.
+const locatorLeaks = leaks.filter((l) => l.kind === 'identifier' && inLocator(l));
+if (locatorLeaks.length) {
+  const guessed = locatorLeaks.filter((l) => l.basis === 'shape').length;
+  fail(`${locatorLeaks.length} locator leak(s) — a run value reached a locator or precondition` +
+    (guessed ? ` (${guessed} kinded by shape alone: check each — a minted id here is a wrong-record bug, an app constant is a ledger false positive)` : ''));
+  console.log(describeLeaks(locatorLeaks.slice(0, 12)));
 } else {
-  pass(`no fatal leaks (${leaks.length} non-fatal, in reportTemplate/urlPattern/expectations)`);
+  pass(`no locator leaks (${leaks.length} non-fatal, in reportTemplate/urlPattern/expectations)`);
 }
 
 // 2. Every {{step.output}} a later step depends on must be one a ZERO-MODEL
@@ -189,17 +199,12 @@ const publishes = new Map(
     return [s.id, new Set(chain.flatMap(publishedOutputs))];
   }),
 );
-// Outputs an earlier run demonstrated are the app's own, so their recorded
-// literal resolves and the reference is not fragile at all. Run 1 references
-// everything on purpose (PLAN-evidence-over-shape.md), so without this the
-// check would fail every freshly recorded flow by design.
-const stable = new Set(
-  flow.steps.flatMap((s) =>
-    Object.entries(s.outputEvidence ?? {})
-      .filter(([, ev]) => ev.differed === 0 && ev.same >= 1)
-      .map(([name]) => `${s.id}.${name}`),
-  ),
-);
+// There is no "demonstrated stable" exemption any more: agreement between runs
+// never resolves a reference to its recorded literal (flow.ts RunSpecific — a
+// reset app reproduces a minted id exactly), so a reference its producer does
+// not republish pays recovery every run whatever the evidence says. Run 1
+// references everything on purpose (PLAN-evidence-over-shape.md), so a flow
+// only one run has seen is a note, not a failure.
 const unjudged = new Set();
 const fragile = new Set();
 for (const step of flow.steps) {
@@ -208,24 +213,28 @@ for (const step of flow.steps) {
       if (out === 'url' || out.startsWith('url.')) continue; // provenance: republished every run
       const can = publishes.get(sid);
       if (!can || can.has(out) || can.has(out.split('#')[0])) continue;
-      if (stable.has(`${sid}.${out}`)) continue; // demonstrated app furniture
       const producer = flow.steps.find((s) => s.id === sid);
-      const ev = producer?.outputEvidence?.[out.split('#')[0]];
+      const ev = producer?.outputEvidence?.[out] ?? producer?.outputEvidence?.[out.split('#')[0]];
       if (!ev) {
         unjudged.add(`${step.id} needs {{${sid}.${out}}} — no run has judged it yet`);
         continue;
       }
-      fragile.add(`${step.id} needs {{${sid}.${out}}}, demonstrated volatile (${ev.differed}×) — recovery every run`);
+      fragile.add(
+        ev.differed
+          ? `${step.id} needs {{${sid}.${out}}}, demonstrated volatile (${ev.differed}×) — recovery every run`
+          : `${step.id} needs {{${sid}.${out}}}, not republished by ${sid} (agreed ${ev.same}×, which resolves nothing) — recovery every run`,
+      );
     }
   }
 }
 if (!hasFlow) {
   console.log('skip  cross-step references (no flow was exported)');
 } else if (fragile.size) {
-  // Volatile is not a defect: it means the reference names a record and MUST
-  // stay a reference. It is a COST — that step pays recovery on every run —
-  // so it is reported as a finding, not as correctness.
-  fail(`${fragile.size} reference(s) are demonstrated volatile: their steps pay recovery on every run`);
+  // Not a defect: a reference its producer does not republish MUST stay a
+  // reference (a literal would act on the recording's record). It is a COST —
+  // that step pays recovery on every run — and the fix is for the producing
+  // skill to re-observe the value, so it is reported as a finding.
+  fail(`${fragile.size} reference(s) are not republished by their producing step: those steps pay recovery on every run`);
   for (const f of [...fragile].slice(0, 10)) console.log(`      ${f}`);
 } else if (unjudged.size) {
   // Expected for a flow only one run has seen. It becomes a finding only if a
@@ -233,7 +242,7 @@ if (!hasFlow) {
   console.log(`note  ${unjudged.size} reference(s) not yet judged — run 2 decides them`);
   for (const f of [...unjudged].slice(0, 6)) console.log(`      ${f}`);
 } else {
-  pass('every cross-step reference is provenance-backed, re-observed, or demonstrated stable');
+  pass('every cross-step reference is provenance-backed or re-observed');
 }
 
 // 2b. A run value left literal in a NAVIGATION TARGET. fwgr11 went to
@@ -245,7 +254,7 @@ if (!hasFlow) {
 //     release cycle. As a gate it refused fwod19 -- a clean 6/6 recording --
 //     over `action=123` in `#action=123&cids=1&menu_id=81`, which is Odoo's
 //     Discuss MENU id: identical on every run, present in the first
-//     post-login navigation, and `identifierLike("123")` is true. Telling
+//     post-login navigation, and `looksLikeId("123")` is true. Telling
 //     that apart from a minted uid needs a second run (PLAN-evidence-over-
 //     shape.md), so as a gate it costs a whole sweep when wrong, while here it
 //     costs a look. Report, do not enforce, what one run cannot establish.

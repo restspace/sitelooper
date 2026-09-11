@@ -1,7 +1,8 @@
 import type { LocatorCandidate, RecordedEntry, RecordedInstruction, RecordedStep } from '../daemon/recorder.js';
 import type { Report } from '../agent/report.js';
 import { newSkillId, originOf, type Skill, type SkillParam, type SkillStep, type StepExpectation } from './store.js';
-import { identifierLike } from './ledger.js';
+import { MIN_ID_LEN, digitDominant, looksLikeId, skeleton, tokenPattern } from './shape.js';
+import { idPositionPart, occursAsToken } from './ledger.js';
 import { WILDCARD, maskVolatile } from '../shared/text.js';
 
 /** Args whose string values are candidates for parameter slots. */
@@ -483,7 +484,7 @@ function derivesFromKnown(value: string, known: Set<string>): boolean {
   if (known.has(value)) return true;
   for (const k of known) {
     if (k.length < 3 || k.length === value.length) continue;
-    if (new RegExp(`(?<![A-Za-z0-9])${escapeRe(k)}(?![A-Za-z0-9])`).test(value)) return true;
+    if (tokenPattern(k).test(value)) return true;
   }
   return false;
 }
@@ -541,17 +542,17 @@ function discoverMinted(kept: RecordedStep[], startUrl: string, slots: Map<strin
       seen.add(v);
       // Position is evidence. A bare "44" free in prose means nothing, which is
       // why the ledger keeps a length floor — but "44" sitting in a url part
-      // is a record id, and isIdLike already says so for url-pattern
+      // is a record id, and the shape rule already says so for url-pattern
       // generalisation. Requiring 4 characters here contradicted that: odoo's
       // record ids are two-digit integers, so fwod15 compiled ZERO minting
       // steps and the whole `mints` mechanism was inert on that target.
       //
       // Same shape as the two floor mismatches already fixed today ("t15"
-      // below identifierLike's floor; url parts published at >= 4 while
+      // below looksLikeId's floor; url parts published at >= 4 while
       // buildFlow minted refs at >= 3). Three separate thresholds asking one
       // question, disagreeing three times. This one now asks the question the
       // url code already answers.
-      if (!fresh || !(isIdLike(v) || identifierLike(v)) || slotVals.has(v) || /\{\{/.test(v)) continue;
+      if (!fresh || !looksLikeId(v, 'first-run') || slotVals.has(v) || /\{\{/.test(v)) continue;
       // A stable route word ("tickets", "dashboards") also first appears in a
       // post-nav url once; claiming it would wildcard preconditions that
       // should stay exact. Requiring a digit is a heuristic, but one whose
@@ -615,8 +616,10 @@ export function discoverSlots(
   }
   for (const v of locatorCandidates) {
     // Record-specific = already a value the caller typed (an arg slot), or
-    // carries an identifier (a digit / id-like token). Excludes stable UI text.
-    if (values.has(v) || /\d/.test(v) || v.split(/\s+/).some(isIdLike)) values.add(v);
+    // carries a digit. Excludes stable UI text. (A second arm asked the url
+    // segment test of each word; with digits already admitted, all it added
+    // was a digit-free hex word like "deadbeef".)
+    if (values.has(v) || /\d/.test(v)) values.add(v);
   }
   const knownVals: string[] = [];
   for (const raw of Object.values(known)) {
@@ -661,7 +664,7 @@ export function discoverSlots(
   for (const step of steps) {
     if (typeof step.args.url !== 'string') continue;
     for (const part of urlParts(step.args.url)) {
-      if (part.label !== 'q.id' || !/^\d{1,10}$/.test(part.value)) continue;
+      if (!idPositionPart(part)) continue;
       if (!knownIdOrigins.has(part.value) || urlIdVals.includes(part.value)) continue;
       if (knownVals.includes(part.value) || values.has(part.value)) continue;
       urlIdVals.push(part.value);
@@ -694,25 +697,16 @@ export function substituteUrlParts(url: string, minted: { name: string; value: s
 export function substituteUrlId(url: string, slots: Map<string, string>): string {
   let out = url;
   for (const [name, value] of slots) {
-    if (!/^\d{1,10}$/.test(value)) continue;
+    if (!idPositionPart({ label: 'q.id', value })) continue;
     out = out.replace(new RegExp(`([?&#]id=)${escapeRe(value)}(?=[&#]|$)`, 'g'), `$1{{${name}}}`);
   }
   return out;
 }
 
-/** How many times `value` stands as a whole token in `text`. */
+/** How many times `value` stands as a whole token in `text` (shape.ts `tokenPattern`). */
 export function countTokenOccurrences(text: string, value: string): number {
   if (!value) return 0;
-  const re = new RegExp(`(^|[^A-Za-z0-9])${escapeRe(value)}(?=$|[^A-Za-z0-9])`, 'g');
-  let n = 0;
-  while (re.exec(text) !== null) n++;
-  return n;
-}
-
-function occursAsToken(text: string, value: string): boolean {
-  if (!value) return false;
-  const re = new RegExp(`(^|[^A-Za-z0-9])${escapeRe(value)}(?=$|[^A-Za-z0-9])`);
-  return re.test(text);
+  return [...text.matchAll(tokenPattern(value, 'g'))].length;
 }
 
 /**
@@ -761,7 +755,67 @@ export function stranded(c: LocatorCandidate, runValues: string[]): boolean {
   // reuses ids is a different record.
   else if (c.kind === 'testid') fields.push(c.value);
   else if (c.kind === 'id' || c.kind === 'css') fields.push(c.selector);
-  return fields.some((f) => runValues.some((v) => f.includes(v)));
+  // Whole tokens, not substrings — the same rule `scanForLeaks` uses
+  // (occursAsToken), so the stripper and the scanner agree on what a match is.
+  // `includes` let a banked quantity condemn any locator that merely contained
+  // its characters: "5.00" deleted `text("£ 425.00")` and `£ 1,015.00` from
+  // fwod28's store, "3.00" deleted `£ 113.00` from fwod32's, though neither
+  // price was ever a run value. Measured over all 33 published recordings the
+  // two rules disagree 10 times, every one of them that shape — no genuine id
+  // is caught by substring alone.
+  return fields.some((f) => runValues.some((v) => occursAsToken(f, v)));
+}
+
+/**
+ * Retire a read's own value as a way of FINDING the element it read, once a
+ * later run has proved that value varies.
+ *
+ * A read located by the text it reported is circular: `getByText('£ 133.33')`
+ * for the output `total`. The recording cannot tell which of those are dead —
+ * it saw each value exactly once, and the characters do not say (shape.ts).
+ * Measured over the 33 published recordings, deleting them all is net
+ * negative: 191 of 890 reads carry such a candidate, 48 of those values have
+ * no digit and are page furniture a text locator is the RIGHT way to find
+ * (`"Recipients"`, `"No supplier"`, an input's placeholder), 86 would be left
+ * findable only by position, and 9 chains would empty outright — a recovery
+ * turn on every replay, forever.
+ *
+ * So evidence decides, the same way it decides everything else here: run 1
+ * proposes nothing, and a candidate is dropped only for an output
+ * `outputEvidence` has actually seen change. Such a candidate is provably
+ * dead — the value it looks for is not on the page any more — and the failure
+ * it prevents is the narrow, silent one: the recording's value still present
+ * somewhere else as the page's only match, so the read resolves and publishes
+ * a stale identity with no sign of trouble.
+ *
+ * `volatile` maps a read's output name to the value the RECORDING saw, for
+ * outputs now known to vary. Whole-token matching (`stranded`), and values
+ * under three characters are left alone: too small to carry identity, and too
+ * easy to hit by accident.
+ *
+ * Emptying a chain is deliberate and follows the compiler's own rule: a read
+ * that can now only be found by position must not publish (fwrd16-n3 read
+ * `tbody > tr:nth-of-type(1) > td` and confidently published the wrong
+ * ticket's ref). Replay SKIPS a read with no locator, so the value comes back
+ * absent, not wrong.
+ *
+ * Mutates `steps`; returns how many candidates went. The caller persists.
+ */
+export function dropDeadReadLocators(steps: SkillStep[], volatile: Record<string, string>): number {
+  let removed = 0;
+  for (const step of steps) {
+    if (step.body) removed += dropDeadReadLocators(step.body, volatile);
+    if (step.tool !== 'read' && step.tool !== 'read_all') continue;
+    const dead = step.label ? (volatile[step.label] ?? '').trim() : '';
+    if (dead.length < MIN_ID_LEN) continue;
+    for (const [key, chain] of Object.entries(step.locators ?? {})) {
+      const kept = chain.filter((c) => !stranded(c, [dead]));
+      if (kept.length === chain.length) continue;
+      removed += chain.length - kept.length;
+      step.locators[key] = kept.length && !kept.every(positional) ? kept : [];
+    }
+  }
+  return removed;
 }
 
 /**
@@ -777,17 +831,15 @@ export function stranded(c: LocatorCandidate, runValues: string[]): boolean {
  * that very step already has it welded in. fwrd19l shipped three, fwrd20l and
  * fwrd21l two each, all of them below `stranded`'s reach.
  *
- * Structural, so it needs no provenance: an id-like token that is not a slot
- * marker. Bare one- and two-digit numbers are excluded by `isIdLike`'s
- * callers here, so ordinary hooks (`del-1`, `row-2`) are untouched.
+ * Structural, so it needs no provenance: the address has a skeleton (shape.ts)
+ * different from itself — some token in it is numeric and is neither a slot
+ * marker nor an index. That includes `del-1` and `row-2`: a small number in a
+ * hook names a row as surely as a large one, and this only demotes.
  */
 function bookmarked(c: LocatorCandidate): boolean {
   if (c.kind !== 'testid' && c.kind !== 'id') return false;
   const text = c.kind === 'testid' ? c.value : c.selector;
-  return text
-    .split(/[^A-Za-z0-9{}]+/)
-    .filter(Boolean)
-    .some((tok) => !tok.includes('{{') && isIdLike(tok) && !/^\d{1,2}$/.test(tok));
+  return skeleton(text) !== text;
 }
 
 function locatorValues(chain: LocatorCandidate[]): string[] {
@@ -812,15 +864,19 @@ export function substitute(text: string, slots: Map<string, string>): string {
   const byLength = [...slots].sort((a, b) => b[1].length - a[1].length);
   for (const [name, value] of byLength) {
     if (!value) continue;
-    // Whole-token only, and a bare number never rewrites a selector index:
-    // a cost of "25" must not touch the 25 in `:nth-of-type(25)` or `nth=25`.
+    // Whole-token only (shape.ts `tokenPattern`: a word's '-' and '_' bind, so
+    // "form" never rewrites the middle of `o_form_view_group`). A bare number
+    // additionally never rewrites a selector index — a cost of "25" must not
+    // touch the 25 in `:nth-of-type(25)` or `nth=25` — nor a number inside a
+    // dotted run of numbers (127.0.0.1, 1.2.3), which is part of that address
+    // or version: fwod31 compiled the odoo start url as
+    // `http://127.0.0.{{d1}}:8069/...` after `cids=1` minted d1 = "1". Both
+    // guards only narrow the shared boundary, which already lets '-' and '_'
+    // split around a number.
     const numeric = /^\d+$/.test(value);
-    // A number inside a dotted run of numbers (127.0.0.1, 1.2.3) is part of
-    // that address or version, never a slot: fwod31 compiled the odoo start
-    // url as `http://127.0.0.{{d1}}:8069/...` after `cids=1` minted d1 = "1".
     const re = numeric
       ? new RegExp(`(?<![A-Za-z0-9(=]|\\d\\.)${escapeRe(value)}(?![A-Za-z0-9)]|\\.\\d)`, 'g')
-      : new RegExp(`(?<![A-Za-z0-9])${escapeRe(value)}(?![A-Za-z0-9])`, 'g');
+      : tokenPattern(value, 'g');
     out = out.replace(re, `{{${name}}}`);
   }
   return out;
@@ -874,7 +930,7 @@ export function urlPattern(url: string, slots: Map<string, string> = new Map()):
         if (!seg) return seg;
         const filled = substitute(safeDecode(seg), slots);
         if (filled !== seg && filled.includes('{{')) return filled;
-        return isIdLike(seg) ? ':id' : seg;
+        return digitDominant(seg, 'proposal') ? ':id' : seg;
       })
       .join('/');
   /**
@@ -908,7 +964,7 @@ export function urlPattern(url: string, slots: Map<string, string> = new Map()):
         const value = pair.slice(eq + 1);
         const filled = substitute(safeDecode(value), slots);
         if (filled !== value && filled.includes('{{')) return `${key}=${filled}`;
-        return `${key}=${isIdLike(value) ? ':id' : value}`;
+        return `${key}=${digitDominant(value, 'proposal') ? ':id' : value}`;
       })
       .sort();
     return '#' + pairs.join('&');
@@ -921,14 +977,6 @@ export function urlPattern(url: string, slots: Map<string, string> = new Map()):
   return `${origin}${norm(u.pathname)}${hash}`;
 }
 
-export function isIdLike(seg: string): boolean {
-  if (/^\d+$/.test(seg)) return true;
-  if (/^[0-9a-f]{8,}$/i.test(seg)) return true;
-  if (/^[0-9a-f-]{32,}$/i.test(seg)) return true; // uuid
-  if (/^[A-Za-z]{1,4}[-_]?\d+$/.test(seg)) return true; // t15, RD-1015
-  if (/^[A-Za-z0-9_-]{16,}$/.test(seg) && /\d/.test(seg)) return true; // opaque tokens
-  return false;
-}
 
 /**
  * A url decomposed for structural matching: origin, path segments, and the
@@ -1017,7 +1065,7 @@ export interface UrlSegDiff {
  * where a literal in the pattern disagrees with the live value — empty list
  * means a match. Wildcard segments (`:id`, `:var`, unfilled `{{…}}`) match
  * anything: matching consults the pattern's own markers, never a shape
- * heuristic on the live value (that is what made isIdLike load-bearing).
+ * heuristic on the live value (that is what made the url shape test load-bearing).
  *
  * A query-shaped fragment is application STATE, and state accumulates (Odoo
  * lands on "#cids=1" and has grown "#action=…&menu_id=…" by the next
@@ -1223,17 +1271,15 @@ export function stableFirst(chain: LocatorCandidate[]): LocatorCandidate[] {
     // Where it was is the last resort by definition: behind every name and
     // every path. fwgr27's store had it second, ahead of the anchored path.
     if (c.kind === 'point') return true;
+    // The same test as `bookmarked`, extended to css paths.
     if (c.kind === 'testid' || c.kind === 'id' || c.kind === 'css') {
       const text = c.kind === 'testid' ? c.value : c.selector;
-      return text
-        .split(/[^A-Za-z0-9{}]+/)
-        .filter(Boolean)
-        .some((tok) => !tok.includes('{{') && isIdLike(tok) && !/^\d{1,2}$/.test(tok));
+      return skeleton(text) !== text;
     }
     // A name that is nothing but an id ("RD-1017") names a record, not a
     // control: the same element next run will carry a different one.
     const name = c.kind === 'role' ? c.name : c.kind === 'text' ? c.text : '';
-    return Boolean(name) && !name.includes('{{') && isIdLike(name.trim());
+    return Boolean(name) && !name.includes('{{') && digitDominant(name, 'ordering');
   };
   const stable = chain.filter((c) => !volatile(c));
   const points = chain.filter((c) => c.kind === 'point');
@@ -1256,15 +1302,11 @@ export function sameProcedure(a: Skill, b: Skill): boolean {
   });
 }
 
-/** A locator's structural shape for merge comparison: its kind, plus the stable
- * part of a css/id selector (tag/structure, not any embedded id). */
+/** A locator's structural shape for merge comparison: its kind, plus the
+ * skeleton of a css/id selector, so `#row-1042 > a` and `#row-77 > a` match. */
 function locatorShape(c: LocatorCandidate | undefined): string {
   if (!c) return 'none';
-  if (c.kind === 'css' || c.kind === 'id') {
-    // Drop id-like and numeric tokens so `#row-1042 > a` and `#row-77 > a` match.
-    const skeleton = c.selector.replace(/[A-Za-z0-9_-]+/g, (tok) => (isIdLike(tok) ? '*' : tok));
-    return `${c.kind}:${skeleton}`;
-  }
+  if (c.kind === 'css' || c.kind === 'id') return `${c.kind}:${skeleton(c.selector)}`;
   return c.kind;
 }
 
@@ -1348,27 +1390,19 @@ export function dropDismissedDialogs(steps: SkillStep[]): SkillStep[] {
   return out;
 }
 
-/** Replace id-like whole tokens in a string with `*`, so per-record ids collapse. */
-function stripIds(text: string): string {
-  return text
-    .split(/([^A-Za-z0-9]+)/)
-    .map((tok) => (/^[A-Za-z0-9]+$/.test(tok) && isIdLike(tok) ? '*' : tok))
-    .join('');
-}
-
 /** A candidate's identity with per-record ids blanked — its shape AND its name/value. */
 function candSkeleton(c: LocatorCandidate): string {
   switch (c.kind) {
     case 'role':
-      return `role:${c.role}:${stripIds(c.name ?? '')}`;
+      return `role:${c.role}:${skeleton(c.name ?? '')}`;
     case 'text':
-      return `text:${stripIds(c.text ?? '')}`;
+      return `text:${skeleton(c.text ?? '')}`;
     case 'label':
-      return `label:${stripIds(c.label ?? '')}`;
+      return `label:${skeleton(c.label ?? '')}`;
     case 'placeholder':
-      return `placeholder:${stripIds(c.placeholder ?? '')}`;
+      return `placeholder:${skeleton(c.placeholder ?? '')}`;
     case 'testid':
-      return `testid:${stripIds(c.value)}`;
+      return `testid:${skeleton(c.value)}`;
     default:
       return locatorShape(c);
   }

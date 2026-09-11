@@ -203,7 +203,14 @@ for (const runid of runids) {
     if (f.markup !== markup) problems.push(`markup=${f.markup} (want ${markup})`)
     if (!samePrice(f.price, want)) problems.push(`price=${money(f.price)} (want ${money(want)})`)
     if (ticketId && f.ticketId !== ticketId) problems.push(`on ticket ${f.ticketId}, not ${ticketId}`)
-    const dup = count > 1 ? ` (WARNING: ${count} creates share this name)` : ''
+    // PLAN-provenance phase 5: an extra created record FAILS, it does not warn.
+    // The task creates each part once. Two creates sharing a name means the
+    // run did the work twice, and `hits[0]` then silently picks one of them —
+    // so every field below is checked against a record chosen by accident.
+    // fwrd16 is the precedent at the ticket level (17 or 19 mutations against
+    // a clean run's 10, scored 6/6); nothing was watching the part level.
+    if (count > 1) problems.push(`${count} creates share this name — the run created it more than once`)
+    const dup = count > 1 ? ` (DUPLICATE: ${count} creates share this name)` : ''
     return {
       pass: problems.length === 0,
       price: f.price,
@@ -395,6 +402,11 @@ for (const t of unarchived) {
 if (benchTickets.length > runids.length) {
   console.log('Prior-run residue is present — runs are NOT starting from a common baseline.')
   console.log('Reset the app between runs (POST /__reset) so each run owns its log.')
+  // A sweep whose runs did not start from the same state is not a measurement,
+  // whatever its objectives say: a replay that "found" a record may have found
+  // the previous run's. Phase 5 of PLAN-provenance — this used to print and
+  // exit 0, so every consumer of the exit code read the sweep as clean.
+  anyFailure = true
 }
 
 fs.mkdirSync(OUT, { recursive: true })
