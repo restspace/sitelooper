@@ -660,7 +660,11 @@ export function discoverSlots(
   // origin always binds. An earlier step's OUTPUT is not: f24bdf9 kept such
   // slots on expectation evidence, and bindSkill refused whole skills
   // whenever that output went unpublished (fwgr23 05-open, fwkb3-n3).
-  const carried = JSON.stringify(steps.map((s) => [s.args, s.locators, s.diff?.added ?? [], s.diff?.alerts ?? []]));
+  // The post-nav URL counts too: a step's `expect.urlPattern` is built from it,
+  // and a runid inside a slug is a url the replay waits for and never sees.
+  // fwgr28's create step expected `/d/{{v2}}/fwgr28-n1-bench-dashboard` on six
+  // steps — the uid was a slot, the runid beside it was not.
+  const carried = JSON.stringify(steps.map((s) => [s.args, s.locators, s.diff?.added ?? [], s.diff?.alerts ?? [], s.diff?.url ?? '']));
   const varOnly: string[] = [];
   for (const [key, raw] of Object.entries(known)) {
     const v = String(raw ?? '').trim();

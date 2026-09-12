@@ -192,6 +192,26 @@ describe('volatile expectations and whitespace identity (fwkb3, fwod31)', () => 
     expect(bound?.[name]).toBe('fwrd45-n2');
   });
 
+  it('slots a declared var that survives only in a url the step navigated to (fwgr28 02-create)', () => {
+    // Grafana's slug carries the runid: six steps expected
+    // `/d/<uid>/fwgr28-n1-bench-dashboard`, which no later run can reach.
+    const text = 'Create the bench dashboard and save it.';
+    const entries: RecordedEntry[] = [
+      { k: 'instruction', text, url: `${ORIGIN}/dashboard/new`, fingerprint: [1, 0, 0] },
+      step('click', { target: '@e9' }, [{ kind: 'role', role: 'button', name: 'Save dashboard' }], {
+        diff: { url: `${ORIGIN}/d/dfxzaeppeohdsc/fwgr28-n1-bench-dashboard`, alerts: [], added: ['- heading "Bench"'] },
+      }),
+    ];
+    const s = compileSkill({ entries, instruction: text, report, session: 's', model: 'm', now: '2026-09-12T00:00:00Z', knownValues: { 'var:runid': 'fwgr28-n1' } })!;
+    const slot = Object.entries(s.params).find(([, p]) => p.example === 'fwgr28-n1');
+    expect(slot, 'the runid gets a slot').toBeTruthy();
+    // The runid is what this test is about. The uid beside it is a digit-free
+    // token no url-segment rule has ever generalised; provenance slots it (the
+    // real fwgr28 pattern was `/d/{{v2}}/…`), which needs a minting step.
+    expect(s.steps[0].expect?.urlPattern).toBe(`${ORIGIN}/d/dfxzaeppeohdsc/{{${slot![0]}}}-bench-dashboard`);
+    expect(JSON.stringify(s.steps)).not.toContain('fwgr28-n1');
+  });
+
   it('does not slot an earlier OUTPUT the expectations quote — it may not be published (f24bdf9)', () => {
     const text = 'On the detail page, set its status to Ready.';
     const entries: RecordedEntry[] = [

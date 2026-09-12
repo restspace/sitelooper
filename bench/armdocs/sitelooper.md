@@ -25,6 +25,15 @@ Sizing an instruction:
              it and retry the halves.
   Too small: one click, one fill, one read. You pay for a whole agent loop to do what
              `peek` gives you for free.
+  Budget:    `--timeout` defaults to 300 seconds, which is a fit for a fast app and
+             marginal for a heavy one. On an app whose pages take seconds to settle
+             (Odoo, Grafana), pass `--timeout 600 --max-turns 40` on any instruction
+             that creates or edits a record. A `do` cut off at the timeout mid-work
+             is the expensive failure: the work is half done, the recording keeps the
+             instruction but has no procedure to replay for it, so EVERY later run
+             pays the model to redo it. fwod35 and fwgr28 each lost 3-4 steps that
+             way, at 35-50 model turns per step per replay. Raising the budget costs
+             nothing on an instruction that finishes early.
   Do not drive the page by repeated `peek`/`config` polling. `peek` is for orienting
   ONCE when a `do` reports something you did not expect. If you are about to issue the
   same read a second time, issue a `do` instead.

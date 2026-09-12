@@ -313,6 +313,26 @@ if (!hasFlow) {
   pass('the flow establishes its own starting page');
 }
 
+// 4b. Steps the recording could not compile a procedure for, because their
+//     instruction never reported success — usually a `do` cut off at its
+//     --timeout mid-work. They are kept (the session's later work depended on
+//     them) but they have no skill, so EVERY replay pays the model to redo
+//     them: fwod35 and fwgr28 each carried 3-4, at 35-50 turns per step per
+//     replay, which was most of those sweeps' replay cost. Reported, not
+//     failed: an adopted step is an honest record of a hard instruction, and
+//     it graduates once a replay's recovery earns a pin.
+const adopted = flow.steps.filter((s) => s.adopted);
+if (!hasFlow) {
+  console.log('skip  adopted steps (no flow was exported)');
+} else if (adopted.length) {
+  console.log(
+    `note  ${adopted.length} step(s) have no procedure and replay model-first (${adopted.map((s) => s.id).join(', ')}) — ` +
+      'their recording instruction never reported success; consider a larger --timeout on those instructions when re-recording',
+  );
+} else {
+  pass('every flow step carries a procedure');
+}
+
 // 5. How much of each replay ran without the model at all. Reported, not
 //    asserted: the right number depends on the procedure the run recorded, and
 //    a threshold here would just be another way of comparing two sweeps.
