@@ -10,7 +10,7 @@ import { digitDominant } from '../src/skills/shape.js';
 import { volatileMatcher } from '../src/shared/text.js';
 import { recordCandidateEvidence, retired } from '../src/skills/repair.js';
 import { SkillStore } from '../src/skills/store.js';
-import { coalesceControls, compileSkill, dropDeadReadLocators, dropDismissedDialogs, dropSupersededNavigation, compileSkills, discoverSlots, fillParams, fillParamsDeep, foldLoops, sameProcedure, softUrlMatch, stableFirst, substitute, substituteUrlParts, urlDiff, urlMatches, urlParts, urlPattern } from '../src/skills/compile.js';
+import { type TransformNote, coalesceControls, compileSkill, dropDeadReadLocators, dropDismissedDialogs, dropSupersededNavigation, compileSkills, discoverSlots, fillParams, fillParamsDeep, foldLoops, sameProcedure, softUrlMatch, stableFirst, substitute, substituteUrlParts, urlDiff, urlMatches, urlParts, urlPattern } from '../src/skills/compile.js';
 import type { LocatorCandidate } from '../src/daemon/recorder.js';
 import type { SkillStep } from '../src/skills/store.js';
 import { bindSkill, canAdoptPin, learnFromInstruction, matchTemplate, publishedOutputs, selectCandidates, synthesizeReport } from '../src/skills/learn.js';
@@ -650,6 +650,34 @@ describe('foldLoops', () => {
    * "the remaining modal". A definite article in front of a singular noun is
    * not a quantifier over a collection.
    */
+  /**
+   * Every transform here deletes or rewrites steps the recording actually
+   * made, on evidence that is never conclusive. Until the reason was written
+   * down, the only way to see what had fired was to recompile every published
+   * recording under two builds and diff the stores — which is how the "the
+   * remaining modal" misreading above was found, and it took 23 rebuilds.
+   */
+  it('says what it folded and which word authorised the scope', () => {
+    const steps = [...deleteGroup('p18'), ...deleteGroup('p19')];
+
+    const bounded: TransformNote[] = [];
+    foldLoops(steps, 'delete part p18 and part p19', bounded);
+    expect(bounded).toHaveLength(1);
+    expect(bounded[0]).toMatchObject({ name: 'foldLoops', at: 1 });
+    expect(bounded[0].reason).toMatch(/bounded to those 2, because the instruction quantifies nothing/);
+
+    const drained: TransformNote[] = [];
+    foldLoops(steps, 'remove every part from the list', drained);
+    // The quantifier is NAMED, which is the whole point: "because the
+    // instruction said \"every\"" is reviewable, "drain" is not.
+    expect(drained[0].reason).toMatch(/DRAIN the collection, because the instruction said "every"/);
+
+    // A fold that does not happen claims nothing.
+    const none: TransformNote[] = [];
+    foldLoops([deleteGroup('p18')[0]], 'delete every part', none);
+    expect(none).toEqual([]);
+  });
+
   it('reads "the remaining X" as one named thing, not as a quantifier', () => {
     const steps = [...deleteGroup('p18'), ...deleteGroup('p19')];
     expect(foldLoops(steps, 'close the topmost dialog, then the remaining modal')[0].scope).toBe('observed');

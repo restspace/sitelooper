@@ -90,6 +90,18 @@ export interface Skill {
      * reason the procedure's validated status was given up.
      */
     contractChanges?: { at: string; by: string; gave: string[] }[];
+    /**
+     * What the compiler did to the recording on the way to this procedure,
+     * and why: a folded loop and the quantifier that authorised its scope, a
+     * dismissed dialog pair, a superseded navigation.
+     *
+     * Each of these deletes or rewrites steps that actually happened, on
+     * evidence that is never conclusive. Recording the reason is what makes
+     * the decision reviewable at all — the alternative, and what was actually
+     * done once, is recompiling every published recording under two builds
+     * and diffing the stores.
+     */
+    transforms?: { name: string; at: number; reason: string }[];
   };
   /**
    * The execution contract this procedure was written under. Absent means 1,

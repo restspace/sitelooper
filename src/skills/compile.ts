@@ -5,6 +5,26 @@ import { MIN_ID_LEN, digitDominant, looksLikeId, skeleton, tokenPattern } from '
 import { idPositionPart, occursAsToken } from './ledger.js';
 import { WILDCARD, maskVolatile } from '../shared/text.js';
 
+/**
+ * One thing the compiler did to the recording, and why.
+ *
+ * Every transform below deletes or rewrites steps the recording actually
+ * made, on evidence that is never conclusive: a dialog that looked inert, a
+ * navigation that looked superseded, two deletions that looked like
+ * iteration. Until this existed the only way to see what had fired was to
+ * recompile every published recording under two builds and diff the stores —
+ * which is how the "the remaining modal" misreading was found, and it took
+ * 23 rebuilds. A transformation that cannot say why it fired cannot be
+ * reviewed.
+ */
+export interface TransformNote {
+  /** The transform: foldLoops, dropDismissedDialogs, ... */
+  name: string;
+  /** 1-based index into the steps the transform was GIVEN. */
+  at: number;
+  reason: string;
+}
+
 /** Args whose string values are candidates for parameter slots. */
 const VALUE_ARGS = new Set(['value', 'text', 'option', 'url', 'prompt_text']);
 
@@ -256,7 +276,13 @@ export function compileSkills(input: CompileInput): Skill[] {
       return out;
     });
     const mintedForStart = mintedMap((m) => m.keptIndex < base);
-    return { sg, segParams, mintedForStart, folded: foldLoops(coalesceControls(dropDismissedDialogs(dropSupersededNavigation(skillSteps))), input.instruction) };
+    const notes: TransformNote[] = [];
+    const folded = foldLoops(
+      coalesceControls(dropDismissedDialogs(dropSupersededNavigation(skillSteps, notes), notes), notes),
+      input.instruction,
+      notes,
+    );
+    return { sg, segParams, mintedForStart, folded, notes };
   });
 
   // Derived-param metadata lands on the MINTING segment: which post-fold step
@@ -405,7 +431,13 @@ export function compileSkills(input: CompileInput): Skill[] {
       status: 'provisional' as const,
       ...(chain ? { seq: { chain, index: k, of } } : {}),
       ...(input.variantOf ? { variantOf: input.variantOf } : {}),
-      provenance: { session: input.session, instruction: input.instruction, ...(input.model ? { model: input.model } : {}), created: now },
+      provenance: {
+        session: input.session,
+        instruction: input.instruction,
+        ...(input.model ? { model: input.model } : {}),
+        created: now,
+        ...(b.notes.length ? { transforms: b.notes } : {}),
+      },
     };
   });
 }
@@ -1377,12 +1409,13 @@ const NON_LOOP_TOOLS = new Set(['read', 'read_all', 'eval', 'screenshot']);
  * seeing the repetition. Only no-locator steps with byte-identical args are
  * touched, so real actions are never merged.
  */
-export function coalesceControls(steps: SkillStep[]): SkillStep[] {
+export function coalesceControls(steps: SkillStep[], notes?: TransformNote[]): SkillStep[] {
   const out: SkillStep[] = [];
-  for (const step of steps) {
+  for (const [i, step] of steps.entries()) {
     const prev = out[out.length - 1];
     const noTarget = !step.locators.target?.length && !step.locators.source?.length;
     if (prev && noTarget && prev.tool === step.tool && !prev.locators.target?.length && JSON.stringify(prev.args) === JSON.stringify(step.args)) {
+      notes?.push({ name: 'coalesceControls', at: i + 1, reason: `repeat of the previous ${step.tool} with identical args and no target of its own` });
       continue;
     }
     out.push(step);
@@ -1399,8 +1432,12 @@ export function coalesceControls(steps: SkillStep[]): SkillStep[] {
  * intermediate page may have been load-bearing (a session bootstrap, a
  * redirect that set a cookie), and this cannot tell from the outside.
  */
-export function dropSupersededNavigation(steps: SkillStep[]): SkillStep[] {
-  return steps.filter((step, i) => !(step.tool === 'goto' && steps[i + 1]?.tool === 'goto'));
+export function dropSupersededNavigation(steps: SkillStep[], notes?: TransformNote[]): SkillStep[] {
+  return steps.filter((step, i) => {
+    const superseded = step.tool === 'goto' && steps[i + 1]?.tool === 'goto';
+    if (superseded) notes?.push({ name: 'dropSupersededNavigation', at: i + 1, reason: `the next step navigates again, to ${JSON.stringify(String(steps[i + 1].args.url ?? ''))}` });
+    return !superseded;
+  });
 }
 
 /** Button names that dismiss a dialog without acting — UI convention, not app knowledge. */
@@ -1418,7 +1455,7 @@ const DISMISSAL = /^(cancel|close|dismiss|no|not now|back|keep editing)$/i;
  * that button is named as a dismissal, and step N+1 recorded no page change
  * of its own. A confirm ("Discard", "Delete", "Save") never matches.
  */
-export function dropDismissedDialogs(steps: SkillStep[]): SkillStep[] {
+export function dropDismissedDialogs(steps: SkillStep[], notes?: TransformNote[]): SkillStep[] {
   const out: SkillStep[] = [];
   for (let i = 0; i < steps.length; i++) {
     const opener = steps[i];
@@ -1444,6 +1481,11 @@ export function dropDismissedDialogs(steps: SkillStep[]): SkillStep[] {
       const name = primary?.kind === 'role' && primary.role === 'button' ? primary.name : primary?.kind === 'text' ? primary.text : undefined;
       const listed = name !== undefined && added.some((l) => l.includes(`button "${name}"`));
       if (name && listed && DISMISSAL.test(name.trim())) {
+        notes?.push({
+          name: 'dropDismissedDialogs',
+          at: i + 1,
+          reason: `opened a dialog and step ${i + 2} clicked its ${JSON.stringify(name)}, a dismissal that recorded no consequence of its own`,
+        });
         i += 1; // skip the closer too
         continue;
       }
@@ -1530,8 +1572,9 @@ const UNIVERSAL = /\b(all|every|each|entire|whole)\b|(?<!\bthe\s)\bremaining\b/i
  * the locators are re-resolved every pass, so the SAME number of records is
  * worked however the app has reordered or renumbered them.
  */
-export function foldLoops(steps: SkillStep[], instruction = ''): SkillStep[] {
-  const drain = UNIVERSAL.test(instruction);
+export function foldLoops(steps: SkillStep[], instruction = '', notes?: TransformNote[]): SkillStep[] {
+  const quantifier = UNIVERSAL.exec(instruction);
+  const drain = Boolean(quantifier);
   const out: SkillStep[] = [];
   let i = 0;
   while (i < steps.length) {
@@ -1565,6 +1608,13 @@ export function foldLoops(steps: SkillStep[], instruction = ''): SkillStep[] {
         // outgrow the recorded list, still with a runaway guard.
         max: drain ? Math.min(count * 2 + 3, LOOP_MAX_ITER_CAP) : count,
         scope: drain ? 'drain' : 'observed',
+      });
+      notes?.push({
+        name: 'foldLoops',
+        at: i + 1,
+        reason: drain
+          ? `${count} identical action group(s) folded into a loop allowed to DRAIN the collection, because the instruction said ${JSON.stringify(quantifier![0])}`
+          : `${count} identical action group(s) folded into a loop bounded to those ${count}, because the instruction quantifies nothing`,
       });
       i += count * len;
       folded = true;

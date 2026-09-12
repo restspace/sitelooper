@@ -888,6 +888,13 @@ function skillsCommand(positional: string[], flags: Map<string, string | boolean
         }; created ${s.provenance.created} in session ${s.provenance.session}${s.provenance.model ? ` by ${s.provenance.model}` : ''}`,
       );
       if (s.variantOf) console.log(`variant of: ${s.variantOf}`);
+      // What the compiler did to the recording, and why. Each of these
+      // deleted or rewrote steps that actually happened, on evidence that is
+      // never conclusive — so the reason is the reviewable part.
+      for (const t of s.provenance.transforms ?? []) console.log(`compiled: ${t.name} at step ${t.at} — ${t.reason}`);
+      for (const c of s.provenance.contractChanges ?? []) {
+        console.log(`weakened by ${c.by} at ${c.at}: ${c.gave.join('; ')}`);
+      }
       console.log('steps:');
       s.steps.forEach((st, i) => {
         const target = st.locators.target?.[0] ? candidateExpr(st.locators.target[0]) : st.args.target ? String(st.args.target) : '';
