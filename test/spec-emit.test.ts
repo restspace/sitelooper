@@ -1542,6 +1542,20 @@ describe('emitFlowFile: the already-satisfied guard', () => {
     expect(source.indexOf('async function satisfied(')).toBeLessThan(source.indexOf('export const steps = {'));
   });
 
+  /**
+   * The record-scope check landed in replay first and, for a while, only
+   * there. That is the shape of bug the parity harness exists for: a compiled
+   * spec would see "Order A" and "Cancelled" both on a list page and skip the
+   * step, when it was order B that had been cancelled.
+   */
+  it('carries the record-scope check into the artifact, not just the page-wide one', () => {
+    const source = emit(cancelStep());
+    expect(source).toContain('async function sharesScope(page: Page, identity: string[], goal: string[]): Promise<boolean> {');
+    // satisfied() must actually CALL it — inlining a helper nothing reaches is
+    // the failure this test is really guarding against.
+    expect(source).toContain('return await sharesScope(page, identity, goal);');
+  });
+
   it('emits nothing at all for a segment with no goal', () => {
     const source = emit(cancelStep({ goal: undefined, report: undefined }));
     expect(source).not.toContain('satisfied(');
@@ -1579,10 +1593,13 @@ describe('emitFlowFile: the already-satisfied guard', () => {
     const js = ts.transpileModule(fn![0], {
       compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext },
     }).outputText;
-    const build = new Function('present', `${js}\nreturn satisfied;`) as (
+    // `sharesScope` is the other half and is exercised on a real DOM below;
+    // stub it true here so these cases speak only about presence.
+    const build = new Function('present', 'sharesScope', `${js}\nreturn satisfied;`) as (
       p: (page: unknown, t: string) => Promise<boolean>,
+      s: () => Promise<boolean>,
     ) => (page: unknown, identity: string[], goal: string[]) => Promise<boolean>;
-    const onPage = (shown: string[]) => build(async (_p, t) => shown.includes(t));
+    const onPage = (shown: string[]) => build(async (_p, t) => shown.includes(t), async () => true);
     expect(await onPage(['S00021', 'Sales Order', 'Cancelled'])(null, ['S00021', 'Sales Order'], ['Cancelled'])).toBe(true);
     // the right record, still in its old state
     expect(await onPage(['S00021', 'Sales Order'])(null, ['S00021', 'Sales Order'], ['Cancelled'])).toBe(false);

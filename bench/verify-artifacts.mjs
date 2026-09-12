@@ -41,9 +41,41 @@ const skillsDir = path.join(dir, `${tag}-skills`);
 const hasFlow = exists(flowPath);
 const flow = hasFlow ? read(flowPath) : { steps: [] };
 if (!hasFlow) console.log(`note  no flow at ${flowPath} — run 1 never exported one (refused, or incomplete)`);
-const store = exists(skillsDir)
-  ? fs.readdirSync(skillsDir).filter((f) => f.endsWith('.json')).flatMap((f) => read(path.join(skillsDir, f)))
-  : [];
+/**
+ * Every procedure in a store, whichever layout wrote it.
+ *
+ * The store is one directory per origin holding one file per procedure;
+ * before that it was one whole-file array per origin at the top level. Both
+ * shapes are read here, because the published stores under
+ * `bench/results-published/` are committed artifacts in the older one.
+ *
+ * This used to be a single-level scan for `*.json`, which the directory
+ * layout turned into a scan that matched nothing: `readdirSync` returned the
+ * origin DIRECTORIES, the `.json` filter dropped every one of them, and the
+ * store read as empty. Every leak check below then passed over zero
+ * procedures and reported a clean run — the failure mode this script exists
+ * to catch, in the script itself. `sitemap.json` is skipped for the same
+ * reason SkillStore skips it: it lives beside the procedures and is not one.
+ */
+function readStore(root) {
+  if (!exists(root)) return [];
+  const out = [];
+  for (const e of fs.readdirSync(root, { withFileTypes: true })) {
+    if (e.isDirectory()) {
+      for (const f of fs.readdirSync(path.join(root, e.name))) {
+        if (!f.endsWith('.json') || f === 'sitemap.json') continue;
+        const one = read(path.join(root, e.name, f));
+        out.push(...(Array.isArray(one) ? one : [one]));
+      }
+    } else if (e.isFile() && e.name.endsWith('.json')) {
+      const legacy = read(path.join(root, e.name));
+      out.push(...(Array.isArray(legacy) ? legacy : [legacy]));
+    }
+  }
+  return out;
+}
+const store = readStore(skillsDir);
+if (exists(skillsDir) && !store.length) console.log(`note  store at ${skillsDir} holds no procedures`);
 
 /**
  * The recording run's ledger, reconstructed from what it left behind. The

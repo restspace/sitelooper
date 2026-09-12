@@ -254,6 +254,21 @@ export function originSlug(origin: string): string {
  *
  * Reads stay fresh on every access, so daemons still see each other's work.
  */
+/**
+ * An origin directory holds one file per procedure, and these, which are not
+ * procedures and must not be read as one.
+ *
+ * The list exists because the alternative failed quietly: `sitemap.json` sits
+ * in the same directory (SiteModel.file), parses cleanly, and carries an
+ * `origin` but no `id` — so the shape gate below filed it under `corrupt`, on
+ * every single read, for every origin anyone had ever browsed. A permanent
+ * entry on a list whose whole purpose is "this is a thing to look at".
+ *
+ * Anything else that comes to live beside the procedures belongs here too.
+ */
+export const SITEMAP_FILE = 'sitemap.json';
+const NOT_A_PROCEDURE = new Set([SITEMAP_FILE]);
+
 export class SkillStore {
   constructor(readonly dir: string = skillsDir()) {}
 
@@ -295,7 +310,7 @@ export class SkillStore {
   private readDir(dir: string): Skill[] {
     let names: string[];
     try {
-      names = fs.readdirSync(dir).filter((n) => n.endsWith('.json'));
+      names = fs.readdirSync(dir).filter((n) => n.endsWith('.json') && !NOT_A_PROCEDURE.has(n));
     } catch {
       return [];
     }

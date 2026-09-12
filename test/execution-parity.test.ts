@@ -26,7 +26,7 @@ import { executeTool } from '../src/agent/tools.js';
 import { BrowserSession } from '../src/daemon/browser.js';
 import { emitFlowFile } from '../src/spec/emit.js';
 import type { SpecFlow } from '../src/spec/ir.js';
-import type { ReplayResult } from '../src/skills/replay.js';
+import { goalSatisfied, type ReplayResult } from '../src/skills/replay.js';
 import type { Skill, SkillStep } from '../src/skills/store.js';
 
 const enabled = process.env.BP_BROWSER_TESTS === '1';
@@ -186,6 +186,42 @@ render();
     ],
   });
 
+  /**
+   * A flow whose segment carries both an identity and a goal, which is what
+   * makes the emitter reach for the already-satisfied guard — and so for the
+   * scope check the guard is built on. Nothing here is executed; the flow
+   * exists to make the artifact carry that helper so it can be run directly.
+   */
+  const scopeFlow = (): SpecFlow => {
+    const click: SkillStep = { tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Cancel' }] } };
+    return {
+      version: 1,
+      name: 'parity-scope',
+      origin,
+      startUrl: `${origin}/`,
+      vars: [],
+      steps: [
+        {
+          id: '01-cancel',
+          instruction: 'cancel the order {{v1}}',
+          params: { v1: 'S00039' },
+          outputs: ['order_status'],
+          segments: [
+            {
+              id: 's_scope',
+              template: 'cancel {{v1}}',
+              params: { v1: { example: 'S00039', usedIn: [1], known: true } },
+              preconditions: { urlPattern: `${origin}/`, requireText: ['{{v1}}'] },
+              goal: { requireText: ['Cancelled'] },
+              report: { summary: 'cancelled {{v1}}', values: { order_status: 'Cancelled' } },
+              steps: [click],
+            },
+          ],
+        },
+      ],
+    };
+  };
+
   /** Run the contract through daemon replay, in its own browser session. */
   async function viaReplay(steps: SkillStep[]): Promise<Outcome> {
     const session = new BrowserSession({ session: `parity-replay-${Date.now()}`, persist: false, learn: true });
@@ -324,5 +360,84 @@ render();
     // Three records, marked once each — not one record marked three times.
     expect(replayLog.sort()).toEqual(['mark:Item 1', 'mark:Item 2', 'mark:Item 3']);
     expect(emittedLog.sort()).toEqual(['mark:Item 1', 'mark:Item 2', 'mark:Item 3']);
+  }, 120_000);
+
+  /**
+   * C06, as a parity case rather than a replay case.
+   *
+   * "Is this record already in the goal state?" is a gate, not an action, so
+   * no mutation log can catch a disagreement about it — and the two runners
+   * did disagree. Replay learned to require the identity and the goal to hold
+   * inside ONE record's container; the emitted artifact went on checking both
+   * page-wide, so a compiled spec skipped a step because some OTHER row had
+   * reached the state this one was supposed to reach.
+   *
+   * Both predicates are therefore run against the same live DOM and must
+   * return the same answer. A gate that only one runner applies is the same
+   * class of defect as an action only one runner performs.
+   */
+  it('both runners refuse a goal satisfied by a different record on the same list', async () => {
+    const flow = scopeFlow();
+    const source = emitFlowFile(flow, { tier: 'plain' }).source;
+    const cut = /\nasync function sharesScope\(page: Page[\s\S]*?\n\}\n/.exec(source);
+    expect(cut, 'the artifact must carry the scope check at all').not.toBeNull();
+    const js = ts.transpileModule(cut![0], {
+      compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext },
+    }).outputText;
+    const emittedScope = new Function(`${js}\nreturn sharesScope;`)() as (
+      page: unknown,
+      identity: string[],
+      goal: string[],
+    ) => Promise<boolean>;
+
+    const session = new BrowserSession({ session: `parity-scope-${Date.now()}`, persist: false });
+    try {
+      const page = await session.getPage();
+      await page.goto(`${origin}/`);
+      await page.evaluate(() => {
+        const table = document.createElement('table');
+        table.id = 'orders';
+        table.innerHTML =
+          '<tbody>' +
+          '<tr><td>S00039</td><td>Pending</td></tr>' +
+          '<tr><td>S00040</td><td>Cancelled</td></tr>' +
+          '</tbody>';
+        document.body.append(table);
+      });
+      // Named apart from the harness's own skillOf, which builds the loop
+      // contract: this one is just the identity/goal pair the gate reads.
+      const orderSkill = {
+        preconditions: { urlPattern: `${origin}/`, requireText: ['{{v1}}'] },
+        goal: { requireText: ['Cancelled'] },
+      };
+
+      // S00039 is Pending. Only S00040 is Cancelled.
+      const replayPending = (await goalSatisfied(page, orderSkill, { v1: 'S00039' })).satisfied;
+      const emittedPending = await emittedScope(page, ['S00039'], ['Cancelled']);
+      expect(replayPending).toBe(false);
+      expect(emittedPending).toBe(false);
+
+      // S00040 genuinely is, in its own row — neither may refuse that.
+      const replayDone = (await goalSatisfied(page, orderSkill, { v1: 'S00040' })).satisfied;
+      const emittedDone = await emittedScope(page, ['S00040'], ['Cancelled']);
+      expect(replayDone).toBe(true);
+      expect(emittedDone).toBe(true);
+
+      // A detail page is not a list: nothing repeats, so page-wide agreement
+      // is the right answer and both must give it.
+      await page.evaluate(() => {
+        document.getElementById('orders')?.remove();
+        const h = document.createElement('h2');
+        h.textContent = 'Order S00039';
+        const status = document.createElement('button');
+        status.type = 'button';
+        status.textContent = 'Cancelled';
+        document.body.append(h, status);
+      });
+      expect((await goalSatisfied(page, orderSkill, { v1: 'S00039' })).satisfied).toBe(true);
+      expect(await emittedScope(page, ['S00039'], ['Cancelled'])).toBe(true);
+    } finally {
+      await session.close();
+    }
   }, 120_000);
 });
