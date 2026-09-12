@@ -1,0 +1,156 @@
+{
+  "flow": "fwod36",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Signed in to the Odoo instance at http://127.0.0.1:8069/ as admin, opened the Contacts app from the home menu, clicked  | Configuration | 6 | 3 | YourCompany |  |  | New | Toggle Dropdown | New |  |  |  | 0\nSales | 0.00\nInvoiced |  | Add | Send message | Log note | Activities |  |  | 0 | Follow on the Contacts list, and created a customer contact with Name \"fwod36-n3 Bench Customer |  |  | Benchville |  |  | \" and City \"Benchville\". I saved it via the breadcrumb save button, which navigated to the record URL http://127.0.0.1:8069/web#cids=1&menu_id=109&action=156&model=res.partner&view_type=form&id=46 (so the app assigned res.partner id 44), and the form then displayed the saved values. After reloading the page the record still showed Name \"fwod36-n3 Bench Customer |  |  | Benchville |  |  | \" and City \"Benchville\", confirming the values persisted on the record.",
+      "values": {
+        "ref": "fwod36-n3",
+        "new_contact_button": " | Configuration | 6 | 3 | YourCompany |  |  | New | Toggle Dropdown | New |  |  |  | 0\nSales | 0.00\nInvoiced |  | Add | Send message | Log note | Activities |  |  | 0 | Follow",
+        "saved_city": "Benchville",
+        "saved_contact_name": "fwod36-n3 Bench Customer |  |  | Benchville |  |  | ",
+        "record_url": "http://127.0.0.1:8069/web#cids=1&menu_id=109&action=156&model=res.partner&view_type=form&id=46",
+        "company_type": "Company"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "18/18",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_f81a61; observed ref=fwod36-n3, quantity=3.00, untaxed_amount_footer_label=Untaxed Amount\t£ 885.00, customer_name=fwod36-n3 Bench Customer, customer_city=Benchville, order_reference=S00023, unit_price=295.00, tax_20_percent=£ 177.00, total=£ 1,062.00.",
+      "values": {
+        "ref": "fwod36-n3",
+        "quantity": "3.00",
+        "untaxed_amount_footer_label": "Untaxed Amount\t£ 885.00",
+        "customer_name": "fwod36-n3 Bench Customer",
+        "customer_city": "Benchville",
+        "order_reference": "S00023",
+        "unit_price": "295.00",
+        "tax_20_percent": "£ 177.00",
+        "total": "£ 1,062.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "21/21",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_1ac9e6; observed line_1={{02-create.product_name}} qty 3.00 @ 295.00 = £885.00, ref=fwod36-n3, customer=fwod36-n3 Bench Customer, line_2_quantity=2.00, line_2_subtotal=£ 140.00, line_2_unit_price=70.00, new_untaxed_amount=£ 1,025.00, order_reference=S00023, tax_20=£ 205.00, total=£ 1,230.00.",
+      "values": {
+        "line_1": "{{02-create.product_name}} qty 3.00 @ 295.00 = £885.00",
+        "ref": "fwod36-n3",
+        "customer": "fwod36-n3 Bench Customer",
+        "line_2_quantity": "2.00",
+        "line_2_subtotal": "£ 140.00",
+        "line_2_unit_price": "70.00",
+        "new_untaxed_amount": "£ 1,025.00",
+        "order_reference": "S00023",
+        "tax_20": "£ 205.00",
+        "total": "£ 1,230.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Opened the existing draft quotation S00023 (sale.order id 21) for 'fwod36-n3 Bench Customer', clicked into the first line's Quantity cell ({{02-create.product_name}}) and changed it from 3 to 5, committed with Tab, and saved the quotation. After saving the record shows line 1 = {{02-create.product_name}} qty 5.00 @ 295.00 with subtotal £ 1,475.00, and line 2 = {{03-open.line_2_product}} qty 2.00 @ 70.00 with subtotal £ 140.00; the app computes and displays Untaxed Amount £ 1,615.00 (Tax 20% £ 323.00, Total £ 1,938.00). The status bar still marks \"Quotation\" as the current stage — I did not click Confirm, so the record remains an unconfirmed draft.",
+      "values": {
+        "line_1_product": "{{02-create.product_name}}",
+        "line_2_product": "{{03-open.line_2_product}}",
+        "ref": "fwod36-n3",
+        "quotation_number": "S00023",
+        "customer_name": "fwod36-n3 Bench Customer",
+        "line_1_quantity": "5.00",
+        "line_1_unit_price": "295.00",
+        "line_1_subtotal": "£ 1,475.00",
+        "line_2_quantity": "2.00",
+        "line_2_unit_price": "70.00",
+        "line_2_subtotal": "£ 140.00",
+        "new_untaxed_amount": "£ 1,615.00",
+        "tax_20": "£ 323.00",
+        "total": "£ 1,938.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Confirmed. I opened quotation S00023 for 'fwod36-n3 Bench Customer' and clicked Confirm; the confirmation completed directly with no dialog shown (dialog handling was armed but capturedDialogs is empty). After confirming, (a) the order reference is S00023 — the page title \"Odoo - S00023\", breadcrumb \"Quotations S00023\" and record heading all report the same reference, so the app kept the existing name and did not reassign it; and (b) the status bar now marks \"Sales Order\" as the current stage (the options render as ... , Sales Order, Quotation Sent, Quotation), replacing the previous \"Quotation\" state. Confirming also removed the Confirm button, added a Create Invoice button, added Delivered/Invoiced columns to the order lines and turned the customer into a link, all read from the live page after the action. The task is complete; nothing remains outstanding.",
+      "values": {
+        "customer": "fwod36-n3 Bench Customer (Benchville)",
+        "record_breadcrumb": "Quotations S00023",
+        "ref": "fwod36-n3",
+        "order_reference": "S00023"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "3/3",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_a8cb44; observed customer=fwod36-n3 Bench Customer (Benchville), ref=fwod36-n3, current_url=http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=23, div_o_statusbar_status_b=... | Sales Order | Quotation Sent | Quotation | ... | Sales Order, statusbar_after_cancel=Create Invoice\nSend by Email\nPreview\nCancel\nSales Order\nQuotation Sent\nQuotation, statusbar_labels_after_c=Cancelled\nSales Order\nQuotation Sent\nQuotation, order_reference=S00023, totals_footer=Untaxed Amount\t£ 1,615.00\nTAX 20%\t\n£ 323.00\n\nTotal\t£ 1,938.00, buttons_after_cancel_2=Preview\nSet to Quotation, untaxed_amount=£ 1,615.00, tax_20=£ 323.00, total=£ 1,938.00.",
+      "values": {
+        "customer": "fwod36-n3 Bench Customer (Benchville)",
+        "ref": "fwod36-n3",
+        "current_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=23",
+        "div_o_statusbar_status_b": "... | Sales Order | Quotation Sent | Quotation | ... | Sales Order",
+        "statusbar_after_cancel": "Create Invoice\nSend by Email\nPreview\nCancel\nSales Order\nQuotation Sent\nQuotation",
+        "statusbar_labels_after_c": "Cancelled\nSales Order\nQuotation Sent\nQuotation",
+        "order_reference": "S00023",
+        "totals_footer": "Untaxed Amount\t£ 1,615.00\nTAX 20%\t\n£ 323.00\n\nTotal\t£ 1,938.00",
+        "buttons_after_cancel_2": "Preview\nSet to Quotation",
+        "untaxed_amount": "£ 1,615.00",
+        "tax_20": "£ 323.00",
+        "total": "£ 1,938.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0,
+      "repinned": "s_a8cb44",
+      "repinParams": {
+        "v1": "{{02-create.order_reference}}",
+        "v2": "{{runid}}"
+      }
+    }
+  ],
+  "passed": 6,
+  "total": 6,
+  "repinned": 1,
+  "drift": 0,
+  "wallMs": 54228,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

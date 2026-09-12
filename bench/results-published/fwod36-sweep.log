@@ -1,0 +1,113 @@
+
+[sweep] run 1/3: fwod36-n1 (store: /home/user/sitelooper/bench/results/fwod36-skills)
+[harness] odoo: defaulting APP_URL
+[harness] odoo: defaulting APP_EMAIL
+[harness] odoo: defaulting APP_PASSWORD
+[reset] odoo: no leftover bench customers
+[harness] odoo responded 303 at http://127.0.0.1:8069/
+stopped: fwod36-n1
+  flow "fwod36" saved: 6 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwod36.json
+  warning: note: dropped 2 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: warning: contradicted-step: 04-open read new_untaxed_amount "£ 1,615.00" right after 03-open reported "£ 1,025.00"; 03-open's change may not have landed and a later step may be retrying it. Re-record 03-open.
+  warning: warning: 9 value(s) KNOWN to be this run's survived unslotted — a replay will act on or wait for the recording's value (non-fatal outside locators):
+  s_4f078a.reportTemplate.summary: "44" (url) in "Signed in to the Odoo instance at {{v2}} as admin, opened the Contacts app from the home menu, clicked New on the Contacts list, and created a customer contact "
+  s_4f078a.reportTemplate.values.contact_id: "44" (url) in "44"
+  s_4f078a.reportTemplate.values.record_url: "44" (url) in "http://127.0.0.1:8069/web#cids=1&menu_id=109&action=156&model=res.partner&view_type=form&id=44"
+  s_f81a61.reportTemplate.summary: "21" (url) in "Opened the Sales app from the Home Menu, created a new quotation, and set customer '{{v1}}' by typing in the customer autocomplete and clicking the matching dro"
+  s_f81a61.reportTemplate.values.quotation_id: "21" (url) in "21"
+  s_9841c9.reportTemplate.summary: "21" (url) in "Opened the existing draft quotation {{v1}} (sale.order id 21) for '{{v2}}', clicked into the first line's Quantity cell ({{v4}}) and changed it from 3 to 5, com"
+  s_9841c9.reportTemplate.values.quotation_id: "21" (url) in "21"
+  s_1ac9e6.reportTemplate.summary: "21" (url) in "Completed: opened the existing draft quotation {{v1}} (sale.order id 21) for customer '{{v2}}' and added a second order line via \"Add a product\". I typed \"chair"
+  s_1ac9e6.reportTemplate.values.quotation_id: "21" (url) in "21"
+  warning: warning: 146 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "Benchville" (output) in "Open http://127.0.0.1:8069/ and sign in with username 'admin' and password 'admin'. Then in the Contacts app (or via the Sales app's customer field), create a n"
+  flow.steps[0].params.v4: "Benchville" (output) in "Benchville"
+  flow.steps[4].instruction: "Sales Order" (output) in "Open the existing quotation with reference {{02-create.order_reference}} for customer '{{runid}} Bench Customer' in the Odoo Sales app (currently a draft with t"
+  flow.steps[5].instruction: "Sales Order" (output) in "Open the confirmed sales order with reference {{02-create.order_reference}} for customer '{{runid}} Bench Customer' in the Odoo Sales app (status currently 'Sal"
+  flow.warnings[0]: "£ 1,025.00" (output) in "contradicted-step: 04-open read new_untaxed_amount \"£ 1,615.00\" right after 03-open reported \"£ 1,025.00\"; 03-open's change may not have landed and a later step"
+  warning: {{02-create.product_name}} (used by 03-open) can only be re-observed by model recovery — consider re-recording so the value is read from the page.
+  warning: {{03-open.line_2_product}} (used by 04-open) can only be re-observed by model recovery — consider re-recording so the value is read from the page.
+arm=sitelooper model=z-ai/glm-5.3 runid=fwod36-n1 stop=completed
+turns=7 wall=387.6s
+commands=6 cmdTime=370.3s cmdBytes=8730 timeouts=0
+orchestrator in=11767 cw=0 cr=19328 out=2292
+inner prompt=1956980 cached=1801088 completion=22874
+spend=$0.0741 maxUsd=2
+learn: A_n=0 replayed=0/6 full=0 repaired=0 compiled=6 variants=0
+-> /home/user/sitelooper/bench/results/fwod36-n1-sitelooper-result.json
+
+fwod36-n1: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00021
+
+[sweep] run 2/3: fwod36-n2 (replay flow fwod36, no orchestrator)
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+[sweep] fwod36-n2: 1 drift ticket(s) → fwod36-n2-drift.json
+
+fwod36-n2: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00022
+
+[sweep] run 3/3: fwod36-n3 (replay flow fwod36, no orchestrator)
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+
+fwod36-n3: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00023
+
+Learning sweep fwod36 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwod36-n1' │ '6/6'    │ 'completed' │ 7     │ 6    │ 0.0741    │ 0   │ '0/6'        │ 388    │
+│ 1       │ 2 │ 'fwod36-n2' │ '6/6'    │ 'success'   │ 21    │ 6    │ 0.0149    │ 1   │ '6/6 (flow)' │ 142    │
+│ 2       │ 3 │ 'fwod36-n3' │ '6/6'    │ 'success'   │ 0     │ 6    │ 0         │ 1   │ '6/6 (flow)' │ 54     │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8069
+  s_ea4ff8  validated    2 steps  3/3 (100%)
+           Open {{v2}} and sign in with username 'admin' and password 'admin'. Then in the Contacts app (or via the Sales…
+  s_c0ad77  validated    2 steps  3/3 (100%)
+           Open {{v2}} and sign in with username 'admin' and password 'admin'. Then in the Contacts app (or via the Sales…
+  s_212c1c  validated    1 steps  3/3 (100%)
+           Open {{v2}} and sign in with username 'admin' and password 'admin'. Then in the Contacts app (or via the Sales…
+  s_b6a214  validated    4 steps  3/3 (100%)
+           Open {{v2}} and sign in with username 'admin' and password 'admin'. Then in the Contacts app (or via the Sales…
+  s_4f078a  validated    7 steps  3/3 (100%)
+           Open {{v2}} and sign in with username 'admin' and password 'admin'. Then in the Contacts app (or via the Sales…
+  s_944347  validated    2 steps  3/3 (100%)
+           Open {{v2}} and sign in with username 'admin' and password 'admin'. Then in the Contacts app (or via the Sales…
+  s_3fad41  validated    1 steps  3/3 (100%)
+           In the Odoo Sales app, create a new quotation for the customer '{{v1}}'. The customer field is an autocomplete…
+  s_5ac7f1  validated   10 steps  3/3 (100%)
+           In the Odoo Sales app, create a new quotation for the customer '{{v1}}'. The customer field is an autocomplete…
+  s_f81a61  validated    8 steps  3/3 (100%)
+           In the Odoo Sales app, create a new quotation for the customer '{{v1}}'. The customer field is an autocomplete…
+  s_b6c4c3  validated    2 steps  3/3 (100%)
+           In the Odoo Sales app, create a new quotation for the customer '{{v1}}'. The customer field is an autocomplete…
+  s_1ac9e6  validated   13 steps  3/3 (100%)
+           Open the existing draft quotation with reference {{v1}} for customer '{{v2}}' in the Odoo Sales app (it curren…
+  s_9841c9  validated   15 steps  3/3 (100%)
+           Open the existing draft quotation with reference {{v1}} for customer '{{v2}}' in the Odoo Sales app. It curren…
+  s_04caec  validated    3 steps  3/3 (100%)
+           Open the existing quotation with reference {{v1}} for customer '{{v2}}' in the Odoo Sales app (currently a dra…
+  s_a8cb44  validated   17 steps  2/2 (100%)  variant of s_12d5ef
+           Open the confirmed sales order with reference {{v1}} for customer '{{v2}} Bench Customer' in the Odoo Sales ap…
+  s_12d5ef  demoted      8 steps  1/2 (50%)
+           Open the confirmed sales order with reference {{v1}} for customer '{{v2}}' in the Odoo Sales app (status curre…
+store: /home/user/sitelooper/bench/results/fwod36-skills
+
+summary: /home/user/sitelooper/bench/results/fwod36-sweep.json
