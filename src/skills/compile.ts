@@ -3,7 +3,7 @@ import type { Report } from '../agent/report.js';
 import { SKILL_CONTRACT, newSkillId, originOf, type Skill, type SkillParam, type SkillStep, type StepExpectation } from './store.js';
 import { MIN_ID_LEN, digitDominant, looksLikeId, skeleton, tokenPattern } from './shape.js';
 import { idPositionPart, occursAsToken } from './ledger.js';
-import { WILDCARD, maskVolatile } from '../shared/text.js';
+import { WILDCARD, identityRe, maskVolatile } from '../shared/text.js';
 
 /**
  * One thing the compiler did to the recording, and why.
@@ -556,7 +556,11 @@ function identityOf(startText: string | undefined, slots: Map<string, string>, k
     // the live page showed "Backlog" — the same word.
     const value = raw.replace(/\s+/g, ' ').trim();
     if (!derivesFromKnown(raw, known) || value.length < MIN_IDENTITY_LEN || /^https?:/i.test(value)) continue;
-    if (!startText.replace(/\s+/g, ' ').includes(value)) continue;
+    // The same bounded rule replay will apply (identityRe). If compile minted a
+    // marker on a plain substring hit, it could mint one whose only appearance
+    // was INSIDE a longer token — a marker the tightened replay gate can never
+    // satisfy. Upstream of both runners, so it has to move with them.
+    if (!identityRe(value).test(startText.replace(/\s+/g, ' '))) continue;
     out.push(`{{${name}}}`);
   }
   return out;

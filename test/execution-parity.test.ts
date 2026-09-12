@@ -17,7 +17,6 @@
  * Opt-in like the other browser suites: BP_BROWSER_TESTS=1.
  */
 import fs from 'node:fs';
-import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 import ts from 'typescript';
@@ -29,6 +28,7 @@ import type { SpecFlow } from '../src/spec/ir.js';
 import { goalSatisfied, type ReplayResult } from '../src/skills/replay.js';
 import { ignorableRefs, resolveInstruction, resolveStepParams, type FlowStep } from '../src/skills/flow.js';
 import type { Skill, SkillStep } from '../src/skills/store.js';
+import { createFixtureServer, type FixtureServer } from './fixture/server.js';
 
 const enabled = process.env.BP_BROWSER_TESTS === '1';
 const d = enabled ? describe : describe.skip;
@@ -53,69 +53,15 @@ interface Outcome {
 }
 
 d('execution parity (daemon replay vs emitted artifact)', () => {
-  let server: http.Server;
+  let fx: FixtureServer;
   let origin: string;
-  let items: string[] = [];
-  let log: string[] = [];
   let home: string;
   let emitDir: string;
 
-  /**
-   * A list with two affordances per row: Remove, which deletes the record and
-   * SHRINKS the collection, and Mark, which mutates it in place and leaves the
-   * row where it is. The two are the shapes a folded loop comes in, and they
-   * need opposite cursor behaviour. Both go through the server, which is the
-   * only thing that records them, so a test can ask the application what
-   * happened rather than believing a runner.
-   */
-  const PAGE = `<!doctype html><html><head><meta charset="utf-8"><title>Items</title></head><body>
-<h1>Items</h1>
-<p id="target">Item 2</p>
-<ul id="items"></ul>
-<script>
-async function render() {
-  const res = await fetch('/items');
-  const names = await res.json();
-  document.getElementById('items').innerHTML = names
-    .map((n) => '<li class="item">' + n +
-      ' <button class="del" type="button" data-id="' + n + '">Remove</button>' +
-      ' <button class="mark" type="button" data-id="' + n + '">Mark</button></li>')
-    .join('');
-}
-document.addEventListener('click', async (e) => {
-  const del = e.target.closest('.del');
-  if (del) {
-    await fetch('/delete/' + encodeURIComponent(del.dataset.id), { method: 'POST' });
-    del.closest('.item').remove();
-    return;
-  }
-  // Mark mutates the record and leaves the row in place: the collection keeps
-  // its size, so only a cursor gets the loop to the next record.
-  const mark = e.target.closest('.mark');
-  if (mark) await fetch('/mark/' + encodeURIComponent(mark.dataset.id), { method: 'POST' });
-});
-render();
-</script>
-</body></html>`;
-
-  /**
-   * A record page, the shape a procedure that navigates to its own subject
-   * lands on: the record's own id is the only thing that tells it from every
-   * other page of the template, and Mark is work done TO that record. The
-   * server logs the visit itself, so the harness can ask whether a runner
-   * navigated at all rather than believing its report.
-   */
-  const RECORD = (id: string) => `<!doctype html><html><head><meta charset="utf-8"><title>Record</title></head><body>
-<h1>Record ${id}</h1>
-<button class="mark" type="button" data-id="${id}">Mark</button>
-<script>
-document.querySelector('.mark').addEventListener('click', async (e) => {
-  await fetch('/mark/' + encodeURIComponent(e.target.dataset.id), { method: 'POST' });
-});
-</script>
-</body></html>`;
-
   beforeAll(async () => {
+    fx = await createFixtureServer(10);
+    origin = fx.origin;
+
     home = fs.mkdtempSync(path.join(os.tmpdir(), 'bp-parity-'));
     process.env.SITELOOPER_HOME = home;
     process.env.SITELOOPER_SKILLS_DIR = path.join(home, 'skills');
@@ -129,49 +75,10 @@ document.querySelector('.mark').addEventListener('click', async (e) => {
       path.join(emitDir, 'pw-shim.mjs'),
       "export { expect } from '@playwright/test';\nexport const test = { step: async (_name, fn) => await fn() };\n",
     );
-
-    server = http.createServer((req, res) => {
-      const url = req.url ?? '/';
-      if (url === '/' ) {
-        res.writeHead(200, { 'content-type': 'text/html' });
-        res.end(PAGE);
-        return;
-      }
-      if (url.startsWith('/record/')) {
-        const id = decodeURIComponent(url.slice('/record/'.length));
-        log.push(`visit:${id}`);
-        res.writeHead(200, { 'content-type': 'text/html' });
-        res.end(RECORD(id));
-        return;
-      }
-      if (url === '/items') {
-        res.writeHead(200, { 'content-type': 'application/json' });
-        res.end(JSON.stringify(items));
-        return;
-      }
-      if (url.startsWith('/mark/') && req.method === 'POST') {
-        log.push(`mark:${decodeURIComponent(url.slice('/mark/'.length))}`);
-        res.writeHead(200);
-        res.end('ok');
-        return;
-      }
-      if (url.startsWith('/delete/') && req.method === 'POST') {
-        const id = decodeURIComponent(url.slice('/delete/'.length));
-        log.push(`delete:${id}`);
-        items = items.filter((n) => n !== id);
-        res.writeHead(200);
-        res.end('ok');
-        return;
-      }
-      res.writeHead(404);
-      res.end();
-    });
-    await new Promise<void>((r) => server.listen(0, '127.0.0.1', r));
-    origin = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
   }, 60_000);
 
   afterAll(async () => {
-    await new Promise<void>((r) => server?.close(() => r()));
+    await fx?.close();
     delete process.env.SITELOOPER_HOME;
     delete process.env.SITELOOPER_SKILLS_DIR;
     fs.rmSync(home, { recursive: true, force: true });
@@ -179,10 +86,7 @@ document.querySelector('.mark').addEventListener('click', async (e) => {
     fs.rmSync(emitDir, { recursive: true, force: true });
   });
 
-  const reset = (n: number) => {
-    items = Array.from({ length: n }, (_, i) => `Item ${i + 1}`);
-    log = [];
-  };
+  const reset = (n: number) => fx.reset(n);
   beforeEach(() => reset(10));
 
   /** The one contract both runners execute. */
@@ -501,10 +405,10 @@ document.querySelector('.mark').addEventListener('click', async (e) => {
   it('neither runner binds a used slot to a value the producing read never captured', async () => {
     reset(2);
     const { outcome: replay, blocking } = await replayFlowOf(readSkill('#nope'), markSkill(), markFlowStep());
-    const replayLog = [...log];
+    const replayLog = [...fx.log];
     reset(2);
     const emitted = await emittedFlowOf(readMarkFlow('#nope'));
-    const emittedLog = [...log];
+    const emittedLog = [...fx.log];
 
     // Replay's own classification: the slot is used, so the reference blocks.
     // Once from the instruction and once from the param binding, as the
@@ -532,10 +436,10 @@ document.querySelector('.mark').addEventListener('click', async (e) => {
   it('both runners proceed when the producing read did capture the value', async () => {
     reset(2);
     const { outcome: replay, blocking } = await replayFlowOf(readSkill('#target'), markSkill(), markFlowStep());
-    const replayLog = [...log];
+    const replayLog = [...fx.log];
     reset(2);
     const emitted = await emittedFlowOf(readMarkFlow('#target'));
-    const emittedLog = [...log];
+    const emittedLog = [...fx.log];
 
     expect([...new Set(blocking)]).toEqual([]);
     expect(replay.ok, replay.reason ?? '').toBe(true);
@@ -548,10 +452,10 @@ document.querySelector('.mark').addEventListener('click', async (e) => {
   async function both(steps: SkillStep[], startWith = 10) {
     reset(startWith);
     const replay = await replayOf(skillOf(steps));
-    const replayLog = [...log];
+    const replayLog = [...fx.log];
     reset(startWith);
     const emitted = await emittedOf(specOf(steps));
-    const emittedLog = [...log];
+    const emittedLog = [...fx.log];
     return { replay, emitted, replayLog, emittedLog };
   }
 
@@ -559,10 +463,10 @@ document.querySelector('.mark').addEventListener('click', async (e) => {
   async function bothOf(skill: Skill, spec: SpecFlow, params: Record<string, string>) {
     reset(0);
     const replay = await replayOf(skill, params);
-    const replayLog = [...log];
+    const replayLog = [...fx.log];
     reset(0);
     const emitted = await emittedOf(spec, params);
-    const emittedLog = [...log];
+    const emittedLog = [...fx.log];
     return { replay, emitted, replayLog, emittedLog };
   }
 
@@ -585,7 +489,7 @@ document.querySelector('.mark').addEventListener('click', async (e) => {
     expect(emittedLog).toHaveLength(7);
     expect(new Set(replayLog).size).toBe(7); // seven DIFFERENT items, not one item seven times
     expect(new Set(emittedLog).size).toBe(7);
-    expect(items).toHaveLength(3);
+    expect(fx.items).toHaveLength(3);
   }, 120_000);
 
   /**
@@ -601,7 +505,7 @@ document.querySelector('.mark').addEventListener('click', async (e) => {
     expect(replayLog.sort()).toEqual(emittedLog.sort());
     expect(replayLog).toHaveLength(5);
     expect(new Set(replayLog).size).toBe(5);
-    expect(items).toHaveLength(0);
+    expect(fx.items).toHaveLength(0);
   }, 120_000);
 
   /**
@@ -620,7 +524,7 @@ document.querySelector('.mark').addEventListener('click', async (e) => {
     expect(emittedLog).toHaveLength(2);
     expect(new Set(replayLog).size).toBe(2);
     expect(new Set(emittedLog).size).toBe(2);
-    expect(items).toHaveLength(4);
+    expect(fx.items).toHaveLength(4);
   }, 120_000);
 
   /**
@@ -694,6 +598,89 @@ document.querySelector('.mark').addEventListener('click', async (e) => {
   }, 120_000);
 
   /**
+   * C06. The NEIGHBOURING record: this run is about rec-7, and the page it
+   * lands on shows rec-70.
+   *
+   * Matched by plain substring the identity marker `Record rec-7` is satisfied
+   * by "Record rec-70", so the gate that exists to tell one record of a
+   * template from another passes on the wrong one — and it is exactly on this
+   * path that it is asked, because the url gate proceeds optimistically when a
+   * single id segment disagrees and the fingerprint is close. Bare ids are the
+   * commonest marker shape in the published stores, so this is the live case.
+   *
+   * The mutation log is the oracle: both runners may navigate (the gate sits
+   * after a self-navigating procedure's own goto), and neither may mark.
+   */
+  it('neither runner accepts a neighbouring record whose id merely extends this run’s', async () => {
+    const neighbour = `${origin}/record/rec-70`;
+    const { replay, emitted, replayLog, emittedLog } = await bothOf(recordSkill(neighbour), recordFlow(neighbour), { v1: 'rec-7' });
+
+    expect(replayLog, 'replay must run its own goto before judging the page').toContain('visit:rec-70');
+    expect(emittedLog, 'the artifact must run its own goto before judging the page').toContain('visit:rec-70');
+
+    expect(replay.ok, replay.reason ?? '').toBe(false);
+    expect(emitted.ok, emitted.reason ?? '').toBe(false);
+    expect(replay.reason).toMatch(/different record|does not show/);
+    expect(emitted.reason).toMatch(/identity/i);
+    expect(replayLog.filter((l) => l.startsWith('mark:')), 'replay marked a record it was never given').toEqual([]);
+    expect(emittedLog.filter((l) => l.startsWith('mark:')), 'the artifact marked a record it was never given').toEqual([]);
+  }, 120_000);
+
+  /**
+   * C06, the emitted half, run as code rather than read as source.
+   *
+   * `present` is the artifact's whole identity gate, and it answers in two
+   * dialects the daemon's snapshot collapses into one: visible TEXT, and the
+   * live VALUE of a field, which `getByText` can never see (cloud run sp5odb
+   * died on exactly that). Both halves have to carry the boundary rule, so
+   * both are exercised here against a real DOM.
+   */
+  it('the emitted present helper bounds an identity marker in text and in a field value', async () => {
+    const source = emitFlowFile(scopeFlow(), { tier: 'plain' }).source;
+    const cuts = [/\nfunction escapeRe\([\s\S]*?\n\}\n/, /\nfunction identityRe\([\s\S]*?\n\}\n/, /\nasync function present\(page: Page[\s\S]*?\n\}\n/];
+    const parts = cuts.map((re) => {
+      const m = re.exec(source);
+      expect(m, `the artifact must carry ${String(re)}`).not.toBeNull();
+      return m![0];
+    });
+    const js = ts.transpileModule(parts.join('\n'), {
+      compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext },
+    }).outputText;
+    const emittedPresent = new Function(`${js}\nreturn present;`)() as (page: unknown, text: string, whole?: boolean) => Promise<boolean>;
+
+    const session = new BrowserSession({ session: `parity-present-${Date.now()}`, persist: false });
+    try {
+      const page = await session.getPage();
+
+      await page.setContent('<table><tr><td>312</td></tr></table>');
+      expect(await emittedPresent(page, '12', true), '312 is not order 12').toBe(false);
+      expect(await emittedPresent(page, '12'), 'the unbounded dialect is unchanged').toBe(true);
+
+      await page.setContent('<table><tr><td>Order 12</td></tr></table>');
+      expect(await emittedPresent(page, 'Order 12', true)).toBe(true);
+      // Playwright tests a RegExp against text that is NOT whitespace-normalised,
+      // which is why a literal space has to match any run of whitespace.
+      await page.setContent('<table><tr><td>Order\n   12</td></tr></table>');
+      expect(await emittedPresent(page, 'Order 12', true)).toBe(true);
+
+      // The field dialect: an odoo form in edit mode shows the marker only as
+      // an <input>'s value, and the DOM has no text node for it at all.
+      await page.setContent('<input value="12">');
+      expect(await emittedPresent(page, '12', true)).toBe(true);
+      await page.setContent('<input value="312">');
+      expect(await emittedPresent(page, '12', true)).toBe(false);
+
+      // The shape this defect actually takes on the published stores.
+      await page.setContent('<table><tr><td>fwgr25-n10 Bench Customer</td></tr></table>');
+      expect(await emittedPresent(page, 'fwgr25-n1', true)).toBe(false);
+      await page.setContent('<table><tr><td>fwgr25-n1 Bench Customer</td></tr></table>');
+      expect(await emittedPresent(page, 'fwgr25-n1', true)).toBe(true);
+    } finally {
+      await session.close();
+    }
+  }, 120_000);
+
+  /**
    * C06, as a parity case rather than a replay case.
    *
    * "Is this record already in the goal state?" is a gate, not an action, so
@@ -710,9 +697,15 @@ document.querySelector('.mark').addEventListener('click', async (e) => {
   it('both runners refuse a goal satisfied by a different record on the same list', async () => {
     const flow = scopeFlow();
     const source = emitFlowFile(flow, { tier: 'plain' }).source;
-    const cut = /\nasync function sharesScope\(page: Page[\s\S]*?\n\}\n/.exec(source);
-    expect(cut, 'the artifact must carry the scope check at all').not.toBeNull();
-    const js = ts.transpileModule(cut![0], {
+    // sharesScope bounds its identity half through identityRe (C06), so the
+    // helpers it is built on come out with it — cutting it alone would load a
+    // function that throws on every call and silently "refuses" everything.
+    const cut = [/\nfunction escapeRe\([\s\S]*?\n\}\n/, /\nfunction identityRe\([\s\S]*?\n\}\n/, /\nasync function sharesScope\(page: Page[\s\S]*?\n\}\n/].map((re) => {
+      const m = re.exec(source);
+      expect(m, `the artifact must carry ${String(re)}`).not.toBeNull();
+      return m![0];
+    });
+    const js = ts.transpileModule(cut.join('\n'), {
       compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext },
     }).outputText;
     const emittedScope = new Function(`${js}\nreturn sharesScope;`)() as (

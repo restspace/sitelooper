@@ -145,6 +145,38 @@ describe('volatile expectations and whitespace identity (fwkb3, fwod31)', () => 
     // a wildcard never spans lines
     expect(lineShows(['- a "x"', '- b "y"'], ['- a "{{*}}b "y"'])).toBe(false);
   });
+  /**
+   * C06. An identity marker is the ONLY thing that can tell ticket t15 from
+   * t14 — the url pattern and the fingerprint match every record of the
+   * template, and the url gate hands the decision here precisely when the id
+   * segment disagrees. Matched by substring it decides nothing: `fwgr25-n1` is
+   * satisfied by `fwgr25-n10`, and a bare runid is the commonest marker shape
+   * in the published stores. So `whole` bounds both edges at a letter/digit.
+   */
+  it('lineShows({whole}) matches an identity marker only at a letter/digit boundary', () => {
+    const whole = { whole: true };
+    expect(lineShows(['- cell "312"'], ['12'], whole)).toBe(false);
+    expect(lineShows(['- cell "312"'], ['12'])).toBe(true); // the substring rule is unchanged for everyone else
+    expect(lineShows(['- row "Order 12 Pending"'], ['Order 12'], whole)).toBe(true);
+    expect(lineShows(['- link "INV-2024/170"'], ['INV-2024/17'], whole)).toBe(false);
+    // punctuation is not a letter or a digit, so it never needs a separator
+    expect(lineShows(['- link "(INV-2024/17)"'], ['INV-2024/17'], whole)).toBe(true);
+    expect(lineShows(['- cell "part /17 of 20"'], ['/17'], whole)).toBe(true);
+    expect(lineShows(['- cell "Smithers"'], ['Smith'], whole)).toBe(false);
+    expect(lineShows(['- cell "Smith\'s"'], ['Smith'], whole)).toBe(true);
+    // \p{L} with the u flag, or a non-ASCII letter would read as a boundary
+    expect(lineShows(['- heading "Ångström"'], ['Ångström'], whole)).toBe(true);
+    expect(lineShows(['- heading "Ångströms"'], ['Ångström'], whole)).toBe(false);
+    expect(lineShows(['- cell "田中太郎"'], ['田中'], whole)).toBe(false);
+    expect(lineShows(['- cell "田中 太郎"'], ['田中'], whole)).toBe(true);
+    // the real shape: a neighbouring record whose id extends this run's
+    expect(lineShows(['- row "fwgr25-n10 Bench Customer"'], ['fwgr25-n1'], whole)).toBe(false);
+    expect(lineShows(['- row "fwgr25-n1 Bench Customer"'], ['fwgr25-n1'], whole)).toBe(true);
+    // case-insensitive, and still whitespace-insensitive and wildcard-aware
+    expect(lineShows(['- row "RD-1015"'], ['rd-1015'], whole)).toBe(true);
+    expect(lineShows(['- heading "Bench   Board"'], ['Bench Board '], whole)).toBe(true);
+    expect(lineShows(['- textbox "09/03/2026 07:31": 2026-12-31'], ['- textbox "{{*}} {{*}}": 2026-12-31'], whole)).toBe(true);
+  });
   it('re-inlines a slot that survives only in an expectation: no orphan marker, no phantom param (fwgr23 05-open)', () => {
     // '125.00' is a run value the instruction only names inside '£125.00', so
     // its marker is swallowed in the template and it is typed nowhere; the

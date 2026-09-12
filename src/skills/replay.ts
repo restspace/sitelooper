@@ -1,5 +1,5 @@
 import type { Locator, Page } from 'playwright-core';
-import { clip } from '../shared/text.js';
+import { clip, identityRe, identitySource } from '../shared/text.js';
 import { captureSignature } from '../daemon/diff.js';
 import { cosine, fingerprintPage } from '../daemon/fingerprint.js';
 import { candidateExpr, makeLocator, markPoint, type LocatorCandidate, type StepDiff } from '../daemon/recorder.js';
@@ -271,7 +271,10 @@ export async function replaySkill(
     for (const marker of skill.preconditions.requireText ?? []) {
       const want = fillParams(marker, params);
       if (!want || /\{\{/.test(want)) continue; // unbound marker proves nothing
-      if (await presentOnPage(page, [want])) continue;
+      // Bounded, not substring: a marker matched anywhere inside a longer run
+      // of letters/digits cannot tell t15 from t150, and this is the ONLY gate
+      // that can tell records of one template apart at all.
+      if (await presentOnPage(page, [want], { whole: true })) continue;
       res.refused = true;
       res.wrongRecord = `the page at ${urlPattern(page.url())} does not show ${JSON.stringify(clip(want, 60))} — it matches this procedure's page template but is a different record — nothing was run`;
       res.reason = res.wrongRecord;
@@ -1516,7 +1519,13 @@ export async function goalSatisfied(
   if (!urlMatches(skill.preconditions.urlPattern, page.url(), params)) return { satisfied: false, shown: [] };
   const sig = await captureSignature(page);
   if (!sig) return { satisfied: false, shown: [] };
-  for (const want of [...identity, ...goal]) {
+  // The two halves are asked differently. Identity says WHICH record, so it
+  // takes the bounded rule (S00039 is not S000390); the goal says what state
+  // that record is in, which is an ordinary substring question.
+  for (const want of identity) {
+    if (!lineShows(sig.lines, [want], { whole: true })) return { satisfied: false, shown: [] };
+  }
+  for (const want of goal) {
     if (!lineShows(sig.lines, [want])) return { satisfied: false, shown: [] };
   }
   // Both halves are SOMEWHERE on the page — which on a list is not the same
@@ -1544,7 +1553,10 @@ export async function goalSatisfied(
  */
 async function sharesRecordScope(page: Page, identity: string[], goal: string[]): Promise<boolean> {
   try {
-    return await page.evaluate(scopeCheckInPage, { identity, goal });
+    // The identity half goes in as regex SOURCE: this function is serialised
+    // into the page, so it cannot call identityRe — and a second hand-written
+    // copy of the boundary rule in page scope would be free to drift.
+    return await page.evaluate(scopeCheckInPage, { identity: identity.map(identitySource), goal });
   } catch {
     // A page that cannot be evaluated (navigating, closed) has not proven
     // anything. Conservative: not satisfied, so the step runs.
@@ -1554,6 +1566,7 @@ async function sharesRecordScope(page: Page, identity: string[], goal: string[])
 
 /** Runs in the page; serialised, so everything it needs is in scope or passed in. */
 function scopeCheckInPage(opts: { identity: string[]; goal: string[] }): boolean {
+  // `identity` arrives as regex SOURCE (identitySource), already bounded.
   const norm = (s: string | null | undefined) => (s ?? '').replace(/\s+/g, ' ').trim();
   const textOf = (el: Element) => norm((el as HTMLElement).innerText || el.textContent);
   const all = Array.from(document.querySelectorAll('*'));
@@ -1595,7 +1608,7 @@ function scopeCheckInPage(opts: { identity: string[]; goal: string[] }): boolean
     }
     if (!record) return true; // not a list: the whole page is about one record
     const inside = textOf(record);
-    if (opts.identity.some((t) => inside.includes(norm(t)))) return true;
+    if (opts.identity.some((src) => new RegExp(src, 'iu').test(inside))) return true;
   }
   return false;
 }
@@ -1605,10 +1618,20 @@ function scopeCheckInPage(opts: { identity: string[]; goal: string[] }): boolean
  * field with the value it already held produces no diff. One extra capture on
  * the miss path settles it.
  */
-async function presentOnPage(page: Page, lines: string[]): Promise<boolean> {
+async function presentOnPage(page: Page, lines: string[], opts: LineShowsOptions = {}): Promise<boolean> {
   const sig = await captureSignature(page);
   if (!sig) return false;
-  return lineShows(sig.lines, lines);
+  return lineShows(sig.lines, lines, opts);
+}
+
+export interface LineShowsOptions {
+  /**
+   * Identity matching: the want must sit at a letter/digit boundary on both
+   * sides (see IDENTITY_EDGE) instead of anywhere inside a longer run of
+   * characters. Only for "is this the right RECORD" — the effect gate asks
+   * whether a change LANDED, which is a substring question and stays one.
+   */
+  whole?: boolean;
 }
 
 const normWs = (s: string) => s.replace(/\s+/g, ' ').trim();
@@ -1618,12 +1641,17 @@ const normWs = (s: string) => s.replace(/\s+/g, ' ').trim();
  * added lines)? Whitespace-insensitive on both sides — a marker copied with
  * a trailing space is the same word — and a `{{*}}` wildcard (see
  * maskVolatile) matches anything within one line.
+ *
+ * `opts.whole` switches to the IDENTITY rule: same wildcards, but bounded at
+ * both edges so `fwgr25-n1` is no longer satisfied by `fwgr25-n10`. Only the
+ * identity callers pass it; the effect gate asks a different question.
  */
-export function lineShows(haystack: string[], wants: string[]): boolean {
+export function lineShows(haystack: string[], wants: string[], opts: LineShowsOptions = {}): boolean {
   const all = haystack.map(normWs).join('\n');
   return wants.some((raw) => {
     const want = normWs(raw);
     if (!want) return false;
+    if (opts.whole) return identityRe(want).test(all);
     if (!want.includes(WILDCARD)) return all.includes(want);
     const re = new RegExp(
       want

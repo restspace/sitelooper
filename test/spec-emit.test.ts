@@ -5,7 +5,7 @@ import ts from 'typescript';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Flow } from '../src/skills/flow.js';
 import { SkillStore, type Skill, type SkillStep } from '../src/skills/store.js';
-import { VOLATILE_TOKEN_SHAPE } from '../src/shared/text.js';
+import { IDENTITY_EDGE, VOLATILE_TOKEN_SHAPE } from '../src/shared/text.js';
 import { budgetMs, emitFlowFile, emitSpecFile } from '../src/spec/emit.js';
 import { flowToSpec, type SpecFlow, type SpecSegment, type SpecStep } from '../src/spec/ir.js';
 import { compileFlow } from '../src/spec/index.js';
@@ -632,10 +632,17 @@ describe('preconditions, minting and loops', () => {
     // getByText alone could not see a marker that is an <input>'s VALUE, which
     // is what an odoo form in edit mode shows and what sp5odb died on
     expect(bound).toContain(
-      "await expect.poll(() => present(page, `${p.v1}`), { timeout: 5000, message: 'identity: {{v1}} is not on this page' }).toBe(true);",
+      "await expect.poll(() => present(page, `${p.v1}`, true), { timeout: 5000, message: 'identity: {{v1}} is not on this page' }).toBe(true);",
     );
-    expect(bound).toContain('async function present(page: Page, text: string): Promise<boolean> {');
+    expect(bound).toContain('async function present(page: Page, text: string, whole = false): Promise<boolean> {');
     expect(bound).toContain(".locator('input, textarea, select')");
+    // C06. The identity half is BOUNDED, and by the daemon's own boundary
+    // class — not a second copy written out here, which would be free to drift
+    // away from src/shared/text.ts the way a hand-copied VOLATILE_TOKEN_SHAPE
+    // would. `fwgr25-n1` must not be satisfied by a page showing `fwgr25-n10`.
+    expect(bound).toContain('function identityRe(text: string): RegExp {');
+    expect(bound).toContain(`const EDGE = ${JSON.stringify(IDENTITY_EDGE)};`);
+    expect(bound).toContain("return new RegExp(`(?<!${EDGE})${body}(?!${EDGE})`, 'iu');");
     expect(syntaxErrors(bound)).toEqual([]);
     const unbound = emit(
       specOf([step], { segments: [segment([step], { params: {}, preconditions: { urlPattern: 'http://app.test/x', requireText: ['{{v9}}'] } })] }),
@@ -657,7 +664,7 @@ describe('preconditions, minting and loops', () => {
     const click: SkillStep = { tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'id', selector: '#b' }] } };
     const pre = { urlPattern: 'http://app.test/items/:id', requireText: ['{{v1}}'] };
     const source = emit(specOf([goto, click], { segments: [segment([goto, click], { preconditions: pre })] }));
-    const poll = source.indexOf('await expect.poll(() => present(page, `${p.v1}`)');
+    const poll = source.indexOf('await expect.poll(() => present(page, `${p.v1}`, true)');
     expect(poll).toBeGreaterThan(-1);
     expect(poll).toBeGreaterThan(source.indexOf("await page.goto('http://app.test/items/42');"));
     expect(poll).toBeLessThan(source.indexOf("locator('#b')"));
@@ -667,7 +674,7 @@ describe('preconditions, minting and loops', () => {
     // Only a segment that navigates itself defers: everywhere else the gate
     // stays where it was, at segment entry.
     const still = emit(specOf([click], { segments: [segment([click], { preconditions: pre })] }));
-    expect(still.indexOf('await expect.poll(() => present(page, `${p.v1}`)')).toBeLessThan(still.indexOf("locator('#b')"));
+    expect(still.indexOf('await expect.poll(() => present(page, `${p.v1}`, true)')).toBeLessThan(still.indexOf("locator('#b')"));
     expect(still).not.toContain('// The identity gate sits AFTER the goto above');
   });
 
@@ -1642,7 +1649,10 @@ describe('emitFlowFile: the already-satisfied guard', () => {
   it('inlines the satisfied helper, and the present helper it is built on', () => {
     const source = emit(cancelStep());
     expect(source).toContain('async function satisfied(page: Page, identity: string[], goal: string[]): Promise<boolean> {');
-    expect(source).toContain('async function present(page: Page, text: string): Promise<boolean> {');
+    expect(source).toContain('async function present(page: Page, text: string, whole = false): Promise<boolean> {');
+    // …and the bounded identity matcher present() reaches for, pulled in
+    // transitively because the identity half of `satisfied` asks for it.
+    expect(source).toContain('function identityRe(text: string): RegExp {');
     // Helpers live between DRIFT and the steps object, like every other one.
     expect(source.indexOf('async function satisfied(')).toBeGreaterThan(source.indexOf('export const DRIFT'));
     expect(source.indexOf('async function satisfied(')).toBeLessThan(source.indexOf('export const steps = {'));
