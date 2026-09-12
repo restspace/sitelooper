@@ -547,6 +547,26 @@ function withFileLock<T>(file: string, fn: () => T): T {
   }
 }
 
+/**
+ * A write refused because the procedure changed after the writer read it.
+ *
+ * Thrown rather than swallowed: the caller is holding a decision computed
+ * from a state that no longer exists — a promotion counted from stale
+ * successes, a chain reordered against an ordering somebody already
+ * changed — and the only safe thing it can do is read again and redo the
+ * work. Quietly writing anyway is the lost update; quietly skipping is a
+ * silently dropped change. Both were available and neither is honest.
+ */
+export class StaleWriteError extends Error {
+  constructor(readonly skillId: string, readonly expected: number, readonly found: number) {
+    super(
+      `${skillId} changed since it was read (read revision ${expected}, on disk ${found}) — ` +
+        'read it again and redo the change; nothing was written',
+    );
+    this.name = 'StaleWriteError';
+  }
+}
+
 export class SkillStore {
   constructor(readonly dir: string = skillsDir()) {}
 
@@ -858,10 +878,20 @@ export class SkillStore {
    * that needs "change this without losing a concurrent change" wants
    * `update` instead.
    */
-  put(skill: Skill): void {
+  put(skill: Skill, opts: { overwrite?: boolean } = {}): void {
     const file = this.file(skill.origin, skill.id);
     withFileLock(file, () => {
       const current = this.readFile(file);
+      const expected = skill.revision;
+      // Compare-and-set, but only where staleness can be PROVEN. A revision
+      // on the incoming procedure means it was read from this store, so a
+      // mismatch is a fact: somebody wrote between that read and this write,
+      // and going ahead would erase them. No revision means the caller is
+      // authoring rather than editing — a fresh compile, a spec lowered for
+      // staging — and there is nothing to compare it against.
+      if (current && expected !== undefined && (current.revision ?? 0) !== expected && !opts.overwrite) {
+        throw new StaleWriteError(skill.id, expected, current.revision ?? 0);
+      }
       skill.revision = (current?.revision ?? skill.revision ?? 0) + 1;
       this.write(skill);
     });
@@ -958,10 +988,11 @@ export class SkillStore {
 
   /** A validated variant supersedes the skill it repaired. */
   supersede(originalId: string): void {
-    const original = this.get(originalId);
-    if (!original || original.status === 'demoted') return;
-    original.status = 'demoted';
-    this.put(original);
+    this.update(originalId, (original) => {
+      if (original.status === 'demoted') return null;
+      original.status = 'demoted';
+      return original;
+    });
   }
 }
 

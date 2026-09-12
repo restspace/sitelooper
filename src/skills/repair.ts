@@ -434,6 +434,10 @@ export async function patchSegment(
   // validation across runs before it supersedes the original.
   delete vstep.expect;
   variant.id = newSkillId(variant.origin, `${variant.template}~repair`, now);
+  // A new procedure, not an edit of the one it was cloned from: the inherited
+  // revision describes the ORIGINAL's history and would be checked against a
+  // file that has never existed.
+  delete variant.revision;
   variant.status = 'provisional';
   variant.variantOf = skill.id;
   variant.stats = { uses: 0, successes: 0, partial: 0, created: now, failedAtStep: {}, fallthroughs: 0 };

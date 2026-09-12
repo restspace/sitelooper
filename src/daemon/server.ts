@@ -829,8 +829,11 @@ ${describeLeaks(leaks.slice(0, 6))}`);
     }
     const sealed = quarantineLeakedSteps(flow, store.list(flow.origin), poisoned);
     for (const id of poisoned.keys()) {
-      const sk = store.get(id);
-      if (sk && sk.status !== 'demoted') store.put({ ...sk, status: 'demoted' });
+      // A transaction rather than read-then-write: quarantining runs while
+      // replays may be recording outcomes against the very procedure being
+      // demoted, and this must not overwrite their counters with the ones it
+      // read a moment ago.
+      store.update(id, (sk) => (sk.status === 'demoted' ? null : { ...sk, status: 'demoted' }));
     }
     flow = sealed.flow;
     const file = saveFlow(flow);

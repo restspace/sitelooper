@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { SkillStore, type Skill } from '../src/skills/store.js';
+import { SkillStore, StaleWriteError, type Skill } from '../src/skills/store.js';
 
 /**
  * C09 / invariant 9: concurrent writers cannot lose updates.
@@ -167,6 +167,55 @@ d('SkillStore under concurrent writers', () => {
     });
     expect(seenByUpdate?.stats.uses).toBe(2);
     expect(store.get('s_conc')?.template).toBe('edited');
+  });
+
+  /**
+   * `put` is handed a finished object, so it cannot merge — the most it can
+   * do is notice that the ground moved and refuse. A revision on the incoming
+   * procedure means it was read from this store, so a mismatch is a fact:
+   * somebody wrote in between, and going ahead would erase them.
+   */
+  it('refuses a write computed from a procedure that has since changed', () => {
+    const dir = temp();
+    const store = new SkillStore(dir);
+    store.put(seed());
+
+    const mine = store.get('s_conc')!;
+    const theirs = new SkillStore(dir).get('s_conc')!;
+
+    theirs.template = 'they got there first';
+    new SkillStore(dir).put(theirs);
+
+    mine.template = 'mine';
+    expect(() => store.put(mine)).toThrow(StaleWriteError);
+    expect(() => store.put(mine)).toThrow(/read revision 1, on disk 2/);
+    // Nothing was written: the other write stands, untouched.
+    expect(store.get('s_conc')?.template).toBe('they got there first');
+
+    // Re-reading and redoing the change is what the error asks for, and works.
+    const fresh = store.get('s_conc')!;
+    fresh.template = 'mine, on top of theirs';
+    store.put(fresh);
+    expect(store.get('s_conc')?.template).toBe('mine, on top of theirs');
+  });
+
+  /**
+   * Authoring is not editing. A freshly compiled procedure, or one lowered
+   * from a spec for staging, carries no revision because it was never read
+   * from a store — there is nothing to compare, and refusing it would break
+   * every path that writes a procedure it just built.
+   */
+  it('allows a write from a procedure that was never read from the store', () => {
+    const dir = temp();
+    const store = new SkillStore(dir);
+    store.put(seed());
+    store.put(seed({ template: 'authored over the top' }));
+    expect(store.get('s_conc')?.template).toBe('authored over the top');
+    // An explicit import may overwrite even a procedure carrying a revision
+    // from somewhere else's history.
+    const foreign = { ...seed({ template: 'imported' }), revision: 999 };
+    store.put(foreign, { overwrite: true });
+    expect(store.get('s_conc')?.template).toBe('imported');
   });
 
   it('abandons a transaction that returns null, writing nothing', () => {
