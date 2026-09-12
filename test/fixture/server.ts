@@ -43,6 +43,7 @@ function requestMatches(req: http.IncomingMessage, m: FaultMatch): boolean {
  */
 const PAGE = `<!doctype html><html><head><meta charset="utf-8"><title>Items</title></head><body>
 <h1>Items</h1>
+<p id="target">Item 2</p>
 <ul id="items"></ul>
 <script>
 async function render() {
@@ -67,6 +68,23 @@ document.addEventListener('click', async (e) => {
   if (mark) await fetch('/mark/' + encodeURIComponent(mark.dataset.id), { method: 'POST' });
 });
 render();
+</script>
+</body></html>`;
+
+/**
+ * A record page, the shape a procedure that navigates to its own subject
+ * lands on: the record's own id is the only thing that tells it from every
+ * other page of the template, and Mark is work done TO that record. The
+ * server logs the visit itself, so a caller can ask whether a runner
+ * navigated at all rather than believing its report.
+ */
+const RECORD = (id: string) => `<!doctype html><html><head><meta charset="utf-8"><title>Record</title></head><body>
+<h1>Record ${id}</h1>
+<button class="mark" type="button" data-id="${id}">Mark</button>
+<script>
+document.querySelector('.mark').addEventListener('click', async (e) => {
+  await fetch('/mark/' + encodeURIComponent(e.target.dataset.id), { method: 'POST' });
+});
 </script>
 </body></html>`;
 
@@ -131,6 +149,13 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
     if (url === '/') {
       res.writeHead(200, { 'content-type': 'text/html' });
       res.end(PAGE);
+      return;
+    }
+    if (url.startsWith('/record/')) {
+      const id = decodeURIComponent(url.slice('/record/'.length));
+      log.push(`visit:${id}`);
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end(RECORD(id));
       return;
     }
     if (url === '/items') {
