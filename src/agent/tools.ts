@@ -575,7 +575,7 @@ async function runStep(
   screenshotDir: string,
   signal?: AbortSignal,
   opts: StepOptions = {},
-): Promise<{ result: string; diff?: StepDiff }> {
+): Promise<{ result: string; diff?: StepDiff; captureFailed?: true }> {
   // Describe the targets BEFORE acting: a click can navigate or unmount the
   // element, and a recorder that runs afterwards has nothing left to describe.
   // Recording never fails a run — a broken capture just means a missing step.
@@ -593,7 +593,14 @@ async function runStep(
   // the marker; scrubbing below catches values the page echoes back.
   const result = scrubSecrets(await dispatch(session, name, resolveSecretsDeep(args), screenshotDir, signal, opts.resolved));
   let diff: StepDiff | undefined;
+  // The page signature is a race against CAPTURE_TIMEOUT, and it loses on a
+  // page that is still tearing down a navigation. When it loses there is no
+  // evidence either way about what the action did — which is a different
+  // thing from evidence that it did nothing, and the two used to arrive at
+  // the effect gates as the same `diff === undefined`.
+  let captureFailed = false;
   let fingerprintAfter: number[] | undefined;
+  if (wantDiff && !before) captureFailed = true;
   if (wantDiff && before) {
     let after = await settledSignature(page!);
     // A click that starts a request and routes on its answer looks finished
@@ -624,10 +631,12 @@ async function runStep(
       if (compiledUrlPattern(after.url) !== compiledUrlPattern(before.url)) {
         fingerprintAfter = (await fingerprintPage(page!)) ?? undefined;
       }
+    } else {
+      captureFailed = true;
     }
   }
   recorder?.commit(pending, result, { diff, via: opts.via, fingerprintAfter });
-  return { result, diff };
+  return { result, diff, ...(captureFailed ? { captureFailed: true as const } : {}) };
 }
 
 /**
@@ -1282,6 +1291,13 @@ async function robustClick(loc: Locator, opts: ClickOpts): Promise<string> {
       firstFailure = err instanceof Error ? err.message : String(err);
       // Two or more matches is the agent's problem to fix, not a tier's.
       if (/strict mode violation/i.test(firstFailure)) throw err;
+      // The page went out from under the click. Whether it landed is unknown,
+      // so no further tier may fire: see UNCERTAIN_DISPATCH.
+      if (UNCERTAIN_DISPATCH.test(firstFailure)) {
+        throw new Error(
+          `${label === 'clicked' ? 'click' : 'double-click'} outcome UNKNOWN: the page was torn down during the action (${firstFailure.split('\n')[0].slice(0, 160)}). It may already have taken effect. Do not repeat it — observe the app's state and continue from what you find.`,
+        );
+      }
       // A control the app re-mounts on every render never passes the
       // attached→visible→stable check, and a forced click needs it attached
       // at the instant of the action just the same — so both tiers lose the
@@ -1300,6 +1316,20 @@ async function robustClick(loc: Locator, opts: ClickOpts): Promise<string> {
 
 /** Playwright's own words for an element that left the DOM mid-action — never its generic actionability wording. */
 const DETACHED = /element was detached|not attached to the DOM|element is not attached|element is not stable/i;
+
+/**
+ * Failures that mean the PAGE moved, not that the element was unready: the
+ * context went away, the frame detached, the tab closed. Escalating through
+ * the click tiers is safe only because an actionability timeout proves
+ * Playwright never dispatched — it waits for visible/enabled/stable BEFORE
+ * the pointer event, so nothing happened and trying harder repeats nothing.
+ * These failures carry no such proof. They are the shape a click that
+ * committed and then tore its own page down leaves behind, and a second,
+ * forced, synthetic click would be a second commit. Stop instead, and say the
+ * outcome is unknown rather than guessing either way.
+ */
+const UNCERTAIN_DISPATCH =
+  /execution context was destroyed|target (page|frame)?,? ?(context|browser)? ?(has been|was) closed|browser has been closed|frame was detached|navigating and changing the content|page closed/i;
 
 /** Runs in the page: a synthetic click (React's delegated handlers see it). */
 function fireClick(el: Element, dbl: boolean): void {
@@ -1334,8 +1364,17 @@ export async function fireWhenAttached(loc: Locator, opts: { timeout: number; db
       try {
         await handle.evaluate(fireClick, Boolean(opts.dbl));
         return `${label} (dispatched during a re-render window${cause} — the element re-mounts continuously, so a normal click could not land; if the app did not respond, it may need a keyboard route or a wait_for on the state that settles it)`;
-      } catch {
-        // gone again between resolve and fire — next window
+      } catch (err) {
+        // The element going again between resolve and fire is the ordinary
+        // case: nothing was dispatched, so the next window is safe. A context
+        // that was DESTROYED is not — the click may have landed and navigated
+        // the page, and polling on would fire it a second time.
+        const message = err instanceof Error ? err.message : String(err);
+        if (UNCERTAIN_DISPATCH.test(message)) {
+          throw new Error(
+            `${label === 'clicked' ? 'click' : 'double-click'} outcome UNKNOWN: dispatched into a page that was being torn down (${message.split('\n')[0].slice(0, 160)}). It may already have taken effect. Do not repeat it — observe the app's state and continue from what you find.`,
+          );
+        }
       } finally {
         await handle.dispose().catch(() => {});
       }

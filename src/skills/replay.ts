@@ -18,7 +18,7 @@ export type StepExecutor = (
   args: Record<string, unknown>,
   resolved: Record<string, Locator>,
   via: { skill: string; step: number },
-) => Promise<{ result: string; diff?: StepDiff }>;
+) => Promise<{ result: string; diff?: StepDiff; captureFailed?: true }>;
 
 export interface ReplayOptions {
   page: Page;
@@ -73,6 +73,16 @@ export interface ReplayResult {
   lines: string[];
   /** Soft-expectation misses: logged, never fatal in Stage 1. */
   warnings: string[];
+  /**
+   * Steps whose effect evidence could not be captured at all — the page
+   * signature race timed out, the frame went away mid-navigation. The step's
+   * REQUIRED expectations are still evaluated against the live page (see
+   * expectedChanges), so this is not a pass; it records that one leg of the
+   * evidence was missing, which a caller deciding whether to PROMOTE a
+   * procedure must see. An empty diff is a real observation and never lands
+   * here; only a failed one does.
+   */
+  unobserved: string[];
   fallthroughs: number;
   /** Structured record of every locator that missed its primary. */
   misses: LocatorMiss[];
@@ -160,6 +170,7 @@ export async function replaySkill(
     echoedValues: [],
     lines: [],
     warnings: [],
+    unobserved: [],
     fallthroughs: 0,
     misses: [],
     derivedValues: {},
@@ -177,10 +188,11 @@ export async function replaySkill(
   // Loosely keyed so "Last 6 hours" matches "last 6 hours".
   const interacted = new Set<string>();
   // A recorded dialog that did not open (see StepVerdict.absentDialog): while
-  // set, a step whose target cannot be found is skipped as belonging to that
-  // dialog rather than stopping the replay; cleared by the next step that
-  // resolves its target normally.
-  let absentDialog: string | null = null;
+  // set, a step whose target cannot be found AND which names one of that
+  // dialog's own controls is skipped as belonging to it; cleared by the next
+  // step that resolves its target normally, or by the first step that misses
+  // without belonging to the dialog.
+  let absentDialog: { name: string; lines: string[] } | null = null;
   const looseKey = (s: string): string => s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 
   // Copy the caller's bindings: derived ({{dN}}) values minted mid-replay are
@@ -375,9 +387,22 @@ export async function replaySkill(
         return 'skipped';
       }
       if (absentDialog !== null) {
-        res.warnings.push(`step ${tag}: skipped — acts inside the dialog ${JSON.stringify(absentDialog)}, which did not open this time`);
-        res.lines.push(`${head} → skipped (dialog ${JSON.stringify(absentDialog)} did not open)`);
-        return 'skipped';
+        // Membership is proven against the dialog's own recorded subtree, not
+        // inferred from the target being missing. A step that names a control
+        // the dialog listed was inside it; anything else — a later,
+        // independent action whose locator simply broke — must fail, which is
+        // what a bare "target missing after an absent dialog" used to swallow.
+        const inside = namesDialogControl(step, absentDialog.lines, params);
+        if (inside && step.mints) {
+          res.warnings.push(`step ${tag}: names a control of the absent dialog ${JSON.stringify(absentDialog.name)} but is declared record-minting — not skipped, because skipping a mutation cannot be undone`);
+        } else if (inside) {
+          res.warnings.push(`step ${tag}: skipped — acts on ${JSON.stringify(inside)}, a control of the dialog ${JSON.stringify(absentDialog.name)}, which did not open this time`);
+          res.lines.push(`${head} → skipped (dialog ${JSON.stringify(absentDialog.name)} did not open)`);
+          return 'skipped';
+        } else {
+          res.warnings.push(`step ${tag}: target missing after the absent dialog ${JSON.stringify(absentDialog.name)}, but it names nothing that dialog contained — treated as this procedure's own step, not part of the dialog`);
+          absentDialog = null;
+        }
       }
       // Navigation by recorded destination (PLAN-replay-v2 "order of
       // application", rung 3). A navigation step's recorded EVIDENCE includes
@@ -433,102 +458,94 @@ export async function replaySkill(
       return 'skipped';
     }
 
-    // A click that produced NO observable change at all (no diff, no url
-    // change, no alert) while the recording shows one most likely landed
-    // during a repaint — React detaches and re-mounts controls between
-    // frames, and Playwright's click can hit the old node. One retry after
-    // the DOM settles; a click that changed anything is never repeated.
-    for (let attempt = 0; ; attempt++) {
-      try {
-        outcome = await opts.exec(step.tool, args, resolved, { skill: skill.id, step: failIndex });
-      } catch (err) {
-        const message = (err instanceof Error ? err.message : String(err)).split('\nCall log:')[0];
-        if (isRead) {
-          res.warnings.push(`step ${tag}: read errored — ${clip(message, 120)}`);
-          res.lines.push(`${head} → skipped (${clip(message, 120)})`);
-          return 'skipped';
-        }
-        // A text wait is a condition on the PAGE, located through a chain.
-        // resolveChain took the first candidate that matched exactly one
-        // element, which for a positional candidate can be the wrong one:
-        // fwrd43's create step waited for the new ticket's title in `label
-        // "Tickets" >> nth=1`, which on replay was an empty element, while the
-        // chain's own next candidate — the tickets section — already showed
-        // it. Both replays of 01-open went to recovery over it. The condition
-        // holds if any recorded way of finding the target shows the text; the
-        // wait already gave the page its full timeout to paint.
-        const heldBy = await textHeldElsewhere(page, step, args, params);
-        if (heldBy) {
-          res.fallthroughs++;
-          res.misses.push({ step: tag, key: 'target', primary: candidateExpr((step.locators.target ?? [])[0]), used: candidateExpr(heldBy.candidate), usedIndex: heldBy.index });
-          res.warnings.push(`step ${tag}: ${clip(message, 120)}; the text was already showing in fallback #${heldBy.index + 1} ${candidateExpr(heldBy.candidate)}`);
-          res.lines.push(`${head} → condition met in fallback #${heldBy.index + 1}`);
-          return 'ran';
-        }
-        res.failedAt = failIndex;
-        res.reason = `${step.tool} failed: ${clip(message, 300)}`;
-        res.lines.push(`${head} → FAILED: ${clip(message, 300)}`);
-        return 'stop';
+    // No retry. A click that produced no observable change was retried here
+    // on the theory that it landed during a repaint — but "the page did not
+    // change" is not evidence the click failed to DISPATCH. A mutation whose
+    // effect simply falls outside the diff window (20 added lines, a 2s
+    // capture) looks identical, and the retry then commits it twice. Retry is
+    // only ever safe with proof the action did not fire, and nothing here has
+    // that proof.
+    try {
+      outcome = await opts.exec(step.tool, args, resolved, { skill: skill.id, step: failIndex });
+    } catch (err) {
+      const message = (err instanceof Error ? err.message : String(err)).split('\nCall log:')[0];
+      if (isRead) {
+        res.warnings.push(`step ${tag}: read errored — ${clip(message, 120)}`);
+        res.lines.push(`${head} → skipped (${clip(message, 120)})`);
+        return 'skipped';
       }
-
-      // A navigation renders a route skeleton first; let it hydrate before
-      // the effect gates look for the recorded content.
-      if (page.url() !== urlBefore) await settleDom(page);
-
-      // Bind values this step just minted (derived params) from the live url,
-      // BEFORE the expectation check: the minting step's own expectation refers
-      // to the value it produced, so it must compare against the replay's own.
-      if (skill.derived) {
-        for (const [name, d] of Object.entries(skill.derived)) {
-          if (d.step !== failIndex) continue;
-          const v = urlPart(page.url(), d.at);
-          if (v !== undefined) {
-            params[name] = v;
-            res.derivedValues[name] = v;
-          }
-        }
+      // A text wait is a condition on the PAGE, located through a chain.
+      // resolveChain took the first candidate that matched exactly one
+      // element, which for a positional candidate can be the wrong one:
+      // fwrd43's create step waited for the new ticket's title in `label
+      // "Tickets" >> nth=1`, which on replay was an empty element, while the
+      // chain's own next candidate — the tickets section — already showed
+      // it. Both replays of 01-open went to recovery over it. The condition
+      // holds if any recorded way of finding the target shows the text; the
+      // wait already gave the page its full timeout to paint.
+      const heldBy = await textHeldElsewhere(page, step, args, params);
+      if (heldBy) {
+        res.fallthroughs++;
+        res.misses.push({ step: tag, key: 'target', primary: candidateExpr((step.locators.target ?? [])[0]), used: candidateExpr(heldBy.candidate), usedIndex: heldBy.index });
+        res.warnings.push(`step ${tag}: ${clip(message, 120)}; the text was already showing in fallback #${heldBy.index + 1} ${candidateExpr(heldBy.candidate)}`);
+        res.lines.push(`${head} → condition met in fallback #${heldBy.index + 1}`);
+        return 'ran';
       }
+      res.failedAt = failIndex;
+      res.reason = `${step.tool} failed: ${clip(message, 300)}`;
+      res.lines.push(`${head} → FAILED: ${clip(message, 300)}`);
+      return 'stop';
+    }
 
-      // A step declared record-minting has now run: read THIS run's identifier
-      // off the live url and keep it. If the replay later stops, recovery is
-      // told the record already exists and what it is called, instead of being
-      // told only how many steps ran and left to infer the rest — which is how
-      // fwod13 came to create a second and third order.
-      if (step.mints) {
-        // Only a part the step CHANGED: a rejected click leaves the url as it
-        // was, and "new" from /tickets/new is not a record this run created.
-        const made = urlPart(page.url(), step.mints.at);
-        if (made && made !== urlPart(urlBefore, step.mints.at) && !res.created.includes(made)) res.created.push(made);
-      }
+    // A navigation renders a route skeleton first; let it hydrate before
+    // the effect gates look for the recorded content.
+    if (page.url() !== urlBefore) await settleDom(page);
 
-      // Effect gates: did the step leave the page as the recording said it
-      // would? Each gate's warnings and staged generalisations always apply; a
-      // stop ends the replay here, with what ran already in `res`.
-      let stop: StepVerdict | null = null;
-      const warnings: string[] = [];
-      for (const gate of STEP_GATES) {
-        const verdict = await gate({ page, step, tag, failIndex, args, params, outcome, isRead, positionalResolution });
-        if (!verdict) continue;
-        if (verdict.warnings) warnings.push(...verdict.warnings);
-        if (verdict.generalise) res.generalisations.push(verdict.generalise);
-        if (verdict.absentDialog !== undefined) absentDialog = verdict.absentDialog;
-        if (verdict.stop) {
-          stop = verdict;
-          break;
+    // Bind values this step just minted (derived params) from the live url,
+    // BEFORE the expectation check: the minting step's own expectation refers
+    // to the value it produced, so it must compare against the replay's own.
+    if (skill.derived) {
+      for (const [name, d] of Object.entries(skill.derived)) {
+        if (d.step !== failIndex) continue;
+        const v = urlPart(page.url(), d.at);
+        if (v !== undefined) {
+          params[name] = v;
+          res.derivedValues[name] = v;
         }
       }
-      if (!stop) {
-        res.warnings.push(...warnings);
+    }
+
+    // A step declared record-minting has now run: read THIS run's identifier
+    // off the live url and keep it. If the replay later stops, recovery is
+    // told the record already exists and what it is called, instead of being
+    // told only how many steps ran and left to infer the rest — which is how
+    // fwod13 came to create a second and third order.
+    if (step.mints) {
+      // Only a part the step CHANGED: a rejected click leaves the url as it
+      // was, and "new" from /tickets/new is not a record this run created.
+      const made = urlPart(page.url(), step.mints.at);
+      if (made && made !== urlPart(urlBefore, step.mints.at) && !res.created.includes(made)) res.created.push(made);
+    }
+
+    // Effect gates: did the step leave the page as the recording said it
+    // would? Each gate's warnings and staged generalisations always apply; a
+    // stop ends the replay here, with what ran already in `res`.
+    let stop: StepVerdict | null = null;
+    const warnings: string[] = [];
+    for (const gate of STEP_GATES) {
+      const verdict = await gate({ page, step, tag, failIndex, args, params, outcome, isRead, positionalResolution });
+      if (!verdict) continue;
+      if (verdict.warnings) warnings.push(...verdict.warnings);
+      if (verdict.generalise) res.generalisations.push(verdict.generalise);
+      if (verdict.absentDialog !== undefined) absentDialog = verdict.absentDialog;
+      if (verdict.unobserved && !res.unobserved.includes(tag)) res.unobserved.push(tag);
+      if (verdict.stop) {
+        stop = verdict;
         break;
       }
-      const noEffect =
-        step.tool === 'click' && !!outcome.diff && !outcome.diff.added.length && !outcome.diff.alerts.length && page.url() === urlBefore;
-      if (stop.retryable && noEffect && attempt === 0) {
-        res.warnings.push(`step ${tag}: the click changed nothing on the page — retried once after the DOM settled`);
-        await settleDom(page);
-        continue;
-      }
-      res.warnings.push(...warnings);
+    }
+    res.warnings.push(...warnings);
+    if (stop) {
       // The step took the tab off the app (an error page, another origin):
       // whoever picks up from here — recovery, the next segment — needs the
       // app, not the wreck. Go back to where the step started. rpgr13-r2's
@@ -659,6 +676,26 @@ export async function replaySkill(
       prevRemaining = remaining;
       iter++;
     }
+    // The cap is a budget, not a finish line. A loop that used every pass and
+    // still matches has work left, and returning 'ran' there reported a
+    // part-cleared list as a completed procedure — the same silent pass the
+    // emitted loop used to give, so the two runners agreed on the wrong
+    // answer. Counted fresh: `remaining` above is from before the last pass.
+    // A BOUNDED loop that used every pass has done exactly the work it was
+    // compiled to do; records left over are records it was never given
+    // authority over. Only a drain owes the collection an empty result.
+    if (iter >= max && (step.scope ?? 'drain') === 'drain') {
+      const chain = fillParamsDeep(guard, params) as LocatorCandidate[];
+      const hit = await resolveChain(page, chain, { allowMultiple: true });
+      const left = hit ? await hit.locator.count().catch(() => 0) : 0;
+      if (left > cursor) {
+        res.stepsRun = before;
+        res.failedAt = n;
+        res.reason = `loop stopped after ${max} pass(es) with ${left - cursor} item(s) still matching ${chain0Desc(guard)} — the recorded work is not finished`;
+        res.lines.push(`${n}. loop ×${iter} → FAILED: ${left - cursor} item(s) left`);
+        return 'stop';
+      }
+    }
     res.stepsRun = before + 1;
     res.lines.push(`${n}. loop ×${iter} (while ${chain0Desc(guard)} matches)`);
     return 'ran';
@@ -713,7 +750,7 @@ interface StepGateInput {
   /** The step's args with params filled. */
   args: Record<string, unknown>;
   params: Record<string, string>;
-  outcome: { result: string; diff?: StepDiff };
+  outcome: { result: string; diff?: StepDiff; captureFailed?: true };
   isRead: boolean;
   /** Some target of this step resolved through a structural (positional) candidate. */
   positionalResolution: boolean;
@@ -729,10 +766,15 @@ interface StepVerdict {
    * is conditional UI — "Discard changes?" appears only when there are
    * changes — so its absence is a legitimate state, not a failed effect; the
    * steps that were going to act inside it are skipped (see runOneStep).
+   *
+   * `lines` is the dialog's own recorded subtree — the controls it listed.
+   * Membership is PROVEN against it, never inferred from a target simply
+   * being missing: a step whose locator names nothing the dialog contained
+   * is a step of the procedure's own, and its absence is a failure.
    */
-  absentDialog?: string;
-  /** The stop is "the recorded effect did not appear": worth one retry when the action changed nothing at all. */
-  retryable?: boolean;
+  absentDialog?: { name: string; lines: string[] };
+  /** This step's effect evidence could not be captured (see ReplayResult.unobserved). */
+  unobserved?: true;
 }
 
 type StepGate = (g: StepGateInput) => Promise<StepVerdict | null> | StepVerdict | null;
@@ -783,13 +825,20 @@ const expectedUrl: StepGate = async ({ step, page, params, tag, failIndex }) => 
  * recorded-but-missing alert stays soft (expectedAlert — toasts are volatile).
  */
 const unrecordedAlert: StepGate = ({ outcome, isRead, step, tag }) => {
+  // Detecting a NEW alert needs both captures; with either missing there is
+  // no answer to give. Say so rather than returning the silent null that
+  // reads, downstream, exactly like "no alert was raised".
+  if (outcome.captureFailed && !isRead) {
+    return { unobserved: true, warnings: [`step ${tag}: the page could not be captured after the action — whether it raised an alert is unknown, not clear`] };
+  }
   if (!outcome.diff?.alerts.length || isRead || step.expect?.alertContains) return null;
   return { stop: `step ${tag} raised an alert the recording never saw: ${clip(outcome.diff.alerts.join(' | '), 200)}` };
 };
 
 const expectedAlert: StepGate = ({ outcome, step, params, tag }) => {
-  if (!outcome.diff || !step.expect?.alertContains) return null;
+  if (!step.expect?.alertContains) return null;
   const want = fillParams(step.expect.alertContains, params);
+  if (!outcome.diff) return { unobserved: true, warnings: [`step ${tag}: expected alert containing ${JSON.stringify(want)} could not be observed`] };
   return outcome.diff.alerts.some((a) => a.includes(want)) ? null : { warnings: [`step ${tag}: expected alert containing ${JSON.stringify(want)}`] };
 };
 
@@ -804,8 +853,16 @@ const expectedAlert: StepGate = ({ outcome, step, params, tag }) => {
  * success (the fwrd4l-n3 Ready click).
  */
 const expectedChanges: StepGate = async ({ outcome, step, params, tag, args, page, positionalResolution }) => {
-  if (!outcome.diff || !step.expect?.addedContains?.length) return null;
+  if (!step.expect?.addedContains?.length) return null;
   const warnings: string[] = [];
+  // The step diff is ONE source of evidence, not the authority. When the
+  // capture failed there are no added lines to search — which must not read
+  // as "the expected line was absent but harmlessly so", nor as a pass. The
+  // checks below fall through to presentOnPage, a fresh look at the live
+  // page, and a required effect that cannot be found there still stops the
+  // replay. `added === null` means unavailable; `[]` means observed-empty.
+  const added: string[] | null = outcome.diff ? outcome.diff.added : null;
+  if (added === null) warnings.push(`step ${tag}: the page could not be captured after the action — its recorded effects were checked against the live page instead`);
   // A line carrying a {{vN}} slot is HARD (below). A {{dN}} derived marker
   // is filled like any other param but stays soft — the app minted it.
   const isParam = (l: string) => /\{\{v\d+\}\}/.test(l);
@@ -827,10 +884,10 @@ const expectedChanges: StepGate = async ({ outcome, step, params, tag, args, pag
     if (consequential.length) parameterised = consequential;
     else warnings.push(`step ${tag}: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here`);
   }
-  if (parameterised.length && !lineShows(outcome.diff.added, parameterised) && !(await presentOnPage(page, parameterised))) {
+  if (parameterised.length && !(added !== null && lineShows(added, parameterised)) && !(await presentOnPage(page, parameterised))) {
     return { warnings, stop: `after step ${tag} the page did not show ${parameterised.map((w) => JSON.stringify(w)).join(' / ')} as it did when recorded — the step ran but probably acted on the wrong element` };
   }
-  if (plain.length && !lineShows(outcome.diff.added, plain)) {
+  if (plain.length && !(added !== null && lineShows(added, plain))) {
     // None of the recorded effects in the step diff — check the live page
     // before judging (a change can land outside the diff window).
     if (!(await presentOnPage(page, plain))) {
@@ -841,14 +898,21 @@ const expectedChanges: StepGate = async ({ outcome, step, params, tag, args, pag
       // opens, and that is the app working — not the step failing. The
       // steps that would have acted inside the dialog are skipped instead.
       const dialog = plain.map((l) => /^-\s*dialog\s+"([^"]*)"/.exec(l)?.[1]).find((n) => n !== undefined);
-      if (dialog !== undefined) {
-        warnings.push(`step ${tag}: the recorded dialog ${JSON.stringify(dialog)} did not open — conditional UI, treated as absent; steps inside it will be skipped`);
-        return { warnings, absentDialog: dialog };
+      // ...but only on a real observation. Concluding "the dialog did not
+      // open" from a capture that failed is inferring a branch from missing
+      // evidence, and it would go on to skip the steps inside it.
+      if (dialog !== undefined && added === null) {
+        return { warnings, unobserved: true, stop: `after step ${tag} the page could not be captured, so whether the dialog ${JSON.stringify(dialog)} opened is unknown — its absence cannot be assumed` };
       }
-      return { warnings, retryable: true, stop: `after step ${tag} none of the ${plain.length} recorded page change(s) appeared (e.g. ${JSON.stringify(plain[0])}) — the step ran but did not have its recorded effect` };
+      if (dialog !== undefined) {
+        warnings.push(`step ${tag}: the recorded dialog ${JSON.stringify(dialog)} did not open — conditional UI, treated as absent; steps that name one of its controls will be skipped`);
+        return { warnings, absentDialog: { name: dialog, lines: plain } };
+      }
+      return { warnings, stop: `after step ${tag} none of the ${plain.length} recorded page change(s) appeared (e.g. ${JSON.stringify(plain[0])}) — the step ran but did not have its recorded effect` };
     }
     warnings.push(`step ${tag}: none of the ${plain.length} expected page change(s) appeared in the step diff (found on the page instead)`);
   }
+  if (added === null) return { warnings, unobserved: true };
   return warnings.length ? { warnings } : null;
 };
 
@@ -866,6 +930,35 @@ const errorPage: StepGate = ({ page, tag }) => {
 };
 
 const STEP_GATES: StepGate[] = [errorPage, expectedUrl, unrecordedAlert, expectedAlert, expectedChanges];
+
+/**
+ * The name a step's target candidates put on the element, for membership
+ * tests against a dialog's recorded subtree. Only NAMED candidates count: a
+ * css/point/testid target says where an element was, not what it was called,
+ * and a positional match against a dialog's line list would be a coincidence.
+ */
+function targetNames(step: SkillStep, params: Record<string, string>): string[] {
+  const out: string[] = [];
+  for (const cand of [...(step.locators.target ?? []), ...(step.locators.source ?? [])]) {
+    const c = cand as { kind: string; name?: string; text?: string; label?: string; hasText?: string };
+    const name = c.kind === 'role' ? c.name : c.kind === 'text' ? c.text : c.kind === 'label' ? c.label : c.kind === 'scoped' ? c.hasText : undefined;
+    if (name) out.push(fillParams(name, params).trim());
+  }
+  return out.filter((n) => n.length > 0);
+}
+
+/**
+ * Whether a step acts on a control the absent dialog itself listed. The
+ * dialog's recorded effect lines carry its subtree — `- button "Confirm"`,
+ * `- textbox "Reason"` — so a step naming one of them was inside it. This is
+ * the evidence `dropDismissedDialogs` uses at compile time, applied at replay.
+ */
+function namesDialogControl(step: SkillStep, dialogLines: string[], params: Record<string, string>): string | null {
+  for (const name of targetNames(step, params)) {
+    if (dialogLines.some((l) => l.includes(`"${name}"`))) return name;
+  }
+  return null;
+}
 
 /** Short human label for a loop's guard locator. */
 function chain0Desc(chain: LocatorCandidate[]): string {
@@ -1415,7 +1508,85 @@ export async function goalSatisfied(
   for (const want of [...identity, ...goal]) {
     if (!lineShows(sig.lines, [want])) return { satisfied: false, shown: [] };
   }
+  // Both halves are SOMEWHERE on the page — which on a list is not the same
+  // as both being true of one record. An orders grid showing "S00039
+  // Pending" and "S00040 Cancelled" satisfies "is S00039 cancelled?" by that
+  // test alone: the identity is on one row, the goal on another, and the url
+  // gate above cannot separate them because a list page has one url. So the
+  // two must be proven together, inside the record's own container.
+  if (!(await sharesRecordScope(page, identity, goal))) return { satisfied: false, shown: [] };
   return { satisfied: true, shown: goal };
+}
+
+/**
+ * Do the identity and the goal hold of the SAME record?
+ *
+ * The record's container is the OUTERMOST ancestor of the goal text that is
+ * one of several siblings of its kind — the row among rows, the card among
+ * cards. Outermost, not nearest: a cell is one of several cells too, and
+ * stopping there would ask whether the identity is inside the status cell,
+ * which it never is. The row above it is the scope the page itself asserts is
+ * one record, and it is what a `scoped` locator names. If the goal text has
+ * no repeated ancestor at all the page is not listing records, and page-wide
+ * agreement is the right answer there (a detail page's heading and its status
+ * field share no small container).
+ */
+async function sharesRecordScope(page: Page, identity: string[], goal: string[]): Promise<boolean> {
+  try {
+    return await page.evaluate(scopeCheckInPage, { identity, goal });
+  } catch {
+    // A page that cannot be evaluated (navigating, closed) has not proven
+    // anything. Conservative: not satisfied, so the step runs.
+    return false;
+  }
+}
+
+/** Runs in the page; serialised, so everything it needs is in scope or passed in. */
+function scopeCheckInPage(opts: { identity: string[]; goal: string[] }): boolean {
+  const norm = (s: string | null | undefined) => (s ?? '').replace(/\s+/g, ' ').trim();
+  const textOf = (el: Element) => norm((el as HTMLElement).innerText || el.textContent);
+  const all = Array.from(document.querySelectorAll('*'));
+
+  // The smallest elements that show a goal string: a container shows it too,
+  // and starting from the container would skip the record scope below it.
+  const holders: Element[] = [];
+  for (const raw of opts.goal) {
+    const want = norm(raw);
+    if (!want) continue;
+    const hits = all.filter((el) => textOf(el).includes(want));
+    for (const el of hits) if (!hits.some((other) => other !== el && el.contains(other))) holders.push(el);
+  }
+  if (!holders.length) return false;
+
+  // Siblings of a kind means STRUCTURALLY alike, not merely same-tag: two
+  // unrelated buttons that happen to sit side by side are not a record list,
+  // and treating them as one would scope a lone control to itself. Rows of a
+  // list are rendered by one template and carry the same classes.
+  const kindOf = (el: Element) => `${el.tagName}.${norm(el.getAttribute('class'))}`;
+  const oneOfSeveral = (el: Element): boolean => {
+    const parent = el.parentElement;
+    // A direct child of <body> is a section of the page, not a record: a list
+    // of records sits inside something. Without this, two unrelated top-level
+    // controls make either of them its own "record" scope.
+    if (!parent || parent === document.body) return false;
+    const kind = kindOf(el);
+    let same = 0;
+    for (const sib of Array.from(parent.children)) if (kindOf(sib) === kind) same++;
+    return same >= 2;
+  };
+
+  for (const holder of holders) {
+    let node: Element | null = holder;
+    let record: Element | null = null;
+    while (node && node !== document.body) {
+      if (oneOfSeveral(node)) record = node;
+      node = node.parentElement;
+    }
+    if (!record) return true; // not a list: the whole page is about one record
+    const inside = textOf(record);
+    if (opts.identity.some((t) => inside.includes(norm(t)))) return true;
+  }
+  return false;
 }
 
 /**

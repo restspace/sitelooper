@@ -48,7 +48,13 @@ export function learnFromInstruction(
     const ok = sk.stepsReplayed === sk.stepsTotal;
     const updated = store.recordOutcome(
       sk.invoked,
-      { ok, failedAt: ok ? undefined : sk.stepsReplayed + 1, fallthroughs: sk.fallthroughs, instructionSucceeded: succeeded },
+      {
+        ok,
+        failedAt: ok ? undefined : sk.stepsReplayed + 1,
+        fallthroughs: sk.fallthroughs,
+        instructionSucceeded: succeeded,
+        unobserved: sk.unobserved?.length ?? 0,
+      },
       input.now,
     );
     if (updated) {
