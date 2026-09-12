@@ -1,0 +1,153 @@
+{
+  "flow": "fwgr29",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Signed in to Grafana at http://127.0.0.1:3000/ as admin/admin (default-password warning appeared; clicked \"Skip\"). Opened the provisioned dashboard \"Service Health\" (path /d/bench-service-health/service-health under the Bench folder) — search confirmed this is the only dashboard matching \"service\". The dashboard has exactly three panels, titled \"Request rate\", \"Error count\" and \"Latency by endpoint\".",
+      "values": {
+        "panel_titles": "Request rate | Error count | Latency by endpoint",
+        "first_panel_title": "Request rate",
+        "second_panel_title": "Error count",
+        "third_panel_title": "Latency by endpoint"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_5e54cd; observed dashboard_url=http://127.0.0.1:3000/d/afy0s2j6synlse/fwgr29-n2-bench-dashboard?from=now-6h&to=now&timezone=browser, dashboard_title=fwgr29-n2 Bench Dashboard, panel_title=fwgr29-n2 Availability, run_id=fwgr29-n2 Availability.",
+      "values": {
+        "dashboard_url": "http://127.0.0.1:3000/d/afy0s2j6synlse/fwgr29-n2-bench-dashboard?from=now-6h&to=now&timezone=browser",
+        "dashboard_title": "fwgr29-n2 Bench Dashboard",
+        "panel_title": "fwgr29-n2 Availability",
+        "run_id": "fwgr29-n2 Availability"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "22/22",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "Added a new Text panel to the existing \"fwgr29-n2 Bench Dashboard\" (Add → Visualization → Text), set its title to \"fwgr29-n2 Notes\" and its markdown content to \"Bench notes for run fwgr29-n2\", then explicitly saved via Save dashboard and confirmed the save drawer (which showed the dashboard title \"fwgr29-n2 Bench Dashboard\"); a \"Dashboard saved\" alert appeared. Verification was done on a fresh server reload of the dashboard URL in view mode (no edit session), where the live DOM shows region/heading \"fwgr29-n2 Notes\" containing the paragraph \"Bench notes for run fwgr29-n2\", alongside the pre-existing \"fwgr29-n2 Availability\" stat panel — confirming both panels are persisted.",
+      "values": {
+        "text_panel_title": "fwgr29-n2 Notes",
+        "text_panel_content": "Bench notes for run fwgr29-n2",
+        "dashboard_uid": "afy0s2j6synlse",
+        "other_panel": "fwgr29-n2 Availability (stat, value 27.5 on reload)",
+        "run_id": "fwgr29-n2",
+        "final_url": "http://127.0.0.1:3000/d/afy0s2j6synlse/fwgr29-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&showCategory=Text",
+        "dashboard_title": "fwgr29-n2 Bench Dashboard"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "19/19",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_2d0e25; observed panels_present_after_reload=fwgr29-n2 Notes (text), fwgr29-n2 Availability (stat), time_picker_dropdown_id=collapse-content-5, dashboard_title=fwgr29-n2 Bench Dashboard, run_id=fwgr29-n2 Bench Dashboard.",
+      "values": {
+        "panels_present_after_reload": "fwgr29-n2 Notes (text), fwgr29-n2 Availability (stat)",
+        "time_picker_dropdown_id": "collapse-content-5",
+        "dashboard_title": "fwgr29-n2 Bench Dashboard",
+        "run_id": "fwgr29-n2 Bench Dashboard"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "19/19",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-set",
+      "status": "success",
+      "summary": "Continued from the partial replay: the refresh picker had already been set to 1m and the Save dialog was open with \"Update default refresh value\" ticked, so I confirmed the save (Dashboard saved), then reloaded the dashboard fresh at /d/afy0s2j6synlse/fwgr29-n2-bench-dashboard in view mode. On the fresh reload the top-bar refresh picker shows \"1m\" (aria-label \"Choose refresh time interval with current interval 1 minute selected\") and the page URL is http://127.0.0.1:3000/d/afy0s2j6synlse/fwgr29-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m, so the 1m auto-refresh persisted. The time picker on the same reload shows \"Last 6 hours\", and both panels (fwgr29-n2 Availability stat, fwgr29-n2 Notes text) render.",
+      "values": {
+        "refresh_picker_text_after_reload": "1m",
+        "refresh_picker_aria_after_reload": "Choose refresh time interval with current interval 1 minute selected",
+        "time_range_after_reload": "Last 6 hours",
+        "current_page_url": "http://127.0.0.1:3000/d/afy0s2j6synlse/fwgr29-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m",
+        "dashboard_title": "fwgr29-n2 Bench Dashboard",
+        "panels_after_reload": "fwgr29-n2 Availability (stat, -4.22), fwgr29-n2 Notes (text)",
+        "ref": "fwgr29-n2-bench-dashboard",
+        "ref_2": "fwgr29-n2"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_5569fb stopped at step 6 — wait_for failed: locator.waitFor: Timeout 10000ms exceeded.",
+      "replayed": "5/13",
+      "repaired": false,
+      "turns": 7
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_4d247f; observed a_panel_titles=fwgr29-n2 Notes, fwgr29-n2 Availability, a_notes_text_content=Bench notes for run fwgr29-n2 (contains 'fwgr29-n2'), d_tags_settings_general=[bench] — chip with 'Remove \"bench\" tag' button, dashboard_uid=afy0s2j6synlse, e_current_page_url=http://127.0.0.1:3000/d/afy0s2j6synlse/fwgr29-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m, b_time_picker=Last 6 hours, dashboard_title=fwgr29-n2 Bench Dashboard, run_id=fwgr29-n2 Notes\n\nBench notes for run fwgr29-n2.",
+      "values": {
+        "a_panel_titles": "fwgr29-n2 Notes, fwgr29-n2 Availability",
+        "a_notes_text_content": "Bench notes for run fwgr29-n2 (contains 'fwgr29-n2')",
+        "d_tags_settings_general": "[bench] — chip with 'Remove \"bench\" tag' button",
+        "dashboard_uid": "afy0s2j6synlse",
+        "e_current_page_url": "http://127.0.0.1:3000/d/afy0s2j6synlse/fwgr29-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m",
+        "b_time_picker": "Last 6 hours",
+        "dashboard_title": "fwgr29-n2 Bench Dashboard",
+        "run_id": "fwgr29-n2 Notes\n\nBench notes for run fwgr29-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 6,
+  "total": 6,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwgr29",
+      "step": "05-set",
+      "skill": "s_5569fb",
+      "similarity": 1.002,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_5569fb stopped at step 6 — wait_for failed: locator.waitFor: Timeout 10000ms exceeded.",
+      "reason": "wait_for failed: locator.waitFor: Timeout 10000ms exceeded.",
+      "pageUrlPattern": "http://127.0.0.1:3000/d/afy0s2j6synlse/:id",
+      "pageUrl": "http://127.0.0.1:3000/d/afy0s2j6synlse/fwgr29-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m"
+    }
+  ],
+  "wallMs": 154760,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 87974,
+    "completionTokens": 2157,
+    "cachedTokens": 75264
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 87974,
+      "completionTokens": 2157,
+      "cachedTokens": 75264
+    }
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
