@@ -177,8 +177,15 @@ const FILL_FOCUS_MS = 5_000;
 const EDITOR_SETTLE_MS = 400;
 const EDITOR_BLUR_SETTLE_MS = 200;
 
+/** How long a folded loop lets its last match detach before recounting. Replay's LOOP_SHRINK_WAIT_MS. */
+const LOOP_SHRINK_WAIT_MS = 1_000;
+
 /** The inlined helpers, keyed by the token that proves the body (or another helper) uses one. */
 const HELPERS: { token: string; source: string[] }[] = [
+  {
+    token: 'LOOP_SHRINK_WAIT_MS',
+    source: [`const LOOP_SHRINK_WAIT_MS = ${LOOP_SHRINK_WAIT_MS};`],
+  },
   {
     // Shared by `pick` and `urlPartsWhen`: one poll cadence. The token is the
     // POLL constant, because that is the one BOTH of them name.
@@ -971,6 +978,13 @@ interface Ctx {
   stepId: string;
   /** Slot names the body needs in `p`, collected as it emits. */
   slots: Set<string>;
+  /**
+   * Inside a folded loop: the variable holding the index of the record THIS
+   * pass acts on. Replay keeps exactly such a cursor (runLoop) and advances
+   * it when the collection did not shrink; a spec that always took `.first()`
+   * instead worked record one over and over on every edit-in-place loop.
+   */
+  loopCursor?: string;
   warnings: string[];
   downloads: number;
   /** Resolved-target locals emitted so far, so each names its own. */
@@ -1250,9 +1264,22 @@ function lineName(text: string, exact: boolean): string | null {
  * the first real run. `.or()` is a union, so a union taken `.first()` is
  * exactly "at least one of these is showing".
  */
-function anyOfAssertion(lines: string[], label: string, out: string[]): void {
+/**
+ * `required` marks a group the step's correctness rests on — the lines
+ * carrying this run's own values. When NOTHING in such a group can be named
+ * as a locator the assertion simply was not emitted, and the artifact went on
+ * to run the step and report green while checking nothing about its effect.
+ * That is the emitted twin of replay's unobserved evidence: not a failure,
+ * but not proof either, and it has to be visible to the readiness gate rather
+ * than living in a comment nobody reads.
+ */
+function anyOfAssertion(lines: string[], label: string, out: string[], opts: { required?: boolean; ctx?: Ctx; where?: string } = {}): void {
   const { source, listed, unnameable, count } = lineUnion(lines);
   for (const line of unnameable) out.push(`// observed (nothing nameable in it): ${commentSafe(line)}`);
+  if (!source && opts.required) {
+    out.push(`// UNCHECKED: ${commentSafe(label)} — none of the ${lines.length} recorded line(s) can be named as a locator, so this step's effect is not verified here.`);
+    opts.ctx?.warnings.push(`${opts.where ?? opts.ctx?.stepId ?? 'step'}: a required expectation has no nameable line; the emitted step does not check its effect`);
+  }
   if (!source) return;
   out.push(`// ${label} — any one of these, as replay's effect gate has it:`);
   for (const line of listed) out.push(`//   ${commentSafe(line)}`);
@@ -1288,7 +1315,7 @@ function lineUnion(lines: string[], exact = false): { source: string; listed: st
  * second group, because a step none of whose recorded effects appeared did
  * not have its recorded effect.
  */
-function expectationLines(step: SkillStep, out: string[]): void {
+function expectationLines(step: SkillStep, out: string[], ctx: Ctx): void {
   const recorded = step.expect?.addedContains ?? [];
   let lines = recorded.filter((l) => !TRANSIENT_LINE.test(l));
   if (!lines.length) return;
@@ -1299,7 +1326,10 @@ function expectationLines(step: SkillStep, out: string[]): void {
   }
   const hard = lines.filter((l) => SLOT_LINE.test(l));
   const plain = lines.filter((l) => !SLOT_LINE.test(l));
-  if (hard.length) anyOfAssertion(hard, "this run's own values must show", out);
+  const where = `${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`;
+  // The hard group is this run's own values: the one group whose absence
+  // means the step acted on the wrong thing, so an unnameable one is a hole.
+  if (hard.length) anyOfAssertion(hard, "this run's own values must show", out, { required: true, ctx, where });
   if (plain.length) anyOfAssertion(plain, "the step's recorded effect must show", out);
 }
 
@@ -1393,8 +1423,9 @@ function actionTarget(
   noteSlots(chain, ctx);
   const { sources } = candidateSources(chain, { slot: slotAsParam });
   if (!sources.length) return null;
-  // In a loop the cursor is always the first match: the record this pass acts on.
-  if (sources.length === 1) return opts.first ? `(${sources[0]}).first()` : sources[0];
+  // In a loop, the record this pass acts on is the one at the cursor.
+  const at = ctx.loopCursor ? `.nth(${ctx.loopCursor})` : '.first()';
+  if (sources.length === 1) return opts.first ? `(${sources[0]})${at}` : sources[0];
   const name = `el${++ctx.picks}`;
   const where = `${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex} ${key}`;
   out.push(`const ${name} = await pick(page, [`);
@@ -1405,7 +1436,7 @@ function actionTarget(
   const pickOpts = opts.any ? '{ any: true, drift: run.drift }' : '{ drift: run.drift }';
   const tail = `, ${pickOpts}${ctx.note ? `, ${q(ctx.note)}` : ''}`;
   out.push(`], ${q(where)}${tail});`);
-  return opts.first ? `${name}.first()` : name;
+  return opts.first ? `${name}${at}` : name;
 }
 
 /** The `point` candidates a step lost, as one honest comment. */
@@ -1709,7 +1740,7 @@ function emitSkillStep(step: SkillStep, segment: SpecSegment, index: number, ctx
   }
   if (!isRead) {
     effectLines(step, ctx, out);
-    expectationLines(step, out);
+    expectationLines(step, out, ctx);
   }
   return out;
 }
@@ -1763,7 +1794,7 @@ function waitForLine(target: string, args: Record<string, unknown>, timeout?: nu
 function readLines(step: SkillStep, ctx: Ctx, opts: { any?: boolean; first?: boolean }): string[] {
   const what = String(step.args?.what ?? 'text');
   const out = `outputs[${q(`${ctx.stepId}.${step.label ?? ''}`)}]`;
-  const loc = opts.first ? 'loc.first()' : 'loc';
+  const loc = opts.first ? (ctx.loopCursor ? `loc.nth(${ctx.loopCursor})` : 'loc.first()') : 'loc';
   let read: string | null = null;
   if (what === 'value') read = `async (loc: Locator) => await ${loc}.inputValue()`;
   // read_all legitimately matches many elements, so textContent's strict mode
@@ -1810,24 +1841,62 @@ function emitLoop(step: SkillStep, segment: SpecSegment, index: number, ctx: Ctx
     ];
   }
   const max = step.max ?? DEFAULT_LOOP_MAX;
-  const name = `guard${++ctx.loops}`;
+  const n = ++ctx.loops;
+  const name = `guard${n}`;
+  const left = `remaining${n}`;
+  const was = `before${n}`;
+  const cursor = `cursor${n}`;
+  const pass = `pass${n}`;
   ctx.segmentId = segment.id;
   ctx.stepIndex = index;
+  const where = `${ctx.stepId} ${segment.id}/${index}`;
   const out = [
-    `// @step ${ctx.stepId} ${segment.id}/${index}`,
-    '// The recording folded a run of identical actions into a loop. Each pass acts on the',
-    '// FIRST match: right for a list that shrinks, and all a spec can do — replay advances a',
-    '// cursor here when the list stays the same length (see runLoop).',
+    `// @step ${where}`,
+    '// The recording folded a run of identical actions into a loop, and this mirrors how',
+    '// replay executes one (runLoop), cursor and all. The cursor is what makes both kinds',
+    '// of loop work from one body: a DELETE loop shrinks the collection, so the next record',
+    '// is always match 0 and the cursor stays put; an EDIT-IN-PLACE loop leaves the count',
+    '// alone, so the cursor steps on to the next match. Taking `.first()` every pass, as',
+    '// this used to, silently worked record one over and over on every edit loop.',
+    '// The cap is a budget, not a finish line: passes left over with records unvisited is',
+    '// unfinished work, and it throws rather than returning green.',
     `const ${name} = ${guard};`,
-    `for (let i = 0; i < ${max} && (await ${name}.count()) > 0; i++) {`,
+    `let ${left} = await ${name}.count();`,
+    `let ${cursor} = 0;`,
+    `let ${pass} = 0;`,
+    `for (; ${pass} < ${max} && ${cursor} < ${left}; ${pass}++) {`,
   ];
+  ctx.loopCursor = cursor;
   for (const [k, bstep] of body.entries()) {
     for (const line of emitSkillStep(bstep, segment, index, ctx, true)) {
       out.push(...line.split('\n').map((l) => (l ? '  ' + l : l)));
     }
     if (k < body.length - 1) out.push('');
   }
-  out.push('}');
+  ctx.loopCursor = undefined;
+  out.push(
+    '',
+    '  // Removal is usually asynchronous: "the count shrank" is exactly "the last',
+    '  // match left the DOM", so wait on that element rather than on a timer.',
+    '  await settle(page);',
+    `  const ${was} = ${left};`,
+    `  if (${was} > 0) {`,
+    `    await ${name}.nth(${was} - 1).waitFor({ state: 'detached', timeout: LOOP_SHRINK_WAIT_MS }).catch(() => {});`,
+    '  }',
+    `  ${left} = await ${name}.count();`,
+    `  if (${left} >= ${was}) ${cursor}++;`,
+    '}',
+  );
+  // A bounded loop was given authority over exactly the records the recording
+  // worked; ones left over are not its business. Only a drain owes the
+  // collection an empty result, and must say so when it runs out of passes.
+  if ((step.scope ?? 'drain') === 'drain') {
+    out.push(
+      `if (${cursor} < ${left}) {`,
+      `  throw new Error(\`${where}: the loop stopped after \${${pass}} pass(es) with \${${left} - ${cursor}} record(s) still matching — the recorded work is not finished\`);`,
+      '}',
+    );
+  }
   return out;
 }
 

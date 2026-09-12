@@ -256,7 +256,7 @@ export function compileSkills(input: CompileInput): Skill[] {
       return out;
     });
     const mintedForStart = mintedMap((m) => m.keptIndex < base);
-    return { sg, segParams, mintedForStart, folded: foldLoops(coalesceControls(dropDismissedDialogs(dropSupersededNavigation(skillSteps)))) };
+    return { sg, segParams, mintedForStart, folded: foldLoops(coalesceControls(dropDismissedDialogs(dropSupersededNavigation(skillSteps))), input.instruction) };
   });
 
   // Derived-param metadata lands on the MINTING segment: which post-fold step
@@ -1419,7 +1419,21 @@ export function dropDismissedDialogs(steps: SkillStep[]): SkillStep[] {
     const closer = steps[i + 1];
     const added = opener.expect?.addedContains ?? [];
     const opensDialog = added.some((l) => /^-\s*dialog\b/.test(l));
-    if (opensDialog && closer?.tool === 'click' && !closer.expect?.addedContains?.length) {
+    // "Added nothing to the page" is not "did nothing". A dismissal that
+    // NAVIGATED, that the procedure reads a value from, that raised an alert,
+    // or that creates a record, has consequences the added-lines list cannot
+    // show — and the pair used to be dropped on the strength of that list
+    // alone. Every step carries the url it ran on, so what marks a navigation
+    // is the closer's destination DIFFERING from the opener's, not its
+    // presence. Any other recorded consequence keeps both steps.
+    const inert =
+      closer?.tool === 'click' &&
+      !closer.expect?.addedContains?.length &&
+      (closer.expect?.urlPattern ?? null) === (opener.expect?.urlPattern ?? null) &&
+      !closer.expect?.alertContains &&
+      !closer.mints &&
+      closer.label === undefined;
+    if (opensDialog && inert) {
       const primary = (closer.locators.target ?? [])[0] as { kind?: string; role?: string; name?: string; text?: string } | undefined;
       const name = primary?.kind === 'role' && primary.role === 'button' ? primary.name : primary?.kind === 'text' ? primary.text : undefined;
       const listed = name !== undefined && added.some((l) => l.includes(`button "${name}"`));
@@ -1472,16 +1486,46 @@ function differsInRawId(a: SkillStep[], b: SkillStep[]): boolean {
 }
 
 /**
+ * A universal quantifier in the CALLER's own instruction: the one piece of
+ * evidence in a recording that speaks about scope rather than about what
+ * happened once. "Delete all the parts" authorises draining a collection;
+ * "delete part A and part B" does not, however many times the two look alike
+ * in the trace.
+ *
+ * The list is deliberately short, and "remaining" is deliberately not on it as
+ * a bare word. Rebuilding every published recording found five folded loops,
+ * and the one this rule sent to `drain` was a false positive: "after it closes,
+ * the REMAINING modal is titled 'Cancel {{v3}}'" — an instruction that opens by
+ * saying there are exactly TWO dialogs and then numbers the steps. There,
+ * "remaining" is an adjective picking out one specific thing, not a quantifier
+ * over a collection, and the giveaway is the definite article. "Delete
+ * remaining items" and "any remaining rows" still read as universal; "the
+ * remaining modal" no longer does. Missing a genuine universal costs a loop
+ * that stops at the recorded count, which is the safe direction; reading one
+ * into "the remaining modal" costs authority over a collection nobody counted.
+ */
+const UNIVERSAL = /\b(all|every|each|entire|whole)\b|(?<!\bthe\s)\bremaining\b/i;
+
+/**
  * Collapse a run of ≥2 consecutive, structurally-identical action groups that
  * differ only in a per-record id — the signature of iterating over a list (e.g.
- * deleting each part in turn) — into a single `loop` step. The loop repeats its
- * body while the body's first target still matches an element, so a replay on a
- * list of a different length still clears it, instead of hard-coding the count
- * seen when recording. Conservative by construction: distinct fields (a title
- * vs a customer box) have different skeletons and never fold, and an accidental
- * identical repeat (no id difference) is left alone.
+ * deleting each part in turn) — into a single `loop` step. Conservative by
+ * construction: distinct fields (a title vs a customer box) have different
+ * skeletons and never fold, and an accidental identical repeat (no id
+ * difference) is left alone.
+ *
+ * What the fold does NOT decide is how many records the loop may touch. It
+ * used to: two deletions became a loop capped at seven, which is authority
+ * over a collection nobody had looked at, and a list of ten came back with
+ * three rows left and a success. One trace cannot say whether the job was
+ * "these two" or "all of them" — so the loop is bounded to the work that was
+ * observed unless the instruction itself quantifies universally, and the
+ * generalisation that remains by default is the one the evidence supports:
+ * the locators are re-resolved every pass, so the SAME number of records is
+ * worked however the app has reordered or renumbered them.
  */
-export function foldLoops(steps: SkillStep[]): SkillStep[] {
+export function foldLoops(steps: SkillStep[], instruction = ''): SkillStep[] {
+  const drain = UNIVERSAL.test(instruction);
   const out: SkillStep[] = [];
   let i = 0;
   while (i < steps.length) {
@@ -1511,7 +1555,10 @@ export function foldLoops(steps: SkillStep[]): SkillStep[] {
         locators: {},
         body: group,
         while: group[0].locators.target,
-        max: Math.min(count * 2 + 3, LOOP_MAX_ITER_CAP),
+        // Bounded: exactly the records the recording worked. Drain: room to
+        // outgrow the recorded list, still with a runaway guard.
+        max: drain ? Math.min(count * 2 + 3, LOOP_MAX_ITER_CAP) : count,
+        scope: drain ? 'drain' : 'observed',
       });
       i += count * len;
       folded = true;

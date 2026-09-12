@@ -182,17 +182,17 @@ describe('persistence', () => {
     const model = new SiteModel(dir);
     model.observe('https://app.test:8069/orders', sig(['- button "Save"'], 'Orders'));
     model.flush();
-    const file = path.join(dir, 'app.test_8069', 'sitemap.json');
+    const file = path.join(dir, 'https_app.test_8069', 'sitemap.json');
     expect(fs.existsSync(file)).toBe(true);
-    expect(fs.readdirSync(path.join(dir, 'app.test_8069'))).toEqual(['sitemap.json']);
+    expect(fs.readdirSync(path.join(dir, 'https_app.test_8069'))).toEqual(['sitemap.json']);
 
     const reloaded = new SiteModel(dir).render('https://app.test:8069/orders');
     expect(reloaded).toContain('button "Save"');
   });
 
   it('tolerates a corrupt or foreign file', () => {
-    fs.mkdirSync(path.join(dir, 'app.test'), { recursive: true });
-    fs.writeFileSync(path.join(dir, 'app.test', 'sitemap.json'), '{ not json');
+    fs.mkdirSync(path.join(dir, 'https_app.test'), { recursive: true });
+    fs.writeFileSync(path.join(dir, 'https_app.test', 'sitemap.json'), '{ not json');
     const model = new SiteModel(dir);
     expect(model.render('https://app.test/orders')).toBe('');
     expect(model.load('https://app.test').pages).toEqual({});
@@ -200,7 +200,7 @@ describe('persistence', () => {
     model.flush();
     expect(new SiteModel(dir).render('https://app.test/orders')).toContain('button "Save"');
 
-    fs.writeFileSync(path.join(dir, 'app.test', 'sitemap.json'), JSON.stringify({ version: 9, pages: 'nope' }));
+    fs.writeFileSync(path.join(dir, 'https_app.test', 'sitemap.json'), JSON.stringify({ version: 9, pages: 'nope' }));
     expect(new SiteModel(dir).render('https://app.test/orders')).toBe('');
   });
 
@@ -222,6 +222,6 @@ describe('shared instance', () => {
     expect(siteModel()).toBe(model);
     model.observe('https://app.test/orders', sig(['- button "Save"']));
     model.flush();
-    expect(fs.existsSync(path.join(dir, 'app.test', 'sitemap.json'))).toBe(true);
+    expect(fs.existsSync(path.join(dir, 'https_app.test', 'sitemap.json'))).toBe(true);
   });
 });

@@ -136,6 +136,28 @@ export interface SkillStep {
   while?: LocatorCandidate[];
   /** `tool: 'loop'` only: hard cap on iterations, a runaway guard. */
   max?: number;
+  /**
+   * `tool: 'loop'` only: how far the loop's authority reaches.
+   *
+   * `observed` — do the work that was RECORDED and no more: the number of
+   * records the recording actually acted on. Records beyond that are left
+   * alone, and leaving them is not a failure. This is the default for a new
+   * compile, because two deletions are evidence of two deletions and of
+   * nothing else.
+   *
+   * `drain` — keep going until nothing matches. That is authority over every
+   * record in the collection, including ones that did not exist when the
+   * procedure was recorded, so it is taken from the caller's own words
+   * ("delete ALL the parts") and never inferred from a repetition. A drain
+   * that runs out of passes with records still matching has not finished its
+   * work, and fails rather than reporting success.
+   *
+   * Absent on procedures compiled before the distinction existed. Those were
+   * all written with drain intent and are read that way, so an old store
+   * keeps behaving as it did — but now fails loudly where it used to stop
+   * short in silence.
+   */
+  scope?: 'observed' | 'drain';
 }
 
 export interface StepExpectation {
@@ -159,6 +181,13 @@ export interface SkillStats {
   lastFailedAt?: number;
   /** How often a fallback locator (not the recorded primary) had to be used — drift signal. */
   fallthroughs: number;
+  /**
+   * Steps, across all replays, whose effect evidence could not be captured.
+   * Kept separately from successes and failures because it is neither: a
+   * procedure with a standing count here has replays nobody could verify, and
+   * that is a thing to look at rather than a thing to average away.
+   */
+  unobserved?: number;
 }
 
 export type SkillStatus = 'provisional' | 'validated' | 'demoted';
@@ -170,6 +199,13 @@ export interface ReplayOutcome {
   fallthroughs?: number;
   /** Whether the instruction around the replay ended in a successful report. */
   instructionSucceeded: boolean;
+  /**
+   * How many steps ran without their effect evidence being capturable. Such a
+   * run is not a failure — its required expectations were still checked
+   * against the live page — but it is not the clean, fully observed replay
+   * that promotion is supposed to be counting.
+   */
+  unobserved?: number;
 }
 
 /** Where skills live: `$SITELOOPER_SKILLS_DIR` or `<home>/skills`. */
@@ -187,56 +223,150 @@ export function originOf(url: string): string | null {
   }
 }
 
+/**
+ * Filename-safe name for an origin. The SCHEME is part of it: dropping it put
+ * `http://app.example.com` and `https://app.example.com` in one bucket, so a
+ * procedure recorded over http was offered — and replayed — on https, which
+ * is a different origin with different cookies, different session, and
+ * potentially a different app. `originOf` already keeps them apart; only the
+ * filename conflated them.
+ */
 export function originSlug(origin: string): string {
-  return origin.replace(/^[a-z]+:\/\//, '').replace(/[^A-Za-z0-9.-]+/g, '_') || 'file';
+  const m = /^([a-z][a-z0-9+.-]*):\/\/(.*)$/.exec(origin);
+  const scheme = m ? m[1] : '';
+  const rest = (m ? m[2] : origin).replace(/[^A-Za-z0-9.-]+/g, '_');
+  if (!rest) return scheme || 'file';
+  return scheme ? `${scheme}_${rest}` : rest;
 }
 
 /**
- * One JSON file per origin. Reads are fresh on every access so several
- * daemons (one per session) sharing a store see each other's skills; writes
- * are whole-file, which is fine at the tens-of-skills scale this is for.
+ * One DIRECTORY per origin, one JSON file per procedure inside it, matching
+ * the layout the site model already uses.
+ *
+ * It used to be one whole-file array per origin, and every mutation was an
+ * unguarded read-modify-write over it: two daemons (there is one per session,
+ * and they share this store) that added a procedure, or recorded an outcome,
+ * at the same time would each write back a list built before the other's
+ * change, and the later rename silently dropped it. A file per procedure
+ * removes the conflict rather than locking against it — two writes now touch
+ * the same bytes only when they are about the SAME procedure, and each one is
+ * a tmp-plus-rename, so a reader sees one whole version or the other.
+ *
+ * Reads stay fresh on every access, so daemons still see each other's work.
  */
 export class SkillStore {
   constructor(readonly dir: string = skillsDir()) {}
 
-  private file(origin: string): string {
-    return path.join(this.dir, `${originSlug(origin)}.json`);
+  /**
+   * Files that would not parse. Never dropped and never overwritten: a
+   * corrupt store is a thing to look at, and returning it as "no procedures
+   * here" invites the next write to replace it with an empty one.
+   */
+  readonly corrupt: string[] = [];
+
+  private originDir(origin: string): string {
+    return path.join(this.dir, originSlug(origin));
+  }
+
+  private file(origin: string, id: string): string {
+    return path.join(this.originDir(origin), `${encodeURIComponent(id)}.json`);
   }
 
   origins(): string[] {
-    let names: string[];
+    let entries: fs.Dirent[];
     try {
-      names = fs.readdirSync(this.dir).filter((n) => n.endsWith('.json'));
+      entries = fs.readdirSync(this.dir, { withFileTypes: true });
     } catch {
       return [];
     }
-    const out: string[] = [];
+    const out = new Set<string>();
+    for (const e of entries) {
+      if (e.isDirectory()) {
+        for (const s of this.readDir(path.join(this.dir, e.name))) out.add(s.origin);
+      } else if (e.isFile() && e.name.endsWith('.json')) {
+        // A pre-directory whole-file store; its entries name their own origins.
+        for (const s of this.legacyFile(path.join(this.dir, e.name))) out.add(s.origin);
+      }
+    }
+    return [...out];
+  }
+
+  /** Every parsable procedure in one origin directory, corrupt files recorded and left alone. */
+  private readDir(dir: string): Skill[] {
+    let names: string[];
+    try {
+      names = fs.readdirSync(dir).filter((n) => n.endsWith('.json'));
+    } catch {
+      return [];
+    }
+    const out: Skill[] = [];
     for (const n of names) {
-      const skills = this.read(path.join(this.dir, n));
-      if (skills[0]) out.push(skills[0].origin);
+      const file = path.join(dir, n);
+      let raw: unknown;
+      try {
+        raw = JSON.parse(fs.readFileSync(file, 'utf8'));
+      } catch {
+        if (!this.corrupt.includes(file)) this.corrupt.push(file);
+        continue;
+      }
+      const skill = raw as Skill;
+      if (skill && typeof skill === 'object' && typeof skill.id === 'string' && typeof skill.origin === 'string') out.push(skill);
+      else if (!this.corrupt.includes(file)) this.corrupt.push(file);
     }
     return out;
   }
 
-  private read(file: string): Skill[] {
-    try {
-      const raw = JSON.parse(fs.readFileSync(file, 'utf8'));
-      return Array.isArray(raw) ? (raw as Skill[]) : [];
-    } catch {
-      return [];
-    }
-  }
-
-  private write(origin: string, skills: Skill[]): void {
-    fs.mkdirSync(this.dir, { recursive: true });
-    const file = this.file(origin);
+  private write(skill: Skill): void {
+    const dir = this.originDir(skill.origin);
+    fs.mkdirSync(dir, { recursive: true });
+    const file = this.file(skill.origin, skill.id);
     const tmp = `${file}.${process.pid}.tmp`;
-    fs.writeFileSync(tmp, JSON.stringify(skills, null, 1));
+    fs.writeFileSync(tmp, JSON.stringify(skill, null, 1));
     fs.renameSync(tmp, file);
   }
 
+  /**
+   * Every procedure in a pre-directory whole-file store, read in place.
+   *
+   * Nothing is rewritten or renamed: a legacy file may be a committed
+   * artifact — an exported bench store, a bundle someone pinned — and a read
+   * is not permission to edit it. The entries are filed by the origin they
+   * CARRY rather than the one the filename suggests, because that filename
+   * dropped the scheme and one file can therefore hold both http and https
+   * procedures. A per-procedure file of the same id wins, so the first `put`
+   * after an upgrade migrates that procedure and later reads stop consulting
+   * the legacy copy for it.
+   */
+  private legacyPath(origin: string): string {
+    return path.join(this.dir, `${origin.replace(/^[a-z]+:\/\//, '').replace(/[^A-Za-z0-9.-]+/g, '_') || 'file'}.json`);
+  }
+
+  private legacyFile(file: string): Skill[] {
+    let raw: unknown;
+    try {
+      raw = JSON.parse(fs.readFileSync(file, 'utf8'));
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code !== 'ENOENT' && !this.corrupt.includes(file)) this.corrupt.push(file);
+      return [];
+    }
+    if (!Array.isArray(raw)) {
+      if (!this.corrupt.includes(file)) this.corrupt.push(file);
+      return [];
+    }
+    return (raw as Skill[]).filter((s) => s && typeof s.id === 'string' && typeof s.origin === 'string');
+  }
+
+  private readLegacy(origin: string): Skill[] {
+    return this.legacyFile(this.legacyPath(origin));
+  }
+
   list(origin: string): Skill[] {
-    return this.read(this.file(origin));
+    // Filter by the origin each entry carries: the directory name is a
+    // convenience, the entry is the record.
+    const current = this.readDir(this.originDir(origin)).filter((s) => s.origin === origin);
+    const have = new Set(current.map((s) => s.id));
+    const legacy = this.readLegacy(origin).filter((s) => s.origin === origin && !have.has(s.id));
+    return [...current, ...legacy];
   }
 
   all(): Skill[] {
@@ -248,26 +378,48 @@ export class SkillStore {
   }
 
   put(skill: Skill): void {
-    const skills = this.list(skill.origin).filter((s) => s.id !== skill.id);
-    skills.push(skill);
-    this.write(skill.origin, skills);
+    this.write(skill);
+  }
+
+  /**
+   * Delete is the one operation that may edit a legacy whole-file store: the
+   * caller is asking for the procedure to be gone, and shadowing it would
+   * leave it to reappear. Entries for other origins in that file are kept.
+   */
+  private dropLegacy(origin: string, gone: (s: Skill) => boolean): void {
+    const file = this.legacyPath(origin);
+    const all = this.legacyFile(file);
+    if (!all.length) return;
+    const kept = all.filter((s) => !(s.origin === origin && gone(s)));
+    if (kept.length === all.length) return;
+    const tmp = `${file}.${process.pid}.tmp`;
+    fs.writeFileSync(tmp, JSON.stringify(kept, null, 1));
+    fs.renameSync(tmp, file);
   }
 
   remove(id: string): boolean {
     const skill = this.get(id);
     if (!skill) return false;
-    this.write(skill.origin, this.list(skill.origin).filter((s) => s.id !== id));
+    try {
+      fs.rmSync(this.file(skill.origin, id), { force: true });
+    } catch {
+      return false;
+    }
+    this.dropLegacy(skill.origin, (s) => s.id === id);
     return true;
   }
 
   clear(origin: string): number {
-    const n = this.list(origin).length;
-    try {
-      fs.rmSync(this.file(origin), { force: true });
-    } catch {
-      // best effort
+    const skills = this.list(origin);
+    for (const s of skills) {
+      try {
+        fs.rmSync(this.file(origin, s.id), { force: true });
+      } catch {
+        // best effort
+      }
     }
-    return n;
+    this.dropLegacy(origin, () => true);
+    return skills.length;
   }
 
   /**
@@ -277,6 +429,14 @@ export class SkillStore {
    * inside a successful instruction. Demotion: the same step failing twice in
    * a row. One success is evidence, not proof (the bench caught a fabricated
    * "success" once); one failure can be a flaky page.
+   *
+   * A run with UNOBSERVED steps is neither. Its required expectations were
+   * still checked — against the live page, because the step diff was missing
+   * — so it is not a failure and not a strike. But promotion is a claim that
+   * the procedure has been seen to work, and a step whose effect nobody could
+   * capture has not been seen to do anything. It counts as a use, and stops
+   * there: `successes` does not move, so the second clean replay that
+   * promotes has to be a genuinely observed one.
    */
   recordOutcome(id: string, outcome: ReplayOutcome, now = new Date().toISOString()): Skill | null {
     const skill = this.get(id);
@@ -285,10 +445,15 @@ export class SkillStore {
     st.uses += 1;
     st.lastUsed = now;
     st.fallthroughs += outcome.fallthroughs ?? 0;
-    if (outcome.ok && outcome.instructionSucceeded) {
+    const unobserved = outcome.unobserved ?? 0;
+    if (unobserved > 0) st.unobserved = (st.unobserved ?? 0) + unobserved;
+    if (outcome.ok && outcome.instructionSucceeded && unobserved === 0) {
       st.successes += 1;
       st.lastFailedAt = undefined;
       if (skill.status === 'provisional' && st.successes >= 2) skill.status = 'validated';
+    } else if (outcome.ok && outcome.instructionSucceeded) {
+      // Observed nothing conclusive: not a success, not a strike.
+      st.lastFailedAt = undefined;
     } else if (!outcome.ok) {
       st.partial += 1;
       const at = outcome.failedAt ?? 0;
@@ -296,7 +461,7 @@ export class SkillStore {
       if (st.lastFailedAt === at) skill.status = 'demoted';
       st.lastFailedAt = at;
     }
-    this.put(skill);
+    this.write(skill);
     return skill;
   }
 

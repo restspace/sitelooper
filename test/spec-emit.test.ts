@@ -676,15 +676,51 @@ describe('preconditions, minting and loops', () => {
     expect(source).toContain("await steps['01-do'](page, { d1: '', v1: vars.name }, outputs, run);");
   });
 
-  it('unrolls a folded loop as a capped for-loop on the first match', () => {
+  /**
+   * A required expectation — a line carrying this run's own value — whose
+   * lines name no element emitted no assertion at all, leaving a step that
+   * runs and checks nothing about its effect. `describeInPage` renders an
+   * element whose subtree text is empty or over-long as `role ""`, so this is
+   * an ordinary recording, not a contrived one. Marked in the source so the
+   * readiness gate can refuse to call the artifact verified.
+   */
+  it('marks a required expectation it cannot express, instead of dropping it', () => {
+    const step: SkillStep = {
+      tool: 'click',
+      args: { target: '@e1' },
+      locators: { target: [{ kind: 'id', selector: '#save' }] },
+      expect: { addedContains: ['- generic "" {{v1}}'] },
+    };
+    const { source, warnings } = emitFlowFile(specOf([step]), { tier: 'plain' });
+    expect(source).toContain('// UNCHECKED:');
+    expect(source).toContain("this run's own values must show");
+    expect(warnings.join(' ')).toContain('does not check its effect');
+  });
+
+  /**
+   * C01. The emitted loop mirrors replay's runLoop, cursor included. Taking
+   * `.first()` every pass is right only while the collection shrinks; on an
+   * edit-in-place loop it works record one over and over. And the cap is a
+   * budget, not a finish line.
+   */
+  it('unrolls a folded loop as a capped for-loop with replay\'s cursor', () => {
     const body: SkillStep[] = [{ tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Remove' }] } }];
     const loop: SkillStep = { tool: 'loop', args: {}, locators: {}, body, while: [{ kind: 'role', role: 'button', name: 'Remove' }], max: 7 };
     const source = emit(specOf([loop]));
     expect(source).toContain("const guard1 = page.getByRole('button', { name: 'Remove', exact: true });");
-    expect(source).toContain('for (let i = 0; i < 7 && (await guard1.count()) > 0; i++) {');
-    expect(source).toContain("await click((page.getByRole('button', { name: 'Remove', exact: true })).first());");
+    expect(source).toContain('let remaining1 = await guard1.count();');
+    expect(source).toContain('let cursor1 = 0;');
+    expect(source).toContain('for (; pass1 < 7 && cursor1 < remaining1; pass1++) {');
+    // the body acts on the record at the cursor, not always the first match
+    expect(source).toContain("await click((page.getByRole('button', { name: 'Remove', exact: true })).nth(cursor1));");
     expect(source).not.toContain('.or(page');
-    expect(source).toContain('// FIRST match');
+    // a pass that did not shrink the collection moves on to the next record
+    expect(source).toContain('const before1 = remaining1;');
+    expect(source).toContain('if (remaining1 >= before1) cursor1++;');
+    // termination: records left unvisited when the cap runs out is a failure
+    expect(source).toContain('if (cursor1 < remaining1) {');
+    expect(source).toContain('the recorded work is not finished');
+    expect(source).toContain('const LOOP_SHRINK_WAIT_MS = 1000;');
     expect(syntaxErrors(source)).toEqual([]);
   });
 });
