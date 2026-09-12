@@ -769,7 +769,9 @@ describe('flow-level wiring', () => {
     });
     const source = emit(spec);
     expect(source).toContain("v1: vars.name");
-    expect(source).toContain("v2: outputs['02-b.title'] ?? ''");
+    // v2 is bound to another step's output AND used by a recorded step, so the
+    // call site takes it through `need` rather than defaulting it to ''.
+    expect(source).toContain("v2: need(outputs, '02-b.title', '01-do')");
     expect(source).toContain('v3: `literal-${vars.name}`');
     expect(source).toContain("v4: process.env.BENCH_PASSWORD ?? ''");
     expect(syntaxErrors(source)).toEqual([]);
@@ -788,7 +790,7 @@ describe('flow-level wiring', () => {
     const out = emit({ version: 1, name: 'demo', origin: 'http://app.test', startUrl: 'http://app.test/', vars: [], steps: [producer, consumer] });
     // the producing step's body publishes it; the consuming call site reads it
     expect(out).toContain("outputs['02-create.url.p1'] = await urlPartWhen(page, 'p1');");
-    expect(out).toContain("v1: `http://app.test/d/${outputs['02-create.url.p1'] ?? ''}/notes`");
+    expect(out).toContain("v1: `http://app.test/d/${need(outputs, '02-create.url.p1', '03-add')}/notes`");
     // and only what something reads: an output nobody consumes is noise
     expect(out).not.toContain("outputs['03-add.url");
     expect(out).not.toContain("outputs['02-create.url']");
@@ -801,7 +803,85 @@ describe('flow-level wiring', () => {
     const consumer: SpecStep = { id: '03-add', instruction: 'add', params: { v1: '{{02-create.url}}' }, outputs: [], segments: [segment([step])] };
     const out = emit({ version: 1, name: 'demo', origin: 'http://app.test', startUrl: 'http://app.test/', vars: [], steps: [producer, consumer] });
     expect(out).toContain("outputs['02-create.url'] = page.url();");
-    expect(out).toContain("v1: outputs['02-create.url'] ?? ''");
+    expect(out).toContain("v1: need(outputs, '02-create.url', '03-add')");
+  });
+
+  /**
+   * G03. A read that matched nothing is left empty on purpose — that is honest
+   * for an OBSERVATION and fatal for an ARGUMENT. Replay already draws the
+   * line at consumption (server.ts:1009-1024 + ignorableRefs): a reference
+   * bound into a slot the pinned procedure USES blocks the zero-model replay,
+   * one bound into a slot nothing reads does not. The artifact drew no line at
+   * all: `outputs[ref] ?? ''` turned a missed read into a blank that a
+   * record-scoped locator matches EVERY record with.
+   */
+  describe('a bound reference a used slot needs is not allowed to arrive blank', () => {
+    const fill: SkillStep = { tool: 'fill', args: { target: '@e1', value: '{{v1}}' }, locators: { target: [{ kind: 'id', selector: '#i' }] } };
+    const spec = (usedIn: number[]) =>
+      specOf([fill], {
+        params: { v1: '{{02-b.title}}' },
+        segments: [segment([fill], { params: { v1: { example: 'a', usedIn, known: true } } })],
+      });
+
+    it('takes a used slot through need(), naming the ref and the consuming step', () => {
+      const source = emit(spec([1]));
+      expect(source).toContain("v1: need(outputs, '02-b.title', '01-do')");
+      expect(source).toContain('function need(outputs: Outputs, ref: string, by: string): string {');
+      expect(syntaxErrors(source)).toEqual([]);
+    });
+
+    it('leaves an unused slot exactly as it was, and carries no helper for it', () => {
+      const source = emit(spec([]));
+      expect(source).toContain("v1: outputs['02-b.title'] ?? ''");
+      expect(source).not.toContain('need(outputs, ');
+      // The helper is emitted only where something calls it, like every other.
+      expect(source).not.toContain('function need(');
+    });
+
+    /**
+     * A slot no recorded step types or locates by can still be the one that
+     * names the record — `ignorableRefs` reads requireText for exactly that,
+     * and so must this.
+     */
+    it('checks a slot that only a requireText marker names', () => {
+      const source = emit(
+        specOf([fill], {
+          params: { v1: '{{02-b.title}}' },
+          segments: [
+            segment([fill], {
+              params: { v1: { example: 'a', usedIn: [], known: true } },
+              preconditions: { urlPattern: 'http://app.test/items', requireText: ['Order {{v1}}'] },
+            }),
+          ],
+        }),
+      );
+      expect(source).toContain("v1: need(outputs, '02-b.title', '01-do')");
+    });
+
+    it('never checks a var or an env secret: neither is a value this run produces', () => {
+      const source = emit(
+        specOf([fill], {
+          params: { v1: '{{name}}', v2: '{{env:BENCH_PASSWORD}}' },
+          segments: [segment([fill], { params: { v1: { example: 'a', usedIn: [1] }, v2: { example: 'b', usedIn: [1] } } })],
+        }),
+      );
+      expect(source).toContain('v1: vars.name');
+      expect(source).toContain("v2: process.env.BENCH_PASSWORD ?? ''");
+      expect(source).not.toContain('need(outputs, ');
+    });
+
+    it('throws on a missing or empty value and passes a real one through', () => {
+      const { need } = runnableHelpers(emit(spec([1])));
+      expect(() => need({}, 'a.b', '03-add')).toThrow(/a\.b/);
+      expect(() => need({}, 'a.b', '03-add')).toThrow(/03-add/);
+      // Published-but-empty is the defect's own shape: readOptional's value.
+      expect(() => need({ 'a.b': '' }, 'a.b', '03-add')).toThrow(/a\.b/);
+      expect(() => need({ 'a.b': '' }, 'a.b', '03-add')).toThrow(/published empty/);
+      // It points at the line the producing read logged, and says the run so far stands.
+      expect(() => need({}, 'a.b', '03-add')).toThrow(/sitelooper skip/);
+      expect(() => need({}, 'a.b', '03-add')).toThrow(/nothing of 03-add has run/);
+      expect(need({ 'a.b': 'X' }, 'a.b', '03-add')).toBe('X');
+    });
   });
 
   it('inlines a recorded value with a warning when the flow binds no slot', () => {

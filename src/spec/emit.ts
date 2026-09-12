@@ -844,6 +844,54 @@ const HELPERS: { token: string; source: string[] }[] = [
     ],
   },
   {
+    token: 'need(outputs, ',
+    source: [
+      '/**',
+      ' * A value an earlier step had to publish, taken at the moment the step',
+      ' * that NEEDS it is handed its arguments.',
+      ' *',
+      ' * WHICH REPLAY RULE THIS MIRRORS. The flow runner resolves every {{ref}}',
+      ' * in a step\'s instruction and params BEFORE the step runs',
+      ' * (src/daemon/server.ts:1009-1024) and classifies what it could not fill:',
+      ' * a reference bound into a slot the pinned procedure actually USES — one a',
+      ' * recorded step types or locates by, or that names the record the',
+      " * procedure must find — is BLOCKING (`ignorableRefs`, src/skills/flow.ts:1083),",
+      ' * so the zero-model replay is skipped and the step goes to recovery. Only a',
+      ' * reference no recorded step can be affected by replays as pinned.',
+      ' * `lookupRef` says it outright: a reference this run did not publish "goes',
+      ' * to recovery, never to a recorded literal."',
+      ' *',
+      " * The artifact has no recovery, so blocking here is a stop. What it may NOT",
+      ' * do is what the plain `outputs[ref] ?? \'\'` did: carry the empty string in.',
+      ' * A read that matched nothing is left empty on purpose (see readOptional) —',
+      ' * that is honest for an observation and fatal for an argument. Empty, a',
+      " * record-scoped locator (`li:has-text('')`) matches EVERY record and a",
+      ' * `known` slot loses the identity it exists to carry, so the blank does not',
+      ' * merely misreport the run: it does the work to the wrong record.',
+      ' *',
+      ' * Raised at CONSUMPTION, never at the read: the producing step keeps its',
+      ' * verdict, the browser is at rest, and nothing of the consuming step has',
+      ' * run when this throws.',
+      ' */',
+      'function need(outputs: Outputs, ref: string, by: string): string {',
+      '  const value = outputs[ref as keyof Outputs];',
+      "  if (value === undefined || value === '') {",
+      '    throw new Error(',
+      '      `${by} needs {{${ref}}}, and this run never published it` +',
+      "        (value === '' ? ' (it was published empty)' : '') +",
+      '        `. The step that publishes ${ref} read nothing — look above for its` +',
+      '        ` \\`[sitelooper skip] … read target not found\\` line, which is where this run` +',
+      '        ` diverged. Stopping here instead of passing an empty value into ${by}:` +',
+      '        ` blank, a record-scoped locator matches every record and a known slot loses` +',
+      '        ` its identity, so the step would do its work to the wrong one. Everything` +',
+      '        ` earlier steps did stands; nothing of ${by} has run.`,',
+      '    );',
+      '  }',
+      '  return value;',
+      '}',
+    ],
+  },
+  {
     token: 'present(page, ',
     source: [
       '/**',
@@ -2119,14 +2167,19 @@ function slotsOf(step: SpecStep, found: Set<string>): string[] {
  * step's output, or an environment secret. Secrets stay markers everywhere
  * until the moment they are used — see shared/secrets.ts — and that holds in
  * a compiled spec too: the emitted file names the variable, never the value.
+ *
+ * `by` is the consuming step id, passed only where a missing value would
+ * CHANGE what the step does (see `callArgs`): then a `{{step.output}}`
+ * reference is resolved through `need`, which stops rather than binding a
+ * blank. Left out, a reference resolves the way it always has.
  */
-function paramExpr(template: string, vars: Set<string>): string {
+function paramExpr(template: string, vars: Set<string>, by?: string): string {
   const parts: { lit?: string; expr?: string }[] = [];
   let last = 0;
   for (const m of template.matchAll(/\{\{([\w.#:-]+)\}\}/g)) {
     const at = m.index ?? 0;
     if (at > last) parts.push({ lit: template.slice(last, at) });
-    parts.push({ expr: refExpr(m[1], vars) });
+    parts.push({ expr: refExpr(m[1], vars, by) });
     last = at + m[0].length;
   }
   if (last < template.length) parts.push({ lit: template.slice(last) });
@@ -2136,14 +2189,37 @@ function paramExpr(template: string, vars: Set<string>): string {
   return '`' + parts.map((p) => (p.lit !== undefined ? templateSafe(p.lit) : '${' + p.expr + '}')).join('') + '`';
 }
 
-function refExpr(ref: string, vars: Set<string>): string {
+function refExpr(ref: string, vars: Set<string>, by?: string): string {
   const secret = /^env:([A-Za-z_][A-Za-z0-9_]*)$/.exec(ref);
+  // A secret is validated once, up front (validateInputs / requiredEnvNames);
+  // a plain run var likewise. Only a step-to-step output is a value THIS run
+  // had to produce, so only it can go missing mid-flow.
   if (secret) return `process.env.${secret[1]} ?? ''`;
-  if (ref.includes('.')) return `outputs[${q(ref)}] ?? ''`;
+  if (ref.includes('.')) return by ? `need(outputs, ${q(ref)}, ${q(by)})` : `outputs[${q(ref)}] ?? ''`;
   if (vars.has(ref)) return /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(ref) ? `vars.${ref}` : `vars[${q(ref)}]`;
   // A reference to something the flow never declared: honest at run time
   // rather than a compile-time guess at what the caller meant.
   return `(vars as Record<string, string>)[${q(ref)}] ?? ''`;
+}
+
+/**
+ * Can a missing value in this slot change what the step DOES?
+ *
+ * The port of `ignorableRefs` (src/skills/flow.ts:1083), derived from the same
+ * two facts it reads: a slot some recorded step types or locates by
+ * (`SkillParam.usedIn`), or one naming the record the procedure must find (a
+ * `{{vN}}` inside `preconditions.requireText`). Everything else — a tag the
+ * instruction mentions for context, a price quoted from the recording —
+ * reaches nothing the pinned procedure can act on, so its absence is no reason
+ * to stop. fwgr23 05-open is the case: `{{04-open.tag}}` blank, bound to a slot
+ * no step used.
+ */
+function usedSlot(step: SpecStep, slot: string): boolean {
+  return step.segments.some(
+    (s) =>
+      (s.params[slot]?.usedIn.length ?? 0) > 0 ||
+      (s.preconditions.requireText ?? []).some((marker) => marker.includes(`{{${slot}}}`)),
+  );
 }
 
 /** The `{ v1: …, d1: '' }` argument one step is called with. */
@@ -2154,7 +2230,12 @@ function callArgs(step: SpecStep, slots: string[], vars: Set<string>, warnings: 
     // off the live url after the step that creates it.
     if (derived.has(slot)) return `${slot}: ''`;
     const bound = step.params[slot];
-    if (bound !== undefined) return `${slot}: ${paramExpr(bound, vars)}`;
+    // Only a USED slot is checked. `outputs` is whatever keys the model's
+    // report happened to emit (flow.ts's runFlow), and across the published
+    // bench flows 1521 outputs are declared against 89 consumed downstream:
+    // requiring every one of them would turn values nobody authored into
+    // failure points.
+    if (bound !== undefined) return `${slot}: ${paramExpr(bound, vars, usedSlot(step, slot) ? step.id : undefined)}`;
     const example = step.segments.map((s) => s.params[slot]?.example).find((e) => typeof e === 'string');
     if (example === undefined) return `${slot}: ''`;
     // No flow binding: the recording's own value is the only one there is,
@@ -2287,7 +2368,12 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
     return { step, lines, slots: slotsOf(step, ctx.slots) };
   });
 
-  const body = bodies.flatMap((b) => b.lines).join('\n');
+  // Call sites BEFORE the helper scan: `need(` is emitted only at a call site,
+  // and `neededHelpers` decides what the file carries by what its text names.
+  // Computed after the bodies because a call site's slot list is what the body
+  // collected.
+  const calls = bodies.map((b) => callArgs(b.step, b.slots, vars, warnings));
+  const body = [...bodies.flatMap((b) => b.lines), ...calls].join('\n');
   const helpers = neededHelpers(body);
 
   const out: string[] = [
@@ -2382,9 +2468,12 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
   out.push('  const outputs = run.outputs;');
   out.push('  try {');
   out.push(`    await page.goto(options.startUrl ?? ${q(spec.startUrl)});`);
-  for (const b of bodies) {
+  for (const [i, b] of bodies.entries()) {
     out.push(`    await test.step(${q(`${b.step.id}: ${b.step.instruction}`)}, async () => {`);
-    out.push(`      await steps[${q(b.step.id)}](page, ${callArgs(b.step, b.slots, vars, warnings)}, outputs, run);`);
+    // The arguments are built INSIDE test.step and before `steps[id]` is
+    // called, so a `need` that throws is this step's failure with nothing of
+    // this step run — which is the guarantee the check is worth having for.
+    out.push(`      await steps[${q(b.step.id)}](page, ${calls[i]}, outputs, run);`);
     out.push(`      console.log(${q(`[sitelooper step] ${b.step.id}`)});`);
     out.push('    });');
   }

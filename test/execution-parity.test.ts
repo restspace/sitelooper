@@ -27,6 +27,7 @@ import { BrowserSession } from '../src/daemon/browser.js';
 import { emitFlowFile } from '../src/spec/emit.js';
 import type { SpecFlow } from '../src/spec/ir.js';
 import { goalSatisfied, type ReplayResult } from '../src/skills/replay.js';
+import { ignorableRefs, resolveInstruction, resolveStepParams, type FlowStep } from '../src/skills/flow.js';
 import type { Skill, SkillStep } from '../src/skills/store.js';
 
 const enabled = process.env.BP_BROWSER_TESTS === '1';
@@ -41,6 +42,7 @@ interface FlowModule {
     string,
     (page: unknown, p: Record<string, string>, outputs: Record<string, string | undefined>, run: { outputs: Record<string, string | undefined>; drift: string[] }) => Promise<void>
   >;
+  runFlow(page: unknown, vars: Record<string, string>, options?: { startUrl?: string }): Promise<Record<string, string | undefined>>;
 }
 
 /** One run's verdict, in the shape both sides can be compared in. */
@@ -68,6 +70,7 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
    */
   const PAGE = `<!doctype html><html><head><meta charset="utf-8"><title>Items</title></head><body>
 <h1>Items</h1>
+<p id="target">Item 2</p>
 <ul id="items"></ul>
 <script>
 async function render() {
@@ -119,6 +122,13 @@ document.querySelector('.mark').addEventListener('click', async (e) => {
     // The emitted module imports '@playwright/test', so it has to load from
     // somewhere node resolves the repo's node_modules.
     emitDir = fs.mkdtempSync(path.resolve('test/.parity-'));
+    // See moduleOf: only `test.step` is stubbed, and only because it needs a
+    // Playwright worker. Wrapping is all it does there, so running the callback
+    // inline is what it means outside one.
+    fs.writeFileSync(
+      path.join(emitDir, 'pw-shim.mjs'),
+      "export { expect } from '@playwright/test';\nexport const test = { step: async (_name, fn) => await fn() };\n",
+    );
 
     server = http.createServer((req, res) => {
       const url = req.url ?? '/';
@@ -312,14 +322,28 @@ document.querySelector('.mark').addEventListener('click', async (e) => {
    * worker: the harness drives `steps[id]` itself, which is the same emitted
    * body and keeps the comparison to one process.
    */
-  async function emittedOf(spec: SpecFlow, params: Record<string, string> = {}): Promise<Outcome> {
+  /**
+   * The emitted file, compiled and loaded. `test` is the only thing the
+   * artifact uses that needs a Playwright worker, and it uses it for exactly
+   * one thing — `test.step` around each call site — so it is shimmed and
+   * everything else (the real `expect`, `expect.poll`) is the genuine article.
+   * That is what lets `runFlow` itself be driven here, argument binding
+   * included, rather than only the step bodies.
+   */
+  async function moduleOf(spec: SpecFlow): Promise<FlowModule> {
     const { source } = emitFlowFile(spec, { tier: 'plain' });
-    const js = ts.transpileModule(source, {
-      compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext },
-    }).outputText;
+    const js = ts
+      .transpileModule(source, {
+        compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext },
+      })
+      .outputText.replace("from '@playwright/test'", "from './pw-shim.mjs'");
     const file = path.join(emitDir, `flow-${Date.now()}-${Math.random().toString(36).slice(2)}.mjs`);
     fs.writeFileSync(file, js);
-    const mod = (await import(`file://${file.split(path.sep).join('/')}`)) as FlowModule;
+    return (await import(`file://${file.split(path.sep).join('/')}`)) as FlowModule;
+  }
+
+  async function emittedOf(spec: SpecFlow, params: Record<string, string> = {}): Promise<Outcome> {
+    const mod = await moduleOf(spec);
 
     const session = new BrowserSession({ session: `parity-spec-${Date.now()}`, persist: false });
     try {
@@ -336,6 +360,189 @@ document.querySelector('.mark').addEventListener('click', async (e) => {
       await session.close();
     }
   }
+
+  /**
+   * The whole emitted flow, driven through its own `runFlow` — call sites
+   * included. `emittedOf` deliberately calls `steps[id]` itself, which skips
+   * the argument binding; a defect that lives in the BINDING is invisible to
+   * it, so this case needs the real thing.
+   */
+  async function emittedFlowOf(spec: SpecFlow, vars: Record<string, string> = {}): Promise<Outcome> {
+    const mod = await moduleOf(spec);
+    const session = new BrowserSession({ session: `parity-flow-${Date.now()}`, persist: false });
+    try {
+      const page = await session.getPage();
+      const outputs = await mod.runFlow(page, vars, { startUrl: mod.FLOW.startUrl });
+      return { ok: true, reason: null, outputs: outputs as Record<string, string> };
+    } catch (err) {
+      return { ok: false, reason: err instanceof Error ? err.message : String(err), outputs: {} };
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Two flow steps through DAEMON replay, with the flow runner's own
+   * consumption gate between them.
+   *
+   * The gate is server.ts:1009-1024 verbatim in shape and in the functions it
+   * calls — resolveInstruction / resolveStepParams / ignorableRefs are the
+   * daemon's, not a restatement. What is not reproduced is what the daemon
+   * does AFTER classifying a reference as blocking: it sends the step to
+   * recovery on the strong model, which no offline suite can run. That is the
+   * point being compared anyway — a blocking reference means the pinned
+   * procedure does not replay, and the mutation log is what proves it didn't.
+   */
+  async function replayFlowOf(
+    producer: Skill,
+    consumer: Skill,
+    step: FlowStep,
+  ): Promise<{ outcome: Outcome; blocking: string[] }> {
+    const first = await replayOf(producer);
+    // Keyed by the producing step exactly as the flow runner keys them — the
+    // values are whatever the producer's replay actually published, which for
+    // a skipped read is nothing at all.
+    const outputs = { '01-read': first.outputs };
+    const { missing } = resolveInstruction(step, {}, outputs);
+    const bound = resolveStepParams(step, {}, outputs);
+    const allMissing = [...missing, ...(bound?.missing ?? [])];
+    const ignorable = ignorableRefs(allMissing, step, consumer);
+    const blocking = allMissing.filter((r) => !ignorable.includes(r));
+    if (blocking.length) {
+      return {
+        outcome: {
+          ok: false,
+          reason: `${step.id}: ${blocking.join(', ')} unresolved and used by the pinned procedure — the zero-model replay is skipped`,
+          outputs: first.outputs,
+        },
+        blocking,
+      };
+    }
+    return { outcome: await replayOf(consumer, bound?.params ?? {}), blocking };
+  }
+
+  /**
+   * G03. The consuming step is the one that must stop.
+   *
+   * 01-read's locators miss, so the read is skipped and its value is left
+   * empty — right on both runners, and not what is on trial. 02-mark then
+   * binds a USED slot to `{{01-read.x}}`: replay classifies that reference as
+   * blocking (ignorableRefs: the slot IS used) and never replays the pinned
+   * procedure, while the artifact used to resolve it to `''`, navigate to
+   * `/record/` with an empty id segment, mark whatever was there and report
+   * success — fwgr27's failure exactly.
+   *
+   * The mutation log is the oracle: no `visit:` and no `mark:` means 02-mark
+   * did not run at all, which no runner's own report can establish about
+   * itself.
+   */
+  const readStep = (selector: string): SkillStep => ({
+    tool: 'read',
+    args: { target: '@e1', what: 'text' },
+    locators: { target: [{ kind: 'id', selector }] },
+    label: 'x',
+  });
+  // A function, not a constant: `origin` is only known once the fixture server
+  // is listening, which is beforeAll — after this describe body has run.
+  const markStep = (): SkillStep[] => [{ tool: 'goto', args: { url: `${origin}/record/{{v1}}` }, locators: {} }, MARK];
+
+  const readSkill = (selector: string): Skill => ({
+    ...skillOf([readStep(selector)]),
+    id: 's_read',
+    template: 'read the target',
+  });
+  const markSkill = (): Skill => ({
+    ...skillOf(markStep()),
+    id: 's_mark',
+    template: 'mark record {{v1}}',
+    params: { v1: { example: 'Item 9', usedIn: [1], known: true } },
+  });
+  const markFlowStep = (): FlowStep => ({
+    id: '02-mark',
+    instruction: 'mark record {{01-read.x}}',
+    skill: 's_mark',
+    params: { v1: '{{01-read.x}}' },
+    outputs: [],
+    recorded: {},
+  });
+
+  const readMarkFlow = (selector: string): SpecFlow => ({
+    version: 1,
+    name: 'parity-need',
+    origin,
+    startUrl: `${origin}/`,
+    vars: [],
+    steps: [
+      {
+        id: '01-read',
+        instruction: 'read the target',
+        params: {},
+        outputs: ['x'],
+        segments: [{ id: 's_read', template: 'read the target', params: {}, preconditions: { urlPattern: `${origin}/` }, steps: [readStep(selector)] }],
+      },
+      {
+        id: '02-mark',
+        instruction: 'mark record {{01-read.x}}',
+        params: { v1: '{{01-read.x}}' },
+        outputs: [],
+        segments: [
+          {
+            id: 's_mark',
+            template: 'mark record {{v1}}',
+            params: { v1: { example: 'Item 9', usedIn: [1], known: true } },
+            preconditions: { urlPattern: `${origin}/` },
+            steps: markStep(),
+          },
+        ],
+      },
+    ],
+  });
+
+  it('neither runner binds a used slot to a value the producing read never captured', async () => {
+    reset(2);
+    const { outcome: replay, blocking } = await replayFlowOf(readSkill('#nope'), markSkill(), markFlowStep());
+    const replayLog = [...log];
+    reset(2);
+    const emitted = await emittedFlowOf(readMarkFlow('#nope'));
+    const emittedLog = [...log];
+
+    // Replay's own classification: the slot is used, so the reference blocks.
+    // Once from the instruction and once from the param binding, as the
+    // daemon's own `allMissing` collects them.
+    expect([...new Set(blocking)]).toEqual(['01-read.x']);
+
+    // The oracle first: nothing of 02-mark ran on either side — no navigation
+    // to the empty record id, and no mutation. A verdict is a runner's opinion
+    // of itself; this is the application's account of what happened.
+    expect(replayLog, 'replay must not replay a procedure whose used slot is blank').toEqual([]);
+    expect(emittedLog, 'the artifact must not run 02-mark with a blank slot').toEqual([]);
+
+    expect(replay.ok).toBe(false);
+    expect(emitted.ok).toBe(false);
+    expect(replay.reason).toContain('01-read.x');
+    expect(emitted.reason).toContain('01-read.x');
+    expect(emitted.reason).toContain('02-mark');
+  }, 120_000);
+
+  /**
+   * Without this the case above is satisfied by a check that always refuses.
+   * The same two steps with a read that resolves: the value threads through,
+   * and both runners do the work on THAT record, once.
+   */
+  it('both runners proceed when the producing read did capture the value', async () => {
+    reset(2);
+    const { outcome: replay, blocking } = await replayFlowOf(readSkill('#target'), markSkill(), markFlowStep());
+    const replayLog = [...log];
+    reset(2);
+    const emitted = await emittedFlowOf(readMarkFlow('#target'));
+    const emittedLog = [...log];
+
+    expect([...new Set(blocking)]).toEqual([]);
+    expect(replay.ok, replay.reason ?? '').toBe(true);
+    expect(emitted.ok, emitted.reason ?? '').toBe(true);
+    expect(replayLog).toEqual(['visit:Item 2', 'mark:Item 2']);
+    expect(emittedLog).toEqual(['visit:Item 2', 'mark:Item 2']);
+  }, 120_000);
 
   /** Run one loop contract through both runners against separately reset state. */
   async function both(steps: SkillStep[], startWith = 10) {
