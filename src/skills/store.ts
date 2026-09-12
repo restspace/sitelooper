@@ -73,6 +73,76 @@ export interface Skill {
    */
   derived?: Record<string, { step: number; at: string; example: string }>;
   provenance: { session: string; instruction: string; model?: string; created: string };
+  /**
+   * The execution contract this procedure was written under. Absent means 1,
+   * the contract every store predates this field.
+   *
+   * Not a field format version — a SEMANTICS version. It exists because the
+   * meaning of what is already written here can change without the shape
+   * changing at all: an absent `scope` used to be the only reading there was
+   * and is now "drain"; an effect gate that could not capture a diff used to
+   * pass and now reports `unobserved`; a click that produced no visible change
+   * used to be retried. A procedure that earned its validated status under
+   * those rules did not earn it under these, and nothing about its JSON says
+   * so. Bump only when an existing field's INTERPRETATION moves; adding a new
+   * optional field is not a bump.
+   */
+  contract?: number;
+}
+
+/**
+ * The contract this build writes and is willing to execute.
+ *
+ * This is one-way, and worth being plain about: a build older than the field
+ * ignores it entirely and will happily run a contract-2 procedure under
+ * contract-1 semantics. The gate protects builds from here forward, not the
+ * data already on disk.
+ */
+export const SKILL_CONTRACT = 2;
+
+export function contractOf(s: Pick<Skill, 'contract'>): number {
+  return typeof s.contract === 'number' ? s.contract : 1;
+}
+
+/**
+ * Can this build execute the procedure as written?
+ *
+ * Refusing is the whole point: a procedure from a newer build means fields
+ * this engine has never heard of, or — worse, because it is silent — fields
+ * it knows by name and reads differently.
+ */
+export function contractVerdict(s: Pick<Skill, 'contract'>): { ok: true } | { ok: false; found: number; why: string } {
+  const found = contractOf(s);
+  if (!Number.isInteger(found) || found < 1) {
+    return { ok: false, found, why: `has a malformed contract version (${JSON.stringify(s.contract)})` };
+  }
+  if (found > SKILL_CONTRACT) {
+    return {
+      ok: false,
+      found,
+      why: `was written by a newer Sitelooper (contract ${found}; this build reads up to ${SKILL_CONTRACT}) — upgrade sitelooper to use it`,
+    };
+  }
+  return { ok: true };
+}
+
+/**
+ * Is this procedure's validated status EVIDENCE, under the rules in force now?
+ *
+ * A procedure promoted under contract 1 was promoted by a replay that could
+ * retry a click, skip a step whose dialog was absent, and pass a gate whose
+ * evidence it never captured. Its two clean runs are a true record of what
+ * happened and not a claim about this engine, so the status stands in the
+ * file and is simply not trusted until it is re-earned.
+ *
+ * Resetting the status on read would be the other way to do this, and is
+ * worse three times over: it makes reading a store mutate it, it rewrites
+ * committed artifacts under bench/ on first read, and `successes: 0` destroys
+ * the difference between "never verified" and "verified, then the contract
+ * moved" — which is the distinction this exists to make.
+ */
+export function isVerified(s: Skill): boolean {
+  return s.status === 'validated' && (s.stats.verifiedContract ?? 1) === contractOf(s);
 }
 
 export interface SkillParam {
@@ -188,6 +258,12 @@ export interface SkillStats {
    * that is a thing to look at rather than a thing to average away.
    */
   unobserved?: number;
+  /**
+   * The contract `successes` were counted under. Absent means 1. Read by
+   * `isVerified`, which is what decides whether a validated status is
+   * evidence about THIS engine or a record of an older one's.
+   */
+  verifiedContract?: number;
 }
 
 export type SkillStatus = 'provisional' | 'validated' | 'demoted';
@@ -279,6 +355,24 @@ export class SkillStore {
    */
   readonly corrupt: string[] = [];
 
+  /**
+   * Procedures this build will not execute, and why — almost always because
+   * they were written by a newer one.
+   *
+   * Kept apart from `corrupt` deliberately. Corrupt means "would not parse,
+   * never overwrite it"; these parse perfectly and are perfectly good files,
+   * they are simply not ours to run. Folding them together would make the
+   * never-overwrite rule and what `rm`/`clear` may do mean two different
+   * things at once.
+   *
+   * They are excluded at the read, which is the strongest guarantee available
+   * here: every selection path — list, all, get, candidatesFor, matchTemplate,
+   * compile, export — derives from this, so a procedure from a newer build
+   * cannot be replayed, promoted or emitted without any of those call sites
+   * having to remember to check.
+   */
+  readonly unreadable: { file: string; id: string; origin: string; contract: number; why: string }[] = [];
+
   private originDir(origin: string): string {
     return path.join(this.dir, originSlug(origin));
   }
@@ -325,10 +419,27 @@ export class SkillStore {
         continue;
       }
       const skill = raw as Skill;
-      if (skill && typeof skill === 'object' && typeof skill.id === 'string' && typeof skill.origin === 'string') out.push(skill);
-      else if (!this.corrupt.includes(file)) this.corrupt.push(file);
+      if (skill && typeof skill === 'object' && typeof skill.id === 'string' && typeof skill.origin === 'string') {
+        if (this.admit(skill, file)) out.push(skill);
+      } else if (!this.corrupt.includes(file)) this.corrupt.push(file);
     }
     return out;
+  }
+
+  /**
+   * Is this procedure ours to run? Records the refusal if not, so something
+   * can say so later — silently dropping it is indistinguishable from the
+   * procedure never having been recorded, which is the wrong story entirely.
+   */
+  private admit(skill: Skill, file: string): boolean {
+    const verdict = contractVerdict(skill);
+    if (verdict.ok) return true;
+    // Keyed on the id as well as the file: a legacy whole-file store holds
+    // many procedures, and each refused one is its own thing to report.
+    if (!this.unreadable.some((u) => u.file === file && u.id === skill.id)) {
+      this.unreadable.push({ file, id: skill.id, origin: skill.origin, contract: verdict.found, why: verdict.why });
+    }
+    return false;
   }
 
   private write(skill: Skill): void {
@@ -368,7 +479,9 @@ export class SkillStore {
       if (!this.corrupt.includes(file)) this.corrupt.push(file);
       return [];
     }
-    return (raw as Skill[]).filter((s) => s && typeof s.id === 'string' && typeof s.origin === 'string');
+    return (raw as Skill[]).filter(
+      (s) => s && typeof s.id === 'string' && typeof s.origin === 'string' && this.admit(s, file),
+    );
   }
 
   private readLegacy(origin: string): Skill[] {
@@ -465,7 +578,13 @@ export class SkillStore {
     if (outcome.ok && outcome.instructionSucceeded && unobserved === 0) {
       st.successes += 1;
       st.lastFailedAt = undefined;
-      if (skill.status === 'provisional' && st.successes >= 2) skill.status = 'validated';
+      if (skill.status === 'provisional' && st.successes >= 2) {
+        skill.status = 'validated';
+        // Say WHICH engine's rules these two clean runs were clean under.
+        // Without this the status alone would carry over a contract bump and
+        // claim evidence it does not have.
+        st.verifiedContract = contractOf(skill);
+      }
     } else if (outcome.ok && outcome.instructionSucceeded) {
       // Observed nothing conclusive: not a success, not a strike.
       st.lastFailedAt = undefined;

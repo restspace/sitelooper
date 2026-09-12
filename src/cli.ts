@@ -804,6 +804,19 @@ async function main(): Promise<void> {
 
 // --- skills (reads the store directly; no daemon involved) ---
 
+/**
+ * The files in the store that were not read, and why.
+ *
+ * Both lists existed long before anything printed them: `corrupt` was
+ * write-only for its whole life, so a store with an unparsable procedure in
+ * it looked exactly like a store without one. A refusal nobody is told about
+ * is not a refusal, it is a disappearance.
+ */
+function reportUnusable(store: SkillStore): void {
+  for (const u of store.unreadable) console.log(`refused: ${u.id} ${u.why} (${u.file})`);
+  for (const f of store.corrupt) console.log(`corrupt: ${f} — left untouched; it will not be read or overwritten`);
+}
+
 function skillsCommand(positional: string[], flags: Map<string, string | boolean>, json: boolean): void {
   const store = new SkillStore();
   const sub = positional[0] ?? 'list';
@@ -813,10 +826,24 @@ function skillsCommand(positional: string[], flags: Map<string, string | boolean
       const skills = (origin ? store.list(origin) : store.all()).sort((a, b) => a.origin.localeCompare(b.origin) || b.stats.uses - a.stats.uses);
       if (json) {
         console.log(JSON.stringify(skills.map(skillSummary), null, 2));
+        // stdout stays the bare array it has always been — scripts parse it.
+        // The refusals go to stderr rather than nowhere: a run that silently
+        // omitted half the store is the thing being fixed here.
+        for (const u of store.unreadable) console.error(`refused: ${u.id} ${u.why} (${u.file})`);
+        for (const f of store.corrupt) console.error(`corrupt: ${f}`);
         return;
       }
       if (!skills.length) {
-        console.log(`no stored procedures${origin ? ` for ${origin}` : ''} (store: ${store.dir})`);
+        // Say which of the two this is. A store whose every procedure was
+        // refused is not an empty store, and "no stored procedures" would
+        // read as "you never recorded anything" when the truth is "this
+        // build will not run what you recorded".
+        console.log(
+          store.unreadable.length
+            ? `no procedures this build can run${origin ? ` for ${origin}` : ''} (store: ${store.dir})`
+            : `no stored procedures${origin ? ` for ${origin}` : ''} (store: ${store.dir})`,
+        );
+        reportUnusable(store);
         return;
       }
       let last = '';
@@ -832,13 +859,20 @@ function skillsCommand(positional: string[], flags: Map<string, string | boolean
         console.log(`           ${clipText(s.template, 110)}`);
       }
       console.log(`store: ${store.dir}`);
+      reportUnusable(store);
       return;
     }
     case 'show': {
       const id = positional[1];
       if (!id) fail('usage: skills show <id>', 2);
       const s = store.get(id);
-      if (!s) fail(`no skill ${id}`, 1);
+      if (!s) {
+        // `get` excludes a procedure this build refuses, so "no skill" would
+        // send someone looking for a file that is sitting right there.
+        const refused = store.unreadable.find((u) => u.id === id);
+        if (refused) fail(`${id} ${refused.why} (${refused.file})`, 1);
+        fail(`no skill ${id}`, 1);
+      }
       if (json) {
         console.log(JSON.stringify(s, null, 2));
         return;

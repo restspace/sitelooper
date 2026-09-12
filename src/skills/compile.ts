@@ -1,6 +1,6 @@
 import type { LocatorCandidate, RecordedEntry, RecordedInstruction, RecordedStep } from '../daemon/recorder.js';
 import type { Report } from '../agent/report.js';
-import { newSkillId, originOf, type Skill, type SkillParam, type SkillStep, type StepExpectation } from './store.js';
+import { SKILL_CONTRACT, newSkillId, originOf, type Skill, type SkillParam, type SkillStep, type StepExpectation } from './store.js';
 import { MIN_ID_LEN, digitDominant, looksLikeId, skeleton, tokenPattern } from './shape.js';
 import { idPositionPart, occursAsToken } from './ledger.js';
 import { WILDCARD, maskVolatile } from '../shared/text.js';
@@ -395,7 +395,13 @@ export function compileSkills(input: CompileInput): Skill[] {
       ...(segDerived[k] ? { derived: segDerived[k] } : {}),
       // Only the last segment can vouch for the instruction's end state.
       ...(k === of - 1 ? { reportTemplate } : {}),
-      stats: { uses: 1, successes: 1, partial: 0, created: now, failedAtStep: {}, fallthroughs: 0 },
+      // Stamped where the procedure is BORN, not in SkillStore.write: every
+      // outcome recorded against a legacy procedure goes through write too,
+      // so stamping there would quietly relabel an old file as current on its
+      // first replay — laundering exactly the artifact the version exists to
+      // hold apart.
+      contract: SKILL_CONTRACT,
+      stats: { uses: 1, successes: 1, partial: 0, created: now, failedAtStep: {}, fallthroughs: 0, verifiedContract: SKILL_CONTRACT },
       status: 'provisional' as const,
       ...(chain ? { seq: { chain, index: k, of } } : {}),
       ...(input.variantOf ? { variantOf: input.variantOf } : {}),

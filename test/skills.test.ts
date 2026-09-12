@@ -15,7 +15,7 @@ import type { LocatorCandidate } from '../src/daemon/recorder.js';
 import type { SkillStep } from '../src/skills/store.js';
 import { bindSkill, canAdoptPin, learnFromInstruction, matchTemplate, publishedOutputs, selectCandidates, synthesizeReport } from '../src/skills/learn.js';
 import { candidatesFor, renderCandidates } from '../src/skills/replay.js';
-import { SkillStore, originOf, originSlug, type Skill } from '../src/skills/store.js';
+import { SKILL_CONTRACT, SITEMAP_FILE, SkillStore, contractOf, isVerified, originOf, originSlug, type Skill } from '../src/skills/store.js';
 
 let tmp: string;
 beforeAll(() => {
@@ -951,6 +951,85 @@ describe('SkillStore', () => {
     expect(reader.list(ORIGIN).map((s) => s.template)).toEqual(['good']);
     expect(reader.corrupt).toEqual([bad]);
     expect(fs.readFileSync(bad, 'utf8')).toBe('{ not json');
+  });
+
+  /**
+   * A sitemap lives in the origin directory, parses cleanly and carries an
+   * origin but no id — so the shape gate filed it as corrupt on every read,
+   * for every origin anyone had ever browsed. A permanent entry on a list
+   * whose whole purpose is "this is a thing to look at".
+   */
+  it('does not mistake the sitemap beside the procedures for a corrupt one', () => {
+    const dir = path.join(tmp, 'sibling');
+    const store = new SkillStore(dir);
+    store.put(mk('good'));
+    fs.writeFileSync(path.join(dir, originSlug(ORIGIN), SITEMAP_FILE), JSON.stringify({ version: 1, origin: ORIGIN, pages: {} }));
+    const reader = new SkillStore(dir);
+    expect(reader.list(ORIGIN).map((s) => s.template)).toEqual(['good']);
+    expect(reader.corrupt).toEqual([]);
+  });
+
+  /**
+   * Invariant 8. A procedure from a build that reads further than this one
+   * may use fields this engine has never heard of — or, worse because it is
+   * silent, fields it knows by name and reads differently. It is intact and
+   * it is not ours to run.
+   */
+  it('refuses a procedure written by a newer build, and says so rather than dropping it', () => {
+    const dir = path.join(tmp, 'future');
+    const store = new SkillStore(dir);
+    store.put(mk('ours'));
+    const theirs = { ...mk('theirs'), id: 's_future', contract: SKILL_CONTRACT + 1 };
+    fs.writeFileSync(path.join(dir, originSlug(ORIGIN), 's_future.json'), JSON.stringify(theirs, null, 1));
+
+    const reader = new SkillStore(dir);
+    expect(reader.list(ORIGIN).map((s) => s.id)).toEqual([store.all()[0].id]);
+    expect(reader.get('s_future')).toBeNull();
+    // Not corrupt — it parsed perfectly. A separate channel, and one that
+    // names the version, because "not found" would send someone looking for
+    // a file that is sitting right there.
+    expect(reader.corrupt).toEqual([]);
+    expect(reader.unreadable).toHaveLength(1);
+    expect(reader.unreadable[0]).toMatchObject({ id: 's_future', contract: SKILL_CONTRACT + 1 });
+    expect(reader.unreadable[0].why).toMatch(new RegExp(`contract ${SKILL_CONTRACT + 1}`));
+  });
+
+  /**
+   * The other half of invariant 8: a procedure promoted by an older engine
+   * was promoted by rules this one no longer follows (it could retry a click,
+   * skip a step whose dialog was absent, pass a gate it never observed). The
+   * status stands in the file as a true record; it is simply not evidence
+   * about this engine until re-earned.
+   */
+  it('does not treat a validated status from an older contract as verification', () => {
+    const current: Skill = { ...mk('current'), contract: SKILL_CONTRACT, status: 'validated' };
+    current.stats = { ...current.stats, verifiedContract: SKILL_CONTRACT };
+    expect(isVerified(current)).toBe(true);
+
+    // Legacy: no contract, no verifiedContract — reads as 1 and 1, so its own
+    // validation is intact. Nothing retroactively distrusts old stores.
+    const legacy: Skill = { ...mk('legacy'), status: 'validated' };
+    expect(contractOf(legacy)).toBe(1);
+    expect(isVerified(legacy)).toBe(true);
+
+    // Promoted under 1, carried into a procedure now written at 2.
+    const stale: Skill = { ...mk('stale'), contract: SKILL_CONTRACT, status: 'validated' };
+    stale.stats = { ...stale.stats, verifiedContract: 1 };
+    expect(isVerified(stale)).toBe(false);
+    // ...and the file is untouched by that judgement.
+    expect(stale.status).toBe('validated');
+    expect(stale.stats.successes).toBe(1);
+  });
+
+  it('stamps the contract that earned a promotion', () => {
+    const store = new SkillStore(path.join(tmp, 'earned'));
+    const s = { ...mk('promote me'), contract: SKILL_CONTRACT };
+    delete s.stats.verifiedContract;
+    store.put(s);
+    const after = store.recordOutcome(s.id, { ok: true, instructionSucceeded: true });
+    expect(after?.status).toBe('validated');
+    expect(after?.stats.verifiedContract).toBe(SKILL_CONTRACT);
+    expect(isVerified(after!)).toBe(true);
   });
 
   /**

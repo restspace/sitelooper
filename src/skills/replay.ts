@@ -10,7 +10,7 @@ import { TRANSIENT_LINE, WILDCARD, fillParams, fillParamsDeep, maskMinted, maskV
 
 /** Tools that look at or move to an element without setting or choosing anything. */
 const OBSERVATION_TOOLS = new Set(['scroll_into_view', 'wait_for', 'hover', 'scroll', 'focus', 'screenshot', 'peek']);
-import { originOf, type Skill, type SkillStep } from './store.js';
+import { contractVerdict, isVerified, originOf, type Skill, type SkillStep } from './store.js';
 
 /** Executes one step against the live page, recording it; throws on failure. */
 export type StepExecutor = (
@@ -198,6 +198,17 @@ export async function replaySkill(
   // Copy the caller's bindings: derived ({{dN}}) values minted mid-replay are
   // bound into this map as steps execute, so later steps see them.
   params = { ...params };
+
+  // Belt and braces. SkillStore excludes a procedure this build cannot run at
+  // the read, which covers every selection path — but a skill can also arrive
+  // as an object: lowered from a spec, staged by re-record, handed in by a
+  // test. Refusing here means no route reaches execution unchecked.
+  const contract = contractVerdict(skill);
+  if (!contract.ok) {
+    res.refused = true;
+    res.reason = `${skill.id} ${contract.why} — nothing was run`;
+    return res;
+  }
 
   const missing = Object.keys(skill.params).filter((p) => !(p in params) || params[p] === '');
   if (missing.length) {
@@ -1692,7 +1703,7 @@ export function candidatesFor(skills: Skill[], url: string, limit = 5): Skill[] 
   return skills
     .filter((s) => s.status !== 'demoted' && !(s.seq && s.seq.index > 0) && urlMatches(s.preconditions.urlPattern, url))
     .sort((a, b) => {
-      const rank = (s: Skill) => (s.status === 'validated' ? 1 : 0);
+      const rank = (s: Skill) => (isVerified(s) ? 1 : 0);
       const rate = (s: Skill) => (s.stats.uses ? s.stats.successes / s.stats.uses : 0);
       return rank(b) - rank(a) || rate(b) - rate(a) || (b.stats.lastUsed ?? '').localeCompare(a.stats.lastUsed ?? '');
     })
@@ -1722,7 +1733,15 @@ export function renderCandidates(skills: Skill[]): string {
       .map(([k, p]) => `${k} e.g. ${JSON.stringify(clip(p.example, 40))}`)
       .join(', ');
     const reads = s.steps.filter((st) => st.label).map((st) => st.label);
-    const status = s.status === 'validated' ? `validated ${s.stats.successes}/${s.stats.uses}` : `unverified, ${s.stats.successes}/${s.stats.uses} run(s)`;
+    // A procedure validated under an older contract is described as what it
+    // is: a real record of clean runs, under rules this engine no longer
+    // follows. Calling it "validated" here would hand the model a guarantee
+    // nothing currently backs.
+    const status = isVerified(s)
+      ? `validated ${s.stats.successes}/${s.stats.uses}`
+      : s.status === 'validated'
+        ? `validated under an older contract, so treated as unverified, ${s.stats.successes}/${s.stats.uses} run(s)`
+        : `unverified, ${s.stats.successes}/${s.stats.uses} run(s)`;
     lines.push(`  ${s.id}  ${JSON.stringify(s.template)}`);
     lines.push(`         ${s.steps.length} steps · ${status}${params ? ` · params: ${params}` : ' · no params'}${reads.length ? ` · reads back: ${reads.join(', ')}` : ''}`);
     const literals = literalInputs(s);

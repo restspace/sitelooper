@@ -31,6 +31,7 @@ export type DiagnosticCode =
   | 'needs-rerecord' // repair's verdict when the above mean a recording, not the app, is wrong
   | 'unthreaded-param' // compile could not rethread a literal param (existing warning, now typed)
   | 'missing-skill' // step refers to a skill not in the store
+  | 'future-contract' // the step's pinned skill was written by a newer sitelooper
   | 'no-procedure'; // step has no converged procedure
 
 export interface Diagnostic {

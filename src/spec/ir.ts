@@ -3,7 +3,7 @@ import { mutates } from '../skills/learn.js';
 import { rethreadParams } from './rethread.js';
 import { diagnosticLine, rerecordFix, rerecordAction, type Diagnostic } from './diagnostics.js';
 import { LEAKED_STEP } from './rerecord.js';
-import type { Skill, SkillParam, SkillStep, SkillStore } from '../skills/store.js';
+import { SKILL_CONTRACT, type Skill, type SkillParam, type SkillStep, type SkillStore } from '../skills/store.js';
 
 /**
  * The intermediate representation a compiled spec carries.
@@ -228,7 +228,23 @@ export function flowToSpec(
 
   for (const step of flow.steps) {
     const skill = step.skill ? store.get(step.skill) : null;
-    if (step.skill && !skill) {
+    // Ask the store WHY it has nothing before saying it has nothing. A
+    // procedure this build refuses is excluded from `get`, so without this
+    // the headline symptom of a version mismatch is a missing-skill warning
+    // telling the user to check SITELOOPER_SKILLS_DIR — sending them to look
+    // for a file that is sitting exactly where they left it.
+    const refused = step.skill ? store.unreadable.find((u) => u.id === step.skill) : undefined;
+    if (step.skill && !skill && refused) {
+      diagnostics.push({
+        code: 'future-contract',
+        step: step.id,
+        what: `its pinned skill ${step.skill} ${refused.why}`,
+        why: `the procedure is intact at ${refused.file}; this build reads up to contract ${SKILL_CONTRACT}, so emitting it would mean guessing at semantics it does not implement.`,
+        fix: 'upgrade sitelooper, or recompile with the build that wrote the store.',
+        severity: 'error',
+        line: `step ${step.id} is pinned to skill ${step.skill}, written by a newer sitelooper`,
+      });
+    } else if (step.skill && !skill) {
       diagnostics.push({
         code: 'missing-skill',
         step: step.id,

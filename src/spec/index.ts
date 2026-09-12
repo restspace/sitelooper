@@ -114,7 +114,13 @@ export function compileFlow(
   const { spec, warnings, diagnostics } = flowToSpec(flow, store, { flowFile: file });
   const emitted = emitFlowFile(spec, { tier: o.tier ?? 'plain', diagnostics });
 
-  const refused = hasError(diagnostics) && !o.allowDemoted;
+  // `--allow-demoted` is about demoted pins and nothing else. It used to
+  // clear EVERY error, so any future error-severity diagnostic would be
+  // waivable by a flag that says nothing about it — a contract refusal
+  // bypassed by an unrelated option is not a refusal.
+  const refused = diagnostics.some(
+    (d) => d.severity === 'error' && !(d.code === 'demoted-pin' && o.allowDemoted),
+  );
   const base = safeName(spec.name);
   const compiler = compilerProvenance();
   const compileBlockers = compilationBlockers(spec, emitted.source);

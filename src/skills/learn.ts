@@ -3,7 +3,7 @@ import type { Report } from '../agent/report.js';
 import type { RecordedEntry, RecordedInstruction } from '../daemon/recorder.js';
 import { compileSkills, escapeRe, fillParams, sameProcedure, urlMatches } from './compile.js';
 import { ComponentStore, learnRecipes } from './components.js';
-import { successRate, type Skill, type SkillStore } from './store.js';
+import { contractOf, isVerified, successRate, type Skill, type SkillStore } from './store.js';
 
 export interface LearnedRecord {
   /** A new skill was stored (the first segment, when the compile split). */
@@ -115,7 +115,10 @@ export function learnFromInstruction(
         twin.stats.uses += 1;
         twin.stats.successes += 1;
         twin.stats.lastUsed = skills[0].provenance.created;
-        if (twin.status === 'provisional' && twin.stats.successes >= 2) twin.status = 'validated';
+        if (twin.status === 'provisional' && twin.stats.successes >= 2) {
+          twin.status = 'validated';
+          twin.stats.verifiedContract = contractOf(twin);
+        }
         store.put(twin);
       }
       out.merged = twins[0]!.id;
@@ -133,6 +136,13 @@ export function learnFromInstruction(
  * Zero-model match: a validated skill whose template, read as a pattern,
  * matches the incoming instruction exactly (modulo case, whitespace and quote
  * style), and whose start page is the current one. Returns the bound params.
+ *
+ * `isVerified`, not `status === 'validated'`, and this is the site where the
+ * difference matters most: nothing here consults a model, so the validated
+ * status IS the safety argument. A procedure promoted under an older contract
+ * was promoted by an engine with different rules, and letting it through here
+ * would run it unattended on the strength of evidence about a different
+ * engine. It stays a candidate elsewhere; it just cannot be trusted blind.
  */
 export function matchTemplate(
   skills: Skill[],
@@ -141,7 +151,7 @@ export function matchTemplate(
   known: Record<string, string> = {},
 ): { skill: Skill; params: Record<string, string> } | null {
   for (const skill of skills) {
-    if (skill.status !== 'validated') continue;
+    if (!isVerified(skill)) continue;
     if (skill.seq && skill.seq.index > 0) continue; // chains start at their head
     if (!urlMatches(skill.preconditions.urlPattern, url)) continue;
     const params = bindSkill(skill, instruction, known);
@@ -231,7 +241,7 @@ export function selectCandidates(
     out.push({ skill: s, params });
   }
   return out.sort((a, b) => {
-    const rank = (s: Skill) => (s.status === 'validated' ? 1 : 0);
+    const rank = (s: Skill) => (isVerified(s) ? 1 : 0);
     return (
       rank(b.skill) - rank(a.skill) ||
       successRate(b.skill) - successRate(a.skill) ||
