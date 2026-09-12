@@ -1,0 +1,264 @@
+{
+  "flow": "fwod35",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Navigated to http://127.0.0.1:8069/, signed in with login 'admin' / password 'admin', and reached the Odoo web client. Opened the Apps (Home Menu) page at /web#action=38&model=ir.module.module&view_type=kanban showing 55 apps. Verified the signed-in identity via the user menu → Preferences dialog, which shows \"Mitchell Admin\" (admin@yourcompany.example.com), the Odoo Administrator account. Screenshot captured as evidence.",
+      "values": {},
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Opened the Contacts app from the app switcher, clicked New, filled Name = \"fwod35-n3 Bench Customer\" and City = \"Benchville\" (in the address block), then clicked Save. The record saved as id 44 (URL /web#id=44&model=res.partner&view_type=form), the form switched to read mode with an \"Edit\" button, and a system notification \"Contact created\" by Mitchell Admin appeared. Verified on the saved form: Name = \"fwod35-n3 Bench Customer\" (heading and field value) and City = \"Benchville\". Screenshot captured.",
+      "values": {
+        "customer_ref": "fwod35-n3",
+        "contact_city": "Benchville",
+        "contact_name": "fwod35-n3 Bench Customer"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Opened the Sales app, created a new quotation for customer 'fwod35-n3 Bench Customer' (selected from the autocomplete dropdown — the \"Internal link\" button confirmed the record was chosen), added exactly one order line: product 'Customizable Desk' (variant Steel, White, [[FURN_0096] Customizable Desk (Steel, White)\n160x80cm, with large legs.], selected from the product dropdown; a \"Configure your product\" dialog was confirmed to accept the default variant), quantity 3.00. Saved the quotation via \"Save manually\" — it saved as S00023. Verified on the saved form's order line: product Customizable Desk, qty 3.00, unit price 750.00, tax 20%, tax excl. £2,250.00. The totals section showed Untaxed Amount £2,250.00 (read before saving; consistent with the saved line's £2,250.00 tax excl.). Note: the unit price initially showed 0.00 until the variant-configuration dialog was confirmed, after which it auto-filled to 750.00.",
+      "values": {
+        "customer_ref": "fwod35-n3",
+        "order_reference": "S00023",
+        "product_code": "[FURN_0096] Customizable Desk (Steel, White)\n160x80cm, with large legs."
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Added a second order line to quotation S00023: product \"Chair floor protection\" (selected from the product autocomplete dropdown, no config dialog appeared) with quantity 2.00, then saved the quotation. Verified on the saved form: line 1 = Customizable Desk qty 3.00 @ 750.00 (£2,250.00), line 2 = Chair floor protection qty 2.00 @ 12.00 (£24.00), and the totals section shows Untaxed Amount £2,274.00 (TAX 20% £454.80, Total £2,728.80). Screenshot captured at /home/user/sitelooper/S00023_second_line_saved.png.",
+      "values": {
+        "untaxed_amount_before_sa": "Untaxed Amount\t£ 2,274.00\nTAX 20%\t\n£ 454.80\n\nTotal\t£ 2,728.80",
+        "ref": "S00023",
+        "ref_2": "S00023_second_line_saved.png"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "the flow step has no pinned skill",
+      "replayed": null,
+      "repaired": false,
+      "turns": 35
+    },
+    {
+      "id": "05-edit",
+      "status": "success",
+      "summary": "Inspected S00023: the form was already in read mode (saved) with exactly two order lines — line 1 = Customizable Desk qty 3.00 @ 750.00 (£2,250.00), line 2 = Chair floor protection qty 2.00 @ 12.00 (£24.00). The second line was already valid (different product, quantity 2), so no changes were needed. Totals section on the saved form: Untaxed Amount £2,274.00 (TAX 20% £454.80, Total £2,728.80). Screenshot captured.",
+      "values": {
+        "untaxed_amount": "Untaxed Amount\t£ 2,274.00\nTAX 20%\t\n£ 454.80\n\nTotal\t£ 2,728.80",
+        "ref": "S00023",
+        "ref_2": "FURN_0096",
+        "ref_3": "S00023_final_state.png"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "the flow step has no pinned skill",
+      "replayed": null,
+      "repaired": false,
+      "turns": 4
+    },
+    {
+      "id": "06-edit",
+      "status": "success",
+      "summary": "Clicked \"Save manually\" on S00023 and the form switched to read mode (statusbar radios disabled, Confirm/Send by Email/Preview buttons present, no unsaved-changes indicator). The saved quotation has exactly two order lines: (1) Customizable Desk qty 3.00 @ 750.00 (£2,250.00) and (2) Chair floor protection qty 2.00 @ 12.00 (£24.00, 20% tax). Verified on the saved form: second line product = \"Chair floor protection\", quantity = 2.00, and Untaxed Amount in the totals section = £2,274.00 (TAX 20% £454.80). Screenshot captured.",
+      "values": {
+        "line_2_product": "Chair floor protection",
+        "line_2_quantity": "2.00",
+        "untaxed_amount": "£ 2,274.00",
+        "order_reference": "S00023"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "07-open",
+      "status": "success",
+      "summary": "Opened S00023, entered edit mode (by clicking the first line's quantity cell — the standard Edit button is not exposed in this Odoo 18 UI), changed only the first line's quantity from 3.00 to 5.00, and saved via \"Save manually\". The form switched back to read mode. Verified on the SAVED form: line 1 = Customizable Desk qty 5.00 @ 750.00 (£3,750.00), line 2 = Chair floor protection qty 2.00 @ 12.00 (£24.00), and the totals section shows Untaxed Amount £3,774.00 (TAX 20% £754.80, Total £4,528.80). Screenshot captured.",
+      "values": {
+        "ref": "S00023",
+        "ref_2": "S00023_qty5_saved.png"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "the flow step has no pinned skill",
+      "replayed": "2/2",
+      "repaired": false,
+      "turns": 44
+    },
+    {
+      "id": "08-edit",
+      "status": "success",
+      "summary": "Resumed on S00023 in edit mode with line 1's quantity already changed to 5.00 (line 2 unchanged at 2.00). Clicked \"Save manually\" — the form switched to read mode (statusbar radios disabled, Confirm/Send by Email/Preview buttons present). Verified on the SAVED form: line 1 = Customizable Desk qty 5.00 @ 750.00 (£3,750.00), line 2 = Chair floor protection qty 2.00 @ 12.00 (£24.00). Totals section: Untaxed Amount £3,774.00, TAX 20% £754.80, Total £4,528.80. Screenshot captured.",
+      "values": {
+        "order_reference": "S00023"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "2/2",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "09-report",
+      "status": "success",
+      "summary": "On the saved quotation S00023, clicked the Confirm button — no confirmation dialog was needed. The form updated: the statusbar now shows \"Sales Order\" as the checked (current) status, and a \"Create Invoice\" button appeared in place of Confirm. Verified on the live form: order reference = S00023 (heading), status = Sales Order (statusbar radio checked). Screenshot captured.",
+      "values": {
+        "order_reference": "S00023",
+        "order_status": "Sales Order\nQuotation Sent\nQuotation"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "3/3",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "10-report",
+      "status": "success",
+      "summary": "Cancelled the confirmed sales order S00023: clicked the status-bar \"Cancel\" button, accepted the native confirm dialog, then worked through the stacked dialogs (discarded the auto-opened \"Edit: fwod35-n3 Bench Customer\" contact dialog, then clicked \"Cancel\" in the Cancel Sales Order wizard). The form updated and the statusbar now shows \"Cancelled\" as the current status (all status radios disabled, \"Set to Quotation\" button appeared). Verified on the live form: reference S00023, status Cancelled. Screenshot captured.",
+      "values": {
+        "order_status": "Cancelled\nSales Order\nQuotation Sent\nQuotation",
+        "ref": "S00023",
+        "ref_2": "fwod35-n3",
+        "ref_3": "s_d62b17"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "the flow step has no pinned skill",
+      "replayed": "4/4",
+      "repaired": false,
+      "turns": 11
+    },
+    {
+      "id": "11-edit",
+      "status": "success",
+      "summary": "Observed the current state before acting: the two stacked modals (Edit contact dialog and Cancel Sales Order wizard) were already closed — no modal elements remain in the DOM — and the cancel flow had already completed in the previous turn. The statusbar of S00023 now shows \"Cancelled\" as the checked status (aria-checked=true), with \"Sales Order\", \"Quotation Sent\", and \"Quotation\" unchecked, and the statusbar buttons are now \"Preview\" / \"Set to Quotation\" (Cancel is gone). No further action was needed; verified on the live form and captured a screenshot.",
+      "values": {
+        "ref": "S00023"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "1/1",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "12-report",
+      "status": "success",
+      "summary": "Final read-only verification. (1) Sales order S00023: status bar shows \"Cancelled\" (checked radio), customer = \"fwod35-n3 Bench Customer\", order lines: line 1 = Customizable Desk qty 5.00, line 2 = Chair floor protection qty 2.00. (2) Contact 'fwod35-n3 Bench Customer' (id 44, opened via the customer link on the order): Name = \"fwod35-n3 Bench Customer\", City = \"Benchville\". Nothing was changed — read-only reads and one screenshot.",
+      "values": {
+        "customer_ref": "fwod35-n3",
+        "contact_name": "fwod35-n3 Bench Customer",
+        "contact_city": "Benchville",
+        "order_reference": "S00023"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "4/4",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 12,
+  "total": 12,
+  "repinned": 0,
+  "drift": 4,
+  "driftTickets": [
+    {
+      "flow": "fwod35",
+      "step": "06-edit",
+      "skill": "s_966f60",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.getByRole('button', { name: 'Save manually', exact: true })",
+      "fallbackUsed": "page.locator('div:nth-of-type(1) > div > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(1)')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=23"
+    },
+    {
+      "flow": "fwod35",
+      "step": "07-open",
+      "skill": "s_7ec5ec",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.getByRole('button', { name: 'Save manually', exact: true })",
+      "fallbackUsed": "page.locator('div:nth-of-type(1) > div > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(1)')",
+      "fallbackIndex": 1,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=23"
+    },
+    {
+      "flow": "fwod35",
+      "step": "08-edit",
+      "skill": "s_7ec5ec",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.getByRole('button', { name: 'Save manually', exact: true })",
+      "fallbackUsed": "page.locator('div:nth-of-type(1) > div > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(1)')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=23"
+    },
+    {
+      "flow": "fwod35",
+      "step": "10-report",
+      "skill": "s_d62b17",
+      "similarity": 0.999,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "the flow step has no pinned skill",
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=23"
+    }
+  ],
+  "wallMs": 725293,
+  "model": "z-ai/glm-5.3",
+  "usage": {
+    "promptTokens": 1827732,
+    "completionTokens": 22756,
+    "cachedTokens": 1708352
+  },
+  "usageByModel": {
+    "z-ai/glm-5.3": {
+      "promptTokens": 1827732,
+      "completionTokens": 22756,
+      "cachedTokens": 1708352
+    }
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

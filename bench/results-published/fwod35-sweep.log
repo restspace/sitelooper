@@ -1,0 +1,119 @@
+
+[sweep] run 1/3: fwod35-n1 (store: /home/user/sitelooper/bench/results/fwod35-skills)
+[harness] odoo: defaulting APP_URL
+[harness] odoo: defaulting APP_EMAIL
+[harness] odoo: defaulting APP_PASSWORD
+[reset] odoo: no leftover bench customers
+[harness] odoo responded 303 at http://127.0.0.1:8069/
+stopped: fwod35-n1
+  flow "fwod35" saved: 12 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwod35.json
+  warning: note: 4 step(s) adopted from non-success instruction(s) whose work the session continued from (04-open, 05-edit, 07-open, 10-report) — they replay model-first with doubled budget, and a non-success there does not halt the flow
+  warning: warning: noop-step: 06-edit changed nothing: its instruction asks to save, the recording's 1 state-changing action left the page unchanged, and the page already showed 'Chair floor protection' before it ran. The step may be redundant.
+  warning: warning: noop-step: 08-edit changed nothing: its instruction asks to change, the recording's 1 state-changing action left the page unchanged, and the page already showed 'S00021' before it ran. The step may be redundant.
+  warning: warning: noop-step: 09-report changed nothing: its instruction asks to save, the recording's 1 state-changing action left the page unchanged, and the page already showed 'S00021' before it ran. The step may be redundant.
+  warning: warning: 2 value(s) KNOWN to be this run's survived unslotted — a replay will act on or wait for the recording's value (non-fatal outside locators):
+  s_62bd1a.reportTemplate.summary: "44" (url) in "Opened the Contacts app from the app switcher, clicked New, filled Name = \"{{v2}}\" and City = \"{{v3}}\" (in the address block), then clicked Save. The record sav"
+  s_36cb3f.reportTemplate.summary: "44" (url) in "Final read-only verification. (1) Sales order {{v1}}: status bar shows \"Cancelled\" (checked radio), customer = \"{{v2}}\", order lines: line 1 = Customizable Desk"
+  warning: warning: 46 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].route: "ir.module.module" (url) in "http://127.0.0.1:8069/web#action=:id&cids=:id&menu_id=:id&model=ir.module.module&view_type=kanban"
+  flow.steps[1].instruction: "Benchville" (output) in "In Odoo, create a new contact/customer named exactly '{{runid}} Bench Customer' with the City field set to 'Benchville'. Go to the Contacts app, click New, fill"
+  flow.steps[1].params.v3: "Benchville" (output) in "Benchville"
+  flow.steps[5].instruction: "Chair floor protection" (output) in "In Odoo you are on the sale order form {{03-create.order_reference}} in EDIT MODE with two order lines: line 1 = 'Customizable Desk' qty 3.00 @ 750.00, line 2 ="
+  flow.steps[5].instruction: "2.00" (output) in "In Odoo you are on the sale order form {{03-create.order_reference}} in EDIT MODE with two order lines: line 1 = 'Customizable Desk' qty 3.00 @ 750.00, line 2 ="
+arm=sitelooper model=z-ai/glm-5.3 runid=fwod35-n1 stop=completed
+turns=13 wall=1623.0s
+commands=12 cmdTime=1566.1s cmdBytes=13548 timeouts=0
+orchestrator in=14637 cw=0 cr=52032 out=5303
+inner prompt=3403577 cached=3171776 completion=31220
+spend=$1.3439 maxUsd=2
+learn: A_n=0 replayed=0/12 full=0 repaired=0 compiled=8 variants=0
+-> /home/user/sitelooper/bench/results/fwod35-n1-sitelooper-result.json
+
+fwod35-n1: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00021
+
+[sweep] run 2/3: fwod35-n2 (replay flow fwod35, no orchestrator)
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+[sweep] fwod35-n2: 4 drift ticket(s) → fwod35-n2-drift.json
+
+fwod35-n2: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00022
+
+[sweep] run 3/3: fwod35-n3 (replay flow fwod35, no orchestrator)
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+[sweep] fwod35-n3: 4 drift ticket(s) → fwod35-n3-drift.json
+
+fwod35-n3: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00023
+
+Learning sweep fwod35 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬────────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed       │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼────────────────┼────────┤
+│ 0       │ 1 │ 'fwod35-n1' │ '6/6'    │ 'completed' │ 13    │ 12   │ 1.3439    │ 0   │ '0/12'         │ 1623   │
+│ 1       │ 2 │ 'fwod35-n2' │ '6/6'    │ 'success'   │ 92    │ 12   │ 0.6198    │ 1   │ '12/12 (flow)' │ 535    │
+│ 2       │ 3 │ 'fwod35-n3' │ '6/6'    │ 'success'   │ 94    │ 12   │ 0.7114    │ 1   │ '12/12 (flow)' │ 725    │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴────────────────┴────────┘
+http://127.0.0.1:8069
+  s_7ec5ec  validated    2 steps  5/5 (100%)
+           In Odoo you are on the sale order form {{v1}}, likely in EDIT MODE with the first line's quantity just changed…
+  s_d62b17  validated    4 steps  3/5 (60%)
+           In Odoo on the sales order {{v1}} there are two stacked modal dialogs. The ACTIVE top modal is an 'Edit: {{v2}…
+  s_6c3dc9  validated    2 steps  3/3 (100%)
+           Navigate to {{v1}} and sign in with login 'admin' and password 'admin'. Verify you reach the Odoo home/apps pa…
+  s_eebf90  validated    2 steps  3/3 (100%)
+           Navigate to {{v1}} and sign in with login 'admin' and password 'admin'. Verify you reach the Odoo home/apps pa…
+  s_bb5c2a  validated    3 steps  3/3 (100%)
+           Navigate to {{v1}} and sign in with login 'admin' and password 'admin'. Verify you reach the Odoo home/apps pa…
+  s_7407e2  validated    2 steps  3/3 (100%)
+           Navigate to {{v1}} and sign in with login 'admin' and password 'admin'. Verify you reach the Odoo home/apps pa…
+  s_3e54ab  validated    1 steps  3/3 (100%)
+           In Odoo, create a new contact/customer named exactly '{{v2}}' with the City field set to '{{v3}}'. Go to the C…
+  s_dcd773  validated    3 steps  3/3 (100%)
+           In Odoo, create a new contact/customer named exactly '{{v2}}' with the City field set to '{{v3}}'. Go to the C…
+  s_62bd1a  validated    2 steps  3/3 (100%)
+           In Odoo, create a new contact/customer named exactly '{{v2}}' with the City field set to '{{v3}}'. Go to the C…
+  s_4dda58  validated    3 steps  3/3 (100%)
+           In Odoo, create a new contact/customer named exactly '{{v2}}' with the City field set to '{{v3}}'. Go to the C…
+  s_acea84  validated    1 steps  3/3 (100%)
+           In Odoo, go to the Sales app and create a new quotation for the customer '{{v1}}' (the customer field is an au…
+  s_599b1d  validated   10 steps  3/3 (100%)
+           In Odoo, go to the Sales app and create a new quotation for the customer '{{v1}}' (the customer field is an au…
+  s_88404a  validated    2 steps  3/3 (100%)
+           In Odoo, go to the Sales app and create a new quotation for the customer '{{v1}}' (the customer field is an au…
+  s_7bc446  validated    2 steps  3/3 (100%)
+           In Odoo, go to the Sales app and create a new quotation for the customer '{{v1}}' (the customer field is an au…
+  s_966f60  validated    5 steps  3/3 (100%)
+           In Odoo you are on the sale order form {{v1}} in EDIT MODE with two order lines: line 1 = 'Customizable Desk' …
+  s_ea8d42  validated    3 steps  3/3 (100%)
+           In Odoo, on the saved quotation {{v1}} (customer '{{v2}}', two lines: Customizable Desk qty 5, {{v4}} qty 2), …
+  s_36cb3f  validated    3 steps  3/3 (100%)
+           In Odoo, do a final verification of two things and report them: (1) Open the sales order {{v1}} (Sales app, or…
+  s_511cca  validated    1 steps  3/3 (100%)
+           In Odoo, do a final verification of two things and report them: (1) Open the sales order {{v1}} (Sales app, or…
+  s_21ebae  validated    6 steps  2/2 (100%)
+           In Odoo, open the existing quotation {{v1}} (for customer '{{v2}} Bench Customer') in the Sales app. It curren…
+  s_ba2859  validated    3 steps  2/2 (100%)
+           In Odoo you are on the sale order form {{v1}} (customer '{{v2}} Bench Customer'), possibly in edit mode with a…
+  s_0c5316  validated    1 steps  2/2 (100%)
+           In Odoo on the sales order {{v1}} there are two stacked modal dialogs. The ACTIVE top modal is an 'Edit: {{v2}…
+store: /home/user/sitelooper/bench/results/fwod35-skills
+
+summary: /home/user/sitelooper/bench/results/fwod35-sweep.json

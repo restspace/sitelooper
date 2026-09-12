@@ -1,0 +1,343 @@
+{
+  "name": "fwod35",
+  "origin": "http://127.0.0.1:8069",
+  "startUrl": "http://127.0.0.1:8069/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Navigate to http://127.0.0.1:8069/ and sign in with login 'admin' and password 'admin'. Verify you reach the Odoo home/apps page signed in as Administrator. Note: the app long-polls so never wait for network idle; wait for concrete page state instead.",
+      "skill": "s_7407e2",
+      "params": {
+        "v1": "http://127.0.0.1:8069/"
+      },
+      "outputs": [],
+      "recorded": {
+        "url": "http://127.0.0.1:8069/web#action=38&model=ir.module.module&view_type=kanban&cids=1&menu_id=15",
+        "url.q.model": "ir.module.module"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&menu_id=:id&model=ir.module.module&view_type=kanban",
+      "outputEvidence": {
+        "url": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.q.model": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "In Odoo, create a new contact/customer named exactly '{{runid}} Bench Customer' with the City field set to 'Benchville'. Go to the Contacts app, click New, fill in the Name and City (City is in the address block on the form), then Save. Verify the record saved and report the Name and City values shown on the saved form. Do not wait for network idle.",
+      "skill": "s_4dda58",
+      "params": {
+        "v2": "{{runid}} Bench Customer",
+        "v3": "Benchville",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "contact_city",
+        "contact_name",
+        "customer_ref"
+      ],
+      "recorded": {
+        "contact_city": "Benchville",
+        "contact_name": "fwod35-n1 Bench Customer",
+        "customer_ref": "fwod35-n1",
+        "url": "http://127.0.0.1:8069/web#cids=1&menu_id=109&action=156&model=res.partner&view_type=form&id=44",
+        "url.q.menu_id": "109",
+        "url.q.action": "156",
+        "url.q.id": "44"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=res.partner&view_type=form",
+      "outputEvidence": {
+        "contact_city": {
+          "same": 1,
+          "differed": 0
+        },
+        "contact_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "customer_ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.q.menu_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.q.action": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.q.id": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "03-create",
+      "instruction": "In Odoo, go to the Sales app and create a new quotation for the customer '{{runid}} Bench Customer' (the customer field is an autocomplete dropdown - you must actually select the matching option from the dropdown, not just type it). Add exactly ONE order line: pick any product from the product catalogue (again the product field is an autocomplete - select an actual option from the dropdown), with quantity 3. Save the quotation. Then report: (a) the product name you chose, (b) the unit price the app auto-filled for that line, and (c) the Untaxed Amount the app computed (from the totals section). Do not wait for network idle; wait for concrete page state.",
+      "skill": "s_7bc446",
+      "params": {
+        "v1": "{{runid}} Bench Customer",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "customer_ref",
+        "product_code",
+        "order_reference"
+      ],
+      "recorded": {
+        "customer_ref": "fwod35-n1",
+        "product_code": "FURN_0096",
+        "order_reference": "S00021",
+        "url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=21",
+        "url.q.menu_id": "194",
+        "url.q.action": "316",
+        "url.q.id": "21"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "customer_ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "product_code": {
+          "same": 0,
+          "differed": 1
+        },
+        "order_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.q.menu_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.q.action": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.q.id": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "04-open",
+      "instruction": "In Odoo, open the existing quotation {{03-create.order_reference}} (for customer '{{runid}} Bench Customer') in the Sales app. It currently has one order line: 'Customizable Desk' quantity 3. Add a SECOND order line with a DIFFERENT product (pick any other product from the catalogue; the product field is an autocomplete dropdown - select an actual option from the dropdown, and if a product-configuration dialog appears, confirm it) with quantity 2. Save the quotation. Then report: (a) the product name of the new second line, and (b) the new Untaxed Amount shown in the totals section. Do not wait for network idle; wait for concrete page state.",
+      "outputs": [],
+      "recorded": {},
+      "adopted": true,
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form"
+    },
+    {
+      "id": "05-edit",
+      "instruction": "In Odoo you are on the sale order form {{03-create.order_reference}} (customer '{{runid}} Bench Customer'), possibly in edit mode with a partially-added second order line. First inspect the current state of the order lines table: report how many lines exist, each line's product name and quantity. Then make sure the quotation ends up with exactly TWO order lines: line 1 = 'Customizable Desk' quantity 3, and line 2 = a DIFFERENT product with quantity 2 (if a second line was already added with a valid different product and quantity 2, keep it; if it's incomplete or invalid, fix or redo it). Then Save the quotation and report: (a) the product name of the second line, (b) the quantity of the second line, and (c) the Untaxed Amount shown in the totals section after saving. Do not wait for network idle; wait for concrete page state.",
+      "outputs": [],
+      "recorded": {},
+      "adopted": true,
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form"
+    },
+    {
+      "id": "06-edit",
+      "instruction": "In Odoo you are on the sale order form {{03-create.order_reference}} in EDIT MODE with two order lines: line 1 = 'Customizable Desk' qty 3.00 @ 750.00, line 2 = 'Chair floor protection' qty 2.00 @ 12.00. Click the Save button (e.g. 'Save manually') to persist the quotation. Wait for the form to switch to read mode (no unsaved-changes indicator). Then report: (a) the product name of the second line, (b) the quantity of the second line, and (c) the Untaxed Amount shown in the totals section on the SAVED form. Do not wait for network idle; wait for concrete page state.",
+      "skill": "s_966f60",
+      "params": {
+        "v1": "{{03-create.order_reference}}"
+      },
+      "outputs": [
+        "line_2_product",
+        "line_2_quantity",
+        "untaxed_amount",
+        "order_reference"
+      ],
+      "recorded": {
+        "line_2_product": "Chair floor protection",
+        "line_2_quantity": "2.00",
+        "untaxed_amount": "£ 2,274.00",
+        "order_reference": "S00021"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "line_2_product": {
+          "same": 1,
+          "differed": 0
+        },
+        "line_2_quantity": {
+          "same": 1,
+          "differed": 0
+        },
+        "untaxed_amount": {
+          "same": 1,
+          "differed": 0
+        },
+        "order_reference": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "07-open",
+      "instruction": "In Odoo, open the saved quotation {{03-create.order_reference}} (customer '{{runid}} Bench Customer') in edit mode. It has two order lines: line 1 = 'Customizable Desk' quantity 3.00, line 2 = 'Chair floor protection' quantity 2.00. Change ONLY the first line's quantity from 3 to 5 (leave the second line at quantity 2). Save the quotation. Then report the Untaxed Amount shown in the totals section on the SAVED form, and confirm both lines' products and quantities. Do not wait for network idle; wait for concrete page state.",
+      "outputs": [],
+      "recorded": {},
+      "adopted": true,
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form"
+    },
+    {
+      "id": "08-edit",
+      "instruction": "In Odoo you are on the sale order form {{03-create.order_reference}}, likely in EDIT MODE with the first line's quantity just changed to 5 (second line 'Chair floor protection' should still be quantity 2). First check the current state of the form: is it in edit mode or read mode, and what are the two lines' products and quantities? If the quantity change to 5 is not yet applied/persisted, apply it. Then SAVE the quotation and wait for read mode. Finally report: (a) both lines' product names and quantities on the SAVED form, and (b) the Untaxed Amount shown in the totals section on the SAVED form. Do not wait for network idle; wait for concrete page state.",
+      "skill": "s_7ec5ec",
+      "params": {
+        "v1": "{{03-create.order_reference}}",
+        "v2": "Chair floor protection"
+      },
+      "outputs": [
+        "order_reference"
+      ],
+      "recorded": {
+        "order_reference": "S00021"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "order_reference": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "09-report",
+      "instruction": "In Odoo, on the saved quotation {{03-create.order_reference}} (customer '{{runid}} Bench Customer', two lines: Customizable Desk qty 5, Chair floor protection qty 2), click the Confirm button to confirm the quotation so it becomes a sales order. If a confirmation dialog appears, accept it. Wait for the form to update. Then report: (a) the order reference/name shown (e.g. {{03-create.order_reference}}), and (b) the status the app now shows in the status bar (e.g. 'Sales Order'). Do not wait for network idle; wait for concrete page state.",
+      "skill": "s_ea8d42",
+      "params": {
+        "v1": "{{03-create.order_reference}}",
+        "v2": "{{runid}} Bench Customer",
+        "v4": "Chair floor protection",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "order_reference",
+        "order_status"
+      ],
+      "recorded": {
+        "order_reference": "S00021",
+        "order_status": "Sales Order\nQuotation Sent\nQuotation"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "order_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "order_status": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "10-report",
+      "instruction": "In Odoo, on the confirmed sales order {{03-create.order_reference}} (status 'Sales Order'), cancel the order so nothing stays active. Look for a Cancel button (it may be in the status bar area, or under a dropdown menu like the 'Action'/'cog' menu, or a 'Cancel' button near the status bar). If a confirmation dialog appears, accept it. Wait for the form to update. Then report the status the app shows in the status bar after cancelling (e.g. 'Cancelled'). Do not wait for network idle; wait for concrete page state.",
+      "outputs": [],
+      "recorded": {},
+      "adopted": true,
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form"
+    },
+    {
+      "id": "11-edit",
+      "instruction": "In Odoo on the sales order {{03-create.order_reference}} there are two stacked modal dialogs. The ACTIVE top modal is an 'Edit: {{runid}} Bench Customer' contact dialog with buttons Save & Close / Save & New / Discard. Underneath it is a 'Cancel Sales Order' wizard modal with buttons 'Send and cancel' / 'Cancel' / 'Discard'. First click 'Discard' in the top contact dialog to close it (do NOT save it). Then, in the now-active 'Cancel Sales Order' wizard, click the 'Cancel' button to cancel the order. Wait for the modals to close and the form to update. Then verify and report the status shown in the status bar of {{03-create.order_reference}} (it should be 'Cancelled'). If the status is not yet 'Cancelled', keep working through the cancel flow until it is. Do not wait for network idle; wait for concrete page state.",
+      "skill": "s_d62b17",
+      "params": {
+        "v1": "{{03-create.order_reference}}",
+        "v2": "{{runid}} Bench Customer",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "order_status",
+        "customer_ref",
+        "order_reference"
+      ],
+      "recorded": {
+        "order_status": "Cancelled\nSales Order\nQuotation Sent\nQuotation",
+        "customer_ref": "fwod35-n1",
+        "order_reference": "S00021"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form"
+    },
+    {
+      "id": "12-report",
+      "instruction": "In Odoo, do a final verification of two things and report them: (1) Open the sales order {{03-create.order_reference}} (Sales app, or via the Orders list) and report its status shown in the status bar, its customer name, and the two order lines' products and quantities. (2) Open the contact '{{runid}} Bench Customer' in the Contacts app and report its Name and City. Do not change anything - read only. Do not wait for network idle; wait for concrete page state.",
+      "skill": "s_511cca",
+      "params": {
+        "v1": "{{03-create.order_reference}}",
+        "v2": "{{runid}} Bench Customer",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "contact_name",
+        "contact_city",
+        "order_reference",
+        "customer_ref"
+      ],
+      "recorded": {
+        "contact_name": "fwod35-n1 Bench Customer",
+        "contact_city": "Benchville",
+        "order_reference": "S00021",
+        "customer_ref": "fwod35-n1",
+        "url": "http://127.0.0.1:8069/web#id=44&cids=1&menu_id=194&model=res.partner&view_type=form"
+      },
+      "route": "http://127.0.0.1:8069/web#cids=:id&id=:id&menu_id=:id&model=res.partner&view_type=form",
+      "outputEvidence": {
+        "contact_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "contact_city": {
+          "same": 1,
+          "differed": 0
+        },
+        "order_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "customer_ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwod35-n1",
+    "created": "2026-09-11T23:50:58.996Z",
+    "model": "z-ai/glm-5.3"
+  },
+  "warnings": [
+    "noop-step: 06-edit changed nothing: its instruction asks to save, the recording's 1 state-changing action left the page unchanged, and the page already showed 'Chair floor protection' before it ran. The step may be redundant.",
+    "noop-step: 08-edit changed nothing: its instruction asks to change, the recording's 1 state-changing action left the page unchanged, and the page already showed 'S00021' before it ran. The step may be redundant.",
+    "noop-step: 09-report changed nothing: its instruction asks to save, the recording's 1 state-changing action left the page unchanged, and the page already showed 'S00021' before it ran. The step may be redundant."
+  ]
+}
