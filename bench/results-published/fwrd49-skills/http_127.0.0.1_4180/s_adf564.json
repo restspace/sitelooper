@@ -1,0 +1,1202 @@
+{
+ "id": "s_adf564",
+ "origin": "http://127.0.0.1:4180",
+ "template": "On the ticket detail page for ticket {{v1}} ('{{v2}}', currently status {{v4}} with two parts: '{{v5}}' and '{{v7}}'), remove BOTH parts so the parts table ends up empty. The app may enforce preconditions before allowing a part to be deleted (e.g. it may refuse to delete parts while the ticket is {{v4}}) — if it refuses, read the exact error message it shows, then satisfy whatever it requires (for example changing the ticket status back to {{v6}}) and delete both parts. Wait after each delete for the parts table to refresh (it refreshes a short beat after the mutation, not instantly) and confirm each part is gone before the next step. Then archive the ticket so nothing from this run is left active, and confirm the archive (e.g. 'Archived' marker / 'Unarchive ticket' button, and the row in the tickets list with 'Show archived' ticked). Report: any error text you hit, what you had to do to satisfy it, the final parts count, the ticket's final status, and the confirmation that it is archived.",
+ "params": {
+  "v1": {
+   "example": "RD-1015",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i1:ticket_reference"
+  },
+  "v2": {
+   "example": "fwrd49-n1 RD Bench Ticket",
+   "usedIn": [
+    15,
+    16,
+    17
+   ],
+   "known": true,
+   "binding": "output:i1:ticket_title"
+  },
+  "v3": {
+   "example": "fwrd49-n1",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v4": {
+   "example": "Ready",
+   "usedIn": [
+    13
+   ],
+   "known": true,
+   "binding": "output:i5:status_after_attempt"
+  },
+  "v5": {
+   "example": "fwrd49-n1 RD Part A",
+   "usedIn": [
+    2
+   ],
+   "known": true,
+   "binding": "output:i2:part_name"
+  },
+  "v6": {
+   "example": "Draft",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i1:ticket_status"
+  },
+  "v7": {
+   "example": "fwrd49-n1 RD Part B",
+   "usedIn": [
+    4,
+    5,
+    8
+   ],
+   "known": true
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:4180/#/tickets/{{d1}}",
+  "fingerprint": [
+   0,
+   0.047,
+   0.024,
+   0,
+   0,
+   0,
+   0.071,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.165,
+   0,
+   0.094,
+   0.047,
+   0,
+   0.047,
+   0.094,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0.094,
+   0,
+   0.094,
+   0,
+   0.024,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0.094,
+   0,
+   0,
+   0,
+   0,
+   0.094,
+   0,
+   0,
+   0,
+   0.094,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.094,
+   0,
+   0.047,
+   0,
+   0.047,
+   0.024,
+   0,
+   0,
+   0,
+   0.047,
+   0.047,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0.024,
+   0,
+   0,
+   0.024,
+   0.024,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0.071,
+   0,
+   0.047,
+   0.094,
+   0.118,
+   0,
+   0.047,
+   0.047,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0,
+   0.235,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0.047,
+   0,
+   0.071,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.141,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.282,
+   0,
+   0.071,
+   0.047,
+   0,
+   0,
+   0,
+   0.235,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0.047,
+   0.047,
+   0.212,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0.047,
+   0.047,
+   0,
+   0.094,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.424,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0.071,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0.071,
+   0,
+   0.118,
+   0,
+   0,
+   0.094,
+   0,
+   0.047,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.071,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0.094,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0.024,
+   0,
+   0.235,
+   0.024,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0.165,
+   0.141,
+   0,
+   0,
+   0,
+   0.094,
+   0.024,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.071,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0.047,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0.141,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.188,
+   0,
+   0.165,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.094,
+   0.047,
+   0,
+   0.047,
+   0,
+   0.094,
+   0,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0.047,
+   0,
+   0,
+   0.047,
+   0.071,
+   0,
+   0.047,
+   0.047,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0.047,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "requireText": [
+   "{{v2}}",
+   "{{v3}}"
+  ]
+ },
+ "steps": [
+  {
+   "tool": "dialog_expect",
+   "args": {
+    "action": "accept"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1002"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "tr",
+      "hasText": "{{v5}}",
+      "selector": "td:nth-of-type(7) > button:nth-of-type(2)"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Delete"
+     },
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(1) > td:nth-of-type(7) > button:nth-of-type(2)"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"part-row-p18\"] button"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "part-delete-p18"
+     },
+     {
+      "kind": "point",
+      "x": 1077,
+      "y": 399,
+      "w": 59.6,
+      "h": 29.5,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets/{{d1}}",
+    "addedContains": [
+     "- dialog \"Confirm\"",
+     "- heading \"Confirm\"",
+     "- button \"Cancel\"",
+     "- button \"Delete part\""
+    ]
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Delete part\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=button[name=\"Delete part\"]"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "confirm-yes"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Delete part"
+     },
+     {
+      "kind": "id",
+      "selector": "#confirm-yes"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"confirm-dialog\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "#confirm-yes"
+     },
+     {
+      "kind": "point",
+      "x": 780,
+      "y": 500,
+      "w": 98.5,
+      "h": 39,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets/{{d1}}"
+   }
+  },
+  {
+   "tool": "read_all",
+   "args": {
+    "target": "table tbody tr",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "table tbody tr"
+     },
+     {
+      "kind": "scoped",
+      "container": "tr",
+      "hasText": "{{v7}}"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"parts-table\"] tr"
+     },
+     {
+      "kind": "css",
+      "selector": "#view > section > div > table > tbody > tr"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "part-row-p19"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 399,
+      "w": 1070,
+      "h": 51,
+      "role": null,
+      "tag": "tr",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "part_deleted_second_row_before_delete"
+  },
+  {
+   "tool": "read_all",
+   "args": {
+    "target": "table tbody tr",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "table tbody tr"
+     },
+     {
+      "kind": "scoped",
+      "container": "tr",
+      "hasText": "{{v7}}"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"parts-table\"] tr"
+     },
+     {
+      "kind": "css",
+      "selector": "#view > section > div > table > tbody > tr"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "part-row-p19"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 399,
+      "w": 1070,
+      "h": 51,
+      "role": null,
+      "tag": "tr",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "part_deleted_second_row_before_delete"
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:4180/#/tickets/{{d1}}"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "dialog_expect",
+   "args": {
+    "action": "accept"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1062"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "tr",
+      "hasText": "{{v7}}",
+      "selector": "td:nth-of-type(7) > button:nth-of-type(2)"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Delete"
+     },
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr > td:nth-of-type(7) > button:nth-of-type(2)"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"part-row-p19\"] button"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "part-delete-p19"
+     },
+     {
+      "kind": "point",
+      "x": 1077,
+      "y": 399,
+      "w": 59.6,
+      "h": 29.5,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets/{{d1}}",
+    "addedContains": [
+     "- dialog \"Confirm\"",
+     "- heading \"Confirm\"",
+     "- button \"Cancel\"",
+     "- button \"Delete part\""
+    ]
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Delete part\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=button[name=\"Delete part\"]"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "confirm-yes"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Delete part"
+     },
+     {
+      "kind": "id",
+      "selector": "#confirm-yes"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"confirm-dialog\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "#confirm-yes"
+     },
+     {
+      "kind": "point",
+      "x": 780,
+      "y": 500,
+      "w": 98.5,
+      "h": 39,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets/{{d1}}"
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "final_parts_table",
+    "target": "table",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "table"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "parts-table"
+     },
+     {
+      "kind": "text",
+      "text": "NAME COST MARKUP QTY SUPPLIER PRICE ACTIONS No parts on this ticket yet."
+     },
+     {
+      "kind": "css",
+      "selector": "#view > section > div > table"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 375,
+      "w": 1070,
+      "h": 80,
+      "role": null,
+      "tag": "table",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "final_parts_table"
+  },
+  {
+   "tool": "dialog_expect",
+   "args": {
+    "action": "accept"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Archive ticket\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=button[name=\"Archive ticket\"]"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "archive"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Archive ticket"
+     },
+     {
+      "kind": "css",
+      "selector": "#view > div > div:nth-of-type(2) > button:nth-of-type(3)"
+     },
+     {
+      "kind": "point",
+      "x": 1119,
+      "y": 145,
+      "w": 113.3,
+      "h": 39,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets/{{d1}}",
+    "addedContains": [
+     "- button \"Unarchive ticket\""
+    ]
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "ticket_status_header",
+    "target": "main p:has-text(\"Status\")",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "main p:has-text(\"Status\")"
+     },
+     {
+      "kind": "text",
+      "text": "Status {{v4}} Archived"
+     },
+     {
+      "kind": "css",
+      "selector": "#view > div > div:nth-of-type(1) > p:nth-of-type(3)"
+     },
+     {
+      "kind": "point",
+      "x": 259,
+      "y": 225,
+      "w": 310.3,
+      "h": 25.2,
+      "role": null,
+      "tag": "p",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "ticket_status_header"
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:4180/#/tickets"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "#ticket-rows tr",
+      "hasText": "{{v2}} Archived",
+      "selector": "td:nth-of-type(1) > a"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "ticket-link-{{d1}}"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"ticket-row-{{d1}}\"] a"
+     },
+     {
+      "kind": "css",
+      "selector": "#ticket-rows > tr:nth-of-type(2) > td:nth-of-type(1) > a"
+     },
+     {
+      "kind": "point",
+      "x": 152,
+      "y": 470,
+      "w": 54.6,
+      "h": 15,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "ticket_reference"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "#ticket-rows tr",
+      "hasText": "{{v2}} Archived",
+      "selector": "td:nth-of-type(3)"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"ticket-row-{{d1}}\"] td",
+      "nth": 2
+     },
+     {
+      "kind": "css",
+      "selector": "#ticket-rows > tr:nth-of-type(2) > td:nth-of-type(3)"
+     },
+     {
+      "kind": "point",
+      "x": 703,
+      "y": 469,
+      "w": 207.4,
+      "h": 46.2,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "customer"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "#ticket-rows tr",
+      "hasText": "{{v2}} Archived",
+      "selector": "td:nth-of-type(4) > span"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"ticket-row-{{d1}}\"] span",
+      "nth": 1
+     },
+     {
+      "kind": "css",
+      "selector": "#ticket-rows > tr:nth-of-type(2) > td:nth-of-type(4) > span"
+     },
+     {
+      "kind": "point",
+      "x": 854,
+      "y": 469,
+      "w": 56,
+      "h": 25.2,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "final_status"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "On {{v1}} (status {{v4}} with Part A and Part B) I deleted both parts and the app did NOT refuse — no error, dialog message or inline validation appeared at any point (the aria-live [role=alert] region stayed empty), so no status change back to {{v6}} was needed; deletion is permitted while {{v4}}. Each Delete opened a modal Confirm dialog which I accepted via its \"Delete part\" button, and I verified after each delete (including a full page reload) that the row was gone: Part A removed first, then Part B, leaving the parts table empty (\"No parts on this ticket yet.\") with final parts count 0. I then archived the ticket: the detail page shows \"Status: {{v4}} / Archived\" with the \"Archive ticket\" button replaced by \"Unarchive ticket\", and with \"Show archived\" ticked the tickets list shows {{v1}} | {{v2}} Archived | Bench Test Co | {{v4}} | 0 parts | 2026-09-12.",
+  "values": {
+   "ticket_reference": "{{v1}}",
+   "ticket_title": "{{v2}}",
+   "customer": "Bench Test Co",
+   "part_deleted_first": "{{v5}} (cost $150.00, markup 25%, qty 1, supplier Bench Supply Co, price $187.50)",
+   "part_deleted_second_row_before_delete": "{{v7}}\t$200.00\t25%\t1\tBench Supply Co\t$250.00\tEdit Delete",
+   "part_b_price_before_delete": "$250.00",
+   "remaining_row_after_part_a_delete": "{{v7}}\t$200.00\t25%\t1\tBench Supply Co\t$250.00\tEdit Delete",
+   "error_text_from_deletes": "(none — the app did NOT refuse; no error/dialog/validation message appeared, the aria-live [role=alert] region stayed empty)",
+   "delete_confirm_dialog": "Each delete showed a modal Confirm dialog with 'Cancel' / 'Delete part' buttons",
+   "precondition_had_to_satisfy": "none needed — deleting parts was allowed while the ticket was {{v4}}, so no status change to {{v6}} was required",
+   "final_parts_count": "0",
+   "final_parts_table": "NAME\tCOST\tMARKUP\tQTY\tSUPPLIER\tPRICE\tACTIONS\nNo parts on this ticket yet.",
+   "final_status": "{{v4}}",
+   "archived_state": "Archived — detail page header shows 'Status {{v4}} Archived' and the 'Archive ticket' button became 'Unarchive ticket'; list row (Show archived ticked) = {{v1}}\t{{v2}} Archived\tBench Test Co\t{{v4}}\t0\t2026-09-12",
+   "detail_url": "http://127.0.0.1:4180/#/tickets/t15",
+   "ticket_status_header": "Status\n{{v4}}\nArchived",
+   "ref": "{{v3}}"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-12T23:48:50.453Z",
+  "failedAtStep": {},
+  "fallthroughs": 4,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-12T23:51:03.537Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_780d38",
+  "index": 1,
+  "of": 2
+ },
+ "provenance": {
+  "session": "fwrd49-n1",
+  "instruction": "On the ticket detail page for ticket RD-1015 ('fwrd49-n1 RD Bench Ticket', currently status Ready with two parts: 'fwrd49-n1 RD Part A' and 'fwrd49-n1 RD Part B'), remove BOTH parts so the parts table ends up empty. The app may enforce preconditions before allowing a part to be deleted (e.g. it may refuse to delete parts while the ticket is Ready) — if it refuses, read the exact error message it shows, then satisfy whatever it requires (for example changing the ticket status back to Draft) and delete both parts. Wait after each delete for the parts table to refresh (it refreshes a short beat after the mutation, not instantly) and confirm each part is gone before the next step. Then archive the ticket so nothing from this run is left active, and confirm the archive (e.g. 'Archived' marker / 'Unarchive ticket' button, and the row in the tickets list with 'Show archived' ticked). Report: any error text you hit, what you had to do to satisfy it, the final parts count, the ticket's final status, and the confirmation that it is archived.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-12T23:48:50.453Z"
+ },
+ "revision": 3
+}

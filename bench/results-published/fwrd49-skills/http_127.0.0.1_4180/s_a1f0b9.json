@@ -1,0 +1,326 @@
+{
+ "id": "s_a1f0b9",
+ "origin": "http://127.0.0.1:4180",
+ "template": "Create a new throwaway ticket titled '{{v3}}' with a customer, but do NOT add any parts to it. Then open its detail page and attempt to set its status to {{v2}} (Mark {{v2}} action). If the app refuses, report the exact error/validation message verbatim. Then, based on that message, discover what precondition the app enforces for the {{v2}} status (e.g. add a part or whatever it demands) and satisfy it so the probe ticket reaches {{v2}}, reporting what specifically was required. Finally archive the probe ticket so it is not left active, and confirm it shows as archived. Report: the exact error text you saw, what you had to do to satisfy it, and the probe ticket's final archived state.",
+ "params": {
+  "v1": {
+   "example": "fwrd49-n1",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "Ready",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i5:status_after_attempt"
+  },
+  "v3": {
+   "example": "fwrd49-n1 RD Probe",
+   "usedIn": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "known": true
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:4180/#/tickets",
+  "requireText": [
+   "{{v1}}",
+   "{{v2}}"
+  ]
+ },
+ "steps": [
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "#ticket-rows tr",
+      "hasText": "{{v3}} Archived",
+      "selector": "td:nth-of-type(3)"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"ticket-row-{{d1}}\"] td",
+      "nth": 2
+     },
+     {
+      "kind": "css",
+      "selector": "#ticket-rows > tr:nth-of-type(1) > td:nth-of-type(3)"
+     },
+     {
+      "kind": "point",
+      "x": 703,
+      "y": 423,
+      "w": 207.4,
+      "h": 46.2,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "probe_customer"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "#ticket-rows tr",
+      "hasText": "{{v3}} Archived",
+      "selector": "td:nth-of-type(1) > a"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "ticket-link-{{d1}}"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"ticket-row-{{d1}}\"] a"
+     },
+     {
+      "kind": "css",
+      "selector": "#ticket-rows > tr:nth-of-type(1) > td:nth-of-type(1) > a"
+     },
+     {
+      "kind": "point",
+      "x": 152,
+      "y": 423,
+      "w": 54.6,
+      "h": 15,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "probe_ticket_reference"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "#ticket-rows tr",
+      "hasText": "{{v3}} Archived",
+      "selector": "td:nth-of-type(2)"
+     },
+     {
+      "kind": "text",
+      "text": "{{v3}} Archived"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"ticket-row-{{d1}}\"] td",
+      "nth": 1
+     },
+     {
+      "kind": "css",
+      "selector": "#ticket-rows > tr:nth-of-type(1) > td:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 411,
+      "y": 423,
+      "w": 375.1,
+      "h": 46.2,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "probe_ticket_title"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "#ticket-rows tr",
+      "hasText": "{{v3}} Archived",
+      "selector": "td:nth-of-type(4) > span"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"ticket-row-{{d1}}\"] span",
+      "nth": 1
+     },
+     {
+      "kind": "css",
+      "selector": "#ticket-rows > tr:nth-of-type(1) > td:nth-of-type(4) > span"
+     },
+     {
+      "kind": "point",
+      "x": 854,
+      "y": 423,
+      "w": 56,
+      "h": 25.2,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "status_after_fix"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "#ticket-rows tr",
+      "hasText": "{{v3}} Archived"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "ticket-row-{{d1}}"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"ticket-table\"] tr",
+      "nth": 1
+     },
+     {
+      "kind": "css",
+      "selector": "#ticket-rows > tr:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 423,
+      "w": 1070,
+      "h": 46.2,
+      "role": null,
+      "tag": "tr",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "final_list_row"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "#ticket-rows tr",
+      "hasText": "{{v3}} Archived",
+      "selector": "td:nth-of-type(2)"
+     },
+     {
+      "kind": "text",
+      "text": "{{v3}} Archived"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"ticket-row-{{d1}}\"] td",
+      "nth": 1
+     },
+     {
+      "kind": "css",
+      "selector": "#ticket-rows > tr:nth-of-type(1) > td:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 411,
+      "y": 423,
+      "w": 375.1,
+      "h": 46.2,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "ref"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Created probe ticket RD-1016 ('{{v3}}', customer 'Probe Customer Ltd') with no parts and clicked \"Mark {{v2}}\" on its detail page. The app refused with the verbatim error: \"Ticket is not ready / A ticket needs at least one part before it can be marked {{v2}}\", and the status stayed Draft. The required precondition is therefore at least one part, so I added a single part ('{{v3}} Part', cost 50, markup 20, qty 1, supplier Bench Supply Co → price $60.00), waited for the parts table to refresh, and Mark {{v2}} then succeeded (status Draft → {{v2}}). I then archived the ticket: the detail page shows \"{{v2}}\" + \"Archived\" with an \"Unarchive ticket\" button, and with \"Show archived\" ticked the tickets list shows RD-1016 with the Archived marker, Status {{v2}}, 1 part.",
+  "values": {
+   "probe_customer": "Probe Customer Ltd",
+   "probe_ticket_reference": "RD-1016",
+   "probe_ticket_title": "{{v3}}",
+   "exact_error_text": "Ticket is not ready\n\nA ticket needs at least one part before it can be marked {{v2}}",
+   "error_shown_when": "Mark {{v2}} attempted with 0 parts",
+   "status_after_refused_attempt": "Draft",
+   "precondition_required": "at least one part on the ticket",
+   "fix_applied": "added part '{{v3}} Part' (cost 50, markup 20, qty 1, supplier Bench Supply Co → price $60.00)",
+   "status_after_fix": "{{v2}}",
+   "final_list_row": "RD-1016\t{{v3}} Archived\tProbe Customer Ltd\t{{v2}}\t1\t2026-09-12",
+   "final_archived_state": "Archived (status {{v2}}; detail page shows 'Unarchive ticket' button)",
+   "detail_url": "http://127.0.0.1:4180/#/tickets/t16",
+   "ref": "{{v1}}"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-12T23:47:48.452Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-12T23:50:59.578Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_3cd4d0",
+  "index": 3,
+  "of": 4
+ },
+ "provenance": {
+  "session": "fwrd49-n1",
+  "instruction": "Create a new throwaway ticket titled 'fwrd49-n1 RD Probe' with a customer, but do NOT add any parts to it. Then open its detail page and attempt to set its status to Ready (Mark Ready action). If the app refuses, report the exact error/validation message verbatim. Then, based on that message, discover what precondition the app enforces for the Ready status (e.g. add a part or whatever it demands) and satisfy it so the probe ticket reaches Ready, reporting what specifically was required. Finally archive the probe ticket so it is not left active, and confirm it shows as archived. Report: the exact error text you saw, what you had to do to satisfy it, and the probe ticket's final archived state.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-12T23:47:48.452Z"
+ },
+ "revision": 3
+}

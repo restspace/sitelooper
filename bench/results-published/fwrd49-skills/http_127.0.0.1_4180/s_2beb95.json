@@ -1,0 +1,299 @@
+{
+ "id": "s_2beb95",
+ "origin": "http://127.0.0.1:4180",
+ "template": "Create a new throwaway ticket titled '{{v3}}' with a customer, but do NOT add any parts to it. Then open its detail page and attempt to set its status to {{v2}} (Mark {{v2}} action). If the app refuses, report the exact error/validation message verbatim. Then, based on that message, discover what precondition the app enforces for the {{v2}} status (e.g. add a part or whatever it demands) and satisfy it so the probe ticket reaches {{v2}}, reporting what specifically was required. Finally archive the probe ticket so it is not left active, and confirm it shows as archived. Report: the exact error text you saw, what you had to do to satisfy it, and the probe ticket's final archived state.",
+ "params": {
+  "v1": {
+   "example": "fwrd49-n1",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "Ready",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i5:status_after_attempt"
+  },
+  "v3": {
+   "example": "fwrd49-n1 RD Probe",
+   "usedIn": [
+    1,
+    4,
+    5
+   ],
+   "known": true
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:4180/#/tickets"
+ },
+ "steps": [
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e571",
+    "value": "{{v3}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "field-title"
+     },
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Title *"
+     },
+     {
+      "kind": "label",
+      "label": "Title *"
+     },
+     {
+      "kind": "id",
+      "selector": "#f-title"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"form-dialog\"] input"
+     },
+     {
+      "kind": "css",
+      "selector": "#f-title"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 405,
+      "w": 478,
+      "h": 39,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "addedContains": [
+     "- textbox \"\": {{v3}}"
+    ]
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e575",
+    "value": "Probe Customer Ltd"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "field-customer"
+     },
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Customer"
+     },
+     {
+      "kind": "label",
+      "label": "Customer"
+     },
+     {
+      "kind": "id",
+      "selector": "#f-customer"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"form-dialog\"] input"
+     },
+     {
+      "kind": "css",
+      "selector": "#f-customer"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 507,
+      "w": 478,
+      "h": 39,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "addedContains": [
+     "- textbox \"\": {{*}}"
+    ]
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e577"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "modal-save"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Create ticket"
+     },
+     {
+      "kind": "id",
+      "selector": "#modal-save"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"form-dialog\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "#modal-save"
+     },
+     {
+      "kind": "point",
+      "x": 825,
+      "y": 602,
+      "w": 108.6,
+      "h": 39,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets"
+   }
+  },
+  {
+   "tool": "wait_for",
+   "args": {
+    "target": "table",
+    "state": "text_contains",
+    "text": "{{v3}}",
+    "timeout_ms": 15000
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "table"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "ticket-table"
+     },
+     {
+      "kind": "css",
+      "selector": "#view > section:nth-of-type(2) > div:nth-of-type(1) > table"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 611,
+      "w": 1070,
+      "h": 499.9,
+      "role": null,
+      "tag": "table",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=link[name=\"RD-1016\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "#ticket-rows tr",
+      "hasText": "{{v3}}",
+      "selector": "td:nth-of-type(1) > a"
+     },
+     {
+      "kind": "css",
+      "selector": "#ticket-rows > tr:nth-of-type(1) > td:nth-of-type(1) > a"
+     },
+     {
+      "kind": "point",
+      "x": 152,
+      "y": 423,
+      "w": 54.6,
+      "h": 15,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "mints": {
+    "at": "h1"
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets/{{d1}}",
+    "addedContains": [
+     "- heading \"{{v3}}\"",
+     "- button \"Mark {{v2}}\"",
+     "- button \"Archive ticket\"",
+     "- heading \"Parts\"",
+     "- button \"Add part\""
+    ]
+   }
+  }
+ ],
+ "derived": {
+  "d1": {
+   "step": 5,
+   "at": "h1",
+   "example": "t16"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-12T23:47:48.452Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-12T23:50:54.615Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_3cd4d0",
+  "index": 1,
+  "of": 4
+ },
+ "provenance": {
+  "session": "fwrd49-n1",
+  "instruction": "Create a new throwaway ticket titled 'fwrd49-n1 RD Probe' with a customer, but do NOT add any parts to it. Then open its detail page and attempt to set its status to Ready (Mark Ready action). If the app refuses, report the exact error/validation message verbatim. Then, based on that message, discover what precondition the app enforces for the Ready status (e.g. add a part or whatever it demands) and satisfy it so the probe ticket reaches Ready, reporting what specifically was required. Finally archive the probe ticket so it is not left active, and confirm it shows as archived. Report: the exact error text you saw, what you had to do to satisfy it, and the probe ticket's final archived state.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-12T23:47:48.452Z"
+ },
+ "revision": 4
+}

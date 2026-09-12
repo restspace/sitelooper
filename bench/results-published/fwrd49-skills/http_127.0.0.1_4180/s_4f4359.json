@@ -1,0 +1,120 @@
+{
+ "id": "s_4f4359",
+ "origin": "http://127.0.0.1:4180",
+ "template": "Open {{v2}} and sign in with email {{v3}} and password {{v4}}. Then create a new ticket titled exactly '{{v5}}', filling in any other required fields the form demands with sensible values. After saving, verify the ticket appears in the app (wait for the list/detail view to reflect it, since the view refreshes a short beat after a create) and report the ticket's title and current status as shown on the page.",
+ "params": {
+  "v1": {
+   "example": "fwrd49-n1",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "http://127.0.0.1:4180/",
+   "usedIn": [
+    1
+   ]
+  },
+  "v3": {
+   "example": "bench@example.com",
+   "usedIn": [
+    2
+   ]
+  },
+  "v4": {
+   "example": "bench-pass-1234",
+   "usedIn": []
+  },
+  "v5": {
+   "example": "fwrd49-n1 RD Bench Ticket",
+   "usedIn": [],
+   "known": true
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:4180/"
+ },
+ "steps": [
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v2}}"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e13",
+    "value": "{{v3}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "login-email"
+     },
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Email address"
+     },
+     {
+      "kind": "label",
+      "label": "Email address"
+     },
+     {
+      "kind": "id",
+      "selector": "#login-email"
+     },
+     {
+      "kind": "css",
+      "selector": "#login-email"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 218,
+      "w": 398,
+      "h": 39,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/login",
+    "addedContains": [
+     "- textbox \"\": {{v3}}"
+    ]
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-12T23:41:26.135Z",
+  "failedAtStep": {},
+  "fallthroughs": 4,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-12T23:50:35.630Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_216670",
+  "index": 0,
+  "of": 4
+ },
+ "provenance": {
+  "session": "fwrd49-n1",
+  "instruction": "Open http://127.0.0.1:4180/ and sign in with email bench@example.com and password bench-pass-1234. Then create a new ticket titled exactly 'fwrd49-n1 RD Bench Ticket', filling in any other required fields the form demands with sensible values. After saving, verify the ticket appears in the app (wait for the list/detail view to reflect it, since the view refreshes a short beat after a create) and report the ticket's title and current status as shown on the page.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-12T23:41:26.135Z"
+ },
+ "revision": 3
+}
