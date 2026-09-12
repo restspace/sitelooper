@@ -645,6 +645,32 @@ describe('preconditions, minting and loops', () => {
     expect(unbound).not.toContain('async function present(');
   });
 
+  /**
+   * C02. A segment whose FIRST step is a goto carries its own precondition, so
+   * the gate belongs AFTER that goto — before it, the question is asked of the
+   * page being left, and the recorded url is the RECORDING run's record. This
+   * is replay's `navigatesItself` rule (src/skills/replay.ts), which the
+   * artifact had no equivalent of.
+   */
+  it('defers a self-navigating segment’s identity check until after its own goto', () => {
+    const goto: SkillStep = { tool: 'goto', args: { url: 'http://app.test/items/42' }, locators: {} };
+    const click: SkillStep = { tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'id', selector: '#b' }] } };
+    const pre = { urlPattern: 'http://app.test/items/:id', requireText: ['{{v1}}'] };
+    const source = emit(specOf([goto, click], { segments: [segment([goto, click], { preconditions: pre })] }));
+    const poll = source.indexOf('await expect.poll(() => present(page, `${p.v1}`)');
+    expect(poll).toBeGreaterThan(-1);
+    expect(poll).toBeGreaterThan(source.indexOf("await page.goto('http://app.test/items/42');"));
+    expect(poll).toBeLessThan(source.indexOf("locator('#b')"));
+    expect(source).toContain('// The identity gate sits AFTER the goto above, and is not skipped.');
+    expect(syntaxErrors(source)).toEqual([]);
+
+    // Only a segment that navigates itself defers: everywhere else the gate
+    // stays where it was, at segment entry.
+    const still = emit(specOf([click], { segments: [segment([click], { preconditions: pre })] }));
+    expect(still.indexOf('await expect.poll(() => present(page, `${p.v1}`)')).toBeLessThan(still.indexOf("locator('#b')"));
+    expect(still).not.toContain('// The identity gate sits AFTER the goto above');
+  });
+
   it("re-reads a minted url part after the DOM settles, so a second redirect cannot strand it (the odoo signin failure)", () => {
     const step: SkillStep = { tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'id', selector: '#save' }] }, mints: { at: 'p1' } };
     const out = emit(specOf([step], { segments: [segment([step], { derived: { d1: { step: 1, at: 'q.action', example: '123' } } })] }));

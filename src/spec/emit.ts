@@ -2033,12 +2033,20 @@ function satisfiedGuard(step: SpecStep, ctx: Ctx): string[] {
   return out;
 }
 
-/** One segment: its preconditions, then its steps. */
-function emitSegment(segment: SpecSegment, ctx: Ctx): string[] {
+/**
+ * A segment whose FIRST step navigates carries its own precondition: wherever
+ * the browser is, step 1 puts it on the recorded page. Replay's
+ * `navigatesItself` (src/skills/replay.ts) is this same one line, and the two
+ * must stay the same line — a rule only one runner applies is the class of
+ * defect the parity harness exists to catch.
+ */
+function navigatesItself(segment: SpecSegment): boolean {
+  return segment.steps[0]?.tool === 'goto';
+}
+
+/** The segment's identity gate: one poll per bound marker, a comment per unbound one. */
+function identityChecks(segment: SpecSegment, ctx: Ctx): string[] {
   const out: string[] = [];
-  ctx.lastUrl = null;
-  out.push(`// ${segment.id}: ${commentSafe(segment.template)}`);
-  out.push(`// recorded on a page matching ${commentSafe(segment.preconditions.urlPattern)}`);
   for (const marker of segment.preconditions.requireText ?? []) {
     // Identity: the url and the page shape match every record of this
     // template, so only the marker can say this is the RIGHT record. An
@@ -2057,10 +2065,41 @@ function emitSegment(segment: SpecSegment, ctx: Ctx): string[] {
       )} }).toBe(true);`,
     );
   }
+  return out;
+}
+
+/** One segment: its preconditions, then its steps. */
+function emitSegment(segment: SpecSegment, ctx: Ctx): string[] {
+  const out: string[] = [];
+  ctx.lastUrl = null;
+  out.push(`// ${segment.id}: ${commentSafe(segment.template)}`);
+  out.push(`// recorded on a page matching ${commentSafe(segment.preconditions.urlPattern)}`);
+  const identity = identityChecks(segment, ctx);
+  // Where the gate goes, not whether: a self-navigating segment is checked
+  // AFTER its own goto, never before it and never not at all.
+  const defer = identity.length > 0 && navigatesItself(segment);
+  if (!defer) out.push(...identity);
   for (const [i, step] of segment.steps.entries()) {
     out.push('');
     const lines = step.tool === 'loop' ? emitLoop(step, segment, i + 1, ctx) : emitSkillStep(step, segment, i + 1, ctx);
     out.push(...lines);
+    if (defer && i === 0) {
+      out.push(
+        '',
+        '// The identity gate sits AFTER the goto above, and is not skipped.',
+        '// Asked before it, the question is asked of the page this segment is',
+        "// LEAVING; and the recorded url carries the RECORDING run's record id,",
+        '// so "step 1 decides the page" decides it to be the wrong one. fwod10',
+        "// replayed a goto to another run's record and did this run's work on it,",
+        '// published no values and reported success — the guard built to stop',
+        '// exactly that was off for the procedures most likely to need it. Replay',
+        '// defers it to this same place (navigatesItself && n === 1,',
+        '// src/skills/replay.ts). Failing here is a partial stop rather than a',
+        '// refusal: the goto has already moved the browser, so there is no',
+        '// untouched page left to try another candidate from.',
+        ...identity,
+      );
+    }
   }
   return out;
 }

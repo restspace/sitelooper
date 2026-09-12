@@ -95,6 +95,23 @@ render();
 </script>
 </body></html>`;
 
+  /**
+   * A record page, the shape a procedure that navigates to its own subject
+   * lands on: the record's own id is the only thing that tells it from every
+   * other page of the template, and Mark is work done TO that record. The
+   * server logs the visit itself, so the harness can ask whether a runner
+   * navigated at all rather than believing its report.
+   */
+  const RECORD = (id: string) => `<!doctype html><html><head><meta charset="utf-8"><title>Record</title></head><body>
+<h1>Record ${id}</h1>
+<button class="mark" type="button" data-id="${id}">Mark</button>
+<script>
+document.querySelector('.mark').addEventListener('click', async (e) => {
+  await fetch('/mark/' + encodeURIComponent(e.target.dataset.id), { method: 'POST' });
+});
+</script>
+</body></html>`;
+
   beforeAll(async () => {
     home = fs.mkdtempSync(path.join(os.tmpdir(), 'bp-parity-'));
     process.env.SITELOOPER_HOME = home;
@@ -108,6 +125,13 @@ render();
       if (url === '/' ) {
         res.writeHead(200, { 'content-type': 'text/html' });
         res.end(PAGE);
+        return;
+      }
+      if (url.startsWith('/record/')) {
+        const id = decodeURIComponent(url.slice('/record/'.length));
+        log.push(`visit:${id}`);
+        res.writeHead(200, { 'content-type': 'text/html' });
+        res.end(RECORD(id));
         return;
       }
       if (url === '/items') {
@@ -222,15 +246,56 @@ render();
     };
   };
 
-  /** Run the contract through daemon replay, in its own browser session. */
-  async function viaReplay(steps: SkillStep[]): Promise<Outcome> {
+  /**
+   * C02. A SELF-NAVIGATING procedure: step 1 is the recorded goto, so the
+   * recorded url carries the RECORDING run's record id — here rec-42, while
+   * this run is about rec-77.
+   */
+  const RECORDED = 'rec-42';
+  const MARK: SkillStep = { tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Mark' }] } };
+  const selfNavSteps = (url: string): SkillStep[] => [{ tool: 'goto', args: { url }, locators: {} }, MARK];
+
+  const recordSkill = (url: string): Skill => ({
+    ...skillOf(selfNavSteps(url)),
+    id: 's_record',
+    template: 'mark record {{v1}}',
+    params: { v1: { example: RECORDED, usedIn: [1], known: true } },
+    preconditions: { urlPattern: `${origin}/record/:id`, requireText: ['Record {{v1}}'] },
+  });
+
+  const recordFlow = (url: string): SpecFlow => ({
+    version: 1,
+    name: 'parity-record',
+    origin,
+    startUrl: `${origin}/`,
+    vars: [],
+    steps: [
+      {
+        id: '01-mark',
+        instruction: 'mark record {{v1}}',
+        params: { v1: RECORDED },
+        outputs: [],
+        segments: [
+          {
+            id: 's_record',
+            template: 'mark record {{v1}}',
+            params: { v1: { example: RECORDED, usedIn: [1], known: true } },
+            preconditions: { urlPattern: `${origin}/record/:id`, requireText: ['Record {{v1}}'] },
+            steps: selfNavSteps(url),
+          },
+        ],
+      },
+    ],
+  });
+
+  /** Run a whole procedure through daemon replay, in its own browser session. */
+  async function replayOf(skill: Skill, params: Record<string, string> = {}): Promise<Outcome> {
     const session = new BrowserSession({ session: `parity-replay-${Date.now()}`, persist: false, learn: true });
     try {
       const page = await session.getPage();
       await page.goto(`${origin}/`);
-      const skill = skillOf(steps);
       session.learn!.put(skill);
-      const out = await executeTool(session, 'run_skill', { id: skill.id, params: {} }, os.tmpdir());
+      const out = await executeTool(session, 'run_skill', { id: skill.id, params }, os.tmpdir());
       const replay = out.replay as ReplayResult | undefined;
       // No replay at all means the tool refused before running: surface that
       // rather than letting it read as an ordinary failure.
@@ -247,8 +312,7 @@ render();
    * worker: the harness drives `steps[id]` itself, which is the same emitted
    * body and keeps the comparison to one process.
    */
-  async function viaEmitted(steps: SkillStep[]): Promise<Outcome> {
-    const spec = specOf(steps);
+  async function emittedOf(spec: SpecFlow, params: Record<string, string> = {}): Promise<Outcome> {
     const { source } = emitFlowFile(spec, { tier: 'plain' });
     const js = ts.transpileModule(source, {
       compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext },
@@ -263,7 +327,7 @@ render();
       await page.goto(mod.FLOW.startUrl);
       const run = mod.createFlowRun();
       for (const id of mod.flowStepIds) {
-        await mod.steps[id](page, {}, run.outputs, run);
+        await mod.steps[id](page, params, run.outputs, run);
       }
       return { ok: true, reason: null, outputs: run.outputs as Record<string, string> };
     } catch (err) {
@@ -273,13 +337,24 @@ render();
     }
   }
 
-  /** Run one contract through both runners against separately reset state. */
+  /** Run one loop contract through both runners against separately reset state. */
   async function both(steps: SkillStep[], startWith = 10) {
     reset(startWith);
-    const replay = await viaReplay(steps);
+    const replay = await replayOf(skillOf(steps));
     const replayLog = [...log];
     reset(startWith);
-    const emitted = await viaEmitted(steps);
+    const emitted = await emittedOf(specOf(steps));
+    const emittedLog = [...log];
+    return { replay, emitted, replayLog, emittedLog };
+  }
+
+  /** The same, for a procedure given whole (its own preconditions and params). */
+  async function bothOf(skill: Skill, spec: SpecFlow, params: Record<string, string>) {
+    reset(0);
+    const replay = await replayOf(skill, params);
+    const replayLog = [...log];
+    reset(0);
+    const emitted = await emittedOf(spec, params);
     const emittedLog = [...log];
     return { replay, emitted, replayLog, emittedLog };
   }
@@ -360,6 +435,55 @@ render();
     // Three records, marked once each — not one record marked three times.
     expect(replayLog.sort()).toEqual(['mark:Item 1', 'mark:Item 2', 'mark:Item 3']);
     expect(emittedLog.sort()).toEqual(['mark:Item 1', 'mark:Item 2', 'mark:Item 3']);
+  }, 120_000);
+
+  /**
+   * C02. WHEN the identity check runs, not whether.
+   *
+   * A procedure whose first step is a goto used to be let past the gate on the
+   * grounds that "step 1 decides the page". It does — and the recorded goto
+   * carries the RECORDING run's record id, so it decides it to be the wrong
+   * page, which is how fwod10 did a run's work on another run's records and
+   * reported success. Asserting identity BEFORE the goto is no better: the
+   * browser is still on the page being left, so the check either fails on a
+   * page nobody claimed anything about, or passes on it and then navigates
+   * somewhere unchecked.
+   *
+   * The only correct place is between the two, and both runners must put it
+   * there. The server's visit log is the witness that the navigation actually
+   * happened — no runner's report can establish that about itself.
+   */
+  it('neither runner gates on identity before its own goto, and both stop on the wrong record', async () => {
+    const recorded = `${origin}/record/${RECORDED}`;
+    const { replay, emitted, replayLog, emittedLog } = await bothOf(recordSkill(recorded), recordFlow(recorded), { v1: 'rec-77' });
+
+    // The check did not fire against the page being left: both navigated.
+    expect(replayLog, 'replay must run its own goto before judging the page').toContain(`visit:${RECORDED}`);
+    expect(emittedLog, 'the artifact must run its own goto before judging the page').toContain(`visit:${RECORDED}`);
+
+    // And neither then did this run's work on the record it landed on.
+    expect(replay.ok).toBe(false);
+    expect(emitted.ok).toBe(false);
+    expect(replay.reason).toMatch(/different record|does not show/);
+    expect(emitted.reason).toMatch(/identity/i);
+    expect(replayLog.filter((l) => l.startsWith('mark:'))).toEqual([]);
+    expect(emittedLog.filter((l) => l.startsWith('mark:'))).toEqual([]);
+  }, 120_000);
+
+  /**
+   * The other half, without which the case above is satisfied by a gate that
+   * always refuses: the same procedure with the record id in the goto's url,
+   * so it navigates to THIS run's record. Both must then pass the deferred
+   * check and do the work, once, on rec-77.
+   */
+  it("both runners proceed when the goto lands on this run's own record", async () => {
+    const slotted = `${origin}/record/{{v1}}`;
+    const { replay, emitted, replayLog, emittedLog } = await bothOf(recordSkill(slotted), recordFlow(slotted), { v1: 'rec-77' });
+
+    expect(replay.ok, replay.reason ?? '').toBe(true);
+    expect(emitted.ok, emitted.reason ?? '').toBe(true);
+    expect(replayLog).toEqual(['visit:rec-77', 'mark:rec-77']);
+    expect(emittedLog).toEqual(['visit:rec-77', 'mark:rec-77']);
   }, 120_000);
 
   /**
