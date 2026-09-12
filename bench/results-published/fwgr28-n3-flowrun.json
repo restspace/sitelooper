@@ -1,0 +1,275 @@
+{
+  "flow": "fwgr28",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Signed in to Grafana at http://127.0.0.1:3000/ with admin/admin, chose Skip on the password-change prompt, then opened the provisioned dashboard \"Service health\" via the search picker. The dashboard (URL /d/bench-service-health/service-health) displays exactly three panels, whose on-screen titles are: \"Request rate\", \"Error count\", and \"Latency by endpoint\".",
+      "values": {
+        "panel_1_title": "Request rate",
+        "dashboard_url": "http://127.0.0.1:3000/d/bench-service-health/service-health?from=now-6h&to=now&timezone=browser",
+        "panel_2_title": "Error count",
+        "panel_3_title": "Latency by endpoint"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Created a new dashboard in Grafana with a Stat panel titled \"fwgr28-n3 Availability\" using the TestData data source (default scenario), saved as \"fwgr28-n3 Bench Dashboard\" (UID dfxzc8u645q80e). Save verified: \"Dashboard saved\" alert appeared and exiting edit mode raised no unsaved-changes/discard prompt. Panel title displays on the dashboard as \"fwgr28-n3 Availability\".",
+      "values": {
+        "dashboard_uid": "dfxzc8u645q80e",
+        "dashboard_url": "http://127.0.0.1:3000/d/dfxzc8u645q80e/fwgr28-n3-bench-dashboard?from=now-6h&to=now&timezone=browser",
+        "panel_title": "fwgr28-n3 Availability",
+        "ref": "fwgr28-n3"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "the flow step has no pinned skill",
+      "replayed": "2/2",
+      "repaired": false,
+      "turns": 50
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "Dashboard fully created, saved, and verified. The panel is a Stat visualization (confirmed in the panel editor: the \"Change Visualization\" control shows \"Stat\" with a \"Stat styles\" section), its query data source is TestData with the default Random Walk scenario, and its title is exactly \"fwgr28-n3 Availability\" (confirmed both in the Panel options > Title field and as the panel heading on the dashboard). The dashboard is saved with the title exactly \"fwgr28-n3 Bench Dashboard\" — the save dialog reported \"No changes to save\" with the Save button disabled, proving the save succeeded and the dashboard is fully persisted. The breadcrumb shows \"fwgr28-n3 Bench Dashboard\" and the panel renders TestData's A-series value. Dashboard URL: http://127.0.0.1:3000/d/dfxzaeppeohdsc/fwgr28-n3-bench-dashboard (UID: dfxzaeppeohdsc).",
+      "values": {
+        "ref": "fwgr28-n3",
+        "dashboard_url": "http://127.0.0.1:3000/d/dfxzc8u645q80e/fwgr28-n3-bench-dashboard?from=now-6h&to=now&timezone=browser",
+        "panel_title": "fwgr28-n3 Availability"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0,
+      "repinned": "s_b1517d",
+      "repinParams": {
+        "v1": "{{runid}}",
+        "v2": "{{runid}} Availability"
+      }
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Added a new Text panel titled \"fwgr28-n3 Notes\" to the \"fwgr28-n3 Bench Dashboard\" with content \"Notes for run fwgr28-n3 — bench dashboard created for the Service health benchmark.\" and saved. Save verified: \"Dashboard saved\" alert appeared, and exiting edit mode raised no unsaved-changes/discard prompt. Both panels render on the dashboard: \"fwgr28-n3 Notes\" (with the text content) and \"fwgr28-n3 Availability\". Dashboard URL: http://127.0.0.1:3000/d/dfxzc8u645q80e/fwgr28-n3-bench-dashboard.",
+      "values": {
+        "dashboard_uid": "dfxzc8u645q80e",
+        "dashboard_url": "http://127.0.0.1:3000/d/dfxzc8u645q80e/fwgr28-n3-bench-dashboard?from=now-6h&to=now&timezone=browser",
+        "panel_title": "fwgr28-n3 Notes",
+        "text_content": "Notes for run fwgr28-n3 — bench dashboard created for the Service health benchmark.",
+        "save_dialog_title": "Save dashboard\nfwgr28-n3 Bench Dashboard\nDetails\nChanges21\nUpdate default time range\nWill make current time range the new default\nMessage\nCancel\nSave",
+        "ref": "fwgr28-n3"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "the flow step has no pinned skill",
+      "replayed": "1/10",
+      "repaired": true,
+      "turns": 41
+    },
+    {
+      "id": "05-set",
+      "status": "success",
+      "summary": "The Text panel task was already complete on the live page: the dashboard \"fwgr28-n3 Bench Dashboard\" (UID dfxzc8u645q80e) is in saved view mode showing two panels — \"fwgr28-n3 Notes\" (Text panel, content \"Notes for run fwgr28-n3 — bench dashboard created for the Service health benchmark.\") and \"fwgr28-n3 Availability\" (Stat panel). No unsaved-changes indicator is present and no re-save was needed, so I did not re-apply the changes (avoiding a duplicate panel).",
+      "values": {
+        "dashboard_uid": "dfxzc8u645q80e",
+        "dashboard_url": "http://127.0.0.1:3000/d/dfxzc8u645q80e/fwgr28-n3-bench-dashboard?from=now-6h&to=now&timezone=browser",
+        "panel_title": "fwgr28-n3 Notes",
+        "text_content": "Notes for run fwgr28-n3 — bench dashboard created for the Service health benchmark.",
+        "panel_titles_visible": "fwgr28-n3 Notes; fwgr28-n3 Availability",
+        "ref": "fwgr28-n3"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "the pinned skill s_a4cba9 bound no params for this instruction",
+      "replayed": null,
+      "repaired": false,
+      "turns": 3
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "Added the tag \"bench\" to the \"fwgr28-n3 Bench Dashboard\" (UID dfxzc8u645q80e) via Settings > General > Tags (typed \"bench\" + Enter, chip confirmed by the \"Remove \\\"bench\\\" tag\" button), then saved via the top-bar Save dashboard button — \"Dashboard saved\" alert appeared, and after a second save for a pending time-range change, exiting edit mode raised no unsaved-changes prompt. The dashboard is back in view mode showing both panels (\"fwgr28-n3 Notes\", \"fwgr28-n3 Availability\"). Not fully re-verified: the tag chip's persistence in the Settings Tags field after save (turn cap reached), though it was confirmed added before the successful save.",
+      "values": {
+        "dashboard_uid": "dfxzc8u645q80e",
+        "dashboard_url": "http://127.0.0.1:3000/d/dfxzc8u645q80e/fwgr28-n3-bench-dashboard",
+        "tag_added": "bench",
+        "save_confirmation": "Dashboard saved",
+        "ref": "fwgr28-n3",
+        "ref_2": "s_dcb368"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_dcb368 stopped at step 2 — no element matched any known locator for target (tried 7: page.getByRole('textbox', { name: 'Tags', exact: true }), page.getByLabel('Tags'), page.getByPlaceholder('New tag (enter key to add)'), …)",
+      "replayed": "1/10",
+      "repaired": false,
+      "turns": 29
+    },
+    {
+      "id": "07-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_216509.",
+      "values": {},
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "08-verify",
+      "status": "success",
+      "summary": "Clean-load verification of \"fwgr28-n3 Bench Dashboard\" (UID dfxzc8u645q80e): the time range IS persisted — top bar shows \"Last 6 hours\" and the saved JSON model's top-level \"time\" object is {\"from\": \"now-6h\", \"to\": \"now\"}. The auto-refresh interval is NOT persisted — the top-bar refresh picker shows \"Auto refresh turned off\" and the saved JSON model contains no top-level \"refresh\" field. Dashboard tags: [\"bench\"]. Nothing was changed.",
+      "values": {
+        "auto_refresh_interval": "off (not persisted; no refresh field in saved JSON)",
+        "dashboard_tags": "bench",
+        "dashboard_title": "fwgr28-n3 Bench Dashboard",
+        "dashboard_uid": "dfxzc8u645q80e",
+        "json_refresh_field": "absent (field does not exist in saved JSON model)",
+        "time_range_top_bar": "Last 6 hours",
+        "json_time_object_from": "now-6h",
+        "json_time_object_to": "now",
+        "ref": "fwgr28-n3"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "the flow step has no pinned skill",
+      "replayed": null,
+      "repaired": false,
+      "turns": 18
+    },
+    {
+      "id": "09-open",
+      "status": "success",
+      "summary": "Persisted the auto-refresh interval as 1m on \"fwgr28-n3 Bench Dashboard\" (UID dfxzc8u645q80e): selected 1m in the top-bar refresh picker, saved with the \"Update default refresh value\" checkbox ticked, and got the \"Dashboard saved\" confirmation. Verified in Settings > JSON Model: the saved JSON now contains a top-level \"refresh\": \"1m\" field and the top-level \"time\" object is {\"from\": \"now-6h\", \"to\": \"now\"}.",
+      "values": {
+        "auto_refresh_interval": "1m",
+        "dashboard_title": "fwgr28-n3 Bench Dashboard",
+        "dashboard_uid": "dfxzc8u645q80e",
+        "json_refresh_field": "1m",
+        "save_confirmation": "Dashboard saved",
+        "update_default_refresh_ticked": "true",
+        "json_time_object_from": "now-6h",
+        "json_time_object_to": "now",
+        "ref": "fwgr28-n3"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "every candidate refused — s_3dacea: not on the page this procedure starts from (expects http://127.0.0.1:3000/d/bfxz7vo3a2lmob/fwgr28-n3-bench-dashboard, browser is at http://127.0.0.1:3000/d/dfxzc8u645q80e/:id; the url shape is close but the page structure is not — similarity 0.426) — nothing was run",
+      "replayed": null,
+      "repaired": false,
+      "turns": 14
+    },
+    {
+      "id": "10-report",
+      "status": "success",
+      "summary": "Replayed stored procedure s_eab7c2; observed dashboard_url=http://127.0.0.1:3000/d/dfxzc8u645q80e/fwgr28-n3-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m, bench_run_id=fwgr28-n3 Bench Dashboard.",
+      "values": {
+        "dashboard_url": "http://127.0.0.1:3000/d/dfxzc8u645q80e/fwgr28-n3-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m",
+        "bench_run_id": "fwgr28-n3 Bench Dashboard"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 10,
+  "total": 10,
+  "repinned": 1,
+  "drift": 5,
+  "driftTickets": [
+    {
+      "flow": "fwgr28",
+      "step": "02-create",
+      "skill": "s_50c992",
+      "similarity": 1,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "the flow step has no pinned skill",
+      "pageUrlPattern": "http://127.0.0.1:3000/dashboard/new",
+      "pageUrl": "http://127.0.0.1:3000/dashboard/new?from=now-6h&to=now&timezone=browser"
+    },
+    {
+      "flow": "fwgr28",
+      "step": "04-open",
+      "skill": "s_a4cba9",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.903,
+      "missedLocator": "page.locator('[aria-label=\"Plugin visualization item Text\"]')",
+      "fallbackUsed": "goto http://127.0.0.1:3000/d/bfxz7vo3a2lmob/fwgr28-n3-bench-dashboard",
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:3000/d/bfxz7vo3a2lmob/:id",
+      "pageUrl": "http://127.0.0.1:3000/d/bfxz7vo3a2lmob/fwgr28-n3-bench-dashboard?from=now-6h&to=now"
+    },
+    {
+      "flow": "fwgr28",
+      "step": "04-open",
+      "skill": "s_a4cba9",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 0.903,
+      "missedLocator": "page.getByTestId('data-testid Panel editor option pane field input Title')",
+      "fallbackUsed": null,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:3000/d/bfxz7vo3a2lmob/:id",
+      "pageUrl": "http://127.0.0.1:3000/d/bfxz7vo3a2lmob/fwgr28-n3-bench-dashboard?from=now-6h&to=now"
+    },
+    {
+      "flow": "fwgr28",
+      "step": "06-open",
+      "skill": "s_dcb368",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.987,
+      "missedLocator": "page.getByTestId('data-testid Dashboard settings')",
+      "fallbackUsed": "goto http://127.0.0.1:3000/d/bfxz7vo3a2lmob/fwgr28-n3-bench-dashboard",
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:3000/d/bfxz7vo3a2lmob/:id",
+      "pageUrl": "http://127.0.0.1:3000/d/bfxz7vo3a2lmob/fwgr28-n3-bench-dashboard?from=now-6h&to=now"
+    },
+    {
+      "flow": "fwgr28",
+      "step": "06-open",
+      "skill": "s_dcb368",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 0.987,
+      "missedLocator": "page.getByRole('textbox', { name: 'Tags', exact: true })",
+      "fallbackUsed": null,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:3000/d/bfxz7vo3a2lmob/:id",
+      "pageUrl": "http://127.0.0.1:3000/d/bfxz7vo3a2lmob/fwgr28-n3-bench-dashboard?from=now-6h&to=now"
+    }
+  ],
+  "wallMs": 1531360,
+  "model": "z-ai/glm-5.3",
+  "usage": {
+    "promptTokens": 3237355,
+    "completionTokens": 40768,
+    "cachedTokens": 2828480
+  },
+  "usageByModel": {
+    "z-ai/glm-5.3": {
+      "promptTokens": 3237355,
+      "completionTokens": 40768,
+      "cachedTokens": 2828480
+    }
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

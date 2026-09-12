@@ -1,0 +1,133 @@
+{
+  "flow": "fwgr28",
+  "status": "halted",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Signed in to Grafana at http://127.0.0.1:3000/ with admin/admin, chose Skip on the password-change prompt, then opened the provisioned dashboard \"Service health\" via the search picker. The dashboard (URL /d/bench-service-health/service-health) displays exactly three panels, whose on-screen titles are: \"Request rate\", \"Error count\", and \"Latency by endpoint\".",
+      "values": {
+        "panel_1_title": "Request rate",
+        "dashboard_url": "http://127.0.0.1:3000/d/bench-service-health/service-health?from=now-6h&to=now&timezone=browser",
+        "panel_2_title": "Error count",
+        "panel_3_title": "Latency by endpoint"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Created a new Grafana dashboard with a Stat visualization panel titled \"fwgr28-n2 Availability\" using the TestData data source (default Random Walk scenario), then saved it as \"fwgr28-n2 Bench Dashboard\". Save verified: after exiting edit mode no \"Save dashboard\"/unsaved-changes control remains, the breadcrumb shows the dashboard title, and the panel heading reads \"fwgr28-n2 Availability\" (rendering TestData's A-series value). Dashboard URL: http://127.0.0.1:3000/d/dfxzaeppeohdsc/fwgr28-n2-bench-dashboard (UID: dfxzaeppeohdsc).",
+      "values": {
+        "dashboard_url": "http://127.0.0.1:3000/d/dfxzaeppeohdsc/fwgr28-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&showCategory=Panel%20options",
+        "panel_title": "fwgr28-n2 Availability",
+        "ref": "fwgr28-n2"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "the flow step has no pinned skill",
+      "replayed": null,
+      "repaired": false,
+      "turns": 42
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "Dashboard fully created, saved, and verified. The panel is a Stat visualization (confirmed in the panel editor: the \"Change Visualization\" control shows \"Stat\" with a \"Stat styles\" section), its query data source is TestData with the default Random Walk scenario, and its title is exactly \"fwgr28-n2 Availability\" (confirmed both in the Panel options > Title field and as the panel heading on the dashboard). The dashboard is saved with the title exactly \"fwgr28-n2 Bench Dashboard\" — the save dialog reported \"No changes to save\" with the Save button disabled, proving the save succeeded and the dashboard is fully persisted. The breadcrumb shows \"fwgr28-n2 Bench Dashboard\" and the panel renders TestData's A-series value. Dashboard URL: http://127.0.0.1:3000/d/dfxzaeppeohdsc/fwgr28-n2-bench-dashboard (UID: dfxzaeppeohdsc).",
+      "values": {
+        "dashboard_url": "http://127.0.0.1:3000/d/dfxzaeppeohdsc/fwgr28-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&showCategory=Panel%20options",
+        "panel_title": "fwgr28-n2 Availability",
+        "ref": "fwgr28-n2"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "every candidate refused — s_b1a43f: not on the page this procedure starts from (expects http://127.0.0.1:3000/dashboard/new, browser is at http://127.0.0.1:3000/d/dfxzaeppeohdsc/:id) — nothing was run",
+      "replayed": null,
+      "repaired": false,
+      "turns": 27
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Added a new Text panel to the 'fwgr28-n2 Bench Dashboard' and saved successfully. The panel is titled exactly 'fwgr28-n2 Notes' and its content reads 'Notes for run fwgr28-n2 — bench dashboard created for the Service health benchmark.' (contains the runid fwgr28-n2). Save verified: a 'Dashboard saved' confirmation alert appeared, and after exiting edit mode the dashboard shows both panels ('fwgr28-n2 Notes' with the text content, and 'fwgr28-n2 Availability') with no unsaved-changes indicator. Dashboard URL: http://127.0.0.1:3000/d/dfxzaeppeohdsc/fwgr28-n2-bench-dashboard (UID: dfxzaeppeohdsc).",
+      "values": {
+        "dashboard_url": "http://127.0.0.1:3000/d/dfxzaeppeohdsc/fwgr28-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&showCategory=Panel%20options",
+        "ref": "fwgr28-n2"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "the flow step has no pinned skill",
+      "replayed": null,
+      "repaired": false,
+      "turns": 30
+    },
+    {
+      "id": "05-set",
+      "status": "failure",
+      "summary": "The Text panel exists with the correct title 'fwgr28-n2 Notes' on dashboard 'fwgr28-n2 Bench Dashboard' (http://127.0.0.1:3000/d/dfxzaeppeohdsc/fwgr28-n2-bench-dashboard), but the instruction is incomplete: the panel's displayed content still reads \"Notes for run fwgr28-n2 — bench dashboard created for the Service health benchmark.\" with an EM DASH, not the hyphen version specified. I typed the hyphen version into the content textarea (verified the textarea value), but the panel preview/state did not update (still shows the em dash), so the edit was not confirmed as applied and I did not save. The dashboard's last successful save (from the prior instruction) contains the em-dash content; no 'Dashboard saved' confirmation was produced this turn. Note: the replayed procedure s_a4cba9 navigated to a stale UID (bfxz7vo3a2lmob, 'Not found' page) and failed at step 2 — no duplicate panel was created; I worked on the real dashboard at UID dfxzaeppeohdsc.",
+      "values": {},
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_a4cba9 stopped at step 2 — no element matched any known locator for target (tried 4: page.getByTestId('data-testid Panel editor option pane field input Title'), page.locator('[data-testid=\"input-wrapper\"] input'), page.locator('div:nth-of-type(1) > div:nth-of-type(2) > div > div > div > input'), …)",
+      "replayed": "1/10",
+      "repaired": false,
+      "turns": 29
+    }
+  ],
+  "passed": 4,
+  "total": 10,
+  "repinned": 0,
+  "drift": 2,
+  "driftTickets": [
+    {
+      "flow": "fwgr28",
+      "step": "05-set",
+      "skill": "s_a4cba9",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.879,
+      "missedLocator": "page.locator('[aria-label=\"Plugin visualization item Text\"]')",
+      "fallbackUsed": "goto http://127.0.0.1:3000/d/bfxz7vo3a2lmob/fwgr28-n2-bench-dashboard",
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:3000/d/bfxz7vo3a2lmob/:id",
+      "pageUrl": "http://127.0.0.1:3000/d/bfxz7vo3a2lmob/fwgr28-n2-bench-dashboard?from=now-6h&to=now"
+    },
+    {
+      "flow": "fwgr28",
+      "step": "05-set",
+      "skill": "s_a4cba9",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 0.879,
+      "missedLocator": "page.getByTestId('data-testid Panel editor option pane field input Title')",
+      "fallbackUsed": null,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:3000/d/bfxz7vo3a2lmob/:id",
+      "pageUrl": "http://127.0.0.1:3000/d/bfxz7vo3a2lmob/fwgr28-n2-bench-dashboard?from=now-6h&to=now"
+    }
+  ],
+  "wallMs": 1289358,
+  "model": "z-ai/glm-5.3",
+  "usage": {
+    "promptTokens": 2052246,
+    "completionTokens": 28849,
+    "cachedTokens": 1795328
+  },
+  "usageByModel": {
+    "z-ai/glm-5.3": {
+      "promptTokens": 2052246,
+      "completionTokens": 28849,
+      "cachedTokens": 1795328
+    }
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "halted",
+  "nextActions": []
+}

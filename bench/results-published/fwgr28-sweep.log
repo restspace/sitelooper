@@ -1,0 +1,120 @@
+
+[sweep] run 1/3: fwgr28-n1 (store: /home/user/sitelooper/bench/results/fwgr28-skills)
+[harness] grafana: defaulting APP_URL
+[harness] grafana: defaulting APP_EMAIL
+[harness] grafana: defaulting APP_PASSWORD
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+[harness] grafana responded 302 at http://127.0.0.1:3000/
+[harness] spend ceiling hit: $2.0492 >= --maxUsd 2 at turn 11
+stopped: fwgr28-n1
+  flow "fwgr28" saved: 10 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwgr28.json
+  warning: note: 3 step(s) adopted from non-success instruction(s) whose work the session continued from (02-create, 04-open, 08-verify) — they replay model-first with doubled budget, and a non-success there does not halt the flow
+  warning: warning: 6 value(s) KNOWN to be this run's survived unslotted — a replay will act on or wait for the recording's value (non-fatal outside locators):
+  s_eab7c2.steps[2].expect.urlPattern: "fwgr28-n1" (var) in "http://127.0.0.1:3000/d/{{v2}}/fwgr28-n1-bench-dashboard"
+  s_eab7c2.steps[3].expect.urlPattern: "fwgr28-n1" (var) in "http://127.0.0.1:3000/d/{{v2}}/fwgr28-n1-bench-dashboard"
+  s_eab7c2.steps[4].expect.urlPattern: "fwgr28-n1" (var) in "http://127.0.0.1:3000/d/{{v2}}/fwgr28-n1-bench-dashboard"
+  s_eab7c2.steps[5].expect.urlPattern: "fwgr28-n1" (var) in "http://127.0.0.1:3000/d/{{v2}}/fwgr28-n1-bench-dashboard"
+  s_eab7c2.steps[6].expect.urlPattern: "fwgr28-n1" (var) in "http://127.0.0.1:3000/d/{{v2}}/fwgr28-n1-bench-dashboard"
+  s_eab7c2.steps[7].expect.urlPattern: "fwgr28-n1" (var) in "http://127.0.0.1:3000/d/{{v2}}/fwgr28-n1-bench-dashboard"
+  warning: warning: 78 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[2].route: "bfxz7vo3a2lmob" (url) in "http://127.0.0.1:3000/d/bfxz7vo3a2lmob/:id"
+  flow.steps[3].route: "bfxz7vo3a2lmob" (url) in "http://127.0.0.1:3000/d/bfxz7vo3a2lmob/:id"
+  flow.steps[4].route: "bfxz7vo3a2lmob" (url) in "http://127.0.0.1:3000/d/bfxz7vo3a2lmob/:id"
+  flow.steps[5].route: "bfxz7vo3a2lmob" (url) in "http://127.0.0.1:3000/d/bfxz7vo3a2lmob/:id"
+  flow.steps[6].instruction: "now-6h" (output) in "On the currently open Grafana dashboard '{{runid}} Bench Dashboard' (view mode), do two things in the top bar: (1) open the time range picker (button showing e."
+arm=sitelooper model=z-ai/glm-5.3 runid=fwgr28-n1 stop=spend-cap
+turns=11 wall=1842.9s
+commands=11 cmdTime=1705.2s cmdBytes=18201 timeouts=0
+orchestrator in=8925 cw=0 cr=55424 out=7964
+inner prompt=4214107 cached=3555328 completion=31958
+spend=$2.0492 maxUsd=2
+learn: A_n=0.024 replayed=1/10 full=0 repaired=1 compiled=7 variants=1
+-> /home/user/sitelooper/bench/results/fwgr28-n1-sitelooper-result.json
+
+fwgr28-n1: objectives passed 4/6
+  obj 1: FAIL — finalText missing panel titles: Request rate, Error count, Latency by endpoint
+  obj 2: PASS — type=stat, datasource ok=true
+  obj 3: PASS — type=text, content includes runid=true
+  obj 4: PASS — tags=["bench"], time=now-6h..now
+  obj 5: PASS — refresh="1m"
+  obj 6: FAIL — uid bfxz7vo3a2lmob NOT in finalText
+
+[sweep] run 2/3: fwgr28-n2 (replay flow fwgr28, no orchestrator)
+[reset] grafana: deleted leftover dashboard "fwgr28-n1 Bench Dashboard" (200)
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+[sweep] fwgr28-n2: 2 drift ticket(s) → fwgr28-n2-drift.json
+
+fwgr28-n2: objectives passed 4/6
+  obj 1: PASS — all 3 provisioned titles reported
+  obj 2: PASS — type=stat, datasource ok=true
+  obj 3: PASS — type=text, content includes runid=true
+  obj 4: FAIL — tags=[], time=undefined..undefined
+  obj 5: FAIL — refresh=undefined
+  obj 6: PASS — uid dfxzaeppeohdsc reported
+
+[sweep] run 3/3: fwgr28-n3 (replay flow fwgr28, no orchestrator)
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+[sweep] fwgr28-n3: 5 drift ticket(s) → fwgr28-n3-drift.json
+
+fwgr28-n3: objectives passed 6/6
+  obj 1: PASS — all 3 provisioned titles reported
+  obj 2: PASS — type=stat, datasource ok=true
+  obj 3: PASS — type=text, content includes runid=true
+  obj 4: PASS — tags=["bench"], time=now-6h..now
+  obj 5: PASS — refresh="1m"
+  obj 6: PASS — uid dfxzc8u645q80e reported
+
+Learning sweep fwgr28 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬───────┬────────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n   │ replayed       │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼───────┼────────────────┼────────┤
+│ 0       │ 1 │ 'fwgr28-n1' │ '4/6'    │ 'spend-cap' │ 11    │ 11   │ 2.0492    │ 0.024 │ '1/10 (1 rep)' │ 1843   │
+│ 1       │ 2 │ 'fwgr28-n2' │ '4/6'    │ 'halted'    │ 128   │ 10   │ 0.9534    │ 1     │ '4/10 (flow)'  │ 1289   │
+│ 2       │ 3 │ 'fwgr28-n3' │ '6/6'    │ 'success'   │ 155   │ 10   │ 1.4872    │ 1     │ '10/10 (flow)' │ 1531   │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴───────┴────────────────┴────────┘
+http://127.0.0.1:3000
+  s_d52a0a  validated    3 steps  3/3 (100%)
+           Open {{v1}} in the browser and sign in to Grafana with username admin and password admin (if Grafana asks you …
+  s_7b36ca  validated    2 steps  3/3 (100%)
+           Open {{v1}} in the browser and sign in to Grafana with username admin and password admin (if Grafana asks you …
+  s_67e618  validated    5 steps  3/3 (100%)
+           Open {{v1}} in the browser and sign in to Grafana with username admin and password admin (if Grafana asks you …
+  s_3ae980  validated    2 steps  3/3 (100%)
+           Open {{v1}} in the browser and sign in to Grafana with username admin and password admin (if Grafana asks you …
+  s_a4cba9  demoted     10 steps  1/3 (33%)
+           You are in the Grafana panel editor on dashboard '{{v1}} Bench Dashboard', editing a newly added panel that is…
+  s_216509  validated    8 steps  2/3 (67%)
+           On the currently open Grafana dashboard '{{v1}} Bench Dashboard' (view mode), do two things in the top bar: (1…
+  s_50c992  validated    2 steps  2/2 (100%)
+           In Grafana, create a NEW dashboard. Add a visualization panel of type Stat, title it exactly '{{v2}}', and set…
+  s_b1517d  validated   10 steps  2/2 (100%)
+           The Grafana panel editor is open with the visualization picker dialog visible. In that picker, click the 'Stat…
+  s_dcb368  provisional 10 steps  1/2 (50%)
+           On the currently open Grafana dashboard '{{v1}} Bench Dashboard', open the dashboard settings (the gear/cog ic…
+  s_3dacea  validated   11 steps  2/2 (100%)  variant of s_216509
+           On the currently open Grafana dashboard '{{v1}} Bench Dashboard' (view mode, clean URL), the auto-refresh inte…
+  s_eab7c2  validated    9 steps  2/2 (100%)
+           Final verification of the Grafana dashboard '{{v1}} Bench Dashboard' (UID {{v2}}). Navigate cleanly (no query-…
+  s_b1a43f  provisional  7 steps  1/1 (100%)
+           The Grafana panel editor is open with the visualization picker dialog visible. In that picker, click the 'Stat…
+  s_ee1cf1  provisional  8 steps  1/1 (100%)
+           The Grafana panel editor is open with the visualization picker dialog visible. In that picker, click the 'Stat…
+  s_a41f1a  provisional 11 steps  1/1 (100%)
+           In Grafana, create a NEW dashboard. Add a visualization panel of type Stat, title it exactly '{{v2}}', and set…
+  s_96d3e7  provisional  5 steps  1/1 (100%)
+           In Grafana, create a NEW dashboard. Add a visualization panel of type Stat, title it exactly '{{v2}}', and set…
+  s_410c93  provisional  4 steps  1/1 (100%)
+           In Grafana, create a NEW dashboard. Add a visualization panel of type Stat, title it exactly '{{v2}}', and set…
+  s_eb4b09  provisional 18 steps  1/1 (100%)
+           On the Grafana dashboard '{{v1}} Bench Dashboard' (currently open), add a NEW panel of type Text. Set its titl…
+  s_2cd879  provisional 26 steps  1/1 (100%)  variant of s_a4cba9
+           On the Grafana dashboard '{{v1}} Bench Dashboard' (currently open), add a NEW panel of type Text. Set its titl…
+  s_f7d89d  provisional  3 steps  1/1 (100%)
+           You are in the Grafana panel editor on dashboard '{{v1}} Bench Dashboard', editing a newly added panel that is…
+  s_4a77d9  provisional 15 steps  1/1 (100%)  variant of s_dcb368
+           On the currently open Grafana dashboard '{{v1}} Bench Dashboard', open the dashboard settings (the gear/cog ic…
+  s_82f276  provisional  3 steps  1/1 (100%)
+           Verify that the Grafana dashboard '{{v1}} Bench Dashboard' (UID {{v2}}) has its time range and refresh interva…
+store: /home/user/sitelooper/bench/results/fwgr28-skills
+
+summary: /home/user/sitelooper/bench/results/fwgr28-sweep.json
