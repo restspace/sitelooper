@@ -64,7 +64,8 @@ Providers (presets; each field overridable by flag > env > config file):
   zhipu (default)    glm-5.2 @ api.z.ai            key: GLM_API_KEY / ZHIPU_API_KEY
   novita             deepseek/deepseek-v4-flash @ novita.ai   key: NOVITA_API_KEY
                      escalates to zai-org/glm-5.3 when blocked
-  openrouter         z-ai/glm-5.2 @ openrouter.ai  key: OPENROUTER_API_KEY
+  openrouter         deepseek/deepseek-v4.1-flash @ openrouter.ai  key: OPENROUTER_API_KEY
+                     escalates to z-ai/glm-5.3 when blocked
   openai             gpt-5-mini @ api.openai.com   key: OPENAI_API_KEY
   anthropic          claude-sonnet-5 @ api.anthropic.com (native Messages API, not
                      OpenAI-compatible — its own adapter)   key: ANTHROPIC_API_KEY

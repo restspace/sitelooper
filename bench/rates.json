@@ -4,7 +4,13 @@
   "republishing, since these change. Raw token counts are kept in every result file so",
   "any figure here can be recomputed without re-running the benchmark.",
   "cacheRead is the discounted rate for a prompt-cache hit; cacheWrite is the premium",
-  "for establishing one (OpenAI-compatible providers do not bill a separate write)."
+  "for establishing one (OpenAI-compatible providers do not bill a separate write).",
+  "openrouter/deepseek-v4.1-flash (added 2026-09-12) is served by ~13 backends at",
+  "0.15-0.375 in and 0.60-1.50 out, and OpenRouter picks one per request. The rate",
+  "here is DeepSeek's own endpoint - the cheapest, and 0.003 on a cache hit - so a",
+  "run must PIN that backend for this figure to be the one it paid:",
+  "SITELOOPER_EXTRA_BODY='{\"provider\":{\"only\":[\"DeepSeek\"]}}'. Unpinned, a sweep",
+  "can be routed to a backend up to 2.5x dearer and this under-states it."
  ],
  "novita": {
   "zai-org/glm-5.3": {
@@ -76,6 +82,12 @@
    "cacheRead": 0.1932,
    "cacheWrite": 0.966,
    "output": 3.036
+  },
+  "deepseek/deepseek-v4.1-flash": {
+   "input": 0.15,
+   "cacheRead": 0.003,
+   "cacheWrite": 0.15,
+   "output": 0.6
   },
   "deepseek/deepseek-v4-flash": {
    "input": 0.0546,

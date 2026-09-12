@@ -145,9 +145,16 @@ export const PROVIDER_PRESETS: Record<string, ProviderPreset> = {
     fallbackModel: 'zai-org/glm-5.3',
     keyEnvVars: ['NOVITA_API_KEY'],
   },
+  // Same pairing as the novita preset above, on OpenRouter's routing: a cheap,
+  // fast model drives the agent loop and glm-5.3 takes the instructions it
+  // reports blocked. deepseek-v4.1-flash replaced deepseek-v4-flash here on
+  // 2026-09-12 for its throughput, latency and price; OpenRouter serves it from
+  // several backends whose tool-calling support varies, and the loop only ever
+  // sends `tool_choice: 'auto'`, which every one of them supports.
   openrouter: {
     baseUrl: 'https://openrouter.ai/api/v1',
-    defaultModel: 'z-ai/glm-5.2',
+    defaultModel: 'deepseek/deepseek-v4.1-flash',
+    fallbackModel: 'z-ai/glm-5.3',
     keyEnvVars: ['OPENROUTER_API_KEY'],
   },
   openai: {
