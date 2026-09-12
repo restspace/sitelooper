@@ -248,6 +248,23 @@ comment at `emit.ts:1566` already acknowledges the asymmetry.
   the last pass where replay accumulates into `res.created` (`replay.ts:538`).
 - Gap 7's real-world frequency.
 
+## A hazard in the harness itself
+
+Several parity cases test an emitted helper by cutting it out of the generated
+source with a regex and rebuilding it with `new Function`. When that helper
+later grows a dependency on another helper, the cut function throws on every
+call — and a `try/catch` around it returns `false`.
+
+For a safety check, `false` is the safe answer. So the test goes on passing
+while testing nothing, and it passes *hardest* on the half that asserts a
+refusal. This actually happened: `sharesScope` gained a call to `identityRe`,
+and the scope case's "neither runner may refuse a genuine match" half was the
+only thing that caught it.
+
+A helper cut in isolation fails CLOSED, which reads as a passing safety test.
+Any case using that technique needs a positive control — an assertion that the
+cut helper says *yes* to something — or it proves nothing.
+
 ## Dead code noticed in passing
 
 `OBSERVATION_TOOLS` (`replay.ts:12`) names `scroll`, `focus`, `peek`. None is in
