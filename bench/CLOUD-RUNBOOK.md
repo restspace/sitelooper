@@ -19,8 +19,8 @@ just give each one a distinct runid.
 ## What you need
 
 - The repo, on `main`, up to date.
-- `NOVITA_API_KEY` in the environment. **Never echo it** into output, a file, or
-  a command line.
+- `OPENROUTER_API_KEY` in the environment. **Never echo it** into output, a file,
+  or a command line.
 - Nothing else. The target app ships in this repo and needs no provisioning.
 
 ## 1. Set up
@@ -94,11 +94,11 @@ Substitute `<ARM>` (`sitelooper`, `agent-browser`, `playwright-mcp` or
 > `SITELOOPER_*` names in anything new.
 
 ```sh
-export SITELOOPER_PROVIDER=novita
+export SITELOOPER_PROVIDER=openrouter
 node bench/harness.mjs \
   --arm <ARM> --target repairdesk \
   --task bench/tasks/repairdesk-ticket-flow.md \
-  --provider novita --model zai-org/glm-5.3 \
+  --provider openrouter --model z-ai/glm-5.3 \
   --runid <RUNID> --out bench/results --reset
 ```
 
@@ -109,15 +109,18 @@ node bench/harness.mjs \
   `sitelooper do` fails instantly with "no API key" and the run turn-caps at
   0/6 — that was c0822bp attempt 1, the first cloud run. `cloud-setup.sh` now
   checks for this and warns.
-- **Orchestrator provider.** `--provider novita` is the baseline, but novita's
-  response cache intermittently drops the orchestrator's history on this arm and
-  turn-caps the run at 0/6 (see HANDOFF, "novita drops the orchestrator's
-  history"). To run the orchestrator elsewhere, keep `SITELOOPER_PROVIDER=novita`
-  (that is the *inner* model, which is unaffected) and change only `--provider`:
-  `--provider openrouter --model z-ai/glm-5.3` (needs `OPENROUTER_API_KEY`; routes
-  to Z.ai, logs the served backend and real USD cost in the result). The harness
-  flags any dropped-history turn as `contextTruncations` in the result regardless
-  of provider.
+- **Provider: OpenRouter, both halves.** Novita is no longer used for either the
+  orchestrator or the inner agent, and the account behind it has no balance — a
+  run pointed there dies on its first model call. Earlier cells in
+  `bench/MATRIX-*.md` were taken with `--provider novita`, so a comparison
+  against them carries a provider change as well as whatever else moved; say so
+  rather than reading a delta as a code change. Novita also had a specific
+  failure worth remembering, because it looked like a bug in this repo and was
+  not: its response cache intermittently dropped the orchestrator's history and
+  turn-capped a run at 0/6 (HANDOFF, "novita drops the orchestrator's history").
+  `--provider openrouter --model z-ai/glm-5.3` routes to Z.ai and logs the
+  served backend and real USD cost in the result. The harness flags any
+  dropped-history turn as `contextTruncations` whatever the provider.
 - `--reset` is **not optional**. It reloads the app's seed and clears its
   mutation log, which is what makes the run's recorded writes attributable to it.
 - Expect 10-25 minutes of near-silence. **Do not end your turn while it runs** —
@@ -127,9 +130,11 @@ node bench/harness.mjs \
   and block on it *within* the same turn.
 - Do not lower `--maxTurns`.
 - `--maxUsd` defaults to 2.00: the harness prices orchestrator + inner tokens after
-  every turn and stops at `stop=spend-cap` once the run crosses it. Leave it — a
-  capped run is a legitimate result. Raise it only deliberately, and say so in the
-  report.
+  every turn and stops at `stop=spend-cap` once the run crosses it. A capped run is
+  a legitimate result, not a failure — report it as one. Raise it only deliberately
+  and say so in the report; `--maxUsd 3.00` is the standing figure for the longer
+  odoo and grafana flows, where a 2.00 cap tends to bite mid-flow and truncate the
+  replay behaviour the run exists to observe.
 
 ### Before a rerun of the same runid
 

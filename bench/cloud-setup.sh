@@ -259,18 +259,21 @@ done
 
 say "Preflight"
 
-if [ -n "${NOVITA_API_KEY:-}" ]; then
-  echo "    NOVITA_API_KEY is set"
-  provider=novita
-  host=api.novita.ai
+# OpenRouter is the provider for both halves of a run. Novita is gone: the
+# account behind it has no balance, so a box that falls back to it fails on its
+# first model call and burns a provisioning cycle to learn nothing.
+if [ -n "${OPENROUTER_API_KEY:-}" ]; then
+  echo "    OPENROUTER_API_KEY is set"
+  provider=openrouter
+  host=openrouter.ai
 elif [ -n "${ANTHROPIC_API_KEY:-}" ]; then
   echo "    ANTHROPIC_API_KEY is set"
   provider=anthropic
   host=api.anthropic.com
 else
-  warn "no model API key set — export NOVITA_API_KEY or ANTHROPIC_API_KEY before running"
-  provider=novita
-  host=api.novita.ai
+  warn "no model API key set — export OPENROUTER_API_KEY or ANTHROPIC_API_KEY before running"
+  provider=openrouter
+  host=openrouter.ai
 fi
 
 # Restricted egress is a real failure mode here, not a hypothetical: two runs in
@@ -319,7 +322,7 @@ say "Verifying the stack end to end"
 # Proves the browser actually launches, which is the step most likely to be
 # broken on a fresh box and the one whose failure is least obvious from the
 # harness's own output.
-if [ -n "${NOVITA_API_KEY:-}${ANTHROPIC_API_KEY:-}" ]; then
+if [ -n "${OPENROUTER_API_KEY:-}${ANTHROPIC_API_KEY:-}" ]; then
   if sitelooper open "http://127.0.0.1:${PORT}/" --session cloud-setup-check >/dev/null 2>&1; then
     echo "    browser launched and reached the app"
     sitelooper stop --session cloud-setup-check >/dev/null 2>&1 || true
@@ -330,7 +333,7 @@ if [ -n "${NOVITA_API_KEY:-}${ANTHROPIC_API_KEY:-}" ]; then
 
   # `open` proves the browser, not the model. sitelooper's INNER agent picks
   # its provider from SITELOOPER_PROVIDER, not from the harness's --provider,
-  # and defaults to zhipu — so with only NOVITA_API_KEY set, every `do` call
+  # and defaults to zhipu — so with only OPENROUTER_API_KEY set, every `do` call
   # dies instantly with "no API key" and the run turn-caps at 0/6 (c0822bp
   # attempt 1, 2026-08-22, the first cloud run). Check the resolved config the
   # way the harness will see it.
