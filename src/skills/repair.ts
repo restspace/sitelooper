@@ -144,28 +144,34 @@ export function stepByTag(skill: Skill, tag: string | undefined): import('./stor
  * the stored skill any more (skill gone, step gone, index out of range).
  */
 export function promoteFallback(store: SkillStore, ticket: DriftTicket): boolean {
-  const skill = store.get(ticket.skill);
-  if (!skill || ticket.fallbackIndex === undefined || ticket.fallbackIndex < 1) return false;
-  const step = stepByTag(skill, ticket.atStep);
-  const chain = step?.locators[ticket.key ?? 'target'];
-  if (!chain || ticket.fallbackIndex >= chain.length) return false;
-  // The index was observed on a param-filled chain; make sure it still names
-  // the candidate the ticket promoted (a prior promotion, or a chain edit,
-  // may have moved it). Parameterised candidates can only be index-checked.
-  const expr = candidateExpr(chain[ticket.fallbackIndex]);
-  if (ticket.fallbackUsed && !expr.includes('{{') && expr !== ticket.fallbackUsed) return false;
-  const was = structuredClone(skill);
-  const [used] = chain.splice(ticket.fallbackIndex, 1);
-  chain.unshift(used);
-  // Reordering a locator chain is a locator repair, and invariant 7 says an
-  // ordinary locator repair preserves the contract. It should: nothing here
-  // touches an assertion, a scope or an identity. The check is cheap and the
-  // alternative is trusting that it stays that way — which is how the
-  // promotion path would come to carry a weakening nobody asked it to make.
-  const gave = contractWeakening(was, skill);
-  if (gave.length) return false;
-  store.put(skill);
-  return true;
+  if (ticket.fallbackIndex === undefined || ticket.fallbackIndex < 1) return false;
+  // A transaction, not get-then-put: the chain is re-read here, so a
+  // promotion cannot be computed from an ordering another process has since
+  // changed and then written back over it. The index checks below are exactly
+  // the kind that go wrong against a stale copy.
+  let promoted = false;
+  store.update(ticket.skill, (skill) => {
+    const step = stepByTag(skill, ticket.atStep);
+    const chain = step?.locators[ticket.key ?? 'target'];
+    if (!chain || ticket.fallbackIndex! >= chain.length) return null;
+    // The index was observed on a param-filled chain; make sure it still names
+    // the candidate the ticket promoted (a prior promotion, or a chain edit,
+    // may have moved it). Parameterised candidates can only be index-checked.
+    const expr = candidateExpr(chain[ticket.fallbackIndex!]);
+    if (ticket.fallbackUsed && !expr.includes('{{') && expr !== ticket.fallbackUsed) return null;
+    const was = structuredClone(skill);
+    const [used] = chain.splice(ticket.fallbackIndex!, 1);
+    chain.unshift(used);
+    // Reordering a locator chain is a locator repair, and invariant 7 says an
+    // ordinary locator repair preserves the contract. It should: nothing here
+    // touches an assertion, a scope or an identity. The check is cheap and the
+    // alternative is trusting that it stays that way — which is how the
+    // promotion path would come to carry a weakening nobody asked it to make.
+    if (contractWeakening(was, skill).length) return null;
+    promoted = true;
+    return skill;
+  });
+  return promoted;
 }
 
 /** What a patch-segment proposer gets to work from. */

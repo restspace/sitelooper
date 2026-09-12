@@ -118,6 +118,16 @@ export interface Skill {
    * optional field is not a bump.
    */
   contract?: number;
+  /**
+   * Bumped on every write, so two writers can tell whether they are working
+   * from the same starting point. Absent means a procedure written before
+   * revisions existed, which reads as 0.
+   *
+   * An atomic rename alone is not enough for this. It guarantees a reader
+   * sees one whole version or another, and says nothing about a writer who
+   * read at revision 3, thought about it, and wrote over someone else's 4.
+   */
+  revision?: number;
 }
 
 /**
@@ -375,6 +385,168 @@ export function originSlug(origin: string): string {
 export const SITEMAP_FILE = 'sitemap.json';
 const NOT_A_PROCEDURE = new Set([SITEMAP_FILE]);
 
+/**
+ * How long a lock may be held before it is treated as abandoned.
+ *
+ * Generous on purpose: the work inside one is a small JSON write, so a lock
+ * older than this is not slow, it is dead. Being wrong in the impatient
+ * direction means two writers in the section at once, which is the bug being
+ * fixed; being wrong the other way means a caller waits.
+ */
+const LOCK_STALE_MS = 30_000;
+
+/** How long to wait for a live holder before giving up and saying so. */
+const LOCK_WAIT_MS = 5_000;
+
+/**
+ * How many times to wait out a reader before giving up on a rename. With the
+ * backoff below this is a little over a second, which is many orders of
+ * magnitude longer than a reader holds a handle to one small JSON file.
+ */
+const RENAME_ATTEMPTS = 20;
+
+/** Sleep without a promise: every caller here is synchronous. */
+function pause(ms: number): void {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+
+/**
+ * Delete a file, waiting out anyone who has it momentarily open.
+ *
+ * Same Windows collision as the rename: a contending process reads the lock
+ * to decide whether it is stale, and a delete landing in that window fails
+ * with EPERM. Returns whether the file is gone, because both callers have
+ * something sensible to do when it is not — the acquirer loops, the releaser
+ * lets the lock go stale on its own.
+ */
+function removeQuietly(file: string): boolean {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      fs.rmSync(file, { force: true });
+      return true;
+    } catch {
+      if (attempt >= RENAME_ATTEMPTS) return false;
+      pause(5 + attempt * 5);
+    }
+  }
+}
+
+/** Read a file, waiting out a writer's rename rather than calling it damaged. */
+function readWithRetry(file: string): string {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return fs.readFileSync(file, 'utf8');
+    } catch (err) {
+      const code = (err as NodeJS.ErrnoException).code;
+      if (code === 'ENOENT' || attempt >= RENAME_ATTEMPTS) throw err;
+      pause(5 + attempt * 5);
+    }
+  }
+}
+
+function holderIsGone(pid: number): boolean {
+  if (!Number.isInteger(pid) || pid <= 0) return true;
+  try {
+    process.kill(pid, 0);
+    return false;
+  } catch (err) {
+    // EPERM means the process exists and belongs to someone else.
+    return (err as NodeJS.ErrnoException).code !== 'EPERM';
+  }
+}
+
+/**
+ * Hold an exclusive lock on one file for the duration of `fn`.
+ *
+ * `wx` is the whole mechanism: an exclusive create either wins or throws
+ * EEXIST, atomically, on Windows and POSIX alike.
+ *
+ * Taking over an abandoned lock needs BOTH tests, and the pid one is not
+ * sufficient by itself: pids are reused, so a long-dead holder's number can
+ * belong to something entirely unrelated, and a stale lock would then look
+ * held forever. Age alone is not sufficient either — a live process doing
+ * slow work would have its lock stolen. Gone-or-old is the pair that is
+ * safe: a live holder within the window is respected, anything else is not.
+ */
+function withFileLock<T>(file: string, fn: () => T): T {
+  const lock = `${file}.lock`;
+  const deadline = Date.now() + LOCK_WAIT_MS;
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  for (;;) {
+    try {
+      fs.writeFileSync(lock, JSON.stringify({ pid: process.pid, at: Date.now() }), { flag: 'wx' });
+      break;
+    } catch (err) {
+      const code = (err as NodeJS.ErrnoException).code;
+      // Windows reports an exclusive create against a file that is being
+      // deleted as EPERM rather than EEXIST: the name still exists, in a
+      // pending-delete state, so neither "it is there" nor "it is not" is
+      // true yet. That is contention, not a failure, and rethrowing it made
+      // three runs in five die under four writers.
+      if (code === 'EPERM' || code === 'EACCES' || code === 'EBUSY') {
+        if (Date.now() >= deadline) throw err;
+        pause(10);
+        continue;
+      }
+      if (code !== 'EEXIST') throw err;
+      // Age comes from the filesystem, never from the lock's own contents.
+      // A lock read in the instant between its exclusive create and its bytes
+      // landing parses as nothing, and an earlier version of this read that
+      // as `pid: undefined` -> holderIsGone(0) -> true -> abandoned. Two
+      // processes hitting that window together BOTH took over and BOTH
+      // entered the critical section, which is how a lock with a correct
+      // primitive under it still lost nine updates in a hundred.
+      //
+      // So an unreadable lock is treated as held by someone unknown, and only
+      // its age can retire it.
+      let age: number;
+      try {
+        age = Date.now() - fs.statSync(lock).mtimeMs;
+      } catch {
+        continue; // vanished under us: try to take it
+      }
+      let pid: number | undefined;
+      try {
+        const held = JSON.parse(fs.readFileSync(lock, 'utf8')) as { pid?: number };
+        if (typeof held.pid === 'number') pid = held.pid;
+      } catch {
+        /* half-written or already gone; age is the only evidence */
+      }
+      if ((pid !== undefined && holderIsGone(pid)) || age > LOCK_STALE_MS) {
+        // Claim the abandoned lock by RENAMING it, not by deleting it.
+        //
+        // Delete-then-create is not a takeover, it is a race: two processes
+        // that both judge the lock abandoned both delete, both create, and
+        // both proceed. A rename can only be won once — the loser gets ENOENT
+        // because the file it was about to claim is already gone — so exactly
+        // one of them reaches the `wx` below with the way clear.
+        const claim = `${lock}.${process.pid}.dead`;
+        try {
+          fs.renameSync(lock, claim);
+        } catch {
+          continue; // somebody else claimed it; go round and contend for the new lock
+        }
+        removeQuietly(claim);
+        continue;
+      }
+      if (Date.now() >= deadline) {
+        throw new Error(
+          `could not lock ${path.basename(file)} within ${LOCK_WAIT_MS}ms: process ${pid ?? 'unknown'} has held it for ${Math.round(age)}ms. ` +
+            'If that process is gone, delete ' + lock,
+        );
+      }
+      pause(25);
+    }
+  }
+  try {
+    return fn();
+  } finally {
+    // A lock we genuinely cannot remove goes stale on its own, and the age
+    // test above collects it. Never throw from here: the write succeeded.
+    removeQuietly(lock);
+  }
+}
+
 export class SkillStore {
   constructor(readonly dir: string = skillsDir()) {}
 
@@ -443,9 +615,20 @@ export class SkillStore {
       const file = path.join(dir, n);
       let raw: unknown;
       try {
-        raw = JSON.parse(fs.readFileSync(file, 'utf8'));
-      } catch {
-        if (!this.corrupt.includes(file)) this.corrupt.push(file);
+        raw = JSON.parse(readWithRetry(file));
+      } catch (err) {
+        // Only a file that will not PARSE is corrupt. A file that would not
+        // OPEN — because a writer was renaming over it at that instant, or it
+        // was removed between the listing and the read — is not damaged, and
+        // condemning it would be a permanent verdict on a healthy procedure
+        // reached from a millisecond of bad luck. It also silently shrank the
+        // store: a procedure filed as corrupt is not returned, so an outcome
+        // recorded against it went nowhere.
+        const code = (err as NodeJS.ErrnoException).code;
+        if (code === 'ENOENT') continue;
+        if (err instanceof SyntaxError || !code) {
+          if (!this.corrupt.includes(file)) this.corrupt.push(file);
+        }
         continue;
       }
       const skill = raw as Skill;
@@ -477,8 +660,139 @@ export class SkillStore {
     fs.mkdirSync(dir, { recursive: true });
     const file = this.file(skill.origin, skill.id);
     const tmp = `${file}.${process.pid}.tmp`;
-    fs.writeFileSync(tmp, JSON.stringify(skill, null, 1));
-    fs.renameSync(tmp, file);
+    try {
+      fs.writeFileSync(tmp, JSON.stringify(skill, null, 1));
+      // Windows refuses to rename ONTO a file another process currently has
+      // open, with EPERM, and every reader of this store opens it — `all()`
+      // is called constantly. The write lock does not help, because readers
+      // do not take it and should not have to: reading is safe, the rename is
+      // atomic, and the only problem is that the two collide for the
+      // microseconds the reader's handle is open.
+      //
+      // This is what left a stray `.tmp` beside a bench store that ended up
+      // with 9 of 41 procedures. It was put down to antivirus at the time; it
+      // is ordinary concurrent reading, and it is transient, so the answer is
+      // to wait out the reader rather than to give up the write.
+      for (let attempt = 0; ; attempt++) {
+        try {
+          fs.renameSync(tmp, file);
+          break;
+        } catch (err) {
+          const code = (err as NodeJS.ErrnoException).code;
+          if (attempt >= RENAME_ATTEMPTS || (code !== 'EPERM' && code !== 'EACCES' && code !== 'EBUSY')) throw err;
+          pause(5 + attempt * 5);
+        }
+      }
+    } catch (err) {
+      // A rename that fails leaves the temp file behind forever. One was
+      // found beside a store that had ended up with 9 of the 41 procedures a
+      // run compiled — the whole-file layout made that a catastrophe, and one
+      // file per procedure makes it a single lost write, but the litter is
+      // still evidence of a failure nobody was told about.
+      try {
+        fs.rmSync(tmp, { force: true });
+      } catch {
+        /* the original error is the one worth reporting */
+      }
+      throw err;
+    }
+  }
+
+  /**
+   * Read one procedure straight off disk, ignoring anything already read.
+   *
+   * A read-modify-write has to start from what is on disk NOW, not from a
+   * `Skill` some earlier call handed out — that object may be seconds old and
+   * another process may have recorded an outcome against it since.
+   */
+  /**
+   * Which file holds this procedure, by NAME rather than by reading anything.
+   *
+   * Looking it up through `all()` meant parsing every procedure in the store
+   * to find one path, and a transient read failure on any of them made the
+   * target look absent — at which point `update` returned null and the
+   * outcome it was recording vanished with no error at all. The file name is
+   * derived from the id, so a directory listing answers this without opening
+   * a single file, and nothing about another procedure can affect it.
+   */
+  private locate(id: string): string | null {
+    const name = `${encodeURIComponent(id)}.json`;
+    let entries: fs.Dirent[];
+    try {
+      entries = fs.readdirSync(this.dir, { withFileTypes: true });
+    } catch {
+      return null;
+    }
+    for (const e of entries) {
+      if (!e.isDirectory()) continue;
+      const candidate = path.join(this.dir, e.name, name);
+      if (fs.existsSync(candidate)) return candidate;
+    }
+    return null;
+  }
+
+  private readFile(file: string): Skill | null {
+    let raw: unknown;
+    // Retry a read that lost a race with somebody's rename. On Windows that
+    // surfaces as EPERM; everywhere it can surface as a torn or missing file
+    // for an instant. Giving up here and using a caller's older copy instead
+    // is how a read-modify-write silently reverts someone else's write —
+    // which is the entire bug this machinery exists to stop, reintroduced at
+    // the one point that has to be exactly right.
+    for (let attempt = 0; ; attempt++) {
+      try {
+        raw = JSON.parse(fs.readFileSync(file, 'utf8'));
+        break;
+      } catch (err) {
+        const code = (err as NodeJS.ErrnoException).code;
+        if (code === 'ENOENT') return null; // genuinely gone
+        if (attempt >= RENAME_ATTEMPTS) throw err;
+        pause(5 + attempt * 5);
+      }
+    }
+    const skill = raw as Skill;
+    if (!skill || typeof skill !== 'object' || typeof skill.id !== 'string' || typeof skill.origin !== 'string') return null;
+    return this.admit(skill, file) ? skill : null;
+  }
+
+  /**
+   * Read-modify-write one procedure, with nobody else in the middle.
+   *
+   * `recordOutcome` used to be `get` then mutate then `write`, and every
+   * counter it maintains is a read-modify-write: two daemons replaying the
+   * same procedure at once each read `successes: 1`, each wrote 2, and one
+   * run vanished. Promotion is computed from that same count, so the damage
+   * is not only a wrong number — a procedure can reach `validated` on fewer
+   * clean runs than the rule requires, or be held back from it.
+   *
+   * The lock is per PROCEDURE FILE rather than per origin, which is what the
+   * layout now makes natural: two procedures of one app have nothing to say
+   * to each other, and a per-origin lock would serialise a whole sweep behind
+   * whichever procedure was being written.
+   *
+   * `fn` gets the on-disk procedure, not a caller's copy, and returning null
+   * abandons the transaction without writing.
+   */
+  update(id: string, fn: (skill: Skill) => Skill | null): Skill | null {
+    const file = this.locate(id);
+    if (!file) return null;
+    return withFileLock(file, () => {
+      // Re-read INSIDE the lock. Finding the file above said only which file
+      // to lock; its contents by then may be somebody else's newer write.
+      //
+      // No falling back to an older copy if the read comes back empty. That
+      // would turn "I could not see the current state" into "I will overwrite
+      // it with a state from before", which is the lost update this whole
+      // path exists to prevent. A procedure deleted since is simply not
+      // updated.
+      const current = this.readFile(file);
+      if (!current) return null;
+      const next = fn(current);
+      if (!next) return null;
+      next.revision = (current.revision ?? 0) + 1;
+      this.write(next);
+      return next;
+    });
   }
 
   /**
@@ -535,8 +849,22 @@ export class SkillStore {
     return this.all().find((s) => s.id === id) ?? null;
   }
 
+  /**
+   * Write one procedure, last writer wins.
+   *
+   * Under the same lock `update` takes, so a plain write cannot land in the
+   * middle of somebody's read-modify-write. That is all a bare `put` can
+   * promise: it is handed a finished object, so it cannot merge, and a caller
+   * that needs "change this without losing a concurrent change" wants
+   * `update` instead.
+   */
   put(skill: Skill): void {
-    this.write(skill);
+    const file = this.file(skill.origin, skill.id);
+    withFileLock(file, () => {
+      const current = this.readFile(file);
+      skill.revision = (current?.revision ?? skill.revision ?? 0) + 1;
+      this.write(skill);
+    });
   }
 
   /**
@@ -597,36 +925,35 @@ export class SkillStore {
    * promotes has to be a genuinely observed one.
    */
   recordOutcome(id: string, outcome: ReplayOutcome, now = new Date().toISOString()): Skill | null {
-    const skill = this.get(id);
-    if (!skill) return null;
-    const st = skill.stats;
-    st.uses += 1;
-    st.lastUsed = now;
-    st.fallthroughs += outcome.fallthroughs ?? 0;
-    const unobserved = outcome.unobserved ?? 0;
-    if (unobserved > 0) st.unobserved = (st.unobserved ?? 0) + unobserved;
-    if (outcome.ok && outcome.instructionSucceeded && unobserved === 0) {
-      st.successes += 1;
-      st.lastFailedAt = undefined;
-      if (skill.status === 'provisional' && st.successes >= 2) {
-        skill.status = 'validated';
-        // Say WHICH engine's rules these two clean runs were clean under.
-        // Without this the status alone would carry over a contract bump and
-        // claim evidence it does not have.
-        st.verifiedContract = contractOf(skill);
+    return this.update(id, (skill) => {
+      const st = skill.stats;
+      st.uses += 1;
+      st.lastUsed = now;
+      st.fallthroughs += outcome.fallthroughs ?? 0;
+      const unobserved = outcome.unobserved ?? 0;
+      if (unobserved > 0) st.unobserved = (st.unobserved ?? 0) + unobserved;
+      if (outcome.ok && outcome.instructionSucceeded && unobserved === 0) {
+        st.successes += 1;
+        st.lastFailedAt = undefined;
+        if (skill.status === 'provisional' && st.successes >= 2) {
+          skill.status = 'validated';
+          // Say WHICH engine's rules these two clean runs were clean under.
+          // Without this the status alone would carry over a contract bump and
+          // claim evidence it does not have.
+          st.verifiedContract = contractOf(skill);
+        }
+      } else if (outcome.ok && outcome.instructionSucceeded) {
+        // Observed nothing conclusive: not a success, not a strike.
+        st.lastFailedAt = undefined;
+      } else if (!outcome.ok) {
+        st.partial += 1;
+        const at = outcome.failedAt ?? 0;
+        st.failedAtStep[String(at)] = (st.failedAtStep[String(at)] ?? 0) + 1;
+        if (st.lastFailedAt === at) skill.status = 'demoted';
+        st.lastFailedAt = at;
       }
-    } else if (outcome.ok && outcome.instructionSucceeded) {
-      // Observed nothing conclusive: not a success, not a strike.
-      st.lastFailedAt = undefined;
-    } else if (!outcome.ok) {
-      st.partial += 1;
-      const at = outcome.failedAt ?? 0;
-      st.failedAtStep[String(at)] = (st.failedAtStep[String(at)] ?? 0) + 1;
-      if (st.lastFailedAt === at) skill.status = 'demoted';
-      st.lastFailedAt = at;
-    }
-    this.write(skill);
-    return skill;
+      return skill;
+    });
   }
 
   /** A validated variant supersedes the skill it repaired. */

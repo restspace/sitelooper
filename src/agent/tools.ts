@@ -526,8 +526,10 @@ async function executeSkill(
     g.kind === 'precondition' ? replay.stepsRun >= 1 : replay.ok || (g.step !== undefined && replay.stepsRun > g.step),
   );
   if (confirmed.length) {
-    const fresh = store.get(skill.id);
-    if (fresh) {
+    // A transaction: the pattern is re-read here, so two replays confirming
+    // different segments of the same url cannot each widen from the same
+    // starting point and have one of the two widenings vanish.
+    store.update(skill.id, (fresh) => {
       const was = structuredClone(fresh);
       let changed = false;
       for (const g of confirmed) {
@@ -542,25 +544,24 @@ async function executeSkill(
           }
         }
       }
-      if (changed) {
-        // Generalising a url segment that demonstrated volatility is a real
-        // improvement, and it is also, precisely, a promise made weaker: the
-        // procedure will now start on pages it would previously have refused.
-        // Invariant 7 does not forbid that — it forbids doing it quietly. So
-        // the widening is recorded, and the validation it was carrying is
-        // given up, because two clean runs under the narrower promise are not
-        // evidence for the wider one.
-        const gave = contractWeakening(was, fresh);
-        if (gave.length) {
-          fresh.provenance = {
-            ...fresh.provenance,
-            contractChanges: [...(fresh.provenance.contractChanges ?? []), { at: new Date().toISOString(), by: 'replay generalisation', gave }],
-          };
-          delete fresh.stats.verifiedContract;
-        }
-        store.put(fresh);
+      if (!changed) return null;
+      // Generalising a url segment that demonstrated volatility is a real
+      // improvement, and it is also, precisely, a promise made weaker: the
+      // procedure will now start on pages it would previously have refused.
+      // Invariant 7 does not forbid that — it forbids doing it quietly. So
+      // the widening is recorded, and the validation it was carrying is given
+      // up, because two clean runs under the narrower promise are not
+      // evidence for the wider one.
+      const gave = contractWeakening(was, fresh);
+      if (gave.length) {
+        fresh.provenance = {
+          ...fresh.provenance,
+          contractChanges: [...(fresh.provenance.contractChanges ?? []), { at: new Date().toISOString(), by: 'replay generalisation', gave }],
+        };
+        delete fresh.stats.verifiedContract;
       }
-    }
+      return fresh;
+    });
   }
   const observed = before && replay.stepsRun ? await stateDiff(page, before, BATCH_LINE_BUDGET) : EMPTY_OBSERVATION;
   const body = scrubSecrets(renderReplay(skill, replay)) + scrubSecrets(observed.note) + dialogNote(session);
