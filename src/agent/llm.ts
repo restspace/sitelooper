@@ -52,6 +52,15 @@ export interface Completion {
   /** The assistant message exactly as returned, for appending to history. */
   assistantMessage: ChatMessage;
   usage: Usage;
+  /**
+   * The backend that actually served this call, when the host names one
+   * (OpenRouter's top-level `provider`). OpenRouter routes a model across
+   * backends that differ in price by up to 2.5x, so a token count alone cannot
+   * be priced: without this, a run costed from a rate table is only asserting
+   * what it hoped it paid. Recorded so a provider pin can be CHECKED rather
+   * than assumed (fwrd48 could not be). null when the host names no backend.
+   */
+  served: string | null;
 }
 
 export interface CompleteOptions {
@@ -358,7 +367,7 @@ export class OpenAICompatProvider implements Provider {
   }
 }
 
-function parseCompletion(json: Record<string, any>): Completion {
+export function parseCompletion(json: Record<string, any>): Completion {
   const choice = json.choices?.[0];
   const msg = choice?.message;
   if (!msg) throw new Error(`LLM returned no choices: ${JSON.stringify(json).slice(0, 300)}`);
@@ -395,6 +404,7 @@ function parseCompletion(json: Record<string, any>): Completion {
       // Both OpenAI and z.ai/novita nest the cache hit here; absent → 0.
       cachedTokens: json.usage?.prompt_tokens_details?.cached_tokens ?? 0,
     },
+    served: typeof json.provider === 'string' && json.provider ? json.provider : null,
   };
 }
 
@@ -572,6 +582,8 @@ function parseAnthropicCompletion(json: Record<string, any>): Completion {
       completionTokens: u.output_tokens ?? 0,
       cachedTokens: u.cache_read_input_tokens ?? 0,
     },
+    // Anthropic serves its own models; there is no routing layer to name.
+    served: null,
   };
 }
 

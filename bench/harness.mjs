@@ -884,6 +884,11 @@ async function collectInnerUsage() {
         inner.completionTokens = cfg.usage.completionTokens ?? 0;
         inner.instructions = cfg.usage.instructions ?? 0;
         if (cfg.usageByModel) inner.byModel = cfg.usageByModel;
+        // Which backend actually served the inner model. On a routing host the
+        // same model id is billed at up to 2.5x depending on the backend, so
+        // without this the inner cost below is an assumption, not a reading —
+        // and a provider pin cannot be shown to have held.
+        if (cfg.servedByModel) inner.servedByModel = cfg.servedByModel;
       } else {
         log({ k: 'inner-usage-stale', seen: prompt, kept: inner.promptTokens });
       }

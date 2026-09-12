@@ -206,6 +206,12 @@ for (let n = own.from ? 2 : 1; n <= own.k; n++) {
           const r = rates[fr.provider]?.[model];
           if (r) usd += ((u.promptTokens - u.cachedTokens) * r.input + u.cachedTokens * (r.cacheRead ?? r.input) + u.completionTokens * r.output) / 1e6;
           else console.error(`[sweep] no rate for ${fr.provider}/${model} — its tokens are unpriced`);
+          // rates.json holds ONE rate per model id, but a routing host can
+          // serve that id from backends priced up to 2.5x apart. More than one
+          // backend means the figure above is an average of rates we did not
+          // use, so say so rather than printing it as if it were read.
+          const served = fr.servedByModel?.[model];
+          if (served?.length > 1) console.error(`[sweep] ${model} was served by ${served.join(', ')} — priced at one rate, so total_usd is approximate`);
         }
       } else if (fr.usage && fr.recoveryModel) {
         const r = rates[fr.provider]?.[fr.recoveryModel];

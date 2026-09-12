@@ -88,6 +88,23 @@ export class SessionState {
     if (learned?.variantOf) k.variants += 1;
   }
 
+  /**
+   * Backends that actually served this session's calls, per model id. A routing
+   * host (OpenRouter) spreads one model across backends whose prices differ by
+   * up to 2.5x and picks per request, so token counts alone cannot be costed:
+   * a figure from a rate table is a guess unless the backend is known. Recorded
+   * so a provider pin can be checked after the fact — fwrd48 pinned DeepSeek
+   * and nothing in the artifacts could confirm it held.
+   */
+  servedByModel: Record<string, string[]> = {};
+
+  /** Note which backend served a call, if the host named one. */
+  recordServed(model: string, served: string | null): void {
+    if (!served) return;
+    const seen = (this.servedByModel[model] ??= []);
+    if (!seen.includes(served)) seen.push(served);
+  }
+
   /** Fold one instruction's usage into both the session total and its model's bucket. */
   recordUsage(
     model: string,

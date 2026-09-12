@@ -540,6 +540,7 @@ ${describeLeaks(leaks.slice(0, 6))}`);
           notes: this.state.notes,
           usage: this.state.usage,
           usageByModel: this.state.usageByModel,
+          servedByModel: this.state.servedByModel,
           historyMessages: this.state.messages.length,
         };
       }
@@ -1478,6 +1479,10 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       // priced at the dearest tier in play — an over-, never under-estimate.
       usage,
       usageByModel: diffUsageByModel(usageBefore, this.state.usageByModel),
+      // Backends the routing host picked for this replay's calls — the same
+      // reason usageByModel exists: a token split cannot be priced when one
+      // model id maps to backends that differ in price (see state.servedByModel).
+      servedByModel: this.state.servedByModel,
       recoveryModel: opts.recovery.model,
       // The provider name the daemon actually resolved (flag > env > global
       // config > default), not env-or-default: fwrd43's replays ran on

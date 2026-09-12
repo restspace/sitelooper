@@ -4,11 +4,13 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   OpenAICompatProvider,
+  parseCompletion,
   PROVIDER_PRESETS,
   readGlobalConfig,
   resolveProviderConfig,
   writeGlobalConfig,
 } from '../src/agent/llm.js';
+import { SessionState } from '../src/daemon/state.js';
 
 const ENV_VARS = [
   'SITELOOPER_HOME',
@@ -201,5 +203,36 @@ describe('per-request reasoning effort', () => {
     } finally {
       globalThis.fetch = realFetch;
     }
+  });
+});
+
+describe('served backend', () => {
+  // A routing host bills one model id at different rates depending on which
+  // backend it picked, so a run costed from a rate table is only an assertion
+  // unless the backend it was served by is on record. fwrd48 pinned DeepSeek
+  // and no artifact could show the pin held.
+  it('records the backend OpenRouter names for a call', () => {
+    const c = parseCompletion({
+      provider: 'DeepSeek',
+      choices: [{ message: { content: 'ok' } }],
+      usage: { prompt_tokens: 10, completion_tokens: 2 },
+    });
+    expect(c.served).toBe('DeepSeek');
+  });
+
+  it('is null when the host names no backend, rather than inventing one', () => {
+    const c = parseCompletion({ choices: [{ message: { content: 'ok' } }], usage: {} });
+    expect(c.served).toBeNull();
+  });
+
+  it('a session keeps every distinct backend per model, without duplicates', () => {
+    const state = new SessionState('t-served');
+    state.recordServed('deepseek/deepseek-v4.1-flash', 'DeepSeek');
+    state.recordServed('deepseek/deepseek-v4.1-flash', 'DeepSeek');
+    // A second backend for the same id is exactly the case worth catching: the
+    // pin did not hold and part of the run was billed at another rate.
+    state.recordServed('deepseek/deepseek-v4.1-flash', 'Nebius');
+    state.recordServed('deepseek/deepseek-v4.1-flash', null);
+    expect(state.servedByModel).toEqual({ 'deepseek/deepseek-v4.1-flash': ['DeepSeek', 'Nebius'] });
   });
 });

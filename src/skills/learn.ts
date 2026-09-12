@@ -154,6 +154,51 @@ export function matchTemplate(
  * e.g. a fragile provisional from a single model recovery — from dominating
  * the step run after run.
  */
+/**
+ * The pinned skill's values, re-offered to a sibling by what each slot MEANS.
+ *
+ * Slot names are per-skill positional labels: `v1` is "the first slot of this
+ * skill", not a shared identifier. Two skills that share a procedure therefore
+ * both have a `v1` while their `v1` denotes different records — in fwrd48 the
+ * pinned skill's v1 was the bench ticket and the sibling's v1 was a scratch
+ * ticket that did not exist yet. Inheriting by name handed the sibling the
+ * wrong record's identifier, it acted on the first row it found, and only a
+ * recorded expectation caught it 28 model turns later.
+ *
+ * So a value crosses only where both sides agree what it is: the hint's values
+ * are re-keyed by the hint's own bindings and each sibling slot is looked up by
+ * ITS binding. A slot that cannot be filled that way (no binding, or a binding
+ * nothing has a value for) refuses the whole inheritance — the candidate is
+ * skipped and the step costs a model turn, rather than running against a record
+ * it was never given.
+ */
+function inheritByBinding(
+  sibling: Skill,
+  hint: Skill,
+  pinned: Record<string, string>,
+  known: Record<string, string>,
+): Record<string, string> | null {
+  const byBinding = new Map<string, string>();
+  for (const [n, p] of Object.entries(hint.params)) {
+    if (p.binding && pinned[n] !== undefined) byBinding.set(p.binding, pinned[n]);
+  }
+  // A slot with no binding was cut from the instruction text, so only the
+  // template says what it denotes. Identical templates slot in the same order,
+  // which makes the names correspond by construction; different templates say
+  // nothing, and `sameProcedure` alone cannot stand in — for a one-step skill
+  // it means only "same tool, same kind of locator", which any two clicks in
+  // the app satisfy. That is what let a scratch-ticket skill inherit the bench
+  // ticket's reference in fwrd48.
+  const sameWording = sibling.template === hint.template;
+  const out: Record<string, string> = {};
+  for (const [n, p] of Object.entries(sibling.params)) {
+    const value = p.binding ? byBinding.get(p.binding) ?? known[p.binding] : sameWording ? pinned[n] : undefined;
+    if (value === undefined) return null;
+    out[n] = value;
+  }
+  return out;
+}
+
 export function selectCandidates(
   skills: Skill[],
   hintId: string | undefined,
@@ -173,8 +218,8 @@ export function selectCandidates(
     let params: Record<string, string> | null = null;
     if (s.id === hintId && pinned) params = pinned;
     else params = bindSkill(s, instruction, known);
-    if (!params && pinned && hint && (s.template === hint.template || sameProcedure(s, hint)) && Object.keys(s.params).every((p) => pinned[p])) {
-      params = pinned;
+    if (!params && pinned && hint && (s.template === hint.template || sameProcedure(s, hint))) {
+      params = inheritByBinding(s, hint, pinned, known);
     }
     if (!params) continue;
     out.push({ skill: s, params });

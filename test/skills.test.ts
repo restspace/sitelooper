@@ -999,10 +999,48 @@ describe('selectCandidates (lifecycle-gated adoption)', () => {
     expect(out[0].skill.id).toBe(solid.id);
   });
 
-  it('a sameProcedure sibling with different wording inherits the pinned bindings', () => {
+  it('a sibling with the SAME wording inherits the pinned params', () => {
+    const hint = make('provisional');
+    const sibling = compileSkill({ entries: recording(), instruction: INSTRUCTION, report, session: 's' })!;
+    sibling.status = 'validated';
+    sibling.id = 's_sibling';
+    const params = { v1: 'z9 RD Part B', v2: '300', v3: '40' };
+    const out = selectCandidates([hint, sibling], hint.id, same, params);
+    expect(out.map((c) => c.skill.id)).toEqual([sibling.id, hint.id]);
+    expect(out[0].params).toEqual(params);
+  });
+
+  // fwrd48 07-create: a scratch-ticket skill and a bench-ticket skill were both
+  // a single scoped click, so sameProcedure called them the same procedure. The
+  // slots were inherited by NAME, so the scratch skill was handed the bench
+  // ticket's title and reference, clicked the first row it found, and cost 28
+  // model turns before a recorded expectation caught it. Unbound slots mean
+  // whatever their own instruction cut them from: without the same wording
+  // there is nothing that says they correspond, and guessing acts on the wrong
+  // record. Refusing costs a model turn instead.
+  it('a sameProcedure sibling with DIFFERENT wording does not inherit unbound slots', () => {
     const hint = make('provisional');
     const sibling = compileSkill({ entries: recording(), instruction: 'totally different words x7 RD Part A 100 25', report, session: 's' })!;
     sibling.status = 'validated';
+    sibling.id = 's_other_wording';
+    const params = { v1: 'z9 RD Part B', v2: '300', v3: '40' };
+    const out = selectCandidates([hint, sibling], hint.id, same, params);
+    expect(out.map((c) => c.skill.id)).toEqual([hint.id]);
+  });
+
+  it('a differently-worded sibling still inherits a slot that carries a binding, by that binding', () => {
+    const hint = make('provisional');
+    const sibling = compileSkill({ entries: recording(), instruction: 'totally different words x7 RD Part A 100 25', report, session: 's' })!;
+    sibling.status = 'validated';
+    sibling.id = 's_bound';
+    // Both sides agree v1 IS the earlier step's part name, so the value crosses
+    // on that agreement rather than on the shared label "v1".
+    hint.params.v1 = { ...hint.params.v1, binding: 'output:i2:part_name' };
+    sibling.params.v1 = { ...sibling.params.v1, binding: 'output:i2:part_name' };
+    for (const p of ['v2', 'v3'] as const) {
+      hint.params[p] = { ...hint.params[p], binding: `var:${p}` };
+      sibling.params[p] = { ...sibling.params[p], binding: `var:${p}` };
+    }
     const params = { v1: 'z9 RD Part B', v2: '300', v3: '40' };
     const out = selectCandidates([hint, sibling], hint.id, same, params);
     expect(out.map((c) => c.skill.id)).toEqual([sibling.id, hint.id]);

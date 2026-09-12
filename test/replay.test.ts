@@ -54,6 +54,7 @@ function scripted(script: Array<{ name: string; args: Record<string, unknown> }[
           tool_calls: calls.map((c) => ({ id: c.id, type: 'function' as const, function: { name: c.name, arguments: c.rawArgs } })),
         },
         usage: { promptTokens: 10, completionTokens: 1, cachedTokens: 0 },
+        served: null,
       };
     },
   };

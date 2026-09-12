@@ -42,6 +42,7 @@ function scriptedProvider(script: Array<Partial<Completion> & { toolCalls?: Comp
             : {}),
         },
         usage: { promptTokens: 100, completionTokens: 10, cachedTokens: 40 },
+        served: null,
       };
     },
   };
@@ -620,7 +621,7 @@ describe('escalate-on-blocked', () => {
       model: 'smart',
       async complete() {
         fallbackCalled = true;
-        return { text: null, toolCalls: [], assistantMessage: { role: 'assistant', content: null }, usage: { promptTokens: 0, completionTokens: 0, cachedTokens: 0 } };
+        return { text: null, toolCalls: [], assistantMessage: { role: 'assistant', content: null }, usage: { promptTokens: 0, completionTokens: 0, cachedTokens: 0 }, served: null };
       },
     };
     const controller = new AbortController();

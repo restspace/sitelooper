@@ -606,6 +606,7 @@ export async function runInstruction(
     usage.promptTokens += completion.usage.promptTokens;
     usage.completionTokens += completion.usage.completionTokens;
     usage.cachedTokens += completion.usage.cachedTokens;
+    state.recordServed(provider.model, completion.served);
     state.messages.push(completion.assistantMessage);
     if (completion.text) transcript.push(`assistant: ${completion.text.slice(0, 300)}`);
 
@@ -917,6 +918,7 @@ async function sourceStragglers(
   usage.promptTokens += completion.usage.promptTokens;
   usage.completionTokens += completion.usage.completionTokens;
   usage.cachedTokens += completion.usage.cachedTokens;
+  state.recordServed(provider.model, completion.served);
   const call = completion.toolCalls.find((c) => c.name === 'locate');
   const sources = call?.args && Array.isArray((call.args as { sources?: unknown }).sources) ? ((call.args as { sources: unknown[] }).sources) : [];
   const out: import('../daemon/recorder.js').RecordedStep[] = [];
