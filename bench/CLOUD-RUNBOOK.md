@@ -95,6 +95,9 @@ Substitute `<ARM>` (`sitelooper`, `agent-browser`, `playwright-mcp` or
 
 ```sh
 export SITELOOPER_PROVIDER=openrouter
+export SITELOOPER_MODEL=deepseek/deepseek-v4.1-flash
+export SITELOOPER_FALLBACK_MODEL=z-ai/glm-5.3
+export SITELOOPER_EXTRA_BODY='{"provider":{"only":["DeepSeek"]}}'
 node bench/harness.mjs \
   --arm <ARM> --target repairdesk \
   --task bench/tasks/repairdesk-ticket-flow.md \
@@ -102,6 +105,17 @@ node bench/harness.mjs \
   --runid <RUNID> --out bench/results --reset
 ```
 
+- **Two models, and they are not the same one.** The harness's orchestrator runs
+  on `--provider`/`--model` (glm-5.3). sitelooper's INNER agent loop is the
+  `SITELOOPER_*` block: deepseek-v4.1-flash, escalating to glm-5.3 only when an
+  instruction comes back blocked. `SITELOOPER_EXTRA_BODY` pins OpenRouter to
+  DeepSeek's own backend, which is the one `bench/rates.json` quotes — without
+  the pin OpenRouter may route to a reseller at a different price and the run's
+  USD figure stops meaning what the table says it means. Confirm before
+  sweeping, because getting this wrong is silent until the bill:
+  `sitelooper config --session cfgcheck` should name deepseek-v4.1-flash, then
+  `sitelooper stop --session cfgcheck`. The run records which backend actually
+  served it in the result's `orBackends`.
 - The `export` is **not optional** for the sitelooper arm (harmless for the
   other). `--provider` configures the harness's orchestrator only; sitelooper's
   inner agent resolves its own provider from `SITELOOPER_PROVIDER` and
