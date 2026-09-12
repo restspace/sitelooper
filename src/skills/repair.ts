@@ -3,6 +3,7 @@ import type { Page } from 'playwright-core';
 import type { Provider } from '../agent/llm.js';
 import { fillParams } from './compile.js';
 import { newSkillId, type Skill, type SkillStore } from './store.js';
+import { contractWeakening } from './contract.js';
 
 /**
  * A drift observation from one flow-step replay: the primary locator missed
@@ -153,8 +154,16 @@ export function promoteFallback(store: SkillStore, ticket: DriftTicket): boolean
   // may have moved it). Parameterised candidates can only be index-checked.
   const expr = candidateExpr(chain[ticket.fallbackIndex]);
   if (ticket.fallbackUsed && !expr.includes('{{') && expr !== ticket.fallbackUsed) return false;
+  const was = structuredClone(skill);
   const [used] = chain.splice(ticket.fallbackIndex, 1);
   chain.unshift(used);
+  // Reordering a locator chain is a locator repair, and invariant 7 says an
+  // ordinary locator repair preserves the contract. It should: nothing here
+  // touches an assertion, a scope or an identity. The check is cheap and the
+  // alternative is trusting that it stays that way — which is how the
+  // promotion path would come to carry a weakening nobody asked it to make.
+  const gave = contractWeakening(was, skill);
+  if (gave.length) return false;
   store.put(skill);
   return true;
 }

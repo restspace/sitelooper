@@ -12,6 +12,7 @@ import { controlFromTarget, siteModel } from '../skills/sitemap.js';
 import { settleDom, settlePage } from '../daemon/settle.js';
 import { fingerprintPage } from '../daemon/fingerprint.js';
 import { isRecordable, type StepDiff } from '../daemon/recorder.js';
+import { contractWeakening } from '../skills/contract.js';
 import { urlPattern as compiledUrlPattern } from '../skills/compile.js';
 import { renderReplay, replaySkill, type ReplayResult } from '../skills/replay.js';
 import type { ToolDef } from './llm.js';
@@ -527,6 +528,7 @@ async function executeSkill(
   if (confirmed.length) {
     const fresh = store.get(skill.id);
     if (fresh) {
+      const was = structuredClone(fresh);
       let changed = false;
       for (const g of confirmed) {
         if (g.kind === 'precondition') {
@@ -540,7 +542,24 @@ async function executeSkill(
           }
         }
       }
-      if (changed) store.put(fresh);
+      if (changed) {
+        // Generalising a url segment that demonstrated volatility is a real
+        // improvement, and it is also, precisely, a promise made weaker: the
+        // procedure will now start on pages it would previously have refused.
+        // Invariant 7 does not forbid that — it forbids doing it quietly. So
+        // the widening is recorded, and the validation it was carrying is
+        // given up, because two clean runs under the narrower promise are not
+        // evidence for the wider one.
+        const gave = contractWeakening(was, fresh);
+        if (gave.length) {
+          fresh.provenance = {
+            ...fresh.provenance,
+            contractChanges: [...(fresh.provenance.contractChanges ?? []), { at: new Date().toISOString(), by: 'replay generalisation', gave }],
+          };
+          delete fresh.stats.verifiedContract;
+        }
+        store.put(fresh);
+      }
     }
   }
   const observed = before && replay.stepsRun ? await stateDiff(page, before, BATCH_LINE_BUDGET) : EMPTY_OBSERVATION;

@@ -72,7 +72,25 @@ export interface Skill {
    * recorded run's. `example` is what the recording observed.
    */
   derived?: Record<string, { step: number; at: string; example: string }>;
-  provenance: { session: string; instruction: string; model?: string; created: string };
+  provenance: {
+    session: string;
+    instruction: string;
+    model?: string;
+    created: string;
+    /**
+     * Edits that made this procedure promise LESS than the recording proved
+     * — a widened start pattern, a dropped assertion, a loop given authority
+     * over records nobody counted.
+     *
+     * Kept because invariant 7 does not forbid weakening, it forbids silent
+     * weakening. Generalising a url segment that demonstrated volatility is a
+     * genuine improvement; the same edit applied for no reason is how a
+     * procedure drifts into matching pages it was never recorded against, and
+     * from the JSON alone the two are identical. Each entry is also the
+     * reason the procedure's validated status was given up.
+     */
+    contractChanges?: { at: string; by: string; gave: string[] }[];
+  };
   /**
    * The execution contract this procedure was written under. Absent means 1,
    * the contract every store predates this field.
