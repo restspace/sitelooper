@@ -1,15 +1,35 @@
+import { changedCreation, isReadAction, runStepLifecycle, type StepActionResult } from '../execution/lifecycle.js';
+import { alertVerdict, errorPageVerdict, isErrorPageUrl, markersBound, preconditionVerdict, urlEffectVerdict } from '../execution/gates.js';
+import { LOOP_SHRINK_WAIT_MS, pageReadable, runFoldedLoop, type LoopPass } from '../execution/loop.js';
 import type { Locator, Page } from 'playwright-core';
 import { clip, identityRe, identitySource } from '../shared/text.js';
 import { captureSignature } from '../daemon/diff.js';
 import { cosine, fingerprintPage } from '../daemon/fingerprint.js';
-import { candidateExpr, makeLocator, markPoint, type LocatorCandidate, type StepDiff } from '../daemon/recorder.js';
+import { candidateExpr, makeLocator, type LocatorCandidate, type StepDiff } from '../daemon/recorder.js';
 import { retired } from './repair.js';
+import {
+  RESOLVE_POLL_MS,
+  RESOLVE_WAIT_MS,
+  candidateRank,
+  identityFields,
+  identityValues,
+  resolveCandidates,
+  structuralCandidate,
+  type CandidateObservation,
+  type ResolvePolicy as SharedResolvePolicy,
+} from '../execution/resolve.js';
 import { isRefTarget } from '../daemon/refs.js';
 import { settleDom } from '../daemon/settle.js';
-import { TRANSIENT_LINE, WILDCARD, fillParams, fillParamsDeep, maskMinted, maskVolatile, softUrlMatch, urlMatches, urlPart, urlPattern } from './compile.js';
-
-/** Tools that look at or move to an element without setting or choosing anything. */
-const OBSERVATION_TOOLS = new Set(['scroll_into_view', 'wait_for', 'hover', 'scroll', 'focus', 'screenshot', 'peek']);
+import { TRANSIENT_LINE, fillParams, fillParamsDeep, urlMatches, urlPart, urlPattern } from './compile.js';
+import { capturePageLines, lineShows, presentOnPage, scopeCheckInPage, sweepPage } from '../execution/snapshot.js';
+import { expectedChangesVerdict, liveLines, namesDialogControl } from '../execution/expect.js';
+// The observation dialect and the content-expectation rules live in the
+// shared execution modules, where a compiled artifact embeds them too.
+// Re-exported so this module's callers need not know which owns the source.
+export { lineShows, type LineShowsOptions } from '../execution/snapshot.js';
+export { consequentialExpectations, isEchoLine } from '../execution/expect.js';
+import { candidateNames, echoVerdict, noteInteraction, setsSomething } from '../execution/echo.js';
+import { mayNavigateToDestination, navigateToDestination, textHeldElsewhere } from '../execution/recover.js';
 import { contractVerdict, isVerified, originOf, type Skill, type SkillStep } from './store.js';
 
 /** Executes one step against the live page, recording it; throws on failure. */
@@ -133,21 +153,6 @@ export interface ReplayResult {
 }
 
 const MAX_LINE = 160;
-// Shortest interacted/read value worth treating as an echo. Below this the
-// coincidence rate is too high (a "1m" refresh, a "3" quantity) — a false echo
-// would wrongly drop a legitimate finding, so only substantial values qualify.
-const MIN_ECHO_LEN = 5;
-
-/** Tools whose miss can be substituted by navigating to the step's recorded
- * destination: plain navigation clicks. modifier_click (new tabs) and loop
- * bodies are excluded. */
-const NAV_FALLBACK_TOOLS = new Set(['click', 'dblclick']);
-
-/** A soft-matched precondition needs the page's structural fingerprint to
- * agree before replay proceeds on it. Same-template-different-record pages
- * measured 0.94–1.0 in the swg sweeps; the different-template fixture pair
- * measures 0.57. */
-const SOFT_MATCH_MIN_SIMILARITY = 0.8;
 
 /**
  * Replay a stored skill deterministically: precondition → each step with its
@@ -184,8 +189,8 @@ export async function replaySkill(
 
   // Values the skill puts on the page as it runs — fill/type values, and the
   // names of options it clicks. A later read that returns one of these is an
-  // echo (confirming the control, not app persistence); see echoedValues.
-  // Loosely keyed so "Last 6 hours" matches "last 6 hours".
+  // echo (confirming the control, not app persistence); see echoedValues and
+  // the shared rule, src/execution/echo.ts, which the artifact embeds.
   const interacted = new Set<string>();
   // A recorded dialog that did not open (see StepVerdict.absentDialog): while
   // set, a step whose target cannot be found AND which names one of that
@@ -193,7 +198,6 @@ export async function replaySkill(
   // step that resolves its target normally, or by the first step that misses
   // without belonging to the dialog.
   let absentDialog: { name: string; lines: string[] } | null = null;
-  const looseKey = (s: string): string => s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 
   // Copy the caller's bindings: derived ({{dN}}) values minted mid-replay are
   // bound into this map as steps execute, so later steps see them.
@@ -227,30 +231,18 @@ export async function replaySkill(
   if (skill.preconditions.fingerprint) {
     res.similarity = cosine(skill.preconditions.fingerprint, (await fingerprintPage(page)) ?? undefined);
   }
-  if (!navigatesItself && !urlMatches(skill.preconditions.urlPattern, startUrl, params)) {
-    // Same page shape with 1-2 disagreeing segments is likely an
-    // environment-minted id (an Odoo action id, a Grafana uid): proceed
-    // optimistically instead of refusing — a hard fail here is what turned a
-    // one-segment difference into a dead flow, and it also makes the
-    // volatility evidence uncollectible. But "likely" is not evidence, so
-    // when the segment carries a structural fingerprint, that second gate
-    // decides: a different RECORD of the same template fingerprints close
-    // (0.94–1.0 in the swg sweeps); a different TEMPLATE does not (the
-    // fixture pair measures 0.57). Only a close page proceeds.
-    const soft = softUrlMatch(skill.preconditions.urlPattern, startUrl, params);
-    const structurallySame = res.similarity === null || res.similarity >= SOFT_MATCH_MIN_SIMILARITY;
-    if (!soft || !structurallySame) {
+  if (!navigatesItself) {
+    // Strict, then soft-with-fingerprint, else refuse: the shared verdict
+    // (src/execution/gates.ts, preconditionVerdict) decides; this runner only
+    // supplies the fingerprint similarity it measured and books the result.
+    const verdict = preconditionVerdict(skill.preconditions.urlPattern, startUrl, params, res.similarity);
+    if (verdict.refuse) {
       res.refused = true;
-      res.reason =
-        `not on the page this procedure starts from (expects ${fillParams(skill.preconditions.urlPattern, params)}, browser is at ${urlPattern(startUrl)}` +
-        (soft && !structurallySame ? `; the url shape is close but the page structure is not — similarity ${res.similarity}` : '') +
-        `) — nothing was run`;
+      res.reason = `${verdict.refuse} — nothing was run`;
       return res;
     }
-    res.warnings.push(
-      `start url differs from the recorded pattern in ${soft.diffs.length} segment(s) (${soft.diffs.map((d) => `${d.expected}→${d.actual}`).join(', ')}) — proceeding optimistically`,
-    );
-    res.generalisations.push({ kind: 'precondition', pattern: soft.generalised });
+    res.warnings.push(...verdict.warnings);
+    if (verdict.soft) res.generalisations.push({ kind: 'precondition', pattern: verdict.soft.generalised });
   }
 
   // Identity: the url pattern and the fingerprint both match every record of
@@ -292,8 +284,8 @@ export async function replaySkill(
     step: SkillStep,
     tag: string,
     failIndex: number,
-    /** When set (loop bodies), collects what each target actually resolved to, for the loop's progress check. */
-    sink?: string[],
+    /** When set (loop bodies), collects what each target actually resolved to, and is checked before acting (the loop's progress guard). */
+    sink?: LoopPass,
     /** Loop-body cursor: which match an ambiguous per-record locator should act on (see resolveChain). */
     ambiguousNth?: number,
   ): Promise<'ran' | 'skipped' | 'stop'> => {
@@ -311,7 +303,7 @@ export async function replaySkill(
     // replay continues — only an action step (click/fill/submit) or a hard
     // expectation stops it. read_all also legitimately matches many elements,
     // so its target need not be unique.
-    const isRead = step.tool === 'read' || step.tool === 'read_all';
+    const isRead = isReadAction(step.tool);
 
     // Resolve every target through its chain before touching the page.
     const resolved: Record<string, Locator> = {};
@@ -321,18 +313,29 @@ export async function replaySkill(
     // resolution must be corroborated by a consequential page change, not by
     // the fill's own echo.
     let positionalResolution = false;
+    // A wait for absence whose chain resolved nothing: the condition is met
+    // by that emptiness, so there is nothing to dispatch — but the step still
+    // owes its postconditions (url, recorded effects), so it goes through the
+    // lifecycle with an empty action rather than returning here.
+    let absenceMet = false;
     for (const key of ['target', 'source']) {
       if (!(key in args)) continue;
       const chain = (fillParamsDeep(step.locators[key] ?? [], params) as LocatorCandidate[]) ?? [];
       const identity = identityOfPrimary(step.locators[key] ?? [], skill, params);
+      // An absence wait allows several matches too: a chain that still
+      // matches two visible elements has NOT met "hidden", and reading the
+      // policy's 'ambiguous' miss as "nothing matched → condition met" was a
+      // false success in both runners. Several still there resolve, and are
+      // then waited on to go, exactly as one would be.
+      const absence = waitsForAbsence(step, args);
       const policy = {
         rawTarget: typeof args[key] === 'string' ? String(args[key]) : '',
-        allowMultiple: step.tool === 'read_all',
+        allowMultiple: step.tool === 'read_all' || absence,
         ambiguousNth,
         requireIdentity: identity,
         // Polling to FIND something that is supposed to be gone only delays
         // the answer; the absence is the condition (see waitsForAbsence).
-        waitMs: waitsForAbsence(step, args) ? 0 : resolveWaitMs(),
+        waitMs: absence ? 0 : resolveWaitMs(),
         stayOnOrigin: originOf(step.expect?.urlPattern ?? '') ?? originOf(page.url()) ?? undefined,
       };
       let hit = await resolveChain(page, chain, policy);
@@ -348,9 +351,9 @@ export async function replaySkill(
         // here is the recorded outcome, not drift. fwrd42's 06-report waited
         // for a deleted part's text to go and filed a drift ticket on every
         // run, which no repair could clear because nothing was wrong.
-        if (waitsForAbsence(step, args)) {
-          res.lines.push(`${head} → condition met: ${String(args.state)} (nothing matched)`);
-          return 'ran';
+        if (absence) {
+          absenceMet = true;
+          break;
         }
         resolveError = `no element matched any known locator for ${key}${chain.length ? ` (tried ${chain.length}: ${chain.slice(0, 3).map(candidateExpr).join(', ')}${chain.length > 3 ? ', …' : ''})` : ' (none recorded)'}`;
         res.misses.push({ step: tag, key, primary: chain[0] ? candidateExpr(chain[0]) : '(none recorded)', used: null });
@@ -368,21 +371,12 @@ export async function replaySkill(
       if (hit.missed.length && !structural(hit.candidate)) {
         res.candidateEvidence.push({ step: tag, key, hit: hit.index, missed: hit.missed });
       }
-      sink?.push(`${key}=${candidateExpr(hit.candidate)}`);
+      sink?.entries.push(`${key}=${candidateExpr(hit.candidate)}`);
       // Record what this action put on the page (see `interacted`). Only for
       // non-read steps: a read observes, it does not set. The accessible name
       // of a clicked option ("Last 6 hours") is the value it selects.
-      // Only a step that can SET or SELECT something counts. A scroll to the
-      // heading "Latency by endpoint" set nothing, but its target's name
-      // landed here and the later read of that heading was discounted as an
-      // echo — fwgr23 published two of three panel titles on every replay
-      // and objective 1 failed each time.
-      if (!isRead && !OBSERVATION_TOOLS.has(step.tool)) {
-        for (const cand of chain) {
-          const named = (cand as { name?: string; label?: string }).name ?? (cand as { name?: string; label?: string }).label;
-          if (named && named.length >= MIN_ECHO_LEN) interacted.add(looseKey(named));
-        }
-      }
+      // Only a step that can SET or SELECT something counts (setsSomething).
+      if (setsSomething(step.tool)) noteInteraction(interacted, candidateNames(chain as { name?: unknown; label?: unknown }[]));
       if (hit.index > 0) {
         res.fallthroughs++;
         res.misses.push({ step: tag, key, primary: candidateExpr(chain[0]), used: candidateExpr(hit.candidate), usedIndex: hit.index });
@@ -390,9 +384,7 @@ export async function replaySkill(
       }
     }
     // A typed/filled value is likewise something the skill put on the page.
-    const setsSomething = !isRead && !OBSERVATION_TOOLS.has(step.tool);
-    if (setsSomething && typeof args.value === 'string' && args.value.length >= MIN_ECHO_LEN) interacted.add(looseKey(args.value));
-    if (setsSomething && typeof args.text === 'string' && args.text.length >= MIN_ECHO_LEN) interacted.add(looseKey(args.text));
+    if (setsSomething(step.tool)) noteInteraction(interacted, [args.value, args.text]);
     if (!resolveError) absentDialog = null;
     if (resolveError) {
       if (isRead) {
@@ -429,11 +421,14 @@ export async function replaySkill(
       // concrete (params/derived filled, nothing volatile left), navigate
       // there directly. Both are logged as fallthroughs so drift telemetry
       // and post-session repair still see the miss.
+      // The rule and both rungs are the shared src/execution/recover.ts.
       const destPattern = step.expect?.urlPattern;
-      const isMove =
-        Boolean(destPattern) && NAV_FALLBACK_TOOLS.has(step.tool) && !tag.includes('.') && !urlMatches(destPattern!, page.url(), params);
-      if (isMove) {
-        const arrived = await navigateToDestination(page, destPattern!, params, (tool, a, resolved) => opts.exec(tool, a, resolved, { skill: skill.id, step: failIndex }));
+      if (mayNavigateToDestination(step.tool, destPattern, page.url(), params, tag.includes('.'))) {
+        const exec = (tool: string, a: Record<string, unknown>, r: Record<string, Locator>) => opts.exec(tool, a, r, { skill: skill.id, step: failIndex });
+        const arrived = await navigateToDestination(page, destPattern, params, {
+          click: (locator, selector) => exec('click', { target: selector }, { target: locator }),
+          goto: (url) => exec('goto', { url }, {}),
+        });
         if (arrived) {
           const miss = res.misses[res.misses.length - 1];
           if (miss && miss.step === tag) miss.used = arrived.used;
@@ -448,15 +443,12 @@ export async function replaySkill(
       res.lines.push(`${head} → FAILED: ${resolveError}`);
       return 'stop';
     }
+    // Every target of this step is resolved and nothing has been dispatched:
+    // the one point where a loop pass that repeats the last can still be
+    // refused before its mutation runs again (runFoldedLoop rule 4).
+    sink?.check();
 
-    let outcome: { result: string; diff?: StepDiff };
-    // Dispatched, not completed. A step whose action fires and whose
-    // EXPECTATION then fails returns 'stop' without incrementing stepsRun, so
-    // stepsRun === 0 has never meant "the page was not touched" — and the
-    // caller reads it as exactly that before trying another candidate. A
-    // second candidate then clicks Create again.
-    if (!isRead) res.acted = true;
-    const urlBefore = page.url();
+    let urlBefore = page.url();
 
     // A click that opens a popup (menu, dialog, listbox) is a TOGGLE in most
     // SPAs: the same click on an already-open popup closes it. When the
@@ -472,100 +464,131 @@ export async function replaySkill(
       return 'skipped';
     }
 
-    // No retry. A click that produced no observable change was retried here
-    // on the theory that it landed during a repaint — but "the page did not
-    // change" is not evidence the click failed to DISPATCH. A mutation whose
-    // effect simply falls outside the diff window (20 added lines, a 2s
-    // capture) looks identical, and the retry then commits it twice. Retry is
-    // only ever safe with proof the action did not fire, and nothing here has
-    // that proof.
-    try {
-      outcome = await opts.exec(step.tool, args, resolved, { skill: skill.id, step: failIndex });
-    } catch (err) {
-      const message = (err instanceof Error ? err.message : String(err)).split('\nCall log:')[0];
-      if (isRead) {
-        res.warnings.push(`step ${tag}: read errored — ${clip(message, 120)}`);
-        res.lines.push(`${head} → skipped (${clip(message, 120)})`);
-        return 'skipped';
-      }
-      // A text wait is a condition on the PAGE, located through a chain.
-      // resolveChain took the first candidate that matched exactly one
-      // element, which for a positional candidate can be the wrong one:
-      // fwrd43's create step waited for the new ticket's title in `label
-      // "Tickets" >> nth=1`, which on replay was an empty element, while the
-      // chain's own next candidate — the tickets section — already showed
-      // it. Both replays of 01-open went to recovery over it. The condition
-      // holds if any recorded way of finding the target shows the text; the
-      // wait already gave the page its full timeout to paint.
-      const heldBy = await textHeldElsewhere(page, step, args, params);
-      if (heldBy) {
-        res.fallthroughs++;
-        res.misses.push({ step: tag, key: 'target', primary: candidateExpr((step.locators.target ?? [])[0]), used: candidateExpr(heldBy.candidate), usedIndex: heldBy.index });
-        res.warnings.push(`step ${tag}: ${clip(message, 120)}; the text was already showing in fallback #${heldBy.index + 1} ${candidateExpr(heldBy.candidate)}`);
-        res.lines.push(`${head} → condition met in fallback #${heldBy.index + 1}`);
-        return 'ran';
-      }
-      res.failedAt = failIndex;
-      res.reason = `${step.tool} failed: ${clip(message, 300)}`;
-      res.lines.push(`${head} → FAILED: ${clip(message, 300)}`);
-      return 'stop';
-    }
-
-    // A navigation renders a route skeleton first; let it hydrate before
-    // the effect gates look for the recorded content.
-    if (page.url() !== urlBefore) await settleDom(page);
-
-    // Bind values this step just minted (derived params) from the live url,
-    // BEFORE the expectation check: the minting step's own expectation refers
-    // to the value it produced, so it must compare against the replay's own.
-    if (skill.derived) {
-      for (const [name, d] of Object.entries(skill.derived)) {
-        if (d.step !== failIndex) continue;
-        const v = urlPart(page.url(), d.at);
-        if (v !== undefined) {
-          params[name] = v;
-          res.derivedValues[name] = v;
-        }
-      }
-    }
-
-    // A step declared record-minting has now run: read THIS run's identifier
-    // off the live url and keep it. If the replay later stops, recovery is
-    // told the record already exists and what it is called, instead of being
-    // told only how many steps ran and left to infer the rest — which is how
-    // fwod13 came to create a second and third order.
-    if (step.mints) {
-      // Only a part the step CHANGED: a rejected click leaves the url as it
-      // was, and "new" from /tickets/new is not a record this run created.
-      const made = urlPart(page.url(), step.mints.at);
-      if (made && made !== urlPart(urlBefore, step.mints.at) && !res.created.includes(made)) res.created.push(made);
-    }
-
-    // Effect gates: did the step leave the page as the recording said it
-    // would? Each gate's warnings and staged generalisations always apply; a
-    // stop ends the replay here, with what ran already in `res`.
-    let stop: StepVerdict | null = null;
     const warnings: string[] = [];
-    for (const gate of STEP_GATES) {
-      const verdict = await gate({ page, step, tag, failIndex, args, params, outcome, isRead, positionalResolution });
-      if (!verdict) continue;
-      if (verdict.warnings) warnings.push(...verdict.warnings);
-      if (verdict.generalise) res.generalisations.push(verdict.generalise);
-      if (verdict.absentDialog !== undefined) absentDialog = verdict.absentDialog;
-      if (verdict.unobserved && !res.unobserved.includes(tag)) res.unobserved.push(tag);
-      if (verdict.stop) {
-        stop = verdict;
-        break;
-      }
-    }
-    res.warnings.push(...warnings);
+    const lifecycle = await runStepLifecycle({
+      prepare: async () => {
+        // Dispatched, not completed. A step whose action fires and whose
+        // EXPECTATION then fails returns 'stop' without incrementing stepsRun,
+        // so stepsRun === 0 has never meant "the page was not touched" — and
+        // the caller reads it as exactly that before trying another candidate.
+        // Set before the executor is called, so a throw from it still counts;
+        // set AFTER the already-in-effect skip above, because a skipped click
+        // dispatched nothing.
+        if (!isRead) res.acted = true;
+        urlBefore = page.url();
+      },
+      act: async (): Promise<StepActionResult<{ result: string; diff?: StepDiff; captureFailed?: true }>> => {
+        // No retry. A click that produced no observable change was retried here
+        // on the theory that it landed during a repaint — but "the page did not
+        // change" is not evidence the click failed to DISPATCH. A mutation whose
+        // effect simply falls outside the diff window (20 added lines, a 2s
+        // capture) looks identical, and the retry then commits it twice. Retry is
+        // only ever safe with proof the action did not fire, and nothing here has
+        // that proof.
+        if (absenceMet) return { status: 'completed', value: { result: `condition met: ${String(args.state)} (nothing matched)` } };
+        try {
+          const value = await opts.exec(step.tool, args, resolved, { skill: skill.id, step: failIndex });
+          return { status: 'completed', value };
+        } catch (err) {
+          const message = (err instanceof Error ? err.message : String(err)).split('\nCall log:')[0];
+          if (isRead) {
+            res.warnings.push(`step ${tag}: read errored — ${clip(message, 120)}`);
+            res.lines.push(`${head} → skipped (${clip(message, 120)})`);
+            return { status: 'skipped' };
+          }
+          // A text wait is a condition on the PAGE, located through a chain.
+          // resolveChain took the first candidate that matched exactly one
+          // element, which for a positional candidate can be the wrong one:
+          // fwrd43's create step waited for the new ticket's title in `label
+          // "Tickets" >> nth=1`, which on replay was an empty element, while the
+          // chain's own next candidate — the tickets section — already showed
+          // it. Both replays of 01-open went to recovery over it. The condition
+          // holds if any recorded way of finding the target shows the text; the
+          // wait already gave the page its full timeout to paint.
+          const heldChain = step.tool === 'wait_for' ? ((fillParamsDeep(step.locators.target ?? [], params) as LocatorCandidate[]) ?? []) : [];
+          const held = await textHeldElsewhere(heldObservations(page, heldChain), args.state, args.text);
+          const heldBy = held ? { index: held.index, candidate: heldChain[held.index] } : null;
+          if (heldBy) {
+            res.fallthroughs++;
+            res.misses.push({ step: tag, key: 'target', primary: candidateExpr((step.locators.target ?? [])[0]), used: candidateExpr(heldBy.candidate), usedIndex: heldBy.index });
+            res.warnings.push(`step ${tag}: ${clip(message, 120)}; the text was already showing in fallback #${heldBy.index + 1} ${candidateExpr(heldBy.candidate)}`);
+            // Completed, not 'ran' straight out: the condition held, so the
+            // step's own postconditions still apply. The completion path
+            // below writes the line, once.
+            return { status: 'completed', value: { result: `condition met in fallback #${heldBy.index + 1}` } };
+          }
+          res.failedAt = failIndex;
+          res.reason = `${step.tool} failed: ${clip(message, 300)}`;
+          res.lines.push(`${head} → FAILED: ${clip(message, 300)}`);
+          return { status: 'stopped' };
+        }
+
+      },
+      settle: async () => {
+        // A navigation renders a route skeleton first; let it hydrate before
+        // the effect gates look for the recorded content.
+        if (page.url() !== urlBefore) await settleDom(page);
+
+      },
+      bind: async () => {
+        // Bind values this step just minted (derived params) from the live url,
+        // BEFORE the expectation check: the minting step's own expectation refers
+        // to the value it produced, so it must compare against the replay's own.
+        if (skill.derived) {
+          for (const [name, d] of Object.entries(skill.derived)) {
+            if (d.step !== failIndex) continue;
+            const v = urlPart(page.url(), d.at);
+            if (v !== undefined) {
+              params[name] = v;
+              res.derivedValues[name] = v;
+            }
+          }
+        }
+
+        // A step declared record-minting has now run: read THIS run's identifier
+        // off the live url and keep it. If the replay later stops, recovery is
+        // told the record already exists and what it is called, instead of being
+        // told only how many steps ran and left to infer the rest — which is how
+        // fwod13 came to create a second and third order.
+        if (step.mints) {
+          // Only a part the step CHANGED: a rejected click leaves the url as it
+          // was, and "new" from /tickets/new is not a record this run created.
+          const made = changedCreation(urlPart(urlBefore, step.mints.at), urlPart(page.url(), step.mints.at));
+          if (made && !res.created.includes(made)) res.created.push(made);
+        }
+
+      },
+      verify: async (outcome) => {
+        // Effect gates: did the step leave the page as the recording said it
+        // would? Each gate's warnings and staged generalisations always apply; a
+        // stop ends the replay here, with what ran already in `res`.
+        let stop: StepVerdict | null = null;
+        for (const gate of STEP_GATES) {
+          const verdict = await gate({ page, step, tag, failIndex, args, params, outcome, isRead, positionalResolution });
+          if (!verdict) continue;
+          if (verdict.warnings) warnings.push(...verdict.warnings);
+          if (verdict.generalise) res.generalisations.push(verdict.generalise);
+          if (verdict.absentDialog !== undefined) absentDialog = verdict.absentDialog;
+          if (verdict.unobserved && !res.unobserved.includes(tag)) res.unobserved.push(tag);
+          if (verdict.stop) {
+            stop = verdict;
+            break;
+          }
+        }
+        res.warnings.push(...warnings);
+        return stop;
+      },
+    });
+    if (lifecycle.action.status !== 'completed') return lifecycle.action.status === 'skipped' ? 'skipped' : 'stop';
+    const outcome = lifecycle.action.value;
+    const stop = lifecycle.verification;
     if (stop) {
       // The step took the tab off the app (an error page, another origin):
       // whoever picks up from here — recovery, the next segment — needs the
       // app, not the wreck. Go back to where the step started. rpgr13-r2's
       // recovery spent its whole budget on chrome-error://chromewebdata/.
       const landed = page.url();
-      if (landed !== urlBefore && (/^chrome-error:|^about:neterror/.test(landed) || (originOf(landed) ?? '') !== (originOf(urlBefore) ?? ''))) {
+      if (landed !== urlBefore && (isErrorPageUrl(landed) || (originOf(landed) ?? '') !== (originOf(urlBefore) ?? ''))) {
         try {
           await page.goto(urlBefore, { waitUntil: 'domcontentloaded' });
           warnings.push(`step ${tag}: the browser was returned to ${urlPattern(urlBefore)} from ${urlPattern(landed)}`);
@@ -586,9 +609,10 @@ export async function replaySkill(
       res.values[key] = value;
       // An echo read: this value is only what the skill itself set or chose,
       // so it confirms the control's display, not that the app persisted it.
-      if (value && value.length >= MIN_ECHO_LEN && interacted.has(looseKey(value))) {
+      const echo = echoVerdict(interacted, key, value, `step ${tag}`);
+      if (echo) {
         res.echoedValues.push(key);
-        res.warnings.push(`step ${tag}: read '${key}' returned a value the skill itself set/selected ('${clip(value, 60)}') — confirms the control, not persistence; dropped from the report's confident values`);
+        res.warnings.push(echo);
       }
       res.lines.push(`${head} → ${key} = ${clip(outcome.result, MAX_LINE)}`);
     } else {
@@ -605,113 +629,63 @@ export async function replaySkill(
     const guard = step.while ?? body[0]?.locators.target ?? [];
     const max = step.max ?? 20;
     const before = res.stepsRun;
-    let iter = 0;
-    // Progress guard: a folded loop exists because the recording acted on one
-    // RECORD after another, so every iteration must either shrink the guard's
-    // match count (a delete loop) or resolve different elements (a per-record
-    // edit). When neither happens the per-record locators have stopped
-    // distinguishing records — fwrd4l-n3's "edit each part's supplier" loop
-    // missed its ambiguous role locator, fell through to a positional path
-    // pinned to ROW 1, and edited the same part seven times while the replay
-    // counted it as progress. Same targets + no shrink = fail to recovery.
-    let prevSig: string | null = null;
-    let prevRemaining = Number.POSITIVE_INFINITY;
-    // Cursor over unprocessed records: a delete loop shrinks the guard count,
-    // so match 0 is always the next record; an edit-in-place loop leaves the
-    // count alone, so the next record is the next match index. The cursor
-    // advances exactly when the previous iteration did not consume its record.
-    let cursor = 0;
-    while (iter < max) {
-      // A loop cut short by the budget is NOT a finished loop: breaking out
-      // used to count it as 'ran', and a part-cleared list became a success.
-      if (opts.signal?.aborted) {
-        res.stepsRun = before;
-        res.failedAt = n;
-        res.reason = `instruction budget exhausted after ${iter} loop iteration(s), before the loop finished`;
-        res.lines.push(`${n}. loop → stopped after ×${iter}: ${res.reason}`);
-        return 'stop';
-      }
-      await settleDom(page);
-      const chain = fillParamsDeep(guard, params) as LocatorCandidate[];
-      // No waitMs: this asks whether the list still has rows, and a null
-      // return is the loop's normal exit, not a failure to find something.
-      const hit = await resolveChain(page, chain, { allowMultiple: true });
-      const remaining = hit ? await hit.locator.count().catch(() => 0) : 0;
-      if (!remaining || cursor >= remaining) break;
-      const sig: string[] = [];
-      for (const [k, bstep] of body.entries()) {
-        const st = await runOneStep(bstep, `${n}.${iter + 1}.${k + 1}`, n, sig, cursor);
-        if (st === 'stop') {
-          res.stepsRun = before;
-          return 'stop';
-        }
-      }
-      const joined = sig.join('; ');
-      if (joined && joined === prevSig && remaining >= prevRemaining) {
-        res.stepsRun = before;
-        res.failedAt = n;
-        res.reason =
-          `loop iteration ${iter + 1} resolved the same element(s) as the previous one with the guard count unchanged (${remaining}) — ` +
-          `the recorded per-record locators no longer distinguish records, so the loop was re-acting on one record`;
-        res.lines.push(`${n}. loop → FAILED after ×${iter + 1}: ${res.reason}`);
-        return 'stop';
-      }
-      prevSig = joined;
-      // Did this iteration consume its record (guard shrank) or leave it in
-      // place (edit-in-place)? Advance the cursor only in the second case.
-      // Settle first: a delete's row removal landing late would otherwise
-      // advance the cursor and make the next iteration skip a record.
-      await settleDom(page);
-      // Recount with the SAME candidate that produced `remaining`. Re-walking
-      // the chain can answer from a different rung — the recorded guard
-      // `[data-testid="del-1"]` matches 1 before its row goes and 0 after, but
-      // the chain then falls through to a generic `button "Remove"` matching
-      // the OTHER rows, so a shrink read as growth, advanced the cursor, and
-      // left the last row undeleted while the loop reported success.
-      const count = async (): Promise<number> => makeLocator(page, hit!.candidate).count().catch(() => 0);
-      // Poll for the shrink rather than reading the count once: a row that
-      // leaves the DOM a beat after the click would otherwise look like an
-      // edit-in-place, advance the cursor, and make a delete loop skip a
-      // record — and then stop early on `cursor >= remaining`, leaving the
-      // list part-cleared while reporting success.
-      let after = await count();
-      if (after >= remaining && remaining > 0) {
-        // "the count shrank" is exactly "the remaining-th match left the
-        // DOM", so wait on that element rather than re-counting on a timer:
-        // a row that goes immediately is seen immediately, and a row that
-        // never goes still costs no more than the old window.
-        await makeLocator(page, hit!.candidate)
-          .nth(remaining - 1)
-          .waitFor({ state: 'detached', timeout: LOOP_SHRINK_WAIT_MS })
-          .catch(() => {});
-        after = await count();
-      }
-      if (after >= remaining) cursor++;
-      prevRemaining = remaining;
-      iter++;
-    }
-    // The cap is a budget, not a finish line. A loop that used every pass and
-    // still matches has work left, and returning 'ran' there reported a
-    // part-cleared list as a completed procedure — the same silent pass the
-    // emitted loop used to give, so the two runners agreed on the wrong
-    // answer. Counted fresh: `remaining` above is from before the last pass.
-    // A BOUNDED loop that used every pass has done exactly the work it was
-    // compiled to do; records left over are records it was never given
-    // authority over. Only a drain owes the collection an empty result.
-    if (iter >= max && (step.scope ?? 'drain') === 'drain') {
-      const chain = fillParamsDeep(guard, params) as LocatorCandidate[];
-      const hit = await resolveChain(page, chain, { allowMultiple: true });
-      const left = hit ? await hit.locator.count().catch(() => 0) : 0;
-      if (left > cursor) {
-        res.stepsRun = before;
-        res.failedAt = n;
-        res.reason = `loop stopped after ${max} pass(es) with ${left - cursor} item(s) still matching ${chain0Desc(guard)} — the recorded work is not finished`;
-        res.lines.push(`${n}. loop ×${iter} → FAILED: ${left - cursor} item(s) left`);
-        return 'stop';
-      }
+    // Everything about HOW a folded loop repeats — settle before every count,
+    // the first-match guard, the cursor, the shrink wait, the progress guard,
+    // the cap as a budget — is `runFoldedLoop` (src/execution/loop.ts), the same
+    // policy the emitted artifact carries. What stays here is the daemon's own
+    // bookkeeping: observations in (resolve, settle, run a recorded step) and
+    // the replay result out.
+    let pass = 0;
+    let bodyStopped = false;
+    const result = await runFoldedLoop(
+      {
+        settle: () => settleDom(page),
+        readable: () => pageReadable(page),
+        // Re-walked fresh each time, exactly as the loop asks for it; the
+        // returned guard then recounts with the SAME candidate. Re-walking the
+        // chain to recount can answer from a different rung — the recorded
+        // guard `[data-testid="del-1"]` matches 1 before its row goes and 0
+        // after, but the chain then falls through to a generic `button
+        // "Remove"` matching the OTHER rows, so a shrink reads as growth.
+        guard: async () => {
+          const chain = fillParamsDeep(guard, params) as LocatorCandidate[];
+          const hit = await resolveChain(page, chain, { allowMultiple: true });
+          if (!hit) return null;
+          return {
+            // A count that throws is left to throw: the loop tells an
+            // unreadable guard from an empty one (rule 6).
+            count: () => makeLocator(page, hit.candidate).count(),
+            nth: (i: number) => makeLocator(page, hit.candidate).nth(i),
+          };
+        },
+        runBody: async (cursor: number, progress: LoopPass) => {
+          pass++;
+          for (const [k, bstep] of body.entries()) {
+            const st = await runOneStep(bstep, `${n}.${pass}.${k + 1}`, n, progress, cursor);
+            if (st === 'stop') {
+              bodyStopped = true;
+              return { status: 'stop' as const };
+            }
+          }
+          return { status: 'ran' as const };
+        },
+        aborted: () => Boolean(opts.signal?.aborted),
+      },
+      { max, scope: step.scope ?? 'drain', shrinkWaitMs: LOOP_SHRINK_WAIT_MS, describe: chain0Desc(guard) },
+    );
+    if (!result.ok) {
+      res.stepsRun = before;
+      // A stopped BODY already recorded its own reason and failing step; saying
+      // "the loop body stopped" over the top of it would replace the diagnosis
+      // with a restatement of the obvious.
+      if (bodyStopped) return 'stop';
+      res.failedAt = n;
+      res.reason = result.reason;
+      res.lines.push(`${n}. loop ×${result.iterations} → FAILED: ${result.reason}`);
+      return 'stop';
     }
     res.stepsRun = before + 1;
-    res.lines.push(`${n}. loop ×${iter} (while ${chain0Desc(guard)} matches)`);
+    res.lines.push(`${n}. loop ×${result.iterations} (while ${chain0Desc(guard)} matches)`);
     return 'ran';
   };
 
@@ -821,11 +795,13 @@ const expectedUrl: StepGate = async ({ step, page, params, tag, failIndex }) => 
     }
     if (urlMatches(pattern, page.url(), params)) return null;
   }
-  const soft = softUrlMatch(pattern, page.url(), params);
-  if (!soft) return { stop: `after step ${tag} expected url ${fillParams(pattern, params)} but browser is at ${urlPattern(page.url())}` };
+  // The window is spent; the shared verdict (src/execution/gates.ts) decides
+  // strict / soft-and-continue / stop exactly as the artifact does.
+  const verdict = urlEffectVerdict(pattern, page.url(), params, `step ${tag}`);
+  if (verdict.stop) return { stop: verdict.stop };
   return {
-    warnings: [`step ${tag}: url segment(s) differ from recorded (${soft.diffs.map((d) => `${d.expected}→${d.actual}`).join(', ')}) — treated as volatile`],
-    generalise: { kind: 'expect', step: failIndex, pattern: soft.generalised },
+    warnings: verdict.warnings,
+    generalise: verdict.generalised ? { kind: 'expect', step: failIndex, pattern: verdict.generalised } : undefined,
   };
 };
 
@@ -838,22 +814,25 @@ const expectedUrl: StepGate = async ({ step, page, params, tag, failIndex }) => 
  * state-changing step that provokes an UNRECORDED alert fails hard, while a
  * recorded-but-missing alert stays soft (expectedAlert — toasts are volatile).
  */
-const unrecordedAlert: StepGate = ({ outcome, isRead, step, tag }) => {
-  // Detecting a NEW alert needs both captures; with either missing there is
-  // no answer to give. Say so rather than returning the silent null that
-  // reads, downstream, exactly like "no alert was raised".
-  if (outcome.captureFailed && !isRead) {
-    return { unobserved: true, warnings: [`step ${tag}: the page could not be captured after the action — whether it raised an alert is unknown, not clear`] };
-  }
-  if (!outcome.diff?.alerts.length || isRead || step.expect?.alertContains) return null;
-  return { stop: `step ${tag} raised an alert the recording never saw: ${clip(outcome.diff.alerts.join(' | '), 200)}` };
-};
-
-const expectedAlert: StepGate = ({ outcome, step, params, tag }) => {
-  if (!step.expect?.alertContains) return null;
-  const want = fillParams(step.expect.alertContains, params);
-  if (!outcome.diff) return { unobserved: true, warnings: [`step ${tag}: expected alert containing ${JSON.stringify(want)} could not be observed`] };
-  return outcome.diff.alerts.some((a) => a.includes(want)) ? null : { warnings: [`step ${tag}: expected alert containing ${JSON.stringify(want)}`] };
+const alerts: StepGate = ({ outcome, isRead, step, params, tag }) => {
+  // The shared verdict (src/execution/gates.ts, alertVerdict) decides; the
+  // diff already holds the alerts the action RAISED (the surplus over the
+  // pre-action capture), so `before` is empty here. Only a capture that FAILED
+  // is handed over as null (unobserved, never "no alert"). A step with no diff
+  // at all is a tool the executor never diffs by design — goto, back,
+  // wait_for, hover, scroll_into_view (tools.ts STATE_CHANGING) — and that is
+  // an observed nothing: reading it as unobserved marked every such step of
+  // every replay, and a skill containing one could never validate.
+  const after = outcome.captureFailed ? null : (outcome.diff?.alerts ?? []);
+  const verdict = alertVerdict([], after, {
+    where: `step ${tag}`,
+    isRead,
+    expectedContains: step.expect?.alertContains,
+    params,
+  });
+  if (verdict.stop) return { stop: verdict.stop };
+  if (!verdict.warnings.length && !verdict.unobserved) return null;
+  return { warnings: verdict.warnings, unobserved: verdict.unobserved };
 };
 
 /**
@@ -868,66 +847,18 @@ const expectedAlert: StepGate = ({ outcome, step, params, tag }) => {
  */
 const expectedChanges: StepGate = async ({ outcome, step, params, tag, args, page, positionalResolution }) => {
   if (!step.expect?.addedContains?.length) return null;
-  const warnings: string[] = [];
-  // The step diff is ONE source of evidence, not the authority. When the
-  // capture failed there are no added lines to search — which must not read
-  // as "the expected line was absent but harmlessly so", nor as a pass. The
-  // checks below fall through to presentOnPage, a fresh look at the live
-  // page, and a required effect that cannot be found there still stops the
-  // replay. `added === null` means unavailable; `[]` means observed-empty.
-  const added: string[] | null = outcome.diff ? outcome.diff.added : null;
-  if (added === null) warnings.push(`step ${tag}: the page could not be captured after the action — its recorded effects were checked against the live page instead`);
-  // A line carrying a {{vN}} slot is HARD (below). A {{dN}} derived marker
-  // is filled like any other param but stays soft — the app minted it.
-  const isParam = (l: string) => /\{\{v\d+\}\}/.test(l);
-  // maskVolatile at replay too, so a store compiled before masking existed
-  // (every skill recorded up to set 24) stops failing on the recording's clock.
-  // Transient lines (spinners, progress bars) are dropped here too, so a
-  // store compiled before TRANSIENT_LINE existed stops failing on them.
-  const lines = step.expect.addedContains.filter((l) => !TRANSIENT_LINE.test(l));
-  if (!lines.length) return null;
-  let parameterised = lines.filter(isParam).map((l) => fillParams(maskMinted(maskVolatile(l)), params));
-  const plain = lines.filter((l) => !isParam(l)).map((l) => fillParams(maskMinted(maskVolatile(l)), params));
-  // A positionally-resolved fill must prove itself with a CONSEQUENTIAL
-  // change: its own echo in a same-role element is what the wrong element
-  // produces too (see consequentialExpectations). When the echo is all the
-  // recording has, the old gate stands and we say so.
-  if (positionalResolution && parameterised.length && typeof args.value === 'string' && args.value) {
-    const value = args.value;
-    const consequential = parameterised.filter((l) => !isEchoLine(l, value));
-    if (consequential.length) parameterised = consequential;
-    else warnings.push(`step ${tag}: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here`);
-  }
-  if (parameterised.length && !(added !== null && lineShows(added, parameterised)) && !(await presentOnPage(page, parameterised))) {
-    return { warnings, stop: `after step ${tag} the page did not show ${parameterised.map((w) => JSON.stringify(w)).join(' / ')} as it did when recorded — the step ran but probably acted on the wrong element` };
-  }
-  if (plain.length && !(added !== null && lineShows(added, plain))) {
-    // None of the recorded effects in the step diff — check the live page
-    // before judging (a change can land outside the diff window).
-    if (!(await presentOnPage(page, plain))) {
-      // The recorded effect was a dialog opening. A dialog is conditional
-      // UI: fwgr24's create step recorded "Exit edit" → "Discard changes to
-      // dashboard?" because the RECORDING had unsaved edits at that moment;
-      // a replay whose earlier steps saved cleanly has none, no dialog
-      // opens, and that is the app working — not the step failing. The
-      // steps that would have acted inside the dialog are skipped instead.
-      const dialog = plain.map((l) => /^-\s*dialog\s+"([^"]*)"/.exec(l)?.[1]).find((n) => n !== undefined);
-      // ...but only on a real observation. Concluding "the dialog did not
-      // open" from a capture that failed is inferring a branch from missing
-      // evidence, and it would go on to skip the steps inside it.
-      if (dialog !== undefined && added === null) {
-        return { warnings, unobserved: true, stop: `after step ${tag} the page could not be captured, so whether the dialog ${JSON.stringify(dialog)} opened is unknown — its absence cannot be assumed` };
-      }
-      if (dialog !== undefined) {
-        warnings.push(`step ${tag}: the recorded dialog ${JSON.stringify(dialog)} did not open — conditional UI, treated as absent; steps that name one of its controls will be skipped`);
-        return { warnings, absentDialog: { name: dialog, lines: plain } };
-      }
-      return { warnings, stop: `after step ${tag} none of the ${plain.length} recorded page change(s) appeared (e.g. ${JSON.stringify(plain[0])}) — the step ran but did not have its recorded effect` };
-    }
-    warnings.push(`step ${tag}: none of the ${plain.length} expected page change(s) appeared in the step diff (found on the page instead)`);
-  }
-  if (added === null) return { warnings, unobserved: true };
-  return warnings.length ? { warnings } : null;
+  // The verdict itself is the shared expectedChangesVerdict (src/execution/
+  // expect.ts) — the one rule a compiled artifact embeds too. This adapter
+  // only supplies the observations: the step diff (null when the capture
+  // failed — unavailable, never observed-empty) and a fresh look at the
+  // live page in the same snapshot dialect.
+  const verdict = await expectedChangesVerdict(
+    step.expect.addedContains,
+    params,
+    { tag, tool: step.tool, value: typeof args.value === 'string' ? args.value : undefined, positionalResolution },
+    { added: outcome.diff ? outcome.diff.added : null, live: () => capturePageLines(page) },
+  );
+  return verdict.stop || verdict.unobserved || verdict.absentDialog || verdict.warnings.length ? verdict : null;
 };
 
 /** The effect gates a step passes through after its action, in order. */
@@ -939,40 +870,11 @@ const expectedChanges: StepGate = async ({ outcome, step, params, tag, args, pag
  * refused with the unreadable "browser is at null/".
  */
 const errorPage: StepGate = ({ page, tag }) => {
-  const url = page.url();
-  return /^chrome-error:|^about:neterror/.test(url) ? { stop: `after step ${tag} the browser is on an error page (${url}) — the tab crashed or a navigation failed` } : null;
+  const stop = errorPageVerdict(page.url(), `step ${tag}`);
+  return stop ? { stop } : null;
 };
 
-const STEP_GATES: StepGate[] = [errorPage, expectedUrl, unrecordedAlert, expectedAlert, expectedChanges];
-
-/**
- * The name a step's target candidates put on the element, for membership
- * tests against a dialog's recorded subtree. Only NAMED candidates count: a
- * css/point/testid target says where an element was, not what it was called,
- * and a positional match against a dialog's line list would be a coincidence.
- */
-function targetNames(step: SkillStep, params: Record<string, string>): string[] {
-  const out: string[] = [];
-  for (const cand of [...(step.locators.target ?? []), ...(step.locators.source ?? [])]) {
-    const c = cand as { kind: string; name?: string; text?: string; label?: string; hasText?: string };
-    const name = c.kind === 'role' ? c.name : c.kind === 'text' ? c.text : c.kind === 'label' ? c.label : c.kind === 'scoped' ? c.hasText : undefined;
-    if (name) out.push(fillParams(name, params).trim());
-  }
-  return out.filter((n) => n.length > 0);
-}
-
-/**
- * Whether a step acts on a control the absent dialog itself listed. The
- * dialog's recorded effect lines carry its subtree — `- button "Confirm"`,
- * `- textbox "Reason"` — so a step naming one of them was inside it. This is
- * the evidence `dropDismissedDialogs` uses at compile time, applied at replay.
- */
-function namesDialogControl(step: SkillStep, dialogLines: string[], params: Record<string, string>): string | null {
-  for (const name of targetNames(step, params)) {
-    if (dialogLines.some((l) => l.includes(`"${name}"`))) return name;
-  }
-  return null;
-}
+const STEP_GATES: StepGate[] = [errorPage, expectedUrl, alerts, expectedChanges];
 
 /** Short human label for a loop's guard locator. */
 function chain0Desc(chain: LocatorCandidate[]): string {
@@ -1016,263 +918,79 @@ export interface ElementSpec {
  * the second would push a deliberate selector below a role guess.
  */
 export function structural(c: LocatorCandidate): boolean {
-  if (c.nth !== undefined) return true;
-  if (c.kind === 'point') return true; // where it was, not what it is
-  if (c.kind !== 'css') return false;
-  return /[>+~]|:nth-/.test(c.selector);
-}
-
-/**
- * The expectation lines that could tell a right-element fill from a
- * wrong-element one. A recorded added-line that merely restates the fill in a
- * same-role element — `textbox "": {{v4}}` — is an ECHO: the WRONG textbox
- * produces it too, so it is no evidence at all. fwgr17-n3's 03-open passed
- * its effect gate on exactly that line after a positional fallback took the
- * step. When consequential lines exist (the heading that renders the typed
- * title, the menu button named after it), only those count; when the echo is
- * all the recording has, it is returned unchanged — a lone search-box fill
- * legitimately shows nothing else, and the caller warns instead.
- */
-export function isEchoLine(line: string, filledValue: string): boolean {
-  const escaped = filledValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  return new RegExp(`^-?\\s*(textbox|searchbox|spinbutton|combobox)\\b[^:]*:\\s*${escaped}\\s*$`).test(line.trim());
-}
-
-export function consequentialExpectations(lines: string[], filledValue: string | undefined): string[] {
-  if (!filledValue) return lines;
-  const rest = lines.filter((l) => !isEchoLine(l, filledValue));
-  return rest.length ? rest : lines;
+  return structuralCandidate(c);
 }
 
 export function specOf(chain: LocatorCandidate[]): ElementSpec {
+  const rank = (c: LocatorCandidate) => candidateRank({ kind: c.kind, structural: structural(c) });
   return {
-    identity: chain.filter((c) => c.kind === 'scoped'),
-    handles: chain.filter((c) => c.kind !== 'scoped' && !structural(c)),
+    identity: chain.filter((c) => rank(c) === 0),
+    handles: chain.filter((c) => rank(c) === 1),
     // Paths, then where it was: a point is the last resort behind every path.
-    path: [...chain.filter((c) => c.kind !== 'scoped' && c.kind !== 'point' && structural(c)), ...chain.filter((c) => c.kind === 'point')],
+    path: [...chain.filter((c) => rank(c) === 2), ...chain.filter((c) => rank(c) === 3)],
   };
 }
 
-/** Policy for one resolution. Named, because seven positional flags is how a call site gets one wrong. */
-export interface ResolvePolicy {
+/**
+ * Policy for one resolution — the shared policy (src/execution/resolve.ts,
+ * where every rule and its reason is documented) plus the one daemon-only
+ * input: the agent's raw target, for a step that recorded no chain.
+ */
+export interface ResolvePolicy extends SharedResolvePolicy {
   /** The agent's original target string, used only when no chain was recorded. */
   rawTarget?: string;
-  /** read_all reads across every match, so its target need not be unique. */
-  allowMultiple?: boolean;
-  /**
-   * Loop-body cursor: when a candidate matches several records, act on THIS
-   * match index (the first unprocessed record) instead of skipping to a
-   * fallback. A folded loop's per-record locator is often generic across rows
-   * ("Edit" on every row), so ambiguity there is the loop's normal shape, not
-   * drift — and the positional fallback it used to fall through to is pinned
-   * to one recorded row, which is how fwrd4l edited part A seven times.
-   */
-  ambiguousNth?: number;
-  /**
-   * Identity the PRIMARY candidate carried: values the caller vouched for
-   * that named the record this step acts on ("fwrd8-n2 RD Bench Ticket").
-   * A fallback candidate is a different way of finding the SAME element, so
-   * it must still land on something bearing that text — the positional and
-   * record-id fallbacks recorded beside it are pinned to the recorded run's
-   * row and id, and following one silently moves the whole procedure onto
-   * another record (fwrd8-n2/n3 worked a seed ticket to completion this
-   * way). When no fallback qualifies, the step fails to recovery, which is
-   * cheap; acting on the wrong record is not.
-   */
-  requireIdentity?: string[];
-  /**
-   * The origin the recorded step stayed on. A candidate that resolves to a
-   * link leaving that origin cannot be the recorded control: diaggr1's
-   * replay of fwgr26 fell from `link "New dashboard"` (its menu had been
-   * toggled shut) to the structural `div > … > a:nth-of-type(1)`, which
-   * matched Grafana's footer link to grafana.com; the offline box answered
-   * with an error page and the whole create step went to recovery.
-   */
-  stayOnOrigin?: string;
-  /**
-   * How long to keep re-trying the WHOLE chain when nothing resolves.
-   *
-   * The agent never needed this: a model turn is seconds and it re-snapshots
-   * each time, so anything the app was about to paint (repair-desk defers its
-   * list refetch ~1s BY DESIGN) had always landed before it looked. A replay
-   * has no turns, and settleDom only proves the DOM went quiet, which it does
-   * in the gap BEFORE the refetch paints. The wait costs nothing on a healthy
-   * page — it runs only after a full pass found nothing.
-   *
-   * Zero for a caller ASKING whether something is still there rather than
-   * looking for it: the loop guard reads a null return as "the list is empty,
-   * stop", so waiting there would stall every loop's normal exit.
-   */
-  waitMs?: number;
 }
 
+/**
+ * Resolve a stored chain against the page. This is the daemon's ADAPTER to
+ * the shared policy: it builds one observation per candidate (the live
+ * locator, the stored index, the structural/kind facts, what the candidate
+ * names, its geometry, and the store's retirement evidence) and maps the
+ * shared Resolution back onto the shapes replay's telemetry keeps. Every
+ * DECISION — order, the point mark, identity, plausibility, origin,
+ * ambiguity, the hold, the wait — is made in `resolveCandidates`.
+ */
 export async function resolveChain(
   page: Page,
   chain: LocatorCandidate[],
   policy: ResolvePolicy = {},
 ): Promise<{ locator: Locator; index: number; candidate: LocatorCandidate; missed: number[] } | null> {
-  const { rawTarget = '', allowMultiple = false, ambiguousNth, requireIdentity = [], waitMs = 0, stayOnOrigin } = policy;
-  /** Does the resolved element sit inside a link that leaves the recorded origin? */
-  const leavesOrigin = async (locator: Locator): Promise<boolean> => {
-    if (!stayOnOrigin) return false;
-    try {
-      return await locator.first().evaluate((el, origin) => {
-        const a = (el as Element).closest('a[href]');
-        if (!a) return false;
-        try {
-          const target = new URL((a as HTMLAnchorElement).href, location.href);
-          // file:// pages have an opaque origin; a link there is "home" when
-          // it stays on the same scheme.
-          if (target.origin === 'null' || location.origin === 'null') return target.protocol !== location.protocol;
-          return target.origin !== origin;
-        } catch {
-          return false;
-        }
-      }, stayOnOrigin);
-    } catch {
-      return false;
-    }
-  };
+  const { rawTarget = '', ...shared } = policy;
   const candidates = chain.length || !rawTarget || isRefTarget(rawTarget) ? chain : [{ kind: 'css', selector: rawTarget } as LocatorCandidate];
-  // Identity, then handles, then paths — each keeping its recorded order, and
-  // each carrying its index in the STORED chain so drift still reports which
-  // recorded candidate actually took the step.
-  const spec = specOf(candidates);
-  // Demonstrated volatile last, whatever kind it is. Evidence outranks the
-  // identity/handle/path ordering because that ordering is a prior about what
-  // a candidate IS, and this is a measurement of whether it WORKS.
-  const byEvidence = (list: LocatorCandidate[]) => [...list].sort((a, b) => Number(retired(a)) - Number(retired(b)));
-  const ordered = [...byEvidence(spec.identity), ...byEvidence(spec.handles), ...byEvidence(spec.path)].map((candidate) => ({
-    candidate,
-    index: candidates.indexOf(candidate),
+  // A candidate whose locator cannot even be BUILT (a malformed selector, a
+  // page with no locator engine) is one the walk passes over, not one that
+  // stops the resolution: the failure is deferred to its count() so the
+  // shared policy records it as an 'error' miss and tries the next.
+  const locatorOf = (candidate: LocatorCandidate): Locator => {
+    try {
+      return makeLocator(page, candidate);
+    } catch (error) {
+      return { count: async () => { throw error; } } as unknown as Locator;
+    }
+  };
+  const observations: CandidateObservation[] = candidates.map((candidate, index) => ({
+    locator: locatorOf(candidate),
+    index,
+    structural: structural(candidate),
+    kind: candidate.kind,
+    // What the candidate itself names, params already filled by the caller:
+    // an identity value found here needs no guarding.
+    carries: JSON.stringify(candidate),
+    nth: candidate.nth,
+    point: candidate.kind === 'point' ? candidate : undefined,
+    // Demonstrated volatile by later runs: store evidence, an INPUT to the
+    // shared ordering rather than a rule of its own.
+    retired: retired(candidate),
   }));
-  /** Does this fallback still identify the record the primary named? */
-  const keepsIdentity = async (index: number, candidate: LocatorCandidate, locator: Locator): Promise<boolean> => {
-    // The recorded primary is trusted — unless it is itself structural (an
-    // agent-typed positional selector at the head), which names no record.
-    if (!requireIdentity.length || (index === 0 && !structural(candidate))) return true;
-    const expr = JSON.stringify(candidate);
-    const wanted = requireIdentity.filter((v) => !expr.includes(v));
-    if (!wanted.length) return true;
-    let text: string;
-    try {
-      text = ((await locator.first().textContent({ timeout: 1_000 })) ?? '').replace(/\s+/g, ' ');
-    } catch {
-      return false;
-    }
-    return wanted.every((v) => text.toLowerCase().includes(v.toLowerCase()));
+  const hit = await resolveCandidates(page, observations, { pollMs: RESOLVE_POLL_MS, ...shared });
+  if (!hit) return null;
+  const candidate = candidates[hit.index];
+  return {
+    locator: hit.locator,
+    index: hit.index,
+    candidate: hit.nth !== undefined ? { ...candidate, nth: hit.nth } : candidate,
+    missed: hit.missed.map((m) => m.index),
   };
-  /**
-   * One pass over the chain, best candidate first, reporting which candidates
-   * it REJECTED before the winner.
-   *
-   * Per pass, deliberately. A candidate that missed while the page was still
-   * painting and hits on the next poll is not volatile — it was early. Only
-   * the pass that actually resolved is evidence about the locators, because
-   * only then do we know the element was there to be found.
-   */
-  // The recorded geometry, when the chain carries it: the yardstick a guess
-  // is measured against. A structural fallback that resolves far from where
-  // the recorded element sat is a different element — rpgr13's `div > … >
-  // button` took a header button for a control in the editor's side pane.
-  const recordedBox = candidates.find((c): c is Extract<LocatorCandidate, { kind: 'point' }> => c.kind === 'point') ?? null;
-  const plausible = async (locator: Locator): Promise<boolean> => {
-    if (!recordedBox) return true;
-    try {
-      const box = await locator.first().boundingBox();
-      if (!box) return true; // nothing to measure — let the other guards judge
-      const scroll = await page.evaluate(() => ({ x: window.scrollX, y: window.scrollY }));
-      const cx = box.x + box.width / 2 + scroll.x;
-      const cy = box.y + box.height / 2 + scroll.y;
-      const limit = Math.max(recordedBox.vw, recordedBox.vh) / 3;
-      return Math.hypot(cx - recordedBox.x, cy - recordedBox.y) <= limit;
-    } catch {
-      return true;
-    }
-  };
-  const walk = async (): Promise<{ locator: Locator; index: number; candidate: LocatorCandidate; missed: number[] } | null> => {
-    const missed: number[] = [];
-    for (const { index, candidate } of ordered) {
-      try {
-        // A point names a place; find what is there (of the recorded kind)
-        // before a locator can name it.
-        if (candidate.kind === 'point' && !(await markPoint(page, candidate))) {
-          missed.push(index);
-          continue;
-        }
-        const locator = makeLocator(page, candidate);
-        const count = await locator.count();
-        if (count === 1) {
-          if (!(await keepsIdentity(index, candidate, locator))) {
-            missed.push(index);
-            continue;
-          }
-          if ((index > 0 || structural(candidate)) && candidate.kind !== 'point' && !(await plausible(locator))) {
-            missed.push(index);
-            continue;
-          }
-          // The recorded primary is trusted even when it is such a link — the
-          // recording clicked it (rpgr12-r2's sign-in skill had a stray click
-          // on Grafana's "Support" footer link, and refusing it cost a
-          // 19-turn recovery). Only a guess may not leave the origin.
-          if ((index > 0 || structural(candidate)) && (await leavesOrigin(locator))) {
-            missed.push(index);
-            continue;
-          }
-          return { locator, index, candidate, missed };
-        }
-        if (count > 1) {
-          if (allowMultiple) return { locator, index, candidate, missed };
-          if (ambiguousNth !== undefined && candidate.nth === undefined && ambiguousNth < count) {
-            const picked = locator.nth(ambiguousNth);
-            if (!(await keepsIdentity(index, candidate, picked))) {
-              missed.push(index);
-              continue;
-            }
-            return { locator: picked, index, candidate: { ...candidate, nth: ambiguousNth }, missed };
-          }
-          if (candidate.nth === undefined && index === 0) {
-            missed.push(index); // was unique; ambiguity is drift, keep looking
-            continue;
-          }
-        }
-        missed.push(index);
-      } catch {
-        missed.push(index); // malformed selector or detached page — try the next
-      }
-    }
-    return null;
-  };
-
-  // Fast path first: on a page that is ready this returns immediately and the
-  // wait below never runs. Re-walking the WHOLE chain each poll (rather than
-  // waiting on the primary alone) keeps the preference order intact — the
-  // best candidate still wins the moment it appears — and the identity guard
-  // stops a positional fallback taking the turn while the anchor is pending.
-  //
-  // A structural (positional) hit is not taken on the spot when the chain
-  // also names the element: a path resolves instantly against whatever sits
-  // in that slot while the named control is still rendering. rpgr13 lost
-  // both replays that way — the panel editor's `toggle-viz-picker` test id
-  // was not there yet, `div > … > button` matched a header button that
-  // opens grafana.com, and the tab left the app. The guess is held until the
-  // names have had the whole window; it stands only when none of them came.
-  const named = ordered.some((o) => !structural(o.candidate));
-  const guess = (hit: { candidate: LocatorCandidate } | null) => !!hit && named && structural(hit.candidate);
-  let held: Awaited<ReturnType<typeof walk>> = null;
-  const first = await walk();
-  if (first && !guess(first)) return first;
-  held = first;
-  for (let waited = 0; waited < waitMs; waited += RESOLVE_POLL_MS) {
-    // A plain timer, not page.waitForTimeout: this path runs precisely when
-    // the page is unhappy, and a navigating or detached page makes its own
-    // clock throw.
-    await new Promise((r) => setTimeout(r, RESOLVE_POLL_MS));
-    const hit = await walk();
-    if (hit && !guess(hit)) return hit;
-    if (hit) held = hit;
-  }
-  return held;
 }
 
 /**
@@ -1281,113 +999,26 @@ export async function resolveChain(
  * Only text-bearing locator kinds count — a slot inside a css selector or a
  * testid is an address, not a name, and holding a fallback to it would break
  * ordinary form fills whose fallbacks are structural by design.
+ *
+ * The WHOLE chain, not chain[0]. Identity is a property of the STEP — which
+ * record it acts on — not of whichever candidate happens to sit first.
+ *
+ * fwrd26l is why. The agent's raw target was an XPath,
+ * `//tr[contains(., '{{v5}}')]`, stored as `css` because the recorder does
+ * not parse selector strings. So the primary advertised no identity, the
+ * guard was disarmed, and `#ticket-rows > tr:nth-of-type(1)` took the step —
+ * while the scoped anchor sitting right behind it named the record perfectly
+ * well. Same shape as the `text="..."` case, different syntax; reading the
+ * chain instead of its head fixes both without parsing anything.
+ *
+ * The rule itself is the shared `identityValues`; this is the daemon's view
+ * of its inputs — the skill's known slots and this run's values.
  */
 export function identityOfPrimary(chain: LocatorCandidate[], skill: Skill, params: Record<string, string>): string[] {
-  // The WHOLE chain, not chain[0]. Identity is a property of the STEP — which
-  // record it acts on — not of whichever candidate happens to sit first.
-  //
-  // fwrd26l is why. The agent's raw target was an XPath,
-  // `//tr[contains(., '{{v5}}')]`, stored as `css` because the recorder does
-  // not parse selector strings. So the primary advertised no identity, the
-  // guard was disarmed, and `#ticket-rows > tr:nth-of-type(1)` took the step —
-  // while the scoped anchor sitting right behind it named the record perfectly
-  // well. Same shape as the `text="..."` case, different syntax; reading the
-  // chain instead of its head fixes both without parsing anything.
-  const named = chain
-    .flatMap((c) => {
-      const f = c as { name?: string; text?: string; label?: string; hasText?: string };
-      return [f.name, f.text, f.label, f.hasText];
-    })
-    .filter((v): v is string => typeof v === 'string');
-  if (!named.length) return [];
-  const out = new Set<string>();
-  for (const field of named) {
-    for (const m of field.matchAll(/\{\{(v\d+)\}\}/g)) {
-      if (!skill.params[m[1]]?.known) continue;
-      const value = params[m[1]];
-      if (value && value.length >= 3) out.add(value);
-    }
-  }
-  return [...out];
+  const known: Record<string, string | undefined> = {};
+  for (const [slot, value] of Object.entries(params)) if (skill.params[slot]?.known) known[slot] = value;
+  return identityValues(known, chain.flatMap((c) => identityFields(c as { name?: string; text?: string; label?: string; hasText?: string })));
 }
-
-/**
- * The rungs a navigation step falls through when its recorded link is gone,
- * each testing how the app works for a HUMAN before the next is tried:
- *  (a) another link on the page to the same destination — click that,
- *      exercising the app's own navigation;
- *  (b) only then, and only when the destination is fully concrete
- *      (params/derived filled, nothing volatile left), navigate there
- *      directly — the last resort before model recovery.
- * Returns what got the browser there, or null when neither rung did.
- */
-async function navigateToDestination(
-  page: Page,
-  destPattern: string,
-  params: Record<string, string>,
-  exec: (tool: string, args: Record<string, unknown>, resolved: Record<string, Locator>) => Promise<unknown>,
-): Promise<{ used: string; note: string } | null> {
-  // (a) Requires the matching anchors to agree on ONE destination —
-  // ambiguity (a wildcard pattern matching many records) skips the rung.
-  const link = await linkToDestination(page, destPattern, params);
-  if (link) {
-    try {
-      await exec('click', { target: link.selector }, { target: page.locator(link.selector).first() });
-      await settleDom(page);
-      if (urlMatches(destPattern, page.url(), params)) {
-        return { used: `click ${link.selector}`, note: `clicked another link to the recorded destination (${link.selector})` };
-      }
-    } catch {
-      // that link did not work either — try the direct navigation
-    }
-  }
-  // (b)
-  const dest = fillParams(destPattern, params);
-  const concrete = dest && !dest.includes('{{') && !/[/=#](:id|:var)(?=[/&#]|$)/.test(dest);
-  if (concrete && !urlMatches(destPattern, page.url(), params)) {
-    try {
-      await exec('goto', { url: dest }, {});
-      if (urlMatches(destPattern, page.url(), params)) {
-        return { used: `goto ${dest}`, note: `navigated to the step's recorded destination instead (${dest})` };
-      }
-    } catch {
-      // destination unreachable — the caller reports the original miss
-    }
-  }
-  return null;
-}
-
-/**
- * A visible anchor on the page whose destination matches the recorded
- * pattern. Used by the navigation fallback's first rung: when the recorded
- * link is gone, another route to the same place may exist (a sidebar entry, a
- * search result, a breadcrumb). Returns null unless every matching anchor
- * agrees on ONE destination — a wildcard-heavy pattern matching several
- * records is ambiguity, not evidence.
- */
-async function linkToDestination(
-  page: Page,
-  pattern: string,
-  params: Record<string, string>,
-): Promise<{ selector: string; href: string } | null> {
-  let anchors: { attr: string; abs: string }[];
-  try {
-    const raw = await page.evaluate(() =>
-      Array.from(document.querySelectorAll('a[href]'))
-        .filter((a) => (a as HTMLElement).offsetParent !== null)
-        .map((a) => ({ attr: a.getAttribute('href') ?? '', abs: (a as HTMLAnchorElement).href })),
-    );
-    anchors = Array.isArray(raw) ? raw : [];
-  } catch {
-    return null;
-  }
-  const hits = anchors.filter((a) => a.abs && urlMatches(pattern, a.abs, params));
-  if (!hits.length || new Set(hits.map((h) => h.abs)).size !== 1) return null;
-  return { selector: `a[href="${hits[0].attr.replace(/(["\\])/g, '\\$1')}"]`, href: hits[0].abs };
-}
-
-/** How long a loop iteration waits for its record to leave the guard's match set. */
-const LOOP_SHRINK_WAIT_MS = 1_000;
 
 /**
  * How long a step keeps re-trying its locator chain before calling the target
@@ -1401,67 +1032,33 @@ export function waitsForAbsence(step: SkillStep, args: Record<string, unknown>):
 }
 
 /**
- * For a text wait that timed out: another recorded candidate for its target
- * that shows the text right now, if there is one. Candidates are tried in
- * recorded order after the primary; a point is skipped (it names a place, not
- * an element with text), and a candidate must still match exactly one element.
+ * The daemon's observations for the shared textHeldElsewhere (src/execution/
+ * recover.ts): each stored candidate of the filled chain with the live locator
+ * makeLocator builds for it, index = its stored position. A candidate whose
+ * locator cannot be built is left out, as the old loop skipped it.
  */
-async function textHeldElsewhere(
-  page: Page,
-  step: SkillStep,
-  args: Record<string, unknown>,
-  params: Record<string, string>,
-): Promise<{ index: number; candidate: LocatorCandidate } | null> {
-  if (step.tool !== 'wait_for' || typeof args.text !== 'string' || !args.text.trim()) return null;
-  if (args.state !== 'text_contains' && args.state !== 'text_equals') return null;
-  const want = args.text.replace(/\s+/g, ' ').trim();
-  const chain = (fillParamsDeep(step.locators.target ?? [], params) as LocatorCandidate[]) ?? [];
-  for (let index = 1; index < chain.length; index++) {
-    const candidate = chain[index];
-    if (candidate.kind === 'point') continue;
+function heldObservations(page: Page, chain: LocatorCandidate[]): { index: number; kind: string; locator: Locator }[] {
+  const out: { index: number; kind: string; locator: Locator }[] = [];
+  chain.forEach((candidate, index) => {
+    if (index === 0 || candidate.kind === 'point') return;
     try {
-      const locator = makeLocator(page, candidate);
-      if ((await locator.count()) !== 1) continue;
-      const text = ((await locator.textContent({ timeout: 1_000 })) ?? '').replace(/\s+/g, ' ').trim();
-      if (args.state === 'text_equals' ? text === want : text.includes(want)) return { index, candidate };
+      out.push({ index, kind: candidate.kind, locator: makeLocator(page, candidate) });
     } catch {
-      continue;
+      // unbuildable: never a holder
     }
-  }
-  return null;
+  });
+  return out;
 }
 
 function resolveWaitMs(): number {
   const raw = Number(process.env.SITELOOPER_RESOLVE_WAIT_MS);
-  return Number.isFinite(raw) && raw >= 0 ? raw : 3_000;
+  return Number.isFinite(raw) && raw >= 0 ? raw : RESOLVE_WAIT_MS;
 }
-/**
- * The locator chain has no single DOM condition to wait on — each rung is a
- * different candidate and the preference order has to be re-read as a whole
- * (see resolveChain) — so this one stays a poll. It runs only on a page that
- * has already failed to answer, never on the fast path.
- */
-const RESOLVE_POLL_MS = 100;
+// The locator chain has no single DOM condition to wait on — each rung is a
+// different candidate and the preference order has to be re-read as a whole
+// — so resolution stays a poll, at the shared RESOLVE_POLL_MS cadence.
 /** Backstop cadence for a url an SPA rewrites without raising a navigation. */
 const URL_SETTLE_POLL_MS = 500;
-
-/**
- * Scroll the page end to end so a virtualised or lazily rendered UI paints
- * everything it has, then let the DOM settle. Returns false when the page
- * cannot be scripted (gone, cross-origin frame), in which case the caller
- * simply does not retry.
- */
-async function sweepPage(page: Page): Promise<boolean> {
-  try {
-    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
-    await settleDom(page);
-    await page.evaluate(() => window.scrollTo(0, 0));
-    await settleDom(page);
-    return true;
-  } catch {
-    return false;
-  }
-}
 
 /** A snapshot line that names a popup: the thing a toggle opens and closes. */
 export const OPENER_LINE = /^-?\s*(dialog|alertdialog|menu|menubar|listbox|tooltip)\b/;
@@ -1485,7 +1082,7 @@ export function openerLines(step: SkillStep, params: Record<string, string>): st
   // step had nothing to click.
   const popup = plain.filter((l) => OPENER_LINE.test(l));
   if (!popup.length) return [];
-  return popup.map((l) => fillParams(maskMinted(maskVolatile(l)), params));
+  return liveLines(popup, params);
 }
 
 /**
@@ -1512,7 +1109,9 @@ export async function goalSatisfied(
   const identity = fill(skill.preconditions.requireText);
   const goal = fill(skill.goal?.requireText);
   if (!identity.length || !goal.length) return { satisfied: false, shown: [] };
-  if ([...identity, ...goal].some((t) => !t || /\{\{/.test(t))) return { satisfied: false, shown: [] };
+  // The shared rule (src/execution/gates.ts): a marker still reading `{{v1}}`,
+  // or one whose slot is bound to '', proves nothing. The artifact asks the same.
+  if (!markersBound([...(skill.preconditions.requireText ?? []), ...(skill.goal?.requireText ?? [])], params)) return { satisfied: false, shown: [] };
   // The goal was read on the page template the procedure ends on (single
   // segment, so also where it starts): on any other template the same words
   // mean nothing — a list row can show "Cancelled" for a different order.
@@ -1553,114 +1152,16 @@ export async function goalSatisfied(
  */
 async function sharesRecordScope(page: Page, identity: string[], goal: string[]): Promise<boolean> {
   try {
-    // The identity half goes in as regex SOURCE: this function is serialised
-    // into the page, so it cannot call identityRe — and a second hand-written
-    // copy of the boundary rule in page scope would be free to drift.
+    // The identity half goes in as regex SOURCE: scopeCheckInPage (the shared
+    // src/execution/snapshot.ts) is serialised into the page, so it cannot
+    // call identityRe — and a second hand-written copy of the boundary rule
+    // in page scope would be free to drift.
     return await page.evaluate(scopeCheckInPage, { identity: identity.map(identitySource), goal });
   } catch {
     // A page that cannot be evaluated (navigating, closed) has not proven
     // anything. Conservative: not satisfied, so the step runs.
     return false;
   }
-}
-
-/** Runs in the page; serialised, so everything it needs is in scope or passed in. */
-function scopeCheckInPage(opts: { identity: string[]; goal: string[] }): boolean {
-  // `identity` arrives as regex SOURCE (identitySource), already bounded.
-  const norm = (s: string | null | undefined) => (s ?? '').replace(/\s+/g, ' ').trim();
-  const textOf = (el: Element) => norm((el as HTMLElement).innerText || el.textContent);
-  const all = Array.from(document.querySelectorAll('*'));
-
-  // The smallest elements that show a goal string: a container shows it too,
-  // and starting from the container would skip the record scope below it.
-  const holders: Element[] = [];
-  for (const raw of opts.goal) {
-    const want = norm(raw);
-    if (!want) continue;
-    const hits = all.filter((el) => textOf(el).includes(want));
-    for (const el of hits) if (!hits.some((other) => other !== el && el.contains(other))) holders.push(el);
-  }
-  if (!holders.length) return false;
-
-  // Siblings of a kind means STRUCTURALLY alike, not merely same-tag: two
-  // unrelated buttons that happen to sit side by side are not a record list,
-  // and treating them as one would scope a lone control to itself. Rows of a
-  // list are rendered by one template and carry the same classes.
-  const kindOf = (el: Element) => `${el.tagName}.${norm(el.getAttribute('class'))}`;
-  const oneOfSeveral = (el: Element): boolean => {
-    const parent = el.parentElement;
-    // A direct child of <body> is a section of the page, not a record: a list
-    // of records sits inside something. Without this, two unrelated top-level
-    // controls make either of them its own "record" scope.
-    if (!parent || parent === document.body) return false;
-    const kind = kindOf(el);
-    let same = 0;
-    for (const sib of Array.from(parent.children)) if (kindOf(sib) === kind) same++;
-    return same >= 2;
-  };
-
-  for (const holder of holders) {
-    let node: Element | null = holder;
-    let record: Element | null = null;
-    while (node && node !== document.body) {
-      if (oneOfSeveral(node)) record = node;
-      node = node.parentElement;
-    }
-    if (!record) return true; // not a list: the whole page is about one record
-    const inside = textOf(record);
-    if (opts.identity.some((src) => new RegExp(src, 'iu').test(inside))) return true;
-  }
-  return false;
-}
-
-/**
- * A parameterised line that did not *appear* may still be *there*: filling a
- * field with the value it already held produces no diff. One extra capture on
- * the miss path settles it.
- */
-async function presentOnPage(page: Page, lines: string[], opts: LineShowsOptions = {}): Promise<boolean> {
-  const sig = await captureSignature(page);
-  if (!sig) return false;
-  return lineShows(sig.lines, lines, opts);
-}
-
-export interface LineShowsOptions {
-  /**
-   * Identity matching: the want must sit at a letter/digit boundary on both
-   * sides (see IDENTITY_EDGE) instead of anywhere inside a longer run of
-   * characters. Only for "is this the right RECORD" — the effect gate asks
-   * whether a change LANDED, which is a substring question and stays one.
-   */
-  whole?: boolean;
-}
-
-const normWs = (s: string) => s.replace(/\s+/g, ' ').trim();
-
-/**
- * Does any of `wants` appear in `haystack` (recorded page lines, or a diff's
- * added lines)? Whitespace-insensitive on both sides — a marker copied with
- * a trailing space is the same word — and a `{{*}}` wildcard (see
- * maskVolatile) matches anything within one line.
- *
- * `opts.whole` switches to the IDENTITY rule: same wildcards, but bounded at
- * both edges so `fwgr25-n1` is no longer satisfied by `fwgr25-n10`. Only the
- * identity callers pass it; the effect gate asks a different question.
- */
-export function lineShows(haystack: string[], wants: string[], opts: LineShowsOptions = {}): boolean {
-  const all = haystack.map(normWs).join('\n');
-  return wants.some((raw) => {
-    const want = normWs(raw);
-    if (!want) return false;
-    if (opts.whole) return identityRe(want).test(all);
-    if (!want.includes(WILDCARD)) return all.includes(want);
-    const re = new RegExp(
-      want
-        .split(WILDCARD)
-        .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
-        .join('[^\\n]*?'),
-    );
-    return re.test(all);
-  });
 }
 
 function parseRead(result: string): string {

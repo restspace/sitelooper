@@ -26,9 +26,12 @@ d('component recipes (fixture widgets)', () => {
   const dir = os.tmpdir();
   const run = (name: string, args: Record<string, unknown>) => executeTool(session, name, args, dir);
 
+  const previous = { home: process.env.SITELOOPER_HOME, components: process.env.SITELOOPER_COMPONENTS_FILE };
+
   beforeAll(async () => {
     home = fs.mkdtempSync(path.join(os.tmpdir(), 'bp-comp-br-'));
     process.env.SITELOOPER_HOME = home;
+    // read ahead of the home: always this run's own file, never a developer's store
     process.env.SITELOOPER_COMPONENTS_FILE = path.join(home, 'components.json');
     session = new BrowserSession({ session: 'comp', persist: false, learn: true });
     const page = await session.getPage();
@@ -37,8 +40,10 @@ d('component recipes (fixture widgets)', () => {
 
   afterAll(async () => {
     await session?.close();
-    delete process.env.SITELOOPER_COMPONENTS_FILE;
-    delete process.env.SITELOOPER_HOME;
+    if (previous.components === undefined) delete process.env.SITELOOPER_COMPONENTS_FILE;
+    else process.env.SITELOOPER_COMPONENTS_FILE = previous.components;
+    if (previous.home === undefined) delete process.env.SITELOOPER_HOME;
+    else process.env.SITELOOPER_HOME = previous.home;
     fs.rmSync(home, { recursive: true, force: true });
   });
 

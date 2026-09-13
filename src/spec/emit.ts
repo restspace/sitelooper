@@ -1,3 +1,6 @@
+import { isMutatingAction, isReadAction } from '../execution/lifecycle.js';
+import { isNavigatingAction } from '../execution/browser.js';
+import { setsSomething } from '../execution/echo.js';
 /**
  * The IR as `@playwright/test` source (Tier 2: no sitelooper runtime).
  *
@@ -10,20 +13,24 @@
  * automatic without ever clobbering a reviewer's work.
  *
  * What the emitted body must be is a faithful reading of `replay.ts`: the
- * same locator chain in the same order (see `./locators.js`), the same
- * effect gates as assertions, the same derived-value binding after the step
- * that mints it. Where Tier 2 cannot follow — a `point` candidate, the loop
- * cursor, the live measurement behind a fallback — it says so in a comment
+ * same locator chain resolved through the same shared policy (see
+ * `./locators.js` for the observations and `../execution/resolve.js` for the
+ * rules), the same effect gates as assertions, the same derived-value binding
+ * after the step that mints it. Where Tier 2 cannot follow — a tab switch, an
+ * attribute read, a chain with nothing recorded — it says so in a diagnostic
  * instead of pretending, because a spec that asserts something the recording
  * never observed is worse than one that admits the gap.
  */
+import { EXECUTION_MODULES, executionClosure } from './runtime-source.js';
 import type { LocatorCandidate } from '../daemon/recorder.js';
-import { IDENTITY_EDGE, WILDCARD } from '../shared/text.js';
-import { TRANSIENT_LINE } from '../skills/compile.js';
-import { OPENER_LINE, consequentialExpectations, waitsForAbsence } from '../skills/replay.js';
+import { DIALOG_LINE, SLOT_LINE, TRANSIENT_LINE } from '../execution/expect.js';
+import { identityFields } from '../execution/resolve.js';
+import { originOf } from '../execution/url.js';
+import { OPENER_LINE, waitsForAbsence } from '../skills/replay.js';
+import { seedRecipes, snapshotRecipes } from '../skills/components.js';
 import type { SkillStep } from '../skills/store.js';
-import { candidateSources, chainSource, maskedMatcherSource, matcherSource, stringSource } from './locators.js';
-import type { SpecFlow, SpecSegment, SpecStep } from './ir.js';
+import { candidateSources, matcherSource, observationSources, stringSource } from './locators.js';
+import { unmeasuredPreconditionDiagnostic, type SpecFlow, type SpecSegment, type SpecStep } from './ir.js';
 import { diagnosticNote, formatDiagnostic, type Diagnostic } from './diagnostics.js';
 
 export interface EmitOptions {
@@ -45,8 +52,12 @@ export interface EmitOptions {
  * file cannot otherwise tell from a locator error. A rethread warning is about
  * a binding, not about the step's existence, and belongs in the compile
  * report, not in every reviewer's diff.
+ *
+ * `unsupported-capability` joins them because it is the same kind of fact: the
+ * step is in the file and cannot run, and the reader of the generated code is
+ * exactly the person who has to supply the missing half by hand.
  */
-const FLAGGED: readonly Diagnostic['code'][] = ['demoted-pin', 'noop-step'];
+const FLAGGED: readonly Diagnostic['code'][] = ['demoted-pin', 'noop-step', 'unsupported-capability'];
 
 function flaggedByStep(diagnostics: Diagnostic[] | undefined): Map<string, Diagnostic[]> {
   const out = new Map<string, Diagnostic[]>();
@@ -78,17 +89,9 @@ const BEGIN_MARKER = '// @sitelooper-flow-begin';
 const END_MARKER = '// @sitelooper-flow-end';
 
 /**
- * What the inlined `pick` waits, mirroring replay's own resolve window
- * (resolveWaitMs / RESOLVE_POLL_MS): a spec has no observation turns, and an
- * app that renders a beat late is the normal case, not a failure.
- */
-const PICK_WAIT_MS = 3_000;
-const PICK_POLL_MS = 100;
-
-/**
  * What the inlined `urlPartsWhen` waits for the url a step navigated TO.
  *
- * Longer than `pick`'s window because that is what replay effectively allows a
+ * Longer than the resolve window (RESOLVE_WAIT_MS) because that is what replay effectively allows a
  * url: runOneStep lets the DOM go quiet first (settleDom, capped at 2s) and
  * only then does `expectedUrl` poll for another resolveWaitMs (3s) before it
  * judges the url wrong. A spec that gave up after 3s bound an EMPTY part and
@@ -100,17 +103,6 @@ const URL_WAIT_MS = 5_000;
 
 /** How long a segment's identity marker has to appear before the segment is on the wrong record. */
 const IDENTITY_WAIT_MS = 5_000;
-
-/**
- * What the inlined `settle` waits, mirroring replay's `settleDom` constants
- * exactly (SETTLE_QUIET_MS / SETTLE_MAX_MS / SETTLE_PROBE_MS in
- * src/skills/replay.ts): a page shows it is busy within the probe, must then
- * be mutation-free for the quiet window, and is called quiet after the cap
- * whatever it is still doing.
- */
-const SETTLE_QUIET_MS = 250;
-const SETTLE_MAX_MS = 2_000;
-const SETTLE_PROBE_MS = 60;
 
 /** Playwright's own default; only a different timeout is worth carrying over. */
 const DEFAULT_WAIT_MS = 10_000;
@@ -129,11 +121,10 @@ const clip = (s: string, max = COMMENT_CLIP) => (s.length <= max ? s : s.slice(0
 /** One line of comment text: no newlines, and nothing that would close a doc comment. */
 const commentSafe = (s: string) => clip(String(s).replace(/\s+/g, ' ').replace(/\*\//g, '* /').trim(), 200);
 
-/** A slot marker anywhere in the text — the mark of a value this run supplies. */
-const SLOT_LINE = /\{\{v\d+\}\}/;
-
 /** How a recorded slot renders inside generated source: as the step's own param. */
-const slotAsParam = (s: string) => '${p.' + s + '}';
+// A derived slot the run has not minted is left UNSET, as replay leaves it
+// out of its params: its marker then stays literal, as fillParams leaves it.
+const slotAsParam = (s: string) => (s.startsWith('d') ? '${p.' + s + " ?? '{{" + s + "}}'}" : '${p.' + s + '}');
 
 /** A JS single-quoted literal (mirrors recorder.q, which this module cannot import without pulling in playwright types). */
 function q(value: string): string {
@@ -150,10 +141,6 @@ function templateSafe(text: string): string {
   return text.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$\{/g, '\\${');
 }
 
-function escapeRe(s: string): string {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
 /**
  * Per-tier budget for the inlined `click` helper, mirroring the 10s
  * `timeout` tools.ts hands robustClick, but cut so that ALL THREE tiers plus
@@ -163,138 +150,202 @@ function escapeRe(s: string): string {
 const CLICK_TIER_MS = 5_000;
 
 /**
- * What the inlined `fill` waits, mirroring reactSafeFill in
- * src/daemon/inputs.ts: the field must be visible (its own 10s), and the focus
- * click is a best-effort 5s that some widgets need and most ignore.
+ * What the inlined `type` hands `typeWithRecipe`, as tools.ts's `case 'type'`
+ * does: the tool layer's default 10s timeout, and its 20ms per-key delay when
+ * the recording set none — one cadence in both runners, not Playwright's 0.
  */
-const FILL_WAIT_MS = 10_000;
-const FILL_FOCUS_MS = 5_000;
+const TYPE_TIMEOUT_MS = 10_000;
+const TYPE_DELAY_MS = 20;
 
 /**
- * The two settles inside the editor recipe, taken from `editorSetValue` in
- * src/skills/components.ts verbatim: 400ms for the insert to be absorbed
- * before Escape, 200ms after the blur for the commit the app hangs off it.
+ * The inlined helpers, keyed by the token that proves the body (or another
+ * helper) uses one. Constants both runners share (LOOP_SHRINK_WAIT_MS,
+ * SLOT_LINE, the snapshot limits) are NOT restated here: the shared module
+ * that exports them is embedded whole, and naming the token is what pulls it in.
  */
-const EDITOR_SETTLE_MS = 400;
-const EDITOR_BLUR_SETTLE_MS = 200;
-
-/** How long a folded loop lets its last match detach before recounting. Replay's LOOP_SHRINK_WAIT_MS. */
-const LOOP_SHRINK_WAIT_MS = 1_000;
-
-/** The inlined helpers, keyed by the token that proves the body (or another helper) uses one. */
 const HELPERS: { token: string; source: string[] }[] = [
-  {
-    token: 'LOOP_SHRINK_WAIT_MS',
-    source: [`const LOOP_SHRINK_WAIT_MS = ${LOOP_SHRINK_WAIT_MS};`],
-  },
-  {
-    // Shared by `pick` and `urlPartsWhen`: one poll cadence. The token is the
-    // POLL constant, because that is the one BOTH of them name.
-    token: 'PICK_POLL_MS',
-    source: [`const PICK_WAIT_MS = ${PICK_WAIT_MS};`, `const PICK_POLL_MS = ${PICK_POLL_MS};`],
-  },
   {
     token: 'await settle(',
     source: [
-      `const SETTLE_QUIET_MS = ${SETTLE_QUIET_MS};`,
-      `const SETTLE_MAX_MS = ${SETTLE_MAX_MS};`,
-      `const SETTLE_PROBE_MS = ${SETTLE_PROBE_MS};`,
-      '/**',
-      ' * Let the DOM go quiet before this step looks at the page at all.',
-      ' *',
-      " * WHICH REPLAY RULE THIS MIRRORS. runOneStep's very first act, before the",
-      ' * already-in-effect check and before any chain is resolved, is',
-      ' * `await settleDom(page)` (src/skills/replay.ts): the agent that recorded',
-      ' * the flow had observation turns, which were implicit waits, and a replay',
-      ' * — or a spec — has none. Same constants: a page gets SETTLE_PROBE_MS to',
-      ' * show it is busy at all, then must be mutation-free for SETTLE_QUIET_MS,',
-      ' * and is called quiet regardless after SETTLE_MAX_MS. Instant on a static',
-      ' * page, which is why it can sit on every step.',
-      ' *',
-      ' * WHY EVERY STEP NEEDS IT, not just the resolving ones. The odoo recording',
-      " * toggles the home menu open and shut seven times before clicking `Sales`.",
-      ' * Each toggle click is an opener, so each is guarded by "is the recorded',
-      ' * popup already showing?" — and asked in the same tick as the CLOSING click',
-      ' * that preceded it, that question is answered off a DOM still mid-transition:',
-      ' * the menu is on its way out but still visible, the guard says "already in',
-      ' * effect", the opening click is skipped, and eight steps later there is no',
-      " * `Sales` menuitem because the menu is shut. Replay never sees this, because",
-      ' * its own presence check happens only AFTER settleDom. So the settle goes',
-      ' * ahead of the guard, not merely ahead of the action.',
-      ' *',
-      ' * Errors are swallowed: a page that is navigating or detached cannot be',
-      ' * scripted, and that is the locator resolution\'s failure to report, not this.',
-      ' */',
       'async function settle(page: Page): Promise<void> {',
-      '  try {',
-      '    await page.evaluate(',
-      '      ({ probe, quiet, max }: { probe: number; quiet: number; max: number }) =>',
-      '        new Promise<void>((resolve) => {',
-      '          let timer = setTimeout(resolve, probe);',
-      '          const stop = setTimeout(() => {',
-      '            observer.disconnect();',
-      '            resolve();',
-      '          }, max);',
-      '          const observer = new MutationObserver(() => {',
-      '            clearTimeout(timer);',
-      '            timer = setTimeout(() => {',
-      '              observer.disconnect();',
-      '              clearTimeout(stop);',
-      '              resolve();',
-      '            }, quiet);',
-      '          });',
-      '          observer.observe(document, { childList: true, subtree: true, attributes: true, characterData: true });',
-      '        }),',
-      '      { probe: SETTLE_PROBE_MS, quiet: SETTLE_QUIET_MS, max: SETTLE_MAX_MS },',
-      '    );',
-      '  } catch {',
-      '    // navigating / detached — the locator resolution will report it',
-      '  }',
+      "  // Count the page's requests from the first settle on, as the daemon counts",
+      '  // them from the moment its session adopts a page (see settleNavigation).',
+      '  trackRequests(page);',
+      '  await settleDom(page);',
       '}',
     ],
   },
   {
-    token: 'urlPart(',
+    token: 'await settleNavigation(',
     source: [
       '/**',
-      " * The addressable parts of a url, labelled as the recorder labels them:",
-      ' * path segments `p<i>`, hash-route segments `h<i>`, hash-state values `q.<key>`.',
-      ' * Inlined so the spec depends on nothing but Playwright.',
+      " * After a navigating action: where the url settles, not where it first went.",
+      ' *',
+      " * WHICH REPLAY RULE THIS MIRRORS. tools.ts runStep, for a state-changing",
+      ' * action that may navigate (click, dblclick, press, select): after the DOM',
+      ' * settles it waits for the url to hold still (the shared urlHeldStill,',
+      ' * src/execution/browser.ts, embedded) and settles again when the url moved',
+      ' * while it waited. So a page that exposes a record id and then redirects',
+      ' * once more, with nothing on the page changing in between, is read at its',
+      " * final url by the step's derived binding, mint and gates — in both runners.",
+      ' * A DOM settle alone returns before such a redirect lands.',
       ' */',
-      'function urlPart(url: string, label: string): string {',
-      '  let u: URL;',
-      '  try {',
-      '    u = new URL(url);',
-      '  } catch {',
-      "    return '';",
-      '  }',
-      '  const dec = (s: string) => {',
-      '    try {',
-      '      return decodeURIComponent(s);',
-      '    } catch {',
-      '      return s;',
-      '    }',
-      '  };',
-      '  const parts: Record<string, string> = {};',
-      "  u.pathname.split('/').filter(Boolean).forEach((v, i) => (parts[`p${i}`] ??= dec(v)));",
-      "  const body = u.hash.length > 1 ? u.hash.slice(1).split('?')[0] : '';",
-      "  if (body.startsWith('/') || (body && !body.includes('='))) {",
-      "    body.split('/').filter(Boolean).forEach((v, i) => (parts[`h${i}`] ??= dec(v)));",
-      '  } else if (body) {',
-      "    for (const pair of body.split('&').filter(Boolean)) {",
-      "      const eq = pair.indexOf('=');",
-      '      const k = eq < 0 ? pair : pair.slice(0, eq);',
-      "      parts[`q.${k}`] ??= eq < 0 ? '' : dec(pair.slice(eq + 1));",
-      '    }',
-      '  }',
-      "  return parts[label] ?? '';",
+      'async function settleNavigation(page: Page, urlBefore: string): Promise<void> {',
+      '  await settle(page);',
+      '  const settled = page.url();',
+      '  const seen = await urlHeldStill(page, urlBefore, () => inFlightRequests(page));',
+      '  if (seen !== settled) await settle(page);',
+      '}',
+    ],
+  },
+  {
+    // Shared by `urlPartsWhen` and `urlEffect`: the window a url a step
+    // navigated TO is given before it is judged.
+    token: 'URL_WAIT_MS',
+    source: [`const URL_WAIT_MS = ${URL_WAIT_MS};`],
+  },
+  {
+    token: 'logWarning(',
+    source: [
+      '/** A soft finding, in the one grep-able shape replay reports its own warnings in. */',
+      'function logWarning(line: string): void {',
+      '  console.warn(`[sitelooper warn] ${line}`);',
+      '}',
+    ],
+  },
+  {
+    token: 'echoRead(',
+    source: [
+      '/**',
+      " * A published read whose value is only what this segment itself typed,",
+      " * selected or named — replay's echoedValues, through the shared echoVerdict",
+      ' * (src/execution/echo.ts, embedded). It confirms the control, not that the',
+      ' * app persisted anything, so the label is listed in `run.echoed` and warned;',
+      ' * the value is still published, as replay still carries it to later steps.',
+      ' */',
+      'function echoRead(ledger: Set<string>, run: FlowRun, label: string, key: string, value: string | undefined, where: string): void {',
+      "  const echo = echoVerdict(ledger, label, value ?? '', where);",
+      '  if (!echo) return;',
+      '  run.echoed.push(key);',
+      '  logWarning(echo);',
+      '}',
+    ],
+  },
+  {
+    token: 'errorPageGate(',
+    source: [
+      '/** First gate after every step, as replay orders it: nothing recorded can hold on a browser error page. */',
+      'function errorPageGate(page: Page, where: string): void {',
+      '  const stop = errorPageVerdict(page.url(), where);',
+      '  if (stop) throw new Error(stop);',
+      '}',
+    ],
+  },
+  {
+    token: 'await urlEffect(',
+    source: [
+      '/**',
+      " * Where the step was supposed to leave the browser — replay's expectedUrl",
+      ' * gate. The VERDICT is the shared urlEffectVerdict (src/execution/gates.ts,',
+      ' * embedded): a strict urlMatches passes, a same-shape url with 1–2 differing',
+      ' * literal segments is treated as volatile (warned, continued), anything else',
+      ' * stops. Only the WAIT is this file\'s own: the recorded url may still be on',
+      ' * its way (an SPA sign-in answers the click, then routes a moment later), so',
+      ' * a strict match is given URL_WAIT_MS on the navigation itself before the',
+      ' * verdict is asked once, of wherever the browser then is.',
+      ' */',
+      'async function urlEffect(page: Page, pattern: string, p: Record<string, string>, where: string): Promise<void> {',
+      '  await page.waitForURL((url) => urlMatches(pattern, url.toString(), p), { timeout: URL_WAIT_MS }).catch(() => {});',
+      '  const verdict = urlEffectVerdict(pattern, page.url(), p, where);',
+      '  for (const line of verdict.warnings) logWarning(line);',
+      '  if (verdict.stop) throw new Error(verdict.stop);',
+      '}',
+    ],
+  },
+  {
+    token: 'settledAlerts(',
+    source: [
+      '/**',
+      ' * The alert observation a step is judged by, taken where the daemon takes',
+      " * its diff: after the action, once the DOM has settled (tools.ts",
+      ' * settledSignature), and before any url wait — a toast that auto-dismisses',
+      " * inside verify's url window is seen by both runners or by neither.",
+      ' */',
+      'async function settledAlerts(page: Page): Promise<string[] | null> {',
+      '  await settle(page);',
+      '  return liveAlerts(page);',
+      '}',
+    ],
+  },
+  {
+    token: 'alertGate(',
+    source: [
+      '/**',
+      " * The live-region alerts a step raised, judged by the shared alertVerdict",
+      ' * (src/execution/gates.ts): an alert the recording never saw stops a',
+      ' * state-changing step (the app talking back — a rejection toast that leaves',
+      ' * the page superficially intact); a recorded-but-missing one only warns.',
+      ' * Both observations are taken by the step lifecycle — `before` in prepare,',
+      ' * `after` in settle, right after the action has settled and BEFORE the url',
+      " * wait in verify, where the daemon takes its diff (a toast that auto-dismisses",
+      ' * during a 5s url wait must not be missed) — and a page that could not be',
+      ' * read is handed over as unobserved, never as "no alert".',
+      ' */',
+      'function alertGate(before: string[], after: string[] | null, ctx: { where: string; isRead: boolean; expectedContains?: string; params: Record<string, string> }): void {',
+      '  const verdict = alertVerdict(before, after, ctx);',
+      '  for (const line of verdict.warnings) logWarning(line);',
+      '  if (verdict.stop) throw new Error(verdict.stop);',
+      '}',
+    ],
+  },
+  {
+    token: 'await preconditionGate(',
+    source: [
+      '/**',
+      " * Where a segment starts — replay's start-of-segment rule, through the shared",
+      ' * preconditionVerdict (src/execution/gates.ts): a strict url match passes, a',
+      ' * same-shape url with 1–2 differing segments proceeds with a warning when the',
+      ' * page structure agrees, anything else refuses before the first step acts.',
+      " * `similarity` is what replay's adapter passes: where the recording kept a",
+      ' * page fingerprint, the call site measures the live page with the shared',
+      ' * fingerprintPage and hands over the cosine of recorded and live — null when the page',
+      " * could not be read, exactly as replay; null where the recording kept none",
+      " * (the url alone decides); 'unmeasured' only for a segment of a file",
+      ' * compiled before the vector travelled, which refuses a soft match it cannot',
+      ' * measure. `url` is read at the call site BEFORE `similarity` is measured',
+      ' * (arguments evaluate left to right), as replay reads startUrl before it',
+      ' * fingerprints: both describe the page as the segment found it, not where a',
+      ' * navigation in flight landed during the measurement. Async so the call site',
+      ' * must await it: a gate that could be left un-awaited is one that can',
+      ' * silently become a no-op.',
+      ' */',
+      "async function preconditionGate(pattern: string, url: string, p: Record<string, string>, where: string, similarity: number | null | 'unmeasured'): Promise<void> {",
+      '  const verdict = preconditionVerdict(pattern, url, p, similarity);',
+      '  for (const line of verdict.warnings) logWarning(`${where}: ${line}`);',
+      '  if (verdict.refuse) throw new Error(`${where}: ${verdict.refuse} — nothing of this segment has run`);',
+      '}',
+    ],
+  },
+  {
+    token: 'recordedFingerprint(',
+    source: [
+      '/**',
+      " * The structural page fingerprint a segment recorded, read from FLOW — the",
+      ' * source of truth, so the vector is carried once. A segment the emitter',
+      ' * asked this of always has one; its absence means FLOW was edited by hand,',
+      ' * and the gate fails closed rather than soft-match on the url alone.',
+      ' */',
+      'function recordedFingerprint(stepId: string, segmentId: string): number[] {',
+      '  const steps = FLOW.steps as unknown as readonly { id: string; segments: readonly { id: string; preconditions: { fingerprint?: number[] } }[] }[];',
+      '  const recorded = steps.find((s) => s.id === stepId)?.segments.find((g) => g.id === segmentId)?.preconditions.fingerprint;',
+      '  if (!recorded) throw new Error(`${stepId} ${segmentId}: FLOW carries no recorded page fingerprint for this segment (the file was edited) — recompile it with sitelooper`);',
+      '  return recorded;',
       '}',
     ],
   },
   {
     token: 'urlPartsWhen(',
     source: [
-      `const URL_WAIT_MS = ${URL_WAIT_MS};`,
       '/**',
       ' * The url parts a step mints, read AFTER the navigation it started has landed.',
       ' *',
@@ -312,14 +363,18 @@ const HELPERS: { token: string; source: string[] }[] = [
       ' * while its neighbour is still missing. The step is not where it was',
       ' * recorded until every part is there.',
       ' *',
-      ' * A spec has no settleDom, so it polls on `pick`\'s cadence within the window',
+      ' * A spec has no settleDom, so it polls on the shared resolve cadence',
+      ' * (RESOLVE_POLL_MS) within the window',
       ' * replay effectively allows a url (URL_WAIT_MS), and takes one last reading',
       ' * at the deadline: a step whose url genuinely does not change (the parts were',
       ' * already there) must still bind what is there rather than hang or throw.',
+      ' *',
+      ' * The parts themselves come from the shared `urlPart` (src/execution/url.ts),',
+      " * the daemon's own labelling; a part the url does not carry is undefined.",
       ' */',
-      "async function urlPartsWhen(page: Page, labels: string[], urlBefore = ''): Promise<string[]> {",
+      "async function urlPartsWhen(page: Page, labels: string[], urlBefore = ''): Promise<(string | undefined)[]> {",
       '  const read = (url: string) => labels.map((label) => urlPart(url, label));',
-      '  for (let waited = 0; waited < URL_WAIT_MS; waited += PICK_POLL_MS) {',
+      '  for (let waited = 0; waited < URL_WAIT_MS; waited += RESOLVE_POLL_MS) {',
       '    const url = page.url();',
       '    const values = read(url);',
       '    if (url !== urlBefore && values.every(Boolean)) {',
@@ -336,7 +391,7 @@ const HELPERS: { token: string; source: string[] }[] = [
       '      }',
       '      return read(page.url());',
       '    }',
-      '    await page.waitForTimeout(PICK_POLL_MS);',
+      '    await page.waitForTimeout(RESOLVE_POLL_MS);',
       '  }',
       '  return read(page.url());',
       '}',
@@ -348,135 +403,39 @@ const HELPERS: { token: string; source: string[] }[] = [
       '/** One part, on the same terms. `urlBefore` is omitted where no action of this step',
       "  * moved the page: then the wait is simply for the part to be there at all, which is",
       '  * what the flow runner does before it publishes a step\'s url outputs (consumedUrlOutputs). */',
-      "async function urlPartWhen(page: Page, label: string, urlBefore = ''): Promise<string> {",
+      "async function urlPartWhen(page: Page, label: string, urlBefore = ''): Promise<string | undefined> {",
       '  return (await urlPartsWhen(page, [label], urlBefore))[0];',
       '}',
     ],
   },
   {
-    token: 'hashState(',
+    token: 'bindPart(',
     source: [
       '/**',
-      ' * A query-shaped hash fragment (`#action=1&cids=2`, which is odoo) as its',
-      ' * key/value state, or null when the fragment is a route (`#/orders/7`) or',
-      ' * absent. Mirrors urlShapeOf in src/skills/compile.ts, decoding included.',
+      " * A derived value, bound as replay binds it: only when the url carries the",
+      ' * part. Left unset, the `{{dN}}` marker stays literal wherever it is filled,',
+      " * which urlDiff reads as a wildcard and a locator as text no page shows.",
       ' */',
-      'function hashState(href: string): Map<string, string> | null {',
-      '  let u: URL;',
-      '  try {',
-      '    u = new URL(href);',
-      '  } catch {',
-      '    return null;',
-      '  }',
-      "  const body = u.hash.length > 1 ? u.hash.slice(1).split('?')[0] : '';",
-      "  if (!body || body.startsWith('/') || !body.includes('=')) return null;",
-      '  const out = new Map<string, string>();',
-      "  for (const pair of body.split('&').filter(Boolean)) {",
-      "    const eq = pair.indexOf('=');",
-      '    const k = eq < 0 ? pair : pair.slice(0, eq);',
-      "    let v = eq < 0 ? '' : pair.slice(eq + 1);",
-      '    try {',
-      '      v = decodeURIComponent(v);',
-      '    } catch {',
-      '      // an invalid escape is data too: keep it raw',
-      '    }',
-      '    if (!out.has(k)) out.set(k, v);',
-      '  }',
-      '  return out;',
-      '}',
-    ],
-  },
-  {
-    token: 'hashMatch(',
-    source: [
-      '/**',
-      ' * A url expectation whose pattern carries a query-shaped hash, checked the',
-      ' * way replay checks it (urlDiff/urlMatches in src/skills/compile.ts) rather',
-      ' * than as one regex over the whole url.',
-      ' *',
-      ' * A state fragment is application STATE, and state has no ORDER: odoo emits',
-      " * `#action=316&cids=1&menu_id=194&model=sale.order` on one run and",
-      ' * `#action=316&model=sale.order&view_type=list&cids=1&menu_id=194` on the',
-      ' * next, and a regex fails on the reordering alone — which is the only thing',
-      " * wrong with fwod34's second cloud run. So: every pair the recording named",
-      ' * must be present with the same value, extra live pairs are fine (state',
-      ' * accumulates), and order means nothing. A `null` value is a `:id`/`:var`',
-      ' * wildcard — app-minted state, which urlDiff lets be anything or absent.',
-      ' *',
-      ' * The head (origin + path) keeps the regex form: a path IS ordered.',
-      ' */',
-      'function hashMatch(url: URL, head: RegExp, want: [string, string | null][]): boolean {',
-      '  if (!head.test(url.origin + url.pathname)) return false;',
-      '  const state = hashState(url.href);',
-      '  if (!state) return false;',
-      '  return want.every(([k, v]) => v === null || state.get(k) === v);',
+      'function bindPart(p: Record<string, string>, name: string, value: string | undefined): void {',
+      '  if (value !== undefined) p[name] = value;',
       '}',
     ],
   },
   {
     token: 'await click(',
     source: [
-      '/**',
-      " * A click that lands, mirroring replay's robustClick (src/agent/tools.ts)",
-      ' * tier for tier, in the same order. A plain `locator.click()` waits for',
-      ' * actionability and NOTHING else, so a control an overlay covers — or one',
-      ' * the app re-mounts between frames — burns the whole test timeout on a',
-      ' * single attempt: grafana\'s `toggle-viz-picker` resolved fine and then sat',
-      ' * behind an `<svg>` in a `data-overlay-container` for 60s.',
-      ' *',
-      ' *  1. Playwright\'s own click, actionability checks and all. What a healthy',
-      ' *     app answers on, and the only tier that proves the control was really',
-      ' *     clickable the way a user would find it.',
-      ' *  2. Scrolled into view and FORCED past the checks. This is the overlay',
-      ' *     tier: a decorative layer that intercepts pointer events, or a sticky',
-      ' *     header over the target, is exactly what the checks refuse and what',
-      ' *     the app itself treats as fine.',
-      ' *  3. A synthetic DOM event dispatched at the element. React and friends',
-      " *     hang delegated handlers off the document, so they see this even when",
-      ' *     the element is not "clickable" by any geometric rule at all.',
-      ' *',
-      ' * Each tier gets its own bounded budget so all three (plus the scroll)',
-      ' * finish well inside one test timeout — replay could afford 10s a tier',
-      ' * because it had turns left afterwards; a spec has one shot.',
-      ' *',
-      ' * A strict-mode violation is rethrown at once, as robustClick does: two',
-      ' * matches is a locator that names the wrong thing, and no tier can fix it —',
-      ' * forcing or dispatching would just act on an arbitrary one of them.',
-      ' * Not mirrored: the re-render window tier (fireWhenAttached), which needs',
-      " * to poll element handles; tier 3's dispatch covers the same apps.",
-      ' */',
       `const CLICK_TIER_MS = ${CLICK_TIER_MS};`,
       'async function click(loc: Locator, opts: { dbl?: boolean } = {}): Promise<void> {',
-      '  const act = (o: { timeout: number; force?: boolean }) => (opts.dbl ? loc.dblclick(o) : loc.click(o));',
-      '  let firstFailure: unknown;',
-      '  try {',
-      '    return await act({ timeout: CLICK_TIER_MS });',
-      '  } catch (err) {',
-      '    firstFailure = err;',
-      "    if (/strict mode violation/i.test(err instanceof Error ? err.message : String(err))) throw err;",
-      '  }',
-      '  try {',
-      '    await loc.scrollIntoViewIfNeeded({ timeout: CLICK_TIER_MS }).catch(() => {});',
-      '    return await act({ timeout: CLICK_TIER_MS, force: true });',
-      '  } catch {',
-      '    // the overlay is a real one, or the element moved: fall through',
-      '  }',
-      '  try {',
-      '    await loc',
-      '      .first()',
-      '      .evaluate((el: Element, dbl: boolean) => {',
-      "        const fire = (type: string) => el.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, view: window }));",
-      "        fire('click');",
-      '        if (dbl) {',
-      "          fire('click');",
-      "          fire('dblclick');",
-      '        }',
-      '      }, Boolean(opts.dbl));',
-      '  } catch {',
-      '    // Every tier lost. The FIRST failure is the one worth reporting: it says',
-      '    // what a normal click was actually waiting for.',
-      '    throw firstFailure;',
-      '  }',
+      '  await robustClick(loc, { timeout: CLICK_TIER_MS, ...opts });',
+      '}',
+    ],
+  },
+  {
+    token: 'logRecipe(',
+    source: [
+      '/** The words the daemon reports a verified recipe in (its tool result), as a grep-able line. */',
+      'function logRecipe(attempt: RecipeAttempt): void {',
+      '  console.log(`[sitelooper recipe] ${describeRecipeAttempt(attempt)}`);',
       '}',
     ],
   },
@@ -484,148 +443,43 @@ const HELPERS: { token: string; source: string[] }[] = [
     token: 'await fill(',
     source: [
       '/**',
-      ' * A fill the app actually SEES — mirror of daemon/inputs.ts reactSafeFill',
-      " * (which is how replay executes every recorded `fill`): Playwright's fill",
-      ' * fires only `input`, and apps that commit on `change` (Odoo, React',
-      " * controlled inputs) never see a plain fill. Odoo's sp4od run failed",
-      ' * deterministically on exactly that: `02-create s_c99d6c/6` filled a',
-      ' * quantity of 3, the field never committed, and the recorded row',
-      ' * ("20% £ 36.00") that the next expectation waits for never appeared.',
-      ' *',
-      ' * Same waits and the same event order as the daemon: visible, scrolled',
-      ' * into view, clicked for focus (both best-effort), then the NATIVE',
-      " * prototype value setter — the one React's value tracker cannot see",
-      ' * through — clear-then-set (a number input otherwise appends), an `input`',
-      ' * event after each set and a `change` after the last. An element with no',
-      ' * value property or no prototype setter (contenteditable, a custom',
-      " * widget) falls back to Playwright's own fill, exactly as the daemon does.",
-      ' *',
-      ' * But reactSafeFill is only the SECOND half of what replay does. The',
-      " * daemon's `case 'fill'` (src/agent/tools.ts) asks `tryRecipe(page, target,",
-      " * 'set-value', value)` FIRST (src/skills/components.ts), and only falls back",
-      ' * to reactSafeFill when no widget was recognised or the recipe could not',
-      ' * verify its own effect. That first half is what a keyboard-driven editor',
-      ' * needs: monaco has no value property to set — its `<textarea>` is an input',
-      ' * sink, and the text you see is a rendered `.view-lines` div — so the native',
-      ' * setter writes into a box the editor never reads. Local grafana run',
-      ' * `03-add s_e4d3e5/6` did exactly that: no error, and the saved text panel',
-      " * kept grafana's default markdown, so the objective failed on a step that",
-      ' * reported success. So the ladder is mirrored here too, recipe first.',
+      " * A recorded `fill`, executed as tools.ts's `case 'fill'` executes it: the",
+      ' * shared ladder `fillWithRecipe` (src/execution/recipes.ts, embedded above)',
+      ' * — the component recipe first, verified against the widget\'s own read,',
+      ' * and the native reactSafeFill only when nothing was verified. Both halves',
+      ' * matter. A keyboard-driven editor has no value property to set (monaco\'s',
+      ' * `<textarea>` is an input sink and the text you see is a rendered',
+      ' * `.view-lines` div), so a native setter writes into a box the editor never',
+      ' * reads — grafana `03-add s_e4d3e5/6` reported success on exactly that and',
+      ' * the saved panel kept its default markdown. And a plain input that commits',
+      ' * on `change` (Odoo, React controlled inputs) never sees Playwright\'s own',
+      ' * fill, which fires only `input` — odoo sp4od filled a quantity the form',
+      ' * never committed. The recipes themselves are the RECIPES snapshot: what the',
+      ' * daemon\'s component store would have chosen when this file was compiled.',
+      ' * No visibility wait ahead of recognition, as in the daemon: a recognised',
+      " * widget's recipe clicks its root (an input sink inside it may be 0x0), and",
+      " * the native half waits for the field itself (reactSafeFill's own 10s).",
       ' */',
-      `const FILL_WAIT_MS = ${FILL_WAIT_MS};`,
-      `const FILL_FOCUS_MS = ${FILL_FOCUS_MS};`,
-      `const EDITOR_SETTLE_MS = ${EDITOR_SETTLE_MS};`,
-      `const EDITOR_BLUR_SETTLE_MS = ${EDITOR_BLUR_SETTLE_MS};`,
-      '/**',
-      ' * The widget families whose set-value recipe a fill goes through, in the',
-      ' * FAMILIES order of src/skills/components.ts (most specific first —',
-      " * CodeMirror's .cm-content IS contenteditable, and monaco embeds a",
-      ' * textarea), with each recipe\'s click/blur/verify targets as the seeds',
-      ' * name them. `aria-combobox` is deliberately absent: it carries a',
-      ' * select-option recipe only, and never a set-value one.',
-      ' *',
-      ' * `up` is the same `closest(root)` walk expressed as a locator, so the',
-      ' * root can be CLICKED and READ rather than merely detected; the class',
-      ' * test is token-wise (`" monaco-editor "`), because `contains(@class,',
-      ' * "monaco-editor")` would also match `monaco-editor-background`.',
-      ' */',
-      'const EDITORS: { root: string; up: string; click?: string; blur?: string; read?: string }[] = [',
-      '  {',
-      "    root: '.monaco-editor',",
-      '    up: \'xpath=ancestor-or-self::*[contains(concat(" ", normalize-space(@class), " "), " monaco-editor ")]\',',
-      "    blur: 'textarea',",
-      "    read: '.view-lines',",
-      '  },',
-      '  {',
-      "    root: '.cm-editor',",
-      '    up: \'xpath=ancestor-or-self::*[contains(concat(" ", normalize-space(@class), " "), " cm-editor ")]\',',
-      "    click: '.cm-content',",
-      "    blur: '.cm-content',",
-      "    read: '.cm-content',",
-      '  },',
-      '  {',
-      "    root: '.ProseMirror',",
-      '    up: \'xpath=ancestor-or-self::*[contains(concat(" ", normalize-space(@class), " "), " ProseMirror ")]\',',
-      '  },',
-      '  {',
-      '    root: \'[contenteditable="true"]\',',
-      '    up: \'xpath=ancestor-or-self::*[@contenteditable="true"]\',',
-      '  },',
-      '];',
-      '/**',
-      ' * The set-value recipe, run with Playwright primitives — a transcription of',
-      ' * `editorSetValue` in src/skills/components.ts (click, ControlOrMeta+a,',
-      ' * insertText, settle 400, Escape, blur, settle 200) followed by the',
-      ' * verification read `verifyRecipe` makes: the family\'s verifyRead node must',
-      ' * re-observe the payload, whitespace-squashed (monaco renders spaces as',
-      ' * NBSP and rewraps lines). True only when it did — a recipe that cannot',
-      ' * prove its own effect is a failure, and the caller falls back, exactly as',
-      ' * `tryRecipe` does.',
-      ' */',
-      'async function editorSetValue(loc: Locator, value: string): Promise<boolean> {',
-      '  const which = await loc',
-      '    .evaluate((el: Element, roots: string[]) => roots.findIndex((sel) => Boolean(el.closest(sel))), EDITORS.map((e) => e.root))',
-      '    .catch(() => -1);',
-      '  if (which < 0) return false;',
-      '  const ed = EDITORS[which];',
-      '  const page = loc.page();',
-      '  const root = loc.locator(ed.up).last(); // ancestor-or-self is document order: nearest is last',
-      '  const within = (sel?: string) => (sel ? root.locator(sel).first() : root);',
-      '  try {',
-      '    await within(ed.click).click({ timeout: FILL_FOCUS_MS });',
-      "    await page.keyboard.press('ControlOrMeta+a');",
-      '    await page.keyboard.insertText(value);',
-      '    await page.waitForTimeout(EDITOR_SETTLE_MS);',
-      "    await page.keyboard.press('Escape');",
-      '    // A blur target the recipe names but the widget does not have is simply',
-      '    // skipped (stepHandle returns null, and the daemon blurs nothing).',
-      '    await within(ed.blur)',
-      '      .evaluate((el: Element) => (el as HTMLElement).blur?.())',
-      '      .catch(() => {});',
-      '    await page.waitForTimeout(EDITOR_BLUR_SETTLE_MS);',
-      '  } catch {',
-      '    return false; // a step that could not run at all: fall back',
-      '  }',
-      '  const seen = await within(ed.read)',
-      '    .evaluate((el: Element) => {',
-      '      const v = (el as HTMLInputElement).value;',
-      "      return typeof v === 'string' ? v : ((el as HTMLElement).innerText ?? el.textContent ?? '');",
-      '    })',
-      '    .catch(() => null);',
-      '  if (seen === null) return false;',
-      "  const squash = (s: string) => s.replace(/\\u00a0/g, ' ').replace(/\\s+/g, ' ').trim();",
-      '  return !value || squash(seen).includes(squash(value));',
-      '}',
       'async function fill(loc: Locator, value: string): Promise<void> {',
-      "  await loc.waitFor({ state: 'visible', timeout: FILL_WAIT_MS });",
-      '  await loc.scrollIntoViewIfNeeded().catch(() => {});',
-      '  // The recipe half of the ladder, ahead of the native setter exactly as',
-      "  // tools.ts puts tryRecipe ahead of reactSafeFill. Verified, or nothing.",
-      '  if (await editorSetValue(loc, value)) return;',
-      '  await loc.click({ timeout: FILL_FOCUS_MS }).catch(() => {}); // focus; some widgets need it',
-      '  const handled = await loc.evaluate((el: Element, val: string) => {',
-      '    const input = el as HTMLInputElement | HTMLTextAreaElement;',
-      "    if (!('value' in input)) return false;",
-      '    const proto =',
-      '      input instanceof HTMLTextAreaElement',
-      '        ? HTMLTextAreaElement.prototype',
-      '        : input instanceof HTMLInputElement',
-      '          ? HTMLInputElement.prototype',
-      '          : null;',
-      '    if (!proto) return false;',
-      "    const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;",
-      '    if (!setter) return false;',
-      "    setter.call(input, ''); // clear-then-set: number inputs otherwise append",
-      "    input.dispatchEvent(new Event('input', { bubbles: true }));",
-      '    setter.call(input, val);',
-      "    input.dispatchEvent(new Event('input', { bubbles: true }));",
-      "    input.dispatchEvent(new Event('change', { bubbles: true }));",
-      '    return true;',
-      '  }, value);',
-      '  if (!handled) {',
-      '    // contenteditable or non-standard widget — fall back to Playwright fill',
-      '    await loc.fill(value);',
-      '  }',
+      '  const attempt = await fillWithRecipe(loc.page(), loc, value, recipeBook);',
+      '  if (attempt) logRecipe(attempt);',
+      '}',
+    ],
+  },
+  {
+    token: 'await type(',
+    source: [
+      '/**',
+      " * A recorded `type`, as tools.ts's `case 'type'`: the same set-value recipe",
+      ' * ladder a fill climbs (an editor or an aria-combobox driven by typing in',
+      ' * the recording is driven by its recipe here too), else pressSequentially',
+      " * on the same target with the daemon's timeout and per-key delay.",
+      ' */',
+      `const TYPE_TIMEOUT_MS = ${TYPE_TIMEOUT_MS};`,
+      `const TYPE_DELAY_MS = ${TYPE_DELAY_MS};`,
+      'async function type(loc: Locator, text: string, opts: { delay?: number } = {}): Promise<void> {',
+      '  const attempt = await typeWithRecipe(loc.page(), loc, text, recipeBook, { timeout: TYPE_TIMEOUT_MS, delay: opts.delay ?? TYPE_DELAY_MS });',
+      '  if (attempt) logRecipe(attempt);',
       '}',
     ],
   },
@@ -633,75 +487,80 @@ const HELPERS: { token: string; source: string[] }[] = [
     token: 'await select(',
     source: [
       '/**',
-      ' * An option chosen the way the daemon chooses it — mirror of',
-      ' * daemon/inputs.ts reactSafeSelect, which is how replay executes every',
-      ' * recorded `select`.',
-      ' *',
-      ' * The LABEL is what the procedure means ("the project I just created");',
-      " * the VALUE is whatever the app keys that option by, and apps mint those",
-      ' * per record as often as not — fwat3 03-add selected a project by its id,',
-      ' * and both replays timed out looking for an id that run never minted. So',
-      ' * the recording carries the visible label as `option` and the value it saw',
-      ' * only as `optionValue`, a last resort.',
-      ' *',
-      ' * Same order as the daemon, and it LOOKS before it waits: an option that',
-      ' * is present right now is taken at once (by label, else by value, else by',
-      ' * the recorded fallback value), so a stale fallback is never paid for with',
-      " * the label matcher's full timeout. Only when nothing matches yet does the",
-      ' * label form wait for options that may still be loading, and a plain',
-      ' * `selectOption(label)` — value/index matching — is the final attempt.',
+      " * A recorded `select`, as tools.ts's `case 'select'`: the select-option",
+      ' * recipe for a recognized widget (a portal-rendered aria-combobox), else the',
+      ' * native reactSafeSelect by label, with the recorded `optionValue` as the',
+      ' * last resort replay itself keeps.',
       ' */',
       'async function select(loc: Locator, label: string, fallbackValue?: string): Promise<void> {',
-      '  const present = await loc',
-      '    .evaluate(',
-      '      (el: Element, [v, f]: [string, string]) => {',
-      '        if (!(el instanceof HTMLSelectElement)) return null;',
-      '        const opts = Array.from(el.options);',
-      "        if (opts.some((o) => o.label.trim() === v)) return 'label';",
-      "        if (opts.some((o) => o.value === v)) return 'value';",
-      "        if (f && opts.some((o) => o.value === f)) return 'fallback';",
-      '        return null;',
-      '      },',
-      "      [label, fallbackValue ?? ''] as [string, string],",
-      '    )',
-      '    .catch(() => null);',
-      "  if (present === 'fallback') {",
-      '    await loc.selectOption(fallbackValue!);',
-      '    return;',
-      '  }',
-      "  if (present === 'value') {",
-      '    await loc.selectOption(label);',
-      '    return;',
-      '  }',
-      '  const result = await loc.selectOption({ label }).catch(() => null);',
-      '  if (result) return;',
-      '  await loc.selectOption(label); // fall back to value/index matching',
+      '  const { attempt } = await selectWithRecipe(loc.page(), loc, label, recipeBook, fallbackValue);',
+      '  if (attempt) logRecipe(attempt);',
       '}',
     ],
   },
   {
     token: 'await hover(',
     source: [
-      '/**',
-      ' * A hover the widget actually notices — mirror of daemon/inputs.ts',
-      ' * syntheticHover, which is how replay executes every recorded `hover`.',
-      ' *',
-      " * Playwright's own hover moves the mouse, and CSS `:hover` follows; an",
-      ' * autocomplete or listbox that opens on `mouseenter` (or a menu that keys',
-      ' * off `pointerover`) may never see an event at all when the element is',
-      ' * covered, or when the pointer was already inside it. So the real move is',
-      ' * best-effort, and the events are then dispatched at the element itself.',
-      ' * `mouseenter` does not bubble — that is the one difference between it and',
-      ' * its neighbours, and a bubbling `mouseenter` would fire delegated',
-      ' * handlers no real pointer ever fires.',
-      ' */',
       'async function hover(loc: Locator): Promise<void> {',
-      '  await loc.hover().catch(() => {});',
-      '  await loc.evaluate((el: Element) => {',
-      "    for (const type of ['pointerover', 'mouseover', 'mouseenter', 'mousemove']) {",
-      "      el.dispatchEvent(new MouseEvent(type, { bubbles: type !== 'mouseenter' }));",
-      '    }',
-      '  });',
+      '  await syntheticHover(loc);',
+      '}',
+    ],
+  },
+  {
+    token: 'resolveTarget(',
+    source: [
+      '/**',
+      " * One recorded chain resolved against the page — the artifact's adapter to",
+      ' * the shared `resolveCandidates` (src/execution/resolve.ts, embedded above),',
+      " * which is replay's `resolveChain` policy itself: the class order, the",
+      ' * point mark, the identity guard, plausibility, the origin guard, ambiguity',
+      ' * and its loop-cursor narrowing, the structural hold and the whole-chain',
+      ' * wait are decided THERE, in both runners. Nothing here reinterprets one.',
+      ' *',
+      ' * What this adds is presentation, exactly what replay adds around its own',
+      ' * call:',
+      ' *  - `where` (`"<stepId> <segmentId>/<stepIndex> target|source"`, baked in',
+      ' *    at each call site) turns a silent fallthrough into telemetry. A win by',
+      ' *    any candidate but the primary (stored index 0) IS drift — the recorded',
+      ' *    locator missed and a later one covered for it — so it is one stable,',
+      ' *    grep-able `[sitelooper drift]` line naming every candidate rejected',
+      " *    ahead of the winner and WHY, in the policy's own words (MissReason).",
+      " *  - `resolved` is the loop-body sink (replay's runOneStep `sink`): what",
+      ' *    this target resolved TO, as `<key>=<winning locator>`, with the cursor',
+      ' *    appended only when ambiguity was narrowed to it. The progress guard',
+      " *    compares one pass's entries with the last.",
+      ' *',
+      " * WHAT THE ARTIFACT STILL CANNOT MIRROR. Retirement (`retired`, replay's",
+      " * evidence-based reordering of a candidate later runs showed volatile):",
+      ' * that evidence lives in the skill store, and an artifact has none, so a',
+      ' * compiled chain is ordered by class and recorded order alone. Everything',
+      ' * else the policy decides is decided here from the same observations.',
+      ' */',
+      'async function resolveTarget(',
+      '  page: Page,',
+      '  candidates: CandidateObservation[],',
+      '  where: string,',
+      '  policy: ResolvePolicy,',
+      '  opts: { drift?: string[]; resolved?: { into: string[]; key: string; check?: () => void } } = {},',
+      '): Promise<Resolution | null> {',
+      '  const hit = await resolveCandidates(page, candidates, policy);',
+      '  if (!hit) return null;',
+      '  const primary = candidates.find((c) => c.index === 0) ?? candidates[0];',
+      '  if (hit.index > 0) {',
+      "    const missed = hit.missed.map((m) => `#${m.index + 1} ${m.reason}`).join(', ');",
+      '    const line =',
+      '      `[sitelooper drift] ${where}: primary ${String(primary.locator)} missed; used #${hit.index + 1} ${String(hit.locator)}` +',
+      "      (missed ? ` (${missed})` : '');",
+      '    console.warn(line);',
+      '    (opts.drift ?? DRIFT).push(line);',
+      '  }',
+      '  if (opts.resolved) {',
+      '    const won = candidates.find((c) => c.index === hit.index) ?? primary;',
+      "    opts.resolved.into.push(`${opts.resolved.key}=${String(won.locator)}${hit.nth !== undefined ? `.nth(${hit.nth})` : ''}`);",
+      '    // the loop progress guard, asked before anything acts on what just resolved',
+      '    opts.resolved.check?.();',
+      '  }',
+      '  return hit;',
       '}',
     ],
   },
@@ -709,101 +568,107 @@ const HELPERS: { token: string; source: string[] }[] = [
     token: 'pick(',
     source: [
       '/**',
-      ' * The first recorded way of naming the control that resolves to exactly ONE',
-      ' * element, tried in the order the recording measured. Not `.or()`: that is a',
-      ' * union, so a fallback matching several elements (a dialog-wide input selector,',
-      ' * say) would make the action a strict-mode violation, where the replay it',
-      ' * mirrors simply skips a candidate that is not unique and tries the next.',
-      ' *',
-      ' * It polls, because a spec has none of the observation turns that used to hide',
-      " * an app rendering a beat late (resolveChain's waitMs). `any` is for the two",
-      ' * places ambiguity is the normal shape: reading across every match, and a loop',
-      ' * body whose per-record locator matches every record.',
-      ' *',
-      ' * `where` (`"<stepId> <segmentId>/<stepIndex> target|source"`, baked in at each',
-      ' * call site) is what turns a silent fallthrough into telemetry: when the',
-      ' * winning candidate is not the primary (index 0), that IS drift — the recorded',
-      ' * locator missed and a later one covered for it — so it is worth one stable,',
-      ' * grep-able line, not a passing test that quietly stopped proving what it did',
-      ' * on the day it was recorded.',
-      ' *',
-      ' * WHICH RESOLVER RULE THIS MIRRORS. replay never resolves a step against a',
-      ' * DOM that is still painting: runOneStep awaits settleDom first, and',
-      " * resolveChain's own comment states the principle: a candidate that missed",
-      ' * while the page was still painting and hits on the next poll is not',
-      ' * volatile — it was early. A spec has no settleDom, and a pass here is not',
-      ' * one instant: every count() is its own round trip, so candidate #1 is',
-      ' * sampled several milliseconds before candidate #2. Measured on the',
-      ' * repair-desk bench (fwrd42, which defers its parts refetch ~500ms BY',
-      " * DESIGN, landing on a poll boundary): the scoped primary",
-      " * `locator('tr', { hasText }).locator('td:nth-of-type(1)')` counted 0 at t,",
-      ' * `getByText` counted 1 at t+3ms, and the',
-      ' * recorded primary counted 1 again 3ms later — a phantom drift on ~40% of',
-      ' * runs, twice taking a purely structural fallback. So a fallback wins only',
-      ' * after everything ahead of it has had a SECOND, later look and still',
-      ' * missed. That is the settleDom guarantee expressed with the only clock a',
-      ' * plain spec has.',
-      ' *',
-      ' * WHAT IT CANNOT MIRROR. Four resolveChain rules need state a Tier 2 file',
-      ' * does not carry, so a candidate that is merely ambiguous (count > 1) is',
-      ' * still skipped here rather than narrowed:',
-      " *  - `ambiguousNth` / the recorded `nth`: emitted as `.nth(n)` when the",
-      ' *    recording stored one, but replay can also invent one per loop pass.',
-      " *  - `plausible()`: needs the recorded bounding box, and the `point`",
-      ' *    candidate that carries it is dropped (a spec cannot find an element by',
-      ' *    where it was).',
-      " *  - the structural `held`/`guess` hold: needs to know which candidate is",
-      ' *    positional rather than named. Mirrored statically instead, and more',
-      ' *    strictly, by the identity `.filter({ hasText })` guards locators.ts',
-      ' *    puts on every non-identity candidate.',
-      " *  - `byEvidence` (retired candidates last): per-candidate replay evidence",
-      ' *    lives in the skill store, not in the spec.',
+      ' * resolveTarget for an ACTION: a chain that resolves nothing is a stop.',
       ' *',
       ' * `note` is passed only at a FLAGGED step (compile found the step itself',
       ' * wrong — a demoted pin, say — see spec/diagnostics.ts). Appended to the',
       ' * throw, it is what stops "none of 3 recorded locators resolved" from',
       ' * reading as app drift when the recording is what needs redoing.',
       ' */',
-      'async function pick(page: Page, candidates: Locator[], where: string, opts: { any?: boolean; drift?: string[] } = {}, note?: string): Promise<Locator> {',
-      '  const enough = (n: number) => (opts.any ? n > 0 : n === 1);',
-      '  const hits = async (i: number) => enough(await candidates[i].count().catch(() => 0));',
-      '  /** The first candidate ahead of `i` that is there after all — see the re-check below. */',
-      '  const ahead = async (i: number) => {',
-      '    for (let j = 0; j < i; j++) if (await hits(j)) return j;',
-      '    return -1;',
-      '  };',
-      '  for (let waited = 0; ; waited += PICK_POLL_MS) {',
-      '    for (let i = 0; i < candidates.length; i++) {',
-      '      if (await hits(i)) {',
-      '        // Confirm the miss before demoting the recorded locator. Each',
-      '        // count() is its own round trip, so one pass samples candidate #1',
-      '        // some milliseconds BEFORE candidate #2 — and an app that paints',
-      '        // in that gap makes the earlier candidate look absent when it was',
-      '        // merely early. Re-sampling everything ahead of the winner gives',
-      '        // them a second, later look, which is the guarantee replay gets',
-      '        // for free by letting the DOM go quiet before it resolves at all.',
-      '        const back = i === 0 ? -1 : await ahead(i);',
-      '        const won = back >= 0 ? back : i;',
-      '        if (won > 0) {',
-      '          const line = `[sitelooper drift] ${where}: primary ${String(candidates[0])} missed; used #${won + 1} ${String(candidates[won])}`;',
-      '          console.warn(line);',
-      '          (opts.drift ?? DRIFT).push(line);',
-      '        }',
-      '        return candidates[won];',
-      '      }',
-      '    }',
-      '    if (waited >= PICK_WAIT_MS) break;',
-      '    await page.waitForTimeout(PICK_POLL_MS);',
-      '  }',
-      '  throw new Error(',
+      'async function pick(',
+      '  page: Page,',
+      '  candidates: CandidateObservation[],',
+      '  where: string,',
+      '  policy: ResolvePolicy,',
+      '  opts: { drift?: string[]; resolved?: { into: string[]; key: string; check?: () => void } } = {},',
+      '  note?: string,',
+      '): Promise<Resolution> {',
+      '  const hit = await resolveTarget(page, candidates, where, policy, opts);',
+      '  if (hit) return hit;',
+      '  throw pickMiss(page, candidates, where, note);',
+      '}',
+    ],
+  },
+  {
+    token: 'pickMiss(',
+    source: [
+      '/** The stop for a chain that resolved nothing, shared by `pick` and `pickOrNavigate`. */',
+      'function pickMiss(page: Page, candidates: CandidateObservation[], where: string, note?: string): Error {',
+      '  return new Error(',
       '    // The url and the recorded step are half the answer whenever a chain',
       '    // misses wholesale: a locator that named the control on the day it was',
       '    // recorded usually misses because the page is not the page the step',
       '    // expected, and the log otherwise says only that nothing resolved.',
       '    `none of ${candidates.length} recorded locators resolved at ${where} (page is at ${page.url()}): ` +',
-      "      candidates.slice(0, 3).map((c) => String(c)).join(' | ') +",
+      "      candidates.slice(0, 3).map((c) => String(c.locator)).join(' | ') +",
       "      (note ? `\\n  ${note}` : ''),",
       '  );',
+      '}',
+    ],
+  },
+  {
+    token: 'pickOrNavigate(',
+    source: [
+      '/**',
+      " * `pick` for a navigation click with a recorded destination — replay's",
+      ' * navigation fallback (runOneStep), through the shared',
+      ' * mayNavigateToDestination/navigateToDestination (src/execution/recover.ts,',
+      ' * embedded). When the chain resolves nothing and the browser is not already',
+      ' * where the click was recorded to land, another visible link to that',
+      ' * destination is clicked, else a fully concrete destination is navigated to',
+      ' * directly. Arrival returns null — the step is done, logged as drift, and',
+      ' * its gates are not asked, as replay returns before them. Otherwise the',
+      " * same stop `pick` throws. Never emitted in a loop body (replay's rule).",
+      ' */',
+      'async function pickOrNavigate(',
+      '  page: Page,',
+      '  candidates: CandidateObservation[],',
+      '  where: string,',
+      '  policy: ResolvePolicy,',
+      '  destPattern: string,',
+      '  p: Record<string, string>,',
+      '  opts: { drift?: string[]; resolved?: { into: string[]; key: string; check?: () => void } } = {},',
+      '  note?: string,',
+      '): Promise<Resolution | null> {',
+      '  const hit = await resolveTarget(page, candidates, where, policy, opts);',
+      '  if (hit) return hit;',
+      "  if (mayNavigateToDestination('click', destPattern, page.url(), p, false)) {",
+      '    const arrived = await navigateToDestination(page, destPattern, p, {',
+      '      click: async (loc) => {',
+      '        await click(loc);',
+      '      },',
+      "      goto: (url) => page.goto(url, { waitUntil: 'load', timeout: GOTO_TIMEOUT_MS }),",
+      '    });',
+      '    if (arrived) {',
+      '      const line = `[sitelooper drift] ${where}: none of ${candidates.length} recorded locators resolved; ${arrived.note}`;',
+      '      console.warn(line);',
+      '      (opts.drift ?? DRIFT).push(line);',
+      '      return null;',
+      '    }',
+      '  }',
+      '  throw pickMiss(page, candidates, where, note);',
+      '}',
+      "/** tools.ts's `goto`: the load event, within 30s. */",
+      'const GOTO_TIMEOUT_MS = 30_000;',
+    ],
+  },
+  {
+    token: 'textHeldOrThrow(',
+    source: [
+      '/**',
+      " * A text wait that failed on the target it resolved — replay's",
+      ' * textHeldElsewhere rung (the shared src/execution/recover.ts, embedded):',
+      ' * when another recorded candidate for the same target already shows the',
+      ' * text, the condition held, and the step goes on to its own gates with a',
+      ' * drift line naming the candidate. Otherwise the wait\'s own error stands.',
+      ' */',
+      'async function textHeldOrThrow(err: unknown, candidates: CandidateObservation[], state: string, text: string, where: string, drift: string[]): Promise<void> {',
+      '  const held = await textHeldElsewhere(candidates, state, text);',
+      '  if (!held) throw err;',
+      "  const message = (err instanceof Error ? err.message : String(err)).split('\\n')[0];",
+      '  const line = `[sitelooper drift] ${where}: ${message}; the text was already showing in fallback #${held.index + 1} ${String(held.locator)}`;',
+      '  console.warn(line);',
+      '  drift.push(line);',
       '}',
     ],
   },
@@ -821,22 +686,36 @@ const HELPERS: { token: string; source: string[] }[] = [
       ' * step after it is exactly as valid as it was. A spec that threw here turned',
       " * a missing observation into a failed test: grafana's `panel_content` read is",
       ' * a freshly applied text panel whose body the verifier goes on to confirm,',
-      ' * and none of the three recorded ways of naming it resolved inside the pick',
-      ' * window — one lost value, and the run reported as a broken procedure.',
+      ' * and none of the three recorded ways of naming it resolved inside the',
+      ' * resolve window — one lost value, and the run reported as a broken procedure.',
       ' *',
-      ' * So: the pick and the read together, and on any failure one grep-able line',
-      ' * and an EMPTY value. Assertions and outputs built from an empty read are',
-      ' * left exactly as they were — the emptiness is the honest report.',
+      ' * So: the resolution and the read together, and on any failure one grep-able',
+      ' * line and an EMPTY value. Assertions and outputs built from an empty read',
+      ' * are left exactly as they were — the emptiness is the honest report.',
+      ' *',
+      ' * Before giving up, one sweep of the page (sweepPage, the shared',
+      ' * src/execution/snapshot.ts): a virtualised page renders below-the-fold',
+      " * content only once it has been scrolled to, and the agent's scrolls were",
+      ' * evals, which never compile. Replay does exactly this on a read that',
+      ' * missed (fwgr23 01-open lost the third panel heading without it), and',
+      ' * resolves once more with no wait, the wait having already been spent.',
       ' */',
       'async function readOptional(',
       '  page: Page,',
-      '  candidates: Locator[],',
+      '  candidates: CandidateObservation[],',
       '  where: string,',
+      '  policy: ResolvePolicy,',
       '  read: (loc: Locator) => Promise<string>,',
-      '  opts: { any?: boolean; drift?: string[] } = {},',
+      '  opts: { drift?: string[]; resolved?: { into: string[]; key: string; check?: () => void } } = {},',
       '): Promise<string> {',
+      '  let hit = await resolveTarget(page, candidates, where, policy, opts);',
+      '  if (!hit && (await sweepPage(page))) hit = await resolveTarget(page, candidates, where, { ...policy, waitMs: 0 }, opts);',
+      '  if (!hit) {',
+      '    console.warn(`[sitelooper skip] ${where}: read target not found — value left empty`);',
+      "    return '';",
+      '  }',
       '  try {',
-      '    return await read(await pick(page, candidates, where, opts));',
+      '    return await read(hit.locator);',
       '  } catch {',
       '    console.warn(`[sitelooper skip] ${where}: read target not found — value left empty`);',
       "    return '';",
@@ -893,181 +772,49 @@ const HELPERS: { token: string; source: string[] }[] = [
     ],
   },
   {
-    token: 'present(page, ',
-    source: [
-      '/**',
-      ' * Is `text` on the page — as TEXT, or as the current VALUE of a field?',
-      ' *',
-      " * WHICH REPLAY RULE THIS MIRRORS. checkIdentity (src/skills/replay.ts) asks",
-      ' * `presentOnPage`, which captures a fresh daemon SNAPSHOT and substring-matches',
-      ' * the marker against its lines. Those lines carry field values —',
-      ' * `textbox "Name": sp5odb Bench Customer` — so on a form in EDIT mode the',
-      " * marker is found in an <input>'s value, where `getByText` can never see it:",
-      ' * the DOM has no text node for it at all. Cloud run sp5odb died on exactly',
-      ' * that, at the very first gate of `03-open`, on an odoo customer form.',
-      ' *',
-      ' * So this is the snapshot line test in the two dialects a spec has: visible',
-      ' * text, or the live value of a visible input/textarea/select (a select',
-      ' * reports its selected option label, which is what the snapshot shows).',
-      ' * Whitespace-normalised and case-insensitive on the value half, because the',
-      " * snapshot's own comparison is whitespace-insensitive and a rendered value",
-      ' * is not always cased as it was typed.',
-      ' *',
-      ' * `whole` is the IDENTITY rule (identityRe): the text must sit at a',
-      ' * letter/digit boundary on both sides, so `fwgr25-n1` is not satisfied by a',
-      ' * page showing `fwgr25-n10`. Identity markers pass it; a GOAL string does',
-      ' * not, because replay asks that half as a plain substring too.',
-      ' */',
-      'async function present(page: Page, text: string, whole = false): Promise<boolean> {',
-      "  const want = text.replace(/\\s+/g, ' ').trim();",
-      '  if (!want) return false;',
-      '  const re = whole ? identityRe(want) : null;',
-      '  if (await page.getByText(re ?? text).first().isVisible().catch(() => false)) return true;',
-      '  return await page',
-      "    .locator('input, textarea, select')",
-      '    .evaluateAll((els, [needle, pattern]: [string, string | null]) => {',
-      "      const norm = (s: string) => s.replace(/\\s+/g, ' ').trim().toLowerCase();",
-      '      const target = norm(needle);',
-      "      const rx = pattern === null ? null : new RegExp(pattern, 'iu');",
-      "      const hit = (s: string) => (rx ? rx.test(s.replace(/\\s+/g, ' ').trim()) : norm(s).includes(target));",
-      '      return els.some((el) => {',
-      '        const e = el as HTMLElement & { checkVisibility?: () => boolean };',
-      "        const shown = typeof e.checkVisibility === 'function' ? e.checkVisibility() : e.getClientRects().length > 0;",
-      '        if (!shown) return false;',
-      "        if (el instanceof HTMLSelectElement) return hit(el.selectedOptions[0]?.textContent ?? '');",
-      '        const v = (el as HTMLInputElement | HTMLTextAreaElement).value;',
-      "        return typeof v === 'string' && hit(v);",
-      '      });',
-      '    }, [want, re ? re.source : null] as [string, string | null])',
-      '    .catch(() => false);',
-      '}',
-    ],
-  },
-  {
-    token: 'identityRe(',
-    source: [
-      '/**',
-      ' * An identity marker as a BOUNDED matcher.',
-      ' *',
-      " * WHICH REPLAY RULE THIS MIRRORS. `identitySource`/`identityRe`",
-      ' * (src/shared/text.ts), which the daemon uses at every identity gate. A url',
-      ' * pattern and a page fingerprint match EVERY record of a template, so the',
-      ' * marker is the only thing that can say this is the right record — and',
-      ' * matched by plain substring it cannot: `fwgr25-n1` is satisfied by a page',
-      ' * showing `fwgr25-n10`, `RD-1015` by `RD-10150`. So neither edge may be',
-      ' * glued to another letter or digit. Punctuation is neither, so',
-      ' * `(INV-2024/17)` still matches while `INV-2024/170` does not.',
-      ' *',
-      " * The boundary class is the daemon's own constant, interpolated at emit",
-      ' * time (as VOLATILE_TOKEN_SHAPE is in spec/locators.ts): a second copy',
-      ' * written out here would be free to drift away from it.',
-      ' *',
-      " * Literal spaces become `\\s+` because Playwright's text engine tests a",
-      ' * RegExp against element text that is NOT whitespace-normalised.',
-      ' */',
-      'function identityRe(text: string): RegExp {',
-      `  const EDGE = ${JSON.stringify(IDENTITY_EDGE)};`,
-      '  const body = text',
-      "    .replace(/\\s+/g, ' ')",
-      '    .trim()',
-      `    .split(${JSON.stringify(WILDCARD)})`,
-      "    .map((part) => escapeRe(part).replace(/ /g, '\\\\s+'))",
-      "    .join('[^\\\\n]*?');",
-      "  return new RegExp(`(?<!${EDGE})${body}(?!${EDGE})`, 'iu');",
-      '}',
-    ],
-  },
-  {
     token: 'satisfied(page, ',
     source: [
       '/**',
       " * Is this step's work already DONE on the record it names?",
       ' *',
-      " * WHICH REPLAY RULE THIS MIRRORS. `goalSatisfied` (src/skills/replay.ts):",
-      ' * two halves, and both are load-bearing. The IDENTITY texts say the page is',
-      ' * showing THIS record — the url and the page shape only ever say "a page of',
-      ' * this template" — and the GOAL texts say that record is already in the',
-      " * state this step exists to produce. Identity alone would skip a step",
-      ' * because the right record is open; a goal alone would skip it because some',
-      ' * OTHER record happens to read "Cancelled".',
+      " * WHICH REPLAY RULE THIS MIRRORS. `goalSatisfied` (src/skills/replay.ts),",
+      ' * asked of the SAME observation in the same dialect: one capture of the',
+      " * page's snapshot lines (capturePageLines — role, name, state and the value",
+      ' * after the colon, so a marker that is only an <input>\'s VALUE on a form in',
+      ' * edit mode is seen, where `getByText` never could: cloud run sp5odb died on',
+      ' * exactly that), read by lineShows. Two halves, and both are load-bearing.',
+      ' * The IDENTITY texts say the page is showing THIS record — the url and the',
+      ' * page shape only ever say "a page of this template" — and take the bounded',
+      ' * rule (`whole`: `fwgr25-n1` is not satisfied by `fwgr25-n10`); the GOAL',
+      ' * texts say that record is already in the state this step exists to',
+      ' * produce, and are a plain substring, exactly as goalSatisfied splits them.',
+      ' * Identity alone would skip a step because the right record is open; a goal',
+      ' * alone would skip it because some OTHER record happens to read "Cancelled".',
       ' *',
-      ' * Conservative by construction: no goal, or no identity, is never satisfied.',
-      ' * Being wrong the other way costs one re-run of a step that had already',
-      ' * happened; being wrong THIS way skips work that never happened at all.',
+      ' * Both halves being on the PAGE is not enough, which is why the record-scope',
+      " * check follows (scopeCheckInPage, the daemon's own, run in the page): on a",
+      ' * list, "Order A" and "Cancelled" are both present when it is order B that',
+      ' * was cancelled. They have to hold of the same record.',
       ' *',
-      ' * Both halves being on the PAGE is not enough, which is why the scope check',
-      ' * follows: on a list, "Order A" and "Cancelled" are both present when it is',
-      " * order B that was cancelled. They have to hold of the same record.",
+      ' * Conservative by construction: no goal, no identity, or a page that cannot',
+      ' * be read is never satisfied. Being wrong the other way costs one re-run of',
+      ' * a step that had already happened; being wrong THIS way skips work that',
+      ' * never happened at all.',
       ' */',
       'async function satisfied(page: Page, identity: string[], goal: string[]): Promise<boolean> {',
       '  if (!identity.length || !goal.length) return false;',
-      '  // Identity takes the bounded rule (which record); the goal is a plain',
-      '  // substring (what state it is in), exactly as goalSatisfied splits them.',
+      '  const lines = await capturePageLines(page);',
+      '  if (!lines) return false;',
       '  for (const want of identity) {',
-      '    if (!(await present(page, want, true))) return false;',
+      '    if (!lineShows(lines, [want], { whole: true })) return false;',
       '  }',
       '  for (const want of goal) {',
-      '    if (!(await present(page, want))) return false;',
+      '    if (!lineShows(lines, [want])) return false;',
       '  }',
-      '  return await sharesScope(page, identity, goal);',
-      '}',
-    ],
-  },
-  {
-    token: 'sharesScope(page, ',
-    source: [
-      '/**',
-      ' * Do the identity and the goal hold of the SAME record?',
-      ' *',
-      " * The record's container is the OUTERMOST ancestor of the goal text that is",
-      ' * one of several siblings of its kind — the row among rows, the card among',
-      ' * cards. Outermost, not nearest: a cell is one of several cells too, and',
-      ' * stopping there would ask whether the identity is inside the status cell,',
-      ' * which it never is. If the goal text has no repeated ancestor at all the',
-      ' * page is not listing records, and page-wide agreement is right there (a',
-      " * detail page's heading and its status field share no small container).",
-      ' *',
-      ' * This mirrors `sharesRecordScope` in src/skills/replay.ts. The two runners',
-      ' * have to answer this the same way: for a while only replay asked, and a',
-      ' * compiled spec would skip a step because some OTHER row had reached the',
-      ' * state this one was supposed to reach.',
-      ' */',
-      'async function sharesScope(page: Page, identity: string[], goal: string[]): Promise<boolean> {',
       '  try {',
-      '    return await page.evaluate(({ identity, goal }) => {',
-      "      const norm = (s: string | null | undefined) => (s ?? '').replace(/\\s+/g, ' ').trim();",
-      '      const textOf = (el: Element) => norm((el as HTMLElement).innerText || el.textContent);',
-      "      const all = Array.from(document.querySelectorAll('*'));",
-      '      const holders: Element[] = [];',
-      '      for (const raw of goal) {',
-      '        const want = norm(raw);',
-      '        if (!want) continue;',
-      '        const hits = all.filter((el) => textOf(el).includes(want));',
-      '        for (const el of hits) if (!hits.some((o) => o !== el && el.contains(o))) holders.push(el);',
-      '      }',
-      '      if (!holders.length) return false;',
-      '      const kindOf = (el: Element) => `${el.tagName}.${norm(el.getAttribute(\'class\'))}`;',
-      '      const oneOfSeveral = (el: Element): boolean => {',
-      '        const parent = el.parentElement;',
-      '        if (!parent || parent === document.body) return false;',
-      '        const kind = kindOf(el);',
-      '        let same = 0;',
-      '        for (const sib of Array.from(parent.children)) if (kindOf(sib) === kind) same++;',
-      '        return same >= 2;',
-      '      };',
-      '      for (const holder of holders) {',
-      '        let node: Element | null = holder;',
-      '        let record: Element | null = null;',
-      '        while (node && node !== document.body) {',
-      '          if (oneOfSeveral(node)) record = node;',
-      '          node = node.parentElement;',
-      '        }',
-      '        if (!record) return true;',
-      '        const inside = textOf(record);',
-      "        if (identity.some((s) => new RegExp(s, 'iu').test(inside))) return true;",
-      '      }',
-      '      return false;',
-      '    }, { identity: identity.map((t) => identityRe(t).source), goal });',
+      '    // The identity half goes in as regex SOURCE: scopeCheckInPage is',
+      '    // serialised into the page, so it cannot call identityRe there.',
+      '    return await page.evaluate(scopeCheckInPage, { identity: identity.map(identitySource), goal });',
       '  } catch {',
       '    // A page that cannot be evaluated has proven nothing. Run the step.',
       '    return false;',
@@ -1076,43 +823,93 @@ const HELPERS: { token: string; source: string[] }[] = [
     ],
   },
   {
-    token: 'escapeRe(',
+    token: 'EXPECT_WAIT_MS',
     source: [
-      '/** A value interpolated into a pattern is DATA: its own metacharacters must not become pattern. */',
-      'function escapeRe(s: string): string {',
-      "  return s.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');",
+      '/**',
+      " * How long a recorded page change has to appear: Playwright's own expect",
+      ' * timeout, the patience the `toBeVisible()` assertion this replaced had.',
+      ' */',
+      'const EXPECT_WAIT_MS = 5_000;',
+    ],
+  },
+  {
+    token: 'await expectChanges(',
+    source: [
+      '/**',
+      " * The step's recorded page changes, judged by the daemon's own effect gate.",
+      ' *',
+      ' * WHICH REPLAY RULE THIS MIRRORS. expectedChangesVerdict (src/execution/',
+      " * expect.ts, embedded below) IS replay's `expectedChanges` gate — the same",
+      ' * function, not a reading of it. The lines carrying this run\'s own values are',
+      ' * HARD, the rest are a plain group; either is looked for first in the lines',
+      ' * this step ADDED (capturePageLines before and after, diffed as the recorder',
+      ' * diffs its signatures) and then on the live page, as WHOLE snapshot lines:',
+      ' * role, name, state, and the value after the colon. An earlier cut of this',
+      ' * file rebuilt each recorded line as a Playwright locator and asserted it',
+      ' * visible, which never looked past the name — `- combobox "Project": {{v1}}`',
+      ' * passed on any visible Project combobox whatever it showed. Polled for',
+      ' * EXPECT_WAIT_MS, the patience that assertion had; the daemon reads its diff',
+      ' * once, so the artifact is the more patient of the two, never the looser.',
+      ' *',
+      ' * The verdict\'s warnings go to stdout as `[sitelooper warn]` lines, a missing',
+      ' * diff leg as `[sitelooper unobserved]`; an absent dialog comes back to the',
+      ' * step body, which remembers it for the steps that were going to act inside.',
+      ' */',
+      'async function expectChanges(',
+      '  page: Page,',
+      '  recorded: string[],',
+      '  p: Record<string, string>,',
+      '  ctx: { tag: string; tool: string; value?: string; positionalResolution: boolean },',
+      '  linesBefore: string[] | null,',
+      '): Promise<ChangeVerdict> {',
+      '  let last: ChangeVerdict = { warnings: [] };',
+      '  await expect',
+      '    .poll(',
+      '      async () => {',
+      '        last = await expectedChangesVerdict(recorded, p, ctx, {',
+      '          added: addedLines(linesBefore, await capturePageLines(page)),',
+      '          live: () => capturePageLines(page),',
+      '        });',
+      '        return last.stop ?? null;',
+      '      },',
+      '      { timeout: EXPECT_WAIT_MS, message: `${ctx.tag}: the recorded page change did not appear` },',
+      '    )',
+      '    .toBeNull();',
+      '  for (const warning of last.warnings) console.warn(`[sitelooper warn] ${warning}`);',
+      '  if (last.unobserved) console.warn(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured after the action`);',
+      '  return last;',
       '}',
     ],
   },
   {
-    token: 'looseText(',
+    token: 'await absentDialogSkip(',
     source: [
       '/**',
-      " * A recorded NAME as a `hasText` matcher that tolerates the daemon's spacing.",
+      ' * Is this step one that was going to act inside a dialog that did not open?',
       ' *',
-      " * WHY. The daemon names an element from `innerText` (describeInPage in",
-      ' * src/daemon/diff.ts), which inserts a line break at every BLOCK boundary,',
-      ' * and `clean()` collapses those to single spaces. Playwright matches',
-      ' * `hasText` against `textContent`, which inserts NOTHING between block',
-      ' * children. For a container named from its contents the two disagree by',
-      ' * exactly the separators — measured against the bench grafana, the refresh',
-      ' * menu (twelve <button> children) is',
-      ' *   innerText   "Off\\nAuto\\n5s\\n10s\\n…"   -> recorded "Off Auto 5s 10s …"',
-      ' *   textContent "OffAuto5s10s…"',
-      ' * so `filter({ hasText: \'Off Auto 5s …\' })` counted 0 while',
-      " * `getByRole('menu')` counted 1. Whitespace NORMALISATION cannot bridge",
-      ' * that, because the whitespace is not there to normalise; that is why cloud',
-      ' * runs sp5gr/sp6gr still died at `04-add s_0c4807/5` on the union that',
-      ' * already carried a hasText half.',
-      ' *',
-      ' * So every space the daemon put between two words becomes `\\s*`: it stood',
-      ' * for real whitespace OR for a block boundary, and the pattern has to accept',
-      ' * both. Everything else is escaped, so the matcher still says exactly what',
-      " * the line said, and `i` mirrors a string hasText's case-insensitivity.",
+      ' * WHICH REPLAY RULE THIS MIRRORS. runOneStep, while a recorded dialog is',
+      ' * absent (see ChangeVerdict.absentDialog): a step whose target cannot be',
+      " * found AND which names one of that dialog's own controls — namesDialogControl,",
+      ' * the shared rule, proven against the dialog\'s recorded subtree — is skipped as',
+      ' * belonging to it. A step that resolves its target, or misses without naming',
+      ' * anything the dialog listed, is the procedure\'s own and runs (and fails) as',
+      ' * such; the caller clears the remembered dialog either way. A minting step is',
+      ' * never skipped, because skipping a mutation cannot be undone: the caller',
+      ' * emits none of this for one. The one look at the candidates here is what',
+      " * replay's resolve window becomes on a page `settle` has already let go quiet.",
       ' */',
-      'function looseText(text: string | RegExp): RegExp {',
-      "  const source = typeof text === 'string' ? escapeRe(text) : text.source;",
-      "  return new RegExp(source.replace(/ +/g, '\\\\s*'), typeof text === 'string' ? 'i' : text.flags);",
+      'async function absentDialogSkip(',
+      '  candidates: Locator[],',
+      '  locators: Record<string, { kind: string; name?: string; text?: string; label?: string; hasText?: string }[]>,',
+      '  dialog: { name: string; lines: string[] },',
+      '  p: Record<string, string>,',
+      '  where: string,',
+      '): Promise<boolean> {',
+      '  const inside = namesDialogControl({ locators }, dialog.lines, p);',
+      '  if (inside === null) return false;',
+      '  for (const candidate of candidates) if ((await candidate.count().catch(() => 0)) > 0) return false;',
+      '  console.log(`[sitelooper skip] ${where}: acts on ${JSON.stringify(inside)}, a control of the dialog ${JSON.stringify(dialog.name)}, which did not open — skipped`);',
+      '  return true;',
       '}',
     ],
   },
@@ -1120,18 +917,77 @@ const HELPERS: { token: string; source: string[] }[] = [
 
 /**
  * The helpers this body needs, in declaration order — transitively, because a
- * helper may use another (`urlPartWhen` reads `urlPart`; both poll on `pick`'s
- * constants). Anything else would emit a file that references a function it
- * does not carry, which is the one defect a generated spec cannot survive.
+ * helper may use another (`urlPartWhen` reads the shared `urlPart`; both poll
+ * on `pick`'s constants). Anything else would emit a file that references a
+ * function it does not carry, which is the one defect a generated spec cannot
+ * survive.
+ *
+ * The shared modules (src/execution/*.ts) come first, each embedded WHOLE and
+ * once, a module counted as used when the body or a chosen helper names one of
+ * its exports. A shared module may import a sibling; executionClosure carries
+ * the sibling too, ahead of it, whether or not anything else names it.
  */
-function neededHelpers(body: string): typeof HELPERS {
-  const chosen = new Set<(typeof HELPERS)[number]>();
+function neededHelpers(body: string, perFlow: { token: string; source: string[] }[] = []): { source: string[] }[] {
+  const modules = executionClosure(EXECUTION_MODULES);
+  const shared = modules.map((m) => ({ tokens: m.tokens, source: m.source, name: m.name }));
+  // Per-flow helpers (the recipe snapshot) sit between the shared modules
+  // they call and the fixed helpers that read them, so a top-level `const`
+  // is declared after what builds it and before what uses it.
+  const available: { tokens: string[]; source: string[]; name?: string }[] = [
+    ...shared,
+    ...perFlow.map((h) => ({ tokens: [h.token], source: h.source })),
+    ...HELPERS.map((h) => ({ tokens: [h.token], source: h.source })),
+  ];
+  const chosen = new Set<(typeof available)[number]>();
   for (;;) {
     const text = [body, ...[...chosen].map((h) => h.source.join('\n'))].join('\n');
-    const added = HELPERS.filter((h) => !chosen.has(h) && text.includes(h.token));
-    if (!added.length) return HELPERS.filter((h) => chosen.has(h));
+    const added = available.filter((h) => !chosen.has(h) && h.tokens.some((token) => text.includes(token)));
+    if (!added.length) break;
     for (const h of added) chosen.add(h);
   }
+  // A chosen module's siblings ride along even when nothing in the body names them.
+  const closure = new Set(executionClosure(shared.filter((m) => chosen.has(m)).map((m) => m.name)).map((m) => m.name));
+  return available.filter((h) => chosen.has(h) || (h.name !== undefined && closure.has(h.name)));
+}
+
+/**
+ * The recipe snapshot the artifact's `fill`/`type`/`select` adapters drive
+ * the shared ladders with — `RecipeSnapshot`, `snapshotBook` and the ladders
+ * themselves are the embedded src/execution/recipes.ts. The snapshot is the
+ * spec's (`SpecFlow.recipes`, what the daemon's ComponentStore would have
+ * chosen when the flow was compiled); a spec compiled without a store carries
+ * the shipped seeds, which is what a fresh install's store holds too.
+ * Nothing about a family or a step list is restated here: the recognition
+ * set and the seed procedures travel inside the module.
+ */
+function recipesHelper(spec: SpecFlow): { token: string; source: string[] } {
+  const snapshot = spec.recipes ?? snapshotRecipes(seedRecipes()).recipes;
+  return {
+    token: 'recipeBook',
+    source: [
+      '/**',
+      ' * The component recipes this file drives fill/type/select through: one',
+      " * procedure per (family, intent), the daemon's own choice at compile time.",
+      ' * Compile-time state — the daemon keeps learning and demoting; this file',
+      ' * runs what it was given. Recompile to refresh it.',
+      ' */',
+      `const RECIPES: RecipeSnapshot = ${JSON.stringify(snapshot)};`,
+      'const recipeBook = snapshotBook(RECIPES);',
+    ],
+  };
+}
+
+/**
+ * The FLOW literal: `JSON.stringify(spec, null, 2)`, except that a segment's
+ * page fingerprint — FINGERPRINT_DIMS numbers — is written on ONE line rather
+ * than one line per number. Still JSON (lift parses it as such), and nothing
+ * but whitespace differs, so the IR it encodes is the same.
+ */
+function flowLiteral(spec: SpecFlow): string {
+  return JSON.stringify(spec, null, 2).replace(
+    /("fingerprint": )\[\n([-+.eE0-9,\s]*?)\n\s*\]/g,
+    (_all, head: string, numbers: string) => `${head}[${numbers.split(',').map((n) => n.trim()).join(',')}]`,
+  );
 }
 
 /** Emission state shared by every step of one flow step's body. */
@@ -1148,22 +1004,28 @@ interface Ctx {
    */
   loopCursor?: string;
   warnings: string[];
+  /**
+   * Problems found while emitting, as typed diagnostics (spec/diagnostics.ts)
+   * rather than only prose: a capability the artifact cannot carry is reported
+   * by every surface in the same shape, and the compile caller gets it in
+   * `--json` instead of having to read a comment out of the generated file.
+   */
+  diagnostics: Diagnostic[];
   downloads: number;
   /** Resolved-target locals emitted so far, so each names its own. */
   picks: number;
   /** The segment and within-segment step index currently emitting — for `@step` and `pick`'s `where`. */
   segmentId: string;
   stepIndex: number;
-  /**
-   * The url pattern already asserted, so an SPA whose every step records the
-   * same pattern is asserted once rather than twenty times. The assertion
-   * carries information only where the pattern CHANGES; repeated, it is noise
-   * a reviewer has to read past. Reset at each segment, which is where the
-   * page template can change under the procedure.
-   */
-  lastUrl: string | null;
   /** Hoisted loop guards, so each loop names its own. */
   loops: number;
+  /**
+   * Inside a folded loop: the array the body's resolutions are recorded in,
+   * for the loop's progress guard — replay's `sink` (runOneStep). Every
+   * target of every body step lands here as `<key>=<winning candidate>`, so a
+   * pass that resolved the same elements as the last one reads the same.
+   */
+  loopSink?: string;
   /** Pre-action url captures emitted so far, so each minting step names its own. */
   urls: number;
   /** Batched derived-value reads emitted so far, so each names its own local. */
@@ -1174,339 +1036,155 @@ interface Ctx {
    * fail: the `pick` throw, and a single-candidate action's rethrow.
    */
   note?: string;
+  /**
+   * The segment's KNOWN slots (SkillParam.known): the values a caller vouched
+   * for, which are the only ones that can NAME the record a step acts on.
+   * The identity guard is rendered from these, as replay's identityOfPrimary
+   * restricts itself to `skill.params[slot].known`.
+   */
+  known: Set<string>;
+  /**
+   * The step-scoped variable the resolution reports positional resolution
+   * into, when the step carries recorded changes for the effect gate to
+   * sharpen on — replay's own per-step `positionalResolution`.
+   */
+  positional?: string;
+  /**
+   * An earlier step of this body may leave a recorded dialog absent (see
+   * ChangeVerdict.absentDialog), so every later step consults the body's
+   * `absentDialog` before it resolves — exactly the state runOneStep keeps.
+   */
+  dialogAbsence?: boolean;
+  /**
+   * The current segment's echo ledger (see echoLines): the local that
+   * remembers what this segment typed, selected or named, as replay keeps one
+   * `interacted` set per replayed segment. `echoUsed` says a line named it.
+   */
+  echoes?: string;
+  echoUsed?: boolean;
+  /** Segments emitted so far in this body, so each ledger names its own local. */
+  segments?: number;
 }
 
 const src = (text: string) => stringSource(text, { slot: slotAsParam });
 const match = (text: string) => matcherSource(text, { slot: slotAsParam });
 
 /**
- * A url pattern as a RegExp source for `toHaveURL`, mirroring `urlMatches`:
- * `:id`/`:var` stand for any one segment, a slot for this run's own value
- * (escaped — it is data), the query is not part of the identity of a page
- * and the hash route is. Null when the pattern is not a url at all.
+ * The recorded page changes a step is judged by, after the compile-time
+ * filter both runners apply (TRANSIENT_LINE); empty when the step has none
+ * or is a read (replay's expectedChanges runs on reads too, but the compiler
+ * never attaches an expectation to one — the exclusion is moot and kept).
  */
-function urlRegexSource(pattern: string): string | null {
-  if (!/^[a-z]+:\/\//i.test(pattern)) return null;
-  const hashAt = pattern.indexOf('#');
-  const head = hashAt < 0 ? pattern : pattern.slice(0, hashAt);
-  const hash = hashAt < 0 ? '' : pattern.slice(hashAt);
-  const queryAt = head.indexOf('?');
-  const headSource = urlPatternBody(queryAt < 0 ? head : head.slice(0, queryAt));
-  // The query is dropped from the pattern, so the live url may still carry
-  // one: allow it exactly where it would sit, before the hash route.
-  return hash ? `^${headSource}(?:\\\\?[^#]*)?${urlPatternBody(hash)}$` : `^${headSource}(?:[?#].*)?$`;
-}
-
-/** One piece of a url pattern as regex source: `:id`/`:var` any segment, a slot this run's own value. */
-function urlPatternBody(piece: string): string {
-  let out = '';
-  let last = 0;
-  const token = /\{\{([vd]\d+)\}\}|:id\b|:var\b/g;
-  for (const m of piece.matchAll(token)) {
-    const at = m.index ?? 0;
-    out += templateSafe(escapeRe(piece.slice(last, at)));
-    out += m[1] ? '${escapeRe(p.' + m[1] + ')}' : '[^/]+';
-    last = at + m[0].length;
-  }
-  return out + templateSafe(escapeRe(piece.slice(last)));
-}
-
-const safeDecode = (s: string): string => {
-  try {
-    return decodeURIComponent(s);
-  } catch {
-    return s;
-  }
-};
-
-/**
- * The argument `toHaveURL` is given for a recorded url pattern, or null when
- * the pattern is not a url at all.
- *
- * A regex for a path-shaped url, because a path IS ordered. But a QUERY-SHAPED
- * hash (`#action=1&cids=2`, which is odoo) is application state, and `urlMatches`
- * — the rule replay judges by — compares it as an unordered SET of pairs: every
- * pair the recording named must be present with the same value, extra live pairs
- * are fine, order means nothing. A regex cannot say that, and the whole of what
- * was wrong with fwod34's second cloud run was the ordering: every value right,
- * `#action=…&model=…&cids=…` where the recording saw `#action=…&cids=…&model=…`.
- * Playwright takes a `(url: URL) => boolean` predicate, so that case is emitted
- * as one, over the same inlined comparison replay makes.
- */
-function urlExpectSource(pattern: string): string | null {
-  if (!/^[a-z]+:\/\//i.test(pattern)) return null;
-  const hashAt = pattern.indexOf('#');
-  const body = hashAt < 0 ? '' : pattern.slice(hashAt + 1).split('?')[0];
-  if (!body || body.startsWith('/') || !body.includes('=')) {
-    const re = urlRegexSource(pattern);
-    return re ? `new RegExp(\`${re}\`)` : null;
-  }
-  const head = pattern.slice(0, hashAt);
-  const queryAt = head.indexOf('?');
-  const headSource = urlPatternBody(queryAt < 0 ? head : head.slice(0, queryAt));
-  const pairs = body
-    .split('&')
-    .filter(Boolean)
-    .map((pair) => {
-      const eq = pair.indexOf('=');
-      const k = eq < 0 ? pair : pair.slice(0, eq);
-      const value = eq < 0 ? '' : pair.slice(eq + 1);
-      // `:id`/`:var` is app-minted state: urlDiff lets such a key hold anything,
-      // or be absent altogether. Anything else — a literal, or a slot this run
-      // binds — must be there and equal.
-      if (value === ':id' || value === ':var') return `[${q(k)}, null]`;
-      return `[${q(k)}, ${src(safeDecode(value))}]`;
-    });
-  return `(url: URL) => hashMatch(url, new RegExp(\`^${headSource}$\`), [${pairs.join(', ')}])`;
+function recordedChanges(step: SkillStep): string[] {
+  if (isReadAction(step.tool)) return [];
+  return (step.expect?.addedContains ?? []).filter((l) => !TRANSIENT_LINE.test(l));
 }
 
 /**
- * The roles the daemon gives an <input>/<textarea> (roleOf in
- * src/daemon/diff.ts), plus `combobox`, which an app can also put on an input
- * by hand. These are the roles whose recorded NAME can disagree with
- * Playwright's accessible name for the very same element.
+ * The `ResolvePolicy` for one chain, as source — the same inputs replay's
+ * runOneStep builds for `resolveChain`, derived at compile time:
  *
- * WHY. The daemon's `nameOf` names an element aria-label -> aria-labelledby ->
- * alt -> title -> placeholder -> ancestor <label> -> innerText, and never looks
- * at a `<label for=id>`. Playwright computes the real accessible name, which
- * PREFERS that label over title and placeholder. So an input carrying both —
- * grafana's tag field, `<label for>` "Tags" over placeholder "New tag (enter
- * key to add)" — is recorded under the placeholder and is unfindable by
- * `getByRole(name)`. That is exactly how the compiled spec died in cloud run
- * sp4gr, deterministically, on a step whose live replay passed (replay compares
- * daemon lines to daemon lines, so it never asks Playwright to find the name).
- *
- * The fix is a union over the three ways the name could have been minted, in
- * the daemon's own order of preference. Only these roles get it: a
- * button/link/heading name has no placeholder to disagree with.
+ *  - `allowMultiple` for `read_all`, which reads across every match, and for
+ *    an absence wait: a chain that still matches several visible elements
+ *    has not met "hidden", and must resolve so it can be waited on to go
+ *    rather than read as "nothing matched" (replay's own rule, runOneStep);
+ *  - `ambiguousNth`: the loop cursor, inside a folded loop's body — the
+ *    policy narrows an ambiguous candidate to it only when it matched
+ *    several, exactly as replay does, never an unconditional `.nth()`;
+ *  - `requireIdentity`: replay's identityOfPrimary — `identityValues` over the
+ *    UNFILLED name/text/label/hasText fields of the WHOLE chain, with the
+ *    run's own values for the segment's KNOWN slots. Rendered as the call
+ *    itself over `p.vN` references, so the run's real value guards the run,
+ *    and the ≥3-character rule and dedupe are applied by the shared function
+ *    at run time as they are in the daemon. Omitted when no known slot names
+ *    the target (the daemon passes an empty list; same thing);
+ *  - `stayOnOrigin`: the recorded url pattern's origin when it has a concrete
+ *    one, else the live page's — `originOf`, the daemon's own rule;
+ *  - `waitMs`: the shared RESOLVE_WAIT_MS, or 0 where nothing resolving is
+ *    the condition (an absence wait).
  */
-const INPUT_LIKE_ROLES = new Set(['textbox', 'searchbox', 'combobox', 'spinbutton']);
-
-/**
- * WHY EVERY ROLED LINE GETS A `hasText` UNION.
- *
- * `describeInPage` (src/daemon/diff.ts) falls back to `innerText` (up to 80
- * chars) whenever aria-label/labelledby/alt/title/placeholder/<label> give it
- * nothing — for EVERY role, because a recorded line is a description for a
- * human and a diff, not a locator. Playwright's `getByRole(role, { name })`
- * matches the real ACCESSIBLE NAME. The two readings diverge in two distinct
- * ways, and a locator built off the recorded line has to survive both.
- *
- *   1. The role is not named from its contents at all. Grafana's
- *      refresh-interval popup is recorded as
- *        - menu "Off Auto 5s 10s 30s 1m 5m 15m 30m 1h 2h 1d"
- *      and Playwright's accessible name for that `role=menu` is the empty
- *      string: cloud run sp5gr failed at `04-add s_0c4807/5` on exactly that
- *      locator, every attempt. The odoo home menu (`- menu "6 3 YourCompany"`)
- *      is the same defect.
- *
- *   2. The role IS named from its contents — but the element contains FORM
- *      CONTROLS, and the accessible-name computation substitutes each
- *      control's VALUE where innerText renders nothing. This is why the first
- *      cut of this restricted the union to a "name from author, contents"
- *      allow-list and cloud run sp7od still died at `04-open s_059a1e/1`. That
- *      step clicks an odoo quotation's quantity cell, which puts the order
- *      line into inline edit mode; measured against the local bench odoo, the
- *      same `<tr>` reads
- *        innerText (daemon)  "20% £ 36.00"
- *        accessible name     "Chair floor protection Chair floor protection
- *                             Office chairs can harm your floor: protect it.
- *                             3.00 12.00 20% Delete £ 36.00 Delete row"
- *      — the product combobox, the description textbox and the qty/price
- *      textboxes contribute their values, and a Delete link even lands
- *      BETWEEN "20%" and "£ 36.00", so the recorded name is not so much as a
- *      SUBSTRING of the accessible name. `getByRole('row', { name: '20% £
- *      36.00' })` counted 0. The identical line shape passes in step 02-create
- *      because the row is read-only there and the two readings agree.
- *
- * Both failures are repaired by the same union, so there is no allow-list any
- * more: any roled line may have been named from innerText, and hasText is the
- * only half that reads the element the way the daemon did.
- *
- * But hasText is NOT `clean(innerText)` either, which is what an earlier cut
- * assumed and why sp6gr failed identically with a union already in place.
- * Playwright matches hasText against `textContent`, which puts no separator
- * between block children, so the recorded "Off Auto 5s …" was compared against
- * "OffAuto5s…" and matched nothing — and the odoo row's textContent is
- * "20%£ 36.00", no space, so a plain string hasText misses it too. The hasText
- * half therefore goes through `looseText` (see the helper), which turns each
- * recorded space back into `\s*` — the only form that matches both readings
- * of the same subtree. Verified live: `getByRole('row').filter({ hasText:
- * /20%\s*£\s*36\.00/i })` counts 1 on that edit-mode row.
- *
- * The union is inherently a SUBSTRING test — `exact` cannot be expressed on
- * the hasText half — so the guard callers (wrapAlreadyInEffect, which reads
- * presence as a reason NOT to act) keep their anchored matcher on the role
- * half and accept the looser hasText half. That is deliberate: the alternative
- * is a guard whose role half never matches at all, which is the bug being
- * fixed. Guards are built from POPUP lines only (menu/dialog/listbox), whose
- * roles were already taking the union before this change, so widening the
- * allow-list does not widen any guard.
- */
-
-/**
- * A Playwright locator for one recorded page line (`- role "name"`,
- * `- text: foo`). Null when the line names nothing findable — an unnamed
- * control, or a value with no role — in which case the caller leaves the
- * observation as a comment rather than inventing an assertion.
- */
-function lineLocator(line: string, exact = false): string | null {
-  // `exact: false` by default, unlike an action's locator. A recorded line's name comes
-  // from the daemon's own accessible-name walk (describeInPage in
-  // src/daemon/diff.ts), which composes a name out of the subtree and can
-  // disagree with Playwright's exact matcher on spacing, punctuation and
-  // decorative children - `link "RD Repair Desk"` is a real example. An
-  // ACTION must name one control exactly; a presence check only has to find
-  // the evidence, and replay's own lineShows matches loosely too.
-  //
-  // `exact` is for the one caller that reads presence as a reason NOT to act
-  // (the already-in-effect guard): there a false positive silently drops a
-  // click, and replay's own check is line-exact — `lineShows` looks for the
-  // whole rendered line, quotes and all, so a `button "6"` never matches a
-  // button called "17.6". Loose is safe when it only widens the evidence a
-  // step accepts; it is not safe when it decides the step is unnecessary.
-  //
-  // A recorded line has ALREADY been through maskVolatile, so its clock and
-  // calendar tokens arrive as the `{{*}}` wildcard. Rendered as the literal
-  // string it looks like, that names nothing on any page — kanboard's
-  // `textbox "{{*}} {{*}}"` is a due-date field the app titles with the
-  // current date and time — so it comes back as a RegExp instead (see
-  // maskedMatcherSource), and a line that is nothing but wildcards names no
-  // element at all and is left to the caller's observation comment.
-  const roled = /^-?\s*([a-zA-Z]+)\s+"((?:[^"\\]|\\.)*)"/.exec(line);
-  if (roled) {
-    const name = roled[2].replace(/\\(.)/g, '$1');
-    if (!name.trim()) return null;
-    const matcher = lineName(name, exact);
-    if (!matcher) return null;
-    // `exact` rides along as it always has; Playwright ignores it for a RegExp
-    // name, where the anchoring above carries the same decision.
-    const roleName = roled[1].toLowerCase();
-    const role = `page.getByRole(${q(roled[1])}, { name: ${matcher}, exact: ${exact} })`;
-    if (INPUT_LIKE_ROLES.has(roleName)) {
-      return `${role}.or(page.getByTitle(${matcher}, { exact: ${exact} })).or(page.getByPlaceholder(${matcher}, { exact: ${exact} }))`;
-    }
-    // Every other role: the daemon named this element from innerText, so the
-    // same text also has to be looked for as TEXT. Same matcher in both
-    // halves, so the two can never disagree about what the line said; hasText
-    // is a substring test whatever `exact` says.
-    //
-    // Not restricted to the roles ARIA names from their contents. A row/cell
-    // that holds form controls IS named from its contents, and the accessible
-    // name still diverges from innerText because the controls' VALUES are
-    // substituted in — see the block comment above for the odoo edit-mode row
-    // that killed sp7od with the allow-list in place.
-    //
-    // Through `looseText`, because the two halves read the element's text by
-    // DIFFERENT rules: the daemon's innerText separates block children, the
-    // hasText Playwright compares against (textContent) does not. See the
-    // helper — this is the half that has to survive that gap.
-    return `${role}.or(page.getByRole(${q(roled[1])}).filter({ hasText: looseText(${matcher}) }))`;
-  }
-  const text = /^-?\s*(?:text:)?\s*(.+?)\s*$/.exec(line);
-  const value = text?.[1];
-  if (!value || value.includes('"')) return null;
-  const matcher = lineName(value, exact);
-  return matcher ? `page.getByText(${matcher}, { exact: ${exact} })` : null;
+function policySource(chain: LocatorCandidate[], step: SkillStep, ctx: Ctx, o: { allowMultiple?: boolean; waitMs: 'RESOLVE_WAIT_MS' | '0' }): string {
+  const parts: string[] = [];
+  if (o.allowMultiple) parts.push('allowMultiple: true');
+  if (ctx.loopCursor) parts.push(`ambiguousNth: ${ctx.loopCursor}`);
+  const identity = identitySource(chain, ctx);
+  if (identity) parts.push(`requireIdentity: ${identity}`);
+  parts.push(`stayOnOrigin: ${originSource(step)}`);
+  parts.push(`waitMs: ${o.waitMs}`);
+  return `{ ${parts.join(', ')} }`;
 }
 
-/** The name matcher for one recorded line, wildcards included; null when the line names nothing. */
-function lineName(text: string, exact: boolean): string | null {
-  return maskedMatcherSource(text, { slot: slotAsParam, anchor: exact });
+/** The `identityValues(…)` call for a chain, or null when no known slot names its target. */
+function identitySource(chain: LocatorCandidate[], ctx: Ctx): string | null {
+  const fields = chain.flatMap((c) => identityFields(c as { name?: string; text?: string; label?: string; hasText?: string }));
+  const slotsOf = (field: string) => [...field.matchAll(/\{\{(v\d+)\}\}/g)].map((m) => m[1]).filter((s) => ctx.known.has(s));
+  const named = fields.filter((f) => slotsOf(f).length);
+  const slots = [...new Set(named.flatMap(slotsOf))];
+  if (!slots.length) return null;
+  for (const slot of slots) ctx.slots.add(slot);
+  return `identityValues({ ${slots.map((s) => `${s}: p.${s}`).join(', ')} }, [${named.map(q).join(', ')}])`;
+}
+
+/** Where the step stays: the recorded pattern's concrete origin, else the live page's, as replay derives it. */
+function originSource(step: SkillStep): string {
+  const pattern = step.expect?.urlPattern;
+  const recorded = pattern ? originOf(pattern) : null;
+  if (recorded && !recorded.includes('{')) return q(recorded);
+  return 'originOf(page.url()) ?? undefined';
 }
 
 /**
- * One any-of assertion for a group of recorded lines.
+ * The step's recorded page changes, checked by the shared verdict — the
+ * `expectedChanges` gate itself (src/execution/expect.ts), embedded — over the
+ * same observation the daemon makes: the lines this step added, and the live
+ * page in the snapshot dialect. The recorded lines go in as recorded, markers
+ * intact; the verdict masks and fills them from `p` at run time exactly as
+ * replay does, and reads the WHOLE line — a slot in the value after the colon
+ * is checked, where the locator union this replaced only ever found the name.
  *
- * `lineShows` is ANY-of: replay stops only when NONE of the parameterised
- * lines is on the page, and separately when NONE of the plain ones is. A spec
- * asserting each line on its own would be strictly stricter than the gate it
- * claims to mirror, and fails on the single line whose recorded name the
- * daemon composed differently — which is what `link "RD Repair Desk"` did on
- * the first real run. `.or()` is a union, so a union taken `.first()` is
- * exactly "at least one of these is showing".
+ * `linesBefore` is the pre-action capture emitSkillStep takes in `prepare`.
+ * A recorded dialog that did not open comes back as `absentDialog`, which the
+ * body remembers for the steps that were going to act inside it.
  */
-/**
- * `required` marks a group the step's correctness rests on — the lines
- * carrying this run's own values. When NOTHING in such a group can be named
- * as a locator the assertion simply was not emitted, and the artifact went on
- * to run the step and report green while checking nothing about its effect.
- * That is the emitted twin of replay's unobserved evidence: not a failure,
- * but not proof either, and it has to be visible to the readiness gate rather
- * than living in a comment nobody reads.
- */
-function anyOfAssertion(lines: string[], label: string, out: string[], opts: { required?: boolean; ctx?: Ctx; where?: string } = {}): void {
-  const { source, listed, unnameable, count } = lineUnion(lines);
-  for (const line of unnameable) out.push(`// observed (nothing nameable in it): ${commentSafe(line)}`);
-  if (!source && opts.required) {
-    out.push(`// UNCHECKED: ${commentSafe(label)} — none of the ${lines.length} recorded line(s) can be named as a locator, so this step's effect is not verified here.`);
-    opts.ctx?.warnings.push(`${opts.where ?? opts.ctx?.stepId ?? 'step'}: a required expectation has no nameable line; the emitted step does not check its effect`);
-  }
-  if (!source) return;
-  out.push(`// ${label} — any one of these, as replay's effect gate has it:`);
-  for (const line of listed) out.push(`//   ${commentSafe(line)}`);
-  out.push(`await expect(${source}${count === 1 ? '' : `\n${CONT_INDENT}`}.first()).toBeVisible();`);
-}
-
-/**
- * A group of recorded lines as ONE union locator — the shape both the effect
- * gate above and the already-in-effect guard below need, built once so the
- * two can never disagree about what a recorded line means.
- */
-function lineUnion(lines: string[], exact = false): { source: string; listed: string[]; unnameable: string[]; count: number } {
-  const usable: string[] = [];
-  const listed: string[] = [];
-  const unnameable: string[] = [];
-  for (const line of lines) {
-    const loc = lineLocator(line, exact);
-    if (!loc) unnameable.push(line);
-    else if (!usable.includes(loc)) {
-      usable.push(loc);
-      listed.push(line);
-    }
-  }
-  const source = usable.length ? usable[0] + usable.slice(1).map((u) => `\n${CONT_INDENT}.or(${u})`).join('') : '';
-  return { source, listed, unnameable, count: usable.length };
-}
-
-/**
- * The step's recorded page changes as assertions, mirroring the
- * `expectedChanges` gate: the lines carrying a slot are HARD as a GROUP —
- * they are what distinguishes this run from the recorded one, so none of them
- * showing means the step acted on the wrong thing — and the plain lines are a
- * second group, because a step none of whose recorded effects appeared did
- * not have its recorded effect.
- */
-function expectationLines(step: SkillStep, out: string[], ctx: Ctx): void {
-  const recorded = step.expect?.addedContains ?? [];
-  let lines = recorded.filter((l) => !TRANSIENT_LINE.test(l));
-  if (!lines.length) return;
-  // A fill's own echo in a same-role element is no evidence — the WRONG
-  // textbox produces it too. Same choice replay makes, made visible here.
-  if (step.tool === 'fill' && typeof step.args.value === 'string') {
-    lines = consequentialExpectations(lines, step.args.value);
-  }
-  const hard = lines.filter((l) => SLOT_LINE.test(l));
-  const plain = lines.filter((l) => !SLOT_LINE.test(l));
+function expectationLines(step: SkillStep, ctx: Ctx, out: string[], linesBefore: string): void {
+  const recorded = recordedChanges(step);
+  if (!recorded.length) return;
+  noteSlots(recorded, ctx);
   const where = `${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`;
-  // The hard group is this run's own values: the one group whose absence
-  // means the step acted on the wrong thing, so an unnameable one is a hole.
-  if (hard.length) anyOfAssertion(hard, "this run's own values must show", out, { required: true, ctx, where });
-  if (plain.length) anyOfAssertion(plain, "the step's recorded effect must show", out);
+  const value = typeof step.args?.value === 'string' ? `, value: ${src(step.args.value)}` : '';
+  // Positional resolution is what the step's resolution REPORTED, at run
+  // time (replay's own per-step flag), not a compile-time guess over the chain.
+  const call =
+    `await expectChanges(page, [${recorded.map(q).join(', ')}], p, ` +
+    `{ tag: ${q(where)}, tool: ${q(step.tool)}${value}, positionalResolution: ${ctx.positional ?? 'false'} }, ${linesBefore})`;
+  out.push("// The step's recorded page changes, judged by the daemon's own effect gate (see expectChanges):");
+  for (const line of recorded) out.push(`//   ${commentSafe(line)}`);
+  // Only a plain `- dialog "…"` line can leave a dialog absent (the verdict's
+  // own rule, DIALOG_LINE); a body with no such step never carries the state.
+  if (recorded.some((l) => !SLOT_LINE.test(l) && DIALOG_LINE.test(l))) {
+    ctx.dialogAbsence = true;
+    out.push(`absentDialog = (${call}).absentDialog ?? null;`);
+  } else {
+    out.push(`${call};`);
+  }
 }
 
-/** The url and alert halves of a step's expectation. */
+/**
+ * The url half of a step's expectation: the shared verdict over the recorded
+ * pattern, markers intact, filled from this run's `p` exactly as replay fills
+ * it (urlEffect -> urlEffectVerdict, src/execution/gates.ts). One form for
+ * every pattern shape — a path, a hash route, a query-shaped hash that is
+ * unordered STATE — because the shared urlMatches already knows them all; a
+ * regex built here was a second implementation, and it disagreed (decoding,
+ * trailing slashes, an unbound `{{dN}}`, the soft match it had no notion of).
+ * The alert half is a lifecycle observation (before/after), emitted by
+ * emitSkillStep.
+ */
 function effectLines(step: SkillStep, ctx: Ctx, out: string[]): void {
   const pattern = step.expect?.urlPattern;
-  if (pattern && pattern !== ctx.lastUrl) {
-    ctx.lastUrl = pattern;
-    const check = urlExpectSource(pattern);
-    if (check) out.push(`await expect(page).toHaveURL(${check});`);
-    else out.push(`// expected url ${commentSafe(pattern)} (not a url pattern this compiler can express)`);
-  }
-  // Toasts are volatile: recorded soft in replay, and a spec that asserted
-  // one would fail on timing rather than on behaviour.
-  if (step.expect?.alertContains) out.push(`// expected alert containing ${JSON.stringify(commentSafe(step.expect.alertContains))}`);
+  if (!pattern) return;
+  noteSlots(pattern, ctx);
+  out.push(`await urlEffect(page, ${q(pattern)}, p, ${q(`${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`)});`);
 }
 
 /** Collect the slots a piece of recorded text needs from `p`. */
@@ -1520,37 +1198,41 @@ function noteSlots(value: unknown, ctx: Ctx): void {
 }
 
 /**
- * Wraps everything a click step emitted from `actionStart` on in the
- * already-in-effect guard, or leaves it alone when the recorded effect opens
- * no popup.
+ * Wraps the ACTION a click step emitted — everything from `actionAt` on — in
+ * the already-in-effect guard, or leaves it alone when the recorded effect
+ * opens no popup.
  *
- * WHICH REPLAY RULE THIS MIRRORS. runOneStep, before it acts: a click that
- * OPENS a popup is a TOGGLE, so re-clicking it while the popup is showing
- * closes the very thing the next step depends on — and the click that ought
- * to be a no-op is instead intercepted by the modal overlay it raised, which
- * on kanboard meant 60s of Playwright waiting for an `#modal-overlay` to stop
- * eating pointer events. Replay skips such a click ("already in effect"); the
- * spec asks the same question of the same recorded lines and skips the pick
- * and the click together, because resolving a control under an open modal is
- * no more meaningful than clicking it.
+ * WHICH REPLAY RULE THIS MIRRORS. runOneStep, after it has resolved the
+ * target and before it acts: a click that OPENS a popup is a TOGGLE, so
+ * re-clicking it while the popup is showing closes the very thing the next
+ * step depends on — and the click that ought to be a no-op is instead
+ * intercepted by the modal overlay it raised, which on kanboard meant 60s of
+ * Playwright waiting for an `#modal-overlay` to stop eating pointer events.
+ * Replay skips such a click ("already in effect"); the spec asks the same
+ * question of the same recorded lines. The pick stays OUTSIDE the guard, as
+ * replay's resolution stays ahead of its check: a target that no longer
+ * resolves is a stop in both runners, and a guard that swallowed the miss
+ * would report skipped-and-green where the daemon reports a stop.
  */
-function wrapAlreadyInEffect(step: SkillStep, ctx: Ctx, out: string[], actionStart: number): void {
+function wrapAlreadyInEffect(step: SkillStep, ctx: Ctx, out: string[], actionAt: number): void {
   const opener = openerExpectations(step);
   if (!opener.length) return;
-  const { source, listed, count } = lineUnion(opener, true);
-  if (!source) return;
+  noteSlots(opener, ctx);
   const where = `${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`;
   const acted = out
-    .splice(actionStart)
+    .splice(actionAt)
     .flatMap((l) => l.split('\n'))
     .map((l) => (l ? '  ' + l : l));
   out.push(
     "// This click OPENS a popup, which makes it a toggle: replay skips it when the",
     '// recorded effect is already showing (runOneStep, "skipped (already in effect)"),',
     '// because clicking again would close what the next step needs. Same rule here,',
-    '// off the same recorded lines:',
-    ...listed.map((l) => `//   ${commentSafe(l)}`),
-    `if (await ${source}${count === 1 ? '' : `\n${CONT_INDENT}`}.first().isVisible().catch(() => false)) {`,
+    '// asked AFTER the target resolved (as replay orders it) of the same recorded',
+    '// lines in the same snapshot dialect (presentOnPage, the shared',
+    '// src/execution/snapshot.ts — whole lines, so a `button "6"` never matches a',
+    '// button called "17.6"):',
+    ...opener.map((l) => `//   ${commentSafe(l)}`),
+    `if (await presentOnPage(page, liveLines([${opener.map(q).join(', ')}], p))) {`,
     '  // already in effect: the popup is on the page, so the recorded click has nothing left to do.',
     // A skipped click is invisible in a passing-until-it-isn't spec, and a
     // guard that fires for the WRONG reason (one of these lines is on the page
@@ -1558,6 +1240,7 @@ function wrapAlreadyInEffect(step: SkillStep, ctx: Ctx, out: string[], actionSta
     // that everything after it depends on. One line on stdout is what makes
     // that legible in a bench log.
     `  console.log(${q(`[sitelooper skip] ${where}: recorded popup already showing — click skipped`)});`,
+    "  return { status: 'skipped' };",
     '} else {',
     ...acted,
     '}',
@@ -1565,54 +1248,101 @@ function wrapAlreadyInEffect(step: SkillStep, ctx: Ctx, out: string[], actionSta
 }
 
 /**
- * The expression an action acts on, emitting the resolution above it when the
- * recording measured more than one way of naming the element.
- *
- * A single candidate is used inline. Several become one `pick(...)` call: the
- * chain is an ORDERED list of ways to name one control, not a union of
- * elements, and only `pick` preserves that. Returns null when nothing in the
- * chain could be expressed — the caller then emits a TODO rather than a
- * statement it cannot target.
+ * The resolution one call site resolves through: the chain's observations in
+ * stored order (see locators.ts `observationSource`), then `], where, policy`
+ * and the presentation options. Shared by every place a chain is resolved —
+ * an action, a read, an absence wait — so they cannot disagree about what an
+ * observation is.
  */
-function actionTarget(
+function resolutionLines(
+  chain: LocatorCandidate[],
   step: SkillStep,
   key: 'target' | 'source',
   ctx: Ctx,
-  out: string[],
-  opts: { first?: boolean; any?: boolean } = {},
-): string | null {
-  const chain = step.locators?.[key] ?? [];
+  o: { allowMultiple?: boolean; waitMs: 'RESOLVE_WAIT_MS' | '0' },
+): { open: string[]; where: string; policy: string; opts: string } {
   noteSlots(chain, ctx);
-  const { sources } = candidateSources(chain, { slot: slotAsParam });
-  if (!sources.length) return null;
-  // In a loop, the record this pass acts on is the one at the cursor.
-  const at = ctx.loopCursor ? `.nth(${ctx.loopCursor})` : '.first()';
-  if (sources.length === 1) return opts.first ? `(${sources[0]})${at}` : sources[0];
-  const name = `el${++ctx.picks}`;
-  const where = `${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex} ${key}`;
-  out.push(`const ${name} = await pick(page, [`);
-  for (const source of sources) out.push(`${CONT_INDENT}${source},`);
+  const where = q(`${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex} ${key}`);
+  const open = observationSources(chain, { slot: slotAsParam }).map((source) => `${CONT_INDENT}${source},`);
   // Drift belongs to this invocation. `DRIFT` remains only as a compatibility
   // view of the last completed run; helpers write into the run passed through
-  // the step instead of accumulating process-wide state.
-  const pickOpts = opts.any ? '{ any: true, drift: run.drift }' : '{ drift: run.drift }';
-  const tail = `, ${pickOpts}${ctx.note ? `, ${q(ctx.note)}` : ''}`;
-  out.push(`], ${q(where)}${tail});`);
-  return opts.first ? `${name}${at}` : name;
+  // the step instead of accumulating process-wide state. In a loop body, what
+  // the target resolved to is sunk for the progress guard (replay's sink).
+  const resolved = ctx.loopSink ? `, resolved: { into: ${ctx.loopSink}.entries, key: ${q(key)}, check: ${ctx.loopSink}.check }` : '';
+  return { open, where, policy: policySource(chain, step, ctx, o), opts: `{ drift: run.drift${resolved} }` };
 }
 
-/** The `point` candidates a step lost, as one honest comment. */
-function droppedNotes(step: SkillStep, out: string[]): void {
-  const lost: LocatorCandidate[] = [];
-  for (const key of ['target', 'source']) {
-    for (const c of step.locators?.[key] ?? []) if (c.kind === 'point') lost.push(c);
+/**
+ * The expression an action acts on, emitting the resolution above it.
+ *
+ * EVERY chain goes through the shared policy — a single candidate too:
+ * Playwright's strict mode ("exactly one, or throw") is not the daemon's rule
+ * (identity, plausibility, origin, the wait), and the loop's progress guard
+ * needs what the target resolved to whatever the chain's length. Returns null
+ * when the recording has no candidate at all — the caller then emits a TODO
+ * rather than a statement it cannot target.
+ */
+function actionTarget(step: SkillStep, key: 'target' | 'source', ctx: Ctx, out: string[], hoist?: string): string | null {
+  const chain = step.locators?.[key] ?? [];
+  if (!chain.length) return null;
+  const name = `hit${++ctx.picks}`;
+  const { open, where, policy, opts } = resolutionLines(chain, step, key, ctx, { waitMs: 'RESOLVE_WAIT_MS' });
+  // `hoist` names the observations as a local, for a step that consults them
+  // again after acting (a text wait's held-elsewhere fallback).
+  const candidates = hoist ? hoist : null;
+  if (hoist) out.push(`const ${hoist}: CandidateObservation[] = [`, ...open, '];');
+  const list = (head: string) => (candidates ? [`${head}${candidates}, ${where}, `] : [`${head}[`, ...open, `], ${where}, `]);
+  const note = ctx.note ? `, ${q(ctx.note)}` : '';
+  const destPattern = step.expect?.urlPattern;
+  if (key === 'target' && destPattern && (step.tool === 'click' || step.tool === 'dblclick') && !ctx.loopSink) {
+    // Replay's navigation fallback (the shared recover.ts): a missed
+    // navigation click whose recorded destination the browser is not on
+    // reaches it by another link to it, else directly — then the step is
+    // done, and its gates are not asked, as replay returns before them.
+    noteSlots(destPattern, ctx);
+    const head = list(`const ${name} = await pickOrNavigate(page, `);
+    head[head.length - 1] += `${policy}, ${q(destPattern)}, p, ${opts}${note});`;
+    out.push(...head, `if (!${name}) return { status: 'skipped' };`);
+  } else {
+    const head = list(`const ${name} = await pick(page, `);
+    head[head.length - 1] += `${policy}, ${opts}${note});`;
+    out.push(...head);
   }
-  if (!lost.length) return;
-  const where = lost
-    .map((c) => (c.kind === 'point' ? `${c.role ?? c.tag} at ${c.x},${c.y}` : ''))
-    .filter(Boolean)
-    .join(', ');
-  out.push(`// TODO: dropped the recorded position fallback (${where}) — a spec cannot find an element by where it was.`);
+  // Replay's per-step flag: a resolution through a positional candidate, or
+  // one narrowed to the loop cursor (an index into several matches), is what
+  // the effect gate must corroborate with a consequential change.
+  if (ctx.positional) out.push(`${ctx.positional} = ${ctx.positional} || ${name}.structural || ${name}.nth !== undefined;`);
+  // A resolved target is known by its candidates' names — the name of a
+  // clicked option is the value it selects (replay notes them here too).
+  if (setsSomething(step.tool)) {
+    out.push(...echoNoteLines(chain.map((c) => (c as { name?: unknown; label?: unknown }).name ?? (c as { name?: unknown; label?: unknown }).label), ctx));
+  }
+  return `${name}.locator`;
+}
+
+/**
+ * What a step put on the page, into the segment's echo ledger — replay's
+ * `interacted` set, through the shared noteInteraction (src/execution/echo.ts),
+ * which applies the length floor at run time to the FILLED text.
+ */
+function echoNoteLines(texts: unknown[], ctx: Ctx): string[] {
+  const strings = texts.filter((t): t is string => typeof t === 'string' && t.length > 0);
+  if (!strings.length || !ctx.echoes) return [];
+  noteSlots(strings, ctx);
+  ctx.echoUsed = true;
+  return [`noteInteraction(${ctx.echoes}, [${strings.map(src).join(', ')}]);`];
+}
+
+/**
+ * A published read asked whether it merely echoes what this segment set —
+ * replay's echoedValues. The value is still published (as replay still
+ * carries it); the label goes into `run.echoed` with one warning line.
+ */
+function echoReadLines(step: SkillStep, ctx: Ctx): string[] {
+  if (!ctx.echoes || !step.label) return [];
+  ctx.echoUsed = true;
+  const key = `${ctx.stepId}.${step.label}`;
+  return [`echoRead(${ctx.echoes}, run, ${q(step.label)}, ${q(key)}, outputs[${q(key)}], ${q(`${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`)});`];
 }
 
 /** The names this step mints, in the order the segment declares them. */
@@ -1637,12 +1367,15 @@ function derivedLines(segment: SpecSegment, index: number, ctx: Ctx, out: string
   for (const [name] of here) ctx.slots.add(name);
   if (!here.length) return;
   const example = (d: { example: string }) => `// recorded example: ${commentSafe(d.example)}`;
+  // A part the url does not carry is NOT bound — replay's `if (v !== undefined)
+  // params[name] = v` — so a later url check reads the unbound `{{dN}}` as the
+  // wildcard it is to urlDiff, rather than requiring an empty segment.
   if (!urlBefore) {
-    for (const [name, d] of here) out.push(`p.${name} = urlPart(page.url(), ${q(d.at)}); ${example(d)}`);
+    for (const [name, d] of here) out.push(`bindPart(p, ${q(name)}, urlPart(page.url(), ${q(d.at)})); ${example(d)}`);
     return;
   }
   if (here.length === 1) {
-    out.push(`p.${here[0][0]} = await urlPartWhen(page, ${q(here[0][1].at)}, ${urlBefore}); ${example(here[0][1])}`);
+    out.push(`bindPart(p, ${q(here[0][0])}, await urlPartWhen(page, ${q(here[0][1].at)}, ${urlBefore})); ${example(here[0][1])}`);
     return;
   }
   // ONE wait for ALL of them: a part bound the instant IT is non-empty can be
@@ -1650,7 +1383,7 @@ function derivedLines(segment: SpecSegment, index: number, ctx: Ctx, out: string
   // pattern the three of them go into is then unmatchable by construction.
   const name = `bound${++ctx.binds}`;
   out.push(`const ${name} = await urlPartsWhen(page, [${here.map(([, d]) => q(d.at)).join(', ')}], ${urlBefore});`);
-  here.forEach(([slot, d], i) => out.push(`p.${slot} = ${name}[${i}]; ${example(d)}`));
+  here.forEach(([slot, d], i) => out.push(`bindPart(p, ${q(slot)}, ${name}[${i}]); ${example(d)}`));
 }
 
 /**
@@ -1660,11 +1393,14 @@ function derivedLines(segment: SpecSegment, index: number, ctx: Ctx, out: string
  * transient) effects count, and they count only when at least one of them
  * names a popup — a dialog, menu, listbox or tooltip is the thing a second
  * click closes again, where another row of textboxes is an effect worth
- * re-producing. Widened to `dblclick` here for the same reason it applies to
- * `click`; replay only ever recorded the case for `click`.
+ * re-producing. `click` only, as replay has it: a toggle is a single click's
+ * shape (a menu button, a dropdown), and every bench case behind the rule was
+ * one. A `dblclick` that opens something (a row opening its editor) is not
+ * undone by a second dblclick, and the artifact used to skip it where replay
+ * ran it — gap 17. Now neither skips it.
  */
 function openerExpectations(step: SkillStep): string[] {
-  if (step.tool !== 'click' && step.tool !== 'dblclick') return [];
+  if (step.tool !== 'click') return [];
   const lines = (step.expect?.addedContains ?? []).filter((l) => !TRANSIENT_LINE.test(l) && !SLOT_LINE.test(l));
   // Only the popup lines decide, as replay's openerLines: the other effects
   // a dialog-opening click recorded (the row it was about to fill, the
@@ -1679,17 +1415,147 @@ function openerExpectations(step: SkillStep): string[] {
  * is taken at its first match (see emitLoop).
  */
 function emitSkillStep(step: SkillStep, segment: SpecSegment, index: number, ctx: Ctx, first = false): string[] {
+  ctx.segmentId = segment.id;
+  ctx.stepIndex = index;
+  const urlBefore = `urlBefore${++ctx.urls}`;
+  // The page-change gate sharpens on a positional resolution, so a step that
+  // carries one is given a flag its resolution reports into (see actionTarget).
+  ctx.positional = recordedChanges(step).length ? `positional${ctx.urls}` : undefined;
+  const action = emitSkillAction(step, segment, index, ctx, first);
+  // A step that resolved nothing (page-level, or refused) has nothing to report: the gate is told so outright.
+  if (ctx.positional && !action.some((line) => line.includes(`${ctx.positional} = `))) ctx.positional = undefined;
+  const bindings: string[] = [];
+  // A goto awaits navigation; other actions may only have started it.
+  derivedLines(segment, index, ctx, bindings, step.tool === 'goto' ? '' : urlBefore);
+  if (step.mints) {
+    bindings.push(`// This step creates a record; expose this run's identifier for teardown.`);
+    const alreadyBound = derivedHere(segment, index).find(([, derived]) => derived.at === step.mints!.at);
+    const value = alreadyBound ? `p.${alreadyBound[0]}` : `await urlPartWhen(page, ${q(step.mints.at)}, ${urlBefore})`;
+    const minted = `minted${ctx.urls}`;
+    bindings.push(`const ${minted} = changedCreation(urlPart(${urlBefore}, ${q(step.mints.at)}), ${value});`);
+    // `<step>.minted` is the latest record (the teardown handle a single mint
+    // publishes); `run.created` accumulates every distinct one, as replay's
+    // `created` does — a loop body mints once per pass.
+    bindings.push(`if (${minted}) {`, `  outputs[${q(`${ctx.stepId}.minted`)}] = ${minted};`, `  if (!run.created.includes(${minted})) run.created.push(${minted});`, '}');
+  }
+  const where = `${ctx.stepId} ${segment.id}/${index}`;
+  const isRead = isReadAction(step.tool);
+  // The effect gates, in the order replay's STEP_GATES runs them: error page,
+  // url, alerts, page changes. Each is the shared verdict; see the helpers.
+  const checks: string[] = [`errorPageGate(page, ${q(where)});`];
+  effectLines(step, ctx, checks);
+  // A read raises no alert of its own (replay exempts it), unless the
+  // recording expects one; the daemon's expectedAlert gate has no read test.
+  const alerts = !isRead || step.expect?.alertContains ? `alertsBefore${ctx.urls}` : null;
+  const alertsAfter = alerts ? `alertsAfter${ctx.urls}` : null;
+  if (alerts) {
+    if (step.expect?.alertContains) noteSlots(step.expect.alertContains, ctx);
+    const expected = step.expect?.alertContains ? `, expectedContains: ${q(step.expect.alertContains)}` : '';
+    checks.push(`alertGate(${alerts}, ${alertsAfter}, { where: ${q(where)}, isRead: ${isRead}${expected}, params: p });`);
+  }
+  // The page-change gate needs the lines the page showed BEFORE the action —
+  // the diff leg of its evidence — so a step that carries one captures them
+  // in `prepare`, after the settle, in the same dialect it will judge by.
+  const linesBefore = recordedChanges(step).length ? `linesBefore${ctx.urls}` : null;
+  if (linesBefore) expectationLines(step, ctx, checks, linesBefore);
+  const positional = ctx.positional;
+  ctx.positional = undefined;
+  const indent = (lines: string[]) => lines.flatMap((line) => line.split('\n').map((part) => part ? `    ${part}` : part));
+  return [
+    `// @step ${where}`,
+    `let ${urlBefore} = '';`,
+    ...(alerts ? [`let ${alerts}: string[] = [];`, `let ${alertsAfter}: string[] | null = null;`] : []),
+    ...(linesBefore ? [`let ${linesBefore}: string[] | null = null;`] : []),
+    ...(positional ? [`let ${positional} = false;`] : []),
+    'await runStepLifecycle({',
+    '  prepare: async () => {',
+    '    await settle(page);',
+    `    ${urlBefore} = page.url();`,
+    ...(alerts ? [`    ${alerts} = (await liveAlerts(page)) ?? [];`] : []),
+    ...(linesBefore ? [`    ${linesBefore} = await capturePageLines(page);`] : []),
+    '  },',
+    '  act: async () => {',
+    ...indent(action),
+    "    return { status: 'completed', value: undefined };",
+    '  },',
+    '  settle: async () => {',
+    `    if (page.url() !== ${urlBefore}) await settle(page);`,
+    // tools.ts waits on the url after a state-changing action that may
+    // navigate; the shared urlHeldStill, through settleNavigation.
+    ...(isNavigatingAction(step.tool) && isMutatingAction(step.tool) ? [`    await settleNavigation(page, ${urlBefore});`] : []),
+    // The alert observation belongs to the settle phase, not to verify:
+    // taken right after the action has settled, before the url wait.
+    ...(alerts ? [`    ${alertsAfter} = await settledAlerts(page);`] : []),
+    '  },',
+    '  bind: async () => {',
+    ...indent(bindings),
+    '  },',
+    '  verify: async () => {',
+    ...indent(checks),
+    '  },',
+    '});',
+  ];
+}
+
+/** Tools emitSkillAction dispatches against the page itself, with no locator to resolve. */
+const PAGE_LEVEL_TOOLS = new Set(['goto', 'back', 'set_viewport', 'set_offline', 'eval', 'screenshot', 'dialog_expect', 'tabs']);
+
+/**
+ * What a step does about a recorded dialog an earlier step of this body left
+ * absent (see expectationLines): nothing at all in a body that never has one.
+ *
+ * WHICH REPLAY RULE THIS MIRRORS. runOneStep, on a target that did not
+ * resolve: a step naming one of the absent dialog's own controls is skipped
+ * as belonging to it (absentDialogSkip, over the shared namesDialogControl);
+ * one that names nothing the dialog listed is the procedure's own, and runs
+ * (and fails) as such. Either way — and on every step whose targets resolve,
+ * page-level steps and reads included — the state is cleared, so a stale
+ * dialog can never excuse a later, unrelated miss. A minting step is never
+ * skipped (a skipped mutation cannot be undone); a read is never skipped this
+ * way (replay skips a missing read as a read, before it asks); and an absence
+ * wait is satisfied by the miss itself. Emitted ahead of the already-in-effect
+ * guard and the pick, as replay's ordering has it.
+ */
+function absentDialogLines(step: SkillStep, args: Record<string, unknown>, ctx: Ctx): string[] {
+  if (!ctx.dialogAbsence) return [];
+  const out: string[] = [];
+  const pageLevel = PAGE_LEVEL_TOOLS.has(step.tool) || (step.tool === 'press' && !args.target);
+  const chain = [...(step.locators?.target ?? []), ...(step.locators?.source ?? [])];
+  const { sources } = candidateSources(chain, { slot: slotAsParam });
+  if (!pageLevel && !isReadAction(step.tool) && !waitsForAbsence(step, args) && !step.mints && sources.length) {
+    const locators = Object.fromEntries(
+      Object.entries(step.locators ?? {}).map(([key, cands]) => [
+        key,
+        (cands ?? []).map((c) => {
+          const { kind, name, text, label, hasText } = c as { kind: string; name?: string; text?: string; label?: string; hasText?: string };
+          return { kind, ...(name !== undefined && { name }), ...(text !== undefined && { text }), ...(label !== undefined && { label }), ...(hasText !== undefined && { hasText }) };
+        }),
+      ]),
+    );
+    noteSlots(locators, ctx);
+    const where = `${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`;
+    out.push(
+      `if (absentDialog !== null && (await absentDialogSkip([${sources.join(', ')}], ${JSON.stringify(locators)}, absentDialog, p, ${q(where)}))) {`,
+      "  return { status: 'skipped' };",
+      '}',
+    );
+  }
+  out.push('absentDialog = null;');
+  return out;
+}
+
+function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, ctx: Ctx, first = false): string[] {
   const out: string[] = [];
   // A location comment ahead of everything this step emits, so a Playwright
   // stack line (or a `[sitelooper drift]` warning, which shares this same
   // "<stepId> <segmentId>/<stepIndex>" shape) can be mapped back to the
   // recorded step that produced it.
-  out.push(`// @step ${ctx.stepId} ${segment.id}/${index}`);
+
   // Ahead of EVERYTHING this step does — the already-in-effect guard, the pick,
   // a bare locator action — because that is where replay's own settleDom sits
   // (runOneStep). See the helper's comment for the odoo toggle sequence this
   // ordering is what saves.
-  out.push('await settle(page);');
+
   ctx.segmentId = segment.id;
   ctx.stepIndex = index;
   const args = step.args ?? {};
@@ -1697,18 +1563,15 @@ function emitSkillStep(step: SkillStep, segment: SpecSegment, index: number, ctx
   const str = (name: string, fallback = '') => String(args[name] ?? fallback);
   const num = (name: string): number | undefined => (typeof args[name] === 'number' ? (args[name] as number) : undefined);
 
+  // A filled value or typed text is something the step put on the page, noted
+  // ahead of any skip, as replay notes it before it asks about a miss.
+  if (setsSomething(step.tool)) out.push(...echoNoteLines([args.value, args.text], ctx));
+  out.push(...absentDialogLines(step, args, ctx));
+
   // Steps that act on the page itself, before any locator is needed.
   switch (step.tool) {
     case 'goto':
       out.push(`await page.goto(${src(str('url'))});`);
-      // A navigation renders a route skeleton first: replay lets it hydrate
-      // before its effect gates look for the recorded content (runOneStep's
-      // `if (page.url() !== urlBefore) await settleDom(page)`), and the
-      // assertions and url reads below are exactly those gates.
-      out.push('await settle(page);');
-      effectLines(step, ctx, out);
-      // page.goto awaits its own navigation: the url is already the landed one.
-      derivedLines(segment, index, ctx, out);
       return out;
     case 'back':
       out.push('await page.goBack();');
@@ -1734,8 +1597,16 @@ function emitSkillStep(step: SkillStep, segment: SpecSegment, index: number, ctx
     }
     case 'tabs':
       // A second page needs a real handle, and inventing one would silently
-      // re-point every later `page.` line.
-      out.push(`// TODO: the recording switched to tab ${String(args.switch_to)} here — take the handle yourself.`);
+      // re-point every later `page.` line at the wrong tab.
+      out.push(
+        ...unsupportedCapability(ctx, index, {
+          what: `switches to tab ${String(args.switch_to)}, which a standalone spec cannot express`,
+          why: 'Replay switches the session\'s active page; the generated file has one Page and no handle for the tab the recording moved to, so every later line would run against the wrong one.',
+          fix: 'take the tab handle by hand in the generated file (page.context().pages() / page.waitForEvent(\'page\')), or re-record the procedure without the tab switch',
+          todo: `the recording switched to tab ${commentSafe(String(args.switch_to))} here — take the handle yourself.`,
+          throws: `Unsupported recorded action: tabs (switch to ${String(args.switch_to)})`,
+        }),
+      );
       return out;
     case 'press':
       if (!args.target) {
@@ -1747,10 +1618,9 @@ function emitSkillStep(step: SkillStep, segment: SpecSegment, index: number, ctx
       break;
   }
 
-  droppedNotes(step, out);
-  const isRead = step.tool === 'read' || step.tool === 'read_all';
+  const isRead = isReadAction(step.tool);
   if (isRead && str('what') === 'url') {
-    if (step.label) out.push(`outputs[${q(`${ctx.stepId}.${step.label}`)}] = page.url();`);
+    if (step.label) out.push(`outputs[${q(`${ctx.stepId}.${step.label}`)}] = page.url();`, ...echoReadLines(step, ctx));
     return out;
   }
   // An unlabelled read published nothing — it was the agent orienting itself —
@@ -1761,45 +1631,63 @@ function emitSkillStep(step: SkillStep, segment: SpecSegment, index: number, ctx
     return out;
   }
 
-  // Ambiguity is the normal shape in exactly two places: a read across every
-  // match, and a loop body whose per-record locator names every record.
-  const any = step.tool === 'read_all' || first;
-  // A wait for the target to be GONE cannot go through pick(): pick demands a
-  // resolving candidate, and absence is the condition. The union of every
-  // candidate with .first() is exactly "none of these is on the page" under
-  // toBeHidden / toHaveCount(0) — the same rule replay applies (waitsForAbsence).
+  void first;
+  // A wait for the target to be GONE: resolving nothing IS the condition, so
+  // the chain is resolved once with no wait (replay's waitsForAbsence rule),
+  // and only a chain that still resolves is then held to become hidden.
   if (waitsForAbsence(step, args)) {
     const chain = step.locators?.target ?? [];
-    noteSlots(chain, ctx);
-    const union = chainSource(chain, { slot: slotAsParam, indent: CONT_INDENT }).source;
-    if (!union) {
+    if (!chain.length) {
       out.push(`// TODO: no locator this compiler can express for ${step.tool} — fill it in by hand.`);
       return out;
     }
-    out.push(waitForLine(`(${union}).first()`, args, num('timeout_ms')));
+    const name = `hit${++ctx.picks}`;
+    // Several matches resolve too (allowMultiple): two visible elements have
+    // not met "hidden", and an 'ambiguous' miss read as "nothing matched"
+    // was a false success. Replay's own policy for this step.
+    const { open, where, policy, opts } = resolutionLines(chain, step, 'target', ctx, { allowMultiple: true, waitMs: '0' });
+    // A hidden wait is on the FIRST match, as replay dispatches it
+    // (tools.ts waitFor: `loc.first().waitFor({ state })`); Playwright's
+    // strict expect would otherwise refuse the several matches allowed above
+    // instead of waiting for them to go. A count wait is plural by nature.
+    const target = String(args.state) === 'hidden' ? `${name}.locator.first()` : `${name}.locator`;
+    out.push(
+      '// Absence is the condition: a chain that resolves nothing has met it (replay treats',
+      '// the miss as the recorded outcome, not as drift), so the resolution is asked once,',
+      '// with no wait, and only a target that is still there is waited on to go.',
+      `const ${name} = await resolveTarget(page, [`,
+      ...open,
+      `], ${where}, ${policy}, ${opts});`,
+      `if (${name}) ${waitForLine(target, args, num('timeout_ms'), ctx, index)}`,
+    );
     return out;
   }
   // A read resolves and reads through `readOptional`, which cannot throw: see
   // its comment. It never goes through `actionTarget`, because a `pick` emitted
   // as its own statement would throw before the read could catch anything.
   if (isRead) {
-    out.push(...readLines(step, ctx, { any, first }));
+    out.push(...readLines(step, ctx));
     return out;
   }
-  // The url this step starts from, so a value it mints is read off the url it
-  // navigated TO and not off the one it left (see urlPartWhen / derivedLines).
-  const minting = derivedHere(segment, index).length > 0 || Boolean(step.mints);
-  const urlBefore = minting ? `urlBefore${++ctx.urls}` : '';
-  if (urlBefore) out.push(`const ${urlBefore} = page.url();`);
-
-  // Everything from here to the action itself is what the already-in-effect
-  // guard wraps, so remember where it starts.
-  const actionStart = out.length;
-  const picksBefore = ctx.picks;
-  const target = actionTarget(step, 'target', ctx, out, { first, any });
+  // The resolution, then the action: the already-in-effect guard and the
+  // note rethrow both wrap only the action (see wrapAlreadyInEffect and
+  // noteRethrow) — the `pick` carries its own note.
+  // A text wait keeps its observations: when the wait fails on the target it
+  // resolved, another recorded candidate may already show the text (textHeldOrThrow).
+  const heldText = step.tool === 'wait_for' && (args.state === 'text_contains' || args.state === 'text_equals') && typeof args.text === 'string' && args.text.trim();
+  const observations = heldText ? `observations${ctx.picks + 1}` : undefined;
+  const target = actionTarget(step, 'target', ctx, out, observations);
+  const actionAt = out.length;
   if (!target) {
-    ctx.warnings.push(`${ctx.stepId}: step ${index} (${step.tool}) has no locator a spec can express`);
-    out.push(`// TODO: no locator this compiler can express for ${step.tool} — fill it in by hand.`);
+    out.push(
+      ...unsupportedCapability(ctx, index, {
+        what: `(${step.tool}) has no locator a spec can express`,
+        why: 'The recording kept no candidate for this target, so there is nothing for the artifact to resolve.',
+        fix: `re-record this step so the target is named (sitelooper rerecord), or write the locator for ${step.tool} by hand in the generated file`,
+        todo: `no locator this compiler can express for ${step.tool} — fill it in by hand.`,
+        throws: `Unsupported recorded locator: ${step.tool} has no locator a standalone spec can express`,
+      }),
+    );
     return out;
   }
 
@@ -1827,8 +1715,11 @@ function emitSkillStep(step: SkillStep, segment: SpecSegment, index: number, ctx
       out.push(`await fill(${target}, ${src(str('value'))});`);
       break;
     case 'type': {
+      // Through the inlined helper, never `pressSequentially` alone: a recorded
+      // `type` into an editor or an aria-combobox is recipe-driven in the
+      // daemon, and was the one action the artifact drove past the recipe.
       const delay = num('delay_ms');
-      out.push(`await ${target}.pressSequentially(${src(str('text'))}${delay === undefined ? '' : `, { delay: ${delay} }`});`);
+      out.push(`await type(${target}, ${src(str('text'))}${delay === undefined ? '' : `, { delay: ${delay} }`});`);
       break;
     }
     case 'press':
@@ -1869,41 +1760,43 @@ function emitSkillStep(step: SkillStep, segment: SpecSegment, index: number, ctx
     case 'drag': {
       const source = actionTarget(step, 'source', ctx, out);
       if (source) out.push(`await ${source}.dragTo(${target});`);
-      else out.push(`// TODO: no locator this compiler can express for the drag source.`);
+      else {
+        // The TODO line is what compilationBlockers (src/spec/index.ts) reads
+        // to refuse the file as ready; the throw is what stops a run of it.
+        ctx.warnings.push(`${ctx.stepId}: step ${index} has no expressible drag source`);
+        out.push(`// TODO: no locator this compiler can express for the drag source.`);
+        out.push(`throw new Error(${q('No expressible locator for required drag source')});`);
+      }
       break;
     }
     case 'wait_for':
-      out.push(waitForLine(target, args, num('timeout_ms')));
+      if (observations) {
+        const where = `${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`;
+        out.push(
+          'try {',
+          `  ${waitForLine(target, args, num('timeout_ms'), ctx, index)}`,
+          '} catch (err) {',
+          `  await textHeldOrThrow(err, ${observations}, ${q(String(args.state))}, ${src(str('text'))}, ${q(where)}, run.drift);`,
+          '}',
+        );
+      } else {
+        out.push(waitForLine(target, args, num('timeout_ms'), ctx, index));
+      }
       break;
     default:
       out.push(`// TODO: recorded tool ${step.tool} has no Tier 2 form.`);
+      out.push(`throw new Error(${q(`Unsupported recorded action: ${step.tool}`)});`);
       ctx.warnings.push(`${ctx.stepId}: step ${index} uses tool ${step.tool}, which has no Tier 2 form`);
       break;
   }
 
-  wrapAlreadyInEffect(step, ctx, out, actionStart);
-  // A flagged step whose target resolved to a SINGLE candidate emitted no
-  // `pick`, so there is no throw to carry the note: the action is a bare
-  // locator call whose Playwright timeout says only that a selector never
-  // resolved. Rethrow with the diagnostic appended, so every way a flagged
-  // step can fail says the same thing.
-  if (ctx.note && ctx.picks === picksBefore) noteRethrow(out, actionStart, ctx.note);
-  derivedLines(segment, index, ctx, out, urlBefore);
-  if (step.mints) {
-    out.push(`// This step CREATES a record (its id is url part ${q(step.mints.at)}) — clean it up in your teardown.`);
-    // Nothing else read the post-action url here, so publish the id rather than
-    // leave a teardown to re-derive it: replay keeps the same value (res.created)
-    // for exactly this reason. Read the settled way, off the url the step
-    // navigated TO — the same reason derived values cannot be read in the
-    // click's own tick.
-    if (!derivedHere(segment, index).length) {
-      out.push(`outputs[${q(`${ctx.stepId}.minted`)}] = await urlPartWhen(page, ${q(step.mints.at)}, ${urlBefore});`);
-    }
-  }
-  if (!isRead) {
-    effectLines(step, ctx, out);
-    expectationLines(step, out, ctx);
-  }
+  wrapAlreadyInEffect(step, ctx, out, actionAt);
+  // A flagged step's `pick` carries the note in its own throw (actionTarget),
+  // but the ACTION after it can fail too — a click that timed out on what
+  // resolved says only that Playwright waited — and that failure must say
+  // the same thing. Rethrow everything after the resolution with the
+  // diagnostic appended, so every way a flagged step can fail names it.
+  if (ctx.note) noteRethrow(out, actionAt, ctx.note);
   return out;
 }
 
@@ -1912,6 +1805,8 @@ function emitSkillStep(step: SkillStep, segment: SpecSegment, index: number, ctx
  *
  * The note is compile's diagnostic for this flow step, and a rethrow — not a
  * swallow — is the point: the step still fails, it just stops lying about why.
+ * A throw that already carries the note (a `pick` inside the wrapped lines —
+ * a drag's source) is passed through as it is, never noted twice.
  */
 function noteRethrow(out: string[], from: number, note: string): void {
   const inner = out.splice(from).map((l) =>
@@ -1920,10 +1815,46 @@ function noteRethrow(out: string[], from: number, note: string): void {
       .map((x) => (x ? `  ${x}` : x))
       .join('\n'),
   );
-  out.push('try {', ...inner, '} catch (err) {', `  if (err instanceof Error) err.message += ${q(`\n  ${note}`)};`, '  throw err;', '}');
+  const noted = q(`\n  ${note}`);
+  out.push('try {', ...inner, '} catch (err) {', `  if (err instanceof Error && !err.message.includes(${noted})) err.message += ${noted};`, '  throw err;', '}');
 }
 
-function waitForLine(target: string, args: Record<string, unknown>, timeout?: number): string {
+/**
+ * A capability the recording used and a standalone artifact cannot carry,
+ * reported in all four places somebody looks for it.
+ *
+ * Replay executes a tab switch, an attribute read and a position-only locator;
+ * the artifact has no second Page handle, no `getAttribute` shape for a
+ * recorded `what`, and no way to find an element by where it was on screen.
+ * A comment alone let all three through as a file that compiled, ran, and
+ * quietly did less than the recording — so each one now yields:
+ *   - a typed Diagnostic, printed by every surface and carried in `--json`;
+ *   - a `ctx.warnings` line, for callers that still print warnings;
+ *   - a `// TODO:` line, which is what `compilationBlockers` (spec/index.ts)
+ *     keys on to refuse the flow as ready;
+ *   - a `throw`, so a run of the file stops here rather than skipping it.
+ * This is the shape the `default` branch of the action switch established.
+ */
+function unsupportedCapability(
+  ctx: Ctx,
+  index: number,
+  o: { what: string; why: string; fix?: string; todo: string; throws: string },
+): string[] {
+  const line = `${ctx.stepId}: step ${index} ${o.what}`;
+  ctx.diagnostics.push({
+    code: 'unsupported-capability',
+    step: ctx.stepId,
+    what: o.what,
+    why: o.why,
+    ...(o.fix ? { fix: o.fix } : {}),
+    severity: 'warning',
+    line,
+  });
+  ctx.warnings.push(line);
+  return [`// TODO: ${o.todo}`, `throw new Error(${q(o.throws)});`];
+}
+
+function waitForLine(target: string, args: Record<string, unknown>, timeout: number | undefined, ctx: Ctx, index: number): string {
   const only = timeout && timeout !== DEFAULT_WAIT_MS ? `{ timeout: ${timeout} }` : '';
   const opt = only ? `, ${only}` : '';
   switch (String(args.state)) {
@@ -1938,7 +1869,14 @@ function waitForLine(target: string, args: Record<string, unknown>, timeout?: nu
     case 'count':
       return `await expect(${target}).toHaveCount(${Number(args.count ?? 0)}${opt});`;
     default:
-      return `// TODO: recorded wait_for state ${String(args.state)} has no Tier 2 form.`;
+      // A wait the spec cannot express is a step it cannot run: the diagnostic
+      // reaches the compile caller, the TODO keeps the file from being called
+      // ready (compilationBlockers), and the throw stops a run that gets here.
+      ctx.warnings.push(`${ctx.stepId}: step ${index} waits for state ${String(args.state)}, which has no Tier 2 form`);
+      return [
+        `// TODO: recorded wait_for state ${commentSafe(String(args.state))} has no Tier 2 form.`,
+        `throw new Error(${q(`Unsupported recorded wait_for state: ${String(args.state)}`)});`,
+      ].join('\n');
   }
 }
 
@@ -1953,113 +1891,135 @@ function waitForLine(target: string, args: Record<string, unknown>, timeout?: nu
  * Emitting the single-candidate case as a bare `await loc.textContent()` would
  * have thrown on exactly the same page where the multi-candidate case does.
  */
-function readLines(step: SkillStep, ctx: Ctx, opts: { any?: boolean; first?: boolean }): string[] {
+function readLines(step: SkillStep, ctx: Ctx): string[] {
   const what = String(step.args?.what ?? 'text');
   const out = `outputs[${q(`${ctx.stepId}.${step.label ?? ''}`)}]`;
-  const loc = opts.first ? (ctx.loopCursor ? `loc.nth(${ctx.loopCursor})` : 'loc.first()') : 'loc';
   let read: string | null = null;
-  if (what === 'value') read = `async (loc: Locator) => await ${loc}.inputValue()`;
-  // read_all legitimately matches many elements, so textContent's strict mode
-  // would throw where replay read every match.
+  if (what === 'value') read = `async (loc: Locator) => await loc.inputValue()`;
+  // read_all legitimately matches many elements (the policy's allowMultiple),
+  // so textContent's strict mode would throw where replay read every match.
   else if (what === 'text') {
     read =
       step.tool === 'read_all'
-        ? `async (loc: Locator) => (await ${loc}.allTextContents()).join('\\n')`
-        : `async (loc: Locator) => (await ${loc}.textContent()) ?? ''`;
+        ? `async (loc: Locator) => (await loc.allTextContents()).join('\\n')`
+        : `async (loc: Locator) => (await loc.textContent()) ?? ''`;
   }
-  if (!read) return [`// TODO: read what=${commentSafe(what)} has no Tier 2 form (label ${commentSafe(step.label ?? '')}).`];
+  // `attr` and `count` are read by the daemon's own tool implementations
+  // (tools.ts); the artifact has no shape for them, and publishing nothing
+  // under the label a later step consumes is how an empty value travels.
+  if (!read) {
+    return unsupportedCapability(ctx, ctx.stepIndex, {
+      what: `reads what=${what}, which a standalone spec has no form for (label ${step.label ?? ''})`,
+      why: 'Replay implements attribute and count reads in its own tool layer; the generated file publishes only text and input values, so this label would be left empty and any step consuming it would run on a blank.',
+      fix: `write the read for what=${what} by hand in the generated file, or re-record the step as a text read`,
+      todo: `read what=${commentSafe(what)} has no Tier 2 form (label ${commentSafe(step.label ?? '')}).`,
+      throws: `Unsupported recorded read: what=${what}`,
+    });
+  }
 
   const chain = step.locators?.target ?? [];
-  noteSlots(chain, ctx);
-  const { sources } = candidateSources(chain, { slot: slotAsParam });
-  if (!sources.length) {
-    ctx.warnings.push(`${ctx.stepId}: step ${ctx.stepIndex} (${step.tool}) has no locator a spec can express`);
-    return [`// TODO: no locator this compiler can express for ${step.tool} — fill it in by hand.`];
+  if (!chain.length) {
+    return unsupportedCapability(ctx, ctx.stepIndex, {
+      what: `(${step.tool}) has no locator a spec can express`,
+      why: 'The recording kept no candidate for this target, so there is nothing for the artifact to resolve.',
+      fix: `re-record this step so the target is named (sitelooper rerecord), or write the locator for ${step.tool} by hand in the generated file`,
+      throws: `Unsupported recorded locator: ${step.tool} has no locator a standalone spec can express`,
+      todo: `no locator this compiler can express for ${step.tool} — fill it in by hand.`,
+    });
   }
-  const where = `${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex} target`;
-  const lines = [`${out} = await readOptional(page, [`];
-  for (const source of sources) lines.push(`${CONT_INDENT}${source},`);
-  lines.push(`], ${q(where)}, ${read}, ${opts.any ? '{ any: true, drift: run.drift }' : '{ drift: run.drift }'});`);
-  return lines;
+  // In a loop body a read's resolution is sunk for the progress guard too, as replay sinks every key.
+  const { open, where, policy, opts } = resolutionLines(chain, step, 'target', ctx, { allowMultiple: step.tool === 'read_all', waitMs: 'RESOLVE_WAIT_MS' });
+  return [`${out} = await readOptional(page, [`, ...open, `], ${where}, ${policy}, ${read}, ${opts});`, ...echoReadLines(step, ctx)];
 }
 
 /**
- * A folded loop: the recording did the same thing to record after record,
- * and replay repeats the body while the guard still matches, capped at
- * `max`. Tier 2 keeps the guard and the cap and always acts on the first
- * match — right for a list that shrinks, and the one place a spec cannot
- * follow replay's cursor, so it says so.
+ * A folded loop: the recording did the same thing to record after record.
+ *
+ * HOW it repeats is not emitted here at all — it is `runFoldedLoop`
+ * (src/execution/loop.ts), the same policy replay runs, so the settle before
+ * every count, the cursor, the shrink wait, the progress guard and the cap
+ * cannot drift apart between the two runners. What this emits is the three
+ * observations the policy asks the artifact for: settle the page, resolve the
+ * guard, run the recorded body for one cursor.
+ *
+ * The guard is the FIRST candidate in the chain that matches anything, never
+ * `.or()` over all of them: a chain is an ordered list of ways to name one
+ * thing, and a union of a per-record primary with a generic fallback counts —
+ * and then works — rows the recording never claimed (policy audit, gap 7).
  */
 function emitLoop(step: SkillStep, segment: SpecSegment, index: number, ctx: Ctx): string[] {
   const body = step.body ?? [];
   const guardChain = step.while ?? body[0]?.locators?.target ?? [];
   noteSlots(guardChain, ctx);
-  const guard = chainSource(guardChain, { slot: slotAsParam, indent: CONT_INDENT }).source;
-  if (!guard || !body.length) {
-    ctx.warnings.push(`${ctx.stepId}: step ${index} is a loop with no ${guard ? 'body' : 'guard a spec can express'}`);
+  const observations = observationSources(guardChain, { slot: slotAsParam });
+  if (!observations.length || !body.length) {
+    ctx.warnings.push(`${ctx.stepId}: step ${index} is a loop with no ${observations.length ? 'body' : 'guard a spec can express'}`);
     return [
       `// @step ${ctx.stepId} ${segment.id}/${index}`,
-      `// TODO: recorded loop at step ${index} has no ${guard ? 'body' : 'expressible guard'}.`,
+      `// TODO: recorded loop at step ${index} has no ${observations.length ? 'body' : 'expressible guard'}.`,
     ];
   }
   const max = step.max ?? DEFAULT_LOOP_MAX;
   const n = ++ctx.loops;
-  const name = `guard${n}`;
-  const left = `remaining${n}`;
-  const was = `before${n}`;
+  const result = `loop${n}`;
   const cursor = `cursor${n}`;
-  const pass = `pass${n}`;
+  const sink = `pass${n}`;
   ctx.segmentId = segment.id;
   ctx.stepIndex = index;
   const where = `${ctx.stepId} ${segment.id}/${index}`;
   const out = [
     `// @step ${where}`,
-    '// The recording folded a run of identical actions into a loop, and this mirrors how',
-    '// replay executes one (runLoop), cursor and all. The cursor is what makes both kinds',
-    '// of loop work from one body: a DELETE loop shrinks the collection, so the next record',
-    '// is always match 0 and the cursor stays put; an EDIT-IN-PLACE loop leaves the count',
-    '// alone, so the cursor steps on to the next match. Taking `.first()` every pass, as',
-    '// this used to, silently worked record one over and over on every edit loop.',
-    '// The cap is a budget, not a finish line: passes left over with records unvisited is',
-    '// unfinished work, and it throws rather than returning green.',
-    `const ${name} = ${guard};`,
-    `let ${left} = await ${name}.count();`,
-    `let ${cursor} = 0;`,
-    `let ${pass} = 0;`,
-    `for (; ${pass} < ${max} && ${cursor} < ${left}; ${pass}++) {`,
+    '// The recording folded a run of identical actions into a loop. `runFoldedLoop` is',
+    "// replay's own loop policy, embedded: the cursor is what makes both kinds of loop work",
+    '// from one body — a DELETE loop shrinks the collection, so the next record is always',
+    '// match 0 and the cursor stays put; an EDIT-IN-PLACE loop leaves the count alone, so the',
+    '// cursor steps on to the next match. The guard is the chain resolved through the shared',
+    "// policy with ambiguity allowed (replay's own guard call: `{ allowMultiple: true }`, no",
+    '// wait), and every recount uses that same candidate.',
+    `const ${result} = await runFoldedLoop({`,
+    '  settle: () => settle(page),',
+    '  readable: () => pageReadable(page),',
+    '  guard: async () => {',
+    `    const guard${n} = await resolveCandidates(page, [`,
   ];
+  for (const source of observations) out.push(`      ${source},`);
+  out.push(
+    '    ], { allowMultiple: true });',
+    `    return guard${n} ? guard${n}.locator : null;`,
+    '  },',
+    `  runBody: async (${cursor}: number, ${sink}: LoopPass) => {`,
+    "    // What each target of this pass resolved TO — replay's own sink (runOneStep) — is",
+    '    // the progress guard\'s evidence, checked as each target resolves and before it is',
+    '    // acted on: a pass that resolved the same elements as the last with the guard count',
+    '    // unchanged stops before re-acting on one record.',
+  );
   ctx.loopCursor = cursor;
+  ctx.loopSink = sink;
   for (const [k, bstep] of body.entries()) {
     for (const line of emitSkillStep(bstep, segment, index, ctx, true)) {
-      out.push(...line.split('\n').map((l) => (l ? '  ' + l : l)));
+      out.push(...line.split('\n').map((l) => (l ? '    ' + l : l)));
     }
     if (k < body.length - 1) out.push('');
   }
   ctx.loopCursor = undefined;
+  ctx.loopSink = undefined;
   out.push(
-    '',
-    '  // Removal is usually asynchronous: "the count shrank" is exactly "the last',
-    '  // match left the DOM", so wait on that element rather than on a timer.',
-    '  await settle(page);',
-    `  const ${was} = ${left};`,
-    `  if (${was} > 0) {`,
-    `    await ${name}.nth(${was} - 1).waitFor({ state: 'detached', timeout: LOOP_SHRINK_WAIT_MS }).catch(() => {});`,
-    '  }',
-    `  ${left} = await ${name}.count();`,
-    `  if (${left} >= ${was}) ${cursor}++;`,
-    '}',
+    "    return { status: 'ran' as const };",
+    '  },',
+    `}, { max: ${max}, scope: ${q(step.scope ?? 'drain')}, shrinkWaitMs: LOOP_SHRINK_WAIT_MS, describe: ${q(guardDescription(guardChain))} });`,
+    // The cap is a budget, not a finish line: a drain that used every pass with
+    // records left has unfinished work, and says so rather than returning green.
+    `if (!${result}.ok) throw new Error(\`${templateSafe(where)}: \${${result}.reason}\`);`,
   );
-  // A bounded loop was given authority over exactly the records the recording
-  // worked; ones left over are not its business. Only a drain owes the
-  // collection an empty result, and must say so when it runs out of passes.
-  if ((step.scope ?? 'drain') === 'drain') {
-    out.push(
-      `if (${cursor} < ${left}) {`,
-      `  throw new Error(\`${where}: the loop stopped after \${${pass}} pass(es) with \${${left} - ${cursor}} record(s) still matching — the recorded work is not finished\`);`,
-      '}',
-    );
-  }
   return out;
+}
+
+/** How a loop guard reads in a failure message: its primary's expression, or where a point-only guard was recorded. */
+function guardDescription(chain: LocatorCandidate[]): string {
+  const first = chain[0];
+  if (!first) return 'the guard';
+  if (first.kind === 'point') return `the ${first.role ?? first.tag} recorded at ${first.x},${first.y}`;
+  return candidateSources([first], { slot: slotAsParam }).sources[0] ?? 'the guard';
 }
 
 /** Whether every slot in a marker is bound by this segment's params or its derived values. */
@@ -2108,10 +2068,15 @@ function satisfiedGuard(step: SpecStep, ctx: Ctx): string[] {
   noteSlots([...identity, ...goal], ctx);
   const shown = goal.map((g) => `"${g}"`).join(', ');
   const say = `[sitelooper satisfied] ${step.id} — page shows ${shown}; nothing to do`;
-  // On the page template the goal was read on, or the words mean nothing
-  // (replay's goalSatisfied checks the same url pattern first).
-  const at = urlExpectSource(head.preconditions.urlPattern);
-  const onPage = at ? (at.startsWith('(url') ? `(${at})(new URL(page.url())) && ` : `${at}.test(page.url()) && `) : '';
+  // The same three preconditions replay's goalSatisfied puts ahead of the
+  // page check, through the same shared rules (src/execution/gates.ts and
+  // url.ts): every marker BOUND at run time — a slot bound to '' renders
+  // `Order {{d1}}` as `Order `, which every order shows, and the compile-time
+  // markerBound above cannot see the value — and the page template the goal
+  // was read on, unconditionally, or the words mean nothing.
+  noteSlots(head.preconditions.urlPattern, ctx);
+  const raw = [...identity, ...goal].map(q).join(', ');
+  const onPage = `markersBound([${raw}], p) && urlMatches(${q(head.preconditions.urlPattern)}, page.url(), p) && `;
   const out = [
     `// goal: the page already showing ${shown} for this record means the step's work is done —`,
     '// the same check replay makes before it acts (goalSatisfied, src/skills/replay.ts).',
@@ -2153,10 +2118,14 @@ function identityChecks(segment: SpecSegment, ctx: Ctx): string[] {
     }
     noteSlots(marker, ctx);
     out.push(`// identity: this must be the record the flow is working on, not another of the same shape.`);
-    // Polled, not asserted once: replay reaches this gate after its own
-    // settleDom, and a spec arrives on a page that may still be rendering.
+    // The daemon's own question (checkIdentity, src/skills/replay.ts):
+    // presentOnPage over a fresh snapshot capture, bounded (`whole`) so a
+    // neighbouring record whose id merely extends this one cannot pass, and
+    // seeing a marker that is only a field's VALUE. Polled, not asserted
+    // once: replay reaches this gate after its own settleDom, and a spec
+    // arrives on a page that may still be rendering.
     out.push(
-      `await expect.poll(() => present(page, ${src(marker)}, true), { timeout: ${IDENTITY_WAIT_MS}, message: ${q(
+      `await expect.poll(() => presentOnPage(page, [${src(marker)}], { whole: true }), { timeout: ${IDENTITY_WAIT_MS}, message: ${q(
         `identity: ${commentSafe(marker)} is not on this page`,
       )} }).toBe(true);`,
     );
@@ -2167,9 +2136,41 @@ function identityChecks(segment: SpecSegment, ctx: Ctx): string[] {
 /** One segment: its preconditions, then its steps. */
 function emitSegment(segment: SpecSegment, ctx: Ctx): string[] {
   const out: string[] = [];
-  ctx.lastUrl = null;
+  ctx.known = new Set(Object.entries(segment.params).filter(([, p]) => p.known === true).map(([slot]) => slot));
+  // One echo ledger per segment, as replay keeps one per replayed segment.
+  ctx.segments = (ctx.segments ?? 0) + 1;
+  ctx.echoes = `typed${ctx.segments}`;
+  ctx.echoUsed = false;
   out.push(`// ${segment.id}: ${commentSafe(segment.template)}`);
   out.push(`// recorded on a page matching ${commentSafe(segment.preconditions.urlPattern)}`);
+  // The url precondition: replay's start-of-segment rule, through the shared
+  // preconditionVerdict, unless the segment's first step navigates (then step
+  // 1 puts the browser on the recorded page, and replay asks nothing either).
+  if (!navigatesItself(segment)) {
+    noteSlots(segment.preconditions.urlPattern, ctx);
+    const where = `${ctx.stepId} ${segment.id}`;
+    let similarity = 'null';
+    if (segment.preconditions.fingerprint) {
+      // Replay's own adapter (src/skills/replay.ts): measure the live page
+      // with the shared fingerprintPage and hand the verdict the cosine
+      // against the recorded vector — null when the page could not be read.
+      similarity = `cosine(recordedFingerprint(${q(ctx.stepId)}, ${q(segment.id)}), (await fingerprintPage(page)) ?? undefined)`;
+      out.push("// the recording's page fingerprint decides a soft url match here, measured as replay measures it");
+    } else if (segment.preconditions.fingerprinted) {
+      // A file compiled before the vector travelled: the recording
+      // fingerprinted this page and the file has nothing to measure against,
+      // so the gate is told so and refuses the soft match replay would decide
+      // by fingerprint. Said in the file and in the emit warnings.
+      const diagnostic = unmeasuredPreconditionDiagnostic(ctx.stepId, segment.id);
+      ctx.diagnostics.push(diagnostic);
+      ctx.warnings.push(diagnostic.line!);
+      out.push('// NOTE: the recording fingerprinted this page, but this file predates carried fingerprints, so a soft url match is refused here (only a strict match passes) where replay would decide it by fingerprint. Recompile to carry the fingerprint.');
+      similarity = "'unmeasured'";
+    }
+    // page.url() is an argument AHEAD of the measurement, so it is read first —
+    // replay's order (startUrl, then fingerprintPage).
+    out.push(`await preconditionGate(${q(segment.preconditions.urlPattern)}, page.url(), p, ${q(where)}, ${similarity});`);
+  }
   const identity = identityChecks(segment, ctx);
   // Where the gate goes, not whether: a self-navigating segment is checked
   // AFTER its own goto, never before it and never not at all.
@@ -2197,6 +2198,11 @@ function emitSegment(segment: SpecSegment, ctx: Ctx): string[] {
       );
     }
   }
+  if (ctx.echoUsed) {
+    out.splice(2, 0, `// What this segment types, selects or names: a read that returns only that is an echo (see echoRead).`, `const ${ctx.echoes} = new Set<string>();`);
+  }
+  ctx.echoes = undefined;
+  ctx.echoUsed = false;
   return out;
 }
 
@@ -2276,7 +2282,9 @@ function callArgs(step: SpecStep, slots: string[], vars: Set<string>, warnings: 
   const fields = slots.map((slot) => {
     // A minted value has no caller binding by construction: the body reads it
     // off the live url after the step that creates it.
-    if (derived.has(slot)) return `${slot}: ''`;
+    // Not passed at all: replay's params carry no derived value until it is
+    // minted, and an unset `{{dN}}` is a wildcard where '' is an empty segment.
+    if (derived.has(slot)) return null;
     const bound = step.params[slot];
     // Only a USED slot is checked. `outputs` is whatever keys the model's
     // report happened to emit (flow.ts's runFlow), and across the published
@@ -2292,7 +2300,7 @@ function callArgs(step: SpecStep, slots: string[], vars: Set<string>, warnings: 
     warnings.push(`${step.id}: slot ${slot} has no flow binding — the recorded value is inlined`);
     return `${slot}: ${paramExpr(example, vars)} /* recorded value; no flow binding */`;
   });
-  return `{ ${fields.join(', ')} }`;
+  return `{ ${fields.filter((f) => f !== null).join(', ')} }`;
 }
 
 /**
@@ -2337,7 +2345,7 @@ function urlOutputLines(stepId: string, outs: string[] | undefined): string[] {
     // No urlBefore: nothing here acted, so the wait is simply for the part to
     // be there at all — an SPA can update its url a beat after the page itself
     // settles, which is what consumedUrlOutputs waits out.
-    else lines.push(`outputs[${q(key)}] = await urlPartWhen(page, ${q(out.slice('url.'.length))});`);
+    else lines.push(`outputs[${q(key)}] = (await urlPartWhen(page, ${q(out.slice('url.'.length))})) ?? '';`);
   }
   return lines;
 }
@@ -2387,9 +2395,12 @@ function requiredEnvNames(spec: SpecFlow): string[] {
   return [...names].sort();
 }
 
-export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; warnings: string[] } {
+export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; warnings: string[]; diagnostics: Diagnostic[] } {
   if (o.tier !== 'plain') throw new Error(`unknown emit tier ${String(o.tier)}`);
   const warnings: string[] = [];
+  // Problems only emission can find — a capability the artifact cannot carry —
+  // travel back to the compile caller as diagnostics, not just as prose.
+  const diagnostics: Diagnostic[] = [];
   const vars = new Set(spec.vars);
   const urlRefs = consumedUrlRefs(spec);
   const knownOutputs = outputKeys(spec, urlRefs);
@@ -2398,7 +2409,7 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
 
   // Bodies first: which helpers the file needs is decided by what they use.
   const bodies = spec.steps.map((step) => {
-    const ctx: Ctx = { stepId: step.id, slots: new Set(), warnings, downloads: 0, lastUrl: null, loops: 0, picks: 0, urls: 0, binds: 0, segmentId: '', stepIndex: 0, note: stepNote(flagged.get(step.id)) };
+    const ctx: Ctx = { stepId: step.id, slots: new Set(), warnings, diagnostics, downloads: 0, loops: 0, picks: 0, urls: 0, binds: 0, segmentId: '', stepIndex: 0, note: stepNote(flagged.get(step.id)), known: new Set() };
     const lines: string[] = [];
     if (!step.segments.length) {
       lines.push(`// TODO: no converged procedure for ${JSON.stringify(commentSafe(step.instruction))}`);
@@ -2412,9 +2423,19 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
       }
       const published = urlOutputLines(step.id, urlRefs.get(step.id));
       if (published.length) lines.push('', ...published);
+      // The one piece of state a body keeps between its steps: a recorded
+      // dialog that did not open (see expectationLines), consulted by every
+      // later step before it resolves — as runOneStep keeps it.
+      if (ctx.dialogAbsence) lines.unshift('let absentDialog: { name: string; lines: string[] } | null = null;', '');
     }
     return { step, lines, slots: slotsOf(step, ctx.slots) };
   });
+
+  // What emission itself found goes above the step it belongs to, exactly as a
+  // diagnostic compile found beforehand does.
+  for (const d of diagnostics) {
+    if (d.step && FLAGGED.includes(d.code)) flagged.set(d.step, [...(flagged.get(d.step) ?? []), d]);
+  }
 
   // Call sites BEFORE the helper scan: `need(` is emitted only at a call site,
   // and `neededHelpers` decides what the file carries by what its text names.
@@ -2422,16 +2443,21 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
   // collected.
   const calls = bodies.map((b) => callArgs(b.step, b.slots, vars, warnings));
   const body = [...bodies.flatMap((b) => b.lines), ...calls].join('\n');
-  const helpers = neededHelpers(body);
+  const helpers = neededHelpers(body, [recipesHelper(spec)]);
 
   const out: string[] = [
     '// @sitelooper-flow v1',
     `// Generated by sitelooper from flow ${JSON.stringify(spec.name)} — do not edit by hand.`,
     '// Repair drift with `sitelooper repair <this file>`; the FLOW constant below is the source of truth.',
-    `import { expect, test, ${helpers.some((h) => h.source.some((l) => l.includes('Locator'))) ? 'type Locator, ' : ''}type Page } from '@playwright/test';`,
+    `import { ${helpers.some((h) => h.source.some((l) => l.includes('ElementHandle'))) ? 'type ElementHandle, ' : ''}expect, test, ${helpers.some((h) => h.source.some((l) => l.includes('Locator'))) ? 'type Locator, ' : ''}type Page } from '@playwright/test';`,
+    '',
+    '// This file needs @playwright/test and nothing else. A module-scoped',
+    '// declaration of the one Node global it reads keeps it type-checking in a',
+    '// project without @types/node, and shadows harmlessly in one that has it.',
+    'declare const process: { env: Record<string, string | undefined> };',
     '',
     BEGIN_MARKER,
-    `export const FLOW = ${JSON.stringify(spec, null, 2)};`,
+    `export const FLOW = ${flowLiteral(spec)};`,
     END_MARKER,
     '',
     `export const flowStepIds = ${JSON.stringify(spec.steps.map((step) => step.id))} as const;`,
@@ -2446,6 +2472,16 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
     'export interface FlowRun {',
     '  outputs: Outputs;',
     '  drift: string[];',
+    '  /**',
+    "   * Output keys whose read only echoed what the flow itself typed or selected:",
+    "   * published, but not proof the app persisted them (replay's echoedValues).",
+    '   */',
+    '  echoed: string[];',
+    '  /**',
+    "   * Every distinct record identifier a record-creating step minted this run, in",
+    "   * order (replay's `created`); a loop body contributes one per pass.",
+    '   */',
+    '  created: string[];',
     '}',
     'export interface RunOptions {',
     '  /** Absolute URL, or a relative path resolved through the Playwright project baseURL. */',
@@ -2453,7 +2489,7 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
     '  run?: FlowRun;',
     '}',
     'export function createFlowRun(): FlowRun {',
-    '  return { outputs: {}, drift: [] };',
+    '  return { outputs: {}, drift: [], echoed: [], created: [] };',
     '}',
     '/**',
     ' * The wall-clock budget one run of this flow needs under a test runner: every',
@@ -2500,7 +2536,13 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
       for (const line of formatDiagnostic(d).split('\n')) out.push(`  // ${commentSafe(line)}`);
     }
     out.push(`  /** ${commentSafe(b.step.instruction)} */`);
-    const p = b.slots.length ? `{ ${b.slots.map((s) => `${s}: string`).join('; ')} }` : 'Record<string, string>';
+    // Derived slots are not declared: they are set on `p` only once minted
+    // (bindPart), so the index signature carries them.
+    const derivedSlots = new Set(b.step.segments.flatMap((s) => Object.keys(s.derived ?? {})));
+    const declared = b.slots.filter((s) => !derivedSlots.has(s));
+    const p = declared.length
+      ? `{ ${declared.map((s) => `${s}: string`).join('; ')}${declared.length < b.slots.length ? '; [slot: string]: string' : ''} }`
+      : 'Record<string, string>';
     out.push(`  async ${q(b.step.id)}(page: Page, p: ${p}, outputs: Outputs, run: FlowRun = createFlowRun()): Promise<void> {`);
     for (const line of b.lines) out.push(...line.split('\n').map((l) => (l ? '    ' + l : '')));
     out.push('  },');
@@ -2513,6 +2555,8 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
   out.push('  const run = options.run ?? createFlowRun();');
   out.push('  run.outputs = {};');
   out.push('  run.drift.length = 0;');
+  out.push('  run.echoed = [];');
+  out.push('  run.created = [];');
   out.push('  const outputs = run.outputs;');
   out.push('  try {');
   out.push(`    await page.goto(options.startUrl ?? ${q(spec.startUrl)});`);
@@ -2531,7 +2575,7 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
   out.push('  }');
   out.push('}', '');
 
-  return { source: out.join('\n'), warnings };
+  return { source: out.join('\n'), warnings, diagnostics };
 }
 
 /** An environment variable name for a run var, so the scaffold has something to pass. */
@@ -2574,6 +2618,8 @@ export function emitSpecFile(spec: SpecFlow): string {
     '    // Add your own assertions here; this file is yours and sitelooper never rewrites it.',
     '    // `outputs` has typed keys for every value this flow can publish.',
     '    // `steps` lets you run one generated step on its own.',
+    '    // `run.echoed` lists outputs that only echo what the flow typed or selected:',
+    '    // do not assert persistence on those without reading them somewhere else.',
     '    void outputs;',
     '    void steps;',
     '  } finally {',

@@ -75,6 +75,26 @@ describe('readiness acceptance gate', () => {
     expect(result.blockers.join(' ')).toContain('unsupported');
   });
   /**
+   * An artifact compiled before a recorded position could be resolved carries
+   * `// TODO: dropped the recorded position fallback` for every chain that had
+   * a point. The current compiler resolves the point and never writes that
+   * line, so such an artifact is stale, not unsupported: readiness says to
+   * regenerate it rather than reporting an unrelated blocker.
+   */
+  it('reports an artifact from an older compiler as needing regeneration, not as unsupported', () => {
+    fs.appendFileSync(flowFile, '\n  // TODO: dropped the recorded position fallback (10,20) — a spec cannot resolve a point.');
+    const result = runReadinessCheck({ flowFile, vars: { name: 'n-{n}' }, fixtureIsolation: true }, () => { throw new Error('must not run'); });
+    expect(result.outcome).toBe('blocked');
+    expect(result.blockers.join(' ')).toContain('older version');
+    expect(result.blockers.join(' ')).toContain('regenerate it with `sitelooper compile`');
+    expect(result.blockers.join(' ')).not.toContain('unsupported');
+    // a genuine unsupported TODO beside it is still reported as such
+    fs.appendFileSync(flowFile, '\n// TODO: no locator this compiler can express for click');
+    const both = runReadinessCheck({ flowFile, vars: { name: 'n-{n}' }, fixtureIsolation: true }, () => { throw new Error('must not run'); });
+    expect(both.blockers.join(' ')).toContain('older version');
+    expect(both.blockers.join(' ')).toContain('unsupported');
+  });
+  /**
    * A step whose required expectation had no nameable line emitted no
    * assertion at all: it ran, checked nothing about its own effect, and went
    * green. Three green runs of that are three runs of nothing, so readiness

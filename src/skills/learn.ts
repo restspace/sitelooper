@@ -1,3 +1,4 @@
+import { isMutatingAction, mutatesSteps } from '../execution/lifecycle.js';
 import type { InstructionResult, SkillRecord } from '../agent/loop.js';
 import type { Report } from '../agent/report.js';
 import type { RecordedEntry, RecordedInstruction } from '../daemon/recorder.js';
@@ -400,8 +401,6 @@ export function publishedOutputs(skill: Skill): string[] {
   return [...out];
 }
 
-/** Tools that CHANGE the app, as opposed to observing it. */
-const MUTATING = new Set(['click', 'dblclick', 'right_click', 'modifier_click', 'fill', 'type', 'press', 'select', 'check', 'drag', 'upload']);
 
 /**
  * How many state-changing steps the MODEL drove in a recovery, beyond what a
@@ -414,7 +413,7 @@ const MUTATING = new Set(['click', 'dblclick', 'right_click', 'modifier_click', 
  */
 export function agentGesturesOutsideReplay(entries: RecordedEntry[]): number {
   let n = 0;
-  for (const e of entries) if (e.k === 'step' && !e.via && MUTATING.has(e.tool)) n++;
+  for (const e of entries) if (e.k === 'step' && !e.via && isMutatingAction(e.tool)) n++;
   return n;
 }
 
@@ -432,8 +431,7 @@ export const MAX_STRAY_GESTURES_FOR_PIN = 2;
 export function mutates(store: SkillStore, id: string | undefined): boolean {
   const skill = id ? store.get(id) : null;
   if (!skill) return false;
-  const walk = (steps: Skill['steps']): boolean => steps.some((s) => MUTATING.has(s.tool) || (s.body ? walk(s.body) : false));
-  return walk(skill.steps);
+  return mutatesSteps(skill.steps);
 }
 
 /**

@@ -36,7 +36,7 @@ export interface SiteMap {
 }
 
 export interface PageTemplate {
-  /** The url pattern this template is keyed by — compile.ts urlPattern(url). */
+  /** The url pattern this template is keyed by — compile.ts urlPattern(url, undefined, { query: false }). */
   pattern: string;
   /** Last seen document title, digit runs masked so record titles collapse. */
   title?: string;
@@ -217,7 +217,7 @@ export class SiteModel {
       if (!origin) return;
       const map = this.load(origin);
       const now = new Date().toISOString();
-      const page = this.touch(map, urlPattern(url), now);
+      const page = this.touch(map, urlPattern(url, undefined, { query: false }), now);
       const title = (sig?.title ?? '').trim();
       if (title) page.title = maskDigits(title).slice(0, MAX_TITLE);
       const seenHere = new Set<string>();
@@ -255,13 +255,13 @@ export class SiteModel {
       if (!control?.role || !control.name) return;
       const origin = originOf(fromUrl);
       if (!origin) return;
-      const to = urlPattern(toUrl);
+      const to = urlPattern(toUrl, undefined, { query: false });
       if (!to) return;
       const map = this.load(origin);
       const now = new Date().toISOString();
       // A transition is evidence the page existed, but not evidence of what it
       // showed; touch it without counting a visit or disturbing the inventory.
-      const page = this.touch(map, urlPattern(fromUrl), now, false);
+      const page = this.touch(map, urlPattern(fromUrl, undefined, { query: false }), now, false);
       const key = controlKey(control.role, control.name);
       const entry = page.transitions[key];
       if (entry && entry.to === to) {
@@ -300,7 +300,7 @@ export class SiteModel {
     try {
       const origin = originOf(url);
       if (!origin) return '';
-      const pattern = urlPattern(url);
+      const pattern = urlPattern(url, undefined, { query: false });
       const page = this.load(origin).pages[pattern];
       if (!page || !page.seen) return '';
       const head =

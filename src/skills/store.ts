@@ -329,15 +329,9 @@ export function skillsDir(): string {
   return process.env.SITELOOPER_SKILLS_DIR || path.join(rootDir(), 'skills');
 }
 
-export function originOf(url: string): string | null {
-  try {
-    const u = new URL(url);
-    if (!/^https?:$/.test(u.protocol)) return u.protocol === 'file:' ? 'file://' : null;
-    return u.origin;
-  } catch {
-    return null;
-  }
-}
+// The origin rule is shared with the compiled artifact (src/execution/url.ts);
+// every daemon call site keeps importing it from here.
+export { originOf } from '../execution/url.js';
 
 /**
  * Filename-safe name for an origin. The SCHEME is part of it: dropping it put

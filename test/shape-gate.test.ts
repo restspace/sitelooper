@@ -120,11 +120,11 @@ const INVENTORY: { file: string; fn: Fn; calls: number; question: string; fails:
   {
     file: 'src/skills/compile.ts',
     fn: 'digitDominant',
-    calls: 3,
+    calls: 2,
     question: 'is this url segment / name a record rather than a route or control?',
     fails: 'cost',
     note:
-      'urlPattern (path and hash state) proposes `:id`, softUrlMatch corrects ' +
+      'urlPattern (one reducer for path, query and hash state) proposes `:id`, softUrlMatch corrects ' +
       'on observed variance; stableFirst demotes a name that is only an id.',
   },
   {
@@ -225,7 +225,7 @@ describe('the shape rule has one home', () => {
     // questions, but each has ONE threshold. Page-side code cannot import, so
     // its literal is held equal to the constant here.
     expect(code(read('src/daemon/recorder.ts'))).toContain(`/${GENERATED_ID_HEX_RUN.source}/i`);
-    expect(code(read('src/daemon/fingerprint.ts'))).toContain(CLASS_HASH_HEX_RUN.source);
+    expect(code(read('src/execution/fingerprint.ts'))).toContain(CLASS_HASH_HEX_RUN.source);
   });
 });
 
@@ -255,7 +255,11 @@ const ALLOWLIST: Record<string, { hits: string[]; answers: string }> = {
     answers: 'tokenises prose for proseIdentifiers (digitDominant judges each token), and skips a url scheme (syntax) so a host is never cited',
   },
   'src/daemon/diff.ts': { hits: ['[a-z0-9-]*'], answers: 'parses an aria-snapshot role name (syntax)' },
-  'src/daemon/fingerprint.ts': { hits: ['[0-9a-f]{6'], answers: 'CLASS_HASH_HEX_RUN, page-side (decision 3C)' },
+  'src/execution/fingerprint.ts': { hits: ['[0-9a-f]{6'], answers: 'CLASS_HASH_HEX_RUN, page-side (decision 3C)' },
+  'src/execution/url.ts': {
+    hits: ['[0-9a-f]{8'],
+    answers: 'mintedShape, whether a disagreeing url segment may be generalised at all — the generatedToken arm of shape.ts restated, because a module the artifact embeds may import nothing',
+  },
   'src/daemon/recorder.ts': {
     hits: ['[0-9a-f]{8', '[0-9a-z]{1', '[0-9a-z]{1'],
     answers: 'GENERATED_ID_HEX_RUN page-side (3C); React useId `_r8b_`, node- and page-side — framework ids, only demoted',
@@ -271,6 +275,10 @@ const ALLOWLIST: Record<string, { hits: string[]; answers: string }> = {
   'src/spec/emit.ts': {
     hits: ['[A-Za-z0-9_$]*', '[A-Za-z0-9_$]*', '[A-Za-z0-9_]*', '[A-Za-z0-9_]*'],
     answers: 'JS identifier and {{env:NAME}} syntax in generated code',
+  },
+  'src/spec/runtime-source.ts': {
+    hits: ['[a-z0-9-]*', '[a-z0-9-]*'],
+    answers: 'validates a shared execution module name, in a sibling import and as a file to load (syntax)',
   },
 };
 

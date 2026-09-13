@@ -16,7 +16,8 @@ import { drainDrift, llmProposer, triage, type DrainSummary, type DriftTicket } 
 import { compileFlow } from './spec/index.js';
 import { foldTicketEvidence, mintVars, notConverged, reorderByEvidence } from './spec/repair.js';
 import { emitFlowFile } from './spec/emit.js';
-import { flowToSpec, type SpecFlow } from './spec/ir.js';
+import { carryFingerprints, carryRecipeSnapshot, flowToSpec, type SpecFlow } from './spec/ir.js';
+import { ComponentStore } from './skills/components.js';
 import { LiftError, liftFlowFile } from './spec/lift.js';
 import { diffSpecChanges, foldPatchedVariants, reloadStaged, rerecordDiagnostics, stageRepair } from './spec/repair.js';
 import { diagnosticLine, formatDiagnostic, type Diagnostic } from './spec/diagnostics.js';
@@ -1495,6 +1496,11 @@ async function repairFlowCommand(
   // candidate that dropped to the back of a chain reads, in the emitted file,
   // as a reordering with no reason attached.
   const evidenceLines: string[] = [];
+  // What changed in the recipe snapshot the file carries, and what the
+  // component store holds that it cannot express — filled in once the
+  // convergence runs are done (carryRecipeSnapshot).
+  const recipeLines: string[] = [];
+  const recipeDiagnostics: Diagnostic[] = [];
   // One retirement, one line, however many runs re-observe it.
   const retirementsReported = new Set<string>();
   runResetCmd(resetCmd, 'run 1', say);
@@ -1581,13 +1587,13 @@ async function repairFlowCommand(
     // Every problem this repair found, in the shape every surface reports one
     // (spec/diagnostics.ts) — present in EVERY JSON shape the command prints,
     // refusal, gate failure, dry run and success alike.
-    diagnostics: [...flagged.values()],
+    diagnostics: [...flagged.values(), ...recipeDiagnostics],
     // The tickets themselves, not just how many: "15 drift ticket(s)" cannot be
     // acted on, and the one question a stuck converge loop asks is WHICH
     // locator keeps missing and what won instead.
     tickets,
     ...summary,
-    changes: [...diff.lines, ...evidenceLines],
+    changes: [...diff.lines, ...evidenceLines, ...recipeLines],
     evidence: evidenceLines,
     droppedExpectations: diff.droppedExpectations,
     weakenedByVariant: diff.weakenedByVariant,
@@ -1684,6 +1690,20 @@ async function repairFlowCommand(
   // IR can legitimately move again between the drain and here. Re-diff rather
   // than emit a summary that predates the adoption.
   const finalSpec = reloadStaged(staged).spec;
+  // The recipe snapshot is state the staged store never held. The runs above
+  // went through the daemon, whose recipes are this machine's component store
+  // as it stands NOW, so "converged" is evidence for that snapshot and the
+  // written file carries it: adopted, with a change line per recipe that
+  // moved, when it differs from the one the file was compiled with.
+  const carried = carryRecipeSnapshot(before.recipes, finalSpec, new ComponentStore());
+  recipeLines.push(...carried.changes);
+  recipeDiagnostics.push(...carried.diagnostics);
+  // Likewise each segment's page fingerprint: the staged store was lowered
+  // from the file, so its skills hold the file's vectors; carried unless the
+  // skill a run used recorded a different one (carryFingerprints).
+  const fingerprints = carryFingerprints(before, finalSpec);
+  recipeLines.push(...fingerprints.changes);
+  recipeDiagnostics.push(...fingerprints.diagnostics);
   const finalDiff = diffSpecChanges(before, finalSpec);
   if (finalDiff.lines.join('\n') !== diff.lines.join('\n')) {
     diff = finalDiff;
@@ -1691,6 +1711,12 @@ async function repairFlowCommand(
     printChanges('--- changes (after the convergence run(s) adopted what the repair proposed) ---', diff);
     gateExpectations();
   }
+  if (recipeLines.length) {
+    changed = [...changed, ...recipeLines];
+    say('--- recipe snapshot and fingerprint changes ---');
+    for (const line of recipeLines) say(`  ${line}`);
+  }
+  for (const d of recipeDiagnostics) console.error(`  warning: ${d.line}`);
 
   // The last word before the write, and ahead of --dry-run's own report: a
   // dry run that says "0 change(s), nothing written" about a flow with a
@@ -1739,7 +1765,8 @@ async function repairFlowCommand(
   }
   fs.writeFileSync(outFile, emitted.source);
   if (!json) {
-    for (const w of emitted.warnings) console.error(`  warning: ${w}`);
+    // A line already printed from the carried diagnostics above is not said twice.
+    for (const w of emitted.warnings) if (!recipeDiagnostics.some((d) => d.line === w)) console.error(`  warning: ${w}`);
     console.log(`wrote ${outFile} (${changed.length} change(s); the .spec.ts was not touched)`);
   }
 
@@ -1889,6 +1916,9 @@ async function rerecordFlowCommand(
   const pinned = after?.skill ?? verdict.pinned;
   const skill = pinned ? stagedInput.store.get(pinned) : null;
   const persisted = persistRerecordInput(input, stagedInput, verdict.ok);
+  // The recipe snapshot the rewritten file now carries, where it moved.
+  for (const line of persisted.recipeChanges ?? []) say(`  ${line}`);
+  for (const d of persisted.diagnostics ?? []) console.error(`  warning: ${d.line}`);
   const payload = {
     flow: flow.name,
     file,
@@ -1907,7 +1937,8 @@ async function rerecordFlowCommand(
       repinned: r.step?.repinned ?? null,
       turns: r.step?.turns ?? null,
     })),
-    diagnostics: verdict.ok ? [] : [verdict.diagnostic],
+    diagnostics: verdict.ok ? [...(persisted.diagnostics ?? [])] : [verdict.diagnostic],
+    ...(persisted.recipeChanges?.length ? { recipeChanges: persisted.recipeChanges } : {}),
   };
 
   // Diagnostics first, before the counts and the file paths.

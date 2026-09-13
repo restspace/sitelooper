@@ -9,12 +9,15 @@
  * element than the replay did is worse than no spec at all: it passes or
  * fails for reasons the recording never observed.
  *
- * Two things the runtime decides at resolve time have to be decided here
- * instead: the chain order (mirrored from `specOf`) and the identity guard
- * (mirrored from `ResolvePolicy.requireIdentity`).
+ * Nothing the runtime decides at resolve time is decided here. The chain goes
+ * to the shared `resolveCandidates` (src/execution/resolve.ts, embedded in
+ * the artifact) in STORED order with its stored indices; the order, the
+ * identity guard, ambiguity and the wait are that policy's, in both runners.
+ * What this module renders per candidate is the OBSERVATION the policy asks
+ * for (`observationSource`): the live locator plus the compile-time facts.
  */
 import type { LocatorCandidate } from '../daemon/recorder.js';
-import { specOf } from '../skills/replay.js';
+import { structuralCandidate } from '../execution/resolve.js';
 import { VOLATILE_TOKEN_SHAPE, WILDCARD, volatileMatcher } from '../shared/text.js';
 
 export interface SourceOptions {
@@ -225,81 +228,126 @@ export function candidateSource(c: LocatorCandidate, o: SourceOptions = {}): str
       if (c.selector) src += `.locator(${stringSource(c.selector, o)})`;
       break;
     case 'point':
-      // markPoint tags the element under the recorded coordinates at replay
-      // time; a plain spec has nothing to tag, so the candidate is dropped
-      // rather than approximated into a selector that names a position.
+      // A point is resolved by marking the element under the recorded
+      // coordinates first (markPoint, src/execution/point.ts) and naming the
+      // mark; that is a two-move resolution the shared policy makes, not a
+      // plain expression. See `observationSource`, which renders it with its
+      // geometry. As a bare expression it has no form.
       return null;
   }
   return c.nth !== undefined ? `${src}.nth(${c.nth})` : src;
 }
 
-/** The whole chain as ONE expression: candidates ordered by specOf (identity, handles,
- *  path), joined with .or(), point dropped. When the chain carries identity (a scoped
- *  candidate with hasText), every non-identity candidate is guarded with
- *  .filter({ hasText }) so a fallback cannot land on another record - mirrors
- *  ResolvePolicy.requireIdentity. Returns the source, the candidates that could not be
- *  expressed, and the hasText guards applied. Multi-line pretty form: one candidate per
- *  line, `.or(` continuation lines indented by `indent`. */
-/** The chain as an ordered list of expressions, best first, with the identity guards applied. */
-export function candidateSources(
-  chain: LocatorCandidate[],
-  o: SourceOptions = {},
-): { sources: string[]; dropped: LocatorCandidate[]; identity: string[] } {
-  const spec = specOf(chain);
-  const ordered = [...spec.identity, ...spec.handles, ...spec.path];
-  const scoped = spec.identity as Extract<LocatorCandidate, { kind: 'scoped' }>[];
-  const guards = [...new Set(scoped.map((c) => c.hasText).filter(Boolean))];
-
+/**
+ * The chain as a list of plain expressions in STORED order — every candidate
+ * a bare expression can name, none guarded, none reordered, duplicates kept.
+ * For a presence check (does anything of this chain exist?), not for a
+ * resolution: an action resolves through `observationSources` and the shared
+ * policy. Points have no bare form and are reported in `dropped`.
+ */
+export function candidateSources(chain: LocatorCandidate[], o: SourceOptions = {}): { sources: string[]; dropped: LocatorCandidate[] } {
   const dropped: LocatorCandidate[] = [];
-  const applied = new Set<string>();
   const sources: string[] = [];
-  for (const c of ordered) {
-    let src = candidateSource(c, o);
-    if (src === null) {
-      dropped.push(c);
-      continue;
-    }
-    if (c.kind !== 'scoped') {
-      // requireIdentity's rule: a value the candidate already carries needs no
-      // guard, everything else must still land on a node bearing the record's
-      // text. Unlike replay there is no exemption for the primary - a spec
-      // re-resolves nothing and has no recovery to fail over to, so a fallback
-      // that would silently work ANOTHER record must instead match nothing and
-      // let the step fail loudly.
-      const expr = JSON.stringify(c);
-      for (const g of guards.filter((v) => !expr.includes(v))) {
-        src += `.filter({ hasText: ${stringSource(g, o)} })`;
-        applied.add(g);
-      }
-    }
-    // A recorded chain routinely names the same element twice - an `id`
-    // candidate and the `css` candidate built from the same selector - and
-    // two identical expressions are two identical resolutions: no extra
-    // coverage, one more line for a reviewer to read past.
-    if (!sources.includes(src)) sources.push(src);
+  for (const c of chain) {
+    const src = candidateSource(c, o);
+    if (src === null) dropped.push(c);
+    else sources.push(src);
   }
-  return { sources, dropped, identity: [...applied] };
+  return { sources, dropped };
 }
 
-/** The whole chain as ONE expression: candidates ordered by specOf (identity, handles,
- *  path), joined with .or(), point dropped. When the chain carries identity (a scoped
- *  candidate with hasText), every non-identity candidate is guarded with
- *  .filter({ hasText }) so a fallback cannot land on another record - mirrors
- *  ResolvePolicy.requireIdentity. Returns the source, the candidates that could not be
- *  expressed, and the hasText guards applied. Multi-line pretty form: one candidate per
- *  line, `.or(` continuation lines indented by `indent`.
- *
- *  `.or()` is a UNION, so this expresses "any of these", not "the first of
- *  these that names exactly one element". That is right for a presence check
- *  and wrong for an action - see the emitter's `pick` helper.
+/**
+ * The whole chain as ONE `.or()` union, in stored order, points dropped.
+ * Multi-line pretty form: one candidate per line, `.or(` continuation lines
+ * indented by `indent`. A union expresses "any of these", never "the one the
+ * recording meant" — presence checks only; an action goes through the policy.
  */
-export function chainSource(
-  chain: LocatorCandidate[],
-  o: SourceOptions & { indent?: string } = {},
-): { source: string; dropped: LocatorCandidate[]; identity: string[] } {
+export function chainSource(chain: LocatorCandidate[], o: SourceOptions & { indent?: string } = {}): { source: string; dropped: LocatorCandidate[] } {
   const indent = o.indent ?? '  ';
-  const { sources, dropped, identity } = candidateSources(chain, o);
+  const { sources, dropped } = candidateSources(chain, o);
   const source = sources.length ? sources[0] + sources.slice(1).map((p) => `
 ${indent}.or(${p})`).join('') : '';
-  return { source, dropped, identity };
+  return { source, dropped };
+}
+
+/** A number as source; the recorder measures finite pixels, and anything else renders as 0 rather than as `NaN`. */
+const num = (n: unknown): string => (Number.isFinite(n) ? String(n) : '0');
+
+/**
+ * A stored value as a source literal that `JSON.stringify` will encode at run
+ * time: strings through `stringSource` (slots become `${p.vN}`), everything
+ * else as JSON would write it (a non-finite number as `null`, as
+ * `JSON.stringify` itself renders one). Fields holding `undefined` are left
+ * out, as `JSON.stringify` leaves them out.
+ */
+function literalSource(value: unknown, o: SourceOptions): string {
+  if (typeof value === 'string') return stringSource(value, o);
+  if (Array.isArray(value)) return `[${value.map((v) => literalSource(v, o)).join(', ')}]`;
+  if (value !== null && typeof value === 'object') return objectSource(value as Record<string, unknown>, o);
+  return JSON.stringify(value === undefined ? null : value);
+}
+
+function objectSource(obj: Record<string, unknown>, o: SourceOptions): string {
+  const fields = Object.entries(obj)
+    .filter(([, v]) => v !== undefined)
+    .map(([k, v]) => `${/^[A-Za-z_$][\w$]*$/.test(k) ? k : JSON.stringify(k)}: ${literalSource(v, o)}`);
+  return fields.length ? `{ ${fields.join(', ')} }` : '{}';
+}
+
+/**
+ * One candidate as the OBSERVATION the shared `resolveCandidates` takes
+ * (`CandidateObservation`, src/execution/resolve.ts), rendered as an object
+ * literal. What replay's `resolveChain` builds live, the artifact renders at
+ * compile time, field for field:
+ *
+ *  - `locator`: the same expression `candidateSource` builds, with NO
+ *    identity filter — identity is the policy's runtime rule; for a point,
+ *    `pointLocator(page, { x, y })`, which names what `markPoint` tags.
+ *  - `index`: the candidate's position in the STORED chain, so telemetry
+ *    names the recorded candidate. Passed in by the caller, never recomputed.
+ *  - `structural`: `structuralCandidate`, the shared rule, evaluated here and
+ *    rendered as a boolean literal.
+ *  - `kind`: as recorded.
+ *  - `carries`: the candidate's JSON with its slots filled from `p` at run
+ *    time — what the candidate itself NAMES, so an identity value found in it
+ *    needs no guarding. Rendered as `JSON.stringify({ … })` over an object
+ *    literal whose string fields are template literals, so the encoding
+ *    happens AFTER the filling, at run time, in the daemon's own order
+ *    (`JSON.stringify(candidate)` of the filled chain): a value carrying a
+ *    `"` or `\` is escaped in both runners' text alike, and the guard runs
+ *    for it in both. Replay evidence (`seen`) is not text the candidate
+ *    names and is left out.
+ *  - `nth`: the recorded match index, when there is one — on the locator
+ *    AND on the observation, exactly as the daemon passes both.
+ *  - `point`: the recorded geometry, for a point. The first point in a chain
+ *    is also the plausibility yardstick for every positional guess in it.
+ *
+ * `retired` is deliberately absent: it is the daemon's evidence store, and an
+ * artifact has none — a compiled chain is ordered by class and recorded
+ * order alone.
+ */
+export function observationSource(c: LocatorCandidate, index: number, o: SourceOptions = {}): string {
+  const page = o.page ?? 'page';
+  const { seen: _seen, ...named } = c as LocatorCandidate & { seen?: unknown };
+  void _seen;
+  const fields = [
+    `locator: ${c.kind === 'point' ? `pointLocator(${page}, { x: ${num(c.x)}, y: ${num(c.y)} })` : candidateSource(c, o)}`,
+    `index: ${index}`,
+    `structural: ${structuralCandidate(c)}`,
+    `kind: ${quote(c.kind)}`,
+    `carries: JSON.stringify(${objectSource(named as Record<string, unknown>, o)})`,
+  ];
+  if (c.nth !== undefined) fields.push(`nth: ${c.nth}`);
+  if (c.kind === 'point') {
+    // A recording without a role or tag is malformed, not a compile crash: an
+    // empty tag matches nothing at markPoint, which is the honest miss.
+    const role = c.role === null || c.role === undefined ? 'null' : quote(String(c.role));
+    fields.push(`point: { x: ${num(c.x)}, y: ${num(c.y)}, w: ${num(c.w)}, h: ${num(c.h)}, role: ${role}, tag: ${quote(String(c.tag ?? ''))}, vw: ${num(c.vw)}, vh: ${num(c.vh)} }`);
+  }
+  return `{ ${fields.join(', ')} }`;
+}
+
+/** The whole chain as observations, one per candidate, in stored order with stored indices. */
+export function observationSources(chain: LocatorCandidate[], o: SourceOptions = {}): string[] {
+  return chain.map((c, index) => observationSource(c, index, o));
 }

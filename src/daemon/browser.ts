@@ -2,6 +2,7 @@ import path from 'node:path';
 import { chromium, type BrowserContext, type Page, type Video } from 'playwright-core';
 import { ensureSessionDir } from '../shared/paths.js';
 import { DialogManager } from './dialogs.js';
+import { trackRequests } from '../execution/browser.js';
 import { ScriptRecorder } from './recorder.js';
 import { SkillStore } from '../skills/store.js';
 
@@ -233,23 +234,8 @@ export class BrowserSession {
 }
 
 /**
- * Requests in flight per page, so a tool can tell "the click did nothing" from
- * "the click asked the server and will route on the answer" without waiting a
- * fixed time for both. Counted from the page's own request events, so a page
- * this session never adopted reads as idle.
+ * Requests in flight per page: the shared counter (src/execution/browser.ts),
+ * which the standalone artifact carries too. Started when this session adopts
+ * a page, so a page this session never adopted reads as idle.
  */
-const inFlight = new WeakMap<Page, number>();
-
-function trackRequests(page: Page): void {
-  if (inFlight.has(page)) return;
-  inFlight.set(page, 0);
-  const bump = (delta: number) => () => inFlight.set(page, Math.max(0, (inFlight.get(page) ?? 0) + delta));
-  page.on('request', bump(1));
-  page.on('requestfinished', bump(-1));
-  page.on('requestfailed', bump(-1));
-}
-
-/** How many requests `page` has in flight right now (0 for a page not tracked). */
-export function inFlightRequests(page: Page): number {
-  return inFlight.get(page) ?? 0;
-}
+export { inFlightRequests } from '../execution/browser.js';

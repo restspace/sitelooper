@@ -6,7 +6,7 @@
 // `run` already operate on.
 //
 // This only has to be as faithful as `flowToSpec` is honest about being
-// lossy: fingerprint, stats history, status history and the recording model
+// lossy: stats history, status history and the recording model
 // are gone for good once a spec is emitted (ir.ts's header comment explains
 // why), so lower manufactures fresh, conservative values for them rather
 // than pretending to recover what was never carried. A compiled spec is by
@@ -23,9 +23,7 @@ import type { SpecFlow, SpecSegment, SpecStep } from './ir.js';
  * are copied straight from the segment — those are exactly what `toSegment`
  * (ir.ts) kept, so copying them back is the whole round trip. Everything else
  * is bookkeeping `toSegment` deliberately drops and this function has to
- * invent: zeroed stats (a compiled spec carries no replay history), no
- * fingerprint (the emitted spec never had one to begin with — a live DOM
- * count vector needs a runtime, not a JSON literal), and a synthetic
+ * invent: zeroed stats (a compiled spec carries no replay history) and a synthetic
  * provenance naming the spec as its own source rather than a recording
  * session.
  *
@@ -44,9 +42,15 @@ function toSkill(spec: SpecFlow, step: SpecStep, seg: SpecSegment, index: number
     origin: spec.origin,
     template: seg.template,
     params: seg.params,
-    preconditions: seg.preconditions.requireText
-      ? { urlPattern: seg.preconditions.urlPattern, requireText: seg.preconditions.requireText }
-      : { urlPattern: seg.preconditions.urlPattern },
+    preconditions: {
+      urlPattern: seg.preconditions.urlPattern,
+      ...(seg.preconditions.requireText ? { requireText: seg.preconditions.requireText } : {}),
+      // The recorded fingerprint goes back into the skill, so a repair's
+      // replay of the staged store soft-matches exactly as the artifact does.
+      // A legacy `fingerprinted` flag has no vector to give (carryFingerprints
+      // restores the flag on re-emit).
+      ...(seg.preconditions.fingerprint ? { fingerprint: seg.preconditions.fingerprint } : {}),
+    },
     steps: seg.steps,
     // A lowered spec was emitted by THIS build, so it is this build's
     // contract — and its `validated` is the spec's own claim, which
@@ -100,7 +104,7 @@ function toFlowStep(spec: SpecFlow, step: SpecStep, now: string, skills: Skill[]
  * A lifted spec as the Flow + Skill[] the replay/repair code understands.
  *
  * Segments become skills that keep their ids, seq (chain = the flow step's
- * first segment id, index/of from position), preconditions (no fingerprint),
+ * first segment id, index/of from position), preconditions (the fingerprint included),
  * steps, derived, params; stats start at zero, status 'validated' (a
  * compiled spec is by definition converged), provenance from the spec.
  *

@@ -4,7 +4,10 @@ import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { SkillStore } from '../src/skills/store.js';
 import type { SpecFlow, SpecSegment, SpecStep } from '../src/spec/ir.js';
-import { flowToSpec } from '../src/spec/ir.js';
+import { carryFingerprints, carryRecipeSnapshot, flowToSpec } from '../src/spec/ir.js';
+import { FINGERPRINT_DIMS } from '../src/execution/fingerprint.js';
+import { emitFlowFile } from '../src/spec/emit.js';
+import { ComponentStore, seedRecipeId, seedRecipes, snapshotRecipes, type Recipe } from '../src/skills/components.js';
 import {
   coveringSkill,
   describeSpecChanges,
@@ -261,6 +264,263 @@ describe('stageRepair / reloadStaged', () => {
   });
 });
 
+// Repair and rerecord verify a flow through the DAEMON, whose recipes are the
+// machine's component store as it stands now, then re-emit from a staged store
+// that never held a snapshot. The written file must carry the snapshot those
+// runs executed with, and say so when it moved.
+describe('carryRecipeSnapshot', () => {
+  const dirs: string[] = [];
+  afterEach(() => {
+    for (const d of dirs.splice(0)) fs.rmSync(d, { recursive: true, force: true });
+  });
+  const storeWith = (recipes: Recipe[]): ComponentStore => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sl-carry-recipes-'));
+    dirs.push(dir);
+    const file = path.join(dir, 'components.json');
+    if (recipes.length) fs.writeFileSync(file, JSON.stringify({ version: 1, recipes }));
+    return new ComponentStore(file);
+  };
+  const learned: Recipe = {
+    id: 'r_learn1', family: 'monaco', intent: 'set-value',
+    steps: [{ action: 'click' }, { action: 'insertText', text: '{{value}}' }, { action: 'settle', ms: 300 }],
+    verifyRead: '.view-lines', status: 'validated',
+    stats: { uses: 3, successes: 3, origins: { 'http://127.0.0.1:4180': 3 }, failStreak: 0, created: 't' },
+    provenance: { session: 'sess-1', created: 't' },
+  };
+  const seeds = () => snapshotRecipes(seedRecipes()).recipes;
+  const flowRegion = (source: string) => /\/\/ @sitelooper-flow-begin\n([\s\S]*?)\n\/\/ @sitelooper-flow-end/.exec(source)![1];
+  /** What repair's reloadStaged hands back: the same IR, no snapshot. */
+  const reloaded = (spec: SpecFlow): SpecFlow => {
+    const copy = clone(spec);
+    delete copy.recipes;
+    return copy;
+  };
+
+  it('adopts a store snapshot that differs from the file, with a change line per recipe that moved', () => {
+    const before = { ...specOf([segment('s_1')]), recipes: seeds() };
+    const after = reloaded(before);
+    const { changes, diagnostics } = carryRecipeSnapshot(before.recipes, after, storeWith([learned]));
+    expect(changes).toEqual([`recipes: monaco/set-value ${seedRecipeId('monaco', 'set-value')} -> r_learn1`]);
+    expect(after.recipes!.recipes.find((r) => r.family === 'monaco' && r.intent === 'set-value')!.id).toBe('r_learn1');
+    // ...and what a compile would say about the store it now carries
+    expect(diagnostics.map((d) => d.line)).toEqual([
+      'recipe snapshot: monaco/set-value: uses learned recipe r_learn1 learned in session sess-1 (validated) rather than the shipped seed; the artifact carries it as data',
+    ]);
+    expect(flowRegion(emitFlowFile(after, { tier: 'plain' }).source)).toContain('"id": "r_learn1"');
+  });
+
+  it('names a recipe the store no longer offers as removed', () => {
+    const before = { ...specOf([segment('s_1')]), recipes: seeds() };
+    const demoted = seedRecipes().find((r) => r.family === 'codemirror6' && r.intent === 'set-value')!;
+    demoted.status = 'demoted';
+    demoted.stats.failStreak = 2;
+    const after = reloaded(before);
+    const { changes, diagnostics } = carryRecipeSnapshot(before.recipes, after, storeWith([demoted]));
+    expect(changes).toEqual([`recipes: codemirror6/set-value removed ${demoted.id} (the component store has no usable recipe for it)`]);
+    expect(diagnostics.map((d) => d.code)).toEqual(['recipe-snapshot', 'recipe-snapshot']);
+  });
+
+  it('keeps an identical snapshot as it was: no change line, no warning, a byte-equal FLOW', () => {
+    const before = { ...specOf([segment('s_1')]), recipes: seeds() };
+    const original = emitFlowFile(before, { tier: 'plain' }).source;
+    const after = reloaded(before);
+    expect(carryRecipeSnapshot(before.recipes, after, storeWith([]))).toEqual({ changes: [], diagnostics: [] });
+    expect(after.recipes).toBe(before.recipes);
+    expect(flowRegion(emitFlowFile(after, { tier: 'plain' }).source)).toBe(flowRegion(original));
+  });
+
+  it('a file that predates snapshots gets one, a change line, and a warning that type/select now go through recipes', () => {
+    const before = specOf([segment('s_1')]);
+    const after = reloaded(before);
+    const { changes, diagnostics } = carryRecipeSnapshot(undefined, after, storeWith([]));
+    expect(after.recipes).toEqual(seeds());
+    expect(changes).toEqual(['recipes: the file carried no recipe snapshot; it now carries the one the verification run(s) used']);
+    expect(diagnostics).toHaveLength(1);
+    expect(diagnostics[0]).toMatchObject({ code: 'recipe-snapshot', severity: 'warning' });
+    expect(diagnostics[0].line).toContain('predates recipe snapshots');
+    expect(diagnostics[0].line).toContain('shipped seed recipes');
+    expect(diagnostics[0].line).toContain('type and select go through recipes');
+    expect(diagnostics[0].line).toContain('replaces its content rather than appending');
+    expect(diagnostics[0].fix).toContain('sitelooper compile');
+    // against a store that has moved on, the moved recipe is named too
+    const again = reloaded(before);
+    expect(carryRecipeSnapshot(undefined, again, storeWith([learned])).changes).toEqual([
+      'recipes: the file carried no recipe snapshot; it now carries the one the verification run(s) used',
+      `recipes: monaco/set-value ${seedRecipeId('monaco', 'set-value')} -> r_learn1`,
+    ]);
+  });
+
+  it('leaves a flow that never fills, types or selects exactly as it was — loop bodies are looked into', () => {
+    const clickOnly = segment('s_1');
+    clickOnly.steps = clickOnly.steps.filter((s) => s.tool !== 'fill');
+    const plain = specOf([clickOnly]);
+    const after = reloaded(plain);
+    expect(carryRecipeSnapshot(undefined, after, storeWith([learned]))).toEqual({ changes: [], diagnostics: [] });
+    expect('recipes' in after).toBe(false);
+    // a fill inside a loop body counts
+    const looped = segment('s_2');
+    looped.steps = [{ tool: 'loop', args: {}, locators: {}, body: segment('s_x').steps, max: 3 }];
+    const inLoop = reloaded(specOf([looped]));
+    expect(carryRecipeSnapshot(undefined, inLoop, storeWith([])).changes).toHaveLength(1);
+    expect(inLoop.recipes).toEqual(seeds());
+  });
+});
+
+// A segment's page fingerprint rides the same carry-forward as the recipe
+// snapshot: repair and rerecord rebuild the spec from a staged store, and the
+// written file must keep the file's vector unless the skill the run used
+// recorded a different one.
+describe('carryFingerprints', () => {
+  const vector = (k: number) => Array.from({ length: FINGERPRINT_DIMS }, (_, i) => (i % k === 0 ? 0.2 : 0));
+  const fingerprinted = (id: string, fingerprint: number[], extra: Partial<SpecSegment> = {}) =>
+    segment(id, { preconditions: { urlPattern: 'http://127.0.0.1:4180/#/tickets/:id', fingerprint }, ...extra });
+  const flowRegion = (source: string) => /\/\/ @sitelooper-flow-begin\n([\s\S]*?)\n\/\/ @sitelooper-flow-end/.exec(source)![1];
+
+  it('survives repair staging on its own, and an unchanged file re-emits byte-equal with nothing to say', () => {
+    const before = specOf([fingerprinted('s_1', vector(3))]);
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sl-carry-fp-'));
+    try {
+      const after = reloadStaged(stageRepair(before, dir)).spec;
+      expect(after).toEqual(before);
+      expect(carryFingerprints(before, after)).toEqual({ changes: [], diagnostics: [] });
+      expect(emitFlowFile(after, { tier: 'plain' }).source).toBe(emitFlowFile(before, { tier: 'plain' }).source);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('carries the file\'s vector onto a rebuilt segment that lost it, at the same start pattern only', () => {
+    const before = specOf([fingerprinted('s_1', vector(3))]);
+    const lost = specOf([segment('s_1')]);
+    expect(carryFingerprints(before, lost)).toEqual({ changes: [], diagnostics: [] });
+    expect(lost).toEqual(before);
+    // a re-pin to a variant keeps the page the vector describes
+    const variant = specOf([segment('s_1~repair')]);
+    carryFingerprints(before, variant);
+    expect(variant.steps[0].segments[0].preconditions.fingerprint).toEqual(vector(3));
+    // a segment that now starts elsewhere is another page: the vector is not
+    // carried, but the gate is not loosened silently either (see below)
+    const moved = specOf([segment('s_2', { preconditions: { urlPattern: 'http://127.0.0.1:4180/#/parts' } })]);
+    carryFingerprints(before, moved);
+    expect(moved.steps[0].segments[0].preconditions).toEqual({ urlPattern: 'http://127.0.0.1:4180/#/parts', fingerprinted: true });
+  });
+
+  it('keeps the legacy flag when repair widened the start pattern, and says to recompile', () => {
+    const before = specOf([segment('s_1', { preconditions: { urlPattern: 'http://127.0.0.1:4180/#/tickets/7', fingerprinted: true } })]);
+    const widened = specOf([segment('s_1', { preconditions: { urlPattern: 'http://127.0.0.1:4180/#/tickets/:id' } })]);
+    const { changes, diagnostics } = carryFingerprints(before, widened);
+    expect(widened.steps[0].segments[0].preconditions).toEqual({ urlPattern: 'http://127.0.0.1:4180/#/tickets/:id', fingerprinted: true });
+    expect(changes).toEqual([]);
+    expect(diagnostics).toEqual([expect.objectContaining({ code: 'unmeasured-precondition', step: '02-add', severity: 'warning' })]);
+    // and the re-emitted file still refuses the soft match it cannot measure
+    const { source, warnings } = emitFlowFile(widened, { tier: 'plain' });
+    expect(source).toContain("'02-add s_1', 'unmeasured');");
+    expect(warnings).toEqual([diagnostics[0].line]);
+  });
+
+  it('does not carry a vector across a widened pattern, and falls back to the flag with a change line saying why', () => {
+    const before = specOf([fingerprinted('s_1', vector(3), { preconditions: { urlPattern: 'http://127.0.0.1:4180/#/tickets/7', fingerprint: vector(3) } })]);
+    const widened = specOf([segment('s_1', { preconditions: { urlPattern: 'http://127.0.0.1:4180/#/tickets/:id' } })]);
+    const { changes, diagnostics } = carryFingerprints(before, widened);
+    const pre = widened.steps[0].segments[0].preconditions;
+    expect(pre.fingerprint).toBeUndefined();
+    expect(pre.fingerprinted).toBe(true);
+    expect(changes).toEqual([
+      "fingerprint: 02-add segment s_1 does not carry the file's start-page fingerprint — it was recorded at http://127.0.0.1:4180/#/tickets/7 and the segment now starts at http://127.0.0.1:4180/#/tickets/:id, and the verification run's skill recorded none — so a soft url match is refused here until it is recompiled",
+    ]);
+    expect(diagnostics).toEqual([expect.objectContaining({ code: 'unmeasured-precondition', step: '02-add' })]);
+  });
+
+  it('says the file had only the flag, not none, when the run recorded a vector over a flagged segment', () => {
+    const before = specOf([segment('s_1', { preconditions: { urlPattern: 'http://127.0.0.1:4180/#/tickets/:id', fingerprinted: true } })]);
+    expect(carryFingerprints(before, specOf([fingerprinted('s_1', vector(5))])).changes).toEqual([
+      "fingerprint: 02-add segment s_1 now carries the start-page fingerprint the verification run's skill recorded (the file had only the legacy fingerprinted flag, no vector)",
+    ]);
+  });
+
+  /**
+   * Segments of one chain share their template, so position is no evidence of
+   * identity once a rerecord inserts or removes a segment: a segment is
+   * matched by id, and by position only when it replaced its counterpart in
+   * a chain of unchanged length.
+   */
+  describe('matching a rebuilt segment to the file', () => {
+    it('matches by id when a rerecord inserts a segment before an existing one on the same template', () => {
+      const before = specOf([fingerprinted('s_a', vector(3)), segment('s_b', { preconditions: { urlPattern: 'http://127.0.0.1:4180/#/tickets/:id', fingerprinted: true } })]);
+      // [A, B] -> [X, A, B]: X is new, on the same start pattern and template as A
+      const after = specOf([segment('s_x'), segment('s_a'), segment('s_b')]);
+      const { changes, diagnostics } = carryFingerprints(before, after);
+      const [x, a, b] = after.steps[0].segments.map((s) => s.preconditions);
+      expect(x).toEqual({ urlPattern: 'http://127.0.0.1:4180/#/tickets/:id' });
+      expect(a.fingerprint).toEqual(vector(3));
+      expect(a.fingerprinted).toBeUndefined();
+      expect(b).toEqual({ urlPattern: 'http://127.0.0.1:4180/#/tickets/:id', fingerprinted: true });
+      expect(changes).toEqual([]);
+      expect(diagnostics.map((d) => d.line)).toEqual([expect.stringContaining('segment s_b')]);
+    });
+
+    it('carries nothing positionally when the chain changed length under new ids', () => {
+      const before = specOf([fingerprinted('s_a', vector(3)), segment('s_b', { preconditions: { urlPattern: 'http://127.0.0.1:4180/#/tickets/:id', fingerprinted: true } })]);
+      // [A, B] -> [A', X, B']: all new ids, one template — position says nothing
+      const after = specOf([segment('s_a2'), segment('s_x'), segment('s_b2')]);
+      expect(carryFingerprints(before, after)).toEqual({ changes: [], diagnostics: [] });
+      for (const s of after.steps[0].segments) expect(s.preconditions).toEqual({ urlPattern: 'http://127.0.0.1:4180/#/tickets/:id' });
+    });
+
+    it('does not carry by position onto a new segment while the file\'s segment at that position is still in the rebuild', () => {
+      const before = specOf([fingerprinted('s_a', vector(3)), segment('s_b')]);
+      // [A, B] -> [X, A]: same length, but A moved rather than being replaced
+      const after = specOf([segment('s_x'), segment('s_a')]);
+      carryFingerprints(before, after);
+      expect(after.steps[0].segments[0].preconditions).toEqual({ urlPattern: 'http://127.0.0.1:4180/#/tickets/:id' });
+      expect(after.steps[0].segments[1].preconditions.fingerprint).toEqual(vector(3));
+    });
+
+    it('carries by position onto a replacement of equal template in a chain of unchanged length', () => {
+      const before = specOf([fingerprinted('s_a', vector(3)), fingerprinted('s_b', vector(5))]);
+      const after = specOf([segment('s_a'), segment('s_b~repair')]);
+      carryFingerprints(before, after);
+      expect(after.steps[0].segments[1].preconditions.fingerprint).toEqual(vector(5));
+      // another template in that slot is another procedure: nothing carried
+      const other = specOf([segment('s_a'), segment('s_c', { template: 'remove a part named {{v1}}' })]);
+      carryFingerprints(before, other);
+      expect(other.steps[0].segments[1].preconditions).toEqual({ urlPattern: 'http://127.0.0.1:4180/#/tickets/:id' });
+    });
+  });
+
+  it('keeps the vector the run\'s skill recorded, with a change line, when it differs or the file had none', () => {
+    const before = specOf([fingerprinted('s_1', vector(3))]);
+    const after = specOf([fingerprinted('s_1', vector(5))]);
+    expect(carryFingerprints(before, after)).toEqual({
+      changes: ["fingerprint: 02-add segment s_1 carries the start-page fingerprint the verification run's skill recorded (it differs from the file's)"],
+      diagnostics: [],
+    });
+    expect(after.steps[0].segments[0].preconditions.fingerprint).toEqual(vector(5));
+    const none = specOf([segment('s_1')]);
+    expect(carryFingerprints(none, clone(after)).changes).toEqual([
+      "fingerprint: 02-add segment s_1 now carries the start-page fingerprint the verification run's skill recorded (the file had none)",
+    ]);
+  });
+
+  it('keeps the legacy flag of an old file, which still cannot be measured, and says to recompile', () => {
+    const before = specOf([segment('s_1', { preconditions: { urlPattern: 'http://127.0.0.1:4180/#/tickets/:id', fingerprinted: true } })]);
+    const after = specOf([segment('s_1')]);
+    const { changes, diagnostics } = carryFingerprints(before, after);
+    expect(changes).toEqual([]);
+    expect(after).toEqual(before);
+    expect(diagnostics).toEqual([expect.objectContaining({ code: 'unmeasured-precondition', step: '02-add', severity: 'warning', fix: expect.stringMatching(/recompile/) })]);
+    // the FLOW is what the old file carried, flag and all
+    expect(flowRegion(emitFlowFile(after, { tier: 'plain' }).source)).toBe(flowRegion(emitFlowFile(before, { tier: 'plain' }).source));
+  });
+
+  it('is wired into repair beside the recipe snapshot, before the file is emitted', () => {
+    const body = fs.readFileSync(path.resolve(__dirname, '../src/cli.ts'), 'utf8');
+    const repair = body.slice(body.indexOf('async function repairFlowCommand'));
+    expect(repair).toMatch(/const fingerprints = carryFingerprints\(before, finalSpec\);/);
+    expect(repair.indexOf('carryFingerprints(')).toBeLessThan(repair.indexOf("emitFlowFile(finalSpec, { tier: 'plain' })"));
+  });
+});
+
 // The `repair` command itself drives a browser, so what can be checked without
 // one is its wiring: the same source-level approach test/spec-cli.test.ts takes
 // (importing src/cli.ts would run main()).
@@ -296,6 +556,16 @@ describe('cli: repair command wiring', () => {
   it('exits 3 without writing when the converge gate fails', () => {
     expect(cliSource).toMatch(/not converged: \$\{bad\.join\(', '\)\}/);
     expect(cliSource).toMatch(/console\.error\(`not converged[\s\S]{0,80}process\.exit\(3\)/);
+  });
+
+  it('writes the recipe snapshot the convergence runs used, and reports the change beside the others', () => {
+    const body = cliSource.slice(cliSource.indexOf('async function repairFlowCommand'));
+    expect(body).not.toMatch(/finalSpec\.recipes = before\.recipes/);
+    expect(body).toMatch(/const carried = carryRecipeSnapshot\(before\.recipes, finalSpec, new ComponentStore\(\)\);/);
+    expect(body).toMatch(/changes: \[\.\.\.diff\.lines, \.\.\.evidenceLines, \.\.\.recipeLines\]/);
+    // computed after the last converge run, before the file is emitted
+    expect(body.indexOf('carryRecipeSnapshot(')).toBeGreaterThan(body.indexOf('for (let i = 1; i <= converge; i++)'));
+    expect(body.indexOf('carryRecipeSnapshot(')).toBeLessThan(body.indexOf("emitFlowFile(finalSpec, { tier: 'plain' })"));
   });
 
   it('never writes the .spec.ts — only the owned .flow.ts', () => {

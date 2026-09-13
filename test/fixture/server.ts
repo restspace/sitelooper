@@ -65,8 +65,20 @@ document.addEventListener('click', async (e) => {
   // Mark mutates the record and leaves the row in place: the collection keeps
   // its size, so only a cursor gets the loop to the next record.
   const mark = e.target.closest('.mark');
-  if (mark) await fetch('/mark/' + encodeURIComponent(mark.dataset.id), { method: 'POST' });
+  if (mark) {
+    const res = await fetch('/mark/' + encodeURIComponent(mark.dataset.id), { method: 'POST' });
+    // A rejected write is the app talking back: a live-region toast over a
+    // page that otherwise looks untouched — the shape of fwrd4l-n3's failure,
+    // and what the unrecorded-alert gate exists to catch.
+    if (!res.ok) toast('Mark rejected: ' + mark.dataset.id);
+  }
 });
+function toast(text) {
+  const el = document.createElement('div');
+  el.setAttribute('role', 'alert');
+  el.textContent = text;
+  document.body.append(el);
+}
 render();
 </script>
 </body></html>`;
@@ -82,6 +94,449 @@ const RECORD = (id: string) => `<!doctype html><html><head><meta charset="utf-8"
 <h1>Record ${id}</h1>
 <button class="mark" type="button" data-id="${id}">Mark</button>
 <script>
+document.querySelector('.mark').addEventListener('click', async (e) => {
+  await fetch('/mark/' + encodeURIComponent(e.target.dataset.id), { method: 'POST' });
+});
+</script>
+</body></html>`;
+
+/**
+ * A form whose picker the app may REFUSE: `/project/open` keeps whatever is
+ * chosen; `/project/locked` reverts every choice to Alpha in the change
+ * handler, the way an app rejects a value it does not accept. Either way the
+ * select action itself succeeds, so the only evidence that the choice landed
+ * is the control's VALUE — the half of a snapshot line (`- combobox
+ * "Project": Beta`) a locator built off the line's name never looked at. Save
+ * posts the value the control holds, which the log records.
+ */
+const PROJECT = (mode: string) => `<!doctype html><html><head><meta charset="utf-8"><title>Project</title></head><body>
+<h1>Project</h1>
+<select id="project" aria-label="Project">
+  <option value="Alpha" selected>Alpha</option>
+  <option value="Beta">Beta</option>
+  <option value="Gamma">Gamma</option>
+</select>
+<button id="save" type="button">Save project</button>
+<script>
+const locked = ${JSON.stringify(mode === 'locked')};
+const select = document.getElementById('project');
+select.addEventListener('change', () => { if (locked) select.value = 'Alpha'; });
+document.getElementById('save').addEventListener('click', async () => {
+  await fetch('/save/' + encodeURIComponent(select.value), { method: 'POST' });
+});
+</script>
+</body></html>`;
+
+/**
+ * Conditional UI: Exit opens a "Discard changes?" dialog only when the page
+ * is DIRTY (`/discard/dirty`); on a clean page (`/discard/clean`) it does
+ * nothing, and that is the app working, not a failed step. The dialog's own
+ * Discard button confirms through the server; Mark is a step of the page's
+ * own, outside the dialog, and must run either way.
+ */
+const DISCARD = (mode: string) => `<!doctype html><html><head><meta charset="utf-8"><title>Editor</title></head><body>
+<h1>Editor</h1>
+<button id="exit" type="button">Exit</button>
+<button class="mark" type="button" data-id="editor">Mark</button>
+<dialog id="confirm" aria-label="Discard changes?">
+  <p>Discard changes?</p>
+  <button id="discard" type="button">Discard</button>
+</dialog>
+<script>
+const dirty = ${JSON.stringify(mode === 'dirty')};
+document.getElementById('exit').addEventListener('click', () => {
+  if (dirty) document.getElementById('confirm').showModal();
+});
+document.getElementById('discard').addEventListener('click', async () => {
+  await fetch('/discard/confirm', { method: 'POST' });
+  document.getElementById('confirm').close();
+});
+document.querySelector('.mark').addEventListener('click', async (e) => {
+  await fetch('/mark/' + encodeURIComponent(e.target.dataset.id), { method: 'POST' });
+});
+</script>
+</body></html>`;
+
+/**
+ * A control INSIDE A LINK: `/away/foreign` wraps the Mark button in an anchor
+ * to another origin, `/away/home` in one to this origin. The click handler
+ * prevents the navigation either way, so the only evidence a runner acted is
+ * the mark in the log — and the origin rule (resolve.ts, rule 3c) judges the
+ * anchor's href, not whether it navigated. A resolver that takes a guessed
+ * fallback sitting under a foreign link marks here; one that refuses does not.
+ */
+const AWAY = (mode: string) => `<!doctype html><html><head><meta charset="utf-8"><title>Away</title></head><body>
+<h1>Away</h1>
+<a id="wrap" href="${mode === 'foreign' ? 'http://example.invalid/away' : '/record/home'}"><button class="mark" type="button" data-id="away">Mark</button></a>
+<script>
+document.querySelector('.mark').addEventListener('click', async (e) => {
+  e.preventDefault();
+  await fetch('/mark/' + encodeURIComponent(e.target.dataset.id), { method: 'POST' });
+});
+</script>
+</body></html>`;
+
+/**
+ * A control that is DISABLED (`/gate/disabled`) or not (`/gate/enabled`).
+ * Approve logs `mark:approve` when its handler runs. A browser suppresses
+ * clicks on a disabled button, so a forced click there dispatches nothing the
+ * app sees: a runner that reports it as clicked has claimed an action that
+ * never happened (ROBUSTNESS.md, finding 2).
+ */
+const GATE = (mode: string) => `<!doctype html><html><head><meta charset="utf-8"><title>Gate</title></head><body>
+<h1>Gate</h1>
+<button id="approve" type="button"${mode === 'disabled' ? ' disabled' : ''}>Approve</button>
+<script>
+document.querySelector('#approve').addEventListener('click', async () => {
+  await fetch('/mark/approve', { method: 'POST' });
+});
+</script>
+</body></html>`;
+
+/**
+ * Two routes that differ only by a WORD: `/checkout/<result>` has a Pay
+ * button that lands on `/outcome/<result>`, and the outcome page has a Mark
+ * button. `success` against `failure` is a different page, not a volatile
+ * value, so a runner that recorded success must not mark on failure
+ * (ROBUSTNESS.md, finding 3). `/checkout-q/<result>` is the same flow with
+ * the outcome in the QUERY, `/outcome?result=<result>`: the half of the
+ * finding the url model used to drop.
+ */
+const CHECKOUT = (result: string, byQuery = false) => `<!doctype html><html><head><meta charset="utf-8"><title>Checkout</title></head><body>
+<h1>Checkout</h1>
+<a id="pay" href="${byQuery ? '/outcome?result=' : '/outcome/'}${encodeURIComponent(result)}" role="button">Pay</a>
+</body></html>`;
+const OUTCOME = (result: string) => `<!doctype html><html><head><meta charset="utf-8"><title>Outcome</title></head><body>
+<h1>Payment ${result === 'success' ? 'succeeded' : 'failed'}</h1>
+<button class="mark" type="button" data-id="outcome">Mark</button>
+<script>
+document.querySelector('.mark').addEventListener('click', async (e) => {
+  await fetch('/mark/' + encodeURIComponent(e.target.dataset.id), { method: 'POST' });
+});
+</script>
+</body></html>`;
+
+/**
+ * A navigation whose recorded link is GONE. The recording clicked a link
+ * named "Open record r7"; this page no longer has it. `/nav/other` still
+ * offers another visible link to the same destination (a sidebar entry named
+ * differently); `/nav/none` has no link to it at all. The record page logs
+ * the visit, so the log says whether a runner got there, and how is the
+ * difference between the two pages.
+ */
+const NAV = (mode: string) => `<!doctype html><html><head><meta charset="utf-8"><title>Nav</title></head><body>
+<h1>Navigation</h1>
+${mode === 'other' ? '<nav><a href="/record/r7">Record seven</a></nav>' : '<p>Nothing to open here.</p>'}
+</body></html>`;
+
+/**
+ * A text condition shown in a DIFFERENT element than the one a wait resolves
+ * first: `#status` is present and never shows it, while the tickets region shows
+ * "Ticket T-9 created" (`/held/yes`) or nothing (`/held/no`). Mark proves
+ * whether a runner went past the wait.
+ */
+const HELD = (mode: string) => `<!doctype html><html><head><meta charset="utf-8"><title>Held</title></head><body>
+<h1>Held</h1>
+<p id="status">Working</p>
+<section aria-label="Tickets"><span>${mode === 'yes' ? 'Ticket T-9 created' : 'No tickets'}</span></section>
+<button class="mark" type="button" data-id="held">Mark</button>
+<script>
+document.querySelector('.mark').addEventListener('click', async (e) => {
+  await fetch('/mark/' + encodeURIComponent(e.target.dataset.id), { method: 'POST' });
+});
+</script>
+</body></html>`;
+
+/**
+ * The item list with an Open link per row, to its record page: the shape of a
+ * loop whose body OPENS each record (the url gains the record's id, which a
+ * record-creating step mints) and goes back to the list.
+ */
+const ROWS = `<!doctype html><html><head><meta charset="utf-8"><title>Rows</title></head><body>
+<h1>Rows</h1>
+<ul id="items"></ul>
+<script>
+fetch('/items').then((r) => r.json()).then((names) => {
+  document.getElementById('items').innerHTML = names
+    .map((n) => '<li class="item">' + n + ' <a class="open" href="/record/' + encodeURIComponent(n) + '">Open</a></li>')
+    .join('');
+});
+</script>
+</body></html>`;
+
+/**
+ * The widgets of test/fixture/components.html, served with a commit log. A
+ * monaco-shaped editor (focus redirects to a hidden textarea; the MODEL is
+ * updated only by real editing — an `input` event carrying an `inputType`, as
+ * keyboard insertText fires and a synthetic `new Event('input')` from a
+ * native value setter does not — and renders into `.view-lines` with NBSPs,
+ * like the real thing); a plain contenteditable; a second contenteditable
+ * whose text is what a recording located it by (so replacing its content
+ * un-matches that target mid-recipe); a native select as the control. Each Save button posts what the APP holds, so the log says whether
+ * a runner drove the widget the way the app reads it, not merely that the
+ * runner reported success.
+ */
+const EDITOR = `<!doctype html><html><head><meta charset="utf-8"><title>Editor widgets</title></head><body>
+<h1>Editor widgets</h1>
+<div class="monaco-editor" id="mon" style="border:1px solid #888;width:400px;height:80px;position:relative">
+  <textarea class="inputarea" aria-label="Editor input" style="position:absolute;opacity:0.01;width:1px;height:1px"></textarea>
+  <div class="view-lines" style="font-family:monospace;padding:4px">initial&nbsp;model&nbsp;text</div>
+</div>
+<button id="save-editor" type="button">Save editor</button>
+<div id="ce" contenteditable="true" aria-label="Note" style="border:1px solid #888;width:400px;min-height:40px;padding:4px">starting content</div>
+<button id="save-note" type="button">Save note</button>
+<div id="draft" contenteditable="true" aria-label="Draft" style="border:1px solid #888;width:400px;min-height:40px;padding:4px">draft body</div>
+<button id="save-draft" type="button">Save draft</button>
+<select id="sel" aria-label="Choice">
+  <option value="Alpha" selected>Alpha</option>
+  <option value="Beta">Beta</option>
+  <option value="Gamma">Gamma</option>
+</select>
+<button id="save-choice" type="button">Save choice</button>
+<script>
+const mon = document.getElementById('mon');
+const ta = mon.querySelector('textarea');
+const lines = mon.querySelector('.view-lines');
+let model = 'initial model text';
+ta.value = model;
+mon.addEventListener('mousedown', (e) => { if (e.target !== ta) { e.preventDefault(); ta.focus(); } });
+ta.addEventListener('input', (e) => {
+  if (typeof e.inputType !== 'string' || !e.inputType) return; // not an edit: the editor ignores it
+  model = ta.value;
+  lines.textContent = model.replace(/ /g, '\\u00a0');
+});
+const commit = (kind, value) => fetch('/commit/' + kind + '/' + encodeURIComponent(value), { method: 'POST' });
+document.getElementById('save-editor').addEventListener('click', () => commit('editor', model));
+document.getElementById('save-note').addEventListener('click', () => commit('note', document.getElementById('ce').innerText));
+document.getElementById('save-draft').addEventListener('click', () => commit('draft', document.getElementById('draft').innerText));
+document.getElementById('save-choice').addEventListener('click', () => commit('choice', document.getElementById('sel').value));
+</script>
+</body></html>`;
+
+/**
+ * A state change whose only evidence is what the page renders after it:
+ * Stamp posts `/stamp/doc` and, when the server accepts it, adds a "Revert"
+ * button. A REJECTED stamp raises no toast — the page simply stays as it was
+ * — so no alert gate can see it, and only the recorded effect line (`- button
+ * "Revert"`) says the step did not land. Mark is the next mutation.
+ */
+const STAMP = `<!doctype html><html><head><meta charset="utf-8"><title>Stamp</title></head><body>
+<h1>Stamp</h1>
+<button id="stamp" type="button">Stamp</button>
+<button class="mark" type="button" data-id="stamp">Mark</button>
+<div id="after"></div>
+<script>
+document.getElementById('stamp').addEventListener('click', async () => {
+  const res = await fetch('/stamp/doc', { method: 'POST' });
+  if (res.ok) document.getElementById('after').innerHTML = '<button type="button">Revert</button>';
+});
+document.querySelector('.mark').addEventListener('click', async (e) => {
+  await fetch('/mark/' + encodeURIComponent(e.target.dataset.id), { method: 'POST' });
+});
+</script>
+</body></html>`;
+
+/**
+ * An app that keeps its routing STATE in a query-shaped fragment, the odoo
+ * shape: "Open action" sets `#cids=1&action=9&menu_id=4` — keys in an order
+ * no recording has to share, and one (`menu_id`) a recording may not have
+ * named. The fragment never reaches the server, so Mark is what the log sees.
+ */
+const HASH = `<!doctype html><html><head><meta charset="utf-8"><title>Hash</title></head><body>
+<h1>Hash state</h1>
+<button id="open" type="button">Open action</button>
+<button class="mark" type="button" data-id="hash">Mark</button>
+<script>
+document.getElementById('open').addEventListener('click', () => { location.hash = 'cids=1&action=9&menu_id=4'; });
+document.querySelector('.mark').addEventListener('click', async (e) => {
+  await fetch('/mark/' + encodeURIComponent(e.target.dataset.id), { method: 'POST' });
+});
+</script>
+</body></html>`;
+
+/**
+ * A menu button that is a TOGGLE: "Actions" posts `/toggle/actions` and flips
+ * the "Row actions" menu open or shut. `/menu/closed` loads with the menu
+ * shut; `/menu/open` loads with it already showing (the state a previous
+ * step left); `/menu/gone` shows the open menu but no Actions button at all.
+ * Archive, inside the menu, is the step that depends on it being open.
+ */
+const MENU = (mode: string) => `<!doctype html><html><head><meta charset="utf-8"><title>Menu</title></head><body>
+<h1>Menu</h1>
+${mode === 'gone' ? '' : '<button id="actions" type="button">Actions</button>'}
+<div id="menu" role="menu" aria-label="Row actions"${mode === 'closed' ? ' hidden' : ''}>
+  <button role="menuitem" id="archive" type="button">Archive</button>
+</div>
+<script>
+const actions = document.getElementById('actions');
+if (actions) actions.addEventListener('click', async () => {
+  await fetch('/toggle/actions', { method: 'POST' });
+  const menu = document.getElementById('menu');
+  menu.hidden = !menu.hidden;
+});
+document.getElementById('archive').addEventListener('click', async () => {
+  await fetch('/archive/row', { method: 'POST' });
+});
+</script>
+</body></html>`;
+
+/**
+ * A record-creating form: Create posts `/create/r-new` and, when the server
+ * accepts it, navigates to the new record's page. Refused, it stays on
+ * `/create/form` with no toast — the url part a `mints` step reads is then
+ * exactly what it was before the click.
+ */
+const CREATE = `<!doctype html><html><head><meta charset="utf-8"><title>Create</title></head><body>
+<h1>New record</h1>
+<button id="create" type="button">Create</button>
+<script>
+document.getElementById('create').addEventListener('click', async () => {
+  const res = await fetch('/create/r-new', { method: 'POST' });
+  if (res.ok) location.href = '/record/r-new';
+});
+</script>
+</body></html>`;
+
+/**
+ * A url that exposes a part and then REDIRECTS once more: `/hop/start-<n>`
+ * renders, and 300ms later replaces itself with `/hop/final-<n>` — the shape
+ * of an app that routes to a placeholder id and then to the real one. Nothing
+ * on the page changes in between, so no DOM activity announces the second
+ * hop. `/hopper` links to a start url. The server logs every hop it serves.
+ */
+const HOP = (id: string) => `<!doctype html><html><head><meta charset="utf-8"><title>Hop</title></head><body>
+<h1>Hop ${id}</h1>
+<script>
+${id.startsWith('start-') ? `setTimeout(() => location.replace('/hop/final-' + ${JSON.stringify(id.slice('start-'.length))}), 300);` : ''}
+</script>
+</body></html>`;
+const HOPPER = `<!doctype html><html><head><meta charset="utf-8"><title>Hopper</title></head><body>
+<h1>Hopper</h1>
+<a id="go" href="/hop/start-5">Go</a>
+</body></html>`;
+
+/**
+ * Three native controls whose apps read them differently, each committed by
+ * its own Save button through `/commit/<kind>/<value>`:
+ *  - a <select> whose option VALUES are codes (`b-2`) and labels are words
+ *    (`Beta`), so a recorded label the app has since renamed misses and only
+ *    the recorded `optionValue` finds the option;
+ *  - an <input type=number> whose app commits on `change` only (an `input`
+ *    alone leaves the committed quantity at 1);
+ *  - an ARIA combobox <input> whose options render into a portal outside its
+ *    subtree once something is typed, and whose value is set only by clicking
+ *    an option — no native `selectOption` can drive it.
+ */
+const CONTROLS = `<!doctype html><html><head><meta charset="utf-8"><title>Controls</title></head><body>
+<h1>Controls</h1>
+<select id="code" aria-label="Code">
+  <option value="a-1" selected>Alpha</option>
+  <option value="b-2">Beta</option>
+  <option value="c-3">Gamma</option>
+</select>
+<button id="save-code" type="button">Save code</button>
+<input id="qty" type="number" aria-label="Quantity" value="1">
+<button id="save-qty" type="button">Save quantity</button>
+<input id="fruit" role="combobox" aria-label="Fruit" aria-expanded="false" autocomplete="off">
+<div id="portal"></div>
+<button id="save-fruit" type="button">Save fruit</button>
+<script>
+const commit = (kind, value) => fetch('/commit/' + kind + '/' + encodeURIComponent(value), { method: 'POST' });
+let committedQty = '1';
+const qty = document.getElementById('qty');
+qty.addEventListener('change', () => { committedQty = qty.value; });
+const fruit = document.getElementById('fruit');
+const portal = document.getElementById('portal');
+const FRUIT = ['apple', 'banana x2', 'cherry x3'];
+fruit.addEventListener('input', () => {
+  const q = fruit.value.toLowerCase();
+  portal.innerHTML = '';
+  const ul = document.createElement('ul');
+  ul.setAttribute('role', 'listbox');
+  for (const f of FRUIT.filter((f) => f.includes(q))) {
+    const li = document.createElement('li');
+    li.setAttribute('role', 'option');
+    li.textContent = f;
+    li.addEventListener('click', () => { fruit.value = f; fruit.dataset.chosen = f; portal.innerHTML = ''; });
+    ul.appendChild(li);
+  }
+  portal.appendChild(ul);
+});
+document.getElementById('save-code').addEventListener('click', () => commit('code', document.getElementById('code').value));
+document.getElementById('save-qty').addEventListener('click', () => commit('qty', committedQty));
+document.getElementById('save-fruit').addEventListener('click', () => commit('fruit', fruit.dataset.chosen || ''));
+</script>
+</body></html>`;
+
+/**
+ * The item list with a Tick per row and one page-level Note button. Tick
+ * clears the confirmation area, posts `/tick/<id>`, and only on success shows
+ * an "All good" button there — so a refused tick on the SECOND row leaves no
+ * confirmation on the page, although the first row's tick had shown one. Note
+ * posts `/note`. The shape of a loop body of more than one step whose first
+ * step carries its own recorded effect.
+ */
+const TICK = `<!doctype html><html><head><meta charset="utf-8"><title>Tick</title></head><body>
+<h1>Tick</h1>
+<ul id="items"></ul>
+<button id="note" type="button">Note</button>
+<div id="done"></div>
+<script>
+fetch('/items').then((r) => r.json()).then((names) => {
+  document.getElementById('items').innerHTML = names
+    .map((n) => '<li class="item">' + n + ' <button class="tick" type="button" data-id="' + n + '">Tick</button></li>')
+    .join('');
+});
+document.addEventListener('click', async (e) => {
+  const tick = e.target.closest('.tick');
+  if (tick) {
+    const done = document.getElementById('done');
+    done.innerHTML = '';
+    const res = await fetch('/tick/' + encodeURIComponent(tick.dataset.id), { method: 'POST' });
+    if (res.ok) done.innerHTML = '<button type="button">All good</button>';
+    return;
+  }
+  if (e.target.closest('#note')) await fetch('/note', { method: 'POST' });
+});
+</script>
+</body></html>`;
+
+/**
+ * Two Mark buttons far apart: one near the top of the page (`near`), one
+ * 3000px down inside `#far` (`far`). A recorded point names the near one's
+ * place; a structural fallback `#far > button:nth-of-type(1)` names the far
+ * one. Which record the log shows is which element a runner took.
+ */
+const FAR = `<!doctype html><html><head><meta charset="utf-8"><title>Far</title></head><body>
+<h1>Far</h1>
+<button class="mark" id="near" type="button" data-id="near">Mark</button>
+<div id="far" style="position:absolute;top:3000px;left:0"><button class="mark" type="button" data-id="far">Mark</button></div>
+<script>
+document.addEventListener('click', async (e) => {
+  const mark = e.target.closest('.mark');
+  if (mark) await fetch('/mark/' + encodeURIComponent(mark.dataset.id), { method: 'POST' });
+});
+</script>
+</body></html>`;
+
+/**
+ * A record page that cannot be FINGERPRINTED in time. With `?slow=1` the
+ * page's own script wraps `document.querySelectorAll` so that the one query
+ * the structural fingerprint walks (`body *`) takes three seconds — longer
+ * than FINGERPRINT_CAPTURE_TIMEOUT_MS — while every other query (the snapshot
+ * capture's `*`, Playwright's own injected script) is untouched. Without the
+ * query string it is an ordinary record page. The query string is not part of
+ * a url's shape, so both urls match the same pattern the same way.
+ */
+const STALL = (id: string, slow: boolean) => `<!doctype html><html><head><meta charset="utf-8"><title>Stall</title></head><body>
+<h1>Record ${id}</h1>
+<button class="mark" type="button" data-id="${id}">Mark</button>
+<script>
+${slow ? `const qsa = Document.prototype.querySelectorAll;
+document.querySelectorAll = function (sel) {
+  if (sel === 'body *') { const end = Date.now() + 3000; while (Date.now() < end); }
+  return qsa.call(this, sel);
+};` : ''}
 document.querySelector('.mark').addEventListener('click', async (e) => {
   await fetch('/mark/' + encodeURIComponent(e.target.dataset.id), { method: 'POST' });
 });
@@ -157,6 +612,129 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
       res.writeHead(200, { 'content-type': 'text/html' });
       res.end(RECORD(id));
       return;
+    }
+    if (url.startsWith('/project/') && req.method === 'GET') {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end(PROJECT(url.slice('/project/'.length)));
+      return;
+    }
+    if (url.startsWith('/save/') && req.method === 'POST') {
+      log.push(`save:${decodeURIComponent(url.slice('/save/'.length))}`);
+      res.writeHead(200);
+      res.end('ok');
+      return;
+    }
+    if (url === '/discard/confirm' && req.method === 'POST') {
+      log.push('discard:confirmed');
+      res.writeHead(200);
+      res.end('ok');
+      return;
+    }
+    if (url.startsWith('/discard/') && req.method === 'GET') {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end(DISCARD(url.slice('/discard/'.length)));
+      return;
+    }
+    if (url.startsWith('/away/') && req.method === 'GET') {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end(AWAY(url.slice('/away/'.length)));
+      return;
+    }
+    if (url.startsWith('/gate/') && req.method === 'GET') {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end(GATE(url.slice('/gate/'.length)));
+      return;
+    }
+    if (url.startsWith('/checkout/') && req.method === 'GET') {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end(CHECKOUT(decodeURIComponent(url.slice('/checkout/'.length))));
+      return;
+    }
+    if (url.startsWith('/checkout-q/') && req.method === 'GET') {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end(CHECKOUT(decodeURIComponent(url.slice('/checkout-q/'.length)), true));
+      return;
+    }
+    if (url.startsWith('/outcome?') && req.method === 'GET') {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end(OUTCOME(new URLSearchParams(url.slice('/outcome?'.length)).get('result') ?? ''));
+      return;
+    }
+    if (url.startsWith('/outcome/') && req.method === 'GET') {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end(OUTCOME(decodeURIComponent(url.slice('/outcome/'.length))));
+      return;
+    }
+    if (url.startsWith('/nav/') && req.method === 'GET') {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end(NAV(url.slice('/nav/'.length)));
+      return;
+    }
+    if (url.startsWith('/held/') && req.method === 'GET') {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end(HELD(url.slice('/held/'.length)));
+      return;
+    }
+    if (url === '/rows' && req.method === 'GET') {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end(ROWS);
+      return;
+    }
+    if (url === '/editor' && req.method === 'GET') {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end(EDITOR);
+      return;
+    }
+    if (url.startsWith('/commit/') && req.method === 'POST') {
+      const [kind, value] = url.slice('/commit/'.length).split('/');
+      log.push(`commit:${kind}:${decodeURIComponent(value ?? '')}`);
+      res.writeHead(200);
+      res.end('ok');
+      return;
+    }
+    const html = (body: string) => {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end(body);
+    };
+    // A logged write that honours an armed rejectWrite: refused, nothing is logged.
+    const write = (entry: string) => {
+      const reject = take('reject', req);
+      if (reject) {
+        consume(reject);
+        res.writeHead(reject.status);
+        res.end('rejected');
+        return;
+      }
+      log.push(entry);
+      res.writeHead(200);
+      res.end('ok');
+    };
+    const tail = (prefix: string) => decodeURIComponent(url.slice(prefix.length));
+    if (req.method === 'GET') {
+      if (url === '/stamp') return html(STAMP);
+      if (url === '/hash') return html(HASH);
+      if (url.startsWith('/menu/')) return html(MENU(tail('/menu/')));
+      if (url === '/create/form') return html(CREATE);
+      if (url === '/hopper') return html(HOPPER);
+      if (url.startsWith('/hop/')) {
+        log.push(`hop:${tail('/hop/')}`);
+        return html(HOP(tail('/hop/')));
+      }
+      if (url === '/controls') return html(CONTROLS);
+      if (url === '/tick') return html(TICK);
+      if (url === '/far') return html(FAR);
+      if (url.startsWith('/stall/')) {
+        const [pathPart, query = ''] = url.slice('/stall/'.length).split('?');
+        return html(STALL(decodeURIComponent(pathPart), /(^|&)slow=1(&|$)/.test(query)));
+      }
+    }
+    if (req.method === 'POST') {
+      if (url.startsWith('/stamp/')) return write(`stamp:${tail('/stamp/')}`);
+      if (url.startsWith('/toggle/')) return write(`toggle:${tail('/toggle/')}`);
+      if (url.startsWith('/archive/')) return write(`archive:${tail('/archive/')}`);
+      if (url.startsWith('/create/')) return write(`create:${tail('/create/')}`);
+      if (url.startsWith('/tick/')) return write(`tick:${tail('/tick/')}`);
+      if (url === '/note') return write('note');
     }
     if (url === '/items') {
       const stale = take('stale');

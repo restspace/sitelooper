@@ -1,42 +1,6 @@
 import type { Page } from 'playwright-core';
-
-const SETTLE_QUIET_MS = 250;
-const SETTLE_MAX_MS = 2_000;
-/**
- * How long a page gets to show it is busy before it is called quiet. The
- * quiet window used to be the floor too — 250ms per step even on a static
- * page, ~20s across an 80-step replay that was otherwise at the engine's
- * floor. Now the full quiet window is demanded only once a mutation shows.
- */
-const SETTLE_PROBE_MS = 60;
-
-/** Resolve once no DOM mutation has happened for SETTLE_QUIET_MS, or after SETTLE_MAX_MS. */
-export async function settleDom(page: Page): Promise<void> {
-  try {
-    await page.evaluate(
-      ({ probe, quiet, max }) =>
-        new Promise<void>((resolve) => {
-          let timer = setTimeout(resolve, probe);
-          const stop = setTimeout(() => {
-            observer.disconnect();
-            resolve();
-          }, max);
-          const observer = new MutationObserver(() => {
-            clearTimeout(timer);
-            timer = setTimeout(() => {
-              observer.disconnect();
-              clearTimeout(stop);
-              resolve();
-            }, quiet);
-          });
-          observer.observe(document, { childList: true, subtree: true, attributes: true, characterData: true });
-        }),
-      { probe: SETTLE_PROBE_MS, quiet: SETTLE_QUIET_MS, max: SETTLE_MAX_MS },
-    );
-  } catch {
-    // navigating / detached — the locator resolution will report it
-  }
-}
+import { settleDom } from '../execution/browser.js';
+export { settleDom } from '../execution/browser.js';
 
 const REQUEST_RECENT_MS = 300;
 const SETTLE_PAGE_MAX_MS = 2_000;

@@ -34,10 +34,12 @@ describe('urlHeldStill', () => {
   const fast = { lateNavMs: 600, stillMs: 100, graceMs: 40, pollMs: 10 };
 
   it('returns as soon as a non-navigating click has no request in flight', async () => {
-    const t0 = Date.now();
-    const seen = await urlHeldStill({ url: () => 'http://app/a' }, 'http://app/a', () => 0, fast);
+    // Counted in polls, not milliseconds: a 60ms wall-clock bound failed at
+    // 91ms under full-suite load while the function did exactly one check.
+    let asked = 0;
+    const seen = await urlHeldStill({ url: () => 'http://app/a' }, 'http://app/a', () => (asked++, 0), { ...fast, graceMs: 0 });
     expect(seen).toBe('http://app/a');
-    expect(Date.now() - t0).toBeLessThan(60);
+    expect(asked).toBe(1);
   });
 
   it('keeps waiting while a request is in flight, and follows the navigation it brings', async () => {

@@ -146,18 +146,14 @@ export function parseRefLines(snapshotText: string): Map<string, { role: string;
   return out;
 }
 
-const INTERACTIVE_ROLES =
-  /\b(button|link|textbox|searchbox|combobox|checkbox|radio|switch|slider|spinbutton|menu|menubar|menuitem|option|tab|listbox|grid|row|cell|dialog|alertdialog|heading|alert|status)\b/;
-
 /**
  * The per-line heuristic behind filterInteractive; shared with signature
- * capture. Matches any ref, in-frame ones included — testing for "[@e"
- * silently dropped every line inside an iframe, so an embedded editor or
- * payment form was invisible in the snapshot the agent works from.
+ * capture and, through src/execution/snapshot.ts, with the compiled artifact,
+ * so every runner judges a page by the same lines. Re-exported so this
+ * module's callers need not know which owns it.
  */
-export function isInteractiveLine(line: string): boolean {
-  return line.includes('[@') || INTERACTIVE_ROLES.test(line);
-}
+export { isInteractiveLine } from '../execution/snapshot.js';
+import { isInteractiveLine } from '../execution/snapshot.js';
 
 /**
  * A structural wrapper carrying nothing at all: an unnamed generic or image

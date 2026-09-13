@@ -52,6 +52,13 @@ The compiled module exports `Vars`, `OutputKey`, `Outputs`, `createFlowRun`, `st
 Output values are optional because an observation may not be available; assert the values your
 test depends on explicitly.
 
+The generated file needs `@playwright/test` and nothing else: the execution rules it shares with
+the daemon are embedded in it as typed source. That source is embedded at compile time, so a
+generated file does not pick up later fixes until it is recompiled with `sitelooper compile`
+(which leaves your `.spec.ts` alone unless you pass `--overwrite-spec`). See
+[shared-execution.md](shared-execution.md) for what is shared, what remains specific to each
+runner, and which recorded capabilities a standalone file cannot carry.
+
 Sitelooper's verification command disables retries and runs one worker, while retaining your
 project config, setup dependencies, imports and fixture lifecycle. Normal CI remains under your
 own Playwright settings:

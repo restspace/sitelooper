@@ -212,7 +212,7 @@ describe('compileFlow: a demoted pin refuses to write', () => {
     expect(source).toContain(`// error ${DEMOTED_STEP}: it is pinned to the demoted skill ${DEMOTED_SKILL}`);
     expect(source).toContain(`// fix: sitelooper rerecord ${FWOD34} ${DEMOTED_STEP}`);
     // and the step's own failure says it too
-    expect(source).toContain(`'08-open s_c86522/1 target', { drift: run.drift }, 'it is pinned to the demoted skill s_c86522`);
+    expect(source).toContain(`'08-open s_c86522/1 target', { stayOnOrigin: 'http://127.0.0.1:8069', waitMs: RESOLVE_WAIT_MS }, 'http://127.0.0.1:8069/web#action=:id&cids=:id&id=21&menu_id=:id&model=sale.order&view_type=form', p, { drift: run.drift }, 'it is pinned to the demoted skill s_c86522`);
   });
 });
 
@@ -253,6 +253,8 @@ const FLAG: Diagnostic = {
   severity: 'error',
 };
 const NOTE = 'it is pinned to the demoted skill s_demo — fix: sitelooper rerecord flows/demo.json 01-do';
+/** The resolve policy every plain action step emits, between `where` and the options. */
+const POLICY = '{ stayOnOrigin: originOf(page.url()) ?? undefined, waitMs: RESOLVE_WAIT_MS }';
 
 /** Syntax diagnostics only: a generated file that does not parse is unusable. */
 function syntaxErrors(source: string): string[] {
@@ -292,34 +294,72 @@ describe('the emitter on a flagged step', () => {
 
   it('hands the note to `pick`, as the trailing argument, so the throw carries it', () => {
     const { source } = emitFlowFile(specOf([twoWays]), { tier: 'plain', diagnostics: [FLAG] });
-    expect(source).toContain(`'01-do s_demo/1 target', { drift: run.drift }, '${NOTE}'`);
+    expect(source).toContain(`'01-do s_demo/1 target', ${POLICY}, { drift: run.drift }, '${NOTE}'`);
     // and the helper appends it to the message it throws
-    expect(source).toContain('async function pick(page: Page, candidates: Locator[], where: string, opts: { any?: boolean; drift?: string[] } = {}, note?: string)');
+    expect(source).toContain('  note?: string,\n): Promise<Resolution> {');
     expect(source).toContain("(note ? `\\n  ${note}` : '')");
   });
 
   /**
-   * The single-candidate case has no `pick` to carry the note, and Playwright's
-   * own timeout says only that a selector never resolved — which is exactly the
-   * "reads as drift" failure this whole shape exists to stop.
+   * A single candidate resolves through the same `pick` as a chain does, so it
+   * carries the note the same way. And the ACTION after the resolution is
+   * wrapped in a rethrow that appends the note (review C6, F4): a click that
+   * timed out on what resolved says only that Playwright waited — which is
+   * exactly the "reads as drift" failure this whole shape exists to stop —
+   * so every way a flagged step can fail names the diagnostic. The `pick`
+   * itself stays OUTSIDE the wrapper: its throw already carries the note, and
+   * the wrapper never notes a message twice.
    */
-  it('wraps a single-candidate action in a rethrow that appends the note', () => {
+  it('hands the note to `pick` for a SINGLE candidate too, and rethrows a post-resolution failure with the note', () => {
     const { source } = emitFlowFile(specOf([oneWay]), { tier: 'plain', diagnostics: [FLAG] });
     const block = stepsBlock(source);
-    expect(block).toContain('try {');
-    expect(block).toContain(`err.message += '\\n  ${NOTE}';`);
-    expect(block).toContain('throw err;');
-    // the action itself is unchanged inside the wrapper
-    expect(block).toContain("await click(page.locator('button.cancel'));");
+    const lines = block.split('\n').map((l) => l.trim());
+    const pickAt = lines.findIndex((l) => l === `], '01-do s_demo/1 target', ${POLICY}, { drift: run.drift }, '${NOTE}');`);
+    const tryAt = lines.indexOf('try {');
+    const clickAt = lines.indexOf('await click(hit1.locator);');
+    const catchAt = lines.indexOf('} catch (err) {');
+    expect(pickAt).toBeGreaterThan(-1);
+    // resolution first, outside the wrapper; the action inside it
+    expect(tryAt).toBeGreaterThan(pickAt);
+    expect(clickAt).toBeGreaterThan(tryAt);
+    expect(catchAt).toBeGreaterThan(clickAt);
+    expect(lines[catchAt + 1]).toBe(`if (err instanceof Error && !err.message.includes('\\n  ${NOTE}')) err.message += '\\n  ${NOTE}';`);
+    expect(lines[catchAt + 2]).toBe('throw err;');
+    // one wrapper per flagged step, and the action still acts on what the single candidate resolved to
+    expect(block.split('try {').length).toBe(2);
+    expect(block).toContain("{ locator: page.locator('button.cancel'), index: 0, structural: false, kind: 'css'");
   });
 
-  it('is still parsable TypeScript with the note and the rethrow in it', () => {
+  /** The wrapper, run: a failure after resolution carries the note; a `pick` failure carries it exactly once. */
+  it('a post-resolution failure carries the note at run time, and a pick failure is not noted twice', async () => {
+    const { source } = emitFlowFile(specOf([oneWay]), { tier: 'plain', diagnostics: [FLAG] });
+    const block = stepsBlock(source);
+    // the emitted act phase, cut whole, with `pick` and `click` faked at its edges
+    const act = /act: async \(\) => \{([\s\S]*?)\n\s*\},\n\s*settle:/.exec(block);
+    expect(act).not.toBeNull();
+    const js = ts.transpileModule(`async function act(pick, click, page, p, run, originOf, RESOLVE_WAIT_MS) {${act![1]}\n}`, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
+    type Act = (pick: unknown, click: unknown, page: unknown, p: unknown, run: unknown, originOf: unknown, wait: number) => Promise<unknown>;
+    const build = new Function(`${js}\nreturn act;`) as () => Act;
+    const page = { locator: () => 'loc', url: () => 'http://x.test/' };
+    const run = { drift: [] };
+    const originOf = () => 'http://x.test';
+
+    const afterResolution = build()(async () => ({ locator: 'loc', index: 0, structural: false }), async () => { throw new Error('locator.click: Timeout 10000ms exceeded.'); }, page, {}, run, originOf, 0);
+    await expect(afterResolution).rejects.toThrow(`locator.click: Timeout 10000ms exceeded.\n  ${NOTE}`);
+
+    const atResolution = build()(async (...args: unknown[]) => { throw new Error(`none resolved\n  ${String(args[5])}`); }, async () => {}, page, {}, run, originOf, 0);
+    const message = await atResolution.then(() => '', (err: Error) => err.message);
+    expect(message).toBe(`none resolved\n  ${NOTE}`);
+    expect(message.split(NOTE).length).toBe(2);
+  });
+
+  it('is still parsable TypeScript with the note in it', () => {
     expect(syntaxErrors(emitFlowFile(specOf([twoWays, oneWay]), { tier: 'plain', diagnostics: [FLAG] }).source)).toEqual([]);
   });
 
   it('leaves an unflagged step exactly as it was: no note, no comment, no try', () => {
     const { source } = emitFlowFile(specOf([twoWays, oneWay]), { tier: 'plain' });
-    expect(source).toContain("], '01-do s_demo/1 target', { drift: run.drift });");
+    expect(source).toContain(`], '01-do s_demo/1 target', ${POLICY}, { drift: run.drift });`);
     expect(stepsBlock(source)).not.toContain('try {');
     expect(source).not.toContain('// error 01-do');
     // the note parameter is still on the helper — it is simply never passed
@@ -330,7 +370,7 @@ describe('the emitter on a flagged step', () => {
     const noop: Diagnostic = { code: 'noop-step', step: '01-do', what: '01-do changed nothing', why: 'no mutation.', severity: 'warning' };
     const { source } = emitFlowFile(specOf([twoWays, oneWay]), { tier: 'plain', diagnostics: [noop] });
     expect(source).toContain('  // warning 01-do: 01-do changed nothing');
-    expect(source).toContain("], '01-do s_demo/1 target', { drift: run.drift });");
+    expect(source).toContain(`], '01-do s_demo/1 target', ${POLICY}, { drift: run.drift });`);
     expect(stepsBlock(source)).not.toContain('try {');
   });
 

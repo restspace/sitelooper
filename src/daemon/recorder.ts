@@ -3,6 +3,7 @@ import path from 'node:path';
 import type { ElementHandle, Locator, Page } from 'playwright-core';
 import { ensureSessionDir } from '../shared/paths.js';
 import { volatileMatcher } from '../shared/text.js';
+import { pointLocator } from '../execution/point.js';
 import { isRefTarget, refHint, resolveTarget } from './refs.js';
 import { tagComponent } from '../skills/components.js';
 import { GENERATED_ID_HEX_RUN, skeleton } from '../skills/shape.js';
@@ -98,87 +99,17 @@ export function makeLocator(page: Page, c: LocatorCandidate): Locator {
     }
     case 'point':
       // Resolved in two moves: markPoint() finds the element under the
-      // recorded point and tags it; this locator then names the tag.
-      loc = page.locator(`[${POINT_MARK}=${JSON.stringify(pointToken(c))}]`);
+      // recorded point and tags it; this locator then names the tag. Both
+      // live in the shared execution module so the artifact can do the same.
+      loc = pointLocator(page, c);
       break;
   }
   return c.nth !== undefined ? loc.nth(c.nth) : loc;
 }
 
-/** The attribute markPoint leaves on the element it found, so a sync Locator can name it. */
-export const POINT_MARK = 'data-sitelooper-point';
-export function pointToken(c: { x: number; y: number }): string {
-  return `${c.x},${c.y}`;
-}
-
-/**
- * Find the element under a recorded point, walk up to its actionable
- * ancestor, and tag it for makeLocator — but only when it is the KIND of
- * thing recorded (same role, or same tag when the recording had no role).
- * Returns what it found, or null when nothing of that kind is there. Scrolls
- * the window so the point is on screen first; a point in an inner scroller
- * is found only when that scroller sits where it was recorded.
- */
-export async function markPoint(page: Page, c: Extract<LocatorCandidate, { kind: 'point' }>): Promise<{ role: string | null; tag: string } | null> {
-  try {
-    return await page.evaluate(
-      ({ x, y, role, tag, mark, token }) => {
-        const ACTIONABLE = 'button,a[href],input,select,textarea,summary,[role],[tabindex],label';
-        const targetY = y - window.innerHeight / 2;
-        if (Math.abs(window.scrollY - targetY) > window.innerHeight / 2 || x - window.scrollX > window.innerWidth) {
-          window.scrollTo(Math.max(0, x - window.innerWidth / 2), Math.max(0, targetY));
-        }
-        const hit = document.elementFromPoint(x - window.scrollX, y - window.scrollY);
-        if (!hit) return null;
-        const kindOf = (el: Element): { role: string | null; tag: string } => {
-          const tagOf = el.tagName.toLowerCase();
-          const type = (el.getAttribute('type') || '').toLowerCase();
-          const implicit = (): string | null => {
-            if (tagOf === 'button') return 'button';
-            if (tagOf === 'a') return el.hasAttribute('href') ? 'link' : null;
-            if (tagOf === 'select') return el.hasAttribute('multiple') ? 'listbox' : 'combobox';
-            if (tagOf === 'textarea') return 'textbox';
-            if (tagOf === 'img') return 'img';
-            if (/^h[1-6]$/.test(tagOf)) return 'heading';
-            if (tagOf === 'input') {
-              if (type === 'checkbox') return 'checkbox';
-              if (type === 'radio') return 'radio';
-              if (type === 'submit' || type === 'button' || type === 'reset') return 'button';
-              if (type === 'search') return 'searchbox';
-              if (type === 'number') return 'spinbutton';
-              if (['text', 'email', 'tel', 'url', 'password', ''].includes(type)) return 'textbox';
-              return null;
-            }
-            return null;
-          };
-          return { role: el.getAttribute('role') || implicit(), tag: tagOf };
-        };
-        // The point lands on whatever is painted there — a heading's text
-        // span, a button's icon. Walk up a few ancestors for the recorded
-        // KIND (fwgr27: every heading point missed because the hit was the
-        // title's inner span); failing that, the nearest actionable ancestor.
-        let el: Element | null = null;
-        for (let cur: Element | null = hit, hops = 0; cur && hops < 6; cur = cur.parentElement, hops++) {
-          const k = kindOf(cur);
-          if (role ? k.role === role : k.tag === tag) {
-            el = cur;
-            break;
-          }
-        }
-        el ??= (hit.closest(ACTIONABLE) as Element | null) ?? hit;
-        const { role: roleOf, tag: tagOf } = kindOf(el);
-        const same = role ? roleOf === role : tagOf === tag;
-        if (!same) return null;
-        for (const old of Array.from(document.querySelectorAll(`[${mark}]`))) old.removeAttribute(mark);
-        el.setAttribute(mark, token);
-        return { role: roleOf, tag: tagOf };
-      },
-      { x: c.x, y: c.y, role: c.role, tag: c.tag, mark: POINT_MARK, token: pointToken(c) },
-    );
-  } catch {
-    return null;
-  }
-}
+// The point machinery is a shared execution rule (src/execution/point.ts);
+// re-exported so this module's callers need not know which owns the source.
+export { POINT_MARK, markPoint, pointToken } from '../execution/point.js';
 
 /** Source text for a candidate, e.g. `page.getByRole('button', { name: 'Save' })`. */
 export function candidateExpr(c: LocatorCandidate): string {

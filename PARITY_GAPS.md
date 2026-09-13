@@ -12,7 +12,7 @@ correctness rule implemented in one runner only. The record-scope check lived in
 replay's `goalSatisfied` and not in the emitted `satisfied()`. The deferred
 identity check for a self-navigating procedure lived in replay and not in
 `emitSegment`. The consumption-time unresolved-reference rule lives in the
-daemon (`src/daemon/server.ts:1009`) and not in `refExpr`.
+daemon (`src/daemon/server.ts`) and not in `refExpr`.
 
 All three were found by a human reading code. This file exists so the fourth is
 found by looking at a list instead.
@@ -22,258 +22,496 @@ false-success path: the run reports green and the work did not happen, or
 happened to the wrong record. Those are ranked first. A gap where neither runner
 enforces something is a missing feature and is not in this file.
 
-Every claim below cites `file:line` as of this branch. Lines drift — treat them
-as a starting point, not gospel.
+Claims cite `file:line` as they stood when each entry was written on this branch
+(`refactor/shared-execution`). Later work has moved many of them a long way —
+treat a line number as a hint and search for the named function.
+
+**What changed the shape of this file.** A gap used to be closed by writing the
+rule a second time, in the emitter's dialect, and hoping the two stayed level.
+On this branch a gap is closed by moving the rule into `src/execution/*.ts` —
+ordinary type-checked TypeScript the daemon imports and the artifact embeds
+verbatim (`src/spec/runtime-source.ts`). "Closed by shared `f()`" below means
+exactly that: ONE implementation, cited, with both call sites named. See
+`docs/shared-execution.md`.
 
 ---
 
-## Open gaps, most severe first
+## Closed on this branch, by sharing the rule
 
-### 1. `unrecordedAlert` is not emitted — every action tool — FALSE SUCCESS
+### 1. `unrecordedAlert` is not emitted — CLOSED by shared `alertVerdict`
 
-Replay stops when a state-changing step provokes an alert the recording never
-saw (`replay.ts:838-847`, registered at `:943`). The emitted artifact installs a
-dialog handler only for a recorded `dialog_expect` step (`emit.ts:1632-1638`),
-so Playwright auto-dismisses everything else. The app's rejection is swallowed
-without trace and the step reports green.
+`src/execution/gates.ts:105` is the only implementation. Daemon: the `alerts`
+gate, `replay.ts:820`. Artifact: the emitted `alertGate` helper
+(`emit.ts:251`), observing with the shared `liveAlerts`
+(`src/execution/observe.ts:20`) — which is the alerts half of the ONE page
+capture the daemon diffs (`capturePage`, `src/execution/snapshot.ts:138`), so
+the two see the same elements by construction rather than by a second copy of
+the selector and caps kept in step. Parity case:
+`execution-parity.test.ts:967`.
 
-Worst when the step carries no `expect.addedContains`: `expectationLines`
-returns early (`emit.ts:1387`) and the step is then checked by nothing at all.
+The daemon adapter distinguishes two "no alerts" that used to be conflated:
+`outcome.captureFailed ? null : (outcome.diff?.alerts ?? [])`. A tool the
+executor never diffs by design (goto, back, wait_for, hover, scroll_into_view)
+is an *observed nothing*, not an unobserved one — reading it as unobserved
+marked every such step of every replay, and a skill containing one could never
+validate. Only a capture that FAILED is `null`.
 
-*Closing it:* a `page.on('dialog', ...)` at the top of each emitted step body
-that records dialogs, dismisses them, and throws after the action unless
-`step.expect.alertContains` matched. The subtlety is scoping the listener so a
-`dialog_expect` step's own handler wins.
+The old entry's suggested fix was wrong and is deleted: `page.on('dialog', …)`
+is for NATIVE dialogs (recorded `dialog_expect`). This gate is about live-region
+toasts, which never reach a dialog handler.
 
-### 2. Segment start preconditions are a comment — all tools — FALSE SUCCESS
+### 2. Segment start preconditions are a comment — CLOSED by shared `preconditionVerdict`
 
-Replay refuses outright — "nothing was run" — when the browser is not on the
-segment's page (`replay.ts:230-254`), with a soft-match and fingerprint escape
-at `:240-249`. `emitSegment` emits the url pattern only as a comment
-(`emit.ts:2041`). `toHaveURL` fires after a step, not before one
-(`emit.ts:1403-1410`).
+`src/execution/gates.ts:187`. Daemon: `replay.ts:238`. Artifact: the emitted
+`preconditionGate` helper (`emit.ts:272`, async and awaited), emitted per
+segment at `emit.ts:1929` unless the segment navigates itself. Refusal wording
+says "nothing of this segment has run", as replay's does. Parity cases: refusal
+at `execution-parity.test.ts:1004`, soft-match-and-continue at `:1031`.
 
-A preceding step leaves the browser somewhere unexpected and the artifact starts
-clicking on the wrong page. Replay's "refused, nothing was touched" has no
-emitted twin.
+The fingerprint half — CLOSED by shared `fingerprintPage` + `cosine`
+(`src/execution/fingerprint.ts`) and the vector in the IR
+(`SpecSegment.preconditions.fingerprint`, `src/spec/ir.ts`). Both runners
+measure the live page and hand `preconditionVerdict` the same number. Daemon:
+`res.similarity = cosine(skill.preconditions.fingerprint, (await
+fingerprintPage(page)) ?? undefined)`, `replay.ts:243`, then the verdict at
+`:249`. Artifact: the same expression at the emitted `preconditionGate` call
+site (`emit.ts` `emitSegment`), the recorded vector read out of `FLOW` by the
+emitted `recordedFingerprint`. Both read the url BEFORE measuring (replay's
+`startUrl` at `:235`; the artifact passes `page.url()` as an argument ahead of
+the `cosine(…)` argument), so a navigation landing during the up-to-2s
+measurement cannot make the two judge different urls. A page that cannot be
+read is `null` on both sides (the url decides), and so is a stored vector with
+a non-finite entry (`cosine` returns `null`; `flowToSpec` omits it). The
+artifact is no longer the stricter runner. Parity cases:
+`execution-parity.test.ts:1094` (a one-segment mismatch on a structurally
+identical page proceeds in both, with the warning, and replay's measured
+similarity must be a number ≥ `SOFT_MATCH_MIN_SIMILARITY`, so the case cannot
+pass on a silent null) and `:1120` (the same
+mismatch against a different template's fingerprint refuses in both, before
+any mutation, naming the same similarity). No existing case pinned the old
+"artifact refuses, daemon proceeds" direction, so none was replaced.
 
-*Closing it:* `urlExpectSource` already exists (`emit.ts:1140`); emit a polled
-`toHaveURL` at the segment head, skipped when the segment navigates itself. The
-fingerprint-similarity half is not expressible in Tier 2 and should stay a
-comment that says so.
+Residue, by design: a `.flow.ts` compiled BEFORE the vector travelled carries
+only `fingerprinted: true`. It still lifts, passes `'unmeasured'` (refusing a
+soft match, the stricter direction) and gets an `unmeasured-precondition`
+warning saying to recompile; repair/rerecord keep the flag (`carryFingerprints`)
+rather than loosening the gate silently — also when repair widened the start
+pattern, and a file vector dropped for a widened pattern falls back to the flag
+with a change line. Rebuilt segments are matched to the file's by id (by
+position only for an in-place replacement of the same template in a chain of
+unchanged length), so a rerecord that inserts a segment cannot hand it another
+segment's vector or flag.
 
-### 3. Plain expectation group silently unchecked when no line is nameable — FALSE SUCCESS
+### 3. Plain expectation group silently unchecked when no line is nameable — CLOSED by shared `expectedChangesVerdict`
 
-Replay stops when none of the plain lines is in the diff and none is on the live
-page (`replay.ts:901-923`). `anyOfAssertion` returns silently when `lineUnion`
-produced no locator (`emit.ts:1349`), emitting a comment and no `ctx.warnings`.
+`src/execution/expect.ts:141`. Daemon: `replay.ts:848`. Artifact: the emitted
+`expectChanges` helper (`emit.ts:823-824`), which takes a real before/after
+capture (`capturePageLines` + `addedLines`, `snapshot.ts:161`, `:174`) and hands
+the verdict the same two observations the daemon does.
 
-The asymmetry is structural: replay matches recorded **text lines**, emit must
-turn each line into a **locator** via `lineLocator` (`emit.ts:1257-1315`), which
-returns null for an unnamed control, a wildcard-only line, or any non-roled line
-containing a quote. Those lines are dropped on the emit side only.
+The structural cause is gone with it. `lineLocator`, `lineUnion`,
+`anyOfAssertion`, `INPUT_LIKE_ROLES` and `looseText` no longer exist in
+`emit.ts` — there is no locator translation left to drop a line. The artifact
+now matches WHOLE snapshot lines through the shared `lineShows`
+(`snapshot.ts:201`), which also closes the defect this audit found late and which
+was never in this list: the locator union checked only the role and name, so a
+hard line `- combobox "Project": {{v1}}` passed on any visible Project combobox
+whatever it showed. Parity cases: `execution-parity.test.ts:1099` (value after
+the colon wrong — both stop) and `:1121` (value right — both proceed).
 
-*Closing it:* either make the plain group `required` so readiness sees the
-warning, or give emit a text-level fallback closer to what `presentOnPage`
-actually does.
+### 4. `errorPage` gate is not emitted — CLOSED by shared `errorPageVerdict`
 
-### 4. `errorPage` gate is not emitted — all tools
+`src/execution/gates.ts:44`. Daemon: the `errorPage` gate, `replay.ts:866`,
+first in `STEP_GATES`. Artifact: the emitted `errorPageGate` helper
+(`emit.ts:205`). The emitted `verify` phase runs errorPage, then url, then
+alerts, then expectations — replay's own order.
 
-Replay stops as soon as the tab is on `chrome-error:` / `about:neterror`
-(`replay.ts:938-941`). Neither string appears anywhere under `src/spec`.
+### 5. `satisfied()` can skip a step with no url gate — CLOSED by shared `urlMatches` + `markersBound`
 
-Mostly a loud failure with a misleading reason — the artifact blames a locator,
-not the crash — but a step whose only assertion is an unnameable plain group
-(gap 3) can still pass on an error page.
+`emit.ts:1853` now emits, unconditionally:
+`markersBound([…], p) && urlMatches(<pattern>, page.url(), p) && await satisfied(…)`.
+That is replay's `goalSatisfied` precondition pair (`replay.ts:1369`), through
+the same two shared functions (`gates.ts:222`, `src/execution/url.ts`).
+`urlExpectSource` — the helper that returned null for a non-absolute pattern and
+took the url term with it — no longer exists.
 
-*Closing it:* trivial, one url test after each action.
+`markersBound` also closes the narrower false-success this audit found: a
+`{{dN}}` marker counts as bound at COMPILE time while `p.dN` may be `''` at run
+time, rendering `Order {{d1}}` as `Order `, which every order shows. Both runners
+now ask the run-time question.
 
-### 5. `satisfied()` can skip a step with no url gate — FALSE SUCCESS
+### 6. Loop guard counted before the page settles — CLOSED by shared `runFoldedLoop`
 
-`goalSatisfied` hard-requires a url match before anything else
-(`replay.ts:1516`). The emitted `satisfied()` has no url check
-(`emit.ts:911-917`); the guard prefixes one only when `urlExpectSource` returned
-non-null (`emit.ts:2017-2018`), and that returns null for any pattern which is
-not `scheme://...` (`emit.ts:1141`).
+`src/execution/loop.ts:66`; `hooks.settle()` runs before EVERY count, including
+the first. Daemon: `replay.ts:635`. Artifact: `emit.ts:1757`.
 
-On a segment whose recorded pattern is not absolute, the emitted step
-short-circuits as already-satisfied on *any* page showing the identity and goal
-text, publishes the report template's values, and returns. Work never done,
-reported done.
+### 7. Loop guard: ordered chain vs union — CLOSED by shared `runFoldedLoop` + a first-match guard hook
 
-*Closing it:* trivial — when `urlExpectSource` is null, do not emit the guard at
-all. That is the conservatism replay already uses.
+The policy no longer has a second implementation to disagree with. The artifact's
+`guard` hook walks the candidates in order and returns the FIRST with a nonzero
+count; `runFoldedLoop` recounts with that same locator, as the daemon's
+`resolveChain` already did. The `.or()` union is no longer used for a loop guard.
+Parity case: `execution-parity.test.ts:868`.
 
-### 6. Loop guard counted before the page settles — FALSE SUCCESS
+### 8. `mints` published unconditionally, and skipped on `goto`/`back` — CLOSED by shared `changedCreation`
 
-`runLoop` awaits `settleDom` before resolving the guard on every iteration
-including the first (`replay.ts:631-636`). `emitLoop` counts immediately
-(`emit.ts:1929-1930`); the per-step settle is inside the body (`emit.ts:1596`).
+`src/execution/lifecycle.ts:40`. Daemon: `replay.ts:552`. Artifact:
+`emit.ts:1237`, inside the shared lifecycle's `bind`, for every tool — page-level
+actions return from `emitSkillAction` only and no longer past `emitSkillStep`'s
+obligations.
 
-A list rendered a beat late counts 0, the `for` never enters, and because
-`cursor(0) < left(0)` is false the drain check (`emit.ts:1959-1964`) does not
-fire either. A fully-populated list is reported drained.
+Residual timing difference, same verdict: the daemon reads the part immediately
+after settle, the artifact waits up to `URL_WAIT_MS` for the url to differ, so a
+rejected click costs the artifact that window before it concludes "nothing
+minted".
 
-*Closing it:* trivial — settle before the first count, and probably poll for a
-non-zero count.
+### 9. Derived (`{{dN}}`) binding skipped on most tools — CLOSED by the shared lifecycle
 
-### 7. Loop guard: ordered chain vs union — divergent, and replay is the wrong one
+`runStepLifecycle` (`lifecycle.ts:21`) makes `bind` an obligation of any
+completed action. Daemon: `replay.ts:466`. Artifact: `emit.ts:1266`. Every early
+return now leaves only `emitSkillAction`.
 
-Replay takes the **first candidate that matches** (`replay.ts:635`) and
-deliberately recounts with that same candidate (`replay.ts:668`). Emit builds an
-`.or()` **union of every candidate** (`emit.ts:1901`, `src/spec/locators.ts:296`).
+The residual divergence is closed too. Where the part is NOT on the url the
+daemon leaves `params[name]` unset, so a still-literal `{{dN}}` is a wildcard to
+`urlDiff`; the artifact used to bind `''` (and pass `dN: ''` in at the call
+site), so a later url check required an empty segment and stopped where replay
+went on. Now the emitted `bindPart` sets `p.dN` only when the url carries the
+part, the call site passes no derived slot at all, and a derived slot renders
+in text as `${p.dN ?? '{{dN}}'}` — the literal marker replay's `fillParams`
+leaves. Parity cases: "a derived value the url never carried" (the unminted
+marker passes a later url expectation in both; a different page shape still
+stops both).
 
-For a guard whose primary is per-record and whose fallback is generic, replay
-counts 1 where the artifact counts N. Replay then drains "1 of N", and its
-post-cap recount re-reads the same 1, so it reports **ok with the list
-part-cleared** — a false success on the *replay* side this time.
+### 12. Absent-dialog conditional UI — CLOSED by shared `expectedChangesVerdict` + `namesDialogControl`
 
-Mechanism is certain; frequency is not — it depends on the guard chain the
-compiler stores, which was not traced. **Get a parity case before acting.**
+The `absentDialog` branch is part of the verdict (`expect.ts:141`, the dialog
+rule inside it), and membership is PROVEN against the dialog's recorded subtree
+by the shared `namesDialogControl` (`expect.ts:238`). Daemon: `replay.ts:406`.
+Artifact: the emitted `absentDialogSkip` helper (`emit.ts:861`), with the
+per-body state written at `emit.ts:1018` and cleared at `:1336`. Both refuse to
+skip a `mints` step. Both also refuse to conclude "the dialog did not open" from
+a capture that FAILED — inferring a branch from missing evidence. Parity cases:
+`execution-parity.test.ts:1154` and `:1172`.
 
-### 8. `mints` published unconditionally, and skipped on `goto`/`back`
+### 13. `tabs` is executed by replay, not emitted, and not even warned — CLOSED by `unsupported-capability`
 
-Replay records the id only when the url part actually changed
-(`replay.ts:536-538`), so a rejected click cannot report a creation. Emit
-publishes whatever `urlPartWhen` returns (`emit.ts:1804`). Separately, the
-`goto` (`emit.ts:1616`) and `back` (`:1619`) cases return *before* the `mints`
-block at `:1796`, so a minting `goto` publishes nothing where replay records it.
+`unsupportedCapability` (`emit.ts:1601`) reports in all four places: a typed
+`Diagnostic` (`src/spec/diagnostics.ts`), a `ctx.warnings` line, a `// TODO:`
+(which `compilationBlockers` keys on), and a `throw` in the generated file so a
+run stops rather than quietly doing less. Applied to `tabs`,
+`read what=attr|count`, and a chain with nothing but a recorded position
+(`pointOnly`, `emit.ts:1621`).
 
-`outputs['....minted']` then names a pre-existing record. A teardown built on it
-deletes someone else's row.
+### 15c. `sweepPage` missing from emitted reads — CLOSED by shared `sweepPage`
 
-### 9. Derived (`{{dN}}`) binding skipped on most tools
+`src/execution/snapshot.ts:294`. Daemon: `replay.ts:341`. Artifact: inside the
+emitted `readOptional` helper, `emit.ts:666`. (15a and 15b are closed below.)
 
-Replay binds derived values after **any** step whose index matches
-(`replay.ts:518-527`). Emit calls `derivedLines` from only two places
-(`emit.ts:1615`, `:1795`); every early return bypasses it — `back`,
-`set_viewport`, `set_offline`, `eval`, `screenshot`, `dialog_expect`, `tabs`,
-bare `press`, `read what=url`, unlabelled read, absence `wait_for`, and labelled
-reads.
+### 16. `back` gets no gate at all in emit — CLOSED by the shared lifecycle
 
-`derived[name].step` is the index of the step whose JSON *contains* the marker
-(`src/skills/compile.ts:299-301`), not necessarily a navigating one, so a read
-landing there is plausible. Result: `p.dN` is `undefined` and every later
-interpolation renders the literal `"undefined"`.
+`back` returns from `emitSkillAction` only; `emitSkillStep` still wraps it with
+bind, url effect, alerts and expectations. Parity case:
+`execution-parity.test.ts:497`.
 
-*Closing it:* hoist `derivedLines` to one call site ahead of every `return out`.
+The old entry's premise was wrong and is deleted: the compiler never attaches
+`expect` to a `back`. The recorder captures a diff only for `STATE_CHANGING`
+tools, and `expectationFor` returns undefined without one — so only a hand-built
+skill (as the parity test uses) gives `back` an expectation. The gate still
+matters; the stated reason did not.
 
-### 10. Echoed read values are not detected in emit
+### 17. Opener skip widened to `dblclick` in emit only — CLOSED by agreeing on `click`
 
-Replay drops a read from the report's confident values when it merely echoes
-what the skill itself typed or selected (`replay.ts:377-392`, `:586-589`).
-`readOptional` has no echo notion (`emit.ts:830-843`).
+Both are now `click` only: `replay.ts:1326` and `emit.ts:1209`. A toggle is a
+single click's shape (a menu button, a dropdown), and every bench case behind
+the rule was one; a `dblclick` that opens something — a row opening its editor —
+is not undone by a second dblclick, so neither runner skips it.
 
-The case in `ReplayResult.echoedValues` (`replay.ts:61-71`): the artifact
-publishes the value as persisted and a user assertion built on it passes, while
-the app dropped the save.
+The ORDER also agrees now: both resolve the target first and guard afterwards
+(replay at `replay.ts:459`, after its resolution loop; the artifact's
+`wrapAlreadyInEffect`, `emit.ts:1069`, which deliberately leaves the `pick`
+outside the guard). A guard that swallowed a resolution miss would report
+skipped-and-green where the daemon reports a stop. Both ask the same recorded
+lines in the same dialect, through the shared `presentOnPage` and `liveLines`.
 
-*Closing it:* an emitted per-run `interacted` set fed by every `fill`/`type`/
-`select` value, checked at each read. ~30 lines of helper.
+### 14. `stayOnOrigin` and `plausible` are not in `pick` — CLOSED by shared `resolveCandidates`
 
-### 11. Loop progress guard is not emitted
+`src/execution/resolve.ts:263` is the only implementation of the resolution
+policy: class order, the point mark, the identity guard, plausibility, the
+origin guard, ambiguity and its loop-cursor narrowing, the structural hold and
+the whole-chain wait. Daemon: `resolveChain`, `replay.ts:957`, an adapter that
+builds one observation per stored candidate and maps the result back; its
+policy inputs are built in `runOneStep` (`replay.ts:336`) and the loop guard
+passes `{ allowMultiple: true }` (`replay.ts:657`). Artifact: the emitted
+`resolveTarget`/`pick`/`readOptional` helpers (`emit.ts:498`, `:554`, `:587`),
+which call the embedded `resolveCandidates` and add only presentation (the
+drift line — now naming every rejected candidate in the shared `MissReason`
+words — the loop sink, the throw); the loop guard calls `resolveCandidates`
+directly (`emit.ts:1747`). Observations are rendered at compile time by
+`observationSource` (`src/spec/locators.ts:305`): the stored chain in stored
+order with stored indices, `structuralCandidate` as a literal, the candidate's
+filled JSON as `carries`, a point's geometry with `pointLocator` as its locator.
+Policy inputs are rendered by `policySource` (`emit.ts:961`): `allowMultiple`
+for `read_all` and for an absence wait (several still-visible matches resolve
+and are waited on to go, in both runners — an 'ambiguous' miss read as
+"nothing matched" was a false success on both sides; parity case
+"both runners refuse an absence wait whose chain still matches two visible
+elements"), the loop cursor as `ambiguousNth`, `stayOnOrigin` from the
+recorded pattern's origin else `originOf(page.url())` — `originOf` moved into
+`src/execution/url.ts:35` so both runners read the same rule — and the shared
+`RESOLVE_WAIT_MS` (0 for an absence wait). EVERY locator step goes through it,
+single-candidate too: Playwright strict mode was never the daemon's rule.
 
-Replay fails the loop when an iteration resolved the same elements as the last
-with the guard count unchanged (`replay.ts:647-655`). `emitLoop` has cursor, cap
-and drain but no signature comparison.
+Consequences: the emitted `.filter({ hasText })` guards and the `specOf`
+pre-ordering are deleted from `locators.ts`; a `point` candidate is no longer
+dropped (the `unsupported-capability` diagnostic for a position-only chain is
+retired — the artifact resolves it through `markPoint`/`pointLocator` exactly
+as the daemon does); a loop-body target is narrowed to the cursor only when it
+matched several, not unconditionally `.nth(cursor)`; and positional resolution
+is reported by the resolution itself into the effect gate, not guessed at
+compile time over the chain. Parity cases: `execution-parity.test.ts:1292`
+(origin guard, with its same-origin control) and `:1322` (the cursor on a
+unique body target, both runners stopping on the shared progress guard).
 
-Partly mitigated: `.nth(cursor)` means a stuck cursor usually resolves nothing
-and throws. The residual hole is a collection that **re-orders** between passes,
-where `nth(cursor)` walks positions rather than records.
+What remains daemon-only, by design: `retired` — evidence-based reordering of a
+candidate later runs showed volatile. That evidence lives in the skill store;
+an artifact has none, so a compiled chain is ordered by class and recorded
+order alone (the observation's `retired` is simply omitted). Every guard still
+runs in both runners, so a candidate that fails one is refused by both. But two
+"working" candidates can be two different elements: where a retired candidate
+and a live one in the same class BOTH resolve uniquely and BOTH pass every
+guard, the daemon acts on the live (later-ordered) one and the artifact on the
+retired one — so, in plain words, omitting `retired` can make the artifact act
+on a different, retired-but-working element than the daemon. It is listed under
+"Retirement evidence" below.
 
-### 12. Absent-dialog conditional UI — FALSE **FAILURE**
+### B8. The identity guard's SOURCE differs between the runners — CLOSED by shared `identityValues`
 
-Replay treats a plain expectation naming a `dialog` that did not appear as
-conditional UI rather than a failure (`replay.ts:911-921`) and skips the steps
-naming its controls (`:400-417`), explicitly **not** skipping a `mints` step
-(`:408`). Emit asserts `toBeVisible()` and throws (`emit.ts:1352`).
+`src/execution/resolve.ts:361`. Daemon: `identityOfPrimary`, `replay.ts:1021` —
+`identityValues` over `identityFields` of the WHOLE chain with the skill's known
+slots. Artifact: `identitySource` (`emit.ts:973`) renders the same call at
+compile time — `identityValues({ v1: p.v1 }, ['Mark {{v1}}'])` — over the
+unfilled name/text/label/hasText fields of every candidate, restricted to the
+segment's `known` slots, so the run's real value guards the run and the
+≥3-character rule and dedupe are applied by the shared function at run time as
+they are in the daemon. A known value in a `role` name with no `scoped`
+candidate is now guarded in both. Parity case: `execution-parity.test.ts:1250`
+(the pinned-record fallback rejected, the carrying one taken), with `:1268` as
+its control (no known slot: neither runner guards, both take the pinned
+fallback — the same wrong record, which is what makes the known slot the thing
+that guarded).
 
-The artifact red-fails runs replay passes, on exactly the flows replay was
-taught to survive. Hard to close: needs `namesDialogControl`
-(`replay.ts:967-972`) translated into generated per-step state.
+### B10 / C7. Editor recipes: `fill` transcribed, `type` and `select` past the recipe — CLOSED by shared `fillWithRecipe`/`typeWithRecipe`/`selectWithRecipe`
 
-### 13. `tabs` is executed by replay, not emitted, and not even warned
+`src/execution/recipes.ts` is the only runner: recognition set and order, the
+seed procedures, `executeRecipe`, `verifyRecipe`, `applyRecipe` and the three
+ladders. Daemon: `src/agent/tools.ts` `case 'fill'` (`:1004`), `case 'type'`
+(`:1008`), `case 'select'` (`:1026`), each over `storeBook(new ComponentStore(),
+page)` (`src/skills/components.ts:269`). Artifact: the emitted `fill`, `type`
+and `select` adapters (`src/spec/emit.ts`, `HELPERS`), each over
+`snapshotBook(RECIPES)`, where `RECIPES` is `SpecFlow.recipes` rendered by
+`recipesHelper` — the snapshot `flowToSpec` takes from the ComponentStore the
+compile CLI hands it (`src/spec/ir.ts` `recipeSnapshot`, via
+`snapshotRecipes`, `components.ts:307`), or the shipped seeds for a spec
+compiled without one.
 
-Replay switches the active page (`src/agent/tools.ts:1162-1173`). Emit writes a
-TODO comment and returns **without** pushing to `ctx.warnings` — unlike the
-`default` branch (`emit.ts:1782-1785`) which does warn. The artifact keeps
-driving the original tab and readiness has no idea.
+What this deleted: the artifact's own transcription of the fill ladder
+(`editorSetValue`, the `EDITORS` table with its xpath `up` walks, the inline
+`squash`, `EDITOR_SETTLE_MS`/`EDITOR_BLUR_SETTLE_MS`, two
+`page.waitForTimeout`s, `FILL_FOCUS_MS`). What this added: a recipe path for
+`type` and `select`, which the artifact drove past the recipe entirely — an
+`aria-combobox` the daemon selects by recipe, or a contenteditable the
+recording typed into (the native `pressSequentially` appends to the existing
+content), used to diverge there. The `type` delay row of the trivia list went
+with it: the adapter passes tools.ts's 20ms and 10s.
 
-*The missing warning is a one-liner and should go in regardless.* Real multi-tab
-emission is much larger.
+The snapshot is COMPILE-TIME state, and that is the residual, by design:
+recipe SELECTION evidence (learning, validation, demotion, stats) is daemon
+state, like candidate retirement. The artifact runs the recipe the store had
+chosen when the flow was compiled and never records, demotes or revives one.
+What the store holds that a snapshot cannot express is diagnosed at compile
+time as `recipe-snapshot` (`src/spec/diagnostics.ts`): a demoted recipe
+(omitted), a family left with nothing usable (native for good), a learned
+variant travelling as data. Only a flow that fills, types or selects
+(loop bodies included) is snapshotted or diagnosed. Drift after the compile is
+not diagnosed. `repair` and `rerecord` verify through the daemon's CURRENT
+store, so the file they write carries that store's snapshot
+(`carryRecipeSnapshot`, `src/spec/ir.ts`, called from `src/cli.ts` repair and
+`src/spec/rerecord-input.ts` `persistRerecordInput`): kept byte-for-byte when
+identical, otherwise adopted with a `recipes: …` change line; a file with no
+snapshot gets one plus a `recipe-snapshot` warning that `type`/`select` now go
+through recipes. `lift` refuses a malformed `FLOW.recipes`.
 
-### 14. `stayOnOrigin` is not emitted, and the file claims otherwise
+Review fixes after stage B (C7 review): the component root is pinned as an
+`ElementHandle` at recognition, so a target the recipe un-matches (text- or
+placeholder-located) or over-matches (a mirrored preview) no longer moves the
+root between steps — the lazy `ancestor-or-self … .last()` Locator did, which
+failed a verified edit (blur timeout, then a native fill on a vanished target,
+recorded as a recipe failure) or verified against the wrong component. A
+throwing `onAttempt` (a store write refused with EPERM) no longer turns a
+verified action into an error. The emitted `fill` no longer waits for
+visibility before recognition (the daemon never did): a recognised editor
+whose input sink is 0x0 or hidden now takes its recipe in both runners.
 
-`leavesOrigin` rejects a guessed fallback resolving inside a link that leaves the
-recorded origin (`replay.ts:1113-1132`, applied `:1215`). `pick` has no origin
-check, and its "WHAT IT CANNOT MIRROR" list (`emit.ts:746-759`) names four rules
-but not this one — so the comment asserts a parity that does not hold.
+Parity cases: the "editor recipes" section at the end of
+`test/execution-parity.test.ts` — a `fill` into a monaco-shaped editor whose
+model only a real edit updates (a native setter would commit the initial
+text), a `type` into a contenteditable (native typing would append), a native
+`<select>` as the control (both go native), and a `fill` into a contenteditable
+located by `hasText` whose text the recipe replaces (the pinned root). The
+fixture is `test/fixture/server.ts` `/editor`, committing what the APP holds.
+All four pass in a browser. The parity harness now also points `SITELOOPER_COMPONENTS_FILE`
+into its own temp home (it is read ahead of `SITELOOPER_HOME`). Unit coverage:
+`test/execution-recipes.test.ts` (the runner, including both root-pinning
+shapes and the throwing book), `test/execution-recipes-emit.test.ts` (the
+snapshot's source, the diagnostics, and the emitted adapters run from the
+whole helper block), `test/spec-repair.test.ts` / `test/rerecord-input.test.ts`
+(`carryRecipeSnapshot`), `test/spec-lift.test.ts` (`FLOW.recipes` validation).
 
-*Closing it:* easy, the check is pure DOM.
+### B6a. Identity asked in two dialects — CLOSED by embedding `presentOnPage`
 
-### 15. Replay-only recovery paths
+The emitted `present` and `sharesScope` helpers are deleted. The artifact's
+identity gate is now `presentOnPage(page, [marker], { whole: true })`
+(`emit.ts:1902`) — the same function `checkIdentity` calls (`replay.ts:269`) —
+and the emitted `satisfied` helper (`emit.ts:728`) runs `capturePageLines` +
+`lineShows` and then `page.evaluate(scopeCheckInPage, …)`, the daemon's own
+page function (`snapshot.ts:241`), rather than a hand-maintained copy of it.
 
-`navigateToDestination` (`replay.ts:429-442`) vs `pick` throwing
-(`emit.ts:797-806`); `textHeldElsewhere` (`replay.ts:497-504`) vs a bare
-`toContainText`. Both loud.
+This also closed the dialect defect the copy was written around: a snapshot line
+carries a field's VALUE after the colon, so an odoo form in edit mode shows the
+marker only as an `<input>`'s value, where `getByText` can never see it — cloud
+run sp5odb died on exactly that. Parity case:
+`execution-parity.test.ts:728`, which asserts the two runners agree marker for
+marker, in text and in a field value.
 
-The third is silent and belongs higher: `sweepPage` retries a read
-(`replay.ts:341`) where `readOptional` returns `''` (`emit.ts:837-842`), and a
-later step interpolates the empty value.
+---
 
-### 16. `back` gets no gate at all in emit
+### 10. Echoed read values are not detected in emit — CLOSED by shared `echoVerdict`
 
-`emit.ts:1617-1619` emits `page.goBack()` and returns — no `effectLines`, no
-`expectationLines`, no `derivedLines`, no `mints`. Replay runs all five
-`STEP_GATES` on it (`replay.ts:546`), and a recorded `back` legitimately carries
-`expect.urlPattern` (`store.ts:274`). A real unchecked navigation.
+`src/execution/echo.ts` is the only implementation: the length floor, the loose
+key, which tools set something (`setsSomething` — the old `OBSERVATION_TOOLS`
+set, minus its three dead entries), what a step contributes (`noteInteraction`
+over its `value`/`text` and `candidateNames` of each resolved target) and the
+verdict with its warning. Daemon: the `interacted` ledger in `replaySkill`,
+fed in `runOneStep` and asked at each read, still surfaced as
+`ReplayResult.echoedValues`. Artifact: one `typedN` ledger per emitted segment
+(`emitSegment`), fed by `echoNoteLines` (values ahead of the absent-dialog
+skip, names right after the `pick`, as replay orders them) and asked by the
+emitted `echoRead` after each published read (`echoReadLines`), which lists
+the output key in the new `FlowRun.echoed` and logs a `[sitelooper warn]` line.
+Neither runner withholds the value from later steps. Parity case: "echo reads"
+at the end of `execution-parity.test.ts` (the editor's display of the filled
+text is flagged by both; the page heading, by neither). Unit coverage:
+`test/execution-echo.test.ts`.
 
-### 17. Opener skip widened to `dblclick` in emit only
+---
 
-`emit.ts:1570-1579` covers `click` and `dblclick`; `replay.ts:1472` covers
-`click` only and says so. A recorded `dblclick` whose popup is already present
-is silently skipped by the artifact and executed by replay. Pick one side — the
-comment at `emit.ts:1566` already acknowledges the asymmetry.
+### 15a/15b. Replay-only recovery paths — CLOSED by shared `navigateToDestination` + `textHeldElsewhere`
+
+`src/execution/recover.ts` is the only implementation of both rungs.
+
+- **15a, navigation by recorded destination.** `mayNavigateToDestination`
+  (a plain `click`/`dblclick`, a recorded url expectation the browser is not
+  on, outside a loop body) and `navigateToDestination` (another visible link to
+  the one destination, else a direct navigation to a fully concrete one). Each
+  runner supplies only its click and its goto (`RecoveryHooks`). Daemon:
+  `runOneStep` after a missed resolution, through its tool layer. Artifact: a
+  navigation click with a recorded destination resolves through the emitted
+  `pickOrNavigate` instead of `pick`; on arrival it logs a `[sitelooper drift]`
+  line and the step returns `skipped`, so — as in replay, which returns
+  before its gates — the step's own gates are not asked. Never emitted in a
+  loop body.
+- **15b, a text wait held elsewhere.** `textHeldElsewhere` over observations
+  `{ index, kind, locator }`: the stored candidates after the primary, points
+  skipped, exactly one match, the text shown. Daemon: `heldObservations`
+  builds them with `makeLocator` when the wait throws. Artifact: a
+  `text_contains`/`text_equals` wait hoists its observations into a local,
+  and the emitted `textHeldOrThrow` asks the same question in the wait's
+  `catch`, logging a drift line and going on to the step's gates, or rethrowing.
+
+Parity cases: the "recovery rungs" section at the end of
+`execution-parity.test.ts` — another link reaches the destination, a
+concrete destination is navigated to, a wildcard destination is not guessed
+(both stop); the text held by the second candidate passes, text shown
+nowhere stops.
+
+### B9-residual. Loop-body `mints` — CLOSED by `FlowRun.created`
+
+The artifact still writes `outputs['<step>.minted']` (the latest record, the
+teardown handle a single mint publishes) and now also accumulates every
+distinct minted identifier, in order, into `run.created` — replay's
+`res.created`, through the same shared `changedCreation`. Parity case: "both
+runners keep every record a loop body minted, in order" (a loop opening each
+of three rows).
+
+---
+
+## Not shared, by design
+
+Nothing a runner decides from what it observes is left in one runner only.
+What remains is decided from EVIDENCE the daemon accumulates across runs and a
+compiled artifact cannot have: candidate retirement (below) and recipe
+learning (the residual under B10 / C7). Two differences of form, not verdict,
+are pinned by harness cases and deliberately left: an empty read is omitted
+from replay's values and published as `''` by the artifact (consumers treat
+both as unpublished), and on a rejected creating click the artifact waits up
+to `URL_WAIT_MS` before concluding nothing was minted (gap 8).
+
+### Retirement evidence — daemon-only, by design
+
+The one input to the shared resolution policy the artifact cannot supply:
+`retired(candidate)` (`src/skills/repair.ts:531`), passed by `resolveChain`
+(`replay.ts:987`) from the store's `seen` counts and omitted by the emitter. It
+orders a demonstrated-volatile candidate LAST within its class; it never
+accepts or rejects one. The spec IR does carry `seen` on candidates saved after
+replays, so a compile-time snapshot is possible; it would be stale the moment
+the next replay ran, which is why it is not rendered. Listed here so the
+difference is not rediscovered as a gap.
+
+What the omission can change, stated plainly: when a retired candidate and a
+live one in the same class both resolve to exactly one element and both pass
+the identity, plausibility and origin guards, the two runners act on DIFFERENT
+elements — the daemon on the live candidate's, the artifact on the retired
+candidate's. A retired candidate is one that later runs showed to miss, not
+one shown to land on the wrong element, so the element it resolves to is
+usually the same one; but nothing guarantees that, and "orders two working
+candidates" must not be read as "acts on the same element". A candidate that
+fails a guard is refused by both runners whatever its order.
 
 ---
 
 ## Undetermined
 
-- Whether `read`/`read_all` steps ever carry `expect.urlPattern`. Replay
-  url-gates them (`replay.ts:798`); emit skips `effectLines` for reads
-  (`emit.ts:1807`). `store.ts:274` says the field is set only when the step
-  changed the url, which a read does not — believed moot, not confirmed against
-  a real store.
-- Whether a `loop` body step can carry `mints`. If so, `emit.ts:1804` keeps only
-  the last pass where replay accumulates into `res.created` (`replay.ts:538`).
-- Gap 7's real-world frequency.
+- Gap 7's real-world frequency (how often a stored guard chain pairs a
+  per-record primary with a generic fallback). The mechanism is now closed on
+  both sides, so this is only a question about how much it used to cost.
+- Whether `read`/`read_all` steps ever carry `expect.urlPattern`. Believed moot:
+  the recorder captures a diff only for state-changing tools, and both runners
+  now run the url gate for reads anyway.
 
 ## Considered, and NOT gaps
 
-Things that look like a rule living in one runner only, and are not. Recorded
-so they are not raised again.
+Things that look like a rule living in one runner only, and are not. Recorded so
+they are not raised again.
 
-**The step-boundary modal sweep.** `dismissBlockingDialogs` (`server.ts:1766`)
-presses Escape at up to three leftover `[role="dialog"], [aria-modal="true"]`
-modals between steps, and exists only in the daemon — nothing under `src/spec`
-does anything like it. That reads as a gap and is not one: it is gated on
-`prevRecovered` (`server.ts:999`, set at `:1443`), so it fires **only** after a
-step the MODEL recovered. It is debris-from-improvisation hygiene. A compiled
-artifact has no model and no recovery path, so the state it cleans cannot
-arise there; and after a clean structural replay — the only kind an artifact
-performs — the daemon does not sweep either. The two agree on every case the
-artifact can reach.
+**The step-boundary modal sweep.** `dismissBlockingDialogs` (`src/daemon/server.ts`)
+presses Escape at leftover `[role="dialog"], [aria-modal="true"]` modals between
+steps, and exists only in the daemon. That reads as a gap and is not one: it is
+gated on `prevRecovered`, so it fires **only** after a step the MODEL recovered.
+It is debris-from-improvisation hygiene. A compiled artifact has no model and no
+recovery path, so the state it cleans cannot arise there; and after a clean
+structural replay — the only kind an artifact performs — the daemon does not
+sweep either. The two agree on every case the artifact can reach.
 
 Note also what the gate protects. After a clean replay the page is in the state
-the recording produced, which is the state the next step was recorded against.
-A modal standing open there may be *expected*, and sweeping it would destroy
-the next step's starting conditions.
+the recording produced, which is the state the next step was recorded against. A
+modal standing open there may be *expected*, and sweeping it would destroy the
+next step's starting conditions.
 
-**Overlay-covered controls.** `CLICK_TIERS` (`src/agent/tools.ts:1284`) and the
-emitted `click()` (`emit.ts:418`) mirror each other tier for tier — plain click,
-then scroll-and-force past actionability (the overlay tier), then a synthetic
-DOM event. Deliberately built level; the emitted helper's comment says so and
-cites the grafana `toggle-viz-picker` that sat behind an `<svg>` for 60s.
+**Overlay-covered controls.** No longer "mirrored tier for tier" — there is now
+literally one implementation. `robustClick` (`src/execution/browser.ts`) is
+called by the daemon's tool layer (`src/agent/tools.ts:4`) and by the emitted
+`click()` adapter. Uncertain dispatch and strict-mode ambiguity are checked at
+every tier, and no tier resolves ambiguity with a silent `.first()`.
 
 **A modal that appears unexpectedly and blocks an action** is not gap 12. Gap 12
 is an *expected* dialog that is *absent*. An unexpected modal that is *present*
@@ -283,65 +521,90 @@ covers the target, and where a step actively mishandles one (odoo fwod37
 it had just added) that is model behaviour inside one instruction, not a
 divergence between the runners.
 
-## A hazard in the harness itself
+**`wait_for` absence.** The daemon treats a chain that resolves nothing as the
+condition being met (`replay.ts:348`) and still runs the step's postconditions
+through the lifecycle (`replay.ts:316-320`); the artifact asserts the union
+hidden. Same condition, different mechanism, and not a gap: the "step effects"
+section pins that both still judge a met absence wait by its own url expectation.
 
-Several parity cases test an emitted helper by cutting it out of the generated
-source with a regex and rebuilding it with `new Function`. When that helper
-later grows a dependency on another helper, the cut function throws on every
-call — and a `try/catch` around it returns `false`.
+## A hazard in the harness itself — retired
 
-For a safety check, `false` is the safe answer. So the test goes on passing
-while testing nothing, and it passes *hardest* on the half that asserts a
-refusal. This actually happened: `sharesScope` gained a call to `identityRe`,
-and the scope case's "neither runner may refuse a genuine match" half was the
-only thing that caught it.
+A parity case used to test an emitted helper by regex-cutting that ONE function
+out of the generated source and rebuilding it with `new Function`. When the
+helper later grew a dependency on another helper, the cut function threw on every
+call — and a `try/catch` around it returned `false`. For a safety check `false`
+is the safe answer, so the test went on passing while testing nothing, and it
+passed *hardest* on the half asserting a refusal. This actually happened:
+`sharesScope` gained a call to `identityRe`.
 
-A helper cut in isolation fails CLOSED, which reads as a passing safety test.
-Any case using that technique needs a positive control — an assertion that the
-cut helper says *yes* to something — or it proves nothing.
+**A helper cut in isolation fails CLOSED, which reads as a passing safety test.**
 
-## Dead code noticed in passing
+`test/execution-parity.test.ts:279` and `test/execution-loop.test.ts:305` now cut
+the WHOLE emitted helper block and rebuild every function together, which is the
+fix: a missing dependency is a build error, not a silent `false`.
 
-`OBSERVATION_TOOLS` (`replay.ts:12`) names `scroll`, `focus`, `peek`. None is in
-`RECORDABLE` (`src/daemon/recorder.ts:367-372`), so all three entries are dead.
+The last instance — `test/spec-emit.test.ts`'s `runnablePick`, which cut `pick`
+alone with two regexes — went with C6 stage B: `pick` now depends on
+`resolveTarget`, which depends on the embedded `resolveCandidates`, so a lone
+cut would have failed closed on its first call. Every emitted-helper case now
+rebuilds the whole block (`test/execution-resolve-emit.test.ts` and
+`spec-emit.test.ts` included). Any new case that cuts a single function needs a
+positive control, or it proves nothing.
+
+## Closed in passing
+
+- **A credential in a state-shaped hash travelled in verdict messages.**
+  `describeUrl` (`src/execution/gates.ts`) dropped the query string but
+  re-serialised `#access_token=…` whole. It now masks the value of any
+  fragment key naming a credential (`token`, `secret`, `code`, `session`, …)
+  as `***` and keeps routing keys (`#action=9&cids=1`) readable.
+- **Dead code.** `OBSERVATION_TOOLS` named `scroll`, `focus` and `peek`, none
+  of them recordable. The set moved into `echo.ts` without them.
 
 ---
 
-## Cells the harness does not cover
+## Harness coverage
 
-`test/execution-parity.test.ts` has five cases covering four cells: loop cap and
-drain, drain within cap, observed scope, cursor on a non-shrinking collection,
-and goal record-scope. That last one runs `sharesScope` in isolation rather than
-`satisfied()` / `goalSatisfied` end to end, so the url half and the
-`present()`-vs-`presentOnPage` half are untested.
+`test/execution-parity.test.ts` has 63 cases, all passing in a browser on
+2026-09-13 (the file alone takes about 10 minutes). Every cell the previous
+version of this list named as uncovered now has a case, each asserting both
+runners' verdicts and the fixture server's log, and each "both stop" case
+sits beside a passing control:
 
-Uncovered cells both runners implement, in the order the harness should grow:
+- the plain expectation group on a non-dialog line ("step effects");
+- a query-shaped hash expectation, passing in another key order and stopping
+  past soft tolerance, for `click` and `goto`;
+- the opener skip when the popup is showing, and a STOP (not a skip) when the
+  target is gone;
+- a met absence wait still judged by its own url expectation;
+- a read of an absent target finishing, empty on both sides (replay omits the
+  label; the artifact publishes `''` — consumers treat both as unpublished);
+- a rejected create publishing no record;
+- derived binding across a second redirect ("derived values across a second
+  redirect") — see the fix below;
+- `select` by `optionValue`, a number input receiving `change`, and an
+  `aria-combobox` through the portal-option recipe;
+- a two-step loop body, and a stop on the pass whose own expectation fails;
+- a recorded point resolved by both, and the plausibility rule refusing a
+  structural guess far from it;
+- a fingerprint that cannot be measured in time (the page makes
+  `querySelectorAll('body *')` take 3s): both fall back to the url alone;
+- the echo read, both recovery rungs, and loop-body mints (above).
 
-1. `click`/`fill`/`select`/`check` × `expect.addedContains` **hard** group —
-   `replay.ts:898` vs `emit.ts:1398`. The highest-traffic gate in the system,
-   with zero differential coverage.
-2. The same tools × the **plain** group — `replay.ts:901` vs `emit.ts:1399`.
-   Catches gap 3 directly.
-3. `click`/`goto` × `expect.urlPattern` — `replay.ts:798` vs `emit.ts:1403`.
-   Include a query-shaped hash: emit answers with a predicate
-   (`emit.ts:1164`), replay with `urlMatches`.
-4. Segment head × `preconditions.requireText` — `replay.ts:270` vs
-   `emit.ts:2042`. Must include a form in **edit mode**, where `present()` reads
-   an input value (`emit.ts:867`) and `presentOnPage` reads a snapshot line
-   (`replay.ts:1608`) — the two dialects most likely to disagree.
-5. `click` × already-in-effect opener skip — `replay.ts:466` vs `emit.ts:1441`.
-   The exact-vs-loose matcher choice (`emit.ts:1444`) is a real fork.
-6. `wait_for` × absence — `replay.ts:348` vs `emit.ts:1675`.
-7. `read`/`read_all` × never-fatal, on a target genuinely absent — assert both
-   finish and both publish the same empty value.
-8. `click` × `mints`, including the rejected click where the url part did not
-   change (gap 8).
-9. `goto`/`click` × derived binding off the post-navigation url, against a page
-   that redirects once more after first exposing the part.
-10. `select` × label-then-`optionValue` fallback — `tools.ts:1016` vs the
-    inlined helper (`emit.ts:653`).
-11. `fill` × the editor recipe ladder — `components.ts` vs `editorSetValue`
-    (`emit.ts:564`), on a `contenteditable` and on a numeric input.
-12. `loop` × a body of more than one step, and a body step with its own
-    `expect`. Every existing loop case has a one-step body
-    (`test/execution-parity.test.ts:157`).
+### Closed by a harness case: a redirect after the url first changes
+
+Cell 7 found a real divergence. After a click whose destination redirected
+again with no DOM activity in between, replay bound the FINAL url part and
+the artifact bound the first — so the two marked different records from one
+procedure. Replay's tool layer waits for the url to hold still after a
+state-changing action that may navigate; that wait (`urlHeldStill`) lived
+only in `src/agent/tools.ts`. It now lives in `src/execution/browser.ts`
+with `NAVIGATING_ACTIONS` and the per-page request counter
+(`trackRequests`/`inFlightRequests`, moved out of `src/daemon/browser.ts`);
+the daemon imports them, and the artifact's settle phase calls the emitted
+`settleNavigation` (the shared `urlHeldStill`) after `click`, `dblclick`,
+`press` and `select`.
+
+Still worth a case some day: a goto whose destination redirects after load.
+Neither runner waits after a goto, so both bind the pre-redirect part — they
+agree, and the case pins only that.

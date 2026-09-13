@@ -14,10 +14,26 @@ afterEach(() => {
   expect(path.basename(dir)).toMatch(/^\.spec-dx-/);
   fs.rmSync(dir, { recursive: true, force: true });
 });
+/**
+ * The precondition is the page the procedure starts from, as a real url: the
+ * artifact now gates a segment on it through the shared preconditionVerdict
+ * (the daemon's own rule), so a placeholder like `.*` would be refused by both
+ * runners. The concurrent case below starts a second run on a url that differs
+ * in one segment, which the same verdict lets through as a soft match.
+ *
+ * That segment is a run id in the fragment (`run-1` / `run-2`), and the page
+ * picks its content from it. It used to be the page body itself (`primary">A`
+ * against `fallback">B`), which the url gate only let through because it
+ * generalised any disagreeing segment — the very false success ROBUSTNESS.md
+ * finding 3 names. Only a minted-shaped value is volatile now.
+ */
+const pageFor = (run: string) =>
+  `data:text/html,<script>document.write(location.hash.endsWith("2") ? "<output id=fallback>B</output>" : "<output id=primary>A</output>")</script>#${run}`;
+const START_URL = pageFor('run-1');
 function sample(): SpecFlow {
-  return { version: 1, name: 'sample', origin: 'null', startUrl: 'data:text/html,<output id="primary">A</output>', vars: [],
+  return { version: 1, name: 'sample', origin: 'null', startUrl: START_URL, vars: [],
     steps: [{ id: 'read', instruction: 'Read the result', params: {}, outputs: ['result'],
-      segments: [{ id: 's_read', template: 'Read the result', params: {}, preconditions: { urlPattern: '.*' },
+      segments: [{ id: 's_read', template: 'Read the result', params: {}, preconditions: { urlPattern: START_URL },
         steps: [{ tool: 'read', args: { what: 'text', target: '@result' }, label: 'result',
           locators: { target: [{ kind: 'id', selector: '#primary' }, { kind: 'id', selector: '#fallback' }] } }] }] }] };
 }
@@ -75,7 +91,7 @@ test('independent telemetry', async ({ context }) => {
   const a = createFlowRun(), b = createFlowRun();
   await Promise.all([
     runFlow(pageA, {}, { run: a }),
-    runFlow(pageB, {}, { run: b, startUrl: 'data:text/html,<output id="fallback">B</output>' }),
+    runFlow(pageB, {}, { run: b, startUrl: '${pageFor('run-2')}' }),
   ]);
   expect(a.outputs['read.result']).toBe('A');
   expect(b.outputs['read.result']).toBe('B');

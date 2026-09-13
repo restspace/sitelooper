@@ -112,7 +112,11 @@ const pwReportFile = path.join(tmpDir, 'pw-report.json');
 const pwConfigFile = path.join(tmpDir, 'playwright.config.mjs');
 
 const cliBin = path.join(repoRoot, 'bin', 'sitelooper.js');
-const compileCmd = [process.execPath, cliBin, 'compile', flowArg, '--out', tmpDir, '--force'];
+// `--force` was split by the CLI into `--allow-demoted` and `--overwrite-spec`
+// and is now rejected outright. The tmp dir is per tag, so only a re-run of
+// the same tag ever finds a spec to overwrite; a demoted pin must stay a
+// refusal here, since this arm scores what the compiler is willing to ship.
+const compileCmd = [process.execPath, cliBin, 'compile', flowArg, '--out', tmpDir, '--overwrite-spec'];
 const compileEnv = { ...process.env, SITELOOPER_SKILLS_DIR: skillsDir };
 
 // Minimal config: no `defineConfig` import (that lives in `@playwright/test`,

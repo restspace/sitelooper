@@ -4,13 +4,17 @@ import { rethreadParams } from './rethread.js';
 import { diagnosticLine, rerecordFix, rerecordAction, type Diagnostic } from './diagnostics.js';
 import { LEAKED_STEP } from './rerecord.js';
 import { SKILL_CONTRACT, type Skill, type SkillParam, type SkillStep, type SkillStore } from '../skills/store.js';
+import { seedRecipes, snapshotRecipes, type ComponentStore } from '../skills/components.js';
+import type { RecipeSnapshot } from '../execution/recipes.js';
+import { FINGERPRINT_DIMS } from '../execution/fingerprint.js';
 
 /**
  * The intermediate representation a compiled spec carries.
  *
  * It is a FLOW plus the converged procedures its steps resolved to, with
  * everything the emitted file cannot honour dropped: stats, status, the
- * structural fingerprint and the model that recorded it. Two reasons for it
+ * model that recorded it. (The structural fingerprint DOES travel, per
+ * segment: the artifact measures the live page against it.) Two reasons for it
  * to be its own shape rather than "a Flow and a store". First, the emitted
  * `.flow.ts` embeds this object verbatim as its FLOW constant, so it has to
  * be self-contained — a spec that resolved its skills out of `~/.sitelooper`
@@ -29,6 +33,18 @@ export interface SpecFlow {
   vars: string[];
   /** One per FlowStep, in order. */
   steps: SpecStep[];
+  /**
+   * The component recipes the artifact drives `fill`/`type`/`select` through
+   * (src/execution/recipes.ts): one bare procedure per (family, intent), the
+   * one the daemon's ComponentStore would have chosen at COMPILE time —
+   * seeds and learned variants alike, demoted ones omitted. Compile-time
+   * state, frozen like the segments: the daemon's store keeps learning,
+   * validating and demoting after this file is written, and the artifact does
+   * not. Absent on a spec compiled without a store (hand-built, lowered,
+   * lifted from an older file): the emitter then carries the shipped seeds,
+   * which is exactly what a fresh install's store holds.
+   */
+  recipes?: RecipeSnapshot;
 }
 
 export interface SpecStep {
@@ -43,12 +59,35 @@ export interface SpecStep {
   segments: SpecSegment[];
 }
 
-/** A Skill minus what the spec does not need to carry: stats, status, provenance.model, fingerprint. */
+/** A Skill minus what the spec does not need to carry: stats, status, provenance.model. */
 export interface SpecSegment {
   id: string;
   template: string;
   params: Record<string, SkillParam>;
-  preconditions: { urlPattern: string; requireText?: string[] };
+  preconditions: {
+    urlPattern: string;
+    requireText?: string[];
+    /**
+     * The structural fingerprint the skill recorded of its start page
+     * (src/execution/fingerprint.ts): FINGERPRINT_DIMS numbers, verbatim from
+     * the store. Replay lets a same-shape url with 1–2 differing segments
+     * through only when the live page measures close to it
+     * (preconditionVerdict); the artifact embeds the same `fingerprintPage`
+     * and `cosine` and takes the same measurement, so both runners make the
+     * same soft-match decision. Absent when the skill kept none — the url
+     * alone decides, on both runners.
+     */
+    fingerprint?: number[];
+    /**
+     * LEGACY, read for back-compat only: a file compiled before the vector
+     * travelled marked a fingerprinted segment with this flag and no vector.
+     * Such a segment cannot be measured, so the emitter hands the verdict
+     * `'unmeasured'` (a soft url match is refused) and warns that the file
+     * should be recompiled (`unmeasured-precondition`). Never written for a
+     * segment that carries `fingerprint`.
+     */
+    fingerprinted?: true;
+  };
   /** Verbatim, including locators[].seen evidence, expect, mints, loops. */
   steps: SkillStep[];
   derived?: Skill['derived'];
@@ -73,6 +112,33 @@ export interface SpecSegment {
   report?: { summary: string; values: Record<string, string> };
 }
 
+/**
+ * The one-line form of the `unmeasured-precondition` diagnostic. The emitter
+ * pushes the same line as a warning of its own (it can be run without the
+ * diagnostics), and the compile CLI prints a warning once per distinct line.
+ */
+export function unmeasuredPreconditionLine(stepId: string, segmentId: string): string {
+  return `${stepId}: segment ${segmentId} enforces its url precondition without the page-fingerprint soft-match (this file predates carried fingerprints and has no vector to measure against) — recompile it with \`sitelooper compile\``;
+}
+
+/** The typed form of `unmeasuredPreconditionLine`, for a lifted segment with the legacy flag and no vector. */
+export function unmeasuredPreconditionDiagnostic(stepId: string, segmentId: string): Diagnostic {
+  return {
+    code: 'unmeasured-precondition',
+    step: stepId,
+    what: `segment ${segmentId} enforces its url precondition without the page-fingerprint soft-match replay applies`,
+    why: `${segmentId} recorded a structural fingerprint of its start page, but this file was compiled before the vector travelled in the spec, so it has nothing to measure the live page against: a start url that differs in a segment or two is refused outright (replay would compare page structure and may proceed). Only a strict url match starts this segment in the artifact.`,
+    fix: 'recompile the flow with `sitelooper compile`: the recompiled file carries the fingerprint, and the artifact then measures the page exactly as replay does',
+    severity: 'warning',
+    line: unmeasuredPreconditionLine(stepId, segmentId),
+  };
+}
+
+/** Whether a vector is the shape `fingerprintPage` produces: FINGERPRINT_DIMS finite numbers. */
+export function isFingerprintVector(v: unknown): v is number[] {
+  return Array.isArray(v) && v.length === FINGERPRINT_DIMS && v.every((x) => typeof x === 'number' && Number.isFinite(x));
+}
+
 /** A skill as the spec carries it: the procedure, none of the bookkeeping. */
 function toSegment(skill: Skill, goalBearing = false): SpecSegment {
   const seg: SpecSegment = {
@@ -82,10 +148,13 @@ function toSegment(skill: Skill, goalBearing = false): SpecSegment {
     preconditions: { urlPattern: skill.preconditions.urlPattern },
     steps: skill.steps,
   };
-  // Identity markers travel; the fingerprint does not — a vector of DOM
-  // counts is measured against a live page by a runtime the emitted spec
-  // deliberately does not have.
+  // Identity markers travel, and so does the fingerprint: the artifact embeds
+  // the same measurement replay takes (src/execution/fingerprint.ts). A vector
+  // of any other length is one replay can never compare (`cosine` of unequal
+  // lengths is null, so its url alone decides) — leaving it out gives the
+  // artifact that same null.
   if (skill.preconditions.requireText?.length) seg.preconditions.requireText = skill.preconditions.requireText;
+  if (isFingerprintVector(skill.preconditions.fingerprint)) seg.preconditions.fingerprint = skill.preconditions.fingerprint;
   if (skill.derived) seg.derived = skill.derived;
   // The goal travels only where it can be acted on: see SpecSegment.goal.
   if (goalBearing && skill.goal?.requireText?.length) {
@@ -220,9 +289,23 @@ function noopDiagnostics(flow: Flow, flowFile: string | undefined): Diagnostic[]
 export function flowToSpec(
   flow: Flow,
   store: SkillStore,
-  o: { flowFile?: string } = {},
+  o: {
+    flowFile?: string;
+    /**
+     * The component store whose recipe choices the spec snapshots
+     * (`SpecFlow.recipes`). The compile CLI passes the one the daemon reads
+     * (`$SITELOOPER_COMPONENTS_FILE`, else `<home>/components.json`), so the
+     * artifact carries what a replay on this machine would have used. Omitted
+     * — a lowered spec re-read by repair, a test's hand-built flow — the spec
+     * carries no snapshot and the emitter falls back to the shipped seeds.
+     */
+    components?: ComponentStore;
+  } = {},
 ): { spec: SpecFlow; warnings: string[]; diagnostics: Diagnostic[] } {
   const diagnostics: Diagnostic[] = [...noopDiagnostics(flow, o.flowFile)];
+  // The recipe findings keep their place ahead of the per-step ones; whether
+  // there are any is decided once the steps are known (see below).
+  const recipeAt = diagnostics.length;
   const steps: SpecStep[] = [];
   const fixFile = o.flowFile ?? flow.name;
 
@@ -276,6 +359,10 @@ export function flowToSpec(
       });
     }
     for (const member of chain) {
+      // No `unmeasured-precondition` here any more: the segment carries the
+      // skill's fingerprint (toSegment), and the artifact measures it exactly
+      // as replay does. Only a lifted file that predates the vector has a
+      // segment it cannot measure (carryFingerprints, and the emitter).
       if (member.status === 'demoted') {
         diagnostics.push({
           code: 'demoted-pin',
@@ -320,9 +407,239 @@ export function flowToSpec(
     });
   }
 
+  // Only a flow that fills, types or selects somewhere (loop bodies included)
+  // runs a recipe at all: anything else would carry a snapshot its code never
+  // embeds, and warnings about widgets it never touches.
+  let recipes: RecipeSnapshot | undefined;
+  if (o.components && stepsDriveWidgets(steps)) {
+    const found: Diagnostic[] = [];
+    recipes = recipeSnapshot(o.components, found);
+    diagnostics.splice(recipeAt, 0, ...found);
+  }
+
   return {
-    spec: { version: 1, name: flow.name, origin: flow.origin, startUrl: flow.startUrl, vars: flow.vars ?? [], steps },
+    spec: { version: 1, name: flow.name, origin: flow.origin, startUrl: flow.startUrl, vars: flow.vars ?? [], steps, ...(recipes ? { recipes } : {}) },
     warnings: diagnostics.map(diagnosticLine),
     diagnostics,
   };
+}
+
+/**
+ * The recipe snapshot an artifact carries, and what the store holds that a
+ * static snapshot cannot express — each finding a flow-level
+ * `recipe-snapshot` diagnostic (a warning, never a blocker: the artifact runs
+ * the same ladder the daemon runs, it only stops learning). A demoted recipe
+ * is omitted, so the artifact never revives it; a (family, intent) left with
+ * nothing usable falls back to the native primitive on both runners, but the
+ * artifact does so for good; a learned variant travels as data, knowledge from
+ * this machine's store in the file. Stats and validation drift AFTER the
+ * compile are not diagnosed — that is what "snapshot" means.
+ */
+/** The tools that climb a recipe ladder (src/execution/recipes.ts). */
+const WIDGET_TOOLS = new Set(['fill', 'type', 'select']);
+
+function skillStepsDriveWidgets(steps: readonly SkillStep[]): boolean {
+  return steps.some((s) => WIDGET_TOOLS.has(s.tool) || (Array.isArray(s.body) && skillStepsDriveWidgets(s.body)));
+}
+
+/** Whether any segment of these spec steps fills, types or selects — loop bodies included. */
+export function stepsDriveWidgets(steps: readonly SpecStep[]): boolean {
+  return steps.some((st) => st.segments.some((seg) => skillStepsDriveWidgets(seg.steps)));
+}
+
+/**
+ * Re-attach a recipe snapshot to a spec rebuilt from a store that never held
+ * one — repair's staged store, rerecord's scratch store — so the written file
+ * carries the snapshot the verification runs ACTUALLY executed with.
+ *
+ * Those runs go through the daemon, whose recipe book is the machine's
+ * ComponentStore as it stands now: seeds demoted since the compile, variants
+ * learned since (a rerecord learns them during its own run). "Converged" is
+ * evidence for THAT recipe, not for the one the file was compiled with, so
+ * the current store's snapshot is adopted whenever it differs from `prior`,
+ * with one change line per (family, intent) that moved and the store findings
+ * a compile would report. An identical snapshot keeps `prior` itself (the
+ * FLOW bytes do not move) and says nothing.
+ *
+ * A file with no snapshot (`prior` undefined) predates snapshots: its artifact
+ * ran the shipped seeds, and it may have typed and selected natively. It gets
+ * the store's snapshot, change lines against the seeds, and a
+ * `recipe-snapshot` warning saying what now behaves differently.
+ *
+ * A flow that never fills, types or selects is left exactly as it was.
+ */
+export function carryRecipeSnapshot(
+  prior: RecipeSnapshot | undefined,
+  spec: SpecFlow,
+  components: ComponentStore,
+): { changes: string[]; diagnostics: Diagnostic[] } {
+  if (!stepsDriveWidgets(spec.steps)) {
+    if (prior) spec.recipes = prior;
+    else delete spec.recipes;
+    return { changes: [], diagnostics: [] };
+  }
+  const found: Diagnostic[] = [];
+  const current = recipeSnapshot(components, found);
+  if (prior && JSON.stringify(prior) === JSON.stringify(current)) {
+    spec.recipes = prior;
+    return { changes: [], diagnostics: [] };
+  }
+  spec.recipes = current;
+  const changes = describeRecipeChanges(prior ?? snapshotRecipes(seedRecipes()).recipes, current);
+  if (!prior) {
+    changes.unshift('recipes: the file carried no recipe snapshot; it now carries the one the verification run(s) used');
+    const line =
+      'recipe snapshot: this file predates recipe snapshots, so its artifact ran the shipped seed recipes; it now carries a snapshot, and type and select go through recipes as fill does (a recorded type into a contenteditable now replaces its content rather than appending) — recompile it with `sitelooper compile` and review the result';
+    found.unshift({
+      code: 'recipe-snapshot',
+      what: 'the file predates recipe snapshots, and its type/select steps now go through component recipes',
+      why: 'a .flow.ts written before recipe snapshots carries no `recipes`; the artifact ran the shipped seeds, and an older one typed and selected with the native primitives. The re-emitted file carries the snapshot the verification run(s) used and drives type and select through the same recipe ladder the daemon uses.',
+      fix: 'recompile the flow with `sitelooper compile` and review the type/select steps that act on a recognised widget',
+      severity: 'warning',
+      line,
+    });
+  }
+  return { changes, diagnostics: found };
+}
+
+/**
+ * Carry each segment's recorded page fingerprint from the file a repair or a
+ * rerecord started from (`prior`, lifted) onto the spec it rebuilt from the
+ * store its verification run(s) used — the carry-forward carryRecipeSnapshot
+ * does for recipes, per segment. Segments are matched within the same flow
+ * step by segment id, and by position only for a segment replaced in place
+ * (matchPriorSegment says exactly when).
+ *
+ *  - The rebuilt segment carries a vector (the skill the run used has one):
+ *    it stands. When it differs from the file's own, a `fingerprint: …` change
+ *    line says so; when the file had none (or only the flag), likewise.
+ *  - It carries none, and the file's segment did at the SAME start url
+ *    pattern: the file's vector is carried — it describes that page, and a
+ *    staged store that lost it has not measured anything new.
+ *  - It carries none, and the file's segment had a vector at a DIFFERENT
+ *    pattern (repair widened it): the vector is not carried (it describes
+ *    another page), the `fingerprinted` flag is set instead with a change line
+ *    saying why, and an `unmeasured-precondition` warning says to recompile.
+ *  - It carries none, and the file's segment has the legacy `fingerprinted`
+ *    flag (a file compiled before the vector travelled), at any pattern: the
+ *    flag is kept, so the artifact still refuses the soft match it cannot
+ *    measure, and an `unmeasured-precondition` warning says to recompile.
+ *
+ * Nothing moves for a segment both sides agree on, so an unchanged file
+ * re-emits byte-equal.
+ */
+export function carryFingerprints(prior: SpecFlow, spec: SpecFlow): { changes: string[]; diagnostics: Diagnostic[] } {
+  const changes: string[] = [];
+  const diagnostics: Diagnostic[] = [];
+  const priorSteps = new Map(prior.steps.map((s) => [s.id, s]));
+  for (const step of spec.steps) {
+    const before = priorSteps.get(step.id);
+    step.segments.forEach((seg, i) => {
+      const was = before ? matchPriorSegment(before.segments, step.segments, i) : undefined;
+      const pre = seg.preconditions;
+      if (pre.fingerprint) {
+        const old = was?.preconditions.fingerprint;
+        if (old && JSON.stringify(old) !== JSON.stringify(pre.fingerprint)) {
+          changes.push(`fingerprint: ${step.id} segment ${seg.id} carries the start-page fingerprint the verification run's skill recorded (it differs from the file's)`);
+        } else if (was && !old) {
+          const had = was.preconditions.fingerprinted ? 'the file had only the legacy fingerprinted flag, no vector' : 'the file had none';
+          changes.push(`fingerprint: ${step.id} segment ${seg.id} now carries the start-page fingerprint the verification run's skill recorded (${had})`);
+        }
+        return;
+      }
+      if (!was) return;
+      // The url-pattern check guards the VECTOR only: it describes the page the
+      // file's segment started on, and a segment that now starts on another
+      // pattern must not measure against it. The flag holds nothing
+      // page-specific — it says the recording fingerprinted this start page —
+      // so it survives a moved pattern, and so does a vector dropped for one:
+      // the staged skill lost it and replay passed null, so the artifact says
+      // it cannot measure rather than silently soft-matching on the url alone.
+      const samePattern = was.preconditions.urlPattern === pre.urlPattern;
+      if (was.preconditions.fingerprint && samePattern) {
+        pre.fingerprint = was.preconditions.fingerprint;
+        return;
+      }
+      if (!was.preconditions.fingerprint && !was.preconditions.fingerprinted) return;
+      pre.fingerprinted = true;
+      if (was.preconditions.fingerprint) {
+        changes.push(
+          `fingerprint: ${step.id} segment ${seg.id} does not carry the file's start-page fingerprint — it was recorded at ${was.preconditions.urlPattern} and the segment now starts at ${pre.urlPattern}, and the verification run's skill recorded none — so a soft url match is refused here until it is recompiled`,
+        );
+      }
+      if (seg.steps[0]?.tool !== 'goto') diagnostics.push(unmeasuredPreconditionDiagnostic(step.id, seg.id));
+    });
+  }
+  return { changes, diagnostics };
+}
+
+/**
+ * The file's segment a rebuilt segment continues, for carryFingerprints.
+ *
+ * By segment id first: a segment id is its skill id, which repair keeps for
+ * every segment it only reorders or prepends locators on (foldPatchedVariants
+ * folds a patch back into the original skill), and the flow file's own ids
+ * survive staging and reload.
+ *
+ * By position only as the fallback for a segment REPLACED in place — a re-pin
+ * onto a repair variant (`newSkillId(origin, template~repair, now)`, a clone
+ * that keeps the original's template and `seq` slot) or a rerecord that
+ * recompiled the same chain under new ids. Every segment of one chain shares
+ * the template (store.ts `seq`), so template equality alone cannot tell two
+ * segments of a step apart; the fallback therefore also requires that the
+ * step still has the same number of segments (what a variant clone and an
+ * unchanged chain preserve, and what an inserted or removed segment breaks),
+ * and that neither id is present on the other side (the rebuilt id is new to
+ * the file and the file's id is gone from the rebuild — not a segment that
+ * moved). Anything else matches nothing: the rebuilt segment keeps only what
+ * the run's skill recorded, exactly what replay with that skill measures.
+ */
+function matchPriorSegment(before: SpecSegment[], after: SpecSegment[], i: number): SpecSegment | undefined {
+  const seg = after[i];
+  const byId = before.find((s) => s.id === seg.id);
+  if (byId) return byId;
+  if (before.length !== after.length) return undefined;
+  const was = before[i];
+  if (!was || was.template !== seg.template) return undefined;
+  if (after.some((s) => s.id === was.id)) return undefined;
+  return was;
+}
+
+/** One line per (family, intent) whose chosen procedure differs between two snapshots. */
+export function describeRecipeChanges(before: RecipeSnapshot, after: RecipeSnapshot): string[] {
+  const key = (r: { family: string; intent: string }) => `${r.family}/${r.intent}`;
+  const was = new Map(before.recipes.map((r) => [key(r), r]));
+  const now = new Map(after.recipes.map((r) => [key(r), r]));
+  const lines: string[] = [];
+  for (const [k, r] of now) {
+    const old = was.get(k);
+    if (!old) lines.push(`recipes: ${k} added ${r.id}`);
+    else if (old.id !== r.id) lines.push(`recipes: ${k} ${old.id} -> ${r.id}`);
+    else if (JSON.stringify(old) !== JSON.stringify(r)) lines.push(`recipes: ${k} ${r.id} procedure changed`);
+  }
+  for (const [k, old] of was) {
+    if (!now.has(k)) lines.push(`recipes: ${k} removed ${old.id} (the component store has no usable recipe for it)`);
+  }
+  return lines;
+}
+
+function recipeSnapshot(components: ComponentStore, diagnostics: Diagnostic[]): RecipeSnapshot {
+  const { recipes, diagnostics: findings } = snapshotRecipes(components.list());
+  for (const line of findings) {
+    const demoted = line.includes('is demoted in the component store');
+    const unusable = line.includes('no usable recipe');
+    diagnostics.push({
+      code: 'recipe-snapshot',
+      what: demoted
+        ? 'a component recipe is demoted in the store, and the compiled artifact omits it for good'
+        : unusable
+          ? 'a component family has no usable recipe, so the compiled artifact drives it with the native primitive for good'
+          : 'a learned component recipe travels in the compiled artifact as data',
+      why: `${line}. The snapshot is compile-time state: the daemon keeps validating, learning and demoting after this file is written; the artifact runs what it was given.`,
+      fix: demoted || unusable ? 'record the widget again with the daemon to learn a working recipe, then recompile' : undefined,
+      severity: 'warning',
+      line: `recipe snapshot: ${line}`,
+    });
+  }
+  return recipes;
 }

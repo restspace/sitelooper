@@ -11,6 +11,7 @@
 // verbatim). Lift only has to find that one JSON literal between two marker
 // comments and validate its shape.
 import type { SpecFlow } from './ir.js';
+import { FINGERPRINT_DIMS } from '../execution/fingerprint.js';
 
 const BEGIN_MARKER = '// @sitelooper-flow-begin';
 const END_MARKER = '// @sitelooper-flow-end';
@@ -156,6 +157,7 @@ function validateSpecShape(v: unknown): asserts v is SpecFlow {
       if (!Array.isArray(seg.steps)) {
         throw new LiftError(`${segWhere}: "steps" must be an array`);
       }
+      validatePreconditionFingerprint(segWhere, seg.preconditions);
 
       (seg.steps as unknown[]).forEach((rawSkillStep, skillStepIndex) => {
         const skillStepWhere = `${segWhere}, steps[${skillStepIndex}]`;
@@ -174,6 +176,95 @@ function validateSpecShape(v: unknown): asserts v is SpecFlow {
           throw new LiftError(`${skillStepWhere}: "locators" must be an object`);
         }
       });
+    });
+  });
+
+  if (flow.recipes !== undefined) validateRecipeSnapshot(flow.recipes);
+}
+
+/**
+ * `preconditions.fingerprint`: the artifact measures the live page against it
+ * with `cosine`, which returns null for a vector of the wrong length — the
+ * gate would then silently let a soft url match through on the url alone. A
+ * hand-edited or truncated vector is refused here instead, naming the field.
+ * The legacy `fingerprinted` flag (files compiled before the vector
+ * travelled) is still read, and must be `true` when present.
+ */
+function validatePreconditionFingerprint(segWhere: string, pre: unknown): void {
+  if (typeof pre !== 'object' || pre === null || Array.isArray(pre)) return;
+  const p = pre as Record<string, unknown>;
+  if (p.fingerprint !== undefined) {
+    const v = p.fingerprint;
+    if (!Array.isArray(v)) {
+      throw new LiftError(`${segWhere}: "preconditions.fingerprint" must be an array of ${FINGERPRINT_DIMS} numbers (found ${typeof v})`);
+    }
+    if (v.length !== FINGERPRINT_DIMS) {
+      throw new LiftError(`${segWhere}: "preconditions.fingerprint" must have ${FINGERPRINT_DIMS} entries (found ${v.length})`);
+    }
+    const bad = v.findIndex((x) => typeof x !== 'number' || !Number.isFinite(x));
+    if (bad !== -1) {
+      throw new LiftError(`${segWhere}: "preconditions.fingerprint"[${bad}] must be a finite number (found ${JSON.stringify(v[bad])})`);
+    }
+  }
+  if (p.fingerprinted !== undefined && p.fingerprinted !== true) {
+    throw new LiftError(`${segWhere}: "preconditions.fingerprinted" must be true when present (found ${JSON.stringify(p.fingerprinted)})`);
+  }
+}
+
+const RECIPE_INTENTS =new Set(['set-value', 'read-value', 'select-option', 'open', 'dismiss']);
+const RECIPE_ACTIONS = new Set(['click', 'press', 'insertText', 'fill', 'blur', 'settle']);
+
+/**
+ * `FLOW.recipes` (RecipeSnapshot, src/execution/recipes.ts): the artifact's
+ * fill/type/select read it on every call, so a malformed one would break
+ * every such step at run time — `snapshot.recipes.some` on a non-array — or
+ * fail the embedded literal's type check. It is refused here instead, naming
+ * the field.
+ */
+function validateRecipeSnapshot(v: unknown): void {
+  if (typeof v !== 'object' || v === null || Array.isArray(v)) {
+    throw new LiftError('FLOW.recipes must be an object ({ version: 1, recipes: [...] })');
+  }
+  const snap = v as Record<string, unknown>;
+  if (snap.version !== 1) {
+    throw new LiftError(`FLOW.recipes.version must be 1 (found ${JSON.stringify(snap.version)})`);
+  }
+  if (!Array.isArray(snap.recipes)) {
+    throw new LiftError('FLOW.recipes.recipes must be an array');
+  }
+  snap.recipes.forEach((raw, i) => {
+    const where = `FLOW.recipes.recipes[${i}]`;
+    if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
+      throw new LiftError(`${where}: not an object`);
+    }
+    const r = raw as Record<string, unknown>;
+    if (typeof r.id !== 'string') throw new LiftError(`${where}: missing string "id"`);
+    const at = `${where} (id "${r.id}")`;
+    if (typeof r.family !== 'string') throw new LiftError(`${at}: missing string "family"`);
+    if (typeof r.intent !== 'string' || !RECIPE_INTENTS.has(r.intent)) {
+      throw new LiftError(`${at}: "intent" must be one of ${[...RECIPE_INTENTS].join(', ')} (found ${JSON.stringify(r.intent)})`);
+    }
+    if (r.verifyRead !== undefined && typeof r.verifyRead !== 'string') {
+      throw new LiftError(`${at}: "verifyRead" must be a string when present`);
+    }
+    if (!Array.isArray(r.steps)) throw new LiftError(`${at}: "steps" must be an array`);
+    r.steps.forEach((rawStep, j) => {
+      const stepAt = `${at}, steps[${j}]`;
+      if (typeof rawStep !== 'object' || rawStep === null || Array.isArray(rawStep)) {
+        throw new LiftError(`${stepAt}: not an object`);
+      }
+      const s = rawStep as Record<string, unknown>;
+      if (typeof s.action !== 'string' || !RECIPE_ACTIONS.has(s.action)) {
+        throw new LiftError(`${stepAt}: "action" must be one of ${[...RECIPE_ACTIONS].join(', ')} (found ${JSON.stringify(s.action)})`);
+      }
+      for (const field of ['target', 'key', 'text', 'withText']) {
+        if (s[field] !== undefined && typeof s[field] !== 'string') {
+          throw new LiftError(`${stepAt}: "${field}" must be a string when present`);
+        }
+      }
+      if (s.ms !== undefined && typeof s.ms !== 'number') {
+        throw new LiftError(`${stepAt}: "ms" must be a number when present`);
+      }
     });
   });
 }

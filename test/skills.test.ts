@@ -11,6 +11,7 @@ import { volatileMatcher } from '../src/shared/text.js';
 import { recordCandidateEvidence, retired } from '../src/skills/repair.js';
 import { SkillStore } from '../src/skills/store.js';
 import { type TransformNote, coalesceControls, compileSkill, dropDeadReadLocators, dropDismissedDialogs, dropSupersededNavigation, compileSkills, discoverSlots, fillParams, fillParamsDeep, foldLoops, sameProcedure, softUrlMatch, stableFirst, substitute, substituteUrlParts, urlDiff, urlMatches, urlParts, urlPattern } from '../src/skills/compile.js';
+import { mintedShape } from '../src/execution/url.js';
 import type { LocatorCandidate } from '../src/daemon/recorder.js';
 import type { SkillStep } from '../src/skills/store.js';
 import { bindSkill, canAdoptPin, learnFromInstruction, matchTemplate, publishedOutputs, selectCandidates, synthesizeReport } from '../src/skills/learn.js';
@@ -316,8 +317,13 @@ describe('url patterns', () => {
   it('keeps an opaque-origin url readable instead of printing "null/"', () => {
     expect(urlPattern('chrome-error://chromewebdata/')).toBe('chrome-error://chromewebdata/');
   });
-  it('reduces id-like segments and drops the query', () => {
-    expect(urlPattern('http://h:1/app/tickets/t15?x=1#/tickets/RD-1015')).toBe('http://h:1/app/tickets/:id#/tickets/:id');
+  it('reduces id-like segments, keeping the query as pairs', () => {
+    expect(urlPattern('http://h:1/app/tickets/t15?x=1#/tickets/RD-1015')).toBe('http://h:1/app/tickets/:id?x=:id#/tickets/:id');
+    // pairs sorted, words kept, noise dropped, a credential stored as a wildcard, a slot as its marker
+    expect(urlPattern('http://h:1/?task_id=4&controller=Task&utm_source=x&token=s3cret')).toBe('http://h:1/?controller=Task&task_id=:id&token=:var');
+    expect(urlPattern('http://h:1/edit?id=x7', new Map([['v1', 'x7']]))).toBe('http://h:1/edit?id={{v1}}');
+    // a page TEMPLATE, for seams and routes, ignores the query
+    expect(urlPattern('http://h:1/d/abc?refresh=1m', new Map(), { query: false })).toBe('http://h:1/d/abc');
     expect(urlPattern('http://h:1/products/8f3a9c2e1b/details')).toBe('http://h:1/products/:id/details');
     expect(urlPattern('http://h:1/users/123e4567-e89b-12d3-a456-426614174000')).toBe('http://h:1/users/:id');
     expect(urlPattern('http://h:1/about')).toBe('http://h:1/about');
@@ -1521,6 +1527,17 @@ describe('softUrlMatch (mechanism 2: observed variance)', () => {
     const soft = softUrlMatch('http://h:1/web#action=133&model=sale.order', 'http://h:1/web#action=915&cids=1&model=sale.order');
     expect(soft).not.toBeNull();
     expect(soft!.generalised).toBe('http://h:1/web#action=:var&model=sale.order');
+  });
+  it('generalises only a value whose shape is minted, never a word route or a parameter-filled segment', () => {
+    expect(softUrlMatch('http://h:1/orders/success', 'http://h:1/orders/failure')).toBeNull();
+    expect(softUrlMatch('http://h:1/items/{{v1}}', 'http://h:1/items/43', { v1: '42' })).toBeNull();
+    expect(mintedShape('afw6yy5xxq4u8e')).toBe(true);
+    expect(mintedShape('rec-2')).toBe(true);
+    expect(mintedShape('cfwcsdxqdjabkf')).toBe(true);
+    expect(mintedShape('deadbeef')).toBe(true);
+    expect(mintedShape('edit')).toBe(false);
+    expect(mintedShape('order-history')).toBe(false);
+    expect(mintedShape('')).toBe(false);
   });
   it('gives up past two disagreeing segments', () => {
     expect(softUrlMatch('http://h:1/a1/b2/c3', 'http://h:1/x1/y2/z3')).toBeNull();

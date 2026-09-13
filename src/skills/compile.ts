@@ -1,9 +1,32 @@
+import { mutatesSteps } from '../execution/lifecycle.js';
 import type { LocatorCandidate, RecordedEntry, RecordedInstruction, RecordedStep } from '../daemon/recorder.js';
 import type { Report } from '../agent/report.js';
 import { SKILL_CONTRACT, newSkillId, originOf, type Skill, type SkillParam, type SkillStep, type StepExpectation } from './store.js';
 import { MIN_ID_LEN, digitDominant, looksLikeId, skeleton, tokenPattern } from './shape.js';
 import { idPositionPart, occursAsToken } from './ledger.js';
-import { WILDCARD, identityRe, maskVolatile } from '../shared/text.js';
+import { escapeRe, identityRe, maskVolatile } from '../shared/text.js';
+import { CREDENTIAL_KEY, fillParamsDeep, queryPairs, safeDecode, urlParts } from '../execution/url.js';
+
+/**
+ * The url rules live in src/execution/url.ts, where a compiled artifact embeds
+ * the same source the daemon runs. Re-exported here so no call site changes.
+ */
+export {
+  fillParams,
+  fillParamsDeep,
+  isWildcardSeg,
+  safeDecode,
+  serializeShape,
+  softUrlMatch,
+  urlDiff,
+  urlMatches,
+  urlPart,
+  urlParts,
+  urlShapeOf,
+  type UrlSegDiff,
+  type UrlShape,
+} from '../execution/url.js';
+export { escapeRe } from '../shared/text.js';
 
 /**
  * One thing the compiler did to the recording, and why.
@@ -149,7 +172,7 @@ export function compileSkills(input: CompileInput): Skill[] {
   for (const step of kept) {
     seg.steps.push(step);
     if (step.diff?.url && step.diff.url !== currentUrl) {
-      const crossed = urlPattern(step.diff.url, slots) !== urlPattern(currentUrl, slots);
+      const crossed = urlPattern(step.diff.url, slots, { query: false }) !== urlPattern(currentUrl, slots, { query: false });
       currentUrl = step.diff.url;
       if (crossed) {
         segments.push(seg);
@@ -444,13 +467,6 @@ export function compileSkills(input: CompileInput): Skill[] {
 
 const MIN_GOAL_LEN = 3;
 const MAX_GOAL = 4;
-
-/** Does this procedure CHANGE anything? (learn.ts's `mutates`, at compile time.) */
-const MUTATING_TOOLS = new Set(['click', 'dblclick', 'right_click', 'modifier_click', 'fill', 'type', 'press', 'select', 'check', 'drag', 'upload']);
-
-function mutatesSteps(steps: SkillStep[]): boolean {
-  return steps.some((s) => MUTATING_TOOLS.has(s.tool) || (s.body ? mutatesSteps(s.body) : false));
-}
 
 /**
  * The GOAL: what the page shows once this procedure's work is done.
@@ -939,10 +955,6 @@ function locatorValues(chain: LocatorCandidate[]): string[] {
   return out.filter(Boolean);
 }
 
-export function escapeRe(s: string): string {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
 /** Replace every slot value in `text` by its "{{vN}}" marker, longest values first. */
 export function substitute(text: string, slots: Map<string, string>): string {
   let out = text;
@@ -967,12 +979,6 @@ export function substitute(text: string, slots: Map<string, string>): string {
   return out;
 }
 
-/** Inverse of substitute(): fill "{{vN}}" (caller param) and "{{dN}}" (derived,
- * bound from the live run's own urls) markers from a param map. */
-export function fillParams(text: string, params: Record<string, string>): string {
-  return text.replace(/\{\{([vd]\d+)\}\}/g, (m, name: string) => (name in params ? params[name] : m));
-}
-
 export function substituteDeep(value: unknown, slots: Map<string, string>): unknown {
   if (typeof value === 'string') return substitute(value, slots);
   if (Array.isArray(value)) return value.map((v) => substituteDeep(v, slots));
@@ -982,41 +988,43 @@ export function substituteDeep(value: unknown, slots: Map<string, string>): unkn
   return value;
 }
 
-export function fillParamsDeep(value: unknown, params: Record<string, string>): unknown {
-  if (typeof value === 'string') return fillParams(value, params);
-  if (Array.isArray(value)) return value.map((v) => fillParamsDeep(v, params));
-  if (value && typeof value === 'object') {
-    return Object.fromEntries(Object.entries(value as Record<string, unknown>).map(([k, v]) => [k, fillParamsDeep(v, params)]));
-  }
-  return value;
-}
-
 export function slotsUsed(text: string): string[] {
   return [...new Set([...text.matchAll(/\{\{(v\d+)\}\}/g)].map((m) => m[1]))];
 }
 
 /**
- * A url reduced to the shape that identifies its page: origin + path + hash
- * route, with id-like segments replaced by `:id` and the query dropped.
- * Slot values in the path become their markers, so a skill recorded on
- * `/tickets/x7` matches `/tickets/{{v1}}` on the next run.
+ * A url reduced to the shape that identifies its page: origin + path + query
+ * + hash route, with id-like segments replaced by `:id`. Slot values become
+ * their markers, so a skill recorded on `/tickets/x7` matches
+ * `/tickets/{{v1}}` on the next run, and one recorded on `edit?id=x7` matches
+ * `edit?id={{v1}}` — which, filled, refuses `edit?id=x8` (ROBUSTNESS.md,
+ * finding 3). Query pairs are reduced like hash-state pairs, less the keys
+ * the shared `noiseQueryKey` drops; a credential-named key keeps its key and
+ * stores a wildcard, never the value, since a pattern is persisted and
+ * embedded in a compiled artifact.
+ *
+ * `query: false` leaves the query out, for the callers that ask "is this the
+ * same page TEMPLATE" rather than "is this the page": segment seams, a flow
+ * step's route, the sitemap. Those were keyed without a query before it was
+ * modelled, and a dashboard gaining `refresh=1m` is not a new template.
  */
-export function urlPattern(url: string, slots: Map<string, string> = new Map()): string {
+export function urlPattern(url: string, slots: Map<string, string> = new Map(), opts: { query?: boolean } = {}): string {
   let u: URL;
   try {
     u = new URL(url);
   } catch {
     return url;
   }
+  /** One path segment, hash-state value or query value: its slot marker, `:id`, or itself. */
+  const reduce = (raw: string, decoded = safeDecode(raw)): string => {
+    const filled = substitute(decoded, slots);
+    if (filled !== raw && filled.includes('{{')) return filled;
+    return digitDominant(raw, 'proposal') ? ':id' : raw;
+  };
   const norm = (p: string) =>
     p
       .split('/')
-      .map((seg) => {
-        if (!seg) return seg;
-        const filled = substitute(safeDecode(seg), slots);
-        if (filled !== seg && filled.includes('{{')) return filled;
-        return digitDominant(seg, 'proposal') ? ':id' : seg;
-      })
+      .map((seg) => (seg ? reduce(seg) : seg))
       .join('/');
   /**
    * A hash-routed app puts its route in the fragment, in one of two shapes: a
@@ -1046,219 +1054,33 @@ export function urlPattern(url: string, slots: Map<string, string> = new Map()):
         const eq = pair.indexOf('=');
         if (eq < 0) return pair;
         const key = pair.slice(0, eq);
-        const value = pair.slice(eq + 1);
-        const filled = substitute(safeDecode(value), slots);
-        if (filled !== value && filled.includes('{{')) return `${key}=${filled}`;
-        return `${key}=${digitDominant(value, 'proposal') ? ':id' : value}`;
+        return `${key}=${reduce(pair.slice(eq + 1))}`;
       })
       .sort();
     return '#' + pairs.join('&');
   };
   const hash = u.hash && u.hash.length > 1 ? normHash(u.hash.slice(1)) : '';
+  const pairs = opts.query === false ? [] : [...queryPairs(u.search)].map(([key, value]) => {
+    if (CREDENTIAL_KEY.test(key)) return `${key}=:var`;
+    return `${key}=${reduce(value, value)}`;
+  });
+  const query = pairs.length ? '?' + pairs.sort().join('&') : '';
   // An opaque origin (chrome-error://, about:) prints as "null"; keep the
   // url itself so a message says what the browser was actually showing.
   if (u.origin === 'null') return url;
   const origin = u.protocol === 'file:' ? 'file://' : u.origin;
-  return `${origin}${norm(u.pathname)}${hash}`;
-}
-
-
-/**
- * A url decomposed for structural matching: origin, path segments, and the
- * hash fragment as either route segments or state pairs. Parses stored
- * patterns (which may carry `:id` / `:var` / `{{…}}` markers) and live urls
- * alike; the query string is not part of a page's identity and is dropped.
- */
-interface UrlShape {
-  origin: string;
-  path: string[];
-  hashKind: 'none' | 'path' | 'state';
-  hashPath: string[];
-  hashState: Map<string, string>;
-  /** Whether a path-shaped fragment began with '/', for round-tripping. */
-  hashSlash: boolean;
-}
-
-function safeDecode(s: string): string {
-  try {
-    return decodeURIComponent(s);
-  } catch {
-    return s;
-  }
-}
-
-function urlShapeOf(s: string): UrlShape | null {
-  let u: URL;
-  try {
-    u = new URL(s);
-  } catch {
-    return null;
-  }
-  const origin = u.protocol === 'file:' ? 'file://' : u.origin;
-  const shape: UrlShape = {
-    origin,
-    path: u.pathname.split('/').filter(Boolean).map(safeDecode),
-    hashKind: 'none',
-    hashPath: [],
-    hashState: new Map(),
-    hashSlash: false,
-  };
-  const body = u.hash && u.hash.length > 1 ? u.hash.slice(1).split('?')[0] : '';
-  if (!body) return shape;
-  if (body.startsWith('/') || !body.includes('=')) {
-    shape.hashKind = 'path';
-    shape.hashSlash = body.startsWith('/');
-    shape.hashPath = body.split('/').filter(Boolean).map(safeDecode);
-    return shape;
-  }
-  shape.hashKind = 'state';
-  for (const pair of body.split('&').filter(Boolean)) {
-    const eq = pair.indexOf('=');
-    if (eq < 0) shape.hashState.set(pair, '');
-    else shape.hashState.set(pair.slice(0, eq), safeDecode(pair.slice(eq + 1)));
-  }
-  return shape;
-}
-
-function serializeShape(s: UrlShape): string {
-  let hash = '';
-  if (s.hashKind === 'path') hash = '#' + (s.hashSlash ? '/' : '') + s.hashPath.join('/');
-  else if (s.hashKind === 'state') {
-    hash = '#' + [...s.hashState].map(([k, v]) => `${k}=${v}`).sort().join('&');
-  }
-  return `${s.origin}/${s.path.join('/')}${hash}`;
-}
-
-/** A pattern segment that stands for "any value here". */
-function isWildcardSeg(seg: string): boolean {
-  return seg === ':id' || seg === ':var' || /\{\{[\w.-]+\}\}/.test(seg);
-}
-
-/** One segment where a pattern's literal disagrees with the live url. */
-export interface UrlSegDiff {
-  where: 'path' | 'hashPath' | 'hashState';
-  index?: number;
-  key?: string;
-  expected: string;
-  actual: string;
+  return `${origin}${norm(u.pathname)}${query}${hash}`;
 }
 
 /**
- * Structural comparison of a stored pattern against a live url: `null` when
- * the two are not even the same page shape (different origin, path length,
- * route, or a required state key missing), otherwise the list of segments
- * where a literal in the pattern disagrees with the live value — empty list
- * means a match. Wildcard segments (`:id`, `:var`, unfilled `{{…}}`) match
- * anything: matching consults the pattern's own markers, never a shape
- * heuristic on the live value (that is what made the url shape test load-bearing).
- *
- * A query-shaped fragment is application STATE, and state accumulates (Odoo
- * lands on "#cids=1" and has grown "#action=…&menu_id=…" by the next
- * segment) — so it is a necessary condition: every pair the pattern names
- * must be present, extra live pairs are allowed, and a pattern with no hash
- * requires nothing of a live state fragment. A path-shaped fragment is a
- * route and must match segment for segment.
+ * TRANSIENT_LINE and maskMinted are run-time rules as much as compile-time
+ * ones — the replay gate and the compiled artifact both re-apply them to a
+ * stored line — so they live in the shared src/execution/expect.ts, where the
+ * daemon imports them and an artifact embeds them. Re-exported here so no
+ * call site has to know which of the two owns the source.
  */
-export function urlDiff(pattern: string, url: string): UrlSegDiff[] | null {
-  const p = urlShapeOf(pattern);
-  const l = urlShapeOf(url);
-  if (!p || !l) return pattern === url ? [] : null;
-  if (p.origin !== l.origin || p.path.length !== l.path.length) return null;
-  const diffs: UrlSegDiff[] = [];
-  p.path.forEach((seg, i) => {
-    if (!isWildcardSeg(seg) && seg !== l.path[i]) diffs.push({ where: 'path', index: i, expected: seg, actual: l.path[i] });
-  });
-  if (p.hashKind === 'path') {
-    if (l.hashKind !== 'path' || p.hashPath.length !== l.hashPath.length) return null;
-    p.hashPath.forEach((seg, i) => {
-      if (!isWildcardSeg(seg) && seg !== l.hashPath[i]) diffs.push({ where: 'hashPath', index: i, expected: seg, actual: l.hashPath[i] });
-    });
-  } else if (p.hashKind === 'state') {
-    if (l.hashKind !== 'state') return null;
-    for (const [key, val] of p.hashState) {
-      // A key the pattern only knows as a wildcard (`:id`, a {{dN}} it never
-      // learned a value for) is app-minted state, not identity: odoo adds
-      // `cids=1` to a url on one run and not the next, and fwod32's sign-in
-      // stopped on every replay because the live url lacked it. A missing
-      // key with a LITERAL value is still a different page.
-      if (!l.hashState.has(key)) {
-        if (isWildcardSeg(val)) continue;
-        return null;
-      }
-      const lv = l.hashState.get(key)!;
-      if (!isWildcardSeg(val) && val !== lv) diffs.push({ where: 'hashState', key, expected: val, actual: lv });
-    }
-  } else if (l.hashKind === 'path' && l.hashPath.length) {
-    return null; // pattern names no route; the live url is on one
-  }
-  return diffs;
-}
-
-/** Whether a live url matches a stored pattern exactly (wildcards aside). */
-export function urlMatches(pattern: string, url: string, params: Record<string, string> = {}): boolean {
-  return urlDiff(fillParams(pattern, params), url)?.length === 0;
-}
-
-const MAX_SOFT_DIFFS = 2;
-
-/**
- * Mechanism-2 tolerance (PLAN-replay-v2): the live url is the same page
- * SHAPE as the pattern but 1–2 literal segments disagree — the signature of
- * an environment-minted identifier (a Grafana uid, an Odoo action id) that
- * this run minted differently. Returns the pattern with exactly the
- * disagreeing segments generalised to `:var`, for the caller to proceed
- * optimistically and PERSIST only once the run past this point succeeds —
- * the segment has then demonstrated volatility. Null when the urls differ in
- * shape, everything matched already, or a slot value broke segmentation.
- */
-export function softUrlMatch(
-  pattern: string,
-  url: string,
-  params: Record<string, string> = {},
-): { generalised: string; diffs: UrlSegDiff[] } | null {
-  const filled = fillParams(pattern, params);
-  const diffs = urlDiff(filled, url);
-  if (!diffs || !diffs.length || diffs.length > MAX_SOFT_DIFFS) return null;
-  // Generalise in the ORIGINAL pattern (markers intact). A param value
-  // containing '/' would shift segment positions between the two — bail.
-  const orig = urlShapeOf(pattern);
-  const fld = urlShapeOf(filled);
-  if (!orig || !fld || orig.path.length !== fld.path.length || orig.hashPath.length !== fld.hashPath.length) return null;
-  for (const d of diffs) {
-    if (d.where === 'path') orig.path[d.index!] = ':var';
-    else if (d.where === 'hashPath') orig.hashPath[d.index!] = ':var';
-    else orig.hashState.set(d.key!, ':var');
-  }
-  return { generalised: serializeShape(orig), diffs };
-}
-
-/**
- * The addressable parts of a url, labelled stably so a value observed at
- * record time can be re-extracted from the live run's url at the same
- * position: path segments `p<i>`, hash-route segments `h<i>`, hash-state
- * values `q.<key>`.
- */
-export function urlParts(url: string): { label: string; value: string }[] {
-  const s = urlShapeOf(url);
-  if (!s) return [];
-  const out: { label: string; value: string }[] = [];
-  s.path.forEach((value, i) => out.push({ label: `p${i}`, value }));
-  s.hashPath.forEach((value, i) => out.push({ label: `h${i}`, value }));
-  for (const [k, value] of s.hashState) out.push({ label: `q.${k}`, value });
-  return out;
-}
-
-export function urlPart(url: string, label: string): string | undefined {
-  return urlParts(url).find((p) => p.label === label)?.value;
-}
-
-/**
- * Page lines that describe the page in transit — spinners, progress bars,
- * and toasts (an alert that happened to be on screen, such as fwgr25's
- * "Error loading RSS feed", is not what the step did; a step's own alert is
- * carried by alertContains, which stays soft). Never a lasting effect.
- */
-export const TRANSIENT_LINE = /^-?\s*(status|progressbar|alert)\b/;
+export { TRANSIENT_LINE, maskMinted } from '../execution/expect.js';
+import { TRANSIENT_LINE, maskMinted } from '../execution/expect.js';
 
 function expectationFor(step: RecordedStep, slots: Map<string, string>): StepExpectation | undefined {
   if (!step.diff) return undefined;
@@ -1274,29 +1096,6 @@ function expectationFor(step: RecordedStep, slots: Map<string, string>): StepExp
     if (lasting.length) out.addedContains = lasting.slice(0, MAX_ADDED_LINES).map((l) => maskMinted(maskVolatile(substitute(l, slots))).slice(0, 120));
   }
   return Object.keys(out).length ? out : undefined;
-}
-
-/**
- * An effect expectation asserts what the PROCEDURE put on the page, and the
- * procedure only ever puts values there through its own fills and choices —
- * which are slots (`{{vN}}`, or a `{{dN}}` the app minted and a url showed)
- * by the time this runs, because substitute() went first. A control's
- * displayed value that is NOT a slot is therefore the app's: a default, a
- * computed figure, the id of the record the recording happened to make.
- * atelyr's project picker recorded `- combobox "…": 13f9pv52yozr` — the
- * recording's own project id — and every replay's project had another, so
- * both add-item steps stopped at "did not show … as it did when recorded".
- *
- * Provenance, not shape: no attempt is made to recognise an identifier by
- * how it looks, which breaks on the next app. The role and name still have
- * to match; only the value after the colon is wildcarded.
- */
-export function maskMinted(line: string): string {
-  // `- role "name" [state]: value` — the value colon is the one after the
-  // (quoted) name and any state markers, never one inside the name.
-  return line.replace(/^(-?\s*\S+(?:\s+"(?:[^"\\]|\\.)*")?(?:\s+\[[^\]]*\])*)(:\s*)(\S.*?)\s*$/, (whole, head: string, sep: string, value: string) =>
-    value.includes('{{') ? whole : `${head}${sep}${WILDCARD}`,
-  );
 }
 
 /**

@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { loadFlowFile } from '../skills/flow.js';
+import { ComponentStore } from '../skills/components.js';
 import { SkillStore } from '../skills/store.js';
 import { emitFlowFile, emitSpecFile } from './emit.js';
 import { flowToSpec, type SpecFlow } from './ir.js';
@@ -59,7 +60,7 @@ function compilationBlockers(spec: SpecFlow, source: string): string[] {
   const todos = source
     .split(/\r?\n/)
     .map((line) => line.trim())
-    .filter((line) => line.startsWith('// TODO:') && !line.startsWith('// TODO: dropped the recorded position fallback'));
+    .filter((line) => line.startsWith('// TODO:'));
   for (const todo of [...new Set(todos)]) blockers.push(todo.replace(/^\/\/\s*/, ''));
   return blockers;
 }
@@ -91,6 +92,13 @@ export function compileFlow(
     allowDemoted?: boolean;
     /** Replace the user-owned .spec.ts scaffold. Does not relax diagnostics. */
     overwriteSpec?: boolean;
+    /**
+     * The component store whose recipe choices the artifact snapshots. The
+     * default is the one the daemon reads (`$SITELOOPER_COMPONENTS_FILE`, else
+     * `<home>/components.json`), so the artifact carries what a replay on this
+     * machine would have driven the widgets with.
+     */
+    components?: ComponentStore;
   },
 ): CompileResult {
   let bundle: FlowBundle | undefined;
@@ -111,7 +119,7 @@ export function compileFlow(
   if (!source) throw new Error(`no flow named ${JSON.stringify(flowNameOrPath)} (looked in the flows dir, as a path, and in the procedure snapshot)`);
   const { flow, file } = source;
   const store = o.store ?? (snapshot ? new BundleSkillStore(snapshot) : new SkillStore());
-  const { spec, warnings, diagnostics } = flowToSpec(flow, store, { flowFile: file });
+  const { spec, warnings, diagnostics } = flowToSpec(flow, store, { flowFile: file, components: o.components ?? new ComponentStore() });
   const emitted = emitFlowFile(spec, { tier: o.tier ?? 'plain', diagnostics });
 
   // `--allow-demoted` is about demoted pins and nothing else. It used to
@@ -130,7 +138,9 @@ export function compileFlow(
     flowFile: null,
     specFile: null,
     warnings: [...warnings, ...emitted.warnings],
-    diagnostics,
+    // Emission finds problems compile cannot: a capability the standalone
+    // artifact has no form for is known only once the body is written.
+    diagnostics: [...diagnostics, ...emitted.diagnostics],
     refused,
     compilable: compileBlockers.length === 0,
     compileBlockers,

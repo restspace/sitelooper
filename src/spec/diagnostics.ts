@@ -32,6 +32,9 @@ export type DiagnosticCode =
   | 'unthreaded-param' // compile could not rethread a literal param (existing warning, now typed)
   | 'missing-skill' // step refers to a skill not in the store
   | 'future-contract' // the step's pinned skill was written by a newer sitelooper
+  | 'unmeasured-precondition' // a segment's skill carries a page fingerprint the compiled spec cannot measure against
+  | 'unsupported-capability' // the recording uses something the standalone artifact cannot carry (a tab switch, an attribute read, a position-only locator)
+  | 'recipe-snapshot' // flow-level: the component store holds state the artifact's compile-time recipe snapshot cannot express (a demoted recipe, a family with none usable, a learned variant travelling as data)
   | 'no-procedure'; // step has no converged procedure
 
 export interface Diagnostic {

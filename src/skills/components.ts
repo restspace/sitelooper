@@ -3,10 +3,41 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { ElementHandle, Locator, Page } from 'playwright-core';
 import type { RecordedEntry, RecordedStep } from '../daemon/recorder.js';
-import { settleDom } from '../daemon/settle.js';
+import {
+  applyRecipe,
+  describeRecipeAttempt,
+  RECIPE_FAMILIES,
+  recipeFamilyOf,
+  recognizeComponent,
+  SEED_RECIPES,
+  type RecipeAttempt,
+  type RecipeBook,
+  type RecipeFamily,
+  type RecipeIntent,
+  type RecipeProcedure,
+  type RecipeSnapshot,
+  type RecipeStep,
+  type RecognizedComponent,
+} from '../execution/recipes.js';
 import { rootDir } from '../shared/paths.js';
 import { countTokenOccurrences } from './compile.js';
 import { originOf } from './store.js';
+
+export {
+  applyRecipe,
+  executeRecipe,
+  readComponentValue,
+  recognizeComponent,
+  squashText,
+  verifyRecipe,
+  type RecipeAttempt,
+  type RecipeBook,
+  type RecipeIntent,
+  type RecipeProcedure,
+  type RecipeSnapshot,
+  type RecipeStep,
+  type RecognizedComponent,
+} from '../execution/recipes.js';
 
 /**
  * Component recipes (PLAN-component-recipes): origin-INDEPENDENT
@@ -18,33 +49,19 @@ import { originOf } from './store.js';
  * knowledge is cross-app by construction (monaco is monaco everywhere), so
  * the store is keyed by component family, never by origin — app knowledge
  * stays in the session briefing, exactly as before.
+ *
+ * The RUNNER — families, seed procedures, recognition, execution,
+ * verification and the fill/type/select ladders — is the shared
+ * src/execution/recipes.ts, which the standalone artifact embeds. This module
+ * is the daemon's store: which recipe serves a family (learned variants,
+ * statuses, demotion, stats), and the snapshot of that choice an artifact
+ * carries.
  */
 
-export type RecipeIntent = 'set-value' | 'read-value' | 'select-option' | 'open' | 'dismiss';
+export type ComponentFamily = RecipeFamily;
 
-export interface RecipeStep {
-  action: 'click' | 'press' | 'insertText' | 'fill' | 'blur' | 'settle';
-  /**
-   * CSS relative to the component root; absent = the root itself. A
-   * `page:<css>` prefix scopes to the whole page — for option lists rendered
-   * into a portal outside the component's subtree.
-   */
-  target?: string;
-  key?: string;
-  /** For insertText/fill; "{{value}}" is replaced by the payload. */
-  text?: string;
-  ms?: number;
-  /** Restrict a page-scoped click to elements containing this (filled) text. */
-  withText?: string;
-}
-
-export interface Recipe {
-  id: string;
-  family: string;
-  intent: RecipeIntent;
-  steps: RecipeStep[];
-  /** CSS relative to root for the verification read; absent = the root itself. */
-  verifyRead?: string;
+/** A stored recipe: the runnable procedure plus its lifecycle. */
+export interface Recipe extends RecipeProcedure {
   status: 'provisional' | 'validated' | 'demoted';
   stats: RecipeStats;
   /** Shipped with sitelooper rather than learned; still starts provisional. */
@@ -63,30 +80,11 @@ export interface RecipeStats {
   lastUsed?: string;
 }
 
-export interface ComponentFamily {
-  id: string;
-  /** CSS the component ROOT matches (used with Element.closest). */
-  root: string;
-  /** Default verification read for learned recipes of this family. */
-  verifyRead?: string;
-}
-
-/**
- * Recognition set. Order matters: more specific families first (CodeMirror's
- * .cm-content IS contenteditable; monaco embeds a textarea). Recognition may
- * be heuristic because being wrong is cheap: the recipe's verification read
- * fails, the action falls back to the naive primitive and then the model.
- */
-export const FAMILIES: ComponentFamily[] = [
-  { id: 'monaco', root: '.monaco-editor', verifyRead: '.view-lines' },
-  { id: 'codemirror6', root: '.cm-editor', verifyRead: '.cm-content' },
-  { id: 'prosemirror', root: '.ProseMirror' },
-  { id: 'contenteditable', root: '[contenteditable="true"]' },
-  { id: 'aria-combobox', root: '[role="combobox"]' },
-];
+/** The recognition set, shared with the artifact (src/execution/recipes.ts). */
+export const FAMILIES: ComponentFamily[] = RECIPE_FAMILIES;
 
 export function familyOf(id: string): ComponentFamily | undefined {
-  return FAMILIES.find((f) => f.id === id);
+  return recipeFamilyOf(id);
 }
 
 const SEED_CREATED = '2026-08-25T00:00:00Z';
@@ -95,53 +93,30 @@ function seedStats(): RecipeStats {
   return { uses: 0, successes: 0, origins: {}, failStreak: 0, created: SEED_CREATED };
 }
 
-/** Select-all → replace → commit, the shape every keyboard-driven editor takes. */
-function editorSetValue(clickTarget?: string, blurTarget?: string): RecipeStep[] {
-  return [
-    { action: 'click', ...(clickTarget ? { target: clickTarget } : {}) },
-    { action: 'press', key: 'ControlOrMeta+a' },
-    { action: 'insertText', text: '{{value}}' },
-    { action: 'settle', ms: 400 },
-    { action: 'press', key: 'Escape' },
-    { action: 'blur', ...(blurTarget ? { target: blurTarget } : {}) },
-    { action: 'settle', ms: 200 },
-  ];
+/** A seed's store id: stable across versions, so components.json outcomes keep attaching to it. */
+export function seedRecipeId(family: string, intent: RecipeIntent): string {
+  return `r_${crypto.createHash('sha1').update(`${family}\n${intent}\nseed`).digest('hex').slice(0, 6)}`;
 }
 
 /**
- * The shipped starter library. Seeds are a floor, not an authority: they
- * enter the lifecycle provisional, must verify on first contact, and can be
- * demoted or superseded by learned variants when a library version changes
- * behaviour.
+ * The shipped starter library as the store sees it: the shared SEED_RECIPES
+ * procedures with their ids and lifecycle. Seeds are a floor, not an
+ * authority: they enter the lifecycle provisional, must verify on first
+ * contact, and can be demoted or superseded by learned variants when a
+ * library version changes behaviour.
  */
 export function seedRecipes(): Recipe[] {
-  const mk = (family: string, intent: RecipeIntent, steps: RecipeStep[], verifyRead?: string): Recipe => ({
-    id: `r_${crypto.createHash('sha1').update(`${family}\n${intent}\nseed`).digest('hex').slice(0, 6)}`,
-    family,
-    intent,
-    steps,
-    ...(verifyRead ? { verifyRead } : {}),
+  return SEED_RECIPES.map((seed) => ({
+    id: seedRecipeId(seed.family, seed.intent),
+    family: seed.family,
+    intent: seed.intent,
+    steps: seed.steps.map((s) => ({ ...s })),
+    ...(seed.verifyRead ? { verifyRead: seed.verifyRead } : {}),
     status: 'provisional',
     stats: seedStats(),
     seeded: true,
     provenance: { created: SEED_CREATED },
-  });
-  return [
-    mk('monaco', 'set-value', editorSetValue(undefined, 'textarea'), '.view-lines'),
-    mk('monaco', 'read-value', [], '.view-lines'),
-    mk('codemirror6', 'set-value', editorSetValue('.cm-content', '.cm-content'), '.cm-content'),
-    mk('codemirror6', 'read-value', [], '.cm-content'),
-    mk('prosemirror', 'set-value', editorSetValue()),
-    mk('contenteditable', 'set-value', editorSetValue()),
-    mk('aria-combobox', 'select-option', [
-      { action: 'click' },
-      { action: 'press', key: 'ControlOrMeta+a' },
-      { action: 'insertText', text: '{{value}}' },
-      { action: 'settle', ms: 400 },
-      { action: 'click', target: 'page:[role="option"]', withText: '{{value}}' },
-      { action: 'settle', ms: 200 },
-    ]),
-  ];
+  }));
 }
 
 /** Where recipes live: `$SITELOOPER_COMPONENTS_FILE` or `<home>/components.json`. */
@@ -231,33 +206,13 @@ export function pickRecipe(recipes: Recipe[], family: string, intent: RecipeInte
   );
 }
 
-export interface RecognizedComponent {
-  family: ComponentFamily;
-  root: ElementHandle;
-}
-
 /**
  * Which component (if any) the target element sits inside: nearest matching
- * ancestor, first family in FAMILIES order wins.
+ * ancestor, first family in FAMILIES order wins. The shared recognition,
+ * with the root pinned as an ElementHandle the caller disposes.
  */
-export async function recognize(locator: Locator): Promise<RecognizedComponent | null> {
-  let el: ElementHandle | null = null;
-  try {
-    el = await locator.elementHandle({ timeout: 1_500 });
-  } catch {
-    return null;
-  }
-  if (!el) return null;
-  for (const family of FAMILIES) {
-    try {
-      const rootHandle = await el.evaluateHandle((node, sel) => (node as Element).closest(sel), family.root);
-      const root = rootHandle.asElement();
-      if (root) return { family, root };
-    } catch {
-      // malformed selector / detached node — try the next family
-    }
-  }
-  return null;
+export function recognize(locator: Locator): Promise<RecognizedComponent | null> {
+  return recognizeComponent(locator.page(), locator);
 }
 
 /** The component annotation recorded on a step, for recipe compilation. */
@@ -303,90 +258,22 @@ export async function tagComponent(locator: Locator): Promise<StepComponent | nu
   }
 }
 
-const RECIPE_STEP_TIMEOUT_MS = 3_000;
-
-async function stepHandle(root: ElementHandle, target: string | undefined): Promise<ElementHandle | null> {
-  if (!target) return root;
-  return root.$(target);
-}
-
-/** Run a recipe's steps against a recognized component root. Throws on a step that cannot run. */
-export async function executeRecipe(page: Page, root: ElementHandle, recipe: Recipe, payload: string): Promise<void> {
-  for (const s of recipe.steps) {
-    const text = s.text?.split('{{value}}').join(payload);
-    const withText = s.withText?.split('{{value}}').join(payload);
-    switch (s.action) {
-      case 'click': {
-        if (s.target?.startsWith('page:')) {
-          let loc = page.locator(s.target.slice(5));
-          if (withText) loc = loc.filter({ hasText: withText });
-          await loc.first().click({ timeout: RECIPE_STEP_TIMEOUT_MS });
-        } else {
-          const h = await stepHandle(root, s.target);
-          if (!h) throw new Error(`recipe ${recipe.id}: no "${s.target}" inside the component`);
-          await h.click({ timeout: RECIPE_STEP_TIMEOUT_MS });
-        }
-        break;
-      }
-      case 'press':
-        await page.keyboard.press(String(s.key ?? ''));
-        break;
-      case 'insertText':
-        await page.keyboard.insertText(text ?? '');
-        break;
-      case 'fill': {
-        const h = await stepHandle(root, s.target);
-        if (!h) throw new Error(`recipe ${recipe.id}: no "${s.target}" inside the component`);
-        await h.fill(text ?? '', { timeout: RECIPE_STEP_TIMEOUT_MS });
-        break;
-      }
-      case 'blur': {
-        const h = await stepHandle(root, s.target);
-        await h?.evaluate((el) => (el as HTMLElement).blur?.());
-        break;
-      }
-      case 'settle':
-        // The recipe's `ms` was an estimate of how long the editor takes to
-        // re-render; the re-render itself is observable, so wait for the DOM
-        // to go quiet instead. A component that reacted already costs ~60ms
-        // rather than the full estimate, and one that keeps re-rendering is
-        // followed to its own end rather than cut off at a guess.
-        await settleDom(page);
-        break;
-    }
-  }
-}
-
-/** Normalise for containment checks: monaco renders spaces as NBSP, editors rewrap lines. */
-function squashText(s: string): string {
-  return s.replace(/ /g, ' ').replace(/\s+/g, ' ').trim();
-}
-
-/** Read the component's effective value through the recipe's verification read. */
-export async function readComponentValue(root: ElementHandle, recipe: Recipe): Promise<string | null> {
-  try {
-    const node = recipe.verifyRead ? await root.$(recipe.verifyRead) : root;
-    if (!node) return null;
-    return await node.evaluate((el) => {
-      const anyEl = el as HTMLInputElement;
-      if (typeof anyEl.value === 'string') return anyEl.value;
-      return (el as HTMLElement).innerText ?? el.textContent ?? '';
-    });
-  } catch {
-    return null;
-  }
-}
-
 /**
- * The honesty rule made structural: the recipe only succeeded if the
- * component's effective value re-observes the payload. A recipe that cannot
- * prove its effect reports failure and the caller falls back.
+ * The daemon's RecipeBook: the shared runner's view of the ComponentStore.
+ * `offers` is the gate the old tryRecipe had ahead of recognition (no usable
+ * recipe for the intent — the common case on a plain input — means
+ * recognising the widget can only answer null); `choose` is pickRecipe over
+ * a fresh read; every attempt, verified or not, is folded into the recipe's
+ * lifecycle against the page's origin, so a cross-origin success can count.
  */
-export async function verifyRecipe(root: ElementHandle, recipe: Recipe, payload: string): Promise<boolean> {
-  const value = await readComponentValue(root, recipe);
-  if (value === null) return false;
-  if (!payload) return true;
-  return squashText(value).includes(squashText(payload));
+export function storeBook(store: ComponentStore, page: Page): RecipeBook {
+  return {
+    offers: (intent) => store.list().some((r) => r.intent === intent && r.status !== 'demoted'),
+    choose: (family, intent) => pickRecipe(store.list(), family, intent),
+    onAttempt: (attempt: RecipeAttempt) => {
+      store.recordOutcome(attempt.recipe.id, attempt.ok, originOf(page.url()) ?? 'unknown');
+    },
+  };
 }
 
 /**
@@ -402,30 +289,51 @@ export async function tryRecipe(
   payload: string,
   store: ComponentStore = new ComponentStore(),
 ): Promise<string | null> {
-  // No recipe for this intent at all (the common case on a plain input)?
-  // Then recognising the widget — six round trips — can only answer null.
-  if (!store.list().some((r) => r.intent === intent && r.status !== 'demoted')) return null;
-  let rec: RecognizedComponent | null;
-  try {
-    rec = await recognize(target);
-  } catch {
-    return null;
+  const attempt = await applyRecipe(page, target, intent, payload, storeBook(store, page));
+  return attempt?.ok ? describeRecipeAttempt(attempt) : null;
+}
+
+/**
+ * What an artifact carries in place of the store: the recipe pickRecipe would
+ * choose for every (family, intent) the store knows, seeds and learned
+ * variants alike, as bare procedures. `diagnostics` names the state a static
+ * snapshot cannot express — a demoted recipe (the artifact never demotes or
+ * validates; it runs what it was given), a (family, intent) left with no
+ * usable recipe at all (both runners fall back to the native primitive there,
+ * the artifact forever), and a chosen recipe that is learned rather than a
+ * shipped seed (knowledge from this machine's store, travelling as data).
+ * Pure over the store's list, so a compiler can call it without a page.
+ */
+export function snapshotRecipes(recipes: readonly Recipe[]): { recipes: RecipeSnapshot; diagnostics: string[] } {
+  const diagnostics: string[] = [];
+  const chosen: RecipeProcedure[] = [];
+  const keys = [...new Set(recipes.map((r) => `${r.family}\n${r.intent}`))];
+  for (const key of keys) {
+    const [family, intent] = key.split('\n') as [string, RecipeIntent];
+    const own = recipes.filter((r) => r.family === family && r.intent === intent);
+    for (const r of own.filter((r) => r.status === 'demoted')) {
+      diagnostics.push(
+        `${family}/${intent}: ${r.seeded ? 'seed' : 'learned'} recipe ${r.id} is demoted in the component store (${r.stats.failStreak} consecutive verification failures); the snapshot omits it`,
+      );
+    }
+    const pick = pickRecipe(own, family, intent);
+    if (!pick) {
+      diagnostics.push(`${family}/${intent}: no usable recipe; the artifact falls back to the native primitive on this family, as the daemon does today`);
+      continue;
+    }
+    if (!pick.seeded) {
+      const from = pick.provenance?.session ? ` learned in session ${pick.provenance.session}` : '';
+      diagnostics.push(`${family}/${intent}: uses learned recipe ${pick.id}${from} (${pick.status}) rather than the shipped seed; the artifact carries it as data`);
+    }
+    chosen.push({
+      id: pick.id,
+      family: pick.family,
+      intent: pick.intent,
+      steps: pick.steps.map((s) => ({ ...s })),
+      ...(pick.verifyRead ? { verifyRead: pick.verifyRead } : {}),
+    });
   }
-  if (!rec) return null;
-  const recipe = pickRecipe(store.list(), rec.family.id, intent);
-  if (!recipe) return null;
-  const origin = originOf(page.url()) ?? 'unknown';
-  try {
-    await executeRecipe(page, rec.root, recipe, payload);
-    const ok = await verifyRecipe(rec.root, recipe, payload);
-    store.recordOutcome(recipe.id, ok, origin);
-    if (!ok) return null;
-    const verb = intent === 'select-option' ? 'selected' : 'filled';
-    return `${verb} via recipe ${rec.family.id}/${intent} (${recipe.id}); value verified on the component`;
-  } catch {
-    store.recordOutcome(recipe.id, false, origin);
-    return null;
-  }
+  return { recipes: { version: 1, recipes: chosen }, diagnostics };
 }
 
 /** Family root selectors present on the page right now (one evaluate). */

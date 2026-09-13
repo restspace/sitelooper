@@ -6,6 +6,8 @@ import { loadFlowFile, saveFlow, type Flow } from '../src/skills/flow.js';
 import { SkillStore, type Skill } from '../src/skills/store.js';
 import { compileFlow, exportFlowBundle, loadFlowBundle } from '../src/spec/index.js';
 import { persistRerecordInput, resolveRerecordInput, stageRerecordInput } from '../src/spec/rerecord-input.js';
+import { FINGERPRINT_DIMS } from '../src/execution/fingerprint.js';
+import { ComponentStore, seedRecipeId, seedRecipes, snapshotRecipes, type Recipe } from '../src/skills/components.js';
 
 const dirs: string[] = [];
 const originalSkillsDir = process.env.SITELOOPER_SKILLS_DIR;
@@ -134,5 +136,109 @@ describe('rerecord artifact input', () => {
     const input = resolveRerecordInput('items', bundleFile);
     expect(input.kind).toBe('bundle');
     expect(input.flow.origin).toBe('http://app.test');
+  });
+});
+
+// A compiled file carries each segment's page fingerprint; a rerecord re-emits
+// from the store its run used, so the vector is carried unless that store's
+// skill recorded a different one.
+describe('rerecord of a compiled input: the page fingerprint', () => {
+  const flowRegion = (source: string) => /\/\/ @sitelooper-flow-begin\n([\s\S]*?)\n\/\/ @sitelooper-flow-end/.exec(source)![1];
+  const vector = (k: number) => Array.from({ length: FINGERPRINT_DIMS }, (_, i) => (i % k === 0 ? 0.3 : 0));
+
+  function compiledWithFingerprint(dir: string): string {
+    const { flow, store } = fixture(dir);
+    const skill = store.get('s_old')!;
+    store.put({
+      ...skill,
+      preconditions: { urlPattern: 'http://app.test/', fingerprint: vector(4) },
+      steps: [{ tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'id', selector: '#open' }] } }],
+    }, { overwrite: true });
+    const flowFile = saveFlow(flow, path.join(dir, 'items.json'));
+    const compiled = compileFlow(flowFile, { store, outDir: path.join(dir, 'generated') });
+    expect(compiled.spec.steps[0].segments[0].preconditions.fingerprint).toEqual(vector(4));
+    return compiled.flowFile!;
+  }
+
+  it('keeps the file\'s vector: no change line, and the FLOW is byte-equal', () => {
+    const dir = temp();
+    const file = compiledWithFingerprint(dir);
+    const original = fs.readFileSync(file, 'utf8');
+    const input = resolveRerecordInput(file);
+    expect(input.skills![0].preconditions.fingerprint).toEqual(vector(4));
+    const staged = stageRerecordInput(input, input.flow);
+    const persisted = persistRerecordInput(input, staged, true);
+    expect(persisted).toMatchObject({ wrote: true, recipeChanges: [], diagnostics: [] });
+    expect(flowRegion(fs.readFileSync(file, 'utf8'))).toBe(flowRegion(original));
+  });
+
+  it('adopts the vector a re-recorded skill measured, and says so', () => {
+    const dir = temp();
+    const file = compiledWithFingerprint(dir);
+    const input = resolveRerecordInput(file);
+    const staged = stageRerecordInput(input, input.flow);
+    const old = staged.store.get('s_old')!;
+    staged.store.put({ ...old, preconditions: { ...old.preconditions, fingerprint: vector(6) } }, { overwrite: true });
+    const persisted = persistRerecordInput(input, staged, true);
+    expect(persisted.recipeChanges).toEqual([
+      "fingerprint: 01-open segment s_old carries the start-page fingerprint the verification run's skill recorded (it differs from the file's)",
+    ]);
+    expect(resolveRerecordInput(file).skills![0].preconditions.fingerprint).toEqual(vector(6));
+  });
+});
+
+// A rerecord verifies through the daemon, whose recipes are the machine's
+// component store (plus whatever the run itself learned). The rewritten
+// compiled file carries THAT snapshot, and reports the move.
+describe('rerecord of a compiled input: the recipe snapshot', () => {
+  const flowRegion = (source: string) => /\/\/ @sitelooper-flow-begin\n([\s\S]*?)\n\/\/ @sitelooper-flow-end/.exec(source)![1];
+  const learned: Recipe = {
+    id: 'r_learn1', family: 'monaco', intent: 'set-value',
+    steps: [{ action: 'click' }, { action: 'insertText', text: '{{value}}' }, { action: 'settle', ms: 300 }],
+    verifyRead: '.view-lines', status: 'validated',
+    stats: { uses: 3, successes: 3, origins: { 'http://app.test': 3 }, failStreak: 0, created: 't' },
+    provenance: { session: 'rerecord-run', created: 't' },
+  };
+  const components = (dir: string, recipes: Recipe[]): ComponentStore => {
+    const file = path.join(dir, `components-${recipes.length}.json`);
+    if (recipes.length) fs.writeFileSync(file, JSON.stringify({ version: 1, recipes }));
+    return new ComponentStore(file);
+  };
+
+  /** A compiled flow whose one step fills, snapshotted from a seeds-only store. */
+  function compiledWithFill(dir: string): string {
+    const { flow, store } = fixture(dir);
+    const skill = store.get('s_old')!;
+    store.put({ ...skill, steps: [...skill.steps, { tool: 'fill', args: { target: '@e1', value: 'notes' }, locators: { target: [{ kind: 'id', selector: '#notes' }] } }] }, { overwrite: true });
+    const flowFile = saveFlow(flow, path.join(dir, 'items.json'));
+    const compiled = compileFlow(flowFile, { store, outDir: path.join(dir, 'generated'), components: components(dir, []) });
+    expect(compiled.spec.recipes).toEqual(snapshotRecipes(seedRecipes()).recipes);
+    return compiled.flowFile!;
+  }
+
+  it('adopts the store the run used when it differs, and says which recipe moved', () => {
+    const dir = temp();
+    const file = compiledWithFill(dir);
+    const input = resolveRerecordInput(file);
+    expect(input.recipes).toEqual(snapshotRecipes(seedRecipes()).recipes);
+    const staged = stageRerecordInput(input, input.flow);
+    const persisted = persistRerecordInput(input, staged, true, components(dir, [learned]));
+    expect(persisted.wrote).toBe(true);
+    expect(persisted.recipeChanges).toEqual([`recipes: monaco/set-value ${seedRecipeId('monaco', 'set-value')} -> r_learn1`]);
+    expect(persisted.diagnostics!.map((d) => d.code)).toEqual(['recipe-snapshot']);
+    const written = fs.readFileSync(file, 'utf8');
+    expect(flowRegion(written)).toContain('"id": "r_learn1"');
+    expect(resolveRerecordInput(file).recipes!.recipes.find((r) => r.family === 'monaco' && r.intent === 'set-value')!.id).toBe('r_learn1');
+  });
+
+  it('keeps an identical snapshot: no change line, and the FLOW is byte-equal', () => {
+    const dir = temp();
+    const file = compiledWithFill(dir);
+    const original = fs.readFileSync(file, 'utf8');
+    const input = resolveRerecordInput(file);
+    const staged = stageRerecordInput(input, input.flow);
+    const persisted = persistRerecordInput(input, staged, true, components(dir, []));
+    expect(persisted).toMatchObject({ wrote: true, recipeChanges: [], diagnostics: [] });
+    expect(flowRegion(fs.readFileSync(file, 'utf8'))).toBe(flowRegion(original));
   });
 });

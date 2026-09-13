@@ -1,11 +1,15 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import type { Locator, Page } from 'playwright-core';
-import { inFlightRequests, type BrowserSession } from '../daemon/browser.js';
+import { NAVIGATING_ACTIONS, inFlightRequests, robustClick, urlHeldStill } from '../execution/browser.js';
+import { addedLines } from '../execution/snapshot.js';
+export { fireWhenAttached, urlHeldStill } from '../execution/browser.js';
+import type { BrowserSession } from '../daemon/browser.js';
 import { clip } from '../shared/text.js';
 import { captureSignature, describeChange, type PageSignature } from '../daemon/diff.js';
-import { html5DragDrop, reactSafeFill, reactSafeSelect, selectedOption, syntheticHover } from '../daemon/inputs.js';
-import { tryRecipe } from '../skills/components.js';
+import { html5DragDrop, selectedOption, syntheticHover } from '../daemon/inputs.js';
+import { describeRecipeAttempt, fillWithRecipe, selectWithRecipe, typeWithRecipe } from '../execution/recipes.js';
+import { ComponentStore, storeBook } from '../skills/components.js';
 import { resolveSecretsDeep, scrubSecrets, scrubSecretsDeep } from '../shared/secrets.js';
 import { refHint, resolveTarget, snapshot, truncate } from '../daemon/refs.js';
 import { controlFromTarget, siteModel } from '../skills/sitemap.js';
@@ -45,18 +49,8 @@ const NAVIGATED = new Set(['goto', 'back']);
 const AUTO_SNAPSHOT_CHARS = 3_500;
 /** How long an action that has visibly done nothing gets to show its first effect. */
 const REACTION_MS = 400;
-/** Tools whose effect may be a navigation the app performs on the answer to a request. */
-const NAVIGATING = new Set(['click', 'dblclick', 'press', 'submit', 'select']);
-/** How long a click's late navigation is given before its effect is captured as final. */
-const LATE_NAV_MS = 1_500;
-/** A url that has not moved for this long, after moving, is where the step left the page. */
-const URL_STILL_MS = 500;
-/**
- * How long "no request in flight" must hold before it means "no navigation
- * coming". Zero: the DOM settle that precedes this wait (≥250ms quiet) is the
- * grace, and a request the click started is already counted by then.
- */
-const LATE_NAV_GRACE_MS = 0;
+/** Tools whose effect may be a navigation the app performs on the answer to a request (shared: src/execution/browser.ts). */
+const NAVIGATING = new Set(NAVIGATING_ACTIONS);
 
 const MAX_BATCH_STEPS = 10;
 
@@ -643,12 +637,12 @@ async function runStep(
       diff = scrubSecretsDeep({
         url: after.url,
         alerts: after.alerts.filter((a) => !before.alerts.includes(a)),
-        added: after.lines.filter((l) => !before.lines.includes(l)).slice(0, 20),
+        added: addedLines(before.lines, after.lines) ?? [],
       });
       // The step crossed a page-template seam (its url pattern changed):
       // fingerprint the new page so compile can split a skill here and gate
       // the next segment on the page it actually runs on.
-      if (compiledUrlPattern(after.url) !== compiledUrlPattern(before.url)) {
+      if (compiledUrlPattern(after.url, undefined, { query: false }) !== compiledUrlPattern(before.url, undefined, { query: false })) {
         fingerprintAfter = (await fingerprintPage(page!)) ?? undefined;
       }
     } else {
@@ -659,46 +653,6 @@ async function runStep(
   return { result, diff, ...(captureFailed ? { captureFailed: true as const } : {}) };
 }
 
-/**
- * Where a navigating tool left the url once it has held still. A late
- * navigation rides on a request the tool started, so a page with no request
- * in flight and the url it began on is not going anywhere: the wait ends
- * there rather than at the deadline. Set 30's zero-model replays ran at
- * twice set 28's wall clock because every non-navigating click sat out the
- * full LATE_NAV_MS (78 actions, ~30s of nothing on repairdesk).
- */
-export async function urlHeldStill(
-  page: Pick<Page, 'url'>,
-  beforeUrl: string,
-  inFlight: () => number,
-  timing: { lateNavMs?: number; stillMs?: number; graceMs?: number; pollMs?: number } = {},
-): Promise<string> {
-  const lateNavMs = timing.lateNavMs ?? LATE_NAV_MS;
-  const stillMs = timing.stillMs ?? URL_STILL_MS;
-  const graceMs = timing.graceMs ?? LATE_NAV_GRACE_MS;
-  const pollMs = timing.pollMs ?? 100;
-  const start = Date.now();
-  const deadline = start + lateNavMs;
-  let seen = page.url();
-  let stillSince = start;
-  // Check first, sleep after: the caller has already let the DOM settle, so
-  // a request the click started is registered by now, and the common case
-  // (a click that navigates nowhere) should cost nothing here.
-  for (;;) {
-    const now = page.url();
-    if (now !== seen) {
-      seen = now;
-      stillSince = Date.now();
-    } else if (now !== beforeUrl) {
-      if (Date.now() - stillSince >= stillMs) break;
-    } else if (Date.now() - start >= graceMs && inFlight() === 0) {
-      break; // nothing asked of the server, so nothing to route on
-    }
-    if (Date.now() >= deadline) break;
-    await new Promise((r) => setTimeout(r, pollMs));
-  }
-  return seen;
-}
 
 async function settledSignature(page: Page): Promise<PageSignature | null> {
   try {
@@ -995,27 +949,23 @@ async function dispatch(
       // family's stored, self-verifying recipe instead of the naive fill —
       // which is known to lie on these widgets. Falls back to the naive path
       // when nothing is recognized or the recipe cannot verify its effect.
-      const viaRecipe = await tryRecipe(page, t(), 'set-value', String(args.value ?? ''));
-      if (viaRecipe) return viaRecipe;
-      await reactSafeFill(t(), String(args.value ?? ''));
-      return 'filled';
+      // The ladder itself is shared with the standalone artifact
+      // (src/execution/recipes.ts); the store is what this runner adds.
+      const viaRecipe = await fillWithRecipe(page, t(), String(args.value ?? ''), storeBook(new ComponentStore(), page));
+      return viaRecipe ? describeRecipeAttempt(viaRecipe) : 'filled';
     }
     case 'type': {
-      const viaRecipe = await tryRecipe(page, t(), 'set-value', String(args.text ?? ''));
-      if (viaRecipe) return viaRecipe;
-      await t().pressSequentially(String(args.text ?? ''), {
+      const viaRecipe = await typeWithRecipe(page, t(), String(args.text ?? ''), storeBook(new ComponentStore(), page), {
         timeout,
         delay: typeof args.delay_ms === 'number' ? args.delay_ms : 20,
       });
-      return 'typed';
+      return viaRecipe ? describeRecipeAttempt(viaRecipe) : 'typed';
     }
     case 'press':
       if (args.target) await t().press(String(args.key), { timeout });
       else await page.keyboard.press(String(args.key));
       return `pressed ${args.key}`;
     case 'select': {
-      const viaRecipe = await tryRecipe(page, t(), 'select-option', String(args.option ?? ''));
-      if (viaRecipe) return viaRecipe;
       // The label is what the procedure MEANS ("the project I just created");
       // the value is whatever the app keys that option by, minted per record
       // as often as not (fwat3 03-add selected the project by its id and both
@@ -1023,7 +973,8 @@ async function dispatch(
       // as `option` and the recorded value only as `optionValue`, the last
       // resort when the label form finds nothing.
       const fallbackValue = typeof args.optionValue === 'string' && args.optionValue ? args.optionValue : undefined;
-      const selected = await reactSafeSelect(t(), String(args.option), fallbackValue);
+      const { attempt, selected } = await selectWithRecipe(page, t(), String(args.option ?? ''), storeBook(new ComponentStore(), page), fallbackValue);
+      if (attempt) return describeRecipeAttempt(attempt);
       const chosen = await selectedOption(t());
       return `selected ${JSON.stringify(selected)}${chosen ? ` label=${JSON.stringify(chosen.label)}` : ''}`;
     }
@@ -1051,7 +1002,11 @@ async function dispatch(
     }
 
     case 'wait_for':
-      return waitFor(page, args, signal);
+      // On the locator replay RESOLVED, when it did: a replayed wait carries a
+      // recorded `@eN` ref as its target, which names nothing in a session
+      // that took no snapshot, and a hidden wait on nothing is met at once —
+      // whatever the resolved chain still shows.
+      return waitFor(page, args, signal, t());
 
     case 'read': {
       // The page URL is an observation with no element behind it: a record's
@@ -1225,13 +1180,6 @@ async function dispatch(
 }
 
 /**
- * Click that recovers from a covered/marginally-actionable element (friction
- * that otherwise sends the agent to a raw eval): normal click → scroll + force
- * → dispatched DOM event, reporting which path worked. A strict-mode violation
- * (selector matched many elements) is NOT swallowed — it is rethrown so the
- * caller gets the disambiguation hint rather than silently acting on .first().
- */
-/**
  * Why an eval expression is refused: the page-mutating call it makes, or null.
  *
  * fwgr19 recorded its dashboard save as `btn.click()` inside an eval. The
@@ -1263,157 +1211,13 @@ export function evalMutation(expression: string): string | null {
   return null;
 }
 
-type ClickOpts = { timeout: number; dbl?: boolean };
-type ClickAct = (o: { timeout: number; force?: boolean }) => Promise<void>;
-
-/**
- * One way to land a click. `note` is appended to the result so the agent (and
- * a post-mortem) can see which tier did the work.
- */
-interface ClickTier {
-  note: string;
-  run: (loc: Locator, opts: ClickOpts, act: ClickAct) => Promise<void>;
-}
-
-/**
- * The tiers a click falls through, in order. Each is tried when the one
- * before it failed; the window tier (fireWhenAttached) comes last and its own
- * error is what the agent sees, because it is the only tier that can explain
- * WHY nothing landed.
- */
-const CLICK_TIERS: ClickTier[] = [
-  // Playwright's own click, actionability checks and all.
-  { note: '', run: (_loc, opts, act) => act({ timeout: opts.timeout }) },
-  // Scroll into view and skip the checks: a control under a sticky header,
-  // or one an overlay covers in a way the app treats as fine.
-  {
-    note: ' (forced past actionability checks)',
-    run: async (loc, opts, act) => {
-      await loc.scrollIntoViewIfNeeded({ timeout: opts.timeout }).catch(() => {});
-      await act({ timeout: opts.timeout, force: true });
-    },
-  },
-  // A synthetic event straight at the element: React's delegated handlers see
-  // it even when the element is not "clickable" by Playwright's rules.
-  { note: ' (dispatched DOM event — element was not normally clickable)', run: (loc, opts) => loc.first().evaluate(fireClick, Boolean(opts.dbl)) },
-];
-
-async function robustClick(loc: Locator, opts: ClickOpts): Promise<string> {
-  const label = opts.dbl ? 'double-clicked' : 'clicked';
-  const act: ClickAct = (o) => (opts.dbl ? loc.dblclick(o) : loc.click(o));
-  let firstFailure = '';
-  for (const tier of CLICK_TIERS) {
-    try {
-      await tier.run(loc, opts, act);
-      return `${label}${tier.note}`;
-    } catch (err) {
-      if (firstFailure) continue;
-      firstFailure = err instanceof Error ? err.message : String(err);
-      // Two or more matches is the agent's problem to fix, not a tier's.
-      if (/strict mode violation/i.test(firstFailure)) throw err;
-      // The page went out from under the click. Whether it landed is unknown,
-      // so no further tier may fire: see UNCERTAIN_DISPATCH.
-      if (UNCERTAIN_DISPATCH.test(firstFailure)) {
-        throw new Error(
-          `${label === 'clicked' ? 'click' : 'double-click'} outcome UNKNOWN: the page was torn down during the action (${firstFailure.split('\n')[0].slice(0, 160)}). It may already have taken effect. Do not repeat it — observe the app's state and continue from what you find.`,
-        );
-      }
-      // A control the app re-mounts on every render never passes the
-      // attached→visible→stable check, and a forced click needs it attached
-      // at the instant of the action just the same — so both tiers lose the
-      // race and burn their full timeout (rpgr4-r2 spent 74 turns on
-      // grafana's viz-picker toggle this way). Only Playwright's own detach
-      // evidence sends a click straight to the window tier: its generic
-      // timeout log reads "waiting for element to be visible, enabled and
-      // stable" for EVERY stalled click, and matching on that routed 15
-      // ordinary replay clicks per run past the tiers that had been landing
-      // them (rpgr5).
-      if (DETACHED.test(firstFailure)) break;
-    }
-  }
-  return fireWhenAttached(loc, opts, label, firstFailure);
-}
-
-/** Playwright's own words for an element that left the DOM mid-action — never its generic actionability wording. */
-const DETACHED = /element was detached|not attached to the DOM|element is not attached|element is not stable/i;
-
-/**
- * Failures that mean the PAGE moved, not that the element was unready: the
- * context went away, the frame detached, the tab closed. Escalating through
- * the click tiers is safe only because an actionability timeout proves
- * Playwright never dispatched — it waits for visible/enabled/stable BEFORE
- * the pointer event, so nothing happened and trying harder repeats nothing.
- * These failures carry no such proof. They are the shape a click that
- * committed and then tore its own page down leaves behind, and a second,
- * forced, synthetic click would be a second commit. Stop instead, and say the
- * outcome is unknown rather than guessing either way.
- */
-const UNCERTAIN_DISPATCH =
-  /execution context was destroyed|target (page|frame)?,? ?(context|browser)? ?(has been|was) closed|browser has been closed|frame was detached|navigating and changing the content|page closed/i;
-
-/** Runs in the page: a synthetic click (React's delegated handlers see it). */
-function fireClick(el: Element, dbl: boolean): void {
-  const fire = (type: string) => el.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, view: window }));
-  fire('click');
-  if (dbl) {
-    fire('click');
-    fire('dblclick');
-  }
-}
-
-/**
- * Click a control that keeps re-mounting. Polls for the element and, the
- * moment a handle resolves, dispatches the click in the same tick — no
- * actionability wait at all. A flickering element is attached for a good
- * fraction of every cycle; the normal tiers never act inside that window.
- * If no window is found within the budget, the error says what the agent is
- * fighting and what to try instead of the same click again.
- */
-export async function fireWhenAttached(loc: Locator, opts: { timeout: number; dbl?: boolean }, label = 'clicked', because = ''): Promise<string> {
-  // The first line of the failure that sent us here rides along in the
-  // result, so a post-mortem can see WHY a click took this route.
-  const cause = because ? ` after: ${because.split('\n')[0].slice(0, 120)}` : '';
-  const deadline = Date.now() + opts.timeout;
-  let polls = 0;
-  let attached = 0;
-  while (Date.now() < deadline) {
-    polls++;
-    const handle = await loc.first().elementHandle({ timeout: 100 }).catch(() => null);
-    if (handle) {
-      attached++;
-      try {
-        await handle.evaluate(fireClick, Boolean(opts.dbl));
-        return `${label} (dispatched during a re-render window${cause} — the element re-mounts continuously, so a normal click could not land; if the app did not respond, it may need a keyboard route or a wait_for on the state that settles it)`;
-      } catch (err) {
-        // The element going again between resolve and fire is the ordinary
-        // case: nothing was dispatched, so the next window is safe. A context
-        // that was DESTROYED is not — the click may have landed and navigated
-        // the page, and polling on would fire it a second time.
-        const message = err instanceof Error ? err.message : String(err);
-        if (UNCERTAIN_DISPATCH.test(message)) {
-          throw new Error(
-            `${label === 'clicked' ? 'click' : 'double-click'} outcome UNKNOWN: dispatched into a page that was being torn down (${message.split('\n')[0].slice(0, 160)}). It may already have taken effect. Do not repeat it — observe the app's state and continue from what you find.`,
-          );
-        }
-      } finally {
-        await handle.dispose().catch(() => {});
-      }
-    }
-    await new Promise((r) => setTimeout(r, 25));
-  }
-  throw new Error(
-    attached
-      ? `target re-rendered continuously: attached on ${attached} of ${polls} polls but never long enough to click. The app re-mounts it on every render. Do not repeat this click — wait_for an element that appears once the state settles, or drive it by keyboard (focus a stable neighbour, Tab to it, press Enter).`
-      : `target was never attached during ${Math.round(opts.timeout / 1000)}s of polling after an initial detach — it was removed by a re-render. Re-snapshot and locate it afresh rather than repeating this click.`,
-  );
-}
-
 async function waitFor(
   page: Page,
   args: Record<string, unknown>,
   signal?: AbortSignal,
+  /** The target to wait on; replay passes what its chain resolved to. */
+  loc: Locator = resolveTarget(page, String(args.target)),
 ): Promise<string> {
-  const loc = resolveTarget(page, String(args.target));
   const timeout = typeof args.timeout_ms === 'number' ? args.timeout_ms : 10_000;
   const state = String(args.state);
 

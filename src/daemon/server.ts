@@ -1396,7 +1396,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
         // Agreement is recorded but never acted on — see flow.ts RunSpecific.
         // The route this replay actually ended on, so a step that recovered
         // somewhere else contributes no verdict (FlowStep.route).
-        const replayRoute = evidenceOutputs.url ? compiledUrlPattern(evidenceOutputs.url) : undefined;
+        const replayRoute = evidenceOutputs.url ? compiledUrlPattern(evidenceOutputs.url, undefined, { query: false }) : undefined;
         const changed = noteOutputEvidence(step, evidenceOutputs, replayRoute);
         if (changed.length) {
           evidenceChanged += changed.length;

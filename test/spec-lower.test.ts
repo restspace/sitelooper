@@ -3,6 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { flowToSpec } from '../src/spec/ir.js';
+import { FINGERPRINT_DIMS } from '../src/execution/fingerprint.js';
 import type { SpecFlow, SpecSegment, SpecStep } from '../src/spec/ir.js';
 import { specToFlow, stageForReplay } from '../src/spec/lower.js';
 import { SKILL_CONTRACT, SkillStore, isVerified } from '../src/skills/store.js';
@@ -125,6 +126,26 @@ const HAND_BUILT_SPECS: SpecFlow[] = [
             preconditions: { urlPattern: 'http://localhost:5173/orders/21', requireText: ['{{v1}}'] },
             goal: { requireText: ['Cancelled'] },
             report: { summary: 'cancelled {{v1}}', values: { order_status: 'Cancelled' } },
+          }),
+        ],
+      }),
+    ],
+  },
+  // a segment with a recorded page fingerprint: the vector goes back into the
+  // skill (so a repair's replay soft-matches as the artifact does) and comes
+  // out of flowToSpec again unchanged
+  {
+    version: 1,
+    name: 'fingerprinted',
+    origin: 'http://localhost:5173',
+    startUrl: 'http://localhost:5173/',
+    vars: [],
+    steps: [
+      step('01-open', {
+        params: {},
+        segments: [
+          segment('01-open-seg', {
+            preconditions: { urlPattern: 'http://localhost:5173/x', requireText: ['{{v1}}'], fingerprint: Array.from({ length: FINGERPRINT_DIMS }, (_, i) => (i % 3 ? 0 : 0.102)) },
           }),
         ],
       }),
@@ -260,6 +281,12 @@ describe('specToFlow: shape of the produced Flow/Skill[]', () => {
       expect(skill.goal).toBeUndefined();
       expect(skill.reportTemplate).toBeUndefined();
     }
+  });
+
+  it('gives the skill the segment\'s recorded fingerprint, and invents none', () => {
+    const spec = HAND_BUILT_SPECS.find((s) => s.name === 'fingerprinted')!;
+    expect(specToFlow(spec).skills[0].preconditions.fingerprint).toEqual(spec.steps[0].segments[0].preconditions.fingerprint);
+    for (const skill of specToFlow(HAND_BUILT_SPECS[1]).skills) expect(skill.preconditions.fingerprint).toBeUndefined();
   });
 
   it('leaves skill unset on a step with no converged procedure', () => {

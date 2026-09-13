@@ -1,3 +1,4 @@
+import { isMutatingAction } from '../execution/lifecycle.js';
 import type { Skill } from './store.js';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -393,7 +394,7 @@ export function buildFlow(
     // Only `differed` is ever acted on (varyingValues, dead-read retirement);
     // agreement is recorded and never used — see `RunSpecific`.
     const step = steps[steps.length - 1];
-    if (g.endUrl) step.route = urlPattern(g.endUrl, new Map());
+    if (g.endUrl) step.route = urlPattern(g.endUrl, new Map(), { query: false });
     for (const m of minted) {
       if (!(m.output in step.recorded)) step.recorded = { ...step.recorded, [m.output]: m.value };
     }
@@ -502,7 +503,7 @@ function groupByInstruction(entries: RecordedEntry[]): Group[] {
       const g = groups[groups.length - 1];
       if (e.diff?.url) g.endUrl = e.diff.url;
       if (!g.firstTool) g.firstTool = e.tool;
-      if (MUTATING_TOOLS.has(e.tool)) {
+      if (isMutatingAction(e.tool)) {
         g.mutations += 1;
         if (e.diff) {
           g.mutationsDiffed += 1;
@@ -750,8 +751,6 @@ function contradictionWarning(idI: string, gi: Group, idJ: string, gj: Group): s
   return null;
 }
 
-/** Tools that CHANGE the app, as opposed to observing it. */
-const MUTATING_TOOLS = new Set(['click', 'dblclick', 'right_click', 'modifier_click', 'fill', 'type', 'press', 'select', 'check', 'drag', 'upload']);
 
 /**
  * Instructions that CHANGED the app but did not report success AND were not

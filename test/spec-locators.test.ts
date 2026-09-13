@@ -11,9 +11,11 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Locator } from 'playwright-core';
 import { BrowserSession } from '../src/daemon/browser.js';
+import { pointLocator } from '../src/execution/point.js';
+import { resolveCandidates, type CandidateObservation } from '../src/execution/resolve.js';
 import { makeLocator, type LocatorCandidate } from '../src/daemon/recorder.js';
 import { volatileMatcher } from '../src/shared/text.js';
-import { candidateSource, chainSource, matcherSource, stringSource } from '../src/spec/locators.js';
+import { candidateSource, chainSource, matcherSource, observationSource, observationSources, stringSource } from '../src/spec/locators.js';
 
 /** What the generated file inlines; the regex tests need it in scope. */
 const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -148,22 +150,23 @@ describe('chainSource', () => {
   const positional: LocatorCandidate = { kind: 'css', selector: '#editlist > div:nth-of-type(1) > button' };
   const point: LocatorCandidate = { kind: 'point', x: 1, y: 2, w: 3, h: 4, role: 'button', tag: 'button', vw: 1280, vh: 720 };
 
-  it('orders identity, then handles, then paths, and drops the point', () => {
-    const { source, dropped, identity: guards } = chainSource([positional, role, identity, point]);
+  it('keeps STORED order, guards nothing, and drops the point', () => {
+    const { source, dropped } = chainSource([positional, role, identity, point]);
     expect(source).toBe(
-      "page.locator('#editlist .erow', { hasText: 'Item One' }).locator('button')\n" +
-        "  .or(page.getByRole('button', { name: 'Edit', exact: true }).filter({ hasText: 'Item One' }))\n" +
-        "  .or(page.locator('#editlist > div:nth-of-type(1) > button').filter({ hasText: 'Item One' }))",
+      "page.locator('#editlist > div:nth-of-type(1) > button')\n" +
+        "  .or(page.getByRole('button', { name: 'Edit', exact: true }))\n" +
+        "  .or(page.locator('#editlist .erow', { hasText: 'Item One' }).locator('button'))",
     );
     expect(dropped).toEqual([point]);
-    expect(guards).toEqual(['Item One']);
+    // Identity is the runtime policy's rule now, not a compile-time filter.
+    expect(source).not.toContain('.filter({ hasText');
+    expect(Object.keys(chainSource([positional, role, identity, point]))).toEqual(['source', 'dropped']);
   });
 
   it('leaves a chain without identity unguarded', () => {
-    const { source, identity: guards } = chainSource([role, positional]);
+    const { source } = chainSource([role, positional]);
     expect(source).toContain(".or(page.locator('#editlist > div:nth-of-type(1) > button'))");
     expect(source).not.toContain('filter');
-    expect(guards).toEqual([]);
   });
 
   it('does not guard a candidate that already names the record', () => {
@@ -177,7 +180,127 @@ describe('chainSource', () => {
   });
 
   it('is empty when nothing in the chain can be expressed', () => {
-    expect(chainSource([point])).toEqual({ source: '', dropped: [point], identity: [] });
+    expect(chainSource([point])).toEqual({ source: '', dropped: [point] });
+  });
+
+  it('keeps duplicates: a union is stored order, not a set', () => {
+    const { source } = chainSource([role, role]);
+    expect(source).toBe(
+      "page.getByRole('button', { name: 'Edit', exact: true })\n" +
+        "  .or(page.getByRole('button', { name: 'Edit', exact: true }))",
+    );
+  });
+});
+
+/**
+ * The observation literal each candidate becomes for the shared policy
+ * (`CandidateObservation`, src/execution/resolve.ts). What the daemon builds
+ * live, the artifact renders here: same locator, same stored index, the same
+ * `structuralCandidate` verdict, and the candidate's own JSON as `carries`.
+ */
+describe('observationSource / observationSources', () => {
+  const identity: LocatorCandidate = { kind: 'scoped', container: '#editlist .erow', hasText: 'Item One', selector: 'button' };
+  const role: LocatorCandidate = { kind: 'role', role: 'button', name: 'Edit' };
+  const positional: LocatorCandidate = { kind: 'css', selector: '#editlist > div:nth-of-type(1) > button' };
+  const point: LocatorCandidate = { kind: 'point', x: 10, y: 20, w: 5, h: 5, role: 'button', tag: 'button', vw: 800, vh: 600 };
+
+  it('renders the live locator, the stored index, the shared structural verdict, the kind and what it carries', () => {
+    expect(observationSource(role, 0)).toBe(
+      "{ locator: page.getByRole('button', { name: 'Edit', exact: true }), index: 0, structural: false, kind: 'role', " +
+        "carries: JSON.stringify({ kind: 'role', role: 'button', name: 'Edit' }) }",
+    );
+    // structuralCandidate's own rule, not a restatement of it: a css path.
+    expect(observationSource(positional, 1)).toBe(
+      "{ locator: page.locator('#editlist > div:nth-of-type(1) > button'), index: 1, structural: true, kind: 'css', " +
+        "carries: JSON.stringify({ kind: 'css', selector: '#editlist > div:nth-of-type(1) > button' }) }",
+    );
+    expect(observationSource({ kind: 'css', selector: '.plain' }, 2)).toContain('structural: false');
+  });
+
+  it('carries the slots as a template literal, so a parameter is filled at run time', () => {
+    const src = observationSource({ kind: 'role', role: 'button', name: 'Save {{v1}}' }, 0);
+    expect(src).toContain("carries: JSON.stringify({ kind: 'role', role: 'button', name: `Save ${p.v1}` })");
+    expect(src).toContain("name: `Save ${p.v1}`");
+  });
+
+  it('leaves replay evidence out of carries: `seen` is not text the candidate names', () => {
+    const src = observationSource({ kind: 'text', text: 'Row Alpha', seen: { hit: 3, miss: 1 } }, 0);
+    expect(src).toContain("carries: JSON.stringify({ kind: 'text', text: 'Row Alpha' })");
+    expect(src).not.toContain('seen');
+  });
+
+  /**
+   * Review C6, F3. The daemon's `carries` is `JSON.stringify` of the FILLED
+   * candidate, so a value holding a `"` or `\` appears escaped and the
+   * identity guard runs for it. Interpolating the value raw into JSON text
+   * put the bare `"` there instead, `includes(value)` held, and the guard was
+   * skipped — the artifact acting where the daemon guards. Encoding at run
+   * time, after the fill, is the daemon's own order.
+   */
+  it('encodes carries at run time, after the fill, so a value with a quote is guarded as the daemon guards it', async () => {
+    const value = 'Row "A" \\ B';
+    const src = observationSource({ kind: 'role', role: 'button', name: 'Open {{v1}}' }, 1);
+    expect(src).toContain("carries: JSON.stringify({ kind: 'role', role: 'button', name: `Open ${p.v1}` })");
+
+    const locatorOf = (text: string) => {
+      const self = {
+        count: async () => 1,
+        first: () => self,
+        textContent: async () => text,
+        boundingBox: async () => null,
+        evaluate: async () => false,
+      };
+      return self as unknown as Locator;
+    };
+    const pageWith = (text: string) => ({ url: () => 'http://x.test/', getByRole: () => locatorOf(text), evaluate: async () => ({ x: 0, y: 0 }) });
+    const observe = (page: unknown) => new Function('page', 'p', `return ${src}`)(page, { v1: value }) as CandidateObservation;
+
+    // the same text the daemon builds: JSON of the filled candidate
+    expect(observe(pageWith('')).carries).toBe(JSON.stringify({ kind: 'role', role: 'button', name: `Open ${value}` }));
+    expect(observe(pageWith('')).carries).not.toContain(value);
+
+    // ...so the shared policy guards the fallback by its text, in both runners:
+    // an element bearing nothing of the value is refused, one bearing it is taken
+    const bare = pageWith('');
+    expect(await resolveCandidates(bare as never, [observe(bare)], { requireIdentity: [value], waitMs: 0 })).toBeNull();
+    const bearing = pageWith(`Open ${value}`);
+    expect((await resolveCandidates(bearing as never, [observe(bearing)], { requireIdentity: [value], waitMs: 0 }))?.index).toBe(1);
+  });
+
+  it('puts the recorded match index on BOTH the locator and the observation', () => {
+    const src = observationSource({ kind: 'css', selector: 'button.dup', nth: 1 }, 0);
+    expect(src).toContain("locator: page.locator('button.dup').nth(1)");
+    expect(src).toContain('nth: 1');
+    // A recorded match index is a position, so it is structural whatever the kind.
+    expect(src).toContain('structural: true');
+  });
+
+  it('renders a point as pointLocator with its recorded geometry', () => {
+    expect(observationSource(point, 2)).toBe(
+      '{ locator: pointLocator(page, { x: 10, y: 20 }), index: 2, structural: true, ' +
+        "kind: 'point', carries: JSON.stringify({ kind: 'point', x: 10, y: 20, w: 5, h: 5, role: 'button', tag: 'button', vw: 800, vh: 600 })" +
+        ", point: { x: 10, y: 20, w: 5, h: 5, role: 'button', tag: 'button', vw: 800, vh: 600 } }",
+    );
+  });
+
+  it('renders a point with no recorded role as role: null, never as the string', () => {
+    const src = observationSource({ ...point, role: null }, 0);
+    expect(src).toContain('role: null');
+    expect(src).not.toContain("role: 'null'");
+  });
+
+  it('takes the page expression from the options, for a point too', () => {
+    expect(observationSource(point, 0, { page: 'frame' })).toContain('locator: pointLocator(frame, { x: 10, y: 20 })');
+    expect(observationSource(role, 0, { page: 'frame' })).toContain("locator: frame.getByRole('button'");
+  });
+
+  it('renders the whole chain in stored order with stored indices, nothing dropped or deduped', () => {
+    const sources = observationSources([positional, role, identity, point, role]);
+    expect(sources).toHaveLength(5);
+    expect(sources.map((s) => /index: (\d+)/.exec(s)![1])).toEqual(['0', '1', '2', '3', '4']);
+    expect(sources.map((s) => /kind: '([a-z]+)'/.exec(s)![1])).toEqual(['css', 'role', 'scoped', 'point', 'role']);
+    // No compile-time identity guard survives anywhere in the chain.
+    expect(sources.join('\n')).not.toContain('.filter({ hasText');
   });
 });
 
@@ -230,14 +353,24 @@ d('emitted source resolves what makeLocator resolves (fixture page)', () => {
     }, 30_000);
   }
 
-  it('a guarded chain lands on the identity row, never on the other one', async () => {
+  it('the emitted observations resolve to the identity row, never to the other one', async () => {
     const page = await session.getPage();
     const scoped: LocatorCandidate = { kind: 'scoped', container: '#editlist .erow', hasText: 'Item Two', selector: 'button' };
-    const { source } = chainSource([scoped, { kind: 'role', role: 'button', name: 'Edit' }, { kind: 'css', selector: '#editlist > div:nth-of-type(1) > button' }]);
-    const chain = new Function('page', 'p', `return ${source}`)(page, {}) as Locator;
-    await same(makeLocator(page, scoped), chain);
-    // The guards are what keep it there: row 1's Edit button is a perfect
-    // match for both fallbacks and has none of "Item Two" about it.
-    expect(await chain.evaluate((el) => el.closest('.erow')!.getAttribute('data-row'))).toBe('2');
+    const chain: LocatorCandidate[] = [
+      { kind: 'css', selector: '#editlist > div:nth-of-type(1) > button' },
+      { kind: 'role', role: 'button', name: 'Edit' },
+      scoped,
+    ];
+    // The observations the artifact emits, run through the SHARED policy that
+    // the artifact embeds: identity is the policy's rule now, not a filter
+    // baked into the expression. Row 1's Edit button is a perfect match for
+    // both of the earlier candidates and has none of "Item Two" about it.
+    const observations = observationSources(chain).map(
+      (src) => new Function('page', 'p', 'pointLocator', `return ${src}`)(page, {}, pointLocator) as CandidateObservation,
+    );
+    const hit = await resolveCandidates(page, observations, { requireIdentity: ['Item Two'], waitMs: 0 });
+    expect(hit).not.toBeNull();
+    await same(makeLocator(page, scoped), hit!.locator);
+    expect(await hit!.locator.evaluate((el) => el.closest('.erow')!.getAttribute('data-row'))).toBe('2');
   }, 30_000);
 });

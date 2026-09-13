@@ -61,7 +61,8 @@ describe('cli: repair reports a step whose RECORDING is the problem', () => {
   });
 
   it('puts the diagnostics in every JSON shape, via the shared report()', () => {
-    expect(cliSource).toContain('diagnostics: [...flagged.values()],');
+    // ...the recipe-snapshot warnings carryRecipeSnapshot raised included
+    expect(cliSource).toContain('diagnostics: [...flagged.values(), ...recipeDiagnostics],');
   });
 
   it('never lets --check-spec blame the emitter for a flagged step', () => {

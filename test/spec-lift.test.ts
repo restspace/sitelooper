@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import type { Skill } from '../src/skills/store.js';
 import type { SpecFlow, SpecSegment, SpecStep } from '../src/spec/ir.js';
 import { LiftError, isOwnedFlowFile, liftFlowFile } from '../src/spec/lift.js';
+import { FINGERPRINT_DIMS } from '../src/execution/fingerprint.js';
 
 // --- test-local builder for the emit.ts layout (contract section 3) -------
 //
@@ -265,5 +266,68 @@ describe('liftFlowFile: negative cases (hand-edited files)', () => {
     expect(() => liftFlowFile(text)).toThrow(LiftError);
     expect(() => liftFlowFile(text)).toThrow(/step\[1\]/);
     expect(() => liftFlowFile(text)).toThrow(/02-create-seg/);
+  });
+});
+
+describe('liftFlowFile: preconditions.fingerprint', () => {
+  const vector = Array.from({ length: FINGERPRINT_DIMS }, (_, i) => (i % 4 ? 0 : 0.25));
+  const withPreconditions = (preconditions: unknown) => {
+    const spec = JSON.parse(JSON.stringify(HAND_BUILT_FLOWS[1]));
+    spec.steps[1].segments[0].preconditions = preconditions;
+    return buildFlowFileText(spec);
+  };
+
+  it('lifts a recorded vector verbatim, and still reads the legacy flag', () => {
+    const lifted = liftFlowFile(withPreconditions({ urlPattern: 'http://localhost:5173/x', fingerprint: vector })).spec;
+    expect(lifted.steps[1].segments[0].preconditions).toEqual({ urlPattern: 'http://localhost:5173/x', fingerprint: vector });
+    const legacy = liftFlowFile(withPreconditions({ urlPattern: 'http://localhost:5173/x', fingerprinted: true })).spec;
+    expect(legacy.steps[1].segments[0].preconditions).toEqual({ urlPattern: 'http://localhost:5173/x', fingerprinted: true });
+  });
+
+  it.each([
+    ['not an array', { urlPattern: 'x', fingerprint: '0.1,0.2' }, /step\[1\] \(id "02-create"\), segment\[0\] \(id "02-create-seg"\): "preconditions\.fingerprint" must be an array of 512 numbers \(found string\)/],
+    ['a truncated vector', { urlPattern: 'x', fingerprint: vector.slice(0, 100) }, /02-create-seg"\): "preconditions\.fingerprint" must have 512 entries \(found 100\)/],
+    ['a non-number entry', { urlPattern: 'x', fingerprint: [...vector.slice(0, 7), '0.5', ...vector.slice(8)] }, /"preconditions\.fingerprint"\[7\] must be a finite number \(found "0\.5"\)/],
+    ['a null entry', { urlPattern: 'x', fingerprint: [null, ...vector.slice(1)] }, /"preconditions\.fingerprint"\[0\] must be a finite number \(found null\)/],
+    ['a legacy flag that is not true', { urlPattern: 'x', fingerprinted: 'yes' }, /"preconditions\.fingerprinted" must be true when present \(found "yes"\)/],
+  ])('refuses %s with a LiftError naming the field', (_what, preconditions, message) => {
+    const text = withPreconditions(preconditions);
+    expect(() => liftFlowFile(text)).toThrow(LiftError);
+    expect(() => liftFlowFile(text)).toThrow(message);
+  });
+});
+
+describe('liftFlowFile: FLOW.recipes', () => {
+  const recipes = {
+    version: 1,
+    recipes: [
+      { id: 'r_mon', family: 'monaco', intent: 'set-value', steps: [{ action: 'click' }, { action: 'insertText', text: '{{value}}' }, { action: 'settle', ms: 400 }, { action: 'blur', target: 'textarea' }], verifyRead: '.view-lines' },
+      { id: 'r_combo', family: 'aria-combobox', intent: 'select-option', steps: [{ action: 'click', target: 'page:[role="option"]', withText: '{{value}}' }] },
+    ],
+  };
+  const withRecipes = (r: unknown) => buildFlowFileText({ ...HAND_BUILT_FLOWS[0], recipes: r } as unknown as SpecFlow);
+
+  it('lifts a well-formed snapshot verbatim', () => {
+    expect(liftFlowFile(withRecipes(recipes)).spec.recipes).toEqual(recipes);
+    // absent stays absent
+    expect(liftFlowFile(buildFlowFileText(HAND_BUILT_FLOWS[0])).spec.recipes).toBeUndefined();
+  });
+
+  it.each([
+    ['not an object', [], /FLOW\.recipes must be an object/],
+    ['a wrong version', { ...recipes, version: 2 }, /FLOW\.recipes\.version must be 1 \(found 2\)/],
+    ['recipes not an array', { version: 1, recipes: {} }, /FLOW\.recipes\.recipes must be an array/],
+    ['a recipe that is not an object', { version: 1, recipes: ['r_x'] }, /FLOW\.recipes\.recipes\[0\]: not an object/],
+    ['a recipe with no id', { version: 1, recipes: [{ family: 'monaco', intent: 'set-value', steps: [] }] }, /FLOW\.recipes\.recipes\[0\]: missing string "id"/],
+    ['a recipe with no family', { version: 1, recipes: [{ id: 'r_x', intent: 'set-value', steps: [] }] }, /recipes\[0\] \(id "r_x"\): missing string "family"/],
+    ['an unknown intent', { version: 1, recipes: [{ id: 'r_x', family: 'monaco', intent: 'paste', steps: [] }] }, /recipes\[0\] \(id "r_x"\): "intent" must be one of .* \(found "paste"\)/],
+    ['steps not an array', { version: 1, recipes: [{ id: 'r_x', family: 'monaco', intent: 'set-value', steps: 'click' }] }, /recipes\[0\] \(id "r_x"\): "steps" must be an array/],
+    ['an unknown step action', { version: 1, recipes: [{ id: 'r_x', family: 'monaco', intent: 'set-value', steps: [{ action: 'wait' }] }] }, /recipes\[0\] \(id "r_x"\), steps\[0\]: "action" must be one of/],
+    ['a non-string step text', { version: 1, recipes: [{ id: 'r_x', family: 'monaco', intent: 'set-value', steps: [{ action: 'insertText', text: 7 }] }] }, /steps\[0\]: "text" must be a string when present/],
+    ['a non-string verifyRead', { version: 1, recipes: [{ id: 'r_x', family: 'monaco', intent: 'set-value', steps: [], verifyRead: 1 }] }, /"verifyRead" must be a string when present/],
+  ])('refuses %s with a LiftError naming the field', (_what, bad, message) => {
+    const text = withRecipes(bad);
+    expect(() => liftFlowFile(text)).toThrow(LiftError);
+    expect(() => liftFlowFile(text)).toThrow(message);
   });
 });
