@@ -1,0 +1,107 @@
+{
+ "id": "s_f87832",
+ "origin": "http://127.0.0.1:3000",
+ "template": "Open {{v1}} in the browser. If a login page appears, sign in with username admin and password admin; if a change-password prompt appears afterwards, click Skip. Then find and open the provisioned dashboard named '{{v2}}' (for example via the Dashboards browse/search page). When it is open, report the exact titles of all its panels exactly as displayed on screen (if the dashboard uses rows or tabs, check every one so no panel is missed), and also report the dashboard's URL.",
+ "params": {
+  "v1": {
+   "example": "http://127.0.0.1:3000/",
+   "usedIn": [
+    1
+   ]
+  },
+  "v2": {
+   "example": "Service health",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:3000/"
+ },
+ "steps": [
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e28",
+    "value": "admin"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Username input field"
+     },
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Email or username"
+     },
+     {
+      "kind": "label",
+      "label": "Email or username"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "email or username"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"input-wrapper\"] input"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(2) > div > div > div > input"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 452,
+      "w": 383,
+      "h": 32,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/login",
+    "addedContains": [
+     "- textbox \"email or username\": {{*}}"
+    ]
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-12T23:42:58.864Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-13T00:08:38.135Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_bac4f9",
+  "index": 0,
+  "of": 4
+ },
+ "provenance": {
+  "session": "fwgr30-n1",
+  "instruction": "Open http://127.0.0.1:3000/ in the browser. If a login page appears, sign in with username admin and password admin; if a change-password prompt appears afterwards, click Skip. Then find and open the provisioned dashboard named 'Service health' (for example via the Dashboards browse/search page). When it is open, report the exact titles of all its panels exactly as displayed on screen (if the dashboard uses rows or tabs, check every one so no panel is missed), and also report the dashboard's URL.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-12T23:42:58.864Z"
+ },
+ "revision": 3
+}

@@ -1,0 +1,330 @@
+{
+ "id": "s_6dcc5b",
+ "origin": "http://127.0.0.1:3000",
+ "template": "Open {{v1}} in the browser. If a login page appears, sign in with username admin and password admin; if a change-password prompt appears afterwards, click Skip. Then find and open the provisioned dashboard named '{{v2}}' (for example via the Dashboards browse/search page). When it is open, report the exact titles of all its panels exactly as displayed on screen (if the dashboard uses rows or tabs, check every one so no panel is missed), and also report the dashboard's URL.",
+ "params": {
+  "v1": {
+   "example": "http://127.0.0.1:3000/",
+   "usedIn": []
+  },
+  "v2": {
+   "example": "Service health",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:3000/dashboards"
+ },
+ "steps": [
+  {
+   "tool": "read_all",
+   "args": {
+    "target": "a[href*=\"/d/\"]",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "a[href*=\"/d/\"]"
+     },
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "Service Health"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div > div > div:nth-of-type(2) > a"
+     },
+     {
+      "kind": "point",
+      "x": 130,
+      "y": 324,
+      "w": 99.1,
+      "h": 22,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "dashboard_title_in_search"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "a[href*=\"/d/\"]",
+    "what": "attr",
+    "attr": "href",
+    "label": "service_health_href"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "a[href*=\"/d/\"]"
+     },
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "Service Health"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div > div > div:nth-of-type(2) > a"
+     },
+     {
+      "kind": "point",
+      "x": 130,
+      "y": 324,
+      "w": 99.1,
+      "h": 22,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "service_health_href"
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:3000/d/bench-service-health/service-health"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "read_all",
+   "args": {
+    "target": "main h2",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "main h2"
+     }
+    ]
+   },
+   "label": "panel_titles"
+  },
+  {
+   "tool": "scroll_into_view",
+   "args": {
+    "target": "@e81"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "id",
+      "selector": "#pageContent"
+     },
+     {
+      "kind": "css",
+      "selector": "#pageContent"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 490,
+      "w": 1280,
+      "h": 820,
+      "role": null,
+      "tag": "main",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "dashboard_url",
+    "what": "url"
+   },
+   "locators": {},
+   "label": "dashboard_url"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Service Health breadcrumb"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] span",
+      "nth": 0
+     },
+     {
+      "kind": "css",
+      "selector": "header > div:nth-of-type(2) > nav > ol > li:nth-of-type(4) > span"
+     },
+     {
+      "kind": "point",
+      "x": 341,
+      "y": 60,
+      "w": 99.1,
+      "h": 22,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "dashboard_title_in_search"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"header-container\"] h2",
+      "nth": 0
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > section > div:nth-of-type(2) > div:nth-of-type(1) > h2",
+      "nth": 0
+     },
+     {
+      "kind": "point",
+      "x": 68,
+      "y": 165,
+      "w": 86.4,
+      "h": 22,
+      "role": "heading",
+      "tag": "h2",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "panel_title_1"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"header-container\"] h2",
+      "nth": 1
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > section > div:nth-of-type(2) > div:nth-of-type(1) > h2",
+      "nth": 1
+     },
+     {
+      "kind": "point",
+      "x": 691,
+      "y": 165,
+      "w": 76.6,
+      "h": 22,
+      "role": "heading",
+      "tag": "h2",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "panel_title_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"header-container\"] h2",
+      "nth": 2
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > section > div:nth-of-type(2) > div:nth-of-type(1) > h2",
+      "nth": 2
+     },
+     {
+      "kind": "point",
+      "x": 1036,
+      "y": 165,
+      "w": 138.9,
+      "h": 22,
+      "role": "heading",
+      "tag": "h2",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "panel_title_3"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Logged in at {{v1}} as admin/admin (a change-password prompt appeared and I clicked \"Skip\"), then found the dashboard via the Dashboards browse/search page (searching \"{{v2}}\" returned the dashboard titled \"Service Health\") and opened it. The dashboard shows exactly 3 panels in one flat layout — no rows or tabs exist (verified: 0 elements matching dashboard-row/[role=tab], and no \"expand/collapse row\" controls), so no panel was hidden. Panel titles exactly as displayed: \"Request rate\", \"Error count\", \"Latency by endpoint\".",
+  "values": {
+   "dashboard_slug": "bench-service-health/service-health",
+   "dashboard_title_in_search": "Service Health",
+   "panel_titles": "Request rate, Error count, Latency by endpoint",
+   "panel_count": "3",
+   "rows_or_tabs": "0",
+   "service_health_href": "/d/bench-service-health/service-health",
+   "dashboard_url": "http://127.0.0.1:3000/d/bench-service-health/service-health?from=now-6h&to=now&timezone=browser",
+   "panel_title_1": "Request rate",
+   "panel_title_2": "Error count",
+   "panel_title_3": "Latency by endpoint"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-12T23:42:58.864Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-13T00:08:38.133Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_bac4f9",
+  "index": 3,
+  "of": 4
+ },
+ "provenance": {
+  "session": "fwgr30-n1",
+  "instruction": "Open http://127.0.0.1:3000/ in the browser. If a login page appears, sign in with username admin and password admin; if a change-password prompt appears afterwards, click Skip. Then find and open the provisioned dashboard named 'Service health' (for example via the Dashboards browse/search page). When it is open, report the exact titles of all its panels exactly as displayed on screen (if the dashboard uses rows or tabs, check every one so no panel is missed), and also report the dashboard's URL.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-12T23:42:58.864Z"
+ },
+ "revision": 4
+}
