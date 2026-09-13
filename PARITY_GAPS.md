@@ -248,6 +248,41 @@ comment at `emit.ts:1566` already acknowledges the asymmetry.
   the last pass where replay accumulates into `res.created` (`replay.ts:538`).
 - Gap 7's real-world frequency.
 
+## Considered, and NOT gaps
+
+Things that look like a rule living in one runner only, and are not. Recorded
+so they are not raised again.
+
+**The step-boundary modal sweep.** `dismissBlockingDialogs` (`server.ts:1766`)
+presses Escape at up to three leftover `[role="dialog"], [aria-modal="true"]`
+modals between steps, and exists only in the daemon — nothing under `src/spec`
+does anything like it. That reads as a gap and is not one: it is gated on
+`prevRecovered` (`server.ts:999`, set at `:1443`), so it fires **only** after a
+step the MODEL recovered. It is debris-from-improvisation hygiene. A compiled
+artifact has no model and no recovery path, so the state it cleans cannot
+arise there; and after a clean structural replay — the only kind an artifact
+performs — the daemon does not sweep either. The two agree on every case the
+artifact can reach.
+
+Note also what the gate protects. After a clean replay the page is in the state
+the recording produced, which is the state the next step was recorded against.
+A modal standing open there may be *expected*, and sweeping it would destroy
+the next step's starting conditions.
+
+**Overlay-covered controls.** `CLICK_TIERS` (`src/agent/tools.ts:1284`) and the
+emitted `click()` (`emit.ts:418`) mirror each other tier for tier — plain click,
+then scroll-and-force past actionability (the overlay tier), then a synthetic
+DOM event. Deliberately built level; the emitted helper's comment says so and
+cites the grafana `toggle-viz-picker` that sat behind an `<svg>` for 60s.
+
+**A modal that appears unexpectedly and blocks an action** is not gap 12. Gap 12
+is an *expected* dialog that is *absent*. An unexpected modal that is *present*
+is the opposite polarity, it is covered by the click tiers above where it merely
+covers the target, and where a step actively mishandles one (odoo fwod37
+`02-create` cancelled a product-configurator modal, which removed the order line
+it had just added) that is model behaviour inside one instruction, not a
+divergence between the runners.
+
 ## A hazard in the harness itself
 
 Several parity cases test an emitted helper by cutting it out of the generated
