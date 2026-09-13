@@ -1,0 +1,246 @@
+{
+  "flow": "fwod37",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_c7016c; observed contact_display_name_after_reload=fwod37-n2 Bench Customer, contact_ref=fwod37-n2, saved_contact_name=fwod37-n2 Bench Customer, saved_city=Benchville, record_url=http://127.0.0.1:8069/web#cids=1&menu_id=109&action=156&model=res.partner&view_type=form&id=45, page_title=Odoo - fwod37-n2 Bench Customer.",
+      "values": {
+        "contact_display_name_after_reload": "fwod37-n2 Bench Customer",
+        "contact_ref": "fwod37-n2",
+        "saved_contact_name": "fwod37-n2 Bench Customer",
+        "saved_city": "Benchville",
+        "record_url": "http://127.0.0.1:8069/web#cids=1&menu_id=109&action=156&model=res.partner&view_type=form&id=45",
+        "page_title": "Odoo - fwod37-n2 Bench Customer"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "failure",
+      "summary": "I reached the Sales app (Quotations list → New), set the customer to 'fwod37-n2 Bench Customer' by picking that option from the customer autocomplete dropdown, and added exactly ONE order line with the product 'Customizable Desk' chosen from the product autocomplete dropdown at quantity 3. The app auto-filled the unit price as £ 750.00 (the price came from the product configurator, which opened because the product is configurable; I confirmed the default variant [FURN_0096] Customizable Desk (Steel, White) at £ 750.00 with qty 3), and the totals area shows Untaxed Amount £ 2,250.00, TAX 20% £ 450.00, Total £ 2,700.00. However, I could NOT confirm the quotation was saved: an earlier Save attempt was blocked by a leftover product-configurator modal overlay, cancelling that modal removed the first order line, and after re-adding the line the form title still read 'New' (URL model=sale.order&view_type=form with no record id). The quotation's name/reference is therefore NOT verified — it may still be unsaved.",
+      "values": {
+        "product_name": "Customizable Desk",
+        "unit_price": "750.00",
+        "quantity": "3.00",
+        "untaxed_amount": "£ 2,250.00",
+        "tax_20_percent": "£ 450.00",
+        "total": "£ 2,700.00",
+        "quotation_name": "not observable (form title read 'New')",
+        "customer": "fwod37-n2 Bench Customer"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "the flow step has no pinned skill",
+      "replayed": null,
+      "repaired": false,
+      "turns": 59
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_9b86be; observed customer=fwod37-n2 Bench Customer (Benchville), product_name= | Customizable Desk | [FURN_0096] Customizable Desk (Steel, White)\n160x80cm, with large legs. | 3.00 | 750.00 | 20% | £ 2,250.00 | , untaxed_amount_row=Untaxed Amount\t£ 2,250.00 | TAX 20%\t\n£ 450.00 | Total\t£ 2,700.00, quotation_reference=S00022, quantity=3.00, unit_price=750.00, taxes=20%, tax_20pct=£ 450.00, total=£ 2,700.00.",
+      "values": {
+        "customer": "fwod37-n2 Bench Customer (Benchville)",
+        "product_name": " | Customizable Desk | [FURN_0096] Customizable Desk (Steel, White)\n160x80cm, with large legs. | 3.00 | 750.00 | 20% | £ 2,250.00 | ",
+        "untaxed_amount_row": "Untaxed Amount\t£ 2,250.00 | TAX 20%\t\n£ 450.00 | Total\t£ 2,700.00",
+        "quotation_reference": "S00022",
+        "quantity": "3.00",
+        "unit_price": "750.00",
+        "taxes": "20%",
+        "tax_20pct": "£ 450.00",
+        "total": "£ 2,700.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_478e23; observed customer_ref=fwod37-n2, new_line_product_name=[FURN_7777] Office Chair, new_line_tax=20%, untaxed_amount_row=Untaxed Amount\t£ 2,390.00 | TAX 20%\t\n£ 478.00 | Total\t£ 2,868.00, quotation_reference=S00022, new_line_unit_price=70.00, new_line_quantity=2.00, new_line_subtotal=£ 140.00, new_untaxed_amount=£ 2,390.00, tax_20pct=£ 478.00, total=£ 2,868.00, first_line_quantity=3.00, first_line_unit_price=750.00, first_line_subtotal=£ 2,250.00, first_line_subtotal_cell=£ 2,250.00, second_line_subtotal_cell=£ 140.00, product_code_office_chair=[FURN_7777] Office Chair, first_line_product=Customizable Desk, product_code_acoustic_screens=Customizable Desk.",
+      "values": {
+        "customer_ref": "fwod37-n2",
+        "new_line_product_name": "[FURN_7777] Office Chair",
+        "new_line_tax": "20%",
+        "untaxed_amount_row": "Untaxed Amount\t£ 2,390.00 | TAX 20%\t\n£ 478.00 | Total\t£ 2,868.00",
+        "quotation_reference": "S00022",
+        "new_line_unit_price": "70.00",
+        "new_line_quantity": "2.00",
+        "new_line_subtotal": "£ 140.00",
+        "new_untaxed_amount": "£ 2,390.00",
+        "tax_20pct": "£ 478.00",
+        "total": "£ 2,868.00",
+        "first_line_quantity": "3.00",
+        "first_line_unit_price": "750.00",
+        "first_line_subtotal": "£ 2,250.00",
+        "first_line_subtotal_cell": "£ 2,250.00",
+        "second_line_subtotal_cell": "£ 140.00",
+        "product_code_office_chair": "[FURN_7777] Office Chair",
+        "first_line_product": "Customizable Desk",
+        "product_code_acoustic_screens": "Customizable Desk"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "29/29",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_e689c1; observed second_line_product=[FURN_7777] Office Chair, untaxed_amount_row=Untaxed Amount\t£ 3,890.00 | TAX 20%\t\n£ 778.00 | Total\t£ 4,668.00, first_line_product=[FURN_0096] Customizable Desk (Steel, White)\n160x80cm, with large legs., breadcrumb=Quotations\nS00022, record_url=http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22, quotation_reference=S00022, first_line_new_quantity=5.00, first_line_unit_price=750.00, first_line_new_subtotal=£ 3,750.00, second_line_quantity=2.00, second_line_unit_price=70.00, second_line_subtotal=£ 140.00, new_untaxed_amount=£ 3,890.00, tax_20pct=£ 778.00, total=£ 4,668.00, first_line_subtotal_cell=£ 3,750.00, second_line_subtotal_cell=£ 140.00, first_line_tax_cell=20%.",
+      "values": {
+        "second_line_product": "[FURN_7777] Office Chair",
+        "untaxed_amount_row": "Untaxed Amount\t£ 3,890.00 | TAX 20%\t\n£ 778.00 | Total\t£ 4,668.00",
+        "first_line_product": "[FURN_0096] Customizable Desk (Steel, White)\n160x80cm, with large legs.",
+        "breadcrumb": "Quotations\nS00022",
+        "record_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22",
+        "quotation_reference": "S00022",
+        "first_line_new_quantity": "5.00",
+        "first_line_unit_price": "750.00",
+        "first_line_new_subtotal": "£ 3,750.00",
+        "second_line_quantity": "2.00",
+        "second_line_unit_price": "70.00",
+        "second_line_subtotal": "£ 140.00",
+        "new_untaxed_amount": "£ 3,890.00",
+        "tax_20pct": "£ 778.00",
+        "total": "£ 4,668.00",
+        "first_line_subtotal_cell": "£ 3,750.00",
+        "second_line_subtotal_cell": "£ 140.00",
+        "first_line_tax_cell": "20%"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "24/24",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_cf1b8a; observed order_heading=S00022, breadcrumb=Quotations > S00022, previous_stage=... | Sales Order | Quotation Sent | Quotation | ... | Quotation, statusbar_text=Sales Order\nQuotation Sent\nQuotation, order_reference=S00022, breadcrumb_text=Quotations\nS00022, statusbar_quotation_sent=Quotation Sent.",
+      "values": {
+        "order_heading": "S00022",
+        "breadcrumb": "Quotations > S00022",
+        "previous_stage": "... | Sales Order | Quotation Sent | Quotation | ... | Quotation",
+        "statusbar_text": "Sales Order\nQuotation Sent\nQuotation",
+        "order_reference": "S00022",
+        "breadcrumb_text": "Quotations\nS00022",
+        "statusbar_quotation_sent": "Quotation Sent"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "07-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_9a0599; observed breadcrumb=Quotations > S00022, statusbar_stages_present=Cancelled | Sales Order | Quotation Sent | Quotation, customer_ref=fwod37-n2, previous_stage=... | Sales Order | Quotation Sent | Quotation | ... | Sales Order, statusbar_text=Cancelled\nSales Order\nQuotation Sent\nQuotation, breadcrumb_2=Quotations\nS00022, current_status_stage=Cancelled, cancelled=true, order_reference=S00022, new_button_visible=Set to Quotation, statusbar_quotation_sent=Quotation Sent.",
+      "values": {
+        "breadcrumb": "Quotations > S00022",
+        "statusbar_stages_present": "Cancelled | Sales Order | Quotation Sent | Quotation",
+        "customer_ref": "fwod37-n2",
+        "previous_stage": "... | Sales Order | Quotation Sent | Quotation | ... | Sales Order",
+        "statusbar_text": "Cancelled\nSales Order\nQuotation Sent\nQuotation",
+        "breadcrumb_2": "Quotations\nS00022",
+        "current_status_stage": "Cancelled",
+        "cancelled": "true",
+        "order_reference": "S00022",
+        "new_button_visible": "Set to Quotation",
+        "statusbar_quotation_sent": "Quotation Sent"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "08-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_95c714; observed breadcrumb=Contacts > fwod37-n2 Bench Customer, customer_ref=fwod37-n2, contact_name_value=fwod37-n2 Bench Customer, contact_city_value=Benchville, breadcrumb_2=Contacts\nfwod37-n2 Bench Customer, contact_record_url=http://127.0.0.1:8069/web#id=45&cids=1&menu_id=109&action=156&model=res.partner&view_type=form.",
+      "values": {
+        "breadcrumb": "Contacts > fwod37-n2 Bench Customer",
+        "customer_ref": "fwod37-n2",
+        "contact_name_value": "fwod37-n2 Bench Customer",
+        "contact_city_value": "Benchville",
+        "breadcrumb_2": "Contacts\nfwod37-n2 Bench Customer",
+        "contact_record_url": "http://127.0.0.1:8069/web#id=45&cids=1&menu_id=109&action=156&model=res.partner&view_type=form"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 7,
+  "total": 8,
+  "repinned": 0,
+  "drift": 2,
+  "driftTickets": [
+    {
+      "flow": "fwod37",
+      "step": "05-open",
+      "skill": "s_e689c1",
+      "atStep": "20",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.getByText('£ 1,475.00', { exact: true })",
+      "fallbackUsed": "page.locator('div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(7)')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22"
+    },
+    {
+      "flow": "fwod37",
+      "step": "08-open",
+      "skill": "s_4149ef",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 0.995,
+      "missedLocator": "page.locator('role=link[name=\"Search Name for: fwod37-n2 Bench Customer\"]')",
+      "fallbackUsed": "page.locator('li.o_menu_item', { hasText: 'Search Name for: fwod37-n2 Bench Customer' }).locator('a')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=res.partner&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#id=45&cids=1&menu_id=109&action=156&model=res.partner&view_type=form"
+    }
+  ],
+  "wallMs": 379032,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 905737,
+    "completionTokens": 13351,
+    "cachedTokens": 851584
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 905737,
+      "completionTokens": 13351,
+      "cachedTokens": 851584
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

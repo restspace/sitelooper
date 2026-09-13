@@ -1,0 +1,104 @@
+{
+ "id": "s_ce58a8",
+ "origin": "http://127.0.0.1:8069",
+ "template": "Open {{v2}} and sign in with username admin and password admin. Then create a new customer (contact) named exactly '{{v1}} Bench Customer' with the City field set to 'Benchville' (fill the Address/city field on the contact form), save it, and verify the saved record shows the name '{{v1}} Bench Customer' and city 'Benchville'. Report what you observed on the saved record. Note: the app long-polls so never wait for network idle; wait for concrete page state instead.",
+ "params": {
+  "v1": {
+   "example": "fwod37-n1",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "http://127.0.0.1:8069/",
+   "usedIn": [
+    1
+   ]
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8069/"
+ },
+ "steps": [
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v2}}"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e12",
+    "value": "admin"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Email"
+     },
+     {
+      "kind": "label",
+      "label": "Email"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Email"
+     },
+     {
+      "kind": "id",
+      "selector": "#login"
+     },
+     {
+      "kind": "css",
+      "selector": "#login"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 200,
+      "w": 268,
+      "h": 35,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web/login",
+    "addedContains": [
+     "- textbox \"Email\": {{*}}"
+    ]
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-12T23:43:19.354Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-13T00:00:51.887Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_b73a38",
+  "index": 0,
+  "of": 6
+ },
+ "provenance": {
+  "session": "fwod37-n1",
+  "instruction": "Open http://127.0.0.1:8069/ and sign in with username admin and password admin. Then create a new customer (contact) named exactly 'fwod37-n1 Bench Customer' with the City field set to 'Benchville' (fill the Address/city field on the contact form), save it, and verify the saved record shows the name 'fwod37-n1 Bench Customer' and city 'Benchville'. Report what you observed on the saved record. Note: the app long-polls so never wait for network idle; wait for concrete page state instead.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-12T23:43:19.354Z"
+ },
+ "revision": 3
+}
