@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadFlowFile, type Flow } from '../skills/flow.js';
-import { SkillStore, type Skill } from '../skills/store.js';
+import { SKILL_CONTRACT, SkillStore, contractOf, contractVerdict, type Skill } from '../skills/store.js';
 
 export interface CompilerProvenance {
   name: 'sitelooper';
@@ -52,6 +52,22 @@ export function loadFlowBundle(file: string): FlowBundle {
     throw new Error(`cannot read procedure snapshot ${JSON.stringify(file)}: ${err instanceof Error ? err.message : String(err)}`);
   }
   if (!isFlowBundle(parsed)) throw new Error(`${JSON.stringify(file)} is not a Sitelooper procedure snapshot`);
+  // BundleSkillStore serves its procedures from this array and never goes
+  // through SkillStore's reader, so the contract check has to happen at the
+  // boundary. Throwing beats filtering: a silently dropped entry surfaces
+  // later as a missing-procedure diagnostic, which blames the snapshot for
+  // being incomplete when the real answer is that it is too new to read.
+  //
+  // The snapshot's own schemaVersion is a separate question and stays 1: a v1
+  // snapshot may legitimately carry procedures of any contract.
+  const tooNew = parsed.skills.filter((s) => !contractVerdict(s).ok);
+  if (tooNew.length) {
+    const shown = tooNew.slice(0, 3).map((s) => `${s.id} (contract ${contractOf(s)})`).join(', ');
+    throw new Error(
+      `${JSON.stringify(file)} holds ${tooNew.length} procedure(s) this build cannot run — ` +
+        `${shown}${tooNew.length > 3 ? ', …' : ''}; this build reads up to contract ${SKILL_CONTRACT}. Upgrade sitelooper.`,
+    );
+  }
   return parsed;
 }
 

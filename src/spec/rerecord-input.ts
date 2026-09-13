@@ -100,7 +100,10 @@ export function stageRerecordInput(input: RerecordInput, patchedFlow: Flow): Sta
   const workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'sitelooper-rerecord-'));
   const skillsDir = path.join(workspace, 'skills');
   const store = new SkillStore(skillsDir);
-  for (const skill of input.skills ?? []) store.put(skill);
+  // Importing into a brand-new temp store, from procedures that may carry a
+  // revision belonging to whatever store exported them. Comparing those
+  // numbers against this one's would be comparing two unrelated histories.
+  for (const skill of input.skills ?? []) store.put(skill, { overwrite: true });
   const flowFile = saveFlow(patchedFlow, path.join(workspace, `${safeName(patchedFlow.name)}.json`));
   return { flowFile, skillsDir, store, workspace };
 }

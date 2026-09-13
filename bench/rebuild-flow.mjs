@@ -39,6 +39,7 @@
  * how many cross-step references a flow carries, what each step publishes,
  * and how many record identities are still frozen in as literals.
  */
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -309,6 +310,25 @@ for (const { runid, file } of sessions()) {
 
   const startUrl = startUrlOf(entries);
   const rebuilt = storeFrom(entries, { runid }, valuesByInstruction);
+  // C06. The identity markers each recording compiles to, with the value each
+  // slot stands for. A url pattern and a page fingerprint match EVERY record of
+  // a template, so `preconditions.requireText` is the only thing that can say
+  // "this is the right record" — and nothing else in this fingerprint touches
+  // it, which made a change to identityOf invisible here. A marker that
+  // DISAPPEARS under a tightening is one that only ever appeared EXTENDED at
+  // recording time, and that is exactly what has to be listed and explained.
+  run.markers = rebuilt.all().flatMap((s) =>
+    (s.preconditions?.requireText ?? []).map((m) => {
+      const filled = m.replace(/\{\{(\w+)\}\}/g, (_, n) => s.params?.[n]?.example ?? `{{${n}}}`);
+      // Keyed by a hash of the TEMPLATE, not by the skill id: an id hashes the
+      // compile's `created` stamp (store.ts), so it differs between two runs of
+      // this script for reasons that have nothing to do with the code under
+      // test. A hash rather than the template itself because a template is a
+      // whole instruction — unreadable in a pinned baseline.
+      const key = crypto.createHash('sha1').update(s.template).digest('hex').slice(0, 6);
+      return `${key}:${m}${filled === m ? '' : ` = ${JSON.stringify(filled)}`}`;
+    }),
+  );
   const store = recompile ? rebuilt : published;
   // REBUILD_STORE_DIR=<dir>: persist the recompiled skills as a real store, so
   // a recording can be re-exported with the current engine and REPLAYED
@@ -409,6 +429,8 @@ const summary = {
     // of a step is the kind of move this gate is for.
     flowSteps: r.flow?.steps ?? null,
     adoptedSteps: r.flow ? r.flow.adopted.length : null,
+    // The identity gate itself, not just what the flow wires together.
+    markers: r.markers ?? [],
   })),
 };
 console.log(`\n${JSON.stringify(summary, null, 2)}`);
@@ -434,6 +456,8 @@ if (writeBaseline && baselineFile) {
     for (const k of ['instructions', 'withModelNames', 'wouldAsk', 'crossStepRefs', 'stepsPublishing', 'flowSteps', 'adoptedSteps']) {
       if (w[k] !== g[k]) console.log(`  ${w.runid}.${k}: ${w[k]} -> ${g[k]}`);
     }
+    for (const m of w.markers ?? []) if (!(g.markers ?? []).includes(m)) console.log(`  ${w.runid}.markers LOST: ${m}`);
+    for (const m of g.markers ?? []) if (!(w.markers ?? []).includes(m)) console.log(`  ${w.runid}.markers GAINED: ${m}`);
   }
   process.exit(1);
 }

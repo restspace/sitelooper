@@ -267,6 +267,7 @@ const ALLOWLIST: Record<string, { hits: string[]; answers: string }> = {
     answers: 'substitute\'s numeric branch: tokenPattern plus the nth-index and dotted-number guards',
   },
   'src/skills/relabel.ts': { hits: ['[a-zA-Z0-9_]{0'], answers: 'validates an output name (syntax)' },
+  'src/skills/store.ts': { hits: ['[a-z0-9+.-]*'], answers: 'parses a url scheme so originSlug keeps http and https apart (syntax)' },
   'src/spec/emit.ts': {
     hits: ['[A-Za-z0-9_$]*', '[A-Za-z0-9_$]*', '[A-Za-z0-9_]*', '[A-Za-z0-9_]*'],
     answers: 'JS identifier and {{env:NAME}} syntax in generated code',

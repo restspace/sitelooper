@@ -19,6 +19,7 @@ import { BrowserSession } from '../src/daemon/browser.js';
 import { SessionState } from '../src/daemon/state.js';
 import { compileSkill, compileSkills } from '../src/skills/compile.js';
 import { learnFromInstruction } from '../src/skills/learn.js';
+import { goalSatisfied } from '../src/skills/replay.js';
 import type { Skill } from '../src/skills/store.js';
 
 const enabled = process.env.BP_BROWSER_TESTS === '1';
@@ -204,34 +205,128 @@ d('skill replay (fixture page)', () => {
   }, 30_000);
 
   /**
-   * A React control re-mounted between frames can swallow the click that
-   * landed on its old node. A click that changed NOTHING while the recording
-   * shows an effect is retried once after the DOM settles; a click that
-   * changed anything is never repeated.
+   * C06. "Is this record already in the goal state?" was answered by looking
+   * for the identity anywhere on the page and the goal anywhere on the page.
+   * On a list those are two different records: an orders grid showing S00039
+   * Pending and S00040 Cancelled satisfied "cancel S00039", and the cancel
+   * step was skipped as already done. The url gate cannot separate them —
+   * a list has one url — so the two must hold inside one record's own scope.
    */
-  it('retries once a click that produced no change at all', async () => {
+  it('does not satisfy a goal from another record on the same list', async () => {
+    const page = await session.getPage();
+    await page.goto(fixtureUrl);
+    await page.evaluate(() => {
+      const table = document.createElement('table');
+      table.innerHTML =
+        '<tbody>' +
+        '<tr><td>S00039</td><td>Pending</td></tr>' +
+        '<tr><td>S00040</td><td>Cancelled</td></tr>' +
+        '</tbody>';
+      table.id = 'orders';
+      document.body.append(table);
+    });
+    const listSkill = (identity: string[]) => ({
+      preconditions: { urlPattern: fixtureUrl, requireText: identity },
+      goal: { requireText: ['Cancelled'] },
+    });
+
+    // S00039 is Pending; only S00040 is Cancelled. Not satisfied.
+    expect(await goalSatisfied(page, listSkill(['{{v1}}']), { v1: 'S00039' })).toEqual({ satisfied: false, shown: [] });
+    // S00040 genuinely is cancelled, in its own row.
+    expect(await goalSatisfied(page, listSkill(['{{v1}}']), { v1: 'S00040' })).toEqual({ satisfied: true, shown: ['Cancelled'] });
+
+    // A detail page is not a list: identity and goal share no small container,
+    // and page-wide agreement is the right answer there.
+    await page.evaluate(() => {
+      document.getElementById('orders')?.remove();
+      const h = document.createElement('h2');
+      h.textContent = 'Order S00039';
+      // A status control, as odoo's status bar renders it — the signature
+      // only carries elements with a role.
+      const status = document.createElement('button');
+      status.type = 'button';
+      status.textContent = 'Cancelled';
+      document.body.append(h, status);
+    });
+    expect(await goalSatisfied(page, listSkill(['{{v1}}']), { v1: 'S00039' })).toEqual({ satisfied: true, shown: ['Cancelled'] });
+  }, 30_000);
+
+  /**
+   * C04. A recorded dialog that does not open is legitimate conditional UI,
+   * and the steps that were going to act INSIDE it are skipped. What used to
+   * happen as well: the flag was sticky and membership was inferred from a
+   * target simply being missing, so the first later step whose locator had
+   * genuinely broken was skipped too — silently dropping required work and
+   * still reporting ok. Membership is now proven against the dialog's own
+   * recorded controls.
+   */
+  it('skips only the absent dialog\'s own controls, and fails an unrelated missing step', async () => {
+    const page = await session.getPage();
+    await page.goto(fixtureUrl);
+    // "Discard changes?" never opens (nothing is unsaved), so neither its
+    // Cancel button nor the unrelated "Archive" control exist on the page.
+    const skill: Skill = {
+      ...clickSkill('s_absent', []),
+      steps: [
+        {
+          tool: 'click',
+          args: { target: '@e1' },
+          locators: { target: [{ kind: 'role', role: 'button', name: 'Submit' }] },
+          expect: { urlPattern: fixtureUrl, addedContains: ['- dialog "Discard changes?"', '- button "Cancel"'] },
+        },
+        {
+          tool: 'click',
+          args: { target: '@e2' },
+          locators: { target: [{ kind: 'role', role: 'button', name: 'Cancel' }] },
+        },
+        {
+          tool: 'click',
+          args: { target: '@e3' },
+          locators: { target: [{ kind: 'role', role: 'button', name: 'Archive' }] },
+        },
+      ],
+    } as Skill;
+    session.learn!.put(skill);
+    const out = await run('run_skill', { id: skill.id, params: {} });
+    session.learn!.remove(skill.id);
+
+    // Cancel belongs to the dialog: skipped. Archive does not: the replay stops.
+    expect(out.replay?.warnings.some((w) => /"Cancel".*control of the dialog/.test(w))).toBe(true);
+    expect(out.replay?.ok).toBe(false);
+    expect(out.replay?.failedAt).toBe(3);
+    expect(out.replay?.warnings.some((w) => /names nothing that dialog contained/.test(w))).toBe(true);
+  }, 30_000);
+
+  /**
+   * C05. A click that produced no visible change used to be retried once, on
+   * the theory that it had landed on a node React was replacing. But "the
+   * page did not change" is indistinguishable from "the mutation committed
+   * and its effect fell outside the diff window" — so the retry was a second
+   * dispatch of an operation that may already have happened. The button here
+   * COUNTS its clicks and never renders the recorded effect: the replay must
+   * stop with the effect unmet, having dispatched exactly once.
+   */
+  it('does not re-dispatch a click whose effect it could not see', async () => {
     const page = await session.getPage();
     await page.goto(fixtureUrl);
     await page.evaluate(() => {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.textContent = 'Flaky';
-      let clicks = 0;
-      btn.addEventListener('click', () => {
-        if (++clicks < 2) return; // the first click lands on a node React is replacing
-        const h = document.createElement('h2');
-        h.textContent = 'Opened';
-        document.body.append(h);
-      });
+      (window as unknown as { commits: number }).commits = 0;
+      // The mutation commits server-side every time; the page shows nothing.
+      btn.addEventListener('click', () => { (window as unknown as { commits: number }).commits += 1; });
       document.body.append(btn);
     });
     const skill = clickSkill('s_flaky', [{ name: 'Flaky', role: 'button', added: ['- heading "Opened"'] }]);
     session.learn!.put(skill);
     const out = await run('run_skill', { id: skill.id, params: {} });
     session.learn!.remove(skill.id);
-    expect(out.replay?.ok).toBe(true);
-    expect(out.replay?.warnings.some((w) => /retried once/.test(w))).toBe(true);
-    expect(await page.locator('h2', { hasText: 'Opened' }).count()).toBe(1);
+    expect(out.replay?.ok).toBe(false);
+    expect(out.replay?.reason).toMatch(/did not have its recorded effect/);
+    expect(out.replay?.acted).toBe(true);
+    expect(out.replay?.warnings.some((w) => /retried once/.test(w))).toBe(false);
+    expect(await page.evaluate(() => (window as unknown as { commits: number }).commits)).toBe(1);
   }, 30_000);
 
   /**

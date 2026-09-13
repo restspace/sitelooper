@@ -217,7 +217,29 @@ for (let n = own.from ? 2 : 1; n <= own.k; n++) {
         const r = rates[fr.provider]?.[fr.recoveryModel];
         if (r) usd = ((fr.usage.promptTokens - fr.usage.cachedTokens) * r.input + fr.usage.cachedTokens * (r.cacheRead ?? r.input) + fr.usage.completionTokens * r.output) / 1e6;
       }
-      row = { ...row, stop: fr.status, cmds: fr.total, turns: fr.steps.reduce((a, s) => a + (s.turns ?? 0), 0), total_usd: +usd.toFixed(4), wall_s: +(fr.wallMs / 1000).toFixed(0), A_n: 1, replayed: `${fr.passed}/${fr.total} (flow)` };
+      // A_n is the DETERMINISTIC fraction, so it has to be counted, not
+      // assumed. It was hardcoded to 1 on this path, which made the column a
+      // constant: fwod37's replays reported A_n=1 while 02-create had no
+      // pinned skill at all and paid the model 60 turns on every single run,
+      // and fwgr30's genuinely model-free replays reported the same 1. A step
+      // is deterministic here when it replayed without spending a turn.
+      const free = fr.steps.filter((s) => (s.turns ?? 0) === 0).length;
+      row = {
+        ...row,
+        stop: fr.status,
+        cmds: fr.total,
+        turns: fr.steps.reduce((a, s) => a + (s.turns ?? 0), 0),
+        total_usd: +usd.toFixed(4),
+        wall_s: +(fr.wallMs / 1000).toFixed(0),
+        A_n: fr.steps.length ? +(free / fr.steps.length).toFixed(2) : '',
+        replayed: `${fr.passed}/${fr.total} (flow)`,
+      };
+      // A step with no procedure is the expensive kind of miss: it is not a
+      // repair or a drifted locator, it is work the recording never captured,
+      // so every replay pays full price for it forever.
+      for (const s of fr.steps.filter((s) => /no pinned skill/.test(s.fellBack ?? ''))) {
+        console.error(`[sweep] ${runid}: ${s.id} has no pinned skill — ${s.turns ?? 0} model turn(s), on every replay`);
+      }
     } catch (err) {
       console.error(`[sweep] no flowrun for ${runid}: ${err.message}`);
     }

@@ -148,6 +148,12 @@ export interface SkillRecord {
   similarity: number | null;
   /** Structured locator misses from the replay (drift telemetry). */
   misses?: import('../skills/replay.js').LocatorMiss[];
+  /**
+   * Steps whose effect evidence could not be captured (ReplayResult.unobserved).
+   * The run may still have been right; what it cannot be is PROOF, so it does
+   * not count towards promoting the procedure.
+   */
+  unobserved?: string[];
   /** Why the replay stopped, when it did (drift telemetry). */
   failReason?: string;
   /** 1-based skill step the replay failed at, when it did. */
@@ -1022,6 +1028,7 @@ function accountActions(skill: SkillRecord, name: string, args: Record<string, u
       skill.fallthroughs = r.fallthroughs;
       skill.similarity = r.similarity;
       if (r.misses.length) skill.misses = r.misses;
+      if (r.unobserved.length) skill.unobserved = r.unobserved;
       if (r.reason) skill.failReason = r.reason;
       if (r.failedAt !== undefined) skill.failedAt = r.failedAt;
       skill.replayUrl = r.url;

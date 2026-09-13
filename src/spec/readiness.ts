@@ -136,6 +136,17 @@ export function runReadinessCheck(o: ReadinessOptions, check: typeof runSpecChec
   if (source.split(/\r?\n/).some((line) => line.trim().startsWith('// TODO:') && !line.trim().startsWith('// TODO: dropped the recorded position fallback'))) {
     report.blockers.push('Compiled source contains unresolved or unsupported actions');
   }
+  // A step that runs without checking its own effect passes for a reason
+  // that has nothing to do with the app being right, and three green runs of
+  // it are three runs of nothing. Readiness is the claim that the artifact
+  // was executed AND verified, so an unverifiable step blocks the claim
+  // rather than quietly lowering what it is worth.
+  const unchecked = source.split(/\r?\n/).filter((line) => line.trim().startsWith('// UNCHECKED:')).length;
+  if (unchecked) {
+    report.blockers.push(
+      `${unchecked} step(s) have a required expectation the compiler could not express, so the artifact does not verify their effect — re-record those steps or assert the outcome in your own spec`,
+    );
+  }
   if (!o.resetCmd && !o.fixtureIsolation) report.blockers.push('Supply resetCmd or declare fixtureIsolation so every run prepares fresh state');
   if (o.isolated) report.blockers.push('An isolated compiler smoke test cannot establish project readiness');
   const datasets = Array.from({ length: Number.isInteger(count) && count > 0 && count < 1000 ? count : 0 }, (_, i) => {

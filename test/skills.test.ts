@@ -10,12 +10,12 @@ import { digitDominant } from '../src/skills/shape.js';
 import { volatileMatcher } from '../src/shared/text.js';
 import { recordCandidateEvidence, retired } from '../src/skills/repair.js';
 import { SkillStore } from '../src/skills/store.js';
-import { coalesceControls, compileSkill, dropDeadReadLocators, dropDismissedDialogs, dropSupersededNavigation, compileSkills, discoverSlots, fillParams, fillParamsDeep, foldLoops, sameProcedure, softUrlMatch, stableFirst, substitute, substituteUrlParts, urlDiff, urlMatches, urlParts, urlPattern } from '../src/skills/compile.js';
+import { type TransformNote, coalesceControls, compileSkill, dropDeadReadLocators, dropDismissedDialogs, dropSupersededNavigation, compileSkills, discoverSlots, fillParams, fillParamsDeep, foldLoops, sameProcedure, softUrlMatch, stableFirst, substitute, substituteUrlParts, urlDiff, urlMatches, urlParts, urlPattern } from '../src/skills/compile.js';
 import type { LocatorCandidate } from '../src/daemon/recorder.js';
 import type { SkillStep } from '../src/skills/store.js';
 import { bindSkill, canAdoptPin, learnFromInstruction, matchTemplate, publishedOutputs, selectCandidates, synthesizeReport } from '../src/skills/learn.js';
 import { candidatesFor, renderCandidates } from '../src/skills/replay.js';
-import { SkillStore, originOf, originSlug, type Skill } from '../src/skills/store.js';
+import { SKILL_CONTRACT, SITEMAP_FILE, SkillStore, contractOf, isVerified, originOf, originSlug, type Skill } from '../src/skills/store.js';
 
 let tmp: string;
 beforeAll(() => {
@@ -144,6 +144,38 @@ describe('volatile expectations and whitespace identity (fwkb3, fwod31)', () => 
     expect(lineShows(live, ['Ready'])).toBe(false);
     // a wildcard never spans lines
     expect(lineShows(['- a "x"', '- b "y"'], ['- a "{{*}}b "y"'])).toBe(false);
+  });
+  /**
+   * C06. An identity marker is the ONLY thing that can tell ticket t15 from
+   * t14 — the url pattern and the fingerprint match every record of the
+   * template, and the url gate hands the decision here precisely when the id
+   * segment disagrees. Matched by substring it decides nothing: `fwgr25-n1` is
+   * satisfied by `fwgr25-n10`, and a bare runid is the commonest marker shape
+   * in the published stores. So `whole` bounds both edges at a letter/digit.
+   */
+  it('lineShows({whole}) matches an identity marker only at a letter/digit boundary', () => {
+    const whole = { whole: true };
+    expect(lineShows(['- cell "312"'], ['12'], whole)).toBe(false);
+    expect(lineShows(['- cell "312"'], ['12'])).toBe(true); // the substring rule is unchanged for everyone else
+    expect(lineShows(['- row "Order 12 Pending"'], ['Order 12'], whole)).toBe(true);
+    expect(lineShows(['- link "INV-2024/170"'], ['INV-2024/17'], whole)).toBe(false);
+    // punctuation is not a letter or a digit, so it never needs a separator
+    expect(lineShows(['- link "(INV-2024/17)"'], ['INV-2024/17'], whole)).toBe(true);
+    expect(lineShows(['- cell "part /17 of 20"'], ['/17'], whole)).toBe(true);
+    expect(lineShows(['- cell "Smithers"'], ['Smith'], whole)).toBe(false);
+    expect(lineShows(['- cell "Smith\'s"'], ['Smith'], whole)).toBe(true);
+    // \p{L} with the u flag, or a non-ASCII letter would read as a boundary
+    expect(lineShows(['- heading "Ångström"'], ['Ångström'], whole)).toBe(true);
+    expect(lineShows(['- heading "Ångströms"'], ['Ångström'], whole)).toBe(false);
+    expect(lineShows(['- cell "田中太郎"'], ['田中'], whole)).toBe(false);
+    expect(lineShows(['- cell "田中 太郎"'], ['田中'], whole)).toBe(true);
+    // the real shape: a neighbouring record whose id extends this run's
+    expect(lineShows(['- row "fwgr25-n10 Bench Customer"'], ['fwgr25-n1'], whole)).toBe(false);
+    expect(lineShows(['- row "fwgr25-n1 Bench Customer"'], ['fwgr25-n1'], whole)).toBe(true);
+    // case-insensitive, and still whitespace-insensitive and wildcard-aware
+    expect(lineShows(['- row "RD-1015"'], ['rd-1015'], whole)).toBe(true);
+    expect(lineShows(['- heading "Bench   Board"'], ['Bench Board '], whole)).toBe(true);
+    expect(lineShows(['- textbox "09/03/2026 07:31": 2026-12-31'], ['- textbox "{{*}} {{*}}": 2026-12-31'], whole)).toBe(true);
   });
   it('re-inlines a slot that survives only in an expectation: no orphan marker, no phantom param (fwgr23 05-open)', () => {
     // '125.00' is a run value the instruction only names inside '£125.00', so
@@ -617,7 +649,73 @@ describe('foldLoops', () => {
     expect(folded[0].tool).toBe('loop');
     expect(folded[0].body).toHaveLength(2);
     expect(folded[0].while?.[0]).toMatchObject({ kind: 'role', name: 'Delete' });
-    expect(folded[0].max).toBe(2 * 2 + 3);
+  });
+
+  /**
+   * C07. Folding compresses a repetition; it does not confer authority over
+   * records nobody looked at. Two deletions used to become a loop capped at
+   * seven, so a list of ten came back with three rows left — and, before the
+   * execution fixes, called that a success. Scope now comes from the caller's
+   * own words, and the default is the work that was observed.
+   */
+  it('bounds a folded loop to the observed work unless the instruction quantifies', () => {
+    const steps = [...deleteGroup('p18'), ...deleteGroup('p19')];
+
+    const bounded = foldLoops(steps, 'delete part p18 and part p19');
+    expect(bounded[0].scope).toBe('observed');
+    expect(bounded[0].max).toBe(2); // two records seen, two records worked
+
+    for (const instruction of ['delete all the parts', 'remove every part', 'delete each part', 'clear the entire parts list']) {
+      const drained = foldLoops(steps, instruction);
+      expect(drained[0].scope, instruction).toBe('drain');
+      expect(drained[0].max, instruction).toBe(2 * 2 + 3);
+    }
+
+    // No instruction at all is not a licence either.
+    expect(foldLoops(steps)[0].scope).toBe('observed');
+  });
+
+  /**
+   * Rebuilding every published recording folded five loops, and the only one
+   * this rule sent to `drain` was wrong: an Odoo instruction that says there
+   * are exactly TWO stacked dialogs, numbers the steps, and then refers to
+   * "the remaining modal". A definite article in front of a singular noun is
+   * not a quantifier over a collection.
+   */
+  /**
+   * Every transform here deletes or rewrites steps the recording actually
+   * made, on evidence that is never conclusive. Until the reason was written
+   * down, the only way to see what had fired was to recompile every published
+   * recording under two builds and diff the stores — which is how the "the
+   * remaining modal" misreading above was found, and it took 23 rebuilds.
+   */
+  it('says what it folded and which word authorised the scope', () => {
+    const steps = [...deleteGroup('p18'), ...deleteGroup('p19')];
+
+    const bounded: TransformNote[] = [];
+    foldLoops(steps, 'delete part p18 and part p19', bounded);
+    expect(bounded).toHaveLength(1);
+    expect(bounded[0]).toMatchObject({ name: 'foldLoops', at: 1 });
+    expect(bounded[0].reason).toMatch(/bounded to those 2, because the instruction quantifies nothing/);
+
+    const drained: TransformNote[] = [];
+    foldLoops(steps, 'remove every part from the list', drained);
+    // The quantifier is NAMED, which is the whole point: "because the
+    // instruction said \"every\"" is reviewable, "drain" is not.
+    expect(drained[0].reason).toMatch(/DRAIN the collection, because the instruction said "every"/);
+
+    // A fold that does not happen claims nothing.
+    const none: TransformNote[] = [];
+    foldLoops([deleteGroup('p18')[0]], 'delete every part', none);
+    expect(none).toEqual([]);
+  });
+
+  it('reads "the remaining X" as one named thing, not as a quantifier', () => {
+    const steps = [...deleteGroup('p18'), ...deleteGroup('p19')];
+    expect(foldLoops(steps, 'close the topmost dialog, then the remaining modal')[0].scope).toBe('observed');
+    // Without the article it still quantifies, and so does "any remaining".
+    expect(foldLoops(steps, 'delete remaining rows')[0].scope).toBe('drain');
+    expect(foldLoops(steps, 'delete any remaining rows')[0].scope).toBe('drain');
   });
 
   it('does NOT fold distinct form fields that merely share a role', () => {
@@ -829,8 +927,200 @@ describe('SkillStore', () => {
     expect(store.origins()).toEqual([ORIGIN]);
     expect(store.remove(s.id)).toBe(true);
     expect(store.all()).toEqual([]);
-    expect(originSlug('http://127.0.0.1:4180')).toBe('127.0.0.1_4180');
     expect(originOf('file:///C:/x.html')).toBe('file://');
+  });
+
+  /**
+   * C03. Promotion is a claim that the procedure has been SEEN to work. A
+   * replay whose effect evidence could not be captured is neither a success
+   * nor a strike: its required expectations were still checked against the
+   * live page, so it is not a failure, but nobody watched it do anything, so
+   * it cannot be one of the two clean replays that promote.
+   */
+  it('does not promote on a replay whose evidence could not be observed', () => {
+    const store = new SkillStore(path.join(tmp, 'unobserved'));
+    const s = mk('prove me');
+    store.put(s);
+
+    const before = s.stats.successes; // one from the recording itself
+    const blind = store.recordOutcome(s.id, { ok: true, instructionSucceeded: true, unobserved: 2 })!;
+    expect(blind.status).toBe('provisional');
+    expect(blind.stats.successes).toBe(before); // did not advance promotion
+    expect(blind.stats.uses).toBe(2); // but it did happen, and is counted
+    expect(blind.stats.unobserved).toBe(2);
+    expect(blind.stats.partial).toBe(0); // and is not a strike: nothing failed
+
+    // The next genuinely observed replay promotes, on its own merit.
+    const promoted = store.recordOutcome(s.id, { ok: true, instructionSucceeded: true })!;
+    expect(promoted.status).toBe('validated');
+    expect(promoted.stats.successes).toBe(before + 1);
+    expect(promoted.stats.unobserved).toBe(2);
+  });
+
+  /**
+   * C09. The slug dropped the scheme, so http and https on the same host
+   * shared one store file and each was offered the other's procedures.
+   */
+  it('keeps http and https on one host in separate stores', () => {
+    expect(originSlug('http://127.0.0.1:4180')).toBe('http_127.0.0.1_4180');
+    expect(originSlug('https://app.example.com')).toBe('https_app.example.com');
+    expect(originSlug('http://app.example.com')).not.toBe(originSlug('https://app.example.com'));
+    expect(originSlug('file://')).toBe('file');
+
+    const store = new SkillStore(path.join(tmp, 'schemes'));
+    const insecure = { ...mk('over http'), id: 's_http', origin: 'http://app.example.com' };
+    const secure = { ...mk('over https'), id: 's_https', origin: 'https://app.example.com' };
+    store.put(insecure);
+    store.put(secure);
+    expect(store.list('http://app.example.com').map((s) => s.id)).toEqual(['s_http']);
+    expect(store.list('https://app.example.com').map((s) => s.id)).toEqual(['s_https']);
+    expect(store.origins().sort()).toEqual(['http://app.example.com', 'https://app.example.com']);
+  });
+
+  /**
+   * C09. Two writers adding different procedures to one origin used to race
+   * through a whole-file array: each read the list before the other's write
+   * and the later rename dropped the earlier record. A file per procedure
+   * means the two writes never touch the same bytes.
+   */
+  it('does not lose a concurrent write of a different procedure', () => {
+    const store = new SkillStore(path.join(tmp, 'concurrent'));
+    const a = { ...mk('first'), id: 's_a' };
+    const b = { ...mk('second'), id: 's_b' };
+    // Both writers read the same (empty) state before either writes.
+    const writerA = new SkillStore(store.dir);
+    const writerB = new SkillStore(store.dir);
+    expect(writerA.list(ORIGIN)).toEqual([]);
+    expect(writerB.list(ORIGIN)).toEqual([]);
+    writerA.put(a);
+    writerB.put(b);
+    expect(store.list(ORIGIN).map((s) => s.id).sort()).toEqual(['s_a', 's_b']);
+  });
+
+  /**
+   * C09. A file that will not parse is not an empty store. Reporting it as
+   * one let the next write replace the evidence with a valid empty list.
+   */
+  it('reports a corrupt procedure file instead of reading it as absent', () => {
+    const dir = path.join(tmp, 'corrupt');
+    const store = new SkillStore(dir);
+    store.put(mk('good'));
+    const bad = path.join(dir, originSlug(ORIGIN), 'broken.json');
+    fs.writeFileSync(bad, '{ not json');
+    const reader = new SkillStore(dir);
+    expect(reader.list(ORIGIN).map((s) => s.template)).toEqual(['good']);
+    expect(reader.corrupt).toEqual([bad]);
+    expect(fs.readFileSync(bad, 'utf8')).toBe('{ not json');
+  });
+
+  /**
+   * A sitemap lives in the origin directory, parses cleanly and carries an
+   * origin but no id — so the shape gate filed it as corrupt on every read,
+   * for every origin anyone had ever browsed. A permanent entry on a list
+   * whose whole purpose is "this is a thing to look at".
+   */
+  it('does not mistake the sitemap beside the procedures for a corrupt one', () => {
+    const dir = path.join(tmp, 'sibling');
+    const store = new SkillStore(dir);
+    store.put(mk('good'));
+    fs.writeFileSync(path.join(dir, originSlug(ORIGIN), SITEMAP_FILE), JSON.stringify({ version: 1, origin: ORIGIN, pages: {} }));
+    const reader = new SkillStore(dir);
+    expect(reader.list(ORIGIN).map((s) => s.template)).toEqual(['good']);
+    expect(reader.corrupt).toEqual([]);
+  });
+
+  /**
+   * Invariant 8. A procedure from a build that reads further than this one
+   * may use fields this engine has never heard of — or, worse because it is
+   * silent, fields it knows by name and reads differently. It is intact and
+   * it is not ours to run.
+   */
+  it('refuses a procedure written by a newer build, and says so rather than dropping it', () => {
+    const dir = path.join(tmp, 'future');
+    const store = new SkillStore(dir);
+    store.put(mk('ours'));
+    const theirs = { ...mk('theirs'), id: 's_future', contract: SKILL_CONTRACT + 1 };
+    fs.writeFileSync(path.join(dir, originSlug(ORIGIN), 's_future.json'), JSON.stringify(theirs, null, 1));
+
+    const reader = new SkillStore(dir);
+    expect(reader.list(ORIGIN).map((s) => s.id)).toEqual([store.all()[0].id]);
+    expect(reader.get('s_future')).toBeNull();
+    // Not corrupt — it parsed perfectly. A separate channel, and one that
+    // names the version, because "not found" would send someone looking for
+    // a file that is sitting right there.
+    expect(reader.corrupt).toEqual([]);
+    expect(reader.unreadable).toHaveLength(1);
+    expect(reader.unreadable[0]).toMatchObject({ id: 's_future', contract: SKILL_CONTRACT + 1 });
+    expect(reader.unreadable[0].why).toMatch(new RegExp(`contract ${SKILL_CONTRACT + 1}`));
+  });
+
+  /**
+   * The other half of invariant 8: a procedure promoted by an older engine
+   * was promoted by rules this one no longer follows (it could retry a click,
+   * skip a step whose dialog was absent, pass a gate it never observed). The
+   * status stands in the file as a true record; it is simply not evidence
+   * about this engine until re-earned.
+   */
+  it('does not treat a validated status from an older contract as verification', () => {
+    const current: Skill = { ...mk('current'), contract: SKILL_CONTRACT, status: 'validated' };
+    current.stats = { ...current.stats, verifiedContract: SKILL_CONTRACT };
+    expect(isVerified(current)).toBe(true);
+
+    // Legacy: no contract, no verifiedContract — reads as 1 and 1, so its own
+    // validation is intact. Nothing retroactively distrusts old stores.
+    const legacy: Skill = { ...mk('legacy'), status: 'validated' };
+    expect(contractOf(legacy)).toBe(1);
+    expect(isVerified(legacy)).toBe(true);
+
+    // Promoted under 1, carried into a procedure now written at 2.
+    const stale: Skill = { ...mk('stale'), contract: SKILL_CONTRACT, status: 'validated' };
+    stale.stats = { ...stale.stats, verifiedContract: 1 };
+    expect(isVerified(stale)).toBe(false);
+    // ...and the file is untouched by that judgement.
+    expect(stale.status).toBe('validated');
+    expect(stale.stats.successes).toBe(1);
+  });
+
+  it('stamps the contract that earned a promotion', () => {
+    const store = new SkillStore(path.join(tmp, 'earned'));
+    const s = { ...mk('promote me'), contract: SKILL_CONTRACT };
+    delete s.stats.verifiedContract;
+    store.put(s);
+    const after = store.recordOutcome(s.id, { ok: true, instructionSucceeded: true });
+    expect(after?.status).toBe('validated');
+    expect(after?.stats.verifiedContract).toBe(SKILL_CONTRACT);
+    expect(isVerified(after!)).toBe(true);
+  });
+
+  /**
+   * C09. A legacy whole-file store is still readable, split by the origin
+   * each entry CARRIES — the old filename had dropped the scheme, so one
+   * file can hold both. Reading never rewrites it: such a file may be a
+   * committed artifact (an exported bench store, a pinned bundle).
+   */
+  it('reads a legacy per-origin file, splitting it by each entry\'s own origin', () => {
+    const dir = path.join(tmp, 'legacy');
+    fs.mkdirSync(dir, { recursive: true });
+    const legacy = path.join(dir, 'app.example.com.json');
+    const insecure = { ...mk('over http'), id: 's_http', origin: 'http://app.example.com' };
+    const secure = { ...mk('over https'), id: 's_https', origin: 'https://app.example.com' };
+    const before = JSON.stringify([insecure, secure], null, 1);
+    fs.writeFileSync(legacy, before);
+
+    const store = new SkillStore(dir);
+    expect(store.list('http://app.example.com').map((s) => s.id)).toEqual(['s_http']);
+    expect(store.list('https://app.example.com').map((s) => s.id)).toEqual(['s_https']);
+    expect(store.origins().sort()).toEqual(['http://app.example.com', 'https://app.example.com']);
+    expect(fs.readFileSync(legacy, 'utf8')).toBe(before);
+
+    // A put migrates that one procedure; the per-procedure copy then wins.
+    store.put({ ...secure, template: 'edited' });
+    expect(store.list('https://app.example.com').map((s) => s.template)).toEqual(['edited']);
+    expect(store.all()).toHaveLength(2);
+
+    // Delete is the one operation that may edit the legacy file.
+    expect(store.remove('s_http')).toBe(true);
+    expect(store.list('http://app.example.com')).toEqual([]);
   });
 
   it('promotes on the second clean replay and demotes on two strikes at one step', () => {
@@ -1457,6 +1747,24 @@ describe('dropDismissedDialogs (fwgr25: a dialog opened and cancelled is a no-op
     const steps = [click('Back to dashboard', ['- button "Exit edit"']), click('Exit edit', DIALOG), click('Cancel'), click('Save dashboard', ['- dialog "Drawer title Save dashboard"'])];
     expect(dropDismissedDialogs(steps).map((s) => s.args.target)).toEqual(['@Back to dashboard', '@Save dashboard']);
   });
+  /**
+   * C07. The pair is dropped on evidence that the dismissal did nothing, and
+   * an empty added-lines list is not that evidence on its own: a Close that
+   * navigated, published a value, raised an alert, or minted a record had a
+   * consequence the line list cannot show.
+   */
+  it('keeps a dismissal that had any other recorded consequence', () => {
+    const opener = click('Exit edit', DIALOG);
+    const navigated = { ...click('Cancel'), expect: { urlPattern: 'http://x/list' } };
+    expect(dropDismissedDialogs([opener, navigated]).length).toBe(2);
+    const reads = { ...click('Cancel'), label: 'order_status' };
+    expect(dropDismissedDialogs([opener, reads]).length).toBe(2);
+    const mints = { ...click('Cancel'), mints: { at: 'p1' } };
+    expect(dropDismissedDialogs([opener, mints]).length).toBe(2);
+    const alerted = { ...click('Cancel'), expect: { urlPattern: 'http://x/d/:id/:id', alertContains: 'Not saved' } };
+    expect(dropDismissedDialogs([opener, alerted]).length).toBe(2);
+  });
+
   it('keeps a confirm click, and a dismissal the dialog did not list', () => {
     expect(dropDismissedDialogs([click('Exit edit', DIALOG), click('Discard')]).length).toBe(2);
     expect(dropDismissedDialogs([click('Exit edit', DIALOG), click('Not now')]).length).toBe(2);

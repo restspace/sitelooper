@@ -18,6 +18,7 @@
  * never observed is worse than one that admits the gap.
  */
 import type { LocatorCandidate } from '../daemon/recorder.js';
+import { IDENTITY_EDGE, WILDCARD } from '../shared/text.js';
 import { TRANSIENT_LINE } from '../skills/compile.js';
 import { OPENER_LINE, consequentialExpectations, waitsForAbsence } from '../skills/replay.js';
 import type { SkillStep } from '../skills/store.js';
@@ -177,8 +178,15 @@ const FILL_FOCUS_MS = 5_000;
 const EDITOR_SETTLE_MS = 400;
 const EDITOR_BLUR_SETTLE_MS = 200;
 
+/** How long a folded loop lets its last match detach before recounting. Replay's LOOP_SHRINK_WAIT_MS. */
+const LOOP_SHRINK_WAIT_MS = 1_000;
+
 /** The inlined helpers, keyed by the token that proves the body (or another helper) uses one. */
 const HELPERS: { token: string; source: string[] }[] = [
+  {
+    token: 'LOOP_SHRINK_WAIT_MS',
+    source: [`const LOOP_SHRINK_WAIT_MS = ${LOOP_SHRINK_WAIT_MS};`],
+  },
   {
     // Shared by `pick` and `urlPartsWhen`: one poll cadence. The token is the
     // POLL constant, because that is the one BOTH of them name.
@@ -837,6 +845,54 @@ const HELPERS: { token: string; source: string[] }[] = [
     ],
   },
   {
+    token: 'need(outputs, ',
+    source: [
+      '/**',
+      ' * A value an earlier step had to publish, taken at the moment the step',
+      ' * that NEEDS it is handed its arguments.',
+      ' *',
+      ' * WHICH REPLAY RULE THIS MIRRORS. The flow runner resolves every {{ref}}',
+      ' * in a step\'s instruction and params BEFORE the step runs',
+      ' * (src/daemon/server.ts:1009-1024) and classifies what it could not fill:',
+      ' * a reference bound into a slot the pinned procedure actually USES — one a',
+      ' * recorded step types or locates by, or that names the record the',
+      " * procedure must find — is BLOCKING (`ignorableRefs`, src/skills/flow.ts:1083),",
+      ' * so the zero-model replay is skipped and the step goes to recovery. Only a',
+      ' * reference no recorded step can be affected by replays as pinned.',
+      ' * `lookupRef` says it outright: a reference this run did not publish "goes',
+      ' * to recovery, never to a recorded literal."',
+      ' *',
+      " * The artifact has no recovery, so blocking here is a stop. What it may NOT",
+      ' * do is what the plain `outputs[ref] ?? \'\'` did: carry the empty string in.',
+      ' * A read that matched nothing is left empty on purpose (see readOptional) —',
+      ' * that is honest for an observation and fatal for an argument. Empty, a',
+      " * record-scoped locator (`li:has-text('')`) matches EVERY record and a",
+      ' * `known` slot loses the identity it exists to carry, so the blank does not',
+      ' * merely misreport the run: it does the work to the wrong record.',
+      ' *',
+      ' * Raised at CONSUMPTION, never at the read: the producing step keeps its',
+      ' * verdict, the browser is at rest, and nothing of the consuming step has',
+      ' * run when this throws.',
+      ' */',
+      'function need(outputs: Outputs, ref: string, by: string): string {',
+      '  const value = outputs[ref as keyof Outputs];',
+      "  if (value === undefined || value === '') {",
+      '    throw new Error(',
+      '      `${by} needs {{${ref}}}, and this run never published it` +',
+      "        (value === '' ? ' (it was published empty)' : '') +",
+      '        `. The step that publishes ${ref} read nothing — look above for its` +',
+      '        ` \\`[sitelooper skip] … read target not found\\` line, which is where this run` +',
+      '        ` diverged. Stopping here instead of passing an empty value into ${by}:` +',
+      '        ` blank, a record-scoped locator matches every record and a known slot loses` +',
+      '        ` its identity, so the step would do its work to the wrong one. Everything` +',
+      '        ` earlier steps did stands; nothing of ${by} has run.`,',
+      '    );',
+      '  }',
+      '  return value;',
+      '}',
+    ],
+  },
+  {
     token: 'present(page, ',
     source: [
       '/**',
@@ -856,26 +912,68 @@ const HELPERS: { token: string; source: string[] }[] = [
       ' * Whitespace-normalised and case-insensitive on the value half, because the',
       " * snapshot's own comparison is whitespace-insensitive and a rendered value",
       ' * is not always cased as it was typed.',
+      ' *',
+      ' * `whole` is the IDENTITY rule (identityRe): the text must sit at a',
+      ' * letter/digit boundary on both sides, so `fwgr25-n1` is not satisfied by a',
+      ' * page showing `fwgr25-n10`. Identity markers pass it; a GOAL string does',
+      ' * not, because replay asks that half as a plain substring too.',
       ' */',
-      'async function present(page: Page, text: string): Promise<boolean> {',
+      'async function present(page: Page, text: string, whole = false): Promise<boolean> {',
       "  const want = text.replace(/\\s+/g, ' ').trim();",
       '  if (!want) return false;',
-      '  if (await page.getByText(text).first().isVisible().catch(() => false)) return true;',
+      '  const re = whole ? identityRe(want) : null;',
+      '  if (await page.getByText(re ?? text).first().isVisible().catch(() => false)) return true;',
       '  return await page',
       "    .locator('input, textarea, select')",
-      '    .evaluateAll((els, needle: string) => {',
+      '    .evaluateAll((els, [needle, pattern]: [string, string | null]) => {',
       "      const norm = (s: string) => s.replace(/\\s+/g, ' ').trim().toLowerCase();",
       '      const target = norm(needle);',
+      "      const rx = pattern === null ? null : new RegExp(pattern, 'iu');",
+      "      const hit = (s: string) => (rx ? rx.test(s.replace(/\\s+/g, ' ').trim()) : norm(s).includes(target));",
       '      return els.some((el) => {',
       '        const e = el as HTMLElement & { checkVisibility?: () => boolean };',
       "        const shown = typeof e.checkVisibility === 'function' ? e.checkVisibility() : e.getClientRects().length > 0;",
       '        if (!shown) return false;',
-      "        if (el instanceof HTMLSelectElement) return norm(el.selectedOptions[0]?.textContent ?? '').includes(target);",
+      "        if (el instanceof HTMLSelectElement) return hit(el.selectedOptions[0]?.textContent ?? '');",
       '        const v = (el as HTMLInputElement | HTMLTextAreaElement).value;',
-      "        return typeof v === 'string' && norm(v).includes(target);",
+      "        return typeof v === 'string' && hit(v);",
       '      });',
-      '    }, want)',
+      '    }, [want, re ? re.source : null] as [string, string | null])',
       '    .catch(() => false);',
+      '}',
+    ],
+  },
+  {
+    token: 'identityRe(',
+    source: [
+      '/**',
+      ' * An identity marker as a BOUNDED matcher.',
+      ' *',
+      " * WHICH REPLAY RULE THIS MIRRORS. `identitySource`/`identityRe`",
+      ' * (src/shared/text.ts), which the daemon uses at every identity gate. A url',
+      ' * pattern and a page fingerprint match EVERY record of a template, so the',
+      ' * marker is the only thing that can say this is the right record — and',
+      ' * matched by plain substring it cannot: `fwgr25-n1` is satisfied by a page',
+      ' * showing `fwgr25-n10`, `RD-1015` by `RD-10150`. So neither edge may be',
+      ' * glued to another letter or digit. Punctuation is neither, so',
+      ' * `(INV-2024/17)` still matches while `INV-2024/170` does not.',
+      ' *',
+      " * The boundary class is the daemon's own constant, interpolated at emit",
+      ' * time (as VOLATILE_TOKEN_SHAPE is in spec/locators.ts): a second copy',
+      ' * written out here would be free to drift away from it.',
+      ' *',
+      " * Literal spaces become `\\s+` because Playwright's text engine tests a",
+      ' * RegExp against element text that is NOT whitespace-normalised.',
+      ' */',
+      'function identityRe(text: string): RegExp {',
+      `  const EDGE = ${JSON.stringify(IDENTITY_EDGE)};`,
+      '  const body = text',
+      "    .replace(/\\s+/g, ' ')",
+      '    .trim()',
+      `    .split(${JSON.stringify(WILDCARD)})`,
+      "    .map((part) => escapeRe(part).replace(/ /g, '\\\\s+'))",
+      "    .join('[^\\\\n]*?');",
+      "  return new RegExp(`(?<!${EDGE})${body}(?!${EDGE})`, 'iu');",
       '}',
     ],
   },
@@ -896,13 +994,84 @@ const HELPERS: { token: string; source: string[] }[] = [
       ' * Conservative by construction: no goal, or no identity, is never satisfied.',
       ' * Being wrong the other way costs one re-run of a step that had already',
       ' * happened; being wrong THIS way skips work that never happened at all.',
+      ' *',
+      ' * Both halves being on the PAGE is not enough, which is why the scope check',
+      ' * follows: on a list, "Order A" and "Cancelled" are both present when it is',
+      " * order B that was cancelled. They have to hold of the same record.",
       ' */',
       'async function satisfied(page: Page, identity: string[], goal: string[]): Promise<boolean> {',
       '  if (!identity.length || !goal.length) return false;',
-      '  for (const want of [...identity, ...goal]) {',
+      '  // Identity takes the bounded rule (which record); the goal is a plain',
+      '  // substring (what state it is in), exactly as goalSatisfied splits them.',
+      '  for (const want of identity) {',
+      '    if (!(await present(page, want, true))) return false;',
+      '  }',
+      '  for (const want of goal) {',
       '    if (!(await present(page, want))) return false;',
       '  }',
-      '  return true;',
+      '  return await sharesScope(page, identity, goal);',
+      '}',
+    ],
+  },
+  {
+    token: 'sharesScope(page, ',
+    source: [
+      '/**',
+      ' * Do the identity and the goal hold of the SAME record?',
+      ' *',
+      " * The record's container is the OUTERMOST ancestor of the goal text that is",
+      ' * one of several siblings of its kind — the row among rows, the card among',
+      ' * cards. Outermost, not nearest: a cell is one of several cells too, and',
+      ' * stopping there would ask whether the identity is inside the status cell,',
+      ' * which it never is. If the goal text has no repeated ancestor at all the',
+      ' * page is not listing records, and page-wide agreement is right there (a',
+      " * detail page's heading and its status field share no small container).",
+      ' *',
+      ' * This mirrors `sharesRecordScope` in src/skills/replay.ts. The two runners',
+      ' * have to answer this the same way: for a while only replay asked, and a',
+      ' * compiled spec would skip a step because some OTHER row had reached the',
+      ' * state this one was supposed to reach.',
+      ' */',
+      'async function sharesScope(page: Page, identity: string[], goal: string[]): Promise<boolean> {',
+      '  try {',
+      '    return await page.evaluate(({ identity, goal }) => {',
+      "      const norm = (s: string | null | undefined) => (s ?? '').replace(/\\s+/g, ' ').trim();",
+      '      const textOf = (el: Element) => norm((el as HTMLElement).innerText || el.textContent);',
+      "      const all = Array.from(document.querySelectorAll('*'));",
+      '      const holders: Element[] = [];',
+      '      for (const raw of goal) {',
+      '        const want = norm(raw);',
+      '        if (!want) continue;',
+      '        const hits = all.filter((el) => textOf(el).includes(want));',
+      '        for (const el of hits) if (!hits.some((o) => o !== el && el.contains(o))) holders.push(el);',
+      '      }',
+      '      if (!holders.length) return false;',
+      '      const kindOf = (el: Element) => `${el.tagName}.${norm(el.getAttribute(\'class\'))}`;',
+      '      const oneOfSeveral = (el: Element): boolean => {',
+      '        const parent = el.parentElement;',
+      '        if (!parent || parent === document.body) return false;',
+      '        const kind = kindOf(el);',
+      '        let same = 0;',
+      '        for (const sib of Array.from(parent.children)) if (kindOf(sib) === kind) same++;',
+      '        return same >= 2;',
+      '      };',
+      '      for (const holder of holders) {',
+      '        let node: Element | null = holder;',
+      '        let record: Element | null = null;',
+      '        while (node && node !== document.body) {',
+      '          if (oneOfSeveral(node)) record = node;',
+      '          node = node.parentElement;',
+      '        }',
+      '        if (!record) return true;',
+      '        const inside = textOf(record);',
+      "        if (identity.some((s) => new RegExp(s, 'iu').test(inside))) return true;",
+      '      }',
+      '      return false;',
+      '    }, { identity: identity.map((t) => identityRe(t).source), goal });',
+      '  } catch {',
+      '    // A page that cannot be evaluated has proven nothing. Run the step.',
+      '    return false;',
+      '  }',
       '}',
     ],
   },
@@ -971,6 +1140,13 @@ interface Ctx {
   stepId: string;
   /** Slot names the body needs in `p`, collected as it emits. */
   slots: Set<string>;
+  /**
+   * Inside a folded loop: the variable holding the index of the record THIS
+   * pass acts on. Replay keeps exactly such a cursor (runLoop) and advances
+   * it when the collection did not shrink; a spec that always took `.first()`
+   * instead worked record one over and over on every edit-in-place loop.
+   */
+  loopCursor?: string;
   warnings: string[];
   downloads: number;
   /** Resolved-target locals emitted so far, so each names its own. */
@@ -1250,9 +1426,22 @@ function lineName(text: string, exact: boolean): string | null {
  * the first real run. `.or()` is a union, so a union taken `.first()` is
  * exactly "at least one of these is showing".
  */
-function anyOfAssertion(lines: string[], label: string, out: string[]): void {
+/**
+ * `required` marks a group the step's correctness rests on — the lines
+ * carrying this run's own values. When NOTHING in such a group can be named
+ * as a locator the assertion simply was not emitted, and the artifact went on
+ * to run the step and report green while checking nothing about its effect.
+ * That is the emitted twin of replay's unobserved evidence: not a failure,
+ * but not proof either, and it has to be visible to the readiness gate rather
+ * than living in a comment nobody reads.
+ */
+function anyOfAssertion(lines: string[], label: string, out: string[], opts: { required?: boolean; ctx?: Ctx; where?: string } = {}): void {
   const { source, listed, unnameable, count } = lineUnion(lines);
   for (const line of unnameable) out.push(`// observed (nothing nameable in it): ${commentSafe(line)}`);
+  if (!source && opts.required) {
+    out.push(`// UNCHECKED: ${commentSafe(label)} — none of the ${lines.length} recorded line(s) can be named as a locator, so this step's effect is not verified here.`);
+    opts.ctx?.warnings.push(`${opts.where ?? opts.ctx?.stepId ?? 'step'}: a required expectation has no nameable line; the emitted step does not check its effect`);
+  }
   if (!source) return;
   out.push(`// ${label} — any one of these, as replay's effect gate has it:`);
   for (const line of listed) out.push(`//   ${commentSafe(line)}`);
@@ -1288,7 +1477,7 @@ function lineUnion(lines: string[], exact = false): { source: string; listed: st
  * second group, because a step none of whose recorded effects appeared did
  * not have its recorded effect.
  */
-function expectationLines(step: SkillStep, out: string[]): void {
+function expectationLines(step: SkillStep, out: string[], ctx: Ctx): void {
   const recorded = step.expect?.addedContains ?? [];
   let lines = recorded.filter((l) => !TRANSIENT_LINE.test(l));
   if (!lines.length) return;
@@ -1299,7 +1488,10 @@ function expectationLines(step: SkillStep, out: string[]): void {
   }
   const hard = lines.filter((l) => SLOT_LINE.test(l));
   const plain = lines.filter((l) => !SLOT_LINE.test(l));
-  if (hard.length) anyOfAssertion(hard, "this run's own values must show", out);
+  const where = `${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`;
+  // The hard group is this run's own values: the one group whose absence
+  // means the step acted on the wrong thing, so an unnameable one is a hole.
+  if (hard.length) anyOfAssertion(hard, "this run's own values must show", out, { required: true, ctx, where });
   if (plain.length) anyOfAssertion(plain, "the step's recorded effect must show", out);
 }
 
@@ -1393,8 +1585,9 @@ function actionTarget(
   noteSlots(chain, ctx);
   const { sources } = candidateSources(chain, { slot: slotAsParam });
   if (!sources.length) return null;
-  // In a loop the cursor is always the first match: the record this pass acts on.
-  if (sources.length === 1) return opts.first ? `(${sources[0]}).first()` : sources[0];
+  // In a loop, the record this pass acts on is the one at the cursor.
+  const at = ctx.loopCursor ? `.nth(${ctx.loopCursor})` : '.first()';
+  if (sources.length === 1) return opts.first ? `(${sources[0]})${at}` : sources[0];
   const name = `el${++ctx.picks}`;
   const where = `${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex} ${key}`;
   out.push(`const ${name} = await pick(page, [`);
@@ -1405,7 +1598,7 @@ function actionTarget(
   const pickOpts = opts.any ? '{ any: true, drift: run.drift }' : '{ drift: run.drift }';
   const tail = `, ${pickOpts}${ctx.note ? `, ${q(ctx.note)}` : ''}`;
   out.push(`], ${q(where)}${tail});`);
-  return opts.first ? `${name}.first()` : name;
+  return opts.first ? `${name}${at}` : name;
 }
 
 /** The `point` candidates a step lost, as one honest comment. */
@@ -1709,7 +1902,7 @@ function emitSkillStep(step: SkillStep, segment: SpecSegment, index: number, ctx
   }
   if (!isRead) {
     effectLines(step, ctx, out);
-    expectationLines(step, out);
+    expectationLines(step, out, ctx);
   }
   return out;
 }
@@ -1763,7 +1956,7 @@ function waitForLine(target: string, args: Record<string, unknown>, timeout?: nu
 function readLines(step: SkillStep, ctx: Ctx, opts: { any?: boolean; first?: boolean }): string[] {
   const what = String(step.args?.what ?? 'text');
   const out = `outputs[${q(`${ctx.stepId}.${step.label ?? ''}`)}]`;
-  const loc = opts.first ? 'loc.first()' : 'loc';
+  const loc = opts.first ? (ctx.loopCursor ? `loc.nth(${ctx.loopCursor})` : 'loc.first()') : 'loc';
   let read: string | null = null;
   if (what === 'value') read = `async (loc: Locator) => await ${loc}.inputValue()`;
   // read_all legitimately matches many elements, so textContent's strict mode
@@ -1810,24 +2003,62 @@ function emitLoop(step: SkillStep, segment: SpecSegment, index: number, ctx: Ctx
     ];
   }
   const max = step.max ?? DEFAULT_LOOP_MAX;
-  const name = `guard${++ctx.loops}`;
+  const n = ++ctx.loops;
+  const name = `guard${n}`;
+  const left = `remaining${n}`;
+  const was = `before${n}`;
+  const cursor = `cursor${n}`;
+  const pass = `pass${n}`;
   ctx.segmentId = segment.id;
   ctx.stepIndex = index;
+  const where = `${ctx.stepId} ${segment.id}/${index}`;
   const out = [
-    `// @step ${ctx.stepId} ${segment.id}/${index}`,
-    '// The recording folded a run of identical actions into a loop. Each pass acts on the',
-    '// FIRST match: right for a list that shrinks, and all a spec can do — replay advances a',
-    '// cursor here when the list stays the same length (see runLoop).',
+    `// @step ${where}`,
+    '// The recording folded a run of identical actions into a loop, and this mirrors how',
+    '// replay executes one (runLoop), cursor and all. The cursor is what makes both kinds',
+    '// of loop work from one body: a DELETE loop shrinks the collection, so the next record',
+    '// is always match 0 and the cursor stays put; an EDIT-IN-PLACE loop leaves the count',
+    '// alone, so the cursor steps on to the next match. Taking `.first()` every pass, as',
+    '// this used to, silently worked record one over and over on every edit loop.',
+    '// The cap is a budget, not a finish line: passes left over with records unvisited is',
+    '// unfinished work, and it throws rather than returning green.',
     `const ${name} = ${guard};`,
-    `for (let i = 0; i < ${max} && (await ${name}.count()) > 0; i++) {`,
+    `let ${left} = await ${name}.count();`,
+    `let ${cursor} = 0;`,
+    `let ${pass} = 0;`,
+    `for (; ${pass} < ${max} && ${cursor} < ${left}; ${pass}++) {`,
   ];
+  ctx.loopCursor = cursor;
   for (const [k, bstep] of body.entries()) {
     for (const line of emitSkillStep(bstep, segment, index, ctx, true)) {
       out.push(...line.split('\n').map((l) => (l ? '  ' + l : l)));
     }
     if (k < body.length - 1) out.push('');
   }
-  out.push('}');
+  ctx.loopCursor = undefined;
+  out.push(
+    '',
+    '  // Removal is usually asynchronous: "the count shrank" is exactly "the last',
+    '  // match left the DOM", so wait on that element rather than on a timer.',
+    '  await settle(page);',
+    `  const ${was} = ${left};`,
+    `  if (${was} > 0) {`,
+    `    await ${name}.nth(${was} - 1).waitFor({ state: 'detached', timeout: LOOP_SHRINK_WAIT_MS }).catch(() => {});`,
+    '  }',
+    `  ${left} = await ${name}.count();`,
+    `  if (${left} >= ${was}) ${cursor}++;`,
+    '}',
+  );
+  // A bounded loop was given authority over exactly the records the recording
+  // worked; ones left over are not its business. Only a drain owes the
+  // collection an empty result, and must say so when it runs out of passes.
+  if ((step.scope ?? 'drain') === 'drain') {
+    out.push(
+      `if (${cursor} < ${left}) {`,
+      `  throw new Error(\`${where}: the loop stopped after \${${pass}} pass(es) with \${${left} - ${cursor}} record(s) still matching — the recorded work is not finished\`);`,
+      '}',
+    );
+  }
   return out;
 }
 
@@ -1898,12 +2129,20 @@ function satisfiedGuard(step: SpecStep, ctx: Ctx): string[] {
   return out;
 }
 
-/** One segment: its preconditions, then its steps. */
-function emitSegment(segment: SpecSegment, ctx: Ctx): string[] {
+/**
+ * A segment whose FIRST step navigates carries its own precondition: wherever
+ * the browser is, step 1 puts it on the recorded page. Replay's
+ * `navigatesItself` (src/skills/replay.ts) is this same one line, and the two
+ * must stay the same line — a rule only one runner applies is the class of
+ * defect the parity harness exists to catch.
+ */
+function navigatesItself(segment: SpecSegment): boolean {
+  return segment.steps[0]?.tool === 'goto';
+}
+
+/** The segment's identity gate: one poll per bound marker, a comment per unbound one. */
+function identityChecks(segment: SpecSegment, ctx: Ctx): string[] {
   const out: string[] = [];
-  ctx.lastUrl = null;
-  out.push(`// ${segment.id}: ${commentSafe(segment.template)}`);
-  out.push(`// recorded on a page matching ${commentSafe(segment.preconditions.urlPattern)}`);
   for (const marker of segment.preconditions.requireText ?? []) {
     // Identity: the url and the page shape match every record of this
     // template, so only the marker can say this is the RIGHT record. An
@@ -1917,15 +2156,46 @@ function emitSegment(segment: SpecSegment, ctx: Ctx): string[] {
     // Polled, not asserted once: replay reaches this gate after its own
     // settleDom, and a spec arrives on a page that may still be rendering.
     out.push(
-      `await expect.poll(() => present(page, ${src(marker)}), { timeout: ${IDENTITY_WAIT_MS}, message: ${q(
+      `await expect.poll(() => present(page, ${src(marker)}, true), { timeout: ${IDENTITY_WAIT_MS}, message: ${q(
         `identity: ${commentSafe(marker)} is not on this page`,
       )} }).toBe(true);`,
     );
   }
+  return out;
+}
+
+/** One segment: its preconditions, then its steps. */
+function emitSegment(segment: SpecSegment, ctx: Ctx): string[] {
+  const out: string[] = [];
+  ctx.lastUrl = null;
+  out.push(`// ${segment.id}: ${commentSafe(segment.template)}`);
+  out.push(`// recorded on a page matching ${commentSafe(segment.preconditions.urlPattern)}`);
+  const identity = identityChecks(segment, ctx);
+  // Where the gate goes, not whether: a self-navigating segment is checked
+  // AFTER its own goto, never before it and never not at all.
+  const defer = identity.length > 0 && navigatesItself(segment);
+  if (!defer) out.push(...identity);
   for (const [i, step] of segment.steps.entries()) {
     out.push('');
     const lines = step.tool === 'loop' ? emitLoop(step, segment, i + 1, ctx) : emitSkillStep(step, segment, i + 1, ctx);
     out.push(...lines);
+    if (defer && i === 0) {
+      out.push(
+        '',
+        '// The identity gate sits AFTER the goto above, and is not skipped.',
+        '// Asked before it, the question is asked of the page this segment is',
+        "// LEAVING; and the recorded url carries the RECORDING run's record id,",
+        '// so "step 1 decides the page" decides it to be the wrong one. fwod10',
+        "// replayed a goto to another run's record and did this run's work on it,",
+        '// published no values and reported success — the guard built to stop',
+        '// exactly that was off for the procedures most likely to need it. Replay',
+        '// defers it to this same place (navigatesItself && n === 1,',
+        '// src/skills/replay.ts). Failing here is a partial stop rather than a',
+        '// refusal: the goto has already moved the browser, so there is no',
+        '// untouched page left to try another candidate from.',
+        ...identity,
+      );
+    }
   }
   return out;
 }
@@ -1945,14 +2215,19 @@ function slotsOf(step: SpecStep, found: Set<string>): string[] {
  * step's output, or an environment secret. Secrets stay markers everywhere
  * until the moment they are used — see shared/secrets.ts — and that holds in
  * a compiled spec too: the emitted file names the variable, never the value.
+ *
+ * `by` is the consuming step id, passed only where a missing value would
+ * CHANGE what the step does (see `callArgs`): then a `{{step.output}}`
+ * reference is resolved through `need`, which stops rather than binding a
+ * blank. Left out, a reference resolves the way it always has.
  */
-function paramExpr(template: string, vars: Set<string>): string {
+function paramExpr(template: string, vars: Set<string>, by?: string): string {
   const parts: { lit?: string; expr?: string }[] = [];
   let last = 0;
   for (const m of template.matchAll(/\{\{([\w.#:-]+)\}\}/g)) {
     const at = m.index ?? 0;
     if (at > last) parts.push({ lit: template.slice(last, at) });
-    parts.push({ expr: refExpr(m[1], vars) });
+    parts.push({ expr: refExpr(m[1], vars, by) });
     last = at + m[0].length;
   }
   if (last < template.length) parts.push({ lit: template.slice(last) });
@@ -1962,14 +2237,37 @@ function paramExpr(template: string, vars: Set<string>): string {
   return '`' + parts.map((p) => (p.lit !== undefined ? templateSafe(p.lit) : '${' + p.expr + '}')).join('') + '`';
 }
 
-function refExpr(ref: string, vars: Set<string>): string {
+function refExpr(ref: string, vars: Set<string>, by?: string): string {
   const secret = /^env:([A-Za-z_][A-Za-z0-9_]*)$/.exec(ref);
+  // A secret is validated once, up front (validateInputs / requiredEnvNames);
+  // a plain run var likewise. Only a step-to-step output is a value THIS run
+  // had to produce, so only it can go missing mid-flow.
   if (secret) return `process.env.${secret[1]} ?? ''`;
-  if (ref.includes('.')) return `outputs[${q(ref)}] ?? ''`;
+  if (ref.includes('.')) return by ? `need(outputs, ${q(ref)}, ${q(by)})` : `outputs[${q(ref)}] ?? ''`;
   if (vars.has(ref)) return /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(ref) ? `vars.${ref}` : `vars[${q(ref)}]`;
   // A reference to something the flow never declared: honest at run time
   // rather than a compile-time guess at what the caller meant.
   return `(vars as Record<string, string>)[${q(ref)}] ?? ''`;
+}
+
+/**
+ * Can a missing value in this slot change what the step DOES?
+ *
+ * The port of `ignorableRefs` (src/skills/flow.ts:1083), derived from the same
+ * two facts it reads: a slot some recorded step types or locates by
+ * (`SkillParam.usedIn`), or one naming the record the procedure must find (a
+ * `{{vN}}` inside `preconditions.requireText`). Everything else — a tag the
+ * instruction mentions for context, a price quoted from the recording —
+ * reaches nothing the pinned procedure can act on, so its absence is no reason
+ * to stop. fwgr23 05-open is the case: `{{04-open.tag}}` blank, bound to a slot
+ * no step used.
+ */
+function usedSlot(step: SpecStep, slot: string): boolean {
+  return step.segments.some(
+    (s) =>
+      (s.params[slot]?.usedIn.length ?? 0) > 0 ||
+      (s.preconditions.requireText ?? []).some((marker) => marker.includes(`{{${slot}}}`)),
+  );
 }
 
 /** The `{ v1: …, d1: '' }` argument one step is called with. */
@@ -1980,7 +2278,12 @@ function callArgs(step: SpecStep, slots: string[], vars: Set<string>, warnings: 
     // off the live url after the step that creates it.
     if (derived.has(slot)) return `${slot}: ''`;
     const bound = step.params[slot];
-    if (bound !== undefined) return `${slot}: ${paramExpr(bound, vars)}`;
+    // Only a USED slot is checked. `outputs` is whatever keys the model's
+    // report happened to emit (flow.ts's runFlow), and across the published
+    // bench flows 1521 outputs are declared against 89 consumed downstream:
+    // requiring every one of them would turn values nobody authored into
+    // failure points.
+    if (bound !== undefined) return `${slot}: ${paramExpr(bound, vars, usedSlot(step, slot) ? step.id : undefined)}`;
     const example = step.segments.map((s) => s.params[slot]?.example).find((e) => typeof e === 'string');
     if (example === undefined) return `${slot}: ''`;
     // No flow binding: the recording's own value is the only one there is,
@@ -2113,7 +2416,12 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
     return { step, lines, slots: slotsOf(step, ctx.slots) };
   });
 
-  const body = bodies.flatMap((b) => b.lines).join('\n');
+  // Call sites BEFORE the helper scan: `need(` is emitted only at a call site,
+  // and `neededHelpers` decides what the file carries by what its text names.
+  // Computed after the bodies because a call site's slot list is what the body
+  // collected.
+  const calls = bodies.map((b) => callArgs(b.step, b.slots, vars, warnings));
+  const body = [...bodies.flatMap((b) => b.lines), ...calls].join('\n');
   const helpers = neededHelpers(body);
 
   const out: string[] = [
@@ -2208,9 +2516,12 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
   out.push('  const outputs = run.outputs;');
   out.push('  try {');
   out.push(`    await page.goto(options.startUrl ?? ${q(spec.startUrl)});`);
-  for (const b of bodies) {
+  for (const [i, b] of bodies.entries()) {
     out.push(`    await test.step(${q(`${b.step.id}: ${b.step.instruction}`)}, async () => {`);
-    out.push(`      await steps[${q(b.step.id)}](page, ${callArgs(b.step, b.slots, vars, warnings)}, outputs, run);`);
+    // The arguments are built INSIDE test.step and before `steps[id]` is
+    // called, so a `need` that throws is this step's failure with nothing of
+    // this step run — which is the guarantee the check is worth having for.
+    out.push(`      await steps[${q(b.step.id)}](page, ${calls[i]}, outputs, run);`);
     out.push(`      console.log(${q(`[sitelooper step] ${b.step.id}`)});`);
     out.push('    });');
   }

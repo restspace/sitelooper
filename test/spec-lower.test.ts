@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { flowToSpec } from '../src/spec/ir.js';
 import type { SpecFlow, SpecSegment, SpecStep } from '../src/spec/ir.js';
 import { specToFlow, stageForReplay } from '../src/spec/lower.js';
-import { SkillStore } from '../src/skills/store.js';
+import { SKILL_CONTRACT, SkillStore, isVerified } from '../src/skills/store.js';
 import type { Skill } from '../src/skills/store.js';
 
 // --- hand-built fixtures ----------------------------------------------------
@@ -211,7 +211,15 @@ describe('specToFlow: shape of the produced Flow/Skill[]', () => {
     expect(skills.length).toBeGreaterThan(0);
     for (const skill of skills) {
       expect(skill.status).toBe('validated');
-      expect(skill.stats).toEqual({ uses: 0, successes: 0, partial: 0, created: skill.stats.created, failedAtStep: {}, fallthroughs: 0 });
+      expect(skill.stats).toEqual({
+        uses: 0, successes: 0, partial: 0, created: skill.stats.created, failedAtStep: {}, fallthroughs: 0,
+        // A lowered spec was emitted by THIS build, so its `validated` is a
+        // claim about this contract. Without the stamp `isVerified` would read
+        // the procedure as stale the moment it was manufactured.
+        verifiedContract: SKILL_CONTRACT,
+      });
+      expect(skill.contract).toBe(SKILL_CONTRACT);
+      expect(isVerified(skill)).toBe(true);
     }
   });
 

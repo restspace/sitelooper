@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { PageSignature } from '../daemon/diff.js';
 import { urlPattern } from './compile.js';
-import { originOf, originSlug, skillsDir } from './store.js';
+import { SITEMAP_FILE, originOf, originSlug, skillsDir } from './store.js';
 
 /**
  * What the tool knows about an APP, as opposed to what it knows about a
@@ -172,7 +172,7 @@ export class SiteModel {
 
   /** `<dir>/<encoded origin>/sitemap.json`, mirroring SkillStore's encoding. */
   private file(origin: string): string {
-    return path.join(this.dir, originSlug(origin), 'sitemap.json');
+    return path.join(this.dir, originSlug(origin), SITEMAP_FILE);
   }
 
   load(origin: string): SiteMap {

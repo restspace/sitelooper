@@ -22,6 +22,7 @@ import { retired, stepByTag, type DriftTicket } from '../skills/repair.js';
 import { structural } from '../skills/replay.js';
 import type { Flow } from '../skills/flow.js';
 import { SkillStore, type Skill, type SkillStep } from '../skills/store.js';
+import { expectationLoss } from '../skills/contract.js';
 import type { FlowRunResult } from '../shared/protocol.js';
 import { mutates, selectCandidates } from '../skills/learn.js';
 import { rerecordFix, type Diagnostic } from './diagnostics.js';
@@ -70,19 +71,6 @@ const exprs = (chain: LocatorCandidate[]) => chain.map((c) => candidateExpr(c));
  * `addedContains`, is the thing PLAN-self-updating-spec.md forbids: it turns
  * a red build green by asserting less.
  */
-function expectationLoss(before: SkillStep, after: SkillStep): string | null {
-  const b = before.expect;
-  if (!b) return null;
-  const a = after.expect;
-  if (!a) return 'the step no longer asserts anything about the page it produced';
-  const lost: string[] = [];
-  if (b.urlPattern && !a.urlPattern) lost.push(`url ${b.urlPattern}`);
-  if (b.alertContains && !a.alertContains) lost.push(`alert ${JSON.stringify(b.alertContains)}`);
-  for (const line of b.addedContains ?? []) {
-    if (!(a.addedContains ?? []).includes(line)) lost.push(`page text ${JSON.stringify(line)}`);
-  }
-  return lost.length ? `no longer asserts ${lost.join(', ')}` : null;
-}
 
 export interface SpecDiff {
   /** The reviewer-facing summary, one line per observation, "no change" per untouched step. */
@@ -184,7 +172,7 @@ function diffSegment(
     if (!aStep) continue;
     const where = `${as.id} step ${bStep.tag}`;
 
-    const loss = expectationLoss(bStep.step, aStep.step);
+    const loss = expectationLoss(bStep.step.expect, aStep.step.expect);
     if (loss) {
       const line = `${where}: ${loss}`;
       (isVariant ? weakenedByVariant : droppedExpectations).push(`${stepId}: ${line}`);

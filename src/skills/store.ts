@@ -72,7 +72,117 @@ export interface Skill {
    * recorded run's. `example` is what the recording observed.
    */
   derived?: Record<string, { step: number; at: string; example: string }>;
-  provenance: { session: string; instruction: string; model?: string; created: string };
+  provenance: {
+    session: string;
+    instruction: string;
+    model?: string;
+    created: string;
+    /**
+     * Edits that made this procedure promise LESS than the recording proved
+     * — a widened start pattern, a dropped assertion, a loop given authority
+     * over records nobody counted.
+     *
+     * Kept because invariant 7 does not forbid weakening, it forbids silent
+     * weakening. Generalising a url segment that demonstrated volatility is a
+     * genuine improvement; the same edit applied for no reason is how a
+     * procedure drifts into matching pages it was never recorded against, and
+     * from the JSON alone the two are identical. Each entry is also the
+     * reason the procedure's validated status was given up.
+     */
+    contractChanges?: { at: string; by: string; gave: string[] }[];
+    /**
+     * What the compiler did to the recording on the way to this procedure,
+     * and why: a folded loop and the quantifier that authorised its scope, a
+     * dismissed dialog pair, a superseded navigation.
+     *
+     * Each of these deletes or rewrites steps that actually happened, on
+     * evidence that is never conclusive. Recording the reason is what makes
+     * the decision reviewable at all — the alternative, and what was actually
+     * done once, is recompiling every published recording under two builds
+     * and diffing the stores.
+     */
+    transforms?: { name: string; at: number; reason: string }[];
+  };
+  /**
+   * The execution contract this procedure was written under. Absent means 1,
+   * the contract every store predates this field.
+   *
+   * Not a field format version — a SEMANTICS version. It exists because the
+   * meaning of what is already written here can change without the shape
+   * changing at all: an absent `scope` used to be the only reading there was
+   * and is now "drain"; an effect gate that could not capture a diff used to
+   * pass and now reports `unobserved`; a click that produced no visible change
+   * used to be retried. A procedure that earned its validated status under
+   * those rules did not earn it under these, and nothing about its JSON says
+   * so. Bump only when an existing field's INTERPRETATION moves; adding a new
+   * optional field is not a bump.
+   */
+  contract?: number;
+  /**
+   * Bumped on every write, so two writers can tell whether they are working
+   * from the same starting point. Absent means a procedure written before
+   * revisions existed, which reads as 0.
+   *
+   * An atomic rename alone is not enough for this. It guarantees a reader
+   * sees one whole version or another, and says nothing about a writer who
+   * read at revision 3, thought about it, and wrote over someone else's 4.
+   */
+  revision?: number;
+}
+
+/**
+ * The contract this build writes and is willing to execute.
+ *
+ * This is one-way, and worth being plain about: a build older than the field
+ * ignores it entirely and will happily run a contract-2 procedure under
+ * contract-1 semantics. The gate protects builds from here forward, not the
+ * data already on disk.
+ */
+export const SKILL_CONTRACT = 2;
+
+export function contractOf(s: Pick<Skill, 'contract'>): number {
+  return typeof s.contract === 'number' ? s.contract : 1;
+}
+
+/**
+ * Can this build execute the procedure as written?
+ *
+ * Refusing is the whole point: a procedure from a newer build means fields
+ * this engine has never heard of, or — worse, because it is silent — fields
+ * it knows by name and reads differently.
+ */
+export function contractVerdict(s: Pick<Skill, 'contract'>): { ok: true } | { ok: false; found: number; why: string } {
+  const found = contractOf(s);
+  if (!Number.isInteger(found) || found < 1) {
+    return { ok: false, found, why: `has a malformed contract version (${JSON.stringify(s.contract)})` };
+  }
+  if (found > SKILL_CONTRACT) {
+    return {
+      ok: false,
+      found,
+      why: `was written by a newer Sitelooper (contract ${found}; this build reads up to ${SKILL_CONTRACT}) — upgrade sitelooper to use it`,
+    };
+  }
+  return { ok: true };
+}
+
+/**
+ * Is this procedure's validated status EVIDENCE, under the rules in force now?
+ *
+ * A procedure promoted under contract 1 was promoted by a replay that could
+ * retry a click, skip a step whose dialog was absent, and pass a gate whose
+ * evidence it never captured. Its two clean runs are a true record of what
+ * happened and not a claim about this engine, so the status stands in the
+ * file and is simply not trusted until it is re-earned.
+ *
+ * Resetting the status on read would be the other way to do this, and is
+ * worse three times over: it makes reading a store mutate it, it rewrites
+ * committed artifacts under bench/ on first read, and `successes: 0` destroys
+ * the difference between "never verified" and "verified, then the contract
+ * moved" — which is the distinction this exists to make.
+ */
+export function isVerified(s: Skill): boolean {
+  return s.status === 'validated' && (s.stats.verifiedContract ?? 1) === contractOf(s);
 }
 
 export interface SkillParam {
@@ -136,6 +246,28 @@ export interface SkillStep {
   while?: LocatorCandidate[];
   /** `tool: 'loop'` only: hard cap on iterations, a runaway guard. */
   max?: number;
+  /**
+   * `tool: 'loop'` only: how far the loop's authority reaches.
+   *
+   * `observed` — do the work that was RECORDED and no more: the number of
+   * records the recording actually acted on. Records beyond that are left
+   * alone, and leaving them is not a failure. This is the default for a new
+   * compile, because two deletions are evidence of two deletions and of
+   * nothing else.
+   *
+   * `drain` — keep going until nothing matches. That is authority over every
+   * record in the collection, including ones that did not exist when the
+   * procedure was recorded, so it is taken from the caller's own words
+   * ("delete ALL the parts") and never inferred from a repetition. A drain
+   * that runs out of passes with records still matching has not finished its
+   * work, and fails rather than reporting success.
+   *
+   * Absent on procedures compiled before the distinction existed. Those were
+   * all written with drain intent and are read that way, so an old store
+   * keeps behaving as it did — but now fails loudly where it used to stop
+   * short in silence.
+   */
+  scope?: 'observed' | 'drain';
 }
 
 export interface StepExpectation {
@@ -159,6 +291,19 @@ export interface SkillStats {
   lastFailedAt?: number;
   /** How often a fallback locator (not the recorded primary) had to be used — drift signal. */
   fallthroughs: number;
+  /**
+   * Steps, across all replays, whose effect evidence could not be captured.
+   * Kept separately from successes and failures because it is neither: a
+   * procedure with a standing count here has replays nobody could verify, and
+   * that is a thing to look at rather than a thing to average away.
+   */
+  unobserved?: number;
+  /**
+   * The contract `successes` were counted under. Absent means 1. Read by
+   * `isVerified`, which is what decides whether a validated status is
+   * evidence about THIS engine or a record of an older one's.
+   */
+  verifiedContract?: number;
 }
 
 export type SkillStatus = 'provisional' | 'validated' | 'demoted';
@@ -170,6 +315,13 @@ export interface ReplayOutcome {
   fallthroughs?: number;
   /** Whether the instruction around the replay ended in a successful report. */
   instructionSucceeded: boolean;
+  /**
+   * How many steps ran without their effect evidence being capturable. Such a
+   * run is not a failure — its required expectations were still checked
+   * against the live page — but it is not the clean, fully observed replay
+   * that promotion is supposed to be counting.
+   */
+  unobserved?: number;
 }
 
 /** Where skills live: `$SITELOOPER_SKILLS_DIR` or `<home>/skills`. */
@@ -187,56 +339,526 @@ export function originOf(url: string): string | null {
   }
 }
 
+/**
+ * Filename-safe name for an origin. The SCHEME is part of it: dropping it put
+ * `http://app.example.com` and `https://app.example.com` in one bucket, so a
+ * procedure recorded over http was offered — and replayed — on https, which
+ * is a different origin with different cookies, different session, and
+ * potentially a different app. `originOf` already keeps them apart; only the
+ * filename conflated them.
+ */
 export function originSlug(origin: string): string {
-  return origin.replace(/^[a-z]+:\/\//, '').replace(/[^A-Za-z0-9.-]+/g, '_') || 'file';
+  const m = /^([a-z][a-z0-9+.-]*):\/\/(.*)$/.exec(origin);
+  const scheme = m ? m[1] : '';
+  const rest = (m ? m[2] : origin).replace(/[^A-Za-z0-9.-]+/g, '_');
+  if (!rest) return scheme || 'file';
+  return scheme ? `${scheme}_${rest}` : rest;
 }
 
 /**
- * One JSON file per origin. Reads are fresh on every access so several
- * daemons (one per session) sharing a store see each other's skills; writes
- * are whole-file, which is fine at the tens-of-skills scale this is for.
+ * One DIRECTORY per origin, one JSON file per procedure inside it, matching
+ * the layout the site model already uses.
+ *
+ * It used to be one whole-file array per origin, and every mutation was an
+ * unguarded read-modify-write over it: two daemons (there is one per session,
+ * and they share this store) that added a procedure, or recorded an outcome,
+ * at the same time would each write back a list built before the other's
+ * change, and the later rename silently dropped it. A file per procedure
+ * removes the conflict rather than locking against it — two writes now touch
+ * the same bytes only when they are about the SAME procedure, and each one is
+ * a tmp-plus-rename, so a reader sees one whole version or the other.
+ *
+ * Reads stay fresh on every access, so daemons still see each other's work.
  */
+/**
+ * An origin directory holds one file per procedure, and these, which are not
+ * procedures and must not be read as one.
+ *
+ * The list exists because the alternative failed quietly: `sitemap.json` sits
+ * in the same directory (SiteModel.file), parses cleanly, and carries an
+ * `origin` but no `id` — so the shape gate below filed it under `corrupt`, on
+ * every single read, for every origin anyone had ever browsed. A permanent
+ * entry on a list whose whole purpose is "this is a thing to look at".
+ *
+ * Anything else that comes to live beside the procedures belongs here too.
+ */
+export const SITEMAP_FILE = 'sitemap.json';
+const NOT_A_PROCEDURE = new Set([SITEMAP_FILE]);
+
+/**
+ * How long a lock may be held before it is treated as abandoned.
+ *
+ * Generous on purpose: the work inside one is a small JSON write, so a lock
+ * older than this is not slow, it is dead. Being wrong in the impatient
+ * direction means two writers in the section at once, which is the bug being
+ * fixed; being wrong the other way means a caller waits.
+ */
+const LOCK_STALE_MS = 30_000;
+
+/** How long to wait for a live holder before giving up and saying so. */
+const LOCK_WAIT_MS = 5_000;
+
+/**
+ * How many times to wait out a reader before giving up on a rename. With the
+ * backoff below this is a little over a second, which is many orders of
+ * magnitude longer than a reader holds a handle to one small JSON file.
+ */
+const RENAME_ATTEMPTS = 20;
+
+/** Sleep without a promise: every caller here is synchronous. */
+function pause(ms: number): void {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+
+/**
+ * Delete a file, waiting out anyone who has it momentarily open.
+ *
+ * Same Windows collision as the rename: a contending process reads the lock
+ * to decide whether it is stale, and a delete landing in that window fails
+ * with EPERM. Returns whether the file is gone, because both callers have
+ * something sensible to do when it is not — the acquirer loops, the releaser
+ * lets the lock go stale on its own.
+ */
+function removeQuietly(file: string): boolean {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      fs.rmSync(file, { force: true });
+      return true;
+    } catch {
+      if (attempt >= RENAME_ATTEMPTS) return false;
+      pause(5 + attempt * 5);
+    }
+  }
+}
+
+/** Read a file, waiting out a writer's rename rather than calling it damaged. */
+function readWithRetry(file: string): string {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return fs.readFileSync(file, 'utf8');
+    } catch (err) {
+      const code = (err as NodeJS.ErrnoException).code;
+      if (code === 'ENOENT' || attempt >= RENAME_ATTEMPTS) throw err;
+      pause(5 + attempt * 5);
+    }
+  }
+}
+
+function holderIsGone(pid: number): boolean {
+  if (!Number.isInteger(pid) || pid <= 0) return true;
+  try {
+    process.kill(pid, 0);
+    return false;
+  } catch (err) {
+    // EPERM means the process exists and belongs to someone else.
+    return (err as NodeJS.ErrnoException).code !== 'EPERM';
+  }
+}
+
+/**
+ * Hold an exclusive lock on one file for the duration of `fn`.
+ *
+ * `wx` is the whole mechanism: an exclusive create either wins or throws
+ * EEXIST, atomically, on Windows and POSIX alike.
+ *
+ * Taking over an abandoned lock needs BOTH tests, and the pid one is not
+ * sufficient by itself: pids are reused, so a long-dead holder's number can
+ * belong to something entirely unrelated, and a stale lock would then look
+ * held forever. Age alone is not sufficient either — a live process doing
+ * slow work would have its lock stolen. Gone-or-old is the pair that is
+ * safe: a live holder within the window is respected, anything else is not.
+ */
+function withFileLock<T>(file: string, fn: () => T): T {
+  const lock = `${file}.lock`;
+  const deadline = Date.now() + LOCK_WAIT_MS;
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  for (;;) {
+    try {
+      fs.writeFileSync(lock, JSON.stringify({ pid: process.pid, at: Date.now() }), { flag: 'wx' });
+      break;
+    } catch (err) {
+      const code = (err as NodeJS.ErrnoException).code;
+      // Windows reports an exclusive create against a file that is being
+      // deleted as EPERM rather than EEXIST: the name still exists, in a
+      // pending-delete state, so neither "it is there" nor "it is not" is
+      // true yet. That is contention, not a failure, and rethrowing it made
+      // three runs in five die under four writers.
+      if (code === 'EPERM' || code === 'EACCES' || code === 'EBUSY') {
+        if (Date.now() >= deadline) throw err;
+        pause(10);
+        continue;
+      }
+      if (code !== 'EEXIST') throw err;
+      // Age comes from the filesystem, never from the lock's own contents.
+      // A lock read in the instant between its exclusive create and its bytes
+      // landing parses as nothing, and an earlier version of this read that
+      // as `pid: undefined` -> holderIsGone(0) -> true -> abandoned. Two
+      // processes hitting that window together BOTH took over and BOTH
+      // entered the critical section, which is how a lock with a correct
+      // primitive under it still lost nine updates in a hundred.
+      //
+      // So an unreadable lock is treated as held by someone unknown, and only
+      // its age can retire it.
+      let age: number;
+      try {
+        age = Date.now() - fs.statSync(lock).mtimeMs;
+      } catch {
+        continue; // vanished under us: try to take it
+      }
+      let pid: number | undefined;
+      try {
+        const held = JSON.parse(fs.readFileSync(lock, 'utf8')) as { pid?: number };
+        if (typeof held.pid === 'number') pid = held.pid;
+      } catch {
+        /* half-written or already gone; age is the only evidence */
+      }
+      if ((pid !== undefined && holderIsGone(pid)) || age > LOCK_STALE_MS) {
+        // Claim the abandoned lock by RENAMING it, not by deleting it.
+        //
+        // Delete-then-create is not a takeover, it is a race: two processes
+        // that both judge the lock abandoned both delete, both create, and
+        // both proceed. A rename can only be won once — the loser gets ENOENT
+        // because the file it was about to claim is already gone — so exactly
+        // one of them reaches the `wx` below with the way clear.
+        const claim = `${lock}.${process.pid}.dead`;
+        try {
+          fs.renameSync(lock, claim);
+        } catch {
+          continue; // somebody else claimed it; go round and contend for the new lock
+        }
+        removeQuietly(claim);
+        continue;
+      }
+      if (Date.now() >= deadline) {
+        throw new Error(
+          `could not lock ${path.basename(file)} within ${LOCK_WAIT_MS}ms: process ${pid ?? 'unknown'} has held it for ${Math.round(age)}ms. ` +
+            'If that process is gone, delete ' + lock,
+        );
+      }
+      pause(25);
+    }
+  }
+  try {
+    return fn();
+  } finally {
+    // A lock we genuinely cannot remove goes stale on its own, and the age
+    // test above collects it. Never throw from here: the write succeeded.
+    removeQuietly(lock);
+  }
+}
+
+/**
+ * A write refused because the procedure changed after the writer read it.
+ *
+ * Thrown rather than swallowed: the caller is holding a decision computed
+ * from a state that no longer exists — a promotion counted from stale
+ * successes, a chain reordered against an ordering somebody already
+ * changed — and the only safe thing it can do is read again and redo the
+ * work. Quietly writing anyway is the lost update; quietly skipping is a
+ * silently dropped change. Both were available and neither is honest.
+ */
+export class StaleWriteError extends Error {
+  constructor(readonly skillId: string, readonly expected: number, readonly found: number) {
+    super(
+      `${skillId} changed since it was read (read revision ${expected}, on disk ${found}) — ` +
+        'read it again and redo the change; nothing was written',
+    );
+    this.name = 'StaleWriteError';
+  }
+}
+
 export class SkillStore {
   constructor(readonly dir: string = skillsDir()) {}
 
-  private file(origin: string): string {
-    return path.join(this.dir, `${originSlug(origin)}.json`);
+  /**
+   * Files that would not parse. Never dropped and never overwritten: a
+   * corrupt store is a thing to look at, and returning it as "no procedures
+   * here" invites the next write to replace it with an empty one.
+   */
+  readonly corrupt: string[] = [];
+
+  /**
+   * Procedures this build will not execute, and why — almost always because
+   * they were written by a newer one.
+   *
+   * Kept apart from `corrupt` deliberately. Corrupt means "would not parse,
+   * never overwrite it"; these parse perfectly and are perfectly good files,
+   * they are simply not ours to run. Folding them together would make the
+   * never-overwrite rule and what `rm`/`clear` may do mean two different
+   * things at once.
+   *
+   * They are excluded at the read, which is the strongest guarantee available
+   * here: every selection path — list, all, get, candidatesFor, matchTemplate,
+   * compile, export — derives from this, so a procedure from a newer build
+   * cannot be replayed, promoted or emitted without any of those call sites
+   * having to remember to check.
+   */
+  readonly unreadable: { file: string; id: string; origin: string; contract: number; why: string }[] = [];
+
+  private originDir(origin: string): string {
+    return path.join(this.dir, originSlug(origin));
+  }
+
+  private file(origin: string, id: string): string {
+    return path.join(this.originDir(origin), `${encodeURIComponent(id)}.json`);
   }
 
   origins(): string[] {
-    let names: string[];
+    let entries: fs.Dirent[];
     try {
-      names = fs.readdirSync(this.dir).filter((n) => n.endsWith('.json'));
+      entries = fs.readdirSync(this.dir, { withFileTypes: true });
     } catch {
       return [];
     }
-    const out: string[] = [];
+    const out = new Set<string>();
+    for (const e of entries) {
+      if (e.isDirectory()) {
+        for (const s of this.readDir(path.join(this.dir, e.name))) out.add(s.origin);
+      } else if (e.isFile() && e.name.endsWith('.json')) {
+        // A pre-directory whole-file store; its entries name their own origins.
+        for (const s of this.legacyFile(path.join(this.dir, e.name))) out.add(s.origin);
+      }
+    }
+    return [...out];
+  }
+
+  /** Every parsable procedure in one origin directory, corrupt files recorded and left alone. */
+  private readDir(dir: string): Skill[] {
+    let names: string[];
+    try {
+      names = fs.readdirSync(dir).filter((n) => n.endsWith('.json') && !NOT_A_PROCEDURE.has(n));
+    } catch {
+      return [];
+    }
+    const out: Skill[] = [];
     for (const n of names) {
-      const skills = this.read(path.join(this.dir, n));
-      if (skills[0]) out.push(skills[0].origin);
+      const file = path.join(dir, n);
+      let raw: unknown;
+      try {
+        raw = JSON.parse(readWithRetry(file));
+      } catch (err) {
+        // Only a file that will not PARSE is corrupt. A file that would not
+        // OPEN — because a writer was renaming over it at that instant, or it
+        // was removed between the listing and the read — is not damaged, and
+        // condemning it would be a permanent verdict on a healthy procedure
+        // reached from a millisecond of bad luck. It also silently shrank the
+        // store: a procedure filed as corrupt is not returned, so an outcome
+        // recorded against it went nowhere.
+        const code = (err as NodeJS.ErrnoException).code;
+        if (code === 'ENOENT') continue;
+        if (err instanceof SyntaxError || !code) {
+          if (!this.corrupt.includes(file)) this.corrupt.push(file);
+        }
+        continue;
+      }
+      const skill = raw as Skill;
+      if (skill && typeof skill === 'object' && typeof skill.id === 'string' && typeof skill.origin === 'string') {
+        if (this.admit(skill, file)) out.push(skill);
+      } else if (!this.corrupt.includes(file)) this.corrupt.push(file);
     }
     return out;
   }
 
-  private read(file: string): Skill[] {
+  /**
+   * Is this procedure ours to run? Records the refusal if not, so something
+   * can say so later — silently dropping it is indistinguishable from the
+   * procedure never having been recorded, which is the wrong story entirely.
+   */
+  private admit(skill: Skill, file: string): boolean {
+    const verdict = contractVerdict(skill);
+    if (verdict.ok) return true;
+    // Keyed on the id as well as the file: a legacy whole-file store holds
+    // many procedures, and each refused one is its own thing to report.
+    if (!this.unreadable.some((u) => u.file === file && u.id === skill.id)) {
+      this.unreadable.push({ file, id: skill.id, origin: skill.origin, contract: verdict.found, why: verdict.why });
+    }
+    return false;
+  }
+
+  private write(skill: Skill): void {
+    const dir = this.originDir(skill.origin);
+    fs.mkdirSync(dir, { recursive: true });
+    const file = this.file(skill.origin, skill.id);
+    const tmp = `${file}.${process.pid}.tmp`;
     try {
-      const raw = JSON.parse(fs.readFileSync(file, 'utf8'));
-      return Array.isArray(raw) ? (raw as Skill[]) : [];
-    } catch {
-      return [];
+      fs.writeFileSync(tmp, JSON.stringify(skill, null, 1));
+      // Windows refuses to rename ONTO a file another process currently has
+      // open, with EPERM, and every reader of this store opens it — `all()`
+      // is called constantly. The write lock does not help, because readers
+      // do not take it and should not have to: reading is safe, the rename is
+      // atomic, and the only problem is that the two collide for the
+      // microseconds the reader's handle is open.
+      //
+      // This is what left a stray `.tmp` beside a bench store that ended up
+      // with 9 of 41 procedures. It was put down to antivirus at the time; it
+      // is ordinary concurrent reading, and it is transient, so the answer is
+      // to wait out the reader rather than to give up the write.
+      for (let attempt = 0; ; attempt++) {
+        try {
+          fs.renameSync(tmp, file);
+          break;
+        } catch (err) {
+          const code = (err as NodeJS.ErrnoException).code;
+          if (attempt >= RENAME_ATTEMPTS || (code !== 'EPERM' && code !== 'EACCES' && code !== 'EBUSY')) throw err;
+          pause(5 + attempt * 5);
+        }
+      }
+    } catch (err) {
+      // A rename that fails leaves the temp file behind forever. One was
+      // found beside a store that had ended up with 9 of the 41 procedures a
+      // run compiled — the whole-file layout made that a catastrophe, and one
+      // file per procedure makes it a single lost write, but the litter is
+      // still evidence of a failure nobody was told about.
+      try {
+        fs.rmSync(tmp, { force: true });
+      } catch {
+        /* the original error is the one worth reporting */
+      }
+      throw err;
     }
   }
 
-  private write(origin: string, skills: Skill[]): void {
-    fs.mkdirSync(this.dir, { recursive: true });
-    const file = this.file(origin);
-    const tmp = `${file}.${process.pid}.tmp`;
-    fs.writeFileSync(tmp, JSON.stringify(skills, null, 1));
-    fs.renameSync(tmp, file);
+  /**
+   * Read one procedure straight off disk, ignoring anything already read.
+   *
+   * A read-modify-write has to start from what is on disk NOW, not from a
+   * `Skill` some earlier call handed out — that object may be seconds old and
+   * another process may have recorded an outcome against it since.
+   */
+  /**
+   * Which file holds this procedure, by NAME rather than by reading anything.
+   *
+   * Looking it up through `all()` meant parsing every procedure in the store
+   * to find one path, and a transient read failure on any of them made the
+   * target look absent — at which point `update` returned null and the
+   * outcome it was recording vanished with no error at all. The file name is
+   * derived from the id, so a directory listing answers this without opening
+   * a single file, and nothing about another procedure can affect it.
+   */
+  private locate(id: string): string | null {
+    const name = `${encodeURIComponent(id)}.json`;
+    let entries: fs.Dirent[];
+    try {
+      entries = fs.readdirSync(this.dir, { withFileTypes: true });
+    } catch {
+      return null;
+    }
+    for (const e of entries) {
+      if (!e.isDirectory()) continue;
+      const candidate = path.join(this.dir, e.name, name);
+      if (fs.existsSync(candidate)) return candidate;
+    }
+    return null;
+  }
+
+  private readFile(file: string): Skill | null {
+    let raw: unknown;
+    // Retry a read that lost a race with somebody's rename. On Windows that
+    // surfaces as EPERM; everywhere it can surface as a torn or missing file
+    // for an instant. Giving up here and using a caller's older copy instead
+    // is how a read-modify-write silently reverts someone else's write —
+    // which is the entire bug this machinery exists to stop, reintroduced at
+    // the one point that has to be exactly right.
+    for (let attempt = 0; ; attempt++) {
+      try {
+        raw = JSON.parse(fs.readFileSync(file, 'utf8'));
+        break;
+      } catch (err) {
+        const code = (err as NodeJS.ErrnoException).code;
+        if (code === 'ENOENT') return null; // genuinely gone
+        if (attempt >= RENAME_ATTEMPTS) throw err;
+        pause(5 + attempt * 5);
+      }
+    }
+    const skill = raw as Skill;
+    if (!skill || typeof skill !== 'object' || typeof skill.id !== 'string' || typeof skill.origin !== 'string') return null;
+    return this.admit(skill, file) ? skill : null;
+  }
+
+  /**
+   * Read-modify-write one procedure, with nobody else in the middle.
+   *
+   * `recordOutcome` used to be `get` then mutate then `write`, and every
+   * counter it maintains is a read-modify-write: two daemons replaying the
+   * same procedure at once each read `successes: 1`, each wrote 2, and one
+   * run vanished. Promotion is computed from that same count, so the damage
+   * is not only a wrong number — a procedure can reach `validated` on fewer
+   * clean runs than the rule requires, or be held back from it.
+   *
+   * The lock is per PROCEDURE FILE rather than per origin, which is what the
+   * layout now makes natural: two procedures of one app have nothing to say
+   * to each other, and a per-origin lock would serialise a whole sweep behind
+   * whichever procedure was being written.
+   *
+   * `fn` gets the on-disk procedure, not a caller's copy, and returning null
+   * abandons the transaction without writing.
+   */
+  update(id: string, fn: (skill: Skill) => Skill | null): Skill | null {
+    const file = this.locate(id);
+    if (!file) return null;
+    return withFileLock(file, () => {
+      // Re-read INSIDE the lock. Finding the file above said only which file
+      // to lock; its contents by then may be somebody else's newer write.
+      //
+      // No falling back to an older copy if the read comes back empty. That
+      // would turn "I could not see the current state" into "I will overwrite
+      // it with a state from before", which is the lost update this whole
+      // path exists to prevent. A procedure deleted since is simply not
+      // updated.
+      const current = this.readFile(file);
+      if (!current) return null;
+      const next = fn(current);
+      if (!next) return null;
+      next.revision = (current.revision ?? 0) + 1;
+      this.write(next);
+      return next;
+    });
+  }
+
+  /**
+   * Every procedure in a pre-directory whole-file store, read in place.
+   *
+   * Nothing is rewritten or renamed: a legacy file may be a committed
+   * artifact — an exported bench store, a bundle someone pinned — and a read
+   * is not permission to edit it. The entries are filed by the origin they
+   * CARRY rather than the one the filename suggests, because that filename
+   * dropped the scheme and one file can therefore hold both http and https
+   * procedures. A per-procedure file of the same id wins, so the first `put`
+   * after an upgrade migrates that procedure and later reads stop consulting
+   * the legacy copy for it.
+   */
+  private legacyPath(origin: string): string {
+    return path.join(this.dir, `${origin.replace(/^[a-z]+:\/\//, '').replace(/[^A-Za-z0-9.-]+/g, '_') || 'file'}.json`);
+  }
+
+  private legacyFile(file: string): Skill[] {
+    let raw: unknown;
+    try {
+      raw = JSON.parse(fs.readFileSync(file, 'utf8'));
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code !== 'ENOENT' && !this.corrupt.includes(file)) this.corrupt.push(file);
+      return [];
+    }
+    if (!Array.isArray(raw)) {
+      if (!this.corrupt.includes(file)) this.corrupt.push(file);
+      return [];
+    }
+    return (raw as Skill[]).filter(
+      (s) => s && typeof s.id === 'string' && typeof s.origin === 'string' && this.admit(s, file),
+    );
+  }
+
+  private readLegacy(origin: string): Skill[] {
+    return this.legacyFile(this.legacyPath(origin));
   }
 
   list(origin: string): Skill[] {
-    return this.read(this.file(origin));
+    // Filter by the origin each entry carries: the directory name is a
+    // convenience, the entry is the record.
+    const current = this.readDir(this.originDir(origin)).filter((s) => s.origin === origin);
+    const have = new Set(current.map((s) => s.id));
+    const legacy = this.readLegacy(origin).filter((s) => s.origin === origin && !have.has(s.id));
+    return [...current, ...legacy];
   }
 
   all(): Skill[] {
@@ -247,27 +869,73 @@ export class SkillStore {
     return this.all().find((s) => s.id === id) ?? null;
   }
 
-  put(skill: Skill): void {
-    const skills = this.list(skill.origin).filter((s) => s.id !== skill.id);
-    skills.push(skill);
-    this.write(skill.origin, skills);
+  /**
+   * Write one procedure, last writer wins.
+   *
+   * Under the same lock `update` takes, so a plain write cannot land in the
+   * middle of somebody's read-modify-write. That is all a bare `put` can
+   * promise: it is handed a finished object, so it cannot merge, and a caller
+   * that needs "change this without losing a concurrent change" wants
+   * `update` instead.
+   */
+  put(skill: Skill, opts: { overwrite?: boolean } = {}): void {
+    const file = this.file(skill.origin, skill.id);
+    withFileLock(file, () => {
+      const current = this.readFile(file);
+      const expected = skill.revision;
+      // Compare-and-set, but only where staleness can be PROVEN. A revision
+      // on the incoming procedure means it was read from this store, so a
+      // mismatch is a fact: somebody wrote between that read and this write,
+      // and going ahead would erase them. No revision means the caller is
+      // authoring rather than editing — a fresh compile, a spec lowered for
+      // staging — and there is nothing to compare it against.
+      if (current && expected !== undefined && (current.revision ?? 0) !== expected && !opts.overwrite) {
+        throw new StaleWriteError(skill.id, expected, current.revision ?? 0);
+      }
+      skill.revision = (current?.revision ?? skill.revision ?? 0) + 1;
+      this.write(skill);
+    });
+  }
+
+  /**
+   * Delete is the one operation that may edit a legacy whole-file store: the
+   * caller is asking for the procedure to be gone, and shadowing it would
+   * leave it to reappear. Entries for other origins in that file are kept.
+   */
+  private dropLegacy(origin: string, gone: (s: Skill) => boolean): void {
+    const file = this.legacyPath(origin);
+    const all = this.legacyFile(file);
+    if (!all.length) return;
+    const kept = all.filter((s) => !(s.origin === origin && gone(s)));
+    if (kept.length === all.length) return;
+    const tmp = `${file}.${process.pid}.tmp`;
+    fs.writeFileSync(tmp, JSON.stringify(kept, null, 1));
+    fs.renameSync(tmp, file);
   }
 
   remove(id: string): boolean {
     const skill = this.get(id);
     if (!skill) return false;
-    this.write(skill.origin, this.list(skill.origin).filter((s) => s.id !== id));
+    try {
+      fs.rmSync(this.file(skill.origin, id), { force: true });
+    } catch {
+      return false;
+    }
+    this.dropLegacy(skill.origin, (s) => s.id === id);
     return true;
   }
 
   clear(origin: string): number {
-    const n = this.list(origin).length;
-    try {
-      fs.rmSync(this.file(origin), { force: true });
-    } catch {
-      // best effort
+    const skills = this.list(origin);
+    for (const s of skills) {
+      try {
+        fs.rmSync(this.file(origin, s.id), { force: true });
+      } catch {
+        // best effort
+      }
     }
-    return n;
+    this.dropLegacy(origin, () => true);
+    return skills.length;
   }
 
   /**
@@ -277,35 +945,54 @@ export class SkillStore {
    * inside a successful instruction. Demotion: the same step failing twice in
    * a row. One success is evidence, not proof (the bench caught a fabricated
    * "success" once); one failure can be a flaky page.
+   *
+   * A run with UNOBSERVED steps is neither. Its required expectations were
+   * still checked — against the live page, because the step diff was missing
+   * — so it is not a failure and not a strike. But promotion is a claim that
+   * the procedure has been seen to work, and a step whose effect nobody could
+   * capture has not been seen to do anything. It counts as a use, and stops
+   * there: `successes` does not move, so the second clean replay that
+   * promotes has to be a genuinely observed one.
    */
   recordOutcome(id: string, outcome: ReplayOutcome, now = new Date().toISOString()): Skill | null {
-    const skill = this.get(id);
-    if (!skill) return null;
-    const st = skill.stats;
-    st.uses += 1;
-    st.lastUsed = now;
-    st.fallthroughs += outcome.fallthroughs ?? 0;
-    if (outcome.ok && outcome.instructionSucceeded) {
-      st.successes += 1;
-      st.lastFailedAt = undefined;
-      if (skill.status === 'provisional' && st.successes >= 2) skill.status = 'validated';
-    } else if (!outcome.ok) {
-      st.partial += 1;
-      const at = outcome.failedAt ?? 0;
-      st.failedAtStep[String(at)] = (st.failedAtStep[String(at)] ?? 0) + 1;
-      if (st.lastFailedAt === at) skill.status = 'demoted';
-      st.lastFailedAt = at;
-    }
-    this.put(skill);
-    return skill;
+    return this.update(id, (skill) => {
+      const st = skill.stats;
+      st.uses += 1;
+      st.lastUsed = now;
+      st.fallthroughs += outcome.fallthroughs ?? 0;
+      const unobserved = outcome.unobserved ?? 0;
+      if (unobserved > 0) st.unobserved = (st.unobserved ?? 0) + unobserved;
+      if (outcome.ok && outcome.instructionSucceeded && unobserved === 0) {
+        st.successes += 1;
+        st.lastFailedAt = undefined;
+        if (skill.status === 'provisional' && st.successes >= 2) {
+          skill.status = 'validated';
+          // Say WHICH engine's rules these two clean runs were clean under.
+          // Without this the status alone would carry over a contract bump and
+          // claim evidence it does not have.
+          st.verifiedContract = contractOf(skill);
+        }
+      } else if (outcome.ok && outcome.instructionSucceeded) {
+        // Observed nothing conclusive: not a success, not a strike.
+        st.lastFailedAt = undefined;
+      } else if (!outcome.ok) {
+        st.partial += 1;
+        const at = outcome.failedAt ?? 0;
+        st.failedAtStep[String(at)] = (st.failedAtStep[String(at)] ?? 0) + 1;
+        if (st.lastFailedAt === at) skill.status = 'demoted';
+        st.lastFailedAt = at;
+      }
+      return skill;
+    });
   }
 
   /** A validated variant supersedes the skill it repaired. */
   supersede(originalId: string): void {
-    const original = this.get(originalId);
-    if (!original || original.status === 'demoted') return;
-    original.status = 'demoted';
-    this.put(original);
+    this.update(originalId, (original) => {
+      if (original.status === 'demoted') return null;
+      original.status = 'demoted';
+      return original;
+    });
   }
 }
 

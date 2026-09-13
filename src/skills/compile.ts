@@ -1,9 +1,29 @@
 import type { LocatorCandidate, RecordedEntry, RecordedInstruction, RecordedStep } from '../daemon/recorder.js';
 import type { Report } from '../agent/report.js';
-import { newSkillId, originOf, type Skill, type SkillParam, type SkillStep, type StepExpectation } from './store.js';
+import { SKILL_CONTRACT, newSkillId, originOf, type Skill, type SkillParam, type SkillStep, type StepExpectation } from './store.js';
 import { MIN_ID_LEN, digitDominant, looksLikeId, skeleton, tokenPattern } from './shape.js';
 import { idPositionPart, occursAsToken } from './ledger.js';
-import { WILDCARD, maskVolatile } from '../shared/text.js';
+import { WILDCARD, identityRe, maskVolatile } from '../shared/text.js';
+
+/**
+ * One thing the compiler did to the recording, and why.
+ *
+ * Every transform below deletes or rewrites steps the recording actually
+ * made, on evidence that is never conclusive: a dialog that looked inert, a
+ * navigation that looked superseded, two deletions that looked like
+ * iteration. Until this existed the only way to see what had fired was to
+ * recompile every published recording under two builds and diff the stores —
+ * which is how the "the remaining modal" misreading was found, and it took
+ * 23 rebuilds. A transformation that cannot say why it fired cannot be
+ * reviewed.
+ */
+export interface TransformNote {
+  /** The transform: foldLoops, dropDismissedDialogs, ... */
+  name: string;
+  /** 1-based index into the steps the transform was GIVEN. */
+  at: number;
+  reason: string;
+}
 
 /** Args whose string values are candidates for parameter slots. */
 const VALUE_ARGS = new Set(['value', 'text', 'option', 'url', 'prompt_text']);
@@ -256,7 +276,13 @@ export function compileSkills(input: CompileInput): Skill[] {
       return out;
     });
     const mintedForStart = mintedMap((m) => m.keptIndex < base);
-    return { sg, segParams, mintedForStart, folded: foldLoops(coalesceControls(dropDismissedDialogs(dropSupersededNavigation(skillSteps)))) };
+    const notes: TransformNote[] = [];
+    const folded = foldLoops(
+      coalesceControls(dropDismissedDialogs(dropSupersededNavigation(skillSteps, notes), notes), notes),
+      input.instruction,
+      notes,
+    );
+    return { sg, segParams, mintedForStart, folded, notes };
   });
 
   // Derived-param metadata lands on the MINTING segment: which post-fold step
@@ -395,11 +421,23 @@ export function compileSkills(input: CompileInput): Skill[] {
       ...(segDerived[k] ? { derived: segDerived[k] } : {}),
       // Only the last segment can vouch for the instruction's end state.
       ...(k === of - 1 ? { reportTemplate } : {}),
-      stats: { uses: 1, successes: 1, partial: 0, created: now, failedAtStep: {}, fallthroughs: 0 },
+      // Stamped where the procedure is BORN, not in SkillStore.write: every
+      // outcome recorded against a legacy procedure goes through write too,
+      // so stamping there would quietly relabel an old file as current on its
+      // first replay — laundering exactly the artifact the version exists to
+      // hold apart.
+      contract: SKILL_CONTRACT,
+      stats: { uses: 1, successes: 1, partial: 0, created: now, failedAtStep: {}, fallthroughs: 0, verifiedContract: SKILL_CONTRACT },
       status: 'provisional' as const,
       ...(chain ? { seq: { chain, index: k, of } } : {}),
       ...(input.variantOf ? { variantOf: input.variantOf } : {}),
-      provenance: { session: input.session, instruction: input.instruction, ...(input.model ? { model: input.model } : {}), created: now },
+      provenance: {
+        session: input.session,
+        instruction: input.instruction,
+        ...(input.model ? { model: input.model } : {}),
+        created: now,
+        ...(b.notes.length ? { transforms: b.notes } : {}),
+      },
     };
   });
 }
@@ -518,7 +556,11 @@ function identityOf(startText: string | undefined, slots: Map<string, string>, k
     // the live page showed "Backlog" — the same word.
     const value = raw.replace(/\s+/g, ' ').trim();
     if (!derivesFromKnown(raw, known) || value.length < MIN_IDENTITY_LEN || /^https?:/i.test(value)) continue;
-    if (!startText.replace(/\s+/g, ' ').includes(value)) continue;
+    // The same bounded rule replay will apply (identityRe). If compile minted a
+    // marker on a plain substring hit, it could mint one whose only appearance
+    // was INSIDE a longer token — a marker the tightened replay gate can never
+    // satisfy. Upstream of both runners, so it has to move with them.
+    if (!identityRe(value).test(startText.replace(/\s+/g, ' '))) continue;
     out.push(`{{${name}}}`);
   }
   return out;
@@ -1371,12 +1413,13 @@ const NON_LOOP_TOOLS = new Set(['read', 'read_all', 'eval', 'screenshot']);
  * seeing the repetition. Only no-locator steps with byte-identical args are
  * touched, so real actions are never merged.
  */
-export function coalesceControls(steps: SkillStep[]): SkillStep[] {
+export function coalesceControls(steps: SkillStep[], notes?: TransformNote[]): SkillStep[] {
   const out: SkillStep[] = [];
-  for (const step of steps) {
+  for (const [i, step] of steps.entries()) {
     const prev = out[out.length - 1];
     const noTarget = !step.locators.target?.length && !step.locators.source?.length;
     if (prev && noTarget && prev.tool === step.tool && !prev.locators.target?.length && JSON.stringify(prev.args) === JSON.stringify(step.args)) {
+      notes?.push({ name: 'coalesceControls', at: i + 1, reason: `repeat of the previous ${step.tool} with identical args and no target of its own` });
       continue;
     }
     out.push(step);
@@ -1393,8 +1436,12 @@ export function coalesceControls(steps: SkillStep[]): SkillStep[] {
  * intermediate page may have been load-bearing (a session bootstrap, a
  * redirect that set a cookie), and this cannot tell from the outside.
  */
-export function dropSupersededNavigation(steps: SkillStep[]): SkillStep[] {
-  return steps.filter((step, i) => !(step.tool === 'goto' && steps[i + 1]?.tool === 'goto'));
+export function dropSupersededNavigation(steps: SkillStep[], notes?: TransformNote[]): SkillStep[] {
+  return steps.filter((step, i) => {
+    const superseded = step.tool === 'goto' && steps[i + 1]?.tool === 'goto';
+    if (superseded) notes?.push({ name: 'dropSupersededNavigation', at: i + 1, reason: `the next step navigates again, to ${JSON.stringify(String(steps[i + 1].args.url ?? ''))}` });
+    return !superseded;
+  });
 }
 
 /** Button names that dismiss a dialog without acting — UI convention, not app knowledge. */
@@ -1412,18 +1459,37 @@ const DISMISSAL = /^(cancel|close|dismiss|no|not now|back|keep editing)$/i;
  * that button is named as a dismissal, and step N+1 recorded no page change
  * of its own. A confirm ("Discard", "Delete", "Save") never matches.
  */
-export function dropDismissedDialogs(steps: SkillStep[]): SkillStep[] {
+export function dropDismissedDialogs(steps: SkillStep[], notes?: TransformNote[]): SkillStep[] {
   const out: SkillStep[] = [];
   for (let i = 0; i < steps.length; i++) {
     const opener = steps[i];
     const closer = steps[i + 1];
     const added = opener.expect?.addedContains ?? [];
     const opensDialog = added.some((l) => /^-\s*dialog\b/.test(l));
-    if (opensDialog && closer?.tool === 'click' && !closer.expect?.addedContains?.length) {
+    // "Added nothing to the page" is not "did nothing". A dismissal that
+    // NAVIGATED, that the procedure reads a value from, that raised an alert,
+    // or that creates a record, has consequences the added-lines list cannot
+    // show — and the pair used to be dropped on the strength of that list
+    // alone. Every step carries the url it ran on, so what marks a navigation
+    // is the closer's destination DIFFERING from the opener's, not its
+    // presence. Any other recorded consequence keeps both steps.
+    const inert =
+      closer?.tool === 'click' &&
+      !closer.expect?.addedContains?.length &&
+      (closer.expect?.urlPattern ?? null) === (opener.expect?.urlPattern ?? null) &&
+      !closer.expect?.alertContains &&
+      !closer.mints &&
+      closer.label === undefined;
+    if (opensDialog && inert) {
       const primary = (closer.locators.target ?? [])[0] as { kind?: string; role?: string; name?: string; text?: string } | undefined;
       const name = primary?.kind === 'role' && primary.role === 'button' ? primary.name : primary?.kind === 'text' ? primary.text : undefined;
       const listed = name !== undefined && added.some((l) => l.includes(`button "${name}"`));
       if (name && listed && DISMISSAL.test(name.trim())) {
+        notes?.push({
+          name: 'dropDismissedDialogs',
+          at: i + 1,
+          reason: `opened a dialog and step ${i + 2} clicked its ${JSON.stringify(name)}, a dismissal that recorded no consequence of its own`,
+        });
         i += 1; // skip the closer too
         continue;
       }
@@ -1472,16 +1538,47 @@ function differsInRawId(a: SkillStep[], b: SkillStep[]): boolean {
 }
 
 /**
+ * A universal quantifier in the CALLER's own instruction: the one piece of
+ * evidence in a recording that speaks about scope rather than about what
+ * happened once. "Delete all the parts" authorises draining a collection;
+ * "delete part A and part B" does not, however many times the two look alike
+ * in the trace.
+ *
+ * The list is deliberately short, and "remaining" is deliberately not on it as
+ * a bare word. Rebuilding every published recording found five folded loops,
+ * and the one this rule sent to `drain` was a false positive: "after it closes,
+ * the REMAINING modal is titled 'Cancel {{v3}}'" — an instruction that opens by
+ * saying there are exactly TWO dialogs and then numbers the steps. There,
+ * "remaining" is an adjective picking out one specific thing, not a quantifier
+ * over a collection, and the giveaway is the definite article. "Delete
+ * remaining items" and "any remaining rows" still read as universal; "the
+ * remaining modal" no longer does. Missing a genuine universal costs a loop
+ * that stops at the recorded count, which is the safe direction; reading one
+ * into "the remaining modal" costs authority over a collection nobody counted.
+ */
+const UNIVERSAL = /\b(all|every|each|entire|whole)\b|(?<!\bthe\s)\bremaining\b/i;
+
+/**
  * Collapse a run of ≥2 consecutive, structurally-identical action groups that
  * differ only in a per-record id — the signature of iterating over a list (e.g.
- * deleting each part in turn) — into a single `loop` step. The loop repeats its
- * body while the body's first target still matches an element, so a replay on a
- * list of a different length still clears it, instead of hard-coding the count
- * seen when recording. Conservative by construction: distinct fields (a title
- * vs a customer box) have different skeletons and never fold, and an accidental
- * identical repeat (no id difference) is left alone.
+ * deleting each part in turn) — into a single `loop` step. Conservative by
+ * construction: distinct fields (a title vs a customer box) have different
+ * skeletons and never fold, and an accidental identical repeat (no id
+ * difference) is left alone.
+ *
+ * What the fold does NOT decide is how many records the loop may touch. It
+ * used to: two deletions became a loop capped at seven, which is authority
+ * over a collection nobody had looked at, and a list of ten came back with
+ * three rows left and a success. One trace cannot say whether the job was
+ * "these two" or "all of them" — so the loop is bounded to the work that was
+ * observed unless the instruction itself quantifies universally, and the
+ * generalisation that remains by default is the one the evidence supports:
+ * the locators are re-resolved every pass, so the SAME number of records is
+ * worked however the app has reordered or renumbered them.
  */
-export function foldLoops(steps: SkillStep[]): SkillStep[] {
+export function foldLoops(steps: SkillStep[], instruction = '', notes?: TransformNote[]): SkillStep[] {
+  const quantifier = UNIVERSAL.exec(instruction);
+  const drain = Boolean(quantifier);
   const out: SkillStep[] = [];
   let i = 0;
   while (i < steps.length) {
@@ -1511,7 +1608,17 @@ export function foldLoops(steps: SkillStep[]): SkillStep[] {
         locators: {},
         body: group,
         while: group[0].locators.target,
-        max: Math.min(count * 2 + 3, LOOP_MAX_ITER_CAP),
+        // Bounded: exactly the records the recording worked. Drain: room to
+        // outgrow the recorded list, still with a runaway guard.
+        max: drain ? Math.min(count * 2 + 3, LOOP_MAX_ITER_CAP) : count,
+        scope: drain ? 'drain' : 'observed',
+      });
+      notes?.push({
+        name: 'foldLoops',
+        at: i + 1,
+        reason: drain
+          ? `${count} identical action group(s) folded into a loop allowed to DRAIN the collection, because the instruction said ${JSON.stringify(quantifier![0])}`
+          : `${count} identical action group(s) folded into a loop bounded to those ${count}, because the instruction quantifies nothing`,
       });
       i += count * len;
       folded = true;

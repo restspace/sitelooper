@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { saveFlow, type Flow } from '../src/skills/flow.js';
-import { SkillStore, type Skill } from '../src/skills/store.js';
+import { SKILL_CONTRACT, SkillStore, type Skill } from '../src/skills/store.js';
 import { compileFlow, exportFlowBundle, loadFlowBundle } from '../src/spec/index.js';
 
 const dirs: string[] = [];
@@ -80,6 +80,45 @@ describe('portable procedure snapshots', () => {
     const again = compileFlow(flowFile, { store, outDir: out, allowDemoted: true });
     expect(again.specFile).toBeNull();
     expect(fs.readFileSync(path.join(out, 'portable.spec.ts'), 'utf8')).toContain('// user assertion');
+  });
+
+  /**
+   * BundleSkillStore serves its procedures from the snapshot array and never
+   * goes through SkillStore's reader, so the contract check has to happen
+   * where the snapshot is loaded. Throwing beats filtering: a silently
+   * dropped entry surfaces later as a missing-procedure diagnostic, which
+   * blames the snapshot for being incomplete when the truth is that it is too
+   * new to read.
+   */
+  it('refuses a snapshot holding a procedure written by a newer build', () => {
+    const dir = temp();
+    const { flowFile, store } = fixtures(dir);
+    const out = path.join(dir, 'bundle.json');
+    exportFlowBundle(flowFile, { outFile: out, store });
+    const raw = JSON.parse(fs.readFileSync(out, 'utf8'));
+    raw.skills[0].contract = SKILL_CONTRACT + 1;
+    fs.writeFileSync(out, JSON.stringify(raw, null, 2));
+    expect(() => loadFlowBundle(out)).toThrow(new RegExp(`contract ${SKILL_CONTRACT + 1}`));
+    // The snapshot's own schemaVersion is a separate question and is fine —
+    // a v1 snapshot may legitimately carry procedures of any contract.
+    expect(raw.schemaVersion).toBe(1);
+  });
+
+  /**
+   * `--allow-demoted` is about demoted pins. It used to clear EVERY error, so
+   * any future error-severity diagnostic was waivable by a flag that says
+   * nothing about it.
+   */
+  it('does not let --allow-demoted waive an unrelated refusal', () => {
+    const dir = temp();
+    const { flowFile, store } = fixtures(dir);
+    const skill = store.get('s_portable')!;
+    skill.contract = SKILL_CONTRACT + 1;
+    store.put(skill);
+    const fresh = new SkillStore(store.dir);
+    const result = compileFlow(flowFile, { store: fresh, outDir: path.join(dir, 'out'), allowDemoted: true });
+    expect(result.refused).toBe(true);
+    expect(result.diagnostics.map((d) => d.code)).toContain('future-contract');
   });
 
   it('does not call an emitted TODO ready to execute', () => {

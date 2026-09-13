@@ -74,6 +74,18 @@ describe('readiness acceptance gate', () => {
     const result = runReadinessCheck({ flowFile, vars: { name: 'n-{n}' }, fixtureIsolation: true }, () => { throw new Error('must not run'); });
     expect(result.blockers.join(' ')).toContain('unsupported');
   });
+  /**
+   * A step whose required expectation had no nameable line emitted no
+   * assertion at all: it ran, checked nothing about its own effect, and went
+   * green. Three green runs of that are three runs of nothing, so readiness
+   * refuses the claim rather than quietly making it worth less.
+   */
+  it('blocks a step whose effect the artifact does not verify', () => {
+    fs.appendFileSync(flowFile, '\n// UNCHECKED: this run\'s own values must show — none of the 1 recorded line(s) can be named as a locator, so this step\'s effect is not verified here.');
+    const result = runReadinessCheck({ flowFile, vars: { name: 'n-{n}' }, fixtureIsolation: true }, () => { throw new Error('must not run'); });
+    expect(result.outcome).toBe('blocked');
+    expect(result.blockers.join(' ')).toContain('does not verify their effect');
+  });
   it('requires coverage metadata for older compiled artifacts', () => {
     fs.writeFileSync(flowFile, 'export const steps = {};');
     const result = runReadinessCheck({ flowFile, fixtureIsolation: true }, () => { throw new Error('must not run'); });

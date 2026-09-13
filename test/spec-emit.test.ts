@@ -5,7 +5,7 @@ import ts from 'typescript';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Flow } from '../src/skills/flow.js';
 import { SkillStore, type Skill, type SkillStep } from '../src/skills/store.js';
-import { VOLATILE_TOKEN_SHAPE } from '../src/shared/text.js';
+import { IDENTITY_EDGE, VOLATILE_TOKEN_SHAPE } from '../src/shared/text.js';
 import { budgetMs, emitFlowFile, emitSpecFile } from '../src/spec/emit.js';
 import { flowToSpec, type SpecFlow, type SpecSegment, type SpecStep } from '../src/spec/ir.js';
 import { compileFlow } from '../src/spec/index.js';
@@ -632,10 +632,17 @@ describe('preconditions, minting and loops', () => {
     // getByText alone could not see a marker that is an <input>'s VALUE, which
     // is what an odoo form in edit mode shows and what sp5odb died on
     expect(bound).toContain(
-      "await expect.poll(() => present(page, `${p.v1}`), { timeout: 5000, message: 'identity: {{v1}} is not on this page' }).toBe(true);",
+      "await expect.poll(() => present(page, `${p.v1}`, true), { timeout: 5000, message: 'identity: {{v1}} is not on this page' }).toBe(true);",
     );
-    expect(bound).toContain('async function present(page: Page, text: string): Promise<boolean> {');
+    expect(bound).toContain('async function present(page: Page, text: string, whole = false): Promise<boolean> {');
     expect(bound).toContain(".locator('input, textarea, select')");
+    // C06. The identity half is BOUNDED, and by the daemon's own boundary
+    // class — not a second copy written out here, which would be free to drift
+    // away from src/shared/text.ts the way a hand-copied VOLATILE_TOKEN_SHAPE
+    // would. `fwgr25-n1` must not be satisfied by a page showing `fwgr25-n10`.
+    expect(bound).toContain('function identityRe(text: string): RegExp {');
+    expect(bound).toContain(`const EDGE = ${JSON.stringify(IDENTITY_EDGE)};`);
+    expect(bound).toContain("return new RegExp(`(?<!${EDGE})${body}(?!${EDGE})`, 'iu');");
     expect(syntaxErrors(bound)).toEqual([]);
     const unbound = emit(
       specOf([step], { segments: [segment([step], { params: {}, preconditions: { urlPattern: 'http://app.test/x', requireText: ['{{v9}}'] } })] }),
@@ -643,6 +650,32 @@ describe('preconditions, minting and loops', () => {
     expect(unbound).toContain('is unbound here — nothing to check.');
     // and the helper is inlined only where a marker actually needs it
     expect(unbound).not.toContain('async function present(');
+  });
+
+  /**
+   * C02. A segment whose FIRST step is a goto carries its own precondition, so
+   * the gate belongs AFTER that goto — before it, the question is asked of the
+   * page being left, and the recorded url is the RECORDING run's record. This
+   * is replay's `navigatesItself` rule (src/skills/replay.ts), which the
+   * artifact had no equivalent of.
+   */
+  it('defers a self-navigating segment’s identity check until after its own goto', () => {
+    const goto: SkillStep = { tool: 'goto', args: { url: 'http://app.test/items/42' }, locators: {} };
+    const click: SkillStep = { tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'id', selector: '#b' }] } };
+    const pre = { urlPattern: 'http://app.test/items/:id', requireText: ['{{v1}}'] };
+    const source = emit(specOf([goto, click], { segments: [segment([goto, click], { preconditions: pre })] }));
+    const poll = source.indexOf('await expect.poll(() => present(page, `${p.v1}`, true)');
+    expect(poll).toBeGreaterThan(-1);
+    expect(poll).toBeGreaterThan(source.indexOf("await page.goto('http://app.test/items/42');"));
+    expect(poll).toBeLessThan(source.indexOf("locator('#b')"));
+    expect(source).toContain('// The identity gate sits AFTER the goto above, and is not skipped.');
+    expect(syntaxErrors(source)).toEqual([]);
+
+    // Only a segment that navigates itself defers: everywhere else the gate
+    // stays where it was, at segment entry.
+    const still = emit(specOf([click], { segments: [segment([click], { preconditions: pre })] }));
+    expect(still.indexOf('await expect.poll(() => present(page, `${p.v1}`, true)')).toBeLessThan(still.indexOf("locator('#b')"));
+    expect(still).not.toContain('// The identity gate sits AFTER the goto above');
   });
 
   it("re-reads a minted url part after the DOM settles, so a second redirect cannot strand it (the odoo signin failure)", () => {
@@ -676,15 +709,51 @@ describe('preconditions, minting and loops', () => {
     expect(source).toContain("await steps['01-do'](page, { d1: '', v1: vars.name }, outputs, run);");
   });
 
-  it('unrolls a folded loop as a capped for-loop on the first match', () => {
+  /**
+   * A required expectation — a line carrying this run's own value — whose
+   * lines name no element emitted no assertion at all, leaving a step that
+   * runs and checks nothing about its effect. `describeInPage` renders an
+   * element whose subtree text is empty or over-long as `role ""`, so this is
+   * an ordinary recording, not a contrived one. Marked in the source so the
+   * readiness gate can refuse to call the artifact verified.
+   */
+  it('marks a required expectation it cannot express, instead of dropping it', () => {
+    const step: SkillStep = {
+      tool: 'click',
+      args: { target: '@e1' },
+      locators: { target: [{ kind: 'id', selector: '#save' }] },
+      expect: { addedContains: ['- generic "" {{v1}}'] },
+    };
+    const { source, warnings } = emitFlowFile(specOf([step]), { tier: 'plain' });
+    expect(source).toContain('// UNCHECKED:');
+    expect(source).toContain("this run's own values must show");
+    expect(warnings.join(' ')).toContain('does not check its effect');
+  });
+
+  /**
+   * C01. The emitted loop mirrors replay's runLoop, cursor included. Taking
+   * `.first()` every pass is right only while the collection shrinks; on an
+   * edit-in-place loop it works record one over and over. And the cap is a
+   * budget, not a finish line.
+   */
+  it('unrolls a folded loop as a capped for-loop with replay\'s cursor', () => {
     const body: SkillStep[] = [{ tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Remove' }] } }];
     const loop: SkillStep = { tool: 'loop', args: {}, locators: {}, body, while: [{ kind: 'role', role: 'button', name: 'Remove' }], max: 7 };
     const source = emit(specOf([loop]));
     expect(source).toContain("const guard1 = page.getByRole('button', { name: 'Remove', exact: true });");
-    expect(source).toContain('for (let i = 0; i < 7 && (await guard1.count()) > 0; i++) {');
-    expect(source).toContain("await click((page.getByRole('button', { name: 'Remove', exact: true })).first());");
+    expect(source).toContain('let remaining1 = await guard1.count();');
+    expect(source).toContain('let cursor1 = 0;');
+    expect(source).toContain('for (; pass1 < 7 && cursor1 < remaining1; pass1++) {');
+    // the body acts on the record at the cursor, not always the first match
+    expect(source).toContain("await click((page.getByRole('button', { name: 'Remove', exact: true })).nth(cursor1));");
     expect(source).not.toContain('.or(page');
-    expect(source).toContain('// FIRST match');
+    // a pass that did not shrink the collection moves on to the next record
+    expect(source).toContain('const before1 = remaining1;');
+    expect(source).toContain('if (remaining1 >= before1) cursor1++;');
+    // termination: records left unvisited when the cap runs out is a failure
+    expect(source).toContain('if (cursor1 < remaining1) {');
+    expect(source).toContain('the recorded work is not finished');
+    expect(source).toContain('const LOOP_SHRINK_WAIT_MS = 1000;');
     expect(syntaxErrors(source)).toEqual([]);
   });
 });
@@ -707,7 +776,9 @@ describe('flow-level wiring', () => {
     });
     const source = emit(spec);
     expect(source).toContain("v1: vars.name");
-    expect(source).toContain("v2: outputs['02-b.title'] ?? ''");
+    // v2 is bound to another step's output AND used by a recorded step, so the
+    // call site takes it through `need` rather than defaulting it to ''.
+    expect(source).toContain("v2: need(outputs, '02-b.title', '01-do')");
     expect(source).toContain('v3: `literal-${vars.name}`');
     expect(source).toContain("v4: process.env.BENCH_PASSWORD ?? ''");
     expect(syntaxErrors(source)).toEqual([]);
@@ -726,7 +797,7 @@ describe('flow-level wiring', () => {
     const out = emit({ version: 1, name: 'demo', origin: 'http://app.test', startUrl: 'http://app.test/', vars: [], steps: [producer, consumer] });
     // the producing step's body publishes it; the consuming call site reads it
     expect(out).toContain("outputs['02-create.url.p1'] = await urlPartWhen(page, 'p1');");
-    expect(out).toContain("v1: `http://app.test/d/${outputs['02-create.url.p1'] ?? ''}/notes`");
+    expect(out).toContain("v1: `http://app.test/d/${need(outputs, '02-create.url.p1', '03-add')}/notes`");
     // and only what something reads: an output nobody consumes is noise
     expect(out).not.toContain("outputs['03-add.url");
     expect(out).not.toContain("outputs['02-create.url']");
@@ -739,7 +810,85 @@ describe('flow-level wiring', () => {
     const consumer: SpecStep = { id: '03-add', instruction: 'add', params: { v1: '{{02-create.url}}' }, outputs: [], segments: [segment([step])] };
     const out = emit({ version: 1, name: 'demo', origin: 'http://app.test', startUrl: 'http://app.test/', vars: [], steps: [producer, consumer] });
     expect(out).toContain("outputs['02-create.url'] = page.url();");
-    expect(out).toContain("v1: outputs['02-create.url'] ?? ''");
+    expect(out).toContain("v1: need(outputs, '02-create.url', '03-add')");
+  });
+
+  /**
+   * G03. A read that matched nothing is left empty on purpose — that is honest
+   * for an OBSERVATION and fatal for an ARGUMENT. Replay already draws the
+   * line at consumption (server.ts:1009-1024 + ignorableRefs): a reference
+   * bound into a slot the pinned procedure USES blocks the zero-model replay,
+   * one bound into a slot nothing reads does not. The artifact drew no line at
+   * all: `outputs[ref] ?? ''` turned a missed read into a blank that a
+   * record-scoped locator matches EVERY record with.
+   */
+  describe('a bound reference a used slot needs is not allowed to arrive blank', () => {
+    const fill: SkillStep = { tool: 'fill', args: { target: '@e1', value: '{{v1}}' }, locators: { target: [{ kind: 'id', selector: '#i' }] } };
+    const spec = (usedIn: number[]) =>
+      specOf([fill], {
+        params: { v1: '{{02-b.title}}' },
+        segments: [segment([fill], { params: { v1: { example: 'a', usedIn, known: true } } })],
+      });
+
+    it('takes a used slot through need(), naming the ref and the consuming step', () => {
+      const source = emit(spec([1]));
+      expect(source).toContain("v1: need(outputs, '02-b.title', '01-do')");
+      expect(source).toContain('function need(outputs: Outputs, ref: string, by: string): string {');
+      expect(syntaxErrors(source)).toEqual([]);
+    });
+
+    it('leaves an unused slot exactly as it was, and carries no helper for it', () => {
+      const source = emit(spec([]));
+      expect(source).toContain("v1: outputs['02-b.title'] ?? ''");
+      expect(source).not.toContain('need(outputs, ');
+      // The helper is emitted only where something calls it, like every other.
+      expect(source).not.toContain('function need(');
+    });
+
+    /**
+     * A slot no recorded step types or locates by can still be the one that
+     * names the record — `ignorableRefs` reads requireText for exactly that,
+     * and so must this.
+     */
+    it('checks a slot that only a requireText marker names', () => {
+      const source = emit(
+        specOf([fill], {
+          params: { v1: '{{02-b.title}}' },
+          segments: [
+            segment([fill], {
+              params: { v1: { example: 'a', usedIn: [], known: true } },
+              preconditions: { urlPattern: 'http://app.test/items', requireText: ['Order {{v1}}'] },
+            }),
+          ],
+        }),
+      );
+      expect(source).toContain("v1: need(outputs, '02-b.title', '01-do')");
+    });
+
+    it('never checks a var or an env secret: neither is a value this run produces', () => {
+      const source = emit(
+        specOf([fill], {
+          params: { v1: '{{name}}', v2: '{{env:BENCH_PASSWORD}}' },
+          segments: [segment([fill], { params: { v1: { example: 'a', usedIn: [1] }, v2: { example: 'b', usedIn: [1] } } })],
+        }),
+      );
+      expect(source).toContain('v1: vars.name');
+      expect(source).toContain("v2: process.env.BENCH_PASSWORD ?? ''");
+      expect(source).not.toContain('need(outputs, ');
+    });
+
+    it('throws on a missing or empty value and passes a real one through', () => {
+      const { need } = runnableHelpers(emit(spec([1])));
+      expect(() => need({}, 'a.b', '03-add')).toThrow(/a\.b/);
+      expect(() => need({}, 'a.b', '03-add')).toThrow(/03-add/);
+      // Published-but-empty is the defect's own shape: readOptional's value.
+      expect(() => need({ 'a.b': '' }, 'a.b', '03-add')).toThrow(/a\.b/);
+      expect(() => need({ 'a.b': '' }, 'a.b', '03-add')).toThrow(/published empty/);
+      // It points at the line the producing read logged, and says the run so far stands.
+      expect(() => need({}, 'a.b', '03-add')).toThrow(/sitelooper skip/);
+      expect(() => need({}, 'a.b', '03-add')).toThrow(/nothing of 03-add has run/);
+      expect(need({ 'a.b': 'X' }, 'a.b', '03-add')).toBe('X');
+    });
   });
 
   it('inlines a recorded value with a warning when the flow binds no slot', () => {
@@ -1500,10 +1649,27 @@ describe('emitFlowFile: the already-satisfied guard', () => {
   it('inlines the satisfied helper, and the present helper it is built on', () => {
     const source = emit(cancelStep());
     expect(source).toContain('async function satisfied(page: Page, identity: string[], goal: string[]): Promise<boolean> {');
-    expect(source).toContain('async function present(page: Page, text: string): Promise<boolean> {');
+    expect(source).toContain('async function present(page: Page, text: string, whole = false): Promise<boolean> {');
+    // …and the bounded identity matcher present() reaches for, pulled in
+    // transitively because the identity half of `satisfied` asks for it.
+    expect(source).toContain('function identityRe(text: string): RegExp {');
     // Helpers live between DRIFT and the steps object, like every other one.
     expect(source.indexOf('async function satisfied(')).toBeGreaterThan(source.indexOf('export const DRIFT'));
     expect(source.indexOf('async function satisfied(')).toBeLessThan(source.indexOf('export const steps = {'));
+  });
+
+  /**
+   * The record-scope check landed in replay first and, for a while, only
+   * there. That is the shape of bug the parity harness exists for: a compiled
+   * spec would see "Order A" and "Cancelled" both on a list page and skip the
+   * step, when it was order B that had been cancelled.
+   */
+  it('carries the record-scope check into the artifact, not just the page-wide one', () => {
+    const source = emit(cancelStep());
+    expect(source).toContain('async function sharesScope(page: Page, identity: string[], goal: string[]): Promise<boolean> {');
+    // satisfied() must actually CALL it — inlining a helper nothing reaches is
+    // the failure this test is really guarding against.
+    expect(source).toContain('return await sharesScope(page, identity, goal);');
   });
 
   it('emits nothing at all for a segment with no goal', () => {
@@ -1543,10 +1709,13 @@ describe('emitFlowFile: the already-satisfied guard', () => {
     const js = ts.transpileModule(fn![0], {
       compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext },
     }).outputText;
-    const build = new Function('present', `${js}\nreturn satisfied;`) as (
+    // `sharesScope` is the other half and is exercised on a real DOM below;
+    // stub it true here so these cases speak only about presence.
+    const build = new Function('present', 'sharesScope', `${js}\nreturn satisfied;`) as (
       p: (page: unknown, t: string) => Promise<boolean>,
+      s: () => Promise<boolean>,
     ) => (page: unknown, identity: string[], goal: string[]) => Promise<boolean>;
-    const onPage = (shown: string[]) => build(async (_p, t) => shown.includes(t));
+    const onPage = (shown: string[]) => build(async (_p, t) => shown.includes(t), async () => true);
     expect(await onPage(['S00021', 'Sales Order', 'Cancelled'])(null, ['S00021', 'Sales Order'], ['Cancelled'])).toBe(true);
     // the right record, still in its old state
     expect(await onPage(['S00021', 'Sales Order'])(null, ['S00021', 'Sales Order'], ['Cancelled'])).toBe(false);
