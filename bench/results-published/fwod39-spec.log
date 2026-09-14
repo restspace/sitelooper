@@ -1,0 +1,50 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-open
+[sitelooper step] 02-create
+  ✘  1 fwod39.spec.ts:4:1 › fwod39 (1.5m)
+
+
+  1) fwod39.spec.ts:4:1 › fwod39 › 03-open: In Odoo, open the existing draft quotation with reference {{02-create.quotation_reference}} (customer '{{runid}} Bench Customer', currently one line: '{{02-create.product_name}}' qty 3). Add a SECOND order line with a DIFFERENT product (the product field is an autocomplete dropdown - actually click an option from the dropdown; do not reuse Desk Combination) with quantity 2. Let Odoo auto-fill the unit price. Save the quotation. Then report: (a) the product name of the new second line, (b) the new Untaxed Amount the quotation shows, and (c) the Total. Keep the quotation in draft - do not confirm it. Note: Odoo long-polls so the page is never network-idle - wait for concrete elements instead. 
+
+    Error: none of 2 recorded locators resolved at 03-open s_f95701/5 target (page is at http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form): locator('table > tbody > tr:nth-of-type(2) > td:nth-of-type(4) > div > input') | locator('[data-sitelooper-point="691,520"]')
+
+       at fwod39.flow.ts:7842
+
+      7840 | /** The stop for a chain that resolved nothing, shared by `pick` and `pickOrNavigate`. */
+      7841 | function pickMiss(page: Page, candidates: CandidateObservation[], where: string, note?: string): Error {
+    > 7842 |   return new Error(
+           |          ^
+      7843 |     // The url and the recorded step are half the answer whenever a chain
+      7844 |     // misses wholesale: a locator that named the control on the day it was
+      7845 |     // recorded usually misses because the page is not the page the step
+        at pickMiss (/home/user/sitelooper/bench/results/fwod39-spec-tmp/fwod39.flow.ts:7842:10)
+        at pick (/home/user/sitelooper/bench/results/fwod39-spec-tmp/fwod39.flow.ts:7837:9)
+        at Object.act (/home/user/sitelooper/bench/results/fwod39-spec-tmp/fwod39.flow.ts:10033:22)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwod39-spec-tmp/fwod39.flow.ts:5971:18)
+        at Object.03-open (/home/user/sitelooper/bench/results/fwod39-spec-tmp/fwod39.flow.ts:10024:5)
+        at /home/user/sitelooper/bench/results/fwod39-spec-tmp/fwod39.flow.ts:12016:7
+        at runFlow (/home/user/sitelooper/bench/results/fwod39-spec-tmp/fwod39.flow.ts:12015:5)
+        at /home/user/sitelooper/bench/results/fwod39-spec-tmp/fwod39.spec.ts:9:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    [sitelooper drift] 02-create s_2df8c9/7 target: primary locator('tr:nth-of-type(1) > td:nth-of-type(6) > div > div > span > div') missed; used #2 locator('[data-sitelooper-point="858,440"]') (#1 absent)
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../test-results/fwod39-fwod39/error-context.md
+
+  1 failed
+    fwod39.spec.ts:4:1 › fwod39 ────────────────────────────────────────────────────────────────────
+[sitelooper warn] step 02-create s_e77eb0/10: none of the 2 expected page change(s) appeared in the step diff (found on the page instead)
+[sitelooper skip] 02-create s_e77eb0/11 target: read target not found — value left empty
+[sitelooper skip] 02-create s_e77eb0/13 target: read target not found — value left empty
+[sitelooper warn] step 02-create s_e77eb0/14: none of the 5 expected page change(s) appeared in the step diff (found on the page instead)
+[sitelooper skip] 02-create s_2df8c9/3 target: read target not found — value left empty
+[sitelooper skip] 02-create s_2df8c9/4 target: read target not found — value left empty
+[sitelooper drift] 02-create s_2df8c9/7 target: primary locator('tr:nth-of-type(1) > td:nth-of-type(6) > div > div > span > div') missed; used #2 locator('[data-sitelooper-point="858,440"]') (#1 absent)
+[sitelooper skip] 02-create s_2df8c9/9 target: read target not found — value left empty
+[sitelooper skip] 02-create s_2df8c9/10 target: read target not found — value left empty
+[sitelooper warn] step 03-open s_f95701/1: none of the 5 expected page change(s) appeared in the step diff (found on the page instead)
+[sitelooper warn] step 03-open s_f95701/3: none of the 2 expected page change(s) appeared in the step diff (found on the page instead)
+[sitelooper skip] 03-open s_f95701/4 target: read target not found — value left empty
