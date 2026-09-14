@@ -1,0 +1,47 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-open
+[sitelooper step] 02-add
+  ✘  1 fwrd50.spec.ts:4:1 › fwrd50 (11.5s)
+
+
+  1) fwrd50.spec.ts:4:1 › fwrd50 › 03-add: On the ticket detail page for ticket {{01-open.ticket_reference}} (titled '{{runid}} RD Bench Ticket'), add a second part named exactly '{{runid}} RD Part B' with cost 200 and markup 25. Use the 'Add part' action, fill the form fields (name, cost, markup) and submit. Wait for the part to appear in the ticket's parts list alongside '{{runid}} RD Part A'. Report the new part's name, cost, markup, and the price the app computes/displays for it, plus the ticket's total. 
+
+    Error: identity: {{v2}} is not on this page
+
+    identity: {{v2}} is not on this page
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+
+       at fwrd50.flow.ts:8237
+
+      8235 |     await preconditionGate('http://127.0.0.1:4180/#/tickets/:id', page.url(), p, '03-add s_c675d2', cosine(recordedFingerprint('03-add', 's_c675d2'), (await fingerprintPage(page)) ?? undefined));
+      8236 |     // identity: this must be the record the flow is working on, not another of the same shape.
+    > 8237 |     await expect.poll(() => presentOnPage(page, [`${p.v2}`], { whole: true }), { timeout: 5000, message: 'identity: {{v2}} is not on this page' }).toBe(true);
+           |                                                                                                                                                    ^
+      8238 |     // identity: this must be the record the flow is working on, not another of the same shape.
+      8239 |     await expect.poll(() => presentOnPage(page, [`${p.v3}`], { whole: true }), { timeout: 5000, message: 'identity: {{v3}} is not on this page' }).toBe(true);
+      8240 |
+        at Object.03-add (/home/user/sitelooper/bench/results/fwrd50-spec-spec-tmp/fwrd50.flow.ts:8237:148)
+        at /home/user/sitelooper/bench/results/fwrd50-spec-spec-tmp/fwrd50.flow.ts:10304:7
+        at runFlow (/home/user/sitelooper/bench/results/fwrd50-spec-spec-tmp/fwrd50.flow.ts:10303:5)
+        at /home/user/sitelooper/bench/results/fwrd50-spec-spec-tmp/fwrd50.spec.ts:9:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    [sitelooper drift] 01-open s_f85b39/4 target: primary locator('text=fwrd50-spec RD Bench Ticket') missed; used #2 locator('#ticket-rows tr').filter({ hasText: 'fwrd50-spec RD Bench Ticket' }).locator('td:nth-of-type(2)')
+    [sitelooper drift] 01-open s_b20a9c/6 target: primary locator('#view > div > di...
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../test-results/fwrd50-fwrd50/error-context.md
+
+  1 failed
+    fwrd50.spec.ts:4:1 › fwrd50 ────────────────────────────────────────────────────────────────────
+[sitelooper drift] 01-open s_f85b39/4 target: primary locator('text=fwrd50-spec RD Bench Ticket') missed; used #2 locator('#ticket-rows tr').filter({ hasText: 'fwrd50-spec RD Bench Ticket' }).locator('td:nth-of-type(2)')
+[sitelooper drift] 01-open s_b20a9c/6 target: primary locator('#view > div > div:nth-of-type(1) > p:nth-of-type(2)') missed; used #2 getByText(/^Customer: Not recorded · Raised (?:\d{1,2}:\d{2}(?::\d{2})?|\d{1,4}[/.-]\d{1,2}[/.-]\d{1,4})$/)

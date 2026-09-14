@@ -1,0 +1,40 @@
+{
+  "arm": "spec",
+  "runid": "fwrd50-spec",
+  "target": "repairdesk",
+  "flow": "fwrd50.json",
+  "flowName": "fwrd50",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwrd50-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwrd50-spec-spec-tmp/fwrd50.flow.ts",
+  "specFile": "bench/results/fwrd50-spec-spec-tmp/fwrd50.spec.ts",
+  "wallMs": 14425,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwrd50",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 11498,
+      "error": "Error: identity: {{v2}} is not on this page\n\nidentity: {{v2}} is not on this page\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate",
+      "drift": [
+        "[sitelooper drift] 01-open s_f85b39/4 target: primary locator('text=fwrd50-spec RD Bench Ticket') missed; used #2 locator('#ticket-rows tr').filter({ hasText: 'fwrd50-spec RD Bench Ticket' }).locator('td:nth-of-type(2)')",
+        "[sitelooper drift] 01-open s_b20a9c/6 target: primary locator('#view > div > div:nth-of-type(1) > p:nth-of-type(2)') missed; used #2 getByText(/^Customer: Not recorded · Raised (?:\\d{1,2}:\\d{2}(?::\\d{2})?|\\d{1,4}[/.-]\\d{1,2}[/.-]\\d{1,4})$/)"
+      ]
+    }
+  ],
+  "drift": [
+    "[sitelooper drift] 01-open s_f85b39/4 target: primary locator('text=fwrd50-spec RD Bench Ticket') missed; used #2 locator('#ticket-rows tr').filter({ hasText: 'fwrd50-spec RD Bench Ticket' }).locator('td:nth-of-type(2)')",
+    "[sitelooper drift] 01-open s_b20a9c/6 target: primary locator('#view > div > div:nth-of-type(1) > p:nth-of-type(2)') missed; used #2 getByText(/^Customer: Not recorded · Raised (?:\\d{1,2}:\\d{2}(?::\\d{2})?|\\d{1,4}[/.-]\\d{1,2}[/.-]\\d{1,4})$/)"
+  ],
+  "driftCount": 2,
+  "logTail": "\nRunning 1 test using 1 worker\n\n[sitelooper step] 01-open\n[sitelooper step] 02-add\n  ✘  1 fwrd50.spec.ts:4:1 › fwrd50 (11.5s)\n\n\n  1) fwrd50.spec.ts:4:1 › fwrd50 › 03-add: On the ticket detail page for ticket {{01-open.ticket_reference}} (titled '{{runid}} RD Bench Ticket'), add a second part named exactly '{{runid}} RD Part B' with cost 200 and markup 25. Use the 'Add part' action, fill the form fields (name, cost, markup) and submit. Wait for the part to appear in the ticket's parts list alongside '{{runid}} RD Part A'. Report the new part's name, cost, markup, and the price the app computes/displays for it, plus the ticket's total. \n\n    Error: identity: {{v2}} is not on this page\n\n    identity: {{v2}} is not on this page\n\n    expect(received).toBe(expected) // Object.is equality\n\n    Expected: true\n    Received: false\n\n    Call Log:\n    - Timeout 5000ms exceeded while waiting on the predicate\n\n       at fwrd50.flow.ts:8237\n\n      8235 |     await preconditionGate('http://127.0.0.1:4180/#/tickets/:id', page.url(), p, '03-add s_c675d2', cosine(recordedFingerprint('03-add', 's_c675d2'), (await fingerprintPage(page)) ?? undefined));\n      8236 |     // identity: this must be the record the flow is working on, not another of the same shape.\n    > 8237 |     await expect.poll(() => presentOnPage(page, [`${p.v2}`], { whole: true }), { timeout: 5000, message: 'identity: {{v2}} is not on this page' }).toBe(true);\n           |                                                                                                                                                    ^\n      8238 |     // identity: this must be the record the flow is working on, not another of the same shape.\n      8239 |     await expect.poll(() => presentOnPage(page, [`${p.v3}`], { whole: true }), { timeout: 5000, message: 'identity: {{v3}} is not on this page' }).toBe(true);\n      8240 |\n        at Object.03-add (/home/user/sitelooper/bench/results/fwrd50-spec-spec-tmp/fwrd50.flow.ts:8237:148)\n        at /home/user/sitelooper/bench/results/fwrd50-spec-spec-tmp/fwrd50.flow.ts:10304:7\n        at runFlow (/home/user/sitelooper/bench/results/fwrd50-spec-spec-tmp/fwrd50.flow.ts:10303:5)\n        at /home/user/sitelooper/bench/results/fwrd50-spec-spec-tmp/fwrd50.spec.ts:9:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    [sitelooper drift] 01-open s_f85b39/4 target: primary locator('text=fwrd50-spec RD Bench Ticket') missed; used #2 locator('#ticket-rows tr').filter({ hasText: 'fwrd50-spec RD Bench Ticket' }).locator('td:nth-of-type(2)')\n    [sitelooper drift] 01-open s_b20a9c/6 target: primary locator('#view > div > di...\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: ../../../test-results/fwrd50-fwrd50/error-context.md\n\n  1 failed\n    fwrd50.spec.ts:4:1 › fwrd50 ────────────────────────────────────────────────────────────────────\n[sitelooper drift] 01-open s_f85b39/4 target: primary locator('text=fwrd50-spec RD Bench Ticket') missed; used #2 locator('#ticket-rows tr').filter({ hasText: 'fwrd50-spec RD Bench Ticket' }).locator('td:nth-of-type(2)')\n[sitelooper drift] 01-open s_b20a9c/6 target: primary locator('#view > div > div:nth-of-type(1) > p:nth-of-type(2)') missed; used #2 getByText(/^Customer: Not recorded · Raised (?:\\d{1,2}:\\d{2}(?::\\d{2})?|\\d{1,4}[/.-]\\d{1,2}[/.-]\\d{1,4})$/)\n"
+}

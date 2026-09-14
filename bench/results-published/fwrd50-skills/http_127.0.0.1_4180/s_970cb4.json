@@ -1,0 +1,115 @@
+{
+ "id": "s_970cb4",
+ "origin": "http://127.0.0.1:4180",
+ "template": "Go to the app's ticket list view at {{v3}}. Verify whether the ticket '{{v1}} RD Bench Ticket' ({{v2}}) appears in the active ticket list or only in an archived/hidden section. Report exactly what the list shows for this ticket (its title, status, any archived indicator), and whether any other tickets or records created during this run remain active. Do not change anything.",
+ "params": {
+  "v1": {
+   "example": "fwrd50-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "RD-1016",
+   "usedIn": [],
+   "known": true,
+   "binding": "01-open.ticket_reference"
+  },
+  "v3": {
+   "example": "http://127.0.0.1:4180/",
+   "usedIn": [
+    1
+   ]
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:4180/#/tickets/:id"
+ },
+ "steps": [
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v3}}"
+   },
+   "locators": {},
+   "via": {
+    "skill": "s_49d4bd",
+    "step": 1
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e142"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "page-next"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Next"
+     },
+     {
+      "kind": "id",
+      "selector": "#page-next"
+     },
+     {
+      "kind": "css",
+      "selector": "#page-next"
+     },
+     {
+      "kind": "point",
+      "x": 1126,
+      "y": 895,
+      "w": 58.8,
+      "h": 39,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "addedContains": [
+     "- row \"RD-1003 Chest freezer icing up Pinehurst Grocers Ready 2 {{*}}\"",
+     "- cell \"RD-1003\"",
+     "- link \"RD-1003\"",
+     "- cell \"Chest freezer icing up\"",
+     "- cell \"{{*}}\""
+    ]
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 2,
+  "successes": 2,
+  "partial": 0,
+  "created": "2026-09-13T23:58:23.631Z",
+  "failedAtStep": {},
+  "fallthroughs": 1,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-13T23:58:55.679Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_239f82",
+  "index": 0,
+  "of": 2
+ },
+ "variantOf": "s_49d4bd",
+ "provenance": {
+  "session": "fwrd50-n2",
+  "instruction": "Go to the app's ticket list view at http://127.0.0.1:4180/. Verify whether the ticket 'fwrd50-n2 RD Bench Ticket' (RD-1016) appears in the active ticket list or only in an archived/hidden section. Report exactly what the list shows for this ticket (its title, status, any archived indicator), and whether any other tickets or records created during this run remain active. Do not change anything.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-13T23:58:23.631Z"
+ },
+ "revision": 2
+}

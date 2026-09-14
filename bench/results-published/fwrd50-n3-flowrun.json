@@ -1,0 +1,286 @@
+{
+  "flow": "fwrd50",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Signed in at http://127.0.0.1:4180/ as bench@example.com and created a new ticket via the \"New ticket\" dialog. The form's only required field was \"Title\" (there was also an optional \"Customer\" field, which I left blank); submitting created ticket RD-1017, which appeared in the ticket list and I opened its detail page.",
+      "values": {
+        "detail_page_url": "http://127.0.0.1:4180/#/tickets/t15",
+        "ticket_reference": "RD-1017",
+        "ticket_title": "fwrd50-n3 RD Bench Ticket",
+        "status": "Draft",
+        "customer": "Not recorded",
+        "parts": "No parts on this ticket yet.",
+        "raised_date": "Customer: Not recorded · Raised 2026-09-13"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-add",
+      "status": "success",
+      "summary": "On ticket RD-1017's detail page I used the \"Add part\" action; the dialog required Part name, Cost and Markup % (Quantity defaulted to 1 and Supplier was optional). I entered 'fwrd50-n3 RD Bench Ticket RD Part A' with cost 100 and markup 25 and submitted. The part now appears in the ticket's Parts table (name fwrd50-n3 RD Bench Ticket RD Part A, cost $100.00, markup 25%, qty 1, no supplier, price $125.00) and the ticket shows a total of $125.00 under \"Total (price × quantity)\".",
+      "values": {
+        "ticket_reference": "RD-1017",
+        "part_row_id": "fwrd50-n3 RD Bench Ticket"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-add",
+      "status": "success",
+      "summary": "On ticket RD-1017's detail page I used the \"Add part\" action, entered name 'fwrd50-n3 RD Part B', cost 200, markup 25 (qty defaulted to 1, supplier optional) and submitted. The part now appears in the Parts table alongside 'fwrd50-n3 RD Part A' — cost $100.00, markup 25%, qty 1, No supplier, price $125.00 — and 'fwrd50-n3 RD Part B' shows cost $200.00, markup 25%, qty 1, No supplier, computed price $250.00. The ticket total under \"Total (price × quantity)\" is now $375.00.",
+      "values": {
+        "ticket_reference": "RD-1017",
+        "ticket_title": "fwrd50-n3 RD Bench Ticket",
+        "new_part_name": "fwrd50-n3 RD Part B",
+        "new_part_cost": "$200.00",
+        "new_part_markup": "25%",
+        "new_part_qty": "1",
+        "new_part_supplier": "No supplier",
+        "new_part_price": "$250.00",
+        "part_a_row": "fwrd50-n3 RD Part A\t$100.00\t25%\t1\tNo supplier\t$125.00",
+        "ticket_total": "$375.00",
+        "ref": "fwrd50-n3"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "the pinned skill s_c675d2 bound no params for this instruction",
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 5
+    },
+    {
+      "id": "04-find",
+      "status": "success",
+      "summary": "Clicked \"Edit\" on the 'fwrd50-n3 RD Part A' row of ticket RD-1017's parts table, changed Cost from 100 to 150 (markup untouched at 25) and clicked \"Save part\". The table refreshed: the row now reads fwrd50-n3 RD Part A | $150.00 | 25% | 1 | No supplier | $187.50, and the ticket total went from $375.00 to $437.50. The other part (Part B, $200.00 / $250.00) is unchanged.",
+      "values": {
+        "ticket_title": "fwrd50-n3",
+        "part_name_input": "fwrd50-n3 RD Part A",
+        "ticket_total": "Total (price × quantity)\t$437.50\t",
+        "ticket_reference": "RD-1017"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-report",
+      "status": "success",
+      "summary": "Clicking \"Mark Ready\" was first refused with the alert \"Ticket is not ready / Part \\\"fwrd50-n3 RD Bench Ticket RD Part A\\\" has no supplier / Part \\\"fwrd50-n3 RD Bench Ticket RD Part B\\\" has no supplier\" (both parts had no supplier). I used the parts table's \"Edit\" action on each part and filled the previously-blank required Supplier field with \"Acme Supplies\" (cost, markup and qty unchanged), saving each. Re-clicking \"Mark Ready\" then succeeded with no error: the status chip now shows \"Ready\" and the action buttons changed to \"Mark Draft\"/\"Mark Closed\". Ticket total remains $437.50.",
+      "values": {
+        "blocking_error_message": "Ticket is not ready\n\nPart \"fwrd50-n3 RD Part A\" has no supplier\nPart \"fwrd50-n3 RD Part B\" has no supplier",
+        "part_name_input": "fwrd50-n3 RD Part A",
+        "ticket_title": "fwrd50-n3 RD Bench Ticket"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "06-remove",
+      "status": "success",
+      "summary": "Deleted both parts: each row's \\\"Delete\\\" opened an in-page \\\"Confirm\\\" dialog with a \\\"Delete part\\\" button, which I clicked; the parts table now shows \\\"No parts on this ticket yet.\\\" Clicking \\\"Archive ticket\\\" was accepted with no validation error and no precondition. No toast/alert text was displayed; the confirmation is the new \\\"Archived\\\" badge next to the \\\"Ready\\\" status chip and the action button changing to \\\"Unarchive ticket\\\". Final state: ticket RD-1017, status Ready, Archived, parts list empty.",
+      "values": {
+        "ticket_reference": "RD-1017"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "07-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_7dcb5b; observed rd1016_row_archived_view=RD-1017 | fwrd50-n3 RD Bench Ticket Archived | Not recorded | Ready | 0 | 2026-09-13, fwrd50_search_with_archived=RD-1017 only, ref=RD-1017, ref_2=fwrd50-n3, showing_summary=Matches the reference, the title and the customer name., list_default_summary=Showing 1–10 of 13.",
+      "values": {
+        "rd1016_row_archived_view": "RD-1017 | fwrd50-n3 RD Bench Ticket Archived | Not recorded | Ready | 0 | 2026-09-13",
+        "fwrd50_search_with_archived": "RD-1017 only",
+        "ref": "RD-1017",
+        "ref_2": "fwrd50-n3",
+        "showing_summary": "Matches the reference, the title and the customer name.",
+        "list_default_summary": "Showing 1–10 of 13"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0,
+      "repinned": "s_970cb4",
+      "repinParams": {
+        "v1": "{{runid}}",
+        "v2": "{{01-open.ticket_reference}}",
+        "v3": "http://127.0.0.1:4180/"
+      }
+    }
+  ],
+  "passed": 7,
+  "total": 7,
+  "repinned": 1,
+  "drift": 9,
+  "driftTickets": [
+    {
+      "flow": "fwrd50",
+      "step": "01-open",
+      "skill": "s_f85b39",
+      "atStep": "4",
+      "key": "target",
+      "similarity": 1.004,
+      "missedLocator": "page.locator('text=fwrd50-n3 RD Bench Ticket')",
+      "fallbackUsed": "page.locator('#ticket-rows tr', { hasText: 'fwrd50-n3 RD Bench Ticket' }).locator('td:nth-of-type(2)')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    },
+    {
+      "flow": "fwrd50",
+      "step": "01-open",
+      "skill": "s_b20a9c",
+      "atStep": "6",
+      "key": "target",
+      "similarity": 1.004,
+      "missedLocator": "page.locator('#view > div > div:nth-of-type(1) > p:nth-of-type(2)')",
+      "fallbackUsed": "page.getByText('Customer: Not recorded · Raised 2026-09-13', { exact: true })",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    },
+    {
+      "flow": "fwrd50",
+      "step": "03-add",
+      "skill": "s_c675d2",
+      "similarity": 0.856,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "the pinned skill s_c675d2 bound no params for this instruction",
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    },
+    {
+      "flow": "fwrd50",
+      "step": "04-find",
+      "skill": "s_82feb2",
+      "atStep": "3",
+      "key": "target",
+      "similarity": 1.002,
+      "missedLocator": "page.locator('input >> nth=1')",
+      "fallbackUsed": "page.getByTestId('field-cost')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    },
+    {
+      "flow": "fwrd50",
+      "step": "05-report",
+      "skill": "s_40193b",
+      "atStep": "5",
+      "key": "target",
+      "similarity": 1.002,
+      "missedLocator": "page.locator('input >> nth=4')",
+      "fallbackUsed": "page.getByTestId('field-supplier')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    },
+    {
+      "flow": "fwrd50",
+      "step": "05-report",
+      "skill": "s_40193b",
+      "atStep": "7",
+      "key": "target",
+      "similarity": 1.002,
+      "missedLocator": "page.locator('role=button[name=\"Edit\"] >> nth=1')",
+      "fallbackUsed": "page.locator('tr', { hasText: 'fwrd50-n3 RD Part B' }).locator('td:nth-of-type(7) > button:nth-of-type(1)')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    },
+    {
+      "flow": "fwrd50",
+      "step": "05-report",
+      "skill": "s_40193b",
+      "atStep": "8",
+      "key": "target",
+      "similarity": 1.002,
+      "missedLocator": "page.locator('input >> nth=4')",
+      "fallbackUsed": "page.getByTestId('field-supplier')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    },
+    {
+      "flow": "fwrd50",
+      "step": "06-remove",
+      "skill": "s_0098d9",
+      "atStep": "4",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.locator('role=button[name=\"Delete\"] >> nth=0')",
+      "fallbackUsed": "page.locator('tr', { hasText: 'fwrd50-n3 RD Part B' }).locator('td:nth-of-type(7) > button:nth-of-type(2)')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    },
+    {
+      "flow": "fwrd50",
+      "step": "07-verify",
+      "skill": "s_7dcb5b",
+      "atStep": "2",
+      "key": "target",
+      "similarity": null,
+      "missedLocator": "page.locator('#main p, main p >> nth=1')",
+      "fallbackUsed": "page.locator('#search-help')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets"
+    }
+  ],
+  "wallMs": 30653,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 53232,
+    "completionTokens": 1301,
+    "cachedTokens": 46464
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 53232,
+      "completionTokens": 1301,
+      "cachedTokens": 46464
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

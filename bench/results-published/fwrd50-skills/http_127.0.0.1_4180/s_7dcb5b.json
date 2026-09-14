@@ -1,0 +1,571 @@
+{
+ "id": "s_7dcb5b",
+ "origin": "http://127.0.0.1:4180",
+ "template": "Go to the app's ticket list view at {{v3}}. Verify whether the ticket '{{v1}} RD Bench Ticket' ({{v2}}) appears in the active ticket list or only in an archived/hidden section. Report exactly what the list shows for this ticket (its title, status, any archived indicator), and whether any other tickets or records created during this run remain active. Do not change anything.",
+ "params": {
+  "v1": {
+   "example": "fwrd50-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "RD-1016",
+   "usedIn": [],
+   "known": true,
+   "binding": "01-open.ticket_reference"
+  },
+  "v3": {
+   "example": "http://127.0.0.1:4180/",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:4180/#/tickets"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e32"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "show-archived"
+     },
+     {
+      "kind": "role",
+      "role": "checkbox",
+      "name": "Show archived"
+     },
+     {
+      "kind": "label",
+      "label": "Show archived"
+     },
+     {
+      "kind": "id",
+      "selector": "#show-archived"
+     },
+     {
+      "kind": "css",
+      "selector": "#show-archived"
+     },
+     {
+      "kind": "point",
+      "x": 1054,
+      "y": 216,
+      "w": 16,
+      "h": 16,
+      "role": "checkbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "addedContains": [
+     "- checkbox \"\" [checked]",
+     "- row \"{{v2}} {{v1}} RD Bench Ticket Archived Not recorded Ready 0 {{*}}\"",
+     "- cell \"{{v2}}\"",
+     "- link \"{{v2}}\"",
+     "- cell \"{{v1}} RD Bench Ticket Archived\""
+    ]
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "#main p, main p >> nth=1",
+    "what": "text",
+    "label": "showing_summary"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#main p, main p >> nth=1"
+     },
+     {
+      "kind": "id",
+      "selector": "#search-help"
+     },
+     {
+      "kind": "text",
+      "text": "Matches the reference, the title and the customer name."
+     },
+     {
+      "kind": "css",
+      "selector": "#search-help"
+     },
+     {
+      "kind": "point",
+      "x": 670,
+      "y": 258,
+      "w": 710.7,
+      "h": 18,
+      "role": null,
+      "tag": "p",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "showing_summary"
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e142"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "page-next"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Next"
+     },
+     {
+      "kind": "id",
+      "selector": "#page-next"
+     },
+     {
+      "kind": "css",
+      "selector": "#page-next"
+     },
+     {
+      "kind": "point",
+      "x": 1126,
+      "y": 895,
+      "w": 58.8,
+      "h": 39,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "addedContains": [
+     "- row \"RD-1005 Till printer jams on receipts Blue Fox Cafe Draft 2 {{*}}\"",
+     "- cell \"RD-1005\"",
+     "- link \"RD-1005\"",
+     "- cell \"Till printer jams on receipts\"",
+     "- cell \"{{*}}\""
+    ]
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e140"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "page-prev"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Previous"
+     },
+     {
+      "kind": "id",
+      "selector": "#page-prev"
+     },
+     {
+      "kind": "css",
+      "selector": "#page-prev"
+     },
+     {
+      "kind": "point",
+      "x": 959,
+      "y": 664,
+      "w": 84.5,
+      "h": 39,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "addedContains": [
+     "- row \"{{v2}} {{v1}} RD Bench Ticket Archived Not recorded Ready 0 {{*}}\"",
+     "- cell \"{{v2}}\"",
+     "- link \"{{v2}}\"",
+     "- cell \"{{v1}} RD Bench Ticket Archived\"",
+     "- cell \"Not recorded\""
+    ]
+   }
+  },
+  {
+   "tool": "check",
+   "args": {
+    "target": "@e32",
+    "checked": false
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "show-archived"
+     },
+     {
+      "kind": "role",
+      "role": "checkbox",
+      "name": "Show archived"
+     },
+     {
+      "kind": "label",
+      "label": "Show archived"
+     },
+     {
+      "kind": "id",
+      "selector": "#show-archived"
+     },
+     {
+      "kind": "css",
+      "selector": "#show-archived"
+     },
+     {
+      "kind": "point",
+      "x": 1054,
+      "y": 216,
+      "w": 16,
+      "h": 16,
+      "role": "checkbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "addedContains": [
+     "- checkbox \"\"",
+     "- row \"RD-1005 Till printer jams on receipts Blue Fox Cafe Draft 2 {{*}}\"",
+     "- cell \"RD-1005\"",
+     "- link \"RD-1005\"",
+     "- cell \"Till printer jams on receipts\""
+    ]
+   }
+  },
+  {
+   "tool": "check",
+   "args": {
+    "checked": true,
+    "target": "@e32"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "show-archived"
+     },
+     {
+      "kind": "role",
+      "role": "checkbox",
+      "name": "Show archived"
+     },
+     {
+      "kind": "label",
+      "label": "Show archived"
+     },
+     {
+      "kind": "id",
+      "selector": "#show-archived"
+     },
+     {
+      "kind": "css",
+      "selector": "#show-archived"
+     },
+     {
+      "kind": "point",
+      "x": 1054,
+      "y": 216,
+      "w": 16,
+      "h": 16,
+      "role": "checkbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "addedContains": [
+     "- checkbox \"\" [checked]",
+     "- row \"{{v2}} {{v1}} RD Bench Ticket Archived Not recorded Ready 0 {{*}}\"",
+     "- cell \"{{v2}}\"",
+     "- link \"{{v2}}\"",
+     "- cell \"{{v1}} RD Bench Ticket Archived\""
+    ]
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e29",
+    "value": "fwrd50"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "search"
+     },
+     {
+      "kind": "role",
+      "role": "searchbox",
+      "name": "Search"
+     },
+     {
+      "kind": "label",
+      "label": "Search"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Reference, title or customer"
+     },
+     {
+      "kind": "id",
+      "selector": "#search"
+     },
+     {
+      "kind": "css",
+      "selector": "#search"
+     },
+     {
+      "kind": "point",
+      "x": 670,
+      "y": 224,
+      "w": 710.7,
+      "h": 39,
+      "role": "searchbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "addedContains": [
+     "- searchbox \"Reference, title or customer\": fwrd50"
+    ]
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e29",
+    "value": ""
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "search"
+     },
+     {
+      "kind": "role",
+      "role": "searchbox",
+      "name": "Search"
+     },
+     {
+      "kind": "label",
+      "label": "Search"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Reference, title or customer"
+     },
+     {
+      "kind": "id",
+      "selector": "#search"
+     },
+     {
+      "kind": "css",
+      "selector": "#search"
+     },
+     {
+      "kind": "point",
+      "x": 670,
+      "y": 224,
+      "w": 710.7,
+      "h": 39,
+      "role": "searchbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "addedContains": [
+     "- searchbox \"Reference, title or customer\"",
+     "- row \"RD-1014 Under-counter fridge door misaligned Marlow Bakery Draft 1 {{*}}\"",
+     "- cell \"RD-1014\"",
+     "- link \"RD-1014\"",
+     "- cell \"Under-counter fridge door misaligned\""
+    ]
+   }
+  },
+  {
+   "tool": "check",
+   "args": {
+    "checked": false,
+    "target": "@e32"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "show-archived"
+     },
+     {
+      "kind": "role",
+      "role": "checkbox",
+      "name": "Show archived"
+     },
+     {
+      "kind": "label",
+      "label": "Show archived"
+     },
+     {
+      "kind": "id",
+      "selector": "#show-archived"
+     },
+     {
+      "kind": "css",
+      "selector": "#show-archived"
+     },
+     {
+      "kind": "point",
+      "x": 1054,
+      "y": 216,
+      "w": 16,
+      "h": 16,
+      "role": "checkbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "addedContains": [
+     "- checkbox \"\"",
+     "- row \"RD-1005 Till printer jams on receipts Blue Fox Cafe Draft 2 {{*}}\"",
+     "- cell \"RD-1005\"",
+     "- link \"RD-1005\"",
+     "- cell \"Till printer jams on receipts\""
+    ]
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "list-summary"
+     },
+     {
+      "kind": "id",
+      "selector": "#list-summary"
+     },
+     {
+      "kind": "css",
+      "selector": "#list-summary"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 334,
+      "w": 114.9,
+      "h": 19.5,
+      "role": null,
+      "tag": "p",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "list_default_summary"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Ticket {{v2}} ('{{v1}} RD Bench Ticket') appears in the ticket list ONLY in the archived/hidden section: with 'Show archived' unchecked the list (\"Showing 1–10 of 13\") does not contain it; ticking 'Show archived' it appears as the first row — \"{{v2}} | {{v1}} RD Bench Ticket Archived | Not recorded | Ready | 0 | 2026-09-13\" (an \"Archived\" marker beside its title, status Ready, 0 parts). The only other ticket shown as archived is RD-1013 (seed data). No other records from this run exist: a search for \"{{v4}}\" with 'Show archived' on returns only {{v2}} (the references present are 1001–1014 plus 1016, i.e. pre-existing seed tickets). Nothing was created, changed or deleted; the filter/search were restored to their original state (search cleared, 'Show archived' unchecked, page 1).",
+  "values": {
+   "rd1016_row_archived_view": "{{v2}} | {{v1}} RD Bench Ticket Archived | Not recorded | Ready | 0 | 2026-09-13",
+   "list_default_summary": "Showing 1–10 of 13",
+   "list_with_archived_summary": "Showing 1–10 of 15",
+   "rd1016_visible_without_show_archived": "no",
+   "rd1016_visible_with_show_archived": "yes (row 1)",
+   "other_archived_ticket": "RD-1013 Bain-marie thermostat drifting (Blue Fox Cafe, Closed)",
+   "fwrd50_search_with_archived": "{{v2}} only",
+   "other_tickets_from_this_run": "none",
+   "showing_summary": "Matches the reference, the title and the customer name.",
+   "ref": "{{v2}}",
+   "ref_2": "{{v1}}",
+   "ref_3": "RD-1013"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 2,
+  "successes": 2,
+  "partial": 0,
+  "created": "2026-09-13T23:58:23.631Z",
+  "failedAtStep": {},
+  "fallthroughs": 1,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-13T23:58:55.678Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_239f82",
+  "index": 1,
+  "of": 2
+ },
+ "variantOf": "s_49d4bd",
+ "provenance": {
+  "session": "fwrd50-n2",
+  "instruction": "Go to the app's ticket list view at http://127.0.0.1:4180/. Verify whether the ticket 'fwrd50-n2 RD Bench Ticket' (RD-1016) appears in the active ticket list or only in an archived/hidden section. Report exactly what the list shows for this ticket (its title, status, any archived indicator), and whether any other tickets or records created during this run remain active. Do not change anything.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-13T23:58:23.631Z"
+ },
+ "revision": 2
+}
