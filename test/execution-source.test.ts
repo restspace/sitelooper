@@ -101,7 +101,7 @@ describe('standalone execution source', () => {
     expect(source).toContain('=> urlMatches(');
     // ...and the gate verdicts with the observation they are asked over.
     expect(source).toContain("await urlEffect(page, 'http://app.test/record/{{d1}}', p, '01-actions s_runtime/2');");
-    expect(source).toContain("alertGate(alertsBefore2, alertsAfter2, { where: '01-actions s_runtime/2', isRead: false, expectedContains: 'Saved {{v1}}', params: p });");
+    expect(source).toContain("alertGate(alertsBefore2, alertsAfter2, { where: '01-actions s_runtime/2', isRead: false, expectedContains: 'Saved {{v1}}', params: p, effectConfirmed: changes2.confirmed === true });");
     expect(source).toContain('alertsAfter2 = await settledAlerts(page);');
     expect(source).toContain("errorPageGate(page, '01-actions s_runtime/1');");
     expect(source).toContain('const verdict = alertVerdict(before, after ? after.alerts : null, ctx, after ? after.complete : true);');
@@ -109,8 +109,9 @@ describe('standalone execution source', () => {
     expect(source).toContain('linesBefore2 = await capturePageLines(page);');
     // ...with positional resolution reported by the resolution itself, not guessed at compile time.
     expect(source).toContain(
-      "absentDialog = (await expectChanges(page, ['- dialog \"Options\"', '- button \"Apply\"', '- combobox \"Project\": {{v1}}'], p, { tag: '01-actions s_runtime/2', tool: 'click', positionalResolution: positional2 }, linesBefore2)).absentDialog ?? null;",
+      "const changes2 = await expectChanges(page, ['- dialog \"Options\"', '- button \"Apply\"', '- combobox \"Project\": {{v1}}'], p, { tag: '01-actions s_runtime/2', tool: 'click', positionalResolution: positional2 }, linesBefore2);",
     );
+    expect(source).toContain('absentDialog = changes2.absentDialog ?? null;');
     expect(source).toContain('positional2 = positional2 || hit1.structural || hit1.nth !== undefined;');
     // ...and every locator resolved through the shared policy with the daemon's policy inputs.
     // (a navigation click with a recorded destination through the shared navigation fallback)

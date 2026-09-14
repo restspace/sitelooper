@@ -104,13 +104,26 @@ export interface AlertVerdict {
 }
 
 /**
- * An alert the recording never saw is the app talking back — usually a
- * rejection ("Ticket is not ready…") that leaves the page superficially
- * intact. fwrd4l-n3 clicked into exactly that: the step counted as run, the
- * synthesized report declared the recorded outcome, and only external
- * verification caught that the ticket never reached Ready. So a
- * state-changing step that provokes an UNRECORDED alert stops hard, while a
- * recorded-but-missing alert stays soft — toasts are volatile — and never stops.
+ * An alert the recording never saw cannot, on its own, be told apart: it may
+ * be the app talking back — a rejection ("Ticket is not ready…") that leaves
+ * the page superficially intact, as fwrd4l-n3 clicked into, the step counted
+ * as run and only external verification catching that the ticket never
+ * reached Ready — or it may be ambient page content that simply rendered late,
+ * like fwgr34's "Error loading RSS feed" on a Grafana home page whose feed an
+ * offline box cannot reach (the recording's after-look came before it did).
+ *
+ * So an unrecorded alert is always REPORTED, and whether the run continues is
+ * decided by the step's own state evidence, not by the alert:
+ * - `effectConfirmed` (expect.ts ChangeVerdict.confirmed — the recorded page
+ *   changes appeared in what the action added): the step demonstrably did what
+ *   it was recorded doing, so the alert is a warning and the run goes on; a
+ *   later gate or step stops it if the state is in fact broken.
+ * - otherwise the alert is the only evidence there is about whether the step
+ *   worked, and a state-changing step stops on it (the rejected Mark that
+ *   would otherwise go on to Remove the item).
+ * A recorded-but-missing alert stays soft — toasts are volatile — and never
+ * stops; a recorded alert (`expectedContains`) is what the step is expected
+ * to raise, and is checked, not treated as unexpected.
  *
  * `before`/`after` are the visible live-region texts around the action (the
  * daemon's diff already holds the surplus, so it passes `before: []`); `after`
@@ -126,7 +139,7 @@ export interface AlertVerdict {
 export function alertVerdict(
   before: string[],
   after: string[] | null,
-  ctx: { where: string; isRead: boolean; expectedContains?: string; params: Record<string, string> },
+  ctx: { where: string; isRead: boolean; expectedContains?: string; params: Record<string, string>; effectConfirmed?: boolean },
   afterComplete = true,
 ): AlertVerdict {
   const warnings: string[] = [];
@@ -148,7 +161,10 @@ export function alertVerdict(
   }
   const raised = after.filter((a) => !before.includes(a));
   if (raised.length && !ctx.isRead && want === undefined) {
-    return { warnings, stop: `${ctx.where} raised an alert the recording never saw: ${clip(raised.join(' | '), 200)}` };
+    const seen = `${ctx.where} raised an alert the recording never saw: ${clip(raised.join(' | '), 200)}`;
+    if (!ctx.effectConfirmed) return { warnings, stop: seen };
+    warnings.push(`${seen} — reported, not stopped: the step's recorded page changes appeared`);
+    return { warnings };
   }
   if (!afterComplete) {
     if (!ctx.isRead && !raised.length) {

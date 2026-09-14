@@ -487,13 +487,13 @@ describe('emitted step lifecycle', () => {
     expect(bind.body.indexOf("bindPart(p, 'd1'")).toBeLessThan(bind.body.indexOf('changedCreation('));
     expect(bind.body).toContain("outputs['01-step.minted'] = minted1;");
     expect(bind.body).toContain('if (!run.created.includes(minted1)) run.created.push(minted1);');
-    // The effect gates in replay's STEP_GATES order: error page, url, alerts, page changes.
+    // The effect gates in replay's STEP_GATES order: error page, url, page changes, alerts.
     expect(verify.body).toContain("errorPageGate(page, '01-step s_emit/1');");
     expect(verify.body).toContain(`await urlEffect(page, '${ORIGIN}/orders/{{d1}}', p, '01-step s_emit/1');`);
-    expect(verify.body).toContain("alertGate(alertsBefore1, alertsAfter1, { where: '01-step s_emit/1', isRead: false, params: p });");
+    expect(verify.body).toContain("alertGate(alertsBefore1, alertsAfter1, { where: '01-step s_emit/1', isRead: false, params: p, effectConfirmed: changes1.confirmed === true });");
     expect(verify.body.indexOf('errorPageGate(')).toBeLessThan(verify.body.indexOf('await urlEffect('));
     expect(verify.body.indexOf('await urlEffect(')).toBeLessThan(verify.body.indexOf('alertGate('));
-    expect(verify.body.indexOf('alertGate(')).toBeLessThan(verify.body.indexOf('Order'));
+    expect(verify.body.indexOf('Order')).toBeLessThan(verify.body.indexOf('alertGate('));
     // verify judges; it captures nothing of its own
     expect(verify.body).not.toContain('liveAlerts(');
     expect(verify.body).not.toContain('settledAlerts(');

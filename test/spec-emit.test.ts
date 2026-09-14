@@ -805,7 +805,7 @@ describe('expectations', () => {
     expect(captured).toBeLessThan(lines.indexOf('act: async () => {', prepare));
     expect(out).toContain('let linesBefore1: string[] | null = null;');
     // the gate runs in verify, and it is the daemon's own — embedded, not restated
-    expect(lines.indexOf("await expectChanges(page, ['- heading \"{{v1}} Widget\"', '- generic \"sidebar\"', '- tab \"New Project\"'], p, { tag: '01-do s_test1/1', tool: 'click', positionalResolution: positional1 }, linesBefore1);")).toBeGreaterThan(lines.indexOf('verify: async () => {'));
+    expect(lines.indexOf("const changes1 = await expectChanges(page, ['- heading \"{{v1}} Widget\"', '- generic \"sidebar\"', '- tab \"New Project\"'], p, { tag: '01-do s_test1/1', tool: 'click', positionalResolution: positional1 }, linesBefore1);")).toBeGreaterThan(lines.indexOf('verify: async () => {'));
     expect(out).toContain('// Shared execution source: expect.ts. Regenerate to update.');
     expect(out).toContain('// Shared execution source: snapshot.ts. Regenerate to update.');
     expect(out).toContain('async function expectedChangesVerdict(');
@@ -954,8 +954,9 @@ describe('expectations', () => {
     expect(lines.indexOf('let absentDialog: { name: string; lines: string[] } | null = null;')).toBeLessThan(lines.indexOf('// @step 01-do s_test1/1'));
     // set by the verdict of the step that recorded the dialog
     expect(source).toContain(
-      "absentDialog = (await expectChanges(page, ['- dialog \"Discard changes?\"', '- button \"Discard\"'], p, { tag: '01-do s_test1/1', tool: 'click', positionalResolution: positional1 }, linesBefore1)).absentDialog ?? null;",
+      "const changes1 = await expectChanges(page, ['- dialog \"Discard changes?\"', '- button \"Discard\"'], p, { tag: '01-do s_test1/1', tool: 'click', positionalResolution: positional1 }, linesBefore1);",
     );
+    expect(source).toContain('absentDialog = changes1.absentDialog ?? null;');
     // the step before it consults nothing (there is no dialog to be absent yet)
     const step1 = source.slice(source.indexOf('// @step 01-do s_test1/1'), source.indexOf('// @step 01-do s_test1/2'));
     expect(step1).not.toContain('absentDialogSkip');
@@ -2499,7 +2500,7 @@ describe('every step settles first', () => {
     // action and before verify — and it fires here because a goto changes the
     // url. The assertion it gates must come after it.
     const resettled = lines.indexOf('if (page.url() !== urlBefore1) await settle(page);');
-    const asserted = lines.findIndex((l) => l.startsWith('await expectChanges(page, '));
+    const asserted = lines.findIndex((l) => /^const changes\d+ = await expectChanges\(page, /.test(l));
     expect(nav).toBeGreaterThan(-1);
     expect(resettled).toBeGreaterThan(nav);
     expect(asserted).toBeGreaterThan(resettled);

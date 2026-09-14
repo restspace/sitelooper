@@ -150,6 +150,18 @@ describe('alertVerdict', () => {
     // several, joined; only the NEW ones count
     const out = alertVerdict(['Welcome back'], ['Welcome back', 'Rejected', 'Try again'], ctx);
     expect(out.stop).toBe('step 4 raised an alert the recording never saw: Rejected | Try again');
+    // an explicit false is no confirmation either
+    expect(alertVerdict([], ['Rejected'], { ...ctx, effectConfirmed: false }).stop).toBe('step 4 raised an alert the recording never saw: Rejected');
+  });
+
+  it('reports, and does not stop on, an unrecorded alert when the step\'s recorded page changes confirmed it worked', () => {
+    // fwgr34: the home page a Skip landed on rendered "Error loading RSS feed"
+    // after the recording's own after-look; the step's recorded links appeared.
+    expect(alertVerdict([], ['Error loading RSS feed'], { ...ctx, effectConfirmed: true })).toEqual({
+      warnings: ["step 4 raised an alert the recording never saw: Error loading RSS feed — reported, not stopped: the step's recorded page changes appeared"],
+    });
+    // an incomplete after-look changes nothing about an alert that WAS seen
+    expect(alertVerdict([], ['Error loading RSS feed'], { ...ctx, effectConfirmed: true }, false).stop).toBeUndefined();
   });
 
   it('passes when nothing new appeared, and never stops a read', () => {

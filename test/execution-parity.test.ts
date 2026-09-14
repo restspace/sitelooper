@@ -65,6 +65,8 @@ interface Outcome {
   drift?: string[];
   /** What replay knows about its last state-changing action (ReplayResult.outcome). The artifact reports it in its error only. */
   outcome?: string;
+  /** The run's warnings (replay's warnings; the artifact's `[sitelooper warn]` lines, prefix stripped). */
+  warnings?: string[];
 }
 
 d('execution parity (daemon replay vs emitted artifact)', () => {
@@ -238,7 +240,7 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       // No replay at all means the tool refused before running: surface that
       // rather than letting it read as an ordinary failure.
       if (!replay) return { ok: false, reason: `run_skill returned no replay: ${out.result}`, outputs: {}, echoed: [] };
-      return { ok: replay.ok, reason: replay.reason ?? null, outputs: replay.values, echoed: replay.echoedValues, created: replay.created, drift: replay.misses.filter((m) => m.used).map((m) => m.step), outcome: replay.outcome };
+      return { ok: replay.ok, reason: replay.reason ?? null, outputs: replay.values, echoed: replay.echoedValues, created: replay.created, drift: replay.misses.filter((m) => m.used).map((m) => m.step), outcome: replay.outcome, warnings: replay.warnings };
     } finally {
       await session.close();
     }
@@ -274,6 +276,14 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     const mod = await moduleOf(spec);
 
     const session = new BrowserSession({ session: `parity-spec-${Date.now()}`, persist: false });
+    // The artifact's warnings go to the console; keep them for the outcome.
+    const warnings: string[] = [];
+    const warn = console.warn;
+    console.warn = (...args: unknown[]) => {
+      const line = args.map(String).join(' ');
+      if (line.startsWith('[sitelooper warn] ')) warnings.push(line.slice('[sitelooper warn] '.length));
+      warn(...args);
+    };
     try {
       const page = await session.getPage();
       await page.goto(mod.FLOW.startUrl);
@@ -281,10 +291,11 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       for (const id of mod.flowStepIds) {
         await mod.steps[id](page, params, run.outputs, run);
       }
-      return { ok: true, reason: null, outputs: run.outputs as Record<string, string>, echoed: run.echoed.map((key) => key.slice(key.indexOf('.') + 1)), created: run.created, drift: [...run.drift] };
+      return { ok: true, reason: null, outputs: run.outputs as Record<string, string>, echoed: run.echoed.map((key) => key.slice(key.indexOf('.') + 1)), created: run.created, drift: [...run.drift], warnings };
     } catch (err) {
-      return { ok: false, reason: err instanceof Error ? err.message : String(err), outputs: {}, echoed: [] };
+      return { ok: false, reason: err instanceof Error ? err.message : String(err), outputs: {}, echoed: [], warnings };
     } finally {
+      console.warn = warn;
       await session.close();
     }
   }
@@ -1042,6 +1053,61 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(clear.replayLog).toEqual(['mark:Item 1', 'delete:Item 1']);
       expect(clear.emittedLog).toEqual(['mark:Item 1', 'delete:Item 1']);
     }, 180_000);
+
+    /**
+     * G01b. An unrecorded alert beside a CONFIRMED effect is reported, and the
+     * run goes on. fwgr34: the page a step landed on rendered an alert its
+     * recording's after-look had come too early to see. An alert alone cannot
+     * say whether it is the app refusing the step or ambient page content, so
+     * the step's own state evidence decides: Mark's recorded "Marked Item 1"
+     * appeared in what the action added, so both runners warn and mark again.
+     * The same page with Mark refused shows the alert and no heading: the
+     * page-change gate stops that, before the second Mark. And the same step
+     * with nothing recorded to confirm it still stops on the alert (G01).
+     */
+    it("both runners report an unrecorded alert and go on when the step's recorded change confirmed it, and stop when nothing does", async () => {
+      const markAmbient = (expectHeading: boolean): SkillStep => ({
+        tool: 'click',
+        args: { target: '@e1' },
+        locators: { target: [{ kind: 'role', role: 'button', name: 'Mark' }] },
+        ...(expectHeading ? { expect: { addedContains: ['- heading "Marked Item 1"'] } } : {}),
+      });
+      const goto: SkillStep = { tool: 'goto', args: { url: `${origin}/ambient` }, locators: {} };
+
+      const confirmed = await both([goto, markAmbient(true), markAmbient(false)], 0);
+      expect(confirmed.replay.ok, confirmed.replay.reason ?? '').toBe(true);
+      expect(confirmed.emitted.ok, confirmed.emitted.reason ?? '').toBe(true);
+      expect(confirmed.replayLog).toEqual(['mark:Item 1', 'mark:Item 1']);
+      expect(confirmed.emittedLog).toEqual(['mark:Item 1', 'mark:Item 1']);
+      const reported = /raised an alert the recording never saw: Error loading feed — reported, not stopped/;
+      expect(confirmed.replay.warnings?.some((w) => reported.test(w)), JSON.stringify(confirmed.replay.warnings)).toBe(true);
+      expect(confirmed.emitted.warnings?.some((w) => reported.test(w)), JSON.stringify(confirmed.emitted.warnings)).toBe(true);
+
+      // Refused: the alert again, and the recorded heading nowhere — the page-change gate stops it.
+      reset(0);
+      fx.faults.rejectWrite(409, { pathPrefix: '/mark/' });
+      const refusedReplay = await replayOf(skillOf([goto, markAmbient(true), markAmbient(false)]));
+      const refusedReplayLog = [...fx.log];
+      reset(0);
+      fx.faults.rejectWrite(409, { pathPrefix: '/mark/' });
+      const refusedEmitted = await emittedOf(specOf([goto, markAmbient(true), markAmbient(false)]));
+      const refusedEmittedLog = [...fx.log];
+      expect(refusedReplay.ok).toBe(false);
+      expect(refusedEmitted.ok).toBe(false);
+      expect(refusedReplay.reason).toMatch(/none of the 1 recorded page change\(s\) appeared/);
+      expect(refusedEmitted.reason).toMatch(/the recorded page change did not appear|none of the 1 recorded page change\(s\) appeared/);
+      expect(refusedReplayLog).toEqual([]);
+      expect(refusedEmittedLog).toEqual([]);
+
+      // Nothing recorded to confirm the step: the alert is the only evidence, and it stops.
+      const unconfirmed = await both([goto, markAmbient(false), markAmbient(false)], 0);
+      expect(unconfirmed.replay.ok).toBe(false);
+      expect(unconfirmed.emitted.ok).toBe(false);
+      expect(unconfirmed.replay.reason).toMatch(/raised an alert the recording never saw: Error loading feed/);
+      expect(unconfirmed.emitted.reason).toMatch(/raised an alert the recording never saw: Error loading feed/);
+      expect(unconfirmed.replayLog).toEqual(['mark:Item 1']);
+      expect(unconfirmed.emittedLog).toEqual(['mark:Item 1']);
+    }, 240_000);
 
     /**
      * G02. A segment started on the WRONG page is refused before its first

@@ -194,6 +194,34 @@ document.querySelector('#approve').addEventListener('click', async () => {
 </body></html>`;
 
 /**
+ * A page whose Mark lands AND, beside it, an unrelated panel fails to load:
+ * the shape of fwgr34, where the Grafana home page a step arrived on rendered
+ * "Error loading RSS feed" (an offline box, a feed it cannot reach). Mark logs
+ * `mark:<id>` and shows "Marked <id>"; the feed panel's alert is raised at the
+ * same moment and has nothing to do with whether Mark worked. A rejected Mark
+ * (faults.rejectWrite) shows the feed alert too, and no "Marked" heading.
+ */
+const AMBIENT = `<!doctype html><html><head><meta charset="utf-8"><title>Ambient</title></head><body>
+<h1>Ambient</h1>
+<button class="mark" type="button" data-id="Item 1">Mark</button>
+<div id="out"></div>
+<script>
+document.querySelector('.mark').addEventListener('click', async (e) => {
+  const res = await fetch('/mark/' + encodeURIComponent(e.target.dataset.id), { method: 'POST' });
+  const feed = document.createElement('div');
+  feed.setAttribute('role', 'alert');
+  feed.textContent = 'Error loading feed';
+  document.getElementById('out').replaceChildren(feed);
+  if (res.ok) {
+    const done = document.createElement('h2');
+    done.textContent = 'Marked ' + e.target.dataset.id;
+    document.getElementById('out').append(done);
+  }
+});
+</script>
+</body></html>`;
+
+/**
  * Two routes that differ only by a WORD: `/checkout/<result>` has a Pay
  * button that lands on `/outcome/<result>`, and the outcome page has a Mark
  * button. `success` against `failure` is a different page, not a volatile
@@ -830,6 +858,11 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
     if (url.startsWith('/away/') && req.method === 'GET') {
       res.writeHead(200, { 'content-type': 'text/html' });
       res.end(AWAY(url.slice('/away/'.length)));
+      return;
+    }
+    if (url === '/ambient' && req.method === 'GET') {
+      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+      res.end(AMBIENT);
       return;
     }
     if (url.startsWith('/gate/') && req.method === 'GET') {

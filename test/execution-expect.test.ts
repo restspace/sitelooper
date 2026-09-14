@@ -52,7 +52,7 @@ describe('expectedChangesVerdict', () => {
     const nameOnly = await expectedChangesVerdict(recorded, p, ctx({ tool: 'select' }), seen([], ['- combobox "Project"']));
     expect(nameOnly.stop).toMatch(/did not show/);
     // in the diff
-    expect(await expectedChangesVerdict(recorded, p, ctx({ tool: 'select' }), seen(['- combobox "Project": Beta'], []))).toEqual({ warnings: [] });
+    expect(await expectedChangesVerdict(recorded, p, ctx({ tool: 'select' }), seen(['- combobox "Project": Beta'], []))).toEqual({ warnings: [], confirmed: true });
     // or on the live page, when the diff missed it (filling a field with the value it already held)
     expect(await expectedChangesVerdict(recorded, p, ctx({ tool: 'select' }), seen([], ['- combobox "Project": Beta']))).toEqual({ warnings: [] });
     // whitespace-insensitive, as lineShows is
@@ -69,7 +69,7 @@ describe('expectedChangesVerdict', () => {
 
   it('checks the plain group in the diff, then on the live page with a warning, and stops when it is nowhere', async () => {
     const recorded = ['- heading "Saved"', '- button "Undo"'];
-    expect(await expectedChangesVerdict(recorded, {}, ctx(), seen(['- button "Undo"'], []))).toEqual({ warnings: [] });
+    expect(await expectedChangesVerdict(recorded, {}, ctx(), seen(['- button "Undo"'], []))).toEqual({ warnings: [], confirmed: true });
     const onPage = await expectedChangesVerdict(recorded, {}, ctx(), seen([], ['- heading "Saved"']));
     expect(onPage.stop).toBeUndefined();
     expect(onPage.warnings).toEqual(['step 3: none of the 2 expected page change(s) appeared in the step diff (found on the page instead)']);
@@ -104,13 +104,29 @@ describe('expectedChangesVerdict', () => {
     const positional = await expectedChangesVerdict(recorded, p, ctx({ tool: 'fill', value: 'My Title', positionalResolution: true }), echoOnly);
     expect(positional.stop).toBe('after step 3 the page did not show "- heading \\"My Title\\"" as it did when recorded — the step ran but probably acted on the wrong element');
     // named: the echo is evidence
-    expect(await expectedChangesVerdict(recorded, p, ctx({ tool: 'fill', value: 'My Title', positionalResolution: false }), echoOnly)).toEqual({ warnings: [] });
+    expect(await expectedChangesVerdict(recorded, p, ctx({ tool: 'fill', value: 'My Title', positionalResolution: false }), echoOnly)).toEqual({ warnings: [], confirmed: true });
     // positional but no value (a click that resolved by position): nothing to filter by
-    expect(await expectedChangesVerdict(recorded, p, ctx({ positionalResolution: true }), echoOnly)).toEqual({ warnings: [] });
+    expect(await expectedChangesVerdict(recorded, p, ctx({ positionalResolution: true }), echoOnly)).toEqual({ warnings: [], confirmed: true });
     // positional with only the echo recorded: the old gate stands, and it says so
     const lone = await expectedChangesVerdict(['- textbox "": {{v1}}'], p, ctx({ tool: 'fill', value: 'My Title', positionalResolution: true }), echoOnly);
     expect(lone.stop).toBeUndefined();
     expect(lone.warnings).toEqual(["step 3: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here"]);
+    // ...and an echo that cannot tell right element from wrong confirms nothing
+    // (an unrecorded alert on this step still stops it: gates.ts alertVerdict)
+    expect(lone.confirmed).toBeUndefined();
+  });
+
+  it('confirms the step only when every recorded group was found in what the action added', async () => {
+    const recorded = ['- heading "{{v1}}"', '- button "Undo"'];
+    const p = { v1: 'Widget A' };
+    // both groups in the diff
+    expect((await expectedChangesVerdict(recorded, p, ctx(), seen(['- heading "Widget A"', '- button "Undo"'], []))).confirmed).toBe(true);
+    // the plain group only on the live page — it may simply have been there already
+    expect((await expectedChangesVerdict(recorded, p, ctx(), seen(['- heading "Widget A"'], ['- button "Undo"']))).confirmed).toBeUndefined();
+    // a failed capture: no diff to have found anything in
+    expect((await expectedChangesVerdict(recorded, p, ctx(), seen(null, ['- heading "Widget A"', '- button "Undo"']))).confirmed).toBeUndefined();
+    // nothing recorded, or only transient lines: nothing to confirm by
+    expect((await expectedChangesVerdict(['- status "Loading…"'], {}, ctx(), seen(['- status "Loading…"'], []))).confirmed).toBeUndefined();
   });
 
   it('treats a recorded dialog that did not open as conditional UI, carrying its subtree for the skip rule', async () => {
@@ -120,7 +136,7 @@ describe('expectedChangesVerdict', () => {
     expect(absent.absentDialog).toEqual({ name: 'Discard changes?', lines: recorded });
     expect(absent.warnings).toEqual(['step 5: the recorded dialog "Discard changes?" did not open — conditional UI, treated as absent; steps that name one of its controls will be skipped']);
     // it opened: an ordinary pass
-    expect(await expectedChangesVerdict(recorded, {}, ctx(), seen(['- dialog "Discard changes?"', '- button "Discard"'], []))).toEqual({ warnings: [] });
+    expect(await expectedChangesVerdict(recorded, {}, ctx(), seen(['- dialog "Discard changes?"', '- button "Discard"'], []))).toEqual({ warnings: [], confirmed: true });
     // only a PLAIN dialog line is conditional UI: one carrying this run's value is hard, and its absence stops
     const hard = await expectedChangesVerdict(['- dialog "Edit {{v1}}"'], { v1: 'Widget A' }, ctx(), seen([], []));
     expect(hard.stop).toMatch(/did not show "- dialog \\"Edit Widget A\\""/);
@@ -188,7 +204,7 @@ describe('expectedChangesVerdict', () => {
   it('reads the diff first: a change that landed in the diff needs no live look', async () => {
     let looked = 0;
     const obs: ChangeObservation = { added: ['- heading "Widget A"'], live: async () => { looked++; return { lines: [], complete: true }; } };
-    expect(await expectedChangesVerdict(['- heading "{{v1}}"'], { v1: 'Widget A' }, ctx(), obs)).toEqual({ warnings: [] });
+    expect(await expectedChangesVerdict(['- heading "{{v1}}"'], { v1: 'Widget A' }, ctx(), obs)).toEqual({ warnings: [], confirmed: true });
     expect(looked).toBe(0);
   });
 });
@@ -359,7 +375,7 @@ describe('the emitted adapter', () => {
       { tool: 'click', args: { target: '@e3' }, locators: { target: button('Mark') } },
     ]), { tier: 'plain' });
     expect(bodiesOf(source)).toContain('let absentDialog: { name: string; lines: string[] } | null = null;');
-    expect(stepOf(source, 1)).toContain(').absentDialog ?? null;');
+    expect(stepOf(source, 1)).toMatch(/absentDialog = changes\d+\.absentDialog \?\? null;/);
     expect(stepOf(source, 1)).not.toContain('absentDialogSkip');
     for (const n of [2, 3]) {
       const step = stepOf(source, n);

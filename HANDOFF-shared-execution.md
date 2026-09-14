@@ -54,8 +54,9 @@ execution parity.** Several policies are still independently implemented; see
 
 ### Behaviour now single-source
 
-- **Gates.** The emitted `verify` runs error page, url, alerts, then content
-  expectations — replay's own order, through replay's own verdicts. The segment
+- **Gates.** The emitted `verify` runs error page, url, content expectations,
+  then alerts (an unrecorded alert only stops a step whose recorded changes did
+  not confirm it) — replay's own order, through replay's own verdicts. The segment
   url precondition is enforced in artifacts (it was a comment), and
   `preconditionGate` is async and awaited. The artifact captures its alerts in
   the lifecycle's `settle` phase, at the moment the daemon's executor diffs.

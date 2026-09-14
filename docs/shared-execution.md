@@ -62,8 +62,11 @@ match at all. The artifact now emits one form for every pattern shape.
 
 Each is a pure function over observations the caller supplies. What differs per
 runner is only **how it waits and observes**, never what it decides. The
-emitted `verify` phase runs them in replay's own order: error page, url, alerts,
-then content expectations. The alerts observation is taken in the lifecycle's
+emitted `verify` phase runs them in replay's own order: error page, url, content
+expectations, then alerts. The alert gate comes last because an alert the
+recording never saw is always reported, but stops the step only when its
+recorded page changes did not confirm it worked (`ChangeVerdict.confirmed`:
+the changes appeared in what the action added); see `alertVerdict`. The alerts observation is taken in the lifecycle's
 `settle` phase, so the artifact looks at the page at the same moment the daemon's
 executor captures its diff.
 

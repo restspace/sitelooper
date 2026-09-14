@@ -616,3 +616,17 @@ A third case the review did not name was also generalised: a segment filled from
   - The two cases: 2 of 2 passed.
   - Sampled existing cases: 12 of 12 passed. These were the back url gate, drain loop, alert gate, both navigation-fallback rungs, word route, popup, rejected create, both redirect bindings, number input and two-step body stop.
   - The whole parity file was not run.
+
+### Unrecorded alerts are reported; the step's state evidence decides (2026-09-14)
+
+**Found by** the grafana compiled check fwgr34 on 5ea79a0: all three runs stopped at `01-open s_93ccd2/3` ("Skip" on the change-password screen) with "raised an alert the recording never saw: Error loading RSS feed". The home page's News panel cannot reach its feed on an offline box. The recording's after-look came before the panel failed; the new waiting (finding 6) now waits for the page's own requests, so the alert was on screen when the gate looked. The step itself had worked.
+
+**The rule before:** any alert the recording never saw stopped a state-changing step. An alert alone cannot say whether it is the app refusing the step or ambient page content, so the gate's outcome depended on timing.
+
+**Changed** (`gates.ts` `alertVerdict`, `expect.ts` `ChangeVerdict.confirmed`, both runners):
+- An unrecorded alert is always reported.
+- It stops the step only when the step's recorded page changes did not confirm it worked. `confirmed` means every recorded group appeared in what the action added (the diff), not merely on the live page, and a positional fill proven only by its own echo confirms nothing.
+- The alert gate now runs after the page-change gate in both runners (`STEP_GATES`, emitted `verify`).
+- A step with nothing recorded to confirm it still stops on the alert: it is the only evidence (parity G01, the rejected Mark that would otherwise go on to Remove). A recorded alert (`alertContains`) is still what the step is expected to raise.
+
+**Tests.** Unit: `alertVerdict` with `effectConfirmed`; `expectedChangesVerdict` confirms only on diff evidence. Parity G01b (`/ambient` fixture): an alert beside a confirmed "Marked Item 1" is warned and both runners mark again; the same step refused stops at the page-change gate with an empty log; with nothing recorded it stops on the alert.

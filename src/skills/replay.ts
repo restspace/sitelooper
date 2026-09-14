@@ -730,9 +730,11 @@ export async function replaySkill(
         // would? Each gate's warnings and staged generalisations always apply; a
         // stop ends the replay here, with what ran already in `res`.
         let stop: StepVerdict | null = null;
+        let effectConfirmed = false;
         for (const gate of STEP_GATES) {
-          const verdict = await gate({ page, step, tag, failIndex, args, params, outcome, isRead, positionalResolution });
+          const verdict = await gate({ page, step, tag, failIndex, args, params, outcome, isRead, positionalResolution, effectConfirmed });
           if (!verdict) continue;
+          if (verdict.confirmed) effectConfirmed = true;
           if (verdict.warnings) warnings.push(...verdict.warnings);
           if (verdict.generalise) res.generalisations.push(verdict.generalise);
           if (verdict.absentDialog !== undefined) absentDialog = verdict.absentDialog;
@@ -935,6 +937,8 @@ interface StepGateInput {
   isRead: boolean;
   /** Some target of this step resolved through a structural (positional) candidate. */
   positionalResolution: boolean;
+  /** An earlier gate (expectedChanges) saw the step's recorded page changes in what it added. */
+  effectConfirmed?: boolean;
 }
 
 /** A gate's verdict. Warnings and generalisations always apply; `stop` ends the replay with that reason. */
@@ -956,6 +960,8 @@ interface StepVerdict {
   absentDialog?: { name: string; lines: string[] };
   /** This step's effect evidence could not be captured (see ReplayResult.unobserved). */
   unobserved?: true;
+  /** The recorded page changes appeared in the step's diff (expect.ts ChangeVerdict.confirmed). */
+  confirmed?: true;
 }
 
 type StepGate = (g: StepGateInput) => Promise<StepVerdict | null> | StepVerdict | null;
@@ -1004,10 +1010,12 @@ const expectedUrl: StepGate = async ({ step, page, params, tag, failIndex }) => 
  * intact. fwrd4l-n3 clicked into exactly that: the step counted as run, the
  * synthesized report declared the recorded outcome, and only external
  * verification caught that the ticket never reached Ready. So a
- * state-changing step that provokes an UNRECORDED alert fails hard, while a
- * recorded-but-missing alert stays soft (expectedAlert — toasts are volatile).
+ * state-changing step that provokes an UNRECORDED alert fails hard — unless
+ * its recorded page changes confirmed it worked, when the alert is reported
+ * and the replay goes on — while a recorded-but-missing alert stays soft
+ * (expectedAlert — toasts are volatile).
  */
-const alerts: StepGate = ({ outcome, isRead, step, params, tag }) => {
+const alerts: StepGate = ({ outcome, isRead, step, params, tag, effectConfirmed }) => {
   // The shared verdict (src/execution/gates.ts, alertVerdict) decides; the
   // diff already holds the alerts the action RAISED (the surplus over the
   // pre-action capture), so `before` is empty here. Only a capture that FAILED
@@ -1022,7 +1030,7 @@ const alerts: StepGate = ({ outcome, isRead, step, params, tag }) => {
   // the before/after alerts are rendered in the step's dialect instead — the
   // same surplus the recorder takes — so a dialect-1 step is not stopped by a
   // shadow-root toast its recording could never have seen.
-  const ctx = { where: `step ${tag}`, isRead, expectedContains: step.expect?.alertContains, params };
+  const ctx = { where: `step ${tag}`, isRead, expectedContains: step.expect?.alertContains, params, effectConfirmed };
   const d = dialectOf(step);
   const obs = outcome.captureFailed ? undefined : outcome.observations;
   const verdict = obs
@@ -1065,7 +1073,7 @@ const expectedChanges: StepGate = async ({ outcome, step, params, tag, args, pag
     { tag, tool: step.tool, value: typeof args.value === 'string' ? args.value : undefined, positionalResolution },
     { added: outcome.captureFailed ? null : added, live: () => captureLines(page, d) },
   );
-  return verdict.stop || verdict.unobserved || verdict.absentDialog || verdict.warnings.length ? verdict : null;
+  return verdict.stop || verdict.unobserved || verdict.absentDialog || verdict.confirmed || verdict.warnings.length ? verdict : null;
 };
 
 /** The effect gates a step passes through after its action, in order. */
@@ -1081,7 +1089,10 @@ const errorPage: StepGate = ({ page, tag }) => {
   return stop ? { stop } : null;
 };
 
-const STEP_GATES: StepGate[] = [errorPage, expectedUrl, alerts, expectedChanges];
+// The alert gate runs AFTER the page-change gate: an alert the recording never
+// saw is reported, and only stops the step when its recorded changes could not
+// confirm it worked (gates.ts alertVerdict).
+const STEP_GATES: StepGate[] = [errorPage, expectedUrl, expectedChanges, alerts];
 
 /** The line dialect a step's recorded lines are in: absent is dialect 1, every expectation compiled before dialects existed. */
 function dialectOf(step: SkillStep): LineDialect {

@@ -291,16 +291,17 @@ const HELPERS: { token: string; source: string[] }[] = [
     source: [
       '/**',
       " * The live-region alerts a step raised, judged by the shared alertVerdict",
-      ' * (src/execution/gates.ts): an alert the recording never saw stops a',
-      ' * state-changing step (the app talking back — a rejection toast that leaves',
-      ' * the page superficially intact); a recorded-but-missing one only warns.',
+      ' * (src/execution/gates.ts): an alert the recording never saw is reported,',
+      ' * and stops a state-changing step only when its recorded page changes did',
+      ' * not confirm it worked (a rejection toast that leaves the page superficially',
+      ' * intact); a recorded-but-missing one only warns.',
       ' * Both observations are taken by the step lifecycle — `before` in prepare,',
       ' * `after` in settle, right after the action has settled and BEFORE the url',
       " * wait in verify, where the daemon takes its diff (a toast that auto-dismisses",
       ' * during a 5s url wait must not be missed) — and a page that could not be',
       ' * read is handed over as unobserved, never as "no alert".',
       ' */',
-      'function alertGate(before: string[], after: ObservedAlerts | null, ctx: { where: string; isRead: boolean; expectedContains?: string; params: Record<string, string> }): void {',
+      'function alertGate(before: string[], after: ObservedAlerts | null, ctx: { where: string; isRead: boolean; expectedContains?: string; params: Record<string, string>; effectConfirmed?: boolean }): void {',
       '  const verdict = alertVerdict(before, after ? after.alerts : null, ctx, after ? after.complete : true);',
       '  for (const line of verdict.warnings) logWarning(line);',
       '  if (verdict.stop) throw new Error(verdict.stop);',
@@ -1248,9 +1249,9 @@ function originSource(step: SkillStep): string {
  * A recorded dialog that did not open comes back as `absentDialog`, which the
  * body remembers for the steps that were going to act inside it.
  */
-function expectationLines(step: SkillStep, ctx: Ctx, out: string[], linesBefore: string): void {
+function expectationLines(step: SkillStep, ctx: Ctx, out: string[], linesBefore: string): string | null {
   const recorded = recordedChanges(step);
-  if (!recorded.length) return;
+  if (!recorded.length) return null;
   noteSlots(recorded, ctx);
   const where = `${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`;
   const value = typeof step.args?.value === 'string' ? `, value: ${src(step.args.value)}` : '';
@@ -1263,12 +1264,14 @@ function expectationLines(step: SkillStep, ctx: Ctx, out: string[], linesBefore:
   for (const line of recorded) out.push(`//   ${commentSafe(line)}`);
   // Only a plain `- dialog "…"` line can leave a dialog absent (the verdict's
   // own rule, DIALOG_LINE); a body with no such step never carries the state.
+  // The verdict is kept: its `confirmed` is what the alert gate after it reads.
+  const verdict = `changes${ctx.urls}`;
+  out.push(`const ${verdict} = ${call};`);
   if (recorded.some((l) => !SLOT_LINE.test(l) && DIALOG_LINE.test(l))) {
     ctx.dialogAbsence = true;
-    out.push(`absentDialog = (${call}).absentDialog ?? null;`);
-  } else {
-    out.push(`${call};`);
+    out.push(`absentDialog = ${verdict}.absentDialog ?? null;`);
   }
+  return verdict;
 }
 
 /**
@@ -1594,23 +1597,26 @@ function emitSkillStep(step: SkillStep, segment: SpecSegment, index: number, ctx
   const where = `${ctx.stepId} ${segment.id}/${index}`;
   const isRead = isReadAction(step.tool);
   // The effect gates, in the order replay's STEP_GATES runs them: error page,
-  // url, alerts, page changes. Each is the shared verdict; see the helpers.
+  // url, page changes, alerts — the alert gate last, because an alert the
+  // recording never saw only stops a step whose page changes did not confirm
+  // it worked. Each is the shared verdict; see the helpers.
   const checks: string[] = [`errorPageGate(page, ${q(where)});`];
   effectLines(step, ctx, checks);
   // A read raises no alert of its own (replay exempts it), unless the
   // recording expects one; the daemon's expectedAlert gate has no read test.
   const alerts = !isRead || step.expect?.alertContains ? `alertsBefore${ctx.urls}` : null;
   const alertsAfter = alerts ? `alertsAfter${ctx.urls}` : null;
-  if (alerts) {
-    if (step.expect?.alertContains) noteSlots(step.expect.alertContains, ctx);
-    const expected = step.expect?.alertContains ? `, expectedContains: ${q(step.expect.alertContains)}` : '';
-    checks.push(`alertGate(${alerts}, ${alertsAfter}, { where: ${q(where)}, isRead: ${isRead}${expected}, params: p });`);
-  }
   // The page-change gate needs the lines the page showed BEFORE the action —
   // the diff leg of its evidence — so a step that carries one captures them
   // in `prepare`, after the settle, in the same dialect it will judge by.
   const linesBefore = recordedChanges(step).length ? `linesBefore${ctx.urls}` : null;
-  if (linesBefore) expectationLines(step, ctx, checks, linesBefore);
+  const changes = linesBefore ? expectationLines(step, ctx, checks, linesBefore) : null;
+  if (alerts) {
+    if (step.expect?.alertContains) noteSlots(step.expect.alertContains, ctx);
+    const expected = step.expect?.alertContains ? `, expectedContains: ${q(step.expect.alertContains)}` : '';
+    const confirmed = changes ? `, effectConfirmed: ${changes}.confirmed === true` : '';
+    checks.push(`alertGate(${alerts}, ${alertsAfter}, { where: ${q(where)}, isRead: ${isRead}${expected}, params: p${confirmed} });`);
+  }
   const positional = ctx.positional;
   ctx.positional = undefined;
   const indent = (lines: string[]) => lines.flatMap((line) => line.split('\n').map((part) => part ? `    ${part}` : part));

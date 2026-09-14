@@ -138,6 +138,15 @@ export interface ChangeVerdict {
    * is a step of the procedure's own, and its absence is a failure.
    */
   absentDialog?: { name: string; lines: string[] };
+  /**
+   * The step's recorded page changes were seen in what the action ADDED — the
+   * diff, not merely the live page, where a line may simply have been there
+   * already — and nothing weakened that (a positional fill proven only by its
+   * own echo is not confirmation). This is the evidence that lets an alert the
+   * recording never saw be reported instead of stopping the run (gates.ts
+   * alertVerdict): the step demonstrably did what it was recorded doing.
+   */
+  confirmed?: true;
 }
 
 /**
@@ -164,6 +173,9 @@ export async function expectedChangesVerdict(
   const warnings: string[] = [];
   if (!recorded?.length) return { warnings };
   const { tag } = ctx;
+  // Confirmation (ChangeVerdict.confirmed) holds only while every recorded
+  // group was found in the diff; any fallback below clears it.
+  let confirmed = true;
   // The step diff is ONE source of evidence, not the authority. When the
   // capture failed there are no added lines to search — which must not read
   // as "the expected line was absent but harmlessly so", nor as a pass. The
@@ -201,9 +213,13 @@ export async function expectedChangesVerdict(
     const value = ctx.value;
     const consequential = parameterised.filter((l) => !isEchoLine(l, value));
     if (consequential.length) parameterised = consequential;
-    else warnings.push(`step ${tag}: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here`);
+    else {
+      confirmed = false;
+      warnings.push(`step ${tag}: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here`);
+    }
   }
   if (parameterised.length && !(added !== null && lineShows(added, parameterised))) {
+    confirmed = false;
     const seen = await look(parameterised);
     if (!seen.shown) {
       const shown = parameterised.map((w) => JSON.stringify(w)).join(' / ');
@@ -214,6 +230,7 @@ export async function expectedChangesVerdict(
     }
   }
   if (plain.length && !(added !== null && lineShows(added, plain))) {
+    confirmed = false;
     // None of the recorded effects in the step diff — check the live page
     // before judging (a change can land outside the diff window).
     const seen = await look(plain);
@@ -248,7 +265,7 @@ export async function expectedChangesVerdict(
     warnings.push(`step ${tag}: none of the ${plain.length} expected page change(s) appeared in the step diff (found on the page instead)`);
   }
   if (added === null) return { warnings, unobserved: true };
-  return { warnings };
+  return confirmed ? { warnings, confirmed: true } : { warnings };
 }
 
 /** The locator candidates of a step, as far as the dialog-membership rule reads them. */
