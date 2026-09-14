@@ -135,7 +135,10 @@ export default {
   retries: 0,
   workers: 1,
   reporter: [['json', { outputFile: ${JSON.stringify(pwReportFile)} }], ['list']],
-  use: { headless: true },
+  // --trace keeps a Playwright trace (DOM snapshots, network, console) for a
+  // failing test under ${tag}-spec-tmp/test-results, so an intermittent
+  // compiled-run failure can be read after the fact instead of re-guessed.
+  use: { headless: true${args.trace ? ", trace: 'retain-on-failure', screenshot: 'only-on-failure'" : ''} },
 };
 `;
 
