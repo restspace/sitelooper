@@ -2062,6 +2062,40 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     }, 120_000);
 
     /**
+     * A read_all is plural by design. fwod41's odoo recording read
+     * `tr.o_data_row input` values: replay published every match, while the
+     * artifact took `inputValue()` on the many-element locator, threw strict
+     * mode and skipped the read on all five compiled runs. `/controls` has
+     * two inputs (#qty = 1, #fruit empty); both runners publish the same
+     * joined value, and a text read_all over two headings-and-buttons does too.
+     */
+    it('both runners read every match of a read_all, and attribute and count reads alike', async () => {
+      const steps: SkillStep[] = [
+        { tool: 'goto', args: { url: `${origin}/controls` }, locators: {} },
+        { tool: 'read_all', args: { target: 'input', what: 'value' }, locators: { target: [{ kind: 'css', selector: 'input' }] }, label: 'inputs' },
+        { tool: 'read_all', args: { target: 'button[id^="save-"]', what: 'text' }, locators: { target: [{ kind: 'css', selector: 'button[id^="save-"]' }] }, label: 'saves' },
+        // attribute and count reads, which the artifact once refused to compile
+        { tool: 'read', args: { target: '#qty', what: 'attr', attr: 'aria-label' }, locators: { target: [{ kind: 'id', selector: '#qty' }] }, label: 'qtyLabel' },
+        { tool: 'read_all', args: { target: 'input', what: 'attr', attr: 'id' }, locators: { target: [{ kind: 'css', selector: 'input' }] }, label: 'ids' },
+        { tool: 'read_all', args: { target: 'button[id^="save-"]', what: 'count' }, locators: { target: [{ kind: 'css', selector: 'button[id^="save-"]' }] }, label: 'saveCount' },
+      ];
+      const { replay, emitted } = await both(steps, 2);
+
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replay.outputs.inputs).toBe('1 | ');
+      expect(emitted.outputs['01-clear.inputs']).toBe(replay.outputs.inputs);
+      expect(replay.outputs.saves).toBe('Save code | Save quantity | Save fruit');
+      expect(emitted.outputs['01-clear.saves']).toBe(replay.outputs.saves);
+      expect(replay.outputs.qtyLabel).toBe('Quantity');
+      expect(emitted.outputs['01-clear.qtyLabel']).toBe(replay.outputs.qtyLabel);
+      expect(replay.outputs.ids).toBe('qty | fruit');
+      expect(emitted.outputs['01-clear.ids']).toBe(replay.outputs.ids);
+      expect(replay.outputs.saveCount).toBe('3');
+      expect(emitted.outputs['01-clear.saveCount']).toBe(replay.outputs.saveCount);
+    }, 120_000);
+
+    /**
      * Cell 6. `/create/form`: Create is declared record-minting at the url's
      * second path part. The server refuses it, no toast shows, and the page
      * stays on `/create/form` — whose `form` is the part a runner reading the

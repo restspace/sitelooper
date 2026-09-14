@@ -693,33 +693,29 @@ const HELPERS: { token: string; source: string[] }[] = [
       ' * line and an EMPTY value. Assertions and outputs built from an empty read',
       ' * are left exactly as they were — the emptiness is the honest report.',
       ' *',
-      ' * Before giving up, one sweep of the page (sweepPage, the shared',
-      ' * src/execution/snapshot.ts): a virtualised page renders below-the-fold',
-      " * content only once it has been scrolled to, and the agent's scrolls were",
-      ' * evals, which never compile. Replay does exactly this on a read that',
-      ' * missed (fwgr23 01-open lost the third panel heading without it), and',
-      ' * resolves once more with no wait, the wait having already been spent.',
+      ' * The rules are not restated here. WHEN the resolution is asked (once, then',
+      ' * after one sweep of the page once more with no wait) is the shared',
+      ' * resolveForRead; taking the read, flattening it and turning its error into',
+      ' * a skip is the shared takeRead (src/execution/observe.ts, embedded).',
+      " * Replay's runOneStep calls the same two; this adapter only says what it did.",
       ' */',
       'async function readOptional(',
       '  page: Page,',
       '  candidates: CandidateObservation[],',
       '  where: string,',
       '  policy: ResolvePolicy,',
-      '  read: (loc: Locator) => Promise<string>,',
+      '  read: (loc: Locator) => Promise<unknown>,',
       '  opts: { drift?: string[]; resolved?: { into: string[]; key: string; check?: () => void } } = {},',
       '): Promise<string> {',
-      '  let hit = await resolveTarget(page, candidates, where, policy, opts);',
-      '  if (!hit && (await sweepPage(page))) hit = await resolveTarget(page, candidates, where, { ...policy, waitMs: 0 }, opts);',
+      '  const hit = await resolveForRead(page, (again) => resolveTarget(page, candidates, where, again ? { ...policy, waitMs: 0 } : policy, opts));',
       '  if (!hit) {',
       '    console.warn(`[sitelooper skip] ${where}: read target not found — value left empty`);',
       "    return '';",
       '  }',
-      '  try {',
-      '    return await read(hit.locator);',
-      '  } catch {',
-      '    console.warn(`[sitelooper skip] ${where}: read target not found — value left empty`);',
-      "    return '';",
-      '  }',
+      '  const taken = await takeRead(() => read(hit.locator));',
+      '  if (taken.ok) return taken.value;',
+      '  console.warn(`[sitelooper skip] ${where}: read errored (${taken.message}) — value left empty`);',
+      "  return '';",
       '}',
     ],
   },
@@ -1922,23 +1918,23 @@ function waitForLine(target: string, args: Record<string, unknown>, timeout: num
 function readLines(step: SkillStep, ctx: Ctx): string[] {
   const what = String(step.args?.what ?? 'text');
   const out = `outputs[${q(`${ctx.stepId}.${step.label ?? ''}`)}]`;
-  let read: string | null = null;
-  if (what === 'value') read = `async (loc: Locator) => await loc.inputValue()`;
-  // read_all legitimately matches many elements (the policy's allowMultiple),
-  // so textContent's strict mode would throw where replay read every match.
-  else if (what === 'text') {
-    read =
-      step.tool === 'read_all'
-        ? `async (loc: Locator) => (await loc.allTextContents()).join('\\n')`
-        : `async (loc: Locator) => (await loc.textContent()) ?? ''`;
-  }
-  // `attr` and `count` are read by the daemon's own tool implementations
-  // (tools.ts); the artifact has no shape for them, and publishing nothing
-  // under the label a later step consumes is how an empty value travels.
+  // The daemon's read tools take every element read through the embedded
+  // readElements, and readOptional publishes it through the same takeRead
+  // replay does, so a read_all reads EVERY match here too. A single-element
+  // read on a plural selector threw strict mode, and was skipped on every
+  // compiled run (fwod41).
+  const attr = step.args?.attr;
+  const readable = what === 'text' || what === 'value' || what === 'count' || (what === 'attr' && typeof attr === 'string' && attr !== '');
+  const read = readable
+    ? `(loc: Locator) => readElements(loc, ${step.tool === 'read_all'}, ${q(what)}${what === 'attr' ? `, { attr: ${q(String(attr))} }` : ''})`
+    : null;
+  // An unknown kind, or an attribute read that never recorded WHICH attribute:
+  // publishing nothing under the label a later step consumes is how an empty
+  // value travels.
   if (!read) {
     return unsupportedCapability(ctx, ctx.stepIndex, {
-      what: `reads what=${what}, which a standalone spec has no form for (label ${step.label ?? ''})`,
-      why: 'Replay implements attribute and count reads in its own tool layer; the generated file publishes only text and input values, so this label would be left empty and any step consuming it would run on a blank.',
+      what: `reads what=${what}${what === 'attr' ? ' with no attribute named' : ''}, which a standalone spec has no form for (label ${step.label ?? ''})`,
+      why: 'The recording does not say what to read off the element, so the generated file cannot take it; this label would be left empty and any step consuming it would run on a blank.',
       fix: `write the read for what=${what} by hand in the generated file, or re-record the step as a text read`,
       todo: `read what=${commentSafe(what)} has no Tier 2 form (label ${commentSafe(step.label ?? '')}).`,
       throws: `Unsupported recorded read: what=${what}`,

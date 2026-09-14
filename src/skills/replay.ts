@@ -21,7 +21,8 @@ import {
 import { isRefTarget } from '../daemon/refs.js';
 import { settleDom } from '../daemon/settle.js';
 import { TRANSIENT_LINE, fillParams, fillParamsDeep, urlMatches, urlPart, urlPattern } from './compile.js';
-import { capturePageLines, lineShows, presentOnPage, scopeCheckInPage, sweepPage } from '../execution/snapshot.js';
+import { flattenRead, resolveForRead, takeRead } from '../execution/observe.js';
+import { capturePageLines, lineShows, presentOnPage, scopeCheckInPage } from '../execution/snapshot.js';
 import { expectedChangesVerdict, liveLines, namesDialogControl } from '../execution/expect.js';
 // The observation dialect and the content-expectation rules live in the
 // shared execution modules, where a compiled artifact embeds them too.
@@ -338,13 +339,11 @@ export async function replaySkill(
         waitMs: absence ? 0 : resolveWaitMs(),
         stayOnOrigin: originOf(step.expect?.urlPattern ?? '') ?? originOf(page.url()) ?? undefined,
       };
-      let hit = await resolveChain(page, chain, policy);
-      // A virtualised page renders below-the-fold content only once it has
-      // been scrolled to. The agent's scrolls were evals, which never compile,
-      // so a read of the third panel heading found two headings and was
-      // skipped (fwgr23 01-open, both replays: objective 1 lost). One sweep
-      // of the page before giving up on an observation.
-      if (!hit && isRead && (await sweepPage(page))) hit = await resolveChain(page, chain, { ...policy, waitMs: 0 });
+      // A read is an observation: the shared resolveForRead sweeps the page
+      // and asks once more before giving up on it, exactly as the artifact does.
+      const hit = isRead
+        ? await resolveForRead(page, (again) => resolveChain(page, chain, again ? { ...policy, waitMs: 0 } : policy))
+        : await resolveChain(page, chain, policy);
       if (!hit) {
         // A wait for an element to be HIDDEN is satisfied by its absence: the
         // step's own success condition is "nothing matches", so a dead chain
@@ -477,7 +476,7 @@ export async function replaySkill(
         if (!isRead) res.acted = true;
         urlBefore = page.url();
       },
-      act: async (): Promise<StepActionResult<{ result: string; diff?: StepDiff; captureFailed?: true }>> => {
+      act: async (): Promise<StepActionResult<{ result: string; diff?: StepDiff; captureFailed?: true; read?: string }>> => {
         // No retry. A click that produced no observable change was retried here
         // on the theory that it landed during a repaint — but "the page did not
         // change" is not evidence the click failed to DISPATCH. A mutation whose
@@ -486,16 +485,26 @@ export async function replaySkill(
         // only ever safe with proof the action did not fire, and nothing here has
         // that proof.
         if (absenceMet) return { status: 'completed', value: { result: `condition met: ${String(args.state)} (nothing matched)` } };
+        if (isRead) {
+          // Taken and flattened by the shared takeRead, as the artifact takes it:
+          // a read that errors is skipped, never a failed step.
+          let result = '';
+          const taken = await takeRead(async () => {
+            result = (await opts.exec(step.tool, args, resolved, { skill: skill.id, step: failIndex })).result;
+            return decodeRead(result);
+          });
+          if (!taken.ok) {
+            res.warnings.push(`step ${tag}: read errored — ${clip(taken.message, 120)}`);
+            res.lines.push(`${head} → skipped (${clip(taken.message, 120)})`);
+            return { status: 'skipped' };
+          }
+          return { status: 'completed', value: { result, read: taken.value } };
+        }
         try {
           const value = await opts.exec(step.tool, args, resolved, { skill: skill.id, step: failIndex });
           return { status: 'completed', value };
         } catch (err) {
           const message = (err instanceof Error ? err.message : String(err)).split('\nCall log:')[0];
-          if (isRead) {
-            res.warnings.push(`step ${tag}: read errored — ${clip(message, 120)}`);
-            res.lines.push(`${head} → skipped (${clip(message, 120)})`);
-            return { status: 'skipped' };
-          }
           // A text wait is a condition on the PAGE, located through a chain.
           // resolveChain took the first candidate that matched exactly one
           // element, which for a positional candidate can be the wrong one:
@@ -605,7 +614,7 @@ export async function replaySkill(
 
     if (isRead) {
       const key = step.label ?? `read${tag}`;
-      const value = parseRead(outcome.result);
+      const value = outcome.read ?? flattenRead(decodeRead(outcome.result));
       res.values[key] = value;
       // An echo read: this value is only what the skill itself set or chose,
       // so it confirms the control's display, not that the app persisted it.
@@ -1164,10 +1173,10 @@ async function sharesRecordScope(page: Page, identity: string[], goal: string[])
   }
 }
 
-function parseRead(result: string): string {
+/** A read tool's result as the value it carries: its JSON, or the text itself when it is not JSON. */
+function decodeRead(result: string): unknown {
   try {
-    const v = JSON.parse(result);
-    return Array.isArray(v) ? v.map(String).join(' | ') : String(v);
+    return JSON.parse(result);
   } catch {
     return result;
   }

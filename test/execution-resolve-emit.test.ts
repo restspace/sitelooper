@@ -41,7 +41,7 @@ const bodyOf = (source: string) => source.slice(source.indexOf('export const ste
 
 /** The policy argument of the first `pick(`/`readOptional(`/`resolveTarget(` call in the body. */
 function policyOf(source: string): string {
-  const m = /\], '01-do s_1\/\d+ (?:target|source)', (\{[^\n]*?\}), (?:async \(loc: Locator\)[^\n]*?, |'[^'\n]*', p, )?\{ drift: run\.drift/.exec(bodyOf(source));
+  const m = /\], '01-do s_1\/\d+ (?:target|source)', (\{[^\n]*?\}), (?:(?:async )?\(loc: Locator\)[^\n]*?, |'[^'\n]*', p, )?\{ drift: run\.drift/.exec(bodyOf(source));
   if (!m) throw new Error('no resolution call in the emitted body');
   return m[1];
 }
@@ -201,7 +201,11 @@ describe('the policy the artifact derives at compile time', () => {
     const chain: SkillStep['locators']['target'] = [{ kind: 'css', selector: '.row' }];
     const all = emit(flowOf([{ tool: 'read_all', args: { target: '@e1', what: 'text' }, locators: { target: chain }, label: 'rows' }])).source;
     expect(policyOf(all)).toBe('{ allowMultiple: true, stayOnOrigin: originOf(page.url()) ?? undefined, waitMs: RESOLVE_WAIT_MS }');
-    expect(bodyOf(all)).toContain("async (loc: Locator) => (await loc.allTextContents()).join('\\n'), { drift: run.drift });");
+    expect(bodyOf(all)).toContain("(loc: Locator) => readElements(loc, true, 'text'), { drift: run.drift });");
+    // a value read_all reads every match too, never inputValue's single element (fwod41)
+    const values = emit(flowOf([{ tool: 'read_all', args: { target: '@e1', what: 'value' }, locators: { target: chain }, label: 'inputs' }])).source;
+    expect(bodyOf(values)).toContain("(loc: Locator) => readElements(loc, true, 'value'), { drift: run.drift });");
+    expect(values).toContain('async function readElements(\n  loc: Locator,');
     const one = emit(flowOf([{ tool: 'read', args: { target: '@e1', what: 'text' }, locators: { target: chain }, label: 'row' }])).source;
     expect(policyOf(one)).toBe('{ stayOnOrigin: originOf(page.url()) ?? undefined, waitMs: RESOLVE_WAIT_MS }');
   });
@@ -325,5 +329,18 @@ describe('the emitted adapter over the shared policy', () => {
     // and reads what is there when the chain resolves
     const there = fakeLocator({ counts: [1] }, 'there');
     expect(await readOptional(fakePage(), [obs(there, 0)], 'w', { waitMs: 0 }, async (loc: Locator) => `read ${String(loc)}`, {})).toBe('read there');
+    // every match of a plural read, flattened as replay flattens it
+    expect(await readOptional(fakePage(), [obs(there, 0)], 'w', { waitMs: 0 }, async () => ['a', null, 'c'], {})).toBe('a | null | c');
+  });
+
+  it('skips a read that resolves but errors, naming the error rather than a missing target', async () => {
+    const warned: string[] = [];
+    const { readOptional } = helpersOf(source, (line) => warned.push(line));
+    const there = fakeLocator({ counts: [1] }, 'there');
+    const value = await readOptional(fakePage(), [obs(there, 0)], '01-do s_1/2 target', { waitMs: 0 }, async () => {
+      throw new Error('strict mode violation: resolved to 3 elements\nCall log:\n  - waiting');
+    }, {});
+    expect(value).toBe('');
+    expect(warned).toEqual(['[sitelooper skip] 01-do s_1/2 target: read errored (strict mode violation: resolved to 3 elements) — value left empty']);
   });
 });

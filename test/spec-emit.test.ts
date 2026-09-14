@@ -293,14 +293,17 @@ describe('step bodies', () => {
       sequenceAt(one({ tool: 'read', args: { target: '@e1', what: 'text' }, locators: loc, label: 'total' }), [
         "outputs['01-do.total'] = await readOptional(page, [",
         `{ locator: page.locator('#total'), index: 0, structural: false, kind: 'id', carries: JSON.stringify({ kind: 'id', selector: '#total' }) },`,
-        "], '01-do s_test1/1 target', { stayOnOrigin: originOf(page.url()) ?? undefined, waitMs: RESOLVE_WAIT_MS }, async (loc: Locator) => (await loc.textContent()) ?? '', { drift: run.drift });",
+        "], '01-do s_test1/1 target', { stayOnOrigin: originOf(page.url()) ?? undefined, waitMs: RESOLVE_WAIT_MS }, (loc: Locator) => readElements(loc, false, 'text'), { drift: run.drift });",
       ]),
     ).toBeGreaterThan(-1);
     expect(one({ tool: 'read', args: { target: '@e1', what: 'value' }, locators: loc, label: 'name' })).toContain(
-      "'01-do s_test1/1 target', { stayOnOrigin: originOf(page.url()) ?? undefined, waitMs: RESOLVE_WAIT_MS }, async (loc: Locator) => await loc.inputValue(), { drift: run.drift });",
+      "'01-do s_test1/1 target', { stayOnOrigin: originOf(page.url()) ?? undefined, waitMs: RESOLVE_WAIT_MS }, (loc: Locator) => readElements(loc, false, 'value'), { drift: run.drift });",
     );
     expect(one({ tool: 'read', args: { what: 'url' }, locators: {}, label: 'here' })).toContain("outputs['01-do.here'] = page.url();");
-    expect(one({ tool: 'read_all', args: { target: '@e1', what: 'text' }, locators: loc, label: 'rows' })).toContain('.allTextContents()).join(');
+    expect(one({ tool: 'read_all', args: { target: '@e1', what: 'text' }, locators: loc, label: 'rows' })).toContain("(loc: Locator) => readElements(loc, true, 'text')");
+    // attribute and count reads take the same shared call the daemon's read tools do
+    expect(one({ tool: 'read', args: { target: '@e1', what: 'attr', attr: 'href' }, locators: loc, label: 'link' })).toContain("(loc: Locator) => readElements(loc, false, 'attr', { attr: 'href' })");
+    expect(one({ tool: 'read_all', args: { target: '@e1', what: 'count' }, locators: loc, label: 'rows' })).toContain("(loc: Locator) => readElements(loc, true, 'count')");
   });
 
   it('leaves an unlabelled read as an observation', () => {
@@ -577,7 +580,7 @@ describe('step bodies', () => {
     // `allowMultiple: true` is what lets the policy hand back a candidate that
     // matched many; the read callback reads across them all.
     expect(out).toMatch(
-      /], '[^']+', \{ allowMultiple: true, [^\n]*\}, async \(loc: Locator\) => \(await loc\.allTextContents\(\)\)[^\n]*, \{ drift: run\.drift \}\);/,
+      /], '[^']+', \{ allowMultiple: true, [^\n]*\}, \(loc: Locator\) => readElements\(loc, true, 'text'\), \{ drift: run\.drift \}\);/,
     );
     expect(out).not.toContain('any: true');
   });
@@ -2370,7 +2373,7 @@ describe('a read never fails the flow', () => {
   it('routes a multi-candidate read through readOptional, not a bare pick', () => {
     expect(source).toContain("outputs['01-do.panel_content'] = await readOptional(page, [");
     expect(source).toContain(
-      "], '01-do s_test1/1 target', { stayOnOrigin: originOf(page.url()) ?? undefined, waitMs: RESOLVE_WAIT_MS }, async (loc: Locator) => (await loc.textContent()) ?? '', { drift: run.drift });",
+      "], '01-do s_test1/1 target', { stayOnOrigin: originOf(page.url()) ?? undefined, waitMs: RESOLVE_WAIT_MS }, (loc: Locator) => readElements(loc, false, 'text'), { drift: run.drift });",
     );
     // the resolution is INSIDE the helper, so nothing at the call site can throw
     expect(source).not.toContain('= await pick(page, [');
@@ -2387,7 +2390,7 @@ describe('a read never fails the flow', () => {
       sequenceAt(out, [
         "outputs['01-do.total'] = await readOptional(page, [",
         `{ locator: page.locator('#total'), index: 0, structural: false, kind: 'id', carries: JSON.stringify({ kind: 'id', selector: '#total' }) },`,
-        "], '01-do s_test1/1 target', { stayOnOrigin: originOf(page.url()) ?? undefined, waitMs: RESOLVE_WAIT_MS }, async (loc: Locator) => (await loc.textContent()) ?? '', { drift: run.drift });",
+        "], '01-do s_test1/1 target', { stayOnOrigin: originOf(page.url()) ?? undefined, waitMs: RESOLVE_WAIT_MS }, (loc: Locator) => readElements(loc, false, 'text'), { drift: run.drift });",
       ]),
     ).toBeGreaterThan(-1);
     // never a bare read at the call site, which would throw where this cannot

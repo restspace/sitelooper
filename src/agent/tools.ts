@@ -3,6 +3,7 @@ import path from 'node:path';
 import type { Locator, Page } from 'playwright-core';
 import { NAVIGATING_ACTIONS, inFlightRequests, robustClick, urlHeldStill } from '../execution/browser.js';
 import { addedLines } from '../execution/snapshot.js';
+import { isElementRead, readElements } from '../execution/observe.js';
 export { fireWhenAttached, urlHeldStill } from '../execution/browser.js';
 import type { BrowserSession } from '../daemon/browser.js';
 import { clip } from '../shared/text.js';
@@ -1016,7 +1017,7 @@ async function dispatch(
       if (typeof args.target !== 'string' || !args.target.trim()) throw new Error(`read ${String(args.what)} needs a target (only what=url reads without one)`);
       const loc = t();
       // `count` asks HOW MANY, so plural is the answer, not an error.
-      if (args.what === 'count') return String(await loc.count());
+      if (args.what === 'count') return String(await readElements(loc, false, 'count'));
       // Every ACTION already insists on a unique target: click and fill hand
       // the locator to Playwright, whose strict mode throws on an ambiguous
       // match, and the agent answers that by naming something specific. A
@@ -1047,36 +1048,17 @@ async function dispatch(
             `Use a snapshot ref (@e123) for the one you mean, or a more specific selector; use read_all to read all ${n}.`,
         );
       }
-      switch (args.what) {
-        case 'text':
-          return JSON.stringify(await loc.innerText({ timeout }));
-        case 'value':
-          return JSON.stringify(await loc.inputValue({ timeout }));
-        case 'attr':
-          return JSON.stringify(await loc.getAttribute(String(args.attr), { timeout }));
-        default:
-          throw new Error(`unknown read kind: ${args.what}`);
-      }
+      // The element reads themselves are the shared src/execution/observe.ts,
+      // which a compiled artifact replays with the very same calls.
+      if (!isElementRead(args.what)) throw new Error(`unknown read kind: ${args.what}`);
+      return JSON.stringify(await readElements(loc, false, args.what, { attr: String(args.attr), timeout }));
     }
 
     case 'read_all': {
       const loc = t();
-      switch (args.what) {
-        case 'text':
-          return JSON.stringify(await loc.allInnerTexts());
-        case 'value':
-          return JSON.stringify(
-            await loc.evaluateAll((els) => els.map((e) => (e as HTMLInputElement).value ?? null)),
-          );
-        case 'attr':
-          return JSON.stringify(
-            await loc.evaluateAll((els, a) => els.map((e) => e.getAttribute(a)), String(args.attr)),
-          );
-        case 'count':
-          return String(await loc.count());
-        default:
-          throw new Error(`unknown read_all kind: ${args.what}`);
-      }
+      if (!isElementRead(args.what)) throw new Error(`unknown read_all kind: ${args.what}`);
+      if (args.what === 'count') return String(await readElements(loc, true, 'count'));
+      return JSON.stringify(await readElements(loc, true, args.what, { attr: String(args.attr) }));
     }
 
     case 'eval': {

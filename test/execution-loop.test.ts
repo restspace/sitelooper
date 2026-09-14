@@ -484,16 +484,16 @@ const UNSUPPORTED: [string, SkillStep, string, string][] = [
     '// TODO: the recording switched to tab 1 here — take the handle yourself.',
   ],
   [
-    'an attribute read',
+    'an attribute read that never named its attribute',
     { tool: 'read', args: { target: '@e1', what: 'attr', name: 'href' }, locators: { target: [{ kind: 'id', selector: '#a' }] }, label: 'link' },
     'Unsupported recorded read: what=attr',
     '// TODO: read what=attr has no Tier 2 form (label link).',
   ],
   [
-    'a count read',
-    { tool: 'read', args: { target: '@e1', what: 'count' }, locators: { target: [{ kind: 'id', selector: '#a' }] }, label: 'rows' },
-    'Unsupported recorded read: what=count',
-    '// TODO: read what=count has no Tier 2 form (label rows).',
+    'a read of an unknown kind',
+    { tool: 'read', args: { target: '@e1', what: 'style' }, locators: { target: [{ kind: 'id', selector: '#a' }] }, label: 'look' },
+    'Unsupported recorded read: what=style',
+    '// TODO: read what=style has no Tier 2 form (label look).',
   ],
   [
     'a target with no recorded locator at all',
