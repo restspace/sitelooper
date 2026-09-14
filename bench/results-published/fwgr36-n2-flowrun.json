@@ -1,0 +1,248 @@
+{
+  "flow": "fwgr36",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_e79930; observed dashboard_name=Service Health.",
+      "values": {
+        "dashboard_name": "Service Health"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_048381; observed dashboard_slug=fwgr36-n2-bench-dashboard, ref=fwgr36-n2, panel_title=fwgr36-n2 Availability, dashboard_title=fwgr36-n2 Bench Dashboard, panel_value_observed=62.6.",
+      "values": {
+        "dashboard_slug": "fwgr36-n2-bench-dashboard",
+        "ref": "fwgr36-n2",
+        "panel_title": "fwgr36-n2 Availability",
+        "dashboard_title": "fwgr36-n2 Bench Dashboard",
+        "panel_value_observed": "62.6"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-add",
+      "status": "success",
+      "summary": "The replay had already added the Text panel (title 'fwgr36-n2 Notes', content 'Bench notes for run fwgr36-n2') but stopped before finishing; I observed that state, re-opened the Save dashboard drawer and clicked Save (the drawer closed and the dashboard returned to view mode), then proved persistence by reloading the dashboard fresh at http://127.0.0.1:3000/d/cfy9uiybpeghsd/fwgr36-n2-bench-dashboard with no parameters. After the reload the dashboard breadcrumb reads 'fwgr36-n2 Bench Dashboard' and both panels render: region 'fwgr36-n2 Notes' with heading 'fwgr36-n2 Notes' and paragraph 'Bench notes for run fwgr36-n2', plus the existing 'fwgr36-n2 Availability' stat (74.5). The 'Dashboard saved' toast text itself was not captured in a snapshot (the alert elements read back empty after the drawer closed), so success is verified by the panel surviving a full page reload rather than by the toast.",
+      "values": {
+        "dashboard_uid": "cfy9uiybpeghsd",
+        "dashboard_url": "http://127.0.0.1:3000/d/cfy9uiybpeghsd/fwgr36-n2-bench-dashboard",
+        "dashboard_title_breadcrumb": "fwgr36-n2 Bench Dashboard",
+        "text_panel_title": "fwgr36-n2 Notes",
+        "text_panel_content": "Bench notes for run fwgr36-n2",
+        "other_panel_title": "fwgr36-n2 Availability",
+        "other_panel_value_after_reload": "74.5",
+        "screenshot": "/tmp/fwgr36-n2-text-panel-saved.png",
+        "dashboard_url_2": "http://127.0.0.1:3000/d/cfy9uiybpeghsd/fwgr36-n2-bench-dashboard?from=now-6h&to=now&timezone=browser",
+        "ref": "fwgr36-n2"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_8e26fe stopped at step 19 — goto failed: page.goto: net::ERR_ABORTED at http://127.0.0.1:3000/d/cfy9uiybpeghsd/fwgr36-n2-bench-dashboard?from=now-6h&to=now&timezone=browser",
+      "replayed": "18/23",
+      "repaired": false,
+      "turns": 9
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "All parts completed and verified on the dashboard 'fwgr36-n2 Bench Dashboard' (UID cfy9uiybpeghsd). I opened Dashboard settings > General, added the tag 'bench' (chip rendered with a 'Remove \"bench\" tag' button), clicked Save dashboard and the green 'Dashboard saved' alert appeared. I then set the top-bar time picker to 'Last 6 hours', clicked Save dashboard, ticked the 'Update default time range' checkbox in the save dialog (which enabled the previously disabled Save button) and confirmed the save. Finally I reloaded the dashboard fresh at http://127.0.0.1:3000/d/cfy9uiybpeghsd/fwgr36-n2-bench-dashboard with no query params: the top bar reads 'Last 6 hours' and Dashboard settings > General reads the tag 'bench'. Both panels ('fwgr36-n2 Notes' and 'fwgr36-n2 Availability') are present and edit mode was exited.",
+      "values": {
+        "dashboard_tags": "bench",
+        "dashboard_uid": "cfy9uiybpeghsd",
+        "panel_titles": "fwgr36-n2 Notes, fwgr36-n2 Availability",
+        "save_alerts": "Dashboard saved (observed after the tags save and again after the time-range save)",
+        "time_range_after_set": "Last 6 hours",
+        "top_bar_time_range_after_reload": "Last 6 hours",
+        "update_default_time_range_checkbox": "ticked",
+        "ref": "fwgr36-n2"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "every candidate refused — s_c0cdad: the page at http://127.0.0.1:3000/d/cfy9uiybpeghsd/:id?from=:id&timezone=browser&to=now does not show \"fwgr36-n2 Bench Dashboard\" — it matches this procedure's page template but is a different record — nothing was run",
+      "replayed": "0/24",
+      "repaired": false,
+      "turns": 25
+    },
+    {
+      "id": "05-set",
+      "status": "success",
+      "summary": "Set the auto-refresh interval to 1m on 'fwgr36-n2 Bench Dashboard' (UID cfy9uiybpeghsd) and persisted it. The replay had left the dashboard with refresh=1m in the URL but had failed before the save (the save dialog was never open), and no 'Save dashboard' button existed in view mode because the dashboard was not dirty; I therefore entered Edit mode (where the toolbar exposes 'Save dashboard'), re-picked '1 minute' from the top-bar refresh-interval menu (button now reading '1m'), clicked 'Save dashboard', ticked the 'Update default refresh value' checkbox that appeared in the save drawer (this enabled the previously disabled Save), and confirmed — the green 'Dashboard saved' alert appeared. Finally I reloaded the dashboard fresh with no URL params at http://127.0.0.1:3000/d/cfy9uiybpeghsd/fwgr36-n2-bench-dashboard: the page loads with refresh=1m in the address bar and the refresh-interval selector reads 'Choose refresh time interval with current interval 1 minute selected' (shown as '1m'), with the time range still 'Last 6 hours'.",
+      "values": {
+        "dashboard_title": "fwgr36-n2 Bench Dashboard",
+        "dashboard_uid": "cfy9uiybpeghsd",
+        "refresh_interval_after_fresh_reload": "1m",
+        "refresh_selector_aria_after_reload": "Choose refresh time interval with current interval 1 minute selected",
+        "saved_alert": "Dashboard saved banner shown after clicking Save in the drawer",
+        "save_drawer_checkbox_ticked": "Update default refresh value",
+        "time_range_after_reload": "Last 6 hours",
+        "url_after_fresh_reload": "http://127.0.0.1:3000/d/cfy9uiybpeghsd/fwgr36-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m",
+        "ref": "fwgr36-n2"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_9c9f53 stopped at step 5 — no element matched any known locator for target (tried 6: page.getByTestId('Dashboard settings Save Dashboard Modal Save refresh checkbox'), page.getByRole('checkbox', { name: 'Update default refresh valueWill make the current refresh the new default', exact: true }), page.getByLabel('Update default refresh valueWill make the current refresh the new default'), …)",
+      "replayed": "4/10",
+      "repaired": false,
+      "turns": 25
+    },
+    {
+      "id": "06-report",
+      "status": "success",
+      "summary": "Loaded the dashboard with no query params; Grafana rewrote the address bar to http://127.0.0.1:3000/d/cfy9uiybpeghsd/fwgr36-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m. Breadcrumb reads \"fwgr36-n2 Bench Dashboard\". The dashboard has 2 panels: \"fwgr36-n2 Notes\" and \"fwgr36-n2 Availability\". Top-bar time range is \"Last 6 hours\" and the auto-refresh interval shows \"1m\". Dashboard settings > General shows the Tags field with the single tag \"bench\" (Title \"fwgr36-n2 Bench Dashboard\"). Nothing was modified.",
+      "values": {
+        "requested_url": "http://127.0.0.1:3000/d/cfy9uiybpeghsd/",
+        "settings_general_title": "fwgr36-n2 Bench Dashboard",
+        "dashboard_uid": "cfy9uiybpeghsd",
+        "text_panel_title": "fwgr36-n2 Notes",
+        "stat_panel_title": "fwgr36-n2 Availability",
+        "ref": "fwgr36-n2",
+        "exact_url_after_load": "http://127.0.0.1:3000/d/cfy9uiybpeghsd/fwgr36-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m",
+        "panel_titles": "fwgr36-n2 Notes | fwgr36-n2 Availability",
+        "breadcrumb_title": "fwgr36-n2 Bench Dashboard",
+        "top_bar_time_range": "Last 6 hours",
+        "auto_refresh_interval_top_bar": "1m",
+        "panel_count": "2",
+        "settings_general_tags": "bench",
+        "settings_auto_refresh_intervals_field": "5s,10s,30s,1m,5m,15m,30m,1h,2h,1d"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "07-open",
+      "status": "success",
+      "summary": "Opened the panel editor for the panel titled \"fwgr36-n2 Availability\" via its panel menu > Edit. Its Data source picker showed \"TestData | optional | key=value, key2=value2 | 1 | auto | none | none | 1 | 0 | 0 | Search options | null | Auto | Auto | Choose | auto | auto | auto | none | - | null | null\" (confirmed by the picker's displayed value/placeholder and the only data-source logo on the page being alt=\"TestData | optional | key=value, key2=value2 | 1 | auto | none | none | 1 | 0 | 0 | Search options | null | Auto | Auto | Choose | auto | auto | auto | none | - | null | null logo\"; the query row's options were TestData | optional | key=value, key2=value2 | 1 | auto | none | none | 1 | 0 | 0 | Search options | null | Auto | Auto | Choose | auto | auto | auto | none | - | null | null-specific, e.g. \"Test Data Query scenario select container\"). The visualization picker showed \"Stat\", with the options pane headed \"Stat styles\" (Text mode) — so the panel type is Stat. Nothing was changed: I clicked \"Back to dashboard\" and then \"Exit edit\" to leave edit mode, and no \"Dashboard saved\" alert appeared; the URL returned to the normal dashboard URL (no editPanel/editview params) and the time range (Last 6 hours) and refresh (1m) are unchanged.",
+      "values": {
+        "panels_still_present": "fwgr36-n2 Notes, fwgr36-n2 Availability",
+        "dashboard_uid": "cfy9uiybpeghsd",
+        "ref": "fwgr36-n2",
+        "panel_visualization_type": "Stat",
+        "panel_data_source": "TestData | optional | key=value, key2=value2 | 1 | auto | none | none | 1 | 0 | 0 | Search options | null | Auto | Auto | Choose | auto | auto | auto | none | - | null | null",
+        "datasource_logo_alts": "TestData logo",
+        "url_after_exit_without_saving": "http://127.0.0.1:3000/d/cfy9uiybpeghsd/fwgr36-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m",
+        "time_range_after_exit": "Last 6 hours",
+        "refresh_after_exit": "1m",
+        "panel_opened": "fwgr36-n2 Availability"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 7,
+  "total": 7,
+  "repinned": 0,
+  "drift": 5,
+  "driftTickets": [
+    {
+      "flow": "fwgr36",
+      "step": "03-add",
+      "skill": "s_8e26fe",
+      "similarity": 0.996,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_8e26fe stopped at step 19 — goto failed: page.goto: net::ERR_ABORTED at http://127.0.0.1:3000/d/cfy9uiybpeghsd/fwgr36-n2-bench-dashboard?from=now-6h&to=now&timezone=browser",
+      "reason": "goto failed: page.goto: net::ERR_ABORTED at http://127.0.0.1:3000/d/cfy9uiybpeghsd/fwgr36-n2-bench-dashboard?from=now-6h&to=now&timezone=browser",
+      "pageUrlPattern": "http://127.0.0.1:3000/d/cfy9uiybpeghsd/:id?from=:id&timezone=browser&to=now",
+      "pageUrl": "http://127.0.0.1:3000/d/cfy9uiybpeghsd/fwgr36-n2-bench-dashboard?from=now-6h&to=now&timezone=browser"
+    },
+    {
+      "flow": "fwgr36",
+      "step": "04-open",
+      "skill": "s_c0cdad",
+      "similarity": 0.252,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "every candidate refused — s_c0cdad: the page at http://127.0.0.1:3000/d/cfy9uiybpeghsd/:id?from=:id&timezone=browser&to=now does not show \"fwgr36-n2 Bench Dashboard\" — it matches this procedure's page template but is a different record — nothing was run",
+      "reason": "not on the page this procedure starts from (expects http://127.0.0.1:3000/d/cfy9uiybpeghsd/fwgr36-n2-bench-dashboard?editview=json-model&from=:id&timezone=browser&to=now, browser is at http://127.0.0.1:3000/?from=now-6h&timezone=browser&to=now) — nothing was run",
+      "pageUrlPattern": "http://127.0.0.1:3000/?from=:id&timezone=browser&to=now",
+      "pageUrl": "http://127.0.0.1:3000/?from=now-6h&to=now&timezone=browser"
+    },
+    {
+      "flow": "fwgr36",
+      "step": "05-set",
+      "skill": "s_9c9f53",
+      "atStep": "4",
+      "key": "target",
+      "similarity": 0.986,
+      "missedLocator": "page.getByTestId('data-testid Save dashboard button')",
+      "fallbackUsed": "elementAt(1260, 60) /* button */",
+      "fallbackIndex": 4,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:3000/d/cfy9uiybpeghsd/:id?from=:id&refresh=:id&timezone=browser&to=now",
+      "pageUrl": "http://127.0.0.1:3000/d/cfy9uiybpeghsd/fwgr36-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m"
+    },
+    {
+      "flow": "fwgr36",
+      "step": "05-set",
+      "skill": "s_9c9f53",
+      "atStep": "5",
+      "key": "target",
+      "similarity": 0.986,
+      "missedLocator": "page.getByTestId('Dashboard settings Save Dashboard Modal Save refresh checkbox')",
+      "fallbackUsed": null,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:3000/d/cfy9uiybpeghsd/:id?from=:id&refresh=:id&timezone=browser&to=now",
+      "pageUrl": "http://127.0.0.1:3000/d/cfy9uiybpeghsd/fwgr36-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m"
+    },
+    {
+      "flow": "fwgr36",
+      "step": "07-open",
+      "skill": "s_563a29",
+      "atStep": "8",
+      "key": "target",
+      "similarity": 0.998,
+      "missedLocator": "page.locator('#data-source-picker + input, input#data-source-picker')",
+      "fallbackUsed": "page.locator('[data-testid=\"input-wrapper\"] input')",
+      "fallbackIndex": 5,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:3000/d/cfy9uiybpeghsd/:id?from=:id&refresh=:id&timezone=browser&to=now",
+      "pageUrl": "http://127.0.0.1:3000/d/cfy9uiybpeghsd/fwgr36-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m"
+    }
+  ],
+  "wallMs": 326603,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 1153218,
+    "completionTokens": 19309,
+    "cachedTokens": 1062656
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 1153218,
+      "completionTokens": 19309,
+      "cachedTokens": 1062656
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

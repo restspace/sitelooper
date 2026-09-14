@@ -1,0 +1,981 @@
+{
+ "id": "s_7584e3",
+ "origin": "http://127.0.0.1:3000",
+ "template": "On the Grafana dashboard '{{v1}} Bench Dashboard' (UID {{v2}}), open Dashboard settings > General, add the tag '{{v3}}' to the Tags field, and save the settings. Then set the top-bar time picker to '{{v4}}', click Save, tick the 'Update default time range' checkbox in the save dialog, and confirm the save. Finally reload the dashboard fresh and report the tags in settings and the time range shown in the top bar.",
+ "params": {
+  "v1": {
+   "example": "fwgr36-n2",
+   "usedIn": [
+    1,
+    15
+   ],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "cfy9uiybpeghsd",
+   "usedIn": [
+    1,
+    15
+   ],
+   "known": true,
+   "binding": "03-add.url.p1"
+  },
+  "v3": {
+   "example": "bench",
+   "usedIn": [
+    4
+   ]
+  },
+  "v4": {
+   "example": "Last 6 hours",
+   "usedIn": [
+    9,
+    10,
+    11,
+    19
+   ]
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:3000/d/{{v2}}/{{v1}}-bench-dashboard?from=:id&timezone=browser&to=now"
+ },
+ "steps": [
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:3000/d/{{v2}}/{{v1}}-bench-dashboard"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e67"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Edit dashboard button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Edit"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(5) > button"
+     },
+     {
+      "kind": "point",
+      "x": 1198,
+      "y": 60,
+      "w": 38.3,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v2}}/{{v1}}-bench-dashboard?from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- button \"Add\"",
+     "- button \"Settings\"",
+     "- button \"Exit edit\"",
+     "- button \"Save dashboard\"",
+     "- button \"More save options\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Settings\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=button[name=\"Settings\"]"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Dashboard settings"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Settings"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(3) > button"
+     },
+     {
+      "kind": "point",
+      "x": 962,
+      "y": 60,
+      "w": 63.8,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v2}}/{{v1}}-bench-dashboard?editview=settings&from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- link \"{{v1}} Bench Dashboard\"",
+     "- button \"Back to dashboard\"",
+     "- heading \"Settings\"",
+     "- tab \"General\"",
+     "- tab \"Annotations\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e218",
+    "value": "{{v3}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Tags"
+     },
+     {
+      "kind": "label",
+      "label": "Tags"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "New tag (enter key to add)"
+     },
+     {
+      "kind": "id",
+      "selector": "#tags-input"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"input-wrapper\"] input"
+     },
+     {
+      "kind": "css",
+      "selector": "#tags-input"
+     },
+     {
+      "kind": "point",
+      "x": 192,
+      "y": 414,
+      "w": 320,
+      "h": 32,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v2}}/{{v1}}-bench-dashboard?editview=settings&from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- textbox \"New tag (enter key to add)\": {{v3}}",
+     "- button \"Add\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "press",
+   "args": {
+    "key": "Enter",
+    "target": "@e218"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Tags"
+     },
+     {
+      "kind": "label",
+      "label": "Tags"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "New tag (enter key to add)"
+     },
+     {
+      "kind": "id",
+      "selector": "#tags-input"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"input-wrapper\"] input"
+     },
+     {
+      "kind": "css",
+      "selector": "#tags-input"
+     },
+     {
+      "kind": "point",
+      "x": 192,
+      "y": 414,
+      "w": 320,
+      "h": 32,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v2}}/{{v1}}-bench-dashboard?editview=settings&from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- textbox \"New tag (enter key to add)\"",
+     "- button \"Add\" [disabled]",
+     "- button \"Remove \\\"{{v3}}\\\" tag\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e159"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Save dashboard button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Save dashboard"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(3) > div > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1140,
+      "y": 60,
+      "w": 109.4,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v2}}/{{v1}}-bench-dashboard?editview=settings&from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- dialog \"\"",
+     "- dialog \"Drawer title Save dashboard\"",
+     "- button \"Close\"",
+     "- heading \"Save dashboard\"",
+     "- tab \"Details\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e409"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Save dashboard drawer button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Save"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(3) > div:nth-of-type(1) > div > div > div:nth-of-type(3) > button:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 776,
+      "y": 372,
+      "w": 65.4,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v2}}/{{v1}}-bench-dashboard?editview=settings&from=:id&timezone=browser&to=now",
+    "alertContains": "Dashboard saved",
+    "addedContains": [
+     "- button \"Back to dashboard\"",
+     "- button \"Save dashboard\"",
+     "- button \"More save options\"",
+     "- button \"Toggle top search bar\"",
+     "- button \"Close alert\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e151"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Back to dashboard button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Back to dashboard"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(1) > button"
+     },
+     {
+      "kind": "point",
+      "x": 993,
+      "y": 60,
+      "w": 143.5,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v2}}/{{v1}}-bench-dashboard?from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- button \"Add\"",
+     "- button \"Settings\"",
+     "- button \"Exit edit\"",
+     "- button \"Time range selected: {{v4}}\"",
+     "- button \"Zoom out time range\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e455"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid TimePicker Open Button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Time range selected: {{v4}}"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid dashboard controls\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div > div:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1013,
+      "y": 112,
+      "w": 153.5,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v2}}/{{v1}}-bench-dashboard?from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- dialog \"\"",
+     "- textbox \"Search quick ranges\"",
+     "- checkbox \"Last 5 minutes\"",
+     "- checkbox \"Last 15 minutes\"",
+     "- checkbox \"Last 30 minutes\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e547"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "text",
+      "text": "{{v4}}",
+      "nth": 1
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid TimePicker Overlay Content\"] label"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > ul > li:nth-of-type(6) > label"
+     },
+     {
+      "kind": "point",
+      "x": 1016,
+      "y": 380,
+      "w": 217.6,
+      "h": 36,
+      "role": null,
+      "tag": "label",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v2}}/{{v1}}-bench-dashboard?from=:id&timezone=browser&to=now",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "@e455",
+    "what": "text",
+    "label": "time_range_after_set"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid TimePicker Open Button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Time range selected: {{v4}}"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid dashboard controls\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div > div:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1013,
+      "y": 112,
+      "w": 153.5,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "time_range_after_set"
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e444"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Save dashboard button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Save dashboard"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(6) > div > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1140,
+      "y": 60,
+      "w": 109.4,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v2}}/{{v1}}-bench-dashboard?from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- dialog \"\"",
+     "- dialog \"Drawer title Save dashboard\"",
+     "- button \"Close\"",
+     "- heading \"Save dashboard\"",
+     "- tab \"Details\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "check",
+   "args": {
+    "target": "@e694",
+    "checked": true
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "Dashboard settings Save Dashboard Modal Save timerange checkbox"
+     },
+     {
+      "kind": "role",
+      "role": "checkbox",
+      "name": "Update default time rangeWill make current time range the new default"
+     },
+     {
+      "kind": "label",
+      "label": "Update default time rangeWill make current time range the new default"
+     },
+     {
+      "kind": "id",
+      "selector": "#save-timerange"
+     },
+     {
+      "kind": "css",
+      "selector": "#save-timerange"
+     },
+     {
+      "kind": "point",
+      "x": 798,
+      "y": 155,
+      "w": 284.5,
+      "h": 36,
+      "role": "checkbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v2}}/{{v1}}-bench-dashboard?from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- tab \"Changes1\"",
+     "- checkbox \"Update default time rangeWill make current time range the new default\" [checked]",
+     "- button \"Save\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e708"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Save dashboard drawer button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Save"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(3) > div:nth-of-type(1) > div > div > div:nth-of-type(3) > button:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 776,
+      "y": 372,
+      "w": 65.4,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v2}}/{{v1}}-bench-dashboard?from=:id&timezone=browser&to=now",
+    "alertContains": "Dashboard saved",
+    "addedContains": [
+     "- button \"Add\"",
+     "- button \"Settings\"",
+     "- button \"Exit edit\"",
+     "- button \"Save dashboard\"",
+     "- button \"More save options\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:3000/d/{{v2}}/{{v1}}-bench-dashboard"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e67"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Edit dashboard button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Edit"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(5) > button"
+     },
+     {
+      "kind": "point",
+      "x": 1198,
+      "y": 60,
+      "w": 38.3,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v2}}/{{v1}}-bench-dashboard?from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- button \"Add\"",
+     "- button \"Settings\"",
+     "- button \"Exit edit\"",
+     "- button \"Save dashboard\"",
+     "- button \"More save options\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Settings\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=button[name=\"Settings\"]"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Dashboard settings"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Settings"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(3) > button"
+     },
+     {
+      "kind": "point",
+      "x": 962,
+      "y": 60,
+      "w": 63.8,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v2}}/{{v1}}-bench-dashboard?editview=settings&from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- link \"{{v1}} Bench Dashboard\"",
+     "- button \"Back to dashboard\"",
+     "- heading \"Settings\"",
+     "- tab \"General\"",
+     "- tab \"Annotations\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e151"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Back to dashboard button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Back to dashboard"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(1) > button"
+     },
+     {
+      "kind": "point",
+      "x": 993,
+      "y": 60,
+      "w": 143.5,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v2}}/{{v1}}-bench-dashboard?from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- button \"Add\"",
+     "- button \"Settings\"",
+     "- button \"Exit edit\"",
+     "- button \"Time range selected: {{v4}}\"",
+     "- button \"Zoom out time range\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "button[aria-label^=\"Time range selected\"]",
+    "what": "text",
+    "label": "top_bar_time_range_after_reload"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "button[aria-label^=\"Time range selected\"]"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid TimePicker Open Button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Time range selected: {{v4}}"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid dashboard controls\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div > div:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1013,
+      "y": 112,
+      "w": 153.5,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "time_range_after_set"
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e385"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Exit edit mode button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Exit edit"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(5) > button"
+     },
+     {
+      "kind": "point",
+      "x": 1042,
+      "y": 60,
+      "w": 63,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v2}}/{{v1}}-bench-dashboard?from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- button \"Mark as favorite\"",
+     "- button \"Share\"",
+     "- button \"Edit\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "reportTemplate": {
+  "summary": "All parts completed and verified on the dashboard '{{v1}} Bench Dashboard' (UID {{v2}}). I opened Dashboard settings > General, added the tag '{{v3}}' (chip rendered with a 'Remove \"{{v3}}\" tag' button), clicked Save dashboard and the green 'Dashboard saved' alert appeared. I then set the top-bar time picker to '{{v4}}', clicked Save dashboard, ticked the 'Update default time range' checkbox in the save dialog (which enabled the previously disabled Save button) and confirmed the save. Finally I reloaded the dashboard fresh at http://127.0.0.1:3000/d/{{v2}}/{{v1}}-bench-dashboard with no query params: the top bar reads '{{v4}}' and Dashboard settings > General reads the tag '{{v3}}'. Both panels ('{{v1}} Notes' and '{{v1}} Availability') are present and edit mode was exited.",
+  "values": {
+   "dashboard_tags": "{{v3}}",
+   "dashboard_uid": "{{v2}}",
+   "panel_titles": "{{v1}} Notes, {{v1}} Availability",
+   "save_alerts": "Dashboard saved (observed after the tags save and again after the time-range save)",
+   "time_range_after_set": "{{v4}}",
+   "top_bar_time_range_after_reload": "{{v4}}",
+   "update_default_time_range_checkbox": "ticked",
+   "ref": "{{v1}}"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 2,
+  "successes": 2,
+  "partial": 0,
+  "created": "2026-09-14T23:05:37.402Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-14T23:09:57.917Z"
+ },
+ "status": "validated",
+ "provenance": {
+  "session": "fwgr36-n2",
+  "instruction": "On the Grafana dashboard 'fwgr36-n2 Bench Dashboard' (UID cfy9uiybpeghsd), open Dashboard settings > General, add the tag 'bench' to the Tags field, and save the settings. Then set the top-bar time picker to 'Last 6 hours', click Save, tick the 'Update default time range' checkbox in the save dialog, and confirm the save. Finally reload the dashboard fresh and report the tags in settings and the time range shown in the top bar.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-14T23:05:37.402Z"
+ },
+ "revision": 2
+}
