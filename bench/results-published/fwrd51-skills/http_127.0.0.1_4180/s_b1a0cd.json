@@ -1,0 +1,154 @@
+{
+ "id": "s_b1a0cd",
+ "origin": "http://127.0.0.1:4180",
+ "template": "Open {{v2}} and sign in with email {{v3}} and password {{v4}}. Then create a new ticket titled exactly '{{v1}} RD Bench Ticket', filling in any required fields the form demands (discover them yourself). After saving, wait for the list/detail view to refresh and confirm the ticket '{{v1}} RD Bench Ticket' exists, reporting its title, status, and any other fields shown on its detail page.",
+ "params": {
+  "v1": {
+   "example": "fwrd51-n1",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "http://127.0.0.1:4180/",
+   "usedIn": [
+    3
+   ]
+  },
+  "v3": {
+   "example": "bench@example.com",
+   "usedIn": [
+    4
+   ]
+  },
+  "v4": {
+   "example": "bench-pass-1234",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:4180/"
+ },
+ "steps": [
+  {
+   "tool": "wait_for",
+   "args": {
+    "target": "body",
+    "state": "visible",
+    "timeout_ms": 10000
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "body"
+     },
+     {
+      "kind": "css",
+      "selector": "html > body"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 450,
+      "w": 1264,
+      "h": 884,
+      "role": null,
+      "tag": "body",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "what": "url"
+   },
+   "locators": {},
+   "label": "initial_page_url"
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v2}}"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e13",
+    "value": "{{v3}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "login-email"
+     },
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Email address"
+     },
+     {
+      "kind": "label",
+      "label": "Email address"
+     },
+     {
+      "kind": "id",
+      "selector": "#login-email"
+     },
+     {
+      "kind": "css",
+      "selector": "#login-email"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 218,
+      "w": 398,
+      "h": 39,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/login",
+    "addedContains": [
+     "- textbox \"Email address\": {{v3}}"
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-14T22:37:43.555Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_4adbe4",
+  "index": 0,
+  "of": 4
+ },
+ "provenance": {
+  "session": "fwrd51-n1",
+  "instruction": "Open http://127.0.0.1:4180/ and sign in with email bench@example.com and password bench-pass-1234. Then create a new ticket titled exactly 'fwrd51-n1 RD Bench Ticket', filling in any required fields the form demands (discover them yourself). After saving, wait for the list/detail view to refresh and confirm the ticket 'fwrd51-n1 RD Bench Ticket' exists, reporting its title, status, and any other fields shown on its detail page.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-14T22:37:43.555Z"
+ },
+ "revision": 1
+}

@@ -1,0 +1,102 @@
+{
+  "arm": "sitelooper",
+  "target": "repairdesk",
+  "machine": {
+    "platform": "linux",
+    "arch": "x64",
+    "node": "v22.22.2",
+    "cpus": 4,
+    "memGB": 17,
+    "tool": "sitelooper ? author browser tests with an agent; run compiled tests with Playwri",
+    "commit": "f9a9438"
+  },
+  "mutationLogPath": "/home/user/sitelooper/bench/results/fwrd51-n1-sitelooper-mutationlog.json",
+  "provider": "openrouter",
+  "model": "z-ai/glm-5.3",
+  "runid": "fwrd51-n1",
+  "task": "bench/tasks/repairdesk-ticket-flow.md",
+  "briefed": false,
+  "reset": true,
+  "stopReason": "completed",
+  "turns": 8,
+  "wallMs": 546610,
+  "orchestrator": {
+    "input": 23083,
+    "cacheWrite": 0,
+    "cacheRead": 11584,
+    "output": 2380
+  },
+  "inner": {
+    "promptTokens": 1323381,
+    "cachedTokens": 1217024,
+    "completionTokens": 16636,
+    "instructions": 7,
+    "byModel": {
+      "deepseek/deepseek-v4.1-flash": {
+        "promptTokens": 1323381,
+        "completionTokens": 16636,
+        "cachedTokens": 1217024,
+        "instructions": 7
+      }
+    },
+    "servedByModel": {
+      "deepseek/deepseek-v4.1-flash": [
+        "DeepSeek"
+      ]
+    },
+    "skills": {
+      "instructions": 7,
+      "offered": 4,
+      "invoked": 1,
+      "fullReplays": 1,
+      "repaired": 0,
+      "refused": 0,
+      "tierA": 0,
+      "stepsReplayed": 12,
+      "deterministicActions": 12,
+      "totalActions": 81,
+      "compiled": 6,
+      "merged": 0,
+      "variants": 0
+    },
+    "model": "deepseek/deepseek-v4.1-flash",
+    "fallbackModel": "z-ai/glm-5.3",
+    "provider": "openrouter"
+  },
+  "commandCount": 7,
+  "subcommands": {
+    "do": 7
+  },
+  "invocationCount": 7,
+  "commandMs": 355039,
+  "commandBytes": 9477,
+  "timeouts": 0,
+  "contextTruncations": 0,
+  "coarse": true,
+  "learn": {
+    "dir": "/home/user/sitelooper/bench/results/fwrd51-skills",
+    "instructions": 7,
+    "offered": 4,
+    "invoked": 1,
+    "fullReplays": 1,
+    "repaired": 0,
+    "refused": 0,
+    "tierA": 0,
+    "stepsReplayed": 12,
+    "deterministicActions": 12,
+    "totalActions": 81,
+    "compiled": 6,
+    "merged": 0,
+    "variants": 0,
+    "deterministicFraction": 0.148
+  },
+  "orBackends": [
+    "DeepInfra",
+    "Modal"
+  ],
+  "orReportedCostUsd": 0.0396,
+  "maxUsd": 3,
+  "spendUsd": 0.0754,
+  "finalText": "All objectives are complete and verified.\n\n## Final Report\n\n**Objective 1 — DONE.** Ticket `fwrd51-n1 RD Bench Ticket` created (reference **RD-1015**, detail URL `/#/tickets/t15`), initially in status **Draft**, customer \"Not recorded\", raised 2026-09-14. Only the Title field was required by the create form.\n\n**Objective 2 — DONE.** Part `fwrd51-n1 RD Part A` added with cost **$100.00** and markup **25%** (qty 1). The app computed a price of **$125.00**.\n\n**Objective 3 — DONE.** Part `fwrd51-n1 RD Part B` added with cost **$200.00** and markup **25%** (qty 1). The app computed a price of **$250.00**. Parts total at that point: $375.00.\n\n**Objective 4 — DONE.** Part A's cost edited from 100 to **$150.00** (markup still 25%). The app then computed a price of **$187.50**. Parts total updated to $437.50.\n\n**Objective 5 — DONE.** Attempting \"Mark Ready\" from Draft was refused with the exact message:\n> \"Ticket is not ready — Part \"fwrd51-n1 RD Part A\" has no supplier / Part \"fwrd51-n1 RD Part B\" has no supplier\"\n\n**What was required:** the sole precondition was that **every part on the ticket must have a supplier**. I set the Supplier field on both parts (to \"Bench Supplier\") via each part's Edit dialog. \"Mark Ready\" then succeeded and the ticket's status block read **Ready** (buttons changed to Mark Draft / Mark Closed / Archive ticket).\n\n**Objective 6 — DONE.** Both parts were deleted, each via a custom Confirm dialog reading \"Delete the part \"fwrd51-n1 RD Part A\" from this ticket? This cannot be undone.\" (and the same wording for Part B), confirmed with \"Delete part\". The parts table then showed only \"No parts on this ticket yet.\" (no total row rendered). The ticket was then archived via \"Archive ticket\" — it acted immediately with no confirmation dialog, and the button became \"Unarchive ticket\".\n\n**Final verification:** searching the active tickets list for \"fwrd51-n1\" returns \"No tickets match the current filters.\" — nothing from this run remains active. With \"Show archived\" ticked, the row `RD-1015 | fwrd51-n1 RD Bench Ticket [Archived] | Not recorded | Ready | 0 | 2026-09-14` appears, and the ticket's detail page shows status **Ready** with an **Archived** badge and an empty parts table.",
+  "transcriptPath": "/home/user/sitelooper/bench/results/fwrd51-n1-sitelooper-transcript.jsonl"
+}

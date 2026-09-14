@@ -1,0 +1,199 @@
+{
+  "flow": "fwrd51",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Signed in at http://127.0.0.1:4180/#/login as bench@example.com, created a new ticket with the new-ticket dialog (only the required \"Title *\" field was filled with exactly 'fwrd51-n2 RD Bench Ticket'; Customer left blank as optional), and confirmed it appeared in the refreshed list and its detail page at /#/tickets/t15.",
+      "values": {
+        "ticket_reference": "RD-1016",
+        "ticket_title": "fwrd51-n2 RD Bench Ticket",
+        "ticket_status": "Draft",
+        "ticket_customer": "Not recorded",
+        "ticket_raised": "2026-09-14",
+        "actions_available": "Mark Ready, Archive ticket; Parts section empty (\"No parts on this ticket yet.\")",
+        "ref": "fwrd51-n2"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "every candidate refused — s_b1a0cd: not on the page this procedure starts from (expects http://127.0.0.1:4180/, browser is at http://127.0.0.1:4180/#/login) — nothing was run",
+      "replayed": null,
+      "repaired": false,
+      "turns": 8
+    },
+    {
+      "id": "02-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_380adc; observed ref_2=fwrd51-n2, table_rows=NAME\tCOST\tMARKUP\tQTY\tSUPPLIER\tPRICE\tACTIONS | No parts on this ticket yet., bench_id=RD-1016, part_name=No parts on this ticket yet., cost=$100.00, markup=25%, supplier=No supplier, computed_price=$125.00.",
+      "values": {
+        "ref_2": "fwrd51-n2",
+        "table_rows": "NAME\tCOST\tMARKUP\tQTY\tSUPPLIER\tPRICE\tACTIONS | No parts on this ticket yet.",
+        "bench_id": "RD-1016",
+        "part_name": "No parts on this ticket yet.",
+        "cost": "$100.00",
+        "markup": "25%",
+        "supplier": "No supplier",
+        "computed_price": "$125.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-add",
+      "status": "success",
+      "summary": "On the RD-1016 ticket detail page (/#/tickets/t15) I opened the \"Add part\" form and filled the \"Part name *\" field with exactly 'fwrd51-n2 RD Part B', cost 200 and markup 25 (supplier left blank/optional), then saved with the \"Save part\" button. The page refreshed and the parts table rebuilt with both parts; the live DOM shows Part B in its own row with name 'fwrd51-n2 RD Part B', cost $200.00, markup 25%, qty 1, supplier \"No supplier\", and an app-computed PRICE of $250.00, and the parts total is now $375.00 (Part A $125.00 + Part B $250.00).",
+      "values": {
+        "ticket_reference": "RD-1016",
+        "part_B_name": "fwrd51-n2 RD Part B",
+        "part_B_cost": "$200.00",
+        "part_B_markup": "25%",
+        "part_B_qty": "1",
+        "part_B_supplier": "No supplier",
+        "part_B_computed_price": "$250.00",
+        "parts_total": "$375.00",
+        "parts_table_rows": "fwrd51-n2 RD Part A | $100.00 | 25% | 1 | No supplier | $125.00 ;; fwrd51-n2 RD Part B | $200.00 | 25% | 1 | No supplier | $250.00",
+        "parts_total_row": "Total (price × quantity)\t$375.00",
+        "table_tbody_tr_td": "$125.00",
+        "ref": "fwrd51-n2"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "the pinned skill s_380adc bound no params for this instruction",
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 7
+    },
+    {
+      "id": "04-edit",
+      "status": "success",
+      "summary": "On RD-1016's detail page (http://127.0.0.1:4180/#/tickets/t15) I clicked Edit on the \"fwrd51-n2 RD Part A\" row, which opened an \"Edit part\" dialog prefilled with name, cost 100, markup 25, quantity 1. I changed Cost to 150 and clicked \"Save part\". The dialog closed and the parts table refreshed; reading it live confirms Part A now shows cost $150.00, markup 25%, qty 1, and the app-computed price $187.50, with the parts total updated to $437.50 (Part A $187.50 + Part B $250.00).",
+      "values": {
+        "bench_id": "fwrd51-n2",
+        "parts_table": "NAME\tCOST\tMARKUP\tQTY\tSUPPLIER\tPRICE\tACTIONS | fwrd51-n2 RD Part A\t$150.00\t25%\t1\tNo supplier\t$187.50\tEdit Delete | fwrd51-n2 RD Part B\t$200.00\t25%\t1\tNo supplier\t$250.00\tEdit Delete | Total (price × quantity)\t$437.50\t",
+        "ref": "RD-1016",
+        "part_name": "fwrd51-n2 RD Part A",
+        "cost": "$150.00",
+        "markup": "25%",
+        "supplier": "No supplier",
+        "computed_price": "$187.50",
+        "parts_total": "$437.50"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-change",
+      "status": "success",
+      "summary": "Replayed stored procedure s_db13cb; observed parts=fwrd51-n2 RD Part A | $150.00 | 25% | 1 | Bench Supplier | $187.50, fwrd51-n2 RD Part B | $200.00 | 25% | 1 | Bench Supplier | $250.00, refusal_message_verbatim=Ticket is not ready\n\nPart \"fwrd51-n2 RD Part A\" has no supplier\nPart \"fwrd51-n2 RD Part B\" has no supplier, ticket_status_block=Customer: Not recorded · Raised 2026-09-14, ticket_reference=RD-1016, ticket_title=fwrd51-n2 RD Bench Ticket, final_status=Ready, parts_total=$437.50, bench_id=fwrd51-n2 RD Part A.",
+      "values": {
+        "parts": "fwrd51-n2 RD Part A | $150.00 | 25% | 1 | Bench Supplier | $187.50, fwrd51-n2 RD Part B | $200.00 | 25% | 1 | Bench Supplier | $250.00",
+        "refusal_message_verbatim": "Ticket is not ready\n\nPart \"fwrd51-n2 RD Part A\" has no supplier\nPart \"fwrd51-n2 RD Part B\" has no supplier",
+        "ticket_status_block": "Customer: Not recorded · Raised 2026-09-14",
+        "ticket_reference": "RD-1016",
+        "ticket_title": "fwrd51-n2 RD Bench Ticket",
+        "final_status": "Ready",
+        "parts_total": "$437.50",
+        "bench_id": "fwrd51-n2 RD Part A"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "06-delete",
+      "status": "success",
+      "summary": "Replayed stored procedure s_29a31a; observed confirm_delete_part_a=Confirm — Delete the part \"fwrd51-n2 RD Part A\" from this ticket? This cannot be undone. [Cancel] [Delete part], confirm_delete_part_b=Confirm — Delete the part \"fwrd51-n2 RD Part B\" from this ticket? This cannot be undone. [Cancel] [Delete part], ticket_status=Ready, archived_list_entry=RD-1016 | fwrd51-n2 RD Bench Ticket [Archived] | Not recorded | Ready | 0 | 2026-09-14, visible_in_active_list=no (13 active tickets listed, RD-1016 absent), bench_id=fwrd51-n2, confirm_dialog_text=Confirm\n\nDelete the part \"fwrd51-n2 RD Part A\" from this ticket? This cannot be undone.\n\nCancel\nDelete part, confirm_dialog_text_part=Confirm\n\nDelete the part \"fwrd51-n2 RD Part B\" from this ticket? This cannot be undone.\n\nCancel\nDelete part, parts_after_deletes=NAME\tCOST\tMARKUP\tQTY\tSUPPLIER\tPRICE\tACTIONS | fwrd51-n2 RD Part B\t$200.00\t25%\t1\tBench Supplier\t$250.00\tEdit Delete | Total (price × quantity)\t$250.00\t, ref=RD-1016.",
+      "values": {
+        "confirm_delete_part_a": "Confirm — Delete the part \"fwrd51-n2 RD Part A\" from this ticket? This cannot be undone. [Cancel] [Delete part]",
+        "confirm_delete_part_b": "Confirm — Delete the part \"fwrd51-n2 RD Part B\" from this ticket? This cannot be undone. [Cancel] [Delete part]",
+        "ticket_status": "Ready",
+        "archived_list_entry": "RD-1016 | fwrd51-n2 RD Bench Ticket [Archived] | Not recorded | Ready | 0 | 2026-09-14",
+        "visible_in_active_list": "no (13 active tickets listed, RD-1016 absent)",
+        "bench_id": "fwrd51-n2",
+        "confirm_dialog_text": "Confirm\n\nDelete the part \"fwrd51-n2 RD Part A\" from this ticket? This cannot be undone.\n\nCancel\nDelete part",
+        "confirm_dialog_text_part": "Confirm\n\nDelete the part \"fwrd51-n2 RD Part B\" from this ticket? This cannot be undone.\n\nCancel\nDelete part",
+        "parts_after_deletes": "NAME\tCOST\tMARKUP\tQTY\tSUPPLIER\tPRICE\tACTIONS | fwrd51-n2 RD Part B\t$200.00\t25%\t1\tBench Supplier\t$250.00\tEdit Delete | Total (price × quantity)\t$250.00\t",
+        "ref": "RD-1016"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "07-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_10d961; observed check1_active_search_fwrd51_n1=With 'Show archived' UNTICKED and the search box set to 'fwrd51-n2', the table body showed the single row 'No tickets match the current filters.' — no active ticket with 'fwrd51-n2' in its title., check2_archived_badge=present (title cell text 'fwrd51-n2 RD Bench Ticket Archived'), check3_detail_status=Ready, bench_id=fwrd51-n2, active_list_note=RD\nRepair Desk\nTickets\nBench User\nSign out | Bench User\nSign out |  |  | Repair tickets\n\nEvery job on the bench, newest first. Open a ticket to manage its parts.\n\nNew ticket\nFilter tickets\nStatus\nAll statuses\nDraft\nReady\nClosed\nSearch\n\nMatches the reference, the title and the customer name.\n\nShow archived\nTickets\n\nShowing 1–10 of 13\n\nREF\tTITLE\tCUSTOMER\tSTATUS\tPARTS\tCREATED\nRD-1014\tUnder-counter fridge door misaligned\tMarlow Bakery\tDraft\t1\t2026-01-23\nRD-1012\tIce machine producing hollow cubes\tThe Anchor Inn\tDraft\t2\t2026-01-21\nRD-1011\tCard terminal will not pair\tPinehurst Grocers\tDraft\t0\t2026-01-20\nRD-1010\tProving cabinet humidity too low\tMarlow Bakery\tDraft\t1\t2026-01-19\nRD-1009\tCoffee grinder inconsistent grind\tBlue Fox Cafe\tDraft\t1\t2026-01-16\nRD-1008\tGlass washer leaves residue\tThe Anchor Inn\tReady\t1\t2026-01-15\nRD-1007\tExtractor fan noisy at full speed\tMarlow Bakery\tDraft\t1\t2026-01-14\nRD-1006\tWalk-in fridge alarm keeps sounding\tPinehurst Grocers\tDraft\t1\t2026-01-13\nRD-1005\tTill printer jams on receipts\tBlue Fox Cafe\tDraft\t2\t2026-01-12\nRD-1004\tDishwasher drains slowly\tThe Anchor Inn\tReady\t1\t2026-01-09\nPrevious\nPage 1 of 2\nNext | Repair tickets\n\nEvery job on the bench, newest first. Open a ticket to manage its parts.\n\nNew ticket | Repair tickets\n\nEvery job on the bench, newest first. Open a ticket to manage its parts. | Every job on the bench, newest first. Open a ticket to manage its parts. | New ticket | Status\nAll statuses\nDraft\nReady\nClosed\nSearch\n\nMatches the reference, the title and the customer name.\n\nShow archived | Status\nAll statuses\nDraft\nReady\nClosed | Search\n\nMatches the reference, the title and the customer name. | Matches the reference, the title and the customer name. | Show archived | Showing 1–10 of 13 | REF\tTITLE\tCUSTOMER\tSTATUS\tPARTS\tCREATED\nRD-1014\tUnder-counter fridge door misaligned\tMarlow Bakery\tDraft\t1\t2026-01-23\nRD-1012\tIce machine producing hollow cubes\tThe Anchor Inn\tDraft\t2\t2026-01-21\nRD-1011\tCard terminal will not pair\tPinehurst Grocers\tDraft\t0\t2026-01-20\nRD-1010\tProving cabinet humidity too low\tMarlow Bakery\tDraft\t1\t2026-01-19\nRD-1009\tCoffee grinder inconsistent grind\tBlue Fox Cafe\tDraft\t1\t2026-01-16\nRD-1008\tGlass washer leaves residue\tThe Anchor Inn\tReady\t1\t2026-01-15\nRD-1007\tExtractor fan noisy at full speed\tMarlow Bakery\tDraft\t1\t2026-01-14\nRD-1006\tWalk-in fridge alarm keeps sounding\tPinehurst Grocers\tDraft\t1\t2026-01-13\nRD-1005\tTill printer jams on receipts\tBlue Fox Cafe\tDraft\t2\t2026-01-12\nRD-1004\tDishwasher drains slowly\tThe Anchor Inn\tReady\t1\t2026-01-09 | Previous\nPage 1 of 2\nNext | Repair Desk — internal workshop tooling. Prices include the configured markup.\n\nEnvironment: local benchmark instance | Repair Desk — internal workshop tooling. Prices include the configured markup. | Environment: local benchmark instance | \n        Edit part\n        Update fwrd51-n2 RD Part B.\n       | Update fwrd51-n2 RD Part B. | Part name *As it should appear on the customer invoice.Cost *What the workshop pays the supplier, before markup.Markup % *Percentage added to the cost to reach the sale price.QuantityWhole units.SupplierOptional. Leave blank if the part has not been sourced yet. | Part name *As it should appear on the customer invoice. | As it should appear on the customer invoice. | Cost *What the workshop pays the supplier, before markup. | What the workshop pays the supplier, before markup. | Markup % *Percentage added to the cost to reach the sale price. | Percentage added to the cost to reach the sale price. | QuantityWhole units. | Whole units. | SupplierOptional. Leave blank if the part has not been sourced yet. | Optional. Leave blank if the part has not been sourced yet. |  | \n        Cancel\n        Save part\n       | \n      \n        Confirm\n        Delete the part \"fwrd51-n2 RD Part B\" from this ticket? This cannot be undone.\n      \n      \n        Cancel\n        Delete part\n      \n     | \n        Confirm\n        Delete the part \"fwrd51-n2 RD Part B\" from this ticket? This cannot be undone.\n       | Delete the part \"fwrd51-n2 RD Part B\" from this ticket? This cannot be undone. | \n        Cancel\n        Delete part\n      , check2_archived_list_rows=RD-1016\tfwrd51-n2 RD Bench Ticket Archived\tNot recorded\tReady\t0\t2026-09-14, check2_status=Ready, check3_detail_heading=fwrd51-n2 RD Bench Ticket, check3_detail_badge=Archived, ticket_reference=RD-1016.",
+      "values": {
+        "check1_active_search_fwrd51_n1": "With 'Show archived' UNTICKED and the search box set to 'fwrd51-n2', the table body showed the single row 'No tickets match the current filters.' — no active ticket with 'fwrd51-n2' in its title.",
+        "check2_archived_badge": "present (title cell text 'fwrd51-n2 RD Bench Ticket Archived')",
+        "check3_detail_status": "Ready",
+        "bench_id": "fwrd51-n2",
+        "active_list_note": "RD\nRepair Desk\nTickets\nBench User\nSign out | Bench User\nSign out |  |  | Repair tickets\n\nEvery job on the bench, newest first. Open a ticket to manage its parts.\n\nNew ticket\nFilter tickets\nStatus\nAll statuses\nDraft\nReady\nClosed\nSearch\n\nMatches the reference, the title and the customer name.\n\nShow archived\nTickets\n\nShowing 1–10 of 13\n\nREF\tTITLE\tCUSTOMER\tSTATUS\tPARTS\tCREATED\nRD-1014\tUnder-counter fridge door misaligned\tMarlow Bakery\tDraft\t1\t2026-01-23\nRD-1012\tIce machine producing hollow cubes\tThe Anchor Inn\tDraft\t2\t2026-01-21\nRD-1011\tCard terminal will not pair\tPinehurst Grocers\tDraft\t0\t2026-01-20\nRD-1010\tProving cabinet humidity too low\tMarlow Bakery\tDraft\t1\t2026-01-19\nRD-1009\tCoffee grinder inconsistent grind\tBlue Fox Cafe\tDraft\t1\t2026-01-16\nRD-1008\tGlass washer leaves residue\tThe Anchor Inn\tReady\t1\t2026-01-15\nRD-1007\tExtractor fan noisy at full speed\tMarlow Bakery\tDraft\t1\t2026-01-14\nRD-1006\tWalk-in fridge alarm keeps sounding\tPinehurst Grocers\tDraft\t1\t2026-01-13\nRD-1005\tTill printer jams on receipts\tBlue Fox Cafe\tDraft\t2\t2026-01-12\nRD-1004\tDishwasher drains slowly\tThe Anchor Inn\tReady\t1\t2026-01-09\nPrevious\nPage 1 of 2\nNext | Repair tickets\n\nEvery job on the bench, newest first. Open a ticket to manage its parts.\n\nNew ticket | Repair tickets\n\nEvery job on the bench, newest first. Open a ticket to manage its parts. | Every job on the bench, newest first. Open a ticket to manage its parts. | New ticket | Status\nAll statuses\nDraft\nReady\nClosed\nSearch\n\nMatches the reference, the title and the customer name.\n\nShow archived | Status\nAll statuses\nDraft\nReady\nClosed | Search\n\nMatches the reference, the title and the customer name. | Matches the reference, the title and the customer name. | Show archived | Showing 1–10 of 13 | REF\tTITLE\tCUSTOMER\tSTATUS\tPARTS\tCREATED\nRD-1014\tUnder-counter fridge door misaligned\tMarlow Bakery\tDraft\t1\t2026-01-23\nRD-1012\tIce machine producing hollow cubes\tThe Anchor Inn\tDraft\t2\t2026-01-21\nRD-1011\tCard terminal will not pair\tPinehurst Grocers\tDraft\t0\t2026-01-20\nRD-1010\tProving cabinet humidity too low\tMarlow Bakery\tDraft\t1\t2026-01-19\nRD-1009\tCoffee grinder inconsistent grind\tBlue Fox Cafe\tDraft\t1\t2026-01-16\nRD-1008\tGlass washer leaves residue\tThe Anchor Inn\tReady\t1\t2026-01-15\nRD-1007\tExtractor fan noisy at full speed\tMarlow Bakery\tDraft\t1\t2026-01-14\nRD-1006\tWalk-in fridge alarm keeps sounding\tPinehurst Grocers\tDraft\t1\t2026-01-13\nRD-1005\tTill printer jams on receipts\tBlue Fox Cafe\tDraft\t2\t2026-01-12\nRD-1004\tDishwasher drains slowly\tThe Anchor Inn\tReady\t1\t2026-01-09 | Previous\nPage 1 of 2\nNext | Repair Desk — internal workshop tooling. Prices include the configured markup.\n\nEnvironment: local benchmark instance | Repair Desk — internal workshop tooling. Prices include the configured markup. | Environment: local benchmark instance | \n        Edit part\n        Update fwrd51-n2 RD Part B.\n       | Update fwrd51-n2 RD Part B. | Part name *As it should appear on the customer invoice.Cost *What the workshop pays the supplier, before markup.Markup % *Percentage added to the cost to reach the sale price.QuantityWhole units.SupplierOptional. Leave blank if the part has not been sourced yet. | Part name *As it should appear on the customer invoice. | As it should appear on the customer invoice. | Cost *What the workshop pays the supplier, before markup. | What the workshop pays the supplier, before markup. | Markup % *Percentage added to the cost to reach the sale price. | Percentage added to the cost to reach the sale price. | QuantityWhole units. | Whole units. | SupplierOptional. Leave blank if the part has not been sourced yet. | Optional. Leave blank if the part has not been sourced yet. |  | \n        Cancel\n        Save part\n       | \n      \n        Confirm\n        Delete the part \"fwrd51-n2 RD Part B\" from this ticket? This cannot be undone.\n      \n      \n        Cancel\n        Delete part\n      \n     | \n        Confirm\n        Delete the part \"fwrd51-n2 RD Part B\" from this ticket? This cannot be undone.\n       | Delete the part \"fwrd51-n2 RD Part B\" from this ticket? This cannot be undone. | \n        Cancel\n        Delete part\n      ",
+        "check2_archived_list_rows": "RD-1016\tfwrd51-n2 RD Bench Ticket Archived\tNot recorded\tReady\t0\t2026-09-14",
+        "check2_status": "Ready",
+        "check3_detail_heading": "fwrd51-n2 RD Bench Ticket",
+        "check3_detail_badge": "Archived",
+        "ticket_reference": "RD-1016"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 7,
+  "total": 7,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwrd51",
+      "step": "03-add",
+      "skill": "s_380adc",
+      "similarity": 0.856,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "the pinned skill s_380adc bound no params for this instruction",
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    }
+  ],
+  "wallMs": 46007,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 159698,
+    "completionTokens": 2599,
+    "cachedTokens": 140032
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 159698,
+      "completionTokens": 2599,
+      "cachedTokens": 140032
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
