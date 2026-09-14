@@ -1,0 +1,47 @@
+
+Running 1 test using 1 worker
+
+  ✘  1 fwgr32.spec.ts:9:1 › fwgr32 (8.1s)
+
+
+  1) fwgr32.spec.ts:9:1 › fwgr32 › 01-open: Open http://127.0.0.1:3000/ in the browser. If a login page appears, sign in with username admin and password admin; if a change-password prompt appears afterwards, click Skip. Then find and open the provisioned dashboard named 'Service health' (for example via the Dashboards browse/search page). When it is open, report the exact titles of all its panels exactly as displayed on screen (if the dashboard uses rows or tabs, check every one so no panel is missed), and also report the dashboard's URL. 
+
+    Error: 01-open s_93ccd2/3 raised an alert the recording never saw: Error loading RSS feed Make sure that the feed URL is correct and that CORS is configured correctly on the server. See News panel documentation.
+
+       at fwgr32.flow.ts:10347
+
+      10345 |   const verdict = alertVerdict(before, after ? after.alerts : null, ctx, after ? after.complete : true);
+      10346 |   for (const line of verdict.warnings) logWarning(line);
+    > 10347 |   if (verdict.stop) throw new Error(verdict.stop);
+            |                           ^
+      10348 | }
+      10349 |
+      10350 | /**
+        at alertGate (/home/user/sitelooper/bench/results/fwgr34s3-spec-tmp/fwgr32.flow.ts:10347:27)
+        at Object.verify (/home/user/sitelooper/bench/results/fwgr34s3-spec-tmp/fwgr32.flow.ts:11088:9)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwgr34s3-spec-tmp/fwgr32.flow.ts:8580:24)
+        at Object.01-open (/home/user/sitelooper/bench/results/fwgr34s3-spec-tmp/fwgr32.flow.ts:11056:5)
+        at /home/user/sitelooper/bench/results/fwgr34s3-spec-tmp/fwgr32.flow.ts:16317:7
+        at runFlow (/home/user/sitelooper/bench/results/fwgr34s3-spec-tmp/fwgr32.flow.ts:16316:5)
+        at /home/user/sitelooper/bench/results/fwgr34s3-spec-tmp/fwgr32.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../../test-results/fwgr32-fwgr32/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../test-results/fwgr32-fwgr32/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../test-results/fwgr32-fwgr32/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../test-results/fwgr32-fwgr32/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    fwgr32.spec.ts:9:1 › fwgr32 ────────────────────────────────────────────────────────────────────
