@@ -1,0 +1,114 @@
+{
+ "id": "s_af66c5",
+ "origin": "http://127.0.0.1:3000",
+ "template": "On the Grafana dashboard '{{v3}}' (already saved, with panels '{{v1}} Notes' and '{{v1}} Availability'), do two things and persist them: (1) In the top-bar time picker, change the time range to '{{v4}}'. (2) Open Dashboard settings (gear icon) > General, and add the tag 'bench' to the Tags field (type 'bench' and press Enter so it becomes a tag chip), then click 'Save dashboard'. In the save dialog that appears, make sure the checkbox 'Update default time range' IS ticked (this is essential so the 6-hour range is persisted into the saved dashboard), then confirm the save. Verify the save succeeded. Report: the tags shown in Dashboard settings > General afterwards, the time range shown in the top-bar time picker, and whether the 'Update default time range' checkbox was ticked when you saved.",
+ "params": {
+  "v1": {
+   "example": "fwgr31-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "fwgr31-n2 Bench Dashboard",
+   "usedIn": [
+    1
+   ],
+   "known": true
+  },
+  "v4": {
+   "example": "Last 6 hours",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:3000/?from=:id&timezone=browser&to=now",
+  "requireText": [
+   "{{v1}}",
+   "{{v3}}"
+  ]
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=option[name=\"{{v3}}\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=option[name=\"{{v3}}\"]"
+     },
+     {
+      "kind": "role",
+      "role": "option",
+      "name": "{{v3}}"
+     },
+     {
+      "kind": "css",
+      "selector": "#kbar-listbox-item-1"
+     },
+     {
+      "kind": "id",
+      "selector": "#kbar-listbox-item-1"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 104,
+      "w": 767,
+      "h": 38,
+      "role": "option",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "mints": {
+    "at": "p1"
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{d1}}/{{v1}}-bench-dashboard?from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- link \"Home\"",
+     "- link \"Dashboards\"",
+     "- button \"Mark as favorite\"",
+     "- button \"Share\"",
+     "- button \"Edit\""
+    ]
+   }
+  }
+ ],
+ "derived": {
+  "d1": {
+   "step": 1,
+   "at": "p1",
+   "example": "bfy6g8hcxk3k0c"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-14T00:16:23.316Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_e125ec",
+  "index": 1,
+  "of": 3
+ },
+ "provenance": {
+  "session": "fwgr31-n2",
+  "instruction": "On the Grafana dashboard 'fwgr31-n2 Bench Dashboard' (already saved, with panels 'fwgr31-n2 Notes' and 'fwgr31-n2 Availability'), do two things and persist them: (1) In the top-bar time picker, change the time range to 'Last 6 hours'. (2) Open Dashboard settings (gear icon) > General, and add the tag 'bench' to the Tags field (type 'bench' and press Enter so it becomes a tag chip), then click 'Save dashboard'. In the save dialog that appears, make sure the checkbox 'Update default time range' IS ticked (this is essential so the 6-hour range is persisted into the saved dashboard), then confirm the save. Verify the save succeeded. Report: the tags shown in Dashboard settings > General afterwards, the time range shown in the top-bar time picker, and whether the 'Update default time range' checkbox was ticked when you saved.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-14T00:16:23.316Z"
+ },
+ "revision": 1
+}

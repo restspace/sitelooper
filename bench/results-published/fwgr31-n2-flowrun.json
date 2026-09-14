@@ -1,0 +1,332 @@
+{
+  "flow": "fwgr31",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Signed into Grafana at http://127.0.0.1:3000/ as admin/admin (a default-password \"Update your password\" prompt appeared; I clicked Skip). Via the dashboards search I found the only provisioned \"Service Health\" dashboard (folder \"Bench\", URL /d/bench-service-health/service-health) and opened it. The rendered dashboard shows exactly three panels — panel headings read in order: \"Request rate\", \"Error count\", \"Latency by endpoint\".",
+      "values": {
+        "panel_titles_in_order": "Request rate | Error count | Latency by endpoint",
+        "dashboard_title": "Service Health",
+        "dashboard_folder": "Bench",
+        "panel_title_1_request_rate": "Request rate",
+        "panel_title_2_error_count": "Error count",
+        "h2_3": "Latency by endpoint",
+        "page_title": "Service Health - Bench - Dashboards - Grafana"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_310759; observed dashboard_url_slug=fwgr31-n2-bench-dashboard, runid=fwgr31-n2, query_editor_data_source=TestData, dashboard_title_topbar=fwgr31-n2 Bench Dashboard, panel_title=fwgr31-n2 Availability, visualization_type=Stat.",
+      "values": {
+        "dashboard_url_slug": "fwgr31-n2-bench-dashboard",
+        "runid": "fwgr31-n2",
+        "query_editor_data_source": "TestData",
+        "dashboard_title_topbar": "fwgr31-n2 Bench Dashboard",
+        "panel_title": "fwgr31-n2 Availability",
+        "visualization_type": "Stat"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-edit",
+      "status": "success",
+      "summary": "Replayed stored procedure s_17fc6c; observed dashboard_title=fwgr31-n2 Bench Dashboard, panel_titles_in_order=fwgr31-n2 Notes, fwgr31-n2 Availability, notes_panel_title=fwgr31-n2 Notes, notes_panel_text=Bench run fwgr31-n2 — Stat panel uses TestData., availability_panel_title=fwgr31-n2 Availability, runid=fwgr31-n2, availability_panel_value=Dashboard not found\nWe're looking but can't seem to find this dashboard. Try returning home or seeking help on the community site..",
+      "values": {
+        "dashboard_title": "fwgr31-n2 Bench Dashboard",
+        "panel_titles_in_order": "fwgr31-n2 Notes, fwgr31-n2 Availability",
+        "notes_panel_title": "fwgr31-n2 Notes",
+        "notes_panel_text": "Bench run fwgr31-n2 — Stat panel uses TestData.",
+        "availability_panel_title": "fwgr31-n2 Availability",
+        "runid": "fwgr31-n2",
+        "availability_panel_value": "Dashboard not found\nWe're looking but can't seem to find this dashboard. Try returning home or seeking help on the community site."
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "19/19",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-change",
+      "status": "success",
+      "summary": "Opened the 'fwgr31-n2 Bench Dashboard' via the Ctrl+K search, set the top-bar time picker to 'Last 6 hours', then in Dashboard settings > General added the tag 'bench' (it became a tag chip), clicked 'Save dashboard' with the 'Update default time range' checkbox ticked, and the save succeeded (alert \"Dashboard saved\", no unsaved-changes indicator, edit mode exited). The top-bar time picker now reads 'Last 6 hours' and the dashboard renders both panels: 'fwgr31-n2 Notes' (text \"Bench run fwgr31-n2 — Stat panel uses TestData.\") and 'fwgr31-n2 Availability'.",
+      "values": {
+        "dashboard_title_topbar": "fwgr31-n2 Bench Dashboard",
+        "dashboard_url": "http://127.0.0.1:3000/d/bfy6g8hcxk3k0c/fwgr31-n2-bench-dashboard?from=now-6h&to=now&timezone=browser",
+        "dashboard_uid": "bfy6g8hcxk3k0c",
+        "time_picker_range": "Last 6 hours",
+        "settings_general_tags_after_save": "bench",
+        "update_default_time_range_checkbox_ticked": "yes - I checked it in the save dialog; re-opening Save dashboard afterwards showed no 'Update default time range' checkbox, indicating the current 6h range already equals the saved default",
+        "panel_titles_in_order": "fwgr31-n2 Notes, fwgr31-n2 Availability",
+        "notes_panel_text": "Bench run fwgr31-n2 — Stat panel uses TestData.",
+        "availability_panel_value": "91.7",
+        "ref": "fwgr31-n2"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "every candidate refused — s_515eeb: the page at http://127.0.0.1:3000/d/dfy6esk4aypkwa/:id?from=:id&timezone=browser&to=now does not show \"fwgr31-n2\" — it matches this procedure's page template but is a different record — nothing was run",
+      "replayed": null,
+      "repaired": false,
+      "turns": 28
+    },
+    {
+      "id": "05-set",
+      "status": "success",
+      "summary": "Set the top-bar refresh picker to '1m' on 'fwgr31-n2 Bench Dashboard'. The picker change alone did not mark the dashboard dirty (the Save dashboard dialog said \"No changes to save\"), so I entered edit mode (Edit), opened Save dashboard, ticked the \"Update default refresh value – Will make the current refresh the new default\" checkbox (which registered \"Changes 1\" and enabled Save) — the \"Update default time range\" checkbox was not offered because the current 6-hour range already equalled the saved default — and clicked Save, which confirmed with the \"Dashboard saved\" alert and closed edit mode. Verified persistence by reloading the bare URL /d/bfy6g8hcxk3k0c/fwgr31-n2-bench-dashboard with no query params: the refresh control shows '1m' and the time picker shows 'Last 6 hours' (Grafana re-added from=now-6h&refresh=1m from the saved defaults). The replay's failed step 4 (ticking \"Update default refresh value\") was completed manually.",
+      "values": {
+        "dashboard_title_topbar": "fwgr31-n2 Bench Dashboard",
+        "dashboard_uid": "bfy6g8hcxk3k0c",
+        "refresh_interval_after_reload": "1m",
+        "time_range_after_reload": "Last 6 hours",
+        "refresh_picker_aria_label_after_reload": "Choose refresh time interval with current interval 1 minute selected",
+        "reloaded_url_no_params": "http://127.0.0.1:3000/d/bfy6g8hcxk3k0c/fwgr31-n2-bench-dashboard",
+        "persistence_method": "Edit mode -> Save dashboard -> ticked checkbox 'Update default refresh value' (Changes 1) -> Save",
+        "save_confirmation": "Dashboard saved",
+        "panel_titles_after_reload": "fwgr31-n2 Notes, fwgr31-n2 Availability",
+        "update_default_time_range_checkbox_offered": "no - dialog showed only 'Update default refresh value'; current 6h range already matched the saved default",
+        "screenshot": "/home/user/sitelooper/fwgr31-n2-refresh-1m-after-reload.png",
+        "save_dialog_text_after_t": "Save dashboard\nfwgr31-n2 Bench Dashboard\nDetails\nChanges1\nUpdate default refresh value\nWill make the current refresh the new default\nMessage\nCancel\nSave",
+        "reloaded_url_no_params_2": "http://127.0.0.1:3000/d/bfy6g8hcxk3k0c/fwgr31-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m",
+        "ref": "fwgr31-n2",
+        "ref_2": "6-hour",
+        "ref_3": "fwgr31-n2-bench-dashboard"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_8cbb3e stopped at step 4 — no element matched any known locator for target (tried 6: page.getByTestId('Dashboard settings Save Dashboard Modal Save refresh checkbox'), page.getByRole('checkbox', { name: 'Update default refresh valueWill make the current refresh the new default', exact: true }), page.getByLabel('Update default refresh valueWill make the current refresh the new default'), …)",
+      "replayed": "3/7",
+      "repaired": false,
+      "turns": 24
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "Browsed to 'fwgr31-n2 Bench Dashboard' from the Dashboards search palette (the replayed procedure had landed on a stale \"Not found\" dashboard URL; I re-navigated by search, not by URL), then read everything live from the rendered dashboard. Confirmed: URL http://127.0.0.1:3000/d/bfy6g8hcxk3k0c/fwgr31-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m; top-bar title 'fwgr31-n2 Bench Dashboard'; panels in order 'fwgr31-n2 Notes' (text \"Bench run fwgr31-n2 — Stat panel uses TestData.\") and 'fwgr31-n2 Availability'; time picker 'Last 6 hours'; refresh control '1m'. Opened the Availability panel's edit view and read its query-editor data source as TestData (the data-source picker element carries alt=\"TestData logo\" and placeholder \"TestData\") and its visualization type as 'Stat', then clicked Back to dashboard (no changes made). Nothing was modified. Not re-confirmed in this final pass: the dashboard tags — I did not re-open Dashboard settings (the toolbar in view showed no Settings/gear button after returning from panel edit).",
+      "values": {
+        "1_page_url_exact": "http://127.0.0.1:3000/d/bfy6g8hcxk3k0c/fwgr31-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m",
+        "2_dashboard_title_topbar": "fwgr31-n2 Bench Dashboard",
+        "3_panel_titles_in_order": "fwgr31-n2 Notes, fwgr31-n2 Availability",
+        "4_notes_panel_text": "Bench run fwgr31-n2 — Stat panel uses TestData.",
+        "5_availability_panel_data_source_in_query_editor": "TestData (picker logo alt=\"TestData logo\", placeholder=\"TestData\", src public/app/plugins/datasource/grafana-testdata-datasource/img/testdata.svg)",
+        "6_availability_panel_visualization_type": "Stat",
+        "7_topbar_time_range": "Last 6 hours",
+        "8_topbar_refresh_interval": "1m",
+        "9_dashboard_tags": "bench (NOT re-read live in this final pass — confirmed earlier in this session when it was added in Dashboard settings > General and after the '1m' refresh save; the post-edit toolbar visible now showed no Settings button to re-open)",
+        "dashboard_uid": "bfy6g8hcxk3k0c",
+        "screenshots": "/home/user/sitelooper/fwgr31-n2-final-verify-dashboard.png, /home/user/sitelooper/fwgr31-n2-availability-panel-edit.png",
+        "panel_title_notes": "fwgr31-n2 Notes",
+        "panel_title_availability": "fwgr31-n2 Availability",
+        "testdata_logo_alt_text": "TestData logo",
+        "ref": "fwgr31-n2"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_bfb98b stopped at step 10 — no element matched any known locator for target (tried 5: page.getByTestId('data-testid Edit dashboard button'), page.getByRole('button', { name: 'Edit', exact: true }), page.locator('[data-testid=\"data-testid Nav toolbar\"] button'), …)",
+      "replayed": "9/33",
+      "repaired": false,
+      "turns": 29
+    }
+  ],
+  "passed": 6,
+  "total": 6,
+  "repinned": 0,
+  "drift": 12,
+  "driftTickets": [
+    {
+      "flow": "fwgr31",
+      "step": "03-edit",
+      "skill": "s_17fc6c",
+      "atStep": "15",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.locator('li.css-2aqyne', { hasText: 'fwgr31-n2 Bench Dashboard' }).locator('span')",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:3000/d/dfy6esk4aypkwa/:id?from=:id&timezone=browser&to=now",
+      "pageUrl": "http://127.0.0.1:3000/d/dfy6esk4aypkwa/fwgr31-n2-bench-dashboard?from=now-6h&to=now&timezone=browser"
+    },
+    {
+      "flow": "fwgr31",
+      "step": "03-edit",
+      "skill": "s_17fc6c",
+      "atStep": "16",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByText('Bench run fwgr31-n2 — Stat panel uses TestData.', { exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:3000/d/dfy6esk4aypkwa/:id?from=:id&timezone=browser&to=now",
+      "pageUrl": "http://127.0.0.1:3000/d/dfy6esk4aypkwa/fwgr31-n2-bench-dashboard?from=now-6h&to=now&timezone=browser"
+    },
+    {
+      "flow": "fwgr31",
+      "step": "03-edit",
+      "skill": "s_17fc6c",
+      "atStep": "18",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.locator('[data-testid=\"header-container\"] h2').nth(0)",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:3000/d/dfy6esk4aypkwa/:id?from=:id&timezone=browser&to=now",
+      "pageUrl": "http://127.0.0.1:3000/d/dfy6esk4aypkwa/fwgr31-n2-bench-dashboard?from=now-6h&to=now&timezone=browser"
+    },
+    {
+      "flow": "fwgr31",
+      "step": "03-edit",
+      "skill": "s_17fc6c",
+      "atStep": "19",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.locator('[data-testid=\"header-container\"] h2').nth(1)",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:3000/d/dfy6esk4aypkwa/:id?from=:id&timezone=browser&to=now",
+      "pageUrl": "http://127.0.0.1:3000/d/dfy6esk4aypkwa/fwgr31-n2-bench-dashboard?from=now-6h&to=now&timezone=browser"
+    },
+    {
+      "flow": "fwgr31",
+      "step": "05-set",
+      "skill": "s_8cbb3e",
+      "atStep": "3",
+      "key": "target",
+      "similarity": 0.982,
+      "missedLocator": "page.getByTestId('data-testid Save dashboard button')",
+      "fallbackUsed": "elementAt(1140, 60) /* button */",
+      "fallbackIndex": 4,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:3000/d/bfy6g8hcxk3k0c/:id?from=:id&refresh=:id&shareView=link&timezone=browser&to=now",
+      "pageUrl": "http://127.0.0.1:3000/d/bfy6g8hcxk3k0c/fwgr31-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m&shareView=link"
+    },
+    {
+      "flow": "fwgr31",
+      "step": "05-set",
+      "skill": "s_8cbb3e",
+      "atStep": "4",
+      "key": "target",
+      "similarity": 0.982,
+      "missedLocator": "page.getByTestId('Dashboard settings Save Dashboard Modal Save refresh checkbox')",
+      "fallbackUsed": null,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:3000/d/bfy6g8hcxk3k0c/:id?from=:id&refresh=:id&shareView=link&timezone=browser&to=now",
+      "pageUrl": "http://127.0.0.1:3000/d/bfy6g8hcxk3k0c/fwgr31-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m&shareView=link"
+    },
+    {
+      "flow": "fwgr31",
+      "step": "06-open",
+      "skill": "s_bfb98b",
+      "atStep": "4",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByRole('option', { name: 'fwgr31-n2 Bench Dashboard Dashboards', exact: true })",
+      "fallbackUsed": "goto http://127.0.0.1:3000/d/dfy6esk4aypkwa/fwgr31-n2-bench-dashboard",
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:3000/d/dfy6esk4aypkwa/:id?from=:id&to=now",
+      "pageUrl": "http://127.0.0.1:3000/d/dfy6esk4aypkwa/fwgr31-n2-bench-dashboard?from=now-6h&to=now"
+    },
+    {
+      "flow": "fwgr31",
+      "step": "06-open",
+      "skill": "s_bfb98b",
+      "atStep": "6",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.locator('li.css-2aqyne', { hasText: 'fwgr31-n2 Bench Dashboard' }).locator('span')",
+      "fallbackUsed": null,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:3000/d/dfy6esk4aypkwa/:id?from=:id&to=now",
+      "pageUrl": "http://127.0.0.1:3000/d/dfy6esk4aypkwa/fwgr31-n2-bench-dashboard?from=now-6h&to=now"
+    },
+    {
+      "flow": "fwgr31",
+      "step": "06-open",
+      "skill": "s_bfb98b",
+      "atStep": "7",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.locator('[data-testid=\"TextPanel-converted-content\"] p')",
+      "fallbackUsed": null,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:3000/d/dfy6esk4aypkwa/:id?from=:id&to=now",
+      "pageUrl": "http://127.0.0.1:3000/d/dfy6esk4aypkwa/fwgr31-n2-bench-dashboard?from=now-6h&to=now"
+    },
+    {
+      "flow": "fwgr31",
+      "step": "06-open",
+      "skill": "s_bfb98b",
+      "atStep": "8",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.locator('[data-testid=\"data-testid TimePicker Open Button\"] span')",
+      "fallbackUsed": "page.locator('div:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(1) > div > span > span:nth-of-type(1)')",
+      "fallbackIndex": 1,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:3000/d/dfy6esk4aypkwa/:id?from=:id&to=now",
+      "pageUrl": "http://127.0.0.1:3000/d/dfy6esk4aypkwa/fwgr31-n2-bench-dashboard?from=now-6h&to=now"
+    },
+    {
+      "flow": "fwgr31",
+      "step": "06-open",
+      "skill": "s_bfb98b",
+      "atStep": "9",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.locator('[data-testid=\"data-testid RefreshPicker interval button\"] div')",
+      "fallbackUsed": "elementAt(1228, 112) /* div */",
+      "fallbackIndex": 3,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:3000/d/dfy6esk4aypkwa/:id?from=:id&to=now",
+      "pageUrl": "http://127.0.0.1:3000/d/dfy6esk4aypkwa/fwgr31-n2-bench-dashboard?from=now-6h&to=now"
+    },
+    {
+      "flow": "fwgr31",
+      "step": "06-open",
+      "skill": "s_bfb98b",
+      "atStep": "10",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByTestId('data-testid Edit dashboard button')",
+      "fallbackUsed": null,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:3000/d/dfy6esk4aypkwa/:id?from=:id&to=now",
+      "pageUrl": "http://127.0.0.1:3000/d/dfy6esk4aypkwa/fwgr31-n2-bench-dashboard?from=now-6h&to=now"
+    }
+  ],
+  "wallMs": 772653,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 1523016,
+    "completionTokens": 19263,
+    "cachedTokens": 1412224
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 1523016,
+      "completionTokens": 19263,
+      "cachedTokens": 1412224
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

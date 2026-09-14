@@ -1,0 +1,272 @@
+{
+ "id": "s_6a56f3",
+ "origin": "http://127.0.0.1:3000",
+ "template": "Final verification of the Grafana dashboard '{{v3}}'. Open the dashboard by browsing to it (search for it in Dashboards), then report ALL of the following read from the live page: (1) the browser's current page URL exactly as shown in the address bar / window.location.href; (2) the dashboard title shown in the top bar; (3) the titles of every panel on the dashboard in order; (4) the text content of the '{{v1}} Notes' panel; (5) the data source name shown in the query editor of the '{{v1}} Availability' panel (click Edit on that panel to check, then go Back); (6) the visualization type of the '{{v1}} Availability' panel; (7) the time range shown in the top-bar time picker; (8) the auto-refresh interval shown in the top-bar refresh control; (9) the dashboard's tags (Dashboard settings > General > Tags). Do not change anything — this is read-only verification.",
+ "params": {
+  "v1": {
+   "example": "fwgr31-n2",
+   "usedIn": [
+    4
+   ],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "Bench",
+   "usedIn": [
+    3
+   ],
+   "known": true,
+   "binding": "01-open.dashboard_folder"
+  },
+  "v3": {
+   "example": "fwgr31-n2 Bench Dashboard",
+   "usedIn": [],
+   "known": true
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:3000/d/bfy6g8hcxk3k0c/{{v1}}-bench-dashboard?from=:id&refresh=:id&timezone=browser&to=now"
+ },
+ "steps": [
+  {
+   "tool": "read",
+   "args": {
+    "label": "page_url",
+    "what": "url"
+   },
+   "locators": {},
+   "label": "1_page_url_exact",
+   "via": {
+    "skill": "s_bfb98b",
+    "step": 1
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Search or jump to...\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Search or jump to..."
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"wrapper\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "header > div:nth-of-type(1) > div:nth-of-type(2) > div > div > button"
+     },
+     {
+      "kind": "point",
+      "x": 644,
+      "y": 20,
+      "w": 310,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/bfy6g8hcxk3k0c/{{v1}}-bench-dashboard?from=:id&refresh=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- dialog \"\"",
+     "- combobox \"Search or jump to...\"",
+     "- listbox \"\"",
+     "- option \"Recent dashboards\"",
+     "- option \"{{v3}}\""
+    ]
+   },
+   "via": {
+    "skill": "s_bfb98b",
+    "step": 2
+   }
+  },
+  {
+   "tool": "type",
+   "args": {
+    "target": "role=combobox[name=\"Search or jump to...\"]",
+    "text": "fwgr31-n1 {{v2}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "combobox",
+      "name": "Search or jump to..."
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Search or jump to..."
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div > div > div:nth-of-type(1) > input"
+     },
+     {
+      "kind": "point",
+      "x": 652,
+      "y": 25,
+      "w": 711,
+      "h": 24,
+      "role": "combobox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/bfy6g8hcxk3k0c/{{v1}}-bench-dashboard?from=:id&refresh=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- combobox \"Search or jump to...\": fwgr31-n1 {{v2}}"
+    ]
+   },
+   "via": {
+    "skill": "s_bfb98b",
+    "step": 3
+   }
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:3000/d/dfy6esk4aypkwa/{{v1}}-bench-dashboard"
+   },
+   "locators": {},
+   "via": {
+    "skill": "s_bfb98b",
+    "step": 4
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "topbar_time_range",
+    "target": "@e89",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "text",
+      "text": "Last 6 hours"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid TimePicker Open Button\"] span"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(1) > div > span > span:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1014,
+      "y": 112,
+      "w": 84.5,
+      "h": 30,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "7_topbar_time_range",
+   "via": {
+    "skill": "s_bfb98b",
+    "step": 8
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Search or jump to...\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=button[name=\"Search or jump to...\"]"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Search or jump to..."
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"wrapper\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "header > div:nth-of-type(1) > div:nth-of-type(2) > div > div > button"
+     },
+     {
+      "kind": "point",
+      "x": 644,
+      "y": 20,
+      "w": 310,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "mints": {
+    "at": "p1"
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{d1}}/{{v1}}-bench-dashboard?from=:id&to=now",
+    "addedContains": [
+     "- dialog \"\"",
+     "- combobox \"Search or jump to...\"",
+     "- listbox \"\"",
+     "- option \"Recent dashboards\"",
+     "- option \"{{v3}}\""
+    ]
+   }
+  }
+ ],
+ "derived": {
+  "d1": {
+   "step": 6,
+   "at": "p1",
+   "example": "dfy6esk4aypkwa"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-14T00:24:47.010Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_c97b86",
+  "index": 0,
+  "of": 3
+ },
+ "variantOf": "s_bfb98b",
+ "provenance": {
+  "session": "fwgr31-n2",
+  "instruction": "Final verification of the Grafana dashboard 'fwgr31-n2 Bench Dashboard'. Open the dashboard by browsing to it (search for it in Dashboards), then report ALL of the following read from the live page: (1) the browser's current page URL exactly as shown in the address bar / window.location.href; (2) the dashboard title shown in the top bar; (3) the titles of every panel on the dashboard in order; (4) the text content of the 'fwgr31-n2 Notes' panel; (5) the data source name shown in the query editor of the 'fwgr31-n2 Availability' panel (click Edit on that panel to check, then go Back); (6) the visualization type of the 'fwgr31-n2 Availability' panel; (7) the time range shown in the top-bar time picker; (8) the auto-refresh interval shown in the top-bar refresh control; (9) the dashboard's tags (Dashboard settings > General > Tags). Do not change anything — this is read-only verification.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-14T00:24:47.010Z"
+ },
+ "revision": 1
+}

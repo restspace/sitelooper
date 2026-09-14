@@ -1,0 +1,604 @@
+{
+ "id": "s_5cd8d2",
+ "origin": "http://127.0.0.1:3000",
+ "template": "On the Grafana dashboard '{{v3}}' (saved, time range 'Last 6 hours', tag 'bench'), set the dashboard's auto-refresh interval to '1m'. Use the refresh-interval control in the top bar (the clock/refresh dropdown next to the time range picker) and select '1m'. Then make sure this refresh interval is PERSISTED into the saved dashboard: check whether the dashboard now shows unsaved changes (Save dashboard button enabled / dirty indicator); if so, save the dashboard via the Save dashboard button, TICKING the 'Update default time range' checkbox in the save dialog (so the 6-hour range stays persisted), and confirm '{{02-create.save_confirmation}}'. If changing the picker does not mark the dashboard dirty, find another way to persist the 1m refresh interval into the saved dashboard (e.g. a setting in Dashboard settings) and save. Finally verify persistence: fully reload the dashboard URL with NO query params and confirm the refresh interval control still shows '1m' and the time range still shows 'Last 6 hours'. Report: the refresh interval shown after reload, the time range shown after reload, and exactly how you persisted the refresh interval.",
+ "params": {
+  "v1": {
+   "example": "fwgr31-n3",
+   "usedIn": [
+    11
+   ],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "fwgr31-n3 Bench Dashboard",
+   "usedIn": [
+    1,
+    14
+   ],
+   "known": true
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:3000/d/cfy6hdylxv85cc/{{v1}}-bench-dashboard?editview=settings&from=:id&timezone=browser&to=now"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e132"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "{{v3}}"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid panel content\"] a"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > ul > li:nth-of-type(1) > div > div > a"
+     },
+     {
+      "kind": "point",
+      "x": 138,
+      "y": 706,
+      "w": 193.9,
+      "h": 17,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/cfy6hdylxv85cc/{{v1}}-bench-dashboard?from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- link \"Home\"",
+     "- link \"Dashboards\"",
+     "- button \"Mark as favorite\"",
+     "- button \"Share\"",
+     "- button \"Edit\""
+    ]
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e202"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid RefreshPicker interval button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Auto refresh turned off. Choose refresh time interval"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid dashboard controls\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div:nth-of-type(2) > div:nth-of-type(2) > div > button"
+     },
+     {
+      "kind": "point",
+      "x": 1247,
+      "y": 112,
+      "w": 34,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/cfy6hdylxv85cc/{{v1}}-bench-dashboard?from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- menu \"Off Auto 5s 10s 30s 1m 5m 15m 30m 1h 2h 1d\""
+    ]
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e262"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "menuitemradio",
+      "name": "1 minute"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid dashboard controls\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div > div > div > button:nth-of-type(6)"
+     },
+     {
+      "kind": "point",
+      "x": 1229,
+      "y": 308,
+      "w": 71.4,
+      "h": 32,
+      "role": "menuitemradio",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/cfy6hdylxv85cc/{{v1}}-bench-dashboard?from=:id&refresh=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- button \"Choose refresh time interval with current interval 1 minute selected\""
+    ]
+   }
+  },
+  {
+   "tool": "press",
+   "args": {
+    "key": "d"
+   },
+   "locators": {},
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/cfy6hdylxv85cc/{{v1}}-bench-dashboard?from=:id&refresh=:id&timezone=browser&to=now"
+   }
+  },
+  {
+   "tool": "press",
+   "args": {
+    "key": "s"
+   },
+   "locators": {},
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/cfy6hdylxv85cc/{{v1}}-bench-dashboard?editview=settings&from=:id&refresh=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- link \"{{v3}}\"",
+     "- button \"Back to dashboard\"",
+     "- button \"Save dashboard\"",
+     "- button \"More save options\"",
+     "- heading \"Settings\""
+    ]
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e332"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Tab JSON Model"
+     },
+     {
+      "kind": "role",
+      "role": "tab",
+      "name": "JSON Model"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div > div > div:nth-of-type(7) > a"
+     },
+     {
+      "kind": "point",
+      "x": 654,
+      "y": 181,
+      "w": 108.8,
+      "h": 34,
+      "role": "tab",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/cfy6hdylxv85cc/{{v1}}-bench-dashboard?editview=json-model&from=:id&refresh=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- link \"Settings\"",
+     "- textbox \"Editor content;Press Alt+F1 for Accessibility Options.\": {{*}}",
+     "- button \"Save changes\""
+    ]
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e523"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Back to dashboard button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Back to dashboard"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(1) > button"
+     },
+     {
+      "kind": "point",
+      "x": 993,
+      "y": 60,
+      "w": 143.5,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/cfy6hdylxv85cc/{{v1}}-bench-dashboard?from=:id&refresh=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- button \"Add\"",
+     "- button \"Settings\"",
+     "- button \"Exit edit\"",
+     "- button \"Time range selected: Last 6 hours\"",
+     "- button \"Zoom out time range\""
+    ]
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e838"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Save dashboard button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Save dashboard"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(6) > div > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1140,
+      "y": 60,
+      "w": 109.4,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/cfy6hdylxv85cc/{{v1}}-bench-dashboard?from=:id&refresh=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- dialog \"\"",
+     "- dialog \"Drawer title Save dashboard\"",
+     "- button \"Close\"",
+     "- heading \"Save dashboard\"",
+     "- tab \"Details\""
+    ]
+   }
+  },
+  {
+   "tool": "check",
+   "args": {
+    "target": "@e940",
+    "checked": true
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "Dashboard settings Save Dashboard Modal Save refresh checkbox"
+     },
+     {
+      "kind": "role",
+      "role": "checkbox",
+      "name": "Update default refresh valueWill make the current refresh the new default"
+     },
+     {
+      "kind": "label",
+      "label": "Update default refresh valueWill make the current refresh the new default"
+     },
+     {
+      "kind": "id",
+      "selector": "#save-refresh"
+     },
+     {
+      "kind": "css",
+      "selector": "#save-refresh"
+     },
+     {
+      "kind": "point",
+      "x": 799,
+      "y": 155,
+      "w": 286.1,
+      "h": 36,
+      "role": "checkbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/cfy6hdylxv85cc/{{v1}}-bench-dashboard?from=:id&refresh=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- tab \"Changes1\"",
+     "- checkbox \"Update default refresh valueWill make the current refresh the new default\" [checked]"
+    ]
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Save\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=button[name=\"Save\"]"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Save dashboard drawer button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Save"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(3) > div:nth-of-type(1) > div > div > div:nth-of-type(3) > button:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 776,
+      "y": 372,
+      "w": 65.4,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/cfy6hdylxv85cc/{{v1}}-bench-dashboard?from=:id&refresh=:id&timezone=browser&to=now",
+    "alertContains": "Dashboard saved",
+    "addedContains": [
+     "- button \"Add\"",
+     "- button \"Settings\"",
+     "- button \"Exit edit\"",
+     "- button \"Save dashboard\"",
+     "- button \"More save options\""
+    ]
+   }
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:3000/d/cfy6hdylxv85cc/{{v1}}-bench-dashboard"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "read",
+   "args": {
+    "attr": "aria-label",
+    "label": "topbar_refresh_interval_after_reload",
+    "target": "@e101",
+    "what": "attr"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid RefreshPicker interval button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Choose refresh time interval with current interval 1 minute selected"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid dashboard controls\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div:nth-of-type(2) > div:nth-of-type(2) > div > button"
+     },
+     {
+      "kind": "point",
+      "x": 1236,
+      "y": 112,
+      "w": 56.5,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "topbar_refresh_interval_"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "attr": "aria-label",
+    "label": "topbar_time_range_after_reload",
+    "target": "@e84",
+    "what": "attr"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid TimePicker Open Button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Time range selected: Last 6 hours"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid dashboard controls\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div > div:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 991,
+      "y": 112,
+      "w": 153.5,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "topbar_time_range_after_"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "dashboard_title_topbar",
+    "target": "@e53",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid {{v3}} breadcrumb"
+     },
+     {
+      "kind": "text",
+      "text": "{{v3}}"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] span"
+     },
+     {
+      "kind": "css",
+      "selector": "header > div:nth-of-type(2) > nav > ol > li:nth-of-type(3) > span"
+     },
+     {
+      "kind": "point",
+      "x": 322,
+      "y": 60,
+      "w": 193.9,
+      "h": 22,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "dashboard_title"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "page_url_after_reload",
+    "what": "url"
+   },
+   "locators": {},
+   "label": "url_after_clean_reload"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "On '{{v3}}' (URL /d/cfy6hdylxv85cc/{{v1}}-bench-dashboard) I selected '1m' in the top-bar refresh-interval control, which set the picker to 1m but did NOT mark the dashboard dirty (no Save dashboard button / dirty indicator appeared). So I persisted it via the save drawer instead: opening Save dashboard showed \"No changes to save\", but the drawer's checkbox 'Update default refresh value — Will make the current refresh the new default' was available; I ticked it (a \"Changes 1\" tab appeared and Save became enabled) and clicked Save, which returned \"Dashboard saved\". I then reloaded the bare dashboard URL with no query params; the top bar shows time range \"Last 6 hours\" and the refresh control reads 1m (aria-label \"Choose refresh time interval with current interval 1 minute selected\"), and the URL was rewritten to ?from=now-6h&to=now&timezone=browser&refresh=1m, confirming both are persisted. Note: no 'Update default time range' checkbox existed in this save drawer (only the refresh one); the 6-hour default was already persisted from the earlier save and verified to survive the reload.",
+  "values": {
+   "dashboard_title": "{{v3}}",
+   "refresh_interval_after_reload": "1m (aria-label: Choose refresh time interval with current interval 1 minute selected)",
+   "time_range_after_reload": "Last 6 hours (aria-label: Time range selected: Last 6 hours)",
+   "how_persisted": "Refresh picker -> 1m did not dirty the dashboard (no Save dashboard button); opened Save dashboard drawer, ticked checkbox 'Update default refresh value' (Changes 1, Save enabled), clicked Save -> 'Dashboard saved'",
+   "time_range_checkbox": "no 'Update default time range' checkbox present in this save drawer; 6h default already persisted earlier and confirmed on reload",
+   "save_confirmation": "Dashboard saved",
+   "url_after_clean_reload": "http://127.0.0.1:3000/d/cfy6hdylxv85cc/{{v1}}-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m",
+   "topbar_refresh_interval_": "Choose refresh time interval with current interval 1 minute selected",
+   "topbar_time_range_after_": "Time range selected: Last 6 hours",
+   "ref": "{{v1}}",
+   "ref_2": "{{v1}}-bench-dashboard",
+   "ref_3": "now-6h"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-14T00:31:32.925Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "provenance": {
+  "session": "fwgr31-n3",
+  "instruction": "On the Grafana dashboard 'fwgr31-n3 Bench Dashboard' (saved, time range 'Last 6 hours', tag 'bench'), set the dashboard's auto-refresh interval to '1m'. Use the refresh-interval control in the top bar (the clock/refresh dropdown next to the time range picker) and select '1m'. Then make sure this refresh interval is PERSISTED into the saved dashboard: check whether the dashboard now shows unsaved changes (Save dashboard button enabled / dirty indicator); if so, save the dashboard via the Save dashboard button, TICKING the 'Update default time range' checkbox in the save dialog (so the 6-hour range stays persisted), and confirm '{{02-create.save_confirmation}}'. If changing the picker does not mark the dashboard dirty, find another way to persist the 1m refresh interval into the saved dashboard (e.g. a setting in Dashboard settings) and save. Finally verify persistence: fully reload the dashboard URL with NO query params and confirm the refresh interval control still shows '1m' and the time range still shows 'Last 6 hours'. Report: the refresh interval shown after reload, the time range shown after reload, and exactly how you persisted the refresh interval.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-14T00:31:32.925Z"
+ },
+ "revision": 1
+}

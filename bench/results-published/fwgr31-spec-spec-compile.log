@@ -1,0 +1,19 @@
+error 06-open: it is pinned to the demoted skill s_bfb98b — the compiled spec inherits a procedure whose last replays failed at the same step
+  why: s_bfb98b is demoted: 1 of 3 replays succeeded; replay failed at step 10 on 2 of them; the demotion was two consecutive failures at step 10; last used 2026-09-14T00:37:23.499Z.
+  fix: sitelooper rerecord bench/results/flows/fwgr31.json 06-open
+warning 02-create: reads what=attr, which a standalone spec has no form for (label query_editor_data_source)
+  why: Replay implements attribute and count reads in its own tool layer; the generated file publishes only text and input values, so this label would be left empty and any step consuming it would run on a blank.
+  fix: write the read for what=attr by hand in the generated file, or re-record the step as a text read
+warning 04-change: reads what=attr, which a standalone spec has no form for (label button_aria_label_remove)
+  why: Replay implements attribute and count reads in its own tool layer; the generated file publishes only text and input values, so this label would be left empty and any step consuming it would run on a blank.
+  fix: write the read for what=attr by hand in the generated file, or re-record the step as a text read
+warning 06-open: reads what=attr, which a standalone spec has no form for (label testdata_logo_alt_text)
+  why: Replay implements attribute and count reads in its own tool layer; the generated file publishes only text and input values, so this label would be left empty and any step consuming it would run on a blank.
+  fix: write the read for what=attr by hand in the generated file, or re-record the step as a text read
+warning 06-open: reads what=attr, which a standalone spec has no form for (label tag_chip_label)
+  why: Replay implements attribute and count reads in its own tool layer; the generated file publishes only text and input values, so this label would be left empty and any step consuming it would run on a blank.
+  fix: write the read for what=attr by hand in the generated file, or re-record the step as a text read
+
+nothing written: the error(s) above are about the RECORDING, not the app — a compiled spec would fail at a locator and read as drift.
+re-record the step(s) with the fix command above, or pass --allow-demoted to compile the demoted pin anyway.
+sitelooper: refused: a step is pinned to a demoted skill — see the diagnostics above (--allow-demoted compiles it anyway)

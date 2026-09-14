@@ -1,0 +1,107 @@
+{
+ "id": "s_4a233b",
+ "origin": "http://127.0.0.1:3000",
+ "template": "Final verification of the Grafana dashboard '{{v3}}'. Open the dashboard by browsing to it (search for it in Dashboards), then report ALL of the following read from the live page: (1) the browser's current page URL exactly as shown in the address bar / window.location.href; (2) the dashboard title shown in the top bar; (3) the titles of every panel on the dashboard in order; (4) the text content of the '{{v1}} Notes' panel; (5) the data source name shown in the query editor of the '{{v1}} Availability' panel (click Edit on that panel to check, then go Back); (6) the visualization type of the '{{v1}} Availability' panel; (7) the time range shown in the top-bar time picker; (8) the auto-refresh interval shown in the top-bar refresh control; (9) the dashboard's tags (Dashboard settings > General > Tags). Do not change anything — this is read-only verification.",
+ "params": {
+  "v1": {
+   "example": "fwgr31-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "Bench",
+   "usedIn": [],
+   "known": true,
+   "binding": "01-open.dashboard_folder"
+  },
+  "v3": {
+   "example": "fwgr31-n2 Bench Dashboard",
+   "usedIn": [
+    1
+   ],
+   "known": true
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:3000/d/{{d1}}/{{v1}}-bench-dashboard?from=:id&to=now",
+  "requireText": [
+   "{{v1}}",
+   "{{v2}}"
+  ]
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=option[name=\"{{v3}}\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=option[name=\"{{v3}}\"]"
+     },
+     {
+      "kind": "role",
+      "role": "option",
+      "name": "{{v3}}"
+     },
+     {
+      "kind": "css",
+      "selector": "#kbar-listbox-item-1"
+     },
+     {
+      "kind": "id",
+      "selector": "#kbar-listbox-item-1"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 104,
+      "w": 767,
+      "h": 38,
+      "role": "option",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/bfy6g8hcxk3k0c/{{v1}}-bench-dashboard?from=:id&refresh=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- button \"Mark as favorite\"",
+     "- button \"Share\"",
+     "- button \"Edit\"",
+     "- button \"Choose refresh time interval with current interval 1 minute selected\"",
+     "- heading \"{{v1}} Notes\""
+    ]
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-14T00:24:47.010Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_c97b86",
+  "index": 1,
+  "of": 3
+ },
+ "variantOf": "s_bfb98b",
+ "provenance": {
+  "session": "fwgr31-n2",
+  "instruction": "Final verification of the Grafana dashboard 'fwgr31-n2 Bench Dashboard'. Open the dashboard by browsing to it (search for it in Dashboards), then report ALL of the following read from the live page: (1) the browser's current page URL exactly as shown in the address bar / window.location.href; (2) the dashboard title shown in the top bar; (3) the titles of every panel on the dashboard in order; (4) the text content of the 'fwgr31-n2 Notes' panel; (5) the data source name shown in the query editor of the 'fwgr31-n2 Availability' panel (click Edit on that panel to check, then go Back); (6) the visualization type of the 'fwgr31-n2 Availability' panel; (7) the time range shown in the top-bar time picker; (8) the auto-refresh interval shown in the top-bar refresh control; (9) the dashboard's tags (Dashboard settings > General > Tags). Do not change anything — this is read-only verification.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-14T00:24:47.010Z"
+ },
+ "revision": 1
+}

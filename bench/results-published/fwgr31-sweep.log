@@ -1,0 +1,122 @@
+
+[sweep] run 1/3: fwgr31-n1 (store: /home/user/sitelooper/bench/results/fwgr31-skills)
+[harness] grafana: defaulting APP_URL
+[harness] grafana: defaulting APP_EMAIL
+[harness] grafana: defaulting APP_PASSWORD
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+[harness] grafana responded 302 at http://127.0.0.1:3000/
+stopped: fwgr31-n1
+  flow "fwgr31" saved: 6 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwgr31.json
+  warning: warning: 2 value(s) KNOWN to be this run's survived unslotted — a replay will act on or wait for the recording's value (non-fatal outside locators):
+  s_bfb98b.steps[2].args.text: "fwgr31-n1" (var) in "fwgr31-n1 Bench"
+  s_bfb98b.steps[2].expect.addedContains[0]: "fwgr31-n1" (var) in "- combobox \"Search or jump to...\": fwgr31-n1 Bench"
+  warning: warning: 210 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[1].instruction: "TestData" (output) in "In Grafana, create a NEW dashboard (Dashboards > New dashboard > Add visualization, or the + New dashboard button). Add a panel with visualization type 'Stat'. "
+  flow.steps[1].instruction: "Stat" (output) in "In Grafana, create a NEW dashboard (Dashboards > New dashboard > Add visualization, or the + New dashboard button). Add a panel with visualization type 'Stat'. "
+  flow.steps[1].route: "dfy6esk4aypkwa" (url) in "http://127.0.0.1:3000/d/dfy6esk4aypkwa/:id"
+  flow.steps[2].instruction: "TestData" (output) in "On the Grafana dashboard '{{runid}} {{01-open.dashboard_folder}} Dashboard' (currently in panel-edit mode for the Stat panel), first exit the panel editor back "
+  flow.steps[2].instruction: "Stat" (output) in "On the Grafana dashboard '{{runid}} {{01-open.dashboard_folder}} Dashboard' (currently in panel-edit mode for the Stat panel), first exit the panel editor back "
+  warning: {{02-create.save_confirmation}} (used by 05-set) can only be re-observed by model recovery — consider re-recording so the value is read from the page.
+arm=sitelooper model=z-ai/glm-5.3 runid=fwgr31-n1 stop=completed
+turns=7 wall=1148.8s
+commands=6 cmdTime=1123.1s cmdBytes=11194 timeouts=0
+orchestrator in=6410 cw=0 cr=25088 out=5379
+inner prompt=3613952 cached=3359232 completion=37863
+spend=$0.1102 maxUsd=3
+learn: A_n=0 replayed=0/6 full=0 repaired=0 compiled=6 variants=0
+-> /home/user/sitelooper/bench/results/fwgr31-n1-sitelooper-result.json
+
+fwgr31-n1: objectives passed 6/6
+  obj 1: PASS — all 3 provisioned titles reported
+  obj 2: PASS — type=stat, datasource ok=true
+  obj 3: PASS — type=text, content includes runid=true
+  obj 4: PASS — tags=["bench"], time=now-6h..now
+  obj 5: PASS — refresh="1m"
+  obj 6: PASS — uid dfy6esk4aypkwa reported
+
+[sweep] run 2/3: fwgr31-n2 (replay flow fwgr31, no orchestrator)
+[reset] grafana: deleted leftover dashboard "fwgr31-n1 Bench Dashboard" (200)
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+[sweep] fwgr31-n2: 12 drift ticket(s) → fwgr31-n2-drift.json
+
+fwgr31-n2: objectives passed 6/6
+  obj 1: PASS — all 3 provisioned titles reported
+  obj 2: PASS — type=stat, datasource ok=true
+  obj 3: PASS — type=text, content includes runid=true
+  obj 4: PASS — tags=["bench"], time=now-6h..now
+  obj 5: PASS — refresh="1m"
+  obj 6: PASS — uid bfy6g8hcxk3k0c reported
+
+[sweep] run 3/3: fwgr31-n3 (replay flow fwgr31, no orchestrator)
+[reset] grafana: deleted leftover dashboard "fwgr31-n2 Bench Dashboard" (200)
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+[sweep] fwgr31-n3: 11 drift ticket(s) → fwgr31-n3-drift.json
+
+fwgr31-n3: objectives passed 6/6
+  obj 1: PASS — all 3 provisioned titles reported
+  obj 2: PASS — type=stat, datasource ok=true
+  obj 3: PASS — type=text, content includes runid=true
+  obj 4: PASS — tags=["bench"], time=now-6h..now
+  obj 5: PASS — refresh="1m"
+  obj 6: PASS — uid cfy6hdylxv85cc reported
+
+Learning sweep fwgr31 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwgr31-n1' │ '6/6'    │ 'completed' │ 7     │ 6    │ 0.1102    │ 0   │ '0/6'        │ 1149   │
+│ 1       │ 2 │ 'fwgr31-n2' │ '6/6'    │ 'success'   │ 81    │ 6    │ 0.0324    │ 0.5 │ '6/6 (flow)' │ 773    │
+│ 2       │ 3 │ 'fwgr31-n3' │ '6/6'    │ 'success'   │ 87    │ 6    │ 0.0347    │ 0.5 │ '6/6 (flow)' │ 754    │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:3000
+  s_17fc6c  validated   19 steps  3/3 (100%)
+           On the Grafana dashboard '{{v1}}' (currently in panel-edit mode for the {{v4}} panel), first exit the panel ed…
+  s_22712d  validated    7 steps  3/3 (100%)
+           Open {{v1}} and sign in with username admin and password admin (if a 'change password' prompt appears, skip it…
+  s_310759  validated    4 steps  3/3 (100%)
+           In Grafana, create a NEW dashboard (Dashboards > New dashboard > Add visualization, or the + New dashboard but…
+  s_5fd61d  validated    4 steps  3/3 (100%)
+           Open {{v1}} and sign in with username admin and password admin (if a 'change password' prompt appears, skip it…
+  s_69c8ea  validated    2 steps  3/3 (100%)
+           Open {{v1}} and sign in with username admin and password admin (if a 'change password' prompt appears, skip it…
+  s_8b3d97  validated    3 steps  3/3 (100%)
+           Open {{v1}} and sign in with username admin and password admin (if a 'change password' prompt appears, skip it…
+  s_bfb98b  demoted     33 steps  1/3 (33%)
+           Final verification of the Grafana dashboard '{{v1}}'. Open the dashboard by browsing to it (search for it in D…
+  s_d56623  validated    2 steps  3/3 (100%)
+           In Grafana, create a NEW dashboard (Dashboards > New dashboard > Add visualization, or the + New dashboard but…
+  s_d694a2  validated    9 steps  3/3 (100%)
+           In Grafana, create a NEW dashboard (Dashboards > New dashboard > Add visualization, or the + New dashboard but…
+  s_555cf7  provisional  1 steps  1/2 (50%)
+           On the Grafana dashboard '{{v3}}' (already saved, with panels '{{v1}} Notes' and '{{v1}} Availability'), do tw…
+  s_75f3ea  provisional 18 steps  1/2 (50%)  variant of s_8cbb3e
+           On the Grafana dashboard '{{v1}} {{v2}} Dashboard' (saved, time range 'Last 6 hours', tag 'bench'), set the da…
+  s_8cbb3e  provisional  7 steps  1/2 (50%)
+           On the Grafana dashboard '{{v1}}' (saved, time range '{{v4}}', tag '{{v5}}'), set the dashboard's auto-refresh…
+  s_2fd45d  provisional 16 steps  1/1 (100%)  variant of s_555cf7
+           On the Grafana dashboard '{{v3}}' (already saved, with panels '{{v1}} Notes' and '{{v1}} Availability'), do tw…
+  s_4a233b  provisional  1 steps  1/1 (100%)  variant of s_bfb98b
+           Final verification of the Grafana dashboard '{{v3}}'. Open the dashboard by browsing to it (search for it in D…
+  s_515eeb  provisional 19 steps  1/1 (100%)
+           On the Grafana dashboard '{{v1}}' (already saved, with panels '{{v4}}' and '{{v5}}'), do two things and persis…
+  s_5cd8d2  provisional 15 steps  1/1 (100%)
+           On the Grafana dashboard '{{v3}}' (saved, time range 'Last 6 hours', tag 'bench'), set the dashboard's auto-re…
+  s_6a56f3  provisional  6 steps  1/1 (100%)  variant of s_bfb98b
+           Final verification of the Grafana dashboard '{{v3}}'. Open the dashboard by browsing to it (search for it in D…
+  s_a904d6  provisional  1 steps  1/1 (100%)  variant of s_bfb98b
+           Final verification of the Grafana dashboard '{{v3}}'. Open the dashboard by browsing to it (search for it in D…
+  s_af66c5  provisional  1 steps  1/1 (100%)
+           On the Grafana dashboard '{{v3}}' (already saved, with panels '{{v1}} Notes' and '{{v1}} Availability'), do tw…
+  s_b1b421  provisional 14 steps  1/1 (100%)  variant of s_bfb98b
+           Final verification of the Grafana dashboard '{{v3}}'. Open the dashboard by browsing to it (search for it in D…
+  s_dc469e  provisional  2 steps  1/1 (100%)  variant of s_555cf7
+           On the Grafana dashboard '{{v3}}' (already saved, with panels '{{v1}} Notes' and '{{v1}} Availability'), do tw…
+  s_ddb23b  provisional  6 steps  1/1 (100%)  variant of s_bfb98b
+           Final verification of the Grafana dashboard '{{v3}}'. Open the dashboard by browsing to it (search for it in D…
+  s_e10990  provisional 22 steps  1/1 (100%)
+           On the Grafana dashboard '{{v3}}' (already saved, with panels '{{v1}} Notes' and '{{v1}} Availability'), do tw…
+  s_edd892  provisional 15 steps  1/1 (100%)  variant of s_bfb98b
+           Final verification of the Grafana dashboard '{{v3}}'. Open the dashboard by browsing to it (search for it in D…
+store: /home/user/sitelooper/bench/results/fwgr31-skills
+
+summary: /home/user/sitelooper/bench/results/fwgr31-sweep.json
