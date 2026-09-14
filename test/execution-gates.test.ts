@@ -20,8 +20,9 @@ import {
   preconditionVerdict,
   urlEffectVerdict,
 } from '../src/execution/gates.js';
-import { liveAlerts } from '../src/execution/observe.js';
-import { SNAPSHOT_LIMITS, describeInPage } from '../src/execution/snapshot.js';
+import { liveAlerts, liveAlertsObserved } from '../src/execution/observe.js';
+import { SHADOW_LIMITS, SNAPSHOT_LIMITS, observeDocumentInPage } from '../src/execution/snapshot.js';
+import { documentOf } from './fixture/observation.js';
 import { flowToSpec, unmeasuredPreconditionDiagnostic } from '../src/spec/ir.js';
 import { FINGERPRINT_DIMS, cosine } from '../src/execution/fingerprint.js';
 import type { Flow } from '../src/skills/flow.js';
@@ -189,7 +190,7 @@ describe('alertVerdict', () => {
   });
 
   it('is asked over the same live-region capture the daemon takes', async () => {
-    // The observation IS the daemon's own capture (describeInPage under
+    // The observation IS the daemon's own capture (observeDocumentInPage under
     // SNAPSHOT_LIMITS, the shared snapshot module the daemon's diff is built
     // on): liveAlerts is its alerts half, not a second selector and second set
     // of caps kept in step by a test. One page function, one limits object.
@@ -200,16 +201,44 @@ describe('alertVerdict', () => {
     const page = {
       evaluate: async (fn: unknown, arg: unknown) => {
         asked.push(fn, arg);
-        return { lines: ['- button "Save"'], alerts: ['Saved 3 items'] };
+        return documentOf(['- button "Save"'], ['Saved 3 items']);
       },
     } as unknown as import('playwright-core').Page;
     expect(await liveAlerts(page)).toEqual(['Saved 3 items']);
-    expect(asked).toEqual([describeInPage, SNAPSHOT_LIMITS]);
+    expect(asked).toEqual([observeDocumentInPage, { ...SNAPSHOT_LIMITS, ...SHADOW_LIMITS, legacy: true }]);
     // and a page that cannot be read is unobserved, never "no alert"
     const gone = { evaluate: async () => { throw new Error('Execution context was destroyed'); } } as unknown as import('playwright-core').Page;
     expect(await liveAlerts(gone)).toBeNull();
     const odd = { evaluate: async () => 'not a capture' } as unknown as import('playwright-core').Page;
     expect(await liveAlerts(odd)).toBeNull();
+    // with its coverage: a look past the alert cap did not see every live region
+    const capped = { evaluate: async () => documentOf([], ['A', 'B', 'C', 'D', 'E'], { alertsTruncated: true }) } as unknown as import('playwright-core').Page;
+    expect(await liveAlertsObserved(capped)).toEqual({ alerts: ['A', 'B', 'C', 'D', 'E'], complete: false });
+    expect(await liveAlertsObserved(page)).toEqual({ alerts: ['Saved 3 items'], complete: true });
+    expect(await liveAlertsObserved(gone)).toBeNull();
+  });
+
+  /**
+   * An after-look that did not see every live region (the cap, an unread
+   * frame) cannot say "nothing new was raised" or "the recorded alert is
+   * missing". An alert it DID see is still evidence and still stops.
+   */
+  it('reads an incomplete after-look as unobserved, and still stops on an alert it saw', () => {
+    expect(alertVerdict([], [], ctx, false)).toEqual({
+      warnings: ["step 4: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear"],
+      unobserved: true,
+    });
+    expect(alertVerdict([], ['Rejected'], ctx, false).stop).toBe('step 4 raised an alert the recording never saw: Rejected');
+    const want = { ...ctx, expectedContains: 'Saved' };
+    expect(alertVerdict([], ['Saved it'], want, false)).toEqual({ warnings: [] });
+    expect(alertVerdict([], ['Other'], want, false)).toEqual({
+      warnings: ['step 4: expected alert containing "Saved" could not be observed in full'],
+      unobserved: true,
+    });
+    // a read expecting nothing has nothing to miss
+    expect(alertVerdict([], [], { ...ctx, isRead: true }, false)).toEqual({ warnings: [] });
+    // and a complete look is today's verdict, unchanged
+    expect(alertVerdict([], [], ctx, true)).toEqual({ warnings: [] });
   });
 });
 

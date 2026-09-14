@@ -1,11 +1,12 @@
 import { mutatesSteps } from '../execution/lifecycle.js';
 import type { LocatorCandidate, RecordedEntry, RecordedInstruction, RecordedStep } from '../daemon/recorder.js';
 import type { Report } from '../agent/report.js';
-import { SKILL_CONTRACT, newSkillId, originOf, type Skill, type SkillParam, type SkillStep, type StepExpectation } from './store.js';
+import { contractFor, newSkillId, originOf, type Skill, type SkillParam, type SkillStep, type StepExpectation } from './store.js';
 import { MIN_ID_LEN, digitDominant, looksLikeId, skeleton, tokenPattern } from './shape.js';
 import { idPositionPart, occursAsToken } from './ledger.js';
 import { escapeRe, identityRe, maskVolatile } from '../shared/text.js';
 import { CREDENTIAL_KEY, fillParamsDeep, queryPairs, safeDecode, urlParts } from '../execution/url.js';
+import { contextsEqual, framesEqual } from '../execution/context.js';
 
 /**
  * The url rules live in src/execution/url.ts, where a compiled artifact embeds
@@ -171,6 +172,15 @@ export function compileSkills(input: CompileInput): Skill[] {
   let currentUrl = startUrl;
   for (const step of kept) {
     seg.steps.push(step);
+    // A step that opened a popup, closed its page or switched tabs moved the
+    // procedure to ANOTHER page: a seam whatever the urls say, and the next
+    // segment is gated on the page the procedure continues on.
+    if (step.effect && step.effect.kind !== 'navigate' && step.afterUrl) {
+      currentUrl = step.afterUrl;
+      segments.push(seg);
+      seg = { steps: [], startUrl: currentUrl, ...(step.fingerprintAfter ? { fingerprint: step.fingerprintAfter } : {}) };
+      continue;
+    }
     if (step.diff?.url && step.diff.url !== currentUrl) {
       const crossed = urlPattern(step.diff.url, slots, { query: false }) !== urlPattern(currentUrl, slots, { query: false });
       currentUrl = step.diff.url;
@@ -268,6 +278,21 @@ export function compileSkills(input: CompileInput): Skill[] {
         locators[key] = isRead && lostAnchor && kept.every(positional) ? [] : kept;
       }
       const out: SkillStep = { tool: step.tool, args, locators };
+      // Where each target lives and what the step did to its page travel
+      // verbatim: a frame path names an iframe, not a record, so nothing in
+      // it is slotted (a frame retitled per record fails closed at replay).
+      const contexts: NonNullable<SkillStep['contexts']> = {};
+      for (const [key, loc] of Object.entries(step.locators)) {
+        if (loc.frame?.length && (key === 'target' || key === 'source')) contexts[key] = { frame: loc.frame };
+      }
+      if (Object.keys(contexts).length) out.contexts = contexts;
+      if (step.page !== undefined) out.page = step.page;
+      if (step.effect) {
+        out.effect =
+          step.effect.kind === 'popup' && step.afterUrl
+            ? { kind: 'popup', urlPattern: urlPattern(step.afterUrl, slots, { query: false }) }
+            : step.effect;
+      }
       // Record-minting, from the evidence discoverMinted already gathered:
       // this step's post-nav url carried an identifier the run had not seen
       // before. Stored per step because a replay that stops needs to know
@@ -394,6 +419,7 @@ export function compileSkills(input: CompileInput): Skill[] {
   // when the instruction began. See deriveGoal.
   const goal = deriveGoal({
     startText: head?.startText,
+    startTextComplete: head?.startTextComplete,
     reportValues,
     sub,
     // Single-segment only: startText is the page the instruction BEGAN on,
@@ -449,8 +475,12 @@ export function compileSkills(input: CompileInput): Skill[] {
       // so stamping there would quietly relabel an old file as current on its
       // first replay — laundering exactly the artifact the version exists to
       // hold apart.
-      contract: SKILL_CONTRACT,
-      stats: { uses: 1, successes: 1, partial: 0, created: now, failedAtStep: {}, fallthroughs: 0, verifiedContract: SKILL_CONTRACT },
+      //
+      // The contract is the one these steps NEED (store.ts contractFor): 3 only
+      // for a procedure that carries frame or page context, which a build that
+      // cannot follow it must refuse rather than resolve against the main page.
+      contract: contractFor(b.folded),
+      stats: { uses: 1, successes: 1, partial: 0, created: now, failedAtStep: {}, fallthroughs: 0, verifiedContract: contractFor(b.folded) },
       status: 'provisional' as const,
       ...(chain ? { seq: { chain, index: k, of } } : {}),
       ...(input.variantOf ? { variantOf: input.variantOf } : {}),
@@ -490,16 +520,21 @@ const MAX_GOAL = 4;
  *  - a line that still carries a `{{slot}}` after substitution cannot be
  *    checked against a live page without guessing what fills it;
  *  - and no startText, no report values, or a read-only procedure means no
- *    goal at all. Never guess one.
+ *    goal at all. Never guess one;
+ *  - nor from a startText that is not the whole page (cut at its budget, or
+ *    taken by a look that could not cover the page): text missing from it was
+ *    never shown to be missing from the page, and "Sales Order" cut off the
+ *    end of a long start page would read as brought into existence.
  */
 function deriveGoal(opts: {
   startText: string | undefined;
+  startTextComplete?: boolean;
   reportValues: Record<string, unknown>;
   sub: (s: string) => string;
   mutating: boolean;
   identities: Set<string>;
 }): { requireText: string[] } | null {
-  if (!opts.mutating || !opts.startText) return null;
+  if (!opts.mutating || !opts.startText || opts.startTextComplete === false) return null;
   const before = opts.startText.replace(/\s+/g, ' ').toLowerCase();
   const out: string[] = [];
   const seen = new Set<string>();
@@ -1095,7 +1130,11 @@ function expectationFor(step: RecordedStep, slots: Map<string, string>): StepExp
     const lasting = step.diff.added.filter((l) => !TRANSIENT_LINE.test(l));
     if (lasting.length) out.addedContains = lasting.slice(0, MAX_ADDED_LINES).map((l) => maskMinted(maskVolatile(substitute(l, slots))).slice(0, 120));
   }
-  return Object.keys(out).length ? out : undefined;
+  if (!Object.keys(out).length) return undefined;
+  // The recording's dialect travels with its lines, so replay and the artifact
+  // render the live page the way these lines were written.
+  if (step.diff.dialect === 2) out.lineDialect = 2;
+  return out;
 }
 
 /**
@@ -1177,6 +1216,8 @@ export function sameProcedure(a: Skill, b: Skill): boolean {
   return a.steps.every((s, i) => {
     const t = b.steps[i];
     if (s.tool !== t.tool) return false;
+    // The same Save in the page and in a payment frame are two procedures.
+    if (!contextsEqual(s.contexts, t.contexts) || s.page !== t.page || JSON.stringify(s.effect ?? null) !== JSON.stringify(t.effect ?? null)) return false;
     // Same procedure = same tools driven by the same KIND of primary locator,
     // regardless of the literal value (a label of 'Name' vs 'Name *', a role
     // name that is a parameter or a record id). This is what lets two runs'
@@ -1184,6 +1225,24 @@ export function sameProcedure(a: Skill, b: Skill): boolean {
     // differences are exactly the parameters the skills already carry.
     return locatorShape(s.locators.target?.[0]) === locatorShape(t.locators.target?.[0]);
   });
+}
+
+/**
+ * Whether two procedures say the same things about WHERE they act: the frame
+ * each target lives in, the page each step runs on and what it does to it.
+ * A merge by template alone must not fold a recording of the payment frame's
+ * Save into a procedure that presses the page's own.
+ */
+export function samePageContexts(a: Skill, b: Skill): boolean {
+  const signature = (steps: SkillStep[]): unknown[] =>
+    steps.map((s) => [
+      Object.fromEntries(Object.entries(s.contexts ?? {}).filter(([, c]) => c?.frame?.length).map(([k, c]) => [k, c!.frame])),
+      s.page ?? null,
+      s.effect ?? null,
+      s.whileContext?.frame ?? null,
+      s.body ? signature(s.body) : null,
+    ]);
+  return JSON.stringify(signature(a.steps)) === JSON.stringify(signature(b.steps));
 }
 
 /** A locator's structural shape for merge comparison: its kind, plus the
@@ -1217,7 +1276,7 @@ export function coalesceControls(steps: SkillStep[], notes?: TransformNote[]): S
   for (const [i, step] of steps.entries()) {
     const prev = out[out.length - 1];
     const noTarget = !step.locators.target?.length && !step.locators.source?.length;
-    if (prev && noTarget && prev.tool === step.tool && !prev.locators.target?.length && JSON.stringify(prev.args) === JSON.stringify(step.args)) {
+    if (prev && noTarget && !step.effect && !prev.effect && prev.tool === step.tool && !prev.locators.target?.length && JSON.stringify(prev.args) === JSON.stringify(step.args)) {
       notes?.push({ name: 'coalesceControls', at: i + 1, reason: `repeat of the previous ${step.tool} with identical args and no target of its own` });
       continue;
     }
@@ -1278,6 +1337,8 @@ export function dropDismissedDialogs(steps: SkillStep[], notes?: TransformNote[]
       (closer.expect?.urlPattern ?? null) === (opener.expect?.urlPattern ?? null) &&
       !closer.expect?.alertContains &&
       !closer.mints &&
+      !closer.effect &&
+      framesEqual(opener.contexts?.target?.frame, closer.contexts?.target?.frame) &&
       closer.label === undefined;
     if (opensDialog && inert) {
       const primary = (closer.locators.target ?? [])[0] as { kind?: string; role?: string; name?: string; text?: string } | undefined;
@@ -1323,6 +1384,10 @@ function chainSkeleton(chain: LocatorCandidate[] | undefined): string {
 /** Two steps are the same procedure applied to (possibly) a different record. */
 function loopEquivalent(a: SkillStep, b: SkillStep): boolean {
   if (a.tool !== b.tool || a.tool === 'loop') return false;
+  // Two identical controls in different frames or pages are not one control
+  // met twice, and a step that moves the procedure to another page is never
+  // iteration.
+  if (!contextsEqual(a.contexts, b.contexts) || a.page !== b.page || a.effect || b.effect) return false;
   // Same procedure means the same TYPED values too: two edits that set
   // different quantities are two steps, not one loop replaying the first
   // group's value on every record. Targets are per-record by design.
@@ -1407,6 +1472,7 @@ export function foldLoops(steps: SkillStep[], instruction = '', notes?: Transfor
         locators: {},
         body: group,
         while: group[0].locators.target,
+        ...(group[0].contexts?.target?.frame?.length ? { whileContext: group[0].contexts.target } : {}),
         // Bounded: exactly the records the recording worked. Drain: room to
         // outgrow the recorded list, still with a runaway guard.
         max: drain ? Math.min(count * 2 + 3, LOOP_MAX_ITER_CAP) : count,

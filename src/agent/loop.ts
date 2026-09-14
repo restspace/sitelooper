@@ -2,6 +2,7 @@ import type { BrowserSession } from '../daemon/browser.js';
 import type { SessionState } from '../daemon/state.js';
 import type { ChatMessage, Provider, ToolDef } from './llm.js';
 import { captureSignature } from '../daemon/diff.js';
+import { CURRENT_DIALECT, coverageComplete } from '../execution/snapshot.js';
 import { fingerprintPage } from '../daemon/fingerprint.js';
 import { candidatesFor, renderCandidates, type ReplayResult } from '../skills/replay.js';
 import { componentsOnPage, renderComponents } from '../skills/components.js';
@@ -981,7 +982,7 @@ async function offerSite(browser: BrowserSession): Promise<string> {
 
 async function offerSkills(
   browser: BrowserSession,
-): Promise<{ ids: string[]; text: string; context: { url?: string; fingerprint?: number[]; startText?: string } }> {
+): Promise<{ ids: string[]; text: string; context: { url?: string; fingerprint?: number[]; startText?: string; startDialect?: 2; startTextComplete?: boolean } }> {
   const none = { ids: [], text: '', context: {} };
   if (!browser.learn || !browser.isOpen) return none;
   try {
@@ -999,12 +1000,21 @@ async function offerSkills(
     // evidence compile needs to give a skill an identity precondition (see
     // RecordedInstruction.startText).
     const sig = await captureSignature(page);
-    const startText = sig ? sig.lines.join('\n').slice(0, START_TEXT_BUDGET) : undefined;
+    const joined = sig ? sig.lines.join('\n') : '';
+    const startText = sig ? joined.slice(0, START_TEXT_BUDGET) : undefined;
+    // Whether this is the WHOLE page: not cut at the budget, and taken by a
+    // look that covered it. Compile reads "not in startText" as "not on the
+    // page before the work", which only a complete startText can say.
+    const startTextComplete = Boolean(sig) && joined.length <= START_TEXT_BUDGET && (!sig!.observation || coverageComplete(sig!.observation.coverage));
     const text = [renderCandidates(candidates), components].filter(Boolean).join('\n');
     return {
       ids: candidates.map((s) => s.id),
       text,
-      context: { url, ...(fingerprint ? { fingerprint } : {}), ...(startText ? { startText } : {}) },
+      context: {
+        url,
+        ...(fingerprint ? { fingerprint } : {}),
+        ...(startText ? { startText, startDialect: CURRENT_DIALECT, ...(startTextComplete ? {} : { startTextComplete: false }) } : {}),
+      },
     };
   } catch {
     return none;

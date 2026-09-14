@@ -29,7 +29,7 @@ const ctx = (over: Partial<{ tag: string; tool: string; value?: string; position
 });
 
 /** An observation: what the diff holds, and what a fresh look at the page shows. */
-const seen = (added: string[] | null, live: string[] | null): ChangeObservation => ({ added, live: async () => live });
+const seen = (added: string[] | null, live: string[] | null): ChangeObservation => ({ added, live: async () => (live === null ? null : { lines: live, complete: true }) });
 
 describe('expectedChangesVerdict', () => {
   it('passes with nothing to say when the step recorded no lines, or only transient ones', async () => {
@@ -153,9 +153,41 @@ describe('expectedChangesVerdict', () => {
     expect(dialog.absentDialog).toBeUndefined();
   });
 
+  /**
+   * ROBUSTNESS.md finding 4. A live look that could not cover the page (a cap
+   * reached, a visible frame unread, a virtualised list) has not shown a line
+   * ABSENT. The stop stands — nothing established the effect — but it is
+   * marked unobserved and says why; and the conditional branch that reads
+   * absence as "the dialog did not open" is never taken on such a look.
+   */
+  it('keeps the stop on a look that could not cover the page, marks it unobserved, and never takes the absent-dialog branch on it', async () => {
+    const partial = (lines: string[]): ChangeObservation => ({
+      added: [],
+      live: async () => ({ lines, complete: false, coverage: { nodesWalked: 4000, nodeCap: 4000, nodesTruncated: false, linesTruncated: true, alertsTruncated: false, shadowRootsWalked: 0, frames: { observed: 0, hidden: 0, overCap: 0, inaccessible: [] }, collections: { partial: false, evidence: [] } } }),
+    });
+    const hard = await expectedChangesVerdict(['- heading "{{v1}}"'], { v1: 'Widget A' }, ctx(), partial([]));
+    expect(hard.unobserved).toBe(true);
+    expect(hard.stop).toBe('after step 3 the page did not show "- heading \\"Widget A\\"" as it did when recorded, and that could not be confirmed: capture incomplete (the line cap was reached) — the step ran but its effect was not established');
+    const plain = await expectedChangesVerdict(['- heading "Saved"'], {}, ctx(), partial([]));
+    expect(plain.unobserved).toBe(true);
+    expect(plain.stop).toMatch(/^after step 3 none of the 1 recorded page change\(s\) appeared \(e\.g\. "- heading \\"Saved\\""\), and that could not be confirmed: capture incomplete \(the line cap was reached\)/);
+    const dialog = await expectedChangesVerdict(['- dialog "Discard changes?"'], {}, ctx(), partial([]));
+    expect(dialog.absentDialog).toBeUndefined();
+    expect(dialog.unobserved).toBe(true);
+    expect(dialog.stop).toBe('after step 3 the recorded dialog "Discard changes?" was not seen, but the page could not be observed in full (the line cap was reached) — its absence cannot be assumed');
+    // a live page that could not be read at all is the same: never [] for "unavailable"
+    const unreadable = await expectedChangesVerdict(['- dialog "Discard changes?"'], {}, ctx(), { added: [], live: async () => null });
+    expect(unreadable.absentDialog).toBeUndefined();
+    expect(unreadable.stop).toMatch(/could not be observed in full \(the page could not be read\)/);
+    // what an incomplete look DOES show is still evidence: no stop, nothing unobserved
+    expect(await expectedChangesVerdict(['- heading "Saved"'], {}, ctx(), partial(['- heading "Saved"']))).toEqual({
+      warnings: ['step 3: none of the 1 expected page change(s) appeared in the step diff (found on the page instead)'],
+    });
+  });
+
   it('reads the diff first: a change that landed in the diff needs no live look', async () => {
     let looked = 0;
-    const obs: ChangeObservation = { added: ['- heading "Widget A"'], live: async () => { looked++; return []; } };
+    const obs: ChangeObservation = { added: ['- heading "Widget A"'], live: async () => { looked++; return { lines: [], complete: true }; } };
     expect(await expectedChangesVerdict(['- heading "{{v1}}"'], { v1: 'Widget A' }, ctx(), obs)).toEqual({ warnings: [] });
     expect(looked).toBe(0);
   });
@@ -311,7 +343,7 @@ describe('the emitted adapter', () => {
     expect(second).not.toContain('expectChanges(');
     // the same rule, embedded once each, and nothing of the old locator union
     expect(source).toContain('async function expectedChangesVerdict(');
-    expect(source).toContain('async function capturePageLines(page: Page)');
+    expect(source).toContain('async function capturePageLines(page: Page, d: LineDialect = 1)');
     expect(source).toContain('const EXPECT_WAIT_MS = 5_000;');
     expect(source).toContain('{ timeout: EXPECT_WAIT_MS, message: `${ctx.tag}: the recorded page change did not appear` }');
     expect(bodiesOf(source)).not.toContain('toBeVisible');

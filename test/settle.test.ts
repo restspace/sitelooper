@@ -3,7 +3,7 @@ import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { BrowserSession } from '../src/daemon/browser.js';
 import { waitForContent } from '../src/daemon/refs.js';
-import { inFlightRequests, installRequestTracking, settleDom, settlePage } from '../src/daemon/settle.js';
+import { inFlightRequests, pageTraffic, settleDom, settlePage } from '../src/daemon/settle.js';
 
 /**
  * Browser-gated, as test/diff.test.ts:
@@ -79,7 +79,7 @@ d('settle (real page)', () => {
   it('settlePage waits for a fetch the click starts, and returns when it lands', async () => {
     const page = await session.getPage();
     await page.goto(BASE);
-    installRequestTracking(page);
+    pageTraffic(page);
     const t0 = Date.now();
     await page.click('#go');
     await settlePage(page, { maxMs: 3_000 });
@@ -89,11 +89,14 @@ d('settle (real page)', () => {
     expect(elapsed).toBeLessThan(3_500); // and it is bounded
   }, 30_000);
 
-  it('does not wait out a long-poll', async () => {
+  // No path is taken for a stream by its name any more (ROBUSTNESS.md finding 6):
+  // a poll the page opened before the settle is the page's own, and is not waited for.
+  it('does not wait out a long-poll the page already had open', async () => {
     const page = await session.getPage();
     await page.goto(BASE);
-    installRequestTracking(page);
+    pageTraffic(page);
     await page.click('#poll');
+    await new Promise((r) => setTimeout(r, 500));
     const t0 = Date.now();
     await settlePage(page);
     expect(Date.now() - t0).toBeLessThan(1_000); // no 2s deadline paid
@@ -102,7 +105,7 @@ d('settle (real page)', () => {
   it('settlePage is bounded when the page never stops asking', async () => {
     const page = await session.getPage();
     await page.goto(BASE);
-    installRequestTracking(page);
+    pageTraffic(page);
     await page.evaluate(() => {
       void fetch('/stuck');
     });

@@ -13,7 +13,7 @@
 // definition the converged output of a prior run, so `status: 'validated'`
 // is not a guess — that is what "compiled" means.
 import type { Flow, FlowStep } from '../skills/flow.js';
-import { SKILL_CONTRACT, type Skill, type SkillStore } from '../skills/store.js';
+import { contractFor, type Skill, type SkillStore } from '../skills/store.js';
 import type { SpecFlow, SpecSegment, SpecStep } from './ir.js';
 
 /**
@@ -56,8 +56,10 @@ function toSkill(spec: SpecFlow, step: SpecStep, seg: SpecSegment, index: number
     // contract — and its `validated` is the spec's own claim, which
     // `verifiedContract` has to match or `isVerified` would read the
     // procedure as stale the moment it was manufactured.
-    contract: SKILL_CONTRACT,
-    stats: { uses: 0, successes: 0, partial: 0, created: now, failedAtStep: {}, fallthroughs: 0, verifiedContract: SKILL_CONTRACT },
+    // The contract is the one its steps need (store.ts contractFor): 3 when
+    // they carry frame or page context, 2 otherwise.
+    contract: contractFor(seg.steps),
+    stats: { uses: 0, successes: 0, partial: 0, created: now, failedAtStep: {}, fallthroughs: 0, verifiedContract: contractFor(seg.steps) },
     status: 'validated',
     provenance: { session: `spec:${spec.name}`, instruction: step.instruction, created: now },
   };

@@ -1,6 +1,17 @@
 import type { Page } from 'playwright-core';
 import { clip } from '../shared/text.js';
-import { SNAPSHOT_LIMITS, describeInPage, isInteractiveLine } from '../execution/snapshot.js';
+import {
+  CAPTURE_TIMEOUT_MS,
+  CURRENT_DIALECT,
+  SNAPSHOT_LIMITS,
+  alertsComplete,
+  coverageComplete,
+  describeCoverage,
+  observePage,
+  renderAlerts,
+  renderLines,
+  type PageObservation,
+} from '../execution/snapshot.js';
 import { truncate } from './refs.js';
 
 /**
@@ -11,11 +22,19 @@ import { truncate } from './refs.js';
 export interface PageSignature {
   url: string;
   title: string;
+  /** Interactive lines in CURRENT_DIALECT — what new recordings are written in. */
   lines: string[];
   alerts: string[];
+  /**
+   * The structured observation the lines were rendered from: a replay renders
+   * it again in an older recorded step's dialect, and its coverage says whether
+   * a line missing from `lines` is absent from the page. Absent on a signature
+   * built by hand (tests, the site model's fixtures): read as complete.
+   */
+  observation?: PageObservation;
 }
 
-const CAPTURE_TIMEOUT = 2_000;
+const CAPTURE_TIMEOUT = CAPTURE_TIMEOUT_MS;
 const MAX_ALERT_CHARS = SNAPSHOT_LIMITS.maxAlertChars;
 const MAX_LINE_CHARS = 120;
 const LIST_LINE_BUDGET = 12;
@@ -28,37 +47,39 @@ const DIFF_BUDGET = 700;
  * to "no diff", never to an error.
  */
 export async function captureSignature(page: Page): Promise<PageSignature | null> {
-  let timer: ReturnType<typeof setTimeout> | undefined;
   try {
-    return await Promise.race([
-      capture(page),
+    // NOT ariaSnapshot(): every call to it — mode:'ai' *or* plain — re-mints
+    // Playwright's [ref=eN] registry, and a plain call leaves it empty, so the
+    // @refs the agent holds from its last explicit snapshot stop resolving.
+    // This runs after every action, so it walks the DOM itself instead.
+    // observePage is the shared observation (src/execution/snapshot.ts): the
+    // same page function the compiled artifact embeds, with the same limits
+    // and its own deadline (the main document, then what is left for frames).
+    const observation = await observePage(page);
+    if (!observation) return null;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const title = await Promise.race([
+      page.title(),
       new Promise<null>((resolve) => {
         timer = setTimeout(() => resolve(null), CAPTURE_TIMEOUT);
       }),
-    ]);
+    ]).finally(() => clearTimeout(timer));
+    if (title === null) return null;
+    return {
+      url: observation.url || page.url(),
+      title,
+      lines: renderLines(observation, CURRENT_DIALECT),
+      alerts: renderAlerts(observation, CURRENT_DIALECT),
+      observation,
+    };
   } catch {
     return null;
-  } finally {
-    clearTimeout(timer);
   }
 }
 
-async function capture(page: Page): Promise<PageSignature> {
-  // NOT ariaSnapshot(): every call to it — mode:'ai' *or* plain — re-mints
-  // Playwright's [ref=eN] registry, and a plain call leaves it empty, so the
-  // @refs the agent holds from its last explicit snapshot stop resolving.
-  // This runs after every action, so it walks the DOM itself instead.
-  // describeInPage is the shared dialect (src/execution/snapshot.ts): the
-  // same page function the compiled artifact embeds, with the same limits.
-  // Everything it needs is passed in: it is serialised into the page, so
-  // module-level constants are not in scope there.
-  const { lines, alerts } = await page.evaluate(describeInPage, SNAPSHOT_LIMITS);
-  return {
-    url: page.url(),
-    title: await page.title(),
-    lines: lines.filter(isInteractiveLine),
-    alerts,
-  };
+/** Whether a signature's look covered the page (a hand-built one, with no observation, is taken as complete). */
+function covered(sig: PageSignature): boolean {
+  return !sig.observation || (coverageComplete(sig.observation.coverage) && alertsComplete(sig.observation.coverage));
 }
 
 /**
@@ -93,8 +114,15 @@ export interface ChangeReport {
   /** More lines differ than can usefully be listed. */
   substantial: boolean;
   urlChanged: boolean;
-  /** The two signatures are identical: the page has not reacted (yet). */
+  /**
+   * The two signatures are identical AND both looks covered the page: the page
+   * has not reacted (yet). A look that stopped at a cap or could not read a
+   * visible frame has not shown that nothing changed, only that nothing
+   * changed in what it saw — that is `noVisibleChange` without this.
+   */
   nothingChanged: boolean;
+  /** Nothing differs between the two signatures as captured, however much of the page they covered. */
+  noVisibleChange: boolean;
 }
 
 export function describeChange(
@@ -130,7 +158,13 @@ export function describeChange(
     for (const line of removed) parts.push(`- ${clip(line, MAX_LINE_CHARS)}`);
   }
 
-  const text = parts.length ? truncate(parts.join('; '), DIFF_BUDGET) : 'no visible change';
+  const complete = covered(before) && covered(after);
+  const partly = [before, after].map((s) => (s.observation ? describeCoverage(s.observation.coverage) : '')).find(Boolean);
+  const text = parts.length
+    ? truncate(parts.join('; '), DIFF_BUDGET)
+    : complete
+      ? 'no visible change'
+      : `no visible change in what could be observed (capture incomplete: ${clip(partly ?? 'coverage unknown', 160)})`;
   const headParts = substantial
     ? [...head, `page changed substantially (~${changed} lines differ)`]
     : head;
@@ -139,7 +173,8 @@ export function describeChange(
     headline: headParts.length ? truncate(headParts.join('; '), DIFF_BUDGET) : text,
     substantial,
     urlChanged,
-    nothingChanged: parts.length === 0,
+    nothingChanged: parts.length === 0 && complete,
+    noVisibleChange: parts.length === 0,
   };
 }
 

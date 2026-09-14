@@ -2,7 +2,7 @@ import { isMutatingAction, mutatesSteps } from '../execution/lifecycle.js';
 import type { InstructionResult, SkillRecord } from '../agent/loop.js';
 import type { Report } from '../agent/report.js';
 import type { RecordedEntry, RecordedInstruction } from '../daemon/recorder.js';
-import { compileSkills, escapeRe, fillParams, sameProcedure, urlMatches } from './compile.js';
+import { compileSkills, escapeRe, fillParams, samePageContexts, sameProcedure, urlMatches } from './compile.js';
 import { ComponentStore, learnRecipes } from './components.js';
 import { contractOf, isVerified, successRate, type Skill, type SkillStore } from './store.js';
 
@@ -108,7 +108,8 @@ export function learnFromInstruction(
           s.status !== 'demoted' &&
           (s.seq?.index ?? 0) === (sk.seq?.index ?? 0) &&
           (s.seq?.of ?? 1) === (sk.seq?.of ?? 1) &&
-          (s.template === sk.template || sameProcedure(s, sk)),
+          (s.template === sk.template || sameProcedure(s, sk)) &&
+          samePageContexts(s, sk),
       ),
     );
     if (twins.every(Boolean) && new Set(twins.map((t) => t!.seq?.chain ?? t!.id)).size === 1) {

@@ -1,11 +1,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import type { Locator, Page } from 'playwright-core';
-import { NAVIGATING_ACTIONS, inFlightRequests, robustClick, urlHeldStill } from '../execution/browser.js';
-import { addedLines } from '../execution/snapshot.js';
+import { NAVIGATING_ACTIONS, outcomeLabel, outcomeOfError, robustClick, type ActionOutcome } from '../execution/browser.js';
+import { beginAction, type ActionExpectation, type ActionObservation, type SettleVerdict } from '../execution/action.js';
+import { CURRENT_DIALECT, addedLines, type PageObservation } from '../execution/snapshot.js';
+import { POPUP_WAIT_MS, type PageEffect } from '../execution/context.js';
 import { isElementRead, readElements } from '../execution/observe.js';
 export { fireWhenAttached, urlHeldStill } from '../execution/browser.js';
-import type { BrowserSession } from '../daemon/browser.js';
+import { ACTION_DEADLINE_MS, type BrowserSession } from '../daemon/browser.js';
 import { clip } from '../shared/text.js';
 import { captureSignature, describeChange, type PageSignature } from '../daemon/diff.js';
 import { html5DragDrop, selectedOption, syntheticHover } from '../daemon/inputs.js';
@@ -52,6 +54,13 @@ const AUTO_SNAPSHOT_CHARS = 3_500;
 const REACTION_MS = 400;
 /** Tools whose effect may be a navigation the app performs on the answer to a request (shared: src/execution/browser.ts). */
 const NAVIGATING = new Set(NAVIGATING_ACTIONS);
+/**
+ * Inputs: the tools whose own save an app commonly debounces. Their action
+ * observation gives a request the start grace from the dispatch itself — a
+ * fill changes a value, not the DOM, so nothing else would announce the save
+ * that starts 200ms later (src/execution/action.ts).
+ */
+const INPUT_TOOLS = new Set(['fill', 'type', 'press', 'select', 'check']);
 
 const MAX_BATCH_STEPS = 10;
 
@@ -425,6 +434,12 @@ export interface ToolExecution {
    * ones and keeps this result, exactly as it does after an explicit snapshot.
    */
   snapshotIncluded?: boolean;
+  /**
+   * What is known about a state-changing action: from its observation when it
+   * ran (src/execution/action.ts), from the error it threw when it did not.
+   * A failed action's result also ends with `outcomeLabel`.
+   */
+  outcome?: ActionOutcome;
 }
 
 /** Tool definitions for a session: run_skill only exists when a skill store is attached. */
@@ -444,6 +459,8 @@ export async function executeTool(
   screenshotDir: string,
   /** Cancels cooperative waits (wait_for polling) when the caller's deadline expires. */
   signal?: AbortSignal,
+  /** `deadlineMs`: the whole-action deadline of a state-changing tool (ACTION_DEADLINE_MS). */
+  options: { deadlineMs?: number } = {},
 ): Promise<ToolExecution> {
   try {
     // Inside the guard: a dead browser (getPage throwing) must come back as
@@ -453,8 +470,8 @@ export async function executeTool(
     if (name === 'run_skill') return await executeSkill(session, args, screenshotDir, signal);
     const diffing = STATE_CHANGING.has(name) ? await session.getPage().catch(() => null) : null;
     const before: PageSignature | null = diffing ? await captureSignature(diffing) : null;
-    const { result } = await runStep(session, name, args, screenshotDir, signal, { before });
-    const observed = diffing && before ? await stateDiff(diffing, before) : EMPTY_OBSERVATION;
+    const { result, outcome, settled } = await runStep(session, name, args, screenshotDir, signal, { before, deadlineMs: options.deadlineMs });
+    const observed = diffing && before ? await stateDiff(diffing, before, undefined, Boolean(settled)) : EMPTY_OBSERVATION;
     // goto/back report a url and a title, which is the one thing the agent
     // already knew; what it needs is what is ON the page it asked for.
     const landed = NAVIGATED.has(name) ? await landingSnapshot(session) : '';
@@ -475,8 +492,16 @@ export async function executeTool(
       result: truncate(result + scrubSecrets(observed.note) + landed + dialogNote(session), TOOL_RESULT_BUDGET + 8200),
       isError: false,
       snapshotIncluded: observed.snapshotIncluded || Boolean(landed),
+      ...(outcome ? { outcome } : {}),
     };
   } catch (err) {
+    // A failed state-changing action says what is known about it, so the model
+    // (and a caller) can tell "nothing happened, try again" from "it may have
+    // happened, look first" without reading the wording.
+    if (STATE_CHANGING.has(name)) {
+      const outcome = outcomeOfError(err);
+      return { result: truncate(`ERROR: ${explainError(err, args)} ${outcomeLabel(outcome)}`, TOOL_RESULT_BUDGET), isError: true, outcome };
+    }
     return { result: truncate(`ERROR: ${explainError(err, args)}`, TOOL_RESULT_BUDGET), isError: true };
   }
 }
@@ -505,12 +530,15 @@ async function executeSkill(
   const page = await session.getPage();
   const before = await captureSignature(page);
   // The replay stays on its page: a replayed click that opens a tab (a
-  // recorded stray click on a target=_blank link) must not move it.
+  // recorded stray click on a target=_blank link) must not move it. Only a
+  // step RECORDED opening a popup, closing its page or switching tabs moves
+  // the pin, and the session is left on the page the procedure ended on.
   const replay = await session.withPinnedPage(page, () =>
     replaySkill(skill, params, {
       page,
       signal,
-      exec: async (tool, stepArgs, resolved, via) => runStep(session, tool, stepArgs, screenshotDir, signal, { resolved, via }),
+      follow: (next) => session.repin(next),
+      exec: async (tool, stepArgs, resolved, via, action) => runStep(session, tool, stepArgs, screenshotDir, signal, { resolved, via, expect: action?.expect }),
     }),
   );
   // Mechanism 2 (PLAN-replay-v2): a url segment that soft-matched and was
@@ -574,6 +602,10 @@ interface StepOptions {
   /** Replay: locators already resolved through a skill's chain. */
   resolved?: Record<string, Locator>;
   via?: { skill: string; step: number };
+  /** Replay: the step's expected effect, which the action's observation polls for (effect-verified). */
+  expect?: ActionExpectation;
+  /** The whole-action deadline (ACTION_DEADLINE_MS). */
+  deadlineMs?: number;
 }
 
 /**
@@ -590,7 +622,7 @@ async function runStep(
   screenshotDir: string,
   signal?: AbortSignal,
   opts: StepOptions = {},
-): Promise<{ result: string; diff?: StepDiff; captureFailed?: true }> {
+): Promise<StepRun> {
   // Describe the targets BEFORE acting: a click can navigate or unmount the
   // element, and a recorder that runs afterwards has nothing left to describe.
   // Recording never fails a run — a broken capture just means a missing step.
@@ -602,59 +634,190 @@ async function runStep(
       : null;
   const wantDiff = Boolean(session.learn) && page && STATE_CHANGING.has(name);
   const before = wantDiff ? (opts.before ?? (await captureSignature(page!))) : null;
-  // Secrets ({{env:NAME}}) resolve HERE and only here — after the recorder
-  // captured the marker-bearing args above, immediately before the browser
-  // needs the real value. Everything persisted or shown to the model keeps
-  // the marker; scrubbing below catches values the page echoes back.
-  const result = scrubSecrets(await dispatch(session, name, resolveSecretsDeep(args), screenshotDir, signal, opts.resolved));
-  let diff: StepDiff | undefined;
-  // The page signature is a race against CAPTURE_TIMEOUT, and it loses on a
-  // page that is still tearing down a navigation. When it loses there is no
-  // evidence either way about what the action did — which is a different
-  // thing from evidence that it did nothing, and the two used to arrive at
-  // the effect gates as the same `diff === undefined`.
-  let captureFailed = false;
-  let fingerprintAfter: number[] | undefined;
-  if (wantDiff && !before) captureFailed = true;
-  if (wantDiff && before) {
-    let after = await settledSignature(page!);
+  // Which page this step runs on, and whether it opens another: the pages
+  // open before it, and a popup listener attached BEFORE the action
+  // dispatches (a target=_blank click can raise its popup while the click is
+  // still returning). Recorded only when a recorder is there to keep it.
+  const pagesBefore = pending && page ? await session.listPages().catch(() => [] as Page[]) : [];
+  let opened: Page | null = null;
+  const onPopup = (p: Page) => {
+    opened ??= p;
+  };
+  const watchPopup = Boolean(pending && page && POPUP_TOOLS.has(name) && typeof page.on === 'function');
+  if (watchPopup) page!.on('popup', onPopup);
+  // One observation per state-changing action, begun BEFORE it dispatches
+  // (src/execution/action.ts): the whole-action deadline the click tiers are
+  // cut to, the traffic baseline, and the expected effect when replay has one.
+  // Every caller gets it, not only learning mode — the settle it ends with is
+  // what the agent's state diff is taken after, too.
+  const actionPage = STATE_CHANGING.has(name) ? (page ?? (await session.getPage().catch(() => null))) : null;
+  let obs: ActionObservation | null = null;
+  try {
+    // Secrets ({{env:NAME}}) resolve HERE and only here — after the recorder
+    // captured the marker-bearing args above, immediately before the browser
+    // needs the real value. Everything persisted or shown to the model keeps
+    // the marker; scrubbing below catches values the page echoes back.
+    obs = actionPage
+      ? beginAction(actionPage, {
+          deadlineMs: opts.deadlineMs ?? ACTION_DEADLINE_MS,
+          navigating: NAVIGATING.has(name),
+          graceFromDispatch: INPUT_TOOLS.has(name),
+          expect: opts.expect,
+        })
+      : null;
+    const result = scrubSecrets(await dispatch(session, name, resolveSecretsDeep(args), screenshotDir, signal, opts.resolved, obs));
+    // The action's evidence: the DOM quiet, the requests it started landed, a
+    // debounced request given its moment, the url held still after a tool that
+    // may navigate, the expected effect polled for.
     // A click that starts a request and routes on its answer looks finished
     // while the request is in flight: the DOM is quiet and the url is still
     // the old one. fwat2's sign-in was recorded that way — expected url "/"
     // and an added "Logging in..." button — and the replay, which arrived at
-    // the landing page, could match neither. Give a late navigation a moment
-    // before the effect is taken as final; a step that changed the url
-    // already, or changes nothing, pays nothing.
-    // The same in the other direction: a click whose url changed once and
-    // then again (Odoo autosaves the record, then opens the catalogue) was
-    // captured between the two, and the compiler cut a segment boundary at
-    // a page the procedure was only passing through. So: wait until the url
-    // has held still, whether it has moved yet or not.
-    if (after && NAVIGATING.has(name)) {
-      const seen = await urlHeldStill(page!, before.url, () => inFlightRequests(page!));
-      if (seen !== after.url) after = await settledSignature(page!);
-    }
-    if (after) {
-      diff = scrubSecretsDeep({
-        url: after.url,
-        alerts: after.alerts.filter((a) => !before.alerts.includes(a)),
-        added: addedLines(before.lines, after.lines) ?? [],
-      });
-      // The step crossed a page-template seam (its url pattern changed):
-      // fingerprint the new page so compile can split a skill here and gate
-      // the next segment on the page it actually runs on.
-      if (compiledUrlPattern(after.url, undefined, { query: false }) !== compiledUrlPattern(before.url, undefined, { query: false })) {
-        fingerprintAfter = (await fingerprintPage(page!)) ?? undefined;
+    // the landing page, could match neither. The same in the other direction:
+    // a click whose url changed once and then again (Odoo autosaves the
+    // record, then opens the catalogue) was captured between the two, and the
+    // compiler cut a segment boundary at a page the procedure was only passing
+    // through. Both are the observation's url wait now (urlHeldStill inside it).
+    const verdict: SettleVerdict | null = obs ? await obs.settle() : null;
+    let diff: StepDiff | undefined;
+    let observations: StepRun['observations'];
+    // The page signature is a race against CAPTURE_TIMEOUT, and it loses on a
+    // page that is still tearing down a navigation. When it loses there is no
+    // evidence either way about what the action did — which is a different
+    // thing from evidence that it did nothing, and the two used to arrive at
+    // the effect gates as the same `diff === undefined`.
+    let captureFailed = false;
+    let fingerprintAfter: number[] | undefined;
+    if (wantDiff && !before) captureFailed = true;
+    if (wantDiff && before) {
+      const after = verdict ? await captureSignature(page!) : await settledSignature(page!);
+      if (after) {
+        // Recorded in CURRENT_DIALECT (the signature's lines), and tagged so:
+        // compile carries the tag onto the step's expectation, and every runner
+        // renders the live page in the dialect the expectation was written in.
+        diff = scrubSecretsDeep({
+          url: after.url,
+          alerts: after.alerts.filter((a) => !before.alerts.includes(a)),
+          added: addedLines(before.lines, after.lines) ?? [],
+          dialect: CURRENT_DIALECT,
+        });
+        // The observations themselves, in memory only (never recorded): a replay
+        // of a step recorded in an older dialect re-renders them in that dialect
+        // rather than judging its stored lines against these. Scrubbed as the
+        // diff is, so nothing rendered from them carries a resolved secret.
+        if (before.observation && after.observation) {
+          observations = scrubSecretsDeep({ before: before.observation, after: after.observation });
+        }
+        // The step crossed a page-template seam (its url pattern changed):
+        // fingerprint the new page so compile can split a skill here and gate
+        // the next segment on the page it actually runs on.
+        if (compiledUrlPattern(after.url, undefined, { query: false }) !== compiledUrlPattern(before.url, undefined, { query: false })) {
+          fingerprintAfter = (await fingerprintPage(page!)) ?? undefined;
+        }
+      } else {
+        captureFailed = true;
       }
-    } else {
-      captureFailed = true;
     }
+    const context = pending && page ? await pageContextOf(session, page, name, args, pagesBefore, opened) : {};
+    // A step that closed its own page left nothing to capture, and that is an
+    // observation, not a failed one: the close is what it did.
+    if (context.effect?.kind === 'close' && captureFailed) captureFailed = false;
+    if (context.effect && context.effect.kind !== 'navigate' && context.afterPage) {
+      fingerprintAfter = (await fingerprintPage(context.afterPage)) ?? undefined;
+    }
+    recorder?.commit(pending, result, {
+      diff,
+      via: opts.via,
+      fingerprintAfter,
+      ...(context.page !== undefined ? { page: context.page } : {}),
+      ...(context.effect ? { effect: context.effect, afterUrl: context.afterPage?.url() } : {}),
+    });
+    return {
+      result,
+      diff,
+      ...(observations ? { observations } : {}),
+      ...(captureFailed ? { captureFailed: true as const } : {}),
+      ...(verdict ? { outcome: verdict.outcome, settled: true as const } : {}),
+    };
+  } finally {
+    obs?.cancel();
+    if (watchPopup) page!.off('popup', onPopup);
   }
-  recorder?.commit(pending, result, { diff, via: opts.via, fingerprintAfter });
-  return { result, diff, ...(captureFailed ? { captureFailed: true as const } : {}) };
 }
 
+/** Tools whose action can open a popup. */
+const POPUP_TOOLS = new Set(['click', 'dblclick', 'modifier_click', 'press', 'select', 'check']);
 
+/**
+ * How long a page that was itself opened by another gets to close after a
+ * step (window.close() on the answer to the request its button sent). Paid
+ * only on such pages, and only while recording.
+ */
+const CLOSE_GRACE_MS = 500;
+
+/**
+ * The page facts a recorded step carries (SkillStep.page / effect): which of
+ * the open pages it ran on — only when there was more than one — and whether
+ * it opened a popup, closed its page, or switched tabs, with the page the
+ * procedure continues on.
+ */
+async function pageContextOf(
+  session: BrowserSession,
+  page: Page,
+  name: string,
+  args: Record<string, unknown>,
+  pagesBefore: Page[],
+  opened: Page | null,
+): Promise<{ page?: number; effect?: PageEffect; afterPage?: Page }> {
+  const index = pagesBefore.indexOf(page);
+  const out: { page?: number; effect?: PageEffect; afterPage?: Page } = pagesBefore.length > 1 && index >= 0 ? { page: index } : {};
+  if (name === 'tabs') {
+    if (typeof args.switch_to !== 'number') return out;
+    const now = await session.getPage().catch(() => null);
+    return { ...out, effect: { kind: 'switch', to: args.switch_to }, ...(now ? { afterPage: now } : {}) };
+  }
+  if (!page.isClosed() && POPUP_TOOLS.has(name)) {
+    // The event may land after the capture; a page this one opened is the
+    // same fact read off the context.
+    if (!opened) {
+      const pages = await session.listPages().catch(() => [] as Page[]);
+      for (const p of pages) {
+        if (pagesBefore.includes(p)) continue;
+        if ((await p.opener().catch(() => null)) === page) {
+          opened = p;
+          break;
+        }
+      }
+    }
+    if (!opened && (await page.opener().catch(() => null))) {
+      await page.waitForEvent('close', { timeout: CLOSE_GRACE_MS }).catch(() => {});
+    }
+  }
+  if (page.isClosed()) {
+    const now = await session.getPage().catch(() => null);
+    return { ...out, effect: { kind: 'close' }, ...(now ? { afterPage: now } : {}) };
+  }
+  if (opened && !opened.isClosed()) {
+    await opened.waitForLoadState('domcontentloaded', { timeout: POPUP_WAIT_MS }).catch(() => {});
+    return { ...out, effect: { kind: 'popup', urlPattern: compiledUrlPattern(opened.url()) }, afterPage: opened };
+  }
+  return out;
+}
+
+/** What one step run hands back to its caller (replay's StepExecutor). */
+export interface StepRun {
+  result: string;
+  diff?: StepDiff;
+  /** The before/after observations `diff` was rendered from, when both were taken. */
+  observations?: { before: PageObservation; after: PageObservation };
+  captureFailed?: true;
+  /** How the action ended, when it was a state-changing tool with an observation. */
+  outcome?: ActionOutcome;
+  /** The action's observation settled the page, so a caller need not settle it again. */
+  settled?: true;
+}
+
+/** A signature taken once the page has loaded and the DOM has gone quiet: for a step that had no action observation. */
 async function settledSignature(page: Page): Promise<PageSignature | null> {
   try {
     await page.waitForLoadState('domcontentloaded').catch(() => {});
@@ -747,6 +910,8 @@ async function executeBatch(
   const notes: string[] = [];
   let ran = 0;
   let failedAt = -1;
+  // Whether the last step that ran left the page settled by its own action observation.
+  let lastSettled = false;
 
   for (const [i, step] of steps.entries()) {
     if (signal?.aborted) {
@@ -755,12 +920,15 @@ async function executeBatch(
     }
     const head = `${i + 1}. ${step.tool} ${summarize(step.args)} → `;
     try {
-      const { result } = await runStep(session, step.tool, step.args, screenshotDir, signal);
+      const { result, settled } = await runStep(session, step.tool, step.args, screenshotDir, signal);
+      lastSettled = Boolean(settled);
       lines.push(head + clip(result, BATCH_STEP_CHARS) + dialogNote(session).replace(/^\n/, ' '));
       ran++;
     } catch (err) {
+      lastSettled = false;
+      const outcome = STATE_CHANGING.has(step.tool) ? ` ${outcomeLabel(outcomeOfError(err))}` : '';
       lines.push(
-        head + 'ERROR: ' + clip(explainError(err, step.args), BATCH_STEP_ERROR_CHARS) +
+        head + 'ERROR: ' + clip(explainError(err, step.args), BATCH_STEP_ERROR_CHARS) + outcome +
           dialogNote(session).replace(/^\n/, ' '),
       );
       failedAt = i;
@@ -770,7 +938,7 @@ async function executeBatch(
     }
   }
 
-  const observed = page && before && (ran || failedAt >= 0) ? await stateDiff(page, before, BATCH_LINE_BUDGET) : EMPTY_OBSERVATION;
+  const observed = page && before && (ran || failedAt >= 0) ? await stateDiff(page, before, BATCH_LINE_BUDGET, lastSettled) : EMPTY_OBSERVATION;
   const body = [...lines, ...notes].join('\n') + scrubSecrets(observed.note);
   // Nothing ran at all — either the first step failed or the budget expired
   // before it started; that IS an error result.
@@ -815,16 +983,19 @@ const EMPTY_OBSERVATION: Observation = { note: '', snapshotIncluded: false };
  * ariaSnapshot re-mints Playwright's ref registry, and an agent halfway
  * through filling a form by @ref must keep the refs it is holding.
  */
-async function stateDiff(page: Page, before: PageSignature, lineBudget?: number): Promise<Observation> {
+async function stateDiff(page: Page, before: PageSignature, lineBudget?: number, settled = false): Promise<Observation> {
   try {
     // Settle first: DOM updates are usually async. Genuinely slow updates
     // are still wait_for's job — the diff is a hint, not proof.
-    await page.waitForLoadState('domcontentloaded').catch(() => {});
-    // settlePage, not settleDom: the diff should carry the app's ANSWER to the
-    // action, so a fetch the click started within the last moments is given
-    // its (bounded) chance to land before the after-capture. Long-polls are
-    // excluded by the tracker, so an app that never goes idle still settles.
-    await settlePage(page);
+    // An action with an observation has settled already (runStep): its
+    // evidence — the answer to a request it started, a debounced save — is
+    // what the diff should carry, and a second settle would only cost time.
+    // Otherwise settlePage, not settleDom: a fetch started within the last
+    // moments is given its (bounded) chance to land before the after-capture.
+    if (!settled) {
+      await page.waitForLoadState('domcontentloaded').catch(() => {});
+      await settlePage(page);
+    }
     let after = await captureSignature(page);
     if (!after) return EMPTY_OBSERVATION;
     let change = describeChange(before, after, lineBudget);
@@ -835,7 +1006,10 @@ async function stateDiff(page: Page, before: PageSignature, lineBudget?: number)
     // bounded window to show its FIRST mutation. This is a condition, not a
     // sleep: an action that already changed something never reaches it, and a
     // late one returns the moment it lands.
-    if (change.nothingChanged && (await firstMutation(page, REACTION_MS))) {
+    // noVisibleChange, not nothingChanged: the wait is for a late reaction in
+    // what the capture can see, and a capture that could not see everything
+    // is still worth giving that moment.
+    if (change.noVisibleChange && (await firstMutation(page, REACTION_MS))) {
       await settleDom(page);
       const settled = await captureSignature(page);
       if (settled) {
@@ -915,6 +1089,8 @@ async function dispatch(
   signal?: AbortSignal,
   /** Replay: pre-resolved locators that override args.target / args.source. */
   resolved?: Record<string, Locator>,
+  /** The action's observation: its deadline clamps the click tiers, and they report how the click went out. */
+  obs?: ActionObservation | null,
 ): Promise<string> {
   if (signal?.aborted) throw new Error('cancelled before starting: instruction budget exhausted');
   const page = await session.getPage();
@@ -929,9 +1105,9 @@ async function dispatch(
       });
 
     case 'click':
-      return robustClick(t(), { timeout });
+      return robustClick(t(), { timeout, obs: obs ?? undefined });
     case 'dblclick':
-      return robustClick(t(), { timeout, dbl: true });
+      return robustClick(t(), { timeout, dbl: true, obs: obs ?? undefined });
     case 'modifier_click': {
       // Validate BEFORE clicking: a missing list used to click plainly and
       // then throw on the result, so the model repeated a click that landed.

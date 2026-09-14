@@ -3,7 +3,7 @@ import { mutates, selectCandidates } from '../skills/learn.js';
 import { rethreadParams } from './rethread.js';
 import { diagnosticLine, rerecordFix, rerecordAction, type Diagnostic } from './diagnostics.js';
 import { LEAKED_STEP } from './rerecord.js';
-import { SKILL_CONTRACT, type Skill, type SkillParam, type SkillStep, type SkillStore } from '../skills/store.js';
+import { SKILL_CONTRACT, stepsCarryContext, type Skill, type SkillParam, type SkillStep, type SkillStore } from '../skills/store.js';
 import { seedRecipes, snapshotRecipes, type ComponentStore } from '../skills/components.js';
 import type { RecipeSnapshot } from '../execution/recipes.js';
 import { FINGERPRINT_DIMS } from '../execution/fingerprint.js';
@@ -25,7 +25,13 @@ import type { BrowserProfile } from '../execution/browser.js';
  * moved on since.
  */
 export interface SpecFlow {
-  version: 1;
+  /**
+   * 1, or 2 for a spec whose procedures say where a target lives or what a
+   * step does to its page (SkillStep.contexts / page / effect, contract 3). A
+   * build that lifts only version 1 refuses such a file rather than lowering
+   * it into procedures it would resolve against the main page.
+   */
+  version: 1 | 2;
   /** Flow name. */
   name: string;
   origin: string;
@@ -481,7 +487,7 @@ export function flowToSpec(
   }
 
   return {
-    spec: { version: 1, name: flow.name, origin: flow.origin, startUrl: flow.startUrl, vars: flow.vars ?? [], steps, ...(recipes ? { recipes } : {}), ...(flow.browser ? { browser: flow.browser } : {}) },
+    spec: { version: steps.some((st) => st.segments.some((seg) => stepsCarryContext(seg.steps))) ? 2 : 1, name: flow.name, origin: flow.origin, startUrl: flow.startUrl, vars: flow.vars ?? [], steps, ...(recipes ? { recipes } : {}), ...(flow.browser ? { browser: flow.browser } : {}) },
     warnings: diagnostics.map(diagnosticLine),
     diagnostics,
   };

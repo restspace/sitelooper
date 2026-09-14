@@ -543,6 +543,198 @@ document.querySelector('.mark').addEventListener('click', async (e) => {
 </script>
 </body></html>`;
 
+/**
+ * Everything the first snapshot dialect could not see (ROBUSTNESS.md finding
+ * 4), on one page: a `<label for>` input, a disabled button, a button in an
+ * OPEN shadow root (with a status toast beside it), a same-origin iframe, a
+ * frame from `cross` (another origin, when given), a `display:none` iframe,
+ * and a grid that says it has 500 rows while rendering 20. `?pad=N` puts N
+ * elements ahead of a trailing `Late` button, past the element cap;
+ * `?many=N` renders N buttons, past the line cap.
+ */
+const OBSERVE = (q: URLSearchParams) => {
+  const cross = q.get('cross');
+  const pad = Number(q.get('pad') ?? 0);
+  const many = Number(q.get('many') ?? 0);
+  return `<!doctype html><html><head><meta charset="utf-8"><title>Observe</title></head><body>
+<h1>Observe</h1>
+<label for="email">Email</label><input id="email" type="text" value="a@b.test">
+<label>Remember <input id="remember" type="checkbox" checked></label>
+<button id="dis" type="button" disabled>Disabled save</button>
+<div role="button" aria-disabled="true" aria-label="Soft disabled">x</div>
+<x-panel id="panel"></x-panel>
+<iframe id="same" src="/observe/frame/Frame%20button" style="width:200px;height:60px"></iframe>
+${cross ? `<iframe id="cross" src="${cross}/observe/frame/Cross%20button" style="width:200px;height:60px"></iframe>` : ''}
+<iframe id="hidden" src="/observe/frame/Hidden%20button" style="display:none"></iframe>
+${q.get('grid') === '0' ? '' : `<div role="grid" aria-label="Orders" aria-rowcount="500">
+${Array.from({ length: 20 }, (_, i) => `<div role="row"><span role="cell">Order ${i + 1}</span></div>`).join('\n')}
+</div>`}
+<div role="status">Saved</div>
+${Array.from({ length: many }, (_, i) => `<button type="button">B${i}</button>`).join('')}
+<div id="pad">${Array.from({ length: pad }, () => '<span></span>').join('')}</div>
+<button type="button" id="late">Late</button>
+<script>
+const host = document.getElementById('panel');
+const root = host.attachShadow({ mode: 'open' });
+root.innerHTML = '<button type="button">Shadow action</button><span id="lbl">Shadow field</span><input aria-labelledby="lbl"><div role="status">Shadow toast</div>';
+</script>
+</body></html>`;
+};
+
+const OBSERVE_FRAME = (label: string) => `<!doctype html><html><head><meta charset="utf-8"><title>Frame</title></head><body>
+<button type="button">${label}</button>
+</body></html>`;
+
+/**
+ * An effect that lands INSIDE an iframe (ROBUSTNESS.md finding 4): Open
+ * payment puts a `Confirm payment` button into the same-origin payment frame
+ * — in `ok` mode; in `broken` mode the click does nothing. Mark sits in the
+ * page itself. A procedure recorded in dialect 2 expects the frame's button;
+ * dialect 1 never saw frames at all. The Email input is named only by a
+ * `<label for>`, which dialect 1 renders as `""`.
+ */
+const EMBED = (mode: string) => `<!doctype html><html><head><meta charset="utf-8"><title>Embed</title></head><body>
+<h1>Embed</h1>
+<label for="email">Email</label><input id="email" type="text">
+<button id="open" type="button">Open payment</button>
+<iframe id="pay" src="/observe/frame/Card" style="width:300px;height:120px"></iframe>
+<button class="mark" type="button" data-id="embed">Mark</button>
+<script>
+document.getElementById('open').addEventListener('click', () => {
+  if (${JSON.stringify(mode)} !== 'ok') return;
+  const doc = document.getElementById('pay').contentDocument;
+  const b = doc.createElement('button');
+  b.type = 'button';
+  b.textContent = 'Confirm payment';
+  doc.body.appendChild(b);
+});
+document.querySelector('.mark').addEventListener('click', async (e) => {
+  await fetch('/mark/' + encodeURIComponent(e.target.dataset.id), { method: 'POST' });
+});
+</script>
+</body></html>`;
+
+/**
+ * Frame context (ROBUSTNESS.md finding 5): `/frames` has a Save of its own
+ * (POST /note) and a payment iframe, titled "Payment", whose document has an
+ * IDENTICAL Save (POST /frame-save). A procedure recorded on the frame's Save
+ * must press that one, never the page's. `/frames/renamed` is the same page
+ * after the app retitled and moved the frame: nothing recorded names it any
+ * more, and the right answer is to stop, not to press the page's Save.
+ */
+const FRAMES = (renamed: boolean) => `<!doctype html><html><head><meta charset="utf-8"><title>Frames</title></head><body>
+<h1>Checkout</h1>
+<button type="button" id="save">Save</button>
+<iframe ${renamed ? 'title="Checkout" src="/frames/moved"' : 'title="Payment" src="/frames/inner"'} style="width:300px;height:120px"></iframe>
+<script>
+document.getElementById('save').addEventListener('click', () => fetch('/note', { method: 'POST' }));
+</script>
+</body></html>`;
+
+const FRAME_INNER = `<!doctype html><html><head><meta charset="utf-8"><title>Payment</title></head><body>
+<button type="button" id="save">Save</button>
+<script>
+document.getElementById('save').addEventListener('click', () => fetch('/frame-save', { method: 'POST' }));
+</script>
+</body></html>`;
+
+/**
+ * Page context: `/opener` opens `/popup/child` in a new tab (target=_blank);
+ * the child's Approve posts /approve and closes its own window, and the
+ * procedure goes on to press After (POST /after) back on the opener.
+ */
+const OPENER = `<!doctype html><html><head><meta charset="utf-8"><title>Opener</title></head><body>
+<h1>Orders</h1>
+<a id="open" href="/popup/child" target="_blank">Open approval</a>
+<button type="button" id="after">After</button>
+<script>
+document.getElementById('after').addEventListener('click', () => fetch('/after', { method: 'POST' }));
+</script>
+</body></html>`;
+
+const POPUP_CHILD = `<!doctype html><html><head><meta charset="utf-8"><title>Approval</title></head><body>
+<h1>Approve order</h1>
+<button type="button" id="approve">Approve</button>
+<script>
+document.getElementById('approve').addEventListener('click', () => {
+  fetch('/approve', { method: 'POST' }).then(() => window.close());
+});
+</script>
+</body></html>`;
+
+/**
+ * Waiting (ROBUSTNESS.md finding 6). Each page's effect arrives through the
+ * server, which logs it, so a test asserts what the APPLICATION saw:
+ *  - `/debounce` (`?live=1`: with an event stream open from load): typing into Title saves 200ms after the last keystroke
+ *    (POST /api/save/<value>, answered 300ms later), then shows "Saved: <value>".
+ *  - `/live`: Refresh changes the page at once, posts /mark/live, and opens an
+ *    event stream (/api/feed) that never closes.
+ *  - `/notify`: Notify posts /api/notifications — an ordinary request on a path
+ *    named like a stream — answered after 700ms, then shows a Dismiss button.
+ *  - `/slowclick`: Start is covered by an overlay for 2.5s (forever with
+ *    `?forever=1`); a click shows "started" and posts /api/slow, which is never
+ *    answered.
+ */
+const DEBOUNCE = (live: boolean) => `<!doctype html><html><head><meta charset="utf-8"><title>Debounce</title></head><body>
+<h1>Draft</h1>
+<input id="title" aria-label="Title">
+<div id="saved"></div>
+<script>
+${live ? "fetch('/api/feed').then(async (res) => { const reader = res.body.getReader(); for (;;) { const { done } = await reader.read(); if (done) break; } });" : ''}
+let timer;
+document.getElementById('title').addEventListener('input', (e) => {
+  clearTimeout(timer);
+  const value = e.target.value;
+  timer = setTimeout(async () => {
+    await fetch('/api/save/' + encodeURIComponent(value), { method: 'POST' });
+    document.getElementById('saved').innerHTML = '<h2>Saved: ' + value + '</h2>';
+  }, 200);
+});
+</script>
+</body></html>`;
+
+const LIVE = `<!doctype html><html><head><meta charset="utf-8"><title>Live</title></head><body>
+<h1>Live</h1>
+<button id="refresh" type="button">Refresh</button>
+<div id="out"></div>
+<script>
+document.getElementById('refresh').addEventListener('click', () => {
+  document.getElementById('out').innerHTML = '<button type="button">Refreshed</button>';
+  fetch('/mark/live', { method: 'POST' });
+  fetch('/api/feed').then(async (res) => {
+    const reader = res.body.getReader();
+    for (;;) { const { done } = await reader.read(); if (done) break; }
+  });
+});
+</script>
+</body></html>`;
+
+const NOTIFY = `<!doctype html><html><head><meta charset="utf-8"><title>Notify</title></head><body>
+<h1>Inbox</h1>
+<button id="notify" type="button">Notify</button>
+<div id="out"></div>
+<script>
+document.getElementById('notify').addEventListener('click', async () => {
+  await fetch('/api/notifications', { method: 'POST' });
+  document.getElementById('out').innerHTML = '<button type="button">Dismiss notification</button>';
+});
+</script>
+</body></html>`;
+
+const SLOWCLICK = (forever: boolean) => `<!doctype html><html><head><meta charset="utf-8"><title>Slow click</title></head><body>
+<h1>Slow</h1>
+<button id="start" type="button" style="position:absolute;top:100px;left:20px">Start</button>
+<div id="cover" style="position:fixed;inset:0;background:rgba(0,0,0,0.1)"></div>
+<div id="out"></div>
+<script>
+${forever ? '' : "setTimeout(() => document.getElementById('cover').remove(), 2500);"}
+document.getElementById('start').addEventListener('click', () => {
+  document.getElementById('out').innerHTML = '<button type="button">started</button>';
+  fetch('/api/slow', { method: 'POST' });
+});
+</script>
+</body></html>`;
+
 export interface FixtureServer {
   server: http.Server;
   origin: string;
@@ -711,6 +903,18 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
     };
     const tail = (prefix: string) => decodeURIComponent(url.slice(prefix.length));
     if (req.method === 'GET') {
+      if (url === '/debounce' || url === '/debounce?live=1') return html(DEBOUNCE(url.endsWith('live=1')));
+      if (url === '/live') return html(LIVE);
+      if (url === '/notify') return html(NOTIFY);
+      if (url === '/slowclick' || url === '/slowclick?forever=1') return html(SLOWCLICK(url.endsWith('forever=1')));
+      if (url === '/api/feed') {
+        log.push('feed:open');
+        res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-cache' });
+        res.write('data: hello\n\n');
+        const tick = setInterval(() => res.write('data: tick\n\n'), 200);
+        res.on('close', () => clearInterval(tick));
+        return;
+      }
       if (url === '/stamp') return html(STAMP);
       if (url === '/hash') return html(HASH);
       if (url.startsWith('/menu/')) return html(MENU(tail('/menu/')));
@@ -723,18 +927,48 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
       if (url === '/controls') return html(CONTROLS);
       if (url === '/tick') return html(TICK);
       if (url === '/far') return html(FAR);
+      if (url.startsWith('/observe/frame/')) return html(OBSERVE_FRAME(tail('/observe/frame/')));
+      // A frame document that renders a button and then never answers again.
+      if (url === '/observe/stuck') return html('<!doctype html><button>Stuck</button><script>setTimeout(() => { for (;;) {} }, 100)</script>');
+      if (url === '/observe' || url.startsWith('/observe?')) return html(OBSERVE(new URLSearchParams(url.split('?')[1] ?? '')));
+      if (url.startsWith('/embed/')) return html(EMBED(tail('/embed/')));
+      if (url === '/frames') return html(FRAMES(false));
+      // Also at `/frames?renamed=1`, the SAME page as far as a recorded
+      // `/frames` pattern is concerned, so a replay reaches the frame lookup.
+      if (url === '/frames/renamed' || url === '/frames?renamed=1') return html(FRAMES(true));
+      if (url === '/frames/inner' || url === '/frames/moved') return html(FRAME_INNER);
+      if (url === '/opener') return html(OPENER);
+      if (url === '/popup/child') return html(POPUP_CHILD);
       if (url.startsWith('/stall/')) {
         const [pathPart, query = ''] = url.slice('/stall/'.length).split('?');
         return html(STALL(decodeURIComponent(pathPart), /(^|&)slow=1(&|$)/.test(query)));
       }
     }
     if (req.method === 'POST') {
+      if (url.startsWith('/api/save/')) {
+        log.push(`save:${tail('/api/save/')}`);
+        setTimeout(() => res.writeHead(200).end('ok'), 300);
+        return;
+      }
+      if (url === '/api/notifications') {
+        log.push('notify');
+        setTimeout(() => res.writeHead(200).end('ok'), 700);
+        return;
+      }
+      // Never answered: the request stays open until the page or the server goes.
+      if (url === '/api/slow') {
+        log.push('slow:start');
+        return;
+      }
       if (url.startsWith('/stamp/')) return write(`stamp:${tail('/stamp/')}`);
       if (url.startsWith('/toggle/')) return write(`toggle:${tail('/toggle/')}`);
       if (url.startsWith('/archive/')) return write(`archive:${tail('/archive/')}`);
       if (url.startsWith('/create/')) return write(`create:${tail('/create/')}`);
       if (url.startsWith('/tick/')) return write(`tick:${tail('/tick/')}`);
       if (url === '/note') return write('note');
+      if (url === '/frame-save') return write('frame-save');
+      if (url === '/approve') return write('approve');
+      if (url === '/after') return write('after');
     }
     if (url === '/items') {
       const stale = take('stale');
@@ -824,7 +1058,10 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
       },
     },
     async close() {
-      await new Promise<void>((r) => server.close(() => r()));
+      // An event stream or an unanswered request never closes on its own.
+      const closing = new Promise<void>((r) => server.close(() => r()));
+      server.closeAllConnections();
+      await closing;
     },
   };
 }

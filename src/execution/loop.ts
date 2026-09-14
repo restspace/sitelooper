@@ -34,7 +34,10 @@ import type { Locator, Page } from 'playwright-core';
  *     been repeated by the time it was noticed.
  *  5. THE CAP IS A BUDGET, NOT A FINISH LINE. A DRAIN that used every pass and
  *     still matches has work left and fails; a loop BOUNDED to the observed
- *     work was never given authority over the rest.
+ *     work was never given authority over the rest — it succeeds, but as
+ *     `partial` when records still match, never as `complete`. A drain that
+ *     empties what the page RENDERED of a virtualised collection is partial
+ *     too (the `coverage` hook).
  *  6. AN UNREADABLE GUARD IS NOT AN EMPTY ONE. A count that threw used to read
  *     as zero, and zero is the loop's normal exit, so a closed or navigating
  *     page reported an unfinished collection drained. A count that throws, or
@@ -64,6 +67,13 @@ export interface LoopHooks {
   /** Whether the page can be read at all — what separates "no record matched" from "nothing could be asked" (rule 6). */
   readable(): Promise<boolean>;
   aborted?(): boolean;
+  /**
+   * Whether the page's collections are only partly rendered (snapshot.ts
+   * ObservationCoverage.collections), asked once when a drain runs out of
+   * matches: an empty rendered window over a larger collection is not an
+   * empty collection. Null (or no hook) when it cannot be said.
+   */
+  coverage?(): Promise<{ partial: boolean; evidence: string[] } | null>;
 }
 
 /** How long a loop iteration waits for its record to leave the guard's match set — both runners' default. */
@@ -78,7 +88,19 @@ export interface LoopOptions {
   describe?: string;
 }
 
-export type LoopOutcome = { ok: true; iterations: number } | { ok: false; reason: string; iterations: number };
+/**
+ * How a loop ended. `complete`: the work it had authority over is done.
+ * `partial`: it stopped short of everything that matches WITHOUT failing — a
+ * loop bounded to the observed work used its passes and records still match
+ * (`remaining`, null when they could not be counted), or a drain emptied every
+ * record the page RENDERED while the page says its collection is larger
+ * (a virtualised grid). Not a stop, and not the same claim as `complete`:
+ * callers say so. `ok: false` is a loop that did not finish what it owed.
+ */
+export type LoopOutcome =
+  | { ok: true; state: 'complete'; iterations: number }
+  | { ok: true; state: 'partial'; iterations: number; remaining: number | null; reason: string }
+  | { ok: false; reason: string; iterations: number };
 
 /** The reason a stopped BODY produces: the body itself already said what went wrong. */
 export const LOOP_BODY_STOPPED = 'the loop body stopped';
@@ -103,6 +125,8 @@ export async function runFoldedLoop(hooks: LoopHooks, opts: LoopOptions): Promis
   let prevSig: string | null = null;
   let prevRemaining = Number.POSITIVE_INFINITY;
   let cursor = 0;
+  /** The loop ran out of matching records, rather than out of passes. */
+  let exhausted = false;
   const describe = opts.describe ?? 'the guard';
   const unreadable = (why: string): LoopOutcome => ({
     ok: false,
@@ -155,7 +179,10 @@ export async function runFoldedLoop(hooks: LoopHooks, opts: LoopOptions): Promis
     const seen = await observe();
     if (typeof seen === 'string') return unreadable(seen);
     const { hit, remaining } = seen;
-    if (!remaining || cursor >= remaining) break;
+    if (!remaining || cursor >= remaining) {
+      exhausted = true;
+      break;
+    }
     const repeatsPrevious = remaining >= prevRemaining ? prevSig : null;
     const entries: string[] = [];
     // A closure, not a method: the artifact hands `pass.check` on detached.
@@ -222,5 +249,34 @@ export async function runFoldedLoop(hooks: LoopHooks, opts: LoopOptions): Promis
       };
     }
   }
-  return { ok: true, iterations: iter };
+  // A BOUNDED loop that used its passes did the work it had authority over
+  // (rule 5), but "the loop is done" and "nothing matches any more" are
+  // different claims, and a caller reporting the first must not imply the
+  // second. So the rest is counted and the outcome says partial.
+  if (iter >= opts.max && opts.scope === 'observed') {
+    const seen = await observe();
+    if (typeof seen === 'string') {
+      return { ok: true, state: 'partial', iterations: iter, remaining: null, reason: `bounded to ${opts.max} pass(es); whether records still match ${describe} could not be read (${seen})` };
+    }
+    if (seen.remaining > cursor) {
+      const left = seen.remaining - cursor;
+      return { ok: true, state: 'partial', iterations: iter, remaining: left, reason: `bounded to ${opts.max} pass(es), ${left} item(s) still match ${describe}` };
+    }
+  }
+  // A drain that ran out of RENDERED matches on a page that says its
+  // collection is bigger than what it rendered has emptied a window, not the
+  // collection.
+  if (exhausted && opts.scope === 'drain' && hooks.coverage) {
+    const collections = await hooks.coverage().catch(() => null);
+    if (collections?.partial) {
+      return {
+        ok: true,
+        state: 'partial',
+        iterations: iter,
+        remaining: null,
+        reason: `no rendered record matches ${describe}, but the page renders only part of its collection (${collections.evidence.join(', ') || 'virtualised'}) — records not rendered may remain`,
+      };
+    }
+  }
+  return { ok: true, state: 'complete', iterations: iter };
 }

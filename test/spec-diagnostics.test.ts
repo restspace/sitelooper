@@ -361,7 +361,7 @@ describe('the emitter on a flagged step', () => {
     const lines = block.split('\n').map((l) => l.trim());
     const pickAt = lines.findIndex((l) => l === `], '01-do s_demo/1 target', ${POLICY}, { drift: run.drift }, '${NOTE}');`);
     const tryAt = lines.indexOf('try {');
-    const clickAt = lines.indexOf('await click(hit1.locator);');
+    const clickAt = lines.indexOf('await click(hit1.locator, { obs: obs1 }).catch(actionFailed);');
     const catchAt = lines.indexOf('} catch (err) {');
     expect(pickAt).toBeGreaterThan(-1);
     // resolution first, outside the wrapper; the action inside it
@@ -379,18 +379,27 @@ describe('the emitter on a flagged step', () => {
   it('a post-resolution failure carries the note at run time, and a pick failure is not noted twice', async () => {
     const { source } = emitFlowFile(specOf([oneWay]), { tier: 'plain', diagnostics: [FLAG] });
     const block = stepsBlock(source);
-    // the emitted act phase, cut whole, with `pick` and `click` faked at its edges
+    // the emitted act phase, cut whole, with `pick` and `click` faked at its edges — and the
+    // action's observation and its outcome rethrow, which act as the shared ones do here
     const act = /act: async \(\) => \{([\s\S]*?)\n\s*\},\n\s*settle:/.exec(block);
     expect(act).not.toBeNull();
-    const js = ts.transpileModule(`async function act(pick, click, page, p, run, originOf, RESOLVE_WAIT_MS) {${act![1]}\n}`, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
-    type Act = (pick: unknown, click: unknown, page: unknown, p: unknown, run: unknown, originOf: unknown, wait: number) => Promise<unknown>;
-    const build = new Function(`${js}\nreturn act;`) as () => Act;
+    const js = ts.transpileModule(`async function act(pick, click, page, p, run, originOf, RESOLVE_WAIT_MS, beginAction, ACTION_DEADLINE_MS, actionFailed) {${act![1]}\n}`, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
+    type Act = (pick: unknown, click: unknown, page: unknown, p: unknown, run: unknown, originOf: unknown, wait: number, beginAction: unknown, deadline: number, actionFailed: unknown) => Promise<unknown>;
+    const built = new Function(`${js}\nreturn act;`) as () => Act;
+    const beginAction = () => ({ remaining: () => 1_000, settle: async () => ({}) });
+    const actionFailed = (err: Error) => {
+      err.message += ' [outcome: unknown]';
+      throw err;
+    };
+    const build = () => (pick: unknown, click: unknown, page: unknown, p: unknown, run: unknown, originOf: unknown, wait: number) =>
+      built()(pick, click, page, p, run, originOf, wait, beginAction, 25_000, actionFailed);
     const page = { locator: () => 'loc', url: () => 'http://x.test/' };
     const run = { drift: [] };
     const originOf = () => 'http://x.test';
 
     const afterResolution = build()(async () => ({ locator: 'loc', index: 0, structural: false }), async () => { throw new Error('locator.click: Timeout 10000ms exceeded.'); }, page, {}, run, originOf, 0);
-    await expect(afterResolution).rejects.toThrow(`locator.click: Timeout 10000ms exceeded.\n  ${NOTE}`);
+    // the outcome first (the action's own rethrow), then the step's note
+    await expect(afterResolution).rejects.toThrow(`locator.click: Timeout 10000ms exceeded. [outcome: unknown]\n  ${NOTE}`);
 
     const atResolution = build()(async (...args: unknown[]) => { throw new Error(`none resolved\n  ${String(args[5])}`); }, async () => {}, page, {}, run, originOf, 0);
     const message = await atResolution.then(() => '', (err: Error) => err.message);

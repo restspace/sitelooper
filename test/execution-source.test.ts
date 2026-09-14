@@ -54,6 +54,15 @@ describe('standalone execution source', () => {
               while: [{ kind: 'css' as const, selector: '.row .del' }, { kind: 'role' as const, role: 'button', name: 'Remove' }],
               body: [{ tool: 'click', args: { target: '@e1' }, locators: { target } }],
             },
+            // A target inside a recorded frame, read and clicked there, on the
+            // page the procedure is on, opening a popup the procedure follows
+            // (the shared context module: rootFor, pageIndexVerdict, armPageEffect).
+            { tool: 'read', args: { target: '@f1e1', what: 'text' }, locators: { target }, contexts: { target: { frame: [{ selectors: ['iframe[title="Payment"]'], title: 'Payment' }] } }, label: 'framed' },
+            {
+              tool: 'click', args: { target: '@f1e2' }, locators: { target },
+              contexts: { target: { frame: [{ selectors: ['iframe[title="Payment"]', 'iframe >> nth=0'], title: 'Payment', urlPattern: 'http://app.test/pay' }] } },
+              page: 0, effect: { kind: 'popup', urlPattern: 'http://app.test/popup' },
+            },
           ],
         }, {
           // A second segment that does not navigate itself, with a recorded page
@@ -86,7 +95,7 @@ describe('standalone execution source', () => {
     expect(source).toContain('async function resolveCandidates(page: Page, cands: readonly CandidateObservation[], policy: ResolvePolicy = {}): Promise<Resolution | null> {');
     expect(source.indexOf('// Shared execution source: point.ts.')).toBeLessThan(source.indexOf('// Shared execution source: resolve.ts.'));
     // The fixture really exercises the shared text and url rules, each embedded once.
-    expect(source).toContain('presentOnPage(page, [`${p.v1}`], { whole: true })');
+    expect(source).toContain('confirmPresence(page, [`${p.v1}`], 2, { whole: true })');
     expect(source).toContain("bindPart(p, 'd1', urlPart(page.url(), 'p1'));");
     expect(source).toContain("changedCreation(urlPart(urlBefore2, 'p1'), await urlPartWhen(page, 'p1', urlBefore2))");
     expect(source).toContain('=> urlMatches(');
@@ -95,7 +104,7 @@ describe('standalone execution source', () => {
     expect(source).toContain("alertGate(alertsBefore2, alertsAfter2, { where: '01-actions s_runtime/2', isRead: false, expectedContains: 'Saved {{v1}}', params: p });");
     expect(source).toContain('alertsAfter2 = await settledAlerts(page);');
     expect(source).toContain("errorPageGate(page, '01-actions s_runtime/1');");
-    expect(source).toContain('const verdict = alertVerdict(before, after, ctx);');
+    expect(source).toContain('const verdict = alertVerdict(before, after ? after.alerts : null, ctx, after ? after.complete : true);');
     // ...the content expectation, in the same snapshot dialect on both sides.
     expect(source).toContain('linesBefore2 = await capturePageLines(page);');
     // ...with positional resolution reported by the resolution itself, not guessed at compile time.
@@ -128,14 +137,25 @@ describe('standalone execution source', () => {
     expect(source).toContain('const recipeBook = snapshotBook(RECIPES);');
     expect(source.indexOf('// Shared execution source: recipes.ts.')).toBeLessThan(source.indexOf('const recipeBook = snapshotBook(RECIPES);'));
     expect(source).toContain('const attempt = await fillWithRecipe(loc.page(), loc, value, recipeBook);');
-    expect(source).toMatch(/await type\(hit\d+\.locator, 'typed', \{ delay: 5 \}\);/);
+    expect(source).toMatch(/await type\(hit\d+\.locator, 'typed', \{ delay: 5 \}\)\.catch\(actionFailed\);/);
     expect(source).toContain('const attempt = await typeWithRecipe(loc.page(), loc, text, recipeBook, { timeout: TYPE_TIMEOUT_MS, delay: opts.delay ?? TYPE_DELAY_MS });');
-    expect(source).toMatch(/await select\(hit\d+\.locator, 'Option', '17'\);/);
+    expect(source).toMatch(/await select\(hit\d+\.locator, 'Option', '17'\)\.catch\(actionFailed\);/);
+    // ...and every state-changing action observed from just before it dispatches (the shared action module).
+    expect(source).toMatch(/obs\d+ = beginAction\(page, \{ deadlineMs: ACTION_DEADLINE_MS, navigating: true, expect: effectExpectation\(page, \['- combobox "Project": \{\{v1\}\}'\], p\) \}\);/);
+    expect(source).toContain('const ACTION_DEADLINE_MS = 25000;');
+    expect(source).toContain('    pageTraffic(page);');
     expect(source).toContain('const { attempt } = await selectWithRecipe(loc.page(), loc, label, recipeBook, fallbackValue);');
     // ...and the fingerprinted segment's gate, measured as replay measures it.
     expect(source).toContain("await preconditionGate('http://app.test/', page.url(), p, '01-actions s_measured', cosine(recordedFingerprint('01-actions', 's_measured'), (await fingerprintPage(page)) ?? undefined));");
     expect(source).toContain('async function fingerprintPage(page: Page): Promise<number[] | null> {');
-    for (const name of ['text', 'url', 'gates', 'observe', 'browser', 'lifecycle', 'loop', 'snapshot', 'expect', 'point', 'resolve', 'recipes', 'fingerprint', 'echo', 'recover']) {
+    // ...the frame and page context: a frame root ahead of the chain, the page gate, the popup armed and followed.
+    expect(source).toContain(`const root2 = await frameRoot(page, [{"selectors":["iframe[title=\\"Payment\\"]","iframe >> nth=0"],"title":"Payment","urlPattern":"http://app.test/pay"}], '01-actions s_runtime/15 target');`);
+    expect(source).toMatch(/\{ locator: root2\.locator\('#control'\), index: 0/);
+    expect(source).toContain("pageGate(page, 0, '01-actions s_runtime/15');");
+    expect(source).toContain(`landing15 = await armPageEffect(page, {"kind":"popup","urlPattern":"http://app.test/popup"}, '01-actions s_runtime/15');`);
+    expect(source).toContain('if (moved15) page = run.page = moved15;');
+    expect(source).toMatch(/outputs\['01-actions\.framed'\] = 'root' in framed\d+ \? await readOptional\(page, \[/);
+    for (const name of ['text', 'url', 'gates', 'observe', 'browser', 'action', 'lifecycle', 'loop', 'snapshot', 'expect', 'point', 'resolve', 'recipes', 'fingerprint', 'echo', 'recover', 'context']) {
       expect(source.split(`// Shared execution source: ${name}.ts.`).length, name).toBe(2);
     }
     const options: ts.CompilerOptions = {
@@ -195,17 +215,19 @@ describe('standalone execution source', () => {
       expect([...loader.EXECUTION_MODULES].sort()).toEqual([...EXECUTION_MODULES].sort());
       expect(loader.EXECUTION_MODULES).toEqual(expect.arrayContaining(['browser', 'lifecycle', 'text', 'url', 'gates', 'observe']));
       expect(loader.executionSource('gates').join('\n')).toContain('function alertVerdict(');
-      expect(loader.executionSource('observe').join('\n')).toContain('async function liveAlerts(page: Page): Promise<string[] | null> {');
+      expect(loader.executionSource('observe').join('\n')).toContain('async function liveAlerts(page: Page, d: LineDialect = 1): Promise<string[] | null> {');
       expect(loader.executionSource('browser').join('\n')).toContain('async function robustClick(');
       expect(loader.executionSource('lifecycle').join('\n')).toContain('async function runStepLifecycle');
       expect(loader.executionSource('text').join('\n')).toContain('function identityRe(marker: string): RegExp {');
       expect(loader.executionSource('url').join('\n')).toContain('function urlMatches(pattern: string, url: string');
       expect(loader.executionSource('resolve').join('\n')).toContain('async function resolveCandidates(');
       expect(loader.executionSource('point').join('\n')).toContain('async function markPoint(');
-      expect(loader.executionClosure(['resolve']).map((m) => m.name)).toEqual(['point', 'resolve']);
+      expect(loader.executionClosure(['resolve']).map((m) => m.name)).toEqual(['browser', 'point', 'resolve']);
       expect(loader.executionSource('recipes').join('\n')).toContain('async function fillWithRecipe(');
       expect(loader.executionSource('recipes').join('\n')).toContain('const SEED_RECIPES: SeedRecipe[] = [');
       expect(loader.executionClosure(['recipes']).map((m) => m.name)).toEqual(['browser', 'recipes']);
+      expect(loader.executionSource('action').join('\n')).toContain('function beginAction(page: Page, opts: ActionOptions): ActionObservation {');
+      expect(loader.executionClosure(['action']).map((m) => m.name)).toEqual(['browser', 'action']);
       expect(loader.executionSource('fingerprint').join('\n')).toContain('async function fingerprintPage(page: Page): Promise<number[] | null> {');
       expect(loader.executionClosure(['fingerprint']).map((m) => m.name)).toEqual(['fingerprint']);
       for (const name of loader.EXECUTION_MODULES) {
@@ -269,7 +291,7 @@ describe('standalone execution source', () => {
     expect(resolve.tokens).toEqual(
       expect.arrayContaining(['resolveCandidates(', 'identityValues(', 'identityFields(', 'orderCandidates(', 'structuralCandidate(', 'candidateRank(', 'RESOLVE_POLL_MS', 'RESOLVE_WAIT_MS']),
     );
-    expect(resolve.dependencies).toEqual(['point']);
+    expect(resolve.dependencies).toEqual(['browser', 'point']);
     expect(modules.find((m) => m.name === 'point')!.tokens).toEqual(expect.arrayContaining(['markPoint(', 'pointLocator(', 'pointToken(', 'POINT_MARK']));
     const recipes = modules.find((m) => m.name === 'recipes')!;
     expect(recipes.tokens).toEqual(
@@ -283,6 +305,19 @@ describe('standalone execution source', () => {
     const fingerprint = modules.find((m) => m.name === 'fingerprint')!;
     expect(fingerprint.tokens).toEqual(expect.arrayContaining(['fingerprintPage(', 'cosine(', 'normaliseFingerprint(', 'fingerprintPathsInPage(', 'FINGERPRINT_DIMS']));
     expect(fingerprint.dependencies).toEqual([]);
+    const context = modules.find((m) => m.name === 'context')!;
+    expect(context.tokens).toEqual(
+      expect.arrayContaining(['rootFor(', 'armPageEffect(', 'pageIndexVerdict(', 'stepEffect(', 'describeFramePath(', 'framesEqual(', 'contextsEqual(', 'POPUP_WAIT_MS', 'FRAME_POLL_MS']),
+    );
+    // The frame lookup and the popup follow need only the url rules.
+    expect(context.dependencies).toEqual(['url']);
+    const action = modules.find((m) => m.name === 'action')!;
+    expect(action.tokens).toEqual(
+      expect.arrayContaining(['beginAction(', 'pageTraffic(', 'classifyLongLived(', 'inFlightRequests(', 'DEFAULT_TRAFFIC_POLICY', 'ACTION_START_GRACE_MS', 'ACTION_NETWORK_CAP_MS', 'ACTION_EFFECT_WAIT_MS']),
+    );
+    // The observation waits with the shared DOM settle and url wait, and reads the outcome of an error there.
+    expect(action.dependencies).toEqual(['browser']);
+    expect(modules.find((m) => m.name === 'browser')!.tokens).toEqual(expect.arrayContaining(['robustClick(', 'actionFailure(', 'outcomeOfError(', 'outcomeLabel(', 'domQuiet(', 'settleDom(']));
   });
 
   it('strips a sibling import and rejects any other', () => {

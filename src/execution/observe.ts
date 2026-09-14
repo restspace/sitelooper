@@ -6,7 +6,7 @@
  * a sibling shared module or a Playwright type may be imported.
  */
 import type { Locator, Page } from 'playwright-core';
-import { capturePage, sweepPage } from './snapshot.js';
+import { alertsComplete, capturePage, sweepPage, type LineDialect } from './snapshot.js';
 
 /** What a recorded read takes off its element. A page url read has no element and is not one of these. */
 export type ReadWhat = 'text' | 'value' | 'attr' | 'count';
@@ -88,14 +88,27 @@ export async function takeRead(read: () => Promise<unknown>): Promise<ReadTaken>
 
 /**
  * The visible live-region texts on the page right now — the alerts half of
- * the ONE page capture the daemon diffs (describeInPage under SNAPSHOT_LIMITS,
- * src/execution/snapshot.ts): the same elements, visibility rule, caps and
- * whitespace cleaning by construction, not by a second copy kept in step. An
- * alert the daemon would diff is one the artifact sees. These are toasts and
- * status lines, not native `window.alert` dialogs. Null when the page cannot
- * be read (navigating, closed, not answering): "unobserved", never "no alert".
+ * the ONE page capture the daemon diffs (observeDocumentInPage under
+ * SNAPSHOT_LIMITS, src/execution/snapshot.ts), rendered in the step's line
+ * dialect: the same elements, visibility rule, caps and whitespace cleaning
+ * by construction, not by a second copy kept in step. An alert the daemon
+ * would diff is one the artifact sees. These are toasts and status lines, not
+ * native `window.alert` dialogs. Null when the page cannot be read
+ * (navigating, closed, not answering): "unobserved", never "no alert".
  */
-export async function liveAlerts(page: Page): Promise<string[] | null> {
-  const captured = await capturePage(page);
+export async function liveAlerts(page: Page, d: LineDialect = 1): Promise<string[] | null> {
+  const captured = await capturePage(page, d);
   return captured ? captured.alerts : null;
+}
+
+/** Live-region texts with whether the look saw every one of them (alertsComplete) — what alertVerdict needs to tell "none raised" from "none seen". */
+export interface ObservedAlerts {
+  alerts: string[];
+  complete: boolean;
+}
+
+/** liveAlerts, with its coverage: null when the page cannot be read. */
+export async function liveAlertsObserved(page: Page, d: LineDialect = 1): Promise<ObservedAlerts | null> {
+  const captured = await capturePage(page, d);
+  return captured ? { alerts: captured.alerts, complete: alertsComplete(captured.coverage) } : null;
 }

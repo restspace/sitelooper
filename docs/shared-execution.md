@@ -144,32 +144,84 @@ prompts and persisted run records, and a query string is where `?token=…` live
 
 ### `observe.ts` — live-region alerts
 
-`liveAlerts(page)`, and nothing else: it is the alerts half of the ONE page
-capture (`capturePage`, below). It used to restate the selector and the caps,
-with a test keeping the two copies in step; now they agree by construction. An
-alert the daemon would diff is one the artifact sees. Returns `null` when the
-page cannot be read — *unobserved*, never "no alert".
+`liveAlerts(page, d = 1)` and `liveAlertsObserved(page, d = 1)` (→ `{ alerts,
+complete } | null`, the `ObservedAlerts` type): the alerts half of the ONE page
+observation (`capturePage`, below), rendered in a line dialect. It used to
+restate the selector and the caps, with a test keeping the two copies in step;
+now they agree by construction. An alert the daemon would diff is one the
+artifact sees. Returns `null` when the page cannot be read — *unobserved*, never
+"no alert". `complete` is `alertsComplete(coverage)`: false when the alert cap
+was reached or a rendered frame could not be read, and `alertVerdict`'s fourth
+argument then reports "nothing raised" and "expected alert missing" as
+unobserved (an alert that WAS seen still stops the step).
 
-### `snapshot.ts` — the page dialect
+### `snapshot.ts` — the observation model and its line dialects
 
-`describeInPage` (the in-page capture; `src/daemon/diff.ts` imports it),
-`isInteractiveLine`, `capturePage`, `capturePageLines`, `addedLines`,
-`lineShows`, `presentOnPage`, `scopeCheckInPage`, `sweepPage`, plus
-`SNAPSHOT_LIMITS`, `CAPTURE_TIMEOUT_MS` and `MAX_ADDED_LINES`.
+`observeDocumentInPage` (the in-page walk), `observePage` (the node-side
+observation: the main document, its open shadow roots and its rendered frames),
+`renderLines`, `renderAlerts`, `coverageComplete`, `alertsComplete`,
+`describeCoverage`, `isInteractiveLine`, `capturePage`, `capturePageLines`,
+`captureLines`, `addedLines`, `lineShows`, `presence`, `confirmPresence`,
+`presentOnPage`, `scopeCheckInPage`, `sweepPage`; the types `LineDialect`,
+`ObservedNode`, `ObservationCoverage`, `PageObservation`, `Presence`; and
+`CURRENT_DIALECT`, `SNAPSHOT_LIMITS`, `SHADOW_LIMITS`, `MAX_FRAMES`,
+`FRAME_MIN_BUDGET_MS`, `CAPTURE_TIMEOUT_MS`, `MAX_ADDED_LINES`.
 
-`capturePage` is the single capture — one `page.evaluate` under one timeout race,
-returning lines and alerts; `capturePageLines` is its interactive-lines view and
-`liveAlerts` its alerts view.
+**One structured observation.** `observePage` evaluates `observeDocumentInPage`
+in the main document under `CAPTURE_TIMEOUT_MS` (a failure is `null`), then, in
+what is left of that deadline (at least `FRAME_MIN_BUDGET_MS`), every child
+frame whose element has a box, up to `MAX_FRAMES`. Each node carries role, both
+names, value, checked, disabled, its context (frame child-index path, open
+shadow hosts) and whether it belongs to the dialect-1 walk. The coverage says
+how much was seen: element and line caps, the alert cap, shadow roots walked,
+frames observed / hidden / over the cap / inaccessible (with reason), and
+collections the page says are only partly rendered (`aria-rowcount` or
+`aria-setsize` larger than what is rendered, `aria-busy`). A hidden frame is not
+a gap; a visible frame that could not be read, or one past the cap, is. A
+CLOSED shadow root cannot be seen from script and is not counted.
 
-This is what lets the artifact judge the **same lines** the daemon judges — and
-ask the same identity question. The artifact's identity gate calls
-`presentOnPage` directly, and its `satisfied` helper runs `capturePageLines` +
-`lineShows` and then `page.evaluate(scopeCheckInPage, …)`. The emitted `present`
-and `sharesScope` helpers that used to restate both are deleted.
+**Two line dialects, chosen per step.** Recorded lines are persisted and
+matched as substrings, so they cannot change meaning under a stored recording.
+`renderLines(o, 1)` is the first capture byte for byte: main document, light
+DOM, the old caps, the old names (a `<label for>` input is `""`), no disabled
+state. `test/observation.browser.test.ts` keeps the old page function as an
+oracle and compares the two on every fixture page, past both caps included.
+`renderLines(o, 2)` is every node, named by its `<label>`s when it has no name
+of its own, with ` [checked]`, ` [disabled]`, then `: value`; frame and shadow
+context never appear in the line text. New recordings are written in
+`CURRENT_DIALECT` (2): `StepDiff.dialect`, compiled onto
+`StepExpectation.lineDialect` by `expectationFor`, carried verbatim into the
+spec IR and the emitted `FLOW`. Absent means 1. Both runners render the live
+page in the step's own dialect before comparing:
 
-The artifact takes its own before/after capture in the step lifecycle and diffs
-it with the recorder's own rule, so both runners hand their verdict a real diff
-plus a live-page fallback.
+| | Daemon (`src/skills/replay.ts`) | Artifact (`src/spec/emit.ts`) |
+|---|---|---|
+| Effect diff | `addedLines(renderLines(before, d), renderLines(after, d))` over the executor's in-memory observations (`StepRunResult.observations`, from `tools.ts runStep`) | `capturePageLines(page, d)` in prepare and in `expectChanges` |
+| Live look | `captureLines(page, d)` | `captureLines(page, dialect)` inside `expectChanges` |
+| Alerts | `renderAlerts(before/after, d)` with `alertsComplete(after.coverage)` | `liveAlerts(page, d)` / `settledAlerts(page, d)` → `alertGate` |
+| Toggle skip | `presentOnPage(page, opener, {}, d)` | `presentOnPage(page, liveLines(…), {}, 2)` for a dialect-2 step |
+| Identity | `confirmPresence(page, [marker], 2, { whole: true })` | `expect.poll(… confirmPresence(page, [marker], 2, { whole: true }) …).toBe('present')` |
+| Already satisfied | `captureLines(page, 2)`, incomplete = not satisfied | `satisfied`: `captureLines(page, 2)`, incomplete = not satisfied |
+
+A dialect-1 step emits exactly the calls it did before (the dialect argument
+defaults to 1), so an artifact compiled from an older store is unchanged.
+
+**Three-way presence.** `presence(page, lines, d, opts)` is `present` on a
+match, `absent` only on a look that `coverageComplete` accepts, and `unknown`
+otherwise (including a page that cannot be read). `confirmPresence` sweeps the
+page once on `unknown` and asks again, returning `why`. Every absence consumer
+treats `unknown` on the safe side: an effect line not found on an incomplete
+look still stops, marked unobserved, with the reason
+(`expectedChangesVerdict`); a recorded dialog is only treated as absent on a
+complete look; an identity marker that stays `unknown` refuses as "could not
+confirm", not as a wrong record; the toggle skip clicks; a goal is never
+satisfied; `describeChange` does not report `nothingChanged`; and compile
+derives no goal from a start text that was cut or incompletely captured
+(`RecordedInstruction.startTextComplete: false`).
+
+`contractWeakening` compares recorded page lines only within one dialect: a
+step re-recorded in dialect 2 is not a loss of its dialect-1 lines, but a step
+that asserts no page change at all any more still is.
 
 ### `expect.ts` — the content-expectation verdict
 
@@ -187,10 +239,81 @@ showed: the locator only ever matched the name.
 ### `browser.ts` — the actions
 
 `robustClick`, `fireWhenAttached`, `reactSafeFill`, `reactSafeSelect`,
-`syntheticHover`, `settleDom`. Daemon: `src/agent/tools.ts:4`,
-`src/daemon/inputs.ts:2`, `src/daemon/settle.ts:2`. Artifact: the emitted
-`click`/`hover`/`settle` adapters, and the native half of the recipe ladders
-(below) that `fill`/`type`/`select` climb.
+`syntheticHover`, `settleDom`, `domQuiet`, `urlHeldStill`, and the action
+outcome vocabulary: `ActionOutcome` (`not-dispatched` / `dispatched` /
+`effect-verified` / `unknown`), `DispatchVia`, `ActionFailure`,
+`actionFailure`, `outcomeOfError`, `outcomeLabel`, `ClickObservation`.
+Daemon: `src/agent/tools.ts`, `src/daemon/inputs.ts`, `src/daemon/settle.ts`.
+Artifact: the emitted `click`/`hover`/`settle` adapters, and the native half of
+the recipe ladders (below) that `fill`/`type`/`select` climb.
+
+Every error `robustClick` and `fireWhenAttached` throw carries its outcome
+(`actionOutcome`, `actionReason`) with its model-facing message unchanged: a
+disabled control, a strict-mode ambiguity, a window that never came and a
+deadline spent before a tier started are `not-dispatched`; a page torn down
+under the click is `unknown`. An untagged error is `unknown` by
+`outcomeOfError` — only proof says nothing went out. Given a `ClickObservation`
+(an action's observation, below), every tier's timeout is cut to what is left
+of the action's deadline and the tier that landed is reported (`dispatched`).
+The outcome travels out as data: `ToolExecution.outcome`, `StepRunResult.outcome`,
+`ReplayResult.outcome`, and `[outcome: …]` after a failure's text in both
+runners (`click failed: … [outcome: not dispatched]` in replay; the emitted
+`actionFailed`, `.catch(actionFailed)` on each state-changing call, in the
+artifact).
+
+### `action.ts` — one observation per action
+
+`beginAction`, `pageTraffic`, `classifyLongLived`, `inFlightRequests`, the
+types `ActionObservation`, `ActionOptions`, `ActionExpectation`,
+`SettleVerdict`, `PageTraffic`, `RequestRecord`, `TrafficPolicy`,
+`LongLivedWhy`, `ActionClock`, `PageEventsPort`, `DomPort`, and
+`DEFAULT_TRAFFIC_POLICY`, `ACTION_QUIET_MS`, `ACTION_DOM_MAX_MS`,
+`ACTION_START_GRACE_MS`, `ACTION_NETWORK_CAP_MS`, `ACTION_EFFECT_WAIT_MS`,
+`ACTION_EFFECT_POLL_MS`. Imports `browser.ts` only (ROBUSTNESS.md finding 6).
+
+**Traffic.** `pageTraffic(page)` records the page's requests once (a WeakMap
+per page): type, method, endpoint (origin + path), start, response and
+content type, finish. A main-frame navigation abandons everything but
+documents. It replaced both earlier trackers — the shared all-requests counter
+and `daemon/settle.ts`'s fetch/XHR tracker with its `STREAMING_PATH` name list.
+Whether an open request is long-lived is `classifyLongLived`, by behaviour
+only, in order: a stream transport; a streaming content type; a fetch/XHR body
+open past `streamBodyMs` (1s) after its headers; a request started more than
+`recentMs` (300ms) before the action and still open; a fetch/XHR unanswered past
+`longOpenMs` (5s); a fetch/XHR to an endpoint this page already showed to be a
+long-poll or stream (learned from the three behavioural rules, never from a
+name). Counted types are fetch, XHR, document and script.
+
+**The observation.** `beginAction(page, opts)` is called BEFORE the dispatch
+(after a popup listener, `armPageEffect`, where a step has one) and fixes the
+baseline and one deadline. `settle()` then waits, every wait bounded by the
+deadline: the DOM quiet (`domQuiet`, after `domcontentloaded`); open ordinary
+requests (one network budget of 2s for the whole settle, woken by traffic
+events and by the moment a request would turn long-lived); a start grace of
+250ms after the last mutation or request finish — and, for an input
+(`graceFromDispatch`: fill, type, press, select, check), after the dispatch
+itself — in which a request may still start (a debounced save); the url held
+still for a tool that may navigate (`urlHeldStill`, counting only ordinary
+open requests); and, given an `ActionExpectation`, that expectation polled for
+up to 3s. The verdict: `effect-verified` when it held, `unknown` when every look
+was unobservable, `dispatched` otherwise, or what `failed(err)` recorded; plus
+what it waited for, which open requests it ignored and why, and whether the
+deadline cut a wait. Quiet alone never verifies an effect.
+
+The expectation both runners pass is `expect.ts` `effectExpectation`: the
+step's recorded `{{vN}}` lines, filled, in its line dialect — the hard half of
+the effect gate. The url is deliberately not part of it (see ROBUSTNESS.md).
+
+| | Daemon | Artifact (`src/spec/emit.ts`) |
+|---|---|---|
+| Traffic installed | `BrowserSession.adoptPage` (`pageTraffic`) | `runFlow` before the start url, and the `settle` adapter |
+| Observation | `tools.ts runStep`, around every `STATE_CHANGING` tool; deadline `ACTION_DEADLINE_MS` (30s, `daemon/browser.ts`) | `obsN = beginAction(page, { deadlineMs: ACTION_DEADLINE_MS, navigating?, graceFromDispatch?, expect? })` just before each state-changing call (`observeAction`); `ACTION_DEADLINE_MS` 25s |
+| Clicks | `robustClick(…, { obs })` | `click(loc, { obs: obsN })` |
+| Settle | `obs.settle()`, then the diff's after-capture; `stateDiff` does not settle again; replay's settle phase does nothing after a settled step | settle phase `if (obsN) await obsN.settle(); else if (page.url() !== urlBeforeN) await settle(page);` (the old `settleNavigation` is gone) |
+| Expectation | replay `effectExpectation(page, step.expect.addedContains, params, d)` through `StepExecutor`'s fifth argument | the same call emitted into the options |
+
+`daemon/settle.ts` `settlePage` is `beginAction(page, { deadlineMs: 2000 }).settle()`
+for a page with no action behind it.
 
 ### `echo.ts` — reads that only echo what the procedure set
 
@@ -211,16 +334,73 @@ runners.
 
 `mayNavigateToDestination`, `navigateToDestination`, `linkToDestination`,
 `textHeldElsewhere`, `RecoveryHooks`, `HELD_TEXT_READ_MS`. Imports `browser.ts`
-(`settleDom`) and `url.ts`.
+(`settleDom`, `outcomeOfError`, `outcomeLabel`) and `url.ts`.
 
 | | Daemon (`src/skills/replay.ts`) | Artifact (`src/spec/emit.ts`) |
 |---|---|---|
 | Navigation by recorded destination | `runOneStep`, after a missed resolution: `mayNavigateToDestination(tool, pattern, url, params, inLoopBody)`, then `navigateToDestination` with hooks over `opts.exec('click'/'goto')`; arrival returns `ran` before the gates | a navigation click with a recorded destination (not in a loop body) resolves through the emitted `pickOrNavigate`, hooks over the `click` adapter and `page.goto` (load, 30s); arrival logs `[sitelooper drift]` and returns `skipped`, before the gates |
+| A substitute link whose click may have landed | `navigateToDestination` returns `{ unknown: true, note }` when rung (a)'s click threw anything but a proven `not-dispatched`; replay stops with the note (`acted` stays set), never trying rung (b)'s direct navigation | `pickOrNavigate` throws with the note |
 | Text held elsewhere | the wait's `catch`: `textHeldElsewhere(heldObservations(page, chain), state, text)` | a text wait hoists its observations; the wait's `catch` calls the emitted `textHeldOrThrow`, which drifts and continues or rethrows |
 
 Record ids minted in a loop body: the daemon's `res.created` and the
 artifact's `run.created` both accumulate every distinct `changedCreation`
 value, in order; the artifact's `<step>.minted` output stays the latest.
+
+### `context.ts` — where a target lives, and what a step does to its page
+
+`FrameHop`, `FramePath`, `TargetContext`, `PageEffect`, `FrameRoot`, `Root`,
+`rootFor`, `describeFrameHop`, `describeFramePath`, `framesEqual`,
+`contextsEqual`, `stepEffect`, `pageIndexVerdict`, `armPageEffect`,
+`POPUP_WAIT_MS`, `FRAME_POLL_MS`. Imports `url.ts` (`urlMatches`) only
+(ROBUSTNESS.md finding 5).
+
+**Frames.** A recorded element inside an iframe is described against its own
+frame (recorder.ts `targetRoot` / `framePathOf`): every candidate is verified
+there, no point candidate is recorded, and the path to the frame travels BESIDE
+the chain as `SkillStep.contexts[key].frame` — not on each candidate, where it
+would leak into what the candidate names (`carries`, the identity guard). A hop
+keeps the selectors that match exactly that iframe at record time:
+`iframe[name=…]`, `iframe[title=…]`, `iframe#stableId`, `iframe[src*="/path"]`,
+and `iframe >> nth=i` only with the frame's url pattern, which `rootFor` then
+requires. `rootFor(page, frame, waitMs)` walks the path top-down on a poll and
+returns the page for no path, the frame's root, or `{ error, missing }` — never
+the main page in place of a missing frame. A frame that cannot be named at
+record time records no chain at all, so the step stops at replay rather than
+resolving a page-rooted guess.
+
+**Page effects.** `SkillStep.effect` is `popup`, `close` or `switch` (a legacy
+`tabs` step with `switch_to` reads as a switch through `stepEffect`);
+`SkillStep.page` is the index among the open pages, written only when more than
+one was open. `armPageEffect` is called BEFORE the action dispatches (the popup
+listener; the opener of a page about to close) and hands back the question to
+ask afterwards: the page the procedure continues on, or the stop.
+
+| | Daemon (`src/skills/replay.ts`) | Artifact (`src/spec/emit.ts`) |
+|---|---|---|
+| Frame root | `runOneStep`: `rootFor(page, step.contexts[key].frame, waitMs)`, then `resolveChain(page, chain, policy, root)`; a missing frame is `resolveError` (no dialog skip, no navigation fallback), an absence wait is met by it, a read is skipped | `frameRoot(page, FRAME, where)` ahead of `pick`/`pickOrNavigate`, observations built on `rootN`; `rootFor(…, 0)` for an absence wait; `rootFor(…, RESOLVE_WAIT_MS)` and a `[sitelooper skip]` for a read |
+| Loop guard | `rootFor(page, whileContext.frame, 0)`, throwing (unreadable, rule 6) | `frameRoot(page, FRAME, where, 0)` inside `guard` |
+| Page check | `pageIndexVerdict(page, step.page, …)` before anything resolves | `pageGate(page, N, where)` in `prepare` |
+| Effect | `armPageEffect` before `opts.exec`; after the lifecycle `page = movedTo; opts.follow(page)` (BrowserSession `repin`) | `landingN = await armPageEffect(…)` after the pick, before the action; `movedN = await landed(landingN)`; after the lifecycle `page = run.page = movedN`; every step body starts from `run.page` |
+
+`withPinnedPage` still keeps a replay on its page whatever tabs open; only a
+step with a recorded effect moves the pin, and the page the pin stands on when
+the replay ends is left active, so a chain's next segment starts there.
+
+**Contract.** A procedure whose steps carry any of this is contract 3
+(`contractFor`); every other procedure stays contract 2, so stored procedures
+keep their stamp and their verified status (`isVerified` compares the stamp with
+`verifiedContract`). `SKILL_CONTRACT` (3) is the highest this build reads, so a
+contract-2 build refuses a contract-3 procedure instead of resolving its frame
+target on the page. A spec carrying context is `version: 2`, which a build that
+lifts only version 1 refuses for the same reason.
+
+Compile: a popup/close/switch is a segment seam (the next segment's precondition
+is the page the procedure continues on); steps in different frames or pages
+never fold into a loop or merge into one procedure (`contextsEqual`,
+`samePageContexts`). `contractWeakening` reports a dropped or changed frame, a
+dropped effect and a dropped page check. Locator repair (`patchSegment`) refuses
+an in-frame target; spec repair refuses to fold a variant located in another
+frame.
 
 ### `recipes.ts` — the component recipe runner
 
@@ -324,6 +504,17 @@ first matching candidate, not a `.or()` union, and recount with that same
 candidate; the cursor; the progress guard; and the cap as a budget rather than a
 finish line. The artifact supplies three observations — settle, resolve the
 guard, run the body for one cursor — and the policy does the rest.
+
+`LoopOutcome` has three shapes: `{ ok: true, state: 'complete' }`,
+`{ ok: true, state: 'partial', remaining, reason }` and `{ ok: false, reason }`.
+Partial is a loop that did the work it had authority over without finishing
+the collection: a BOUNDED (`observed`) loop that used its passes while records
+still match (`remaining` counted, or `null` when the count could not be read),
+or a DRAIN that ran out of rendered matches while the optional `coverage` hook
+(both runners pass `observePage(page)`'s `coverage.collections`) says the
+collection is only partly rendered. Replay records `loop ×N (partial: reason)`
+and a warning; the artifact logs `[sitelooper partial] <where>: reason`.
+Neither is a stop.
 
 The progress guard needs a signature that can actually repeat. The artifact
 builds one from what its targets RESOLVED to: `pick` takes a `resolved` sink and
@@ -492,11 +683,12 @@ reported in four places at once — `unsupportedCapability`, `emit.ts:1653`:
 
 Applied to:
 
-- **`tabs`** — a second page needs a real handle; inventing one would re-point
-  every later `page.` line at the wrong tab.
 - **`read what=attr|count`** — implemented in the daemon's own tool layer; the
   artifact publishes only text and input values, so the label would be left empty
   and a consuming step would run on a blank.
+- (A **`tabs`** switch used to be listed here. It is followed now — the tab at
+  the recorded index becomes `page` for every later line and `run.page` for
+  every later flow step — see `context.ts` above.)
 - **a chain with no candidate at all** — nothing to resolve. (A position-only
   chain used to be listed here; it now resolves through the shared
   `markPoint`/`pointLocator`, exactly as the daemon resolves it.)

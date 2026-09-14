@@ -237,11 +237,33 @@ describe('specToFlow: shape of the produced Flow/Skill[]', () => {
         // A lowered spec was emitted by THIS build, so its `validated` is a
         // claim about this contract. Without the stamp `isVerified` would read
         // the procedure as stale the moment it was manufactured.
-        verifiedContract: SKILL_CONTRACT,
+        // The contract its steps need: 2 for a procedure with no frame or
+        // page context (contractFor), never simply this build's highest.
+        verifiedContract: 2,
       });
-      expect(skill.contract).toBe(SKILL_CONTRACT);
+      expect(skill.contract).toBe(2);
       expect(isVerified(skill)).toBe(true);
     }
+  });
+
+  it('keeps a step\'s frame path, page and effect, and stamps such a procedure contract 3 (still verified)', () => {
+    const spec = structuredClone(HAND_BUILT_SPECS[1]);
+    const seg = spec.steps[0].segments[0];
+    const frame = [{ selectors: ['iframe[title="Payment"]'], title: 'Payment' }];
+    Object.assign(seg.steps[0], { contexts: { target: { frame } }, page: 1, effect: { kind: 'close' } });
+    const { skills } = specToFlow(spec);
+    const skill = skills.find((s) => s.id === seg.id)!;
+    expect(skill.steps[0]).toMatchObject({ contexts: { target: { frame } }, page: 1, effect: { kind: 'close' } });
+    expect(skill.contract).toBe(3);
+    expect(SKILL_CONTRACT).toBe(3);
+    expect(skill.stats.verifiedContract).toBe(3);
+    expect(isVerified(skill)).toBe(true);
+    // ...and back again: the spec rebuilt from the staged store is a version-2 spec carrying them.
+    const store = new SkillStore(tempStoreDir());
+    const flow = stageForReplay(spec, store);
+    const { spec: again } = flowToSpec(flow, store);
+    expect(again.version).toBe(2);
+    expect(again.steps[0].segments[0].steps[0]).toMatchObject({ contexts: { target: { frame } }, page: 1, effect: { kind: 'close' } });
   });
 
   it('does not set seq on a single-segment procedure', () => {

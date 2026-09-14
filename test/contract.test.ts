@@ -123,4 +123,42 @@ describe('contractWeakening', () => {
     expect(expectationLoss({ urlPattern: 'u' }, { urlPattern: 'u' })).toBeNull();
     expect(expectationLoss({ urlPattern: 'u' }, undefined)).toMatch(/no longer asserts anything/);
   });
+
+  /**
+   * A step re-recorded in dialect 2 names a `<label for>` input where dialect
+   * 1 named it `""`. That is the same promise in the new spelling: comparing
+   * the two spellings line by line would call every such re-record a loss and
+   * strip the procedure's validation for it.
+   */
+  it('compares page lines only within one dialect, and still catches a step that asserts none any more', () => {
+    const v1 = { addedContains: ['- textbox "": {{v1}}'] };
+    const v2 = { addedContains: ['- textbox "Email": {{v1}}'], lineDialect: 2 as const };
+    expect(expectationLoss(v1, v2)).toBeNull();
+    expect(expectationLoss(v1, { lineDialect: 2, urlPattern: 'u' })).toBe('no longer asserts page text "- textbox \\"\\": {{v1}}"');
+    // within one dialect, a dropped line is still a dropped line
+    expect(expectationLoss(v2, { addedContains: ['- button "Save"'], lineDialect: 2 })).toBe('no longer asserts page text "- textbox \\"Email\\": {{v1}}"');
+    expect(expectationLoss(v1, { addedContains: [] })).toMatch(/page text/);
+  });
+  /**
+   * ROBUSTNESS.md finding 5: where a target lives is part of what a step
+   * promises. The same chain resolved from the page instead of the recorded
+   * frame can press the page's own identical Save, and a step that no longer
+   * follows the popup it opened runs its successors on the opener.
+   */
+  it('catches a dropped or changed frame, a dropped page effect, and a dropped page check', () => {
+    const frame = [{ selectors: ['iframe[title="Payment"]'], title: 'Payment' }];
+    const framed = step({ contexts: { target: { frame } }, page: 1, effect: { kind: 'popup' } });
+    expect(contractWeakening(skill({ steps: [framed] }), skill({ steps: [framed] }))).toEqual([]);
+    expect(contractWeakening(skill({ steps: [framed] }), skill({ steps: [step()] }))).toEqual([
+      'step 1: no longer looks for its target inside the recorded frame iframe[title="Payment"]',
+      'step 1: no longer follows the popup it recorded',
+      'step 1: no longer checks that it runs on page 1 of the browser',
+    ]);
+    const moved = step({ contexts: { target: { frame: [{ selectors: ['iframe[title="Checkout"]'], title: 'Checkout' }] } }, page: 1, effect: { kind: 'popup' } });
+    expect(contractWeakening(skill({ steps: [framed] }), skill({ steps: [moved] }))).toEqual([
+      'step 1: looks for its target in iframe[title="Checkout"] instead of the recorded frame iframe[title="Payment"]',
+    ]);
+    // gaining a frame is not a weakening
+    expect(contractWeakening(skill({ steps: [step()] }), skill({ steps: [framed] }))).toEqual([]);
+  });
 });

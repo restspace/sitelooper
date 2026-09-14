@@ -16,6 +16,7 @@ import {
   candidateRank,
   identityFields,
   identityValues,
+  isDrift,
   orderCandidates,
   resolveCandidates,
   structuralCandidate,
@@ -158,6 +159,46 @@ describe('resolveCandidates', () => {
     ]);
     expect(hit?.index).toBe(2);
     expect(hit?.missed).toEqual([{ index: 0, reason: 'absent' }, { index: 1, reason: 'error' }]);
+  });
+
+  describe('drift and the race (rule 7)', () => {
+    it('calls a resolution drift only when a candidate tried ahead of the winner failed', async () => {
+      expect(isDrift({ index: 0, missed: [] })).toBe(false);
+      expect(isDrift({ index: 0, missed: [{ index: 1, reason: 'absent' }] })).toBe(false);
+      expect(isDrift({ index: 2, missed: [{ index: 0, reason: 'absent' }] })).toBe(true);
+      // a positional primary ranked behind the name that won was never tried, so nothing drifted (fwod41 07-change)
+      const path = fakeLocator({ counts: [1] }, 'path');
+      const name = fakeLocator({ counts: [1] }, 'name');
+      const hit = await resolveCandidates(page, [obs({ locator: path, index: 0, kind: 'css', structural: true }), obs({ locator: name, index: 1 })]);
+      expect(hit).toMatchObject({ index: 1, missed: [] });
+      expect(isDrift(hit!)).toBe(false);
+      expect(path.calls).toEqual([]);
+    });
+
+    it('walks again once the DOM is quiet when a named fallback beat an ABSENT better candidate, and takes the late name', async () => {
+      // odoo's autocomplete: the named option is counted before the list paints, the id after
+      const option = fakeLocator({ counts: [0, 1] }, 'option');
+      const id = fakeLocator({ counts: [1] }, 'id');
+      const hit = await resolveCandidates(page, [obs({ locator: option, index: 0 }), obs({ locator: id, index: 1, kind: 'id' })]);
+      expect(hit).toMatchObject({ locator: option, index: 0, missed: [] });
+      expect(option.calls.filter((c) => c === 'count')).toHaveLength(2);
+    });
+
+    it('keeps the fallback when the second walk still finds no better candidate', async () => {
+      const gone = fakeLocator({ counts: [0] }, 'gone');
+      const id = fakeLocator({ counts: [1] }, 'id');
+      const hit = await resolveCandidates(page, [obs({ locator: gone, index: 0 }), obs({ locator: id, index: 1, kind: 'id' })]);
+      expect(hit).toMatchObject({ locator: id, index: 1, missed: [{ index: 0, reason: 'absent' }] });
+      expect(gone.calls.filter((c) => c === 'count')).toHaveLength(2);
+    });
+
+    it('does not walk again when every miss ahead was a judgment of the page as it is', async () => {
+      const twice = fakeLocator({ counts: [2, 1] }, 'twice');
+      const id = fakeLocator({ counts: [1] }, 'id');
+      const hit = await resolveCandidates(page, [obs({ locator: twice, index: 0 }), obs({ locator: id, index: 1, kind: 'id' })]);
+      expect(hit).toMatchObject({ locator: id, index: 1, missed: [{ index: 0, reason: 'ambiguous' }] });
+      expect(twice.calls.filter((c) => c === 'count')).toHaveLength(1);
+    });
   });
 
   describe('identity (rule 3a)', () => {

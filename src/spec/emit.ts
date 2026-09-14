@@ -26,6 +26,7 @@ import type { LocatorCandidate } from '../daemon/recorder.js';
 import { DIALOG_LINE, SLOT_LINE, TRANSIENT_LINE } from '../execution/expect.js';
 import { identityFields } from '../execution/resolve.js';
 import { originOf } from '../execution/url.js';
+import { describeFramePath, stepEffect } from '../execution/context.js';
 import { OPENER_LINE, waitsForAbsence } from '../skills/replay.js';
 import { seedRecipes, snapshotRecipes } from '../skills/components.js';
 import type { SkillStep } from '../skills/store.js';
@@ -150,6 +151,14 @@ function templateSafe(text: string): string {
 const CLICK_TIER_MS = 5_000;
 
 /**
+ * The whole budget of one emitted action — dispatch, its settle, its expected
+ * effect — as the daemon's ACTION_DEADLINE_MS (30s) is for replay's. Shorter,
+ * because a step's pick and gates share a Playwright test's timeout with it;
+ * the click tiers (3×CLICK_TIER_MS plus the re-render window) fit inside it.
+ */
+const ACTION_DEADLINE_MS = 25_000;
+
+/**
  * What the inlined `type` hands `typeWithRecipe`, as tools.ts's `case 'type'`
  * does: the tool layer's default 10s timeout, and its 20ms per-key delay when
  * the recording set none — one cadence in both runners, not Playwright's 0.
@@ -168,33 +177,31 @@ const HELPERS: { token: string; source: string[] }[] = [
     token: 'await settle(',
     source: [
       'async function settle(page: Page): Promise<void> {',
-      "  // Count the page's requests from the first settle on, as the daemon counts",
-      '  // them from the moment its session adopts a page (see settleNavigation).',
-      '  trackRequests(page);',
+      "  // Record the page's traffic from the first settle on, as the daemon records",
+      '  // it from the moment its session adopts a page: an action begun on it later',
+      '  // (beginAction, the shared src/execution/action.ts) has a baseline to read.',
+      '  pageTraffic(page);',
       '  await settleDom(page);',
       '}',
     ],
   },
   {
-    token: 'await settleNavigation(',
+    // The whole-action budget every emitted beginAction is given.
+    token: 'ACTION_DEADLINE_MS',
+    source: [`const ACTION_DEADLINE_MS = ${ACTION_DEADLINE_MS};`],
+  },
+  {
+    token: 'catch(actionFailed)',
     source: [
       '/**',
-      " * After a navigating action: where the url settles, not where it first went.",
-      ' *',
-      " * WHICH REPLAY RULE THIS MIRRORS. tools.ts runStep, for a state-changing",
-      ' * action that may navigate (click, dblclick, press, select): after the DOM',
-      ' * settles it waits for the url to hold still (the shared urlHeldStill,',
-      ' * src/execution/browser.ts, embedded) and settles again when the url moved',
-      ' * while it waited. So a page that exposes a record id and then redirects',
-      ' * once more, with nothing on the page changing in between, is read at its',
-      " * final url by the step's derived binding, mint and gates — in both runners.",
-      ' * A DOM settle alone returns before such a redirect lands.',
+      " * A state-changing action that threw, rethrown with what its error proves",
+      " * about it (the shared outcomeOfError): `[outcome: not dispatched]` when",
+      ' * nothing went out, `[outcome: unknown]` otherwise — the words replay puts',
+      " * after its own `click failed: …`.",
       ' */',
-      'async function settleNavigation(page: Page, urlBefore: string): Promise<void> {',
-      '  await settle(page);',
-      '  const settled = page.url();',
-      '  const seen = await urlHeldStill(page, urlBefore, () => inFlightRequests(page));',
-      '  if (seen !== settled) await settle(page);',
+      'function actionFailed(err: unknown): never {',
+      "  if (err instanceof Error && !err.message.includes('[outcome: ')) err.message += ` ${outcomeLabel(outcomeOfError(err))}`;",
+      '  throw err;',
       '}',
     ],
   },
@@ -270,10 +277,12 @@ const HELPERS: { token: string; source: string[] }[] = [
       " * its diff: after the action, once the DOM has settled (tools.ts",
       ' * settledSignature), and before any url wait — a toast that auto-dismisses',
       " * inside verify's url window is seen by both runners or by neither.",
+      " * Rendered in the step's line dialect, with whether every live region was",
+      ' * seen (the alert cap, an unread frame): "none raised" needs a full look.',
       ' */',
-      'async function settledAlerts(page: Page): Promise<string[] | null> {',
+      'async function settledAlerts(page: Page, dialect: LineDialect = 1): Promise<ObservedAlerts | null> {',
       '  await settle(page);',
-      '  return liveAlerts(page);',
+      '  return liveAlertsObserved(page, dialect);',
       '}',
     ],
   },
@@ -291,8 +300,8 @@ const HELPERS: { token: string; source: string[] }[] = [
       ' * during a 5s url wait must not be missed) — and a page that could not be',
       ' * read is handed over as unobserved, never as "no alert".',
       ' */',
-      'function alertGate(before: string[], after: string[] | null, ctx: { where: string; isRead: boolean; expectedContains?: string; params: Record<string, string> }): void {',
-      '  const verdict = alertVerdict(before, after, ctx);',
+      'function alertGate(before: string[], after: ObservedAlerts | null, ctx: { where: string; isRead: boolean; expectedContains?: string; params: Record<string, string> }): void {',
+      '  const verdict = alertVerdict(before, after ? after.alerts : null, ctx, after ? after.complete : true);',
       '  for (const line of verdict.warnings) logWarning(line);',
       '  if (verdict.stop) throw new Error(verdict.stop);',
       '}',
@@ -422,11 +431,60 @@ const HELPERS: { token: string; source: string[] }[] = [
     ],
   },
   {
+    token: 'await frameRoot(',
+    source: [
+      '/**',
+      " * The recorded frame a step's target lives in — replay's own lookup, the",
+      ' * shared rootFor (src/execution/context.ts, embedded): the ranked selectors',
+      ' * each hop recorded, polled for `waitMs`. A frame that is not there is a',
+      " * stop, never a search of the main page: the page's own Save is not the",
+      " * frame's Save, whatever it is called.",
+      ' */',
+      'async function frameRoot(page: Page, frame: FramePath, where: string, waitMs: number = RESOLVE_WAIT_MS): Promise<Root> {',
+      '  const found = await rootFor(page, frame, waitMs);',
+      "  if ('error' in found) throw new Error(`${where}: ${found.error}, so the target recorded inside it was not looked for on the page`);",
+      '  return found.root;',
+      '}',
+    ],
+  },
+  {
+    token: 'pageGate(',
+    source: [
+      '/**',
+      " * The page a step was recorded on, among the browser's open pages — replay's",
+      ' * check through the shared pageIndexVerdict: a step recorded on a popup does',
+      ' * not run on the page that opened it.',
+      ' */',
+      'function pageGate(page: Page, expected: number, where: string): void {',
+      '  const stop = pageIndexVerdict(page, expected, where);',
+      '  if (stop) throw new Error(stop);',
+      '}',
+    ],
+  },
+  {
+    token: 'await landed(',
+    source: [
+      '/**',
+      ' * Where a step that was recorded opening a popup, closing its page or',
+      ' * switching tabs left the procedure — the question the shared armPageEffect',
+      ' * (armed before the action dispatched) hands back. A recorded popup that did',
+      ' * not open is a stop, exactly as in replay.',
+      ' */',
+      'async function landed(landing: (() => Promise<{ page: Page } | { error: string } | null>) | null): Promise<Page | null> {',
+      '  if (!landing) return null;',
+      '  const result = await landing();',
+      "  if (result && 'error' in result) throw new Error(result.error);",
+      '  return result ? result.page : null;',
+      '}',
+    ],
+  },
+  {
     token: 'await click(',
     source: [
       `const CLICK_TIER_MS = ${CLICK_TIER_MS};`,
-      'async function click(loc: Locator, opts: { dbl?: boolean } = {}): Promise<void> {',
-      '  await robustClick(loc, { timeout: CLICK_TIER_MS, ...opts });',
+      'async function click(loc: Locator, opts: { dbl?: boolean; obs?: ActionObservation | null } = {}): Promise<void> {',
+      "  // The tiers are cut to what is left of the action's deadline, and report how the click went out.",
+      '  await robustClick(loc, { timeout: CLICK_TIER_MS, dbl: opts.dbl, obs: opts.obs ?? undefined });',
       '}',
     ],
   },
@@ -546,11 +604,12 @@ const HELPERS: { token: string; source: string[] }[] = [
       '  const hit = await resolveCandidates(page, candidates, policy);',
       '  if (!hit) return null;',
       '  const primary = candidates.find((c) => c.index === 0) ?? candidates[0];',
-      '  if (hit.index > 0) {',
+      '  // Drift is a better candidate that FAILED (the shared isDrift), never a stored',
+      '  // index alone: a positional primary the policy ranked behind a name was not missed.',
+      '  if (isDrift(hit)) {',
       "    const missed = hit.missed.map((m) => `#${m.index + 1} ${m.reason}`).join(', ');",
-      '    const line =',
-      '      `[sitelooper drift] ${where}: primary ${String(primary.locator)} missed; used #${hit.index + 1} ${String(hit.locator)}` +',
-      "      (missed ? ` (${missed})` : '');",
+      '    const head = hit.missed.some((m) => m.index === 0) ? `primary ${String(primary.locator)} missed; used` : \'used\';',
+      '    const line = `[sitelooper drift] ${where}: ${head} #${hit.index + 1} ${String(hit.locator)} (${missed})`;',
       '    console.warn(line);',
       '    (opts.drift ?? DRIFT).push(line);',
       '  }',
@@ -639,6 +698,8 @@ const HELPERS: { token: string; source: string[] }[] = [
       '      },',
       "      goto: (url) => page.goto(url, { waitUntil: 'load', timeout: GOTO_TIMEOUT_MS }),",
       '    });',
+      "    // The substitute link's click may have landed: a stop, never the direct navigation after it.",
+      "    if (arrived && 'unknown' in arrived) throw new Error(`${where}: none of ${candidates.length} recorded locators resolved; ${arrived.note}`);",
       '    if (arrived) {',
       '      const line = `[sitelooper drift] ${where}: none of ${candidates.length} recorded locators resolved; ${arrived.note}`;',
       '      console.warn(line);',
@@ -793,14 +854,16 @@ const HELPERS: { token: string; source: string[] }[] = [
       ' * was cancelled. They have to hold of the same record.',
       ' *',
       ' * Conservative by construction: no goal, no identity, or a page that cannot',
-      ' * be read is never satisfied. Being wrong the other way costs one re-run of',
-      ' * a step that had already happened; being wrong THIS way skips work that',
-      ' * never happened at all.',
+      ' * be read — or a look that could not cover it (captureLines, dialect 2: a',
+      ' * cap reached, a visible frame unread, a virtualised list) — is never',
+      ' * satisfied. Being wrong the other way costs one re-run of a step that had',
+      ' * already happened; being wrong THIS way skips work that never happened.',
       ' */',
       'async function satisfied(page: Page, identity: string[], goal: string[]): Promise<boolean> {',
       '  if (!identity.length || !goal.length) return false;',
-      '  const lines = await capturePageLines(page);',
-      '  if (!lines) return false;',
+      '  const captured = await captureLines(page, 2);',
+      '  if (!captured || !captured.complete) return false;',
+      '  const lines = captured.lines;',
       '  for (const want of identity) {',
       '    if (!lineShows(lines, [want], { whole: true })) return false;',
       '  }',
@@ -848,7 +911,9 @@ const HELPERS: { token: string; source: string[] }[] = [
       ' * once, so the artifact is the more patient of the two, never the looser.',
       ' *',
       ' * The verdict\'s warnings go to stdout as `[sitelooper warn]` lines, a missing',
-      ' * diff leg as `[sitelooper unobserved]`; an absent dialog comes back to the',
+      " * diff leg or a look that could not cover the page as `[sitelooper unobserved]`.",
+      " * Every look is rendered in `dialect`, the one the step's lines were recorded",
+      ' * in (StepExpectation.lineDialect), exactly as replay renders its own. An absent dialog comes back to the',
       ' * step body, which remembers it for the steps that were going to act inside.',
       ' */',
       'async function expectChanges(',
@@ -857,14 +922,15 @@ const HELPERS: { token: string; source: string[] }[] = [
       '  p: Record<string, string>,',
       '  ctx: { tag: string; tool: string; value?: string; positionalResolution: boolean },',
       '  linesBefore: string[] | null,',
+      '  dialect: LineDialect = 1,',
       '): Promise<ChangeVerdict> {',
       '  let last: ChangeVerdict = { warnings: [] };',
       '  await expect',
       '    .poll(',
       '      async () => {',
       '        last = await expectedChangesVerdict(recorded, p, ctx, {',
-      '          added: addedLines(linesBefore, await capturePageLines(page)),',
-      '          live: () => capturePageLines(page),',
+      '          added: addedLines(linesBefore, await capturePageLines(page, dialect)),',
+      '          live: () => captureLines(page, dialect),',
       '        });',
       '        return last.stop ?? null;',
       '      },',
@@ -872,7 +938,7 @@ const HELPERS: { token: string; source: string[] }[] = [
       '    )',
       '    .toBeNull();',
       '  for (const warning of last.warnings) console.warn(`[sitelooper warn] ${warning}`);',
-      '  if (last.unobserved) console.warn(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured after the action`);',
+      '  if (last.unobserved) console.warn(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);',
       '  return last;',
       '}',
     ],
@@ -1088,6 +1154,18 @@ interface Ctx {
   echoUsed?: boolean;
   /** Segments emitted so far in this body, so each ledger names its own local. */
   segments?: number;
+  /** Frame roots emitted so far, so each resolution in a frame names its own local. */
+  roots?: number;
+  /**
+   * The step-scoped variable holding what a recorded page effect armed before
+   * the action (armPageEffect), when the step emitting carries one.
+   */
+  landing?: string;
+  /**
+   * The step-scoped variable holding the action's observation (beginAction),
+   * when the step emitting is a state-changing action.
+   */
+  obs?: string;
 }
 
 const src = (text: string) => stringSource(text, { slot: slotAsParam });
@@ -1180,7 +1258,7 @@ function expectationLines(step: SkillStep, ctx: Ctx, out: string[], linesBefore:
   // time (replay's own per-step flag), not a compile-time guess over the chain.
   const call =
     `await expectChanges(page, [${recorded.map(q).join(', ')}], p, ` +
-    `{ tag: ${q(where)}, tool: ${q(step.tool)}${value}, positionalResolution: ${ctx.positional ?? 'false'} }, ${linesBefore})`;
+    `{ tag: ${q(where)}, tool: ${q(step.tool)}${value}, positionalResolution: ${ctx.positional ?? 'false'} }, ${linesBefore}${dialectArg(step)})`;
   out.push("// The step's recorded page changes, judged by the daemon's own effect gate (see expectChanges):");
   for (const line of recorded) out.push(`//   ${commentSafe(line)}`);
   // Only a plain `- dialog "…"` line can leave a dialog absent (the verdict's
@@ -1209,6 +1287,16 @@ function effectLines(step: SkillStep, ctx: Ctx, out: string[]): void {
   if (!pattern) return;
   noteSlots(pattern, ctx);
   out.push(`await urlEffect(page, ${q(pattern)}, p, ${q(`${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`)});`);
+}
+
+/**
+ * The trailing dialect argument for a step's page observations: `, 2` when its
+ * recorded lines are in dialect 2 (StepExpectation.lineDialect), nothing for
+ * dialect 1 — the helpers default to it, so a file compiled from a store
+ * written before dialects reads exactly as it did.
+ */
+function dialectArg(step: SkillStep): string {
+  return step.expect?.lineDialect === 2 ? ', 2' : '';
 }
 
 /** Collect the slots a piece of recorded text needs from `p`. */
@@ -1256,7 +1344,7 @@ function wrapAlreadyInEffect(step: SkillStep, ctx: Ctx, out: string[], actionAt:
     '// src/execution/snapshot.ts — whole lines, so a `button "6"` never matches a',
     '// button called "17.6"):',
     ...opener.map((l) => `//   ${commentSafe(l)}`),
-    `if (await presentOnPage(page, liveLines([${opener.map(q).join(', ')}], p))) {`,
+    `if (await presentOnPage(page, liveLines([${opener.map(q).join(', ')}], p)${step.expect?.lineDialect === 2 ? ', {}, 2' : ''})) {`,
     '  // already in effect: the popup is on the page, so the recorded click has nothing left to do.',
     // A skipped click is invisible in a passing-until-it-isn't spec, and a
     // guard that fires for the WRONG reason (one of these lines is on the page
@@ -1284,10 +1372,12 @@ function resolutionLines(
   key: 'target' | 'source',
   ctx: Ctx,
   o: { allowMultiple?: boolean; waitMs: 'RESOLVE_WAIT_MS' | '0' },
+  /** The expression the candidates are built from: `page`, or the recorded frame's root local. */
+  root = 'page',
 ): { open: string[]; where: string; policy: string; opts: string } {
   noteSlots(chain, ctx);
   const where = q(`${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex} ${key}`);
-  const open = observationSources(chain, { slot: slotAsParam }).map((source) => `${CONT_INDENT}${source},`);
+  const open = observationSources(chain, { slot: slotAsParam, page: root }).map((source) => `${CONT_INDENT}${source},`);
   // Drift belongs to this invocation. `DRIFT` remains only as a compatibility
   // view of the last completed run; helpers write into the run passed through
   // the step instead of accumulating process-wide state. In a loop body, what
@@ -1309,8 +1399,9 @@ function resolutionLines(
 function actionTarget(step: SkillStep, key: 'target' | 'source', ctx: Ctx, out: string[], hoist?: string): string | null {
   const chain = step.locators?.[key] ?? [];
   if (!chain.length) return null;
+  const root = frameRootLines(step, key, ctx, out);
   const name = `hit${++ctx.picks}`;
-  const { open, where, policy, opts } = resolutionLines(chain, step, key, ctx, { waitMs: 'RESOLVE_WAIT_MS' });
+  const { open, where, policy, opts } = resolutionLines(chain, step, key, ctx, { waitMs: 'RESOLVE_WAIT_MS' }, root);
   // `hoist` names the observations as a local, for a step that consults them
   // again after acting (a text wait's held-elsewhere fallback).
   const candidates = hoist ? hoist : null;
@@ -1342,6 +1433,23 @@ function actionTarget(step: SkillStep, key: 'target' | 'source', ctx: Ctx, out: 
     out.push(...echoNoteLines(chain.map((c) => (c as { name?: unknown; label?: unknown }).name ?? (c as { name?: unknown; label?: unknown }).label), ctx));
   }
   return `${name}.locator`;
+}
+
+/**
+ * The root a target's chain resolves against, emitting its lookup: `page` for
+ * a target of the main frame, else a local holding the recorded frame
+ * (frameRoot, over the shared rootFor), which throws when the frame is not
+ * there — replay's stop, never a search of the page.
+ */
+function frameRootLines(step: SkillStep, key: 'target' | 'source', ctx: Ctx, out: string[]): string {
+  const frame = step.contexts?.[key]?.frame;
+  if (!frame?.length) return 'page';
+  const root = `root${(ctx.roots = (ctx.roots ?? 0) + 1)}`;
+  out.push(
+    `// The recorded ${key} lives inside ${commentSafe(describeFramePath(frame))}; its chain is resolved there and nowhere else.`,
+    `const ${root} = await frameRoot(page, ${JSON.stringify(frame)}, ${q(`${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex} ${key}`)});`,
+  );
+  return root;
 }
 
 /**
@@ -1445,7 +1553,28 @@ function emitSkillStep(step: SkillStep, segment: SpecSegment, index: number, ctx
   // The page-change gate sharpens on a positional resolution, so a step that
   // carries one is given a flag its resolution reports into (see actionTarget).
   ctx.positional = recordedChanges(step).length ? `positional${ctx.urls}` : undefined;
+  // A recorded popup, close or tab switch: armed in the action, just ahead of
+  // its dispatch, and asked where the procedure continues once it has run.
+  const effect = stepEffect(step);
+  const landing = effect && effect.kind !== 'navigate' ? `landing${ctx.urls}` : undefined;
+  const moved = landing ? `moved${ctx.urls}` : undefined;
+  ctx.landing = landing;
+  // A state-changing action is observed from just before it dispatches to the
+  // end of its settle (the shared beginAction), as tools.ts runStep observes
+  // every state-changing tool replay executes.
+  const obs = isMutatingAction(step.tool) ? `obs${ctx.urls}` : undefined;
+  ctx.obs = obs;
   const action = emitSkillAction(step, segment, index, ctx, first);
+  ctx.landing = undefined;
+  ctx.obs = undefined;
+  const observed = obs && action.some((line) => line.includes(`${obs} = beginAction(`)) ? obs : undefined;
+  if (landing && moved) {
+    action.push(
+      `// The recording ${effect!.kind === 'popup' ? 'opened a popup' : effect!.kind === 'close' ? 'closed this page' : `switched to tab ${(effect as { to: number }).to}`} here: the step is not done until the`,
+      '// procedure is on the page it continued on (replay stops the same way when it is not).',
+      `${moved} = await landed(${landing});`,
+    );
+  }
   // A step that resolved nothing (page-level, or refused) has nothing to report: the gate is told so outright.
   if (ctx.positional && !action.some((line) => line.includes(`${ctx.positional} = `))) ctx.positional = undefined;
   const bindings: string[] = [];
@@ -1488,28 +1617,35 @@ function emitSkillStep(step: SkillStep, segment: SpecSegment, index: number, ctx
   return [
     `// @step ${where}`,
     `let ${urlBefore} = '';`,
-    ...(alerts ? [`let ${alerts}: string[] = [];`, `let ${alertsAfter}: string[] | null = null;`] : []),
+    ...(alerts ? [`let ${alerts}: string[] = [];`, `let ${alertsAfter}: ObservedAlerts | null = null;`] : []),
     ...(linesBefore ? [`let ${linesBefore}: string[] | null = null;`] : []),
     ...(positional ? [`let ${positional} = false;`] : []),
+    ...(landing ? [`let ${landing}: Awaited<ReturnType<typeof armPageEffect>> | null = null;`, `let ${moved}: Page | null = null;`] : []),
+    ...(observed ? [`let ${observed}: ActionObservation | null = null;`] : []),
     'await runStepLifecycle({',
     '  prepare: async () => {',
     '    await settle(page);',
+    // Replay asks which page it is on before it resolves anything.
+    ...(step.page !== undefined ? [`    pageGate(page, ${step.page}, ${q(where)});`] : []),
     `    ${urlBefore} = page.url();`,
-    ...(alerts ? [`    ${alerts} = (await liveAlerts(page)) ?? [];`] : []),
-    ...(linesBefore ? [`    ${linesBefore} = await capturePageLines(page);`] : []),
+    ...(alerts ? [`    ${alerts} = (await liveAlerts(page${dialectArg(step)})) ?? [];`] : []),
+    ...(linesBefore ? [`    ${linesBefore} = await capturePageLines(page${dialectArg(step)});`] : []),
     '  },',
     '  act: async () => {',
     ...indent(action),
     "    return { status: 'completed', value: undefined };",
     '  },',
     '  settle: async () => {',
-    `    if (page.url() !== ${urlBefore}) await settle(page);`,
-    // tools.ts waits on the url after a state-changing action that may
-    // navigate; the shared urlHeldStill, through settleNavigation.
-    ...(isNavigatingAction(step.tool) && isMutatingAction(step.tool) ? [`    await settleNavigation(page, ${urlBefore});`] : []),
+    // An observed action settles on its own evidence — the DOM, the requests
+    // it started, a debounced one, the url held still after a tool that may
+    // navigate (the shared urlHeldStill, inside it), its expected effect — as
+    // runStep settles replay's; anything else as replay's settle phase does.
+    ...(observed
+      ? [`    if (${observed}) await ${observed}.settle();`, `    else if (page.url() !== ${urlBefore}) await settle(page);`]
+      : [`    if (page.url() !== ${urlBefore}) await settle(page);`]),
     // The alert observation belongs to the settle phase, not to verify:
     // taken right after the action has settled, before the url wait.
-    ...(alerts ? [`    ${alertsAfter} = await settledAlerts(page);`] : []),
+    ...(alerts ? [`    ${alertsAfter} = await settledAlerts(page${dialectArg(step)});`] : []),
     '  },',
     '  bind: async () => {',
     ...indent(bindings),
@@ -1518,7 +1654,18 @@ function emitSkillStep(step: SkillStep, segment: SpecSegment, index: number, ctx
     ...indent(checks),
     '  },',
     '});',
+    // Every later step of this body, and every later flow step (run.page), is
+    // asked of the page the procedure continued on.
+    ...(moved ? [`if (${moved}) page = run.page = ${moved};`] : []),
   ];
+}
+
+/** Whether any step (loop bodies included) moves the procedure to another page. */
+function carriesEffect(steps: readonly SkillStep[]): boolean {
+  return steps.some((s) => {
+    const effect = stepEffect(s);
+    return (effect !== undefined && effect.kind !== 'navigate') || (Array.isArray(s.body) && carriesEffect(s.body));
+  });
 }
 
 /** Tools emitSkillAction dispatches against the page itself, with no locator to resolve. */
@@ -1546,7 +1693,11 @@ function absentDialogLines(step: SkillStep, args: Record<string, unknown>, ctx: 
   const pageLevel = PAGE_LEVEL_TOOLS.has(step.tool) || (step.tool === 'press' && !args.target);
   const chain = [...(step.locators?.target ?? []), ...(step.locators?.source ?? [])];
   const { sources } = candidateSources(chain, { slot: slotAsParam });
-  if (!pageLevel && !isReadAction(step.tool) && !waitsForAbsence(step, args) && !step.mints && sources.length) {
+  // A target inside a recorded frame is never skipped this way: the dialog's
+  // controls were looked for on the page, and replay does not consult the
+  // absent dialog for a step whose frame is missing either.
+  const framed = Boolean(step.contexts?.target?.frame?.length || step.contexts?.source?.frame?.length);
+  if (!pageLevel && !framed && !isReadAction(step.tool) && !waitsForAbsence(step, args) && !step.mints && sources.length) {
     const locators = Object.fromEntries(
       Object.entries(step.locators ?? {}).map(([key, cands]) => [
         key,
@@ -1620,21 +1771,19 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
       return out;
     }
     case 'tabs':
-      // A second page needs a real handle, and inventing one would silently
-      // re-point every later `page.` line at the wrong tab.
-      out.push(
-        ...unsupportedCapability(ctx, index, {
-          what: `switches to tab ${String(args.switch_to)}, which a standalone spec cannot express`,
-          why: 'Replay switches the session\'s active page; the generated file has one Page and no handle for the tab the recording moved to, so every later line would run against the wrong one.',
-          fix: 'take the tab handle by hand in the generated file (page.context().pages() / page.waitForEvent(\'page\')), or re-record the procedure without the tab switch',
-          todo: `the recording switched to tab ${commentSafe(String(args.switch_to))} here — take the handle yourself.`,
-          throws: `Unsupported recorded action: tabs (switch to ${String(args.switch_to)})`,
-        }),
-      );
+      // The switch itself is the step's page effect (stepEffect): the handle
+      // is the tab at the recorded index among the open pages, taken after
+      // the step and carried to every later line as `page` (and to later flow
+      // steps as run.page) — replay's follow, not a guess. A tabs step that
+      // only listed the tabs did nothing to the page.
+      if (ctx.landing) out.push(`${ctx.landing} = await armPageEffect(page, ${JSON.stringify(stepEffect(step))}, ${q(`${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`)});`);
+      else out.push('// the recording listed the open tabs here; nothing to do.');
       return out;
     case 'press':
       if (!args.target) {
+        if (ctx.landing) out.push(`${ctx.landing} = await armPageEffect(page, ${JSON.stringify(stepEffect(step))}, ${q(`${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`)});`);
         out.push(`await page.keyboard.press(${src(str('key'))});`);
+        observeAction(step, ctx, out);
         return out;
       }
       break;
@@ -1666,10 +1815,22 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
       return out;
     }
     const name = `hit${++ctx.picks}`;
+    // Inside a recorded frame: a frame that is not there shows nothing, so the
+    // absence is met; an ambiguous one is a stop (replay's own reading).
+    const frame = step.contexts?.target?.frame;
+    let root = 'page';
+    if (frame?.length) {
+      const framed = `framed${(ctx.roots = (ctx.roots ?? 0) + 1)}`;
+      root = `${framed}.root`;
+      out.push(
+        `const ${framed} = await rootFor(page, ${JSON.stringify(frame)}, 0);`,
+        `if ('error' in ${framed} && !${framed}.missing) throw new Error(${q(`${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex} target: `)} + ${framed}.error);`,
+      );
+    }
     // Several matches resolve too (allowMultiple): two visible elements have
     // not met "hidden", and an 'ambiguous' miss read as "nothing matched"
     // was a false success. Replay's own policy for this step.
-    const { open, where, policy, opts } = resolutionLines(chain, step, 'target', ctx, { allowMultiple: true, waitMs: '0' });
+    const { open, where, policy, opts } = resolutionLines(chain, step, 'target', ctx, { allowMultiple: true, waitMs: '0' }, root);
     // A hidden wait is on the FIRST match, as replay dispatches it
     // (tools.ts waitFor: `loc.first().waitFor({ state })`); Playwright's
     // strict expect would otherwise refuse the several matches allowed above
@@ -1679,9 +1840,9 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
       '// Absence is the condition: a chain that resolves nothing has met it (replay treats',
       '// the miss as the recorded outcome, not as drift), so the resolution is asked once,',
       '// with no wait, and only a target that is still there is waited on to go.',
-      `const ${name} = await resolveTarget(page, [`,
+      root === 'page' ? `const ${name} = await resolveTarget(page, [` : `const ${name} = 'root' in ${root.slice(0, -'.root'.length)} ? await resolveTarget(page, [`,
       ...open,
-      `], ${where}, ${policy}, ${opts});`,
+      root === 'page' ? `], ${where}, ${policy}, ${opts});` : `], ${where}, ${policy}, ${opts}) : null;`,
       `if (${name}) ${waitForLine(target, args, num('timeout_ms'), ctx, index)}`,
     );
     return out;
@@ -1717,10 +1878,10 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
 
   switch (step.tool) {
     case 'click':
-      out.push(`await click(${target});`);
+      out.push(`await click(${target}${ctx.obs ? `, { obs: ${ctx.obs} }` : ''});`);
       break;
     case 'dblclick':
-      out.push(`await click(${target}, { dbl: true });`);
+      out.push(`await click(${target}, { dbl: true${ctx.obs ? `, obs: ${ctx.obs}` : ''} });`);
       break;
     // Not through the tiers: tools.ts dispatches a right or modifier click as a
     // plain, single Playwright click too (only click/dblclick reach
@@ -1814,6 +1975,15 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
       break;
   }
 
+  // The action's observation begins just before it dispatches, after the
+  // arming below (both before the dispatch, as replay orders them).
+  if (!(step.tool === 'drag' && !out[out.length - 1]?.includes('.dragTo('))) observeAction(step, ctx, out);
+  // A recorded popup/close is armed after the target resolved and before the
+  // action dispatches, as replay arms it: a target=_blank click can raise its
+  // popup before the click call returns.
+  if (ctx.landing) {
+    out.splice(actionAt, 0, `${ctx.landing} = await armPageEffect(page, ${JSON.stringify(stepEffect(step))}, ${q(`${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`)});`);
+  }
   wrapAlreadyInEffect(step, ctx, out, actionAt);
   // A flagged step's `pick` carries the note in its own throw (actionTarget),
   // but the ACTION after it can fail too — a click that timed out on what
@@ -1823,6 +1993,35 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
   if (ctx.note) noteRethrow(out, actionAt, ctx.note);
   return out;
 }
+
+/**
+ * Observe the state-changing action whose dispatch is the last line of `out`:
+ * begin its observation (the shared beginAction) just ahead of it, and rethrow
+ * a failure with its outcome (actionFailed). The options are replay's runStep
+ * options: whether the tool may navigate (the url wait), whether it is an
+ * input (the start grace from the dispatch), and the step's expected effect
+ * (the shared effectExpectation over its recorded `{{vN}}` lines).
+ */
+function observeAction(step: SkillStep, ctx: Ctx, out: string[]): void {
+  if (!ctx.obs || !isMutatingAction(step.tool) || !out.length) return;
+  const dispatch = out.pop()!;
+  const options = ['deadlineMs: ACTION_DEADLINE_MS'];
+  if (isNavigatingAction(step.tool)) options.push('navigating: true');
+  if (INPUT_TOOLS.has(step.tool)) options.push('graceFromDispatch: true');
+  const hard = recordedChanges(step).filter((l) => SLOT_LINE.test(l));
+  if (hard.length) {
+    noteSlots(hard, ctx);
+    options.push(`expect: effectExpectation(page, [${hard.map(q).join(', ')}], p${dialectArg(step)})`);
+  }
+  // Every dispatch this is asked of is one `await <call>;` line (a trailing
+  // comment allowed): the failure is taken on the call itself, so the step
+  // body gains no try block around it.
+  const call = /^await (.+?);(\s*\/\/.*)?$/.exec(dispatch);
+  out.push(`${ctx.obs} = beginAction(page, { ${options.join(', ')} });`, call ? `await ${call[1]}.catch(actionFailed);${call[2] ?? ''}` : dispatch);
+}
+
+/** Inputs, whose own save an app commonly debounces: tools.ts INPUT_TOOLS. */
+const INPUT_TOOLS = new Set(['fill', 'type', 'press', 'select', 'check']);
 
 /**
  * Wrap `out[from..]` in a try/catch that appends `note` to whatever it throws.
@@ -1952,6 +2151,21 @@ function readLines(step: SkillStep, ctx: Ctx): string[] {
     });
   }
   // In a loop body a read's resolution is sunk for the progress guard too, as replay sinks every key.
+  const frame = step.contexts?.target?.frame;
+  if (frame?.length) {
+    // A read inside a recorded frame that is not there is skipped, as replay
+    // skips a read it cannot resolve: an observation, never a stop.
+    const framed = `framed${(ctx.roots = (ctx.roots ?? 0) + 1)}`;
+    const r = resolutionLines(chain, step, 'target', ctx, { allowMultiple: step.tool === 'read_all', waitMs: 'RESOLVE_WAIT_MS' }, `${framed}.root`);
+    return [
+      `const ${framed} = await rootFor(page, ${JSON.stringify(frame)}, RESOLVE_WAIT_MS);`,
+      `if ('error' in ${framed}) console.warn(${q(`[sitelooper skip] ${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex} target: `)} + ${framed}.error + ' — value left empty');`,
+      `${out} = 'root' in ${framed} ? await readOptional(page, [`,
+      ...r.open,
+      `], ${r.where}, ${r.policy}, ${read}, ${r.opts}) : '';`,
+      ...echoReadLines(step, ctx),
+    ];
+  }
   const { open, where, policy, opts } = resolutionLines(chain, step, 'target', ctx, { allowMultiple: step.tool === 'read_all', waitMs: 'RESOLVE_WAIT_MS' });
   return [`${out} = await readOptional(page, [`, ...open, `], ${where}, ${policy}, ${read}, ${opts});`, ...echoReadLines(step, ctx)];
 }
@@ -1975,7 +2189,11 @@ function emitLoop(step: SkillStep, segment: SpecSegment, index: number, ctx: Ctx
   const body = step.body ?? [];
   const guardChain = step.while ?? body[0]?.locators?.target ?? [];
   noteSlots(guardChain, ctx);
-  const observations = observationSources(guardChain, { slot: slotAsParam });
+  // The guard counts where the body acts: inside the recorded frame, when
+  // there is one. A frame that is not there throws — unreadable, not empty.
+  const guardFrame = (step.whileContext ?? body[0]?.contexts?.target)?.frame;
+  const guardRoot = guardFrame?.length ? `guardRoot${ctx.loops + 1}` : 'page';
+  const observations = observationSources(guardChain, { slot: slotAsParam, page: guardRoot });
   if (!observations.length || !body.length) {
     ctx.warnings.push(`${ctx.stepId}: step ${index} is a loop with no ${observations.length ? 'body' : 'guard a spec can express'}`);
     return [
@@ -2003,7 +2221,9 @@ function emitLoop(step: SkillStep, segment: SpecSegment, index: number, ctx: Ctx
     `const ${result} = await runFoldedLoop({`,
     '  settle: () => settle(page),',
     '  readable: () => pageReadable(page),',
+    '  coverage: async () => (await observePage(page))?.coverage.collections ?? null,',
     '  guard: async () => {',
+    ...(guardFrame?.length ? [`    const ${guardRoot} = await frameRoot(page, ${JSON.stringify(guardFrame)}, ${q(`${where} loop guard`)}, 0);`] : []),
     `    const guard${n} = await resolveCandidates(page, [`,
   ];
   for (const source of observations) out.push(`      ${source},`);
@@ -2034,6 +2254,9 @@ function emitLoop(step: SkillStep, segment: SpecSegment, index: number, ctx: Ctx
     // The cap is a budget, not a finish line: a drain that used every pass with
     // records left has unfinished work, and says so rather than returning green.
     `if (!${result}.ok) throw new Error(\`${templateSafe(where)}: \${${result}.reason}\`);`,
+    // A partial loop is not a failure and not a finished collection either:
+    // replay says `loop ×N (partial: …)` and so does this, on stdout.
+    `if (${result}.state === 'partial') console.warn(\`[sitelooper partial] ${templateSafe(where)}: \${${result}.reason}\`);`,
   );
   return out;
 }
@@ -2143,15 +2366,17 @@ function identityChecks(segment: SpecSegment, ctx: Ctx): string[] {
     noteSlots(marker, ctx);
     out.push(`// identity: this must be the record the flow is working on, not another of the same shape.`);
     // The daemon's own question (checkIdentity, src/skills/replay.ts):
-    // presentOnPage over a fresh snapshot capture, bounded (`whole`) so a
-    // neighbouring record whose id merely extends this one cannot pass, and
-    // seeing a marker that is only a field's VALUE. Polled, not asserted
-    // once: replay reaches this gate after its own settleDom, and a spec
-    // arrives on a page that may still be rendering.
+    // confirmPresence over a fresh dialect-2 observation, bounded (`whole`)
+    // so a neighbouring record whose id merely extends this one cannot pass,
+    // seeing a marker that is only a field's VALUE or sits in a frame, and
+    // sweeping the page once when the look could not establish absence.
+    // Polled, not asserted once: replay reaches this gate after its own
+    // settleDom, and a spec arrives on a page that may still be rendering. A
+    // look that stays 'unknown' fails the poll as 'unknown', not as absent.
     out.push(
-      `await expect.poll(() => presentOnPage(page, [${src(marker)}], { whole: true }), { timeout: ${IDENTITY_WAIT_MS}, message: ${q(
-        `identity: ${commentSafe(marker)} is not on this page`,
-      )} }).toBe(true);`,
+      `await expect.poll(async () => (await confirmPresence(page, [${src(marker)}], 2, { whole: true })).presence, { timeout: ${IDENTITY_WAIT_MS}, message: ${q(
+        `identity: ${commentSafe(marker)} is not confirmed on this page`,
+      )} }).toBe('present');`,
     );
   }
   return out;
@@ -2431,6 +2656,10 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
   const envInputs = requiredEnvNames(spec);
   const flagged = flaggedByStep(o.diagnostics);
 
+  // A flow with a step that moves the procedure to another page (a popup, a
+  // close, a tab switch) carries that page between flow steps on `run.page`;
+  // one without never names it, so its generated text is unchanged.
+  const followsPages = spec.steps.some((step) => step.segments.some((seg) => carriesEffect(seg.steps)));
   // Bodies first: which helpers the file needs is decided by what they use.
   const bodies = spec.steps.map((step) => {
     const ctx: Ctx = { stepId: step.id, slots: new Set(), warnings, diagnostics, downloads: 0, loops: 0, picks: 0, urls: 0, binds: 0, segmentId: '', stepIndex: 0, note: stepNote(flagged.get(step.id)), known: new Set() };
@@ -2451,6 +2680,8 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
       // dialog that did not open (see expectationLines), consulted by every
       // later step before it resolves — as runOneStep keeps it.
       if (ctx.dialogAbsence) lines.unshift('let absentDialog: { name: string; lines: string[] } | null = null;', '');
+      // An earlier flow step may have left the procedure on another page.
+      if (followsPages) lines.unshift("// Where an earlier step's popup, close or tab switch left the procedure.", 'if (run.page && !run.page.isClosed()) page = run.page;', '');
     }
     return { step, lines, slots: slotsOf(step, ctx.slots) };
   });
@@ -2469,7 +2700,10 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
   const body = [...bodies.flatMap((b) => b.lines), ...calls].join('\n');
   // runFlow judges the browser it is handed (profileMismatch, readLiveBrowser);
   // named here because runFlow is written after the helper scan.
-  const helpers = neededHelpers([body, 'profileMismatch(', 'readLiveBrowser('].join('\n'), [recipesHelper(spec)]);
+  // A flow with an observed action records its page's traffic from the start
+  // url on (runFlow, below), so the first action's baseline includes the load.
+  const observesActions = body.includes('beginAction(');
+  const helpers = neededHelpers([body, 'profileMismatch(', 'readLiveBrowser(', ...(observesActions ? ['pageTraffic('] : [])].join('\n'), [recipesHelper(spec)]);
 
   const out: string[] = [
     '// @sitelooper-flow v1',
@@ -2513,6 +2747,15 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
     '   * that is not the one the flow was recorded in (see RECORDED_BROWSER).',
     '   */',
     '  warnings: string[];',
+    ...(followsPages
+      ? [
+          '  /**',
+          "   * The page the procedure is on once a step's recorded popup, close or tab",
+          '   * switch moved it; every later step runs there. Unset until one does.',
+          '   */',
+          '  page?: Page;',
+        ]
+      : []),
     '}',
     'export interface RunOptions {',
     '  /** Absolute URL, or a relative path resolved through the Playwright project baseURL. */',
@@ -2590,6 +2833,7 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
   out.push('  run.echoed = [];');
   out.push('  run.created = [];');
   out.push('  run.warnings = [];');
+  if (followsPages) out.push('  run.page = undefined;');
   out.push('  const outputs = run.outputs;');
   out.push('  try {');
   // Judged, never applied: the browser belongs to the test runner (the
@@ -2599,6 +2843,7 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
   out.push('      run.warnings.push(browserMismatch);');
   out.push("      console.warn(`[sitelooper warn] ${browserMismatch}`);");
   out.push('    }');
+  if (observesActions) out.push("    // Traffic is recorded from the start url on, as the daemon records it from adopting the page.", '    pageTraffic(page);');
   out.push(`    await page.goto(options.startUrl ?? ${q(spec.startUrl)});`);
   for (const [i, b] of bodies.entries()) {
     out.push(`    await test.step(${q(`${b.step.id}: ${b.step.instruction}`)}, async () => {`);

@@ -23,6 +23,7 @@ import { structural } from '../skills/replay.js';
 import type { Flow } from '../skills/flow.js';
 import { SkillStore, type Skill, type SkillStep } from '../skills/store.js';
 import { expectationLoss } from '../skills/contract.js';
+import { framesEqual } from '../execution/context.js';
 import type { FlowRunResult } from '../shared/protocol.js';
 import { mutates, selectCandidates } from '../skills/learn.js';
 import { rerecordFix, type Diagnostic } from './diagnostics.js';
@@ -295,6 +296,13 @@ export function foldPatchedVariants(
     const chain = ostep?.locators[key];
     if (!variant || !original || !proposed || !chain) {
       lines.push(`could not fold ${variantId} into ${originalId}: the patched step is no longer there`);
+      continue;
+    }
+    // A candidate means something only against the root it was found on: a
+    // variant that locates this target in another frame (or on the page
+    // where the original looks in a frame) is not a locator for this chain.
+    if (!framesEqual(vstep?.contexts?.[key as 'target' | 'source']?.frame, ostep?.contexts?.[key as 'target' | 'source']?.frame)) {
+      lines.push(`could not fold ${variantId} into ${originalId}: the variant looks for step ${tag ?? '?'} ${key} in a different frame`);
       continue;
     }
     const expr = candidateExpr(proposed);

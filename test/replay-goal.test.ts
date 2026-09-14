@@ -10,13 +10,14 @@ import { describe, expect, it } from 'vitest';
 import type { Page } from 'playwright-core';
 import { goalSatisfied } from '../src/skills/replay.js';
 import type { Skill } from '../src/skills/store.js';
+import { documentOf } from './fixture/observation.js';
 
 /** A page that shows exactly these signature lines. */
 function fakePage(lines: string[]): Page {
   return {
     url: () => 'http://127.0.0.1:8069/odoo/sales/21',
     title: async () => 'Sales order',
-    evaluate: async () => ({ lines, alerts: [] }),
+    evaluate: async () => documentOf(lines),
   } as unknown as Page;
 }
 
@@ -62,6 +63,20 @@ describe('goalSatisfied', () => {
   it('refuses an unbound marker rather than reading it literally', async () => {
     // {{v3}} unfilled proves nothing about this run's record.
     expect(await goalSatisfied(fakePage(CANCELLED), skill(['Cancelled']), { v1: 'S00021' })).toEqual({ satisfied: false, shown: [] });
+  });
+
+  /**
+   * ROBUSTNESS.md finding 4: a look that stopped at a cap, or could not read a
+   * visible frame, is not the page. Skipping a step on it risks work that
+   * never happened; running it costs one replay.
+   */
+  it('is not satisfied on a look that could not cover the page, even when both halves show', async () => {
+    const partial = {
+      url: () => 'http://127.0.0.1:8069/odoo/sales/21',
+      title: async () => 'Sales order',
+      evaluate: async () => documentOf(CANCELLED, [], { nodesTruncated: true }),
+    } as unknown as Page;
+    expect(await goalSatisfied(partial, skill(['Cancelled']), PARAMS)).toEqual({ satisfied: false, shown: [] });
   });
 
   it('is not satisfied when the page cannot be captured', async () => {

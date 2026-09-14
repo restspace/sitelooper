@@ -244,10 +244,50 @@ describe('liftFlowFile: negative cases (hand-edited files)', () => {
   });
 
   it('throws LiftError on an unsupported version', () => {
-    const spec2 = { ...HAND_BUILT_FLOWS[0], version: 2 } as unknown as SpecFlow;
-    const text = buildFlowFileText(spec2);
+    const spec3 = { ...HAND_BUILT_FLOWS[0], version: 3 } as unknown as SpecFlow;
+    const text = buildFlowFileText(spec3);
     expect(() => liftFlowFile(text)).toThrow(LiftError);
     expect(() => liftFlowFile(text)).toThrow(/version/i);
+  });
+
+  /**
+   * ROBUSTNESS.md finding 5: a step's frame path, page index and page effect
+   * travel in FLOW verbatim (a version-2 spec), and a malformed one is refused
+   * naming the field — the artifact acts on all three.
+   */
+  describe('frame and page context', () => {
+    const framed = (extra: Record<string, unknown>): SpecFlow => {
+      const spec = structuredClone(HAND_BUILT_FLOWS[1]) as SpecFlow;
+      spec.version = 2;
+      Object.assign(spec.steps[0].segments[0].steps[0], extra);
+      return spec;
+    };
+    const context = {
+      contexts: { target: { frame: [{ selectors: ['iframe[title="Payment"]', 'iframe[src*="/frames/inner"]'], title: 'Payment' }] } },
+      page: 1,
+      effect: { kind: 'popup', urlPattern: 'http://127.0.0.1/popup/child' },
+    };
+
+    it('round-trips contexts, page and effect on a version-2 spec', () => {
+      const spec = framed(context);
+      const { spec: lifted, version } = liftFlowFile(buildFlowFileText(spec));
+      expect(version).toBe(2);
+      expect(lifted).toEqual(spec);
+      expect(lifted.steps[0].segments[0].steps[0]).toMatchObject(context);
+    });
+
+    it.each([
+      ['a frame hop with no selectors', { contexts: { target: { frame: [{ selectors: [] }] } } }, /contexts\.target\.frame"\[0\]: "selectors"/],
+      ['a frame that is not an array', { contexts: { target: { frame: 'iframe' } } }, /"contexts\.target\.frame" must be an array/],
+      ['a context for an unknown key', { contexts: { other: { frame: [] } } }, /may only name target and source/],
+      ['a negative page', { page: -1 }, /"page" must be a non-negative integer/],
+      ['an unknown effect', { effect: { kind: 'teleport' } }, /"effect\.kind" must be one of/],
+      ['a switch with no index', { effect: { kind: 'switch' } }, /"effect\.to"/],
+    ])('refuses %s', (_name, extra, message) => {
+      const text = buildFlowFileText(framed(extra));
+      expect(() => liftFlowFile(text)).toThrow(LiftError);
+      expect(() => liftFlowFile(text)).toThrow(message);
+    });
   });
 
   it('ignores a stray "export const FLOW" outside the markers and lifts the real one', () => {

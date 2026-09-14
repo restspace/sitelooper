@@ -2,7 +2,76 @@ import type { Locator, Page } from 'playwright-core';
 
 /** Browser execution shared by replay and the standalone spec bundle. */
 
-type ClickOpts = { timeout: number; dbl?: boolean };
+/**
+ * What is known about an action once it has been attempted (ROBUSTNESS.md
+ * finding 2). The four are different facts, and every caller that decides
+ * whether something may be tried again needs to tell them apart:
+ *  - `not-dispatched`: there is PROOF nothing reached the app (Playwright's
+ *    actionability wait gave up before the pointer event, the control is
+ *    disabled, the deadline ran out before a tier began). Another attempt
+ *    repeats nothing.
+ *  - `dispatched`: the action went out; whether it had its effect is for the
+ *    effect gates to say.
+ *  - `effect-verified`: it went out and its expected effect was seen.
+ *  - `unknown`: it may or may not have reached the app (the page was torn down
+ *    under it, or the failure carries no proof either way). Never repeat it.
+ *
+ * Carried on the error a failed action throws (`actionFailure`), never parsed
+ * out of its words: the message is written for a model and a person, and is
+ * free to change.
+ */
+export type ActionOutcome = 'not-dispatched' | 'dispatched' | 'effect-verified' | 'unknown';
+
+/** Which way a dispatched action went out. */
+export type DispatchVia = 'actionable' | 'forced' | 'synthetic' | 'rerender-window' | 'native';
+
+/** Why an action failed, for a caller that wants more than its outcome. */
+export type ActionFailureReason = 'disabled' | 'teardown' | 'strict' | 'never-attached' | 'rerender' | 'timeout' | 'deadline';
+
+/** An error that says what is known about the action that threw it. */
+export interface ActionFailure extends Error {
+  actionOutcome: 'not-dispatched' | 'unknown';
+  actionReason: ActionFailureReason;
+}
+
+/**
+ * Tag a failure with its outcome. Given an Error, that same object is tagged
+ * and returned — a caller that compares identity (or reads Playwright's own
+ * message) sees the error it would have seen untagged.
+ */
+export function actionFailure(outcome: 'not-dispatched' | 'unknown', reason: ActionFailureReason, error: string | Error): ActionFailure {
+  const failure = (typeof error === 'string' ? new Error(error) : error) as ActionFailure;
+  failure.actionOutcome = outcome;
+  failure.actionReason = reason;
+  return failure;
+}
+
+/**
+ * The outcome a thrown error establishes. Only a tagged failure can say
+ * `not-dispatched`: anything else carries no proof that nothing happened, so
+ * it is `unknown`, the direction that never repeats an action.
+ */
+export function outcomeOfError(err: unknown): 'not-dispatched' | 'unknown' {
+  const tagged = err && typeof err === 'object' ? (err as Partial<ActionFailure>).actionOutcome : undefined;
+  return tagged === 'not-dispatched' ? 'not-dispatched' : 'unknown';
+}
+
+/** The outcome as it reads beside a failure: `[outcome: not dispatched]`. */
+export function outcomeLabel(outcome: ActionOutcome): string {
+  return `[outcome: ${outcome.replace(/-/g, ' ')}]`;
+}
+
+/**
+ * What a click is told about the action it belongs to (src/execution/action.ts
+ * `beginAction`): how much of the action's deadline is left, which clamps every
+ * tier, and where to report the way the click went out.
+ */
+export interface ClickObservation {
+  remaining(): number;
+  dispatched?(via: DispatchVia): void;
+}
+
+type ClickOpts = { timeout: number; dbl?: boolean; obs?: ClickObservation };
 type ClickAct = (o: { timeout: number; force?: boolean }) => Promise<void>;
 
 /**
@@ -11,6 +80,7 @@ type ClickAct = (o: { timeout: number; force?: boolean }) => Promise<void>;
  */
 interface ClickTier {
   note: string;
+  via: DispatchVia;
   run: (loc: Locator, opts: ClickOpts, act: ClickAct) => Promise<void>;
 }
 
@@ -22,11 +92,12 @@ interface ClickTier {
  */
 const CLICK_TIERS: ClickTier[] = [
   // Playwright's own click, actionability checks and all.
-  { note: '', run: (_loc, opts, act) => act({ timeout: opts.timeout }) },
+  { note: '', via: 'actionable', run: (_loc, opts, act) => act({ timeout: opts.timeout }) },
   // Scroll into view and skip the checks: a control under a sticky header,
   // or one an overlay covers in a way the app treats as fine.
   {
     note: ' (forced past actionability checks)',
+    via: 'forced',
     run: async (loc, opts, act) => {
       await loc.scrollIntoViewIfNeeded({ timeout: opts.timeout }).catch(() => {});
       await act({ timeout: opts.timeout, force: true });
@@ -34,22 +105,49 @@ const CLICK_TIERS: ClickTier[] = [
   },
   // A synthetic event straight at the element: React's delegated handlers see
   // it even when the element is not "clickable" by Playwright's rules.
-  { note: ' (dispatched DOM event — element was not normally clickable)', run: (loc, opts) => loc.evaluate(fireClick, Boolean(opts.dbl)) },
+  { note: ' (dispatched DOM event — element was not normally clickable)', via: 'synthetic', run: (loc, opts) => loc.evaluate(fireClick, Boolean(opts.dbl), { timeout: opts.timeout }) },
 ];
+
+/**
+ * The budget one tier (or the window tier) may spend: its own timeout, cut to
+ * what is left of the action's deadline. Never 0 — Playwright reads a zero
+ * timeout as "no timeout" — so a spent deadline is reported by the caller
+ * before the tier starts, not passed down.
+ */
+function tierBudget(opts: ClickOpts): number {
+  const left = opts.obs ? Math.floor(opts.obs.remaining()) : Infinity;
+  return Math.min(opts.timeout, left);
+}
+
+/** The refusal for a deadline that ran out before the next way of clicking could start: nothing was dispatched. */
+function deadlineSpent(label: string, because: string): ActionFailure {
+  const cause = because ? ` (after: ${because.split('\n')[0].slice(0, 120)})` : '';
+  return actionFailure(
+    'not-dispatched',
+    'deadline',
+    `${label === 'clicked' ? 'click' : 'double-click'} NOT dispatched: the action's deadline ran out before the control could be clicked${cause}. Observe the page — something it was waiting on (an overlay, a load) never finished.`,
+  );
+}
 
 export async function robustClick(loc: Locator, opts: ClickOpts): Promise<string> {
   const label = opts.dbl ? 'double-clicked' : 'clicked';
   const act: ClickAct = (o) => (opts.dbl ? loc.dblclick(o) : loc.click(o));
   let firstFailure = '';
   for (const tier of CLICK_TIERS) {
+    // Every tier before this one failed in a way that proves nothing went out
+    // (the throws below end the loop otherwise), so a deadline spent here is
+    // a click that was never dispatched.
+    const budget = tierBudget(opts);
+    if (budget < 1) throw deadlineSpent(label, firstFailure);
     try {
-      await tier.run(loc, opts, act);
+      await tier.run(loc, { ...opts, timeout: budget }, act);
+      opts.obs?.dispatched?.(tier.via);
       return `${label}${tier.note}`;
     } catch (err) {
       const failure = err instanceof Error ? err.message : String(err);
       firstFailure ||= failure;
       // Two or more matches is the agent's problem to fix, not a tier's.
-      if (/strict mode violation/i.test(failure)) throw err;
+      if (/strict mode violation/i.test(failure)) throw err instanceof Error ? actionFailure('not-dispatched', 'strict', err) : err;
       // A DISABLED control refused the click by design, and the tiers below
       // do not get past that: a forced click on a disabled button dispatches
       // nothing the app handles, yet returned "clicked (forced past
@@ -57,7 +155,9 @@ export async function robustClick(loc: Locator, opts: ClickOpts): Promise<string
       // failed, so an ordinary click costs nothing extra; an element that
       // cannot be asked (gone, re-rendering) goes on down the tiers as before.
       if (tier === CLICK_TIERS[0] && (await loc.isDisabled({ timeout: DISABLED_PROBE_MS }).catch(() => false))) {
-        throw new Error(
+        throw actionFailure(
+          'not-dispatched',
+          'disabled',
           `${label === 'clicked' ? 'click' : 'double-click'} NOT dispatched: the control is disabled, so the app would ignore it. ` +
             'Make whatever enables it true first (a required field, a selection, a finished load), then click it.',
         );
@@ -65,7 +165,9 @@ export async function robustClick(loc: Locator, opts: ClickOpts): Promise<string
       // The page went out from under the click. Whether it landed is unknown,
       // so no further tier may fire: see UNCERTAIN_DISPATCH.
       if (UNCERTAIN_DISPATCH.test(failure)) {
-        throw new Error(
+        throw actionFailure(
+          'unknown',
+          'teardown',
           `${label === 'clicked' ? 'click' : 'double-click'} outcome UNKNOWN: the page was torn down during the action (${failure.split('\n')[0].slice(0, 160)}). It may already have taken effect. Do not repeat it — observe the app's state and continue from what you find.`,
         );
       }
@@ -123,17 +225,23 @@ function fireClick(el: Element, dbl: boolean): void {
  * If no window is found within the budget, the error says what the agent is
  * fighting and what to try instead of the same click again.
  */
-export async function fireWhenAttached(loc: Locator, opts: { timeout: number; dbl?: boolean }, label = 'clicked', because = ''): Promise<string> {
+export async function fireWhenAttached(loc: Locator, opts: ClickOpts, label = 'clicked', because = ''): Promise<string> {
   // The first line of the failure that sent us here rides along in the
   // result, so a post-mortem can see WHY a click took this route.
   const cause = because ? ` after: ${because.split('\n')[0].slice(0, 120)}` : '';
-  const deadline = Date.now() + opts.timeout;
+  // Cut to the action's deadline like every tier before it; one already spent
+  // means no window was ever tried.
+  const budget = tierBudget(opts);
+  if (budget < 1) throw deadlineSpent(label, because);
+  const deadline = Date.now() + budget;
   let polls = 0;
   let attached = 0;
   while (Date.now() < deadline) {
     polls++;
     const handle = await loc.elementHandle({ timeout: 100 }).catch((err: unknown) => {
       const message = err instanceof Error ? err.message : String(err);
+      if (err instanceof Error && /strict mode violation/i.test(message)) throw actionFailure('not-dispatched', 'strict', err);
+      if (err instanceof Error && UNCERTAIN_DISPATCH.test(message)) throw actionFailure('unknown', 'teardown', err);
       if (/strict mode violation/i.test(message) || UNCERTAIN_DISPATCH.test(message)) throw err;
       return null;
     });
@@ -141,6 +249,7 @@ export async function fireWhenAttached(loc: Locator, opts: { timeout: number; db
       attached++;
       try {
         await handle.evaluate(fireClick, Boolean(opts.dbl));
+        opts.obs?.dispatched?.('rerender-window');
         return `${label} (dispatched during a re-render window${cause} — the element re-mounts continuously, so a normal click could not land; if the app did not respond, it may need a keyboard route or a wait_for on the state that settles it)`;
       } catch (err) {
         // The element going again between resolve and fire is the ordinary
@@ -149,7 +258,9 @@ export async function fireWhenAttached(loc: Locator, opts: { timeout: number; db
         // the page, and polling on would fire it a second time.
         const message = err instanceof Error ? err.message : String(err);
         if (UNCERTAIN_DISPATCH.test(message)) {
-          throw new Error(
+          throw actionFailure(
+            'unknown',
+            'teardown',
             `${label === 'clicked' ? 'click' : 'double-click'} outcome UNKNOWN: dispatched into a page that was being torn down (${message.split('\n')[0].slice(0, 160)}). It may already have taken effect. Do not repeat it — observe the app's state and continue from what you find.`,
           );
         }
@@ -159,10 +270,13 @@ export async function fireWhenAttached(loc: Locator, opts: { timeout: number; db
     }
     await new Promise((r) => setTimeout(r, 25));
   }
-  throw new Error(
+  // Every window either never came or was gone before the event fired: nothing went out.
+  throw actionFailure(
+    'not-dispatched',
+    attached ? 'rerender' : 'never-attached',
     attached
       ? `target re-rendered continuously: attached on ${attached} of ${polls} polls but never long enough to click. The app re-mounts it on every render. Do not repeat this click — wait_for an element that appears once the state settles, or drive it by keyboard (focus a stable neighbour, Tab to it, press Enter).`
-      : `target was never attached during ${Math.round(opts.timeout / 1000)}s of polling after an initial detach — it was removed by a re-render. Re-snapshot and locate it afresh rather than repeating this click.`,
+      : `target was never attached during ${Math.round(budget / 1000)}s of polling after an initial detach — it was removed by a re-render. Re-snapshot and locate it afresh rather than repeating this click.`,
   );
 }
 
@@ -357,30 +471,6 @@ export const URL_STILL_MS = 500;
 export const LATE_NAV_GRACE_MS = 0;
 
 /**
- * Requests in flight per page, so a runner can tell "the click did nothing"
- * from "the click asked the server and will route on the answer" without
- * waiting a fixed time for both. Counted from the page's own request events,
- * so a page never tracked reads as idle. The daemon starts counting when its
- * session adopts a page; the artifact when its first step settles.
- */
-const inFlight = new WeakMap<Page, number>();
-
-export function trackRequests(page: Page): void {
-  // A minimal page (a test stub with only url/evaluate) has no request events: it reads as idle.
-  if (inFlight.has(page) || typeof page.on !== 'function') return;
-  inFlight.set(page, 0);
-  const bump = (delta: number) => () => inFlight.set(page, Math.max(0, (inFlight.get(page) ?? 0) + delta));
-  page.on('request', bump(1));
-  page.on('requestfinished', bump(-1));
-  page.on('requestfailed', bump(-1));
-}
-
-/** How many requests `page` has in flight right now (0 for a page not tracked). */
-export function inFlightRequests(page: Page): number {
-  return inFlight.get(page) ?? 0;
-}
-
-/**
  * Where a navigating tool left the url once it has held still. A late
  * navigation rides on a request the tool started, so a page with no request
  * in flight and the url it began on is not going anywhere: the wait ends
@@ -435,30 +525,47 @@ const SETTLE_MAX_MS = 2_000;
  */
 const SETTLE_PROBE_MS = 60;
 
-/** Resolve once no DOM mutation has happened for SETTLE_QUIET_MS, or after SETTLE_MAX_MS. */
-export async function settleDom(page: Page): Promise<void> {
+/** Resolve once no DOM mutation has happened for SETTLE_QUIET_MS, or after `maxMs` (SETTLE_MAX_MS). */
+export async function settleDom(page: Page, maxMs: number = SETTLE_MAX_MS): Promise<void> {
+  await domQuiet(page, { maxMs });
+}
+
+/**
+ * settleDom that says what it saw: whether the DOM mutated at all while it
+ * watched, and how long before it returned the last mutation was. An action's
+ * observation (src/execution/action.ts) reads the second as evidence — a page
+ * that changed a moment ago may be about to ask the server for something.
+ * Null when the page could not be evaluated (navigating, detached, closed).
+ */
+export async function domQuiet(
+  page: Page,
+  timing: { probeMs?: number; quietMs?: number; maxMs?: number } = {},
+): Promise<{ mutated: boolean; sinceMs: number } | null> {
   try {
-    await page.evaluate(
+    return await page.evaluate(
       ({ probe, quiet, max }) =>
-        new Promise<void>((resolve) => {
+        new Promise<{ mutated: boolean; sinceMs: number }>((resolve) => {
+          let last = 0;
           const finish = () => {
             observer.disconnect();
             clearTimeout(timer);
             clearTimeout(stop);
-            resolve();
+            resolve({ mutated: last > 0, sinceMs: last > 0 ? Date.now() - last : 0 });
           };
           let timer = setTimeout(finish, probe);
           const stop = setTimeout(finish, max);
           const observer = new MutationObserver(() => {
+            last = Date.now();
             clearTimeout(timer);
             timer = setTimeout(finish, quiet);
           });
           observer.observe(document, { childList: true, subtree: true, attributes: true, characterData: true });
         }),
-      { probe: SETTLE_PROBE_MS, quiet: SETTLE_QUIET_MS, max: SETTLE_MAX_MS },
+      { probe: timing.probeMs ?? SETTLE_PROBE_MS, quiet: timing.quietMs ?? SETTLE_QUIET_MS, max: timing.maxMs ?? SETTLE_MAX_MS },
     );
   } catch {
     // navigating / detached — the locator resolution will report it
+    return null;
   }
 }
 

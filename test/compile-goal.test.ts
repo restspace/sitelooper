@@ -128,10 +128,39 @@ describe('goal derivation', () => {
     expect(skill.goal).toBeUndefined();
   });
 
+  /**
+   * ROBUSTNESS.md finding 4. A start page cut at its budget, or taken by a look
+   * that could not cover the page, does not show what was NOT on the page: a
+   * "Cancelled" beyond the cut would read as brought into existence, and the
+   * goal built on it would skip a cancel that never happened.
+   */
+  it('derives no goal from a start page that was not captured whole', () => {
+    const whole = compile(cancelRecording(BEFORE), CANCEL, CANCEL_REPORT, { quotation_ref: 'S00021', current_status: 'Sales Order' });
+    expect(whole[0].goal).toEqual({ requireText: ['Cancelled'] });
+    const entries = cancelRecording(BEFORE);
+    entries[0] = { ...(entries[0] as Extract<RecordedEntry, { k: 'instruction' }>), startDialect: 2, startTextComplete: false };
+    const [cut] = compile(entries, CANCEL, CANCEL_REPORT, { quotation_ref: 'S00021', current_status: 'Sales Order' });
+    expect(cut.goal).toBeUndefined();
+  });
+
   it('does not treat text the page already showed as a goal', () => {
     // The same recording, but the order was ALREADY cancelled when it began:
     // nothing in the report is new, so there is nothing to check for.
     const [skill] = compile(cancelRecording(`${BEFORE}\n- button "Cancelled"`), CANCEL, CANCEL_REPORT, { quotation_ref: 'S00021', current_status: 'Sales Order' });
     expect(skill.goal).toBeUndefined();
+  });
+});
+
+describe('the line dialect a step was recorded in', () => {
+  it('travels from the recorded diff onto the step expectation, and is absent for an older recording', () => {
+    const tagged = cancelRecording(BEFORE).map((e) =>
+      e.k === 'step' && e.diff ? { ...e, diff: { ...e.diff, dialect: 2 as const } } : e,
+    );
+    const [v2] = compile(tagged, CANCEL, CANCEL_REPORT);
+    const click = v2.steps.find((s) => s.expect?.addedContains?.length);
+    expect(click?.expect).toMatchObject({ addedContains: ['- button "Cancelled"'], lineDialect: 2 });
+    const [v1] = compile(cancelRecording(BEFORE), CANCEL, CANCEL_REPORT);
+    const old = v1.steps.find((s) => s.expect?.addedContains?.length);
+    expect(old?.expect?.lineDialect).toBeUndefined();
   });
 });

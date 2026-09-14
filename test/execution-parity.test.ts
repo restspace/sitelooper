@@ -14,7 +14,10 @@
  * server keeps a mutation log that only it can write, so "both runners said
  * ok" can never stand in for "the right thing happened once".
  *
- * Opt-in like the other browser suites: BP_BROWSER_TESTS=1.
+ * Opt-in on its own switch, BP_PARITY_TESTS=1 (`npm run test:parity`), not
+ * with the other browser suites: a full run takes about nine minutes, so it
+ * runs from time to time and before a change to shared execution is trusted,
+ * not on every test run.
  */
 import fs from 'node:fs';
 import os from 'node:os';
@@ -34,7 +37,7 @@ import type { Skill, SkillParam, SkillStep } from '../src/skills/store.js';
 import type { LocatorCandidate } from '../src/daemon/recorder.js';
 import { createFixtureServer, type FixtureServer } from './fixture/server.js';
 
-const enabled = process.env.BP_BROWSER_TESTS === '1';
+const enabled = process.env.BP_PARITY_TESTS === '1';
 const d = enabled ? describe : describe.skip;
 
 /** What the emitted module exposes that the harness drives directly. */
@@ -58,6 +61,10 @@ interface Outcome {
   echoed?: string[];
   /** Record identifiers the run minted (replay's created; the artifact's run.created). */
   created?: string[];
+  /** Steps that stood on a fallback after a better candidate failed (replay misses with a used locator; the artifact run.drift lines). */
+  drift?: string[];
+  /** What replay knows about its last state-changing action (ReplayResult.outcome). The artifact reports it in its error only. */
+  outcome?: string;
 }
 
 d('execution parity (daemon replay vs emitted artifact)', () => {
@@ -231,7 +238,7 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       // No replay at all means the tool refused before running: surface that
       // rather than letting it read as an ordinary failure.
       if (!replay) return { ok: false, reason: `run_skill returned no replay: ${out.result}`, outputs: {}, echoed: [] };
-      return { ok: replay.ok, reason: replay.reason ?? null, outputs: replay.values, echoed: replay.echoedValues, created: replay.created };
+      return { ok: replay.ok, reason: replay.reason ?? null, outputs: replay.values, echoed: replay.echoedValues, created: replay.created, drift: replay.misses.filter((m) => m.used).map((m) => m.step), outcome: replay.outcome };
     } finally {
       await session.close();
     }
@@ -274,7 +281,7 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       for (const id of mod.flowStepIds) {
         await mod.steps[id](page, params, run.outputs, run);
       }
-      return { ok: true, reason: null, outputs: run.outputs as Record<string, string>, echoed: run.echoed.map((key) => key.slice(key.indexOf('.') + 1)), created: run.created };
+      return { ok: true, reason: null, outputs: run.outputs as Record<string, string>, echoed: run.echoed.map((key) => key.slice(key.indexOf('.') + 1)), created: run.created, drift: [...run.drift] };
     } catch (err) {
       return { ok: false, reason: err instanceof Error ? err.message : String(err), outputs: {}, echoed: [] };
     } finally {
@@ -1807,12 +1814,46 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(emitted.ok).toBe(false);
       expect(replay.reason).toMatch(/NOT dispatched: the control is disabled/);
       expect(emitted.reason).toMatch(/NOT dispatched: the control is disabled/);
+      // ...and both say so as an OUTCOME, carried on the error, not only in its words.
+      expect(replay.outcome).toBe('not-dispatched');
+      expect(replay.reason).toMatch(/\[outcome: not dispatched\]$/);
+      expect(emitted.reason).toMatch(/\[outcome: not dispatched\]/);
 
       const enabled = await both(gateSteps('enabled'), 0);
       expect(enabled.replay.ok, enabled.replay.reason ?? '').toBe(true);
       expect(enabled.emitted.ok, enabled.emitted.reason ?? '').toBe(true);
       expect(enabled.replayLog).toEqual(['mark:approve']);
       expect(enabled.emittedLog).toEqual(['mark:approve']);
+    }, 180_000);
+
+    /**
+     * Finding 6. Title saves 200ms after typing stops and answers 300ms later,
+     * while an event stream the page opened never closes. Neither runner may
+     * read the fill's effect before the save lands, nor sit out the stream:
+     * both wait for the recorded "Saved: <value>" and save exactly once.
+     */
+    it('both runners wait for a debounced save beside an open event stream, and save once', async () => {
+      const steps: SkillStep[] = [
+        { tool: 'goto', args: { url: `${origin}/debounce?live=1` }, locators: {} },
+        {
+          tool: 'fill',
+          args: { target: '@e1', value: '{{v1}}' },
+          locators: { target: [{ kind: 'role', role: 'textbox', name: 'Title' }] },
+          expect: { addedContains: ['- heading "Saved: {{v1}}"'], lineDialect: 2 },
+        },
+      ];
+      const params: Record<string, SkillParam> = { v1: { example: 'Draft A', usedIn: [2], known: true } };
+      const skill: Skill = { ...skillOf(steps), id: 's_debounce', template: 'title the draft {{v1}}', params };
+      const spec: SpecFlow = {
+        ...specOf(steps),
+        steps: [{ id: '01-title', instruction: 'title the draft {{v1}}', params: { v1: 'Draft B' }, outputs: [], segments: [{ id: 's_debounce', template: 'title the draft {{v1}}', params, preconditions: { urlPattern: `${origin}/` }, steps }] }],
+      };
+      const { replay, emitted, replayLog, emittedLog } = await bothOf(skill, spec, { v1: 'Draft B' });
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replay.outcome).toBe('effect-verified');
+      expect(replayLog).toEqual(['feed:open', 'save:Draft B']);
+      expect(emittedLog).toEqual(['feed:open', 'save:Draft B']);
     }, 180_000);
 
     /**
@@ -1864,6 +1905,161 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(paid.replayLog).toEqual(['mark:outcome']);
       expect(paid.emittedLog).toEqual(['mark:outcome']);
     }, 180_000);
+  });
+
+  describe('observation dialects (ROBUSTNESS.md finding 4)', () => {
+    /** A procedure with a v1 param, run from `/` through its own goto, as both runners see it. */
+    const dialectProcedure = (id: string, steps: SkillStep[]): { skill: Skill; spec: SpecFlow } => {
+      const params: Record<string, SkillParam> = { v1: { example: 'a@b.test', usedIn: [2], known: true } };
+      const skill: Skill = { ...skillOf(steps), id, template: 'pay as {{v1}}', params };
+      const spec: SpecFlow = {
+        version: 1,
+        name: `parity-${id}`,
+        origin,
+        startUrl: `${origin}/`,
+        vars: [],
+        steps: [{ id: '01-pay', instruction: 'pay as {{v1}}', params: { v1: 'a@b.test' }, outputs: [], segments: [{ id, template: 'pay as {{v1}}', params, preconditions: { urlPattern: `${origin}/` }, steps }] }],
+      };
+      return { skill, spec };
+    };
+    const fillEmail = (line: string, lineDialect?: 2): SkillStep => ({
+      tool: 'fill',
+      args: { target: '@e1', value: '{{v1}}' },
+      locators: { target: [{ kind: 'role', role: 'textbox', name: 'Email' }] },
+      expect: { addedContains: [line], ...(lineDialect ? { lineDialect } : {}) },
+    });
+    const embedMark: SkillStep = { tool: 'click', args: { target: '@e9' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Mark' }] } };
+
+    /**
+     * (a) A store compiled before dialects: its fill recorded `- textbox "":
+     * {{v1}}` for an input named only by `<label for>`, and carries no dialect
+     * tag. Both runners must still render the live page in dialect 1 — where
+     * that input IS `""` — and pass, marking once. Tagged as dialect 1 but
+     * written the dialect-2 way (`"Email"`), the same line must stop both: the
+     * tag, not a union of the two renderings, decides.
+     */
+    it('both runners judge an untagged (dialect 1) step in dialect 1, and only in dialect 1', async () => {
+      const v1 = dialectProcedure('s_dialect1', [{ tool: 'goto', args: { url: `${origin}/embed/ok` }, locators: {} }, fillEmail('- textbox "": {{v1}}'), embedMark]);
+      const { replay, emitted, replayLog, emittedLog } = await bothOf(v1.skill, v1.spec, { v1: 'a@b.test' });
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replayLog).toEqual(['mark:embed']);
+      expect(emittedLog).toEqual(['mark:embed']);
+
+      const misread = dialectProcedure('s_dialect1x', [{ tool: 'goto', args: { url: `${origin}/embed/ok` }, locators: {} }, fillEmail('- textbox "Email": {{v1}}'), embedMark]);
+      const wrong = await bothOf(misread.skill, misread.spec, { v1: 'a@b.test' });
+      expect(wrong.replayLog, 'replay judged a dialect-1 step in dialect 2').toEqual([]);
+      expect(wrong.emittedLog, 'the artifact judged a dialect-1 step in dialect 2').toEqual([]);
+      expect(wrong.replay.reason).toMatch(/did not show "- textbox \\"Email\\": a@b\.test" as it did when recorded/);
+      expect(wrong.emitted.reason).toMatch(/the recorded page change did not appear|did not show "- textbox \\"Email\\": a@b\.test"/);
+    }, 240_000);
+
+    /**
+     * (b) A dialect-2 step whose recorded effect is a button that appears
+     * INSIDE an iframe. Dialect 1 walked no frame, so no runner could have
+     * verified it; both now see it and Mark once. On the page where Open
+     * payment does nothing, both stop before Mark — the independent half: the
+     * gate is not simply always passing.
+     */
+    it('both runners see a dialect-2 effect inside an iframe, and stop when it does not appear', async () => {
+      const steps = (mode: string): SkillStep[] => [
+        { tool: 'goto', args: { url: `${origin}/embed/${mode}` }, locators: {} },
+        {
+          tool: 'click',
+          args: { target: '@e2' },
+          locators: { target: [{ kind: 'role', role: 'button', name: 'Open payment' }] },
+          expect: { addedContains: ['- button "Confirm payment"'], lineDialect: 2 },
+        },
+        embedMark,
+      ];
+      const ok = dialectProcedure('s_frame', steps('ok'));
+      const { replay, emitted, replayLog, emittedLog } = await bothOf(ok.skill, ok.spec, { v1: 'a@b.test' });
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replayLog).toEqual(['mark:embed']);
+      expect(emittedLog).toEqual(['mark:embed']);
+
+      const broken = dialectProcedure('s_frame_broken', steps('broken'));
+      const none = await bothOf(broken.skill, broken.spec, { v1: 'a@b.test' });
+      expect(none.replayLog, 'replay marked past an effect that never appeared').toEqual([]);
+      expect(none.emittedLog, 'the artifact marked past an effect that never appeared').toEqual([]);
+      expect(none.replay.reason).toMatch(/none of the 1 recorded page change\(s\) appeared \(e\.g\. "- button \\"Confirm payment\\""\)/);
+      expect(none.emitted.ok).toBe(false);
+    }, 240_000);
+  });
+
+  describe('frame and page context (ROBUSTNESS.md finding 5)', () => {
+    /** One self-navigating procedure, stamped with the contract its steps need, as both runners see it. */
+    const contextProcedure = (id: string, steps: SkillStep[]): { skill: Skill; spec: SpecFlow } => {
+      const skill: Skill = { ...skillOf(steps), id, template: id, contract: 3, stats: { ...skillOf(steps).stats, verifiedContract: 3 } };
+      const spec: SpecFlow = {
+        version: 2,
+        name: `parity-${id}`,
+        origin,
+        startUrl: `${origin}/`,
+        vars: [],
+        steps: [{ id: '01-context', instruction: id, params: {}, outputs: [], segments: [{ id, template: id, params: {}, preconditions: { urlPattern: `${origin}/` }, steps }] }],
+      };
+      return { skill, spec };
+    };
+    const role = (name: string, r = 'button') => [{ kind: 'role' as const, role: r, name }];
+
+    /**
+     * `/frames` has a Save of its own (POST /note) and a Payment iframe with an
+     * identical Save (POST /frame-save). The procedure was recorded on the
+     * frame's Save; a page-rooted chain resolves the page's Save first time,
+     * uniquely, and presses it. On `/frames/renamed` nothing recorded names the
+     * frame any more, and both must stop with nothing pressed — not fall back
+     * to the page.
+     */
+    it('both runners press the in-frame Save, not the identical main-page one', async () => {
+      const save = (page: string): SkillStep[] => [
+        { tool: 'goto', args: { url: `${origin}${page}` }, locators: {} },
+        {
+          tool: 'click',
+          args: { target: '@f1e2' },
+          locators: { target: role('Save') },
+          contexts: { target: { frame: [{ selectors: ['iframe[title="Payment"]', 'iframe[src*="/frames/inner"]'], title: 'Payment' }] } },
+        },
+      ];
+      const ok = contextProcedure('s_frame_save', save('/frames'));
+      const { replay, emitted, replayLog, emittedLog } = await bothOf(ok.skill, ok.spec, {});
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      await new Promise((r) => setTimeout(r, 300));
+      expect(replayLog).toEqual(['frame-save']);
+      expect(emittedLog).toEqual(['frame-save']);
+
+      const gone = contextProcedure('s_frame_gone', save('/frames/renamed'));
+      const none = await bothOf(gone.skill, gone.spec, {});
+      expect(none.replayLog, 'replay pressed something without its frame').toEqual([]);
+      expect(none.emittedLog, 'the artifact pressed something without its frame').toEqual([]);
+      expect(none.replay.reason).toMatch(/recorded frame iframe\[title="Payment"\] not found/);
+      expect(none.emitted.reason).toMatch(/recorded frame iframe\[title="Payment"\] not found/);
+    }, 240_000);
+
+    /**
+     * `/opener` opens `/popup/child` in a new tab; its Approve posts /approve
+     * and closes the window; After (POST /after) is back on the opener. A
+     * runner that does not follow the popup looks for Approve on the opener and
+     * stops with nothing approved; one that does not return to the opener
+     * looks for After on a closed page.
+     */
+    it('both runners follow a recorded popup and return to the opener', async () => {
+      const steps: SkillStep[] = [
+        { tool: 'goto', args: { url: `${origin}/opener` }, locators: {} },
+        { tool: 'click', args: { target: '@e1' }, locators: { target: role('Open approval', 'link') }, effect: { kind: 'popup', urlPattern: `${origin}/popup/child` } },
+        { tool: 'click', args: { target: '@e2' }, locators: { target: role('Approve') }, page: 1, effect: { kind: 'close' } },
+        { tool: 'click', args: { target: '@e3' }, locators: { target: role('After') } },
+      ];
+      const flow = contextProcedure('s_popup_flow', steps);
+      const { replay, emitted, replayLog, emittedLog } = await bothOf(flow.skill, flow.spec, {});
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      await new Promise((r) => setTimeout(r, 300));
+      expect(replayLog).toEqual(['approve', 'after']);
+      expect(emittedLog).toEqual(['approve', 'after']);
+    }, 240_000);
   });
 
   describe('step effects', () => {
@@ -2093,6 +2289,28 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(emitted.outputs['01-clear.ids']).toBe(replay.outputs.ids);
       expect(replay.outputs.saveCount).toBe('3');
       expect(emitted.outputs['01-clear.saveCount']).toBe(replay.outputs.saveCount);
+    }, 120_000);
+
+    /**
+     * Drift is a better candidate that FAILED, not a stored index. The primary
+     * here is positional (an agent-typed `>> nth=0`, like grafana's
+     * `div.css-qpkbik:has-text("Stat") >> nth=0`), so the policy ranks the name
+     * behind it first; the name wins on the first try and nothing missed. Both
+     * runners act, and neither files drift for it (fwod41 07-change was filed on
+     * every run).
+     */
+    it('neither runner reports drift when a positional primary is only ranked behind the name that won', async () => {
+      const steps: SkillStep[] = [
+        { tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'css', selector: 'li > button.mark >> nth=0' }, { kind: 'css', selector: '.mark[data-id="Item 1"]' }] } },
+      ];
+      const { replay, emitted, replayLog, emittedLog } = await both(steps, 2);
+
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replayLog).toEqual(['mark:Item 1']);
+      expect(emittedLog).toEqual(['mark:Item 1']);
+      expect(replay.drift).toEqual([]);
+      expect(emitted.drift).toEqual([]);
     }, 120_000);
 
     /**

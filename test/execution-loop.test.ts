@@ -115,7 +115,7 @@ describe('runFoldedLoop', () => {
     const f = fake({ size: 0 });
     const out = await runFoldedLoop(f.hooks, opts({ max: 3 }));
     expect(f.calls).toEqual(['settle', 'resolve', 'count']);
-    expect(out).toEqual({ ok: true, iterations: 0 });
+    expect(out).toEqual({ ok: true, state: 'complete', iterations: 0 });
   });
 
   it('never counts without settling first, across several passes', async () => {
@@ -142,7 +142,7 @@ describe('runFoldedLoop', () => {
     const f = fake({ size: 3 });
     const out = await runFoldedLoop(f.hooks, opts({ max: 9 }));
     expect(f.cursors).toEqual([0, 0, 0]);
-    expect(out).toEqual({ ok: true, iterations: 3 });
+    expect(out).toEqual({ ok: true, state: 'complete', iterations: 3 });
   });
 
   it('advances the cursor when the collection does not shrink (an edit-in-place loop)', async () => {
@@ -150,7 +150,7 @@ describe('runFoldedLoop', () => {
     const out = await runFoldedLoop(f.hooks, opts({ max: 9, scope: 'observed' }));
     // Three records visited once each, then cursor >= count ends the loop.
     expect(f.cursors).toEqual([0, 1, 2]);
-    expect(out).toEqual({ ok: true, iterations: 3 });
+    expect(out).toEqual({ ok: true, state: 'complete', iterations: 3 });
   });
 
   it('waits for the last match to detach before deciding the count did not shrink', async () => {
@@ -213,7 +213,7 @@ describe('runFoldedLoop', () => {
         return g && { nth: g.nth, count: async () => { if (!failed) { failed = true; throw new Error('Execution context was destroyed'); } return g.count(); } };
       },
     };
-    expect(await runFoldedLoop(hooks, opts())).toEqual({ ok: true, iterations: 2 });
+    expect(await runFoldedLoop(hooks, opts())).toEqual({ ok: true, state: 'complete', iterations: 2 });
   });
 
   it('the recount after a pass is held to the same rule', async () => {
@@ -237,7 +237,7 @@ describe('runFoldedLoop', () => {
 
   it('a guard that matched nothing on a readable page is a genuinely empty collection', async () => {
     const f = fake({ size: 0 });
-    expect(await runFoldedLoop({ ...f.hooks, guard: async () => null }, opts())).toEqual({ ok: true, iterations: 0 });
+    expect(await runFoldedLoop({ ...f.hooks, guard: async () => null }, opts())).toEqual({ ok: true, state: 'complete', iterations: 0 });
   });
 
   it('a body that stops ends the loop without overwriting its diagnosis', async () => {
@@ -257,11 +257,51 @@ describe('runFoldedLoop', () => {
     });
   });
 
-  it('a BOUNDED loop that used every pass did exactly the work it was given', async () => {
+  it('a BOUNDED loop that used every pass did exactly the work it was given, and says it is partial', async () => {
     const f = fake({ size: 10, mode: 'edit', signature: (c) => `record-${c}` });
-    const out = await runFoldedLoop(f.hooks, opts({ max: 2, scope: 'observed' }));
-    expect(out).toEqual({ ok: true, iterations: 2 });
+    const out = await runFoldedLoop(f.hooks, opts({ max: 2, scope: 'observed', describe: "button 'Mark'" }));
+    // Not a failure — the loop had authority over the observed work only — but
+    // not "the collection is done" either: eight records still match.
+    expect(out).toEqual({ ok: true, state: 'partial', iterations: 2, remaining: 8, reason: "bounded to 2 pass(es), 8 item(s) still match button 'Mark'" });
     expect(f.cursors).toEqual([0, 1]);
+  });
+
+  it('a BOUNDED loop whose passes covered every match is complete', async () => {
+    const f = fake({ size: 2, mode: 'edit', signature: (c) => `record-${c}` });
+    expect(await runFoldedLoop(f.hooks, opts({ max: 2, scope: 'observed' }))).toEqual({ ok: true, state: 'complete', iterations: 2 });
+  });
+
+  it('a BOUNDED loop whose remainder cannot be counted is partial with an unknown remainder, never complete', async () => {
+    const f = fake({ size: 10, mode: 'edit', signature: (c) => `record-${c}`, countThrowsFrom: 7 });
+    const out = await runFoldedLoop(f.hooks, opts({ max: 2, scope: 'observed' }));
+    expect(out.ok).toBe(true);
+    expect(out).toMatchObject({ state: 'partial', remaining: null, iterations: 2 });
+    expect((out as { reason: string }).reason).toMatch(/^bounded to 2 pass\(es\); whether records still match the guard could not be read/);
+  });
+
+  it('a DRAIN that emptied the rendered window of a virtualised collection is partial, not complete', async () => {
+    const f = fake({ size: 3 });
+    let asked = 0;
+    const virtualised: LoopHooks = { ...f.hooks, coverage: async () => { asked++; return { partial: true, evidence: ["grid 'Orders' 20/340"] }; } };
+    const out = await runFoldedLoop(virtualised, opts({ describe: "button 'Remove'" }));
+    expect(out).toEqual({
+      ok: true,
+      state: 'partial',
+      iterations: 3,
+      remaining: null,
+      reason: "no rendered record matches button 'Remove', but the page renders only part of its collection (grid 'Orders' 20/340) — records not rendered may remain",
+    });
+    expect(asked).toBe(1);
+    // a page whose collections are fully rendered, or cannot be asked, is complete as before
+    const full = fake({ size: 3 });
+    expect(await runFoldedLoop({ ...full.hooks, coverage: async () => ({ partial: false, evidence: [] }) }, opts())).toEqual({ ok: true, state: 'complete', iterations: 3 });
+    const silent = fake({ size: 3 });
+    expect(await runFoldedLoop({ ...silent.hooks, coverage: async () => null }, opts())).toEqual({ ok: true, state: 'complete', iterations: 3 });
+    // a bounded loop is not asked: it never claimed the collection
+    const bounded = fake({ size: 2, mode: 'edit', signature: (c) => `record-${c}` });
+    let boundedAsked = 0;
+    await runFoldedLoop({ ...bounded.hooks, coverage: async () => { boundedAsked++; return { partial: true, evidence: [] }; } }, opts({ scope: 'observed' }));
+    expect(boundedAsked).toBe(0);
   });
 
   it('an abort stops the loop instead of calling a part-done list finished', async () => {
@@ -373,7 +413,7 @@ describe('the emitted loop', () => {
     // the body still goes through the shared step lifecycle, acting on what
     // the policy resolved
     expect(source).toContain('await runStepLifecycle({');
-    expect(source).toContain('await click(hit1.locator);');
+    expect(source).toContain('await click(hit1.locator, { obs: obs1 }).catch(actionFailed);');
   });
 
   /**
@@ -478,12 +518,6 @@ const NO_LOCATOR: never[] = [];
 
 const UNSUPPORTED: [string, SkillStep, string, string][] = [
   [
-    'a tab switch',
-    { tool: 'tabs', args: { switch_to: 1 }, locators: {} },
-    'Unsupported recorded action: tabs (switch to 1)',
-    '// TODO: the recording switched to tab 1 here — take the handle yourself.',
-  ],
-  [
     'an attribute read that never named its attribute',
     { tool: 'read', args: { target: '@e1', what: 'attr', name: 'href' }, locators: { target: [{ kind: 'id', selector: '#a' }] }, label: 'link' },
     'Unsupported recorded read: what=attr',
@@ -552,7 +586,7 @@ describe('compile-time diagnostics for what the artifact cannot do', () => {
     expect(source).not.toContain('// TODO: dropped the recorded position fallback');
     expect(source).toContain("{ locator: pointLocator(page, { x: 1, y: 2 }), index: 0, structural: true, kind: 'point'");
     expect(source).toContain("point: { x: 1, y: 2, w: 3, h: 4, role: null, tag: 'div', vw: 800, vh: 600 }");
-    expect(source).toContain('await click(hit1.locator);');
+    expect(source).toContain('await click(hit1.locator, { obs: obs1 }).catch(actionFailed);');
   });
 
   it('a position-only locator on a read is resolvable too', () => {
@@ -575,6 +609,18 @@ describe('compile-time diagnostics for what the artifact cannot do', () => {
   });
 });
 
+describe('a recorded tab switch (ROBUSTNESS.md finding 5)', () => {
+  it('is followed, not reported as a capability the artifact lacks', () => {
+    const { source, diagnostics } = emitFlowFile(flowOf([{ tool: 'tabs', args: { switch_to: 1 }, locators: {} }]), { tier: 'plain' });
+    expect(diagnostics).toEqual([]);
+    expect(source).not.toContain('Unsupported recorded action: tabs');
+    expect(source).toContain(`landing1 = await armPageEffect(page, {"kind":"switch","to":1}, '01-step s_emit/1');`);
+    expect(source).toContain('moved1 = await landed(landing1);');
+    expect(source).toContain('if (moved1) page = run.page = moved1;');
+    expect(source).toContain('if (run.page && !run.page.isClosed()) page = run.page;');
+  });
+});
+
 describe('compileFlow over an unsupported capability', () => {
   const dirs: string[] = [];
   afterEach(() => {
@@ -591,7 +637,9 @@ describe('compileFlow over an unsupported capability', () => {
       template: 'open the report tab',
       params: {},
       preconditions: { urlPattern: `${ORIGIN}/` },
-      steps: [{ tool: 'tabs', args: { switch_to: 1 }, locators: {} }],
+      // A read of a kind the artifact has no form for (a tab switch used to
+      // stand here; it is followed now — see "a recorded tab switch").
+      steps: [{ tool: 'read', args: { target: '@e1', what: 'style' }, locators: { target: [{ kind: 'id', selector: '#a' }] }, label: 'look' }],
       stats: { uses: 2, successes: 2, partial: 0, created: '2026-09-07T00:00:00.000Z', failedAtStep: {}, fallthroughs: 0 },
       status: 'validated',
       provenance: { session: 'author', instruction: 'open the report tab', created: '2026-09-07T00:00:00.000Z' },
@@ -609,10 +657,10 @@ describe('compileFlow over an unsupported capability', () => {
 
     const result = compileFlow(flowFile, { store, outDir: path.join(dir, 'out') });
     expect(result.compilable).toBe(false);
-    expect(result.compileBlockers.join(' ')).toContain('switched to tab 1');
+    expect(result.compileBlockers.join(' ')).toContain('read what=style has no Tier 2 form');
     expect(result.diagnostics.map((d) => d.code)).toContain('unsupported-capability');
     // A warning, not an error: the file is still written, and still refuses to run.
     expect(result.refused).toBe(false);
-    expect(fs.readFileSync(result.flowFile!, 'utf8')).toContain('Unsupported recorded action: tabs');
+    expect(fs.readFileSync(result.flowFile!, 'utf8')).toContain('Unsupported recorded read: what=style');
   });
 });

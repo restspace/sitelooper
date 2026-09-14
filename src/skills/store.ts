@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import type { LocatorCandidate } from '../daemon/recorder.js';
+import type { PageEffect, TargetContext } from '../execution/context.js';
 import { rootDir } from '../shared/paths.js';
 
 /**
@@ -137,11 +138,40 @@ export interface Skill {
  * ignores it entirely and will happily run a contract-2 procedure under
  * contract-1 semantics. The gate protects builds from here forward, not the
  * data already on disk.
+ *
+ * The HIGHEST contract this build reads, not the one every procedure is
+ * stamped with: a procedure is stamped `contractFor(steps)`. Contract 3 is a
+ * procedure that says where its targets live or what it does to its page
+ * (SkillStep.contexts / page / effect, ROBUSTNESS.md finding 5). Those are new
+ * optional fields, which alone would be no bump — except that a build which
+ * ignores them does not merely do less: it resolves an in-frame Save against
+ * the main page, where an identical Save may well be, and presses it. So a
+ * procedure carrying any of them is contract 3, which a contract-2 build
+ * refuses (contractVerdict), and one carrying none stays contract 2, so every
+ * stored procedure keeps its stamp and its verified status (isVerified
+ * compares the stamp with verifiedContract, never with this constant).
  */
-export const SKILL_CONTRACT = 2;
+export const SKILL_CONTRACT = 3;
 
 export function contractOf(s: Pick<Skill, 'contract'>): number {
   return typeof s.contract === 'number' ? s.contract : 1;
+}
+
+/** Whether any step (loop bodies included) says where its target lives or what it does to its page. */
+export function stepsCarryContext(steps: readonly SkillStep[]): boolean {
+  return steps.some(
+    (s) =>
+      Boolean(s.contexts && Object.values(s.contexts).some((c) => c?.frame?.length)) ||
+      s.page !== undefined ||
+      s.effect !== undefined ||
+      Boolean(s.whileContext?.frame?.length) ||
+      (Array.isArray(s.body) && stepsCarryContext(s.body)),
+  );
+}
+
+/** The contract a procedure with these steps is written under: 3 when it carries page or frame context, else 2. */
+export function contractFor(steps: readonly SkillStep[]): number {
+  return stepsCarryContext(steps) ? 3 : 2;
 }
 
 /**
@@ -216,6 +246,23 @@ export interface SkillStep {
   args: Record<string, unknown>;
   /** Ways of finding each target, best first; strings inside may carry slots. */
   locators: Record<string, LocatorCandidate[]>;
+  /**
+   * Where each target lives, keyed like `locators`: a frame path when the
+   * recorded element sat inside an iframe (src/execution/context.ts). Beside
+   * the chain, not on each candidate: every candidate of one chain resolves
+   * against the same root, and a frame path on a candidate would leak into
+   * what the candidate NAMES (`carries`, the identity guard). Absent means the
+   * main frame. Contract 3 (see SKILL_CONTRACT).
+   */
+  contexts?: Partial<Record<'target' | 'source', TargetContext>>;
+  /**
+   * The index, in the browser's open pages, of the page this step ran on at
+   * record time — written only when more than one page was open, so absent
+   * means "the procedure's own page". A replay on any other index stops.
+   */
+  page?: number;
+  /** What the step did to the page itself: opened a popup, closed its page, switched tabs. Both runners follow it. */
+  effect?: PageEffect;
   expect?: StepExpectation;
   /** For read/read_all steps: which report value this read supplied, if any. */
   label?: string;
@@ -244,6 +291,8 @@ export interface SkillStep {
   body?: SkillStep[];
   /** `tool: 'loop'` only: repeat the body while this locator matches ≥1 element. */
   while?: LocatorCandidate[];
+  /** `tool: 'loop'` only: where the `while` guard's elements live (the body's first target context). */
+  whileContext?: TargetContext;
   /** `tool: 'loop'` only: hard cap on iterations, a runaway guard. */
   max?: number;
   /**
@@ -277,6 +326,16 @@ export interface StepExpectation {
   alertContains?: string;
   /** Soft: page lines that appeared after the step. */
   addedContains?: string[];
+  /**
+   * The line dialect `addedContains` and `alertContains` are written in
+   * (src/execution/snapshot.ts LineDialect); absent = 1, every expectation
+   * compiled before dialects existed. Per step, not per skill: a repair can
+   * put a re-recorded step beside original ones. Both runners render the live
+   * page in THIS dialect before comparing. An optional field, so no
+   * SKILL_CONTRACT bump: a build that ignores it compares dialect-2 lines with
+   * dialect-1 captures, which can only stop a run, never pass one.
+   */
+  lineDialect?: 2;
 }
 
 export interface SkillStats {

@@ -18,6 +18,7 @@ import { buildFlow, jsonLeaves, lookupOutput, noteOutputEvidence, varyingValues 
 import { addEvidenceValue, proseIdentifiers } from '../src/agent/report.js';
 import { identityOfPrimary } from '../src/skills/replay.js';
 import type { Skill } from '../src/skills/store.js';
+import { documentOf, isObserveArg } from './fixture/observation.js';
 
 let tmp: string;
 beforeAll(() => {
@@ -374,7 +375,7 @@ describe('a self-navigating procedure is checked AFTER its goto', () => {
       // The landed page shows n1's record, never n2's.
       locator: () => ({ count: async () => 0, first: () => ({ textContent: async () => '' }) }),
       async content() { return '<html>n1 Bench Customer</html>'; },
-      async evaluate() { return 'n1 Bench Customer'; },
+      async evaluate(_fn: unknown, arg: unknown) { return isObserveArg(arg) ? documentOf(['- heading "n1 Bench Customer"']) : 'n1 Bench Customer'; },
       async waitForLoadState() {},
     } as unknown as import('playwright-core').Page;
     const out = await replaySkill(skill, { v1: 'n2 Bench Customer' }, {
@@ -391,6 +392,50 @@ describe('a self-navigating procedure is checked AFTER its goto', () => {
     // The goto ran — that is how we learn where it lands. Nothing after it did.
     expect(ran).toEqual(['goto']);
     expect(out.stepsRun).toBe(1); // the goto ran and is not pretended away
+  });
+
+  /**
+   * ROBUSTNESS.md finding 4: a look that could not cover the page (here the
+   * element cap) has not shown the marker ABSENT. The step stops just the
+   * same — nothing confirmed the record — but as an unconfirmed identity,
+   * marked unobserved, not as a proven wrong record (which would send the flow
+   * runner back to its start url on no evidence).
+   */
+  it('stops on an identity it could not confirm, without calling it a different record', async () => {
+    const { replaySkill } = await import('../src/skills/replay.js');
+    const skill = {
+      id: 's_nav', origin: 'http://x.test', template: 't',
+      params: { v1: { example: 'n1 Bench Customer', usedIn: [], known: true as const } },
+      preconditions: { urlPattern: 'http://x.test/rec/:id', requireText: ['{{v1}}'] },
+      steps: [
+        { tool: 'goto', args: { url: 'http://x.test/rec/44' }, locators: {} },
+        { tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Edit' }] } },
+      ],
+      stats: { uses: 1, successes: 1, partial: 0, created: '', failedAtStep: {}, fallthroughs: 0 },
+      status: 'validated', provenance: { session: 's', instruction: 't', created: '' },
+    } as unknown as Skill;
+    const ran: string[] = [];
+    let looks = 0;
+    const page = {
+      url: () => 'http://x.test/rec/44',
+      async goto() {},
+      locator: () => ({ count: async () => 0, first: () => ({ textContent: async () => '' }) }),
+      async evaluate(_fn: unknown, arg: unknown) {
+        if (!isObserveArg(arg)) return undefined;
+        looks++;
+        return documentOf(['- heading "n1 Bench"'], [], { nodesTruncated: true });
+      },
+      async waitForLoadState() {},
+    } as unknown as import('playwright-core').Page;
+    const out = await replaySkill(skill, { v1: 'n2 Bench Customer' }, { page, exec: async (tool) => { ran.push(tool); return { result: 'ok' }; } });
+    expect(ran).toEqual(['goto']);
+    expect(out.ok).toBe(false);
+    expect(out.failedAt).toBe(1);
+    expect(out.wrongRecord).toBeUndefined();
+    expect(out.reason).toMatch(/^could not confirm that the page at .* shows "n2 Bench Customer" \(capture incomplete: the element cap was reached/);
+    expect(out.unobserved).toContain('identity');
+    // asked, the page swept, and asked again
+    expect(looks).toBe(2);
   });
 });
 

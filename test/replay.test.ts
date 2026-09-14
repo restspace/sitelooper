@@ -1641,3 +1641,131 @@ d('prose read-back through a stable test hook (fixture page)', () => {
     }
   }, 30_000);
 });
+
+/**
+ * ROBUSTNESS.md finding 5, end to end: record through the tools the agent
+ * uses, compile through learning, replay through run_skill — against a fixture
+ * server whose mutation log is the oracle. The page has its own Save and an
+ * iframe with an identical one; an opener page opens a popup that closes
+ * itself.
+ */
+d('frame and page context: record, compile, replay (fixture server)', () => {
+  let fx: import('./fixture/server.js').FixtureServer;
+  let home: string;
+  let session: BrowserSession;
+  const dir = os.tmpdir();
+  const run = (name: string, args: Record<string, unknown>) => executeTool(session, name, args, dir);
+  const resultOf = (): import('../src/agent/loop.js').InstructionResult => ({
+    report: { status: 'success', summary: 'done', evidence: { values: {} } },
+    turns: 1,
+    usage: { promptTokens: 0, completionTokens: 0, cachedTokens: 0 },
+    screenshots: [],
+  });
+  const learned = (instruction: string, mark: number) =>
+    learnFromInstruction(session.learn!, { result: resultOf(), instruction, entries: session.script!.entriesSince(mark), session: 'context' });
+  const logIs = async (want: string[]) => {
+    const deadline = Date.now() + 5_000;
+    while (Date.now() < deadline && JSON.stringify(fx.log) !== JSON.stringify(want)) await new Promise((r) => setTimeout(r, 50));
+    return [...fx.log];
+  };
+
+  beforeAll(async () => {
+    const { createFixtureServer } = await import('./fixture/server.js');
+    fx = await createFixtureServer(0);
+    home = fs.mkdtempSync(path.join(os.tmpdir(), 'bp-context-'));
+    process.env.SITELOOPER_HOME = home;
+    process.env.SITELOOPER_SKILLS_DIR = path.join(home, 'skills');
+    session = new BrowserSession({ session: 'context', persist: false, learn: true });
+  }, 60_000);
+  afterAll(async () => {
+    await session?.close();
+    await fx?.close();
+    for (const k of ['SITELOOPER_SKILLS_DIR', 'SITELOOPER_HOME']) delete process.env[k];
+    fs.rmSync(home, { recursive: true, force: true });
+  });
+
+  let frameSkill: Skill;
+
+  it('records the in-frame Save with its frame path, and replay presses that Save — never the page\'s own', async () => {
+    const page = await session.getPage();
+    await page.goto(`${fx.origin}/frames`);
+    fx.reset(0);
+    const mark = session.script!.mark();
+    const instruction = 'save the payment';
+    session.script!.beginInstruction(instruction, { url: page.url() });
+    const snap = (await run('snapshot', {})).result;
+    const ref = /button "Save" \[(@f\d+e\d+)\]/.exec(snap)?.[1];
+    expect(ref, snap).toBeTruthy();
+    const clicked = await run('click', { target: ref });
+    expect(clicked.isError, clicked.result).toBe(false);
+    expect(await logIs(['frame-save'])).toEqual(['frame-save']);
+
+    const out = learned(instruction, mark);
+    frameSkill = session.learn!.get(out!.compiled!)!;
+    const step = frameSkill.steps[0];
+    expect(step.contexts?.target?.frame?.[0].selectors[0]).toContain('title="Payment"');
+    expect(step.locators.target.some((c) => c.kind === 'point')).toBe(false);
+    expect(frameSkill.contract).toBe(3);
+
+    await page.goto(`${fx.origin}/frames`);
+    fx.reset(0);
+    const replay = await run('run_skill', { id: frameSkill.id, params: {} });
+    expect(replay.replay?.ok, replay.replay?.reason).toBe(true);
+    expect(await logIs(['frame-save'])).toEqual(['frame-save']);
+    expect(fx.log).not.toContain('note');
+  }, 90_000);
+
+  it('stops when the recorded frame is gone, naming it, and presses nothing', async () => {
+    expect(frameSkill, 'the recording case ran first').toBeTruthy();
+    const page = await session.getPage();
+    await page.goto(`${fx.origin}/frames?renamed=1`);
+    fx.reset(0);
+    const replay = await run('run_skill', { id: frameSkill.id, params: {} });
+    expect(replay.replay?.ok).toBe(false);
+    expect(replay.replay?.reason).toMatch(/recorded frame iframe\[title="Payment"\] not found/);
+    await new Promise((r) => setTimeout(r, 300));
+    expect(fx.log).toEqual([]);
+  }, 60_000);
+
+  it('records a popup, its close and the return to the opener, and replay follows all three', async () => {
+    const page = await session.getPage();
+    await page.goto(`${fx.origin}/opener`);
+    fx.reset(0);
+    const mark = session.script!.mark();
+    const instruction = 'approve the order in its popup, then press After';
+    session.script!.beginInstruction(instruction, { url: page.url() });
+    const refOf = async (re: RegExp) => {
+      const snap = (await run('snapshot', {})).result;
+      const ref = re.exec(snap)?.[1];
+      expect(ref, snap).toBeTruthy();
+      return ref!;
+    };
+    expect((await run('click', { target: await refOf(/link "Open approval" \[(@e\d+)\]/) })).isError).toBe(false);
+    expect((await session.getPage()).url()).toBe(`${fx.origin}/popup/child`);
+    expect((await run('click', { target: await refOf(/button "Approve" \[(@e\d+)\]/) })).isError).toBe(false);
+    const closing = Date.now() + 5_000;
+    while (Date.now() < closing && (await session.listPages()).length > 1) await new Promise((r) => setTimeout(r, 50));
+    expect((await session.getPage()).url()).toBe(`${fx.origin}/opener`);
+    expect((await run('click', { target: await refOf(/button "After" \[(@e\d+)\]/) })).isError).toBe(false);
+    expect(await logIs(['approve', 'after'])).toEqual(['approve', 'after']);
+
+    const out = learned(instruction, mark);
+    const chain = (out!.compiledAll ?? []).map((id) => session.learn!.get(id)!);
+    expect(chain).toHaveLength(3);
+    expect(chain[0].steps[0].effect).toMatchObject({ kind: 'popup' });
+    expect(chain[1].preconditions.urlPattern).toBe(`${fx.origin}/popup/child`);
+    expect(chain[1].steps[0]).toMatchObject({ page: 1, effect: { kind: 'close' } });
+    expect(chain[2].steps[0].page ?? 0).toBe(0);
+    expect(chain[2].steps[0].effect).toBeUndefined();
+
+    await page.goto(`${fx.origin}/opener`);
+    fx.reset(0);
+    for (const segment of chain) {
+      const replay = await run('run_skill', { id: segment.id, params: {} });
+      expect(replay.replay?.ok, `${segment.id}: ${replay.replay?.reason}`).toBe(true);
+    }
+    expect(await logIs(['approve', 'after'])).toEqual(['approve', 'after']);
+    expect((await session.getPage()).url()).toBe(`${fx.origin}/opener`);
+    expect(await session.listPages()).toHaveLength(1);
+  }, 120_000);
+});

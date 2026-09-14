@@ -4,6 +4,7 @@ import type { Provider } from '../agent/llm.js';
 import { fillParams } from './compile.js';
 import { newSkillId, type Skill, type SkillStore } from './store.js';
 import { contractWeakening } from './contract.js';
+import { describeFramePath } from '../execution/context.js';
 
 /**
  * A drift observation from one flow-step replay: the primary locator missed
@@ -386,6 +387,13 @@ export async function patchSegment(
   // replacement for a deleted part's text.
   const notAControl = notAControlWhy(skill, ticket);
   if (notAControl) return { ticket, outcome: 'not-a-control', detail: notAControl };
+  // The proposal is asked of the PAGE's snapshot and verified against the
+  // page; for a target recorded inside a frame that would verify some other
+  // control and prepend it to a chain resolved inside the frame.
+  const framed = step.contexts?.[(ticket.key ?? 'target') as 'target' | 'source']?.frame;
+  if (framed?.length) {
+    return { ticket, outcome: 'not-applicable', detail: `the target lives inside the recorded frame ${describeFramePath(framed)}, which locator repair does not look inside` };
+  }
 
   const recorded = recordedKindOf(step, chain);
   const snapshot = await interactiveSnapshot(page);

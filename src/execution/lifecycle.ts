@@ -1,7 +1,13 @@
-/** An action may explicitly skip or stop; neither outcome claims completion. */
+/**
+ * An action may explicitly skip or stop; neither outcome claims completion. A
+ * stopped action may say what is known about its dispatch (browser.ts
+ * `ActionOutcome`): a stop whose action was proven never to have gone out is
+ * a different fact from one that may have landed.
+ */
 export type StepActionResult<T> =
   | { status: 'completed'; value: T }
-  | { status: 'skipped' | 'stopped' };
+  | { status: 'skipped' }
+  | { status: 'stopped'; outcome?: 'not-dispatched' | 'dispatched' | 'effect-verified' | 'unknown' };
 
 export interface StepLifecycle<T, V> {
   prepare(): Promise<void>;

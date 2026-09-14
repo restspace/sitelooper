@@ -1,9 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import type { ElementHandle, Locator, Page } from 'playwright-core';
+import type { ElementHandle, Frame, Locator, Page } from 'playwright-core';
 import { ensureSessionDir } from '../shared/paths.js';
 import { volatileMatcher } from '../shared/text.js';
 import { pointLocator } from '../execution/point.js';
+import { rootFor, type FramePath, type PageEffect, type Root } from '../execution/context.js';
+import { urlPattern } from '../skills/compile.js';
 import { isRefTarget, refHint, resolveTarget } from './refs.js';
 import { tagComponent } from '../skills/components.js';
 import { GENERATED_ID_HEX_RUN, skeleton } from '../skills/shape.js';
@@ -63,8 +65,13 @@ export type LocatorCandidate = (
   seen?: { hit: number; miss: number };
 };
 
-/** Rebuild a candidate into a live Locator. Shared by recording and replay. */
-export function makeLocator(page: Page, c: LocatorCandidate): Locator {
+/**
+ * Rebuild a candidate into a live Locator. Shared by recording and replay.
+ * `page` is the ROOT the chain resolves against: the page, or the frame a
+ * recorded frame path leads to (src/execution/context.ts rootFor) — Page and
+ * FrameLocator build locators with the same calls.
+ */
+export function makeLocator(page: Root, c: LocatorCandidate): Locator {
   let loc: Locator;
   switch (c.kind) {
     case 'testid':
@@ -101,10 +108,18 @@ export function makeLocator(page: Page, c: LocatorCandidate): Locator {
       // Resolved in two moves: markPoint() finds the element under the
       // recorded point and tags it; this locator then names the tag. Both
       // live in the shared execution module so the artifact can do the same.
+      // A point is a place in the PAGE's coordinates; inside a frame it names
+      // nothing (the recorder records none there).
+      if (!isPage(page)) throw new Error('a recorded point cannot be resolved inside a frame');
       loc = pointLocator(page, c);
       break;
   }
   return c.nth !== undefined ? loc.nth(c.nth) : loc;
+}
+
+/** A root that is the page itself, not a frame inside it. */
+function isPage(root: Root): root is Page {
+  return typeof (root as Page).mainFrame === 'function';
 }
 
 // The point machinery is a shared execution rule (src/execution/point.ts);
@@ -178,6 +193,12 @@ export interface LocatorExpr {
    * that verified. Replay walks this chain when the page has drifted.
    */
   chain?: LocatorCandidate[];
+  /**
+   * The frame the element sat in, top-down, when it was not the main frame
+   * (src/execution/context.ts). Every candidate in `chain` was verified
+   * against THAT frame, so the chain means nothing resolved from the page.
+   */
+  frame?: FramePath;
 }
 
 /** What a state-changing step visibly did, kept so replay can check for it. */
@@ -185,6 +206,12 @@ export interface StepDiff {
   url: string;
   alerts: string[];
   added: string[];
+  /**
+   * The line dialect `added` and `alerts` are written in (src/execution/
+   * snapshot.ts LineDialect). Absent on recordings made before dialects
+   * existed, which are dialect 1.
+   */
+  dialect?: 2;
 }
 
 export interface RecordedStep {
@@ -206,6 +233,18 @@ export interface RecordedStep {
   fingerprintAfter?: number[];
   /** Set when the step was executed by replaying a stored skill, not chosen by the agent. */
   via?: { skill: string; step: number };
+  /**
+   * The index of the page this step ran on among the browser's open pages,
+   * written only when more than one page was open (see SkillStep.page).
+   */
+  page?: number;
+  /** What the step did to the page itself: opened a popup, closed its page, switched tabs. */
+  effect?: PageEffect;
+  /**
+   * Where a `popup`, `close` or `switch` effect left the procedure: the url of
+   * the page it continues on. Compile starts the next segment there.
+   */
+  afterUrl?: string;
   /** The recognized component the target sits inside, for recipe compilation. */
   component?: { family: string; rel: string };
   /**
@@ -241,6 +280,15 @@ export interface RecordedInstruction {
    * ticket that happens to share the template (fwrd8 did exactly that).
    */
   startText?: string;
+  /** The line dialect `startText` is in; absent = 1. */
+  startDialect?: 2;
+  /**
+   * False when `startText` is NOT the whole page: cut at its budget, or taken
+   * by a look that could not cover the page. Text missing from an incomplete
+   * startText was not shown to be absent, so compile derives no goal from it
+   * ("not on the page before" is what a goal rests on). Absent = complete.
+   */
+  startTextComplete?: boolean;
   /**
    * This entry continues the immediately preceding instruction after an
    * escalation — `text` is the ORIGINAL caller wording, not the resume
@@ -384,7 +432,10 @@ export class ScriptRecorder {
   }
 
   /** Mark the start of one `do` instruction; becomes a test.step in the script. */
-  beginInstruction(text: string, context: { url?: string; fingerprint?: number[]; startText?: string; resume?: true } = {}): void {
+  beginInstruction(
+    text: string,
+    context: { url?: string; fingerprint?: number[]; startText?: string; startDialect?: 2; startTextComplete?: boolean; resume?: true } = {},
+  ): void {
     this.append({ k: 'instruction', text, ...context });
   }
 
@@ -555,7 +606,11 @@ export class ScriptRecorder {
   }
 
   /** Commit a prepared step once the action succeeded. Failed actions are dropped. */
-  commit(step: RecordedStep | null, result: string, extra: { diff?: StepDiff; via?: RecordedStep['via']; fingerprintAfter?: number[] } = {}): void {
+  commit(
+    step: RecordedStep | null,
+    result: string,
+    extra: { diff?: StepDiff; via?: RecordedStep['via']; fingerprintAfter?: number[]; page?: number; effect?: PageEffect; afterUrl?: string } = {},
+  ): void {
     if (!step) return;
     // A select is recorded by the option's visible LABEL whatever the caller
     // passed: the label is the term the procedure has provenance for (it is
@@ -574,6 +629,9 @@ export class ScriptRecorder {
       ...(extra.diff ? { diff: extra.diff } : {}),
       ...(extra.via ? { via: extra.via } : {}),
       ...(extra.fingerprintAfter ? { fingerprintAfter: extra.fingerprintAfter } : {}),
+      ...(extra.page !== undefined ? { page: extra.page } : {}),
+      ...(extra.effect ? { effect: extra.effect } : {}),
+      ...(extra.afterUrl ? { afterUrl: extra.afterUrl } : {}),
     };
     this.append(RESULT_TOOLS.has(step.tool) ? { ...entry, result } : entry);
   }
@@ -615,7 +673,7 @@ interface ElementInfo {
 
 interface Candidate {
   expr: string;
-  make: (page: Page) => Locator;
+  make: (root: Root) => Locator;
   spec: LocatorCandidate;
 }
 
@@ -938,6 +996,17 @@ export async function describeLocator(page: Page, locator: Locator, raw: string,
 }
 
 async function describeHandle(page: Page, handle: ElementHandle<Node>, raw: string, retarget = false): Promise<LocatorExpr> {
+  // Where the element lives. A live ref reaches into an iframe, so the agent
+  // can act on an in-frame Save; a chain built from the PAGE cannot find it
+  // again, and one that happens to resolve there has found a different Save.
+  // So every candidate is verified against the element's own frame, and the
+  // path to that frame travels beside the chain. A frame that cannot be named
+  // again records no chain at all: a step with nothing to resolve stops at
+  // replay, where a page-rooted guess would press the wrong control.
+  const where = await targetRoot(page, handle);
+  if (!where) return { expr: '', verified: false, raw };
+  const { root, frame } = where;
+  const framed = frame ? { frame } : {};
   // A click is recorded against the element that best survives the app
   // restyling itself — see CLICK_RETARGETS. The element the agent actually
   // clicked keeps its structural path as the chain's last fallback.
@@ -947,11 +1016,11 @@ async function describeHandle(page: Page, handle: ElementHandle<Node>, raw: stri
       if (!el) continue;
       try {
         const info = (await el.evaluate(describeInPage)) as ElementInfo;
-        const { winner, chain } = await verifiedChain(page, info, el);
+        const { winner, chain } = await verifiedChain(root, info, el, Boolean(frame));
         if (winner) {
           const selfInfo = (await handle.evaluate(describeInPage)) as ElementInfo;
           const fallback: LocatorCandidate = { kind: 'css', selector: selfInfo.cssPath };
-          return { expr: candidateExpr(winner), verified: true, raw, chain: [...chain, fallback] };
+          return { expr: candidateExpr(winner), verified: true, raw, chain: [...chain, fallback], ...framed };
         }
       } finally {
         await el.dispose().catch(() => {});
@@ -959,11 +1028,96 @@ async function describeHandle(page: Page, handle: ElementHandle<Node>, raw: stri
     }
   }
   const info = (await handle.evaluate(describeInPage)) as ElementInfo;
-  const { winner, chain } = await verifiedChain(page, info, handle);
-  if (winner) return { expr: candidateExpr(winner), verified: true, raw, chain };
+  const { winner, chain } = await verifiedChain(root, info, handle, Boolean(frame));
+  if (winner) return { expr: candidateExpr(winner), verified: true, raw, chain, ...framed };
   // Nothing resolved back to this element — hand over the structural path and
   // let the generated script flag it, rather than inventing something clean.
-  return { expr: `page.locator(${q(info.cssPath)})`, verified: false, raw, chain };
+  return { expr: `page.locator(${q(info.cssPath)})`, verified: false, raw, chain, ...framed };
+}
+
+/**
+ * The root an element's chain is verified against: the page for an element
+ * of the main frame, else the frame it sits in, with the recorded path to it.
+ * Null when the element sits in a frame that cannot be named again.
+ */
+async function targetRoot(page: Page, handle: ElementHandle<Node>): Promise<{ root: Root; frame?: FramePath } | null> {
+  const owner = await handle.ownerFrame().catch(() => null);
+  if (!owner || owner === page.mainFrame()) return { root: page };
+  const frame = await framePathOf(page, owner);
+  if (!frame) return null;
+  const found = await rootFor(page, frame, 0);
+  return 'root' in found ? { root: found.root, frame } : null;
+}
+
+/**
+ * How to find `frame` again from the page, top-down: one hop per iframe
+ * element between the main frame and it. Each hop keeps only the selectors
+ * that match exactly that iframe in its parent RIGHT NOW — its name, its
+ * title, a stable id, the path of its src, and its position as the last
+ * resort (with the frame's url pattern, which rootFor then requires). Null
+ * when some level has none, or its element cannot be read.
+ */
+export async function framePathOf(page: Page, frame: Frame): Promise<FramePath | null> {
+  const levels: Frame[] = [];
+  for (let f: Frame | null = frame; f && f !== page.mainFrame(); f = f.parentFrame()) levels.unshift(f);
+  const path: FramePath = [];
+  let root: Root = page;
+  for (const level of levels) {
+    const el = await level.frameElement().catch(() => null);
+    if (!el) return null;
+    try {
+      const facts = await el
+        .evaluate((node) => {
+          const e = node as HTMLIFrameElement;
+          const tag = e.tagName.toLowerCase();
+          const raw = e.getAttribute('src') ?? '';
+          let src = '';
+          try {
+            src = raw ? new URL(raw, e.ownerDocument.baseURI).pathname : '';
+          } catch {
+            src = '';
+          }
+          return {
+            tag,
+            name: e.getAttribute('name') ?? '',
+            title: e.getAttribute('title') ?? '',
+            id: e.id ?? '',
+            src,
+            index: Array.from(e.ownerDocument.querySelectorAll(tag)).indexOf(e),
+          };
+        })
+        .catch(() => null);
+      if (!facts) return null;
+      const attr = (name: string, value: string) => `${facts.tag}[${name}=${JSON.stringify(value)}]`;
+      const offered: string[] = [];
+      if (facts.name) offered.push(attr('name', facts.name));
+      if (facts.title) offered.push(attr('title', facts.title));
+      if (facts.id && isStableId(facts.id)) offered.push(/^[A-Za-z][\w-]*$/.test(facts.id) ? `${facts.tag}#${facts.id}` : attr('id', facts.id));
+      if (facts.src && facts.src !== '/') offered.push(`${facts.tag}[src*=${JSON.stringify(facts.src)}]`);
+      // The position is kept only with the frame's url, which is what makes
+      // "the second iframe" the recorded one rather than whichever sits there.
+      const url = level.url();
+      const pattern = url && url !== 'about:blank' ? urlPattern(url) : '';
+      const nth = facts.index >= 0 && pattern ? `${facts.tag} >> nth=${facts.index}` : null;
+      if (nth) offered.push(nth);
+      const selectors: string[] = [];
+      for (const selector of offered) {
+        const match = await matchIndex(root.locator(selector), el);
+        if (match && match.count === 1) selectors.push(selector);
+      }
+      if (!selectors.length) return null;
+      path.push({
+        selectors,
+        ...(facts.name ? { name: facts.name } : {}),
+        ...(facts.title ? { title: facts.title } : {}),
+        ...(nth && selectors.includes(nth) ? { urlPattern: pattern } : {}),
+      });
+      root = root.locator(selectors[0]).contentFrame();
+    } finally {
+      await el.dispose().catch(() => {});
+    }
+  }
+  return path.length ? path : null;
 }
 
 /**
@@ -1048,13 +1202,15 @@ async function recordLinkOf(handle: ElementHandle<Node>): Promise<ElementHandle<
  * one element needs no index anyway.
  */
 async function verifiedChain(
-  page: Page,
+  page: Root,
   info: ElementInfo,
   handle: ElementHandle<Node>,
+  /** The element sits in a frame: a point in the page's coordinates would name something else. */
+  noPoint = false,
 ): Promise<{ winner: LocatorCandidate | null; chain: LocatorCandidate[] }> {
   const chain: LocatorCandidate[] = [];
   let winner: LocatorCandidate | null = null;
-  for (const candidate of candidatesFor(info)) {
+  for (const candidate of candidatesFor(info, noPoint)) {
     // An identity anchor that matches several elements is not identity. It
     // would record clean (the handle is simply match 0) and then be discarded
     // at replay, where ambiguity in the primary reads as drift — so prove it
@@ -1103,7 +1259,7 @@ async function matchIndex(locator: Locator, handle: ElementHandle<Node>): Promis
 /** How far into a locator's matches the recorded element may sit and still be indexed. */
 const MATCH_INDEX_LIMIT = 10;
 
-function candidatesFor(info: ElementInfo): Candidate[] {
+function candidatesFor(info: ElementInfo, noPoint = false): Candidate[] {
   const out: Candidate[] = [];
   // Identity first, when the element sits in a record's row that shows a
   // value the caller vouched for: that locator names the RECORD, so it is the
@@ -1134,8 +1290,10 @@ function candidatesFor(info: ElementInfo): Candidate[] {
     out.push(cand({ kind: 'css', selector: `[${info.anchor.attr}=${JSON.stringify(info.anchor.value)}] ${info.tag}` }));
   }
   out.push(cand({ kind: 'css', selector: info.cssPath }));
-  // Where it was, last of all — see LocatorCandidate 'point'.
-  if (info.box) {
+  // Where it was, last of all — see LocatorCandidate 'point'. Not inside a
+  // frame: the box is in the frame's coordinates, and both runners mark a
+  // point on the page.
+  if (info.box && !noPoint) {
     const { x, y, w, h } = info.box;
     out.push(cand({ kind: 'point', x: Math.round(x + w / 2), y: Math.round(y + h / 2), w, h, role: info.role, tag: info.tag, vw: info.viewport.w, vh: info.viewport.h }));
   }

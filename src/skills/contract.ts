@@ -1,4 +1,5 @@
 import { WILDCARD } from '../shared/text.js';
+import { describeFramePath, framesEqual } from '../execution/context.js';
 import type { Skill, SkillStep, StepExpectation } from './store.js';
 
 /**
@@ -36,8 +37,16 @@ export function expectationLoss(before: StepExpectation | undefined, after: Step
   const lost: string[] = [];
   if (before.urlPattern && !after.urlPattern) lost.push(`url ${before.urlPattern}`);
   if (before.alertContains && !after.alertContains) lost.push(`alert ${JSON.stringify(before.alertContains)}`);
-  for (const line of before.addedContains ?? []) {
-    if (!(after.addedContains ?? []).includes(line)) lost.push(`page text ${JSON.stringify(line)}`);
+  // Lines are compared only within one dialect. A step re-recorded in dialect
+  // 2 names a labelled input `"Email"` where dialect 1 named it `""`: that is
+  // the same assertion written the new way, not a lost one. Across dialects
+  // only a step that asserts NO page change any more has given something up.
+  if ((before.lineDialect ?? 1) === (after.lineDialect ?? 1)) {
+    for (const line of before.addedContains ?? []) {
+      if (!(after.addedContains ?? []).includes(line)) lost.push(`page text ${JSON.stringify(line)}`);
+    }
+  } else if (before.addedContains?.length && !after.addedContains?.length) {
+    lost.push(`page text ${before.addedContains.map((l) => JSON.stringify(l)).join(', ')}`);
   }
   return lost.length ? `no longer asserts ${lost.join(', ')}` : null;
 }
@@ -50,6 +59,26 @@ function stepWeakening(before: SkillStep, after: SkillStep, where: string): stri
   // A step that minted a record is how recovery knows a record already
   // exists. Losing it is how a recovered run creates a second one.
   if (before.mints && !after.mints) out.push(`${where} no longer records that it creates a record`);
+
+  // Where a target lives is part of what the step promises: the same chain
+  // resolved from the page instead of the recorded frame can press the
+  // page's own identical control.
+  for (const key of ['target', 'source'] as const) {
+    const was = before.contexts?.[key]?.frame;
+    if (!was?.length) continue;
+    const now = after.contexts?.[key]?.frame;
+    if (!now?.length) out.push(`${where} no longer looks for its ${key} inside the recorded frame ${describeFramePath(was)}`);
+    else if (!framesEqual(was, now)) out.push(`${where} looks for its ${key} in ${describeFramePath(now)} instead of the recorded frame ${describeFramePath(was)}`);
+  }
+  if (before.whileContext?.frame?.length && !framesEqual(before.whileContext.frame, after.whileContext?.frame)) {
+    out.push(`${where} no longer counts its loop guard inside the recorded frame ${describeFramePath(before.whileContext.frame)}`);
+  }
+  if (before.effect && JSON.stringify(before.effect) !== JSON.stringify(after.effect ?? null)) {
+    out.push(`${where} no longer follows the ${before.effect.kind} it recorded`);
+  }
+  if (before.page !== undefined && after.page !== before.page) {
+    out.push(`${where} no longer checks that it runs on page ${before.page} of the browser`);
+  }
 
   if (before.tool === 'loop' || after.tool === 'loop') {
     const bScope = before.scope ?? 'drain';

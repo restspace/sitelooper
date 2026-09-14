@@ -1,6 +1,7 @@
+import type { Page } from 'playwright-core';
 import { WILDCARD, escapeRe, maskVolatile } from './text.js';
 import { fillParams } from './url.js';
-import { lineShows } from './snapshot.js';
+import { captureLines, describeCoverage, lineShows, type LineDialect, type ObservationCoverage } from './snapshot.js';
 
 /**
  * The content-expectation verdict both execution targets share: given what a
@@ -83,12 +84,24 @@ export function consequentialExpectations(lines: string[], filledValue: string |
   return rest.length ? rest : lines;
 }
 
+/** A fresh look at the live page, in the step's line dialect (see snapshot.ts captureLines). */
+export interface LiveLines {
+  lines: string[];
+  /** The look covered enough of the page for a missing line to mean absent (coverageComplete). */
+  complete: boolean;
+  coverage?: ObservationCoverage;
+}
+
 /** What a runner observed after the step: its diff, and a way to look again. */
 export interface ChangeObservation {
   /** The lines the step added (the diff), or null when that capture failed — never [] for "unavailable". */
   added: string[] | null;
-  /** A fresh look at the live page; null when the page cannot be read. */
-  live: () => Promise<string[] | null>;
+  /**
+   * A fresh look at the live page; null when the page cannot be read. Both
+   * are rendered in the dialect the step's recorded lines are in — a diff in
+   * one dialect judged against lines in another would miss by construction.
+   */
+  live: () => Promise<LiveLines | null>;
 }
 
 /** The step, as the verdict needs to know it. */
@@ -107,7 +120,11 @@ export interface ChangeVerdict {
   stop?: string;
   /** Always applied, whatever else the verdict says. */
   warnings: string[];
-  /** The diff leg of the evidence was missing (a failed capture); the live page decided. */
+  /**
+   * Part of the evidence was missing: the diff leg (a failed capture, the
+   * live page decided), or a live look that could not cover the page, so a
+   * stop could not be confirmed as a real absence.
+   */
   unobserved?: true;
   /**
    * The recorded effect was a dialog opening and no dialog opened. A dialog
@@ -155,7 +172,18 @@ export async function expectedChangesVerdict(
   // `added === null` means unavailable; `[]` means observed-empty.
   const added = obs.added;
   if (added === null) warnings.push(`step ${tag}: the page could not be captured after the action — its recorded effects were checked against the live page instead`);
-  const showing = async (lines: string[]): Promise<boolean> => lineShows((await obs.live()) ?? [], lines);
+  // A live look answers three ways. Shown is evidence. Not shown on a look
+  // that covered the page is absence. Not shown on a look that could not
+  // (the page unreadable, a cap reached, a visible frame unread, a
+  // virtualised list) is NOT absence: the stop below still stands — nothing
+  // established the effect — but it is marked unobserved and says why, and a
+  // conditional branch (the absent dialog) is never taken on it.
+  const look = async (lines: string[]): Promise<{ shown: boolean; complete: boolean; why: string }> => {
+    const live = await obs.live();
+    if (!live) return { shown: false, complete: false, why: 'the page could not be read' };
+    if (lineShows(live.lines, lines)) return { shown: true, complete: live.complete, why: '' };
+    return { shown: false, complete: live.complete, why: live.complete ? '' : live.coverage ? describeCoverage(live.coverage) || 'coverage unknown' : 'coverage unknown' };
+  };
   // A line carrying a {{vN}} slot is HARD (below). A {{dN}} derived marker
   // is filled like any other param but stays soft — the app minted it.
   const isParam = (l: string) => SLOT_LINE.test(l);
@@ -175,13 +203,21 @@ export async function expectedChangesVerdict(
     if (consequential.length) parameterised = consequential;
     else warnings.push(`step ${tag}: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here`);
   }
-  if (parameterised.length && !(added !== null && lineShows(added, parameterised)) && !(await showing(parameterised))) {
-    return { warnings, stop: `after step ${tag} the page did not show ${parameterised.map((w) => JSON.stringify(w)).join(' / ')} as it did when recorded — the step ran but probably acted on the wrong element` };
+  if (parameterised.length && !(added !== null && lineShows(added, parameterised))) {
+    const seen = await look(parameterised);
+    if (!seen.shown) {
+      const shown = parameterised.map((w) => JSON.stringify(w)).join(' / ');
+      if (!seen.complete) {
+        return { warnings, unobserved: true, stop: `after step ${tag} the page did not show ${shown} as it did when recorded, and that could not be confirmed: capture incomplete (${seen.why}) — the step ran but its effect was not established` };
+      }
+      return { warnings, stop: `after step ${tag} the page did not show ${shown} as it did when recorded — the step ran but probably acted on the wrong element` };
+    }
   }
   if (plain.length && !(added !== null && lineShows(added, plain))) {
     // None of the recorded effects in the step diff — check the live page
     // before judging (a change can land outside the diff window).
-    if (!(await showing(plain))) {
+    const seen = await look(plain);
+    if (!seen.shown) {
       // The recorded effect was a dialog opening. A dialog is conditional
       // UI: fwgr24's create step recorded "Exit edit" → "Discard changes to
       // dashboard?" because the RECORDING had unsaved edits at that moment;
@@ -195,9 +231,17 @@ export async function expectedChangesVerdict(
       if (dialog !== undefined && added === null) {
         return { warnings, unobserved: true, stop: `after step ${tag} the page could not be captured, so whether the dialog ${JSON.stringify(dialog)} opened is unknown — its absence cannot be assumed` };
       }
+      // The same for a live look that could not cover the page: a dialog in
+      // an unread frame, or past a cap, is not a dialog that did not open.
+      if (dialog !== undefined && !seen.complete) {
+        return { warnings, unobserved: true, stop: `after step ${tag} the recorded dialog ${JSON.stringify(dialog)} was not seen, but the page could not be observed in full (${seen.why}) — its absence cannot be assumed` };
+      }
       if (dialog !== undefined) {
         warnings.push(`step ${tag}: the recorded dialog ${JSON.stringify(dialog)} did not open — conditional UI, treated as absent; steps that name one of its controls will be skipped`);
         return { warnings, absentDialog: { name: dialog, lines: plain } };
+      }
+      if (!seen.complete) {
+        return { warnings, unobserved: true, stop: `after step ${tag} none of the ${plain.length} recorded page change(s) appeared (e.g. ${JSON.stringify(plain[0])}), and that could not be confirmed: capture incomplete (${seen.why}) — the step ran but its effect was not established` };
       }
       return { warnings, stop: `after step ${tag} none of the ${plain.length} recorded page change(s) appeared (e.g. ${JSON.stringify(plain[0])}) — the step ran but did not have its recorded effect` };
     }
@@ -240,4 +284,37 @@ export function namesDialogControl(step: DialogControlStep, dialogLines: readonl
     if (dialogLines.some((l) => l.includes(`"${name}"`))) return name;
   }
   return null;
+}
+
+/**
+ * What an action's observation (src/execution/action.ts `beginAction`) polls
+ * for as the step's completion: the HARD half of its recorded page changes —
+ * the lines carrying this run's own `{{vN}}` values, filled — in the step's
+ * line dialect. It holds when any of them shows, as the effect gate
+ * (expectedChangesVerdict) accepts any of them; it does not hold when none
+ * shows on a look that covered the page; and it could not be observed (null)
+ * otherwise. Undefined when the step has no such line: quiet is then all the
+ * observation waits for, and it never calls that an effect.
+ *
+ * The recorded url is not part of it. Both runners' url gates already wait on
+ * the url with their own window, and a url the gate would accept as volatile
+ * would never strictly match here, so every such step would sit out the whole
+ * effect window first.
+ */
+export function effectExpectation(
+  page: Page,
+  recorded: readonly string[] | undefined,
+  params: Record<string, string>,
+  d: LineDialect = 1,
+): { holds(): Promise<boolean | null> } | undefined {
+  const hard = liveLines((recorded ?? []).filter((l) => SLOT_LINE.test(l) && !TRANSIENT_LINE.test(l)), params);
+  if (!hard.length) return undefined;
+  return {
+    holds: async () => {
+      const live = await captureLines(page, d);
+      if (!live) return null;
+      if (lineShows(live.lines, hard)) return true;
+      return live.complete ? false : null;
+    },
+  };
 }

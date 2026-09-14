@@ -116,11 +116,18 @@ export interface AlertVerdict {
  * daemon's diff already holds the surplus, so it passes `before: []`); `after`
  * is null when the page could not be captured, which is reported as
  * unobserved rather than read as "no alert was raised".
+ *
+ * `afterComplete` false says the after-look did not see every live region
+ * (the alert cap was reached, or a rendered frame could not be read). An
+ * alert it DID see still stops the step — that is evidence — but "nothing new
+ * was raised" and "the expected alert is missing" are then not established:
+ * both are reported unobserved, never as a clean step.
  */
 export function alertVerdict(
   before: string[],
   after: string[] | null,
   ctx: { where: string; isRead: boolean; expectedContains?: string; params: Record<string, string> },
+  afterComplete = true,
 ): AlertVerdict {
   const warnings: string[] = [];
   let unobserved: true | undefined;
@@ -142,6 +149,17 @@ export function alertVerdict(
   const raised = after.filter((a) => !before.includes(a));
   if (raised.length && !ctx.isRead && want === undefined) {
     return { warnings, stop: `${ctx.where} raised an alert the recording never saw: ${clip(raised.join(' | '), 200)}` };
+  }
+  if (!afterComplete) {
+    if (!ctx.isRead && !raised.length) {
+      unobserved = true;
+      warnings.push(`${ctx.where}: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear`);
+    }
+    if (want !== undefined && !raised.some((a) => a.includes(want))) {
+      unobserved = true;
+      warnings.push(`${ctx.where}: expected alert containing ${JSON.stringify(want)} could not be observed in full`);
+    }
+    return unobserved ? { warnings, unobserved } : { warnings };
   }
   if (want !== undefined && !raised.some((a) => a.includes(want))) {
     warnings.push(`${ctx.where}: expected alert containing ${JSON.stringify(want)}`);

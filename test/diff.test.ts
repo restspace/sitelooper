@@ -52,6 +52,27 @@ describe('diffSignatures', () => {
     );
   });
 
+  /**
+   * ROBUSTNESS.md finding 4: two looks that both stopped at a cap (or could not
+   * read a visible frame) agreeing is not "nothing changed", only "nothing
+   * changed in what they saw". The text says which, and `nothingChanged` is
+   * kept for the claim a complete look can make.
+   */
+  it('does not call an incomplete look "nothing changed"', () => {
+    const coverage = {
+      nodesWalked: 4000, nodeCap: 4000, nodesTruncated: true, linesTruncated: false, alertsTruncated: false, shadowRootsWalked: 0,
+      frames: { observed: 0, hidden: 0, overCap: 0, inaccessible: [] }, collections: { partial: false, evidence: [] },
+    };
+    const observation = { url: 'https://app.test/', nodes: [], alerts: [], coverage };
+    const partial = sig({ lines: ['- button "Save"'], observation });
+    const change = describeChange(partial, partial);
+    expect(change.nothingChanged).toBe(false);
+    expect(change.noVisibleChange).toBe(true);
+    expect(change.text).toBe('no visible change in what could be observed (capture incomplete: the element cap was reached (4000 walked))');
+    const whole = describeChange(sig({ lines: ['- button "Save"'] }), sig({ lines: ['- button "Save"'] }));
+    expect(whole).toMatchObject({ nothingChanged: true, noVisibleChange: true, text: 'no visible change' });
+  });
+
   it('treats a reordered line as no change (multiset compare)', () => {
     const before = sig({ lines: ['- button "A"', '- button "B"', '- button "C"'] });
     const after = sig({ lines: ['- button "C"', '- button "A"', '- button "B"'] });

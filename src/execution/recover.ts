@@ -11,7 +11,7 @@
  * Self-contained: sibling shared modules and Playwright types only.
  */
 import type { Locator, Page } from 'playwright-core';
-import { settleDom } from './browser.js';
+import { outcomeLabel, outcomeOfError, settleDom } from './browser.js';
 import { fillParams, urlMatches } from './url.js';
 
 /** Tools whose miss can be substituted by navigating to the step's recorded destination: plain navigation clicks. */
@@ -27,7 +27,12 @@ export function mayNavigateToDestination(tool: string, destPattern: string | und
   return Boolean(destPattern) && NAV_FALLBACK_TOOLS.has(tool) && !inLoopBody && !urlMatches(destPattern!, liveUrl, params);
 }
 
-/** How a runner acts during recovery: its own click on a locator, its own navigation. */
+/**
+ * How a runner acts during recovery: its own click on a locator, its own
+ * navigation. A click that fails throws as the runner's click throws, with its
+ * outcome on the error (browser.ts `actionFailure`): that is what decides
+ * whether the direct navigation may follow it.
+ */
 export interface RecoveryHooks {
   /** `selector` is the css the locator was built from, for a runner that records what it clicked. */
   click(locator: Locator, selector: string): Promise<unknown>;
@@ -43,14 +48,18 @@ export interface RecoveryHooks {
  *      (params/derived filled, nothing volatile left), navigate there
  *      directly — the last resort before recovery (the daemon's model, the
  *      artifact's stop).
- * Returns what got the browser there, or null when neither rung did.
+ * Returns what got the browser there, or null when neither rung did — or,
+ * when the rung (a) click failed without proof that nothing went out,
+ * `unknown`: the click may have landed, so the direct navigation is NOT
+ * tried after it (a second commit of whatever that link does), and the caller
+ * stops with the note.
  */
 export async function navigateToDestination(
   page: Page,
   destPattern: string,
   params: Record<string, string>,
   hooks: RecoveryHooks,
-): Promise<{ used: string; note: string } | null> {
+): Promise<{ used: string; note: string } | { unknown: true; note: string } | null> {
   // (a) Requires the matching anchors to agree on ONE destination —
   // ambiguity (a wildcard pattern matching many records) skips the rung.
   const link = await linkToDestination(page, destPattern, params);
@@ -61,8 +70,17 @@ export async function navigateToDestination(
       if (urlMatches(destPattern, page.url(), params)) {
         return { used: `click ${link.selector}`, note: `clicked another link to the recorded destination (${link.selector})` };
       }
-    } catch {
-      // that link did not work either — try the direct navigation
+    } catch (err) {
+      // A click proven not to have gone out: that link did not work either —
+      // try the direct navigation. Anything else may have landed.
+      const outcome = outcomeOfError(err);
+      if (outcome !== 'not-dispatched') {
+        const message = (err instanceof Error ? err.message : String(err)).split('\n')[0].slice(0, 160);
+        return {
+          unknown: true,
+          note: `clicked another link to the recorded destination (${link.selector}), but whether that click took effect is unknown (${message}) — not navigating there directly, which could repeat it ${outcomeLabel(outcome)}`,
+        };
+      }
     }
   }
   // (b)

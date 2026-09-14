@@ -1,4 +1,5 @@
 import type { Locator, Page } from 'playwright-core';
+import { settleDom } from './browser.js';
 import { markPoint, type PointGeometry } from './point.js';
 
 /**
@@ -45,6 +46,10 @@ import { markPoint, type PointGeometry } from './point.js';
  *     are reported per pass, from the pass that resolved: a candidate that
  *     missed while the page was still painting and hits on the next poll is
  *     not volatile, it was early.
+ *  7. THE RACE. A named fallback that wins while a better candidate was
+ *     merely absent is confirmed once the DOM has gone quiet, and the second
+ *     pass's named answer stands (see `confirm`). Drift is a better candidate
+ *     that failed, never a stored index alone (`isDrift`).
  *
  * What the runners supply is OBSERVATIONS — a locator per candidate and the
  * compile-time facts about it — and how they present the result. What they
@@ -256,6 +261,20 @@ async function keepsIdentity(c: CandidateObservation, locator: Locator, requireI
 }
 
 /**
+ * Whether a resolution is DRIFT: a candidate the policy tried ahead of the
+ * winner failed, and the step stood on a fallback. Not merely "the winner is
+ * not stored index 0": rule 1 ranks a positional primary behind the
+ * candidates that name the element, and a name that wins the first try has
+ * replaced nothing that missed. Reading the stored index alone filed drift
+ * tickets for steps where nothing had changed (fwod41 07-change's `nth: 0`
+ * path, grafana's agent-typed `div.css-qpkbik:has-text("Stat") >> nth=0`),
+ * on every run, in both runners.
+ */
+export function isDrift(hit: { index: number; missed: readonly unknown[] }): boolean {
+  return hit.index > 0 && hit.missed.length > 0;
+}
+
+/**
  * Resolve one chain of candidates against the page under `policy`. `cands`
  * is given in STORED order (index ascending); this function orders it.
  * Returns null when nothing resolved within the wait.
@@ -328,7 +347,7 @@ export async function resolveCandidates(page: Page, cands: readonly CandidateObs
   const named = ordered.some((c) => !c.structural);
   const guess = (hit: Resolution | null) => !!hit && named && hit.structural;
   const first = await walk();
-  if (first && !guess(first)) return first;
+  if (first && !guess(first)) return confirm(first);
   let held = first;
   for (let waited = 0; waited < waitMs; waited += pollMs) {
     // A plain timer, not page.waitForTimeout: this path runs precisely when
@@ -336,10 +355,30 @@ export async function resolveCandidates(page: Page, cands: readonly CandidateObs
     // clock throw.
     await new Promise((r) => setTimeout(r, pollMs));
     const hit = await walk();
-    if (hit && !guess(hit)) return hit;
+    if (hit && !guess(hit)) return confirm(hit);
     if (hit) held = hit;
   }
   return held;
+
+  /**
+   * Rule 7, THE RACE. A named fallback that wins while a better candidate was
+   * merely ABSENT may have won by being counted a moment later, on a page that
+   * was still painting. Odoo's autocomplete does exactly this: the DOM goes
+   * quiet in the gap before the search answers, so one pass counted the named
+   * option (absent), then `#autocomplete_0_0` (absent), then the same id again
+   * (present) — the list arrived mid-walk, and the step clicked "whatever is
+   * first" by an id that only looks like a name (fwod42 02-create, two runs of
+   * three). So: let the DOM go quiet once and walk again. The second answer
+   * stands when it resolves to a named candidate; otherwise the first does.
+   * A hit whose misses are all judgments (identity, ambiguity, origin) is
+   * about the page as it is, not early, and is taken as it stands.
+   */
+  async function confirm(hit: Resolution): Promise<Resolution> {
+    if (!isDrift(hit) || !hit.missed.some((m) => m.reason === 'absent')) return hit;
+    await settleDom(page);
+    const again = await walk();
+    return again && !guess(again) ? again : hit;
+  }
 }
 
 /** The text-bearing fields of a candidate: what it NAMES. A slot inside a css selector or a testid is an address, not a name. */

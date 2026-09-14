@@ -1,6 +1,6 @@
 import type { Locator, Page } from 'playwright-core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { fireWhenAttached, robustClick, settleDom } from '../src/execution/browser.js';
+import { fireWhenAttached, outcomeLabel, outcomeOfError, robustClick, settleDom } from '../src/execution/browser.js';
 
 function clickTarget() {
   const target = {
@@ -110,6 +110,75 @@ describe('shared click dispatch safety', () => {
     target.elementHandle.mockRejectedValue(new Error('strict mode violation'));
     await expect(fireWhenAttached(loc, { timeout: 100 })).rejects.toThrow('strict mode violation');
     expect(target.elementHandle).toHaveBeenCalledTimes(1);
+  });
+});
+
+/**
+ * ROBUSTNESS.md finding 2: what a click's failure proves travels on the error
+ * (`actionOutcome`), with the model-facing words unchanged; and the action's
+ * deadline cuts every tier.
+ */
+describe('click outcomes and the action deadline', () => {
+  it('tags each failure with what it proves, keeping its words', async () => {
+    const disabled = clickTarget();
+    disabled.target.click.mockRejectedValueOnce(new Error('Timeout waiting for element to be enabled'));
+    disabled.target.isDisabled.mockResolvedValue(true);
+    const refused = await robustClick(disabled.loc, { timeout: 100 }).catch((e: unknown) => e);
+    expect(refused).toMatchObject({ actionOutcome: 'not-dispatched', actionReason: 'disabled' });
+    expect(outcomeOfError(refused)).toBe('not-dispatched');
+
+    const torn = clickTarget();
+    torn.target.click.mockRejectedValueOnce(new Error('Target page, context or browser has been closed'));
+    const unknown = await robustClick(torn.loc, { timeout: 100 }).catch((e: unknown) => e);
+    expect(unknown).toMatchObject({ actionOutcome: 'unknown', actionReason: 'teardown' });
+    expect((unknown as Error).message).toMatch(/^click outcome UNKNOWN: the page was torn down/);
+
+    const ambiguous = clickTarget();
+    const strict = new Error('strict mode violation: locator resolved to 2 elements');
+    ambiguous.target.click.mockRejectedValueOnce(strict);
+    await expect(robustClick(ambiguous.loc, { timeout: 100 })).rejects.toBe(strict);
+    expect(strict).toMatchObject({ actionOutcome: 'not-dispatched', actionReason: 'strict' });
+
+    // an error nobody tagged proves nothing: unknown, never "safe to repeat"
+    expect(outcomeOfError(new Error('boom'))).toBe('unknown');
+    expect(outcomeOfError('boom')).toBe('unknown');
+    expect(outcomeLabel('not-dispatched')).toBe('[outcome: not dispatched]');
+  });
+
+  it('a window tier that never finds the element proves nothing went out', async () => {
+    const { loc } = clickTarget();
+    const failure = await fireWhenAttached(loc, { timeout: 60 }).catch((e: unknown) => e);
+    expect(failure).toMatchObject({ actionOutcome: 'not-dispatched', actionReason: 'never-attached' });
+    expect((failure as Error).message).toMatch(/^target was never attached during 0s of polling/);
+  });
+
+  it('cuts every tier to what is left of the deadline, and reports how the click went out', async () => {
+    const { target, loc } = clickTarget();
+    target.click.mockRejectedValueOnce(new Error('Timeout waiting for element to be visible'));
+    const dispatched = vi.fn();
+    const left = [40, 25];
+    const obs = { remaining: () => left.shift() ?? 0, dispatched };
+    await expect(robustClick(loc, { timeout: 10_000, obs })).resolves.toContain('forced past actionability');
+    expect(target.click).toHaveBeenNthCalledWith(1, { timeout: 40 });
+    expect(target.click).toHaveBeenNthCalledWith(2, { timeout: 25, force: true });
+    expect(dispatched).toHaveBeenCalledWith('forced');
+  });
+
+  it('a deadline spent before a tier starts is a click never dispatched, and no tier runs', async () => {
+    const { target, loc } = clickTarget();
+    const spent = await robustClick(loc, { timeout: 10_000, obs: { remaining: () => 0 } }).catch((e: unknown) => e);
+    expect(spent).toMatchObject({ actionOutcome: 'not-dispatched', actionReason: 'deadline' });
+    expect((spent as Error).message).toMatch(/^click NOT dispatched: the action's deadline ran out/);
+    expect(target.click).not.toHaveBeenCalled();
+
+    // after a tier that proved nothing went out, the same
+    const late = clickTarget();
+    late.target.click.mockRejectedValueOnce(new Error('Timeout 30ms exceeded'));
+    const left = [30, 0];
+    const after = await robustClick(late.loc, { timeout: 10_000, obs: { remaining: () => left.shift() ?? 0 } }).catch((e: unknown) => e);
+    expect(after).toMatchObject({ actionOutcome: 'not-dispatched', actionReason: 'deadline' });
+    expect(late.target.click).toHaveBeenCalledTimes(1);
+    expect(late.target.evaluate).not.toHaveBeenCalled();
   });
 });
 

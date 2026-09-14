@@ -216,7 +216,7 @@ describe('the policy the artifact derives at compile time', () => {
     const { source } = emit(flowOf([loop]));
     const body = bodyOf(source);
     expect(body).toContain("], '01-do s_1/1 target', { ambiguousNth: cursor1, stayOnOrigin: originOf(page.url()) ?? undefined, waitMs: RESOLVE_WAIT_MS }, { drift: run.drift, resolved: { into: pass1.entries, key: 'target', check: pass1.check } });");
-    expect(body).toContain('await click(hit1.locator);');
+    expect(body).toContain('await click(hit1.locator, { obs: obs1 }).catch(actionFailed);');
     expect(body).not.toContain('.nth(cursor1)');
     // the guard: the same chain through the same policy, ambiguity allowed, no wait
     expect(body).toContain('const guard1 = await resolveCandidates(page, [');
@@ -342,5 +342,48 @@ describe('the emitted adapter over the shared policy', () => {
     }, {});
     expect(value).toBe('');
     expect(warned).toEqual(['[sitelooper skip] 01-do s_1/2 target: read errored (strict mode violation: resolved to 3 elements) — value left empty']);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Frame and page context (ROBUSTNESS.md finding 5): the chain resolves inside
+// the recorded frame, a recorded popup is armed before the action and
+// followed, and a step without either emits exactly what it did before.
+// ---------------------------------------------------------------------------
+
+describe('frame and page context in the emitted body', () => {
+  const frame = [{ selectors: ['iframe[title="Payment"]', 'iframe[src*="/frames/inner"]'], title: 'Payment' }];
+  const save = [{ kind: 'role' as const, role: 'button', name: 'Save' }];
+
+  it('resolves an in-frame chain against the recorded frame, and a plain one against the page', () => {
+    const framed = bodyOf(emit(flowOf([{ ...click(save), contexts: { target: { frame } } }], {})).source);
+    expect(framed).toContain(`const root1 = await frameRoot(page, ${JSON.stringify(frame)}, '01-do s_1/1 target');`);
+    expect(framed).toContain("{ locator: root1.getByRole('button', { name: 'Save', exact: true }), index: 0");
+    expect(framed).not.toContain("locator: page.getByRole('button', { name: 'Save'");
+    const plain = bodyOf(emit(flowOf([click(save)], {})).source);
+    expect(plain).not.toContain('frameRoot(');
+    expect(plain).toContain("{ locator: page.getByRole('button', { name: 'Save', exact: true }), index: 0");
+    expect(plain).not.toContain('armPageEffect(');
+    expect(plain).not.toContain('run.page');
+  });
+
+  it('arms a recorded popup after the target resolves and before the click, and continues on it', () => {
+    const body = bodyOf(emit(flowOf([{ ...click(save), effect: { kind: 'popup', urlPattern: 'http://app.test/popup/child' } }, click(save)], {})).source);
+    const pick = body.indexOf('const hit1 = await pick(page, [');
+    const arm = body.indexOf(`landing1 = await armPageEffect(page, {"kind":"popup","urlPattern":"http://app.test/popup/child"}, '01-do s_1/1');`);
+    const act = body.indexOf('await click(hit1.locator, { obs: obs1 }).catch(actionFailed);');
+    expect(pick).toBeGreaterThan(-1);
+    expect(arm).toBeGreaterThan(pick);
+    expect(act).toBeGreaterThan(arm);
+    expect(body.indexOf('moved1 = await landed(landing1);')).toBeGreaterThan(act);
+    expect(body).toContain('if (moved1) page = run.page = moved1;');
+    // every flow step picks up where an earlier one left the procedure
+    expect(body).toContain('if (run.page && !run.page.isClosed()) page = run.page;');
+  });
+
+  it('gates a step recorded on another page of the browser before anything resolves', () => {
+    const body = bodyOf(emit(flowOf([{ ...click(save), page: 1, effect: { kind: 'close' } }], {})).source);
+    expect(body.indexOf("pageGate(page, 1, '01-do s_1/1');")).toBeLessThan(body.indexOf('const hit1 = await pick(page, ['));
+    expect(body).toContain(`landing1 = await armPageEffect(page, {"kind":"close"}, '01-do s_1/1');`);
   });
 });

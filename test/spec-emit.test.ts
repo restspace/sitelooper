@@ -14,6 +14,7 @@ import { liftFlowFile } from '../src/spec/lift.js';
 import { FINGERPRINT_DIMS, normaliseFingerprint } from '../src/execution/fingerprint.js';
 import { compileFlow } from '../src/spec/index.js';
 import { parseSpecReport, verdictFor } from '../src/spec/check.js';
+import { documentOf } from './fixture/observation.js';
 
 const FWAT2 = path.resolve('bench/results-published/fwat2-skills');
 const RDFLOW = path.resolve('bench/results-published/flows/rdflow.json');
@@ -255,27 +256,27 @@ describe('step bodies', () => {
     const clicked = one({ tool: 'click', args: { target: '@e1' }, locators: loc });
     expect(clicked).toContain('const hit1 = await pick(page, [');
     expect(clicked).toContain(OBSERVED);
-    expect(clicked).toContain('await click(hit1.locator);');
-    expect(one({ tool: 'dblclick', args: { target: '@e1' }, locators: loc })).toContain('await click(hit1.locator, { dbl: true });');
-    expect(one({ tool: 'right_click', args: { target: '@e1' }, locators: loc })).toContain("await hit1.locator.click({ button: 'right' });");
+    expect(clicked).toContain('await click(hit1.locator, { obs: obs1 }).catch(actionFailed);');
+    expect(one({ tool: 'dblclick', args: { target: '@e1' }, locators: loc })).toContain('await click(hit1.locator, { dbl: true, obs: obs1 }).catch(actionFailed);');
+    expect(one({ tool: 'right_click', args: { target: '@e1' }, locators: loc })).toContain("await hit1.locator.click({ button: 'right' }).catch(actionFailed); // plain, as replay dispatches it — robustClick's tiers are for click/dblclick only");
     // through the inlined helper, never Playwright's own fill (which fires no `change`)
     expect(one({ tool: 'fill', args: { target: '@e1', value: '{{v1}}' }, locators: loc })).toContain(
-      'await fill(hit1.locator, `${p.v1}`);',
+      'await fill(hit1.locator, `${p.v1}`).catch(actionFailed);',
     );
     // through the inlined helper, never `pressSequentially` alone (the recipe ladder comes first, as in tools.ts)
-    expect(one({ tool: 'type', args: { target: '@e1', text: 'abc', delay_ms: 50 }, locators: loc })).toContain("await type(hit1.locator, 'abc', { delay: 50 });");
-    expect(one({ tool: 'type', args: { target: '@e1', text: 'abc' }, locators: loc })).toContain("await type(hit1.locator, 'abc');");
-    expect(one({ tool: 'press', args: { target: '@e1', key: 'Enter' }, locators: loc })).toContain("await hit1.locator.press('Enter');");
+    expect(one({ tool: 'type', args: { target: '@e1', text: 'abc', delay_ms: 50 }, locators: loc })).toContain("await type(hit1.locator, 'abc', { delay: 50 }).catch(actionFailed);");
+    expect(one({ tool: 'type', args: { target: '@e1', text: 'abc' }, locators: loc })).toContain("await type(hit1.locator, 'abc').catch(actionFailed);");
+    expect(one({ tool: 'press', args: { target: '@e1', key: 'Enter' }, locators: loc })).toContain("await hit1.locator.press('Enter').catch(actionFailed);");
     expect(one({ tool: 'select', args: { target: '@e1', option: 'Client One' }, locators: loc })).toContain(
-      "await select(hit1.locator, 'Client One');",
+      "await select(hit1.locator, 'Client One').catch(actionFailed);",
     );
-    expect(one({ tool: 'check', args: { target: '@e1', checked: true }, locators: loc })).toContain('await hit1.locator.check();');
-    expect(one({ tool: 'check', args: { target: '@e1', checked: false }, locators: loc })).toContain('await hit1.locator.uncheck();');
+    expect(one({ tool: 'check', args: { target: '@e1', checked: true }, locators: loc })).toContain('await hit1.locator.check().catch(actionFailed);');
+    expect(one({ tool: 'check', args: { target: '@e1', checked: false }, locators: loc })).toContain('await hit1.locator.uncheck().catch(actionFailed);');
     expect(one({ tool: 'goto', args: { url: 'http://app.test/x' }, locators: {} })).toContain("await page.goto('http://app.test/x');");
   });
 
   it('presses a key on the page when the recording had no target', () => {
-    expect(one({ tool: 'press', args: { key: 'Escape' }, locators: {} })).toContain("await page.keyboard.press('Escape');");
+    expect(one({ tool: 'press', args: { key: 'Escape' }, locators: {} })).toContain("await page.keyboard.press('Escape').catch(actionFailed);");
   });
 
   it('arms a dialog handler before the click that raises it', () => {
@@ -325,7 +326,7 @@ describe('step bodies', () => {
     });
     expect(out).toContain('const hit1 = await pick(page, [');
     expect(out).toContain(`{ locator: page.locator('#login-email'), index: 0, structural: false, kind: 'id', carries: JSON.stringify({ kind: 'id', selector: '#login-email' }) },`);
-    expect(out).toContain("await fill(hit1.locator, 'x');");
+    expect(out).toContain("await fill(hit1.locator, 'x').catch(actionFailed);");
     // a union would be a strict-mode violation the moment a fallback matched two inputs
     expect(out).not.toContain('.or(page');
     // the helper is the adapter over the shared policy, and takes observations
@@ -352,11 +353,11 @@ describe('step bodies', () => {
     expect(out).toContain("], '01-do s_test1/1 target', { stayOnOrigin: originOf(page.url()) ?? undefined, waitMs: RESOLVE_WAIT_MS }, { drift: run.drift });");
     // the line is reported off the RESOLUTION the shared policy handed back —
     // its winning index, and the reason every candidate ahead of it was passed over
-    expect(out).toContain('if (hit.index > 0) {');
+    // — and only when a candidate tried ahead of the winner failed (the shared isDrift)
+    expect(out).toContain('if (isDrift(hit)) {');
+    expect(out).toContain('export function isDrift(hit: { index: number; missed: readonly unknown[] }): boolean {'.replace('export ', ''));
     expect(out).toContain("const missed = hit.missed.map((m) => `#${m.index + 1} ${m.reason}`).join(', ');");
-    expect(out).toContain(
-      '`[sitelooper drift] ${where}: primary ${String(primary.locator)} missed; used #${hit.index + 1} ${String(hit.locator)}` +',
-    );
+    expect(out).toContain('const line = `[sitelooper drift] ${where}: ${head} #${hit.index + 1} ${String(hit.locator)} (${missed})`;');
     expect(out).toContain('console.warn(line);');
     expect(out).toContain('(opts.drift ?? DRIFT).push(line);');
     expect(syntaxErrors(out)).toEqual([]);
@@ -497,7 +498,8 @@ describe('step bodies', () => {
       `// @step 01-do s_test1/${n}`,
       `let urlBefore${n} = '';`,
       `let alertsBefore${n}: string[] = [];`,
-      `let alertsAfter${n}: string[] | null = null;`,
+      `let alertsAfter${n}: ObservedAlerts | null = null;`,
+      `let obs${n}: ActionObservation | null = null;`,
       'await runStepLifecycle({',
       'prepare: async () => {',
       'await settle(page);',
@@ -509,7 +511,9 @@ describe('step bodies', () => {
       `const hit${n} = await pick(page, [`,
       `{ locator: page.locator('${selector}'), index: 0, structural: false, kind: 'id', carries: JSON.stringify({ kind: 'id', selector: '${selector}' }) },`,
       `], '01-do s_test1/${n} target', { stayOnOrigin: originOf(page.url()) ?? undefined, waitMs: RESOLVE_WAIT_MS }, { drift: run.drift });`,
-      `await click(hit${n}.locator);`,
+      // the action's observation begins just before it dispatches (the shared beginAction)
+      `obs${n} = beginAction(page, { deadlineMs: ACTION_DEADLINE_MS, navigating: true });`,
+      `await click(hit${n}.locator, { obs: obs${n} }).catch(actionFailed);`,
     ];
     const i1 = sequenceAt(out, step(1, '#a'));
     const i2 = sequenceAt(out, step(2, '#b'));
@@ -534,7 +538,7 @@ describe('step bodies', () => {
     });
     expect(out).toContain(`{ locator: page.locator('#go'), index: 0, structural: false, kind: 'id', carries: JSON.stringify({ kind: 'id', selector: '#go' }) },`);
     expect(out).toContain(`{ locator: page.locator('#go'), index: 1, structural: false, kind: 'css', carries: JSON.stringify({ kind: 'css', selector: '#go' }) },`);
-    expect(out).toContain('await click(hit1.locator);');
+    expect(out).toContain('await click(hit1.locator, { obs: obs1 }).catch(actionFailed);');
   });
 
   // NEW CONTRACT: a single-candidate click needs `pick` too, so the flow that
@@ -562,7 +566,7 @@ describe('step bodies', () => {
     expect(noHelper).toContain("import { expect, test, type Locator, type Page } from '@playwright/test';");
     // the import is earned, not speculative: the embedded module really uses it
     expect(noHelper).toContain('async function robustClick(loc: Locator, opts: ClickOpts): Promise<string> {');
-    expect(noHelper).toContain('async function settleDom(page: Page): Promise<void> {');
+    expect(noHelper).toContain('async function settleDom(page: Page, maxMs: number = SETTLE_MAX_MS): Promise<void> {');
     // and a flow that never clicks still emits no click ADAPTER of its own
     expect(noHelper).not.toContain('async function click(loc: Locator');
     const clicked = one({ tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'id', selector: '#b' }] } });
@@ -611,7 +615,7 @@ describe('step bodies', () => {
     expect(source).toContain(
       `{ locator: pointLocator(page, { x: 1, y: 2 }), index: 0, structural: true, kind: 'point', carries: JSON.stringify({ kind: 'point', x: 1, y: 2, w: 3, h: 4, role: null, tag: 'div', vw: 800, vh: 600 }), point: { x: 1, y: 2, w: 3, h: 4, role: null, tag: 'div', vw: 800, vh: 600 } },`,
     );
-    expect(source).toContain('await click(hit1.locator);');
+    expect(source).toContain('await click(hit1.locator, { obs: obs1 }).catch(actionFailed);');
     expect(source).not.toContain('// TODO: no locator this compiler can express for click');
     expect(warnings).toEqual([]);
     expect(diagnostics).toEqual([]);
@@ -805,7 +809,7 @@ describe('expectations', () => {
     expect(out).toContain('// Shared execution source: expect.ts. Regenerate to update.');
     expect(out).toContain('// Shared execution source: snapshot.ts. Regenerate to update.');
     expect(out).toContain('async function expectedChangesVerdict(');
-    expect(out).toContain('function describeInPage(');
+    expect(out).toContain("function observeDocumentInPage(");
     // the slot the line names is one the step's `p` carries
     expect(out).toMatch(/async '01-do'\(page: Page, p: \{[^}]*\bv1: string/);
     // and nothing of the locator union survives, in the bodies or the helpers
@@ -833,14 +837,14 @@ describe('expectations', () => {
     );
     const { expectedChangesVerdict } = runnableHelpers(out);
     const ctx = { tag: '01-do s_test1/1', tool: 'select', positionalResolution: false };
-    const showing = (line: string) => ({ added: [] as string[], live: async () => [line] });
+    const showing = (line: string) => ({ added: [] as string[], live: async () => ({ lines: [line], complete: true }) });
     // the control is on the page, visible, and named Project — and holds the wrong value
     const wrong = await expectedChangesVerdict(['- combobox "Project": {{v1}}'], { v1: 'Beta' }, ctx, showing('- combobox "Project": Alpha'));
     expect(wrong.stop).toMatch(/did not show "- combobox \\"Project\\": Beta"/);
     // the right value passes, in the diff or on the live page
     const right = await expectedChangesVerdict(['- combobox "Project": {{v1}}'], { v1: 'Beta' }, ctx, showing('- combobox "Project": Beta'));
     expect(right.stop).toBeUndefined();
-    const inDiff = await expectedChangesVerdict(['- combobox "Project": {{v1}}'], { v1: 'Beta' }, ctx, { added: ['- combobox "Project": Beta'], live: async () => [] });
+    const inDiff = await expectedChangesVerdict(['- combobox "Project": {{v1}}'], { v1: 'Beta' }, ctx, { added: ['- combobox "Project": Beta'], live: async () => ({ lines: [], complete: true }) });
     expect(inDiff.stop).toBeUndefined();
     expect(inDiff.warnings).toEqual([]);
   });
@@ -913,7 +917,7 @@ describe('expectations', () => {
     const out = withExpect({ addedContains: ['- textbox "": {{v1}}', '- heading "{{v1}}"'] }, 'fill', { target: '@e1', value: '{{v1}}' });
     const { expectedChangesVerdict } = runnableHelpers(out);
     const lines = ['- textbox "": {{v1}}', '- heading "{{v1}}"'];
-    const echoOnly = { added: ['- textbox "": My Title'], live: async () => ['- textbox "": My Title'] };
+    const echoOnly = { added: ['- textbox "": My Title'], live: async () => ({ lines: ['- textbox "": My Title'], complete: true }) };
     // positional: the echo is what the wrong textbox produces too, so only the heading counts — and it is absent
     const positional = await expectedChangesVerdict(lines, { v1: 'My Title' }, { tag: '1', tool: 'fill', value: 'My Title', positionalResolution: true }, echoOnly);
     expect(positional.stop).toMatch(/did not show "- heading \\"My Title\\""/);
@@ -967,7 +971,7 @@ describe('expectations', () => {
       ]),
     ).toBeGreaterThan(-1);
     expect(trimmedLines(step2).indexOf('absentDialog = null;')).toBeLessThan(trimmedLines(step2).indexOf('const hit2 = await pick(page, ['));
-    expect(trimmedLines(step2).indexOf('absentDialog = null;')).toBeLessThan(trimmedLines(step2).indexOf('await click(hit2.locator);'));
+    expect(trimmedLines(step2).indexOf('absentDialog = null;')).toBeLessThan(trimmedLines(step2).indexOf('await click(hit2.locator, { obs: obs2 }).catch(actionFailed);'));
     // a minting step is never skipped: it only clears the state
     const step3 = source.slice(source.indexOf('// @step 01-do s_test1/3'), source.indexOf('// @step 01-do s_test1/4'));
     expect(step3).not.toContain('absentDialogSkip');
@@ -1059,7 +1063,7 @@ describe('expectations', () => {
     expect(lines.indexOf("errorPageGate(page, '01-do s_test1/1');")).toBe(verify + 1);
     expect(out).toContain('// Shared execution source: observe.ts. Regenerate to update.');
     expect(out).toContain('function alertVerdict(');
-    expect(out).toContain('async function liveAlerts(page: Page): Promise<string[] | null> {');
+    expect(out).toContain('async function liveAlerts(page: Page, d: LineDialect = 1): Promise<string[] | null> {');
     // one selector, in the one capture both observations are views of
     expect(out).toContain("'[role=alert],[role=status]'");
     expect(out.split("'[role=alert],[role=status]'").length).toBe(2);
@@ -1067,12 +1071,12 @@ describe('expectations', () => {
     const helper = /\nasync function settledAlerts\(page: Page[\s\S]*?\n\}\n/.exec(out);
     expect(helper).not.toBeNull();
     expect(helper![0]).toContain('await settle(page);');
-    expect(helper![0]).toContain('return liveAlerts(page);');
-    expect(helper![0].indexOf('await settle(page);')).toBeLessThan(helper![0].indexOf('liveAlerts('));
+    expect(helper![0]).toContain('return liveAlertsObserved(page, dialect);');
+    expect(helper![0].indexOf('await settle(page);')).toBeLessThan(helper![0].indexOf('liveAlertsObserved('));
     // and the gate judges what the lifecycle handed it: no capture of its own, no settle of its own
-    const gateHelper = /\nfunction alertGate\(before: string\[\], after: string\[\] \| null[\s\S]*?\n\}\n/.exec(out);
+    const gateHelper = /\nfunction alertGate\(before: string\[\], after: ObservedAlerts \| null[\s\S]*?\n\}\n/.exec(out);
     expect(gateHelper).not.toBeNull();
-    expect(gateHelper![0]).toContain('const verdict = alertVerdict(before, after, ctx);');
+    expect(gateHelper![0]).toContain('const verdict = alertVerdict(before, after ? after.alerts : null, ctx, after ? after.complete : true);');
     expect(gateHelper![0]).not.toContain('liveAlerts(');
     expect(gateHelper![0]).not.toContain('settle(');
     expect(gateHelper![0]).toContain('if (verdict.stop) throw new Error(verdict.stop);');
@@ -1100,16 +1104,17 @@ describe('preconditions, minting and loops', () => {
   it('checks a bound identity marker at segment entry and skips an unbound one', () => {
     const step: SkillStep = { tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'id', selector: '#b' }] } };
     const bound = emit(specOf([step], { segments: [segment([step], { preconditions: { urlPattern: 'http://app.test/x', requireText: ['{{v1}}'] } })] }));
-    // The daemon's own question (checkIdentity → presentOnPage, the shared
-    // snapshot module, embedded): a fresh snapshot capture, whose lines carry a
-    // field's VALUE after the colon — which is what an odoo form in edit mode
-    // shows and what sp5odb died on when the artifact asked getByText instead —
-    // bounded (`whole`) so a neighbouring record's id cannot pass. No dialect
-    // of the artifact's own.
+    // The daemon's own question (checkIdentity → confirmPresence, the shared
+    // snapshot module, embedded): a fresh dialect-2 observation, whose lines
+    // carry a field's VALUE after the colon — which is what an odoo form in
+    // edit mode shows and what sp5odb died on when the artifact asked getByText
+    // instead — bounded (`whole`) so a neighbouring record's id cannot pass,
+    // and answering 'unknown' (never 'absent') on a look that could not cover
+    // the page. No dialect of the artifact's own.
     expect(bound).toContain(
-      "await expect.poll(() => presentOnPage(page, [`${p.v1}`], { whole: true }), { timeout: 5000, message: 'identity: {{v1}} is not on this page' }).toBe(true);",
+      "await expect.poll(async () => (await confirmPresence(page, [`${p.v1}`], 2, { whole: true })).presence, { timeout: 5000, message: 'identity: {{v1}} is not confirmed on this page' }).toBe('present');",
     );
-    expect(bound).toContain('async function presentOnPage(page: Page, lines: string[], opts: LineShowsOptions = {}): Promise<boolean> {');
+    expect(bound).toContain('async function confirmPresence(page: Page, lines: string[], d: LineDialect, opts: LineShowsOptions = {}): Promise<{ presence: Presence; why?: string }> {');
     expect(bound).not.toContain('async function present(');
     expect(bound).not.toContain('getByText(re ?? text)');
     expect(bound).not.toContain(".locator('input, textarea, select')");
@@ -1130,13 +1135,13 @@ describe('preconditions, minting and loops', () => {
     expect(identityRe('RD-1015').test('RD-10150')).toBe(false);
     // embedded once, and ahead of the module that reads it
     expect(bound.split('// Shared execution source: text.ts.').length).toBe(2);
-    expect(bound.indexOf('// Shared execution source: text.ts.')).toBeLessThan(bound.indexOf('async function presentOnPage('));
+    expect(bound.indexOf('// Shared execution source: text.ts.')).toBeLessThan(bound.indexOf('async function confirmPresence('));
     expect(syntaxErrors(bound)).toEqual([]);
     const unbound = emit(
       specOf([step], { segments: [segment([step], { params: {}, preconditions: { urlPattern: 'http://app.test/x', requireText: ['{{v9}}'] } })] }),
     );
     expect(unbound).toContain('is unbound here — nothing to check.');
-    expect(unbound).not.toContain('expect.poll(() => presentOnPage(');
+    expect(unbound).not.toContain('(await confirmPresence(');
   });
 
   /**
@@ -1151,7 +1156,7 @@ describe('preconditions, minting and loops', () => {
     const click: SkillStep = { tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'id', selector: '#b' }] } };
     const pre = { urlPattern: 'http://app.test/items/:id', requireText: ['{{v1}}'] };
     const source = emit(specOf([goto, click], { segments: [segment([goto, click], { preconditions: pre })] }));
-    const poll = source.indexOf('await expect.poll(() => presentOnPage(page, [`${p.v1}`], { whole: true })');
+    const poll = source.indexOf('await expect.poll(async () => (await confirmPresence(page, [`${p.v1}`], 2, { whole: true })).presence');
     expect(poll).toBeGreaterThan(-1);
     expect(poll).toBeGreaterThan(source.indexOf("await page.goto('http://app.test/items/42');"));
     expect(poll).toBeLessThan(source.indexOf("locator('#b')"));
@@ -1161,7 +1166,7 @@ describe('preconditions, minting and loops', () => {
     // Only a segment that navigates itself defers: everywhere else the gate
     // stays where it was, at segment entry.
     const still = emit(specOf([click], { segments: [segment([click], { preconditions: pre })] }));
-    expect(still.indexOf('await expect.poll(() => presentOnPage(page, [`${p.v1}`], { whole: true })')).toBeLessThan(still.indexOf("locator('#b')"));
+    expect(still.indexOf('await expect.poll(async () => (await confirmPresence(page, [`${p.v1}`], 2, { whole: true })).presence')).toBeLessThan(still.indexOf("locator('#b')"));
     expect(still).not.toContain('// The identity gate sits AFTER the goto above');
   });
 
@@ -1227,7 +1232,7 @@ describe('preconditions, minting and loops', () => {
 
     // the guard sits ahead of the identity check, as replay orders them
     const identity = emit(specOf([step], { segments: [segment([step], { preconditions: { urlPattern: 'http://app.test/items', requireText: ['{{v1}}'] } })] }));
-    expect(identity.indexOf('await preconditionGate(')).toBeLessThan(identity.indexOf('await expect.poll(() => presentOnPage(page,'));
+    expect(identity.indexOf('await preconditionGate(')).toBeLessThan(identity.indexOf('await expect.poll(async () => (await confirmPresence(page,'));
   });
 
   /**
@@ -1405,8 +1410,8 @@ describe('preconditions, minting and loops', () => {
     expect(source).toContain("await expectChanges(page, ['- generic \"\" {{v1}}'], p, ");
     const { expectedChangesVerdict } = runnableHelpers(source);
     const ctx = { tag: '1', tool: 'click', positionalResolution: false };
-    expect((await expectedChangesVerdict(['- generic "" {{v1}}'], { v1: 'Widget A' }, ctx, { added: [], live: async () => ['- generic "" Widget A'] })).stop).toBeUndefined();
-    expect((await expectedChangesVerdict(['- generic "" {{v1}}'], { v1: 'Widget A' }, ctx, { added: [], live: async () => ['- generic "" Widget B'] })).stop).toMatch(/did not show/);
+    expect((await expectedChangesVerdict(['- generic "" {{v1}}'], { v1: 'Widget A' }, ctx, { added: [], live: async () => ({ lines: ['- generic "" Widget A'], complete: true }) })).stop).toBeUndefined();
+    expect((await expectedChangesVerdict(['- generic "" {{v1}}'], { v1: 'Widget A' }, ctx, { added: [], live: async () => ({ lines: ['- generic "" Widget B'], complete: true }) })).stop).toMatch(/did not show/);
   });
 
   /**
@@ -1443,7 +1448,7 @@ describe('preconditions, minting and loops', () => {
     // body target too).
     expect(source).toContain('runBody: async (cursor1: number, pass1: LoopPass) => {');
     expect(source).toContain("], '01-do s_test1/1 target', { ambiguousNth: cursor1, stayOnOrigin: originOf(page.url()) ?? undefined, waitMs: RESOLVE_WAIT_MS }, { drift: run.drift, resolved: { into: pass1.entries, key: 'target', check: pass1.check } });");
-    expect(source).toContain('await click(hit1.locator);');
+    expect(source).toContain('await click(hit1.locator, { obs: obs1 }).catch(actionFailed);');
     expect(source).not.toContain('.nth(cursor1)');
     // the progress guard's evidence: what each target resolved to, as replay's
     // sink, checked before the target is acted on
@@ -1882,7 +1887,7 @@ describe('a derived value is read after the navigation lands', () => {
     // urlPartsWhen helper, which is emitted above the steps object
     const settled = lines.indexOf('await settle(page);', declared);
     const before = lines.indexOf('urlBefore1 = page.url();');
-    const acted = lines.indexOf('await click(hit1.locator);');
+    const acted = lines.indexOf('await click(hit1.locator, { obs: obs1 }).catch(actionFailed);');
     const bound = lines.findIndex((l) => l.startsWith("bindPart(p, 'd1', await urlPartWhen(page, 'q.action', urlBefore1));"));
     expect(declared).toBeGreaterThan(-1);
     expect(declared).toBeLessThan(settled);
@@ -2041,7 +2046,7 @@ describe('a click that opens a popup is a toggle', () => {
     expect(source).not.toContain('isVisible()');
     expect(source).toContain('} else {');
     // the action itself moved inside the else branch, indented with it
-    expect(source).toContain('        } else {\n          await click(hit1.locator);');
+    expect(source).toContain('        } else {\n          obs1 = beginAction(page, { deadlineMs: ACTION_DEADLINE_MS, navigating: true });\n          await click(hit1.locator, { obs: obs1 }).catch(actionFailed);');
     // the guard reads the page through the shared capture, embedded once
     expect(source).toContain('async function presentOnPage(page: Page, lines: string[]');
     expect(source).toContain('function liveLines(');
@@ -2068,7 +2073,7 @@ describe('a click that opens a popup is a toggle', () => {
     const lines = emit(specOf([many])).split('\n');
     const guard = lines.findIndex((l) => l.trim().startsWith('if (await presentOnPage('));
     const picked = lines.findIndex((l) => l.includes('= await pick(page, ['));
-    const clicked = lines.findIndex((l) => l.trim() === 'await click(hit1.locator);');
+    const clicked = lines.findIndex((l) => l.trim() === 'await click(hit1.locator, { obs: obs1 }).catch(actionFailed);');
     expect(guard).toBeGreaterThan(-1);
     expect(picked).toBeGreaterThan(-1);
     expect(picked).toBeLessThan(guard);
@@ -2083,7 +2088,7 @@ describe('a click that opens a popup is a toggle', () => {
   it('leaves a dblclick alone, as replay does', () => {
     const dbl: SkillStep = { ...opener, tool: 'dblclick' };
     const out = emit(specOf([dbl]));
-    expect(out).toContain('await click(hit1.locator, { dbl: true });');
+    expect(out).toContain('await click(hit1.locator, { dbl: true, obs: obs1 }).catch(actionFailed);');
     expect(out).not.toContain('already in effect');
     expect(out).not.toContain('} else {');
   });
@@ -2138,11 +2143,11 @@ describe('a click that an overlay intercepts', () => {
       .replace(/\r\n/g, '\n')
       .trim();
     expect(source).toContain(shared);
-    expect(source).toContain('await robustClick(loc, { timeout: CLICK_TIER_MS, ...opts });');
+    expect(source).toContain('await robustClick(loc, { timeout: CLICK_TIER_MS, dbl: opts.dbl, obs: opts.obs ?? undefined });');
   });
 
   it('inlines the click helper only when a step clicks', () => {
-    expect(source).toContain('async function click(loc: Locator, opts: { dbl?: boolean } = {}): Promise<void> {');
+    expect(source).toContain('async function click(loc: Locator, opts: { dbl?: boolean; obs?: ActionObservation | null } = {}): Promise<void> {');
     expect(source).toContain('const CLICK_TIER_MS = 5000;');
     const filled: SkillStep = { tool: 'fill', args: { target: '@e1', value: 'x' }, locators: { target: [{ kind: 'id', selector: '#i' }] } };
     expect(emit(specOf([filled]))).not.toContain('async function click');
@@ -2157,7 +2162,7 @@ describe('a click that an overlay intercepts', () => {
     // src/execution/recipes.ts), whose native half is that reactSafeFill.
     const filled: SkillStep = { tool: 'fill', args: { target: '@e1', value: '3' }, locators: { target: [{ kind: 'id', selector: '#qty' }] } };
     const out = emit(specOf([filled]));
-    expect(out).toContain("await fill(hit1.locator, '3');");
+    expect(out).toContain("await fill(hit1.locator, '3').catch(actionFailed);");
     expect(out).toContain('async function fill(loc: Locator, value: string): Promise<void> {');
     expect(out).toContain('const attempt = await fillWithRecipe(loc.page(), loc, value, recipeBook);');
     // recognition first, as the daemon's case 'fill': no visibility wait ahead of the ladder
@@ -2221,7 +2226,7 @@ describe('a click that an overlay intercepts', () => {
     // type and select climb their own ladders through the same book
     const typed: SkillStep = { tool: 'type', args: { target: '@e1', text: 'abc' }, locators: { target: [{ kind: 'id', selector: '#ed' }] } };
     const typedOut = emit(specOf([typed]));
-    expect(typedOut).toContain("await type(hit1.locator, 'abc');");
+    expect(typedOut).toContain("await type(hit1.locator, 'abc').catch(actionFailed);");
     expect(typedOut).toContain('async function type(loc: Locator, text: string, opts: { delay?: number } = {}): Promise<void> {');
     expect(typedOut).toContain('const attempt = await typeWithRecipe(loc.page(), loc, text, recipeBook, { timeout: TYPE_TIMEOUT_MS, delay: opts.delay ?? TYPE_DELAY_MS });');
     // tools.ts's own defaults, not Playwright's: 10s timeout, 20ms per key
@@ -2253,7 +2258,7 @@ describe('a click that an overlay intercepts', () => {
       locators: { target: [{ kind: 'id', selector: '#client' }] },
     };
     const out = emit(specOf([selected]));
-    expect(out).toContain("await select(hit1.locator, 'Client One', '17');");
+    expect(out).toContain("await select(hit1.locator, 'Client One', '17').catch(actionFailed);");
     expect(out).toContain('async function select(loc: Locator, label: string, fallbackValue?: string): Promise<void> {');
     expect(out).toContain('const { attempt } = await selectWithRecipe(loc.page(), loc, label, recipeBook, fallbackValue);');
     // the same order as daemon/inputs.ts: look first, then the label wait, then value/index
@@ -2266,7 +2271,7 @@ describe('a click that an overlay intercepts', () => {
     expect(syntaxErrors(out)).toEqual([]);
     // no recorded fallback value, no third argument
     const bare: SkillStep = { tool: 'select', args: { target: '@e1', option: 'Client One' }, locators: { target: [{ kind: 'id', selector: '#client' }] } };
-    expect(emit(specOf([bare]))).toContain("await select(hit1.locator, 'Client One');");
+    expect(emit(specOf([bare]))).toContain("await select(hit1.locator, 'Client One').catch(actionFailed);");
     // a flow that never selects carries none of it
     const clicked: SkillStep = { tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'id', selector: '#go' }] } };
     expect(emit(specOf([clicked]))).not.toContain('async function select');
@@ -2292,7 +2297,7 @@ describe('a click that an overlay intercepts', () => {
 
   it('passes the standalone click budget to the shared implementation', () => {
     expect(source).toContain('const CLICK_TIER_MS = 5000;');
-    expect(source).toContain('await robustClick(loc, { timeout: CLICK_TIER_MS, ...opts });');
+    expect(source).toContain('await robustClick(loc, { timeout: CLICK_TIER_MS, dbl: opts.dbl, obs: opts.obs ?? undefined });');
   });
 
   it('takes tier 1 when a normal click lands', async () => {
@@ -2347,10 +2352,10 @@ describe('a click that an overlay intercepts', () => {
   it('dispatches a right or modifier click plainly, as replay does', () => {
     const loc = { target: [{ kind: 'id' as const, selector: '#r' }] };
     const right = emit(specOf([{ tool: 'right_click', args: { target: '@e1' }, locators: loc }]));
-    expect(right).toContain("await hit1.locator.click({ button: 'right' });");
+    expect(right).toContain("await hit1.locator.click({ button: 'right' }).catch(actionFailed);");
     expect(right).not.toContain('async function click');
     const mod = emit(specOf([{ tool: 'modifier_click', args: { target: '@e1', modifiers: ['Shift'] }, locators: loc }]));
-    expect(mod).toContain("await hit1.locator.click({ modifiers: ['Shift'] });");
+    expect(mod).toContain("await hit1.locator.click({ modifiers: ['Shift'] }).catch(actionFailed);");
   });
 });
 
@@ -2456,20 +2461,21 @@ describe('every step settles first', () => {
     // Two steps, two settles each: the unconditional one that opens `prepare`
     // (replay's own "settle before you look at anything"), and the guarded one
     // in the lifecycle's settle phase, which re-settles only when the action
-    // navigated. Nothing else in the step BODIES calls it (the alertGate
+    // navigated (for an observed action, only when it had no observation: its
+    // own settle is what settles it). Nothing else in the step BODIES calls it (the alertGate
     // helper settles once before it looks, as the daemon captures its diff
     // after settleDom — that is a helper, not a step).
     const bodies = source.slice(source.indexOf('export const steps = {'));
     expect(bodies.match(/await settle\(page\);/g)).toHaveLength(4);
     const lines = trimmedLines(bodies);
     expect(lines.filter((l) => l === 'await settle(page);')).toHaveLength(2);
-    expect(lines.filter((l) => /^if \(page\.url\(\) !== urlBefore\d\) await settle\(page\);$/.test(l))).toHaveLength(2);
+    expect(lines.filter((l) => /^else if \(page\.url\(\) !== urlBefore\d\) await settle\(page\);$/.test(l))).toHaveLength(2);
     for (const n of [1, 2]) {
       expect(
         sequenceAt(source, ['prepare: async () => {', 'await settle(page);', `urlBefore${n} = page.url();`]),
       ).toBeGreaterThan(-1);
       expect(
-        sequenceAt(source, ['settle: async () => {', `if (page.url() !== urlBefore${n}) await settle(page);`]),
+        sequenceAt(source, ['settle: async () => {', `if (obs${n}) await obs${n}.settle();`, `else if (page.url() !== urlBefore${n}) await settle(page);`]),
       ).toBeGreaterThan(-1);
     }
   });
@@ -2587,7 +2593,8 @@ describe('emitFlowFile: the already-satisfied guard', () => {
     // The artifact used to answer from getByText and input values — a second
     // dialect, looser than the daemon's roled lines (a marker in a plain <div>
     // satisfied it and not the daemon). That dialect is gone, not bypassed.
-    expect(source).toContain('const lines = await capturePageLines(page);');
+    expect(source).toContain('const captured = await captureLines(page, 2);');
+    expect(source).toContain('if (!captured || !captured.complete) return false;');
     expect(source).toContain('if (!lineShows(lines, [want], { whole: true })) return false;');
     expect(source).toContain('if (!lineShows(lines, [want])) return false;');
     expect(source).not.toContain('async function present(');
@@ -2660,8 +2667,8 @@ describe('emitFlowFile: the already-satisfied guard', () => {
     // only the page capture and the in-page scope check are stubbed, through
     // the page they read. Scope is exercised on a real DOM by the parity harness.
     const { satisfied } = runnableHelpers(source);
-    const onPage = (lines: string[], scoped = true) => ({
-      evaluate: async (fn: unknown) => (String(fn).includes('maxAlerts') ? { lines, alerts: [] } : scoped),
+    const onPage = (lines: string[], scoped = true, complete = true) => ({
+      evaluate: async (fn: unknown) => (String(fn).includes('maxAlerts') ? documentOf(lines, [], { linesTruncated: !complete }) : scoped),
     });
     // a snapshot LINE, role and all — not a text node
     const shown = ['- heading "S00021"', '- textbox "Type": Sales Order', '- button "Cancelled"'];
@@ -2674,6 +2681,8 @@ describe('emitFlowFile: the already-satisfied guard', () => {
     expect(await satisfied(onPage(['- heading "S000210"', '- button "Cancelled"']), ['S00021'], ['Cancelled'])).toBe(false);
     // both present but of different records: the in-page scope check decides
     expect(await satisfied(onPage(shown, false), ['S00021', 'Sales Order'], ['Cancelled'])).toBe(false);
+    // both showing, on a look that could not cover the page (a cap reached): not satisfied — run the step
+    expect(await satisfied(onPage(shown, true, false), ['S00021', 'Sales Order'], ['Cancelled'])).toBe(false);
     expect(await satisfied(onPage(shown), ['S00021'], [])).toBe(false);
     expect(await satisfied(onPage(shown), [], ['Cancelled'])).toBe(false);
     // a page that cannot be read has proven nothing

@@ -39,7 +39,7 @@ export function isOwnedFlowFile(source: string): boolean {
  * unsupported version, or a shape defect — with the step index / segment id
  * it was found at, so a human fixing a drifted file knows where to look.
  */
-export function liftFlowFile(source: string): { spec: SpecFlow; version: 1 } {
+export function liftFlowFile(source: string): { spec: SpecFlow; version: 1 | 2 } {
   const beginIdx = source.indexOf(BEGIN_MARKER);
   const endIdx = source.indexOf(END_MARKER);
   if (beginIdx === -1 && endIdx === -1) {
@@ -87,7 +87,7 @@ export function liftFlowFile(source: string): { spec: SpecFlow; version: 1 } {
   }
 
   validateSpecShape(parsed);
-  return { spec: parsed, version: 1 };
+  return { spec: parsed, version: parsed.version };
 }
 
 /**
@@ -104,8 +104,8 @@ function validateSpecShape(v: unknown): asserts v is SpecFlow {
   }
   const flow = v as Record<string, unknown>;
 
-  if (flow.version !== 1) {
-    throw new LiftError(`unsupported spec version ${JSON.stringify(flow.version)}: lift only supports version 1`);
+  if (flow.version !== 1 && flow.version !== 2) {
+    throw new LiftError(`unsupported spec version ${JSON.stringify(flow.version)}: lift only supports versions 1 and 2`);
   }
   if (typeof flow.name !== 'string') {
     throw new LiftError('FLOW.name must be a string');
@@ -159,8 +159,7 @@ function validateSpecShape(v: unknown): asserts v is SpecFlow {
       }
       validatePreconditionFingerprint(segWhere, seg.preconditions);
 
-      (seg.steps as unknown[]).forEach((rawSkillStep, skillStepIndex) => {
-        const skillStepWhere = `${segWhere}, steps[${skillStepIndex}]`;
+      const visit = (rawSkillStep: unknown, skillStepWhere: string) => {
         if (typeof rawSkillStep !== 'object' || rawSkillStep === null || Array.isArray(rawSkillStep)) {
           throw new LiftError(`${skillStepWhere}: not an object`);
         }
@@ -175,7 +174,10 @@ function validateSpecShape(v: unknown): asserts v is SpecFlow {
         ) {
           throw new LiftError(`${skillStepWhere}: "locators" must be an object`);
         }
-      });
+        validatePageContext(skillStepWhere, skillStep);
+        if (Array.isArray(skillStep.body)) skillStep.body.forEach((b, i) => visit(b, `${skillStepWhere}, body[${i}]`));
+      };
+      (seg.steps as unknown[]).forEach((rawSkillStep, skillStepIndex) => visit(rawSkillStep, `${segWhere}, steps[${skillStepIndex}]`));
     });
   });
 
@@ -208,6 +210,57 @@ function validatePreconditionFingerprint(segWhere: string, pre: unknown): void {
   }
   if (p.fingerprinted !== undefined && p.fingerprinted !== true) {
     throw new LiftError(`${segWhere}: "preconditions.fingerprinted" must be true when present (found ${JSON.stringify(p.fingerprinted)})`);
+  }
+}
+
+/**
+ * A step's `contexts`, `whileContext`, `page` and `effect` (src/execution/
+ * context.ts). Both runners act on them: a frame path with no selectors would
+ * resolve nothing ever, a malformed one would throw inside the artifact, and
+ * an effect of an unknown kind would be silently not followed — so each is
+ * refused here, naming the field.
+ */
+function validatePageContext(where: string, step: Record<string, unknown>): void {
+  const frameAt = (value: unknown, field: string) => {
+    if (typeof value !== 'object' || value === null || Array.isArray(value)) throw new LiftError(`${where}: "${field}" must be an object`);
+    const frame = (value as Record<string, unknown>).frame;
+    if (frame === undefined) return;
+    if (!Array.isArray(frame)) throw new LiftError(`${where}: "${field}.frame" must be an array of frame hops`);
+    frame.forEach((hop, i) => {
+      const at = `${where}: "${field}.frame"[${i}]`;
+      if (typeof hop !== 'object' || hop === null || Array.isArray(hop)) throw new LiftError(`${at} must be an object`);
+      const h = hop as Record<string, unknown>;
+      if (!Array.isArray(h.selectors) || !h.selectors.length || !h.selectors.every((s) => typeof s === 'string' && s.trim())) {
+        throw new LiftError(`${at}: "selectors" must be a non-empty array of strings`);
+      }
+      for (const key of ['name', 'title', 'urlPattern']) {
+        if (h[key] !== undefined && typeof h[key] !== 'string') throw new LiftError(`${at}: "${key}" must be a string when present`);
+      }
+    });
+  };
+  if (step.contexts !== undefined) {
+    if (typeof step.contexts !== 'object' || step.contexts === null || Array.isArray(step.contexts)) {
+      throw new LiftError(`${where}: "contexts" must be an object`);
+    }
+    for (const [key, value] of Object.entries(step.contexts as Record<string, unknown>)) {
+      if (key !== 'target' && key !== 'source') throw new LiftError(`${where}: "contexts" may only name target and source (found ${JSON.stringify(key)})`);
+      frameAt(value, `contexts.${key}`);
+    }
+  }
+  if (step.whileContext !== undefined) frameAt(step.whileContext, 'whileContext');
+  if (step.page !== undefined && !(Number.isInteger(step.page) && (step.page as number) >= 0)) {
+    throw new LiftError(`${where}: "page" must be a non-negative integer when present (found ${JSON.stringify(step.page)})`);
+  }
+  if (step.effect !== undefined) {
+    const e = step.effect as Record<string, unknown> | null;
+    const kind = e && typeof e === 'object' ? e.kind : undefined;
+    if (kind === 'switch') {
+      if (!Number.isInteger(e!.to) || (e!.to as number) < 0) throw new LiftError(`${where}: "effect.to" must be a non-negative integer for a switch`);
+    } else if (kind === 'popup') {
+      if (e!.urlPattern !== undefined && typeof e!.urlPattern !== 'string') throw new LiftError(`${where}: "effect.urlPattern" must be a string when present`);
+    } else if (kind !== 'close' && kind !== 'navigate') {
+      throw new LiftError(`${where}: "effect.kind" must be one of navigate, popup, close, switch (found ${JSON.stringify(kind)})`);
+    }
   }
 }
 

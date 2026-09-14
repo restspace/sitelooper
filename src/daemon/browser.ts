@@ -2,7 +2,8 @@ import path from 'node:path';
 import { chromium, devices, type BrowserContext, type Page, type Video } from 'playwright-core';
 import { ensureSessionDir } from '../shared/paths.js';
 import { DialogManager } from './dialogs.js';
-import { RECORDING_VIEWPORT, profileMismatch, readLiveBrowser, trackRequests, type BrowserProfile } from '../execution/browser.js';
+import { RECORDING_VIEWPORT, profileMismatch, readLiveBrowser, type BrowserProfile } from '../execution/browser.js';
+import { pageTraffic } from '../execution/action.js';
 import { ScriptRecorder } from './recorder.js';
 import { SkillStore } from '../skills/store.js';
 
@@ -186,7 +187,9 @@ export class BrowserSession {
 
   private adoptPage(page: Page): void {
     this.dialogs.attach(page);
-    trackRequests(page);
+    // Traffic is recorded from the moment the session adopts the page, so the
+    // first action on it has a baseline (src/execution/action.ts).
+    pageTraffic(page);
     const video = page.video();
     if (video) this.videos.add(video);
     const previous = this.activePage;
@@ -227,16 +230,30 @@ export class BrowserSession {
 
   private pinnedPage: Page | null = null;
 
-  /** Keep `page` active for the duration of `fn`, whatever tabs open meanwhile. */
+  /**
+   * Keep `page` active for the duration of `fn`, whatever tabs open meanwhile.
+   * The pin moves only when `fn` says so (repin): a replayed step that was
+   * RECORDED opening a popup, closing its page or switching tabs follows it.
+   * Whichever page the pin stands on when `fn` ends is left active, so the
+   * next segment of a chain starts where this one left the procedure.
+   */
   async withPinnedPage<T>(page: Page, fn: () => Promise<T>): Promise<T> {
     const outer = this.pinnedPage;
     this.pinnedPage = page;
     try {
       return await fn();
     } finally {
+      const landed = this.pinnedPage;
       this.pinnedPage = outer;
-      if (!page.isClosed()) this.activePage = page;
+      if (landed && !landed.isClosed()) this.activePage = landed;
+      else if (!page.isClosed()) this.activePage = page;
     }
+  }
+
+  /** Move a pin (and the active page) to `page` — a replay following a recorded page effect. */
+  repin(page: Page): void {
+    if (this.pinnedPage) this.pinnedPage = page;
+    this.activePage = page;
   }
 
   /** Whether a context is already live — so callers can look without launching one. */
@@ -318,8 +335,16 @@ export class BrowserSession {
 }
 
 /**
- * Requests in flight per page: the shared counter (src/execution/browser.ts),
- * which the standalone artifact carries too. Started when this session adopts
+ * Requests in flight per page: the shared traffic record (src/execution/action.ts),
+ * which the standalone artifact carries too. Installed when this session adopts
  * a page, so a page this session never adopted reads as idle.
  */
-export { inFlightRequests } from '../execution/browser.js';
+export { inFlightRequests } from '../execution/action.js';
+
+/**
+ * The whole budget of one agent or replay action: dispatch (every click tier
+ * included), its settle and its expected effect. Click tiers are cut to what
+ * is left of it, so a click that used to be able to spend 3×10s plus a 10s
+ * re-render window now ends by 30s.
+ */
+export const ACTION_DEADLINE_MS = 30_000;

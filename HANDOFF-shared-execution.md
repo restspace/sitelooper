@@ -362,8 +362,11 @@ npm test
 # Browser suites. Serially — concurrent Chromium instances add timing noise.
 $env:BP_BROWSER_TESTS = '1'
 $env:SITELOOPER_CHANNEL = 'chromium'
-npx vitest run test/execution-parity.test.ts
 npm test
+# Parity (~9 min) is on its own switch, BP_PARITY_TESTS=1, and is not part of
+# `npm test`. Run it from time to time and before trusting a change to
+# src/execution:
+npm run test:parity
 Remove-Item Env:BP_BROWSER_TESTS
 Remove-Item Env:SITELOOPER_CHANNEL
 ```

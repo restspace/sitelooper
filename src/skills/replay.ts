@@ -1,9 +1,10 @@
-import { changedCreation, isReadAction, runStepLifecycle, type StepActionResult } from '../execution/lifecycle.js';
+import { changedCreation, isMutatingAction, isReadAction, runStepLifecycle, type StepActionResult } from '../execution/lifecycle.js';
+import { outcomeLabel, outcomeOfError, type ActionOutcome } from '../execution/browser.js';
+import type { ActionExpectation } from '../execution/action.js';
 import { alertVerdict, errorPageVerdict, isErrorPageUrl, markersBound, preconditionVerdict, urlEffectVerdict } from '../execution/gates.js';
 import { LOOP_SHRINK_WAIT_MS, pageReadable, runFoldedLoop, type LoopPass } from '../execution/loop.js';
 import type { Locator, Page } from 'playwright-core';
 import { clip, identityRe, identitySource } from '../shared/text.js';
-import { captureSignature } from '../daemon/diff.js';
 import { cosine, fingerprintPage } from '../daemon/fingerprint.js';
 import { candidateExpr, makeLocator, type LocatorCandidate, type StepDiff } from '../daemon/recorder.js';
 import { retired } from './repair.js';
@@ -13,6 +14,7 @@ import {
   candidateRank,
   identityFields,
   identityValues,
+  isDrift,
   resolveCandidates,
   structuralCandidate,
   type CandidateObservation,
@@ -22,8 +24,21 @@ import { isRefTarget } from '../daemon/refs.js';
 import { settleDom } from '../daemon/settle.js';
 import { TRANSIENT_LINE, fillParams, fillParamsDeep, urlMatches, urlPart, urlPattern } from './compile.js';
 import { flattenRead, resolveForRead, takeRead } from '../execution/observe.js';
-import { capturePageLines, lineShows, presentOnPage, scopeCheckInPage } from '../execution/snapshot.js';
-import { expectedChangesVerdict, liveLines, namesDialogControl } from '../execution/expect.js';
+import {
+  addedLines,
+  alertsComplete,
+  captureLines,
+  confirmPresence,
+  lineShows,
+  observePage,
+  presentOnPage,
+  renderAlerts,
+  renderLines,
+  scopeCheckInPage,
+  type LineDialect,
+  type PageObservation,
+} from '../execution/snapshot.js';
+import { effectExpectation, expectedChangesVerdict, liveLines, namesDialogControl } from '../execution/expect.js';
 // The observation dialect and the content-expectation rules live in the
 // shared execution modules, where a compiled artifact embeds them too.
 // Re-exported so this module's callers need not know which owns the source.
@@ -31,7 +46,8 @@ export { lineShows, type LineShowsOptions } from '../execution/snapshot.js';
 export { consequentialExpectations, isEchoLine } from '../execution/expect.js';
 import { candidateNames, echoVerdict, noteInteraction, setsSomething } from '../execution/echo.js';
 import { mayNavigateToDestination, navigateToDestination, textHeldElsewhere } from '../execution/recover.js';
-import { contractVerdict, isVerified, originOf, type Skill, type SkillStep } from './store.js';
+import { contractFor, contractOf, contractVerdict, isVerified, originOf, stepsCarryContext, type Skill, type SkillStep } from './store.js';
+import { armPageEffect, describeFramePath, pageIndexVerdict, rootFor, stepEffect, type Root } from '../execution/context.js';
 
 /** Executes one step against the live page, recording it; throws on failure. */
 export type StepExecutor = (
@@ -39,12 +55,40 @@ export type StepExecutor = (
   args: Record<string, unknown>,
   resolved: Record<string, Locator>,
   via: { skill: string; step: number },
-) => Promise<{ result: string; diff?: StepDiff; captureFailed?: true }>;
+  /** What the step's action observation polls for: its expected effect (effectExpectation). */
+  action?: { expect?: ActionExpectation },
+) => Promise<StepRunResult>;
+
+/**
+ * What the executor hands back for one step: its tool result, the recorder's
+ * diff (in the dialect it was recorded in, `diff.dialect`), and — when both
+ * were taken — the before/after observations the diff was rendered from, so
+ * a step whose expectation is in another dialect is judged on a diff rendered
+ * in THAT dialect. `captureFailed` marks a diff that could not be taken.
+ */
+export interface StepRunResult {
+  result: string;
+  diff?: StepDiff;
+  observations?: { before: PageObservation; after: PageObservation };
+  captureFailed?: true;
+  /** How the action ended, from its observation (src/execution/action.ts). */
+  outcome?: ActionOutcome;
+  /** The executor's action observation already settled the page after the action. */
+  settled?: true;
+}
 
 export interface ReplayOptions {
   page: Page;
   exec: StepExecutor;
   signal?: AbortSignal;
+  /**
+   * Called when a step recorded opening a popup, closing its page or
+   * switching tabs has moved the procedure to another page: the session moves
+   * its pin there, so the executor acts on the page the replay now uses and a
+   * chain's next segment starts on it. Steps without a recorded effect never
+   * call it — a stray tab a replayed click opens does not move the replay.
+   */
+  follow?: (page: Page) => void;
 }
 
 /**
@@ -130,6 +174,13 @@ export interface ReplayResult {
    */
   acted: boolean;
   /**
+   * What is known about the last state-changing action this replay attempted:
+   * its observation's outcome when it ran, what its error proved when it
+   * threw. A stop whose last action was `not-dispatched` left that action
+   * undone; `unknown` may not have.
+   */
+  outcome?: ActionOutcome;
+  /**
    * Url patterns whose literal segment(s) disagreed with the live url while
    * everything else matched (mechanism 2, PLAN-replay-v2). The replay
    * proceeded optimistically; the caller persists the generalised pattern
@@ -166,7 +217,10 @@ export async function replaySkill(
   params: Record<string, string>,
   opts: ReplayOptions,
 ): Promise<ReplayResult> {
-  const { page } = opts;
+  // Not fixed for the run: a step recorded opening a popup, closing its page
+  // or switching tabs moves the procedure, and every later step, gate and
+  // look is asked of the page it moved to.
+  let page = opts.page;
   const res: ReplayResult = {
     ok: false,
     skill: skill.id,
@@ -212,6 +266,14 @@ export async function replaySkill(
   if (!contract.ok) {
     res.refused = true;
     res.reason = `${skill.id} ${contract.why} — nothing was run`;
+    return res;
+  }
+  // A procedure whose steps carry frame or page context under an older stamp
+  // was written by something that did not know what the stamp promises (a
+  // hand edit, a merge); a build that reads the stamp would not follow them.
+  if (stepsCarryContext(skill.steps) && contractOf(skill) < contractFor(skill.steps)) {
+    res.refused = true;
+    res.reason = `${skill.id} carries frame or page context its contract ${contractOf(skill)} does not declare (it needs ${contractFor(skill.steps)}) — nothing was run`;
     return res;
   }
 
@@ -267,7 +329,20 @@ export async function replaySkill(
       // Bounded, not substring: a marker matched anywhere inside a longer run
       // of letters/digits cannot tell t15 from t150, and this is the ONLY gate
       // that can tell records of one template apart at all.
-      if (await presentOnPage(page, [want], { whole: true })) continue;
+      // Asked in dialect 2 — a marker is text, not a recorded line, and a
+      // record's name inside a frame or an open shadow root is on the page
+      // too. A look that cannot establish absence (a cap, an unread frame, a
+      // virtualised list) sweeps the page once and asks again; still unknown
+      // is a refusal of its own, NOT a wrong record: nothing showed a
+      // different record, only that this one could not be confirmed.
+      const seen = await confirmPresence(page, [want], 2, { whole: true });
+      if (seen.presence === 'present') continue;
+      if (seen.presence === 'unknown') {
+        res.refused = true;
+        res.reason = `could not confirm that the page at ${urlPattern(page.url())} shows ${JSON.stringify(clip(want, 60))} (capture incomplete: ${clip(seen.why ?? 'coverage unknown', 160)}) — nothing was run`;
+        if (!res.unobserved.includes('identity')) res.unobserved.push('identity');
+        return false;
+      }
       res.refused = true;
       res.wrongRecord = `the page at ${urlPattern(page.url())} does not show ${JSON.stringify(clip(want, 60))} — it matches this procedure's page template but is a different record — nothing was run`;
       res.reason = res.wrongRecord;
@@ -298,6 +373,17 @@ export async function replaySkill(
     // (no network-idle, no app knowledge) and instant on a static page.
     await settleDom(page);
 
+    // A step recorded on another of the browser's pages (a popup, a tab) is
+    // not this page's step: asked here, before anything resolves, it stops
+    // rather than pressing the opener's identical control.
+    const offPage = pageIndexVerdict(page, step.page, `step ${tag}`);
+    if (offPage) {
+      res.failedAt = failIndex;
+      res.reason = offPage;
+      res.lines.push(`${head} → FAILED: ${offPage}`);
+      return 'stop';
+    }
+
     // A read/read_all is an OBSERVATION, not a state change: its failure means
     // a value could not be re-captured, never that the procedure is broken. So
     // a read that cannot resolve or errors is skipped with a warning and the
@@ -319,7 +405,13 @@ export async function replaySkill(
     // owes its postconditions (url, recorded effects), so it goes through the
     // lifecycle with an empty action rather than returning here.
     let absenceMet = false;
-    for (const key of ['target', 'source']) {
+    // The roots each target resolved against (src/execution/context.ts): the
+    // page, or the recorded frame. A frame that is not there is a stop of its
+    // own — never a search of the main page — and none of the recovery rungs
+    // below apply to it: they act on the page.
+    const roots: Record<string, Root> = {};
+    let frameMissed = false;
+    for (const key of ['target', 'source'] as const) {
       if (!(key in args)) continue;
       const chain = (fillParamsDeep(step.locators[key] ?? [], params) as LocatorCandidate[]) ?? [];
       const identity = identityOfPrimary(step.locators[key] ?? [], skill, params);
@@ -339,11 +431,25 @@ export async function replaySkill(
         waitMs: absence ? 0 : resolveWaitMs(),
         stayOnOrigin: originOf(step.expect?.urlPattern ?? '') ?? originOf(page.url()) ?? undefined,
       };
+      const framed = await rootFor(page, step.contexts?.[key]?.frame, policy.waitMs);
+      if ('error' in framed) {
+        // Nothing can be visible in a frame that is not there, so an absence
+        // wait is met; an ambiguous frame is not an absent one.
+        if (absence && framed.missing) {
+          absenceMet = true;
+          break;
+        }
+        frameMissed = true;
+        resolveError = `${framed.error}, so the ${key} recorded inside it (${describeFramePath(step.contexts![key]!.frame!)}) was not looked for on the page`;
+        res.misses.push({ step: tag, key, primary: chain[0] ? candidateExpr(chain[0]) : '(none recorded)', used: null });
+        break;
+      }
+      const root = (roots[key] = framed.root);
       // A read is an observation: the shared resolveForRead sweeps the page
       // and asks once more before giving up on it, exactly as the artifact does.
       const hit = isRead
-        ? await resolveForRead(page, (again) => resolveChain(page, chain, again ? { ...policy, waitMs: 0 } : policy))
-        : await resolveChain(page, chain, policy);
+        ? await resolveForRead(page, (again) => resolveChain(page, chain, again ? { ...policy, waitMs: 0 } : policy, root))
+        : await resolveChain(page, chain, policy, root);
       if (!hit) {
         // A wait for an element to be HIDDEN is satisfied by its absence: the
         // step's own success condition is "nothing matches", so a dead chain
@@ -376,10 +482,12 @@ export async function replaySkill(
       // of a clicked option ("Last 6 hours") is the value it selects.
       // Only a step that can SET or SELECT something counts (setsSomething).
       if (setsSomething(step.tool)) noteInteraction(interacted, candidateNames(chain as { name?: unknown; label?: unknown }[]));
-      if (hit.index > 0) {
+      // Drift only when a candidate tried ahead of the winner FAILED (the shared
+      // isDrift): a positional primary ranked behind a name that won was never missed.
+      if (isDrift(hit)) {
         res.fallthroughs++;
         res.misses.push({ step: tag, key, primary: candidateExpr(chain[0]), used: candidateExpr(hit.candidate), usedIndex: hit.index });
-        res.warnings.push(`step ${tag}: primary locator did not resolve; used fallback #${hit.index + 1} ${candidateExpr(hit.candidate)}`);
+        res.warnings.push(`step ${tag}: ${hit.missed.includes(0) ? 'primary locator did not resolve' : 'a better-ranked locator did not resolve'}; used fallback #${hit.index + 1} ${candidateExpr(hit.candidate)}`);
       }
     }
     // A typed/filled value is likewise something the skill put on the page.
@@ -391,7 +499,9 @@ export async function replaySkill(
         res.lines.push(`${head} → skipped (${resolveError})`);
         return 'skipped';
       }
-      if (absentDialog !== null) {
+      // Never a target recorded inside a frame: the dialog's controls were
+      // recorded on the page, and a frame step is not one of them.
+      if (absentDialog !== null && !step.contexts?.target?.frame?.length && !step.contexts?.source?.frame?.length) {
         // Membership is proven against the dialog's own recorded subtree, not
         // inferred from the target being missing. A step that names a control
         // the dialog listed was inside it; anything else — a later,
@@ -422,12 +532,23 @@ export async function replaySkill(
       // and post-session repair still see the miss.
       // The rule and both rungs are the shared src/execution/recover.ts.
       const destPattern = step.expect?.urlPattern;
-      if (mayNavigateToDestination(step.tool, destPattern, page.url(), params, tag.includes('.'))) {
+      if (!frameMissed && mayNavigateToDestination(step.tool, destPattern, page.url(), params, tag.includes('.'))) {
         const exec = (tool: string, a: Record<string, unknown>, r: Record<string, Locator>) => opts.exec(tool, a, r, { skill: skill.id, step: failIndex });
         const arrived = await navigateToDestination(page, destPattern, params, {
           click: (locator, selector) => exec('click', { target: selector }, { target: locator }),
           goto: (url) => exec('goto', { url }, {}),
         });
+        // The substitute link's click may have landed: a stop, never the
+        // direct navigation after it, and the caller must not try another
+        // candidate over a page that may have changed.
+        if (arrived && 'unknown' in arrived) {
+          res.acted = true;
+          res.outcome = 'unknown';
+          res.failedAt = failIndex;
+          res.reason = `${resolveError}; ${arrived.note}`;
+          res.lines.push(`${head} → FAILED: ${res.reason}`);
+          return 'stop';
+        }
         if (arrived) {
           const miss = res.misses[res.misses.length - 1];
           if (miss && miss.step === tag) miss.used = arrived.used;
@@ -457,13 +578,20 @@ export async function replaySkill(
     // replay. Skipped as already in effect. Only popup lines count: a
     // re-usable effect (another row of textboxes) must still be produced.
     const opener = openerLines(step, params);
-    if (opener.length && (await presentOnPage(page, opener))) {
+    // Asked in the step's own line dialect; only a match skips — a look that
+    // could not cover the page clicks, which is the direction this guard
+    // already leans (a wrong skip loses the step everything after needs).
+    if (opener.length && (await presentOnPage(page, opener, {}, dialectOf(step)))) {
       res.warnings.push(`step ${tag}: the recorded effect (${clip(opener[0], 60)}) is already showing — a click would toggle it away; skipped as already in effect`);
       res.lines.push(`${head} → skipped (already in effect)`);
       return 'skipped';
     }
 
     const warnings: string[] = [];
+    /** Where a recorded page effect left the procedure, once the action has run. */
+    let movedTo: Page | null = null;
+    /** Whether an earlier step of this replay had already dispatched something (see `acted`). */
+    let actedBefore = res.acted;
     const lifecycle = await runStepLifecycle({
       prepare: async () => {
         // Dispatched, not completed. A step whose action fires and whose
@@ -473,10 +601,11 @@ export async function replaySkill(
         // Set before the executor is called, so a throw from it still counts;
         // set AFTER the already-in-effect skip above, because a skipped click
         // dispatched nothing.
+        actedBefore = res.acted;
         if (!isRead) res.acted = true;
         urlBefore = page.url();
       },
-      act: async (): Promise<StepActionResult<{ result: string; diff?: StepDiff; captureFailed?: true; read?: string }>> => {
+      act: async (): Promise<StepActionResult<StepRunResult & { read?: string }>> => {
         // No retry. A click that produced no observable change was retried here
         // on the theory that it landed during a repaint — but "the page did not
         // change" is not evidence the click failed to DISPATCH. A mutation whose
@@ -501,7 +630,23 @@ export async function replaySkill(
           return { status: 'completed', value: { result, read: taken.value } };
         }
         try {
-          const value = await opts.exec(step.tool, args, resolved, { skill: skill.id, step: failIndex });
+          // A recorded popup/close/switch is armed BEFORE the action dispatches
+          // (the shared armPageEffect): the popup a click raises can arrive
+          // before the click call returns.
+          const landing = await armPageEffect(page, stepEffect(step), `step ${tag}`);
+          // The step's expected effect is what its action observation polls for
+          // (effect-verified), in the step's own line dialect.
+          const expect = effectExpectation(page, step.expect?.addedContains, params, dialectOf(step));
+          const value = await opts.exec(step.tool, args, resolved, { skill: skill.id, step: failIndex }, expect ? { expect } : undefined);
+          if (value.outcome) res.outcome = value.outcome;
+          const landed = await landing();
+          if (landed && 'error' in landed) {
+            res.failedAt = failIndex;
+            res.reason = landed.error;
+            res.lines.push(`${head} → FAILED: ${landed.error}`);
+            return { status: 'stopped' };
+          }
+          if (landed) movedTo = landed.page;
           return { status: 'completed', value };
         } catch (err) {
           const message = (err instanceof Error ? err.message : String(err)).split('\nCall log:')[0];
@@ -515,7 +660,7 @@ export async function replaySkill(
           // holds if any recorded way of finding the target shows the text; the
           // wait already gave the page its full timeout to paint.
           const heldChain = step.tool === 'wait_for' ? ((fillParamsDeep(step.locators.target ?? [], params) as LocatorCandidate[]) ?? []) : [];
-          const held = await textHeldElsewhere(heldObservations(page, heldChain), args.state, args.text);
+          const held = await textHeldElsewhere(heldObservations(roots.target ?? page, heldChain), args.state, args.text);
           const heldBy = held ? { index: held.index, candidate: heldChain[held.index] } : null;
           if (heldBy) {
             res.fallthroughs++;
@@ -526,16 +671,29 @@ export async function replaySkill(
             // below writes the line, once.
             return { status: 'completed', value: { result: `condition met in fallback #${heldBy.index + 1}` } };
           }
+          // What the failure proves about the action. Only a proof that nothing
+          // went out gives back `acted` — and only as it stood before this step,
+          // so an earlier step's dispatch is never forgotten. `unknown` keeps it:
+          // no sibling candidate may run over a page this click may have changed.
+          const outcome = isMutatingAction(step.tool) ? outcomeOfError(err) : undefined;
+          const label = outcome ? ` ${outcomeLabel(outcome)}` : '';
+          if (outcome) {
+            res.outcome = outcome;
+            if (outcome === 'not-dispatched') res.acted = actedBefore;
+          }
           res.failedAt = failIndex;
-          res.reason = `${step.tool} failed: ${clip(message, 300)}`;
-          res.lines.push(`${head} → FAILED: ${clip(message, 300)}`);
-          return { status: 'stopped' };
+          res.reason = `${step.tool} failed: ${clip(message, 300)}${label}`;
+          res.lines.push(`${head} → FAILED: ${clip(message, 300)}${label}`);
+          return { status: 'stopped', ...(outcome ? { outcome } : {}) };
         }
 
       },
-      settle: async () => {
+      settle: async (value) => {
         // A navigation renders a route skeleton first; let it hydrate before
-        // the effect gates look for the recorded content.
+        // the effect gates look for the recorded content. An action whose
+        // observation settled the page (the executor's) has waited on exactly
+        // that already — DOM, requests, the url — so there is nothing to add.
+        if (value.settled) return;
         if (page.url() !== urlBefore) await settleDom(page);
 
       },
@@ -612,6 +770,15 @@ export async function replaySkill(
       return 'stop';
     }
 
+    // The step did what it was recorded doing to its page: every later step,
+    // gate and look is asked of the page the procedure continues on, and the
+    // session's pin follows so the executor acts there too.
+    if (movedTo && movedTo !== page) {
+      page = movedTo;
+      opts.follow?.(page);
+      res.lines.push(`${head} → ${clip(outcome.result.split('\n')[0], MAX_LINE)}; the procedure continues on ${urlPattern(page.url())} (recorded ${stepEffect(step)!.kind})`);
+      return 'ran';
+    }
     if (isRead) {
       const key = step.label ?? `read${tag}`;
       const value = outcome.read ?? flattenRead(decodeRead(outcome.result));
@@ -658,13 +825,19 @@ export async function replaySkill(
         // "Remove"` matching the OTHER rows, so a shrink reads as growth.
         guard: async () => {
           const chain = fillParamsDeep(guard, params) as LocatorCandidate[];
-          const hit = await resolveChain(page, chain, { allowMultiple: true });
+          // The guard counts records where the body acts on them: inside the
+          // recorded frame. A frame that is not there cannot say how many
+          // remain, so it throws — unreadable, never empty (rule 6).
+          const framed = await rootFor(page, (step.whileContext ?? body[0]?.contexts?.target)?.frame, 0);
+          if ('error' in framed) throw new Error(framed.error);
+          const root = framed.root;
+          const hit = await resolveChain(page, chain, { allowMultiple: true }, root);
           if (!hit) return null;
           return {
             // A count that throws is left to throw: the loop tells an
             // unreadable guard from an empty one (rule 6).
-            count: () => makeLocator(page, hit.candidate).count(),
-            nth: (i: number) => makeLocator(page, hit.candidate).nth(i),
+            count: () => makeLocator(root, hit.candidate).count(),
+            nth: (i: number) => makeLocator(root, hit.candidate).nth(i),
           };
         },
         runBody: async (cursor: number, progress: LoopPass) => {
@@ -679,6 +852,9 @@ export async function replaySkill(
           return { status: 'ran' as const };
         },
         aborted: () => Boolean(opts.signal?.aborted),
+        // Whether a drain that found nothing more had only a rendered window of
+        // a larger collection to look at (a virtualised grid).
+        coverage: async () => (await observePage(page))?.coverage.collections ?? null,
       },
       { max, scope: step.scope ?? 'drain', shrinkWaitMs: LOOP_SHRINK_WAIT_MS, describe: chain0Desc(guard) },
     );
@@ -694,6 +870,14 @@ export async function replaySkill(
       return 'stop';
     }
     res.stepsRun = before + 1;
+    if (result.state === 'partial') {
+      // Not a stop: the loop did the work it had authority over. But it is not
+      // "the collection is done" either, and whoever reads this run must not
+      // be told it was.
+      res.warnings.push(`step ${n}: loop ×${result.iterations} partial — ${result.reason}`);
+      res.lines.push(`${n}. loop ×${result.iterations} (partial: ${result.reason})`);
+      return 'ran';
+    }
     res.lines.push(`${n}. loop ×${result.iterations} (while ${chain0Desc(guard)} matches)`);
     return 'ran';
   };
@@ -747,7 +931,7 @@ interface StepGateInput {
   /** The step's args with params filled. */
   args: Record<string, unknown>;
   params: Record<string, string>;
-  outcome: { result: string; diff?: StepDiff; captureFailed?: true };
+  outcome: StepRunResult;
   isRead: boolean;
   /** Some target of this step resolved through a structural (positional) candidate. */
   positionalResolution: boolean;
@@ -832,13 +1016,18 @@ const alerts: StepGate = ({ outcome, isRead, step, params, tag }) => {
   // wait_for, hover, scroll_into_view (tools.ts STATE_CHANGING) — and that is
   // an observed nothing: reading it as unobserved marked every such step of
   // every replay, and a skill containing one could never validate.
-  const after = outcome.captureFailed ? null : (outcome.diff?.alerts ?? []);
-  const verdict = alertVerdict([], after, {
-    where: `step ${tag}`,
-    isRead,
-    expectedContains: step.expect?.alertContains,
-    params,
-  });
+  //
+  // The step's recorded alert text is in the step's line dialect; the diff is
+  // in the executor's. When the two differ and the observations are there,
+  // the before/after alerts are rendered in the step's dialect instead — the
+  // same surplus the recorder takes — so a dialect-1 step is not stopped by a
+  // shadow-root toast its recording could never have seen.
+  const ctx = { where: `step ${tag}`, isRead, expectedContains: step.expect?.alertContains, params };
+  const d = dialectOf(step);
+  const obs = outcome.captureFailed ? undefined : outcome.observations;
+  const verdict = obs
+    ? alertVerdict(renderAlerts(obs.before, d), renderAlerts(obs.after, d), ctx, alertsComplete(obs.after.coverage))
+    : alertVerdict([], outcome.captureFailed ? null : (outcome.diff?.alerts ?? []), ctx);
   if (verdict.stop) return { stop: verdict.stop };
   if (!verdict.warnings.length && !verdict.unobserved) return null;
   return { warnings: verdict.warnings, unobserved: verdict.unobserved };
@@ -861,11 +1050,20 @@ const expectedChanges: StepGate = async ({ outcome, step, params, tag, args, pag
   // only supplies the observations: the step diff (null when the capture
   // failed — unavailable, never observed-empty) and a fresh look at the
   // live page in the same snapshot dialect.
+  //
+  // Both are rendered in the dialect the step's lines were RECORDED in
+  // (expect.lineDialect, absent = 1): the diff from the executor's own
+  // before/after observations, the live look through captureLines, which also
+  // says whether a line missing from it is absent from the page. A diff taken
+  // without observations (a stand-in executor) is used as it came.
+  const d = dialectOf(step);
+  const obs = outcome.observations;
+  const added = obs ? addedLines(renderLines(obs.before, d), renderLines(obs.after, d)) : outcome.diff ? outcome.diff.added : null;
   const verdict = await expectedChangesVerdict(
     step.expect.addedContains,
     params,
     { tag, tool: step.tool, value: typeof args.value === 'string' ? args.value : undefined, positionalResolution },
-    { added: outcome.diff ? outcome.diff.added : null, live: () => capturePageLines(page) },
+    { added: outcome.captureFailed ? null : added, live: () => captureLines(page, d) },
   );
   return verdict.stop || verdict.unobserved || verdict.absentDialog || verdict.warnings.length ? verdict : null;
 };
@@ -884,6 +1082,11 @@ const errorPage: StepGate = ({ page, tag }) => {
 };
 
 const STEP_GATES: StepGate[] = [errorPage, expectedUrl, alerts, expectedChanges];
+
+/** The line dialect a step's recorded lines are in: absent is dialect 1, every expectation compiled before dialects existed. */
+function dialectOf(step: SkillStep): LineDialect {
+  return step.expect?.lineDialect === 2 ? 2 : 1;
+}
 
 /** Short human label for a loop's guard locator. */
 function chain0Desc(chain: LocatorCandidate[]): string {
@@ -963,6 +1166,8 @@ export async function resolveChain(
   page: Page,
   chain: LocatorCandidate[],
   policy: ResolvePolicy = {},
+  /** What the candidates are built from: the page, or the recorded frame (context.ts rootFor). */
+  root: Root = page,
 ): Promise<{ locator: Locator; index: number; candidate: LocatorCandidate; missed: number[] } | null> {
   const { rawTarget = '', ...shared } = policy;
   const candidates = chain.length || !rawTarget || isRefTarget(rawTarget) ? chain : [{ kind: 'css', selector: rawTarget } as LocatorCandidate];
@@ -972,7 +1177,7 @@ export async function resolveChain(
   // shared policy records it as an 'error' miss and tries the next.
   const locatorOf = (candidate: LocatorCandidate): Locator => {
     try {
-      return makeLocator(page, candidate);
+      return makeLocator(root, candidate);
     } catch (error) {
       return { count: async () => { throw error; } } as unknown as Locator;
     }
@@ -1046,7 +1251,7 @@ export function waitsForAbsence(step: SkillStep, args: Record<string, unknown>):
  * makeLocator builds for it, index = its stored position. A candidate whose
  * locator cannot be built is left out, as the old loop skipped it.
  */
-function heldObservations(page: Page, chain: LocatorCandidate[]): { index: number; kind: string; locator: Locator }[] {
+function heldObservations(page: Root, chain: LocatorCandidate[]): { index: number; kind: string; locator: Locator }[] {
   const out: { index: number; kind: string; locator: Locator }[] = [];
   chain.forEach((candidate, index) => {
     if (index === 0 || candidate.kind === 'point') return;
@@ -1125,16 +1330,21 @@ export async function goalSatisfied(
   // segment, so also where it starts): on any other template the same words
   // mean nothing — a list row can show "Cancelled" for a different order.
   if (!urlMatches(skill.preconditions.urlPattern, page.url(), params)) return { satisfied: false, shown: [] };
-  const sig = await captureSignature(page);
-  if (!sig) return { satisfied: false, shown: [] };
+  // Dialect 2: the markers are text, not recorded lines, and text inside a
+  // frame or open shadow root is on the page. A look that could not cover the
+  // page is not satisfied, whatever it shows — the conservative direction:
+  // being wrong costs one replay, where a skip on partial evidence costs work
+  // that never happened.
+  const captured = await captureLines(page, 2);
+  if (!captured || !captured.complete) return { satisfied: false, shown: [] };
   // The two halves are asked differently. Identity says WHICH record, so it
   // takes the bounded rule (S00039 is not S000390); the goal says what state
   // that record is in, which is an ordinary substring question.
   for (const want of identity) {
-    if (!lineShows(sig.lines, [want], { whole: true })) return { satisfied: false, shown: [] };
+    if (!lineShows(captured.lines, [want], { whole: true })) return { satisfied: false, shown: [] };
   }
   for (const want of goal) {
-    if (!lineShows(sig.lines, [want])) return { satisfied: false, shown: [] };
+    if (!lineShows(captured.lines, [want])) return { satisfied: false, shown: [] };
   }
   // Both halves are SOMEWHERE on the page — which on a list is not the same
   // as both being true of one record. An orders grid showing "S00039

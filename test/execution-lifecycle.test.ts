@@ -8,9 +8,11 @@ import {
   type StepActionResult,
 } from '../src/execution/lifecycle.js';
 import { emitFlowFile } from '../src/spec/emit.js';
+import { actionFailure } from '../src/execution/browser.js';
 import type { SpecFlow, SpecSegment } from '../src/spec/ir.js';
 import { replaySkill } from '../src/skills/replay.js';
 import type { Skill, SkillStep } from '../src/skills/store.js';
+import { documentOf, isObserveArg } from './fixture/observation.js';
 
 /** A lifecycle whose every phase records its name, with overridable phases. */
 function recording(overrides: Partial<{
@@ -184,9 +186,36 @@ describe('replaySkill through the lifecycle', () => {
     expect(out.ok).toBe(false);
     expect(out.stepsRun).toBe(0);
     expect(out.failedAt).toBe(1);
-    expect(out.reason).toBe('click failed: boom');
+    // an untagged error proves nothing about the dispatch: unknown, and `acted` stands
+    expect(out.reason).toBe('click failed: boom [outcome: unknown]');
     expect(out.reason).not.toMatch(/expected url/);
     expect(out.acted).toBe(true); // it was dispatched, even though it failed
+  });
+
+  it('a first action PROVEN not dispatched gives back `acted`; after an earlier dispatch it cannot', async () => {
+    const refusal = () => actionFailure('not-dispatched', 'disabled', 'click NOT dispatched: the control is disabled');
+    const first = await replaySkill(skillOf([{ tool: 'click', args: { target: '@e1' }, locators: { target: button } }]), {}, {
+      page: fakePage(),
+      exec: async () => { throw refusal(); },
+    });
+    expect(first.reason).toBe('click failed: click NOT dispatched: the control is disabled [outcome: not dispatched]');
+    expect(first.outcome).toBe('not-dispatched');
+    expect(first.acted).toBe(false); // nothing reached the app: another candidate may run
+
+    let n = 0;
+    const second = await replaySkill(skillOf([
+      { tool: 'click', args: { target: '@e1' }, locators: { target: button } },
+      { tool: 'click', args: { target: '@e1' }, locators: { target: button } },
+    ]), {}, {
+      page: fakePage(),
+      exec: async () => {
+        if (n++ === 0) return { result: 'clicked', outcome: 'dispatched' };
+        throw refusal();
+      },
+    });
+    expect(second.failedAt).toBe(2);
+    expect(second.outcome).toBe('not-dispatched');
+    expect(second.acted).toBe(true); // the first click went out
   });
 
   it('a verification failure never re-dispatches the action', async () => {
@@ -231,10 +260,10 @@ describe('replaySkill through the lifecycle', () => {
       { tool: 'click', args: { target: '@e1' }, locators: { target: button }, expect: { addedContains: ['dialog "New order"'] } },
     ]);
     // presentOnPage captures the page signature through page.evaluate
-    // (daemon/diff.ts describeInPage); the recorded popup line is showing.
+    // (src/execution/snapshot.ts observeDocumentInPage); the recorded popup line is showing.
     const page = fakePage();
     (page as unknown as { evaluate: (fn: unknown, arg?: unknown) => Promise<unknown> }).evaluate = async (_fn, arg) =>
-      arg && typeof arg === 'object' && 'maxAlerts' in arg ? { lines: ['- dialog "New order"'], alerts: [] } : '';
+      isObserveArg(arg) ? documentOf(['- dialog "New order"']) : '';
     (page as unknown as { title: () => Promise<string> }).title = async () => 'Orders';
     let execs = 0;
     const out = await replaySkill(skill, {}, { page, exec: async () => { execs++; return { result: 'ok' }; } });
@@ -294,7 +323,7 @@ describe('replaySkill through the lifecycle', () => {
     ]);
     const page = fakePage({ matches: 0 });
     (page as unknown as { evaluate: (fn: unknown, arg?: unknown) => Promise<unknown> }).evaluate = async (_fn, arg) =>
-      arg && typeof arg === 'object' && 'maxAlerts' in arg ? { lines: ['- dialog "New order"'], alerts: [] } : '';
+      isObserveArg(arg) ? documentOf(['- dialog "New order"']) : '';
     (page as unknown as { title: () => Promise<string> }).title = async () => 'Orders';
     let execs = 0;
     const out = await replaySkill(skill, {}, { page, exec: async () => { execs++; return { result: 'ok' }; } });
@@ -311,7 +340,7 @@ describe('replaySkill through the lifecycle', () => {
     ]);
     const page = fakePage();
     (page as unknown as { evaluate: (fn: unknown, arg?: unknown) => Promise<unknown> }).evaluate = async (_fn, arg) =>
-      arg && typeof arg === 'object' && 'maxAlerts' in arg ? { lines: ['- dialog "Edit"'], alerts: [] } : '';
+      isObserveArg(arg) ? documentOf(['- dialog "Edit"']) : '';
     (page as unknown as { title: () => Promise<string> }).title = async () => 'Orders';
     let execs = 0;
     const out = await replaySkill(skill, {}, { page, exec: async () => { execs++; return { result: 'ok', diff: { url: `${ORIGIN}/orders`, alerts: [], added: ['- dialog "Edit"'] } }; } });
@@ -442,7 +471,7 @@ describe('emitted step lifecycle', () => {
     expect(act.body).toContain(`], '01-step s_emit/1 target', { stayOnOrigin: '${ORIGIN}', waitMs: RESOLVE_WAIT_MS }, '${ORIGIN}/orders/{{d1}}', p, { drift: run.drift });`);
     // a navigation click falls back to its recorded destination (shared recover.ts), and is then done
     expect(act.body).toContain("if (!hit1) return { status: 'skipped' };");
-    expect(act.body).toContain('await click(hit1.locator);');
+    expect(act.body).toContain('await click(hit1.locator, { obs: obs1 }).catch(actionFailed);');
     expect(act.body).toContain("return { status: 'completed', value: undefined };");
     // and the effect gate is told whether that resolution was positional.
     expect(act.body).toContain('positional1 = positional1 || hit1.structural || hit1.nth !== undefined;');
@@ -519,7 +548,7 @@ describe('emitted step lifecycle', () => {
     }), { tier: 'plain' });
     const act = lifecycleBlocks(source)[1];
     expect(act.body).toContain("return { status: 'skipped' };");
-    expect(act.body.indexOf("return { status: 'skipped' };")).toBeLessThan(act.body.indexOf('await click(hit1.locator);'));
+    expect(act.body.indexOf("return { status: 'skipped' };")).toBeLessThan(act.body.indexOf('await click(hit1.locator, { obs: obs1 }).catch(actionFailed);'));
     // The already-in-effect question is asked AFTER the target resolved, as
     // replay orders it, so the pick still runs on a click that is skipped.
     expect(act.body.indexOf('await pick(page, [')).toBeLessThan(act.body.indexOf('presentOnPage('));
@@ -571,7 +600,7 @@ describe('emitted step lifecycle', () => {
     expect(act.body).toContain('locator: pointLocator(page, { x: 1, y: 2 })');
     expect(act.body).toContain("kind: 'point'");
     expect(act.body).toContain('point: { x: 1, y: 2, w: 3, h: 4, role: \'button\', tag: \'button\', vw: 800, vh: 600 }');
-    expect(act.body).toContain('await hit2.locator.dragTo(hit1.locator);');
+    expect(act.body).toContain('await hit2.locator.dragTo(hit1.locator).catch(actionFailed);');
     expect(act.body).not.toContain('No expressible locator for required drag source');
     expect(warnings).toEqual([]);
   });
@@ -645,7 +674,7 @@ describe('emitted step lifecycle', () => {
         { tool: 'click', args: { target: '@e1' }, locators: { target } },
       ],
     }), { tier: 'plain' });
-    const identity = source.indexOf('await expect.poll(() => presentOnPage(page, [`${p.v1}`], { whole: true })');
+    const identity = source.indexOf('await expect.poll(async () => (await confirmPresence(page, [`${p.v1}`], 2, { whole: true })).presence');
     const gotoStep = source.indexOf('// @step 01-step s_emit/1');
     const clickStep = source.indexOf('// @step 01-step s_emit/2');
     expect(identity).toBeGreaterThan(gotoStep);
@@ -660,7 +689,11 @@ describe('emitted step lifecycle', () => {
       steps: [{ tool: 'click', args: { target: '@e1' }, locators: { target }, expect: { addedContains: ['heading "Saved"'] } }],
     }), { tier: 'plain' });
     const body = source.slice(source.indexOf("async '01-step'("), source.indexOf('export async function runFlow'));
-    expect(body).not.toMatch(/\btry\b/);
-    expect(body).not.toMatch(/\.catch\(/);
+    // The one catch a body has is on a state-changing action's own call, and it
+    // rethrows (actionFailed adds the outcome and throws): nothing is swallowed.
+    expect(body).toContain('.catch(actionFailed);');
+    const rethrowsRemoved = body.split('.catch(actionFailed);').join(';');
+    expect(rethrowsRemoved).not.toMatch(/\btry\b/);
+    expect(rethrowsRemoved).not.toMatch(/\.catch\(/);
   });
 });
