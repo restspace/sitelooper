@@ -1,5 +1,5 @@
 import type { Flow } from '../skills/flow.js';
-import { mutates } from '../skills/learn.js';
+import { mutates, selectCandidates } from '../skills/learn.js';
 import { rethreadParams } from './rethread.js';
 import { diagnosticLine, rerecordFix, rerecordAction, type Diagnostic } from './diagnostics.js';
 import { LEAKED_STEP } from './rerecord.js';
@@ -173,6 +173,29 @@ function toSegment(skill: Skill, goalBearing = false): SpecSegment {
  * would silently drop the rest of the instruction — the sign-in step of
  * fwat2 is two segments, and the second is where the app actually lands.
  */
+/**
+ * A pinned step the flow gave no bindings: the skill replay runs for it, and
+ * the bindings replay gives it.
+ *
+ * Replay's rule (skills/learn.ts `selectCandidates`): with no pinned params,
+ * every live skill of the origin is a candidate that binds by reading its
+ * template as a pattern over the instruction (`bindSkill`), best track record
+ * first. The pin gets no special standing. fwrd50 03-add bound nothing ("the
+ * pinned skill s_c675d2 bound no params for this instruction") and went to the
+ * model; fwat3 04-add and fwgr21 08-open were run by a DIFFERENT skill whose
+ * template did read over the instruction. The emitter compiled the pin in all
+ * three and inlined each slot's recorded example, so fwrd50's spec went looking
+ * for run 1's ticket and typed run 1's part names.
+ *
+ * Compile time has the instruction's `{{ref}}` text where replay has resolved
+ * values; the pattern match is the same, and the bound text is a template the
+ * spec resolves per run. It lacks the run's ledger, so a slot only a recorded
+ * origin could fill does not bind here — a refusal, never a wrong record.
+ */
+export function replayBinding(pinned: Skill, skills: Skill[], instruction: string): { skill: Skill; params: Record<string, string> } | null {
+  return selectCandidates(skills, pinned.id, instruction, undefined, {})[0] ?? null;
+}
+
 function chainOf(skill: Skill, store: SkillStore): Skill[] {
   if (!skill.seq) return [skill];
   const chain = skill.seq.chain;
@@ -310,7 +333,9 @@ export function flowToSpec(
   const fixFile = o.flowFile ?? flow.name;
 
   for (const step of flow.steps) {
-    const skill = step.skill ? store.get(step.skill) : null;
+    const pinned = step.skill ? store.get(step.skill) : null;
+    let skill = pinned;
+    let params = step.params ?? {};
     // Ask the store WHY it has nothing before saying it has nothing. A
     // procedure this build refuses is excluded from `get`, so without this
     // the headline symptom of a version mismatch is a missing-skill warning
@@ -338,6 +363,38 @@ export function flowToSpec(
         severity: 'warning',
         line: `step ${step.id} refers to skill ${step.skill}, which is not in the store`,
       });
+    }
+    // A pin the flow gave no bindings runs whatever replay can bind from the
+    // instruction (replayBinding) — the pin itself, a sibling, or nothing.
+    if (pinned && !Object.keys(params).length && Object.keys(pinned.params).length) {
+      const bound = replayBinding(pinned, store.list(pinned.origin), step.instruction);
+      if (!bound) {
+        diagnostics.push({
+          code: 'unbound-pin',
+          step: step.id,
+          what: `it is pinned to ${pinned.id} but the flow binds none of its slots, and no skill binds them from the instruction — the compiled spec would run with the recording's own values`,
+          why: `replay refuses this step for the same reason ("the pinned skill ${pinned.id} bound no params for this instruction") and hands it to the model; a compiled spec has no model, so it would type and look for the recorded run's record.`,
+          fix: rerecordFix(fixFile, step.id),
+          action: rerecordAction(fixFile, step.id),
+          severity: 'error',
+          line: `step ${step.id} is pinned to ${pinned.id} with no bindings, and no skill binds from its instruction`,
+        });
+      } else {
+        if (bound.skill.id !== pinned.id) {
+          diagnostics.push({
+            code: 'unbound-pin',
+            step: step.id,
+            what: `it is pinned to ${pinned.id}, which cannot bind from the instruction, so the spec compiles ${bound.skill.id} — the skill replay runs for this step`,
+            why: `the flow binds none of ${pinned.id}'s slots and its template does not read over the instruction; replay's candidate selection binds ${bound.skill.id} from the instruction text instead.`,
+            fix: rerecordFix(fixFile, step.id),
+            action: rerecordAction(fixFile, step.id),
+            severity: 'warning',
+            line: `step ${step.id} compiles ${bound.skill.id} in place of its unbindable pin ${pinned.id}`,
+          });
+        }
+        skill = bound.skill;
+        params = bound.params;
+      }
     }
     // A goal is a claim about STATE, so it is only meaningful on a procedure
     // that changes state — `mutates` is the same gate the store uses to stop a
@@ -379,7 +436,6 @@ export function flowToSpec(
     // A literal binding on a step whose instruction threads references is
     // replay debt (an adoption froze that run's values into the pin): align
     // the pinned template against the instruction and rebind what it can.
-    let params = step.params ?? {};
     if (skill) {
       const threaded = rethreadParams(step.id, step.instruction, skill.template, params);
       params = threaded.params;

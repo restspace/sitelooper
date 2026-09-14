@@ -6,7 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Flow } from '../src/skills/flow.js';
 import { SkillStore, type SkillStep } from '../src/skills/store.js';
 import { diagnosticLine, diagnosticNote, formatDiagnostic, hasError, rerecordFix, type Diagnostic } from '../src/spec/diagnostics.js';
-import { flowToSpec, type SpecFlow } from '../src/spec/ir.js';
+import { flowToSpec, replayBinding, type SpecFlow } from '../src/spec/ir.js';
 import { emitFlowFile } from '../src/spec/emit.js';
 import { compileFlow } from '../src/spec/index.js';
 
@@ -183,6 +183,51 @@ describe('flowToSpec: a step with nothing to compile', () => {
 
   it('does not fall over on a flow with no warnings at all', () => {
     expect(flowToSpec(base, new SkillStore(FWOD34_SKILLS)).diagnostics.some((d) => d.code === 'noop-step')).toBe(false);
+  });
+});
+
+/**
+ * A pin the flow gave no bindings compiles what replay runs for it
+ * (`replayBinding`, which is replay's own `selectCandidates`).
+ *
+ * fwat3 04-add is pinned to s_587a37, whose template reads "add a line item"
+ * where the instruction says "add a SECOND line item": it binds nothing, and
+ * replay ran s_3bb51b, whose template does read over the instruction (tier A,
+ * 0 turns, both replays). fwrd50 03-add had no such sibling: replay refused
+ * ("bound no params for this instruction"), and the compiled spec — which had
+ * inlined run 1's values — failed looking for run 1's ticket.
+ */
+describe('flowToSpec: a pinned step with no bindings', () => {
+  const FWAT3 = path.resolve('bench/results-published/fwat3.json');
+  const store = new SkillStore(path.resolve('bench/results-published/fwat3-skills'));
+  const flow = JSON.parse(fs.readFileSync(FWAT3, 'utf8')) as Flow;
+
+  it('binds the skill replay selects from the instruction, and says it is not the pin', () => {
+    const step = flow.steps.find((s) => s.id === '04-add')!;
+    expect(step.params).toBeUndefined();
+    const bound = replayBinding(store.get('s_587a37')!, store.list(flow.origin), step.instruction);
+    expect(bound?.skill.id).toBe('s_3bb51b');
+    expect(Object.values(bound!.params).some((v) => v.includes('{{runid}}'))).toBe(true);
+
+    const { spec, diagnostics } = flowToSpec(flow, store, { flowFile: FWAT3 });
+    expect(spec.steps.find((s) => s.id === '04-add')!.segments[0].id).toBe('s_3bb51b');
+    expect(diagnostics.find((d) => d.code === 'unbound-pin')).toMatchObject({ step: '04-add', severity: 'warning' });
+  });
+
+  it('refuses, as an error, when no skill binds from the instruction', () => {
+    const unbindable: Flow = {
+      ...flow,
+      steps: flow.steps.map((s) => (s.id === '04-add' ? { ...s, instruction: 'do something no recorded template reads over' } : s)),
+    };
+    const { diagnostics } = flowToSpec(unbindable, store, { flowFile: FWAT3 });
+    const refusal = diagnostics.find((d) => d.code === 'unbound-pin');
+    expect(refusal).toMatchObject({ step: '04-add', severity: 'error', fix: `sitelooper rerecord ${FWAT3} 04-add` });
+    expect(refusal!.why).toContain('bound no params for this instruction');
+  });
+
+  it('leaves a step the flow already binds alone', () => {
+    const { diagnostics } = flowToSpec(flow, store, { flowFile: FWAT3 });
+    expect(diagnostics.filter((d) => d.code === 'unbound-pin').map((d) => d.step)).toEqual(['04-add']);
   });
 });
 

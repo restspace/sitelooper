@@ -1681,12 +1681,16 @@ describe('the fwat2 store, every skill as a one-step flow', () => {
 
   it('follows a seq chain into every segment of the procedure', () => {
     const chained = skills.find((s: Skill) => s.seq)!;
+    // Bound, as a recorded flow binds its pins: a param-less step compiles
+    // whatever replay would select from the instruction (replayBinding), and
+    // replay never selects a chain member past its head.
+    const params = Object.fromEntries(Object.entries(chained.params).map(([k, p]) => [k, String(p.example ?? '')]));
     const flow: Flow = {
       name: 'chained',
       origin: chained.origin,
       startUrl: chained.origin + '/',
       vars: [],
-      steps: [{ id: '01-open', instruction: chained.template, skill: chained.id, outputs: [], recorded: {} }],
+      steps: [{ id: '01-open', instruction: chained.template, skill: chained.id, params, outputs: [], recorded: {} }],
       provenance: { session: 'test', created: new Date(0).toISOString() },
     };
     const { spec } = flowToSpec(flow, store);

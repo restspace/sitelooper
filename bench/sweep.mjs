@@ -82,7 +82,9 @@ if (own.from) {
     process.exit(2);
   }
   fs.mkdirSync(learnDir, { recursive: true });
-  for (const f of fs.readdirSync(src)) fs.copyFileSync(path.join(src, f), path.join(learnDir, f));
+  // Recursive: a store keeps one directory per origin (http_127.0.0.1_3000/),
+  // which a flat copyFileSync loop hit as EISDIR.
+  fs.cpSync(src, learnDir, { recursive: true });
   fs.mkdirSync(flowsDir, { recursive: true });
   // Under the NEW flow's name, so the replays invoke `run <own.flow>`.
   const flow = JSON.parse(fs.readFileSync(srcFlow, 'utf8'));

@@ -31,6 +31,7 @@ export type DiagnosticCode =
   | 'needs-rerecord' // repair's verdict when the above mean a recording, not the app, is wrong
   | 'unthreaded-param' // compile could not rethread a literal param (existing warning, now typed)
   | 'missing-skill' // step refers to a skill not in the store
+  | 'unbound-pin' // the step pins a skill but binds none of its slots, and replay could not bind them from the instruction either
   | 'future-contract' // the step's pinned skill was written by a newer sitelooper
   | 'unmeasured-precondition' // a segment's skill carries a page fingerprint the compiled spec cannot measure against
   | 'unsupported-capability' // the recording uses something the standalone artifact cannot carry (a tab switch, an attribute read, a position-only locator)

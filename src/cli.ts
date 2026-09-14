@@ -1012,7 +1012,8 @@ async function compileCommand(positional: string[], flags: Map<string, string | 
     if (result.diagnostics.length) console.error('');
     if (result.refused) {
       console.error('nothing written: the error(s) above are about the RECORDING, not the app — a compiled spec would fail at a locator and read as drift.');
-      console.error('re-record the step(s) with the fix command above, or pass --allow-demoted to compile the demoted pin anyway.');
+      const onlyDemoted = result.diagnostics.every((d) => d.severity !== 'error' || d.code === 'demoted-pin');
+      console.error(`re-record the step(s) with the fix command above${onlyDemoted ? ', or pass --allow-demoted to compile the demoted pin anyway' : ''}.`);
     } else {
       console.log(`flow: ${result.flowFile}`);
       console.log(result.specFile ? `spec: ${result.specFile}` : 'spec: unchanged (already exists — pass --overwrite-spec to overwrite)');
@@ -1022,7 +1023,13 @@ async function compileCommand(positional: string[], flags: Map<string, string | 
     for (const w of result.warnings) if (!reported.has(w)) console.error(`  warning: ${w}`);
   }
   if (result.refused) {
-    fail('refused: a step is pinned to a demoted skill — see the diagnostics above (--allow-demoted compiles it anyway)', 2);
+    const codes = [...new Set(result.diagnostics.filter((d) => d.severity === 'error').map((d) => d.code))];
+    fail(
+      codes.every((c) => c === 'demoted-pin')
+        ? 'refused: a step is pinned to a demoted skill — see the diagnostics above (--allow-demoted compiles it anyway)'
+        : `refused: ${codes.join(', ')} — see the diagnostics above`,
+      2,
+    );
   }
   if (!result.compilable) {
     fail(`not compilable: ${result.compileBlockers.join('; ')}`, 2);
