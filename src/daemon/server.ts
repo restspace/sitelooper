@@ -23,6 +23,7 @@ import { ScriptRecorder } from './recorder.js';
 import { encodeFrame, LineDecoder, type CommandName, type FlowStepResult, type Frame, type Request } from '../shared/protocol.js';
 import { aliasLegacyEnv, ensureSessionDir, socketPath, validateSessionName } from '../shared/paths.js';
 import { BrowserSession } from './browser.js';
+import { DEFAULT_BROWSER_PROFILE } from '../execution/browser.js';
 import { SessionState } from './state.js';
 
 interface DaemonOptions {
@@ -532,6 +533,7 @@ ${describeLeaks(leaks.slice(0, 6))}`);
           sessionDir: ensureSessionDir(this.opts.session),
           briefingChars: this.state.briefing.length,
           recording: this.browser.recording,
+          browser: this.browser.profile,
           scriptRecording: Boolean(this.browser.script),
           scriptSteps: this.browser.script?.entries.filter((e) => e.k === 'step').length ?? 0,
           learning: Boolean(this.browser.learn),
@@ -797,6 +799,9 @@ ${describeLeaks(leaks.slice(0, 6))}`);
       runSpecific: this.runSpecific,
     });
     if (!flow || !flow.steps.length) throw new Error('nothing to export — no successful instruction was recorded');
+    // The browser this session recorded in: replay and the compiled artifact
+    // run the flow in it (execution/browser.ts BrowserProfile).
+    flow.browser = this.browser.profile;
     // Before anything is written. The first cut of this ran after saveFlow,
     // so a "refused" export still left a usable flow on disk and the next run
     // replayed it regardless — a gate that refuses to REPORT is not a gate.
@@ -943,6 +948,11 @@ ${describeLeaks(certain.slice(0, 30))}${certain.length > 30 ? `\n  … and ${cer
       // A run's own repairs should be learned, but not re-pin from a fresh
       // store elsewhere; the flow's pinned skills come from its own file.
     }
+    // The browser the flow was recorded in (Flow.browser; a flow saved before
+    // profiles were stored was recorded at the default). Resized to it when a
+    // running session is in another window; anything fixed at launch is said.
+    const browserMismatch = await this.browser.alignTo(flow.browser ?? DEFAULT_BROWSER_PROFILE).catch(() => null);
+    if (browserMismatch) opts.progress(`[flow ${flow.name}] warning: ${browserMismatch}`);
     const page = await this.browser.getPage();
     await page.goto(flow.startUrl, { waitUntil: 'load', timeout: 30_000 }).catch(() => {});
     // `load` fires before a client-rendered app has painted, and the first

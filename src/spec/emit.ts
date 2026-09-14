@@ -1,5 +1,5 @@
 import { isMutatingAction, isReadAction } from '../execution/lifecycle.js';
-import { isNavigatingAction } from '../execution/browser.js';
+import { DEFAULT_BROWSER_PROFILE, isNavigatingAction, type BrowserProfile } from '../execution/browser.js';
 import { setsSomething } from '../execution/echo.js';
 /**
  * The IR as `@playwright/test` source (Tier 2: no sitelooper runtime).
@@ -960,6 +960,34 @@ function neededHelpers(body: string, perFlow: { token: string; source: string[] 
  * Nothing about a family or a step list is restated here: the recognition
  * set and the seed procedures travel inside the module.
  */
+/**
+ * The browser the flow was recorded in, twice: as the profile `runFlow` judges
+ * the live page against (the embedded profileMismatch), and as the Playwright
+ * Test options the generated `.spec.ts` applies with `test.use`. Applying it
+ * belongs to the spec file, not to runFlow: the browser is the test runner's,
+ * and a project that runs the flow on a phone on purpose must not have it
+ * silently reset to the recording's desktop window.
+ */
+function recordedBrowserLines(profile: BrowserProfile): string[] {
+  const use = {
+    viewport: profile.viewport,
+    ...(profile.deviceScaleFactor !== undefined ? { deviceScaleFactor: profile.deviceScaleFactor } : {}),
+    ...(profile.isMobile !== undefined ? { isMobile: profile.isMobile } : {}),
+    ...(profile.hasTouch !== undefined ? { hasTouch: profile.hasTouch } : {}),
+    ...(profile.userAgent !== undefined ? { userAgent: profile.userAgent } : {}),
+  };
+  return [
+    '/**',
+    ` * The browser this flow was recorded in${profile.device ? ` (${profile.device})` : ''}. Layout-dependent locators`,
+    ' * (coordinates, responsive columns, a nav that collapses to a menu) hold only there;',
+    ' * runFlow compares the page it is given and says so in run.warnings when it differs.',
+    ' */',
+    `export const RECORDED_BROWSER: BrowserProfile = ${JSON.stringify(profile)};`,
+    '/** RECORDED_BROWSER as Playwright Test options: the generated spec calls `test.use(RECORDED_USE)`. */',
+    `export const RECORDED_USE = ${JSON.stringify(use)};`,
+  ];
+}
+
 function recipesHelper(spec: SpecFlow): { token: string; source: string[] } {
   const snapshot = spec.recipes ?? snapshotRecipes(seedRecipes()).recipes;
   return {
@@ -2443,7 +2471,9 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
   // collected.
   const calls = bodies.map((b) => callArgs(b.step, b.slots, vars, warnings));
   const body = [...bodies.flatMap((b) => b.lines), ...calls].join('\n');
-  const helpers = neededHelpers(body, [recipesHelper(spec)]);
+  // runFlow judges the browser it is handed (profileMismatch, readLiveBrowser);
+  // named here because runFlow is written after the helper scan.
+  const helpers = neededHelpers([body, 'profileMismatch(', 'readLiveBrowser('].join('\n'), [recipesHelper(spec)]);
 
   const out: string[] = [
     '// @sitelooper-flow v1',
@@ -2482,14 +2512,20 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
     "   * order (replay's `created`); a loop body contributes one per pass.",
     '   */',
     '  created: string[];',
+    '  /**',
+    '   * What this run noticed about its conditions rather than its steps: today, a browser',
+    '   * that is not the one the flow was recorded in (see RECORDED_BROWSER).',
+    '   */',
+    '  warnings: string[];',
     '}',
     'export interface RunOptions {',
     '  /** Absolute URL, or a relative path resolved through the Playwright project baseURL. */',
     '  startUrl?: string;',
     '  run?: FlowRun;',
     '}',
+    ...recordedBrowserLines(spec.browser ?? DEFAULT_BROWSER_PROFILE),
     'export function createFlowRun(): FlowRun {',
-    '  return { outputs: {}, drift: [], echoed: [], created: [] };',
+    '  return { outputs: {}, drift: [], echoed: [], created: [], warnings: [] };',
     '}',
     '/**',
     ' * The wall-clock budget one run of this flow needs under a test runner: every',
@@ -2557,8 +2593,16 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
   out.push('  run.drift.length = 0;');
   out.push('  run.echoed = [];');
   out.push('  run.created = [];');
+  out.push('  run.warnings = [];');
   out.push('  const outputs = run.outputs;');
   out.push('  try {');
+  // Judged, never applied: the browser belongs to the test runner (the
+  // scaffold applies RECORDED_USE; a mobile project may deliberately differ).
+  out.push('    const browserMismatch = profileMismatch(RECORDED_BROWSER, await readLiveBrowser(page));');
+  out.push('    if (browserMismatch) {');
+  out.push('      run.warnings.push(browserMismatch);');
+  out.push("      console.warn(`[sitelooper warn] ${browserMismatch}`);");
+  out.push('    }');
   out.push(`    await page.goto(options.startUrl ?? ${q(spec.startUrl)});`);
   for (const [i, b] of bodies.entries()) {
     out.push(`    await test.step(${q(`${b.step.id}: ${b.step.instruction}`)}, async () => {`);
@@ -2603,7 +2647,12 @@ export function emitSpecFile(spec: SpecFlow): string {
   const filename = spec.name.replace(/[^A-Za-z0-9._-]+/g, '_') || 'flow';
   return [
     "import { test } from '@playwright/test';",
-    `import { createFlowRun, runFlow, steps, BUDGET_MS } from './${filename}.flow';`,
+    `import { createFlowRun, runFlow, steps, BUDGET_MS, RECORDED_USE } from './${filename}.flow';`,
+    '',
+    `// The browser the flow was recorded in${spec.browser?.device ? ` (${spec.browser.device})` : ''}. To run it at another size, replace this`,
+    "// with your own options (e.g. `test.use({ ...devices['Pixel 7'] })`): layout-dependent locators may",
+    '// then miss, and runFlow reports the difference in run.warnings.',
+    'test.use(RECORDED_USE);',
     '',
     `test(${q(spec.name)}, async ({ page }) => {`,
     '  // One test runs the whole flow: budget it by its recorded steps, not the 60s default.',

@@ -7,6 +7,7 @@ import { SKILL_CONTRACT, type Skill, type SkillParam, type SkillStep, type Skill
 import { seedRecipes, snapshotRecipes, type ComponentStore } from '../skills/components.js';
 import type { RecipeSnapshot } from '../execution/recipes.js';
 import { FINGERPRINT_DIMS } from '../execution/fingerprint.js';
+import type { BrowserProfile } from '../execution/browser.js';
 
 /**
  * The intermediate representation a compiled spec carries.
@@ -45,6 +46,12 @@ export interface SpecFlow {
    * which is exactly what a fresh install's store holds.
    */
   recipes?: RecipeSnapshot;
+  /**
+   * The browser the flow was recorded in (Flow.browser), for the artifact to
+   * apply and judge against. Absent on a flow saved before it was stored, which
+   * was recorded at DEFAULT_BROWSER_PROFILE.
+   */
+  browser?: BrowserProfile;
 }
 
 export interface SpecStep {
@@ -474,7 +481,7 @@ export function flowToSpec(
   }
 
   return {
-    spec: { version: 1, name: flow.name, origin: flow.origin, startUrl: flow.startUrl, vars: flow.vars ?? [], steps, ...(recipes ? { recipes } : {}) },
+    spec: { version: 1, name: flow.name, origin: flow.origin, startUrl: flow.startUrl, vars: flow.vars ?? [], steps, ...(recipes ? { recipes } : {}), ...(flow.browser ? { browser: flow.browser } : {}) },
     warnings: diagnostics.map(diagnosticLine),
     diagnostics,
   };

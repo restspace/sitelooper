@@ -254,6 +254,93 @@ export async function syntheticHover(locator: Locator): Promise<void> {
  */
 export const NAVIGATING_ACTIONS: readonly string[] = ['click', 'dblclick', 'press', 'submit', 'select'];
 
+/**
+ * The window a session records in when it is given no other: `--viewport` and
+ * `--device` choose another (daemon/browser.ts `resolveBrowserProfile`).
+ */
+export const RECORDING_VIEWPORT = { width: 1280, height: 900 } as const;
+
+/**
+ * The browser a flow was recorded in: its window, and for an emulated device
+ * the rest of what Playwright's device descriptor sets. Stored on the flow
+ * (`Flow.browser`), carried into the compiled artifact (`RECORDED_BROWSER`),
+ * and judged at run time by `profileMismatch`.
+ *
+ * WHY IT TRAVELS. A page's layout is part of what a recording captured: a
+ * `point` candidate is coordinates in this window, and an app that lays out by
+ * size (Odoo's list columns and form panes, a responsive nav that becomes a
+ * menu button) renders a different page in another one — a different
+ * procedure, not merely different pixels. Playwright Test's default window is
+ * 1280×720, and fwod39's compiled spec ran there: its 02-create reads found
+ * nothing, a click fell to a point candidate, and 03-open resolved no quantity
+ * input — steps daemon replay ran cleanly twice at 1280×900. A mobile flow is
+ * the same problem from the other side, and a desktop default would override
+ * the device a caller's project configured to exercise it.
+ *
+ * `device` is the Playwright device name it was resolved from, for people;
+ * the other fields are what was applied. Chromium only: a descriptor's
+ * `defaultBrowserType` (webkit, for iPhones) is not honoured.
+ */
+export interface BrowserProfile {
+  device?: string;
+  viewport: { width: number; height: number };
+  deviceScaleFactor?: number;
+  isMobile?: boolean;
+  hasTouch?: boolean;
+  userAgent?: string;
+}
+
+/** What a flow recorded before profiles were stored was recorded in. */
+export const DEFAULT_BROWSER_PROFILE: BrowserProfile = { viewport: { ...RECORDING_VIEWPORT } };
+
+/** What a runner can observe of the browser it was handed. `null` viewport: the page has none (it follows the window). */
+export interface LiveBrowser {
+  viewport: { width: number; height: number } | null;
+  userAgent?: string;
+  hasTouch?: boolean;
+}
+
+/**
+ * The device facts profileMismatch compares, read off the live page the same
+ * way by both runners. A page that cannot be evaluated yet (about:blank before
+ * the first navigation evaluates fine; a crashed one does not) gives only its
+ * size, and the facts it could not read are not compared.
+ */
+export async function readLiveBrowser(page: Pick<Page, 'viewportSize' | 'evaluate'>): Promise<LiveBrowser> {
+  const facts = await page
+    .evaluate(() => ({ userAgent: navigator.userAgent, hasTouch: navigator.maxTouchPoints > 0 }))
+    .catch(() => ({}));
+  return { viewport: page.viewportSize(), ...facts };
+}
+
+/**
+ * Why the browser a flow is about to run in is not the one it was recorded in,
+ * or null when it is. Width and height, the user agent and touch support are
+ * compared — the device facts a page can act on; scale factor and `isMobile`
+ * cannot be read back from a page and are applied, never judged. A field the
+ * recording did not set is not compared.
+ *
+ * Both runners warn with it and neither refuses: a flow run at another size
+ * may still work (role and text candidates survive most reflows), and when it
+ * does not, the failure then says why.
+ */
+export function profileMismatch(recorded: BrowserProfile, live: LiveBrowser): string | null {
+  const diffs: string[] = [];
+  const size = (v: { width: number; height: number }) => `${v.width}x${v.height}`;
+  if (live.viewport && (live.viewport.width !== recorded.viewport.width || live.viewport.height !== recorded.viewport.height)) {
+    diffs.push(`window ${size(live.viewport)} (recorded ${size(recorded.viewport)})`);
+  }
+  if (recorded.userAgent !== undefined && live.userAgent !== undefined && live.userAgent !== recorded.userAgent) {
+    diffs.push('a different user agent');
+  }
+  if (recorded.hasTouch !== undefined && live.hasTouch !== undefined && live.hasTouch !== recorded.hasTouch) {
+    diffs.push(live.hasTouch ? 'touch input (recorded without)' : 'no touch input (recorded with)');
+  }
+  if (!diffs.length) return null;
+  const was = recorded.device ? ` on ${recorded.device}` : '';
+  return `the browser has ${diffs.join(', ')} — the flow was recorded${was} at ${size(recorded.viewport)}, and locators that depend on layout may not hold`;
+}
+
 export function isNavigatingAction(tool: string): boolean {
   return NAVIGATING_ACTIONS.includes(tool);
 }

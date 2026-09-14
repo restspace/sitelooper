@@ -125,6 +125,8 @@ export function specToFlow(spec: SpecFlow): { flow: Flow; skills: Skill[] } {
     vars: spec.vars,
     steps,
     provenance: { session: `spec:${spec.name}`, created: now },
+    // A repaired or re-recorded spec converges in the browser it was recorded in.
+    ...(spec.browser ? { browser: spec.browser } : {}),
   };
   return { flow, skills };
 }

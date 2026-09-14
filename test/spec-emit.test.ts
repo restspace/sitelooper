@@ -7,6 +7,7 @@ import type { Flow } from '../src/skills/flow.js';
 import { SkillStore, type Skill, type SkillStep } from '../src/skills/store.js';
 import { seedRecipes, snapshotRecipes } from '../src/skills/components.js';
 import { IDENTITY_EDGE } from '../src/shared/text.js';
+import { RECORDING_VIEWPORT } from '../src/execution/browser.js';
 import { budgetMs, emitFlowFile, emitSpecFile } from '../src/spec/emit.js';
 import { flowToSpec, type SpecFlow, type SpecSegment, type SpecStep } from '../src/spec/ir.js';
 import { liftFlowFile } from '../src/spec/lift.js';
@@ -205,6 +206,14 @@ describe('emitFlowFile layout', () => {
     expect(source).toContain("  async '01-do'(page: Page, p: { v1: string }, outputs: Outputs, run: FlowRun = createFlowRun()): Promise<void> {");
     expect(source).toContain('export async function runFlow(page: Page, vars: Vars, options: RunOptions = {}): Promise<Outputs> {');
     expect(source).toContain("await page.goto(options.startUrl ?? 'http://app.test/');");
+    // The recorded browser travels (a flow saved before profiles were stored
+    // gets the default it was recorded at), and runFlow judges the page it is
+    // handed against it before navigating — warning, never resizing.
+    expect(source).toContain(`export const RECORDED_BROWSER: BrowserProfile = ${JSON.stringify({ viewport: RECORDING_VIEWPORT })};`);
+    expect(source).toContain(`export const RECORDED_USE = ${JSON.stringify({ viewport: RECORDING_VIEWPORT })};`);
+    expect(source).toContain('    const browserMismatch = profileMismatch(RECORDED_BROWSER, await readLiveBrowser(page));');
+    expect(source).not.toContain('setViewportSize(options');
+    expect(source).toContain('function profileMismatch(');
     expect(source).toContain("  await steps['01-do'](page, { v1: vars.name }, outputs, run);");
     expect(syntaxErrors(source)).toEqual([]);
   });
@@ -1627,7 +1636,9 @@ describe('flow-level wiring', () => {
 describe('emitSpecFile', () => {
   it('is a thin user-owned scaffold that imports the generated half', () => {
     const source = emitSpecFile(specOf([{ tool: 'back', args: {}, locators: {} }]));
-    expect(source).toContain("import { createFlowRun, runFlow, steps, BUDGET_MS } from './demo.flow';");
+    expect(source).toContain("import { createFlowRun, runFlow, steps, BUDGET_MS, RECORDED_USE } from './demo.flow';");
+    // The recorded browser is applied in the user's file, where a device preset can replace it.
+    expect(source).toContain('\ntest.use(RECORDED_USE);\n');
     expect(source).toContain("const outputs = await runFlow(page, { name: process.env['NAME'] ?? '' }, {");
     expect(source).toContain('sitelooper never rewrites it');
     expect(source).toContain("run.drift.join");

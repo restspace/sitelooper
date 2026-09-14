@@ -1,3 +1,4 @@
+import type { BrowserProfile } from '../execution/browser.js';
 import { isMutatingAction } from '../execution/lifecycle.js';
 import type { Skill } from './store.js';
 import fs from 'node:fs';
@@ -26,6 +27,14 @@ export interface Flow {
   vars: string[];
   steps: FlowStep[];
   provenance: { session: string; created: string; model?: string };
+  /**
+   * The browser the flow was recorded in — window size, and for an emulated
+   * device its touch, mobile flag, scale and user agent. Replay and the
+   * compiled artifact run it there (execution/browser.ts BrowserProfile).
+   * Absent on a flow saved before it was stored: those were all recorded at
+   * DEFAULT_BROWSER_PROFILE.
+   */
+  browser?: BrowserProfile;
   /**
    * Record-time problems the build found in this flow, each prefixed with the
    * diagnostic code it becomes (`noop-step:` or `contradicted-step:`). Compile

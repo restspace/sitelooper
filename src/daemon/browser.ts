@@ -1,12 +1,73 @@
 import path from 'node:path';
-import { chromium, type BrowserContext, type Page, type Video } from 'playwright-core';
+import { chromium, devices, type BrowserContext, type Page, type Video } from 'playwright-core';
 import { ensureSessionDir } from '../shared/paths.js';
 import { DialogManager } from './dialogs.js';
-import { trackRequests } from '../execution/browser.js';
+import { RECORDING_VIEWPORT, profileMismatch, readLiveBrowser, trackRequests, type BrowserProfile } from '../execution/browser.js';
 import { ScriptRecorder } from './recorder.js';
 import { SkillStore } from '../skills/store.js';
 
-const VIEWPORT = { width: 1280, height: 900 };
+/**
+ * The browser a session records and replays in, from `--viewport WxH` or
+ * `--device <Playwright device name>` (the CLI hands them to the daemon as
+ * SITELOOPER_VIEWPORT / SITELOOPER_DEVICE). A device supplies its viewport,
+ * scale factor, touch, mobile flag and user agent; a viewport alongside it
+ * overrides the size only. Neither: RECORDING_VIEWPORT, which every session
+ * recorded in before the option existed. Throws on a size that does not parse
+ * or a device Playwright does not know, naming close matches.
+ */
+export function resolveBrowserProfile(o: { viewport?: string; device?: string } = {}): BrowserProfile {
+  let profile: BrowserProfile = { viewport: { ...RECORDING_VIEWPORT } };
+  const deviceName = o.device?.trim();
+  if (deviceName) {
+    const d = devices[deviceName as keyof typeof devices];
+    if (!d) {
+      const first = deviceName.toLowerCase().split(/\s+/)[0];
+      const near = Object.keys(devices).filter((n) => n.toLowerCase().includes(first)).slice(0, 8);
+      throw new Error(
+        `unknown device ${JSON.stringify(deviceName)}${near.length ? ` — did you mean: ${near.join(', ')}` : ''} (Playwright device names, e.g. "iPhone 13", "Pixel 7")`,
+      );
+    }
+    profile = {
+      device: deviceName,
+      viewport: { ...d.viewport },
+      deviceScaleFactor: d.deviceScaleFactor,
+      isMobile: d.isMobile,
+      hasTouch: d.hasTouch,
+      userAgent: d.userAgent,
+    };
+  }
+  const size = o.viewport?.trim();
+  if (size) {
+    const m = /^(\d{2,5})\s*[x×]\s*(\d{2,5})$/i.exec(size);
+    if (!m) throw new Error(`--viewport must be WIDTHxHEIGHT, e.g. 390x844 (got ${JSON.stringify(size)})`);
+    profile = { ...profile, viewport: { width: Number(m[1]), height: Number(m[2]) } };
+  }
+  return profile;
+}
+
+/** The profile the environment asks for: what a spawned daemon launches with. */
+export function profileFromEnv(env: NodeJS.ProcessEnv = process.env): BrowserProfile {
+  return resolveBrowserProfile({ viewport: env.SITELOOPER_VIEWPORT, device: env.SITELOOPER_DEVICE });
+}
+
+/** The env a daemon is spawned with to launch a profile (the inverse of profileFromEnv). */
+export function profileEnv(p: BrowserProfile): Record<string, string> {
+  return {
+    ...(p.device ? { SITELOOPER_DEVICE: p.device } : {}),
+    SITELOOPER_VIEWPORT: `${p.viewport.width}x${p.viewport.height}`,
+  };
+}
+
+/** Playwright context options for a profile. */
+function contextOptions(p: BrowserProfile) {
+  return {
+    viewport: p.viewport,
+    ...(p.deviceScaleFactor !== undefined ? { deviceScaleFactor: p.deviceScaleFactor } : {}),
+    ...(p.isMobile !== undefined ? { isMobile: p.isMobile } : {}),
+    ...(p.hasTouch !== undefined ? { hasTouch: p.hasTouch } : {}),
+    ...(p.userAgent !== undefined ? { userAgent: p.userAgent } : {}),
+  };
+}
 
 export interface BrowserOptions {
   session: string;
@@ -35,6 +96,8 @@ export interface BrowserOptions {
    * (the recording is what gets compiled).
    */
   learn?: boolean;
+  /** The browser to launch; defaults to what the environment asks for (profileFromEnv). */
+  profile?: BrowserProfile;
 }
 
 /**
@@ -51,8 +114,11 @@ export class BrowserSession {
   readonly script: ScriptRecorder | null;
   /** Non-null only in learning mode: where compiled skills go and come from. */
   readonly learn: SkillStore | null;
+  /** The browser this session launches (and so records and replays) in; stored on a flow it saves. */
+  readonly profile: BrowserProfile;
 
   constructor(private opts: BrowserOptions) {
+    this.profile = opts.profile ?? profileFromEnv();
     const learning = Boolean(opts.learn) || process.env.SITELOOPER_SKILLS === '1';
     this.learn = learning ? new SkillStore() : null;
     this.script =
@@ -63,7 +129,7 @@ export class BrowserSession {
     const headless = !(this.opts.headed || process.env.SITELOOPER_HEADED === '1');
     const executablePath = this.opts.executablePath || process.env.SITELOOPER_EXECUTABLE || undefined;
     const recordVideo = this.recording
-      ? { dir: path.join(ensureSessionDir(this.opts.session), 'video'), size: VIEWPORT }
+      ? { dir: path.join(ensureSessionDir(this.opts.session), 'video'), size: this.profile.viewport }
       : undefined;
     const channels = executablePath
       ? [undefined]
@@ -74,14 +140,14 @@ export class BrowserSession {
       try {
         if (this.opts.persist === false) {
           const browser = await chromium.launch({ headless, channel: channel as string | undefined, executablePath });
-          return await browser.newContext({ viewport: VIEWPORT, recordVideo });
+          return await browser.newContext({ ...contextOptions(this.profile), recordVideo });
         }
         const userDataDir = path.join(ensureSessionDir(this.opts.session), 'profile');
         return await chromium.launchPersistentContext(userDataDir, {
           headless,
           channel: channel as string | undefined,
           executablePath,
-          viewport: VIEWPORT,
+          ...contextOptions(this.profile),
           recordVideo,
         });
       } catch (err) {
@@ -184,6 +250,24 @@ export class BrowserSession {
   }
 
   /** Current page, creating one if none is open. */
+  /**
+   * Put the page in the browser a flow was recorded in, as far as a launched
+   * session can: the window is resized (a page's viewport is settable), while
+   * a user agent, touch support or mobile flag is fixed at launch and can only
+   * be reported. Returns what still differs, or null. `sitelooper run` spawns
+   * a fresh session with the flow's own profile, so the report is for a
+   * session that was already running in another one.
+   */
+  async alignTo(recorded: BrowserProfile): Promise<string | null> {
+    const page = await this.getPage();
+    let live = await readLiveBrowser(page);
+    if (live.viewport && (live.viewport.width !== recorded.viewport.width || live.viewport.height !== recorded.viewport.height)) {
+      await page.setViewportSize(recorded.viewport);
+      live = await readLiveBrowser(page);
+    }
+    return profileMismatch(recorded, live);
+  }
+
   async getPage(): Promise<Page> {
     const context = await this.getContext();
     if (this.activePage && !this.activePage.isClosed()) return this.activePage;

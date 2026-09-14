@@ -105,6 +105,8 @@ Global options:
   --session <name> --json --progress --verbose --headed --record --learn --script
   --provider <name> --model <id> --fallback-model <id> --no-escalate
   --max-turns N --timeout S --turn-timeout S
+  --viewport WxH --device "<Playwright device, e.g. iPhone 13>"   # browser a session starts in;
+      a saved flow stores it, and run/compiled specs use it (default 1280x900)
   --json emits versioned results for authoring, compilation, checking and repair.
   Provider presets: zhipu, novita, openrouter, openai, anthropic.
   Credentials: use {{env:NAME}} in instructions; set NAME before starting the session.
@@ -130,6 +132,8 @@ function parseArgv(argv: string[]): ParsedArgs {
     'provider',
     'model',
     'fallback-model',
+    'viewport',
+    'device',
     'base-url',
     'selector',
     'title',
@@ -237,6 +241,51 @@ async function connectValidated(sock: string): Promise<net.Socket> {
   } catch (err) {
     conn.destroy();
     throw err;
+  }
+}
+
+/**
+ * The browser a session is launched in, handed to the daemon through its
+ * environment (SITELOOPER_VIEWPORT / SITELOOPER_DEVICE, read by
+ * daemon/browser.ts profileFromEnv), so a spawned daemon records and replays
+ * in it and a flow it saves stores it.
+ *
+ * `--viewport WxH` / `--device NAME` choose it explicitly and replace whatever
+ * the environment said. Without them, `run <flow>` launches in the browser the
+ * flow was recorded in (Flow.browser): a mobile recording replays at mobile
+ * size, not at the desktop default. Returns the explicitly requested profile,
+ * validated, or null when nothing was requested.
+ */
+async function applyBrowserFlags(
+  flags: Map<string, string | boolean>,
+  flowName?: string,
+): Promise<import('./execution/browser.js').BrowserProfile | null> {
+  const { profileEnv, resolveBrowserProfile } = await import('./daemon/browser.js');
+  const viewport = flags.get('viewport');
+  const device = flags.get('device');
+  if (viewport !== undefined || device !== undefined) {
+    const profile = resolveBrowserProfile({ viewport: viewport ? String(viewport) : undefined, device: device ? String(device) : undefined });
+    delete process.env.SITELOOPER_VIEWPORT;
+    delete process.env.SITELOOPER_DEVICE;
+    Object.assign(process.env, profileEnv(profile));
+    return profile;
+  }
+  const recorded = flowName ? loadFlowFile(flowName)?.flow.browser : undefined;
+  if (recorded) {
+    delete process.env.SITELOOPER_DEVICE;
+    Object.assign(process.env, profileEnv(recorded));
+  }
+  return null;
+}
+
+/** A session keeps the browser it launched with: say so when a flag asked for another. */
+async function warnIfSessionBrowserDiffers(conn: net.Socket, session: string, wanted: import('./execution/browser.js').BrowserProfile): Promise<void> {
+  const res = await request(conn, 'config', {}).catch(() => null);
+  const running = (res?.data as { browser?: import('./execution/browser.js').BrowserProfile } | undefined)?.browser;
+  if (!running) return;
+  const size = (p: typeof wanted) => `${p.viewport.width}x${p.viewport.height}${p.device ? ` (${p.device})` : ''}`;
+  if (size(running) !== size(wanted)) {
+    console.error(`sitelooper: session "${session}" is already running at ${size(running)}; --viewport/--device apply when a session starts — stop it first (sitelooper stop --session ${session}) to use ${size(wanted)}`);
   }
 }
 
@@ -521,12 +570,14 @@ async function main(): Promise<void> {
     return;
   }
 
+  const requestedBrowser = await applyBrowserFlags(flags, command === 'run' ? positional[0] : undefined).catch((err) => fail((err as Error).message, 2));
   const conn = await connectOrSpawn(session, {
     headed: flags.has('headed'),
     record: flags.has('record'),
     script: flags.has('script'),
     learn: flags.has('learn'),
   }).catch((err) => fail(err.message));
+  if (requestedBrowser) await warnIfSessionBrowserDiffers(conn, session, requestedBrowser);
 
   try {
     switch (command) {
@@ -1296,7 +1347,10 @@ async function runStagedFlow(
   const prev = { skills: process.env.SITELOOPER_SKILLS, dir: process.env.SITELOOPER_SKILLS_DIR };
   process.env.SITELOOPER_SKILLS = '1';
   process.env.SITELOOPER_SKILLS_DIR = staged.skillsDir;
+  const prevBrowser = { viewport: process.env.SITELOOPER_VIEWPORT, device: process.env.SITELOOPER_DEVICE };
   try {
+    // Converge and re-record in the browser the flow was recorded in.
+    await applyBrowserFlags(new Map(), staged.flowFile);
     const conn = await connectOrSpawn(session, { headed: opts.headed, record: false, script: false, learn: true });
     try {
       const res = await request(conn, 'run', { name: staged.flowFile, vars }, opts.onProgress);
@@ -1319,6 +1373,10 @@ async function runStagedFlow(
     else process.env.SITELOOPER_SKILLS = prev.skills;
     if (prev.dir === undefined) delete process.env.SITELOOPER_SKILLS_DIR;
     else process.env.SITELOOPER_SKILLS_DIR = prev.dir;
+    if (prevBrowser.viewport === undefined) delete process.env.SITELOOPER_VIEWPORT;
+    else process.env.SITELOOPER_VIEWPORT = prevBrowser.viewport;
+    if (prevBrowser.device === undefined) delete process.env.SITELOOPER_DEVICE;
+    else process.env.SITELOOPER_DEVICE = prevBrowser.device;
     await stopSessionQuietly(session);
     // A repair run's session is scratch: its browser profile exists for one
     // replay and a converge loop would otherwise leave one directory per
