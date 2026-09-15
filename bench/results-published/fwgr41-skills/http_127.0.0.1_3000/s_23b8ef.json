@@ -1,0 +1,343 @@
+{
+ "id": "s_23b8ef",
+ "origin": "http://127.0.0.1:3000",
+ "template": "Navigate to the dashboard '{{v2}}' in Grafana (find it via dashboard search if not already open). Once it is open, report the CURRENT page URL exactly as shown in the browser's address bar / page URL (the full URL including scheme, host, and path). Also confirm on that page: the dashboard title shown, the panel titles visible, the time picker range, the refresh interval, and (via Dashboard settings > General) the dashboard's tags. Report all of these values exactly as observed.",
+ "params": {
+  "v1": {
+   "example": "fwgr41-n3",
+   "usedIn": [
+    7
+   ],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "fwgr41-n3 Bench Dashboard",
+   "usedIn": [],
+   "known": true
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:3000/d/dfyd89d3l70n4d/{{v1}}-bench-dashboard?from=:id&refresh=:id&timezone=browser&to=now"
+ },
+ "steps": [
+  {
+   "tool": "read",
+   "args": {
+    "what": "url",
+    "label": "current_dashboard_url"
+   },
+   "locators": {},
+   "label": "current_dashboard_url",
+   "via": {
+    "skill": "s_0e342c",
+    "step": 1
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e67"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Edit dashboard button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Edit"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(5) > button"
+     },
+     {
+      "kind": "point",
+      "x": 1198,
+      "y": 60,
+      "w": 38.3,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/dfyd89d3l70n4d/{{v1}}-bench-dashboard?from=:id&refresh=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- button \"Add\"",
+     "- button \"Settings\"",
+     "- button \"Exit edit\"",
+     "- button \"Save dashboard\"",
+     "- button \"More save options\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_0e342c",
+    "step": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Settings\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Dashboard settings"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Settings"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(3) > button"
+     },
+     {
+      "kind": "point",
+      "x": 962,
+      "y": 60,
+      "w": 63.8,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/dfyd89d3l70n4d/{{v1}}-bench-dashboard?editview=settings&from=:id&refresh=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- link \"{{v2}}\"",
+     "- button \"Back to dashboard\"",
+     "- heading \"Settings\"",
+     "- tab \"General\"",
+     "- tab \"Annotations\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_0e342c",
+    "step": 3
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Back to dashboard\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Back to dashboard button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Back to dashboard"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(1) > button"
+     },
+     {
+      "kind": "point",
+      "x": 993,
+      "y": 60,
+      "w": 143.5,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/dfyd89d3l70n4d/{{v1}}-bench-dashboard?from=:id&refresh=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- button \"Add\"",
+     "- button \"Settings\"",
+     "- button \"Exit edit\"",
+     "- button \"Time range selected: Last 6 hours\"",
+     "- button \"Zoom out time range\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_0e342c",
+    "step": 4
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e381"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Dashboard settings"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Settings"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(3) > button"
+     },
+     {
+      "kind": "point",
+      "x": 962,
+      "y": 60,
+      "w": 63.8,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/dfyd89d3l70n4d/{{v1}}-bench-dashboard?editview=settings&from=:id&refresh=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- link \"{{v2}}\"",
+     "- button \"Back to dashboard\"",
+     "- heading \"Settings\"",
+     "- tab \"General\"",
+     "- tab \"Annotations\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_0e342c",
+    "step": 5
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e477"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Back to dashboard button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Back to dashboard"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(1) > button"
+     },
+     {
+      "kind": "point",
+      "x": 993,
+      "y": 60,
+      "w": 143.5,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/dfyd89d3l70n4d/{{v1}}-bench-dashboard?from=:id&refresh=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- button \"Add\"",
+     "- button \"Settings\"",
+     "- button \"Exit edit\"",
+     "- button \"Time range selected: Last 6 hours\"",
+     "- button \"Zoom out time range\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_0e342c",
+    "step": 6
+   }
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:3000/d/bfyd7wj0ceolcf/{{v1}}-bench-dashboard"
+   },
+   "locators": {},
+   "via": {
+    "skill": "s_0e342c",
+    "step": 7
+   }
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-15T21:49:23.565Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4
+ },
+ "status": "demoted",
+ "seq": {
+  "chain": "s_d6caef",
+  "index": 0,
+  "of": 3
+ },
+ "variantOf": "s_0e342c",
+ "provenance": {
+  "session": "fwgr41-n3",
+  "instruction": "Navigate to the dashboard 'fwgr41-n3 Bench Dashboard' in Grafana (find it via dashboard search if not already open). Once it is open, report the CURRENT page URL exactly as shown in the browser's address bar / page URL (the full URL including scheme, host, and path). Also confirm on that page: the dashboard title shown, the panel titles visible, the time picker range, the refresh interval, and (via Dashboard settings > General) the dashboard's tags. Report all of these values exactly as observed.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-15T21:49:23.565Z"
+ },
+ "revision": 2
+}

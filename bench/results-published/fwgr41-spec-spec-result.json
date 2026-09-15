@@ -1,0 +1,34 @@
+{
+  "arm": "spec",
+  "runid": "fwgr41-spec",
+  "target": "grafana",
+  "flow": "fwgr41.json",
+  "flowName": "fwgr41",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwgr41-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwgr41-spec-spec-tmp/fwgr41.flow.ts",
+  "specFile": "bench/results/fwgr41-spec-spec-tmp/fwgr41.spec.ts",
+  "wallMs": 81018,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwgr41",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 76923,
+      "error": "Error: 06-find s_e013d1/7 raised an alert the recording never saw: Dashboard not found | Invalid dashboard UID in annotation request",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "logTail": "\nRunning 1 test using 1 worker\n\n[sitelooper step] 01-open\n[sitelooper step] 02-create\n[sitelooper recipe] filled via recipe monaco/set-value (r_f2510e); value verified on the component\n[sitelooper step] 03-open\n[sitelooper step] 04-open\n[sitelooper step] 05-open\n  ✘  1 fwgr41.spec.ts:9:1 › fwgr41 (1.3m)\n\n\n  1) fwgr41.spec.ts:9:1 › fwgr41 › 06-find: Navigate to the dashboard '{{runid}} Bench Dashboard' in Grafana (find it via dashboard search if not already open). Once it is open, report the CURRENT page URL exactly as shown in the browser's address bar / page URL (the full URL including scheme, host, and path). Also confirm on that page: the dashboard title shown, the panel titles visible, the time picker range, the refresh interval, and (via Dashboard settings > General) the dashboard's tags. Report all of these values exactly as observed. \n\n    Error: 06-find s_e013d1/7 raised an alert the recording never saw: Dashboard not found | Invalid dashboard UID in annotation request\n\n       at fwgr41.flow.ts:9792\n\n      9790 |   const verdict = alertVerdict(before, after ? after.alerts : null, ctx, after ? after.complete : true);\n      9791 |   for (const line of verdict.warnings) logWarning(line);\n    > 9792 |   if (verdict.stop) throw new Error(verdict.stop);\n           |                           ^\n      9793 | }\n      9794 |\n      9795 | /**\n        at alertGate (/home/user/sitelooper/bench/results/fwgr41-spec-spec-tmp/fwgr41.flow.ts:9792:27)\n        at Object.verify (/home/user/sitelooper/bench/results/fwgr41-spec-spec-tmp/fwgr41.flow.ts:14430:9)\n        at runStepLifecycle (/home/user/sitelooper/bench/results/fwgr41-spec-spec-tmp/fwgr41.flow.ts:7966:37)\n        at Object.06-find (/home/user/sitelooper/bench/results/fwgr41-spec-spec-tmp/fwgr41.flow.ts:14411:5)\n        at /home/user/sitelooper/bench/results/fwgr41-spec-spec-tmp/fwgr41.flow.ts:14735:7\n        at runFlow (/home/user/sitelooper/bench/results/fwgr41-spec-spec-tmp/fwgr41.flow.ts:14734:5)\n        at /home/user/sitelooper/bench/results/fwgr41-spec-spec-tmp/fwgr41.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: ../../../test-results/fwgr41-fwgr41/error-context.md\n\n  1 failed\n    fwgr41.spec.ts:9:1 › fwgr41 ────────────────────────────────────────────────────────────────────\n[sitelooper warn] 03-open s_7ae526/18: read 'text_panel_rendered_content' returned a value the skill itself set/selected ('Notes for run fwgr41-spec: benchmark dashboard created by au…') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper warn] 03-open s_7ae526/19: read 'text_panel_title' returned a value the skill itself set/selected ('fwgr41-spec Notes') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper skip] 04-open s_4e4f66/18 target: read target not found — value left empty\n[sitelooper skip] 05-open s_d9cbee/12 target: read target not found — value left empty\n[sitelooper warn] 06-find s_e013d1/6: url segment(s) differ from recorded (afyd7g0300dfkc→cfyd8hqymgfeoe) — treated as volatile\n"
+}

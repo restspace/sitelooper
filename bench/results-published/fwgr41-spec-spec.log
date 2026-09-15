@@ -1,0 +1,46 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-open
+[sitelooper step] 02-create
+[sitelooper recipe] filled via recipe monaco/set-value (r_f2510e); value verified on the component
+[sitelooper step] 03-open
+[sitelooper step] 04-open
+[sitelooper step] 05-open
+  ✘  1 fwgr41.spec.ts:9:1 › fwgr41 (1.3m)
+
+
+  1) fwgr41.spec.ts:9:1 › fwgr41 › 06-find: Navigate to the dashboard '{{runid}} Bench Dashboard' in Grafana (find it via dashboard search if not already open). Once it is open, report the CURRENT page URL exactly as shown in the browser's address bar / page URL (the full URL including scheme, host, and path). Also confirm on that page: the dashboard title shown, the panel titles visible, the time picker range, the refresh interval, and (via Dashboard settings > General) the dashboard's tags. Report all of these values exactly as observed. 
+
+    Error: 06-find s_e013d1/7 raised an alert the recording never saw: Dashboard not found | Invalid dashboard UID in annotation request
+
+       at fwgr41.flow.ts:9792
+
+      9790 |   const verdict = alertVerdict(before, after ? after.alerts : null, ctx, after ? after.complete : true);
+      9791 |   for (const line of verdict.warnings) logWarning(line);
+    > 9792 |   if (verdict.stop) throw new Error(verdict.stop);
+           |                           ^
+      9793 | }
+      9794 |
+      9795 | /**
+        at alertGate (/home/user/sitelooper/bench/results/fwgr41-spec-spec-tmp/fwgr41.flow.ts:9792:27)
+        at Object.verify (/home/user/sitelooper/bench/results/fwgr41-spec-spec-tmp/fwgr41.flow.ts:14430:9)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwgr41-spec-spec-tmp/fwgr41.flow.ts:7966:37)
+        at Object.06-find (/home/user/sitelooper/bench/results/fwgr41-spec-spec-tmp/fwgr41.flow.ts:14411:5)
+        at /home/user/sitelooper/bench/results/fwgr41-spec-spec-tmp/fwgr41.flow.ts:14735:7
+        at runFlow (/home/user/sitelooper/bench/results/fwgr41-spec-spec-tmp/fwgr41.flow.ts:14734:5)
+        at /home/user/sitelooper/bench/results/fwgr41-spec-spec-tmp/fwgr41.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../test-results/fwgr41-fwgr41/error-context.md
+
+  1 failed
+    fwgr41.spec.ts:9:1 › fwgr41 ────────────────────────────────────────────────────────────────────
+[sitelooper warn] 03-open s_7ae526/18: read 'text_panel_rendered_content' returned a value the skill itself set/selected ('Notes for run fwgr41-spec: benchmark dashboard created by au…') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 03-open s_7ae526/19: read 'text_panel_title' returned a value the skill itself set/selected ('fwgr41-spec Notes') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper skip] 04-open s_4e4f66/18 target: read target not found — value left empty
+[sitelooper skip] 05-open s_d9cbee/12 target: read target not found — value left empty
+[sitelooper warn] 06-find s_e013d1/6: url segment(s) differ from recorded (afyd7g0300dfkc→cfyd8hqymgfeoe) — treated as volatile
