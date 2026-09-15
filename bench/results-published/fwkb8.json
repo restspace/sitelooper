@@ -1,0 +1,333 @@
+{
+  "name": "fwkb8",
+  "origin": "http://127.0.0.1:8085",
+  "startUrl": "http://127.0.0.1:8085/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-open",
+      "instruction": "Open http://127.0.0.1:8085/ and sign in with username 'admin' and password 'admin'. Then navigate to the project named 'Bench Board' and open its board. Report: (a) the names of the board's columns in their left-to-right order exactly as displayed, and (b) whether a task card titled '{{runid}} Bench Task' already exists on the board (and if so, which column it is in). Do not modify or move any tasks.",
+      "skill": "s_66361f",
+      "params": {
+        "v2": "http://127.0.0.1:8085/",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "board_columns_left_to_right",
+        "board_header_text_read",
+        "task_card_fwkb8_n1_exists",
+        "backlog_task_count",
+        "existing_task_titles",
+        "project_name",
+        "project_id",
+        "column_1_name",
+        "column_2_name",
+        "column_3_name",
+        "column_4_name",
+        "seed_task_1_title",
+        "seed_task_2_title",
+        "seed_task_3_title",
+        "ref"
+      ],
+      "recorded": {
+        "board_columns_left_to_right": "Backlog, Ready, Work in progress, Done",
+        "board_header_text_read": "Backlog (Total number of tasks in this column across all swimlanes 3) Ready Work in progress Done",
+        "task_card_fwkb8_n1_exists": "no",
+        "backlog_task_count": "3",
+        "existing_task_titles": "Seed: triage inbox, Seed: order missing parts, Seed: ship repaired device",
+        "project_name": "Bench Board",
+        "project_id": "1",
+        "column_1_name": "Backlog",
+        "column_2_name": "Ready",
+        "column_3_name": "Work in progress",
+        "column_4_name": "Done",
+        "seed_task_1_title": "Seed: triage inbox",
+        "seed_task_2_title": "Seed: order missing parts",
+        "seed_task_3_title": "Seed: ship repaired device",
+        "ref": "fwkb8-n1",
+        "url": "http://127.0.0.1:8085/?controller=BoardViewController&action=show&plugin=&project_id=1&search="
+      },
+      "route": "http://127.0.0.1:8085/",
+      "outputEvidence": {
+        "column_1_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "seed_task_1_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_task_2_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_task_3_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "On the Kanboard app at http://127.0.0.1:8085/ (already signed in as admin, on the 'Bench Board' project board), create a new task titled '{{runid}} Bench Task' in the 'Bench Board' project. Set its description to 'Bench task for run {{runid}}' (must include the string {{runid}}) and set its due date to 2026-12-31 (year 2026, month December, day 31) using the form's date picker or text entry, whichever the form supports. Submit the form and then verify on the resulting task page that the title is '{{runid}} Bench Task', the description shows 'Bench task for run {{runid}}', the due date shows 2026-12-31, and report the task's numeric ID exactly as displayed (the #number shown on the task page). Do not modify or move the seed tasks.",
+      "skill": "s_72c3a7",
+      "params": {
+        "v1": "Bench Board",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "task_id",
+        "task_title",
+        "task_description",
+        "due_date_displayed",
+        "due_date_calendar",
+        "due_date_format_note",
+        "column",
+        "swimlane",
+        "status",
+        "project",
+        "page_title",
+        "due_date_placeholder",
+        "due_date_typed_value",
+        "task_page_url",
+        "ref"
+      ],
+      "recorded": {
+        "task_id": "4",
+        "task_title": "fwkb8-n1 Bench Task",
+        "task_description": "Bench task for run fwkb8-n1",
+        "due_date_displayed": "12/31/2026 10:46",
+        "due_date_calendar": "2026-12-31",
+        "due_date_format_note": "form input format is mm/dd/yyyy H:i (placeholder showed 09/15/2026 10:46); value was entered as 12/31/2026",
+        "column": "Backlog",
+        "swimlane": "Default swimlane",
+        "status": "open",
+        "project": "Bench Board",
+        "page_title": "Bench Board, #4 - fwkb8-n1 Bench Task",
+        "due_date_placeholder": "09/15/2026 10:46",
+        "due_date_typed_value": "12/31/2026",
+        "task_page_url": "/?controller=TaskViewController&action=show&task_id=4",
+        "ref": "fwkb8-n1"
+      },
+      "route": "http://127.0.0.1:8085/",
+      "outputEvidence": {
+        "task_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "task_description": {
+          "same": 0,
+          "differed": 1
+        },
+        "due_date_displayed": {
+          "same": 0,
+          "differed": 1
+        },
+        "column": {
+          "same": 1,
+          "differed": 0
+        },
+        "swimlane": {
+          "same": 1,
+          "differed": 0
+        },
+        "status": {
+          "same": 1,
+          "differed": 0
+        },
+        "project": {
+          "same": 1,
+          "differed": 0
+        },
+        "page_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "due_date_placeholder": {
+          "same": 0,
+          "differed": 1
+        },
+        "task_page_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "03-change",
+      "instruction": "On the Kanboard app at http://127.0.0.1:8085/ (already signed in as admin), move the task titled '{{runid}} Bench Task' (task #4 in the 'Bench Board' project) so that it sits in the '{{01-open.column_3_name}}' column of the board. You may use the task page's move/change-column action or drag the card on the board, whichever works. Then verify on the board (or the task page) that the task's column is now '{{01-open.column_3_name}}' (not {{01-open.column_1_name}}) and report the column name you see. Do not move or modify the seed tasks (#1, #2, #3).",
+      "skill": "s_3f8e3d",
+      "params": {
+        "v1": "{{runid}} Bench Task",
+        "v3": "Bench Board",
+        "v4": "{{01-open.column_3_name}}",
+        "v5": "{{01-open.column_1_name}}",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "task_id",
+        "task_title",
+        "column_now",
+        "column_header_text",
+        "backlog_header_text",
+        "columns_left_to_right",
+        "cards_by_column",
+        "move_method",
+        "selected_column_value",
+        "ref"
+      ],
+      "recorded": {
+        "task_id": "4",
+        "task_title": "fwkb8-n1 Bench Task",
+        "column_now": "Work in progress",
+        "column_header_text": "Work in progress Task count 1 ( Total number of tasks in this column across all swimlanes 1)",
+        "backlog_header_text": "Backlog Task count 3 ( Total number of tasks in this column across all swimlanes 3)",
+        "columns_left_to_right": "Backlog, Ready, Work in progress, Done",
+        "cards_by_column": "col0 (Backlog): #1 Seed: triage inbox, #2 Seed: order missing parts, #3 Seed: ship repaired device | col2 (Work in progress): #4 fwkb8-n1 Bench Task (due 12/31/2026 10:46)",
+        "move_method": "Task page > Move position > Column = 'Work in progress' > Save",
+        "selected_column_value": "3",
+        "ref": "fwkb8-n1",
+        "url": "http://127.0.0.1:8085/?controller=TaskViewController&action=show&task_id=4"
+      },
+      "route": "http://127.0.0.1:8085/"
+    },
+    {
+      "id": "04-open",
+      "instruction": "On the Kanboard app at http://127.0.0.1:8085/ (already signed in as admin), {{02-create.status}} the task page for task #4 titled '{{runid}} Bench Task' in the 'Bench Board' project and add a comment to that task whose text includes the string {{runid}} (for example: 'Progress note for run {{runid}} — task moved to {{01-open.column_3_name}}.'). Submit the comment and verify it appears in the task's comment list, then report the exact comment text as displayed and confirm it contains {{runid}}. Do not modify or move the seed tasks (#1, #2, #3).",
+      "skill": "s_2dd555",
+      "params": {
+        "v1": "{{02-create.status}}",
+        "v2": "{{runid}} Bench Task",
+        "v4": "Bench Board",
+        "v3": "{{runid}}",
+        "v6": "Progress note for run {{runid}} — task moved to {{01-open.column_3_name}}."
+      },
+      "outputs": [
+        "task_id",
+        "task_title",
+        "comment_text_displayed",
+        "comment_block_full_text",
+        "comment_author",
+        "comment_created_at",
+        "comment_updated_at",
+        "comment_visibility",
+        "contains_fwkb8_n1",
+        "comment_count",
+        "ref"
+      ],
+      "recorded": {
+        "task_id": "4",
+        "task_title": "fwkb8-n1 Bench Task",
+        "comment_text_displayed": "Progress note for run fwkb8-n1 — task moved to Work in progress.",
+        "comment_block_full_text": "A\nadmin Created at: 09/15/2026 10:49 Updated at: 09/15/2026 10:49 Visibility: Standard users\n\nProgress note for run fwkb8-n1 — task moved to Work in progress.",
+        "comment_author": "admin",
+        "comment_created_at": "09/15/2026 10:49",
+        "comment_updated_at": "09/15/2026 10:49",
+        "comment_visibility": "Standard users",
+        "contains_fwkb8_n1": "yes",
+        "comment_count": "1",
+        "ref": "fwkb8-n1"
+      },
+      "route": "http://127.0.0.1:8085/"
+    },
+    {
+      "id": "05-open",
+      "instruction": "Verification only, {{01-open.task_card_fwkb8_n1_exists}} modifications: On the Kanboard app at http://127.0.0.1:8085/ (signed in as admin), {{02-create.status}} the board of the 'Bench Board' project and the task page for the task titled '{{runid}} Bench Task'. Confirm and report: (a) the task's numeric ID as displayed (#number), (b) the column the task sits in on the board, (c) the task's description text, (d) the task's due date, (e) whether the task has at least one comment and its text, and (f) that the seed tasks (#1, #2, #3) are all still in the {{01-open.column_1_name}} column. Change nothing.",
+      "skill": "s_f26935",
+      "params": {
+        "v1": "admin",
+        "v2": "{{02-create.status}}",
+        "v3": "Bench Board",
+        "v4": "{{runid}} Bench Task",
+        "v6": "{{01-open.column_1_name}}",
+        "v5": "{{runid}}"
+      },
+      "outputs": [
+        "task_id",
+        "task_title",
+        "task_page_title",
+        "task_page_header",
+        "task_summary_block",
+        "task_sidebar_fields",
+        "status",
+        "priority",
+        "swimlane",
+        "column_on_board",
+        "position",
+        "assignee",
+        "creator",
+        "due_date",
+        "task_description",
+        "comment_text",
+        "comment_author_time",
+        "has_at_least_one_comment",
+        "columns_left_to_right",
+        "backlog_cards",
+        "backlog_task_count",
+        "work_in_progress_task_count",
+        "ready_cards",
+        "done_cards",
+        "seed_tasks_all_in_backlog",
+        "task_sidebar_text",
+        "ref"
+      ],
+      "recorded": {
+        "task_id": "4",
+        "task_title": "fwkb8-n1 Bench Task",
+        "task_page_title": "Bench Board, #4 - fwkb8-n1 Bench Task",
+        "task_page_header": "KB Bench Board",
+        "task_summary_block": "fwkb8-n1 Bench Task\nStatus: open\nPriority: 0\nSwimlane: Default swimlane\nColumn: Work in progress\nPosition: 1\nAssignee: not assigned - Assign to me\nCreator: admin\nDue date: 12/31/2026 10:46\nStarted: Start now\nCreated: 09/15/2026 10:46\nModified: 09/15/2026 10:48\nMoved: 09/15/2026 10:48",
+        "task_sidebar_fields": "Status: open; Priority: 0; Swimlane: Default swimlane; Column: Work in progress; Position: 1; Assignee: not assigned; Creator: admin; Due date: 12/31/2026 10:46; Created: 09/15/2026 10:46; Modified: 09/15/2026 10:48; Moved: 09/15/2026 10:48",
+        "status": "open",
+        "priority": "0",
+        "swimlane": "Default swimlane",
+        "column_on_board": "Work in progress",
+        "position": "1",
+        "assignee": "not assigned",
+        "creator": "admin",
+        "due_date": "12/31/2026 10:46",
+        "task_description": "Bench task for run fwkb8-n1",
+        "comment_text": "Progress note for run fwkb8-n1 — task moved to Work in progress.",
+        "comment_author_time": "admin, created 09/15/2026 10:49, visibility Standard users",
+        "has_at_least_one_comment": "yes (count 1)",
+        "columns_left_to_right": "Backlog, Ready, Work in progress, Done",
+        "backlog_cards": "#1 Seed: triage inbox, #2 Seed: order missing parts, #3 Seed: ship repaired device",
+        "backlog_task_count": "3",
+        "work_in_progress_task_count": "1",
+        "ready_cards": "none",
+        "done_cards": "none",
+        "seed_tasks_all_in_backlog": "yes",
+        "task_sidebar_text": "Status: open\nPriority: 0\nSwimlane: Default swimlane\nColumn: Work in progress\nPosition: 1\nAssignee: not assigned - Assign to me\nCreator: admin\nDue date: 12/31/2026 10:46\nStarted: Start now\nCreated: 09/15/2026 10:46\nModified: 09/15/2026 10:48\nMoved: 09/15/2026 10:48",
+        "ref": "fwkb8-n1"
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwkb8-n1",
+    "created": "2026-09-15T10:50:10.286Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "warnings": [
+    "noop-step: 05-open changed nothing: its instruction asks to confirm, the recording made no state-changing action, and the page already showed 'fwkb8-n1 Bench Task' before it ran. The step may be redundant."
+  ],
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  }
+}

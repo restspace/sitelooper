@@ -1,0 +1,34 @@
+{
+  "arm": "spec",
+  "runid": "fwkb8-spec",
+  "target": "kanboard",
+  "flow": "fwkb8.json",
+  "flowName": "fwkb8",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwkb8-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwkb8-spec-spec-tmp/fwkb8.flow.ts",
+  "specFile": "bench/results/fwkb8-spec-spec-tmp/fwkb8.spec.ts",
+  "wallMs": 26183,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwkb8",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 23103,
+      "error": "Error: 03-change needs {{01-open.column_3_name}}, and this run never published it. The step that publishes 01-open.column_3_name read nothing — look above for its `[sitelooper skip] … read target not found` line, which is where this run diverged. Stopping here instead of passing an empty value into 03-change: blank, a record-scoped locator matches every record and a known slot loses its identity, so the step would do its work to the wrong one. Everything earlier steps did stands; nothing of 03-change has run.",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "logTail": "\nRunning 1 test using 1 worker\n\n[sitelooper step] 01-open\n[sitelooper step] 02-create\n  ✘  1 fwkb8.spec.ts:9:1 › fwkb8 (23.1s)\n\n\n  1) fwkb8.spec.ts:9:1 › fwkb8 › 03-change: On the Kanboard app at http://127.0.0.1:8085/ (already signed in as admin), move the task titled '{{runid}} Bench Task' (task #4 in the 'Bench Board' project) so that it sits in the '{{01-open.column_3_name}}' column of the board. You may use the task page's move/change-column action or drag the card on the board, whichever works. Then verify on the board (or the task page) that the task's column is now '{{01-open.column_3_name}}' (not {{01-open.column_1_name}}) and report the column name you see. Do not move or modify the seed tasks (#1, #2, #3). \n\n    Error: 03-change needs {{01-open.column_3_name}}, and this run never published it. The step that publishes 01-open.column_3_name read nothing — look above for its `[sitelooper skip] … read target not found` line, which is where this run diverged. Stopping here instead of passing an empty value into 03-change: blank, a record-scoped locator matches every record and a known slot loses its identity, so the step would do its work to the wrong one. Everything earlier steps did stands; nothing of 03-change has run.\n\n       at fwkb8.flow.ts:8058\n\n      8056 |   const value = outputs[ref as keyof Outputs];\n      8057 |   if (value === undefined || value === '') {\n    > 8058 |     throw new Error(\n           |           ^\n      8059 |       `${by} needs {{${ref}}}, and this run never published it` +\n      8060 |         (value === '' ? ' (it was published empty)' : '') +\n      8061 |         `. The step that publishes ${ref} read nothing — look above for its` +\n        at need (/home/user/sitelooper/bench/results/fwkb8-spec-spec-tmp/fwkb8.flow.ts:8058:11)\n        at /home/user/sitelooper/bench/results/fwkb8-spec-spec-tmp/fwkb8.flow.ts:10884:111\n        at runFlow (/home/user/sitelooper/bench/results/fwkb8-spec-spec-tmp/fwkb8.flow.ts:10883:5)\n        at /home/user/sitelooper/bench/results/fwkb8-spec-spec-tmp/fwkb8.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: ../../../test-results/fwkb8-fwkb8/error-context.md\n\n  1 failed\n    fwkb8.spec.ts:9:1 › fwkb8 ──────────────────────────────────────────────────────────────────────\n[sitelooper warn] 01-open s_66361f/24: read 'project_name' returned a value the skill itself set/selected ('Bench Board') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper warn] 02-create s_72c3a7/7: read 'due_date_typed_value' returned a value the skill itself set/selected ('12/31/2026') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper warn] 02-create s_72c3a7/11: read 'task_description' returned a value the skill itself set/selected ('Bench task for run fwkb8-spec | ') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper warn] 02-create s_72c3a7/12: read 'task_title' returned a value the skill itself set/selected ('fwkb8-spec Bench Task') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper warn] 02-create s_72c3a7/13: read 'task_description' returned a value the skill itself set/selected ('Bench task for run fwkb8-spec') — confirms the control, not persistence; dropped from the report's confident values\n"
+}
