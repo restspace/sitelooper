@@ -18,6 +18,7 @@ import {
   isErrorPageUrl,
   markersBound,
   preconditionVerdict,
+  selfNavigationStep,
   urlEffectVerdict,
 } from '../src/execution/gates.js';
 import { liveAlerts, liveAlertsObserved } from '../src/execution/observe.js';
@@ -279,6 +280,21 @@ describe('describeUrl', () => {
   });
 });
 
+describe('selfNavigationStep', () => {
+  const steps = (...tools: string[]) => tools.map((tool) => ({ tool }));
+  it('finds the goto a segment opens with, past steps that only look', () => {
+    expect(selfNavigationStep(steps('goto', 'fill'))).toBe(1);
+    // fwrd51 s_b1a0cd, recorded from about:blank
+    expect(selfNavigationStep(steps('wait_for', 'read', 'goto', 'fill'))).toBe(3);
+  });
+  it('is 0 when anything that acts comes before the goto, or there is none', () => {
+    expect(selfNavigationStep(steps('click', 'goto'))).toBe(0);
+    expect(selfNavigationStep(steps('wait_for', 'fill', 'goto'))).toBe(0);
+    expect(selfNavigationStep(steps('read', 'click'))).toBe(0);
+    expect(selfNavigationStep([])).toBe(0);
+  });
+});
+
 describe('preconditionVerdict', () => {
   it('passes a strict match, slots filled', () => {
     expect(preconditionVerdict('http://app.test/items/{{v1}}', 'http://app.test/items/7', { v1: '7' }, null)).toEqual({ warnings: [] });
@@ -302,6 +318,22 @@ describe('preconditionVerdict', () => {
     expect(far.refuse).toBe(
       'not on the page this procedure starts from (expects http://app.test/d/abc1/home, browser is at http://app.test/d/xyz2/home; the url shape is close but the page structure is not — similarity 0.57)',
     );
+  });
+
+  it('checks a query key a strict match took on trust against the fingerprint (fwgr36 04-open)', () => {
+    const pattern = 'http://app.test/d/{{v3}}/board?editview=json-model&from=:id&to=now';
+    const live = 'http://app.test/d/cfy9/board?from=now-6h&to=now';
+    // the recorded JSON editor against the plain dashboard: another view
+    const far = preconditionVerdict(pattern, live, { v3: 'cfy9' }, 0.252);
+    expect(far.refuse).toBe(
+      'not on the page this procedure starts from (expects http://app.test/d/cfy9/board?editview=json-model&from=:id&to=now, browser is at http://app.test/d/cfy9/board?from=now-6h&to=now; the urls differ only in query key(s) editview, and the page structure is not the recorded one — similarity 0.252, so this is another view of the page)',
+    );
+    // the same page drifting a key (grafana's refresh=1m) measures close and passes
+    expect(preconditionVerdict('http://app.test/d/cfy9/board?to=now', 'http://app.test/d/cfy9/board?refresh=1m&to=now', {}, 0.97)).toEqual({ warnings: [] });
+    // nothing measured, or nothing taken on trust: the strict match stands
+    expect(preconditionVerdict(pattern, live, { v3: 'cfy9' }, null)).toEqual({ warnings: [] });
+    expect(preconditionVerdict(pattern, live, { v3: 'cfy9' }, 'unmeasured')).toEqual({ warnings: [] });
+    expect(preconditionVerdict('http://app.test/d/cfy9/board?to=now', 'http://app.test/d/cfy9/board?to=now', {}, 0.1)).toEqual({ warnings: [] });
   });
 
   it('refuses a different page shape however close the fingerprint', () => {

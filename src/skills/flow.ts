@@ -328,7 +328,9 @@ export function buildFlow(
     // replay binds params from the flow rather than re-parsing the wording.
     let params: Record<string, string> | undefined;
     if (g.report?.skill && opts.bind) {
-      const raw = opts.bind(g.report.skill, g.instruction.text);
+      // The template first (it rethreads slots to their origins); else the
+      // params the recording actually replayed the skill with.
+      const raw = opts.bind(g.report.skill, g.instruction.text) ?? g.report.skillParams ?? null;
       if (raw) {
         params = {};
         for (const [k, v] of Object.entries(raw)) {
@@ -913,6 +915,41 @@ export function lintFlowRefs(flow: Flow, publishes: (skillId: string) => string[
         );
       }
     }
+  }
+  return warnings;
+}
+
+/**
+ * The step's declared outputs a run did not report. `url` and its parts are
+ * exempt: the runner binds them from where the browser lands, not the report.
+ */
+export function unreportedOutputs(step: Pick<FlowStep, 'outputs'>, values: Record<string, string>): string[] {
+  return step.outputs.filter((o) => o !== 'url' && !o.startsWith('url.') && !(o in values));
+}
+
+/**
+ * Export-time lint for the outputs a step DECLARES, referenced or not. A step
+ * pinned to a skill that re-publishes none of an output (no labelled read, no
+ * param-derived report value — see publishedOutputs) reports success on a
+ * zero-model replay with that value silently missing: synthesizeReport drops
+ * the recorded literal as stale, by design. fwgr36's 01-open declared
+ * `panel_titles_in_order`; the recording saw the titles in a snapshot, the
+ * chain it compiled into read only `dashboard_name`, and every replay reported
+ * no panel titles at tier A. lintFlowRefs catches this only when a later step
+ * consumes the value — a value reported to the CALLER has no consumer.
+ */
+export function lintUnpublishedOutputs(flow: Flow, publishes: (skillId: string) => string[] | null): string[] {
+  const warnings: string[] = [];
+  for (const step of flow.steps) {
+    if (!step.skill) continue;
+    const pubs = publishes(step.skill);
+    if (pubs === null) continue;
+    const missing = step.outputs.filter((o) => o !== 'url' && !o.startsWith('url.') && !pubs.includes(o.split('#')[0]));
+    if (!missing.length) continue;
+    warnings.push(
+      `${step.id} reports ${missing.join(', ')}, but ${step.skill} re-reads none of ${missing.length === 1 ? 'it' : 'them'} from the page — ` +
+        `a replay without the model will succeed without ${missing.length === 1 ? 'that value' : 'those values'}; re-record so ${missing.length === 1 ? 'it is' : 'they are'} read.`,
+    );
   }
   return warnings;
 }

@@ -1169,6 +1169,17 @@ describe('preconditions, minting and loops', () => {
     const still = emit(specOf([click], { segments: [segment([click], { preconditions: pre })] }));
     expect(still.indexOf('await expect.poll(async () => (await confirmPresence(page, [`${p.v1}`], 2, { whole: true })).presence')).toBeLessThan(still.indexOf("locator('#b')"));
     expect(still).not.toContain('// The identity gate sits AFTER the goto above');
+
+    // Steps that only look come first in a recording from about:blank
+    // (fwrd51: wait_for → read → goto): the segment still navigates itself —
+    // no url gate at entry, and the identity gate right after its goto.
+    const wait: SkillStep = { tool: 'wait_for', args: { target: 'body', state: 'visible' }, locators: {} };
+    const looked = emit(specOf([wait, goto, click], { segments: [segment([wait, goto, click], { preconditions: pre })] }));
+    const lookedPoll = looked.indexOf('await expect.poll(async () => (await confirmPresence(page, [`${p.v1}`], 2, { whole: true })).presence');
+    expect(looked).not.toContain('await preconditionGate(');
+    expect(lookedPoll).toBeGreaterThan(looked.indexOf("await page.goto('http://app.test/items/42');"));
+    expect(lookedPoll).toBeLessThan(looked.indexOf("locator('#b')"));
+    expect(syntaxErrors(looked)).toEqual([]);
   });
 
   it("re-reads a minted url part after the DOM settles, so a second redirect cannot strand it (the odoo signin failure)", () => {

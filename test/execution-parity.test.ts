@@ -720,6 +720,28 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
   }, 120_000);
 
   /**
+   * The same self-navigating procedure, recorded from a blank tab: it looks at
+   * the page (a wait for `body`) before its goto, as fwrd51's s_b1a0cd did.
+   * It still navigates itself — the start url is not asked (the browser is on
+   * `/`, not a record), and identity is asked after the goto, not before it.
+   * The old rule was "step 1 is a goto", and refused it.
+   */
+  it('both runners treat a procedure that looks before its goto as navigating itself', async () => {
+    const slotted = `${origin}/record/{{v1}}`;
+    const look: SkillStep = { tool: 'wait_for', args: { target: '@e0', state: 'visible' }, locators: { target: [{ kind: 'css', selector: 'body' }] } };
+    const skill = recordSkill(slotted);
+    skill.steps = [look, ...skill.steps];
+    const spec = recordFlow(slotted);
+    spec.steps[0].segments[0].steps = [look, ...spec.steps[0].segments[0].steps];
+    const { replay, emitted, replayLog, emittedLog } = await bothOf(skill, spec, { v1: 'rec-77' });
+
+    expect(replay.ok, replay.reason ?? '').toBe(true);
+    expect(emitted.ok, emitted.reason ?? '').toBe(true);
+    expect(replayLog).toEqual(['visit:rec-77', 'mark:rec-77']);
+    expect(emittedLog).toEqual(['visit:rec-77', 'mark:rec-77']);
+  }, 120_000);
+
+  /**
    * C06. The NEIGHBOURING record: this run is about rec-7, and the page it
    * lands on shows rec-70.
    *
@@ -1224,6 +1246,35 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       const replaySimilarity = Number(refused.exec(replay.reason!)![1]);
       expect(Number(refused.exec(emitted.reason!)![1])).toBe(replaySimilarity);
       expect(replaySimilarity).toBeLessThan(SOFT_MATCH_MIN_SIMILARITY);
+    }, 180_000);
+
+    /**
+     * G05b. A STRICT url match that only holds because the query rule lets a
+     * one-sided key pass: the recording started in another view of the page
+     * (`?view=json`, as fwgr36's s_c0cdad started in grafana's
+     * `editview=json-model`) and its fingerprint is of a different template.
+     * The key is taken on trust only while the page measures close; here it
+     * does not, so both refuse before Mark and name the key.
+     */
+    it('both runners refuse a strict url match that holds only by a one-sided query key when the page structure differs', async () => {
+      reset(0);
+      const recorded = await fingerprintOf(`${origin}/project/open`);
+      const { skill, spec } = fingerprintedAt(`${origin}/record/rec-1?view=json`, recorded, [MARK]);
+      reset(0);
+      const replay = await replayAt(skill, `${origin}/record/rec-1`);
+      const replayLog = [...fx.log];
+      reset(0);
+      const emitted = await emittedAt(spec, `${origin}/record/rec-1`);
+      const emittedLog = [...fx.log];
+
+      expect(replayLog, 'replay must not act on another view of the page').toEqual(['visit:rec-1']);
+      expect(emittedLog, 'the artifact must not act on another view of the page').toEqual(['visit:rec-1']);
+      expect(replay.ok).toBe(false);
+      expect(emitted.ok).toBe(false);
+      const refused = /the urls differ only in query key\(s\) view, and the page structure is not the recorded one — similarity (\d(?:\.\d+)?), so this is another view of the page\)/;
+      expect(replay.reason).toMatch(refused);
+      expect(emitted.reason).toMatch(refused);
+      expect(Number(refused.exec(emitted.reason!)![1])).toBe(Number(refused.exec(replay.reason!)![1]));
     }, 180_000);
   });
 

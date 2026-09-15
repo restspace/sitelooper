@@ -1,7 +1,7 @@
 import { changedCreation, isMutatingAction, isReadAction, runStepLifecycle, type StepActionResult } from '../execution/lifecycle.js';
 import { outcomeLabel, outcomeOfError, type ActionOutcome } from '../execution/browser.js';
 import type { ActionExpectation } from '../execution/action.js';
-import { alertVerdict, errorPageVerdict, isErrorPageUrl, markersBound, preconditionVerdict, urlEffectVerdict } from '../execution/gates.js';
+import { SOFT_MATCH_MIN_SIMILARITY, alertVerdict, errorPageVerdict, isErrorPageUrl, markersBound, preconditionVerdict, selfNavigationStep, urlEffectVerdict } from '../execution/gates.js';
 import { LOOP_SHRINK_WAIT_MS, pageReadable, runFoldedLoop, type LoopPass } from '../execution/loop.js';
 import type { Locator, Page } from 'playwright-core';
 import { clip, identityRe, identitySource } from '../shared/text.js';
@@ -285,12 +285,15 @@ export async function replaySkill(
   }
 
   const startUrl = page.url();
-  // A procedure whose FIRST step navigates (goto) carries its own
-  // precondition: wherever the browser is, step 1 puts it on the recorded
-  // page. Refusing it by start-url would make it permanently unreplayable on
-  // apps that redirect at load (the recorded start url is a race between the
-  // capture and the redirect) — the flow6 head step failed exactly this way.
-  const navigatesItself = skill.steps[0]?.tool === 'goto';
+  // A procedure that opens by navigating (a goto, past any steps that only
+  // look) carries its own precondition: wherever the browser is, that goto
+  // puts it on the recorded page. Refusing it by start-url would make it
+  // permanently unreplayable on apps that redirect at load (the recorded start
+  // url is a race between the capture and the redirect) — the flow6 head step
+  // failed exactly this way, and fwrd51's `wait_for` → `read` → `goto` did too.
+  // The 1-based step of that goto, 0 when the procedure does not open with one.
+  const navigatesAt = selfNavigationStep(skill.steps);
+  const navigatesItself = navigatesAt > 0;
   if (skill.preconditions.fingerprint) {
     res.similarity = cosine(skill.preconditions.fingerprint, (await fingerprintPage(page)) ?? undefined);
   }
@@ -344,7 +347,13 @@ export async function replaySkill(
         return false;
       }
       res.refused = true;
-      res.wrongRecord = `the page at ${urlPattern(page.url())} does not show ${JSON.stringify(clip(want, 60))} — it matches this procedure's page template but is a different record — nothing was run`;
+      // "A different record" is the gate's reading when the page is the
+      // recorded template. When the page's structure measured far from the
+      // recording's, that reading is not established: say what was measured.
+      const unlike = typeof res.similarity === 'number' && res.similarity < SOFT_MATCH_MIN_SIMILARITY;
+      res.wrongRecord = unlike
+        ? `the page at ${urlPattern(page.url())} does not show ${JSON.stringify(clip(want, 60))}, and its structure is not the recorded page's (similarity ${res.similarity}) — a different view or page, not only a different record — nothing was run`
+        : `the page at ${urlPattern(page.url())} does not show ${JSON.stringify(clip(want, 60))} — it matches this procedure's page template but is a different record — nothing was run`;
       res.reason = res.wrongRecord;
       return false;
     }
@@ -903,7 +912,7 @@ export async function replaySkill(
     // now run, so ask whether it landed on THIS run's record before doing any
     // work on it. Refusing here costs a recovery; not refusing costs the work
     // being done to the wrong record and reported as success.
-    if (navigatesItself && n === 1 && skill.preconditions.requireText?.length && !(await checkIdentity())) {
+    if (navigatesItself && n === navigatesAt && skill.preconditions.requireText?.length && !(await checkIdentity())) {
       // NOT `refused`. Refused means "nothing ran, free to try the next
       // candidate" — and the goto has already moved the browser, so trying
       // another candidate would run it from a page nobody expects. This is a

@@ -1,6 +1,7 @@
 import { isMutatingAction, isReadAction } from '../execution/lifecycle.js';
 import { DEFAULT_BROWSER_PROFILE, isNavigatingAction, type BrowserProfile } from '../execution/browser.js';
 import { setsSomething } from '../execution/echo.js';
+import { selfNavigationStep } from '../execution/gates.js';
 /**
  * The IR as `@playwright/test` source (Tier 2: no sitelooper runtime).
  *
@@ -2348,14 +2349,14 @@ function satisfiedGuard(step: SpecStep, ctx: Ctx): string[] {
 }
 
 /**
- * A segment whose FIRST step navigates carries its own precondition: wherever
- * the browser is, step 1 puts it on the recorded page. Replay's
- * `navigatesItself` (src/skills/replay.ts) is this same one line, and the two
- * must stay the same line — a rule only one runner applies is the class of
- * defect the parity harness exists to catch.
+ * A segment that opens by navigating (past steps that only look) carries its
+ * own precondition: wherever the browser is, its goto puts it on the recorded
+ * page. Replay asks the same shared `selfNavigationStep`
+ * (src/execution/gates.ts) — a rule only one runner applies is the class of
+ * defect the parity harness exists to catch. The 1-based goto index, 0 if none.
  */
-function navigatesItself(segment: SpecSegment): boolean {
-  return segment.steps[0]?.tool === 'goto';
+function navigatesItself(segment: SpecSegment): number {
+  return selfNavigationStep(segment.steps);
 }
 
 /** The segment's identity gate: one poll per bound marker, a comment per unbound one. */
@@ -2429,13 +2430,14 @@ function emitSegment(segment: SpecSegment, ctx: Ctx): string[] {
   const identity = identityChecks(segment, ctx);
   // Where the gate goes, not whether: a self-navigating segment is checked
   // AFTER its own goto, never before it and never not at all.
-  const defer = identity.length > 0 && navigatesItself(segment);
+  const navAt = navigatesItself(segment);
+  const defer = identity.length > 0 && navAt > 0;
   if (!defer) out.push(...identity);
   for (const [i, step] of segment.steps.entries()) {
     out.push('');
     const lines = step.tool === 'loop' ? emitLoop(step, segment, i + 1, ctx) : emitSkillStep(step, segment, i + 1, ctx);
     out.push(...lines);
-    if (defer && i === 0) {
+    if (defer && i === navAt - 1) {
       out.push(
         '',
         '// The identity gate sits AFTER the goto above, and is not skipped.',
@@ -2445,7 +2447,7 @@ function emitSegment(segment: SpecSegment, ctx: Ctx): string[] {
         "// replayed a goto to another run's record and did this run's work on it,",
         '// published no values and reported success — the guard built to stop',
         '// exactly that was off for the procedures most likely to need it. Replay',
-        '// defers it to this same place (navigatesItself && n === 1,',
+        '// defers it to this same place (n === navigatesItself,',
         '// src/skills/replay.ts). Failing here is a partial stop rather than a',
         '// refusal: the goto has already moved the browser, so there is no',
         '// untouched page left to try another candidate from.',

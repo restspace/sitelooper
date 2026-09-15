@@ -13,7 +13,8 @@
  *   obj 6  (report-only: the task's numeric id)         checked against finalText
  *
  * Report-only objectives are checked against the run's recorded finalText when
- * the result file is present, and reported UNVERIFIABLE when it is not.
+ * the result file is present, else a flow replay's flowrun summaries and
+ * values, and reported UNVERIFIABLE when neither is.
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -72,6 +73,20 @@ for (const runid of runids) {
       if (typeof r.finalText === 'string') finalText = r.finalText
     } catch {
       /* unreadable result file — treated as absent */
+    }
+  }
+  // Flow replays (`sitelooper run`, no orchestrator) have no harness result
+  // file; their reporting lives in the flowrun's per-step summaries and
+  // read-back values — the same claims a finalText would carry (as
+  // verify-grafana.mjs checks them).
+  if (finalText === null) {
+    try {
+      const fr = JSON.parse(fs.readFileSync(path.join(OUT, `${runid}-flowrun.json`), 'utf8'))
+      finalText = fr.steps
+        .map((s) => `${s.summary ?? ''}\n${Object.values(s.values ?? {}).join('\n')}`)
+        .join('\n')
+    } catch {
+      /* no flowrun either — stays UNVERIFIABLE */
     }
   }
 

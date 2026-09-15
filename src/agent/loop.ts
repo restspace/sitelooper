@@ -139,6 +139,14 @@ export interface InstructionResult {
 export interface SkillRecord {
   listed: string[];
   invoked?: string;
+  /**
+   * The params `invoked` actually ran with. Export binds a flow step's params
+   * from the skill's template, which only works while the instruction keeps
+   * the wording the skill was learned from: fwrd51's "add a SECOND part"
+   * replayed s_380adc with the agent's own params, the template bound nothing,
+   * and the flow pinned the skill with no params at all.
+   */
+  invokedParams?: Record<string, string>;
   stepsReplayed: number;
   stepsTotal: number;
   /** The replay stopped part-way and the agent carried on. */
@@ -448,6 +456,7 @@ export async function runInstruction(
         summary: report.summary,
         values,
         ...(skill.invoked ? { skill: skill.invoked } : {}),
+        ...(skill.invoked && !skill.refused && skill.invokedParams && Object.keys(skill.invokedParams).length ? { skillParams: skill.invokedParams } : {}),
         ...(skill.tier ? { tier: skill.tier } : {}),
       });
     }
@@ -1032,6 +1041,8 @@ function accountActions(skill: SkillRecord, name: string, args: Record<string, u
     if (!skill.invoked) {
       skill.tier = 'B';
       skill.invoked = r.skill;
+      const raw = args.params && typeof args.params === 'object' && !Array.isArray(args.params) ? (args.params as Record<string, unknown>) : {};
+      skill.invokedParams = Object.fromEntries(Object.entries(raw).map(([k, v]) => [k, String(v ?? '')]));
       skill.stepsReplayed = r.stepsRun;
       skill.stepsTotal = r.stepsTotal;
       skill.refused = Boolean(r.refused);

@@ -15,7 +15,7 @@
  * daemon, "<stepId> <segmentId>/<n>" in the artifact).
  */
 import { clip } from './text.js';
-import { CREDENTIAL_KEY, fillParams, serializeShape, softUrlMatch, urlMatches, urlShapeOf, type UrlSegDiff } from './url.js';
+import { CREDENTIAL_KEY, fillParams, oneSidedQueryKeys, serializeShape, softUrlMatch, urlMatches, urlShapeOf, type UrlSegDiff } from './url.js';
 
 /**
  * How a LIVE url reads in a verdict's message. The message travels: into a
@@ -239,13 +239,48 @@ export type FingerprintSimilarity = number | null | 'unmeasured';
  * A segment whose first step navigates carries its own precondition and must
  * not be asked this at all — that is the caller's `navigatesItself` rule.
  */
+/** Tools that look at the page and never take the browser anywhere. */
+const LOOK_ONLY_TOOLS = new Set(['wait_for', 'read', 'read_all', 'screenshot', 'snapshot', 'scroll_into_view', 'hover']);
+
+/**
+ * The 1-based index of the goto a segment opens with, past any leading steps
+ * that only look — 0 when it does not open by navigating. Such a segment
+ * carries its own precondition (its goto puts the browser on the recorded
+ * page), so the start url is not asked, and its identity gate is asked right
+ * after that goto. "Step 1 is a goto" was the old rule: fwrd51 recorded
+ * `wait_for body` → `read url` → `goto` from about:blank, and the start url
+ * refused it on the very page the goto would have left.
+ */
+export function selfNavigationStep(steps: readonly { tool: string }[]): number {
+  for (const [i, step] of steps.entries()) {
+    if (step.tool === 'goto') return i + 1;
+    if (!LOOK_ONLY_TOOLS.has(step.tool)) return 0;
+  }
+  return 0;
+}
+
 export function preconditionVerdict(
   pattern: string,
   url: string,
   params: Record<string, string>,
   similarity: FingerprintSimilarity,
 ): PreconditionVerdict {
-  if (urlMatches(pattern, url, params)) return { warnings: [] };
+  if (urlMatches(pattern, url, params)) {
+    // A strict match that let a one-sided query key pass took that key on
+    // trust. When the caller measured the page, that trust is checked like a
+    // soft match's: `?editview=json-model` against the plain dashboard is the
+    // same url by the query rule and a different view by the page (fwgr36
+    // 04-open measured 0.252), and the identity gate then refused it as a
+    // "different record". A same-page drift of `refresh=1m` measures close.
+    const trusted = oneSidedQueryKeys(fillParams(pattern, params), url);
+    if (trusted.length && typeof similarity === 'number' && similarity < SOFT_MATCH_MIN_SIMILARITY) {
+      return {
+        warnings: [],
+        refuse: `not on the page this procedure starts from (expects ${fillParams(pattern, params)}, browser is at ${describeUrl(url, pattern)}; the urls differ only in query key(s) ${trusted.join(', ')}, and the page structure is not the recorded one — similarity ${similarity}, so this is another view of the page)`,
+      };
+    }
+    return { warnings: [] };
+  }
   const soft = softUrlMatch(pattern, url, params);
   const structurallySame = similarity === null || (typeof similarity === 'number' && similarity >= SOFT_MATCH_MIN_SIMILARITY);
   if (!soft || !structurallySame) {

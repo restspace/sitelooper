@@ -5,7 +5,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { RecordedEntry } from '../src/daemon/recorder.js';
 import {
   ignorableRefs,
-  consumedReportedOutputs, consumedUrlOutputs, buildFlow, lintFlowRefs, noteOutputEvidence, recoveryRoute, resolveInstruction, resolveStepParams, softResolveInstruction, unbankedMutations, urlOutputs, varyingValues, type Flow, type FlowStep } from '../src/skills/flow.js';
+  consumedReportedOutputs, consumedUrlOutputs, buildFlow, lintFlowRefs, lintUnpublishedOutputs, noteOutputEvidence, recoveryRoute, resolveInstruction, resolveStepParams, softResolveInstruction, unbankedMutations, unreportedOutputs, urlOutputs, varyingValues, type Flow, type FlowStep } from '../src/skills/flow.js';
 import { bindSkill, publishedOutputs, synthesizeReport } from '../src/skills/learn.js';
 import type { Skill } from '../src/skills/store.js';
 import { compileSkill } from '../src/skills/compile.js';
@@ -73,6 +73,15 @@ describe('buildFlow', () => {
     expect(flow.steps[0].params).toEqual({ v1: '{{runid}} RD Bench Ticket' });
     // add: name carries the runid ref; cost/markup are constants kept literal
     expect(flow.steps[1].params).toEqual({ v1: '{{runid}} RD Part A', v2: '100', v3: '25' });
+  });
+
+  it('falls back to the params the recording replayed a skill with when its template binds nothing (fwrd51 03-add)', () => {
+    const entries = recording();
+    // The agent replayed s_addpart itself, under wording the template does not match.
+    (entries[6] as { skillParams?: Record<string, string> }).skillParams = { v1: 'fr1 RD Part A', v2: '100', v3: 'RD-1015' };
+    const flow = buildFlow(entries, { name: 'f', origin: ORIGIN, startUrl: `${ORIGIN}/`, vars: { runid: 'fr1' }, session: 's', bind: () => null })!;
+    expect(flow.steps[0].params).toBeUndefined();
+    expect(flow.steps[1].params).toEqual({ v1: '{{runid}} RD Part A', v2: '100', v3: `{{${flow.steps[0].id}.ref}}` });
   });
 
   it('drops instructions that did not end in success', () => {
@@ -337,6 +346,37 @@ describe('resume-merge (escalation continuations)', () => {
     // the unrelated blocked group is dropped; the resume group stands alone and succeeds
     expect(flow.steps).toHaveLength(2);
     expect(flow.steps[0].skill).toBe('s_create');
+  });
+});
+
+describe('lintUnpublishedOutputs / unreportedOutputs (fwgr36 01-open)', () => {
+  const flow: Flow = {
+    name: 'f',
+    origin: ORIGIN,
+    startUrl: `${ORIGIN}/`,
+    vars: [],
+    steps: [
+      { id: '01-open', instruction: 'Open Service health; report its panel titles.', skill: 's_open', outputs: ['dashboard_name', 'panel_titles_in_order', 'url'], recorded: {} },
+      { id: '02-note', instruction: 'Just look.', outputs: ['note'], recorded: {} },
+    ],
+    provenance: { session: 's', created: '2026-09-15T00:00:00Z' },
+  };
+
+  it('warns about a declared output the pinned skill cannot re-read, unreferenced or not', () => {
+    const warnings = lintUnpublishedOutputs(flow, () => ['dashboard_name']);
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain('01-open reports panel_titles_in_order, but s_open re-reads none of it');
+    expect(warnings[0]).not.toContain('url');
+  });
+
+  it('is quiet when everything is re-published, or the skill is not in the store', () => {
+    expect(lintUnpublishedOutputs(flow, () => ['dashboard_name', 'panel_titles_in_order'])).toEqual([]);
+    expect(lintUnpublishedOutputs(flow, () => null)).toEqual([]);
+  });
+
+  it('names what a run left out, ignoring url parts', () => {
+    expect(unreportedOutputs(flow.steps[0], { dashboard_name: 'Service Health' })).toEqual(['panel_titles_in_order']);
+    expect(unreportedOutputs(flow.steps[0], { dashboard_name: 'x', panel_titles_in_order: 'a, b' })).toEqual([]);
   });
 });
 

@@ -307,6 +307,8 @@ export interface RecordedReport {
   values: Record<string, string>;
   /** The skill this instruction compiled into, merged into, or fully replayed (learning mode). */
   skill?: string;
+  /** The params `skill` replayed with, when this instruction replayed it (export's fallback when the template binds nothing). */
+  skillParams?: Record<string, string>;
   /**
    * Renames the post-session relabel pass applied to this report's values,
    * old name -> new name. The durable trace of the pass (the daemon's stderr

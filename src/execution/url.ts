@@ -225,6 +225,24 @@ export function urlDiff(pattern: string, url: string, boundKeys: ReadonlySet<str
   return diffs;
 }
 
+/**
+ * The query keys only one side of a match carries, which urlDiff lets pass
+ * (see its note): a literal-valued key the pattern names and the live url
+ * lacks, and a key the live url has that the pattern does not name. Wildcard
+ * pattern keys are app-minted state and not listed. These are the keys a
+ * strict match took on trust — `editview=json-model` is one of them, and it is
+ * a different VIEW of the dashboard, not the same page (fwgr36 04-open).
+ */
+export function oneSidedQueryKeys(pattern: string, url: string): string[] {
+  const p = urlShapeOf(pattern);
+  const l = urlShapeOf(url);
+  if (!p || !l) return [];
+  const out: string[] = [];
+  for (const [key, val] of p.query) if (!l.query.has(key) && !isWildcardSeg(val)) out.push(key);
+  for (const key of l.query.keys()) if (!p.query.has(key)) out.push(key);
+  return out;
+}
+
 /** Whether a live url matches a stored pattern exactly (wildcards aside). */
 export function urlMatches(pattern: string, url: string, params: Record<string, string> = {}): boolean {
   return urlDiff(fillParams(pattern, params), url, boundQueryKeys(pattern, params))?.length === 0;

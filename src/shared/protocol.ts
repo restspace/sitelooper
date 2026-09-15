@@ -101,6 +101,8 @@ export interface FlowStepResult {
   turns?: number;
   repinned?: string;
   repinParams?: Record<string, string>;
+  /** Declared outputs a successful step did not report (a zero-model replay drops what it could not re-read). */
+  unreported?: string[];
   reason?: string;
 }
 

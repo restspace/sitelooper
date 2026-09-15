@@ -8,7 +8,7 @@ import { urlPattern as compiledUrlPattern, dropDeadReadLocators, fillParams, str
 import type { DriftTicket } from '../skills/repair.js';
 import type { Page } from 'playwright-core';
 import { agentGesturesOutsideReplay, bindSkill, canAdoptPin, decideRepin, learnFromInstruction, matchTemplate, publishedOutputs, selectCandidates, synthesizeReport } from '../skills/learn.js';
-import { buildFlow, consumedReportedOutputs, consumedUrlOutputs, ignorableRefs, jsonLeaves, lintFlowRefs, listFlows, loadFlow, loadFlowFile, lookupOutput, mutatingIntent, noteOutputEvidence, recoveryRoute, remapParams, resolveInstruction, resolveStepParams, softResolveInstruction, saveFlow, staleInstructionIds, unbankedMutations, urlOutputs, varyingValues, type RunSpecific } from '../skills/flow.js';
+import { buildFlow, consumedReportedOutputs, consumedUrlOutputs, ignorableRefs, jsonLeaves, lintFlowRefs, lintUnpublishedOutputs, listFlows, loadFlow, loadFlowFile, lookupOutput, mutatingIntent, noteOutputEvidence, recoveryRoute, remapParams, resolveInstruction, resolveStepParams, softResolveInstruction, saveFlow, staleInstructionIds, unbankedMutations, unreportedOutputs, urlOutputs, varyingValues, type RunSpecific } from '../skills/flow.js';
 import { applyRelabelToEntries, applyRelabelToSkills, relabelCases, requestRelabelPlan } from '../skills/relabel.js';
 import { goalSatisfied, renderReplay } from '../skills/replay.js';
 import { drainDrift, llmProposer, recordCandidateEvidence } from '../skills/repair.js';
@@ -846,7 +846,7 @@ ${describeLeaks(leaks.slice(0, 6))}`);
     // about any {{step.output}} only model recovery could re-observe. A step's
     // pin may be one segment of a chain whose LATER segment does the read, so
     // publishes() unions the whole chain.
-    const warnings = lintFlowRefs(flow, publishedOutputsOf);
+    const warnings = [...lintFlowRefs(flow, publishedOutputsOf), ...lintUnpublishedOutputs(flow, publishedOutputsOf)];
     // Phase 2 of PLAN-provenance: report anything of this run's that survived
     // into the flow. WARN for now — the ledger's coverage is what is being
     // measured, and a false alarm must not block an export.
@@ -1435,7 +1435,13 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
         turns: result.turns,
         ...(repinned ? { repinned } : {}),
         ...(repinParams ? { repinParams } : {}),
+        // A success missing what the step declares it reports: a zero-model
+        // replay drops a recorded value it could not re-read (fwgr36 01-open).
+        ...(result.report.status === 'success' && unreportedOutputs(step, values).length ? { unreported: unreportedOutputs(step, values) } : {}),
       });
+      if (result.report.status === 'success' && unreportedOutputs(step, values).length) {
+        opts.progress(`[flow ${flow.name}] ${step.id}: succeeded without reporting ${unreportedOutputs(step, values).join(', ')}`);
+      }
       if (result.report.status !== 'success') {
         // An adopted step does not halt the flow: the recording's own path
         // continued from this instruction's partial state (that continuation
@@ -1737,6 +1743,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       summary: report.summary,
       values: Object.fromEntries(Object.entries(report.evidence?.values ?? {}).map(([k, v]) => [k, String(v)])),
       skill: match.skill.id,
+      ...(Object.keys(match.params).length ? { skillParams: match.params } : {}),
       tier: 'A',
     });
     return {
