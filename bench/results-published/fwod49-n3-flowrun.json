@@ -1,0 +1,190 @@
+{
+  "flow": "fwod49",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_058f98 (3 steps).",
+      "values": {
+        "contact_reference": "fwod49-n3",
+        "contact_city": "Benchville",
+        "saved_record_url": "http://127.0.0.1:8069/web#cids=1&menu_id=109&action=156&model=res.partner&view_type=form&id=46",
+        "contact_name": "fwod49-n3 Bench Customer"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_1cf8ec; observed contact_reference=fwod49-n3, order_line_count=1, quotation_url=http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form, quotation_reference=S00023, customer=fwod49-n3 Bench Customer, quantity=3.00, unit_price=295.00, total=£ 1,062.00.",
+      "values": {
+        "contact_reference": "fwod49-n3",
+        "order_line_count": "1",
+        "quotation_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form",
+        "quotation_reference": "S00023",
+        "customer": "fwod49-n3 Bench Customer",
+        "quantity": "3.00",
+        "unit_price": "295.00",
+        "total": "£ 1,062.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "18/18",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "product_name"
+      ]
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_f92ff3; observed line_2_quantity=2.00, line_2_subtotal=£ 280.00, line_1_quantity=3.00, untaxed_amount=£ 1,165.00, tax_20=£ 233.00, total=£ 1,398.00, quotation_reference=S00023, customer=fwod49-n3 Bench Customer.",
+      "values": {
+        "line_2_quantity": "2.00",
+        "line_2_subtotal": "£ 280.00",
+        "line_1_quantity": "3.00",
+        "untaxed_amount": "£ 1,165.00",
+        "tax_20": "£ 233.00",
+        "total": "£ 1,398.00",
+        "quotation_reference": "S00023",
+        "customer": "fwod49-n3 Bench Customer"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0,
+      "repinned": "s_f92ff3",
+      "repinParams": {
+        "v1": "{{02-open.quotation_reference}}",
+        "v2": "{{runid}}"
+      },
+      "unreported": [
+        "line_1_product",
+        "line_1_unit_price",
+        "line_1_subtotal",
+        "line_2_product",
+        "line_2_unit_price",
+        "product_reference"
+      ]
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Opened draft quotation S00023 (customer 'fwod49-n3 Bench Customer'). The replayed procedure s_32409f failed on its first step (a dblclick that hit the wrong element), so I set line 1's Quantity myself: filled the first line's Quantity field with 5 and committed it (Tab), which updated the line subtotal to £1,475.00, then clicked the form's Save icon (.o_form_button_save — the header Save button has no accessible name, so role=button[name=\"Save\"] timed out) and reloaded the page to confirm the change persisted. Line 1 is '[FURN_6666] Acoustic Bloc Screens' qty 5.00 @ 295.00 = £1,475.00; line 2 '[E-COM11] Cabinet with Doors' is unchanged at qty 2.00. Untaxed Amount now shows £ 1,755.00 (TAX 20% £ 351.00, Total £ 2,106.00) and the statusbar still reads 'Quotation' (draft).",
+      "values": {
+        "quotation_reference": "S00023",
+        "customer_name": "fwod49-n3 Bench Customer",
+        "line_1_product": "[FURN_6666] Acoustic Bloc Screens",
+        "line_1_quantity": "5.00",
+        "line_1_unit_price": "295.00",
+        "line_1_subtotal": "£ 1,475.00",
+        "line_2_product": "[E-COM11] Cabinet with Doors",
+        "line_2_quantity": "2.00",
+        "untaxed_amount": "£ 1,755.00",
+        "tax_20": "£ 351.00",
+        "total": "£ 2,106.00",
+        "status_bar": "Quotation (draft)",
+        "breadcrumb_dropdown_button_class": "dropdown-toggle d-print-none btn p-0 ms-1 lh-sm border-0",
+        "untaxed_amount_row": "Untaxed Amount\t£ 1,755.00",
+        "button": "Quotation",
+        "ref": "fwod49-n3",
+        "ref_2": "s_32409f",
+        "ref_3": "FURN_6666"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_32409f stopped at step 1 — after step 1 the page did not show \"- combobox \\\"Type to find a product...\\\": {{02-open.product_name}}\" / \"- textbox \\\"\\\": {{02-open.product_name}}\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "replayed": "0/12",
+      "repaired": false,
+      "turns": 23,
+      "unreported": [
+        "line_2_unit_price",
+        "line_2_subtotal"
+      ]
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Opened draft quotation S00023 (customer 'fwod49-n3 Bench Customer', lines: Acoustic Bloc Screens qty 5 and Cabinet with Doors qty 2, Untaxed £1,755.00) and clicked the \"Confirm\" button. No confirmation dialog or wizard appeared. Read from the page after confirming: (a) the record reference/name shown in the form heading is S00023, and (b) the status bar now shows \"Sales Order\" as the current (checked) state, with \"Quotation\" and \"Quotation Sent\" unchecked.",
+      "values": {
+        "contact_reference": "fwod49-n3",
+        "order_reference": "S00023",
+        "customer": "fwod49-n3 Bench Customer",
+        "status_bar": "Sales Order"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "4/4",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_98383d; observed statusbar_states=Cancelled (checked/current); Sales Order, Quotation Sent, Quotation (all unchecked, disabled), contact_reference=fwod49-n3, status_after_cancel=Cancelled, order_reference=S00023, customer=fwod49-n3 Bench Customer.",
+      "values": {
+        "statusbar_states": "Cancelled (checked/current); Sales Order, Quotation Sent, Quotation (all unchecked, disabled)",
+        "contact_reference": "fwod49-n3",
+        "status_after_cancel": "Cancelled",
+        "order_reference": "S00023",
+        "customer": "fwod49-n3 Bench Customer"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 6,
+  "total": 6,
+  "repinned": 1,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwod49",
+      "step": "04-open",
+      "skill": "s_32409f",
+      "similarity": 0.993,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_32409f stopped at step 1 — after step 1 the page did not show \"- combobox \\\"Type to find a product...\\\": {{02-open.product_name}}\" / \"- textbox \\\"\\\": {{02-open.product_name}}\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "reason": "after step 1 the page did not show \"- combobox \\\"Type to find a product...\\\": {{02-open.product_name}}\" / \"- textbox \\\"\\\": {{02-open.product_name}}\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=23"
+    }
+  ],
+  "wallMs": 181655,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 348913,
+    "completionTokens": 7126,
+    "cachedTokens": 320896
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 348913,
+      "completionTokens": 7126,
+      "cachedTokens": 320896
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

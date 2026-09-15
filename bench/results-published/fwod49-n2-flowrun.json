@@ -1,0 +1,199 @@
+{
+  "flow": "fwod49",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_058f98 (3 steps).",
+      "values": {
+        "contact_reference": "fwod49-n2",
+        "contact_city": "Benchville",
+        "saved_record_url": "http://127.0.0.1:8069/web#cids=1&menu_id=109&action=156&model=res.partner&view_type=form&id=45",
+        "contact_name": "fwod49-n2 Bench Customer"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_1cf8ec; observed contact_reference=fwod49-n2, order_line_count=1, quotation_url=http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form, quotation_reference=S00022, customer=fwod49-n2 Bench Customer, quantity=3.00, unit_price=295.00, total=£ 1,062.00.",
+      "values": {
+        "contact_reference": "fwod49-n2",
+        "order_line_count": "1",
+        "quotation_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form",
+        "quotation_reference": "S00022",
+        "customer": "fwod49-n2 Bench Customer",
+        "quantity": "3.00",
+        "unit_price": "295.00",
+        "total": "£ 1,062.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "18/18",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "product_name"
+      ]
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "The replay had already opened draft quotation S00022 and started a second order line, so I continued from there: I selected [E-COM11] Cabinet with Doors from the product autocomplete dropdown, set the line's Quantity to 2, left the first line ([FURN_6666] Acoustic Bloc Screens, qty 3) untouched, and clicked Save. The saved form (still in draft, status bar \"Quotation\") now shows two lines and an Untaxed Amount of £1,165.00, all values read from the live page after saving.",
+      "values": {
+        "line_2_product": "[E-COM11] Cabinet with Doors",
+        "line_2_quantity": "2.00",
+        "line_2_unit_price": "£ 140.00",
+        "line_2_subtotal": "£ 280.00",
+        "line_1_product": "[FURN_6666] Acoustic Bloc Screens",
+        "line_1_quantity": "3.00",
+        "line_1_unit_price": "£ 295.00",
+        "untaxed_amount": "£ 1,165.00",
+        "tax_20": "£ 233.00",
+        "total": "£ 1,398.00",
+        "quotation_reference": "S00022",
+        "customer": "fwod49-n2 Bench Customer",
+        "status": "Quotation (draft)",
+        "ref": "FURN_6666"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_78eaaf stopped at step 2 — after step 2 the page did not show \"- option \\\"{{02-open.product_name}}\\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "replayed": "1/14",
+      "repaired": false,
+      "turns": 13,
+      "unreported": [
+        "line_1_subtotal",
+        "product_reference"
+      ]
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "The replayed procedure had only double-clicked the first line's Quantity cell, so I continued from there: I set line 1's Quantity to 5 (its product [FURN_6666] Acoustic Bloc Screens and unit price 295.00 unchanged), left line 2 ([E-COM11] Cabinet with Doors qty 2, unit 140.00) untouched, and saved. I verified persistence by reloading the form from the URL — the saved record (still in draft, status bar \"Quotation\") shows line 1 qty 5.00 with subtotal £1,475.00, line 2 qty 2.00 with subtotal £280.00, and Untaxed Amount £1,755.00 (Tax 20% £351.00, Total £2,106.00). All values were read from the live page after the reload.",
+      "values": {
+        "quotation_reference": "S00022",
+        "customer": "fwod49-n2 Bench Customer",
+        "status_bar": "Quotation (draft)",
+        "line_1_product": "[FURN_6666] Acoustic Bloc Screens",
+        "line_1_quantity": "5.00",
+        "line_1_unit_price": "295.00",
+        "line_1_subtotal": "£ 1,475.00",
+        "line_2_product": "[E-COM11] Cabinet with Doors",
+        "line_2_quantity": "2.00",
+        "line_2_unit_price": "140.00",
+        "line_2_subtotal": "£ 280.00",
+        "untaxed_amount": "£ 1,755.00",
+        "tax_20": "£ 351.00",
+        "total": "£ 2,106.00",
+        "line_1_row": "[FURN_6666] Acoustic Bloc Screens\t\n[FURN_6666] Acoustic Bloc Screens\n\t5.00\t295.00\t\n20%\n\t£ 1,475.00",
+        "line_2_row": "[E-COM11] Cabinet with Doors\t\n[E-COM11] Cabinet with Doors\n\t2.00\t140.00\t\n20%\n\t£ 280.00",
+        "status_bar_2": "Send by Email\nConfirm\nPreview\nCancel\nSales Order\nQuotation Sent\nQuotation",
+        "untaxed_amount_2": "Untaxed Amount\t£ 1,755.00",
+        "total_2": "Total\t£ 2,106.00",
+        "ref": "FURN_6666"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_32409f stopped at step 1 — after step 1 the page did not show \"- combobox \\\"Type to find a product...\\\": {{02-open.product_name}}\" / \"- textbox \\\"\\\": {{02-open.product_name}}\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "replayed": "0/12",
+      "repaired": false,
+      "turns": 17
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Opened draft quotation S00022 (customer 'fwod49-n2 Bench Customer', lines: Acoustic Bloc Screens qty 5 and Cabinet with Doors qty 2, Untaxed £1,755.00) and clicked the \"Confirm\" button. No confirmation dialog or wizard appeared. Read from the page after confirming: (a) the record reference/name shown in the form heading is S00022, and (b) the status bar now shows \"Sales Order\" as the current (checked) state, with \"Quotation\" and \"Quotation Sent\" unchecked.",
+      "values": {
+        "contact_reference": "fwod49-n2",
+        "order_reference": "S00022",
+        "customer": "fwod49-n2 Bench Customer",
+        "status_bar": "Sales Order"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "4/4",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_98383d; observed statusbar_states=Cancelled (checked/current); Sales Order, Quotation Sent, Quotation (all unchecked, disabled), contact_reference=fwod49-n2, status_after_cancel=Cancelled, order_reference=S00022, customer=fwod49-n2 Bench Customer.",
+      "values": {
+        "statusbar_states": "Cancelled (checked/current); Sales Order, Quotation Sent, Quotation (all unchecked, disabled)",
+        "contact_reference": "fwod49-n2",
+        "status_after_cancel": "Cancelled",
+        "order_reference": "S00022",
+        "customer": "fwod49-n2 Bench Customer"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 6,
+  "total": 6,
+  "repinned": 0,
+  "drift": 2,
+  "driftTickets": [
+    {
+      "flow": "fwod49",
+      "step": "03-open",
+      "skill": "s_78eaaf",
+      "similarity": 1.002,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_78eaaf stopped at step 2 — after step 2 the page did not show \"- option \\\"{{02-open.product_name}}\\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "reason": "after step 2 the page did not show \"- option \\\"{{02-open.product_name}}\\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22"
+    },
+    {
+      "flow": "fwod49",
+      "step": "04-open",
+      "skill": "s_32409f",
+      "similarity": 0.993,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_32409f stopped at step 1 — after step 1 the page did not show \"- combobox \\\"Type to find a product...\\\": {{02-open.product_name}}\" / \"- textbox \\\"\\\": {{02-open.product_name}}\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "reason": "after step 1 the page did not show \"- combobox \\\"Type to find a product...\\\": {{02-open.product_name}}\" / \"- textbox \\\"\\\": {{02-open.product_name}}\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22"
+    }
+  ],
+  "wallMs": 176340,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 456216,
+    "completionTokens": 8006,
+    "cachedTokens": 406528
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 456216,
+      "completionTokens": 8006,
+      "cachedTokens": 406528
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

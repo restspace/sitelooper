@@ -1,0 +1,948 @@
+{
+ "id": "s_a62e59",
+ "origin": "http://127.0.0.1:8069",
+ "template": "In Odoo, open the existing draft quotation {{v1}} (customer '{{v2}} Bench Customer', two order lines: line 1 = {{02-open.product_name}} qty 3, line 2 = {{v3}} qty 2). Change ONLY the first line's Quantity from 3 to 5. Leave the second line and everything else unchanged. Save and report the new Untaxed Amount shown in the totals section, plus the quantity shown on each of the two lines to confirm the change. Leave the quotation in draft.",
+ "params": {
+  "v1": {
+   "example": "S00022",
+   "usedIn": [
+    5
+   ],
+   "known": true,
+   "binding": "02-open.quotation_reference"
+  },
+  "v2": {
+   "example": "fwod49-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "[E-COM11] Cabinet with Doors",
+   "usedIn": [],
+   "known": true,
+   "binding": "03-open.line_2_product"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form"
+ },
+ "steps": [
+  {
+   "tool": "dblclick",
+   "args": {
+    "target": "tbody tr.o_data_row >> nth=0 >> td[name=\"product_uom_qty\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "text",
+      "text": "3.00"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 691,
+      "y": 442,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+    "addedContains": [
+     "- row \"20% £ 885.00\"",
+     "- combobox \"Type to find a product...\": {{*}}",
+     "- link \"Delete\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_32409f",
+    "step": 1
+   }
+  },
+  {
+   "tool": "dblclick",
+   "args": {
+    "target": "@e1854"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 691,
+      "y": 442,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e1896",
+    "value": "5"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "table > tbody > tr:nth-of-type(1) > td:nth-of-type(4) > div > input"
+     },
+     {
+      "kind": "point",
+      "x": 691,
+      "y": 440,
+      "w": 82.4,
+      "h": 21,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+    "addedContains": [
+     "- row \"20% £ 1,475.00\"",
+     "- cell \"£ 1,475.00\"",
+     "- row \"Untaxed Amount £ 1,755.00\"",
+     "- cell \"£ 1,755.00\"",
+     "- row \"TAX 20% £ 351.00\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read_all",
+   "args": {
+    "target": "div.o_field_x2many_list tbody tr",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div.o_field_x2many_list tbody tr"
+     }
+    ]
+   },
+   "label": "line_2_row"
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1666"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "heading",
+      "name": "{{v1}}"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > h1"
+     },
+     {
+      "kind": "point",
+      "x": 490,
+      "y": 206,
+      "w": 898.5,
+      "h": 55,
+      "role": "heading",
+      "tag": "h1",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+    "addedContains": [
+     "- cell \"[FURN_6666] Acoustic Bloc Screens\"",
+     "- cell \"[FURN_6666] Acoustic Bloc Screens\"",
+     "- cell \"5.00\"",
+     "- cell \"295.00\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "div.o_field_x2many_list tbody tr >> nth=0",
+    "what": "text",
+    "label": "line_1_row"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div.o_field_x2many_list tbody tr >> nth=0"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 442,
+      "w": 1246,
+      "h": 40.6,
+      "role": null,
+      "tag": "tr",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line_1_row"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "div.o_field_x2many_list tbody tr >> nth=1",
+    "what": "text",
+    "label": "line_2_row"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div.o_field_x2many_list tbody tr >> nth=1"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 482,
+      "w": 1246,
+      "h": 40.6,
+      "role": null,
+      "tag": "tr",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line_2_row"
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": ".o_form_button_save"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_form_button_save"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Save manually"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 163,
+      "y": 79,
+      "w": 26,
+      "h": 17.5,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read_all",
+   "args": {
+    "target": ".oe_subtotal_footer tr",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".oe_subtotal_footer tr"
+     }
+    ]
+   },
+   "label": "untaxed_amount_2"
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": ".o_form_button_save"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_form_button_save"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 163,
+      "y": 79,
+      "w": 26,
+      "h": 17.5,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": ".o_form_statusbar",
+    "what": "text",
+    "label": "status_bar"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_form_statusbar"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(1)",
+      "nth": 0
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 129,
+      "w": 1248,
+      "h": 33,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "status_bar_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "div.o_field_x2many_list tbody tr >> nth=0",
+    "what": "text",
+    "label": "line_1_row_final"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div.o_field_x2many_list tbody tr >> nth=0"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 442,
+      "w": 1246,
+      "h": 40.6,
+      "role": null,
+      "tag": "tr",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line_1_row"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "div.o_field_x2many_list tbody tr >> nth=1",
+    "what": "text",
+    "label": "line_2_row_final"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div.o_field_x2many_list tbody tr >> nth=1"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 482,
+      "w": 1246,
+      "h": 40.6,
+      "role": null,
+      "tag": "tr",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line_2_row"
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "div.o_field_x2many_list tbody tr >> nth=0",
+    "what": "text",
+    "label": "line_1_row_persisted"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div.o_field_x2many_list tbody tr >> nth=0"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 442,
+      "w": 1246,
+      "h": 40.6,
+      "role": null,
+      "tag": "tr",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line_1_row"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "div.o_field_x2many_list tbody tr >> nth=1",
+    "what": "text",
+    "label": "line_2_row_persisted"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div.o_field_x2many_list tbody tr >> nth=1"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 482,
+      "w": 1246,
+      "h": 40.6,
+      "role": null,
+      "tag": "tr",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line_2_row"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": ".oe_subtotal_footer tr >> nth=0",
+    "what": "text",
+    "label": "untaxed_amount"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".oe_subtotal_footer tr >> nth=0"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div > table > tbody > tr:nth-of-type(1)",
+      "nth": 1
+     },
+     {
+      "kind": "point",
+      "x": 1130,
+      "y": 621,
+      "w": 217.4,
+      "h": 23,
+      "role": null,
+      "tag": "tr",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "untaxed_amount_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": ".oe_subtotal_footer tr >> nth=2",
+    "what": "text",
+    "label": "total"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".oe_subtotal_footer tr >> nth=2"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div > table > tbody > tr:nth-of-type(3)",
+      "nth": 1
+     },
+     {
+      "kind": "point",
+      "x": 1130,
+      "y": 671,
+      "w": 217.4,
+      "h": 29.3,
+      "role": null,
+      "tag": "tr",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "total_2"
+  },
+  {
+   "tool": "read_all",
+   "args": {
+    "target": "div.o_field_x2many_list tbody tr",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div.o_field_x2many_list tbody tr"
+     }
+    ]
+   },
+   "label": "line_1_row"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > h1 > div > span"
+     },
+     {
+      "kind": "point",
+      "x": 89,
+      "y": 195,
+      "w": 96.5,
+      "h": 31,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "quotation_reference"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "value"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "combobox",
+      "name": "Type to find a customer..."
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Type to find a customer..."
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(1) > div > div > input",
+      "nth": 0
+     },
+     {
+      "kind": "point",
+      "x": 383,
+      "y": 247,
+      "w": 409.8,
+      "h": 26,
+      "role": "combobox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "customer"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 691,
+      "y": 442,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line_1_quantity"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(5)"
+     },
+     {
+      "kind": "point",
+      "x": 783,
+      "y": 442,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line_1_unit_price"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(7)"
+     },
+     {
+      "kind": "point",
+      "x": 1179,
+      "y": 442,
+      "w": 104,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line_1_subtotal"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(2) > td:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 691,
+      "y": 482,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line_2_quantity"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(2) > td:nth-of-type(5)"
+     },
+     {
+      "kind": "point",
+      "x": 783,
+      "y": 482,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line_2_unit_price"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(2) > td:nth-of-type(7)"
+     },
+     {
+      "kind": "point",
+      "x": 1179,
+      "y": 482,
+      "w": 104,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line_2_subtotal"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(1) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1205,
+      "y": 621,
+      "w": 66.2,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "untaxed_amount"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(2) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1195,
+      "y": 644,
+      "w": 86,
+      "h": 21,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "tax_20"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(3) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1195,
+      "y": 669,
+      "w": 86,
+      "h": 21,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "total"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "The replayed procedure had only double-clicked the first line's Quantity cell, so I continued from there: I set line 1's Quantity to 5 (its product [FURN_6666] Acoustic Bloc Screens and unit price 295.00 unchanged), left line 2 ({{v3}} qty 2, unit 140.00) untouched, and saved. I verified persistence by reloading the form from the URL — the saved record (still in draft, status bar \"Quotation\") shows line 1 qty 5.00 with subtotal £1,475.00, line 2 qty 2.00 with subtotal £280.00, and Untaxed Amount £1,755.00 (Tax 20% £351.00, Total £2,106.00). All values were read from the live page after the reload.",
+  "values": {
+   "quotation_reference": "{{v1}}",
+   "customer": "{{v2}} Bench Customer",
+   "status_bar": "Quotation (draft)",
+   "line_1_product": "[FURN_6666] Acoustic Bloc Screens",
+   "line_1_quantity": "5.00",
+   "line_1_unit_price": "295.00",
+   "line_1_subtotal": "£ 1,475.00",
+   "line_2_product": "{{v3}}",
+   "line_2_quantity": "2.00",
+   "line_2_unit_price": "140.00",
+   "line_2_subtotal": "£ 280.00",
+   "untaxed_amount": "£ 1,755.00",
+   "tax_20": "£ 351.00",
+   "total": "£ 2,106.00",
+   "line_1_row": "[FURN_6666] Acoustic Bloc Screens\t\n[FURN_6666] Acoustic Bloc Screens\n\t5.00\t295.00\t\n20%\n\t£ 1,475.00",
+   "line_2_row": "{{v3}}\t\n{{v3}}\n\t2.00\t140.00\t\n20%\n\t£ 280.00",
+   "status_bar_2": "Send by Email\nConfirm\nPreview\nCancel\nSales Order\nQuotation Sent\nQuotation",
+   "untaxed_amount_2": "Untaxed Amount\t£ 1,755.00",
+   "total_2": "Total\t£ 2,106.00",
+   "ref": "FURN_6666"
+  }
+ },
+ "contract": 4,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-15T21:48:23.145Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4
+ },
+ "status": "demoted",
+ "variantOf": "s_32409f",
+ "provenance": {
+  "session": "fwod49-n2",
+  "instruction": "In Odoo, open the existing draft quotation S00022 (customer 'fwod49-n2 Bench Customer', two order lines: line 1 = {{02-open.product_name}} qty 3, line 2 = [E-COM11] Cabinet with Doors qty 2). Change ONLY the first line's Quantity from 3 to 5. Leave the second line and everything else unchanged. Save and report the new Untaxed Amount shown in the totals section, plus the quantity shown on each of the two lines to confirm the change. Leave the quotation in draft.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-15T21:48:23.145Z"
+ },
+ "revision": 2
+}

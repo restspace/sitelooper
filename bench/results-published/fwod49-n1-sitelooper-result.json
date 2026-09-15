@@ -1,0 +1,102 @@
+{
+  "arm": "sitelooper",
+  "target": "odoo",
+  "machine": {
+    "platform": "linux",
+    "arch": "x64",
+    "node": "v22.22.2",
+    "cpus": 4,
+    "memGB": 17,
+    "tool": "sitelooper ? author browser tests with an agent; run compiled tests with Playwri",
+    "commit": "42b9a5d"
+  },
+  "mutationLogPath": null,
+  "provider": "openrouter",
+  "model": "z-ai/glm-5.3",
+  "runid": "fwod49-n1",
+  "task": "bench/tasks/odoo-sale-flow.md",
+  "briefed": false,
+  "reset": true,
+  "stopReason": "completed",
+  "turns": 7,
+  "wallMs": 474654,
+  "orchestrator": {
+    "input": 9823,
+    "cacheWrite": 0,
+    "cacheRead": 18368,
+    "output": 4556
+  },
+  "inner": {
+    "promptTokens": 1740534,
+    "cachedTokens": 1602048,
+    "completionTokens": 22669,
+    "instructions": 6,
+    "byModel": {
+      "deepseek/deepseek-v4.1-flash": {
+        "promptTokens": 1740534,
+        "completionTokens": 22669,
+        "cachedTokens": 1602048,
+        "instructions": 6
+      }
+    },
+    "servedByModel": {
+      "deepseek/deepseek-v4.1-flash": [
+        "DeepSeek"
+      ]
+    },
+    "skills": {
+      "instructions": 6,
+      "offered": 3,
+      "invoked": 0,
+      "fullReplays": 0,
+      "repaired": 0,
+      "refused": 0,
+      "tierA": 0,
+      "stepsReplayed": 0,
+      "deterministicActions": 0,
+      "totalActions": 84,
+      "compiled": 6,
+      "merged": 0,
+      "variants": 0
+    },
+    "model": "deepseek/deepseek-v4.1-flash",
+    "fallbackModel": "z-ai/glm-5.3",
+    "provider": "openrouter"
+  },
+  "commandCount": 6,
+  "subcommands": {
+    "do": 6
+  },
+  "invocationCount": 6,
+  "commandMs": 409251,
+  "commandBytes": 6469,
+  "timeouts": 0,
+  "contextTruncations": 0,
+  "coarse": true,
+  "learn": {
+    "dir": "/home/user/sitelooper/bench/results/fwod49-skills",
+    "instructions": 6,
+    "offered": 3,
+    "invoked": 0,
+    "fullReplays": 0,
+    "repaired": 0,
+    "refused": 0,
+    "tierA": 0,
+    "stepsReplayed": 0,
+    "deterministicActions": 0,
+    "totalActions": 84,
+    "compiled": 6,
+    "merged": 0,
+    "variants": 0,
+    "deterministicFraction": 0
+  },
+  "orBackends": [
+    "Together",
+    "Decart"
+  ],
+  "orReportedCostUsd": 0.037,
+  "maxUsd": 3,
+  "spendUsd": 0.0778,
+  "finalText": "All six objectives completed and verified from the page. Final report:\n\n**Objective 1 — DONE:** Customer `fwod49-n1 Bench Customer` created in Contacts, with City = `Benchville` (confirmed on the saved record).\n\n**Objective 2 — DONE:** Quotation `S00021` created for that customer with one order line:\n- Product: `[FURN_6666] Acoustic Bloc Screens` (selected from the autocomplete dropdown)\n- Unit price filled in by the app: `£ 295.00`\n- Untaxed Amount: `£ 885.00` (3 × 295)\n\n**Objective 3 — DONE:** Second order line added to the same quotation:\n- Product: `[E-COM11] Cabinet with Doors` (dropdown-selected), quantity 2, unit price `£ 140.00`\n- New Untaxed Amount: `£ 1,165.00` (885 + 280)\n\n**Objective 4 — DONE:** First line's quantity changed from 3 to 5 (verified on the page: line 1 qty 5.00, line 2 qty 2.00 unchanged):\n- New Untaxed Amount: `£ 1,755.00` (5 × 295 = 1,475 + 280)\n\n**Objective 5 — DONE:** Quotation confirmed:\n- Order reference: `S00021`\n- Status shown: `Sales Order` (checked in the status bar; Quotation / Quotation Sent unchecked)\n\n**Objective 6 — DONE:** Sales order cancelled:\n- Status shown after cancelling: `Cancelled` (checked/current in the status bar; Sales Order, Quotation Sent and Quotation all unchecked/disabled)\n\nNotes: the cancel required accepting a native confirm dialog plus the \"Cancel Sales Order\" wizard (\"Send and cancel\"); a stray contact-edit dialog overlaying the wizard had to be discarded first. The order is now cancelled, so nothing created by this run remains active.",
+  "transcriptPath": "/home/user/sitelooper/bench/results/fwod49-n1-sitelooper-transcript.jsonl"
+}
