@@ -1,0 +1,259 @@
+{
+  "flow": "fwod47",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Signed in to Odoo as admin (login form submitted, landed in the web client), opened the Sales app's Customers view, clicked New, created a contact named exactly \"fwod47-n3 Bench Customer\" (Company type) with Address City \"Benchville\", and saved it. The saved record (res.partner id 44) displays name \"fwod47-n3 Bench Customer\" and City \"Benchville\" in both the heading/name field and the Address City field, and the breadcrumb reads \"Customers / fwod47-n3 Bench Customer\". Reloading the record URL confirmed both values are persisted.",
+      "values": {
+        "breadcrumb": "Customers / fwod47-n3 Bench Customer",
+        "customer_internal_ref": "fwod47-n3",
+        "saved_city": "Benchville",
+        "saved_customer_name": "fwod47-n3 Bench Customer",
+        "customer_record_url": "http://127.0.0.1:8069/web#cids=1&menu_id=199&action=288&model=res.partner&view_type=form&id=46"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "customer_record_id"
+      ]
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_0bff26; observed ref=fwod47-n3, quantity=3.00, quotation_reference=S00023, customer=fwod47-n3 Bench Customer, unit_price=295.00, taxes=20%.",
+      "values": {
+        "ref": "fwod47-n3",
+        "quantity": "3.00",
+        "quotation_reference": "S00023",
+        "customer": "fwod47-n3 Bench Customer",
+        "unit_price": "295.00",
+        "taxes": "20%"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "line_subtotal",
+        "untaxed_amount",
+        "product_line_label",
+        "product_internal_ref"
+      ]
+    },
+    {
+      "id": "03-add",
+      "status": "failure",
+      "summary": "I could not complete the second line on quotation S00023. Line 1 (Acoustic Bloc Screens, qty 3.00 @ 295.00, Untaxed 885.00) is confirmed present. My attempt to add a second line picked [FURN_1118] Corner Desk Left Sit, but that product has configurable attributes, so Odoo opened a \"Configure your product\" modal; the row never received its price (price_unit stayed 0.00, subtotal £0.00) and the required-select commit did not fully land (the product cell text read \"Corner[FURN_1118] Corner Desk Left Sit\"). I then opened the \"Search: Product\" dialog while trying to choose a different product, which left the form in an unsaved/inconsistent state; the final page state shows the order still headed S00023 with a \"Corner\" typed into a product cell and no reliable second-line price. Nothing was saved, so the quotation on record is unchanged. I cannot report a verified second product, its unit price, a new Untaxed total, or a saved state — all unconfirmed. | Evidence: first_line=Acoustic Bloc Screens qty 3.00 @ 295.00, untaxed_before=885.00, attempted_second_product=Corner Desk Left Sit (FURN_1118, price 85.00 shown only inside the configurator modal, not on the order line), second_line_price_unit_observed=0.00 (never auto-filled), quotation_reference=S00023, saved=false, second_product_unit_price=<not observed on the order line>",
+      "values": {
+        "quotation_reference": "S00023",
+        "first_line_product": "Acoustic Bloc Screens",
+        "first_line_quantity": "3.00",
+        "first_line_unit_price": "295.00",
+        "untaxed_amount_before_attempt": "885.00",
+        "attempted_second_product": "Corner Desk Left Sit",
+        "second_line_price_unit_observed": "0.00",
+        "second_product_unit_price": "null",
+        "new_untaxed_amount_total": "null",
+        "saved": "false",
+        "statusbar_status": "Quotation (not saved after change)"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "the flow step has no pinned skill",
+      "replayed": null,
+      "repaired": false,
+      "turns": 59
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Instruction completed and verified. The open quotation form S00023 had the second line (Corner Desk Left Sit) already committed at quantity 2.00 with unit price 85.00 auto-filled; the form was still dirty, so I clicked Save (.o_form_button_save) and the page updated — the unsaved-changes indicator is now gone. Read back from the live saved form: line 2 quantity 2.00, unit price 85.00, subtotal £170.00; line 1 Acoustic Bloc Screens qty 3.00 @ 295.00; Untaxed Amount £1,055.00 (TAX 20% £211.00, Total £1,266.00); order reference S00023, customer fwod47-n3 Bench Customer (Benchville), status bar \"Quotation\".",
+      "values": {
+        "ref": "S00023",
+        "ref_2": "fwod47-n3"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_8a1471 stopped at step 5 — after step 5 the page did not show \"- textbox \\\"\\\": null\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "replayed": "4/22",
+      "repaired": false,
+      "turns": 7,
+      "unreported": [
+        "order_reference",
+        "customer_name",
+        "second_product_name",
+        "second_line_quantity_after_save",
+        "second_line_unit_price",
+        "second_line_subtotal",
+        "untaxed_amount_total",
+        "tax_20_percent",
+        "total",
+        "save_status_indicator_css_class",
+        "first_line_quantity",
+        "first_line_unit_price"
+      ]
+    },
+    {
+      "id": "05-change",
+      "status": "success",
+      "summary": "Replayed stored procedure s_e78840; observed second_line=[FURN_1118] Corner Desk Left Sit qty 2.00 @ null = £ 170.00, first_line_quantity_before_edit=3.00, first_line_subtotal_after_edit=\t\n\t\n\t\n\t\n\t\n20%\n\t\n£ 1,475.00\n\t, untaxed_amount_total=Untaxed Amount\t£ 1,645.00, first_line_quantity_after_save=5.00 | 2.00, first_line_unit_price=295.00, order_reference=S00023, customer_name=fwod47-n3 Bench Customer, first_line_subtotal_after_save=£ 1,475.00, untaxed_amount_total_after_save=£ 1,645.00, tax_20_percent=£ 329.00, total=£ 1,974.00, second_line_quantity=2.00, second_line_unit_price=85.00.",
+      "values": {
+        "second_line": "[FURN_1118] Corner Desk Left Sit qty 2.00 @ null = £ 170.00",
+        "first_line_quantity_before_edit": "3.00",
+        "first_line_subtotal_after_edit": "\t\n\t\n\t\n\t\n\t\n20%\n\t\n£ 1,475.00\n\t",
+        "untaxed_amount_total": "Untaxed Amount\t£ 1,645.00",
+        "first_line_quantity_after_save": "5.00 | 2.00",
+        "first_line_unit_price": "295.00",
+        "order_reference": "S00023",
+        "customer_name": "fwod47-n3 Bench Customer",
+        "first_line_subtotal_after_save": "£ 1,475.00",
+        "untaxed_amount_total_after_save": "£ 1,645.00",
+        "tax_20_percent": "£ 329.00",
+        "total": "£ 1,974.00",
+        "second_line_quantity": "2.00",
+        "second_line_unit_price": "85.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "22/22",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "first_line_product",
+        "tax_20_percent_amount",
+        "total_amount"
+      ]
+    },
+    {
+      "id": "06-report",
+      "status": "success",
+      "summary": "Replayed stored procedure s_72389c; observed heading_breadcrumb=Sales Orders / S00023, lines=[FURN_6666] Acoustic Bloc Screens qty 5.00 @ 295.00 = £ 1,475.00; [FURN_1118] Corner Desk Left Sit qty 2.00 @ null = £ 170.00, untaxed_amount_total=Untaxed Amount\t£ 1,645.00, order_heading=Sales Orders\nS00023, statusbar_state_after_confirm=Sales Order, order_reference=S00023, untaxed_amount_after_confirm=£ 1,645.00, tax_20_percent=£ 329.00, total=£ 1,974.00, customer_name=fwod47-n3 Bench Customer.",
+      "values": {
+        "heading_breadcrumb": "Sales Orders / S00023",
+        "lines": "[FURN_6666] Acoustic Bloc Screens qty 5.00 @ 295.00 = £ 1,475.00; [FURN_1118] Corner Desk Left Sit qty 2.00 @ null = £ 170.00",
+        "untaxed_amount_total": "Untaxed Amount\t£ 1,645.00",
+        "order_heading": "Sales Orders\nS00023",
+        "statusbar_state_after_confirm": "Sales Order",
+        "order_reference": "S00023",
+        "untaxed_amount_after_confirm": "£ 1,645.00",
+        "tax_20_percent": "£ 329.00",
+        "total": "£ 1,974.00",
+        "customer_name": "fwod47-n3 Bench Customer"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "quotation_status_button"
+      ]
+    },
+    {
+      "id": "07-open",
+      "status": "success",
+      "summary": "I opened the Ok | Send and cancel | Cancel | Discard Sales Order dialog (clicking the form's \"Ok | Send and cancel | Cancel | Discard\" header button) and accepted it via the dialog's \"Ok | Send and cancel | Cancel | Discard\" action button (.modal-footer button[name=\"null | action_send_mail_and_cancel | action_cancel | null\"]), which dismissed the wizard and cancelled the order. The form now shows S00023 in the heading with the status bar radio \"Ok | Send and cancel | Cancel | Discardled\" as the checked/current state (the other states, including \"Sales Order\", are disabled, and a \"Set to Quotation\" button has appeared); the Untaxed Amount is still £ 1,645.00.",
+      "values": {
+        "statusbar_states_after_cancel": "Sales Order\nQuotation Sent\nQuotation",
+        "url_after_cancel": "http://127.0.0.1:8069/web#cids=1&menu_id=197&action=315&model=sale.order&view_type=form&id=23",
+        "modal_footer_button": "null | action_send_mail_and_cancel | action_cancel | null",
+        "modal_footer_button_2": "Ok | Send and cancel | Cancel | Discard",
+        "order_reference": "S00023",
+        "untaxed_amount_total": "Untaxed Amount\t£ 1,645.00",
+        "untaxed_amount_after_cancel": "£ 1,645.00",
+        "customer": "fwod47-n3 Bench Customer",
+        "customer_city": "Benchville"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "08-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_7dbdeb; observed customer_breadcrumb=Customers / fwod47-n3 Bench Customer, customer_id=46, order_reference=S00023, order_customer_name=fwod47-n3 Bench Customer, customer_field_with_city=fwod47-n3 Bench Customer\\nBenchville, sales_order_customer=fwod47-n3 Bench Customer (city 'Benchville' shown under the field), ref=fwod47-n3, untaxed_amount_total=Untaxed Amount\t£ 1,645.00, order_reference_heading=Sales Orders\nS00023, customer_city=Benchville, customer_breadcrumb_2=Customers\nfwod47-n3 Bench Customer, customer_name=fwod47-n3 Bench Customer, customer_type=Company.",
+      "values": {
+        "customer_breadcrumb": "Customers / fwod47-n3 Bench Customer",
+        "customer_id": "46",
+        "order_reference": "S00023",
+        "order_customer_name": "fwod47-n3 Bench Customer",
+        "customer_field_with_city": "fwod47-n3 Bench Customer\\nBenchville",
+        "sales_order_customer": "fwod47-n3 Bench Customer (city 'Benchville' shown under the field)",
+        "ref": "fwod47-n3",
+        "untaxed_amount_total": "Untaxed Amount\t£ 1,645.00",
+        "order_reference_heading": "Sales Orders\nS00023",
+        "customer_city": "Benchville",
+        "customer_breadcrumb_2": "Customers\nfwod47-n3 Bench Customer",
+        "customer_name": "fwod47-n3 Bench Customer",
+        "customer_type": "Company"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "customer_record_url",
+        "order_customer_city",
+        "untaxed_amount",
+        "tax_20_percent",
+        "total",
+        "order_record_url",
+        "sales_order_untaxed_amount"
+      ]
+    }
+  ],
+  "passed": 7,
+  "total": 8,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwod47",
+      "step": "04-open",
+      "skill": "s_8a1471",
+      "atStep": "2",
+      "key": "target",
+      "similarity": null,
+      "missedLocator": "page.locator('table.o_list_table tbody tr.o_data_row:nth-child(2) td[name=\\'price_unit\\']')",
+      "fallbackUsed": "elementAt(783, 482) /* td */",
+      "fallbackIndex": 3,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=197&action=315&model=sale.order&view_type=form&id=23"
+    }
+  ],
+  "wallMs": 491525,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 1714523,
+    "completionTokens": 36766,
+    "cachedTokens": 1592576
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 1714523,
+      "completionTokens": 36766,
+      "cachedTokens": 1592576
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

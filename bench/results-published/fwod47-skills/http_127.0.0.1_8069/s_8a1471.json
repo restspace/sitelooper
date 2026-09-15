@@ -1,0 +1,727 @@
+{
+ "id": "s_8a1471",
+ "origin": "http://127.0.0.1:8069",
+ "template": "In the Odoo browser tab there is an open, UNSAVED quotation form for reference {{v1}} (customer {{v2}} Bench Customer) with two order lines: line 1 = Acoustic Bloc Screens qty {{v3}} @ {{v4}}, line 2 = Corner Desk Left Sit qty 1.00 @ {{v5}}. Your job: change the SECOND line's Quantity from 1.00 to 2.00, then Save the quotation. Hints for the inline grid: click once directly on the quantity cell of the second line (the td with name product_uom_qty) to activate the inline editor - an <input> should appear inside that cell; if a single click does not open it, try double-clicking the cell, or click the line's row first then the cell. Once the input is visible, clear it, type 2, then press Tab or click elsewhere on the form to commit. Verify the cell now shows 2.00. Then click Save (or the save icon) and confirm the quotation is saved (no unsaved-changes indicator). Report: the second line's quantity after saving, and the Untaxed Amount total shown in the totals section of the form (look for the 'Untaxed Amount' label and its value; if the totals are collapsed, expand them). Do not wait for network idle - the app long-polls; wait for concrete page state instead.",
+ "params": {
+  "v1": {
+   "example": "S00022",
+   "usedIn": [],
+   "known": true,
+   "binding": "02-create.quotation_reference"
+  },
+  "v2": {
+   "example": "fwod47-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "3.00",
+   "usedIn": [],
+   "known": true,
+   "binding": "02-create.quantity"
+  },
+  "v4": {
+   "example": "295.00",
+   "usedIn": [],
+   "known": true,
+   "binding": "02-create.unit_price"
+  },
+  "v5": {
+   "example": "147.00",
+   "usedIn": [
+    2
+   ],
+   "known": true,
+   "binding": "03-add.second_product_unit_price"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form"
+ },
+ "steps": [
+  {
+   "tool": "read",
+   "args": {
+    "label": "second_line_quantity_after_save",
+    "target": "table.o_list_table tbody tr.o_data_row:nth-child(2) td[name='product_uom_qty']",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "table.o_list_table tbody tr.o_data_row:nth-child(2) td[name='product_uom_qty']"
+     },
+     {
+      "kind": "text",
+      "text": "2.00"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(2) > td:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 691,
+      "y": 482,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "second_line_quantity_after_save"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "second_line_unit_price",
+    "target": "table.o_list_table tbody tr.o_data_row:nth-child(2) td[name='price_unit']",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "table.o_list_table tbody tr.o_data_row:nth-child(2) td[name='price_unit']"
+     },
+     {
+      "kind": "text",
+      "text": "{{v5}}"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(2) > td:nth-of-type(5)"
+     },
+     {
+      "kind": "point",
+      "x": 783,
+      "y": 482,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "second_product_unit_price"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "untaxed_amount_total",
+    "target": "tr:has(td:has-text(\"Untaxed Amount\")) td:last-child",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "tr:has(td:has-text(\"Untaxed Amount\")) td:last-child"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > table > tbody > tr:nth-of-type(1) > td:nth-of-type(2)",
+      "nth": 1
+     },
+     {
+      "kind": "point",
+      "x": 1195,
+      "y": 621,
+      "w": 88,
+      "h": 23,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "untaxed_amount_total_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "quotation_reference",
+    "target": "h1 .o_field_widget[name='name']",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "h1 .o_field_widget[name='name']"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > h1 > div"
+     },
+     {
+      "kind": "point",
+      "x": 490,
+      "y": 196,
+      "w": 898.5,
+      "h": 33.6,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "quotation_reference"
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "table.o_list_table tbody tr.o_data_row:nth-child(2) td[name='product_uom_qty']"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "table.o_list_table tbody tr.o_data_row:nth-child(2) td[name='product_uom_qty']"
+     },
+     {
+      "kind": "text",
+      "text": "2.00"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(2) > td:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 691,
+      "y": 482,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+    "addedContains": [
+     "- row \"20% £ 294.00\"",
+     "- combobox \"Type to find a product...\": {{*}}",
+     "- textbox \"\": {{*}}",
+     "- textbox \"\": {{*}}",
+     "- textbox \"\": {{v5}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read_all",
+   "args": {
+    "target": "table.o_list_table tbody tr.o_data_row td input",
+    "what": "value"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "table.o_list_table tbody tr.o_data_row td input"
+     }
+    ]
+   },
+   "label": "second_line_quantity_after_save"
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "table.o_list_table tbody tr.o_data_row:nth-child(2) td[name='product_uom_qty'] input",
+    "value": "2"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "table.o_list_table tbody tr.o_data_row:nth-child(2) td[name='product_uom_qty'] input"
+     },
+     {
+      "kind": "css",
+      "selector": "table > tbody > tr:nth-of-type(2) > td:nth-of-type(4) > div > input"
+     },
+     {
+      "kind": "point",
+      "x": 691,
+      "y": 481,
+      "w": 82.4,
+      "h": 21,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "press",
+   "args": {
+    "key": "Tab",
+    "target": "table.o_list_table tbody tr.o_data_row:nth-child(2) td[name='product_uom_qty'] input"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "table.o_list_table tbody tr.o_data_row:nth-child(2) td[name='product_uom_qty'] input"
+     },
+     {
+      "kind": "css",
+      "selector": "table > tbody > tr:nth-of-type(2) > td:nth-of-type(4) > div > input"
+     },
+     {
+      "kind": "point",
+      "x": 691,
+      "y": 481,
+      "w": 82.4,
+      "h": 21,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read_all",
+   "args": {
+    "target": "table.o_list_table tbody tr.o_data_row td input",
+    "what": "value"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "table.o_list_table tbody tr.o_data_row td input"
+     }
+    ]
+   },
+   "label": "second_line_quantity_after_save"
+  },
+  {
+   "tool": "read_all",
+   "args": {
+    "target": "tr:has(td:has-text(\"Untaxed Amount\")) td:last-child",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "tr:has(td:has-text(\"Untaxed Amount\")) td:last-child"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > table > tbody > tr:nth-of-type(1) > td:nth-of-type(2)",
+      "nth": 1
+     },
+     {
+      "kind": "point",
+      "x": 1195,
+      "y": 621,
+      "w": 88,
+      "h": 23,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "untaxed_amount_total_2"
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": ".o_form_button_save"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_form_button_save"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Save manually"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 163,
+      "y": 79,
+      "w": 26,
+      "h": 17.5,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "wait_for",
+   "args": {
+    "target": ".o_form_button_save",
+    "state": "hidden",
+    "timeout_ms": 5000
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_form_button_save"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 163,
+      "y": 79,
+      "w": 26,
+      "h": 17.5,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   }
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:8069/web#cids=1&menu_id=197&action=315&model=sale.order&view_type=form&id=22"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "untaxed_amount_total",
+    "target": "tr:has(td:has-text(\"Untaxed Amount\")) td:last-child",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "tr:has(td:has-text(\"Untaxed Amount\")) td:last-child"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > table > tbody > tr:nth-of-type(1) > td:nth-of-type(2)",
+      "nth": 1
+     },
+     {
+      "kind": "point",
+      "x": 1195,
+      "y": 621,
+      "w": 88,
+      "h": 23,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "untaxed_amount_total_2"
+  },
+  {
+   "tool": "read_all",
+   "args": {
+    "target": "table.o_list_table tbody tr.o_data_row td input",
+    "what": "value"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "table.o_list_table tbody tr.o_data_row td input"
+     }
+    ]
+   },
+   "label": "second_line_quantity_after_save"
+  },
+  {
+   "tool": "wait_for",
+   "args": {
+    "target": ".o_form_button_save",
+    "state": "hidden",
+    "timeout_ms": 5000
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_form_button_save"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 163,
+      "y": 79,
+      "w": 26,
+      "h": 17.5,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div > div:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 210,
+      "y": 270,
+      "w": 63.8,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "customer_city"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "value"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "combobox",
+      "name": "Type to find a customer..."
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Type to find a customer..."
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(1) > div > div > input",
+      "nth": 0
+     },
+     {
+      "kind": "point",
+      "x": 383,
+      "y": 247,
+      "w": 409.8,
+      "h": 26,
+      "role": "combobox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "customer_name"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 691,
+      "y": 442,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "first_line_quantity"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(5)"
+     },
+     {
+      "kind": "point",
+      "x": 783,
+      "y": 442,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "first_line_unit_price"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "table > tbody > tr:nth-of-type(2) > td:nth-of-type(7) > div > span"
+     },
+     {
+      "kind": "point",
+      "x": 1199,
+      "y": 481,
+      "w": 54.5,
+      "h": 21,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "second_line_subtotal"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(1) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1205,
+      "y": 621,
+      "w": 66.2,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "untaxed_amount_total"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Quotation {{v1}} (customer {{v2}} Bench Customer) now has its second order line at Quantity 2.00 and the record is committed. On arrival the page already showed the second line as [E-COM06] Corner Desk Right Sit, qty 2.00 @ {{v5}} (the instruction described \"Corner Desk Left Sit qty 1.00\" — a mismatch in the precondition text; the requested 1.00→2.00 change was in fact already in effect and the record had already been saved in the previous run). I nevertheless carried out the edit path — clicked the second line's product_uom_qty cell, set the inline input to 2, pressed Tab to commit, clicked Save — and confirmed the form is committed (the save button is hidden, i.e. the form is clean). After a fresh page reload: line 1 = Acoustic Bloc Screens {{v3}} @ {{v4}} (885.00), line 2 = Corner Desk Right Sit 2.00 @ {{v5}} (294.00), Untaxed Amount £ 1,179.00, reference {{v1}}, status still Quotation. Reported values: (a) second line quantity after saving = 2.00; (b) Untaxed Amount total = £ 1,179.00; reference = {{v1}}.",
+  "values": {
+   "customer_city": "Benchville",
+   "customer_name": "{{v2}} Bench Customer",
+   "first_line_quantity": "{{v3}}",
+   "first_line_unit_price": "{{v4}}",
+   "first_product_name": "[FURN_6666] Acoustic Bloc Screens",
+   "quotation_reference": "{{v1}}",
+   "save_button_state": "hidden (form committed, no pending edits)",
+   "second_line_quantity_after_save": "2.00",
+   "second_line_subtotal": "£ 294.00",
+   "second_product_name": "[E-COM06] Corner Desk Right Sit",
+   "second_product_unit_price": "{{v5}}",
+   "untaxed_amount_total": "£ 1,179.00",
+   "second_line_quantity": "2.00",
+   "untaxed_amount_total_2": "£ 1,179.00",
+   "ref": "{{v2}}"
+  }
+ },
+ "contract": 4,
+ "stats": {
+  "uses": 2,
+  "successes": 1,
+  "partial": 1,
+  "created": "2026-09-15T13:08:17.467Z",
+  "failedAtStep": {
+   "5": 1
+  },
+  "fallthroughs": 1,
+  "verifiedContract": 4,
+  "lastUsed": "2026-09-15T13:16:32.151Z",
+  "lastFailedAt": 5
+ },
+ "status": "provisional",
+ "provenance": {
+  "session": "fwod47-n2",
+  "instruction": "In the Odoo browser tab there is an open, UNSAVED quotation form for reference S00022 (customer fwod47-n2 Bench Customer) with two order lines: line 1 = Acoustic Bloc Screens qty 3.00 @ 295.00, line 2 = Corner Desk Left Sit qty 1.00 @ 147.00. Your job: change the SECOND line's Quantity from 1.00 to 2.00, then Save the quotation. Hints for the inline grid: click once directly on the quantity cell of the second line (the td with name product_uom_qty) to activate the inline editor - an <input> should appear inside that cell; if a single click does not open it, try double-clicking the cell, or click the line's row first then the cell. Once the input is visible, clear it, type 2, then press Tab or click elsewhere on the form to commit. Verify the cell now shows 2.00. Then click Save (or the save icon) and confirm the quotation is saved (no unsaved-changes indicator). Report: the second line's quantity after saving, and the Untaxed Amount total shown in the totals section of the form (look for the 'Untaxed Amount' label and its value; if the totals are collapsed, expand them). Do not wait for network idle - the app long-polls; wait for concrete page state instead.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-15T13:08:17.467Z"
+ },
+ "revision": 2
+}

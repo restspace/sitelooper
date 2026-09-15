@@ -1,0 +1,221 @@
+{
+ "id": "s_c69890",
+ "origin": "http://127.0.0.1:8069",
+ "template": "In the Odoo browser tab there is an open, UNSAVED quotation form for reference {{v1}} (customer {{v2}} Bench Customer) with two order lines: line 1 = Acoustic Bloc Screens qty {{v3}} @ {{v4}}, line 2 = Corner Desk Left Sit qty 1.00 @ {{v5}}. Your job: change the SECOND line's Quantity from 1.00 to 2.00, then Save the quotation. Hints for the inline grid: click once directly on the quantity cell of the second line (the td with name product_uom_qty) to activate the inline editor - an <input> should appear inside that cell; if a single click does not open it, try double-clicking the cell, or click the line's row first then the cell. Once the input is visible, clear it, type 2, then press Tab or click elsewhere on the form to commit. Verify the cell now shows 2.00. Then click Save (or the save icon) and confirm the quotation is saved (no unsaved-changes indicator). Report: the second line's quantity after saving, and the Untaxed Amount total shown in the totals section of the form (look for the 'Untaxed Amount' label and its value; if the totals are collapsed, expand them). Do not wait for network idle - the app long-polls; wait for concrete page state instead.",
+ "params": {
+  "v1": {
+   "example": "S00023",
+   "usedIn": [],
+   "known": true,
+   "binding": "02-create.quotation_reference"
+  },
+  "v2": {
+   "example": "fwod47-n3",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "3.00",
+   "usedIn": [],
+   "known": true,
+   "binding": "02-create.quantity"
+  },
+  "v4": {
+   "example": "295.00",
+   "usedIn": [],
+   "known": true,
+   "binding": "02-create.unit_price"
+  },
+  "v5": {
+   "example": "null",
+   "usedIn": [],
+   "known": true,
+   "binding": "03-add.second_product_unit_price"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form"
+ },
+ "steps": [
+  {
+   "tool": "read",
+   "args": {
+    "label": "quotation_reference",
+    "target": "h1 .o_field_widget[name='name']",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > h1 > div"
+     },
+     {
+      "kind": "point",
+      "x": 490,
+      "y": 196,
+      "w": 898.5,
+      "h": 33.6,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "ref",
+   "via": {
+    "skill": "s_8a1471",
+    "step": 4
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "table.o_list_table tbody tr.o_data_row:nth-child(2) td[name='product_uom_qty']"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "tr.o_data_row",
+      "hasText": "[FURN_1118] Corner Desk Left Sit",
+      "selector": "td:nth-of-type(4)"
+     },
+     {
+      "kind": "text",
+      "text": "2.00"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(2) > td:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 691,
+      "y": 482,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+    "addedContains": [
+     "- row \"20% £ 170.00\"",
+     "- combobox \"Type to find a product...\": {{*}}",
+     "- textbox \"\": {{*}}",
+     "- textbox \"\": {{*}}",
+     "- textbox \"\": {{*}}"
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_8a1471",
+    "step": 5
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": ".o_form_button_save"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_form_button_save"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Save manually"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 163,
+      "y": 79,
+      "w": 26,
+      "h": 17.5,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+    "addedContains": [
+     "- cell \"[FURN_1118] Corner Desk Left Sit\"",
+     "- cell \"[FURN_1118] Corner Desk Left Sit\"",
+     "- cell \"2.00\"",
+     "- cell \"85.00\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > h1 > div > span"
+     },
+     {
+      "kind": "point",
+      "x": 89,
+      "y": 195,
+      "w": 96.5,
+      "h": 31,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "ref"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Instruction completed and verified. The open quotation form {{v1}} had the second line (Corner Desk Left Sit) already committed at quantity 2.00 with unit price 85.00 auto-filled; the form was still dirty, so I clicked Save (.o_form_button_save) and the page updated — the unsaved-changes indicator is now gone. Read back from the live saved form: line 2 quantity 2.00, unit price 85.00, subtotal £170.00; line 1 Acoustic Bloc Screens qty {{v3}} @ {{v4}}; Untaxed Amount £1,055.00 (TAX 20% £211.00, Total £1,266.00); order reference {{v1}}, customer {{v2}} Bench Customer (Benchville), status bar \"Quotation\".",
+  "values": {
+   "ref": "{{v1}}",
+   "ref_2": "{{v2}}"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-15T13:16:32.158Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "variantOf": "s_8a1471",
+ "provenance": {
+  "session": "fwod47-n3",
+  "instruction": "In the Odoo browser tab there is an open, UNSAVED quotation form for reference S00023 (customer fwod47-n3 Bench Customer) with two order lines: line 1 = Acoustic Bloc Screens qty 3.00 @ 295.00, line 2 = Corner Desk Left Sit qty 1.00 @ null. Your job: change the SECOND line's Quantity from 1.00 to 2.00, then Save the quotation. Hints for the inline grid: click once directly on the quantity cell of the second line (the td with name product_uom_qty) to activate the inline editor - an <input> should appear inside that cell; if a single click does not open it, try double-clicking the cell, or click the line's row first then the cell. Once the input is visible, clear it, type 2, then press Tab or click elsewhere on the form to commit. Verify the cell now shows 2.00. Then click Save (or the save icon) and confirm the quotation is saved (no unsaved-changes indicator). Report: the second line's quantity after saving, and the Untaxed Amount total shown in the totals section of the form (look for the 'Untaxed Amount' label and its value; if the totals are collapsed, expand them). Do not wait for network idle - the app long-polls; wait for concrete page state instead.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-15T13:16:32.158Z"
+ },
+ "revision": 1
+}

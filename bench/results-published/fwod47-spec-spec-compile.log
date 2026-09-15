@@ -1,0 +1,13 @@
+flow: /home/user/sitelooper/bench/results/fwod47-spec-spec-tmp/fwod47.flow.ts
+spec: /home/user/sitelooper/bench/results/fwod47-spec-spec-tmp/fwod47.spec.ts
+warning 08-create: 08-create read a value that contradicts what the previous step reported
+  why: 08-create read order_status "Cancelled (current checked state in the status bar; Sales Order, Quotation Sent and Quotation are unchecked and disabled)" right after 07-open reported "Cancelled (status bar radio "Cancelled" is the checked state; all other states disabled)"; 07-open's change may not have landed and a later step may be retrying it. Re-record 07-open.
+  fix: sitelooper rerecord bench/results/flows/fwod47.json 07-open
+warning 03-add: it has no converged procedure, so the compiled spec throws here
+  why: nothing in the store resolves to a recorded procedure for this step; the emitted body is a throw, not a silent skip.
+  fix: sitelooper rerecord bench/results/flows/fwod47.json 03-add
+warning 05-change: (read) has no locator a spec can express
+  why: The recording kept no candidate for this target, so there is nothing for the artifact to resolve.
+  fix: re-record this step so the target is named (sitelooper rerecord), or write the locator for read by hand in the generated file
+
+sitelooper: not compilable: 1 step(s) have no converged procedure: 03-add; TODO: no converged procedure for "On the existing Odoo quotation {{02-create.quotation_reference}} (for customer '{{runid}} Bench Customer', currently with one line: Acoustic Bloc Screens, quantity 3), add a SECOND order line with a D…"; TODO: no locator this compiler can express for read — fill it in by hand.
