@@ -1,0 +1,6 @@
+flow: /home/user/sitelooper/bench/results/fwrd54-spec-spec-tmp/fwrd54.flow.ts
+spec: /home/user/sitelooper/bench/results/fwrd54-spec-spec-tmp/fwrd54.spec.ts
+warning 09-change: 09-change read a value that contradicts what the previous step reported
+  why: 09-change read ticket_detail_with_status_controls "Mark Draft, Mark Closed, Unarchive ticket (not clicked)" right after 08-delete reported "Ready, with an Archived badge alongside it"; 08-delete's change may not have landed and a later step may be retrying it. Re-record 08-delete.
+  fix: sitelooper rerecord bench/results/flows/fwrd54.json 08-delete
+

@@ -1,0 +1,212 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwrd54-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwrd54-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwrd54-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwrd54-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwrd54.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwrd54-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwrd54.spec.ts",
+      "file": "fwrd54.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwrd54",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 3810000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 29754,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-add\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-edit\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-change\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 07-edit\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 08-delete\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 09-change\n"
+                    }
+                  ],
+                  "stderr": [
+                    {
+                      "text": "[sitelooper warn] 02-create s_59f44d/10: read 'ticket_customer' returned a value the skill itself set/selected ('Bench Customer') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_59f44d/11: read 'ticket_title' returned a value the skill itself set/selected ('fwrd54-spec RD Bench Ticket') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-open s_b3f4db/11: read 'part_name' returned a value the skill itself set/selected ('fwrd54-spec RD Part A') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 04-add s_08ec9d/15: read 'part_2_name' returned a value the skill itself set/selected ('fwrd54-spec RD Part B') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 06-change s_abb778/8: read 'mark_ready_button' returned a value the skill itself set/selected ('Mark Ready') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 07-edit s_8f60bc/9: read 'part_A_supplier' returned a value the skill itself set/selected ('Acme Parts') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    }
+                  ],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:4180/ and sign in with email bench@example.com and password bench-pass-1234. Then report what the main screen of the app shows (what kind of app it is, what navigation/sections exist, and whether there is a way to create a ticket).",
+                      "duration": 3831
+                    },
+                    {
+                      "title": "02-create: Create a new repair ticket with the title exactly '{{runid}} RD Bench Ticket'. Fill in the Customer field with something sensible (if it's a dropdown pick any available customer, if free text use 'Bench Customer'). Submit the form and wait for the ticket to appear (the list refreshes a short beat after creation, so wait for the new ticket to actually show). Then report the ticket's reference number, title, customer, and status as shown on the page.",
+                      "duration": 2661
+                    },
+                    {
+                      "title": "03-open: Open the ticket with reference {{02-create.ticket_reference}} (titled '{{runid}} RD Bench Ticket') from the tickets list. On the ticket detail page, find the parts section and add a part named exactly '{{runid}} RD Part A' with cost 100 and markup 25. Fill whatever fields the add-part form requires (name, cost, markup) and submit it. Wait for the part to appear in the ticket's parts list (the view refreshes a short beat after the mutation). Then report: the part's name, cost, markup, and the price the app computes/displays for that part, plus any other fields shown for the part.",
+                      "duration": 4491
+                    },
+                    {
+                      "title": "04-add: On the ticket detail page for {{02-create.ticket_reference}} (titled '{{runid}} RD Bench Ticket'), add a second part named exactly '{{runid}} RD Part B' with cost 200 and markup 25, using the 'Add part' dialog (fill Part name, Cost, Markup %, leave Quantity at its default). Submit and wait for the parts table to refresh so the new row appears. Then report the full parts table contents: for each part its name, cost, markup, quantity, and the price the app computes, plus the total shown in the table footer.",
+                      "duration": 3624
+                    },
+                    {
+                      "title": "05-edit: On the ticket detail page for {{02-create.ticket_reference}}, edit the part named '{{runid}} RD Part A' (use its Edit action) and change its cost from 100 to 150, leaving the markup at 25. Save the change and wait for the parts table to refresh so the updated values show. Then report the part's name, cost, markup, and the price the app computes after the change, plus the table footer total.",
+                      "duration": 1785
+                    },
+                    {
+                      "title": "06-change: On the ticket detail page for {{02-create.ticket_reference}} (titled '{{runid}} RD Bench Ticket', currently status {{02-create.ticket_status}}), attempt to change the ticket's status to 'Ready'. The app enforces preconditions before it will accept that status — if it refuses, read and report the exact error/validation message(s) it shows, and report what the UI says is required. Do NOT try to work around the precondition by deleting parts or changing data destructively; just attempt the status change and report exactly what the app tells you, including any hints, tooltips, or help text about what must be true first. Also report what status-change controls exist on the page (buttons, dropdowns) and what statuses are offered.",
+                      "duration": 1026
+                    },
+                    {
+                      "title": "07-edit: On the ticket detail page for {{02-create.ticket_reference}}, the app refuses to mark the ticket Ready because both parts have no supplier. Satisfy that precondition: edit the part '{{runid}} RD Part A' and set its Supplier field (if it's a dropdown/select pick any available supplier option; if free text type 'Acme Parts'), keeping cost 150 and markup 25 unchanged, and save. Then edit the part '{{runid}} RD Part B' the same way and set its Supplier (same supplier as Part A), keeping cost 200 and markup 25, and save. Wait for the parts table to refresh after each save and confirm both parts now show a supplier. Then click '{{06-change.mark_ready_button}}' and report: the exact supplier value each part now shows, each part's cost/markup/price after the edits, whether {{06-change.mark_ready_button}} succeeded, the ticket's {{06-change.status_field_label}} as displayed afterwards, and any confirmation or error message shown.",
+                      "duration": 3447
+                    },
+                    {
+                      "title": "08-delete: On the ticket detail page for {{02-create.ticket_reference}} (titled '{{runid}} RD Bench Ticket', status Ready), delete both parts: use the Delete action on '{{runid}} RD Part A' and confirm if a confirmation dialog appears, wait for the parts table to refresh so the row is gone (the view refreshes a short beat after the mutation, so wait for the row to actually disappear rather than assuming the first render is final), then do the same for '{{runid}} RD Part B'. Then archive the ticket using the '{{06-change.archive_ticket_button}}' button (confirm if asked). Wait for the refresh. Finally verify: go back to the tickets list (make sure the 'Show archived' checkbox is unchecked) and confirm the ticket '{{runid}} RD Bench Ticket' / {{02-create.ticket_reference}} no longer appears in the active list. Report what the parts table shows after both deletions, what the archive action showed (any confirmation text), and whether {{02-create.ticket_reference}} still appears in the un-archived tickets list.",
+                      "duration": 5887
+                    },
+                    {
+                      "title": "09-change: Final verification, read-only (do not change anything): On the tickets list at http://127.0.0.1:4180/, with 'Show archived' unchecked, search for '{{runid}}' in the Filter tickets search box and report whether any ticket appears. Then check the 'Show archived' checkbox and search again for '{{runid}}', and report the ticket that appears: its reference, title, status, parts count, and whether it shows an archived indicator. If you can open that ticket, report what its parts table shows. Do not edit, delete, or unarchive anything.",
+                      "duration": 2518
+                    }
+                  ],
+                  "startTime": "2026-09-15T12:56:39.277Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "88e996b21ea98f73865a-49af8d4b1d41b4808be4",
+          "file": "fwrd54.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-15T12:56:36.903Z",
+    "duration": 32443.345,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

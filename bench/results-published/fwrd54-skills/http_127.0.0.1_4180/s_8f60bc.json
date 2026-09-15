@@ -1,0 +1,1206 @@
+{
+ "id": "s_8f60bc",
+ "origin": "http://127.0.0.1:4180",
+ "template": "On the ticket detail page for {{v1}}, the app refuses to mark the ticket Ready because both parts have no supplier. Satisfy that precondition: edit the part '{{v2}}' and set its Supplier field (if it's a dropdown/select pick any available supplier option; if free text type '{{v7}}'), keeping cost 150 and markup 25 unchanged, and save. Then edit the part '{{v4}}' the same way and set its Supplier (same supplier as Part A), keeping cost 200 and markup 25, and save. Wait for the parts table to refresh after each save and confirm both parts now show a supplier. Then click '{{v5}}' and report: the exact supplier value each part now shows, each part's cost/markup/price after the edits, whether {{v5}} succeeded, the ticket's {{v6}} as displayed afterwards, and any confirmation or error message shown.",
+ "params": {
+  "v1": {
+   "example": "RD-1015",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:ticket_reference"
+  },
+  "v2": {
+   "example": "fwrd54-n1 RD Part A",
+   "usedIn": [
+    1
+   ],
+   "known": true,
+   "binding": "output:i3:part_name"
+  },
+  "v3": {
+   "example": "fwrd54-n1",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v4": {
+   "example": "fwrd54-n1 RD Part B",
+   "usedIn": [
+    4
+   ],
+   "known": true,
+   "binding": "output:i4:part_2_name"
+  },
+  "v5": {
+   "example": "Mark Ready",
+   "usedIn": [
+    7
+   ],
+   "known": true,
+   "binding": "output:i6:mark_ready_button"
+  },
+  "v6": {
+   "example": "Status",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i6:status_field_label"
+  },
+  "v7": {
+   "example": "Acme Parts",
+   "usedIn": [
+    2,
+    5
+   ]
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+  "fingerprint": [
+   0,
+   0.047,
+   0.024,
+   0,
+   0,
+   0,
+   0.071,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.166,
+   0,
+   0.095,
+   0.047,
+   0,
+   0.047,
+   0.095,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0.095,
+   0,
+   0.095,
+   0,
+   0.024,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0.071,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0.095,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.095,
+   0,
+   0.047,
+   0,
+   0.047,
+   0.024,
+   0,
+   0,
+   0,
+   0.047,
+   0.047,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0.024,
+   0,
+   0,
+   0.024,
+   0.024,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0.071,
+   0,
+   0.047,
+   0.095,
+   0.119,
+   0,
+   0.047,
+   0.047,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0,
+   0.237,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0.047,
+   0,
+   0.071,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.142,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0.285,
+   0,
+   0.071,
+   0.047,
+   0,
+   0,
+   0,
+   0.237,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0.047,
+   0.047,
+   0.214,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0.095,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0.071,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0.047,
+   0.047,
+   0,
+   0.095,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.38,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0.047,
+   0.071,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0.071,
+   0,
+   0.119,
+   0,
+   0,
+   0.095,
+   0,
+   0.047,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0.071,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0.095,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0.024,
+   0,
+   0.237,
+   0.024,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0.166,
+   0.142,
+   0,
+   0,
+   0,
+   0.095,
+   0.024,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0.047,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.071,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0.047,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0.142,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.095,
+   0.19,
+   0,
+   0.166,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0.095,
+   0.047,
+   0,
+   0.047,
+   0,
+   0.095,
+   0,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0.047,
+   0,
+   0,
+   0.047,
+   0.071,
+   0,
+   0.047,
+   0.047,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0.047,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "requireText": [
+   "{{v2}}",
+   "{{v3}}"
+  ]
+ },
+ "goal": {
+  "requireText": [
+   "succeeded — no confirmation or error message was shown; the status simply changed and the toolbar buttons changed"
+  ]
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e431"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "tr",
+      "hasText": "{{v2}}",
+      "selector": "td:nth-of-type(7) > button:nth-of-type(1)"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Edit"
+     },
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(1) > td:nth-of-type(7) > button:nth-of-type(1)"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"part-row-p18\"] button"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "part-edit-p18"
+     },
+     {
+      "kind": "point",
+      "x": 1012,
+      "y": 527,
+      "w": 44.4,
+      "h": 29.5,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+    "addedContains": [
+     "- dialog \"Edit part\"",
+     "- heading \"Edit part\"",
+     "- textbox \"Part name *\": {{v2}}",
+     "- spinbutton \"Cost *\": {{*}}",
+     "- spinbutton \"Markup % *\": {{*}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "role=dialog >> role=textbox[name=\"Supplier\"]",
+    "value": "{{v7}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=dialog >> role=textbox[name=\"Supplier\"]"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "field-supplier"
+     },
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Supplier"
+     },
+     {
+      "kind": "label",
+      "label": "Supplier"
+     },
+     {
+      "kind": "id",
+      "selector": "#f-supplier"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"form-dialog\"] input"
+     },
+     {
+      "kind": "css",
+      "selector": "#f-supplier"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 661,
+      "w": 478,
+      "h": 39,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+    "addedContains": [
+     "- textbox \"Supplier\": {{v7}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=dialog >> role=button[name=\"Save part\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=dialog >> role=button[name=\"Save part\"]"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "modal-save"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Save part"
+     },
+     {
+      "kind": "id",
+      "selector": "#modal-save"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"form-dialog\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "#modal-save"
+     },
+     {
+      "kind": "point",
+      "x": 834,
+      "y": 756,
+      "w": 89.9,
+      "h": 39,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+    "addedContains": [
+     "- row \"{{v2}} $150.00 25% 1 {{v7}} $187.50 Edit Delete\"",
+     "- cell \"{{v7}}\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Edit\"] >> nth=1"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=button[name=\"Edit\"] >> nth=1"
+     },
+     {
+      "kind": "scoped",
+      "container": "tr",
+      "hasText": "{{v4}}",
+      "selector": "td:nth-of-type(7) > button:nth-of-type(1)"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Edit"
+     },
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(2) > td:nth-of-type(7) > button:nth-of-type(1)"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"part-row-p19\"] button"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "part-edit-p19"
+     },
+     {
+      "kind": "point",
+      "x": 1012,
+      "y": 449,
+      "w": 44.4,
+      "h": 29.5,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+    "addedContains": [
+     "- dialog \"Edit part\"",
+     "- heading \"Edit part\"",
+     "- textbox \"Part name *\": {{v4}}",
+     "- spinbutton \"Cost *\": {{*}}",
+     "- spinbutton \"Markup % *\": {{*}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "role=dialog >> role=textbox[name=\"Supplier\"]",
+    "value": "{{v7}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=dialog >> role=textbox[name=\"Supplier\"]"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "field-supplier"
+     },
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Supplier"
+     },
+     {
+      "kind": "label",
+      "label": "Supplier"
+     },
+     {
+      "kind": "id",
+      "selector": "#f-supplier"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"form-dialog\"] input"
+     },
+     {
+      "kind": "css",
+      "selector": "#f-supplier"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 661,
+      "w": 478,
+      "h": 39,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+    "addedContains": [
+     "- textbox \"Supplier\": {{v7}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=dialog >> role=button[name=\"Save part\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=dialog >> role=button[name=\"Save part\"]"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "modal-save"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Save part"
+     },
+     {
+      "kind": "id",
+      "selector": "#modal-save"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"form-dialog\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "#modal-save"
+     },
+     {
+      "kind": "point",
+      "x": 834,
+      "y": 756,
+      "w": 89.9,
+      "h": 39,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+    "addedContains": [
+     "- row \"{{v4}} $200.00 25% 1 {{v7}} $250.00 Edit Delete\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"{{v5}}\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=button[name=\"{{v5}}\"]"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "status-to-Ready"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "{{v5}}"
+     },
+     {
+      "kind": "css",
+      "selector": "#view > div > div:nth-of-type(2) > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1002,
+      "y": 145,
+      "w": 105.5,
+      "h": 39,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+    "addedContains": [
+     "- button \"Mark Draft\"",
+     "- button \"Mark Closed\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "section > div > table > tbody > tr:nth-of-type(1) > td:nth-of-type(1)"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"part-row-p18\"] td",
+      "nth": 0
+     },
+     {
+      "kind": "point",
+      "x": 222,
+      "y": 399,
+      "w": 234.4,
+      "h": 50.5,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "part_A_name"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "value"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "field-supplier"
+     },
+     {
+      "kind": "label",
+      "label": "Supplier"
+     },
+     {
+      "kind": "id",
+      "selector": "#f-supplier"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"form-dialog\"] input",
+      "nth": 4
+     },
+     {
+      "kind": "css",
+      "selector": "#f-supplier"
+     }
+    ]
+   },
+   "label": "part_A_supplier"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "section > div > table > tbody > tr:nth-of-type(2) > td:nth-of-type(1)"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"part-row-p19\"] td",
+      "nth": 0
+     },
+     {
+      "kind": "point",
+      "x": 222,
+      "y": 450,
+      "w": 234.4,
+      "h": 51,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "part_B_name"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"ticket-status\"] span"
+     },
+     {
+      "kind": "css",
+      "selector": "#view > div > div:nth-of-type(1) > p:nth-of-type(3) > span:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 180,
+      "y": 225,
+      "w": 56,
+      "h": 25.2,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "status_displayed_after"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "ticket-ref"
+     },
+     {
+      "kind": "css",
+      "selector": "#view > div > div:nth-of-type(1) > p:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 259,
+      "y": 131,
+      "w": 310.3,
+      "h": 18,
+      "role": null,
+      "tag": "p",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "ticket_reference"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "ticket-title"
+     },
+     {
+      "kind": "css",
+      "selector": "#view > div > div:nth-of-type(1) > h1"
+     },
+     {
+      "kind": "point",
+      "x": 259,
+      "y": 159,
+      "w": 310.3,
+      "h": 30,
+      "role": "heading",
+      "tag": "h1",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "ticket_title"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Satisfied the precondition by editing both parts: the \"Edit part\" dialog's Supplier field is a free-text input, so I typed \"{{v7}}\" in Part A and Part B and saved each (costs and markups left as 150/25 and 200/25). The parts table refreshed after each save and now shows: {{v2}} — supplier \"{{v7}}\", cost $150.00, markup 25%, qty 1, price $187.50; {{v4}} — supplier \"{{v7}}\", cost $200.00, markup 25%, qty 1, price $250.00; footer total $437.50. Clicking \"{{v5}}\" then succeeded with no confirmation or error message — the {{v6}} field now displays \"Ready\" and the toolbar switched from \"{{v5}}\" to \"Mark Draft\" and \"Mark Closed\" (Archive ticket still present). URL unchanged: http://127.0.0.1:4180/#/tickets/t15.",
+  "values": {
+   "mark_ready_outcome": "succeeded — no confirmation or error message was shown; the status simply changed and the toolbar buttons changed",
+   "part_A_cost_markup_price": "$150.00 / 25% / $187.50",
+   "part_A_name": "{{v2}}",
+   "part_A_qty": "1",
+   "part_A_supplier": "{{v7}}",
+   "part_B_cost_markup_price": "$200.00 / 25% / $250.00",
+   "part_B_name": "{{v4}}",
+   "part_B_qty": "1",
+   "part_B_supplier": "{{v7}}",
+   "status_change_controls_after": "Mark Draft, Mark Closed, Archive ticket ({{v5}} gone)",
+   "status_displayed_after": "Ready",
+   "table_footer_total": "Total (price × quantity) $437.50",
+   "ticket_reference": "{{v1}}",
+   "ticket_title": "{{v3}} RD Bench Ticket",
+   "bench_run_id": "{{v3}}"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-15T12:51:57.407Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-15T12:55:48.362Z"
+ },
+ "status": "validated",
+ "provenance": {
+  "session": "fwrd54-n1",
+  "instruction": "On the ticket detail page for RD-1015, the app refuses to mark the ticket Ready because both parts have no supplier. Satisfy that precondition: edit the part 'fwrd54-n1 RD Part A' and set its Supplier field (if it's a dropdown/select pick any available supplier option; if free text type 'Acme Parts'), keeping cost 150 and markup 25 unchanged, and save. Then edit the part 'fwrd54-n1 RD Part B' the same way and set its Supplier (same supplier as Part A), keeping cost 200 and markup 25, and save. Wait for the parts table to refresh after each save and confirm both parts now show a supplier. Then click 'Mark Ready' and report: the exact supplier value each part now shows, each part's cost/markup/price after the edits, whether Mark Ready succeeded, the ticket's Status as displayed afterwards, and any confirmation or error message shown.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-15T12:51:57.407Z"
+ },
+ "revision": 4
+}

@@ -1,0 +1,10 @@
+[spec-replay] resetting repairdesk
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile bench/results/flows/fwrd54.json --out /home/user/sitelooper/bench/results/fwrd54-spec-spec-tmp --overwrite-spec
+flow: /home/user/sitelooper/bench/results/fwrd54-spec-spec-tmp/fwrd54.flow.ts
+spec: /home/user/sitelooper/bench/results/fwrd54-spec-spec-tmp/fwrd54.spec.ts
+warning 09-change: 09-change read a value that contradicts what the previous step reported
+  why: 09-change read ticket_detail_with_status_controls "Mark Draft, Mark Closed, Unarchive ticket (not clicked)" right after 08-delete reported "Ready, with an Archived badge alongside it"; 08-delete's change may not have landed and a later step may be retrying it. Re-record 08-delete.
+  fix: sitelooper rerecord bench/results/flows/fwrd54.json 08-delete
+[spec-replay] running: npx playwright test --config /home/user/sitelooper/bench/results/fwrd54-spec-spec-tmp/playwright.config.mjs
+[spec-replay] fwrd54-spec: 1/1 passed, exit=0, 34s, 0 drift line(s) — result written

@@ -1,0 +1,1203 @@
+{
+ "id": "s_6ab238",
+ "origin": "http://127.0.0.1:4180",
+ "template": "On the ticket detail page for {{v1}} (titled '{{v2}}', status {{v4}}), delete both parts: use the Delete action on '{{v5}}' and confirm if a confirmation dialog appears, wait for the parts table to refresh so the row is gone (the view refreshes a short beat after the mutation, so wait for the row to actually disappear rather than assuming the first render is final), then do the same for '{{v6}}'. Then archive the ticket using the '{{v7}}' button (confirm if asked). Wait for the refresh. Finally verify: go back to the tickets list (make sure the 'Show archived' checkbox is unchecked) and confirm the ticket '{{v2}}' / {{v1}} no longer appears in the active list. Report what the parts table shows after both deletions, what the archive action showed (any confirmation text), and whether {{v1}} still appears in the un-archived tickets list.",
+ "params": {
+  "v1": {
+   "example": "RD-1015",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:ticket_reference"
+  },
+  "v2": {
+   "example": "fwrd54-n1 RD Bench Ticket",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:ticket_title"
+  },
+  "v3": {
+   "example": "fwrd54-n1",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v4": {
+   "example": "Ready",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i7:status_displayed_after"
+  },
+  "v5": {
+   "example": "fwrd54-n1 RD Part A",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i3:part_name"
+  },
+  "v6": {
+   "example": "fwrd54-n1 RD Part B",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i4:part_2_name"
+  },
+  "v7": {
+   "example": "Archive ticket",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i6:archive_ticket_button"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:4180/#/tickets",
+  "fingerprint": [
+   0,
+   0.018,
+   0.009,
+   0.018,
+   0,
+   0,
+   0.028,
+   0,
+   0,
+   0.009,
+   0,
+   0,
+   0.018,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0.092,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0.046,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.028,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0.018,
+   0.028,
+   0,
+   0,
+   0,
+   0,
+   0.183,
+   0,
+   0.037,
+   0,
+   0.009,
+   0,
+   0,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.037,
+   0,
+   0.018,
+   0,
+   0.073,
+   0,
+   0,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.009,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0.037,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.009,
+   0.028,
+   0,
+   0,
+   0,
+   0.018,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.009,
+   0.009,
+   0,
+   0,
+   0.009,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0.009,
+   0,
+   0.018,
+   0.202,
+   0.028,
+   0,
+   0.018,
+   0.018,
+   0.009,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.009,
+   0,
+   0.734,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0.018,
+   0,
+   0.028,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.092,
+   0,
+   0,
+   0,
+   0.009,
+   0,
+   0.092,
+   0.009,
+   0.028,
+   0.018,
+   0,
+   0,
+   0,
+   0.092,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.092,
+   0.037,
+   0,
+   0.018,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0.018,
+   0,
+   0.009,
+   0,
+   0,
+   0,
+   0.037,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.009,
+   0,
+   0.037,
+   0,
+   0,
+   0,
+   0.018,
+   0.018,
+   0,
+   0.055,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.183,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0.018,
+   0.028,
+   0,
+   0,
+   0,
+   0,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.028,
+   0,
+   0.073,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.028,
+   0,
+   0,
+   0,
+   0.009,
+   0,
+   0,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0.009,
+   0.183,
+   0,
+   0.037,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0.073,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.009,
+   0.009,
+   0,
+   0.092,
+   0.009,
+   0,
+   0.018,
+   0.018,
+   0,
+   0,
+   0,
+   0.046,
+   0.055,
+   0,
+   0,
+   0,
+   0.009,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0.037,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.028,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0.009,
+   0,
+   0,
+   0,
+   0.092,
+   0,
+   0,
+   0.055,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0.385,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.101,
+   0.018,
+   0,
+   0.018,
+   0,
+   0.037,
+   0,
+   0,
+   0.147,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0.018,
+   0.028,
+   0,
+   0,
+   0.101,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0.018,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ]
+ },
+ "steps": [
+  {
+   "tool": "read_all",
+   "args": {
+    "label": "active_list_refs",
+    "target": "table tbody tr td:nth-child(1)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "table tbody tr td:nth-child(1)"
+     }
+    ]
+   },
+   "label": "other_ticket_ref_1"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "list_count_text",
+    "target": "@e543",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "list-summary"
+     },
+     {
+      "kind": "id",
+      "selector": "#list-summary"
+     },
+     {
+      "kind": "css",
+      "selector": "#list-summary"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 334,
+      "w": 114.9,
+      "h": 19.5,
+      "role": null,
+      "tag": "p",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "list_count_after_archive"
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e648"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "page-next"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Next"
+     },
+     {
+      "kind": "id",
+      "selector": "#page-next"
+     },
+     {
+      "kind": "css",
+      "selector": "#page-next"
+     },
+     {
+      "kind": "point",
+      "x": 1126,
+      "y": 895,
+      "w": 58.8,
+      "h": 39,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "addedContains": [
+     "- row \"RD-1003 Chest freezer icing up Pinehurst Grocers {{v4}} 2 {{*}}\"",
+     "- cell \"RD-1003\"",
+     "- link \"RD-1003\"",
+     "- cell \"Chest freezer icing up\"",
+     "- cell \"{{*}}\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read_all",
+   "args": {
+    "label": "active_list_refs_page2",
+    "target": "table tbody tr td:nth-child(1)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "table tbody tr td:nth-child(1)"
+     }
+    ]
+   },
+   "label": "other_ticket_ref_11"
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e646"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "page-prev"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Previous"
+     },
+     {
+      "kind": "id",
+      "selector": "#page-prev"
+     },
+     {
+      "kind": "css",
+      "selector": "#page-prev"
+     },
+     {
+      "kind": "point",
+      "x": 959,
+      "y": 572,
+      "w": 84.5,
+      "h": 39,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "addedContains": [
+     "- row \"RD-1014 Under-counter fridge door misaligned Marlow Bakery Draft 1 {{*}}\"",
+     "- cell \"RD-1014\"",
+     "- link \"RD-1014\"",
+     "- cell \"Under-counter fridge door misaligned\"",
+     "- cell \"Draft\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read_all",
+   "args": {
+    "label": "active_list_refs_page1_final",
+    "target": "table tbody tr td:nth-child(1)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "table tbody tr td:nth-child(1)"
+     }
+    ]
+   },
+   "label": "other_ticket_ref_1"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "list_count_final",
+    "target": "@e543",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "list-summary"
+     },
+     {
+      "kind": "id",
+      "selector": "#list-summary"
+     },
+     {
+      "kind": "css",
+      "selector": "#list-summary"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 334,
+      "w": 114.9,
+      "h": 19.5,
+      "role": null,
+      "tag": "p",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "list_count_after_archive"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#ticket-rows > tr:nth-of-type(9) > td:nth-of-type(1) > a"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"ticket-row-t5\"] a"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "ticket-link-t5"
+     },
+     {
+      "kind": "point",
+      "x": 152,
+      "y": 793,
+      "w": 54.6,
+      "h": 15,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "other_ticket_ref_9"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#ticket-rows > tr:nth-of-type(10) > td:nth-of-type(1) > a"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"ticket-row-t4\"] a"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "ticket-link-t4"
+     },
+     {
+      "kind": "point",
+      "x": 152,
+      "y": 839,
+      "w": 54.6,
+      "h": 15,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "other_ticket_ref_10"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#ticket-rows > tr:nth-of-type(1) > td:nth-of-type(1) > a"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"ticket-row-t14\"] a"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "ticket-link-t14"
+     },
+     {
+      "kind": "point",
+      "x": 152,
+      "y": 423,
+      "w": 54.6,
+      "h": 15,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "other_ticket_ref_1"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#ticket-rows > tr:nth-of-type(2) > td:nth-of-type(1) > a"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"ticket-row-t12\"] a"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "ticket-link-t12"
+     },
+     {
+      "kind": "point",
+      "x": 152,
+      "y": 470,
+      "w": 54.6,
+      "h": 15,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "other_ticket_ref_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#ticket-rows > tr:nth-of-type(3) > td:nth-of-type(1) > a"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"ticket-row-t11\"] a"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "ticket-link-t11"
+     },
+     {
+      "kind": "point",
+      "x": 152,
+      "y": 516,
+      "w": 54.6,
+      "h": 15,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "other_ticket_ref_3"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#ticket-rows > tr:nth-of-type(4) > td:nth-of-type(1) > a"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"ticket-row-t10\"] a"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "ticket-link-t10"
+     },
+     {
+      "kind": "point",
+      "x": 152,
+      "y": 562,
+      "w": 54.6,
+      "h": 15,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "other_ticket_ref_4"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#ticket-rows > tr:nth-of-type(5) > td:nth-of-type(1) > a"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"ticket-row-t9\"] a"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "ticket-link-t9"
+     },
+     {
+      "kind": "point",
+      "x": 152,
+      "y": 608,
+      "w": 54.6,
+      "h": 15,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "other_ticket_ref_5"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#ticket-rows > tr:nth-of-type(6) > td:nth-of-type(1) > a"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"ticket-row-t8\"] a"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "ticket-link-t8"
+     },
+     {
+      "kind": "point",
+      "x": 152,
+      "y": 654,
+      "w": 54.6,
+      "h": 15,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "other_ticket_ref_6"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#ticket-rows > tr:nth-of-type(7) > td:nth-of-type(1) > a"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"ticket-row-t7\"] a"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "ticket-link-t7"
+     },
+     {
+      "kind": "point",
+      "x": 152,
+      "y": 701,
+      "w": 54.6,
+      "h": 15,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "other_ticket_ref_7"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#ticket-rows > tr:nth-of-type(8) > td:nth-of-type(1) > a"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"ticket-row-t6\"] a"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "ticket-link-t6"
+     },
+     {
+      "kind": "point",
+      "x": 152,
+      "y": 747,
+      "w": 54.6,
+      "h": 15,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "other_ticket_ref_8"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Deleted both parts from {{v1}}: each Delete action opened an in-page \"Confirm\" modal, which I accepted with \"Delete part\"; the table refreshed after each and now reads \"No parts on this ticket yet.\" (footer total no longer rendered). Clicking \"{{v7}}\" produced NO confirmation dialog — it completed at once (button became \"Unarchive ticket\"; the ticket header gained an \"Archived\" badge next to Status \"{{v4}}\"). Returned to the tickets list with \"Show archived\" unchecked (verified unchecked), where the count is \"Showing 1–10 of 13\" and {{v1}} appears on neither page (page 1: RD-1014, RD-1012, RD-1011, RD-1010, RD-1009, RD-1008, RD-1007, RD-1006, RD-1005, RD-1004; page 2: RD-1003, RD-1002, RD-1001) — so \"{{v2}}\" is confirmed archived and no longer in the active list.",
+  "values": {
+   "archive_confirmation_text": "none — no confirmation dialog appeared; clicking \"{{v7}}\" immediately changed the button to \"Unarchive ticket\" and an \"Archived\" badge appeared in the ticket header",
+   "delete_confirmation": "in-page \"Confirm\" modal (heading Confirm, buttons Cancel / Delete part) shown for each part deletion; accepted",
+   "list_count_after_archive": "Showing 1–10 of 13",
+   "parts_table_after_both_deletions": "No parts on this ticket yet.",
+   "rd1015_in_active_list": "no — absent from both pages of the un-archived list",
+   "show_archived_checkbox_final": "unchecked",
+   "status_after_archive": "{{v4}}, with an Archived badge alongside it",
+   "ticket_detail_url": "http://127.0.0.1:4180/#/tickets/t15",
+   "ticket_reference": "{{v1}}",
+   "ticket_title": "{{v2}}",
+   "other_ticket_ref_1": "RD-1014",
+   "other_ticket_ref_2": "RD-1012",
+   "other_ticket_ref_3": "RD-1011",
+   "other_ticket_ref_4": "RD-1010",
+   "other_ticket_ref_5": "RD-1009",
+   "other_ticket_ref_6": "RD-1008",
+   "other_ticket_ref_7": "RD-1007",
+   "other_ticket_ref_8": "RD-1006",
+   "other_ticket_ref_9": "RD-1005",
+   "other_ticket_ref_10": "RD-1004",
+   "other_ticket_ref_11": "RD-1003"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-15T12:52:58.890Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-15T12:55:54.490Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_77833d",
+  "index": 1,
+  "of": 2
+ },
+ "provenance": {
+  "session": "fwrd54-n1",
+  "instruction": "On the ticket detail page for RD-1015 (titled 'fwrd54-n1 RD Bench Ticket', status Ready), delete both parts: use the Delete action on 'fwrd54-n1 RD Part A' and confirm if a confirmation dialog appears, wait for the parts table to refresh so the row is gone (the view refreshes a short beat after the mutation, so wait for the row to actually disappear rather than assuming the first render is final), then do the same for 'fwrd54-n1 RD Part B'. Then archive the ticket using the 'Archive ticket' button (confirm if asked). Wait for the refresh. Finally verify: go back to the tickets list (make sure the 'Show archived' checkbox is unchecked) and confirm the ticket 'fwrd54-n1 RD Bench Ticket' / RD-1015 no longer appears in the active list. Report what the parts table shows after both deletions, what the archive action showed (any confirmation text), and whether RD-1015 still appears in the un-archived tickets list.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-15T12:52:58.890Z"
+ },
+ "revision": 4
+}
