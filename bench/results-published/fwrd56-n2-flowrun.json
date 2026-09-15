@@ -1,0 +1,174 @@
+{
+  "flow": "fwrd56",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_339639; observed sign_in_password=bench-pass-1234, tickets_count_summary=Showing 1–10 of 13, main_nav_items=Tickets, visible_refs=RD-1014 | RD-1012 | RD-1011 | RD-1010 | RD-1009 | RD-1008 | RD-1007 | RD-1006 | RD-1005 | RD-1004, app_name=Repair Desk, signed_in_user=Bench User, page_heading=Repair tickets.",
+      "values": {
+        "sign_in_password": "bench-pass-1234",
+        "tickets_count_summary": "Showing 1–10 of 13",
+        "main_nav_items": "Tickets",
+        "visible_refs": "RD-1014 | RD-1012 | RD-1011 | RD-1010 | RD-1009 | RD-1008 | RD-1007 | RD-1006 | RD-1005 | RD-1004",
+        "app_name": "Repair Desk",
+        "signed_in_user": "Bench User",
+        "page_heading": "Repair tickets"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_d00a27; observed new_ticket_title=fwrd56-n2 RD Bench Ticket, test_run_id=fwrd56-n2, new_ticket_status=RD-1014 | Under-counter fridge door misaligned | Marlow Bakery | Draft | 1 | 2026-01-23, new_ticket_reference=RD-1016, new_ticket_created=2026-09-15.",
+      "values": {
+        "new_ticket_title": "fwrd56-n2 RD Bench Ticket",
+        "test_run_id": "fwrd56-n2",
+        "new_ticket_status": "RD-1014 | Under-counter fridge door misaligned | Marlow Bakery | Draft | 1 | 2026-01-23",
+        "new_ticket_reference": "RD-1016",
+        "new_ticket_created": "2026-09-15"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "new_ticket_customer"
+      ]
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_0d8c07; observed part_name=fwrd56-n2 RD Part A, test_run_id=fwrd56-n2, part_row=fwrd56-n2 RD Part A\t$100.00\t25%\t1\tNo supplier\t$125.00\tEdit Delete, ticket_detail_url=http://127.0.0.1:4180/#/tickets/t15, ticket_reference=RD-1016, ticket_title=fwrd56-n2 RD Bench Ticket, ticket_status=Draft, part_cost=$100.00, part_markup=25%, part_supplier=No supplier, part_price_computed=$125.00, form_price_note=Price is calculated from cost and markup when the part is saved..",
+      "values": {
+        "part_name": "fwrd56-n2 RD Part A",
+        "test_run_id": "fwrd56-n2",
+        "part_row": "fwrd56-n2 RD Part A\t$100.00\t25%\t1\tNo supplier\t$125.00\tEdit Delete",
+        "ticket_detail_url": "http://127.0.0.1:4180/#/tickets/t15",
+        "ticket_reference": "RD-1016",
+        "ticket_title": "fwrd56-n2 RD Bench Ticket",
+        "ticket_status": "Draft",
+        "part_cost": "$100.00",
+        "part_markup": "25%",
+        "part_supplier": "No supplier",
+        "part_price_computed": "$125.00",
+        "form_price_note": "Price is calculated from cost and markup when the part is saved."
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "19/19",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-add",
+      "status": "success",
+      "summary": "On the RD-1016 detail page (http://127.0.0.1:4180/#/tickets/t15) I opened \"Add part\" and submitted a second part: Part name \"fwrd56-n2 RD Part B\", Cost 200, Markup % 25 (Quantity defaulted to 1, Supplier blank). The dialog closed and, after the view's refresh beat, the new row appeared in the Parts table (confirmed via wait_for and by reading the cells): Name \"fwrd56-n2 RD Part B\", Cost $200.00, Markup 25%, Qty 1, Supplier \"No supplier\", Price $250.00 — the app's computed price exactly as displayed. The Parts table now lists Part A ($100.00 / 25% / $125.00) and Part B, and the footer row shows \"Total (price × quantity) $375.00\".",
+      "values": {
+        "part_b_name": "fwrd56-n2 RD Part B",
+        "test_run_id": "fwrd56-n2",
+        "parts_total": "$375.00",
+        "ticket_reference": "RD-1016",
+        "ticket_title": "fwrd56-n2 RD Bench Ticket",
+        "part_b_cost": "$200.00",
+        "part_b_markup": "25%",
+        "part_b_supplier": "No supplier",
+        "part_b_price_computed": "$250.00",
+        "part_a_name": "fwrd56-n2 RD Part A",
+        "part_a_price": "$125.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-edit",
+      "status": "success",
+      "summary": "Replayed stored procedure s_0ee4ba; observed test_run_id=fwrd56-n2, part_a_name=fwrd56-n2 RD Part A, ticket_reference=RD-1016, part_a_new_cost=$150.00, part_a_markup=25%, part_a_supplier=No supplier, part_a_new_price=$187.50, part_b_price=$250.00, parts_total_new=$437.50.",
+      "values": {
+        "test_run_id": "fwrd56-n2",
+        "part_a_name": "fwrd56-n2 RD Part A",
+        "ticket_reference": "RD-1016",
+        "part_a_new_cost": "$150.00",
+        "part_a_markup": "25%",
+        "part_a_supplier": "No supplier",
+        "part_a_new_price": "$187.50",
+        "part_b_price": "$250.00",
+        "parts_total_new": "$437.50"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "06-change",
+      "status": "success",
+      "summary": "Replayed stored procedure s_beb799; observed part_a=fwrd56-n2 RD Part A | $150.00 | 25% | 1 | Bench Supply Co | $187.50, part_b=fwrd56-n2 RD Part B | $200.00 | 25% | 1 | Bench Supply Co | $250.00, test_run_id=fwrd56-n2, precondition_error_verbatim=Ticket is not ready\n\nPart \"fwrd56-n2 RD Part A\" has no supplier\nPart \"fwrd56-n2 RD Part B\" has no supplier, ticket_reference=RD-1016, parts_total=$437.50, final_status_displayed=Ready.",
+      "values": {
+        "part_a": "fwrd56-n2 RD Part A | $150.00 | 25% | 1 | Bench Supply Co | $187.50",
+        "part_b": "fwrd56-n2 RD Part B | $200.00 | 25% | 1 | Bench Supply Co | $250.00",
+        "test_run_id": "fwrd56-n2",
+        "precondition_error_verbatim": "Ticket is not ready\n\nPart \"fwrd56-n2 RD Part A\" has no supplier\nPart \"fwrd56-n2 RD Part B\" has no supplier",
+        "ticket_reference": "RD-1016",
+        "parts_total": "$437.50",
+        "final_status_displayed": "Ready"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "supplier_value_used"
+      ]
+    },
+    {
+      "id": "07-delete",
+      "status": "success",
+      "summary": "Replayed stored procedure s_3aa681; observed delete_confirm_dialog_text_part_a=Confirm — Delete the part \"fwrd56-n2 RD Part A\" from this ticket? This cannot be undone. [Cancel] [Delete part], delete_confirm_dialog_text_part_b=Confirm — Delete the part \"fwrd56-n2 RD Part B\" from this ticket? This cannot be undone. [Cancel] [Delete part], ticket_after_archive=status Ready + \"Archived\" badge; Archive ticket button replaced by \"Unarchive ticket\", default_list_result=RD-1016 absent — first row is RD-1014; heading \"Showing 1–10 of 13\", show_archived_result=RD-1016 present as first row: Ref RD-1016 | Title \"fwrd56-n2 RD Bench Ticket\" + Archived badge | Customer Bench Customer | Status Ready | Parts 0 | Created 2026-09-15 — \"Showing 1–10 of 15\", test_run_id=fwrd56-n2, ticket_reference=RD-1016, first_list_row_reference=RD-1014.",
+      "values": {
+        "delete_confirm_dialog_text_part_a": "Confirm — Delete the part \"fwrd56-n2 RD Part A\" from this ticket? This cannot be undone. [Cancel] [Delete part]",
+        "delete_confirm_dialog_text_part_b": "Confirm — Delete the part \"fwrd56-n2 RD Part B\" from this ticket? This cannot be undone. [Cancel] [Delete part]",
+        "ticket_after_archive": "status Ready + \"Archived\" badge; Archive ticket button replaced by \"Unarchive ticket\"",
+        "default_list_result": "RD-1016 absent — first row is RD-1014; heading \"Showing 1–10 of 13\"",
+        "show_archived_result": "RD-1016 present as first row: Ref RD-1016 | Title \"fwrd56-n2 RD Bench Ticket\" + Archived badge | Customer Bench Customer | Status Ready | Parts 0 | Created 2026-09-15 — \"Showing 1–10 of 15\"",
+        "test_run_id": "fwrd56-n2",
+        "ticket_reference": "RD-1016",
+        "first_list_row_reference": "RD-1014"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 7,
+  "total": 7,
+  "repinned": 0,
+  "drift": 0,
+  "wallMs": 25509,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

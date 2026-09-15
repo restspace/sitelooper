@@ -1,0 +1,118 @@
+
+[sweep] run 1/3: fwrd56-n1 (store: /home/user/sitelooper/bench/results/fwrd56-skills)
+[harness] repairdesk: defaulting APP_URL
+[harness] repairdesk: defaulting APP_EMAIL
+[harness] repairdesk: defaulting APP_PASSWORD
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+[harness] repairdesk responded 200 at http://127.0.0.1:4180/
+stopped: fwrd56-n1
+  flow "fwrd56" saved: 7 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwrd56.json
+  warning: note: dropped 7 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: note: 01-open no longer publishes table_columns, status_filter_options — no replay reads them from the page and the recording showed no line to read
+  warning: note: 02-create no longer publishes new_ticket_parts_count, required_fields, form_buttons — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-open no longer publishes part_quantity, total_price_x_quantity, part_form_required_fields — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-add no longer publishes part_b_quantity — no replay reads it from the page and the recording showed no line to read
+  warning: note: 05-edit no longer publishes part_a_quantity, parts_total_previous — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-change no longer publishes status_buttons_after — no replay reads it from the page and the recording showed no line to read
+  warning: note: 07-delete no longer publishes parts_count_on_detail_after, parts_count_in_archived_row — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 164 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "bench-pass-1234" (output) in "Open http://127.0.0.1:4180/ and sign in with email bench@example.com and password bench-pass-1234. Then report what the app's main screen shows (what kind of ap"
+  flow.steps[0].params.v3: "bench-pass-1234" (output) in "bench-pass-1234"
+  flow.steps[5].instruction: "Ready" (output) in "In the {{01-open.app_name}} app, on ticket {{02-create.new_ticket_reference}}, attempt to change the ticket's status to 'Ready'. The app enforces preconditions "
+  flow.steps[6].instruction: "Ready" (output) in "In the {{01-open.app_name}} app, on ticket {{02-create.new_ticket_reference}} (status Ready), delete both parts: '{{runid}} RD Part A' and '{{runid}} RD Part B'"
+  flow.steps[6].params.v3: "Ready" (output) in "Ready"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwrd56-n1 stop=completed
+turns=8 wall=311.1s
+commands=7 cmdTime=282.8s cmdBytes=9089 timeouts=0
+orchestrator in=6513 cw=0 cr=26880 out=1721
+inner prompt=1299931 cached=1203968 completion=15284
+spend=$0.0509 maxUsd=3
+learn: A_n=0 replayed=0/7 full=0 repaired=0 compiled=7 variants=0
+-> /home/user/sitelooper/bench/results/fwrd56-n1-sitelooper-result.json
+
+=== fwrd56-n1 === (run self-reported: completed)
+  obj 1  PASS  seq 1: ticket t15 (RD-1015) "fwrd56-n1 RD Bench Ticket"
+  obj 2  PASS  seq 2 p18 cost=100 markup=25 price=125.00
+  obj 3  PASS  seq 3 p19 cost=200 markup=25 price=250.00
+  obj 4  PASS  seq 4: cost 100 -> 150, price 125.00 -> 187.50 (want 187.50), after the create at seq 2
+  obj 5  PASS  seq 7: status Draft -> Ready
+  obj 6  PASS  part A deleted, part B deleted, archive entry at seq 10; state: 0 part(s) surviving, ticket t15 archived=true
+  claim 2  ok — run reported 125.00, app recorded 125.00
+  claim 3  ok — run reported 250.00, app recorded 250.00
+  claim 4  ok — run reported 187.50, app recorded 187.50
+  summary: 6/6 objectives PASS, 0 price claim mismatch(es), 0 duplicate ticket(s)
+
+App state: 15 tickets total, 1 left by benchmark runs (0 still active), 17 parts total, 10 mutation log entries.
+
+[sweep] run 2/3: fwrd56-n2 (replay flow fwrd56, no orchestrator)
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+
+=== fwrd56-n2 === (run self-reported: no result file)
+  note: no result file in /home/user/sitelooper/bench/results — objectives are still scored from the log,
+        but the run's claimed prices cannot be cross-checked.
+  obj 1  PASS  seq 1: ticket t15 (RD-1016) "fwrd56-n2 RD Bench Ticket"
+  obj 2  PASS  seq 2 p18 cost=100 markup=25 price=125.00
+  obj 3  PASS  seq 3 p19 cost=200 markup=25 price=250.00
+  obj 4  PASS  seq 4: cost 100 -> 150, price 125.00 -> 187.50 (want 187.50), after the create at seq 2
+  obj 5  PASS  seq 7: status Draft -> Ready
+  obj 6  PASS  part A deleted, part B deleted, archive entry at seq 10; state: 0 part(s) surviving, ticket t15 archived=true
+  claim 2  no claim parsed from the run's final report
+  claim 3  no claim parsed from the run's final report
+  claim 4  no claim parsed from the run's final report
+  summary: 6/6 objectives PASS, 0 price claim mismatch(es), 0 duplicate ticket(s)
+
+App state: 15 tickets total, 1 left by benchmark runs (0 still active), 17 parts total, 10 mutation log entries.
+
+[sweep] run 3/3: fwrd56-n3 (replay flow fwrd56, no orchestrator)
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+
+=== fwrd56-n3 === (run self-reported: no result file)
+  note: no result file in /home/user/sitelooper/bench/results — objectives are still scored from the log,
+        but the run's claimed prices cannot be cross-checked.
+  obj 1  PASS  seq 1: ticket t15 (RD-1017) "fwrd56-n3 RD Bench Ticket"
+  obj 2  PASS  seq 2 p18 cost=100 markup=25 price=125.00
+  obj 3  PASS  seq 3 p19 cost=200 markup=25 price=250.00
+  obj 4  PASS  seq 4: cost 100 -> 150, price 125.00 -> 187.50 (want 187.50), after the create at seq 2
+  obj 5  PASS  seq 7: status Draft -> Ready
+  obj 6  PASS  part A deleted, part B deleted, archive entry at seq 10; state: 0 part(s) surviving, ticket t15 archived=true
+  claim 2  no claim parsed from the run's final report
+  claim 3  no claim parsed from the run's final report
+  claim 4  no claim parsed from the run's final report
+  summary: 6/6 objectives PASS, 0 price claim mismatch(es), 0 duplicate ticket(s)
+
+App state: 15 tickets total, 1 left by benchmark runs (0 still active), 17 parts total, 10 mutation log entries.
+
+Learning sweep fwrd56 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwrd56-n1' │ '6/6'    │ 'completed' │ 8     │ 7    │ 0.0509    │ 0   │ '0/7'        │ 311    │
+│ 1       │ 2 │ 'fwrd56-n2' │ '6/6'    │ 'success'   │ 0     │ 7    │ 0         │ 1   │ '7/7 (flow)' │ 26     │
+│ 2       │ 3 │ 'fwrd56-n3' │ '6/6'    │ 'success'   │ 0     │ 7    │ 0         │ 1   │ '7/7 (flow)' │ 25     │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:4180
+  s_000fdf  validated   10 steps  3/3 (100%)
+           In the {{v1}} app, on ticket {{v2}} (status {{v3}}), delete both parts: '{{v4}}' and '{{v6}}'. Confirm any del…
+  s_0d8c07  validated   18 steps  3/3 (100%)
+           In the {{v1}} app, open ticket {{v2}} (titled '{{v3}}') and add a part to it named exactly '{{v5}}' with cost …
+  s_0ee4ba  validated   12 steps  3/3 (100%)
+           In the {{v1}} app, on ticket {{v2}}, edit the part named '{{v3}}' to change its cost from 100 to {{v5}} (keep …
+  s_339639  validated    7 steps  3/3 (100%)
+           Open {{v1}} and sign in with email {{v2}} and password {{v3}}. Then report what the app's main screen shows (w…
+  s_3aa681  validated    3 steps  3/3 (100%)
+           In the {{v1}} app, on ticket {{v2}} (status {{v3}}), delete both parts: '{{v4}}' and '{{v6}}'. Confirm any del…
+  s_5bc022  validated    1 steps  3/3 (100%)
+           Open {{v1}} and sign in with email {{v2}} and password {{v3}}. Then report what the app's main screen shows (w…
+  s_8778f4  validated    3 steps  3/3 (100%)
+           Open {{v1}} and sign in with email {{v2}} and password {{v3}}. Then report what the app's main screen shows (w…
+  s_beb799  validated   14 steps  3/3 (100%)
+           In the {{v1}} app, on ticket {{v2}}, attempt to change the ticket's status to 'Ready'. The app enforces precon…
+  s_cc3a5b  validated    1 steps  3/3 (100%)
+           In the {{v1}} app, open ticket {{v2}} (titled '{{v3}}') and add a part to it named exactly '{{v5}}' with cost …
+  s_d00a27  validated   11 steps  3/3 (100%)
+           In the {{v1}} app, create a new repair ticket titled exactly '{{v3}}'. Fill in any required fields the form de…
+  s_d2fcfd  validated   17 steps  3/3 (100%)
+           In the {{v1}} app, on ticket {{v2}} (titled '{{v3}}'), add a second part named exactly '{{v5}}' with cost {{v6…
+store: /home/user/sitelooper/bench/results/fwrd56-skills
+
+summary: /home/user/sitelooper/bench/results/fwrd56-sweep.json
