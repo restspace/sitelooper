@@ -1,0 +1,185 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwgr40-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwgr40-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwgr40-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwgr40-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwgr40.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwgr40-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwgr40.spec.ts",
+      "file": "fwgr40.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwgr40",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 2550000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 58397,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe monaco/set-value (r_f2510e); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-report\n"
+                    }
+                  ],
+                  "stderr": [
+                    {
+                      "text": "[sitelooper warn] 03-open s_b762eb/13: read 'new_panel_title' returned a value the skill itself set/selected ('fwgr40-spec Notes') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-open s_b762eb/14: read 'new_panel_content' returned a value the skill itself set/selected ('Bench notes for run fwgr40-spec') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 04-open s_3f90a4/18 target: read target not found — value left empty\n"
+                    }
+                  ],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in to Grafana with username 'admin' and password 'admin' (skip the change-password prompt if it appears). Then navigate to the provisioned dashboard named 'Service health' (use Dashboards list / search). Report the titles of all panels on that dashboard exactly as shown on screen, one per line.",
+                      "duration": 7632
+                    },
+                    {
+                      "title": "02-create: Create a NEW dashboard in Grafana: click New dashboard, add a visualization, and pick the TestData data source (it may be named 'Grafana Test Data DB' or similar - the one whose query editor has a 'Scenario' dropdown). Change the panel type to 'Stat'. Set the panel title to exactly '{{runid}} Availability'. Then save the dashboard with the title exactly '{{runid}} {{01-signin.dashboard_folder}} Dashboard' (leave folder as General, no tags yet). Confirm the save succeeded and report the dashboard URL/UID shown in the browser address bar after saving.",
+                      "duration": 13395
+                    },
+                    {
+                      "title": "03-open: On the currently open dashboard '{{runid}} {{01-signin.dashboard_folder}} Dashboard' (URL http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard), add a NEW Text panel: click the Add button / Add visualization, choose 'Add a new panel', and select the 'Text' panel type from the visualization picker. Set the panel's title to exactly '{{runid}} Notes' and set the text content to include the runid, e.g. content: '{{01-signin.dashboard_folder}} notes for run {{runid}}'. Then click Apply to exit the editor, and SAVE the dashboard (explicitly save so it persists). Report the panel titles now visible on the dashboard and confirm the save succeeded.",
+                      "duration": 6941
+                    },
+                    {
+                      "title": "04-open: On the open dashboard '{{runid}} {{01-signin.dashboard_folder}} Dashboard' (URL http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard), do two things and save so both persist: (1) Open dashboard settings (gear icon) and add the tag 'bench' to the dashboard's tags, then close settings. (2) Set the top-bar time range picker to 'Last 6 hours'. (3) Then save the dashboard via the Save button, and in the save dialog make sure the checkbox 'Update default time range' IS TICKED before confirming the save. Report the confirmation message, the tags shown in settings, and the time range shown in the top bar.",
+                      "duration": 18116
+                    },
+                    {
+                      "title": "05-open: On the open dashboard '{{runid}} {{01-signin.dashboard_folder}} Dashboard' (URL http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard), set the dashboard's auto-refresh interval to '1m': open the refresh-rate dropdown in the top bar (next to the refresh button, usually showing 'Off' or a time like '5m') and select '1m'. Then SAVE the dashboard via the Save button, ticking the 'Update default time range' checkbox in the save drawer so the refresh interval persists, and confirm the save. Then reload the page and report what the refresh dropdown shows after the reload, plus the save confirmation message.",
+                      "duration": 4017
+                    },
+                    {
+                      "title": "06-report: Final verification: navigate to the dashboard '{{runid}} {{01-signin.dashboard_folder}} Dashboard' by opening a fresh URL http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard (no query params) so it loads from saved state, then report: (a) the exact URL now shown in the browser address bar, (b) the titles of all panels visible, (c) the time range shown in the top-bar time picker, (d) the value shown in the auto-refresh dropdown, (e) the tags listed in dashboard settings (open the gear/settings briefly to check). Do not change anything.",
+                      "duration": 7379
+                    }
+                  ],
+                  "startTime": "2026-09-15T16:42:13.900Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d2eabf22fc8dd0c4e896-12c89b3f44a783a29107",
+          "file": "fwgr40.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-15T16:42:12.367Z",
+    "duration": 60081.554000000004,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
