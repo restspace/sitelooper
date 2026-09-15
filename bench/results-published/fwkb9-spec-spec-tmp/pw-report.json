@@ -1,0 +1,182 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwkb9-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwkb9-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwkb9-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwkb9-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwkb9.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwkb9-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwkb9.spec.ts",
+      "file": "fwkb9.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwkb9",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 1500000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 16804,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-verify\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-set\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-open\n"
+                    }
+                  ],
+                  "stderr": [
+                    {
+                      "text": "[sitelooper warn] 01-open s_d85c50/11: read 'project_name' returned a value the skill itself set/selected ('Bench Board') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_a3f8be/11: read 'task_title' returned a value the skill itself set/selected ('fwkb9-spec Bench Task') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 04-open s_84ad0f/5: read 'comment_text' returned a value the skill itself set/selected ('Comment for run fwkb9-spec') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    }
+                  ],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:8085/ and sign in with username admin and password admin. Then navigate to the project named 'Bench Board' and open its board view. Report the names of the board's columns in their exact left-to-right order as displayed on the board, exactly as shown. Do not modify anything.",
+                      "duration": 5214
+                    },
+                    {
+                      "title": "02-create: In the Kanboard project 'Bench Board', create a new task titled exactly '{{runid}} Bench Task' with a description that includes the text '{{runid}}' (e.g. 'Bench task for run {{runid}}'). Create it in the default/first column. After saving, report the task's numeric ID exactly as the app displays it (shown as #<number> on the task card and task page) and confirm the description text shown on the task page. Do not touch any tasks whose titles start with 'Seed:'.",
+                      "duration": 4034
+                    },
+                    {
+                      "title": "03-verify: In the Kanboard project 'Bench Board', move the task titled '{{runid}} Bench Task' (task {{02-create.task_id_display}}) so that it sits in the '{{01-open.column_3}}' column of the board. You may drag the card between columns or use the task's move/position action from its card menu or task page — whatever works. Do not move or modify any tasks whose titles start with 'Seed:'. Afterwards, verify on the board that the card '{{runid}} Bench Task' appears under the '{{01-open.column_3}}' column and report which column it is in and the column's task list.",
+                      "duration": 571
+                    },
+                    {
+                      "title": "04-open: In Kanboard, open the task page for task {{02-create.task_id_display}} titled '{{runid}} Bench Task' in project 'Bench Board' and add a comment whose text includes '{{runid}}' (e.g. 'Comment for run {{runid}}'). After saving, verify the comment appears on the task page and report the exact comment text shown and the comment count.",
+                      "duration": 2755
+                    },
+                    {
+                      "title": "05-set: In Kanboard, on the task page for task {{02-create.task_id_display}} titled '{{runid}} Bench Task' in project 'Bench Board', set the task's due date to 2026-12-31 (December 31, 2026). Use the task page's edit/details form or the due-date field — whatever the app provides. After saving, verify the due date shown on the task page is 2026-12-31 (or the app's equivalent display for that date) and report exactly what the page displays for the due date. Do not change any other task details.",
+                      "duration": 3290
+                    },
+                    {
+                      "title": "06-open: Verification only, do not modify anything: In Kanboard project 'Bench Board', open the board and the task page for the task titled '{{runid}} Bench Task'. Report: (1) the board's column names in left-to-right order; (2) which column the card '{{runid}} Bench Task' currently sits in; (3) the task's numeric ID as displayed (the #number); (4) the task's description text as shown on the task page; (5) the text of the comment(s) on the task; (6) the due date shown on the task page. Read-only.",
+                      "duration": 556
+                    }
+                  ],
+                  "startTime": "2026-09-15T12:53:57.945Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "56aab17bac123c735bdd-ef5ec01b067c5bbf4176",
+          "file": "fwkb9.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-15T12:53:56.478Z",
+    "duration": 18489.567000000003,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

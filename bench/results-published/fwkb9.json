@@ -1,0 +1,365 @@
+{
+  "name": "fwkb9",
+  "origin": "http://127.0.0.1:8085",
+  "startUrl": "http://127.0.0.1:8085/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-open",
+      "instruction": "Open http://127.0.0.1:8085/ and sign in with username admin and password admin. Then navigate to the project named 'Bench Board' and open its board view. Report the names of the board's columns in their exact left-to-right order as displayed on the board, exactly as shown. Do not modify anything.",
+      "skill": "s_d85c50",
+      "params": {
+        "v1": "http://127.0.0.1:8085/"
+      },
+      "outputs": [
+        "project_name",
+        "columns_left_to_right",
+        "column_1",
+        "column_2",
+        "column_3",
+        "column_4"
+      ],
+      "recorded": {
+        "project_name": "Bench Board",
+        "columns_left_to_right": "Backlog, Ready, Work in progress, Done",
+        "column_1": "Backlog",
+        "column_2": "Ready",
+        "column_3": "Work in progress",
+        "column_4": "Done",
+        "url": "http://127.0.0.1:8085/?controller=BoardViewController&action=show&project_id=1"
+      },
+      "route": "http://127.0.0.1:8085/",
+      "outputEvidence": {
+        "column_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "column_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "column_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "column_4": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "In the Kanboard project 'Bench Board', create a new task titled exactly '{{runid}} Bench Task' with a description that includes the text '{{runid}}' (e.g. 'Bench task for run {{runid}}'). Create it in the default/first column. After saving, report the task's numeric ID exactly as the app displays it (shown as #<number> on the task card and task page) and confirm the description text shown on the task page. Do not touch any tasks whose titles start with 'Seed:'.",
+      "skill": "s_a3f8be",
+      "params": {
+        "v1": "Bench Board",
+        "v3": "{{runid}} Bench Task",
+        "v2": "{{runid}}",
+        "v4": "Bench task for run {{runid}}"
+      },
+      "outputs": [
+        "task_id_display",
+        "task_title",
+        "task_description",
+        "column",
+        "swimlane",
+        "position",
+        "project_name",
+        "project_id",
+        "column_task_count",
+        "task_page_href",
+        "run_reference"
+      ],
+      "recorded": {
+        "task_id_display": "#4",
+        "task_title": "fwkb9-n1 Bench Task",
+        "task_description": "Bench task for run fwkb9-n1",
+        "column": "Backlog",
+        "swimlane": "Default swimlane",
+        "position": "4",
+        "project_name": "Bench Board",
+        "project_id": "1",
+        "column_task_count": "4",
+        "task_page_href": "/?controller=TaskViewController&action=show&task_id=4",
+        "run_reference": "fwkb9-n1"
+      },
+      "route": "http://127.0.0.1:8085/",
+      "outputEvidence": {
+        "task_id_display": {
+          "same": 1,
+          "differed": 0
+        },
+        "task_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "task_description": {
+          "same": 0,
+          "differed": 1
+        },
+        "project_name": {
+          "same": 1,
+          "differed": 0
+        },
+        "task_page_href": {
+          "same": 1,
+          "differed": 0
+        },
+        "run_reference": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "03-verify",
+      "instruction": "In the Kanboard project 'Bench Board', move the task titled '{{runid}} Bench Task' (task {{02-create.task_id_display}}) so that it sits in the '{{01-open.column_3}}' column of the board. You may drag the card between columns or use the task's move/position action from its card menu or task page — whatever works. Do not move or modify any tasks whose titles start with 'Seed:'. Afterwards, verify on the board that the card '{{runid}} Bench Task' appears under the '{{01-open.column_3}}' column and report which column it is in and the column's task list.",
+      "skill": "s_3db086",
+      "params": {
+        "v1": "Bench Board",
+        "v2": "{{runid}} Bench Task",
+        "v4": "{{01-open.column_3}}",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "method",
+        "task_moved",
+        "target_column",
+        "Work_in_progress_task_count",
+        "Work_in_progress_tasks",
+        "Backlog_tasks",
+        "Ready_tasks",
+        "Done_tasks",
+        "run_reference"
+      ],
+      "recorded": {
+        "method": "drag card to Work in progress cell",
+        "task_moved": "#4 fwkb9-n1 Bench Task",
+        "target_column": "Work in progress",
+        "Work_in_progress_task_count": "1",
+        "Work_in_progress_tasks": "#4 fwkb9-n1 Bench Task",
+        "Backlog_tasks": "#1 Seed: triage inbox, #2 Seed: order missing parts, #3 Seed: ship repaired device",
+        "Ready_tasks": "",
+        "Done_tasks": "",
+        "run_reference": "fwkb9-n1"
+      },
+      "route": "http://127.0.0.1:8085/",
+      "outputEvidence": {
+        "method": {
+          "same": 0,
+          "differed": 1
+        },
+        "task_moved": {
+          "same": 0,
+          "differed": 1
+        },
+        "target_column": {
+          "same": 1,
+          "differed": 0
+        },
+        "Work_in_progress_tasks": {
+          "same": 0,
+          "differed": 1
+        },
+        "run_reference": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "04-open",
+      "instruction": "In Kanboard, open the task page for task {{02-create.task_id_display}} titled '{{runid}} Bench Task' in project 'Bench Board' and add a comment whose text includes '{{runid}}' (e.g. 'Comment for run {{runid}}'). After saving, verify the comment appears on the task page and report the exact comment text shown and the comment count.",
+      "skill": "s_84ad0f",
+      "params": {
+        "v1": "{{runid}} Bench Task",
+        "v3": "Bench Board",
+        "v2": "{{runid}}",
+        "v4": "Comment for run {{runid}}"
+      },
+      "outputs": [
+        "task_page",
+        "comment_text",
+        "comment_author",
+        "comment_count",
+        "comment_visibility",
+        "comment_created_at",
+        "comments_header",
+        "run_reference"
+      ],
+      "recorded": {
+        "task_page": "Bench Board, #4 - fwkb9-n1 Bench Task",
+        "comment_text": "Comment for run fwkb9-n1",
+        "comment_author": "admin",
+        "comment_count": "1",
+        "comment_visibility": "Standard users",
+        "comment_created_at": "09/15/2026 12:50",
+        "comments_header": "Comments",
+        "run_reference": "fwkb9-n1",
+        "url": "http://127.0.0.1:8085/?controller=TaskViewController&action=show&task_id=4"
+      },
+      "route": "http://127.0.0.1:8085/",
+      "outputEvidence": {
+        "task_page": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_visibility": {
+          "same": 1,
+          "differed": 0
+        },
+        "comments_header": {
+          "same": 1,
+          "differed": 0
+        },
+        "run_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "05-set",
+      "instruction": "In Kanboard, on the task page for task {{02-create.task_id_display}} titled '{{runid}} Bench Task' in project 'Bench Board', set the task's due date to 2026-12-31 (December 31, 2026). Use the task page's edit/details form or the due-date field — whatever the app provides. After saving, verify the due date shown on the task page is 2026-12-31 (or the app's equivalent display for that date) and report exactly what the page displays for the due date. Do not change any other task details.",
+      "skill": "s_1137c0",
+      "params": {
+        "v1": "{{runid}} Bench Task",
+        "v3": "Bench Board",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "due_date_page_display",
+        "due_date_field_value",
+        "server_response_due_date_span",
+        "date_component_matches_request",
+        "title",
+        "project",
+        "column"
+      ],
+      "recorded": {
+        "due_date_page_display": "Due date: 12/31/2026 12:51",
+        "due_date_field_value": "12/31/2026 12:51",
+        "server_response_due_date_span": "<span>12/31/2026 12:51</span>",
+        "date_component_matches_request": "true (12/31/2026 = 2026-12-31)",
+        "title": "fwkb9-n1 Bench Task",
+        "project": "Bench Board",
+        "column": "Work in progress"
+      },
+      "route": "http://127.0.0.1:8085/",
+      "outputEvidence": {
+        "due_date_page_display": {
+          "same": 0,
+          "differed": 1
+        },
+        "due_date_field_value": {
+          "same": 0,
+          "differed": 1
+        },
+        "title": {
+          "same": 0,
+          "differed": 1
+        },
+        "project": {
+          "same": 1,
+          "differed": 0
+        },
+        "column": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "06-open",
+      "instruction": "Verification only, do not modify anything: In Kanboard project 'Bench Board', open the board and the task page for the task titled '{{runid}} Bench Task'. Report: (1) the board's column names in left-to-right order; (2) which column the card '{{runid}} Bench Task' currently sits in; (3) the task's numeric ID as displayed (the #number); (4) the task's description text as shown on the task page; (5) the text of the comment(s) on the task; (6) the due date shown on the task page. Read-only.",
+      "skill": "s_842049",
+      "params": {
+        "v1": "Bench Board",
+        "v2": "{{runid}} Bench Task",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "columns_left_to_right",
+        "card_column",
+        "task_id_display",
+        "task_title",
+        "description_text_on_task_page",
+        "comments",
+        "comment_count",
+        "due_date_displayed",
+        "card_due_date",
+        "task_page_url",
+        "run_reference"
+      ],
+      "recorded": {
+        "columns_left_to_right": "Backlog, Ready, Work in progress, Done",
+        "card_column": "Work in progress (3rd column; Backlog count 3, Work in progress count 1, Ready and Done empty)",
+        "task_id_display": "#4",
+        "task_title": "fwkb9-n1 Bench Task",
+        "description_text_on_task_page": "Bench task for run fwkb9-n1",
+        "comments": "Comment for run fwkb9-n1",
+        "comment_count": "1",
+        "due_date_displayed": "Due date: 12/31/2026 12:51",
+        "card_due_date": "12/31/2026 12:51",
+        "task_page_url": "http://127.0.0.1:8085/?controller=TaskViewController&action=show&task_id=4",
+        "run_reference": "fwkb9-n1"
+      },
+      "route": "http://127.0.0.1:8085/",
+      "outputEvidence": {
+        "task_id_display": {
+          "same": 1,
+          "differed": 0
+        },
+        "task_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "description_text_on_task_page": {
+          "same": 0,
+          "differed": 1
+        },
+        "comments": {
+          "same": 0,
+          "differed": 1
+        },
+        "card_due_date": {
+          "same": 0,
+          "differed": 1
+        },
+        "run_reference": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwkb9-n1",
+    "created": "2026-09-15T12:52:13.199Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "warnings": [
+    "noop-step: 03-verify changed nothing: its instruction asks to move, the recording's 1 state-changing action left the page unchanged, and the page already showed 'Work in progress' before it ran. The step may be redundant."
+  ],
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  }
+}
