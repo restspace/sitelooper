@@ -1,0 +1,81 @@
+
+[sweep] run 1/3: fwkb11-n1 (store: /home/user/sitelooper/bench/results/fwkb11-skills)
+[harness] kanboard: defaulting APP_URL
+[harness] kanboard: defaulting APP_EMAIL
+[harness] kanboard: defaulting APP_PASSWORD
+[reset] kanboard: no leftover bench tasks
+[harness] kanboard responded 302 at http://127.0.0.1:8085/
+stopped: fwkb11-n1
+  flow "fwkb11" saved: 5 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwkb11.json
+  warning: note: 01-open no longer publishes columns_left_to_right — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-create no longer publishes task_id — no replay reads it from the page and the recording showed no line to read
+  warning: note: 03-open no longer publishes task_id, other_columns_left_to_right, backlog_column_task_count_after, work_in_progress_column_task_count_after — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-open no longer publishes task_id, task_page_url, comment_author, comment_created_at, comment_updated_at, comment_count_on_page — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-open no longer publishes board_url, columns_left_to_right, column_task_counts, task_id_displayed, comment_count, column_1_name, column_2_name, column_4_name — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 123 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "Bench Board" (output) in "Open http://127.0.0.1:8085/ and sign in with username admin and password admin. Then navigate to the project named 'Bench Board' and open its board view. Report"
+  flow.steps[0].instruction: "admin" (output) in "Open http://127.0.0.1:8085/ and sign in with username admin and password admin. Then navigate to the project named 'Bench Board' and open its board view. Report"
+  flow.steps[1].instruction: "Bench Board" (output) in "On the 'Bench Board' project board, create a new task with title exactly '{{runid}} Bench Task'. In the task creation form, set the description to include the t"
+  flow.steps[1].instruction: "2026-12-31" (output) in "On the 'Bench Board' project board, create a new task with title exactly '{{runid}} Bench Task'. In the task creation form, set the description to include the t"
+  flow.steps[1].params.v1: "Bench Board" (output) in "Bench Board"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwkb11-n1 stop=completed
+turns=6 wall=197.5s
+commands=5 cmdTime=174.6s cmdBytes=6933 timeouts=0
+orchestrator in=7868 cw=0 cr=14656 out=1916
+inner prompt=1199994 cached=1094528 completion=20633
+spend=$0.0547 maxUsd=3
+learn: A_n=0 replayed=0/5 full=0 repaired=0 compiled=5 variants=0
+-> /home/user/sitelooper/bench/results/fwkb11-n1-sitelooper-result.json
+
+fwkb11-n1: objectives passed 6/6
+  obj 1: PASS — all 4 column names reported (Backlog | Ready | Work in progress | Done)
+  obj 2: PASS — description includes runid=true
+  obj 3: PASS — column=Work in progress
+  obj 4: PASS — 1 comment(s), 1 carrying the runid
+  obj 5: PASS — date_due=2026-12-31, want 2026-12-31
+  obj 6: PASS — task id 4 reported
+
+[sweep] run 2/3: fwkb11-n2 (replay flow fwkb11, no orchestrator)
+[reset] kanboard: deleted 1 leftover bench task(s)
+
+fwkb11-n2: objectives passed 6/6
+  obj 1: PASS — all 4 column names reported (Backlog | Ready | Work in progress | Done)
+  obj 2: PASS — description includes runid=true
+  obj 3: PASS — column=Work in progress
+  obj 4: PASS — 1 comment(s), 1 carrying the runid
+  obj 5: PASS — date_due=2026-12-31, want 2026-12-31
+  obj 6: PASS — task id 4 reported
+
+[sweep] run 3/3: fwkb11-n3 (replay flow fwkb11, no orchestrator)
+[reset] kanboard: deleted 1 leftover bench task(s)
+
+fwkb11-n3: objectives passed 6/6
+  obj 1: PASS — all 4 column names reported (Backlog | Ready | Work in progress | Done)
+  obj 2: PASS — description includes runid=true
+  obj 3: PASS — column=Work in progress
+  obj 4: PASS — 1 comment(s), 1 carrying the runid
+  obj 5: PASS — date_due=2026-12-31, want 2026-12-31
+  obj 6: PASS — task id 4 reported
+
+Learning sweep fwkb11 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwkb11-n1' │ '6/6'    │ 'completed' │ 6     │ 5    │ 0.0547    │ 0   │ '0/5'        │ 197    │
+│ 1       │ 2 │ 'fwkb11-n2' │ '6/6'    │ 'success'   │ 0     │ 5    │ 0         │ 1   │ '5/5 (flow)' │ 14     │
+│ 2       │ 3 │ 'fwkb11-n3' │ '6/6'    │ 'success'   │ 0     │ 5    │ 0         │ 1   │ '5/5 (flow)' │ 15     │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8085
+  s_033330  validated   10 steps  3/3 (100%)
+           Open the task page for task #4 (titled '{{v1}}') on the '{{v3}}' project and add a comment whose text includes…
+  s_852847  validated   15 steps  3/3 (100%)
+           Verification only, do not modify anything. On the '{{v1}}' project: (1) open the board view and report the col…
+  s_a47335  validated   12 steps  3/3 (100%)
+           On the '{{v1}}' project board, create a new task with title exactly '{{v3}}'. In the task creation form, set t…
+  s_b303d7  validated   11 steps  3/3 (100%)
+           Open {{v1}} and sign in with username admin and password admin. Then navigate to the project named 'Bench Boar…
+  s_ee20dd  validated    6 steps  3/3 (100%)
+           Move the task titled '{{v1}}' (task #4) on the '{{v3}}' project so that it sits in the '{{v4}}' column of the …
+store: /home/user/sitelooper/bench/results/fwkb11-skills
+
+summary: /home/user/sitelooper/bench/results/fwkb11-sweep.json
