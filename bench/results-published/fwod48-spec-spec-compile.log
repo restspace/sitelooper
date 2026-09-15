@@ -1,0 +1,10 @@
+flow: /home/user/sitelooper/bench/results/fwod48-spec-spec-tmp/fwod48.flow.ts
+spec: /home/user/sitelooper/bench/results/fwod48-spec-spec-tmp/fwod48.spec.ts
+warning 07-report: 07-report read a value that contradicts what the previous step reported
+  why: 07-report read so_statusbar "Cancelled [checked]; options Sales Order / Quotation Sent / Quotation all disabled" right after 06-open reported "Sales Order"; 06-open's change may not have landed and a later step may be retrying it. Re-record 06-open.
+  fix: sitelooper rerecord bench/results/flows/fwod48.json 06-open
+warning 02-open: (read) has no locator a spec can express
+  why: The recording kept no candidate for this target, so there is nothing for the artifact to resolve.
+  fix: re-record this step so the target is named (sitelooper rerecord), or write the locator for read by hand in the generated file
+
+sitelooper: not compilable: TODO: no locator this compiler can express for read — fill it in by hand.

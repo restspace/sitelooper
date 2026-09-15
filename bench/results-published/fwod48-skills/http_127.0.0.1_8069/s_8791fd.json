@@ -1,0 +1,72 @@
+{
+ "id": "s_8791fd",
+ "origin": "http://127.0.0.1:8069",
+ "template": "Sign in to Odoo at {{v2}} with login 'admin' and password 'admin' (skip the onboarding/interstitial screens if any appear). Then create a new customer contact named exactly '{{v3}}' with the City field set to '{{v4}}' (fill City under the address block; leave other fields as defaults). Save the record. Verify by reopening/reading the saved contact page and report the customer name and the City value shown on the saved record.",
+ "params": {
+  "v1": {
+   "example": "fwod48-n1",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "http://127.0.0.1:8069/",
+   "usedIn": [
+    2
+   ]
+  },
+  "v3": {
+   "example": "fwod48-n1 Bench Customer",
+   "usedIn": [],
+   "known": true
+  },
+  "v4": {
+   "example": "Benchville",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8069/"
+ },
+ "steps": [
+  {
+   "tool": "read",
+   "args": {
+    "what": "url"
+   },
+   "locators": {},
+   "label": "initial_page_url"
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v2}}"
+   },
+   "locators": {}
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-15T16:30:57.379Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4,
+  "lastUsed": "2026-09-15T16:45:09.174Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_53ed07",
+  "index": 0,
+  "of": 6
+ },
+ "provenance": {
+  "session": "fwod48-n1",
+  "instruction": "Sign in to Odoo at http://127.0.0.1:8069/ with login 'admin' and password 'admin' (skip the onboarding/interstitial screens if any appear). Then create a new customer contact named exactly 'fwod48-n1 Bench Customer' with the City field set to 'Benchville' (fill City under the address block; leave other fields as defaults). Save the record. Verify by reopening/reading the saved contact page and report the customer name and the City value shown on the saved record.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-15T16:30:57.379Z"
+ },
+ "revision": 3
+}

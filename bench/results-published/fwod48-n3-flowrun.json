@@ -1,0 +1,87 @@
+{
+  "flow": "fwod48",
+  "status": "halted",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_9a8e5b (4 steps).",
+      "values": {
+        "ref": "fwod48-n3",
+        "initial_page_url": "http://127.0.0.1:8069/web/login",
+        "customer_name": "fwod48-n3 Bench Customer",
+        "city": "Benchville",
+        "page_title_after_save": "Odoo - fwod48-n3 Bench Customer"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-open",
+      "status": "failure",
+      "summary": "I got as far as a draft Sales order (url .../web#model=sale.order&view_type=form) with the customer \"fwod48-n3 Bench Customer\" chosen from the autocomplete dropdown and one order line whose product was chosen from the product autocomplete: \"Conference Chair\" ([E-COM12] Conference Chair (Steel)), unit price 33.00 (20% tax, line subtotal £ 33.00). However I ran out of turns before finishing: the line's Quantity was never successfully changed from 1.00 to 3, and the quotation was not saved — the page was still in inline edit mode on the order line, so nothing was persisted and no untaxed total / quotation number was observed on a saved record. All three requested values are therefore unconfirmed on a saved quotation.",
+      "values": {
+        "product_name": "Conference Chair",
+        "product_variant": "[E-COM12] Conference Chair (Steel)",
+        "unit_price_shown": "33.00",
+        "quantity_still_shown": "1.00",
+        "line_subtotal_shown": "£ 33.00",
+        "customer_field": "fwod48-n3 Bench Customer",
+        "saved": "NOT saved – page still in inline edit on the order line; quantity not set to 3"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_2c668c stopped at step 1 — step 1 navigated but landed on another view: action=123 where it was sent to action=, menu_id=81 where it was sent to menu_id= — the page it asked for was not given",
+      "replayed": "0/1",
+      "repaired": false,
+      "turns": 29
+    }
+  ],
+  "passed": 1,
+  "total": 7,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwod48",
+      "step": "02-open",
+      "skill": "s_2c668c",
+      "similarity": null,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_2c668c stopped at step 1 — step 1 navigated but landed on another view: action=123 where it was sent to action=, menu_id=81 where it was sent to menu_id= — the page it asked for was not given",
+      "reason": "step 1 navigated but landed on another view: action=123 where it was sent to action=, menu_id=81 where it was sent to menu_id= — the page it asked for was not given",
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&menu_id=:id",
+      "pageUrl": "http://127.0.0.1:8069/web#action=123&cids=1&menu_id=81"
+    }
+  ],
+  "wallMs": 170599,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 330124,
+    "completionTokens": 5805,
+    "cachedTokens": 300160
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 330124,
+      "completionTokens": 5805,
+      "cachedTokens": 300160
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "halted",
+  "nextActions": []
+}

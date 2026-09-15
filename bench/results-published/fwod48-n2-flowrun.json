@@ -1,0 +1,362 @@
+{
+  "flow": "fwod48",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_9a8e5b (4 steps).",
+      "values": {
+        "ref": "fwod48-n2",
+        "initial_page_url": "http://127.0.0.1:8069/web/login",
+        "customer_name": "fwod48-n2 Bench Customer",
+        "city": "Benchville",
+        "page_title_after_save": "Odoo - fwod48-n2 Bench Customer"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-open",
+      "status": "success",
+      "summary": "In the Sales app I created a new quotation, set the Customer via the autocomplete dropdown to 'fwod48-n2 Bench Customer' (chosen from the dropdown, not just typed), added exactly ONE order line by picking product [FURN_1118] Corner Desk Left Sit from the Product autocomplete dropdown, set Quantity to 3 (the app then showed Unit Price 85.00 and a line Tax excl. of £ 255.00), and clicked Save. The form now shows Untaxed Amount £ 255.00, TAX 20% £ 51.00, Total £ 306.00 with a single order line.",
+      "values": {
+        "product_name": "[FURN_1118] Corner Desk Left Sit",
+        "unit_price": "85.00",
+        "quantity": "3.00",
+        "untaxed_amount": "£ 255.00",
+        "tax_20_percent": "£ 51.00",
+        "total": "£ 306.00",
+        "customer_field_value": "fwod48-n2 Bench Customer",
+        "order_line_count": "1",
+        "quotation_number": "Quotations",
+        "statusbar": "Sales Order\nQuotation Sent\nQuotation",
+        "oe_subtotal_footer_tr": "Untaxed Amount\t£ 255.00",
+        "oe_subtotal_footer_tr_2": "TAX 20%\t\n£ 51.00",
+        "oe_subtotal_footer_tr_3": "Total\t£ 306.00",
+        "ref": "fwod48-n2",
+        "ref_2": "FURN_1118"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_a935ba stopped at step 1 — step 1 navigated but landed on another view: action=123 where it was sent to action=, menu_id=81 where it was sent to menu_id= — the page it asked for was not given",
+      "replayed": "0/1",
+      "repaired": false,
+      "turns": 29,
+      "unreported": [
+        "customer",
+        "customer_city_shown",
+        "line_taxes",
+        "line_tax_excl",
+        "tax_20",
+        "chatter_notification_text",
+        "untaxed_amount_recheck",
+        "bench_ref"
+      ]
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_60b507; observed quotation_number=Quotations, line1_product=[FURN_1118] Corner Desk Left Sit, bench_ref=fwod48-n2, new_second_line_product=[FURN_7777] Office Chair | 2.00 | 70.00 | , tax_20_row_text=Untaxed Amount\t£ 395.00 | TAX 20%\t\n£ 79.00 | Total\t£ 474.00, quotation_url=http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22, customer=fwod48-n2 Bench Customer, customer_city_shown=Benchville, second_line_quantity=2.00, second_line_unit_price=70.00, second_line_tax_excl=£ 140.00, untaxed_amount=£ 395.00, taxes_20=£ 79.00, total=£ 474.00.",
+      "values": {
+        "quotation_number": "Quotations",
+        "line1_product": "[FURN_1118] Corner Desk Left Sit",
+        "bench_ref": "fwod48-n2",
+        "new_second_line_product": "[FURN_7777] Office Chair | 2.00 | 70.00 | ",
+        "tax_20_row_text": "Untaxed Amount\t£ 395.00 | TAX 20%\t\n£ 79.00 | Total\t£ 474.00",
+        "quotation_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22",
+        "customer": "fwod48-n2 Bench Customer",
+        "customer_city_shown": "Benchville",
+        "second_line_quantity": "2.00",
+        "second_line_unit_price": "70.00",
+        "second_line_tax_excl": "£ 140.00",
+        "untaxed_amount": "£ 395.00",
+        "taxes_20": "£ 79.00",
+        "total": "£ 474.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "18/18",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "total_row_text"
+      ]
+    },
+    {
+      "id": "04-find",
+      "status": "success",
+      "summary": "Opened the single draft quotation for 'fwod48-n2 Bench Customer' (S00022, url record id=22, statusbar 'Quotation') and verified it: line 1 = [FURN_1118] Corner Desk Left Sit qty 3.00 @ 85.00 (£255.00), line 2 = [FURN_7777] Office Chair qty 2.00 @ 70.00 (£140.00) — the line structure matched the instruction exactly, but the stated expected Untaxed Amount did NOT: it read £395.00, not ~£581.00 (255+140 at these unit prices; the ~£581 figure corresponds to a £147 line-1 price, not FURN_1118's £85). I flagged this and still performed the requested change, since the quoted lines customer/products/quantities matched exactly, then set line 1 Quantity to 5 (line 2 left at 2) and saved the quotation, which remained a draft. After a full page reload the saved record shows line 1 qty 5.00 (£425.00), line 2 qty 2.00 (£140.00), Untaxed Amount £565.00, Taxes TAX 20% £113.00, Total £678.00.",
+      "values": {
+        "quotation_number": "S00022",
+        "record_id": "22",
+        "customer": "fwod48-n2 Bench Customer",
+        "customer_city_shown": "Benchville",
+        "status": "Quotation",
+        "line1_product": "[FURN_1118] Corner Desk Left Sit",
+        "line1_qty_before": "3.00",
+        "line1_qty_after": "5.00",
+        "line1_unit_price": "85.00",
+        "line1_tax_excl_after": "£ 425.00",
+        "line2_product": "[FURN_7777] Office Chair",
+        "line2_qty": "2.00",
+        "line2_unit_price": "70.00",
+        "line2_tax_excl": "£ 140.00",
+        "untaxed_amount_before": "£ 395.00",
+        "untaxed_amount_after": "£ 565.00",
+        "taxes_after": "£ 113.00",
+        "total_after": "£ 678.00",
+        "statusbar_after_save": "Sales Order\nQuotation Sent\nQuotation",
+        "order_lines_table_text": "Product\n\t\nDescription\n\t\nQuantity\n\t\nUnit Price\n\t\nTaxes\n\t\nTax excl.\n\t\n\n\t[FURN_1118] Corner Desk Left Sit\t\n[FURN_1118] Corner Desk Left Sit\n\t5.00\t85.00\t\n20%\n\t£ 425.00\t\n\t[FURN_7777] Office Chair\t\n[FURN_7777] Office Chair\n\t2.00\t70.00\t\n20%\n\t£ 140.00\t\n\tAdd a productAdd a sectionAdd a noteCatalog\n​",
+        "oe_subtotal_footer_tr": "Untaxed Amount\t£ 565.00",
+        "oe_subtotal_footer_tr_2": "TAX 20%\t\n£ 113.00",
+        "oe_subtotal_footer_tr_3": "Total\t£ 678.00",
+        "ref": "fwod48-n2",
+        "ref_2": "FURN_1118",
+        "ref_3": "FURN_7777"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_fb51b4 stopped at step 10 — after step 10 none of the 5 recorded page change(s) appeared (e.g. \"- row \\\"20% £ 735.00\\\"\") — the step ran but did not have its recorded effect",
+      "replayed": "9/28",
+      "repaired": false,
+      "turns": 15,
+      "unreported": [
+        "quotation_reference",
+        "url_record_id",
+        "untaxed_after",
+        "line_count_after",
+        "quotation_url",
+        "breadcrumb",
+        "second_line_row_text",
+        "first_line_row_text",
+        "customer_field_value",
+        "customer_field_text",
+        "tax_20_row_text_before",
+        "untaxed_amount_row_text",
+        "total_row_text_after",
+        "bench_ref",
+        "second_line_product_code"
+      ]
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_620926; observed order_reference=Quotations, url_record_id=22, customer=fwod48-n2 Bench Customer (Benchville), lines_after_confirm=[FURN_1118] Corner Desk Left Sit qty 5.00 Delivered 0.00 Invoiced 0.00 @ 147.00 tax 20% = £735.00; [FURN_7777] Office Chair | 2.00 | 70.00 |  qty 2.00 @ 70.00 tax 20% = £140.00, statusbar_text=Sales Order\nQuotation Sent\nQuotation, untaxed_after_confirm=Untaxed Amount\t£ 565.00 | TAX 20%\t\n£ 113.00 | Total\t£ 678.00, statusbar_sales_order=... | Sales Order | Quotation Sent | Quotation | ... | Sales Order, url_after_confirm=http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22, untaxed_amount_after=£ 565.00, total_after=£ 678.00.",
+      "values": {
+        "order_reference": "Quotations",
+        "url_record_id": "22",
+        "customer": "fwod48-n2 Bench Customer (Benchville)",
+        "lines_after_confirm": "[FURN_1118] Corner Desk Left Sit qty 5.00 Delivered 0.00 Invoiced 0.00 @ 147.00 tax 20% = £735.00; [FURN_7777] Office Chair | 2.00 | 70.00 |  qty 2.00 @ 70.00 tax 20% = £140.00",
+        "statusbar_text": "Sales Order\nQuotation Sent\nQuotation",
+        "untaxed_after_confirm": "Untaxed Amount\t£ 565.00 | TAX 20%\t\n£ 113.00 | Total\t£ 678.00",
+        "statusbar_sales_order": "... | Sales Order | Quotation Sent | Quotation | ... | Sales Order",
+        "url_after_confirm": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22",
+        "untaxed_amount_after": "£ 565.00",
+        "total_after": "£ 678.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "total_row_text"
+      ]
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_6e2ae8; observed order_reference=Quotations, url_record_id=22, customer=fwod48-n2 Bench Customer (Benchville), status_after=Cancelled (radio [checked] in status bar; Sales Order / Quotation Sent / Quotation all disabled), confirmation_dialog=Cancel Sales Order - 'Are you sure you want to cancel this order?' - used the dialog's Cancel (action_cancel) button; did not use Send and cancel (email) or Discard, notes=A leftover 'Edit: fwod48-n2 Bench Customer' contact modal was stacked over the confirmation dialog and swallowed clicks; dismissed it with Escape (no data changed) and then confirmed the cancellation., bench_ref=fwod48-n2, dialog_send_and_cancel_button=Ok | Send and cancel | Cancel | Discard | Ok | Save & Close | Save & New | Discard, status_before=Preview | Set to Quotation | ... | Cancelled | Sales Order | Quotation Sent | Quotation | ... | Cancelled, tax_20_row_text=Untaxed Amount\t£ 565.00 | TAX 20%\t\n£ 113.00 | Total\t£ 678.00, current_status=Cancelled, url_after_cancel=http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22, untaxed_amount=£ 565.00, total=£ 678.00, dialog_discard_button= Discard, statusbar_quotation_sent=Quotation Sent, header_preview_button=Preview.",
+      "values": {
+        "order_reference": "Quotations",
+        "url_record_id": "22",
+        "customer": "fwod48-n2 Bench Customer (Benchville)",
+        "status_after": "Cancelled (radio [checked] in status bar; Sales Order / Quotation Sent / Quotation all disabled)",
+        "confirmation_dialog": "Cancel Sales Order - 'Are you sure you want to cancel this order?' - used the dialog's Cancel (action_cancel) button; did not use Send and cancel (email) or Discard",
+        "notes": "A leftover 'Edit: fwod48-n2 Bench Customer' contact modal was stacked over the confirmation dialog and swallowed clicks; dismissed it with Escape (no data changed) and then confirmed the cancellation.",
+        "bench_ref": "fwod48-n2",
+        "dialog_send_and_cancel_button": "Ok | Send and cancel | Cancel | Discard | Ok | Save & Close | Save & New | Discard",
+        "status_before": "Preview | Set to Quotation | ... | Cancelled | Sales Order | Quotation Sent | Quotation | ... | Cancelled",
+        "tax_20_row_text": "Untaxed Amount\t£ 565.00 | TAX 20%\t\n£ 113.00 | Total\t£ 678.00",
+        "current_status": "Cancelled",
+        "url_after_cancel": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22",
+        "untaxed_amount": "£ 565.00",
+        "total": "£ 678.00",
+        "dialog_discard_button": " Discard",
+        "statusbar_quotation_sent": "Quotation Sent",
+        "header_preview_button": "Preview"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "22/22",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "total_row_text"
+      ]
+    },
+    {
+      "id": "07-report",
+      "status": "success",
+      "summary": "Replayed stored procedure s_72f702 (5 steps).",
+      "values": {
+        "contact_link_text_on_order": "fwod48-n2 Bench Customer Benchville",
+        "so_url_record_id": "22",
+        "so_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22",
+        "bench_ref": "fwod48-n2",
+        "contact_name": "fwod48-n2 Bench Customer",
+        "contact_city": "Benchville",
+        "contact_url": "http://127.0.0.1:8069/web#id=45&cids=1&menu_id=194&model=res.partner&view_type=form",
+        "tax_20_row_text": "Untaxed Amount\t£ 565.00 | TAX 20%\t\n£ 113.00 | Total\t£ 678.00",
+        "so_reference": "S00022",
+        "so_untaxed_amount": "£ 565.00",
+        "so_tax_20": "£ 113.00",
+        "so_total": "£ 678.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 7,
+  "total": 7,
+  "repinned": 0,
+  "drift": 8,
+  "driftTickets": [
+    {
+      "flow": "fwod48",
+      "step": "02-open",
+      "skill": "s_a935ba",
+      "similarity": 0.995,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_a935ba stopped at step 1 — step 1 navigated but landed on another view: action=123 where it was sent to action=, menu_id=81 where it was sent to menu_id= — the page it asked for was not given",
+      "reason": "step 1 navigated but landed on another view: action=123 where it was sent to action=, menu_id=81 where it was sent to menu_id= — the page it asked for was not given",
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&menu_id=:id",
+      "pageUrl": "http://127.0.0.1:8069/web#action=123&cids=1&menu_id=81"
+    },
+    {
+      "flow": "fwod48",
+      "step": "03-open",
+      "skill": "s_60b507",
+      "atStep": "9",
+      "key": "target",
+      "similarity": 1.002,
+      "missedLocator": "page.getByRole('heading', { name: 'Quotations', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22"
+    },
+    {
+      "flow": "fwod48",
+      "step": "03-open",
+      "skill": "s_60b507",
+      "atStep": "18",
+      "key": "target",
+      "similarity": 1.002,
+      "missedLocator": "page.getByRole('row', { name: 'Total £ 697.20', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22"
+    },
+    {
+      "flow": "fwod48",
+      "step": "04-find",
+      "skill": "s_fb51b4",
+      "similarity": 1.001,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_fb51b4 stopped at step 10 — after step 10 none of the 5 recorded page change(s) appeared (e.g. \"- row \\\"20% £ 735.00\\\"\") — the step ran but did not have its recorded effect",
+      "reason": "after step 10 none of the 5 recorded page change(s) appeared (e.g. \"- row \\\"20% £ 735.00\\\"\") — the step ran but did not have its recorded effect",
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22"
+    },
+    {
+      "flow": "fwod48",
+      "step": "05-open",
+      "skill": "s_620926",
+      "atStep": "9",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.getByRole('heading', { name: 'Quotations', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22"
+    },
+    {
+      "flow": "fwod48",
+      "step": "05-open",
+      "skill": "s_620926",
+      "atStep": "13",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.getByRole('row', { name: 'Total £ 1,050.00', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22"
+    },
+    {
+      "flow": "fwod48",
+      "step": "06-open",
+      "skill": "s_6e2ae8",
+      "atStep": "14",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.getByRole('heading', { name: 'Quotations', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22"
+    },
+    {
+      "flow": "fwod48",
+      "step": "06-open",
+      "skill": "s_6e2ae8",
+      "atStep": "22",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.getByRole('row', { name: 'Total £ 1,050.00', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22"
+    }
+  ],
+  "wallMs": 353432,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 644153,
+    "completionTokens": 13792,
+    "cachedTokens": 564608
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 644153,
+      "completionTokens": 13792,
+      "cachedTokens": 564608
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
