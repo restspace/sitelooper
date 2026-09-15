@@ -52,6 +52,9 @@ export interface TransformNote {
 /** Args whose string values are candidates for parameter slots. */
 const VALUE_ARGS = new Set(['value', 'text', 'option', 'url', 'prompt_text']);
 
+/** Steps whose recorded diff is a landing, not an effect (see expectationFor). */
+const NAVIGATION_TOOLS = new Set(['goto', 'back']);
+
 const MAX_ADDED_LINES = 5;
 const MAX_SLOT_VALUES = 12;
 
@@ -161,7 +164,11 @@ export function compileSkills(input: CompileInput): Skill[] {
 
   // Split at page-template seams. A step that navigated (diff.url) to a url
   // with a DIFFERENT pattern ends its segment; the recorder's fingerprintAfter
-  // (when captured) becomes the next segment's precondition.
+  // (when captured) becomes the next segment's precondition. However the page
+  // changed: a goto or back is diffed like a click (tools.ts runStep), so its
+  // landing gates the next segment. Before that a navigation never ended a
+  // segment, which kept the gate observed BEFORE it for the steps AFTER it
+  // (fwrd53 07-report asked a ticket list for the detail page's markers).
   const segments: Segment[] = [];
   let seg: Segment = {
     steps: [],
@@ -170,8 +177,12 @@ export function compileSkills(input: CompileInput): Skill[] {
     ...(head?.startText ? { startText: head.startText } : {}),
   };
   let currentUrl = startUrl;
-  for (const step of kept) {
+  for (const [ki, step] of kept.entries()) {
     seg.steps.push(step);
+    // A goto the next step immediately navigates away from is no page the
+    // procedure used: dropSupersededNavigation removes it from the segment,
+    // which it can only do while the two share one.
+    if (step.tool === 'goto' && kept[ki + 1]?.tool === 'goto') continue;
     // A step that opened a popup, closed its page or switched tabs moved the
     // procedure to ANOTHER page: a seam whatever the urls say, and the next
     // segment is gated on the page the procedure continues on.
@@ -476,9 +487,10 @@ export function compileSkills(input: CompileInput): Skill[] {
       // first replay — laundering exactly the artifact the version exists to
       // hold apart.
       //
-      // The contract is the one these steps NEED (store.ts contractFor): 3 only
-      // for a procedure that carries frame or page context, which a build that
-      // cannot follow it must refuse rather than resolve against the main page.
+      // The contract is the one these steps NEED (store.ts contractFor): 4 for
+      // a procedure that navigates (its gate placement), 3 for one that carries
+      // frame or page context, which a build that cannot follow it must refuse
+      // rather than resolve against the main page.
       contract: contractFor(b.folded),
       stats: { uses: 1, successes: 1, partial: 0, created: now, failedAtStep: {}, fallthroughs: 0, verifiedContract: contractFor(b.folded) },
       status: 'provisional' as const,
@@ -646,7 +658,9 @@ function discoverMinted(kept: RecordedStep[], startUrl: string, slots: Map<strin
   kept.forEach((step, i) => {
     // Values the agent TYPED are inputs, not mints, wherever they surface later.
     for (const v of Object.values(step.args)) if (typeof v === 'string') seen.add(v);
-    if (!step.diff?.url) return;
+    // A navigation's landing names the page it was SENT to, not a record it
+    // made; it was never diffed before, and minting from it is not proposed.
+    if (!step.diff?.url || NAVIGATION_TOOLS.has(step.tool)) return;
     for (const part of urlParts(step.diff.url)) {
       const v = part.value;
       const fresh = !seen.has(v);
@@ -1118,7 +1132,10 @@ export { TRANSIENT_LINE, maskMinted } from '../execution/expect.js';
 import { TRANSIENT_LINE, maskMinted } from '../execution/expect.js';
 
 function expectationFor(step: RecordedStep, slots: Map<string, string>): StepExpectation | undefined {
-  if (!step.diff) return undefined;
+  // A navigation's diff is its LANDING — the next segment's start url,
+  // fingerprint and startText — not an effect to assert: none of it becomes
+  // an expectation, exactly as when goto/back were never diffed.
+  if (!step.diff || NAVIGATION_TOOLS.has(step.tool)) return undefined;
   const out: StepExpectation = {};
   if (step.diff.url) out.urlPattern = urlPattern(step.diff.url, slots);
   if (step.diff.alerts[0]) out.alertContains = substitute(step.diff.alerts[0], slots).slice(0, 120);

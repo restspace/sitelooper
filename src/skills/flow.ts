@@ -1,9 +1,9 @@
 import type { BrowserProfile } from '../execution/browser.js';
 import { isMutatingAction } from '../execution/lifecycle.js';
-import type { Skill } from './store.js';
+import type { Skill, SkillStep } from './store.js';
 import fs from 'node:fs';
 import path from 'node:path';
-import type { RecordedEntry, RecordedInstruction, RecordedReport } from '../daemon/recorder.js';
+import type { LocatorCandidate, RecordedEntry, RecordedInstruction, RecordedReport, StepDiff } from '../daemon/recorder.js';
 import { rootDir } from '../shared/paths.js';
 import { urlParts, urlPattern } from './compile.js';
 import { idPositionPart } from './ledger.js';
@@ -495,6 +495,8 @@ interface Group {
   firstTool?: string;
   /** Set by resolveGroups: kept despite a non-success report — see there. */
   adopted?: boolean;
+  /** Every recorded page diff of this instruction's steps, in order (liveReadsFor reads the last page's). */
+  diffs: StepDiff[];
 }
 
 function groupByInstruction(entries: RecordedEntry[]): Group[] {
@@ -508,11 +510,12 @@ function groupByInstruction(entries: RecordedEntry[]): Group[] {
       // predecessor (truncated recording) stands alone.
       const prev = groups[groups.length - 1];
       if (e.resume && prev?.instruction.text === e.text) continue;
-      groups.push({ instruction: e, mutations: 0, mutationsDiffed: 0, mutationsEffective: 0 });
+      groups.push({ instruction: e, mutations: 0, mutationsDiffed: 0, mutationsEffective: 0, diffs: [] });
     } else if (e.k === 'report' && groups.length) groups[groups.length - 1].report = e;
     else if (e.k === 'step' && groups.length) {
       const g = groups[groups.length - 1];
       if (e.diff?.url) g.endUrl = e.diff.url;
+      if (e.diff) g.diffs.push(e.diff);
       if (!g.firstTool) g.firstTool = e.tool;
       if (isMutatingAction(e.tool)) {
         g.mutations += 1;
@@ -919,6 +922,165 @@ export function lintFlowRefs(flow: Flow, publishes: (skillId: string) => string[
   return warnings;
 }
 
+/** A read the export adds so a zero-model replay republishes an output a later step references. */
+export interface LiveRead {
+  /** The flow step whose output this read republishes. */
+  stepId: string;
+  /** That step's pinned skill; the caller appends the read to the LAST segment of its chain. */
+  skill: string;
+  output: string;
+  /** The value the recording saw, and so the name the read's locators look for. */
+  value: string;
+  /** Where the recording showed it: the next instruction's start page, or this instruction's own page diffs. */
+  source: 'start' | 'diff';
+  read: SkillStep;
+}
+
+/** Roles whose accessible name is a label, not the text they show — a textbox named "Status" holds some other value. */
+const LABELLED_ROLES = new Set(['textbox', 'searchbox', 'combobox', 'spinbutton', 'slider', 'listbox', 'option', 'checkbox', 'radio', 'switch']);
+
+/** Roles tried first when several lines name the value: they SHOW it rather than act on it. */
+const DISPLAY_ROLES = ['heading', 'columnheader', 'rowheader', 'cell', 'status'];
+
+/** Most candidates one synthesized read carries. */
+const MAX_LIVE_READ_CANDIDATES = 3;
+
+/**
+ * Role+name candidates for the snapshot lines whose accessible NAME is exactly
+ * `value` (whitespace-normalised; never a substring of a longer name, so
+ * "Ready" does not match "Mark Ready" — the same bounded rule as identityRe).
+ * A role+name that occurs more than once in the lines is left out: a
+ * candidate without `nth` must resolve to one element at replay, and an
+ * index guessed from line order is a position, which is what a read must not
+ * publish by.
+ */
+export function valueLineCandidates(lines: string[], value: string): LocatorCandidate[] {
+  const want = value.replace(/\s+/g, ' ').trim();
+  if (!want) return [];
+  const seen = new Map<string, { role: string; name: string; count: number; order: number }>();
+  lines.forEach((line, order) => {
+    const m = /^- ([\w-]+) ("(?:[^"\\]|\\.)*")/.exec(line.trim());
+    if (!m) return;
+    let name: string;
+    try {
+      name = String(JSON.parse(m[2])).replace(/\s+/g, ' ').trim();
+    } catch {
+      return;
+    }
+    const key = `${m[1]} ${name}`;
+    const hit = seen.get(key);
+    if (hit) hit.count += 1;
+    else seen.set(key, { role: m[1], name, count: 1, order });
+  });
+  const rank = (role: string): number => {
+    const i = DISPLAY_ROLES.indexOf(role);
+    return i < 0 ? DISPLAY_ROLES.length : i;
+  };
+  return [...seen.values()]
+    .filter((c) => c.name === want && c.count === 1 && !LABELLED_ROLES.has(c.role))
+    .sort((a, b) => rank(a.role) - rank(b.role) || a.order - b.order)
+    .slice(0, MAX_LIVE_READ_CANDIDATES)
+    .map((c) => ({ kind: 'role' as const, role: c.role, name: c.name }));
+}
+
+/**
+ * Reads that give every `{{step.output}}` reference a live source.
+ *
+ * A flow may only depend on values some replay reads live. buildFlow
+ * references every reported value (see there for why), so a value the
+ * recording model REPORTED from a snapshot, without any read the compiler
+ * could pin, becomes a reference no replay publishes: fwkb8's 01-open reported
+ * `column_3_name = "Work in progress"`, its skill had no read for it, and
+ * 03-change went to recovery on every replay with nothing that could ever
+ * correct it — cross-run evidence needs a second run to produce the value.
+ *
+ * The page the producing instruction ENDED on is the page the next instruction
+ * STARTED on, so its `startText` is where the recording showed the value; the
+ * producing instruction's own diffs on its final url are the fallback. A read
+ * is proposed for a line whose accessible name is exactly the value.
+ *
+ * What such a read is worth, honestly: it is located BY the value. For app
+ * furniture — a column name, a status word — that is exactly right, and it
+ * republishes the constant every run. For a value that varies it can only
+ * ever find the recording's value, so it misses (the read is skipped, the
+ * value comes back absent, recovery runs as before) — or, where the old value
+ * is still on the page, echoes it until a run reports a different value and
+ * dead-read retirement (dropDeadReadLocators, keyed by the read's label and
+ * the step's recorded value) strips the candidates. It never makes a
+ * reference worse than unresolved for longer than that.
+ *
+ * Which is why a value the RUN is known to have made gets no read at all
+ * (`runValue`, from the ledger's provenance — never from the value's
+ * characters). A read located by a record's own id publishes the recording's
+ * id wherever that record is still listed, a tier-A replay then AGREES with
+ * the recording, and nothing ever retires it: fwkb3's `task_id "#4"` sat on
+ * the board as `link "#4"`. Leaving the reference unresolved costs recovery
+ * a turn; the read would have cost the right record.
+ *
+ * Pure: the caller decides which skills it may rewrite and persists.
+ */
+export function liveReadsFor(
+  entries: RecordedEntry[],
+  flow: Flow,
+  publishes: (skillId: string) => string[] | null,
+  runValue?: (value: string) => boolean,
+): LiveRead[] {
+  const groups = groupByInstruction(entries);
+  const kept = resolveGroups(groups);
+  const byId = new Map(flow.steps.map((s, i) => [s.id, i]));
+  const out: LiveRead[] = [];
+  const done = new Set<string>();
+  for (const step of flow.steps) {
+    for (const text of [step.instruction, ...Object.values(step.params ?? {})]) {
+      for (const m of text.matchAll(/\{\{([\w-]+)\.([\w.#-]+)\}\}/g)) {
+        const [, sid, output] = m;
+        // Url parts are re-bound from every replay's landing; a JSON path's
+        // body is a response, not a line on the page.
+        if (output === 'url' || output.startsWith('url.') || output.includes('#')) continue;
+        const key = `${sid}.${output}`;
+        if (done.has(key)) continue;
+        done.add(key);
+        const index = byId.get(sid);
+        const producer = index === undefined ? undefined : flow.steps[index];
+        const g = index === undefined ? undefined : kept[index];
+        if (!producer?.skill || !g || stepId(g.instruction.text, index!) !== sid) continue;
+        const pubs = publishes(producer.skill);
+        if (pubs === null || pubs.includes(output)) continue;
+        const raw = producer.recorded?.[output];
+        if (typeof raw !== 'string' || raw.includes('\n')) continue;
+        const value = raw.replace(/\s+/g, ' ').trim();
+        // captureReadBack's bounds: too short to be distinctive, or prose.
+        if (value.length < 2 || value.length > 80 || runValue?.(value)) continue;
+        const next = groups[groups.indexOf(g) + 1];
+        const startLines =
+          next?.instruction.startText && !(g.endUrl && next.instruction.url && !samePage(g.endUrl, next.instruction.url))
+            ? next.instruction.startText.split('\n')
+            : [];
+        let source: LiveRead['source'] = 'start';
+        let candidates = valueLineCandidates(startLines, value);
+        if (!candidates.length) {
+          // Only diffs taken on the page the instruction ended on: the read is
+          // appended there, and a line an earlier page showed is not on it.
+          const finalUrl = g.diffs.length ? g.diffs[g.diffs.length - 1].url : undefined;
+          const added = g.diffs.filter((d) => d.url === finalUrl).flatMap((d) => d.added ?? []);
+          candidates = valueLineCandidates(added, value);
+          source = 'diff';
+        }
+        if (!candidates.length) continue;
+        out.push({
+          stepId: sid,
+          skill: producer.skill,
+          output,
+          value,
+          source,
+          read: { tool: 'read', args: { target: '@synth', what: 'text' }, locators: { target: candidates }, label: output },
+        });
+      }
+    }
+  }
+  return out;
+}
+
 /**
  * Whether a recorded output value is DATA a page could show — a status, an
  * amount, an id, a list of titles — rather than the recording agent narrating
@@ -1129,18 +1291,70 @@ export function resolveInstruction(
 
 /**
  * Like resolveInstruction, but for the recovery path: fill every reference that
- * can be filled and blank the rest (rather than leaving `{{...}}` in the text),
- * so the strong model gets a readable instruction built from what IS known —
- * e.g. the ticket title even when its id could not be threaded.
+ * can be filled (rather than leaving `{{...}}` in the text), so the model gets a
+ * readable instruction built from what IS known — e.g. the ticket title even
+ * when its id could not be threaded.
+ *
+ * A reference this run did not publish is shown as the value the flow RECORDED
+ * for it, marked as such, when `flow` is given; blank otherwise. A blank is
+ * not neutral: fwkb8's 03-change told recovery to move the task "into the ''
+ * column", the model rightly refused, and both replays halted on a value the
+ * recording had seen ("Work in progress") and no replay could re-read. The
+ * marker says the value is the recording's, so the model checks the page
+ * rather than trusting it — and it goes to RECOVERY only: resolveStepParams
+ * and the compiled artifact never act on a recorded literal (see
+ * `RunSpecific` for why that would edit run 1's record silently).
+ *
+ * A value a later run has already watched CHANGE stays blank: it is known to
+ * be the recording's record, not something this run's page will show.
  */
 export function softResolveInstruction(
   step: FlowStep,
   vars: Record<string, string>,
   outputs: Record<string, Record<string, string>>,
+  flow?: Pick<Flow, 'steps'>,
 ): string {
-  return resolveRefs(step.instruction, { vars, outputs }, 'blank')
-    .text.replace(/[ \t]{2,}/g, ' ')
-    .trim();
+  const marked = new Set<string>();
+  const text = step.instruction.replace(/(['"]?)\{\{([\w.#-]+)\}\}(['"]?)/g, (m, open: string, ref: string, close: string) => {
+    // Only a matching pair is the instruction's own quoting of the value.
+    const quoted = Boolean(open) && open === close;
+    const lead = quoted ? '' : open;
+    const trail = quoted ? '' : close;
+    const live = lookupRef(ref, { vars, outputs });
+    if (live !== undefined) return `${open}${live}${close}`;
+    const recorded = flow ? recordedRef(ref, flow.steps) : undefined;
+    if (recorded === undefined) return `${open}${close}`;
+    const q = recorded.includes("'") ? (recorded.includes('"') ? '' : '"') : "'";
+    // The caveat once per reference: repeating it at every use is noise.
+    const caveat = marked.has(ref) ? '' : " (recorded when this flow was made; this run's value may differ — check the page)";
+    marked.add(ref);
+    return `${lead}${q}${recorded}${q}${caveat}${trail}`;
+  });
+  return text.replace(/[ \t]{2,}/g, ' ').trim();
+}
+
+/** Longest recorded value recovery is shown in place of a reference; a longer one is a body, not a detail. */
+const MAX_RECORDED_REF_CHARS = 120;
+
+/**
+ * The value the recording saw for a `{{step.output}}` reference — the step's
+ * `recorded` entry by its full name (minted url parts and JSON leaves are
+ * recorded under it), else a JSON path walked from the base output. Undefined
+ * for a `{{var}}`, an unknown step, a value a later run watched change, and a
+ * value empty or too long to quote.
+ */
+function recordedRef(ref: string, steps: FlowStep[]): string | undefined {
+  const dot = ref.indexOf('.');
+  if (dot < 0) return undefined;
+  const sid = ref.slice(0, dot);
+  const out = ref.slice(dot + 1);
+  const producer = steps.find((s) => s.id === sid);
+  if (!producer) return undefined;
+  if ((producer.outputEvidence?.[out]?.differed ?? 0) > 0) return undefined;
+  const direct = producer.recorded?.[out];
+  const raw = typeof direct === 'string' ? direct : lookupOutput({ [sid]: producer.recorded ?? {} }, sid, out);
+  const value = raw?.replace(/\s+/g, ' ').trim();
+  return value && value.length <= MAX_RECORDED_REF_CHARS ? value : undefined;
 }
 
 /** Resolve a step's stored param bindings from run vars and prior outputs. */

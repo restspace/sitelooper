@@ -1,7 +1,7 @@
 import { changedCreation, isMutatingAction, isReadAction, runStepLifecycle, type StepActionResult } from '../execution/lifecycle.js';
 import { outcomeLabel, outcomeOfError, type ActionOutcome } from '../execution/browser.js';
 import type { ActionExpectation } from '../execution/action.js';
-import { SOFT_MATCH_MIN_SIMILARITY, alertVerdict, errorPageVerdict, gotoLandingVerdict, isErrorPageUrl, markersBound, preconditionVerdict, selfNavigationStep, urlEffectVerdict } from '../execution/gates.js';
+import { SOFT_MATCH_MIN_SIMILARITY, alertVerdict, errorPageVerdict, gotoLandingVerdict, isErrorPageUrl, landedOnRecordedPage, markersBound, preconditionVerdict, segmentGate, urlEffectVerdict } from '../execution/gates.js';
 import { LOOP_SHRINK_WAIT_MS, pageReadable, runFoldedLoop, type LoopPass } from '../execution/loop.js';
 import type { Locator, Page } from 'playwright-core';
 import { clip, identityRe, identitySource } from '../shared/text.js';
@@ -46,7 +46,7 @@ export { lineShows, type LineShowsOptions } from '../execution/snapshot.js';
 export { consequentialExpectations, isEchoLine } from '../execution/expect.js';
 import { candidateNames, echoVerdict, noteInteraction, setsSomething } from '../execution/echo.js';
 import { mayNavigateToDestination, navigateToDestination, textHeldElsewhere } from '../execution/recover.js';
-import { contractFor, contractOf, contractVerdict, isVerified, originOf, stepsCarryContext, type Skill, type SkillStep } from './store.js';
+import { CONTEXT_CONTRACT, contractOf, contractVerdict, isVerified, originOf, stepsCarryContext, type Skill, type SkillStep } from './store.js';
 import { armPageEffect, describeFramePath, pageIndexVerdict, rootFor, stepEffect, type Root } from '../execution/context.js';
 
 /** Executes one step against the live page, recording it; throws on failure. */
@@ -271,9 +271,11 @@ export async function replaySkill(
   // A procedure whose steps carry frame or page context under an older stamp
   // was written by something that did not know what the stamp promises (a
   // hand edit, a merge); a build that reads the stamp would not follow them.
-  if (stepsCarryContext(skill.steps) && contractOf(skill) < contractFor(skill.steps)) {
+  // Asked of the context contract alone: a navigating procedure stamped before
+  // contract 4 is still run (see SKILL_CONTRACT), so contractFor is not the bar.
+  if (stepsCarryContext(skill.steps) && contractOf(skill) < CONTEXT_CONTRACT) {
     res.refused = true;
-    res.reason = `${skill.id} carries frame or page context its contract ${contractOf(skill)} does not declare (it needs ${contractFor(skill.steps)}) — nothing was run`;
+    res.reason = `${skill.id} carries frame or page context its contract ${contractOf(skill)} does not declare (it needs ${CONTEXT_CONTRACT}) — nothing was run`;
     return res;
   }
 
@@ -284,31 +286,16 @@ export async function replaySkill(
     return res;
   }
 
-  const startUrl = page.url();
-  // A procedure that opens by navigating (a goto, past any steps that only
-  // look) carries its own precondition: wherever the browser is, that goto
-  // puts it on the recorded page. Refusing it by start-url would make it
-  // permanently unreplayable on apps that redirect at load (the recorded start
-  // url is a race between the capture and the redirect) — the flow6 head step
-  // failed exactly this way, and fwrd51's `wait_for` → `read` → `goto` did too.
-  // The 1-based step of that goto, 0 when the procedure does not open with one.
-  const navigatesAt = selfNavigationStep(skill.steps);
-  const navigatesItself = navigatesAt > 0;
-  if (skill.preconditions.fingerprint) {
+  // The segment's gate — where it starts, and whose record it is — runs
+  // immediately before its first PAGE-DEPENDENT step (shared segmentGate),
+  // not before step 1: a goto, a viewport, a wait for `body` look at no page,
+  // and gating them asked the page being LEFT (fwrd53 07-report asked a list
+  // for a detail page's markers). A segment with no such step is never gated.
+  const gate = segmentGate(skill.steps);
+  // Measured where the segment starts, as before, whenever the gate will not
+  // measure it itself: the similarity is drift telemetry too (repair.ts).
+  if (skill.preconditions.fingerprint && (gate.at === 0 || gate.afterNavigation)) {
     res.similarity = cosine(skill.preconditions.fingerprint, (await fingerprintPage(page)) ?? undefined);
-  }
-  if (!navigatesItself) {
-    // Strict, then soft-with-fingerprint, else refuse: the shared verdict
-    // (src/execution/gates.ts, preconditionVerdict) decides; this runner only
-    // supplies the fingerprint similarity it measured and books the result.
-    const verdict = preconditionVerdict(skill.preconditions.urlPattern, startUrl, params, res.similarity);
-    if (verdict.refuse) {
-      res.refused = true;
-      res.reason = `${verdict.refuse} — nothing was run`;
-      return res;
-    }
-    res.warnings.push(...verdict.warnings);
-    if (verdict.soft) res.generalisations.push({ kind: 'precondition', pattern: verdict.soft.generalised });
   }
 
   // Identity: the url pattern and the fingerprint both match every record of
@@ -316,15 +303,11 @@ export async function replaySkill(
   // that started on a page showing caller-vouched values must find them
   // again, or it is about to do this run's work on someone else's record.
   //
-  // A self-navigating procedure is checked AFTER its goto, not skipped. The
-  // old rule was "step 1 decides the page", which is true and beside the
-  // point: the recorded goto carries the RECORDING run's record id, so it
-  // decides the page to be the wrong one. fwod10 replayed
+  // Asked after a navigation inside the segment, never skipped for it: the
+  // recorded goto carries the RECORDING run's record id. fwod10 replayed
   //   goto .../web#id=44&...&model=res.partner
   // and steps 03-07 did this run's work on n1's records at tier A, published
-  // no values, reported success, and verified 1/6. The guard designed to stop
-  // exactly that was disabled precisely for the procedures most likely to
-  // need it.
+  // no values, reported success, and verified 1/6.
   const checkIdentity = async (): Promise<boolean> => {
     for (const marker of skill.preconditions.requireText ?? []) {
       const want = fillParams(marker, params);
@@ -359,7 +342,55 @@ export async function replaySkill(
     }
     return true;
   };
-  if (!navigatesItself && skill.preconditions.requireText?.length && !(await checkIdentity())) return res;
+
+  /**
+   * The gate, before step `n`. False when it stopped the replay (reason set).
+   * Nothing dispatched yet (`acted` false): a REFUSAL, and the next candidate
+   * may try. Something already ran (a goto, an earlier step): a partial stop
+   * at `n` — trying another candidate would run it from a page nobody expects,
+   * so the caller hands it to recovery; `wrongRecord` still tells the flow
+   * runner to put the browser back on the flow's start url first.
+   */
+  const passGate = async (n: number): Promise<boolean> => {
+    const { urlPattern: pattern, requireText } = skill.preconditions;
+    let passed = true;
+    if (!gate.afterNavigation) {
+      // The url first, then the measurement: both describe the page as the
+      // gate found it, not where a navigation in flight landed meanwhile.
+      const url = page.url();
+      if (skill.preconditions.fingerprint) {
+        res.similarity = cosine(skill.preconditions.fingerprint, (await fingerprintPage(page)) ?? undefined);
+      }
+      // Strict, then soft-with-fingerprint, else refuse: the shared verdict
+      // (src/execution/gates.ts, preconditionVerdict) decides; this runner only
+      // supplies the fingerprint similarity it measured and books the result.
+      const verdict = preconditionVerdict(pattern, url, params, res.similarity);
+      if (verdict.refuse) {
+        res.refused = true;
+        res.reason = `${verdict.refuse} — nothing was run`;
+        passed = false;
+      } else {
+        res.warnings.push(...verdict.warnings);
+        if (verdict.soft) res.generalisations.push({ kind: 'precondition', pattern: verdict.soft.generalised });
+      }
+    } else if (!landedOnRecordedPage(pattern, page.url())) {
+      // An older skill's navigation left the template its gate was observed
+      // on (shared landedOnRecordedPage): nothing recorded describes this page.
+      return true;
+    }
+    if (passed && requireText?.length) passed = await checkIdentity();
+    if (passed) return true;
+    if (res.acted) {
+      res.refused = false;
+      res.failedAt = n;
+      res.url = page.url();
+      const said = `— stopped before step ${n}`;
+      res.reason = res.reason?.replace(/— nothing was run$/, said);
+      if (res.wrongRecord) res.wrongRecord = res.wrongRecord.replace(/— nothing was run$/, said);
+    }
+    return false;
+  };
+  if (gate.at === 1 && !(await passGate(1))) return res;
 
   // One step against the live page. Mutates `res` (lines/warnings/values/
   // stepsRun) and returns how it went; a 'stop' has already set failedAt/reason.
@@ -908,6 +939,7 @@ export async function replaySkill(
 
   for (const [i, step] of skill.steps.entries()) {
     const n = i + 1;
+    if (n > 1 && n === gate.at && !(await passGate(n))) return res;
     if (opts.signal?.aborted) {
       res.failedAt = n;
       res.reason = 'instruction budget exhausted before this step';
@@ -921,22 +953,6 @@ export async function replaySkill(
     const status = await runOneStep(step, String(n), n);
     if (status === 'stop') break;
     res.stepsRun++;
-    // The identity check a self-navigating procedure deferred: its goto has
-    // now run, so ask whether it landed on THIS run's record before doing any
-    // work on it. Refusing here costs a recovery; not refusing costs the work
-    // being done to the wrong record and reported as success.
-    if (navigatesItself && n === navigatesAt && skill.preconditions.requireText?.length && !(await checkIdentity())) {
-      // NOT `refused`. Refused means "nothing ran, free to try the next
-      // candidate" — and the goto has already moved the browser, so trying
-      // another candidate would run it from a page nobody expects. This is a
-      // partial stop: what ran, ran, and the caller hands it to recovery
-      // rather than restarting. `wrongRecord` still tells the flow runner to
-      // put the browser back on the flow's start url first.
-      res.refused = false;
-      res.failedAt = n;
-      res.url = page.url(); // the goto moved the browser; the caller repositions from here
-      return res;
-    }
   }
 
   res.ok = res.stepsRun === skill.steps.length && res.failedAt === undefined;
@@ -1060,14 +1076,16 @@ const alerts: StepGate = ({ outcome, isRead, step, params, tag, effectConfirmed,
   const ctx = { where: `step ${tag}`, isRead, expectedContains: step.expect?.alertContains, params, effectConfirmed };
   const d = dialectOf(step);
   const obs = outcome.captureFailed ? undefined : outcome.observations;
-  const verdict = obs
-    ? alertVerdict(renderAlerts(obs.before, d), renderAlerts(obs.after, d), ctx, alertsComplete(obs.after.coverage))
-    : // A navigation's own looks: an alert they SAW is evidence and stops the
-      // step. A look that failed stays the observed-empty F1 reads it as —
-      // marking every goto of a page mid-load unobserved would stop a skill
-      // with one ever validating.
-      navAlerts?.after && !outcome.diff
-      ? alertVerdict(navAlerts.before, navAlerts.after.alerts, ctx, navAlerts.after.complete)
+  // A navigation's own looks decide for it, ahead of any diff: the executor
+  // now diffs a goto/back while learning too (its landing is a page seam), but
+  // the looks are the ones the artifact takes. An alert they SAW is evidence
+  // and stops the step. A look that failed stays the observed-empty F1 reads
+  // it as — marking every goto of a page mid-load unobserved would stop a
+  // skill with one ever validating.
+  const verdict = navAlerts
+    ? alertVerdict(navAlerts.before, navAlerts.after?.alerts ?? [], ctx, navAlerts.after?.complete ?? true)
+    : obs
+      ? alertVerdict(renderAlerts(obs.before, d), renderAlerts(obs.after, d), ctx, alertsComplete(obs.after.coverage))
       : alertVerdict([], outcome.captureFailed ? null : (outcome.diff?.alerts ?? []), ctx);
   if (verdict.stop) return { stop: verdict.stop };
   if (!verdict.warnings.length && !verdict.unobserved) return null;

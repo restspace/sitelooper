@@ -255,7 +255,8 @@ describe('specToFlow: shape of the produced Flow/Skill[]', () => {
     const skill = skills.find((s) => s.id === seg.id)!;
     expect(skill.steps[0]).toMatchObject({ contexts: { target: { frame } }, page: 1, effect: { kind: 'close' } });
     expect(skill.contract).toBe(3);
-    expect(SKILL_CONTRACT).toBe(3);
+    // The context contract, below this build's highest (4: a procedure that navigates).
+    expect(SKILL_CONTRACT).toBe(4);
     expect(skill.stats.verifiedContract).toBe(3);
     expect(isVerified(skill)).toBe(true);
     // ...and back again: the spec rebuilt from the staged store is a version-2 spec carrying them.

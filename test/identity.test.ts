@@ -98,6 +98,52 @@ describe('identity precondition (compile)', () => {
     expect(skills[0].preconditions.requireText).toBeUndefined(); // the list showed no ticket yet
     expect(skills[1].preconditions.requireText?.length).toBe(1);
   });
+
+  /**
+   * fwrd53 07-report: every change of page is a seam, a goto included. The
+   * recording starts on a ticket's DETAIL page (its markers), then goes to the
+   * list. The goto ends segment 1, and segment 2 is gated on the list the goto
+   * landed on — never on the detail page's markers.
+   */
+  it('splits at a goto, gating the next segment on its landing, with no page-change expectation on the goto', () => {
+    const entries: RecordedEntry[] = [
+      { k: 'instruction', text: ADD_PART, url: `${ORIGIN}/#/tickets/t15`, fingerprint: [1, 0, 0], startText: '- heading "r9-n2 RD Bench Ticket"' },
+      step('goto', { url: `${ORIGIN}/#/tickets` }, [], {
+        diff: { url: `${ORIGIN}/#/tickets`, alerts: [], added: ['- heading "Repair tickets"', '- row "r9-n2 RD Bench Ticket Open"'], dialect: 2 },
+        fingerprintAfter: [0, 1, 0],
+      }),
+      step('click', { target: '@e3' }, [{ kind: 'role', role: 'button', name: 'Mark' }]),
+    ];
+    const skills = compile(entries, { runid: 'r9-n2' });
+    expect(skills).toHaveLength(2);
+    const [head, tail] = skills;
+    expect(head.steps.map((s) => s.tool)).toEqual(['goto']);
+    expect(head.preconditions.urlPattern).toBe(`${ORIGIN}/#/tickets/:id`);
+    // the landing is not an effect to assert
+    expect(head.steps[0].expect).toBeUndefined();
+    expect(tail.steps.map((s) => s.tool)).toEqual(['click']);
+    expect(tail.preconditions.urlPattern).toBe(`${ORIGIN}/#/tickets`);
+    expect(tail.preconditions.fingerprint).toEqual([0, 1, 0]);
+    // identity from the text that appeared on the list
+    expect(tail.preconditions.requireText).toHaveLength(1);
+    expect(tail.params[tail.preconditions.requireText![0].replace(/[{}]/g, '')].example).toBe('r9-n2');
+    // a procedure that navigates is contract 4; one that does not stays 2
+    expect(head.contract).toBe(4);
+    expect(tail.contract).toBe(2);
+  });
+
+  it('does not split at a goto the next step immediately replaces, so the superseded one is still dropped', () => {
+    const entries: RecordedEntry[] = [
+      { k: 'instruction', text: ADD_PART, url: `${ORIGIN}/#/home` },
+      step('goto', { url: `${ORIGIN}/#/search` }, [], { diff: { url: `${ORIGIN}/#/search`, alerts: [], added: [] } }),
+      step('goto', { url: `${ORIGIN}/#/tickets` }, [], { diff: { url: `${ORIGIN}/#/tickets`, alerts: [], added: [] } }),
+      step('click', { target: '@e3' }, [{ kind: 'role', role: 'button', name: 'Mark' }]),
+    ];
+    const skills = compile(entries);
+    expect(skills.map((s) => s.steps.map((st) => st.tool))).toEqual([['goto'], ['click']]);
+    expect(skills[0].steps[0].args.url).toBe(`${ORIGIN}/#/tickets`);
+    expect(skills[1].preconditions.urlPattern).toBe(`${ORIGIN}/#/tickets`);
+  });
 });
 
 describe('session-minted url ids (fwgr6: the uid in the skill template)', () => {
@@ -387,7 +433,8 @@ describe('a self-navigating procedure is checked AFTER its goto', () => {
     // hands it to recovery instead of replaying a sibling from a page nobody
     // expects.
     expect(out.refused).toBe(false);
-    expect(out.failedAt).toBe(1);
+    // The gate sits before step 2, the first that acts on the page: that is the step it stopped.
+    expect(out.failedAt).toBe(2);
     expect(out.wrongRecord).toMatch(/different record/);
     // The goto ran — that is how we learn where it lands. Nothing after it did.
     expect(ran).toEqual(['goto']);
@@ -430,7 +477,7 @@ describe('a self-navigating procedure is checked AFTER its goto', () => {
     const out = await replaySkill(skill, { v1: 'n2 Bench Customer' }, { page, exec: async (tool) => { ran.push(tool); return { result: 'ok' }; } });
     expect(ran).toEqual(['goto']);
     expect(out.ok).toBe(false);
-    expect(out.failedAt).toBe(1);
+    expect(out.failedAt).toBe(2);
     expect(out.wrongRecord).toBeUndefined();
     expect(out.reason).toMatch(/^could not confirm that the page at .* shows "n2 Bench Customer" \(capture incomplete: the element cap was reached/);
     expect(out.unobserved).toContain('identity');

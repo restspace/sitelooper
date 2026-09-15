@@ -742,6 +742,142 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
   }, 120_000);
 
   /**
+   * Navigation seams (segmentGate). A segment's gate runs immediately before
+   * its first page-dependent step, and a navigation is a seam.
+   *
+   * fwrd53 07-report: s_84b84b was recorded on a ticket DETAIL page (its
+   * identity marker is the record's own heading), and its first step is a goto
+   * to the LIST, where that record is not shown. The old deferred identity
+   * check asked the list for the detail page's marker and refused "a different
+   * record". This is the skill as it was stored — one segment, the goto inside
+   * it — so the landing is judged by landedOnRecordedPage: another template,
+   * whose page the markers never described, and neither runner asks them.
+   */
+  it('both runners run a detail-page skill whose goto lands on a list that does not show the record', async () => {
+    const steps: SkillStep[] = [{ tool: 'goto', args: { url: `${origin}/` }, locators: {} }, MARK];
+    const pre = { urlPattern: `${origin}/record/:id`, requireText: ['Record {{v1}}'] };
+    const params = { v1: { example: RECORDED, usedIn: [], known: true as const } };
+    const skill: Skill = { ...skillOf(steps), id: 's_detail', template: 'mark from the list', params, preconditions: pre };
+    const spec = specOf(steps);
+    Object.assign(spec.steps[0], { params: { v1: 'rec-77' } });
+    Object.assign(spec.steps[0].segments[0], { id: 's_detail', params, preconditions: pre });
+    reset(1);
+    const replay = await replayOf(skill, { v1: 'rec-77' });
+    const replayLog = [...fx.log];
+    reset(1);
+    const emitted = await emittedOf(spec, { v1: 'rec-77' });
+    const emittedLog = [...fx.log];
+
+    expect(replay.ok, replay.reason ?? '').toBe(true);
+    expect(emitted.ok, emitted.reason ?? '').toBe(true);
+    expect(replayLog).toEqual(['mark:Item 1']);
+    expect(emittedLog).toEqual(['mark:Item 1']);
+  }, 120_000);
+
+  /**
+   * The same procedure as newly compiled: the goto is a seam, so segment 1 is
+   * the goto alone (never gated: nothing in it looks at a page) and segment 2
+   * is gated on the page the goto landed on, its markers taken from there.
+   * Both runners check them before segment 2's first acting step — and stop
+   * when the recorded goto took the browser to the RECORDING run's record.
+   */
+  const seamSkills = (url: string): Skill[] => [
+    { ...skillOf([{ tool: 'goto', args: { url }, locators: {} }]), id: 's_seam0', template: 'mark record {{v1}}', params: { v1: { example: RECORDED, usedIn: [], known: true } }, contract: 4 },
+    {
+      ...skillOf([MARK]),
+      id: 's_seam1',
+      template: 'mark record {{v1}}',
+      params: { v1: { example: RECORDED, usedIn: [], known: true } },
+      preconditions: { urlPattern: `${origin}/record/:id`, requireText: ['Record {{v1}}'] },
+    },
+  ];
+  const seamFlow = (url: string): SpecFlow => {
+    const [head, tail] = seamSkills(url);
+    const seg = (s: Skill) => ({ id: s.id, template: s.template, params: s.params, preconditions: s.preconditions, steps: s.steps });
+    return {
+      version: 1,
+      name: 'parity-seam',
+      origin,
+      startUrl: `${origin}/`,
+      vars: [],
+      steps: [{ id: '01-mark', instruction: 'mark record {{v1}}', params: { v1: 'rec-77' }, outputs: [], segments: [seg(head), seg(tail)] }],
+    };
+  };
+  /** A chain of segments through daemon replay, one session, in order, stopping at the first that does not finish. */
+  async function replayChainOf(skills: Skill[], params: Record<string, string>): Promise<Outcome> {
+    const session = new BrowserSession({ session: `parity-chain-${Date.now()}`, persist: false, learn: true });
+    try {
+      const page = await session.getPage();
+      await page.goto(`${origin}/`);
+      for (const skill of skills) session.learn!.put(skill);
+      let last: ReplayResult | undefined;
+      for (const skill of skills) {
+        const out = await executeTool(session, 'run_skill', { id: skill.id, params }, os.tmpdir());
+        last = out.replay as ReplayResult | undefined;
+        if (!last) return { ok: false, reason: `run_skill returned no replay: ${out.result}`, outputs: {} };
+        if (!last.ok) return { ok: false, reason: last.reason ?? null, outputs: last.values, warnings: last.warnings };
+      }
+      return { ok: true, reason: null, outputs: last?.values ?? {}, warnings: last?.warnings };
+    } finally {
+      await session.close();
+    }
+  }
+
+  it('both runners gate a segment after a goto seam on its landing, and stop on the wrong record before acting', async () => {
+    const recorded = `${origin}/record/${RECORDED}`;
+    reset(0);
+    const replay = await replayChainOf(seamSkills(recorded), { v1: 'rec-77' });
+    const replayLog = [...fx.log];
+    reset(0);
+    const emitted = await emittedOf(seamFlow(recorded), { v1: 'rec-77' });
+    const emittedLog = [...fx.log];
+
+    // segment 1 ran from wherever the browser was: no gate asked of `/`
+    expect(replayLog).toEqual([`visit:${RECORDED}`]);
+    expect(emittedLog).toEqual([`visit:${RECORDED}`]);
+    expect(replay.ok).toBe(false);
+    expect(emitted.ok).toBe(false);
+    expect(replay.reason).toMatch(/different record|does not show/);
+    expect(emitted.reason).toMatch(/identity/i);
+
+    // and on this run's own record, both do the work once
+    const slotted = `${origin}/record/{{v1}}`;
+    reset(0);
+    const replayOk = await replayChainOf(seamSkills(slotted), { v1: 'rec-77' });
+    const replayOkLog = [...fx.log];
+    reset(0);
+    const emittedOk = await emittedOf(seamFlow(slotted), { v1: 'rec-77' });
+    const emittedOkLog = [...fx.log];
+    expect(replayOk.ok, replayOk.reason ?? '').toBe(true);
+    expect(emittedOk.ok, emittedOk.reason ?? '').toBe(true);
+    expect(replayOkLog).toEqual(['visit:rec-77', 'mark:rec-77']);
+    expect(emittedOkLog).toEqual(['visit:rec-77', 'mark:rec-77']);
+  }, 180_000);
+
+  /**
+   * A segment none of whose steps looks at the page is never gated: its url
+   * and its markers describe a page it does nothing on.
+   */
+  it('both runners run a segment of only page-independent steps from any page', async () => {
+    const steps: SkillStep[] = [
+      { tool: 'wait_for', args: { target: '@e0', state: 'visible' }, locators: { target: [{ kind: 'css', selector: 'body' }] } },
+      { tool: 'goto', args: { url: `${origin}/record/rec-5` }, locators: {} },
+    ];
+    const pre = { urlPattern: `${origin}/elsewhere/:id`, requireText: ['Record {{v1}}'] };
+    const params = { v1: { example: 'zzz-1', usedIn: [], known: true as const } };
+    const skill: Skill = { ...skillOf(steps), id: 's_blind', template: 'open', params, preconditions: pre };
+    const spec = specOf(steps);
+    Object.assign(spec.steps[0], { params: { v1: 'zzz-9' } });
+    Object.assign(spec.steps[0].segments[0], { id: 's_blind', params, preconditions: pre });
+    const { replay, emitted, replayLog, emittedLog } = await bothOf(skill, spec, { v1: 'zzz-9' });
+
+    expect(replay.ok, replay.reason ?? '').toBe(true);
+    expect(emitted.ok, emitted.reason ?? '').toBe(true);
+    expect(replayLog).toEqual(['visit:rec-5']);
+    expect(emittedLog).toEqual(['visit:rec-5']);
+  }, 120_000);
+
+  /**
    * C06. The NEIGHBOURING record: this run is about rec-7, and the page it
    * lands on shows rec-70.
    *

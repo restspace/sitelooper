@@ -236,8 +236,8 @@ export type FingerprintSimilarity = number | null | 'unmeasured';
  * only a strict match passes. That is an old compiled artifact's case; the
  * emitter says so per segment (the `unmeasured-precondition` diagnostic).
  *
- * A segment whose first step navigates carries its own precondition and must
- * not be asked this at all — that is the caller's `navigatesItself` rule.
+ * Asked immediately before the segment's first page-dependent step
+ * (`segmentGate`), never before a step that does not look at the page.
  */
 /**
  * Where a goto landed, against where it was sent. Redirects are ordinary (a
@@ -263,24 +263,102 @@ export function gotoLandingVerdict(target: string, landed: string, where: string
   return `${where} navigated but landed on another view: ${said} — the page it asked for was not given`;
 }
 
-/** Tools that look at the page and never take the browser anywhere. */
-const LOOK_ONLY_TOOLS = new Set(['wait_for', 'read', 'read_all', 'screenshot', 'snapshot', 'scroll_into_view', 'hover']);
+/** Tools that act on the browser or the tab itself and never on anything in the page. */
+const PAGE_INDEPENDENT_TOOLS = new Set(['goto', 'back', 'set_viewport', 'set_offline', 'dialog_expect', 'screenshot', 'snapshot', 'tabs']);
+
+/** The steps a segment's gate is placed by: a tool, its args, its target chains. */
+export interface GateStep {
+  tool: string;
+  args?: Record<string, unknown>;
+  locators?: Record<string, readonly unknown[] | undefined>;
+}
+
+/** A selector that names the document itself, not anything the page renders. */
+function documentRoot(selector: unknown): boolean {
+  return typeof selector === 'string' && /^\s*(?:body|html)\s*$/i.test(selector);
+}
 
 /**
- * The 1-based index of the goto a segment opens with, past any leading steps
- * that only look — 0 when it does not open by navigating. Such a segment
- * carries its own precondition (its goto puts the browser on the recorded
- * page), so the start url is not asked, and its identity gate is asked right
- * after that goto. "Step 1 is a goto" was the old rule: fwrd51 recorded
- * `wait_for body` → `read url` → `goto` from about:blank, and the start url
- * refused it on the very page the goto would have left.
+ * Whether a step acts on or reads the page's CONTENT — the steps a segment's
+ * gate (where it starts, and whose record it is) exists to protect. Pure, so
+ * both runners and the compiler ask the same question.
+ *
+ * Not page-dependent:
+ *  - goto, back: they take the browser somewhere; what was there before is
+ *    beside the point. A navigation is a page seam (compile.ts).
+ *  - set_viewport, set_offline, tabs: the browser or the tab, not the page.
+ *  - dialog_expect: arms a handler; it touches nothing until a dialog opens.
+ *  - screenshot, snapshot: they look and can never fail on what they see.
+ *  - a `read` of `what: 'url'`: the address bar, which is no page's content.
+ *  - a `press` with no target: keyboard input to whatever has focus.
+ *  - a `wait_for` whose target is the document itself (`body`/`html`, as the
+ *    raw selector or as every recorded candidate) waiting only for it to be
+ *    there: a page load, not a page. A text or count condition on `body` IS
+ *    about the content, and stays page-dependent.
+ * Page-dependent: everything else — every step that resolves a target in the
+ * page (click, dblclick, modifier/right click, fill, type, select, check,
+ * hover, scroll_into_view, drag, upload, download, press with a target, read
+ * and read_all with a target, a wait_for on anything else), a loop (its guard
+ * and body resolve in the page), a labelled read, and eval. An unknown tool
+ * counts as page-dependent: a gate asked once too often refuses a run; one
+ * skipped does its work on the wrong page.
  */
-export function selfNavigationStep(steps: readonly { tool: string }[]): number {
-  for (const [i, step] of steps.entries()) {
-    if (step.tool === 'goto') return i + 1;
-    if (!LOOK_ONLY_TOOLS.has(step.tool)) return 0;
+export function dependsOnPage(step: GateStep): boolean {
+  const args = step.args ?? {};
+  if (PAGE_INDEPENDENT_TOOLS.has(step.tool)) return false;
+  if (step.tool === 'loop') return true;
+  if (step.tool === 'press') return Boolean(args.target);
+  if (step.tool === 'read' || step.tool === 'read_all') return args.what !== 'url';
+  if (step.tool === 'wait_for') {
+    const state = args.state === undefined ? 'visible' : String(args.state);
+    if (state !== 'visible' && state !== 'attached') return true;
+    const chain = step.locators?.target ?? [];
+    const candidates = chain.filter((c): c is { kind: string; selector?: unknown } => Boolean(c) && typeof c === 'object');
+    const onRoot = candidates.length ? candidates.every((c) => c.kind === 'css' && documentRoot(c.selector)) : documentRoot(args.target);
+    return !onRoot;
   }
-  return 0;
+  return true;
+}
+
+/**
+ * Where a segment's gate goes: immediately before its first page-dependent
+ * step (1-based `at`; 0 when it has none, and then it is never gated), and
+ * whether a goto or back ran inside the segment ahead of that step.
+ *
+ * The gate used to sit before step 1, with a special case for a segment that
+ * opened by navigating — which then asked the page it LANDED on for markers
+ * observed before the goto (fwrd53 07-report: a detail page's markers asked of
+ * the list). A navigation is now a seam, so a newly compiled segment never has
+ * one ahead of its gate; `afterNavigation` is an older skill's shape, and the
+ * caller judges it with `landedOnRecordedPage`.
+ */
+export function segmentGate(steps: readonly GateStep[]): { at: number; afterNavigation: boolean } {
+  let navigated = false;
+  for (const [i, step] of steps.entries()) {
+    if (dependsOnPage(step)) return { at: i + 1, afterNavigation: navigated };
+    if (step.tool === 'goto' || step.tool === 'back') navigated = true;
+  }
+  return { at: 0, afterNavigation: false };
+}
+
+/**
+ * A segment compiled before navigations were seams (contract < 4) can hold a
+ * goto or back ahead of its first page-dependent step, while its url pattern,
+ * fingerprint and identity markers were observed on the page BEFORE that
+ * navigation. Judging the landing by them is only meaningful where it is the
+ * same page template: then the url precondition is not asked (the goto chose
+ * the page, and the recording's start url is a race with any redirect) but
+ * the identity markers are — the recorded goto carries the RECORDING run's
+ * record id (fwod10). Anywhere else the markers describe a page the procedure
+ * has left, and neither is asked (fwrd53: a detail page's markers asked of the
+ * list, where the archived record is hidden by design). Same template = a
+ * strict or a soft url match of the recorded pattern with its slots left
+ * UNFILLED: a slot is the record, and which record it is is the markers'
+ * question — filled, another record's url would read as another template and
+ * skip the very check that tells them apart.
+ */
+export function landedOnRecordedPage(pattern: string, url: string): boolean {
+  return urlMatches(pattern, url) || softUrlMatch(pattern, url) !== null;
 }
 
 export function preconditionVerdict(

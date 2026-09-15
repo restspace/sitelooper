@@ -5,10 +5,10 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { RecordedEntry } from '../src/daemon/recorder.js';
 import {
   ignorableRefs,
-  consumedReportedOutputs, consumedUrlOutputs, buildFlow, lintFlowRefs, lintUnpublishedOutputs, looksLikeReportedData, noteOutputEvidence, recoveryRoute, resolveInstruction, resolveStepParams, softResolveInstruction, unbankedMutations, unreportedOutputs, urlOutputs, varyingValues, type Flow, type FlowStep } from '../src/skills/flow.js';
+  consumedReportedOutputs, consumedUrlOutputs, buildFlow, lintFlowRefs, lintUnpublishedOutputs, liveReadsFor, looksLikeReportedData, noteOutputEvidence, recoveryRoute, resolveInstruction, resolveStepParams, softResolveInstruction, unbankedMutations, unreportedOutputs, urlOutputs, valueLineCandidates, varyingValues, type Flow, type FlowStep } from '../src/skills/flow.js';
 import { bindSkill, publishedOutputs, synthesizeReport } from '../src/skills/learn.js';
-import type { Skill } from '../src/skills/store.js';
-import { compileSkill } from '../src/skills/compile.js';
+import { SkillStore, type Skill } from '../src/skills/store.js';
+import { compileSkill, dropDeadReadLocators } from '../src/skills/compile.js';
 
 let tmp: string;
 beforeAll(() => {
@@ -1342,5 +1342,178 @@ describe('consumedReportedOutputs', () => {
     expect(consumedReportedOutputs(steps, '01-open').sort()).toEqual(['body', 'ticket_parts', 'ticket_reference']);
     expect(consumedReportedOutputs(steps, '02-add')).toEqual(['part']);
     expect(consumedReportedOutputs(steps, '07-remove')).toEqual([]);
+  });
+});
+
+describe('recovery text for an unpublished reference (fwkb8)', () => {
+  // fwkb8's shape: 01-open reported the column names from a snapshot, its
+  // skill read none of them, and 03-change's recovery was told to move the
+  // task into the '' column — which the model refused, halting both replays.
+  const flow: Pick<Flow, 'steps'> = {
+    steps: [
+      {
+        id: '01-open',
+        instruction: 'Open the board.',
+        skill: 's_open',
+        outputs: ['column_1_name', 'column_3_name', 'body'],
+        recorded: { column_1_name: 'Backlog', column_3_name: 'Work in progress', 'url.q.project_id': '1', body: '{"task":{"id":"T-44"}}' },
+      },
+      {
+        id: '03-change',
+        instruction: "move the task into the '{{01-open.column_3_name}}' column, then verify it is in '{{01-open.column_3_name}}' (not {{01-open.column_1_name}}) for run {{runid}}",
+        skill: 's_move',
+        params: { v4: '{{01-open.column_3_name}}' },
+        outputs: [],
+        recorded: {},
+      },
+    ],
+  };
+  const step = flow.steps[1];
+  const CAVEAT = " (recorded when this flow was made; this run's value may differ — check the page)";
+
+  it('shows the recorded value, marked once per reference, and does not double the quotes around it', () => {
+    expect(softResolveInstruction(step, { runid: 'z9' }, {}, flow)).toBe(
+      `move the task into the 'Work in progress'${CAVEAT} column, then verify it is in 'Work in progress' (not 'Backlog'${CAVEAT}) for run z9`,
+    );
+  });
+
+  it("prefers this run's value, and without the flow keeps the old blank", () => {
+    expect(softResolveInstruction(step, { runid: 'z9' }, { '01-open': { column_3_name: 'Doing', column_1_name: 'Todo' } }, flow)).toBe(
+      "move the task into the 'Doing' column, then verify it is in 'Doing' (not Todo) for run z9",
+    );
+    expect(softResolveInstruction(step, { runid: 'z9' }, {})).toBe("move the task into the '' column, then verify it is in '' (not ) for run z9");
+  });
+
+  it('resolves url parts and JSON leaves from what was recorded, quoting with a mark the value does not contain', () => {
+    const st: FlowStep = { id: '02', instruction: 'open project {{01-open.url.q.project_id}} task "{{01-open.body#task.id}}"', outputs: [], recorded: {} };
+    expect(softResolveInstruction(st, {}, {}, flow)).toBe(`open project '1'${CAVEAT} task 'T-44'${CAVEAT}`);
+    const apostrophe: Pick<Flow, 'steps'> = { steps: [{ id: '01', instruction: 'x', outputs: ['n'], recorded: { n: "O'Brien" } }] };
+    expect(softResolveInstruction({ id: '02', instruction: "call '{{01.n}}'", outputs: [], recorded: {} }, {}, {}, apostrophe)).toBe(`call "O'Brien"${CAVEAT}`);
+  });
+
+  it("keeps a value a later run watched change blank: it is the recording's record", () => {
+    const watched: Pick<Flow, 'steps'> = { steps: [{ ...flow.steps[0], outputEvidence: { column_3_name: { same: 0, differed: 1 } } }, step] };
+    expect(softResolveInstruction(step, { runid: 'z9' }, {}, watched)).toContain("into the '' column");
+  });
+
+  it('leaves the zero-model paths unresolved — only recovery text sees recorded values', () => {
+    const bound = resolveStepParams(step, { runid: 'z9' }, {})!;
+    expect(bound.missing).toEqual(['01-open.column_3_name']);
+    expect(bound.params.v4).toBe('{{01-open.column_3_name}}');
+    expect(resolveInstruction(step, { runid: 'z9' }, {}).text).not.toContain('Work in progress');
+  });
+});
+
+describe('valueLineCandidates', () => {
+  it('names each line whose accessible name IS the value, display roles first, never a longer name', () => {
+    const lines = ['- link "Backlog"', '- cell "Backlog ( Total number of tasks 3)"', '- link "Work in progress"', '- cell "Work in progress"', '- button "Mark Work in progress"'];
+    expect(valueLineCandidates(lines, 'Work in progress')).toEqual([
+      { kind: 'role', role: 'cell', name: 'Work in progress' },
+      { kind: 'role', role: 'link', name: 'Work in progress' },
+    ]);
+    expect(valueLineCandidates(lines, 'Backlog')).toEqual([{ kind: 'role', role: 'link', name: 'Backlog' }]);
+  });
+
+  it('skips a role+name shown more than once, and controls whose name is a label', () => {
+    const lines = ['- link "Ready"', '- link "Ready"', '- textbox "Ready": x', '- combobox "Status": Ready'];
+    expect(valueLineCandidates(lines, 'Ready')).toEqual([]);
+    expect(valueLineCandidates(['- heading "Ready" [disabled]'], ' Ready ')).toEqual([{ kind: 'role', role: 'heading', name: 'Ready' }]);
+  });
+});
+
+describe('liveReadsFor', () => {
+  const board = `${ORIGIN}/board`;
+  const entries = (): RecordedEntry[] => [
+    { k: 'instruction', text: 'Open the board and report the column names.', url: `${ORIGIN}/` },
+    { k: 'step', tool: 'click', args: { target: '@e1' }, locators: {}, diff: { url: board, alerts: [], added: ['- heading "Bench Board"'], dialect: 2 } },
+    { k: 'report', status: 'success', summary: 'ok', values: { column_1_name: 'Backlog', column_3_name: 'Work in progress', task_id: '4' }, skill: 's_open' },
+    {
+      k: 'instruction',
+      text: "Create a task in the 'Bench Board' project.",
+      url: board,
+      startText: ['- heading "Bench Board"', '- link "Backlog"', '- columnheader "Work in progress"', '- link "Work in progress"'].join('\n'),
+      startDialect: 2,
+    },
+    { k: 'report', status: 'success', summary: 'ok', values: {}, skill: 's_create' },
+    { k: 'instruction', text: "Move the task into the 'Work in progress' column, not 'Backlog'; task 4.", url: board },
+    { k: 'report', status: 'success', summary: 'ok', values: {}, skill: 's_move' },
+  ];
+  const flow = (): Flow => buildFlow(entries(), { name: 'kb', origin: ORIGIN, startUrl: `${ORIGIN}/`, vars: {}, session: 'kb-n1' })!;
+
+  it('reads the fwkb8 shape: a referenced column name the producing skill never reads', () => {
+    const f = flow();
+    expect(f.steps.map((s) => s.id)).toEqual(['01-open', '02-create', '03-step']);
+    expect(f.steps[2].instruction).toContain("'{{01-open.column_3_name}}'");
+    const reads = liveReadsFor(entries(), f, (id) => (id === 's_open' ? ['column_1_name'] : []));
+    // column_1_name is already published; task_id is nowhere on the page as a name.
+    expect(reads).toEqual([
+      {
+        stepId: '01-open',
+        skill: 's_open',
+        output: 'column_3_name',
+        value: 'Work in progress',
+        source: 'start',
+        read: {
+          tool: 'read',
+          args: { target: '@synth', what: 'text' },
+          locators: { target: [{ kind: 'role', role: 'columnheader', name: 'Work in progress' }, { kind: 'role', role: 'link', name: 'Work in progress' }] },
+          label: 'column_3_name',
+        },
+      },
+    ]);
+  });
+
+  it("falls back to the producing instruction's own diffs on its final page, and gives no verdict for a skill not in the store", () => {
+    const f = flow();
+    f.steps[2].instruction = 'Open {{01-open.board_title}}.';
+    f.steps[0].recorded = { ...f.steps[0].recorded, board_title: 'Bench Board' };
+    const noStart = entries().map((e) => (e.k === 'instruction' && e.startText ? { ...e, startText: '' } : e));
+    const reads = liveReadsFor(noStart, f, () => []);
+    expect(reads.map((r) => [r.output, r.source, r.read.locators.target])).toEqual([['board_title', 'diff', [{ kind: 'role', role: 'heading', name: 'Bench Board' }]]]);
+    expect(liveReadsFor(entries(), flow(), () => null)).toEqual([]);
+  });
+
+  it('adds no read for a value the run is known to have made (fwkb3: task_id "#4" shown as link "#4")', () => {
+    const f = flow();
+    f.steps[2].instruction = 'Open task {{01-open.task_ref}} in {{01-open.column_3_name}}.';
+    f.steps[0].recorded = { ...f.steps[0].recorded, task_ref: '#4' };
+    const withRef = entries().map((e) => (e.k === 'instruction' && e.startText ? { ...e, startText: `${e.startText}\n- link "#4"` } : e));
+    expect(liveReadsFor(withRef, f, () => []).map((r) => r.output)).toEqual(['task_ref', 'column_3_name']);
+    expect(liveReadsFor(withRef, f, () => [], (v) => v === '#4').map((r) => r.output)).toEqual(['column_3_name']);
+  });
+
+  it('once appended to the producing skill, the lint sees the output as published and retirement can strip it', async () => {
+    const f = flow();
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'bp-liveread-'));
+    try {
+      const store = new SkillStore(dir);
+      const skill: Skill = {
+        id: 's_open',
+        origin: ORIGIN,
+        template: 'open the board',
+        params: {},
+        preconditions: { urlPattern: `${ORIGIN}/` },
+        steps: [{ tool: 'read_all', args: { target: 'table a', what: 'text' }, locators: { target: [{ kind: 'css', selector: 'table a' }] }, label: 'column_1_name' }],
+        stats: { uses: 1, successes: 1, partial: 0, created: 'now', failedAtStep: {}, fallthroughs: 0 },
+        status: 'provisional',
+        provenance: { session: 'kb-n1', instruction: 'open the board', created: 'now' },
+      };
+      store.put(skill);
+      for (const id of ['s_create', 's_move']) store.put({ ...skill, id, steps: [] });
+      const publishes = (id: string): string[] | null => {
+        const sk = store.get(id);
+        return sk ? publishedOutputs(sk) : null;
+      };
+      expect(lintFlowRefs(f, publishes).some((w) => w.includes('{{01-open.column_3_name}}'))).toBe(true);
+      // What the daemon's export does with each read (server.ts exportFlow).
+      for (const live of liveReadsFor(entries(), f, publishes)) store.update(live.skill, (sk) => ({ ...sk, steps: [...sk.steps, live.read] }));
+      expect(lintFlowRefs(f, publishes).some((w) => w.includes('column_3_name'))).toBe(false);
+      // A later run that reports a different column retires the value-located candidates.
+      const stored = store.get('s_open')!;
+      expect(dropDeadReadLocators(stored.steps, { column_3_name: 'Work in progress' })).toBe(2);
+      expect(stored.steps[1].locators.target).toEqual([]);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

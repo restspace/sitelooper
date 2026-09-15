@@ -150,8 +150,26 @@ export interface Skill {
  * refuses (contractVerdict), and one carrying none stays contract 2, so every
  * stored procedure keeps its stamp and its verified status (isVerified
  * compares the stamp with verifiedContract, never with this constant).
+ *
+ * Contract 4 is a procedure that navigates (a goto or back): compiled with
+ * every navigation as a page seam, and gated before its first page-dependent
+ * step (execution/gates.ts segmentGate). A contract-3 build runs such a
+ * segment — `[goto]` ahead of the next template's segment, or a gate that
+ * starts after a wait — by its self-navigation special case, which asks the
+ * page the goto lands on for markers observed on the page it left (fwrd53
+ * 07-report). Stored procedures of contracts 1–3 still load and run: this
+ * build places their gate by the same rule, and judges a navigation inside
+ * one by `landedOnRecordedPage`.
  */
-export const SKILL_CONTRACT = 3;
+export const SKILL_CONTRACT = 4;
+
+/** The contract a step's frame or page context needs (see SKILL_CONTRACT). */
+export const CONTEXT_CONTRACT = 3;
+
+/** Whether any top-level step takes the browser somewhere: a seam since contract 4. */
+export function stepsNavigate(steps: readonly SkillStep[]): boolean {
+  return steps.some((s) => s.tool === 'goto' || s.tool === 'back');
+}
 
 export function contractOf(s: Pick<Skill, 'contract'>): number {
   return typeof s.contract === 'number' ? s.contract : 1;
@@ -169,9 +187,10 @@ export function stepsCarryContext(steps: readonly SkillStep[]): boolean {
   );
 }
 
-/** The contract a procedure with these steps is written under: 3 when it carries page or frame context, else 2. */
+/** The contract a procedure with these steps is written under: 4 when it navigates, 3 when it carries page or frame context, else 2. */
 export function contractFor(steps: readonly SkillStep[]): number {
-  return stepsCarryContext(steps) ? 3 : 2;
+  if (stepsNavigate(steps)) return 4;
+  return stepsCarryContext(steps) ? CONTEXT_CONTRACT : 2;
 }
 
 /**

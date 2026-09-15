@@ -1146,40 +1146,55 @@ describe('preconditions, minting and loops', () => {
   });
 
   /**
-   * C02. A segment whose FIRST step is a goto carries its own precondition, so
-   * the gate belongs AFTER that goto — before it, the question is asked of the
-   * page being left, and the recorded url is the RECORDING run's record. This
-   * is replay's `navigatesItself` rule (src/skills/replay.ts), which the
-   * artifact had no equivalent of.
+   * C02, and fwrd53. The gate — url and identity — sits immediately before a
+   * segment's first PAGE-DEPENDENT step (the shared segmentGate), as replay
+   * places it. Ahead of a goto it would ask the page being left. A goto inside
+   * the segment ahead of the gate is an older skill's shape: its url is not
+   * asked, and its markers only of a page of the recorded template
+   * (landedOnRecordedPage).
    */
-  it('defers a self-navigating segment’s identity check until after its own goto', () => {
+  it('places the segment gate before its first page-dependent step', () => {
     const goto: SkillStep = { tool: 'goto', args: { url: 'http://app.test/items/42' }, locators: {} };
     const click: SkillStep = { tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'id', selector: '#b' }] } };
     const pre = { urlPattern: 'http://app.test/items/:id', requireText: ['{{v1}}'] };
+    const pollText = 'await expect.poll(async () => (await confirmPresence(page, [`${p.v1}`], 2, { whole: true })).presence';
     const source = emit(specOf([goto, click], { segments: [segment([goto, click], { preconditions: pre })] }));
-    const poll = source.indexOf('await expect.poll(async () => (await confirmPresence(page, [`${p.v1}`], 2, { whole: true })).presence');
+    const poll = source.indexOf(pollText);
     expect(poll).toBeGreaterThan(-1);
     expect(poll).toBeGreaterThan(source.indexOf("await page.goto('http://app.test/items/42');"));
     expect(poll).toBeLessThan(source.indexOf("locator('#b')"));
-    expect(source).toContain('// The identity gate sits AFTER the goto above, and is not skipped.');
+    expect(source).toContain("if (landedOnRecordedPage('http://app.test/items/:id', page.url())) {");
+    expect(source).toContain('function landedOnRecordedPage(');
+    expect(source).not.toContain('await preconditionGate(');
     expect(syntaxErrors(source)).toEqual([]);
 
-    // Only a segment that navigates itself defers: everywhere else the gate
-    // stays where it was, at segment entry.
+    // With nothing ahead of it, the gate is at segment entry, url first.
     const still = emit(specOf([click], { segments: [segment([click], { preconditions: pre })] }));
-    expect(still.indexOf('await expect.poll(async () => (await confirmPresence(page, [`${p.v1}`], 2, { whole: true })).presence')).toBeLessThan(still.indexOf("locator('#b')"));
-    expect(still).not.toContain('// The identity gate sits AFTER the goto above');
+    expect(still.indexOf(pollText)).toBeLessThan(still.indexOf("locator('#b')"));
+    expect(still.indexOf('await preconditionGate(')).toBeLessThan(still.indexOf(pollText));
+    expect(still).not.toContain('if (landedOnRecordedPage(');
 
-    // Steps that only look come first in a recording from about:blank
-    // (fwrd51: wait_for → read → goto): the segment still navigates itself —
-    // no url gate at entry, and the identity gate right after its goto.
+    // A wait for `body` looks at no page: the whole gate moves past it,
+    // url included, and is still asked (no navigation ran ahead of it).
     const wait: SkillStep = { tool: 'wait_for', args: { target: 'body', state: 'visible' }, locators: {} };
+    const waited = emit(specOf([wait, click], { segments: [segment([wait, click], { preconditions: pre })] }));
+    expect(waited.indexOf('await preconditionGate(')).toBeGreaterThan(waited.indexOf('// @step 01-do s_test1/1'));
+    expect(waited.indexOf('await preconditionGate(')).toBeLessThan(waited.indexOf('// @step 01-do s_test1/2'));
+    expect(syntaxErrors(waited)).toEqual([]);
+
+    // fwrd51 (wait_for → goto → click) from about:blank: no url gate, and the
+    // markers after the goto.
     const looked = emit(specOf([wait, goto, click], { segments: [segment([wait, goto, click], { preconditions: pre })] }));
-    const lookedPoll = looked.indexOf('await expect.poll(async () => (await confirmPresence(page, [`${p.v1}`], 2, { whole: true })).presence');
+    const lookedPoll = looked.indexOf(pollText);
     expect(looked).not.toContain('await preconditionGate(');
     expect(lookedPoll).toBeGreaterThan(looked.indexOf("await page.goto('http://app.test/items/42');"));
     expect(lookedPoll).toBeLessThan(looked.indexOf("locator('#b')"));
     expect(syntaxErrors(looked)).toEqual([]);
+
+    // A segment with no page-dependent step is never gated.
+    const none = emit(specOf([wait, goto], { segments: [segment([wait, goto], { preconditions: pre })] }));
+    expect(none).not.toContain('await preconditionGate(');
+    expect(none).not.toContain(pollText);
   });
 
   it("re-reads a minted url part after the DOM settles, so a second redirect cannot strand it (the odoo signin failure)", () => {
@@ -1203,9 +1218,10 @@ describe('preconditions, minting and loops', () => {
    * start-of-segment rule, through the shared preconditionVerdict
    * (src/execution/gates.ts): strict match passes, a same-shape url with 1–2
    * differing segments proceeds with a warning, anything else refuses before
-   * the first step acts. A self-navigating segment is exempt, as in replay.
+   * its first page-dependent step acts. A goto ahead of that step exempts the
+   * url, as in replay.
    */
-  it('gates the precondition url through the shared preconditionVerdict, unless the segment navigates itself', async () => {
+  it('gates the precondition url through the shared preconditionVerdict, unless the segment navigated ahead of the gate', async () => {
     const step: SkillStep = { tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'id', selector: '#b' }] } };
     const out = emit(specOf([step]));
     expect(out).toContain('// recorded on a page matching http://app.test/items');

@@ -1,7 +1,7 @@
 import { isMutatingAction, isReadAction } from '../execution/lifecycle.js';
 import { DEFAULT_BROWSER_PROFILE, isNavigatingAction, type BrowserProfile } from '../execution/browser.js';
 import { setsSomething } from '../execution/echo.js';
-import { selfNavigationStep } from '../execution/gates.js';
+import { segmentGate } from '../execution/gates.js';
 /**
  * The IR as `@playwright/test` source (Tier 2: no sitelooper runtime).
  *
@@ -2353,17 +2353,6 @@ function satisfiedGuard(step: SpecStep, ctx: Ctx): string[] {
   return out;
 }
 
-/**
- * A segment that opens by navigating (past steps that only look) carries its
- * own precondition: wherever the browser is, its goto puts it on the recorded
- * page. Replay asks the same shared `selfNavigationStep`
- * (src/execution/gates.ts) — a rule only one runner applies is the class of
- * defect the parity harness exists to catch. The 1-based goto index, 0 if none.
- */
-function navigatesItself(segment: SpecSegment): number {
-  return selfNavigationStep(segment.steps);
-}
-
 /** The segment's identity gate: one poll per bound marker, a comment per unbound one. */
 function identityChecks(segment: SpecSegment, ctx: Ctx): string[] {
   const out: string[] = [];
@@ -2404,67 +2393,76 @@ function emitSegment(segment: SpecSegment, ctx: Ctx): string[] {
   ctx.echoUsed = false;
   out.push(`// ${segment.id}: ${commentSafe(segment.template)}`);
   out.push(`// recorded on a page matching ${commentSafe(segment.preconditions.urlPattern)}`);
-  // The url precondition: replay's start-of-segment rule, through the shared
-  // preconditionVerdict, unless the segment's first step navigates (then step
-  // 1 puts the browser on the recorded page, and replay asks nothing either).
-  if (!navigatesItself(segment)) {
-    noteSlots(segment.preconditions.urlPattern, ctx);
-    const where = `${ctx.stepId} ${segment.id}`;
-    let similarity = 'null';
-    if (segment.preconditions.fingerprint) {
-      // Replay's own adapter (src/skills/replay.ts): measure the live page
-      // with the shared fingerprintPage and hand the verdict the cosine
-      // against the recorded vector — null when the page could not be read.
-      similarity = `cosine(recordedFingerprint(${q(ctx.stepId)}, ${q(segment.id)}), (await fingerprintPage(page)) ?? undefined)`;
-      out.push("// the recording's page fingerprint decides a soft url match here, measured as replay measures it");
-    } else if (segment.preconditions.fingerprinted) {
-      // A file compiled before the vector travelled: the recording
-      // fingerprinted this page and the file has nothing to measure against,
-      // so the gate is told so and refuses the soft match replay would decide
-      // by fingerprint. Said in the file and in the emit warnings.
-      const diagnostic = unmeasuredPreconditionDiagnostic(ctx.stepId, segment.id);
-      ctx.diagnostics.push(diagnostic);
-      ctx.warnings.push(diagnostic.line!);
-      out.push('// NOTE: the recording fingerprinted this page, but this file predates carried fingerprints, so a soft url match is refused here (only a strict match passes) where replay would decide it by fingerprint. Recompile to carry the fingerprint.');
-      similarity = "'unmeasured'";
-    }
-    // page.url() is an argument AHEAD of the measurement, so it is read first —
-    // replay's order (startUrl, then fingerprintPage).
-    out.push(`await preconditionGate(${q(segment.preconditions.urlPattern)}, page.url(), p, ${q(where)}, ${similarity});`);
-  }
-  const identity = identityChecks(segment, ctx);
-  // Where the gate goes, not whether: a self-navigating segment is checked
-  // AFTER its own goto, never before it and never not at all.
-  const navAt = navigatesItself(segment);
-  const defer = identity.length > 0 && navAt > 0;
-  if (!defer) out.push(...identity);
+  // The gate goes immediately before the first page-dependent step — replay
+  // asks the same shared segmentGate (src/execution/gates.ts); a rule only one
+  // runner applies is the class of defect the parity harness exists to catch.
+  const gate = segmentGate(segment.steps);
   for (const [i, step] of segment.steps.entries()) {
+    if (i + 1 === gate.at) out.push('', ...segmentGateLines(segment, ctx, gate.afterNavigation));
     out.push('');
     const lines = step.tool === 'loop' ? emitLoop(step, segment, i + 1, ctx) : emitSkillStep(step, segment, i + 1, ctx);
     out.push(...lines);
-    if (defer && i === navAt - 1) {
-      out.push(
-        '',
-        '// The identity gate sits AFTER the goto above, and is not skipped.',
-        '// Asked before it, the question is asked of the page this segment is',
-        "// LEAVING; and the recorded url carries the RECORDING run's record id,",
-        '// so "step 1 decides the page" decides it to be the wrong one. fwod10',
-        "// replayed a goto to another run's record and did this run's work on it,",
-        '// published no values and reported success — the guard built to stop',
-        '// exactly that was off for the procedures most likely to need it. Replay',
-        '// defers it to this same place (n === navigatesItself,',
-        '// src/skills/replay.ts). Failing here is a partial stop rather than a',
-        '// refusal: the goto has already moved the browser, so there is no',
-        '// untouched page left to try another candidate from.',
-        ...identity,
-      );
-    }
   }
   if (ctx.echoUsed) {
     out.splice(2, 0, `// What this segment types, selects or names: a read that returns only that is an echo (see echoRead).`, `const ${ctx.echoes} = new Set<string>();`);
   }
   ctx.echoes = undefined;
   ctx.echoUsed = false;
+  return out;
+}
+
+/**
+ * The segment's gate: where it starts (the shared preconditionVerdict) and
+ * whose record it is (identityChecks), both asked at the one place segmentGate
+ * names. `afterNavigation` is a segment compiled before navigations were
+ * seams, with a goto or back ahead of that place: its gate was observed on the
+ * page it left, so the url is not asked and the markers are asked only of a
+ * page of the recorded template (the shared landedOnRecordedPage), as replay
+ * asks them.
+ */
+function segmentGateLines(segment: SpecSegment, ctx: Ctx, afterNavigation: boolean): string[] {
+  const out: string[] = [];
+  const identity = identityChecks(segment, ctx);
+  if (afterNavigation) {
+    if (!identity.length) return out;
+    out.push(
+      '// The gate sits after a navigation this segment was recorded with. Its url',
+      '// and markers were observed on the page the navigation LEFT, so the url is',
+      '// not asked, and the markers only where the page is the recorded template:',
+      "// the recorded goto carries the RECORDING run's record id (fwod10), while a",
+      '// page of another template shows none of them by design (fwrd53). Replay',
+      '// asks this same place (passGate, src/skills/replay.ts).',
+      `if (landedOnRecordedPage(${q(segment.preconditions.urlPattern)}, page.url())) {`,
+      ...identity.map((line) => `  ${line}`),
+      '}',
+    );
+    return out;
+  }
+  // The url precondition: replay's rule, through the shared preconditionVerdict.
+  noteSlots(segment.preconditions.urlPattern, ctx);
+  const where = `${ctx.stepId} ${segment.id}`;
+  let similarity = 'null';
+  if (segment.preconditions.fingerprint) {
+    // Replay's own adapter (src/skills/replay.ts): measure the live page
+    // with the shared fingerprintPage and hand the verdict the cosine
+    // against the recorded vector — null when the page could not be read.
+    similarity = `cosine(recordedFingerprint(${q(ctx.stepId)}, ${q(segment.id)}), (await fingerprintPage(page)) ?? undefined)`;
+    out.push("// the recording's page fingerprint decides a soft url match here, measured as replay measures it");
+  } else if (segment.preconditions.fingerprinted) {
+    // A file compiled before the vector travelled: the recording
+    // fingerprinted this page and the file has nothing to measure against,
+    // so the gate is told so and refuses the soft match replay would decide
+    // by fingerprint. Said in the file and in the emit warnings.
+    const diagnostic = unmeasuredPreconditionDiagnostic(ctx.stepId, segment.id);
+    ctx.diagnostics.push(diagnostic);
+    ctx.warnings.push(diagnostic.line!);
+    out.push('// NOTE: the recording fingerprinted this page, but this file predates carried fingerprints, so a soft url match is refused here (only a strict match passes) where replay would decide it by fingerprint. Recompile to carry the fingerprint.');
+    similarity = "'unmeasured'";
+  }
+  // page.url() is an argument AHEAD of the measurement, so it is read first —
+  // replay's order (the url, then fingerprintPage).
+  out.push(`await preconditionGate(${q(segment.preconditions.urlPattern)}, page.url(), p, ${q(where)}, ${similarity});`);
+  out.push(...identity);
   return out;
 }
 

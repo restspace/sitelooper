@@ -13,13 +13,15 @@ import { describe, expect, it } from 'vitest';
 import {
   SOFT_MATCH_MIN_SIMILARITY,
   alertVerdict,
+  dependsOnPage,
   describeUrl,
   errorPageVerdict,
   gotoLandingVerdict,
   isErrorPageUrl,
+  landedOnRecordedPage,
   markersBound,
   preconditionVerdict,
-  selfNavigationStep,
+  segmentGate,
   urlEffectVerdict,
 } from '../src/execution/gates.js';
 import { liveAlerts, liveAlertsObserved } from '../src/execution/observe.js';
@@ -298,18 +300,63 @@ describe('gotoLandingVerdict', () => {
   });
 });
 
-describe('selfNavigationStep', () => {
-  const steps = (...tools: string[]) => tools.map((tool) => ({ tool }));
-  it('finds the goto a segment opens with, past steps that only look', () => {
-    expect(selfNavigationStep(steps('goto', 'fill'))).toBe(1);
-    // fwrd51 s_b1a0cd, recorded from about:blank
-    expect(selfNavigationStep(steps('wait_for', 'read', 'goto', 'fill'))).toBe(3);
+describe('dependsOnPage', () => {
+  const target = { target: '@e1' };
+  const css = (selector: string) => ({ target: [{ kind: 'css', selector }] });
+  it('is false for a step that looks at no page content', () => {
+    for (const tool of ['goto', 'back', 'set_viewport', 'set_offline', 'dialog_expect', 'screenshot', 'snapshot', 'tabs']) {
+      expect(dependsOnPage({ tool, args: {} }), tool).toBe(false);
+    }
+    expect(dependsOnPage({ tool: 'read', args: { what: 'url' }, locators: {} })).toBe(false);
+    expect(dependsOnPage({ tool: 'press', args: { key: 'Escape' } })).toBe(false);
+    // a page load, as the raw selector or as every recorded candidate
+    expect(dependsOnPage({ tool: 'wait_for', args: { target: '@e0', state: 'visible' }, locators: css('body') })).toBe(false);
+    expect(dependsOnPage({ tool: 'wait_for', args: { target: 'html' } })).toBe(false);
   });
-  it('is 0 when anything that acts comes before the goto, or there is none', () => {
-    expect(selfNavigationStep(steps('click', 'goto'))).toBe(0);
-    expect(selfNavigationStep(steps('wait_for', 'fill', 'goto'))).toBe(0);
-    expect(selfNavigationStep(steps('read', 'click'))).toBe(0);
-    expect(selfNavigationStep([])).toBe(0);
+  it('is true for a step that resolves or reads something in the page', () => {
+    for (const tool of ['click', 'dblclick', 'modifier_click', 'right_click', 'fill', 'type', 'select', 'check', 'hover', 'scroll_into_view', 'drag', 'upload', 'download', 'eval']) {
+      expect(dependsOnPage({ tool, args: target }), tool).toBe(true);
+    }
+    expect(dependsOnPage({ tool: 'loop', args: {} })).toBe(true);
+    expect(dependsOnPage({ tool: 'press', args: { ...target, key: 'Enter' } })).toBe(true);
+    expect(dependsOnPage({ tool: 'read', args: { ...target, what: 'text' } })).toBe(true);
+    expect(dependsOnPage({ tool: 'read_all', args: { ...target, what: 'text' } })).toBe(true);
+    expect(dependsOnPage({ tool: 'wait_for', args: { ...target, state: 'visible' }, locators: css('#banner') })).toBe(true);
+    // a condition on the body's TEXT is about the content
+    expect(dependsOnPage({ tool: 'wait_for', args: { target: 'body', state: 'text_contains', text: 'Saved' } })).toBe(true);
+    // body among other candidates is not the document alone
+    expect(dependsOnPage({ tool: 'wait_for', args: target, locators: { target: [{ kind: 'css', selector: 'body' }, { kind: 'role', role: 'main' }] } })).toBe(true);
+    expect(dependsOnPage({ tool: 'something_new', args: {} })).toBe(true);
+  });
+});
+
+describe('segmentGate', () => {
+  const steps = (...tools: string[]) => tools.map((tool) => ({ tool, args: tool === 'wait_for' ? { target: 'body' } : { target: '@e1' } }));
+  it('goes before the first page-dependent step', () => {
+    expect(segmentGate(steps('click', 'goto'))).toEqual({ at: 1, afterNavigation: false });
+    expect(segmentGate(steps('wait_for', 'fill'))).toEqual({ at: 2, afterNavigation: false });
+  });
+  it('says when a navigation ran ahead of it (an older skill’s shape)', () => {
+    expect(segmentGate(steps('goto', 'fill'))).toEqual({ at: 2, afterNavigation: true });
+    // fwrd51 s_b1a0cd, recorded from about:blank
+    expect(segmentGate([{ tool: 'wait_for', args: { target: 'body' } }, { tool: 'read', args: { what: 'url' } }, { tool: 'goto', args: {} }, { tool: 'fill', args: { target: '@e1' } }])).toEqual({ at: 4, afterNavigation: true });
+  });
+  it('is never asked of a segment with no page-dependent step', () => {
+    expect(segmentGate(steps('wait_for', 'goto'))).toEqual({ at: 0, afterNavigation: false });
+    expect(segmentGate([])).toEqual({ at: 0, afterNavigation: false });
+  });
+});
+
+describe('landedOnRecordedPage', () => {
+  it('is the recorded template by a strict or a soft url match, and nothing else', () => {
+    expect(landedOnRecordedPage('http://app/record/:id', 'http://app/record/rec-42')).toBe(true);
+    // another RECORD of the template is the template: which record is the markers' question
+    expect(landedOnRecordedPage('http://app/#/tickets/{{v1}}', 'http://app/#/tickets/t16')).toBe(true);
+    // a minted literal that disagrees soft-matches
+    expect(landedOnRecordedPage('http://app/d/abc123/bench', 'http://app/d/xyz789/bench')).toBe(true);
+    // fwrd53: a detail page's gate, and the goto landed on the list
+    expect(landedOnRecordedPage('http://app/#/tickets/{{v1}}', 'http://app/#/tickets')).toBe(false);
+    expect(landedOnRecordedPage('http://app/#/tickets/:id', 'http://app/#/parts/7')).toBe(false);
   });
 });
 

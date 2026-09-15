@@ -943,6 +943,33 @@ d('segment chains (two fixture pages)', () => {
     expect(second.replay?.ok).toBe(true);
     expect(second.replay?.values.dbanner).toBe('Noted from ada!');
   }, 60_000);
+
+  /**
+   * Every change of page is a seam, however caused: a goto is recorded with
+   * the landing a click navigation records (its url, the fingerprint of the
+   * new template, the text that appeared), and compile splits there.
+   */
+  it('records a goto with its landing, and compiles it as a seam', async () => {
+    const page = await session.getPage();
+    await page.goto(fixtureUrl);
+    const recorder = session.script!;
+    const mark = recorder.mark();
+    const instr = "open the detail page and save note 'goto zed'";
+    recorder.beginInstruction(instr, { url: page.url() });
+    await run('goto', { url: fixtureUrl.replace(/page\.html$/, 'detail.html') });
+    const snap = (await run('snapshot', {})).result;
+    await run('fill', { target: /textbox "Note" \[(@e\d+)\]/.exec(snap)![1], value: 'goto zed' });
+    const entries = recorder.entriesSince(mark);
+    const goto = entries.find((e) => e.k === 'step' && e.tool === 'goto');
+    expect(goto && goto.k === 'step' && goto.diff?.url).toContain('detail.html');
+    expect(goto && goto.k === 'step' && goto.diff?.added.length).toBeGreaterThan(0);
+    expect(goto && goto.k === 'step' && goto.fingerprintAfter?.length).toBeGreaterThan(0);
+    const skills = compileSkills({ entries, instruction: instr, report: { status: 'success', summary: 'saved', evidence: { values: {} } }, session: 'segchain' });
+    expect(skills.map((s) => s.steps.map((st) => st.tool))).toEqual([['goto'], ['fill']]);
+    expect(skills[0].steps[0].expect).toBeUndefined();
+    expect(skills[1].preconditions.urlPattern).toContain('detail.html');
+    expect(skills[1].preconditions.fingerprint?.length).toBeGreaterThan(0);
+  }, 60_000);
 });
 
 /**

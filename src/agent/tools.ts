@@ -612,7 +612,7 @@ interface StepOptions {
  * One tool call with its recording, and nothing else: no dialog drain. Shared
  * by the single-tool path, by every step of a batch, and by skill replay.
  * In learning mode a per-step page diff is captured around state-changing
- * steps and stored with the recording — that is what becomes a replayed
+ * steps and navigations and stored with the recording — that is what becomes a replayed
  * step's expectation.
  */
 async function runStep(
@@ -632,7 +632,11 @@ async function runStep(
     recorder && page && isRecordable(name)
       ? await recorder.prepare(page, name, args, opts.resolved).catch(() => null)
       : null;
-  const wantDiff = Boolean(session.learn) && page && STATE_CHANGING.has(name);
+  // A navigation is diffed as well: every change of page is a seam, and the
+  // landing — url, fingerprint, the text that appeared — is what compile gates
+  // the next segment on. It gets no action observation (below): a goto
+  // awaits its own navigation.
+  const wantDiff = Boolean(session.learn) && page && (STATE_CHANGING.has(name) || NAVIGATED.has(name));
   const before = wantDiff ? (opts.before ?? (await captureSignature(page!))) : null;
   // Which page this step runs on, and whether it opens another: the pages
   // open before it, and a popup listener attached BEFORE the action
