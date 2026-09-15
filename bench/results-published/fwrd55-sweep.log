@@ -1,0 +1,125 @@
+
+[sweep] run 1/3: fwrd55-n1 (store: /home/user/sitelooper/bench/results/fwrd55-skills)
+[harness] repairdesk: defaulting APP_URL
+[harness] repairdesk: defaulting APP_EMAIL
+[harness] repairdesk: defaulting APP_PASSWORD
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+[harness] repairdesk responded 200 at http://127.0.0.1:4180/
+stopped: fwrd55-n1
+  flow "fwrd55" saved: 6 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwrd55.json
+  warning: note: dropped 3 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: note: 01-open no longer publishes ticket_list_summary_before_save, list_count_before, list_count_after — no replay reads them from the page and the recording showed no line to read
+  warning: note: 02-add no longer publishes qty, parts_table_columns, part_a_name, part_a_markup, part_a_qty — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-add no longer publishes row1, row2, part_b_name, part_b_markup, part_b_qty, part_b_supplier, parts_table_columns, part_a_name — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-report no longer publishes buttons_after — no replay reads it from the page and the recording showed no line to read
+  warning: note: 06-delete no longer publishes archived_list_row_parts_count, archived_list_row_raised_date, part_a_delete_error, part_b_delete_error, archive_confirmation_dialog, archive_error, detail_buttons_after_archive, active_list_summary, parts_count_in_list — no replay reads them from the page and the recording showed no line to read
+  warning: note: 02-add: added a read for part_a_cost to s_67ba45 (page.getByRole('cell', { name: '$100.00', exact: true }); seen on the next instruction's start page)
+  warning: note: 02-add: added a read for part_a_supplier to s_67ba45 (page.getByRole('cell', { name: 'No supplier', exact: true }); seen on the next instruction's start page)
+  warning: note: 02-add: added a read for part_a_actions to s_67ba45 (page.getByRole('cell', { name: 'Edit Delete', exact: true }); seen on the next instruction's start page)
+  warning: note: 03-add: added a read for part_b_cost to s_67ba45 (page.getByRole('cell', { name: '$200.00', exact: true }); seen on the next instruction's start page)
+  warning: note: 03-add: added a read for part_b_computed_price to s_67ba45 (page.getByRole('cell', { name: '$250.00', exact: true }); seen on the next instruction's start page)
+  warning: note: 03-add: added a read for part_a_computed_price to s_67ba45 (page.getByRole('cell', { name: '$125.00', exact: true }); seen on the next instruction's start page)
+  warning: note: 03-add: added a read for table_footer to s_67ba45 (page.getByRole('row', { name: 'Total (price × quantity) $375.00', exact: true }); seen on the next instruction's start page)
+  warning: note: 03-add: added a read for total_row to s_67ba45 (page.getByRole('row', { name: 'Total (price × quantity) $375.00', exact: true }); seen on the next instruction's start page)
+  warning: note: 04-edit: added a read for table_footer_total to s_49ecb2 (page.getByRole('row', { name: 'Total (price × quantity) $437.50', exact: true }); seen on the next instruction's start page)
+  warning: warning: 204 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].route: "http://127.0.0.1:4180/#/tickets" (output) in "http://127.0.0.1:4180/#/tickets/:id"
+  flow.steps[1].route: "http://127.0.0.1:4180/#/tickets" (output) in "http://127.0.0.1:4180/#/tickets/:id"
+  flow.steps[2].route: "http://127.0.0.1:4180/#/tickets" (output) in "http://127.0.0.1:4180/#/tickets/:id"
+  flow.steps[3].route: "http://127.0.0.1:4180/#/tickets" (output) in "http://127.0.0.1:4180/#/tickets/:id"
+  flow.steps[4].instruction: "Ready" (output) in "On the ticket detail page for ticket {{01-open.ticket_reference}} (titled '{{runid}} RD Bench Ticket'), attempt to move the ticket to status 'Ready' using the '"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwrd55-n1 stop=completed
+turns=7 wall=339.6s
+commands=6 cmdTime=288.0s cmdBytes=11318 timeouts=0
+orchestrator in=11058 cw=0 cr=19712 out=2169
+inner prompt=1259762 cached=1162112 completion=15874
+spend=$0.0578 maxUsd=3
+learn: A_n=0.176 replayed=1/6 full=1 repaired=0 compiled=5 variants=0
+-> /home/user/sitelooper/bench/results/fwrd55-n1-sitelooper-result.json
+
+=== fwrd55-n1 === (run self-reported: completed)
+  obj 1  PASS  seq 1: ticket t15 (RD-1015) "fwrd55-n1 RD Bench Ticket"
+  obj 2  PASS  seq 2 p18 cost=100 markup=25 price=125.00
+  obj 3  PASS  seq 3 p19 cost=200 markup=25 price=250.00
+  obj 4  PASS  seq 4: cost 100 -> 150, price 125.00 -> 187.50 (want 187.50), after the create at seq 2
+  obj 5  PASS  seq 7: status Draft -> Ready
+  obj 6  PASS  part A deleted, part B deleted, archive entry at seq 10; state: 0 part(s) surviving, ticket t15 archived=true
+  claim 2  ok — run reported 125.00, app recorded 125.00
+  claim 3  ok — run reported 250.00, app recorded 250.00
+  claim 4  ok — run reported 187.50, app recorded 187.50
+  summary: 6/6 objectives PASS, 0 price claim mismatch(es), 0 duplicate ticket(s)
+
+App state: 15 tickets total, 1 left by benchmark runs (0 still active), 17 parts total, 10 mutation log entries.
+
+[sweep] run 2/3: fwrd55-n2 (replay flow fwrd55, no orchestrator)
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+[sweep] fwrd55-n2: 7 drift ticket(s) → fwrd55-n2-drift.json
+
+=== fwrd55-n2 === (run self-reported: no result file)
+  note: no result file in /home/user/sitelooper/bench/results — objectives are still scored from the log,
+        but the run's claimed prices cannot be cross-checked.
+  obj 1  PASS  seq 1: ticket t15 (RD-1016) "fwrd55-n2 RD Bench Ticket"
+  obj 2  PASS  seq 2 p18 cost=100 markup=25 price=125.00
+  obj 3  PASS  seq 3 p19 cost=200 markup=25 price=250.00
+  obj 4  PASS  seq 4: cost 100 -> 150, price 125.00 -> 187.50 (want 187.50), after the create at seq 2
+  obj 5  PASS  seq 7: status Draft -> Ready
+  obj 6  PASS  part A deleted, part B deleted, archive entry at seq 10; state: 0 part(s) surviving, ticket t15 archived=true
+  claim 2  no claim parsed from the run's final report
+  claim 3  no claim parsed from the run's final report
+  claim 4  no claim parsed from the run's final report
+  summary: 6/6 objectives PASS, 0 price claim mismatch(es), 0 duplicate ticket(s)
+
+App state: 15 tickets total, 1 left by benchmark runs (0 still active), 17 parts total, 10 mutation log entries.
+
+[sweep] run 3/3: fwrd55-n3 (replay flow fwrd55, no orchestrator)
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+[sweep] fwrd55-n3: 10 drift ticket(s) → fwrd55-n3-drift.json
+
+=== fwrd55-n3 === (run self-reported: no result file)
+  note: no result file in /home/user/sitelooper/bench/results — objectives are still scored from the log,
+        but the run's claimed prices cannot be cross-checked.
+  obj 1  PASS  seq 1: ticket t15 (RD-1017) "fwrd55-n3 RD Bench Ticket"
+  obj 2  PASS  seq 2 p18 cost=100 markup=25 price=125.00
+  obj 3  PASS  seq 3 p19 cost=200 markup=25 price=250.00
+  obj 4  PASS  seq 4: cost 100 -> 150, price 125.00 -> 187.50 (want 187.50), after the create at seq 2
+  obj 5  PASS  seq 7: status Draft -> Ready
+  obj 6  PASS  part A deleted, part B deleted, archive entry at seq 10; state: 0 part(s) surviving, ticket t15 archived=true
+  claim 2  no claim parsed from the run's final report
+  claim 3  no claim parsed from the run's final report
+  claim 4  no claim parsed from the run's final report
+  summary: 6/6 objectives PASS, 0 price claim mismatch(es), 0 duplicate ticket(s)
+
+App state: 15 tickets total, 1 left by benchmark runs (0 still active), 17 parts total, 10 mutation log entries.
+
+Learning sweep fwrd55 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬───────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n   │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼───────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwrd55-n1' │ '6/6'    │ 'completed' │ 7     │ 6    │ 0.0578    │ 0.176 │ '1/6'        │ 340    │
+│ 1       │ 2 │ 'fwrd55-n2' │ '6/6'    │ 'success'   │ 0     │ 6    │ 0         │ 1     │ '6/6 (flow)' │ 48     │
+│ 2       │ 3 │ 'fwrd55-n3' │ '6/6'    │ 'success'   │ 0     │ 6    │ 0         │ 1     │ '6/6 (flow)' │ 57     │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴───────┴──────────────┴────────┘
+http://127.0.0.1:4180
+  s_67ba45  validated   21 steps  6/6 (100%)
+           On the ticket detail page for ticket {{v1}} (titled '{{v2}}'), add a part named exactly '{{v4}}' with cost {{v…
+  s_49ecb2  validated    9 steps  3/3 (100%)
+           On the ticket detail page for ticket {{v1}}, edit the part named '{{v2}}' (use its Edit action) and change its…
+  s_667e8c  validated    7 steps  3/3 (100%)
+           Open {{v2}} and sign in with email {{v3}} and password {{v4}}. Then create a new ticket titled exactly '{{v5}}…
+  s_689fdb  validated    4 steps  3/3 (100%)
+           On the ticket detail page for ticket {{v1}} (titled '{{v2}}', currently status {{v4}}), delete BOTH parts ('{{…
+  s_7b21b8  validated    8 steps  3/3 (100%)
+           On the ticket detail page for ticket {{v1}} (titled '{{v2}}', currently status {{v4}}), delete BOTH parts ('{{…
+  s_b2354b  validated    6 steps  3/3 (100%)
+           Open {{v2}} and sign in with email {{v3}} and password {{v4}}. Then create a new ticket titled exactly '{{v5}}…
+  s_dd3b60  validated    8 steps  3/3 (100%)
+           On the ticket detail page for ticket {{v1}} (titled '{{v2}}', currently status {{v4}}), delete BOTH parts ('{{…
+  s_df68c1  validated   13 steps  3/3 (100%)
+           On the ticket detail page for ticket {{v1}} (titled '{{v2}}'), attempt to move the ticket to status 'Ready' us…
+  s_e4e00a  validated    1 steps  3/3 (100%)
+           Open {{v2}} and sign in with email {{v3}} and password {{v4}}. Then create a new ticket titled exactly '{{v5}}…
+  s_facb06  validated    3 steps  3/3 (100%)
+           Open {{v2}} and sign in with email {{v3}} and password {{v4}}. Then create a new ticket titled exactly '{{v5}}…
+store: /home/user/sitelooper/bench/results/fwrd55-skills
+
+summary: /home/user/sitelooper/bench/results/fwrd55-sweep.json

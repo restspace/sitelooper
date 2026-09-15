@@ -1,0 +1,265 @@
+{
+  "flow": "fwrd55",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_b2354b; observed current_url=http://127.0.0.1:4180/#/tickets, ticket_list_summary_after_save=Showing 1–10 of 13, ticket_reference=RD-1016, ticket_title=fwrd55-n2 RD Bench Ticket, status=Draft, customer=Bench Test Customer, raised_date=Customer: Bench Test Customer · Raised 2026-09-15, test_run_id=fwrd55-n2 RD Bench Ticket.",
+      "values": {
+        "current_url": "http://127.0.0.1:4180/#/tickets",
+        "ticket_list_summary_after_save": "Showing 1–10 of 13",
+        "ticket_reference": "RD-1016",
+        "ticket_title": "fwrd55-n2 RD Bench Ticket",
+        "status": "Draft",
+        "customer": "Bench Test Customer",
+        "raised_date": "Customer: Bench Test Customer · Raised 2026-09-15",
+        "test_run_id": "fwrd55-n2 RD Bench Ticket"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-add",
+      "status": "success",
+      "summary": "On ticket RD-1016's detail page I clicked \"Add part\", which opened an \"Add part\" dialog with fields Part name *, Cost *, Markup % *, Quantity (default 1) and optional Supplier. I filled name \"No parts on this ticket yet.\", cost 100, markup 25, and saved; the dialog closed and the Parts table refreshed to show a new row.",
+      "values": {
+        "row_cells_read_1": "fwrd55-n2 RD Part A",
+        "row_cells_read_3": "25%",
+        "test_run_id": "fwrd55-n2",
+        "part_name": "No parts on this ticket yet.",
+        "ticket_reference": "RD-1016",
+        "cost": "$100.00",
+        "markup": "25%",
+        "computed_price": "$125.00",
+        "supplier": "No supplier",
+        "actions": "Edit Delete",
+        "part_a_cost": "$100.00",
+        "part_a_supplier": "No supplier",
+        "part_a_actions": "Edit Delete"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "21/21",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "part_a_computed_price"
+      ]
+    },
+    {
+      "id": "03-add",
+      "status": "success",
+      "summary": "On ticket RD-1016's detail page I clicked \"Add part\", which opened an \"Add part\" dialog with fields Part name *, Cost *, Markup % *, Quantity (default 1) and optional Supplier. I filled name \"fwrd55-n2 RD Part A\", cost 200, markup 25, and saved; the dialog closed and the Parts table refreshed to show a new row.",
+      "values": {
+        "row_cells_read_1": "fwrd55-n2 RD Part B",
+        "row_cells_read_3": "25%",
+        "test_run_id": "fwrd55-n2",
+        "part_name": "fwrd55-n2 RD Part A",
+        "ticket_reference": "RD-1016",
+        "cost": "$200.00",
+        "markup": "25%",
+        "computed_price": "$250.00",
+        "supplier": "No supplier",
+        "actions": "Edit Delete",
+        "part_a_cost": "$100.00",
+        "part_b_cost": "$200.00",
+        "part_b_computed_price": "$250.00",
+        "part_a_computed_price": "$125.00",
+        "table_footer": "Total (price × quantity)\t$375.00\t",
+        "total_row": "Total (price × quantity)\t$375.00\t"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "21/21",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "part_a_actions"
+      ]
+    },
+    {
+      "id": "04-edit",
+      "status": "success",
+      "summary": "Edited 'fwrd55-n2 RD Part A' through its row Edit action, changing Cost from 100 to 150 and leaving Markup at 25, then saved the \"Edit part\" dialog. The table refreshed in place: Part A now reads fwrd55-n2 RD Part A / $150.00 / 25% / 1 / No supplier / Price $187.50 (it was $100.00 / $125.00 before), Part B is unchanged at fwrd55-n2 RD Part B / $200.00 / 25% / 1 / No supplier / $250.00, and the footer total moved from $375.00 to $437.50 — all re-read from the live DOM after the save.",
+      "values": {
+        "part_a_row": "fwrd55-n2 RD Part A | $150.00 | 25% | 1 | No supplier | $187.50 | Edit Delete",
+        "part_b_row_unchanged": "fwrd55-n2 RD Part B | $200.00 | 25% | 1 | No supplier | $250.00 | Edit Delete",
+        "test_run_id": "fwrd55-n2",
+        "table_footer_total_2": "Total (price × quantity)\t$437.50\t",
+        "ticket_reference": "RD-1016",
+        "part_a_cost": "$150.00",
+        "part_a_markup": "25%",
+        "part_a_computed_price": "$187.50",
+        "table_footer_total": "Total (price × quantity)\t$437.50\t"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-report",
+      "status": "success",
+      "summary": "Replayed stored procedure s_df68c1; observed first_error_message=Ticket is not ready\\n\\nPart \"fwrd55-n2 RD Part A\" has no supplier\\nPart \"fwrd55-n2 RD Part B\" has no supplier, part_a_row=fwrd55-n2 RD Part A | $150.00 | 25% | 1 | Acme Supplies | $187.50, part_b_row=fwrd55-n2 RD Part B | $200.00 | 25% | 1 | Beta Components | $250.00, test_run_id=fwrd55-n2, first_error_message_2=Ticket is not ready\n\nPart \"fwrd55-n2 RD Part A\" has no supplier\nPart \"fwrd55-n2 RD Part B\" has no supplier, final_status_badge=Ready, table_footer_total=$437.50.",
+      "values": {
+        "first_error_message": "Ticket is not ready\\n\\nPart \"fwrd55-n2 RD Part A\" has no supplier\\nPart \"fwrd55-n2 RD Part B\" has no supplier",
+        "part_a_row": "fwrd55-n2 RD Part A | $150.00 | 25% | 1 | Acme Supplies | $187.50",
+        "part_b_row": "fwrd55-n2 RD Part B | $200.00 | 25% | 1 | Beta Components | $250.00",
+        "test_run_id": "fwrd55-n2",
+        "first_error_message_2": "Ticket is not ready\n\nPart \"fwrd55-n2 RD Part A\" has no supplier\nPart \"fwrd55-n2 RD Part B\" has no supplier",
+        "final_status_badge": "Ready",
+        "table_footer_total": "$437.50"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "part_a_supplier_set",
+        "part_b_supplier_set"
+      ]
+    },
+    {
+      "id": "06-delete",
+      "status": "success",
+      "summary": "Replayed stored procedure s_dd3b60; observed archived_list_row_reference=RD-1016, archived_list_row_title_and_marker=fwrd55-n2 RD Bench Ticket Archived, archived_list_row_with_show_archived=RD-1016 | fwrd55-n2 RD Bench Ticket Archived | Bench Test Customer | Ready | 0 | 2026-09-15, parts_table_after_deletes=No parts on this ticket yet., archived_list_row=RD-1016\tfwrd55-n2 RD Bench Ticket Archived\tBench Test Customer\tReady\t0\t2026-09-15, final_status_badges_on_detail=Ready | Archived, ticket_reference=RD-1016, ticket_title=fwrd55-n2 RD Bench Ticket, archived_list_row_customer=Bench Test Customer, archived_list_row_status=Ready, archived_badge=Archived, test_run_id=fwrd55-n2 RD Bench Ticket.",
+      "values": {
+        "archived_list_row_reference": "RD-1016",
+        "archived_list_row_title_and_marker": "fwrd55-n2 RD Bench Ticket Archived",
+        "archived_list_row_with_show_archived": "RD-1016 | fwrd55-n2 RD Bench Ticket Archived | Bench Test Customer | Ready | 0 | 2026-09-15",
+        "parts_table_after_deletes": "No parts on this ticket yet.",
+        "archived_list_row": "RD-1016\tfwrd55-n2 RD Bench Ticket Archived\tBench Test Customer\tReady\t0\t2026-09-15",
+        "final_status_badges_on_detail": "Ready | Archived",
+        "ticket_reference": "RD-1016",
+        "ticket_title": "fwrd55-n2 RD Bench Ticket",
+        "archived_list_row_customer": "Bench Test Customer",
+        "archived_list_row_status": "Ready",
+        "archived_badge": "Archived",
+        "test_run_id": "fwrd55-n2 RD Bench Ticket"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "20/20",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 6,
+  "total": 6,
+  "repinned": 0,
+  "drift": 7,
+  "driftTickets": [
+    {
+      "flow": "fwrd55",
+      "step": "02-add",
+      "skill": "s_67ba45",
+      "atStep": "17",
+      "key": "target",
+      "similarity": 1.004,
+      "missedLocator": "page.getByRole('cell', { name: '$200.00', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    },
+    {
+      "flow": "fwrd55",
+      "step": "02-add",
+      "skill": "s_67ba45",
+      "atStep": "18",
+      "key": "target",
+      "similarity": 1.004,
+      "missedLocator": "page.getByRole('cell', { name: '$250.00', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    },
+    {
+      "flow": "fwrd55",
+      "step": "02-add",
+      "skill": "s_67ba45",
+      "atStep": "19",
+      "key": "target",
+      "similarity": 1.004,
+      "missedLocator": "page.getByRole('cell', { name: '$125.00', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    },
+    {
+      "flow": "fwrd55",
+      "step": "02-add",
+      "skill": "s_67ba45",
+      "atStep": "20",
+      "key": "target",
+      "similarity": 1.004,
+      "missedLocator": "page.getByRole('row', { name: 'Total (price × quantity) $375.00', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    },
+    {
+      "flow": "fwrd55",
+      "step": "02-add",
+      "skill": "s_67ba45",
+      "atStep": "21",
+      "key": "target",
+      "similarity": 1.004,
+      "missedLocator": "page.getByRole('row', { name: 'Total (price × quantity) $375.00', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    },
+    {
+      "flow": "fwrd55",
+      "step": "03-add",
+      "skill": "s_67ba45",
+      "atStep": "15",
+      "key": "target",
+      "similarity": 0.856,
+      "missedLocator": "page.getByRole('cell', { name: 'No supplier', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    },
+    {
+      "flow": "fwrd55",
+      "step": "03-add",
+      "skill": "s_67ba45",
+      "atStep": "16",
+      "key": "target",
+      "similarity": 0.856,
+      "missedLocator": "page.getByRole('cell', { name: 'Edit Delete', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    }
+  ],
+  "wallMs": 48087,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
