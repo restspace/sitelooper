@@ -1,0 +1,120 @@
+{
+ "id": "s_c9380c",
+ "origin": "http://127.0.0.1:4180",
+ "template": "Final verification on the repair-desk app: (1) On the tickets list with 'Show archived' unchecked, confirm there is no row for '{{v1}} RD Bench Ticket' / {{v2}} (i.e. nothing from this run is active). (2) With 'Show archived' checked, confirm the {{v2}} row exists and report its exact cells. (3) Open the {{v2}} ticket detail and confirm the parts table shows no parts and report the ticket's status and archived state. Also report whether the customer '{{01-open.customer}}' on this ticket was an existing customer in the app or one created during this session (check if there is a customers page listing it alongside others). Do not change anything.",
+ "params": {
+  "v1": {
+   "example": "fwrd53-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "RD-1016",
+   "usedIn": [
+    2
+   ],
+   "known": true,
+   "binding": "01-open.ticket_reference"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:4180/#/tickets/:id"
+ },
+ "steps": [
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:4180/#/tickets"
+   },
+   "locators": {},
+   "via": {
+    "skill": "s_84b84b",
+    "step": 1
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e365",
+    "value": "{{v2}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "search"
+     },
+     {
+      "kind": "role",
+      "role": "searchbox",
+      "name": "Search"
+     },
+     {
+      "kind": "label",
+      "label": "Search"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Reference, title or customer"
+     },
+     {
+      "kind": "id",
+      "selector": "#search"
+     },
+     {
+      "kind": "css",
+      "selector": "#search"
+     },
+     {
+      "kind": "point",
+      "x": 670,
+      "y": 224,
+      "w": 710.7,
+      "h": 39,
+      "role": "searchbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "addedContains": [
+     "- searchbox \"Reference, title or customer\": {{v2}}",
+     "- row \"No tickets match the current filters.\"",
+     "- cell \"No tickets match the current filters.\"",
+     "- button \"Next\" [disabled]"
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 2,
+  "successes": 2,
+  "partial": 0,
+  "created": "2026-09-15T10:53:32.897Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-15T10:54:08.388Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_fc1b14",
+  "index": 0,
+  "of": 6
+ },
+ "variantOf": "s_84b84b",
+ "provenance": {
+  "session": "fwrd53-n2",
+  "instruction": "Final verification on the repair-desk app: (1) On the tickets list with 'Show archived' unchecked, confirm there is no row for 'fwrd53-n2 RD Bench Ticket' / RD-1016 (i.e. nothing from this run is active). (2) With 'Show archived' checked, confirm the RD-1016 row exists and report its exact cells. (3) Open the RD-1016 ticket detail and confirm the parts table shows no parts and report the ticket's status and archived state. Also report whether the customer '{{01-open.customer}}' on this ticket was an existing customer in the app or one created during this session (check if there is a customers page listing it alongside others). Do not change anything.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-15T10:53:32.897Z"
+ },
+ "revision": 2
+}

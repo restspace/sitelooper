@@ -1,0 +1,10 @@
+[spec-replay] resetting repairdesk
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile bench/results/flows/fwrd53.json --out /home/user/sitelooper/bench/results/fwrd53-spec-spec-tmp --overwrite-spec
+flow: /home/user/sitelooper/bench/results/fwrd53-spec-spec-tmp/fwrd53.flow.ts
+spec: /home/user/sitelooper/bench/results/fwrd53-spec-spec-tmp/fwrd53.spec.ts
+warning 07-report: 07-report read a value that contradicts what the previous step reported
+  why: 07-report read archived_filter_control "checkbox "Show archived"" right after 06-remove reported "Show archived checkbox"; 06-remove's change may not have landed and a later step may be retrying it. Re-record 06-remove.
+  fix: sitelooper rerecord bench/results/flows/fwrd53.json 06-remove
+[spec-replay] running: npx playwright test --config /home/user/sitelooper/bench/results/fwrd53-spec-spec-tmp/playwright.config.mjs
+[spec-replay] fwrd53-spec: 1/1 passed, exit=0, 42s, 0 drift line(s) — result written
