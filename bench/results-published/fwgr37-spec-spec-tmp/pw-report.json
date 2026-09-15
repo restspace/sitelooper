@@ -1,0 +1,208 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwgr37-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwgr37-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwgr37-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwgr37-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwgr37.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwgr37-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwgr37.spec.ts",
+      "file": "fwgr37.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwgr37",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 3960000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 68998,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe monaco/set-value (r_f2510e); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-add\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-add\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-set\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-set\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 07-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 08-verify\n"
+                    }
+                  ],
+                  "stderr": [
+                    {
+                      "text": "[sitelooper warn] 02-create s_40bc8b/14: read 'panel_title_on_dashboard' returned a value the skill itself set/selected ('fwgr37-spec Availability') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-add s_a009f9/15: read 'text_content_rendered' returned a value the skill itself set/selected ('Notes for run fwgr37-spec: benchmark dashboard created via a…') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-add s_a009f9/16: read 'text_panel_title' returned a value the skill itself set/selected ('fwgr37-spec Notes') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 07-open s_dd9b75/5: read 'dashboard_title_breadcrumb' returned a value the skill itself set/selected ('fwgr37-spec Bench Dashboard') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 07-open s_dd9b75/21: read 'dashboard_title_breadcrumb' returned a value the skill itself set/selected ('fwgr37-spec Bench Dashboard') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 08-verify s_2a991a/20: read 'panel_title_2' returned a value the skill itself set/selected ('fwgr37-spec Availability') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    }
+                  ],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in to Grafana at http://127.0.0.1:3000/login with username 'admin' and password 'admin', submitting any welcome/password-change prompt that appears by skipping/saving the default. Then navigate to the provisioned dashboard named 'Service health' (use search or Dashboards if needed, NOT by URL uid guessing — search for it). Report the exact titles of every panel on that dashboard, in the order they appear, exactly as shown on screen.",
+                      "duration": 6705
+                    },
+                    {
+                      "title": "02-create: In Grafana, create a NEW dashboard (Dashboards -> New dashboard -> 'Add visualization' or '+ Add panel'). In the panel editor: set the visualization type to 'Stat'. Set the panel title to exactly '{{runid}} Availability'. For the query, select the TestData data source (it may be named 'TestData DB', 'grafana-testdata-app', 'gdevTestData' or similar — pick the TestData one from the data source picker) and leave the default scenario (e.g. 'Random Walk' / 'CSV File') as is. Then click Apply/Back to exit the editor. Then SAVE the dashboard (Save dashboard button or Ctrl+S) with the dashboard title exactly '{{runid}} Bench Dashboard' (rename it in the save dialog or dashboard settings), and confirm the save. Report: the dashboard title shown after saving, the panel title shown on the dashboard, the data source name used, and whether a 'Dashboard saved' confirmation appeared.",
+                      "duration": 19192
+                    },
+                    {
+                      "title": "03-add: On the Grafana dashboard at http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard (titled '{{runid}} Bench Dashboard'), add a NEW Text panel: use the dashboard's edit/Add panel control ('+ Add panel' / 'Add' button / Edit menu -> Add panel), choose the 'Text' visualization, set the panel title to exactly '{{runid}} Notes', and set the text content to include the runid '{{runid}}' (e.g. write something like 'Notes for run {{runid}}: benchmark dashboard created via automation.'). Apply/Back to exit the editor, then SAVE the dashboard (Save dashboard button, confirm) and verify a 'Dashboard saved' confirmation appears. Report: the panel title shown on the dashboard after saving, the text content rendered in the panel, and whether the save confirmation appeared.",
+                      "duration": 8226
+                    },
+                    {
+                      "title": "04-add: On the Grafana dashboard '{{runid}} Bench Dashboard' (at http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard), add the tag 'bench' to the dashboard: open dashboard Settings (gear icon), find the Tags field under General/Settings, add the tag 'bench' (type it and press Enter so it becomes a chip), then click 'Save settings'/'Save' and confirm. Verify the tag 'bench' is now shown on the dashboard (e.g. in the dashboard header next to the title, or in Settings). Report: the tag(s) shown after saving and any save confirmation.",
+                      "duration": 7692
+                    },
+                    {
+                      "title": "05-set: On the Grafana dashboard '{{runid}} Bench Dashboard' (at http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard), set the dashboard time range to the last 6 hours and PERSIST it into the saved dashboard: click the time picker in the top bar, choose 'Last 6 hours' (or set From = now-6h, To = now). Then open the Save dashboard dialog (Save button or Ctrl+S) and TICK the checkbox 'Update default time range' before confirming the save, so the 6-hour range is written into the saved dashboard. Confirm the save and verify a 'Dashboard saved' alert appears. Report: the time range shown in the top bar after saving, whether the 'Update default time range' checkbox was ticked, and the save confirmation.",
+                      "duration": 8174
+                    },
+                    {
+                      "title": "06-set: On the Grafana dashboard '{{runid}} Bench Dashboard' (at http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard), set the dashboard's auto-refresh interval to '1m' and PERSIST it into the saved dashboard. Approach: open the top-bar refresh interval picker (the one next to the refresh arrow, showing 'Off' by default) and select '1m'. Then, to make sure it is saved into the dashboard, open dashboard Settings (gear) -> General and look for an 'Auto refresh' field / default refresh interval option and set it to 1m if present; then Save (Save dashboard / Save settings) and confirm. If the top-bar refresh picker alone does not produce a saveable change, use the Settings route. Verify a 'Dashboard saved' confirmation appears and that after a fresh reload of the dashboard URL the refresh picker still shows '1m'. Report: the refresh interval shown in the top bar after saving, whether a save confirmation appeared, and what the refresh picker shows after a fresh page load.",
+                      "duration": 4163
+                    },
+                    {
+                      "title": "07-open: You are on a Grafana 11 instance at http://127.0.0.1:3000, already signed in as admin. Final verification task on the dashboard titled '{{runid}} Bench Dashboard'. Open it by searching (Grafana search/jump dialog, type '{{runid}} Bench Dashboard') so it loads fresh, then report ALL of the following read from the live page: (1) the exact URL currently shown in the browser address bar for the dashboard page, (2) the dashboard title shown in the breadcrumb/header, (3) the exact titles of all panels on the dashboard, (4) the text content rendered inside the Text panel (confirm it contains '{{runid}}'), (5) the time range shown in the top-bar time picker, (6) the auto-refresh interval shown in the top-bar refresh picker, (7) open dashboard Settings (gear) and report the Tags listed, then close Settings without changing anything. Do not modify or save anything.",
+                      "duration": 7731
+                    },
+                    {
+                      "title": "08-verify: On the Grafana dashboard '{{runid}} Bench Dashboard' (http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard), verify the data source used by the Stat panel titled '{{runid}} Availability': enter edit mode (Edit), click on the '{{runid}} Availability' panel to open it in the panel editor, and read the name of the data source shown in the query's data source picker (the dropdown at the top of the query tab). Also confirm the visualization type shown in the editor is 'Stat'. Then exit the editor (Back to dashboard) and exit edit mode WITHOUT saving or changing anything. Report: the exact data source name shown in the query picker, the visualization type, and confirm nothing was changed or saved.",
+                      "duration": 5826
+                    }
+                  ],
+                  "startTime": "2026-09-15T08:53:52.898Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e0367d8295f6d7eafb9a-eb31054b7aa3e1c85626",
+          "file": "fwgr37.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-15T08:53:51.226Z",
+    "duration": 70923.538,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
