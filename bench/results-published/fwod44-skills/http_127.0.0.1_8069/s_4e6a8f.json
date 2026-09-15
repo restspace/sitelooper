@@ -1,0 +1,559 @@
+{
+ "id": "s_4e6a8f",
+ "origin": "http://127.0.0.1:8069",
+ "template": "In Odoo, open the existing sales order {{v1}} (customer '{{v2}} Bench Customer', currently in 'Sales Order' status, two order lines:  {{v3}}  qty 5 @ {{v4}}, and  {{v5}}  qty 2 @ {{v6}}). Cancel this sales order by clicking the Cancel button and confirming any confirmation dialog/wizard that appears (choose a reason if asked, e.g. 'The customer cancelled' or similar). Wait for the cancellation to complete. Then report the status the app now shows in the statusbar for this order. Do not wait for network idle; wait for concrete page state.",
+ "params": {
+  "v1": {
+   "example": "S00035",
+   "usedIn": [],
+   "known": true,
+   "binding": "02-open.quotation_reference"
+  },
+  "v2": {
+   "example": "fwod44-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "| [FURN_6666] Acoustic Bloc Screens | [FURN_6666] Acoustic Bloc Screens | 3.00 | 295.00 | 20% | £ 885.00 |",
+   "usedIn": [],
+   "known": true,
+   "binding": "02-open.product_name"
+  },
+  "v4": {
+   "example": "295.00",
+   "usedIn": [],
+   "known": true,
+   "binding": "02-open.unit_price"
+  },
+  "v5": {
+   "example": "| [FURN_6666] Acoustic Bloc Screens | [FURN_6666] Acoustic Bloc Screens | 3.00 | 295.00 | 20% | £ 885.00 |  |  | [FURN_7777] Office Chair | [FURN_7777] Office Chair | 2.00 | 70.00 | 20% | £ 140.00 |",
+   "usedIn": [],
+   "known": true,
+   "binding": "03-open.second_line_product"
+  },
+  "v6": {
+   "example": "70.00",
+   "usedIn": [],
+   "known": true,
+   "binding": "03-open.second_line_unit_price"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Cancel\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Cancel"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 357,
+      "y": 129,
+      "w": 65.6,
+      "h": 33,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+    "alertContains": "Are you sure you want to cancel this order?",
+    "addedContains": [
+     "- dialog \"\"",
+     "- heading \"Cancel Sales Order\"",
+     "- button \"Close\"",
+     "- button \"Send and cancel\"",
+     "- button \"Discard\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_ab5cee",
+    "step": 1
+   }
+  },
+  {
+   "tool": "dialog_expect",
+   "args": {
+    "action": "accept"
+   },
+   "locators": {},
+   "via": {
+    "skill": "s_ab5cee",
+    "step": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e4066"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Cancel",
+      "nth": 1
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div > footer > footer > button:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 334,
+      "y": 661,
+      "w": 65.6,
+      "h": 33,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_ab5cee",
+    "step": 3
+   }
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=35"
+   },
+   "locators": {},
+   "via": {
+    "skill": "s_ab5cee",
+    "step": 4
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e3751"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Cancel",
+      "nth": 0
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 357,
+      "y": 129,
+      "w": 65.6,
+      "h": 33,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_ab5cee",
+    "step": 5
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e4110"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Discard",
+      "nth": 1
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > footer > div > div > button:nth-of-type(3)"
+     },
+     {
+      "kind": "point",
+      "x": 416,
+      "y": 625,
+      "w": 69.5,
+      "h": 33,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_ab5cee",
+    "step": 6
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e3751"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Cancel",
+      "nth": 0
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 357,
+      "y": 129,
+      "w": 65.6,
+      "h": 33,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_ab5cee",
+    "step": 7
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": ".modal.o_technical_modal button[name=\"action_cancel\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Cancel",
+      "nth": 1
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div > footer > footer > button:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 334,
+      "y": 661,
+      "w": 65.6,
+      "h": 33,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+    "addedContains": [
+     "- button \"Set to Quotation\"",
+     "- radio \"Cancelled\" [disabled]",
+     "- row \"Product Description Quantity Unit Price Taxes Tax excl.\"",
+     "- link \"[FURN_6666] Acoustic Bloc Screens\"",
+     "- row \"[FURN_7777] Office Chair [FURN_7777] Office Chair 2.00 {{v6}} 20% £ 140.00\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_ab5cee",
+    "step": 8
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "@e3453",
+    "what": "text",
+    "label": "statusbar_text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "radiogroup",
+      "name": "Statusbar"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div"
+     },
+     {
+      "kind": "point",
+      "x": 1052,
+      "y": 129,
+      "w": 424.1,
+      "h": 33,
+      "role": "radiogroup",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "statusbar_text"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": ".o_statusbar_status .o_arrow_button_current, .o_statusbar_status .active",
+    "what": "text",
+    "label": "current_status"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_statusbar_status .o_arrow_button_current, .o_statusbar_status .active"
+     },
+     {
+      "kind": "role",
+      "role": "radio",
+      "name": "Cancelled"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div > button:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 1213,
+      "y": 129,
+      "w": 101.3,
+      "h": 33,
+      "role": "radio",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "current_status"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > h1 > div > span"
+     },
+     {
+      "kind": "point",
+      "x": 89,
+      "y": 195,
+      "w": 96.5,
+      "h": 31,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "order_reference"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(2) > span",
+      "nth": 1
+     },
+     {
+      "kind": "point",
+      "x": 153,
+      "y": 129,
+      "w": 101.2,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "additional_button_shown"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(1) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1205,
+      "y": 622,
+      "w": 66.2,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "untaxed_amount"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(2) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1195,
+      "y": 645,
+      "w": 86,
+      "h": 21,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "tax_amount"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(3) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1195,
+      "y": 670,
+      "w": 86,
+      "h": 21,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "total_amount"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Sales order {{v1}} (customer '{{v2}} Bench Customer', two lines: 5× Acoustic Bloc Screens @295, 2× Office Chair @70, untaxed £1,615.00) was cancelled. A replay had stopped part-way but had already performed the Cancel click and confirmation; on observing the live page the statusbar shows the order in 'Cancelled' state, with the additional 'Set to Quotation' button that Odoo shows for cancelled orders. No dialog was left open.",
+  "values": {
+   "order_reference": "{{v1}}",
+   "customer": "{{v2}} Bench Customer (Benchville)",
+   "statusbar_text": "Cancelled\nSales Order\nQuotation Sent\nQuotation",
+   "current_status": "Cancelled",
+   "statusbar_buttons": "Cancelled(checked,disabled), Sales Order(disabled), Quotation Sent(disabled), Quotation(disabled)",
+   "additional_button_shown": "Set to Quotation",
+   "untaxed_amount": "£ 1,615.00",
+   "tax_amount": "£ 323.00",
+   "total_amount": "£ 1,938.00",
+   "ref": "{{v2}}"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 2,
+  "successes": 2,
+  "partial": 0,
+  "created": "2026-09-15T06:58:36.680Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-15T06:59:51.195Z"
+ },
+ "status": "validated",
+ "variantOf": "s_ab5cee",
+ "provenance": {
+  "session": "fwod44-n2",
+  "instruction": "In Odoo, open the existing sales order S00035 (customer 'fwod44-n2 Bench Customer', currently in 'Sales Order' status, two order lines:  | [FURN_6666] Acoustic Bloc Screens | [FURN_6666] Acoustic Bloc Screens | 3.00 | 295.00 | 20% | £ 885.00 |  qty 5 @ 295.00, and  | [FURN_6666] Acoustic Bloc Screens | [FURN_6666] Acoustic Bloc Screens | 3.00 | 295.00 | 20% | £ 885.00 |  |  | [FURN_7777] Office Chair | [FURN_7777] Office Chair | 2.00 | 70.00 | 20% | £ 140.00 |  qty 2 @ 70.00). Cancel this sales order by clicking the Cancel button and confirming any confirmation dialog/wizard that appears (choose a reason if asked, e.g. 'The customer cancelled' or similar). Wait for the cancellation to complete. Then report the status the app now shows in the statusbar for this order. Do not wait for network idle; wait for concrete page state.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-15T06:58:36.680Z"
+ },
+ "revision": 2
+}
