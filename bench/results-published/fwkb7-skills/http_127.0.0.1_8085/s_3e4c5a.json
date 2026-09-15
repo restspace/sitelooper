@@ -1,0 +1,423 @@
+{
+ "id": "s_3e4c5a",
+ "origin": "http://127.0.0.1:8085",
+ "template": "Open {{v1}} and sign in with username 'admin' and password 'admin'. Report which page you land on after login and any visible navigation items.",
+ "params": {
+  "v1": {
+   "example": "http://127.0.0.1:8085/",
+   "usedIn": [
+    1
+   ]
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8085/"
+ },
+ "steps": [
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e5",
+    "value": "admin"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Username"
+     },
+     {
+      "kind": "label",
+      "label": "Username"
+     },
+     {
+      "kind": "id",
+      "selector": "#form-username"
+     },
+     {
+      "kind": "css",
+      "selector": "#form-username"
+     },
+     {
+      "kind": "point",
+      "x": 619,
+      "y": 96,
+      "w": 308,
+      "h": 28,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8085/?action=login&controller=AuthController",
+    "addedContains": [
+     "- textbox \"Username\": {{*}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e7",
+    "value": "admin"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Password"
+     },
+     {
+      "kind": "label",
+      "label": "Password"
+     },
+     {
+      "kind": "id",
+      "selector": "#form-password"
+     },
+     {
+      "kind": "css",
+      "selector": "#form-password"
+     },
+     {
+      "kind": "point",
+      "x": 619,
+      "y": 152,
+      "w": 308,
+      "h": 28,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8085/?action=login&controller=AuthController",
+    "addedContains": [
+     "- textbox \"Password\": {{*}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e9"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Sign in"
+     },
+     {
+      "kind": "css",
+      "selector": "html > body > div > form > div:nth-of-type(1) > button"
+     },
+     {
+      "kind": "point",
+      "x": 505,
+      "y": 201,
+      "w": 80.7,
+      "h": 30,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8085/",
+    "addedContains": [
+     "- heading \"KB Dashboard for admin\"",
+     "- link \"Dashboard\"",
+     "- link \"My notifications\"",
+     "- link \"\"",
+     "- link \"A\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "what": "url",
+    "label": "final_url"
+   },
+   "locators": {},
+   "label": "final_url"
+  },
+  {
+   "tool": "read_all",
+   "args": {
+    "target": "a",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "a"
+     }
+    ]
+   },
+   "label": "nav_link_new_project"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "html > body > header > div:nth-of-type(1) > h1"
+     },
+     {
+      "kind": "point",
+      "x": 420,
+      "y": 19,
+      "w": 820,
+      "h": 28,
+      "role": "heading",
+      "tag": "h1",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "landing_page"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#dashboard > div:nth-of-type(2) > p"
+     },
+     {
+      "kind": "point",
+      "x": 760,
+      "y": 153,
+      "w": 1020,
+      "h": 36,
+      "role": null,
+      "tag": "p",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "panel_text"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "header > div:nth-of-type(3) > div:nth-of-type(2) > ul > li:nth-of-type(2) > a"
+     }
+    ]
+   },
+   "label": "nav_link_my_dashboard"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "header > div:nth-of-type(3) > div:nth-of-type(2) > ul > li:nth-of-type(3) > a"
+     }
+    ]
+   },
+   "label": "nav_link_my_profile"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "header > div:nth-of-type(3) > div:nth-of-type(2) > ul > li:nth-of-type(4) > a"
+     }
+    ]
+   },
+   "label": "nav_link_projects_management"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "header > div:nth-of-type(3) > div:nth-of-type(2) > ul > li:nth-of-type(5) > a"
+     }
+    ]
+   },
+   "label": "nav_link_users_management"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "header > div:nth-of-type(3) > div:nth-of-type(2) > ul > li:nth-of-type(6) > a"
+     }
+    ]
+   },
+   "label": "nav_link_groups_management"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "header > div:nth-of-type(3) > div:nth-of-type(2) > ul > li:nth-of-type(7) > a"
+     }
+    ]
+   },
+   "label": "nav_link_plugins"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#main > div > ul > li:nth-of-type(1) > a"
+     },
+     {
+      "kind": "point",
+      "x": 64,
+      "y": 58,
+      "w": 108,
+      "h": 17,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "nav_link_new_project"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#main > div > ul > li:nth-of-type(2) > a"
+     },
+     {
+      "kind": "point",
+      "x": 224,
+      "y": 58,
+      "w": 173.9,
+      "h": 17,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "nav_link_new_personal_project"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Signed in at {{v1}} with admin/admin and landed on the logged-in Dashboard page (\"KB Dashboard for admin\"). The page shows the top-bar links KB, My notifications, My dashboard, My profile, Projects management, Users management, Groups management, Plugins, Settings, Documentation, Logout; a quick-action list (New project, New personal project, Project management, My activity stream); and a sub-navigation with Overview, My projects, My tasks, My subtasks, plus a Search box and Default filters. The main panel shows \"There is nothing assigned to you.\"",
+  "values": {
+   "landing_page": "KB Dashboard for admin",
+   "nav_items": "KB, My notifications, My dashboard, My profile, Projects management, Users management, Groups management, Plugins, Settings, Documentation, Logout, New project, New personal project, Project management, My activity stream, Overview, My projects, My tasks, My subtasks, Search, Default filters",
+   "panel_text": "There is nothing assigned to you.",
+   "final_url": "{{v1}}",
+   "nav_link_new_project": "New project",
+   "nav_link_new_personal_project": "New personal project",
+   "nav_link_my_dashboard": "My dashboard",
+   "nav_link_my_profile": "My profile",
+   "nav_link_projects_management": "Projects management",
+   "nav_link_users_management": "Users management",
+   "nav_link_groups_management": "Groups management",
+   "nav_link_plugins": "Plugins"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-15T08:20:14.957Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-15T08:31:38.686Z"
+ },
+ "status": "validated",
+ "provenance": {
+  "session": "fwkb7-n1",
+  "instruction": "Open http://127.0.0.1:8085/ and sign in with username 'admin' and password 'admin'. Report which page you land on after login and any visible navigation items.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-15T08:20:14.957Z"
+ },
+ "revision": 4
+}
