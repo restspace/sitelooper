@@ -1,0 +1,99 @@
+{
+ "id": "s_e2bee5",
+ "origin": "http://127.0.0.1:8069",
+ "template": "In Odoo (signed in as admin), open the existing draft quotation with reference {{v1}} for customer '{{v2}} Bench Customer' and CONFIRM it (click the Confirm button) so it becomes a sales order. Then report: (a) the order reference/name shown on the page after confirming, and (b) the exact status the app now shows in the status bar (e.g. 'Sales Order'). Also confirm the untaxed amount still reads {{04-open.untaxed_amount}}.",
+ "params": {
+  "v1": {
+   "example": "S00023",
+   "usedIn": [
+    1
+   ],
+   "known": true,
+   "binding": "02-create.order_reference"
+  },
+  "v2": {
+   "example": "fwod45-n3",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&menu_id=:id&model=sale.order&view_type=list"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1882"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "text",
+      "text": "{{v1}}"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(3) > div > table > tbody > tr:nth-of-type(1) > td:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 82,
+      "y": 390,
+      "w": 81.9,
+      "h": 41,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "mints": {
+    "at": "q.id"
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id={{d1}}&menu_id=:id&model=sale.order&view_type=form",
+    "addedContains": [
+     "- link \"Quotations\"",
+     "- button \"Save manually\"",
+     "- button \"Discard changes\"",
+     "- button \"Previous\"",
+     "- button \"Next\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "derived": {
+  "d1": {
+   "step": 1,
+   "at": "q.id",
+   "example": "23"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-15T08:41:03.098Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_ac1051",
+  "index": 0,
+  "of": 2
+ },
+ "provenance": {
+  "session": "fwod45-n3",
+  "instruction": "In Odoo (signed in as admin), open the existing draft quotation with reference S00023 for customer 'fwod45-n3 Bench Customer' and CONFIRM it (click the Confirm button) so it becomes a sales order. Then report: (a) the order reference/name shown on the page after confirming, and (b) the exact status the app now shows in the status bar (e.g. 'Sales Order'). Also confirm the untaxed amount still reads {{04-open.untaxed_amount}}.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-15T08:41:03.098Z"
+ },
+ "revision": 1
+}

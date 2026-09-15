@@ -1,0 +1,124 @@
+
+[sweep] run 1/3: fwod45-n1 (store: /home/user/sitelooper/bench/results/fwod45-skills)
+[harness] odoo: defaulting APP_URL
+[harness] odoo: defaulting APP_EMAIL
+[harness] odoo: defaulting APP_PASSWORD
+[reset] odoo: no leftover bench customers
+[harness] odoo responded 303 at http://127.0.0.1:8069/
+stopped: fwod45-n1
+  flow "fwod45" saved: 7 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwod45.json
+  warning: note: dropped 7 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: warning: contradicted-step: 07-report read so_statusbar "Cancelled (checked, disabled); Sales Order, Quotation Sent, Quotation disabled" right after 06-open reported "Cancelled (checked, disabled); Sales Order, Quotation Sent, Quotation all disabled"; 06-open's change may not have landed and a later step may be retrying it. Re-record 06-open.
+  warning: warning: 3 value(s) KNOWN to be this run's survived unslotted — a replay will act on or wait for the recording's value (non-fatal outside locators):
+  s_7a8f88.reportTemplate.summary: "44" (url) in "Signed in to Odoo 17 as admin, opened the Contacts app, and created a new contact \"{{v3}}\" with City \"Benchville\". After saving, the record opened in form view "
+  s_7a8f88.reportTemplate.values.odoo_record_id: "44" (url) in "44"
+  s_7a8f88.reportTemplate.values.final_page_url: "44" (url) in "http://127.0.0.1:8069/web#cids=1&menu_id=109&action=156&model=res.partner&view_type=form&id=44"
+  warning: warning: 223 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "Benchville" (output) in "Sign in to Odoo at http://127.0.0.1:8069/ with login 'admin' and password 'admin' (skip if already signed in). Then create a new customer contact named exactly "
+  flow.steps[0].route: "res.partner" (output) in "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=res.partner&view_type=form"
+  flow.steps[5].instruction: "Cancel" (output) in "In Odoo (signed in as admin), open the sales order with reference {{02-create.order_reference}} (customer '{{runid}} Bench Customer', currently in status 'Sales"
+  flow.warnings[0]: "Cancelled (checked, disabled); Sales Order, Quotation Sent, Quotation all disabled" (output) in "contradicted-step: 07-report read so_statusbar \"Cancelled (checked, disabled); Sales Order, Quotation Sent, Quotation disabled\" right after 06-open reported \"Ca"
+  flow.warnings[0]: "Cancelled (checked, disabled); Sales Order, Quotation Sent, Quotation disabled" (output) in "contradicted-step: 07-report read so_statusbar \"Cancelled (checked, disabled); Sales Order, Quotation Sent, Quotation disabled\" right after 06-open reported \"Ca"
+  warning: {{02-create.product_name}} (used by 03-open) can only be re-observed by model recovery — consider re-recording so the value is read from the page.
+  warning: 01-signin reports odoo_record_id, model, but s_4f0967 re-reads none of them from the page — a replay without the model will succeed without those values; re-record so they are read.
+  warning: 02-create reports product_name, untaxed_amount, quotation_state, ref_2, ref_3, but s_4e2b15 re-reads none of them from the page — a replay without the model will succeed without those values; re-record so they are read.
+  warning: 03-open reports quotation_state, oe_subtotal_footer_tr_2, oe_subtotal_footer_tr_3, ref_2, but s_9e4a71 re-reads none of them from the page — a replay without the model will succeed without those values; re-record so they are read.
+  warning: 04-open reports quotation_state, oe_subtotal_footer_tr_2, oe_subtotal_footer_tr_3, but s_30bdd8 re-reads none of them from the page — a replay without the model will succeed without those values; re-record so they are read.
+  warning: 05-open reports statusbar_state, untaxed_amount_matches_expected, available_actions_after_confirm, oe_subtotal_footer_tr_2, oe_subtotal_footer_tr_3, o_form_statusbar_o_statu_2, but s_4fd4f3 re-reads none of them from the page — a replay without the model will succeed without those values; re-record so they are read.
+  warning: 06-open reports statusbar_after_cancel, cancellation_wizard, o_dialog_modal_footer_bu_2, o_dialog_modal_footer_bu_4, but s_7ea638 re-reads none of them from the page — a replay without the model will succeed without those values; re-record so they are read.
+  warning: 07-report reports so_statusbar, order_line_1, order_line_2, oe_subtotal_footer_tr_2, oe_subtotal_footer_tr_3, ref_2, ref_3, but s_03ecd8 re-reads none of them from the page — a replay without the model will succeed without those values; re-record so they are read.
+arm=sitelooper model=z-ai/glm-5.3 runid=fwod45-n1 stop=completed
+turns=9 wall=758.1s
+commands=8 cmdTime=585.7s cmdBytes=12886 timeouts=0
+orchestrator in=20128 cw=0 cr=22912 out=5173
+inner prompt=2804717 cached=2605440 completion=31040
+spend=$0.1132 maxUsd=3
+learn: A_n=0 replayed=0/7 full=0 repaired=0 compiled=7 variants=0
+-> /home/user/sitelooper/bench/results/fwod45-n1-sitelooper-result.json
+
+fwod45-n1: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00021
+
+[sweep] run 2/3: fwod45-n2 (replay flow fwod45, no orchestrator)
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+[sweep] fwod45-n2: 1 drift ticket(s) → fwod45-n2-drift.json
+
+fwod45-n2: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00022
+
+[sweep] run 3/3: fwod45-n3 (replay flow fwod45, no orchestrator)
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+[sweep] fwod45-n3: 18 drift ticket(s) → fwod45-n3-drift.json
+
+fwod45-n3: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00023
+
+Learning sweep fwod45 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwod45-n1' │ '6/6'    │ 'completed' │ 9     │ 8    │ 0.1132    │ 0    │ '0/7'        │ 758    │
+│ 1       │ 2 │ 'fwod45-n2' │ '6/6'    │ 'success'   │ 30    │ 7    │ 0.0135    │ 0.86 │ '7/7 (flow)' │ 343    │
+│ 2       │ 3 │ 'fwod45-n3' │ '6/6'    │ 'success'   │ 10    │ 7    │ 0.0047    │ 0.86 │ '7/7 (flow)' │ 123    │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8069
+  s_03ecd8  validated    1 steps  3/3 (100%)
+           In Odoo (signed in as admin), do a final verification of two records and report what you find, changing nothin…
+  s_209fea  validated    8 steps  3/3 (100%)
+           In Odoo (already signed in as admin), create a new Quotation in the Sales app for the customer '{{v1}}' (choos…
+  s_46db24  validated    3 steps  3/3 (100%)
+           In Odoo (signed in as admin), do a final verification of two records and report what you find, changing nothin…
+  s_4c9105  validated    3 steps  3/3 (100%)
+           Sign in to Odoo at {{v2}} with login 'admin' and password 'admin' (skip if already signed in). Then create a n…
+  s_4e2b15  validated    2 steps  3/3 (100%)
+           In Odoo (already signed in as admin), create a new Quotation in the Sales app for the customer '{{v1}}' (choos…
+  s_4f0967  validated    3 steps  3/3 (100%)
+           Sign in to Odoo at {{v2}} with login 'admin' and password 'admin' (skip if already signed in). Then create a n…
+  s_6e0681  validated    1 steps  3/3 (100%)
+           In Odoo (already signed in as admin), create a new Quotation in the Sales app for the customer '{{v1}}' (choos…
+  s_7a8f88  validated    3 steps  3/3 (100%)
+           Sign in to Odoo at {{v2}} with login 'admin' and password 'admin' (skip if already signed in). Then create a n…
+  s_7ea638  validated   16 steps  3/3 (100%)
+           In Odoo (signed in as admin), open the sales order with reference {{v1}} (customer '{{v2}}', currently in stat…
+  s_7eb89e  validated    6 steps  3/3 (100%)
+           In Odoo (signed in as admin), do a final verification of two records and report what you find, changing nothin…
+  s_87647b  validated    1 steps  3/3 (100%)
+           Sign in to Odoo at {{v2}} with login 'admin' and password 'admin' (skip if already signed in). Then create a n…
+  s_980ab9  validated    2 steps  3/3 (100%)
+           Sign in to Odoo at {{v2}} with login 'admin' and password 'admin' (skip if already signed in). Then create a n…
+  s_99d37a  validated    2 steps  3/3 (100%)
+           Sign in to Odoo at {{v2}} with login 'admin' and password 'admin' (skip if already signed in). Then create a n…
+  s_9ab416  validated    8 steps  3/3 (100%)
+           In Odoo (already signed in as admin), create a new Quotation in the Sales app for the customer '{{v1}}' (choos…
+  s_9e4a71  validated   17 steps  3/3 (100%)
+           In Odoo (signed in as admin), open the existing draft quotation with reference {{v1}} for customer '{{v2}}' (f…
+  s_30bdd8  demoted     14 steps  1/2 (50%)
+           In Odoo (signed in as admin), open the existing draft quotation with reference {{v1}} for customer '{{v2}}'. C…
+  s_4fd4f3  validated   10 steps  2/2 (100%)
+           In Odoo (signed in as admin), open the existing draft quotation with reference {{v1}} for customer '{{v2}}' an…
+  s_f7e29f  validated   29 steps  2/2 (100%)  variant of s_30bdd8
+           In Odoo (signed in as admin), open the existing draft quotation with reference {{v1}} for customer '{{v2}} Ben…
+  s_e2bee5  provisional  1 steps  1/1 (100%)
+           In Odoo (signed in as admin), open the existing draft quotation with reference {{v1}} for customer '{{v2}} Ben…
+  s_f7acb2  provisional 15 steps  1/1 (100%)
+           In Odoo (signed in as admin), open the existing draft quotation with reference {{v1}} for customer '{{v2}} Ben…
+store: /home/user/sitelooper/bench/results/fwod45-skills
+
+summary: /home/user/sitelooper/bench/results/fwod45-sweep.json

@@ -1,0 +1,38 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-signin
+[sitelooper step] 02-create
+[sitelooper step] 03-open
+  ✘  1 fwod45.spec.ts:9:1 › fwod45 (33.2s)
+
+
+  1) fwod45.spec.ts:9:1 › fwod45 › 04-open: In Odoo (signed in as admin), open the existing draft quotation with reference {{02-create.order_reference}} for customer '{{runid}} Bench Customer'. Change the FIRST order line's quantity from 3 to 5 — the first line is the one with product '{{02-create.product_name}}'. Leave the second line ('{{03-open.line2_product}}', quantity 2) unchanged. Save the quotation but do NOT confirm it. Then report: (a) the quantity now shown on the first line, (b) the quantity shown on the second line, and (c) the new untaxed amount the app computes for the whole order. 
+
+    Error: 04-open s_f7e29f/11 raised an alert the recording never saw: Can't fetch record(s) 22. They might have been deleted.
+
+       at fwod45.flow.ts:9427
+
+      9425 |   const verdict = alertVerdict(before, after ? after.alerts : null, ctx, after ? after.complete : true);
+      9426 |   for (const line of verdict.warnings) logWarning(line);
+    > 9427 |   if (verdict.stop) throw new Error(verdict.stop);
+           |                           ^
+      9428 | }
+      9429 |
+      9430 | /**
+        at alertGate (/home/user/sitelooper/bench/results/fwod45-spec-spec-tmp/fwod45.flow.ts:9427:27)
+        at Object.verify (/home/user/sitelooper/bench/results/fwod45-spec-spec-tmp/fwod45.flow.ts:12339:9)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwod45-spec-spec-tmp/fwod45.flow.ts:7642:37)
+        at Object.04-open (/home/user/sitelooper/bench/results/fwod45-spec-spec-tmp/fwod45.flow.ts:12321:5)
+        at /home/user/sitelooper/bench/results/fwod45-spec-spec-tmp/fwod45.flow.ts:14050:7
+        at runFlow (/home/user/sitelooper/bench/results/fwod45-spec-spec-tmp/fwod45.flow.ts:14049:5)
+        at /home/user/sitelooper/bench/results/fwod45-spec-spec-tmp/fwod45.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../test-results/fwod45-fwod45/error-context.md
+
+  1 failed
+    fwod45.spec.ts:9:1 › fwod45 ────────────────────────────────────────────────────────────────────

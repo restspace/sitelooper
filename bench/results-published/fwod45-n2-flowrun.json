@@ -1,0 +1,264 @@
+{
+  "flow": "fwod45",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_7a8f88; observed ref=fwod45-n2, initial_page_url=http://127.0.0.1:8069/web/login, final_page_url=http://127.0.0.1:8069/web#cids=1&menu_id=109&action=156&model=res.partner&view_type=form&id=45, customer_city=Benchville, customer_display_name=fwod45-n2 Bench Customer.",
+      "values": {
+        "ref": "fwod45-n2",
+        "initial_page_url": "http://127.0.0.1:8069/web/login",
+        "final_page_url": "http://127.0.0.1:8069/web#cids=1&menu_id=109&action=156&model=res.partner&view_type=form&id=45",
+        "customer_city": "Benchville",
+        "customer_display_name": "fwod45-n2 Bench Customer"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "odoo_record_id",
+        "model"
+      ]
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_209fea; observed ref=fwod45-n2, order_reference=S00022, customer_city=Benchville, customer_name=fwod45-n2 Bench Customer, quantity=3.00, unit_price=295.00, tax_20_amount=£ 177.00, total_amount=£ 1,062.00.",
+      "values": {
+        "ref": "fwod45-n2",
+        "order_reference": "S00022",
+        "customer_city": "Benchville",
+        "customer_name": "fwod45-n2 Bench Customer",
+        "quantity": "3.00",
+        "unit_price": "295.00",
+        "tax_20_amount": "£ 177.00",
+        "total_amount": "£ 1,062.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "19/19",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "product_name",
+        "untaxed_amount",
+        "quotation_state",
+        "ref_2",
+        "ref_3"
+      ]
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_9e4a71; observed line1_product={{02-create.product_name}}, ref=fwod45-n2, line2_product=Chair floor protection | Conference Chair | [FURN_7777] Office Chair | [FURN_0269] Office Chair Black | Create \"Chair\" | Search More... | Create and edit..., oe_subtotal_footer_tr=Untaxed Amount\t£ 1,025.00 | TAX 20%\t\n£ 205.00 | Total\t£ 1,230.00, order_reference=S00022, customer_name=fwod45-n2 Bench Customer, line1_qty=3.00, line1_unit_price=295.00, line2_qty=2.00, line2_unit_price=70.00, line2_tax_excl=£ 140.00, untaxed_amount=£ 1,025.00, tax_20_amount=£ 205.00, total_amount=£ 1,230.00.",
+      "values": {
+        "line1_product": "{{02-create.product_name}}",
+        "ref": "fwod45-n2",
+        "line2_product": "Chair floor protection | Conference Chair | [FURN_7777] Office Chair | [FURN_0269] Office Chair Black | Create \"Chair\" | Search More... | Create and edit...",
+        "oe_subtotal_footer_tr": "Untaxed Amount\t£ 1,025.00 | TAX 20%\t\n£ 205.00 | Total\t£ 1,230.00",
+        "order_reference": "S00022",
+        "customer_name": "fwod45-n2 Bench Customer",
+        "line1_qty": "3.00",
+        "line1_unit_price": "295.00",
+        "line2_qty": "2.00",
+        "line2_unit_price": "70.00",
+        "line2_tax_excl": "£ 140.00",
+        "untaxed_amount": "£ 1,025.00",
+        "tax_20_amount": "£ 205.00",
+        "total_amount": "£ 1,230.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "quotation_state",
+        "oe_subtotal_footer_tr_2",
+        "oe_subtotal_footer_tr_3",
+        "ref_2",
+        "ref_3"
+      ]
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "On the draft quotation S00022 for 'fwod45-n2 Bench Customer' (Benchville) I changed the first order line (product [FURN_6666] Acoustic Bloc Screens) from quantity 3 to 5 and left the second line ([FURN_7777] Office Chair) at 2. The page now shows line 1 qty 5.00 / unit price 295.00 / Tax excl. £ 1,475.00 and line 2 qty 2.00 / unit price 70.00 / Tax excl. £ 140.00, with Untaxed Amount £ 1,615.00, TAX 20% £ 323.00, Total £ 1,938.00, order reference S00022, and the status bar still on 'Quotation' (draft — not confirmed). Caveat: the Save button click had to be force-dispatched (a normal click timed out on an actionability check) and reported \"no visible change\"; I did not independently re-fetch the record from the server, so re-confirming persistence of the edit is advisable.",
+      "values": {
+        "untaxed_amount": "£ 1,615.00",
+        "order_reference": "S00022",
+        "order_status": "Quotation (draft, not confirmed)",
+        "customer_name": "fwod45-n2 Bench Customer",
+        "customer_city": "Benchville",
+        "line1_product": "[FURN_6666] Acoustic Bloc Screens",
+        "line1_quantity": "5.00",
+        "line1_unit_price": "295.00",
+        "line1_tax_excl": "£ 1,475.00",
+        "line2_product": "[FURN_7777] Office Chair",
+        "line2_quantity": "2.00",
+        "line2_unit_price": "70.00",
+        "line2_tax_excl": "£ 140.00",
+        "tax_amount": "£ 323.00",
+        "total_amount": "£ 1,938.00",
+        "oe_subtotal_footer": "Untaxed Amount\t£ 1,615.00\nTAX 20%\t\n£ 323.00\n\nTotal\t£ 1,938.00",
+        "untaxed_amount_2": "£ 1,615.00",
+        "ref": "fwod45-n2",
+        "ref_2": "FURN_6666",
+        "ref_3": "FURN_7777"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_30bdd8 stopped at step 1 — after step 1 the page did not show \"- combobox \\\"Type to find a product...\\\": {{02-create.product_name}}\" / \"- textbox \\\"\\\": {{02-create.product_name}}\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "replayed": "0/14",
+      "repaired": false,
+      "turns": 30,
+      "unreported": [
+        "line1_qty_after_edit",
+        "line2_qty_after_edit",
+        "tax_20_amount",
+        "quotation_state",
+        "oe_subtotal_footer_tr",
+        "oe_subtotal_footer_tr_2",
+        "oe_subtotal_footer_tr_3"
+      ]
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_4fd4f3; observed ref=fwod45-n2, ref_2=S00022_confirmed_sales_order.png, oe_subtotal_footer_tr=Untaxed Amount\t£ 1,615.00 | TAX 20%\t\n£ 323.00 | Total\t£ 1,938.00, order_reference_after_confirm=S00022, statusbar_after_confirm=Sales Order\nQuotation Sent\nQuotation, o_form_statusbar_o_statu=null | true | false | false | null, untaxed_amount=£ 1,615.00, tax_20_amount=£ 323.00, total_amount=£ 1,938.00, customer_name=fwod45-n2 Bench Customer, customer_city=Benchville.",
+      "values": {
+        "ref": "fwod45-n2",
+        "ref_2": "S00022_confirmed_sales_order.png",
+        "oe_subtotal_footer_tr": "Untaxed Amount\t£ 1,615.00 | TAX 20%\t\n£ 323.00 | Total\t£ 1,938.00",
+        "order_reference_after_confirm": "S00022",
+        "statusbar_after_confirm": "Sales Order\nQuotation Sent\nQuotation",
+        "o_form_statusbar_o_statu": "null | true | false | false | null",
+        "untaxed_amount": "£ 1,615.00",
+        "tax_20_amount": "£ 323.00",
+        "total_amount": "£ 1,938.00",
+        "customer_name": "fwod45-n2 Bench Customer",
+        "customer_city": "Benchville"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "statusbar_state",
+        "untaxed_amount_matches_expected",
+        "available_actions_after_confirm",
+        "oe_subtotal_footer_tr_2",
+        "oe_subtotal_footer_tr_3",
+        "o_form_statusbar_o_statu_2"
+      ]
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_7ea638; observed breadcrumb=Quotations / S00022, ref=fwod45-n2, ref_2=S00022_cancelled.png, statusbar_after_cancel_2=Sales Order\nQuotation Sent\nQuotation, o_dialog_modal_footer_bu=null | action_send_mail_and_cancel | action_cancel | null | null | null | null | null, o_dialog_modal_footer_bu_3=Ok | Send and cancel | Cancel | Discard | Ok | Save & Close | Save & New | Discard, statusbar_after_cancel_3=Cancelled\nSales Order\nQuotation Sent\nQuotation, order_reference_after_cancel=S00022, customer_name=fwod45-n2 Bench Customer, customer_city=Benchville, untaxed_amount_before_cancel=£ 1,615.00.",
+      "values": {
+        "breadcrumb": "Quotations / S00022",
+        "ref": "fwod45-n2",
+        "ref_2": "S00022_cancelled.png",
+        "statusbar_after_cancel_2": "Sales Order\nQuotation Sent\nQuotation",
+        "o_dialog_modal_footer_bu": "null | action_send_mail_and_cancel | action_cancel | null | null | null | null | null",
+        "o_dialog_modal_footer_bu_3": "Ok | Send and cancel | Cancel | Discard | Ok | Save & Close | Save & New | Discard",
+        "statusbar_after_cancel_3": "Cancelled\nSales Order\nQuotation Sent\nQuotation",
+        "order_reference_after_cancel": "S00022",
+        "customer_name": "fwod45-n2 Bench Customer",
+        "customer_city": "Benchville",
+        "untaxed_amount_before_cancel": "£ 1,615.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "statusbar_after_cancel",
+        "cancellation_wizard",
+        "o_dialog_modal_footer_bu_2",
+        "o_dialog_modal_footer_bu_4",
+        "o_dialog_modal_footer_bu_5"
+      ]
+    },
+    {
+      "id": "07-report",
+      "status": "success",
+      "summary": "Replayed stored procedure s_7eb89e; observed ref=fwod45-n2, contact_display_name=fwod45-n2 Bench Customer, contact_city=Benchville, oe_subtotal_footer_tr=Untaxed Amount\t£ 1,615.00 | TAX 20%\t\n£ 323.00 | Total\t£ 1,938.00, so_reference=S00022, so_statusbar_final=Cancelled\nSales Order\nQuotation Sent\nQuotation, so_untaxed_amount=£ 1,615.00, so_tax_20=£ 323.00, so_total=£ 1,938.00.",
+      "values": {
+        "ref": "fwod45-n2",
+        "contact_display_name": "fwod45-n2 Bench Customer",
+        "contact_city": "Benchville",
+        "oe_subtotal_footer_tr": "Untaxed Amount\t£ 1,615.00 | TAX 20%\t\n£ 323.00 | Total\t£ 1,938.00",
+        "so_reference": "S00022",
+        "so_statusbar_final": "Cancelled\nSales Order\nQuotation Sent\nQuotation",
+        "so_untaxed_amount": "£ 1,615.00",
+        "so_tax_20": "£ 323.00",
+        "so_total": "£ 1,938.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "so_statusbar",
+        "order_line_1",
+        "order_line_2",
+        "oe_subtotal_footer_tr_2",
+        "oe_subtotal_footer_tr_3",
+        "ref_2",
+        "ref_3"
+      ]
+    }
+  ],
+  "passed": 7,
+  "total": 7,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwod45",
+      "step": "04-open",
+      "skill": "s_30bdd8",
+      "similarity": 1.001,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_30bdd8 stopped at step 1 — after step 1 the page did not show \"- combobox \\\"Type to find a product...\\\": {{02-create.product_name}}\" / \"- textbox \\\"\\\": {{02-create.product_name}}\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "reason": "after step 1 the page did not show \"- combobox \\\"Type to find a product...\\\": {{02-create.product_name}}\" / \"- textbox \\\"\\\": {{02-create.product_name}}\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22"
+    }
+  ],
+  "wallMs": 343189,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 446271,
+    "completionTokens": 9418,
+    "cachedTokens": 402048
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 446271,
+      "completionTokens": 9418,
+      "cachedTokens": 402048
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

@@ -1,0 +1,162 @@
+{
+ "id": "s_99d37a",
+ "origin": "http://127.0.0.1:8069",
+ "template": "Sign in to Odoo at {{v2}} with login 'admin' and password 'admin' (skip if already signed in). Then create a new customer contact named exactly '{{v3}}' with the City field set to 'Benchville'. Use the Sales or Contacts app to create it. Verify afterwards that the customer record exists and shows City = Benchville, and report the customer's display name and city as shown on the page.",
+ "params": {
+  "v1": {
+   "example": "fwod45-n1",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "http://127.0.0.1:8069/",
+   "usedIn": []
+  },
+  "v3": {
+   "example": "fwod45-n1 Bench Customer",
+   "usedIn": [],
+   "known": true
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8069/web/login"
+ },
+ "steps": [
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e15",
+    "value": "admin"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Password"
+     },
+     {
+      "kind": "label",
+      "label": "Password"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Password"
+     },
+     {
+      "kind": "id",
+      "selector": "#password"
+     },
+     {
+      "kind": "css",
+      "selector": "#password"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 280,
+      "w": 268,
+      "h": 35,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web/login",
+    "addedContains": [
+     "- textbox \"Password\": {{*}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e17"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Log in"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div > form > div:nth-of-type(3) > button"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 347,
+      "w": 268,
+      "h": 35,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "mints": {
+    "at": "q.action"
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action={{d1}}&cids={{d2}}&menu_id={{d3}}",
+    "addedContains": [
+     "- button \"Home Menu\"",
+     "- menuitem \"Discuss\"",
+     "- menu \"6 3 YourCompany\"",
+     "- button \"6\"",
+     "- button \"3\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "derived": {
+  "d1": {
+   "step": 2,
+   "at": "q.action",
+   "example": "123"
+  },
+  "d2": {
+   "step": 2,
+   "at": "q.cids",
+   "example": "1"
+  },
+  "d3": {
+   "step": 2,
+   "at": "q.menu_id",
+   "example": "81"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-15T08:22:32.776Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-15T08:39:31.903Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_301d1a",
+  "index": 1,
+  "of": 6
+ },
+ "provenance": {
+  "session": "fwod45-n1",
+  "instruction": "Sign in to Odoo at http://127.0.0.1:8069/ with login 'admin' and password 'admin' (skip if already signed in). Then create a new customer contact named exactly 'fwod45-n1 Bench Customer' with the City field set to 'Benchville'. Use the Sales or Contacts app to create it. Verify afterwards that the customer record exists and shows City = Benchville, and report the customer's display name and city as shown on the page.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-15T08:22:32.776Z"
+ },
+ "revision": 3
+}
