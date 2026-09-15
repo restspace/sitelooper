@@ -1,0 +1,14 @@
+[spec-replay] resetting grafana
+[reset] grafana: deleted leftover dashboard "fwgr38-n3 Bench Dashboard" (200)
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile bench/results/flows/fwgr38.json --out /home/user/sitelooper/bench/results/fwgr38-spec-spec-tmp --overwrite-spec
+flow: /home/user/sitelooper/bench/results/fwgr38-spec-spec-tmp/fwgr38.flow.ts
+spec: /home/user/sitelooper/bench/results/fwgr38-spec-spec-tmp/fwgr38.spec.ts
+warning 03-open: 03-open read a value that contradicts what the previous step reported
+  why: 03-open read save_confirmation "Dashboard saved (save drawer closed, breadcrumb shows 'fwgr38-n1 Bench Dashboard')" right after 02-create reported "Dashboard saved alert"; 02-create's change may not have landed and a later step may be retrying it. Re-record 02-create.
+  fix: sitelooper rerecord bench/results/flows/fwgr38.json 02-create
+warning 06-open: 06-open read a value that contradicts what the previous step reported
+  why: 06-open read screenshot "/tmp/fwgr38-n1-current-state.png" right after 05-open reported "/tmp/fwgr38-n1-refresh-1m-persisted.png"; 05-open's change may not have landed and a later step may be retrying it. Re-record 05-open.
+  fix: sitelooper rerecord bench/results/flows/fwgr38.json 05-open
+[spec-replay] running: npx playwright test --config /home/user/sitelooper/bench/results/fwgr38-spec-spec-tmp/playwright.config.mjs
+[spec-replay] fwgr38-spec: 1/1 passed, exit=0, 71s, 0 drift line(s) — result written

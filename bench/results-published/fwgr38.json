@@ -1,0 +1,374 @@
+{
+  "name": "fwgr38",
+  "origin": "http://127.0.0.1:3000",
+  "startUrl": "http://127.0.0.1:3000",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to the Grafana app at http://127.0.0.1:3000 with username 'admin' and password 'admin' (if a 'change password' or similar prompt appears after login, skip/dismiss it). Then find and open the provisioned dashboard named 'Service health' (via Dashboards / search). Report the exact titles of all the panels shown on that dashboard, exactly as they appear on the page.",
+      "skill": "s_bd32a0",
+      "params": {
+        "v1": "http://127.0.0.1:3000",
+        "v2": "Service health"
+      },
+      "outputs": [
+        "initial_page",
+        "dashboard_name",
+        "dashboard_folder",
+        "panel_count",
+        "panel_titles",
+        "screenshot",
+        "panel_title_request_rate",
+        "panel_title_error_count",
+        "panel_title_latency_by_endpoint"
+      ],
+      "recorded": {
+        "initial_page": "about:blank",
+        "dashboard_name": "Service Health",
+        "dashboard_folder": "Bench",
+        "panel_count": "3",
+        "panel_titles": "Request rate, Error count, Latency by endpoint",
+        "screenshot": "/tmp/service-health-dashboard.png",
+        "panel_title_request_rate": "Request rate",
+        "panel_title_error_count": "Error count",
+        "panel_title_latency_by_endpoint": "Latency by endpoint",
+        "url": "http://127.0.0.1:3000/d/bench-service-health/service-health?from=now-6h&to=now&timezone=browser"
+      },
+      "route": "http://127.0.0.1:3000/d/bench-service-health/service-health",
+      "outputEvidence": {
+        "initial_page": {
+          "same": 0,
+          "differed": 1
+        },
+        "dashboard_name": {
+          "same": 1,
+          "differed": 0
+        },
+        "dashboard_folder": {
+          "same": 1,
+          "differed": 0
+        },
+        "panel_titles": {
+          "same": 0,
+          "differed": 1
+        },
+        "panel_title_request_rate": {
+          "same": 1,
+          "differed": 0
+        },
+        "panel_title_error_count": {
+          "same": 1,
+          "differed": 0
+        },
+        "panel_title_latency_by_endpoint": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "In the Grafana app (already signed in as admin), create a NEW dashboard titled exactly '{{runid}} {{01-signin.dashboard_folder}} Dashboard'. Add a visualization panel of type 'Stat', titled exactly '{{runid}} Availability', whose data source / query uses the 'TestData' data source (find it in the data source picker; use a default TestData query, e.g. the 'Scenario' or default datasource query, so the panel shows data). Save the dashboard with that title (Dashboard settings > save, or the Save dashboard button; fill the title field '{{runid}} {{01-signin.dashboard_folder}} Dashboard' in the save dialog). Confirm the save succeeded (no unsaved changes indicator) and report the panel title and any value the Stat panel displays, plus the dashboard UID/URL after saving.",
+      "skill": "s_e99b5a",
+      "params": {
+        "v1": "{{runid}}",
+        "v2": "{{01-signin.dashboard_folder}}",
+        "v3": "{{runid}} Availability"
+      },
+      "outputs": [
+        "dashboard_title",
+        "dashboard_uid",
+        "dashboard_url_path",
+        "panel_title",
+        "panel_type",
+        "panel_data_source",
+        "stat_value_observed",
+        "stat_value_earlier_in_editor",
+        "panel_options_section_id",
+        "save_confirmation",
+        "unsaved_changes_indicator",
+        "screenshot",
+        "dashboard_url",
+        "run_id"
+      ],
+      "recorded": {
+        "dashboard_title": "fwgr38-n1 Bench Dashboard",
+        "dashboard_uid": "ffybltl9jn85cd",
+        "dashboard_url_path": "/d/ffybltl9jn85cd/fwgr38-n1-bench-dashboard",
+        "panel_title": "fwgr38-n1 Availability",
+        "panel_type": "Stat",
+        "panel_data_source": "TestData (query A scenario: Random Walk)",
+        "stat_value_observed": "103",
+        "stat_value_earlier_in_editor": "98.8",
+        "panel_options_section_id": "button-Panel options",
+        "save_confirmation": "Dashboard saved alert",
+        "unsaved_changes_indicator": "none (document.title = 'fwgr38-n1 Bench Dashboard - Dashboards - Grafana')",
+        "screenshot": "/tmp/fwgr38-n1-bench-dashboard.png",
+        "dashboard_url": "http://127.0.0.1:3000/d/ffybltl9jn85cd/fwgr38-n1-bench-dashboard?from=now-6h&to=now&timezone=browser",
+        "run_id": "fwgr38-n1",
+        "url": "http://127.0.0.1:3000/d/ffybltl9jn85cd/fwgr38-n1-bench-dashboard?from=now-6h&to=now&timezone=browser",
+        "url.p1": "ffybltl9jn85cd",
+        "url.p2": "fwgr38-n1-bench-dashboard"
+      },
+      "route": "http://127.0.0.1:3000/d/ffybltl9jn85cd/:id"
+    },
+    {
+      "id": "03-open",
+      "instruction": "In the Grafana app, open the existing dashboard titled '{{runid}} {{01-signin.dashboard_folder}} Dashboard' (UID {{02-create.url.p1}}, url path /d/{{02-create.url.p1}}/{{runid}}-bench-dashboard) if it is not already open. Add a new panel of visualization type 'Text', titled exactly '{{runid}} Notes', whose text/markdown content includes the runid '{{runid}}' (e.g. write markdown like 'Notes for run {{runid}}' or similar text containing {{runid}}). Then SAVE the dashboard so the change persists (use Save dashboard; if a save dialog asks about overwriting/changes just confirm/save; do not just Apply or Back the panel editor without saving the dashboard). Verify the save succeeded (e.g. a Dashboard saved confirmation or no unsaved-changes state), then reload/verify the dashboard still shows both panels: the Stat panel '{{runid}} Availability' and the Text panel '{{runid}} Notes' with its text containing '{{runid}}'. Report the panel titles you observe and the text content shown in the Text panel.",
+      "skill": "s_333b9b",
+      "params": {
+        "v1": "{{runid}} {{01-signin.dashboard_folder}} Dashboard",
+        "v4": "{{02-create.url.p1}}",
+        "v5": "/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard",
+        "v2": "{{runid}}",
+        "v9": "Notes for run {{runid}}",
+        "v7": "Stat",
+        "v8": "{{runid}} Availability",
+        "v6": "{{runid}}-bench-dashboard"
+      },
+      "outputs": [
+        "dashboard_uid",
+        "dashboard_title",
+        "panel_titles_after_reload",
+        "text_panel_title",
+        "text_panel_type",
+        "text_panel_content",
+        "stat_panel_title",
+        "stat_panel_region_text",
+        "stat_value_this_session",
+        "save_confirmation",
+        "screenshot_editor",
+        "screenshot_after_reload",
+        "stat_panel_region_text_2",
+        "dashboard_url_after_save",
+        "run_id"
+      ],
+      "recorded": {
+        "dashboard_uid": "ffybltl9jn85cd",
+        "dashboard_title": "fwgr38-n1 Bench Dashboard",
+        "panel_titles_after_reload": "fwgr38-n1 Notes, fwgr38-n1 Availability",
+        "text_panel_title": "fwgr38-n1 Notes",
+        "text_panel_type": "Text (markdown)",
+        "text_panel_content": "Notes for run fwgr38-n1",
+        "stat_panel_title": "fwgr38-n1 Availability",
+        "stat_panel_region_text": "fwgr38-n1 Availability 62.9",
+        "stat_value_this_session": "62.9",
+        "save_confirmation": "Dashboard saved (save drawer closed, breadcrumb shows 'fwgr38-n1 Bench Dashboard')",
+        "screenshot_editor": "/tmp/fwgr38-n1-text-panel-editor.png",
+        "screenshot_after_reload": "/tmp/fwgr38-n1-dashboard-both-panels.png",
+        "stat_panel_region_text_2": "fwgr38-n1 Availability\n62.9",
+        "dashboard_url_after_save": "http://127.0.0.1:3000/d/ffybltl9jn85cd/fwgr38-n1-bench-dashboard?from=now-6h&to=now&timezone=browser",
+        "run_id": "fwgr38-n1"
+      },
+      "route": "http://127.0.0.1:3000/d/ffybltl9jn85cd/:id"
+    },
+    {
+      "id": "04-open",
+      "instruction": "In the Grafana app, open the dashboard '{{runid}} {{01-signin.dashboard_folder}} Dashboard' (UID {{02-create.url.p1}}). Two changes to make and SAVE so both persist into the saved dashboard: (1) add the tag 'bench' to the dashboard — e.g. via Dashboard settings > General > Tags field, or the tags field in the save dialog; (2) set the dashboard time range to 'Last 6 hours' using the time picker in the top bar. When saving, make sure to TICK the 'Update default time range' checkbox in the save dialog so the 6h range is persisted as the dashboard's default (the time picker in the top bar alone is NOT proof of persistence). Save the dashboard and confirm it saved. Then verify persistence by navigating to the dashboard URL WITHOUT any time-range query parameters (http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard) and checking the time picker shows 'Last 6 hours', and by checking the dashboard's tags include 'bench' (e.g. dashboard settings or search). Report exactly what you observe for the saved time range and the tag, and whether the 'Update default time range' box was ticked.",
+      "skill": "s_69ae35",
+      "params": {
+        "v1": "{{runid}} {{01-signin.dashboard_folder}} Dashboard",
+        "v4": "{{02-create.url.p1}}",
+        "v6": "http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "dashboard_uid",
+        "dashboard_title",
+        "tag_saved",
+        "tag_evidence_1",
+        "tag_evidence_2",
+        "update_default_time_range_checkbox",
+        "saved_default_time_range_observed",
+        "panel_titles_after_bare_url_load",
+        "text_panel_content",
+        "stat_panel_value",
+        "save_confirmation",
+        "screenshots",
+        "saved_tag_remove_button_text",
+        "final_url_after_bare_load",
+        "stat_panel_region_text",
+        "run_id",
+        "time_range_url_param"
+      ],
+      "recorded": {
+        "dashboard_uid": "ffybltl9jn85cd",
+        "dashboard_title": "fwgr38-n1 Bench Dashboard",
+        "tag_saved": "bench",
+        "tag_evidence_1": "Dashboard settings > General showed chip: Remove \"bench\" tag",
+        "tag_evidence_2": "Dashboards search result row: 'fwgr38-n1 Bench Dashboard | Dashboard | Dashboards | bench'",
+        "update_default_time_range_checkbox": "ticked before saving",
+        "saved_default_time_range_observed": "Last 6 hours (time picker 'Time range selected: Last 6 hours' on a load of the bare URL with no from/to parameters)",
+        "panel_titles_after_bare_url_load": "fwgr38-n1 Notes, fwgr38-n1 Availability",
+        "text_panel_content": "Notes for run fwgr38-n1",
+        "stat_panel_value": "86.3",
+        "save_confirmation": "Dashboard saved alert",
+        "screenshots": "/tmp/fwgr38-n1-no-params-6h.png, /tmp/fwgr38-n1-final-bare-url.png",
+        "saved_tag_remove_button_text": "Remove \"bench\" tag",
+        "final_url_after_bare_load": "http://127.0.0.1:3000/d/ffybltl9jn85cd/fwgr38-n1-bench-dashboard?from=now-6h&to=now&timezone=browser",
+        "stat_panel_region_text": "fwgr38-n1 Availability\n86.3",
+        "run_id": "fwgr38-n1",
+        "time_range_url_param": "now-6h",
+        "url": "http://127.0.0.1:3000/dashboards"
+      },
+      "route": "http://127.0.0.1:3000/dashboards"
+    },
+    {
+      "id": "05-open",
+      "instruction": "In the Grafana app, open the dashboard '{{runid}} {{01-signin.dashboard_folder}} Dashboard' (UID {{02-create.url.p1}}, url path /d/{{02-create.url.p1}}/{{runid}}-bench-dashboard). Set the dashboard's auto-refresh interval to '1m' (1 minute): open the refresh interval picker in the top bar (the 'Auto' refresh indicator next to the time picker) and select 1m, then SAVE the dashboard so it persists (use Save dashboard; if a save dialog asks about default settings, choose to save current settings as default / tick 'Update default interval' or similar checkbox if present so the refresh interval is persisted into the saved dashboard). Verify the save succeeded. Then verify persistence: load the dashboard URL WITHOUT query parameters (http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard) and check the refresh interval picker / Auto refresh label in the top bar shows '1m'. Report exactly what you observe: the refresh interval shown, whether an 'update default' checkbox was ticked during save, and any save confirmation.",
+      "skill": "s_d18533",
+      "params": {
+        "v1": "{{runid}} {{01-signin.dashboard_folder}} Dashboard",
+        "v4": "{{02-create.url.p1}}",
+        "v5": "/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard",
+        "v7": "1 minute",
+        "v8": "http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "dashboard_uid",
+        "refresh_interval_selected",
+        "refresh_picker_after_bare_url_load",
+        "refresh_picker_before_change",
+        "update_default_refresh_checkbox",
+        "save_confirmation",
+        "time_picker_after_bare_url_load",
+        "panel_titles_observed",
+        "screenshot",
+        "save_button_state",
+        "run_id"
+      ],
+      "recorded": {
+        "dashboard_uid": "ffybltl9jn85cd",
+        "refresh_interval_selected": "1m",
+        "refresh_picker_after_bare_url_load": "Choose refresh time interval with current interval 1 minute selected — displays \"1m\"",
+        "refresh_picker_before_change": "Auto refresh turned off. Choose refresh time interval",
+        "update_default_refresh_checkbox": "ticked before saving (drawer subtitle: 'Will make the current refresh the new default')",
+        "save_confirmation": "Dashboard saved alert",
+        "time_picker_after_bare_url_load": "Last 6 hours",
+        "panel_titles_observed": "fwgr38-n1 Notes, fwgr38-n1 Availability",
+        "screenshot": "/tmp/fwgr38-n1-refresh-1m-persisted.png",
+        "save_button_state": "Save",
+        "run_id": "fwgr38-n1",
+        "url": "http://127.0.0.1:3000/d/ffybltl9jn85cd/fwgr38-n1-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m"
+      },
+      "route": "http://127.0.0.1:3000/d/ffybltl9jn85cd/:id"
+    },
+    {
+      "id": "06-open",
+      "instruction": "The Grafana app is already open in this session's browser tab on the dashboard '{{runid}} {{01-signin.dashboard_folder}} Dashboard' (if the tab is not on it, navigate to http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard and wait for it to load). Report the CURRENT page URL of the browser tab (window.location.href), read live from the page, exactly as shown. Also report the dashboard UID visible in that URL and confirm both panels '{{runid}} Availability' (Stat) and '{{runid}} Notes' (Text) are displayed on the page, plus what the top-bar time range and refresh interval controls read. Do not change anything else on the page.",
+      "skill": "s_da0eb6",
+      "params": {
+        "v1": "{{runid}} {{01-signin.dashboard_folder}} Dashboard",
+        "v4": "{{02-create.url.p1}}",
+        "v5": "{{runid}}-bench-dashboard",
+        "v6": "{{runid}} Availability",
+        "v7": "Stat",
+        "v8": "{{runid}} Notes",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "current_page_url",
+        "dashboard_uid",
+        "page_title",
+        "panel_titles_observed",
+        "panel_header_texts",
+        "text_panel_content",
+        "stat_panel_value",
+        "time_range_control",
+        "refresh_interval_control",
+        "screenshot",
+        "panel_title_notes",
+        "panel_title_availability",
+        "run_id"
+      ],
+      "recorded": {
+        "current_page_url": "http://127.0.0.1:3000/d/ffybltl9jn85cd/fwgr38-n1-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m",
+        "dashboard_uid": "ffybltl9jn85cd",
+        "page_title": "fwgr38-n1 Bench Dashboard - Dashboards - Grafana",
+        "panel_titles_observed": "fwgr38-n1 Notes, fwgr38-n1 Availability",
+        "panel_header_texts": "fwgr38-n1 Notes | Notes for run fwgr38-n1, fwgr38-n1 Availability | 16.0",
+        "text_panel_content": "Notes for run fwgr38-n1",
+        "stat_panel_value": "16.0",
+        "time_range_control": "Last 6 hours",
+        "refresh_interval_control": "Choose refresh time interval with current interval 1 minute selected",
+        "screenshot": "/tmp/fwgr38-n1-current-state.png",
+        "panel_title_notes": "fwgr38-n1 Notes",
+        "panel_title_availability": "fwgr38-n1 Availability",
+        "run_id": "fwgr38-n1"
+      },
+      "outputEvidence": {
+        "current_page_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "dashboard_uid": {
+          "same": 0,
+          "differed": 1
+        },
+        "page_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "panel_titles_observed": {
+          "same": 0,
+          "differed": 1
+        },
+        "panel_header_texts": {
+          "same": 0,
+          "differed": 1
+        },
+        "text_panel_content": {
+          "same": 0,
+          "differed": 1
+        },
+        "time_range_control": {
+          "same": 1,
+          "differed": 0
+        },
+        "refresh_interval_control": {
+          "same": 1,
+          "differed": 0
+        },
+        "screenshot": {
+          "same": 0,
+          "differed": 1
+        },
+        "panel_title_notes": {
+          "same": 0,
+          "differed": 1
+        },
+        "panel_title_availability": {
+          "same": 0,
+          "differed": 1
+        },
+        "run_id": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwgr38-n1",
+    "created": "2026-09-15T10:58:43.601Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "warnings": [
+    "contradicted-step: 03-open read save_confirmation \"Dashboard saved (save drawer closed, breadcrumb shows 'fwgr38-n1 Bench Dashboard')\" right after 02-create reported \"Dashboard saved alert\"; 02-create's change may not have landed and a later step may be retrying it. Re-record 02-create.",
+    "contradicted-step: 06-open read screenshot \"/tmp/fwgr38-n1-current-state.png\" right after 05-open reported \"/tmp/fwgr38-n1-refresh-1m-persisted.png\"; 05-open's change may not have landed and a later step may be retrying it. Re-record 05-open."
+  ],
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  }
+}
