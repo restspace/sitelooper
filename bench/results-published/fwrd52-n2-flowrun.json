@@ -1,0 +1,223 @@
+{
+  "flow": "fwrd52",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_d059a5; observed ticket_title=fwrd52-n2 RD Bench Ticket, session_tag=fwrd52-n2, ticket_reference=RD-1016, ticket_customer=Not recorded, ticket_created=2026-09-15, list_summary=Showing 1–10 of 14.",
+      "values": {
+        "ticket_title": "fwrd52-n2 RD Bench Ticket",
+        "session_tag": "fwrd52-n2",
+        "ticket_reference": "RD-1016",
+        "ticket_customer": "Not recorded",
+        "ticket_created": "2026-09-15",
+        "list_summary": "Showing 1–10 of 14"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "ticket_status",
+        "ticket_parts"
+      ]
+    },
+    {
+      "id": "02-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_568ad1; observed part_name=fwrd52-n2 RD Part A, session_tag=fwrd52-n2, part_cost=$100.00, part_markup=25%, part_price=$125.00, ticket_title=fwrd52-n2 RD Bench Ticket, ticket_reference=RD-1016, part_supplier=No supplier.",
+      "values": {
+        "part_name": "fwrd52-n2 RD Part A",
+        "session_tag": "fwrd52-n2",
+        "part_cost": "$100.00",
+        "part_markup": "25%",
+        "part_price": "$125.00",
+        "ticket_title": "fwrd52-n2 RD Bench Ticket",
+        "ticket_reference": "RD-1016",
+        "part_supplier": "No supplier"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "part_qty",
+        "parts_total"
+      ]
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "On ticket RD-1016 ('fwrd52-n2 RD Bench Ticket') I added a second part via the 'Add part' dialog: name 'fwrd52-n2 RD Part B', cost 200, markup 25 (quantity left at default 1, supplier blank). After the view refreshed, the parts table lists both fwrd52-n2 RD Part A ($100.00 cost, 25%, price $125.00) and fwrd52-n2 RD Part B ($200.00 cost, 25%, price $250.00). The app-computed price for Part B is $250.00 (cost + 25% markup) and the ticket's parts total is now $375.00 ($125.00 + $250.00).",
+      "values": {
+        "part_a": "fwrd52-n2 RD Part A — cost $100.00, markup 25%, qty 1, price $125.00",
+        "part_b_name": "fwrd52-n2 RD Part B",
+        "session_tag": "fwrd52-n2",
+        "parts_total": "$375.00",
+        "part_b_price": "$250.00",
+        "current_url": "http://127.0.0.1:4180/#/tickets/t15",
+        "ticket_title": "fwrd52-n2 RD Bench Ticket",
+        "ticket_reference": "RD-1016",
+        "part_b_cost": "$200.00",
+        "part_b_markup": "25%"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "part_b_qty",
+        "screenshot_filename"
+      ]
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "On ticket RD-1016 I used the per-row 'Edit' button on Part A, which opened an 'Edit part' dialog pre-filled with name 'fwrd52-n2 RD Bench Ticket RD Part A', cost 100, markup 25, qty 1. I changed Cost to 150 (markup left at 25) and clicked 'Save part'. After the post-mutation refresh the table shows Part A at cost $150.00, markup 25%, price $187.50, and the ticket parts total is now $437.50. Part B is unchanged: still fwrd52-n2 RD Bench Ticket RD Part B, cost $200.00, markup 25%, price $250.00.",
+      "values": {
+        "part_a_row": "fwrd52-n2 RD Part A — $150.00 — 25% — 1 — No supplier — $187.50",
+        "part_b_row": "fwrd52-n2 RD Part B — $200.00 — 25% — 1 — No supplier — $250.00 (unchanged)",
+        "screenshot": "/root/.sitelooper/sessions/fwrd52-n2/screenshots/shot-1789460720614.jpg",
+        "part_a_row_2": "fwrd52-n2 RD Part A\t$150.00\t25%\t1\tNo supplier\t$187.50\tEdit Delete",
+        "part_b_row_2": "fwrd52-n2 RD Part B\t$200.00\t25%\t1\tNo supplier\t$250.00\tEdit Delete",
+        "parts_total": "$437.50",
+        "ticket_reference": "RD-1016",
+        "part_a_cost": "$150.00",
+        "part_a_markup": "25%",
+        "part_a_price": "$187.50",
+        "part_b_cost": "$200.00",
+        "part_b_price": "$250.00",
+        "session_tag": "fwrd52-n2 RD Bench Ticket"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_68ccce; observed precondition_error_text=Ticket is not ready\\n\\nPart \\\"fwrd52-n2 RD Part A\\\" has no supplier\\nPart \\\"fwrd52-n2 RD Part B\\\" has no supplier, part_a_row=fwrd52-n2 RD Part A $150.00 25% 1 Bench Supplier Co $187.50, part_b_row=fwrd52-n2 RD Part B $200.00 25% 1 Bench Supplier Co $250.00, session_tag=fwrd52-n2, validation_alert=Ticket is not ready\n\nPart \"fwrd52-n2 RD Part A\" has no supplier\nPart \"fwrd52-n2 RD Part B\" has no supplier, ticket_status=Status\nReady, parts_total=$437.50, ticket_reference=RD-1016, ticket_title=fwrd52-n2 RD Bench Ticket, final_status=Ready.",
+      "values": {
+        "precondition_error_text": "Ticket is not ready\\n\\nPart \\\"fwrd52-n2 RD Part A\\\" has no supplier\\nPart \\\"fwrd52-n2 RD Part B\\\" has no supplier",
+        "part_a_row": "fwrd52-n2 RD Part A $150.00 25% 1 Bench Supplier Co $187.50",
+        "part_b_row": "fwrd52-n2 RD Part B $200.00 25% 1 Bench Supplier Co $250.00",
+        "session_tag": "fwrd52-n2",
+        "validation_alert": "Ticket is not ready\n\nPart \"fwrd52-n2 RD Part A\" has no supplier\nPart \"fwrd52-n2 RD Part B\" has no supplier",
+        "ticket_status": "Status\nReady",
+        "parts_total": "$437.50",
+        "ticket_reference": "RD-1016",
+        "ticket_title": "fwrd52-n2 RD Bench Ticket",
+        "final_status": "Ready"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "precondition_required",
+        "actions_taken",
+        "available_buttons_after",
+        "screenshots"
+      ]
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_d8b919; observed detail_url=http://127.0.0.1:4180/#/tickets/t15, archived_view_row=RD-1016\\tfwrd52-n1 RD Bench Ticket Archived\\tNot recorded\\tReady\\t0\\t2026-09-15, archived_row_first_cell=RD-1016, session_tag=fwrd52-n2, ticket_reference=RD-1016, archived_list_row=RD-1016\tfwrd52-n2 RD Bench Ticket Archived\tNot recorded\tReady\t0\t2026-09-15.",
+      "values": {
+        "detail_url": "http://127.0.0.1:4180/#/tickets/t15",
+        "archived_view_row": "RD-1016\\tfwrd52-n1 RD Bench Ticket Archived\\tNot recorded\\tReady\\t0\\t2026-09-15",
+        "archived_row_first_cell": "RD-1016",
+        "session_tag": "fwrd52-n2",
+        "ticket_reference": "RD-1016",
+        "archived_list_row": "RD-1016\tfwrd52-n2 RD Bench Ticket Archived\tNot recorded\tReady\t0\t2026-09-15"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "delete_a",
+        "delete_b",
+        "parts_after_deletion",
+        "archive_action",
+        "archive_blocked",
+        "status_text_after_archive",
+        "button_after_archive",
+        "default_list_summary_after",
+        "default_list_search_RD-1015",
+        "other_ticket_ref"
+      ]
+    },
+    {
+      "id": "07-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_473f82; observed archived_row_full_text=RD-1016 | fwrd52-n2 RD Bench Ticket Archived | Not recorded | Ready | 0 | 2026-09-15, session_tag=fwrd52-n2, archived_row_ref=RD-1016, archived_row_title_cell=fwrd52-n2 RD Bench Ticket Archived, archived_badge_text=Archived, archived_row_status=Ready, archived_row_parts=0, archived_view_summary=Showing 1–1 of 1, active_search_no_match_t=Tickets\n\nNo tickets\n\nREF\tTITLE\tCUSTOMER\tSTATUS\tPARTS\tCREATED\nNo tickets match the current filters.\nPrevious\nPage 1 of 1\nNext, active_list_refs_shown=RD-1014 | RD-1012 | RD-1011 | RD-1010 | RD-1009 | RD-1008 | RD-1007 | RD-1006 | RD-1005 | RD-1004, detail_status_block_2=Status\nReady\nArchived, detail_parts_message=No parts on this ticket yet., detail_action_buttons=Unarchive ticket, detail_title=fwrd52-n2 RD Bench Ticket.",
+      "values": {
+        "archived_row_full_text": "RD-1016 | fwrd52-n2 RD Bench Ticket Archived | Not recorded | Ready | 0 | 2026-09-15",
+        "session_tag": "fwrd52-n2",
+        "archived_row_ref": "RD-1016",
+        "archived_row_title_cell": "fwrd52-n2 RD Bench Ticket Archived",
+        "archived_badge_text": "Archived",
+        "archived_row_status": "Ready",
+        "archived_row_parts": "0",
+        "archived_view_summary": "Showing 1–1 of 1",
+        "active_search_no_match_t": "Tickets\n\nNo tickets\n\nREF\tTITLE\tCUSTOMER\tSTATUS\tPARTS\tCREATED\nNo tickets match the current filters.\nPrevious\nPage 1 of 1\nNext",
+        "active_list_refs_shown": "RD-1014 | RD-1012 | RD-1011 | RD-1010 | RD-1009 | RD-1008 | RD-1007 | RD-1006 | RD-1005 | RD-1004",
+        "detail_status_block_2": "Status\nReady\nArchived",
+        "detail_parts_message": "No parts on this ticket yet.",
+        "detail_action_buttons": "Unarchive ticket",
+        "detail_title": "fwrd52-n2 RD Bench Ticket"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "active_list_summary",
+        "active_list_contains_RD-1015",
+        "active_search_RD-1015_text",
+        "detail_status_block",
+        "detail_archive_action",
+        "active_list_row_ref_1",
+        "active_list_row_ref_2",
+        "active_list_row_ref_3",
+        "active_list_row_ref_4",
+        "active_list_row_ref_5",
+        "active_list_row_ref_6",
+        "active_list_row_ref_7",
+        "active_list_row_ref_8",
+        "other_ticket_ref_1",
+        "other_ticket_ref_2"
+      ]
+    }
+  ],
+  "passed": 7,
+  "total": 7,
+  "repinned": 0,
+  "drift": 0,
+  "wallMs": 22690,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

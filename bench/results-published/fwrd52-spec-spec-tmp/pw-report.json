@@ -1,0 +1,189 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwrd52-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwrd52-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwrd52-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwrd52-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwrd52.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwrd52-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwrd52.spec.ts",
+      "file": "fwrd52.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwrd52",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 3000000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 25220,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 07-verify\n"
+                    }
+                  ],
+                  "stderr": [
+                    {
+                      "text": "[sitelooper warn] 01-open s_d059a5/5: read 'ticket_title' returned a value the skill itself set/selected ('fwrd52-spec RD Bench Ticket') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-open s_568ad1/7: read 'part_name' returned a value the skill itself set/selected ('fwrd52-spec RD Part A') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-open s_872b9f/13: read 'part_b_name' returned a value the skill itself set/selected ('fwrd52-spec RD Part B') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    }
+                  ],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:4180/ and sign in with email bench@example.com and password bench-pass-1234. Then create a new ticket titled exactly '{{runid}} RD Bench Ticket' (fill any required fields the form demands, discover them yourself). After saving, wait for the list/detail view to refresh and report the ticket's title, its status, and any reference/id shown on screen. Note: after a create the list refreshes a short beat after the mutation, so wait for the ticket to actually appear rather than assuming the first render is final.",
+                      "duration": 4807
+                    },
+                    {
+                      "title": "02-open: On the Repair Desk app (already signed in as bench@example.com), open the ticket titled '{{runid}} RD Bench Ticket' (reference {{01-open.ticket_reference}}) and add a part to it named exactly '{{runid}} RD Part A' with cost 100 and markup 25. Discover the form fields yourself and fill them accordingly. After saving, wait for the view to refresh (it refreshes a short beat after the mutation, not instantly) and report the price the app computes for this part — the exact value shown on screen for the part's price, plus the part's name, cost and markup as displayed.",
+                      "duration": 4283
+                    },
+                    {
+                      "title": "03-open: On the Repair Desk app (already signed in), open the ticket titled '{{runid}} RD Bench Ticket' (reference {{01-open.ticket_reference}}) and add a second part named exactly '{{runid}} RD Part B' with cost 200 and markup 25. Use the 'Add part' dialog (fields: Part name, Cost, Markup %, Quantity, Supplier). After saving, wait for the view to refresh (it refreshes a short beat after the mutation, not instantly) and report the price the app computes for this part — the exact value shown on screen for the part's price — plus the parts total for the ticket, and confirm both parts '{{runid}} RD Part A' and '{{runid}} RD Part B' are listed.",
+                      "duration": 3248
+                    },
+                    {
+                      "title": "04-open: On the Repair Desk app (already signed in), open the ticket titled '{{runid}} RD Bench Ticket' (reference {{01-open.ticket_reference}}, url #/tickets/{{02-open.url.h1}}). Edit the part named '{{runid}} RD Part A' and change its cost from 100 to 150, keeping markup 25. Discover how to edit the part (an edit button/action on the part row, or however the app allows it). After saving, wait for the view to refresh (it refreshes a short beat after the mutation, not instantly) and report the price the app computes for Part A afterwards — the exact value shown on screen — plus the updated parts total for the ticket, and confirm Part B is unchanged (cost 200, price 50.00).",
+                      "duration": 1979
+                    },
+                    {
+                      "title": "05-open: On the Repair Desk app (already signed in), open the ticket titled '{{runid}} RD Bench Ticket' (reference {{01-open.ticket_reference}}, url #/tickets/{{02-open.url.h1}}). The goal is to get this ticket's status to 'Ready'. The app enforces preconditions before it will accept that status — attempt the status change, observe any error/validation message the app shows, discover exactly what the preconditions are, and satisfy them (e.g. fill in missing required ticket fields, or whatever the app demands). Then set the status to Ready and confirm the ticket's status displays as 'Ready'. Report exactly what preconditions were required (quote the app's own error/validation text) and the final status shown on screen. Note: after a mutation the view refreshes a short beat later, so wait for concrete page state rather than assuming the first render is final.",
+                      "duration": 3811
+                    },
+                    {
+                      "title": "06-open: On the Repair Desk app (already signed in), open the ticket titled '{{runid}} RD Bench Ticket' (reference {{01-open.ticket_reference}}, url #/tickets/{{02-open.url.h1}}, currently status Ready). Two things to do: (1) delete both parts — '{{runid}} RD Part A' and '{{runid}} RD Part B' — using each row's Delete action (confirm any confirmation dialog). (2) Then archive the ticket — find the archive action (it may be a button on the ticket detail or in the list; discover it). If the app blocks archiving, report the exact error text and satisfy whatever it requires. After each mutation the view refreshes a short beat later, so wait for concrete page state rather than assuming the first render is final. Finally verify: the ticket shows zero parts, and the ticket is archived (report the exact confirmation/status text shown, and whether the ticket still appears in the default/active tickets list or only in an archived view).",
+                      "duration": 4508
+                    },
+                    {
+                      "title": "07-verify: On the Repair Desk app (already signed in), verify the final state of the ticket '{{runid}} RD Bench Ticket' (reference {{01-open.ticket_reference}}): (1) confirm it is archived — check the default active tickets list does NOT contain {{01-open.ticket_reference}}, and that with 'Show archived' enabled the row {{01-open.ticket_reference}} shows the Archived badge, 0 parts, and status Ready; (2) open the ticket detail and confirm it shows no parts ('No parts on this ticket yet.' or equivalent) and the status block reads Ready/Archived. Report exactly what you see on screen for each check. Do not modify anything.",
+                      "duration": 2211
+                    }
+                  ],
+                  "startTime": "2026-09-15T08:31:23.436Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0ca3aece5b59ebc9096e-5a08b68d769c5b81ffbd",
+          "file": "fwrd52.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-15T08:31:21.946Z",
+    "duration": 26982.575,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

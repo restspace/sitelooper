@@ -1,0 +1,10 @@
+[spec-replay] resetting repairdesk
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile bench/results/flows/fwrd52.json --out /home/user/sitelooper/bench/results/fwrd52-spec-spec-tmp --overwrite-spec
+flow: /home/user/sitelooper/bench/results/fwrd52-spec-spec-tmp/fwrd52.flow.ts
+spec: /home/user/sitelooper/bench/results/fwrd52-spec-spec-tmp/fwrd52.spec.ts
+warning 05-open: 05-open read a value that contradicts what the previous step reported
+  why: 05-open read part_a_row "fwrd52-n1 RD Part A $150.00 25% 1 Bench Supplier Co $187.50" right after 04-open reported "fwrd52-n1 RD Part A — $150.00 — 25% — 1 — No supplier — $187.50"; 04-open's change may not have landed and a later step may be retrying it. Re-record 04-open.
+  fix: sitelooper rerecord bench/results/flows/fwrd52.json 04-open
+[spec-replay] running: npx playwright test --config /home/user/sitelooper/bench/results/fwrd52-spec-spec-tmp/playwright.config.mjs
+[spec-replay] fwrd52-spec: 1/1 passed, exit=0, 28s, 0 drift line(s) — result written
