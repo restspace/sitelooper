@@ -1,7 +1,7 @@
 import { changedCreation, isMutatingAction, isReadAction, runStepLifecycle, type StepActionResult } from '../execution/lifecycle.js';
 import { outcomeLabel, outcomeOfError, type ActionOutcome } from '../execution/browser.js';
 import type { ActionExpectation } from '../execution/action.js';
-import { SOFT_MATCH_MIN_SIMILARITY, alertVerdict, errorPageVerdict, isErrorPageUrl, markersBound, preconditionVerdict, selfNavigationStep, urlEffectVerdict } from '../execution/gates.js';
+import { SOFT_MATCH_MIN_SIMILARITY, alertVerdict, errorPageVerdict, gotoLandingVerdict, isErrorPageUrl, markersBound, preconditionVerdict, selfNavigationStep, urlEffectVerdict } from '../execution/gates.js';
 import { LOOP_SHRINK_WAIT_MS, pageReadable, runFoldedLoop, type LoopPass } from '../execution/loop.js';
 import type { Locator, Page } from 'playwright-core';
 import { clip, identityRe, identitySource } from '../shared/text.js';
@@ -23,7 +23,7 @@ import {
 import { isRefTarget } from '../daemon/refs.js';
 import { settleDom } from '../daemon/settle.js';
 import { TRANSIENT_LINE, fillParams, fillParamsDeep, urlMatches, urlPart, urlPattern } from './compile.js';
-import { flattenRead, resolveForRead, takeRead } from '../execution/observe.js';
+import { flattenRead, liveAlerts, liveAlertsObserved, resolveForRead, takeRead, type ObservedAlerts } from '../execution/observe.js';
 import {
   addedLines,
   alertsComplete,
@@ -601,6 +601,15 @@ export async function replaySkill(
     let movedTo: Page | null = null;
     /** Whether an earlier step of this replay had already dispatched something (see `acted`). */
     let actedBefore = res.acted;
+    /**
+     * Alerts around a navigation (goto, back), which the executor never diffs.
+     * The artifact takes these two looks for every non-read step; replay took
+     * none, so fwod45-n3's goto to a record the reset had deleted ("Can't fetch
+     * record(s) 22") landed on the list and ran on at tier A while the compiled
+     * script stopped.
+     */
+    let navAlerts: StepGateInput['navAlerts'];
+    const navigates = NAV_ALERT_TOOLS.has(step.tool);
     const lifecycle = await runStepLifecycle({
       prepare: async () => {
         // Dispatched, not completed. A step whose action fires and whose
@@ -613,6 +622,7 @@ export async function replaySkill(
         actedBefore = res.acted;
         if (!isRead) res.acted = true;
         urlBefore = page.url();
+        if (navigates) navAlerts = { before: (await liveAlerts(page, dialectOf(step))) ?? [], after: null };
       },
       act: async (): Promise<StepActionResult<StepRunResult & { read?: string }>> => {
         // No retry. A click that produced no observable change was retried here
@@ -704,6 +714,9 @@ export async function replaySkill(
         // that already — DOM, requests, the url — so there is nothing to add.
         if (value.settled) return;
         if (page.url() !== urlBefore) await settleDom(page);
+        // After the settle, before the url wait in verify — where the artifact
+        // takes its after-look, so a toast that auto-dismisses is not missed.
+        if (navAlerts) navAlerts.after = await liveAlertsObserved(page, dialectOf(step));
 
       },
       bind: async () => {
@@ -741,7 +754,7 @@ export async function replaySkill(
         let stop: StepVerdict | null = null;
         let effectConfirmed = false;
         for (const gate of STEP_GATES) {
-          const verdict = await gate({ page, step, tag, failIndex, args, params, outcome, isRead, positionalResolution, effectConfirmed });
+          const verdict = await gate({ page, step, tag, failIndex, args, params, outcome, isRead, positionalResolution, effectConfirmed, navAlerts });
           if (!verdict) continue;
           if (verdict.confirmed) effectConfirmed = true;
           if (verdict.warnings) warnings.push(...verdict.warnings);
@@ -948,7 +961,12 @@ interface StepGateInput {
   positionalResolution: boolean;
   /** An earlier gate (expectedChanges) saw the step's recorded page changes in what it added. */
   effectConfirmed?: boolean;
+  /** A navigation step's own alert looks (goto/back carry no executor diff); `after` null when the page could not be read. */
+  navAlerts?: { before: string[]; after: ObservedAlerts | null };
 }
+
+/** Steps whose alerts replay observes itself, because the executor does not diff them. */
+const NAV_ALERT_TOOLS = new Set(['goto', 'back']);
 
 /** A gate's verdict. Warnings and generalisations always apply; `stop` ends the replay with that reason. */
 interface StepVerdict {
@@ -1024,7 +1042,7 @@ const expectedUrl: StepGate = async ({ step, page, params, tag, failIndex }) => 
  * and the replay goes on — while a recorded-but-missing alert stays soft
  * (expectedAlert — toasts are volatile).
  */
-const alerts: StepGate = ({ outcome, isRead, step, params, tag, effectConfirmed }) => {
+const alerts: StepGate = ({ outcome, isRead, step, params, tag, effectConfirmed, navAlerts }) => {
   // The shared verdict (src/execution/gates.ts, alertVerdict) decides; the
   // diff already holds the alerts the action RAISED (the surplus over the
   // pre-action capture), so `before` is empty here. Only a capture that FAILED
@@ -1044,7 +1062,13 @@ const alerts: StepGate = ({ outcome, isRead, step, params, tag, effectConfirmed 
   const obs = outcome.captureFailed ? undefined : outcome.observations;
   const verdict = obs
     ? alertVerdict(renderAlerts(obs.before, d), renderAlerts(obs.after, d), ctx, alertsComplete(obs.after.coverage))
-    : alertVerdict([], outcome.captureFailed ? null : (outcome.diff?.alerts ?? []), ctx);
+    : // A navigation's own looks: an alert they SAW is evidence and stops the
+      // step. A look that failed stays the observed-empty F1 reads it as —
+      // marking every goto of a page mid-load unobserved would stop a skill
+      // with one ever validating.
+      navAlerts?.after && !outcome.diff
+      ? alertVerdict(navAlerts.before, navAlerts.after.alerts, ctx, navAlerts.after.complete)
+      : alertVerdict([], outcome.captureFailed ? null : (outcome.diff?.alerts ?? []), ctx);
   if (verdict.stop) return { stop: verdict.stop };
   if (!verdict.warnings.length && !verdict.unobserved) return null;
   return { warnings: verdict.warnings, unobserved: verdict.unobserved };
@@ -1101,7 +1125,14 @@ const errorPage: StepGate = ({ page, tag }) => {
 // The alert gate runs AFTER the page-change gate: an alert the recording never
 // saw is reported, and only stops the step when its recorded changes could not
 // confirm it worked (gates.ts alertVerdict).
-const STEP_GATES: StepGate[] = [errorPage, expectedUrl, expectedChanges, alerts];
+/** A goto that landed on another view of what it asked for (shared gotoLandingVerdict). */
+const gotoLanding: StepGate = ({ page, step, args, tag }) => {
+  if (step.tool !== 'goto' || typeof args.url !== 'string') return null;
+  const stop = gotoLandingVerdict(args.url, page.url(), `step ${tag}`);
+  return stop ? { stop } : null;
+};
+
+const STEP_GATES: StepGate[] = [errorPage, gotoLanding, expectedUrl, expectedChanges, alerts];
 
 /** The line dialect a step's recorded lines are in: absent is dialect 1, every expectation compiled before dialects existed. */
 function dialectOf(step: SkillStep): LineDialect {

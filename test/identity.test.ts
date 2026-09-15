@@ -434,8 +434,9 @@ describe('a self-navigating procedure is checked AFTER its goto', () => {
     expect(out.wrongRecord).toBeUndefined();
     expect(out.reason).toMatch(/^could not confirm that the page at .* shows "n2 Bench Customer" \(capture incomplete: the element cap was reached/);
     expect(out.unobserved).toContain('identity');
-    // asked, the page swept, and asked again
-    expect(looks).toBe(2);
+    // the goto's own alert looks (before and after it), then identity: asked,
+    // the page swept, and asked again
+    expect(looks).toBe(4);
   });
 });
 

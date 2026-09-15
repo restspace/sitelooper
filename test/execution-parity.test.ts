@@ -1087,6 +1087,42 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
      * page-change gate stops that, before the second Mark. And the same step
      * with nothing recorded to confirm it still stops on the alert (G01).
      */
+    /**
+     * G01c. A NAVIGATION that raises an alert the recording never saw. The
+     * executor diffs no goto, and replay read that as "no alert": fwod45-n3's
+     * goto to a record the reset had deleted landed on the list under "Can't
+     * fetch record(s) 22" and ran on at tier A, reading garbage off the list,
+     * while the compiled script stopped. Both runners must stop before Mark.
+     */
+    it('both runners stop on an alert a goto raised that the recording never saw, before the next mutation', async () => {
+      const goto: SkillStep = { tool: 'goto', args: { url: `${origin}/gone` }, locators: {} };
+      const { replay, emitted, replayLog, emittedLog } = await both([goto, MARK], 0);
+      expect(replayLog, 'replay must not act past an alert its goto raised').toEqual([]);
+      expect(emittedLog, 'the artifact must not act past an alert its goto raised').toEqual([]);
+      expect(replay.ok).toBe(false);
+      expect(emitted.ok).toBe(false);
+      const said = /raised an alert the recording never saw: Can't fetch record\(s\) 22/;
+      expect(replay.reason).toMatch(said);
+      expect(emitted.reason).toMatch(said);
+    }, 120_000);
+
+    /**
+     * G01d. A goto the app answered with ANOTHER VIEW, silently: sent to the
+     * form, landed on the list. Both runners stop before Mark; a goto whose
+     * landing only differs by a redirect elsewhere in the url goes on.
+     */
+    it('both runners stop when a goto lands on another view of what it asked for, before the next mutation', async () => {
+      const goto: SkillStep = { tool: 'goto', args: { url: `${origin}/views#view_type=form&id=22` }, locators: {} };
+      const { replay, emitted, replayLog, emittedLog } = await both([goto, MARK], 0);
+      expect(replayLog, 'replay must not act on the view it was not given').toEqual([]);
+      expect(emittedLog, 'the artifact must not act on the view it was not given').toEqual([]);
+      expect(replay.ok).toBe(false);
+      expect(emitted.ok).toBe(false);
+      const said = /navigated but landed on another view: view_type=list where it was sent to view_type=form/;
+      expect(replay.reason).toMatch(said);
+      expect(emitted.reason).toMatch(said);
+    }, 120_000);
+
     it("both runners report an unrecorded alert and go on when the step's recorded change confirmed it, and stop when nothing does", async () => {
       const markAmbient = (expectHeading: boolean): SkillStep => ({
         tool: 'click',

@@ -15,6 +15,7 @@ import {
   alertVerdict,
   describeUrl,
   errorPageVerdict,
+  gotoLandingVerdict,
   isErrorPageUrl,
   markersBound,
   preconditionVerdict,
@@ -277,6 +278,23 @@ describe('describeUrl', () => {
     expect(describeUrl('http://app.test/#id_token=abc.def&code=4/0Aa&session_state=q1')).toBe('http://app.test/#code=***&id_token=***&session_state=***');
     // Routing state is untouched.
     expect(describeUrl('http://app.test/web#action=9&menu_id=3&cids=1')).toBe('http://app.test/web#action=9&cids=1&menu_id=3');
+  });
+});
+
+describe('gotoLandingVerdict', () => {
+  it('stops on a word value a key both urls carry disagrees on (fwod45: form → list)', () => {
+    expect(
+      gotoLandingVerdict('http://odoo/web#cids=1&action=316&model=sale.order&view_type=form&id=22', 'http://odoo/web#action=316&model=sale.order&view_type=list&cids=1', 'step 11'),
+    ).toBe('step 11 navigated but landed on another view: view_type=list where it was sent to view_type=form — the page it asked for was not given');
+  });
+  it('lets redirects, one-sided keys and volatile ids through', () => {
+    // a root routed to its login (repairdesk), a uid completed with a slug and query (grafana)
+    expect(gotoLandingVerdict('http://app/', 'http://app/#/login', 'step 1')).toBeNull();
+    expect(gotoLandingVerdict('http://graf/d/abc123/', 'http://graf/d/abc123/bench?from=now-6h&to=now', 'step 1')).toBeNull();
+    // the id dropped, the menu id reissued
+    expect(gotoLandingVerdict('http://odoo/web#menu_id=194&view_type=form&id=22', 'http://odoo/web#menu_id=201&view_type=form', 'step 1')).toBeNull();
+    // another origin is the error-page and origin gates' business
+    expect(gotoLandingVerdict('http://app/x?view=a', 'http://other/x?view=b', 'step 1')).toBeNull();
   });
 });
 

@@ -920,11 +920,42 @@ export function lintFlowRefs(flow: Flow, publishes: (skillId: string) => string[
 }
 
 /**
- * The step's declared outputs a run did not report. `url` and its parts are
- * exempt: the runner binds them from where the browser lands, not the report.
+ * Whether a recorded output value is DATA a page could show — a status, an
+ * amount, an id, a list of titles — rather than the recording agent narrating
+ * what it did. The recording model names whatever it likes as a value:
+ * fwrd52's report carried `actions_taken` ("Set Supplier = 'Bench Supplier Co'
+ * on both parts via per-row Edit"), `screenshots` and `delete_a` ("clicked row
+ * Delete -> in-page 'Confirm' dialog -> …"), and flagging every one of those as
+ * unread buried the one that mattered. Empty values and file names are not
+ * data; a short value is; a long one is only when it is a list (at least three
+ * parts of a few words each, as "Request rate, Error count, Latency by
+ * endpoint" is). An unknown value (none recorded) counts as data.
  */
-export function unreportedOutputs(step: Pick<FlowStep, 'outputs'>, values: Record<string, string>): string[] {
-  return step.outputs.filter((o) => o !== 'url' && !o.startsWith('url.') && !(o in values));
+export function looksLikeReportedData(value: string | undefined): boolean {
+  if (value === undefined) return true;
+  const v = value.trim();
+  if (!v) return false;
+  if (/\.(png|jpe?g|gif|webp|pdf)\b/i.test(v)) return false;
+  const words = v.split(/\s+/).length;
+  if (words < 6) return true;
+  const parts = v.split(/[,;|\n\t]+/).map((s) => s.trim()).filter(Boolean);
+  return parts.length >= 3 && words / parts.length <= 4;
+}
+
+/** A declared output worth holding a runner to: not a url part (bound from the landing), and data rather than narration. */
+function heldOutput(step: Pick<FlowStep, 'recorded'>, output: string): boolean {
+  if (output === 'url' || output.startsWith('url.')) return false;
+  const recorded = step.recorded?.[output];
+  return looksLikeReportedData(typeof recorded === 'string' ? recorded : undefined);
+}
+
+/**
+ * The step's declared outputs a run did not report — those that are data
+ * (heldOutput). `url` and its parts are exempt: the runner binds them from
+ * where the browser lands, not the report.
+ */
+export function unreportedOutputs(step: Pick<FlowStep, 'outputs' | 'recorded'>, values: Record<string, string>): string[] {
+  return step.outputs.filter((o) => heldOutput(step, o) && !(o in values));
 }
 
 /**
@@ -944,7 +975,7 @@ export function lintUnpublishedOutputs(flow: Flow, publishes: (skillId: string) 
     if (!step.skill) continue;
     const pubs = publishes(step.skill);
     if (pubs === null) continue;
-    const missing = step.outputs.filter((o) => o !== 'url' && !o.startsWith('url.') && !pubs.includes(o.split('#')[0]));
+    const missing = step.outputs.filter((o) => heldOutput(step, o) && !pubs.includes(o.split('#')[0]));
     if (!missing.length) continue;
     warnings.push(
       `${step.id} reports ${missing.join(', ')}, but ${step.skill} re-reads none of ${missing.length === 1 ? 'it' : 'them'} from the page — ` +

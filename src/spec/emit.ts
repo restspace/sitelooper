@@ -1602,6 +1602,11 @@ function emitSkillStep(step: SkillStep, segment: SpecSegment, index: number, ctx
   // recording never saw only stops a step whose page changes did not confirm
   // it worked. Each is the shared verdict; see the helpers.
   const checks: string[] = [`errorPageGate(page, ${q(where)});`];
+  // Replay's gotoLanding gate, second in its order: a goto that landed on another view of what it asked for.
+  if (step.tool === 'goto' && typeof step.args.url === 'string') {
+    noteSlots(step.args.url, ctx);
+    checks.push(`{ const landing = gotoLandingVerdict(${src(step.args.url)}, page.url(), ${q(where)}); if (landing) throw new Error(landing); }`);
+  }
   effectLines(step, ctx, checks);
   // A read raises no alert of its own (replay exempts it), unless the
   // recording expects one; the daemon's expectedAlert gate has no read test.

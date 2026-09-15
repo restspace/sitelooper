@@ -15,7 +15,7 @@
  * daemon, "<stepId> <segmentId>/<n>" in the artifact).
  */
 import { clip } from './text.js';
-import { CREDENTIAL_KEY, fillParams, oneSidedQueryKeys, serializeShape, softUrlMatch, urlMatches, urlShapeOf, type UrlSegDiff } from './url.js';
+import { CREDENTIAL_KEY, fillParams, mintedShape, oneSidedQueryKeys, serializeShape, softUrlMatch, urlMatches, urlShapeOf, type UrlSegDiff } from './url.js';
 
 /**
  * How a LIVE url reads in a verdict's message. The message travels: into a
@@ -239,6 +239,30 @@ export type FingerprintSimilarity = number | null | 'unmeasured';
  * A segment whose first step navigates carries its own precondition and must
  * not be asked this at all — that is the caller's `navigatesItself` rule.
  */
+/**
+ * Where a goto landed, against where it was sent. Redirects are ordinary (a
+ * root that routes to its login, a uid url the app completes with a slug), so
+ * a different path or a key only one side has decides nothing. What does
+ * decide is a key BOTH urls carry — query or hash state — whose values are
+ * different WORDS: the app chose another view. fwod45's recovery skill sent
+ * the browser to `…&view_type=form&id=22` for a record the reset had deleted,
+ * and Odoo landed it on `view_type=list`; the steps after it read the list as
+ * if it were the order. Two values that both look minted (ids, uids) are a
+ * volatile id, not a different view. Null when the landing is acceptable.
+ */
+export function gotoLandingVerdict(target: string, landed: string, where: string): string | null {
+  const t = urlShapeOf(target);
+  const l = urlShapeOf(landed);
+  if (!t || !l || t.origin !== l.origin) return null;
+  const pairs: [string, string, string][] = [];
+  for (const [key, val] of t.query) if (l.query.has(key)) pairs.push([key, val, l.query.get(key)!]);
+  for (const [key, val] of t.hashState) if (l.hashState.has(key)) pairs.push([key, val, l.hashState.get(key)!]);
+  const differ = pairs.filter(([, want, got]) => want !== got && !/\{\{/.test(want) && !(mintedShape(want) && mintedShape(got)));
+  if (!differ.length) return null;
+  const said = differ.map(([key, want, got]) => `${key}=${clip(got, 40)} where it was sent to ${key}=${clip(want, 40)}`).join(', ');
+  return `${where} navigated but landed on another view: ${said} — the page it asked for was not given`;
+}
+
 /** Tools that look at the page and never take the browser anywhere. */
 const LOOK_ONLY_TOOLS = new Set(['wait_for', 'read', 'read_all', 'screenshot', 'snapshot', 'scroll_into_view', 'hover']);
 

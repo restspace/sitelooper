@@ -101,6 +101,45 @@ document.querySelector('.mark').addEventListener('click', async (e) => {
 </body></html>`;
 
 /**
+ * The page a navigation lands on when its record is gone: Odoo answers a url
+ * for a deleted record with a toast ("Can't fetch record(s) 22") a moment after
+ * the page renders, and a page that still offers work. fwod45-n3 replayed a
+ * goto here at tier A and went on; the compiled script stopped.
+ */
+const GONE = `<!doctype html><html><head><meta charset="utf-8"><title>Gone</title></head><body>
+<h1>Records</h1>
+<button class="mark" type="button" data-id="gone">Mark</button>
+<script>
+setTimeout(() => {
+  const el = document.createElement('div');
+  el.setAttribute('role', 'alert');
+  el.textContent = "Can't fetch record(s) 22. They might have been deleted.";
+  document.body.append(el);
+}, 50);
+document.querySelector('.mark').addEventListener('click', async (e) => {
+  await fetch('/mark/' + encodeURIComponent(e.target.dataset.id), { method: 'POST' });
+});
+</script>
+</body></html>`;
+
+/**
+ * An app that answers a url for a view it will not give with another view:
+ * `/views#view_type=form&id=22` is rewritten to `#view_type=list` once the
+ * page runs, the way Odoo lands a deleted record's form url on its list.
+ * Nothing is raised — only where the browser ended up says it went wrong.
+ */
+const VIEWS = `<!doctype html><html><head><meta charset="utf-8"><title>Views</title></head><body>
+<h1>Orders</h1>
+<button class="mark" type="button" data-id="views">Mark</button>
+<script>
+if (/view_type=form/.test(location.hash)) history.replaceState(null, '', '/views#view_type=list');
+document.querySelector('.mark').addEventListener('click', async (e) => {
+  await fetch('/mark/' + encodeURIComponent(e.target.dataset.id), { method: 'POST' });
+});
+</script>
+</body></html>`;
+
+/**
  * A form whose picker the app may REFUSE: `/project/open` keeps whatever is
  * chosen; `/project/locked` reverts every choice to Alpha in the change
  * handler, the way an app rejects a value it does not accept. Either way the
@@ -858,6 +897,16 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
     if (url.startsWith('/away/') && req.method === 'GET') {
       res.writeHead(200, { 'content-type': 'text/html' });
       res.end(AWAY(url.slice('/away/'.length)));
+      return;
+    }
+    if (url === '/views' && req.method === 'GET') {
+      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+      res.end(VIEWS);
+      return;
+    }
+    if (url === '/gone' && req.method === 'GET') {
+      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+      res.end(GONE);
       return;
     }
     if (url === '/ambient' && req.method === 'GET') {

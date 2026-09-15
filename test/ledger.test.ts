@@ -7,7 +7,7 @@
  * the finding.
  */
 import { describe, expect, it } from 'vitest';
-import { RunLedger, evidenced, fatal, inLocator, occursAsToken, scanForLeaks } from '../src/skills/ledger.js';
+import { RunLedger, evidenced, fatal, inLocator, navigationLeaks, occursAsToken, scanForLeaks } from '../src/skills/ledger.js';
 import { looksLikeId } from '../src/skills/shape.js';
 import { primaryFor } from '../src/daemon/recorder.js';
 
@@ -104,6 +104,29 @@ describe('banking values', () => {
       ['44', 'position'],
       ['afwfbbc2of6rkf', 'shape'],
     ]);
+  });
+});
+
+describe('navigationLeaks: a recovery skill that would navigate to a record this run made (fwod45)', () => {
+  const skillWithGoto = (url: string) => ({ steps: [{ tool: 'goto', args: { url }, locators: {} }] });
+
+  it('refuses an `id=` record an EARLIER step minted, not only one this step minted', () => {
+    const l = new RunLedger();
+    l.addUrlIds('http://odoo/web#menu_id=194&action=316&model=sale.order&view_type=form&id=22', 'i2', [
+      { label: 'q.menu_id', value: '194' },
+      { label: 'q.id', value: '22' },
+    ]);
+    const leaks = scanForLeaks(skillWithGoto('http://odoo/web#menu_id=194&action=316&model=sale.order&view_type=form&id=22'), l, 's_f7e29f');
+    expect(navigationLeaks(leaks, 'i4')).toEqual(['22']);
+  });
+
+  it('still refuses a shape-only id THIS step minted, and still lets an earlier shape-only one through', () => {
+    const l = new RunLedger();
+    l.addUrlIds('http://app/d/afwfbbc2of6rkf', 'i2', [{ label: 'p1', value: 'afwfbbc2of6rkf' }]);
+    const leaks = scanForLeaks(skillWithGoto('http://app/d/afwfbbc2of6rkf'), l, 's_x');
+    // fwod19's lesson: an earlier instruction's shape-only "id" may be app furniture.
+    expect(navigationLeaks(leaks, 'i4')).toEqual([]);
+    expect(navigationLeaks(leaks, 'i2')).toEqual(['afwfbbc2of6rkf']);
   });
 });
 

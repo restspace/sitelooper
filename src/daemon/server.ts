@@ -12,7 +12,7 @@ import { buildFlow, consumedReportedOutputs, consumedUrlOutputs, ignorableRefs, 
 import { applyRelabelToEntries, applyRelabelToSkills, relabelCases, requestRelabelPlan } from '../skills/relabel.js';
 import { goalSatisfied, renderReplay } from '../skills/replay.js';
 import { drainDrift, llmProposer, recordCandidateEvidence } from '../skills/repair.js';
-import { RunLedger, bindingKey, describeLeaks, evidenced, fatal, scanForLeaks, type Leak } from '../skills/ledger.js';
+import { RunLedger, bindingKey, describeLeaks, evidenced, fatal, navigationLeaks, scanForLeaks, type Leak } from '../skills/ledger.js';
 import { quarantineLeakedSteps } from '../spec/rerecord.js';
 import { rerecordFix } from '../spec/diagnostics.js';
 import { originOf, type Skill } from '../skills/store.js';
@@ -944,10 +944,12 @@ ${describeLeaks(certain.slice(0, 30))}${certain.length > 30 ? `\n  … and ${cer
       opts.progress(`[flow ${flow.name}] ${varying.size} value(s) earlier runs demonstrated are run-specific`);
     }
 
-    if (this.browser.learn) {
-      // A run's own repairs should be learned, but not re-pin from a fresh
-      // store elsewhere; the flow's pinned skills come from its own file.
-    }
+    // The run's own values, banked as a recording banks them (the vars now,
+    // each step's minted url ids and reported values as it finishes). Without
+    // them the re-pin guard below scanned against an empty ledger: fwod45-n2's
+    // recovery learned `goto …&id=22` (the order n2's 02-create had just made),
+    // it was pinned, compiled, and every later run navigated to a deleted record.
+    for (const [varName, value] of Object.entries(varsIn)) this.ledger.add(value, { from: 'var', name: varName }, { vouched: true });
     // The browser the flow was recorded in (Flow.browser; a flow saved before
     // profiles were stored was recorded at the default). Resized to it when a
     // running session is in another window; anything fixed at launch is said.
@@ -1096,6 +1098,9 @@ ${describeLeaks(certain.slice(0, 30))}${certain.length > 30 ? `\n  … and ${cer
       }
 
       const mark = this.browser.script?.mark() ?? 0;
+      this.instructionIndex += 1;
+      this.ledger.beginInstruction(this.instructionIndex);
+      const ledgerStep = `i${this.instructionIndex}`;
       // Zero-model first: replay the step's pinned skill directly, binding its
       // params from the flow's stored bindings (robust to reworded steps)
       // rather than re-deriving them from the instruction text.
@@ -1219,6 +1224,8 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       let repinParams: Record<string, string> | undefined;
       if (this.browser.learn) {
         const recoveryEntries = this.browser.script?.entriesSince(mark) ?? [];
+        // What this step minted, banked BEFORE the re-pin guard asks.
+        this.noteMintedIds(recoveryEntries, ledgerStep);
         const learned = learnFromInstruction(this.browser.learn, {
           result,
           // Never hand compile an instruction with unresolved {{ref}} markers:
@@ -1255,21 +1262,17 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
         // AND 10-open onto the same s_738ec0 in one pass.
         const owned = flow.steps.map((st) => ({ id: st.id, skill: pendingPins.get(st.id) ?? st.skill }));
         const adoptable = Boolean(outcome && canAdoptPin(this.browser.learn, owned, step.id, step.skill, outcome.skill, mutatingIntent(step.instruction) ? 'mutating' : 'read-only'));
-        // A candidate whose navigation targets carry an identifier THIS
-        // step's recovery minted (a url part first banked under this
-        // instruction) would replay onto this run's record. An identifier
-        // banked by an EARLIER instruction is left alone: fwod19's odoo menu
-        // id looked minted and was an app constant.
+        // A candidate whose navigation targets carry an identifier this run
+        // made would replay onto this run's record: one THIS step's recovery
+        // minted (a url part first banked under this instruction), or one an
+        // earlier step minted where evidence rather than shape says it is a
+        // record (an `id=` position, a value earlier runs watched change) —
+        // fwod45's `&id=22` was minted by 02-create and navigated to by
+        // 04-open. A shape-only identifier from an earlier instruction is
+        // still left alone: fwod19's odoo menu id looked minted and was an
+        // app constant.
         const candidate = outcome?.ok && outcome.skill ? (this.browser.learn?.get(outcome.skill) ?? null) : null;
-        const mintedLeaks = candidate
-          ? [
-              ...new Set(
-                scanForLeaks(candidate, this.ledger, outcome!.skill)
-                  .filter((l) => /args\.url/.test(l.where) && l.binding.from === 'url' && l.binding.step === `i${this.instructionIndex}`)
-                  .map((l) => l.value),
-              ),
-            ]
-          : [];
+        const mintedLeaks = candidate ? navigationLeaks(scanForLeaks(candidate, this.ledger, outcome!.skill), ledgerStep) : [];
         const decision = decideRepin({
           step,
           reportStatus: result.report.status,
@@ -1339,6 +1342,9 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
         /* browser gone — nothing to bind */
       }
       outputs[step.id] = stepOutputs;
+      // Banked for every step, recovered or not (first appearance wins, so a
+      // step the learning block already banked adds nothing twice).
+      this.noteMintedIds(this.browser.script?.entriesSince(mark) ?? [], ledgerStep);
       const sk = result.skill;
       // Drift telemetry: record, never repair inline. One ticket per primary-
       // locator miss, plus one for a recovery with no structured miss to blame.

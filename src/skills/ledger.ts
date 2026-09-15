@@ -418,6 +418,26 @@ export function evidenced(leak: Leak): boolean {
 }
 
 /**
+ * The identifiers a skill learned in a flow run's recovery would navigate to
+ * that make it unfit to pin: run values in a navigation target (`args.url`)
+ * that this step minted (`step`), or that an earlier step minted where
+ * evidence rather than shape says it is a record (an `id=` position, observed
+ * variance). fwod45-n2's recovery navigated to `&id=22`, the order its own
+ * 02-create had made; the old rule asked only about THIS step's mints and
+ * pinned it. A shape-only id from an earlier step stays exempt: fwod19's odoo
+ * menu id looked minted and was an app constant.
+ */
+export function navigationLeaks(leaks: Leak[], step: string): string[] {
+  return [
+    ...new Set(
+      leaks
+        .filter((l) => /args\.url/.test(l.where) && l.binding.from === 'url' && (l.binding.step === step || evidenced(l)))
+        .map((l) => l.value),
+    ),
+  ];
+}
+
+/**
  * Which leaks are fatal.
  *
  * A leak in a LOCATOR or a precondition acts on the wrong record silently:

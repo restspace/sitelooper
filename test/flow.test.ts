@@ -5,7 +5,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { RecordedEntry } from '../src/daemon/recorder.js';
 import {
   ignorableRefs,
-  consumedReportedOutputs, consumedUrlOutputs, buildFlow, lintFlowRefs, lintUnpublishedOutputs, noteOutputEvidence, recoveryRoute, resolveInstruction, resolveStepParams, softResolveInstruction, unbankedMutations, unreportedOutputs, urlOutputs, varyingValues, type Flow, type FlowStep } from '../src/skills/flow.js';
+  consumedReportedOutputs, consumedUrlOutputs, buildFlow, lintFlowRefs, lintUnpublishedOutputs, looksLikeReportedData, noteOutputEvidence, recoveryRoute, resolveInstruction, resolveStepParams, softResolveInstruction, unbankedMutations, unreportedOutputs, urlOutputs, varyingValues, type Flow, type FlowStep } from '../src/skills/flow.js';
 import { bindSkill, publishedOutputs, synthesizeReport } from '../src/skills/learn.js';
 import type { Skill } from '../src/skills/store.js';
 import { compileSkill } from '../src/skills/compile.js';
@@ -372,6 +372,24 @@ describe('lintUnpublishedOutputs / unreportedOutputs (fwgr36 01-open)', () => {
   it('is quiet when everything is re-published, or the skill is not in the store', () => {
     expect(lintUnpublishedOutputs(flow, () => ['dashboard_name', 'panel_titles_in_order'])).toEqual([]);
     expect(lintUnpublishedOutputs(flow, () => null)).toEqual([]);
+  });
+
+  it('holds a runner only to outputs that are data, not narration, file names or blanks (fwrd52)', () => {
+    // data: short values, and lists of short parts
+    expect(looksLikeReportedData('Draft')).toBe(true);
+    expect(looksLikeReportedData('$125.00')).toBe(true);
+    expect(looksLikeReportedData('Request rate, Error count, Latency by endpoint')).toBe(true);
+    expect(looksLikeReportedData('Seed: triage inbox, Seed: order missing parts, Seed: ship repaired device')).toBe(true);
+    expect(looksLikeReportedData(undefined)).toBe(true);
+    // not data: narration, screenshots, nothing
+    expect(looksLikeReportedData("Set Supplier = 'Bench Supplier Co' on both parts via per-row Edit")).toBe(false);
+    expect(looksLikeReportedData("clicked row Delete -> in-page 'Confirm' dialog -> 'Delete part'; row disappeared")).toBe(false);
+    expect(looksLikeReportedData('error state: shot-1789460741651.jpg; final Ready state: shot-1789460838656.jpg')).toBe(false);
+    expect(looksLikeReportedData('quotation_S00021_draft.png')).toBe(false);
+    expect(looksLikeReportedData('')).toBe(false);
+
+    const narrated = { outputs: ['ticket_status', 'actions_taken', 'screenshots'], recorded: { ticket_status: 'Draft', actions_taken: "Set Supplier = 'Bench Supplier Co' on both parts via per-row Edit", screenshots: 'shot-1.jpg' } };
+    expect(unreportedOutputs(narrated, {})).toEqual(['ticket_status']);
   });
 
   it('names what a run left out, ignoring url parts', () => {
