@@ -1,0 +1,335 @@
+{
+  "flow": "fwod46",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_c859d2; observed final_url=http://127.0.0.1:8069/web#action=123&cids=1&menu_id=81, company=YourCompany.",
+      "values": {
+        "final_url": "http://127.0.0.1:8069/web#action=123&cids=1&menu_id=81",
+        "company": "YourCompany"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "landing_page",
+        "logged_in_user",
+        "login_used"
+      ]
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Created a new customer contact in the Odoo Contacts app from the Discuss page: main menu > Contacts > New, filled Name = 'fwod46-n3 Bench Customer' and City (under the Address section) = 'Benchville', and saved. Reopened the record by searching the Contacts list for the name (found exactly one match) and clicking it; the reopened form confirms Name = 'fwod46-n3 Bench Customer' and City = 'Benchville'.",
+      "values": {
+        "ref": "fwod46-n3",
+        "contact_name": "fwod46-n3 Bench Customer",
+        "contact_city": "Benchville",
+        "record_url": "http://127.0.0.1:8069/web#id=46&cids=1&menu_id=109&action=156&model=res.partner&view_type=form"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "record_id"
+      ]
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Created a quotation in the Sales app (Odoo) for customer 'fwod46-n3 Bench Customer' — the customer autocomplete option was actually clicked (dropdown closed and the partner rendered with its city 'Benchville' beside the field). Added exactly one order line by picking the product option '[FURN_6666] Acoustic Bloc Screens' from the product autocomplete dropdown, set quantity to 3, and saved; the record was assigned reference S00023. On the saved form the line reads qty 3.00, unit price 295.00, and the totals section shows Untaxed Amount £885.00 (Tax 20% £177.00, Total £1,062.00). A transient notification showed 'Mitchell Admin - now - Creating a new record...' during creation.",
+      "values": {
+        "product_name": "Acoustic Bloc Screens ([FURN_6666])",
+        "saved": "true",
+        "unit_price_observed": "295.00",
+        "quotation_reference": "S00023",
+        "quantity": "3.00",
+        "untaxed_amount": "£ 885.00",
+        "tax_20": "£ 177.00",
+        "total": "£ 1,062.00",
+        "customer": "fwod46-n3 Bench Customer",
+        "customer_city": "Benchville",
+        "record_creation_notification": "Mitchell Admin - now - Creating a new record...",
+        "o_field_x2many_list_tbod": "20%",
+        "o_field_x2many_list_tbod_2": "[FURN_6666] Acoustic Bloc Screens",
+        "oe_subtotal_footer_tr": "Untaxed Amount\t£ 885.00",
+        "oe_subtotal_footer_tr_2": "Total\t£ 1,062.00",
+        "ref": "fwod46-n3",
+        "ref_2": "FURN_6666"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "the flow step has no pinned skill",
+      "replayed": null,
+      "repaired": false,
+      "turns": 26,
+      "unreported": [
+        "customer_selected",
+        "customer_city_shown",
+        "untaxed_amount_observed_on_discarded_line",
+        "blocking_modal"
+      ]
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Verified state before acting: the previous run had already created and SAVED the quotation, so instead of duplicating it I confirmed the existing record. I started on the Quotations list view, which already listed S00023 for customer 'fwod46-n3 Bench Customer' (£1,062.00, status Quotation), opened it, and read the live form: statusbar shows the record saved in 'Quotation' state (radios disabled, no Save button — form is in read mode), customer field shows 'fwod46-n3 Bench Customer' with 'Benchville' beneath it, and there is exactly ONE order line: [FURN_6666] Acoustic Bloc Screens at qty 3.00, unit price 295.00, tax 20%, line subtotal £885.00. The totals section shows Untaxed Amount £885.00, TAX 20% £177.00, Total £1,062.00. No new quotation was created (that would have been a duplicate).",
+      "values": {
+        "quotation_reference": "S00023",
+        "untaxed_amount": "£ 885.00",
+        "product_name": "[FURN_6666] Acoustic Bloc Screens",
+        "unit_price": "295.00",
+        "quantity": "3.00",
+        "order_line_count": "1",
+        "tax_20": "£ 177.00",
+        "total": "£ 1,062.00",
+        "customer": "fwod46-n3 Bench Customer",
+        "record_state": "Quotation (saved; statusbar radios disabled, no Save button)",
+        "name_order_line_tbody_tr": "20%",
+        "name_order_line_tbody_tr_2": "£ 885.00",
+        "oe_subtotal_footer_tr": "Untaxed Amount\t£ 885.00",
+        "oe_subtotal_footer_tr_2": "TAX 20%\t\n£ 177.00",
+        "oe_subtotal_footer_tr_3": "Total\t£ 1,062.00",
+        "ref": "fwod46-n3",
+        "ref_2": "FURN_6666"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_1d13b8 stopped at step 7 — step 7 navigated but landed on another view: view_type=list where it was sent to view_type=form — the page it asked for was not given",
+      "replayed": "6/19",
+      "repaired": false,
+      "turns": 6,
+      "unreported": [
+        "tax_20_percent",
+        "order_id",
+        "customer_city_shown",
+        "statusbar",
+        "save_button_used",
+        "table_o_list_table_tbody",
+        "table_o_list_table_tbody_2"
+      ]
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Opened the saved quotation S00023 in the Sales app (it was on the form already). The skill-replay had already placed the form in edit mode with a new blank order line and the product dropdown open, so I continued from there: picked the option 'Chair floor protection' (a different product from 'Cabinet with Doors'; no Configure modal appeared), set its quantity to 2, left line 1 ([FURN_6666] Acoustic Bloc Screens, qty 3.00, 295.00) untouched, and clicked Save. The saved form now shows 2 order lines: line 1 Acoustic Bloc Screens qty 3.00 @ 295.00 = £885.00, line 2 Chair floor protection qty 2.00 @ 12.00 = £24.00, and the totals section reads Untaxed Amount £909.00, TAX 20% £181.80, Total £1,090.80.",
+      "values": {
+        "quotation_reference": "S00023",
+        "second_line_product": "Chair floor protection",
+        "second_line_unit_price": "12.00",
+        "second_line_quantity": "2.00",
+        "first_line": "[FURN_6666] Acoustic Bloc Screens qty 3.00 @ 295.00 = £885.00",
+        "untaxed_amount": "£ 909.00",
+        "tax_20": "£ 181.80",
+        "total": "£ 1,090.80",
+        "order_line_count": "2",
+        "status": "Quotation (saved)",
+        "name_order_line_tbody_tr": "[FURN_6666] Acoustic Bloc Screens",
+        "name_order_line_tbody_tr_2": "3.00",
+        "name_order_line_tbody_tr_3": "295.00",
+        "name_order_line_tbody_tr_4": "20%",
+        "name_order_line_tbody_tr_5": "£ 885.00",
+        "oe_subtotal_footer_tr": "Untaxed Amount\t£ 909.00",
+        "oe_subtotal_footer_tr_2": "TAX 20%\t\n£ 181.80",
+        "oe_subtotal_footer_tr_3": "Total\t£ 1,090.80",
+        "ref": "FURN_6666"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_04ad44 stopped at step 2 — after step 2 the page did not show \"- option \\\"Acoustic Bloc Screens ([FURN_6666])\\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "replayed": "1/12",
+      "repaired": false,
+      "turns": 8,
+      "unreported": [
+        "order_id",
+        "customer",
+        "second_line_subtotal",
+        "first_line_product",
+        "first_line_quantity",
+        "first_line_unit_price",
+        "first_line_subtotal",
+        "tax_20_percent",
+        "statusbar",
+        "save_button_used",
+        "ref_2"
+      ]
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_bf5029; observed line1_product=Acoustic Bloc Screens ([FURN_6666]), line2_product=Chair floor protection, quotation_reference=S00023, line1_quantity=5.00, line1_unit_price=295.00, line2_unit_price=12.00.",
+      "values": {
+        "line1_product": "Acoustic Bloc Screens ([FURN_6666])",
+        "line2_product": "Chair floor protection",
+        "quotation_reference": "S00023",
+        "line1_quantity": "5.00",
+        "line1_unit_price": "295.00",
+        "line2_unit_price": "12.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "order_id",
+        "line1_subtotal",
+        "line2_quantity",
+        "line2_subtotal",
+        "untaxed_amount",
+        "tax_20_percent",
+        "total",
+        "order_line_count",
+        "odoo_version",
+        "ref",
+        "ref_2"
+      ]
+    },
+    {
+      "id": "07-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_ee72cf; observed untaxed_amount={{06-open.untaxed_amount}}, line1=Acoustic Bloc Screens ([FURN_6666]), qty 5.00, unit price 140.00, £700.00, line2=Chair floor protection, qty 2.00, unit price 120.50, £241.00, customer=fwod46-n3 Bench Customer (Benchville), order_reference=S00023.",
+      "values": {
+        "untaxed_amount": "{{06-open.untaxed_amount}}",
+        "line1": "Acoustic Bloc Screens ([FURN_6666]), qty 5.00, unit price 140.00, £700.00",
+        "line2": "Chair floor protection, qty 2.00, unit price 120.50, £241.00",
+        "customer": "fwod46-n3 Bench Customer (Benchville)",
+        "order_reference": "S00023"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "3/3",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "order_id",
+        "tax_20_percent",
+        "total",
+        "order_line_count",
+        "dialog_appeared",
+        "post_confirm_buttons"
+      ]
+    },
+    {
+      "id": "08-open",
+      "status": "success",
+      "summary": "Cancelled sales order S00023. I first verified the record was active (statusbar current = \"Sales Order\"). Clicking the visible \"Cancel\" button opened a native confirm (\"Are you sure you want to cancel this order?\") which I accepted, followed by the Odoo \"Cancel Sales Order\" wizard; I actioned its name=action_cancel button (the plain confirm-cancellation, which does not email the customer — the alternatives were \"Send and cancel\" and \"Discard\"). One wrinkle: my first attempt at the wizard button was swallowed because a stray \"Edit: fwod46-n3 Bench Customer\" dialog had opened on top of the wizard — I closed that with Discard and then the wizard action went through. (a) The statusbar now shows \"Cancelled\" as the checked/current step (Sales Order, Quotation Sent and Quotation all unchecked), the Confirm button is gone and a \"Set to Quotation\" button is offered, confirming nothing stays active. (b) The reference is still S00023 (heading S00023, URL ...id=21), with both lines and the {{06-open.untaxed_amount}} untaxed total unchanged.",
+      "values": {
+        "untaxed_amount": "{{06-open.untaxed_amount}} (unchanged)",
+        "customer": "fwod46-n3 Bench Customer (Benchville)",
+        "ref": "fwod46-n3",
+        "order_reference": "S00023"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "order_id",
+        "tax_20_percent",
+        "total",
+        "order_line_count",
+        "line1",
+        "line2"
+      ]
+    },
+    {
+      "id": "09-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_941f5e; observed contact_kanban_card=fwod46-n3 Bench Customer / Benchville, 1 Sales, order_reference=S00023, order_customer=fwod46-n3 Bench Customer, search_result_count=1-1 (only S00023 matched), ref=fwod46-n3, contact_name= | S00023 | 09/15/2026 11:06:09 | fwod46-n3 Bench Customer | Mitchell Admin |  | YourCompany | £ 1,798.80 | Cancelled | , contact_city=Benchville, order_status_in_list=Cancelled, order_salesperson=Mitchell Admin, order_date_shown_in_list=09/15/2026 11:06:09, table_o_list_table_tbody=£ 1,798.80.",
+      "values": {
+        "contact_kanban_card": "fwod46-n3 Bench Customer / Benchville, 1 Sales",
+        "order_reference": "S00023",
+        "order_customer": "fwod46-n3 Bench Customer",
+        "search_result_count": "1-1 (only S00023 matched)",
+        "ref": "fwod46-n3",
+        "contact_name": " | S00023 | 09/15/2026 11:06:09 | fwod46-n3 Bench Customer | Mitchell Admin |  | YourCompany | £ 1,798.80 | Cancelled | ",
+        "contact_city": "Benchville",
+        "order_status_in_list": "Cancelled",
+        "order_salesperson": "Mitchell Admin",
+        "order_date_shown_in_list": "09/15/2026 11:06:09",
+        "table_o_list_table_tbody": "£ 1,798.80"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "contact_id",
+        "order_id",
+        "untaxed_amount",
+        "tax_20_percent",
+        "total",
+        "order_company",
+        "order_line_count",
+        "line1",
+        "line2"
+      ]
+    }
+  ],
+  "passed": 9,
+  "total": 9,
+  "repinned": 0,
+  "drift": 2,
+  "driftTickets": [
+    {
+      "flow": "fwod46",
+      "step": "04-open",
+      "skill": "s_1d13b8",
+      "similarity": null,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_1d13b8 stopped at step 7 — step 7 navigated but landed on another view: view_type=list where it was sent to view_type=form — the page it asked for was not given",
+      "reason": "step 7 navigated but landed on another view: view_type=list where it was sent to view_type=form — the page it asked for was not given",
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&menu_id=:id&model=sale.order&view_type=list",
+      "pageUrl": "http://127.0.0.1:8069/web#action=316&model=sale.order&view_type=list&cids=1&menu_id=194"
+    },
+    {
+      "flow": "fwod46",
+      "step": "05-open",
+      "skill": "s_04ad44",
+      "similarity": 1.001,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_04ad44 stopped at step 2 — after step 2 the page did not show \"- option \\\"Acoustic Bloc Screens ([FURN_6666])\\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "reason": "after step 2 the page did not show \"- option \\\"Acoustic Bloc Screens ([FURN_6666])\\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#id=23&cids=1&menu_id=194&action=316&model=sale.order&view_type=form"
+    }
+  ],
+  "wallMs": 172684,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 578701,
+    "completionTokens": 9669,
+    "cachedTokens": 506496
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 578701,
+      "completionTokens": 9669,
+      "cachedTokens": 506496
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

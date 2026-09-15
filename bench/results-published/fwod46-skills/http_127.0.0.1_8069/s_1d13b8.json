@@ -1,0 +1,496 @@
+{
+ "id": "s_1d13b8",
+ "origin": "http://127.0.0.1:8069",
+ "template": "In Odoo, finish creating the quotation for customer '{{v1}} Bench Customer'. A quotation form may already be open in the Sales app (Quotations) with the customer already selected and one order line for product '{{v2}}' at quantity 1 — verify the current state first before repeating anything. If {{v3}} usable unsaved quotation form is open, start a new one (Sales > Orders > Quotations > New) and select the customer '{{v1}} Bench Customer' from the autocomplete dropdown (must actually click the dropdown option). The end state must be: a SAVED quotation with exactly ONE order line: product '{{v2}}' (select it from the product autocomplete dropdown by clicking the option), quantity 3. If any 'Configure your product' modal appears, cancel it and re-select the product. Click Save. Then report: (a) the product name on the line, (b) the unit price the app filled in, (c) the untaxed amount in the totals section, (d) the quotation reference/name (e.g. S000xx), and (e) the quantity shown on the line. Note: the app long-polls and is never network-idle, so never wait for network idle — wait for concrete page state instead.",
+ "params": {
+  "v1": {
+   "example": "fwod46-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "[FURN_6666] Acoustic Bloc Screens",
+   "usedIn": [],
+   "known": true,
+   "binding": "03-create.product_name"
+  },
+  "v3": {
+   "example": "true",
+   "usedIn": [],
+   "known": true,
+   "binding": "03-create.saved"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form"
+ },
+ "steps": [
+  {
+   "tool": "read",
+   "args": {
+    "what": "url",
+    "label": "current_url"
+   },
+   "locators": {},
+   "label": "current_url"
+  },
+  {
+   "tool": "read_all",
+   "args": {
+    "target": "tr.o_data_row td",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "tr.o_data_row td"
+     }
+    ]
+   },
+   "label": "product_name"
+  },
+  {
+   "tool": "read_all",
+   "args": {
+    "target": ".oe_subtotal_footer tr",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".oe_subtotal_footer tr"
+     }
+    ]
+   },
+   "label": "oe_subtotal_footer_tr"
+  },
+  {
+   "tool": "read_all",
+   "args": {
+    "target": ".o_field_widget[name='name'] input, .o_breadcrumb",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_field_widget[name='name'] input, .o_breadcrumb"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div:nth-of-type(1) > div > div:nth-of-type(1) > div:nth-of-type(2)",
+      "nth": 1
+     },
+     {
+      "kind": "point",
+      "x": 108,
+      "y": 71,
+      "w": 76.3,
+      "h": 33.8,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "o_field_widget_name_name"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "customer_shown",
+    "target": ".o_field_widget[name='partner_id']",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_field_widget[name='partner_id']"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div",
+      "nth": 0
+     },
+     {
+      "kind": "point",
+      "x": 401,
+      "y": 257,
+      "w": 445.8,
+      "h": 47,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "customer_shown"
+  },
+  {
+   "tool": "read_all",
+   "args": {
+    "target": ".o_form_view button, .o_form_button_save, .o_form_status_indicator",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_form_view button, .o_form_button_save, .o_form_status_indicator"
+     }
+    ]
+   },
+   "label": "order_line_count"
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "read_all",
+   "args": {
+    "target": "tr.o_data_row td",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "tr.o_data_row td"
+     }
+    ]
+   },
+   "label": "product_name"
+  },
+  {
+   "tool": "read_all",
+   "args": {
+    "target": ".oe_subtotal_footer tr",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".oe_subtotal_footer tr"
+     }
+    ]
+   },
+   "label": "oe_subtotal_footer_tr"
+  },
+  {
+   "tool": "read_all",
+   "args": {
+    "target": "tr.o_data_row",
+    "what": "count"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "tr.o_data_row"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 442,
+      "w": 1246,
+      "h": 40.6,
+      "role": null,
+      "tag": "tr",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "order_line_count"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "what": "value",
+    "target": "@e3848",
+    "label": "verified_customer"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "combobox",
+      "name": "Type to find a customer..."
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Type to find a customer..."
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(1) > div > div > input"
+     },
+     {
+      "kind": "point",
+      "x": 383,
+      "y": 247,
+      "w": 409.8,
+      "h": 26,
+      "role": "combobox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "customer"
+  },
+  {
+   "tool": "tabs",
+   "args": {},
+   "locators": {}
+  },
+  {
+   "tool": "read_all",
+   "args": {
+    "target": "button[name=\"Save\"]",
+    "what": "count"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "button[name=\"Save\"]"
+     }
+    ]
+   },
+   "label": "save_button_count_in_dom"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > h1 > div > span"
+     },
+     {
+      "kind": "point",
+      "x": 89,
+      "y": 195,
+      "w": 96.5,
+      "h": 31,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "quotation_reference"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(5)"
+     },
+     {
+      "kind": "point",
+      "x": 783,
+      "y": 442,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "unit_price"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 691,
+      "y": 442,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "quantity_shown_on_line"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(2) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1195,
+      "y": 642,
+      "w": 86,
+      "h": 21,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "tax_20_percent"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(3) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1195,
+      "y": 667,
+      "w": 86,
+      "h": 21,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "total"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "tr:nth-of-type(1) > td:nth-of-type(6) > div > div > span > div"
+     },
+     {
+      "kind": "point",
+      "x": 858,
+      "y": 440,
+      "w": 26,
+      "h": 13,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "tr_o_data_row_td"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Current state check first: the form open in the Sales app was NOT an unsaved new quotation — it was the already-saved quotation S00022 (id=22) in the Sales app (Orders), with the customer field showing '{{v1}} Bench Customer' and exactly one order line '{{v2}}', qty 3.00 — so the required end state already held and nothing was repeated (no new quotation was started, no product re-selected). I re-loaded the very same record URL to prove persistence and read the values off the live page: one order line only, product {{v2}}, qty 3.00, unit price 295.00, taxes 20%, line total £ 885.00; totals section shows Untaxed Amount £ 885.00, TAX 20% £ 177.00, Total £ 1,062.00; breadcrumb shows 'Quotations S00022' with statusbar on 'Quotation'. Note: no 'Save' button exists in the DOM (count 0) because the record is clean/saved, so no explicit Save click was needed or possible; the state is verified from the live DOM after a full reload.",
+  "values": {
+   "quotation_reference": "S00022",
+   "order_reference": "S00022",
+   "untaxed_amount": "£ 885.00",
+   "product_name": "{{v2}}",
+   "unit_price": "295.00",
+   "unit_price_observed": "295.00",
+   "quantity_shown_on_line": "3.00",
+   "order_line_count": "1",
+   "tax_20_percent": "£ 177.00",
+   "total": "£ 1,062.00",
+   "customer": "{{v1}} Bench Customer",
+   "customer_name": "{{v1}} Bench Customer",
+   "status_stage": "Quotation",
+   "statusbar_text": "Quotation",
+   "breadcrumb_text": "Quotations S00022",
+   "save_button_count_in_dom": "0",
+   "current_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22",
+   "customer_shown": "Benchville",
+   "tr_o_data_row_td": "20%",
+   "tr_o_data_row_td_2": "£ 885.00",
+   "oe_subtotal_footer_tr": "Untaxed Amount\t£ 885.00",
+   "oe_subtotal_footer_tr_2": "TAX 20%\t\n£ 177.00",
+   "oe_subtotal_footer_tr_3": "Total\t£ 1,062.00",
+   "o_field_widget_name_name": "Quotations\nS00022",
+   "ref": "{{v1}}",
+   "ref_2": "FURN_6666",
+   "ref_3": "s00022-verified-saved.png"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 2,
+  "successes": 1,
+  "partial": 1,
+  "created": "2026-09-15T11:04:13.808Z",
+  "failedAtStep": {
+   "7": 1
+  },
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-15T11:06:50.857Z",
+  "lastFailedAt": 7
+ },
+ "status": "provisional",
+ "provenance": {
+  "session": "fwod46-n2",
+  "instruction": "In Odoo, finish creating the quotation for customer 'fwod46-n2 Bench Customer'. A quotation form may already be open in the Sales app (Quotations) with the customer already selected and one order line for product '[FURN_6666] Acoustic Bloc Screens' at quantity 1 — verify the current state first before repeating anything. If true usable unsaved quotation form is open, start a new one (Sales > Orders > Quotations > New) and select the customer 'fwod46-n2 Bench Customer' from the autocomplete dropdown (must actually click the dropdown option). The end state must be: a SAVED quotation with exactly ONE order line: product '[FURN_6666] Acoustic Bloc Screens' (select it from the product autocomplete dropdown by clicking the option), quantity 3. If any 'Configure your product' modal appears, cancel it and re-select the product. Click Save. Then report: (a) the product name on the line, (b) the unit price the app filled in, (c) the untaxed amount in the totals section, (d) the quotation reference/name (e.g. S000xx), and (e) the quantity shown on the line. Note: the app long-polls and is never network-idle, so never wait for network idle — wait for concrete page state instead.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-15T11:04:13.808Z"
+ },
+ "revision": 2
+}

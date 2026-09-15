@@ -1,0 +1,156 @@
+
+[sweep] run 1/3: fwod46-n1 (store: /home/user/sitelooper/bench/results/fwod46-skills)
+[harness] odoo: defaulting APP_URL
+[harness] odoo: defaulting APP_EMAIL
+[harness] odoo: defaulting APP_PASSWORD
+[reset] odoo: no leftover bench customers
+[harness] odoo responded 303 at http://127.0.0.1:8069/
+stopped: fwod46-n1
+  flow "fwod46" saved: 9 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwod46.json
+  warning: note: dropped 4 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: note: 1 step(s) adopted from non-success instruction(s) whose work the session continued from (03-create) — they replay model-first with doubled budget, and a non-success there does not halt the flow
+  warning: warning: contradicted-step: 09-verify read order_status_on_form "Cancelled (statusbar: Cancelled aria-checked=true; Sales Order / Quotation Sent / Quotation all unchecked)" right after 08-open reported "Cancelled (aria-checked=true, current step; Sales Order / Quotation Sent / Quotation all unchecked and disabled)"; 08-open's change may not have landed and a later step may be retrying it. Re-record 08-open.
+  warning: warning: 13 value(s) KNOWN to be this run's survived unslotted — a replay will act on or wait for the recording's value (non-fatal outside locators):
+  s_04ad44.reportTemplate.values.order_id: "21" (url) in "21"
+  s_3b7b02.reportTemplate.summary: "21" (url) in "Cancelled sales order {{v1}}. I first verified the record was active (statusbar current = \"Sales Order\"). Clicking the visible \"Cancel\" button opened a native c"
+  s_3b7b02.reportTemplate.values.order_id: "21" (url) in "21"
+  s_941f5e.reportTemplate.summary: "44" (url) in "Read-only verification, no records modified. (1) Contacts: main menu > Contacts, searched '{{v1}}' — exactly 1 card found ({{v1}} / Benchville, showing \"1 Sales"
+  s_941f5e.reportTemplate.summary: "21" (url) in "Read-only verification, no records modified. (1) Contacts: main menu > Contacts, searched '{{v1}}' — exactly 1 card found ({{v1}} / Benchville, showing \"1 Sales"
+  s_941f5e.reportTemplate.values.contact_id: "44" (url) in "44"
+  s_941f5e.reportTemplate.values.order_id: "21" (url) in "21"
+  s_bf5029.reportTemplate.values.order_id: "21" (url) in "21"
+  s_ce2d24.reportTemplate.summary: "21" (url) in "Finished and SAVED the quotation, which now carries reference S00021 (URL .../web#...model=sale.order&view_type=form&id=21, title \"Odoo - S00021\", statusbar on "
+  s_ce2d24.reportTemplate.values.order_id: "21" (url) in "21"
+  s_e7e355.reportTemplate.values.record_id: "44" (url) in "44"
+  s_e7e355.reportTemplate.values.record_url: "44" (url) in "http://127.0.0.1:8069/web#id=44&cids=1&menu_id=109&action=156&model=res.partner&view_type=form"
+  s_ee72cf.reportTemplate.values.order_id: "21" (url) in "21"
+  warning: warning: 205 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "admin" (output) in "Open http://127.0.0.1:8069/ and sign in with login 'admin' and password 'admin'. Important: the app long-polls and is never network-idle, so never wait for netw"
+  flow.steps[1].instruction: "Benchville" (output) in "In Odoo, create a new customer contact named exactly '{{runid}} Bench Customer' with the City field set to 'Benchville'. Go to the Contacts app (main menu), cli"
+  flow.steps[1].params.v3: "Benchville" (output) in "Benchville"
+  flow.steps[7].instruction: "Cancelled" (output) in "In Odoo, open the confirmed sales order {{04-open.quotation_reference}} (customer '{{runid}} Bench Customer', status 'Sales Order', untaxed {{06-open.untaxed_am"
+  flow.steps[8].instruction: "Cancelled" (output) in "In Odoo, verify the end state of this run and report the facts you find (do not change anything): (1) In the Contacts app, search for '{{runid}} Bench Customer'"
+  warning: {{03-create.product_name}} (used by 04-open) can only be re-observed by model recovery — consider re-recording so the value is read from the page.
+  warning: {{03-create.saved}} (used by 04-open) can only be re-observed by model recovery — consider re-recording so the value is read from the page.
+  warning: {{03-create.unit_price_observed}} (used by 05-open) can only be re-observed by model recovery — consider re-recording so the value is read from the page.
+  warning: {{04-open.untaxed_amount}} (used by 05-open) can only be re-observed by model recovery — consider re-recording so the value is read from the page.
+  warning: {{05-open.second_line_product}} (used by 06-open) can only be re-observed by model recovery — consider re-recording so the value is read from the page.
+  warning: {{05-open.untaxed_amount}} (used by 06-open) can only be re-observed by model recovery — consider re-recording so the value is read from the page.
+  warning: {{06-open.untaxed_amount}} (used by 07-open) can only be re-observed by model recovery — consider re-recording so the value is read from the page.
+  warning: 01-open reports landing_page, logged_in_user, login_used, but s_6303fd re-reads none of them from the page — a replay without the model will succeed without those values; re-record so they are read.
+  warning: 02-create reports record_id, but s_f8e8c4 re-reads none of it from the page — a replay without the model will succeed without that value; re-record so it is read.
+  warning: 04-open reports untaxed_amount, tax_20_percent, total, order_id, statusbar, order_line_count, save_button_used, table_o_list_table_tbody_2, but s_9020ed re-reads none of them from the page — a replay without the model will succeed without those values; re-record so they are read.
+  warning: 05-open reports order_id, second_line_product, second_line_subtotal, first_line_quantity, untaxed_amount, tax_20_percent, total, order_line_count, statusbar, save_button_used, ref_2, but s_04ad44 re-reads none of them from the page — a replay without the model will succeed without those values; re-record so they are read.
+  warning: 06-open reports order_id, line1_subtotal, line2_quantity, line2_subtotal, untaxed_amount, tax_20_percent, total, order_line_count, odoo_version, ref, but s_bf5029 re-reads none of them from the page — a replay without the model will succeed without those values; re-record so they are read.
+  warning: 07-open reports order_id, tax_20_percent, total, order_line_count, dialog_appeared, post_confirm_buttons, but s_ee72cf re-reads none of them from the page — a replay without the model will succeed without those values; re-record so they are read.
+  warning: 08-open reports order_id, tax_20_percent, total, order_line_count, line1, line2, but s_3b7b02 re-reads none of them from the page — a replay without the model will succeed without those values; re-record so they are read.
+  warning: 09-verify reports contact_id, order_id, untaxed_amount, tax_20_percent, total, order_company, order_line_count, line1, line2, but s_ad3c53 re-reads none of them from the page — a replay without the model will succeed without those values; re-record so they are read.
+arm=sitelooper model=z-ai/glm-5.3 runid=fwod46-n1 stop=completed
+turns=10 wall=842.6s
+commands=9 cmdTime=707.8s cmdBytes=14503 timeouts=0
+orchestrator in=8482 cw=0 cr=45504 out=5846
+inner prompt=4304548 cached=4020096 completion=49760
+spend=$0.134 maxUsd=3
+learn: A_n=0 replayed=0/9 full=0 repaired=0 compiled=8 variants=0
+-> /home/user/sitelooper/bench/results/fwod46-n1-sitelooper-result.json
+
+fwod46-n1: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00021
+
+[sweep] run 2/3: fwod46-n2 (replay flow fwod46, no orchestrator)
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+[sweep] fwod46-n2: 1 drift ticket(s) → fwod46-n2-drift.json
+
+fwod46-n2: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00022
+[sweep] fwod46-n2: 03-create has no pinned skill — 28 model turn(s), on every replay
+
+[sweep] run 3/3: fwod46-n3 (replay flow fwod46, no orchestrator)
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+[sweep] fwod46-n3: 2 drift ticket(s) → fwod46-n3-drift.json
+
+fwod46-n3: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00023
+[sweep] fwod46-n3: 03-create has no pinned skill — 26 model turn(s), on every replay
+
+Learning sweep fwod46 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwod46-n1' │ '6/6'    │ 'completed' │ 10    │ 9    │ 0.134     │ 0    │ '0/9'        │ 843    │
+│ 1       │ 2 │ 'fwod46-n2' │ '6/6'    │ 'success'   │ 41    │ 9    │ 0.0178    │ 0.78 │ '9/9 (flow)' │ 222    │
+│ 2       │ 3 │ 'fwod46-n3' │ '6/6'    │ 'success'   │ 40    │ 9    │ 0.0182    │ 0.67 │ '9/9 (flow)' │ 173    │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8069
+  s_f8e8c4  validated    2 steps  4/4 (100%)
+           In Odoo, create a new customer contact named exactly '{{v2}}' with the City field set to '{{v3}}'. Go to the C…
+  s_04ad44  validated   12 steps  2/3 (67%)
+           In Odoo, open the saved quotation with reference {{v1}} (Sales app > Orders > Quotations, find {{v1}} and open…
+  s_3b7b02  validated    6 steps  3/3 (100%)
+           In Odoo, open the confirmed sales order {{v1}} (customer '{{v2}}', status 'Sales Order', untaxed {{v4}}) and C…
+  s_57b88c  validated    1 steps  3/3 (100%)
+           In Odoo, create a new customer contact named exactly '{{v2}}' with the City field set to '{{v3}}'. Go to the C…
+  s_5f97d7  validated    3 steps  3/3 (100%)
+           In Odoo, create a new customer contact named exactly '{{v2}}' with the City field set to '{{v3}}'. Go to the C…
+  s_6303fd  validated    2 steps  3/3 (100%)
+           Open {{v1}} and sign in with login 'admin' and password 'admin'. Important: the app long-polls and is never ne…
+  s_863eb3  validated    1 steps  3/3 (100%)
+           In Odoo, create a new customer contact named exactly '{{v2}}' with the City field set to '{{v3}}'. Go to the C…
+  s_941f5e  validated    8 steps  3/3 (100%)
+           In Odoo, verify the end state of this run and report the facts you find (do not change anything): (1) In the C…
+  s_ad3c53  validated    2 steps  3/3 (100%)
+           In Odoo, verify the end state of this run and report the facts you find (do not change anything): (1) In the C…
+  s_b874c3  validated    2 steps  3/3 (100%)
+           Open {{v1}} and sign in with login 'admin' and password 'admin'. Important: the app long-polls and is never ne…
+  s_b8cd7a  validated    3 steps  3/3 (100%)
+           In Odoo, create a new customer contact named exactly '{{v2}}' with the City field set to '{{v3}}'. Go to the C…
+  s_bf5029  validated    7 steps  3/3 (100%)
+           In Odoo, open the saved quotation {{v1}} (customer '{{v2}}', currently 2 lines: line 1 '{{v4}}' qty 3 unit pri…
+  s_c859d2  validated    6 steps  3/3 (100%)
+           Open {{v1}} and sign in with login 'admin' and password 'admin'. Important: the app long-polls and is never ne…
+  s_dd75b5  validated    4 steps  3/3 (100%)
+           In Odoo, verify the end state of this run and report the facts you find (do not change anything): (1) In the C…
+  s_e400e7  validated    3 steps  3/3 (100%)
+           In Odoo, verify the end state of this run and report the facts you find (do not change anything): (1) In the C…
+  s_e7e355  validated    3 steps  3/3 (100%)
+           In Odoo, create a new customer contact named exactly '{{v2}}' with the City field set to '{{v3}}'. Go to the C…
+  s_ee72cf  validated    3 steps  3/3 (100%)
+           In Odoo, open the saved quotation {{v1}} (customer '{{v2}}', 2 lines: '{{v4}}' qty 5, '{{v5}}' qty 2, untaxed …
+  s_1d13b8  provisional 19 steps  1/2 (50%)
+           In Odoo, finish creating the quotation for customer '{{v1}} Bench Customer'. A quotation form may already be o…
+  s_9020ed  provisional  2 steps  1/2 (50%)
+           In Odoo, finish creating the quotation for customer '{{v1}}'. A quotation form may already be open in the Sale…
+  s_229161  provisional 15 steps  1/1 (100%)  variant of s_1d13b8
+           In Odoo, finish creating the quotation for customer '{{v1}} Bench Customer'. A quotation form may already be o…
+  s_5d017b  provisional  1 steps  1/1 (100%)
+           In Odoo, create a new quotation (Sales app > Orders > Quotations > New) for the customer '{{v2}}'. The custome…
+  s_96dfe7  provisional 19 steps  1/1 (100%)  variant of s_04ad44
+           In Odoo, open the saved quotation with reference {{v1}} (Sales app > Orders > Quotations, find {{v1}} and open…
+  s_ba2926  provisional 11 steps  1/1 (100%)
+           In Odoo, create a new quotation (Sales app > Orders > Quotations > New) for the customer '{{v2}}'. The custome…
+  s_ce2d24  provisional  7 steps  1/1 (100%)
+           In Odoo, finish creating the quotation for customer '{{v1}}'. A quotation form may already be open in the Sale…
+  s_ecf732  provisional  2 steps  1/1 (100%)
+           In Odoo, create a new quotation (Sales app > Orders > Quotations > New) for the customer '{{v2}}'. The custome…
+  s_fe366f  provisional 10 steps  1/1 (100%)
+           In Odoo, create a new quotation (Sales app > Orders > Quotations > New) for the customer '{{v2}}'. The custome…
+store: /home/user/sitelooper/bench/results/fwod46-skills
+
+summary: /home/user/sitelooper/bench/results/fwod46-sweep.json

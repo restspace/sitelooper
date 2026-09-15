@@ -1,0 +1,99 @@
+{
+ "id": "s_6303fd",
+ "origin": "http://127.0.0.1:8069",
+ "template": "Open {{v1}} and sign in with login 'admin' and password 'admin'. Important: the app long-polls and is never network-idle, so never wait for network idle — wait for concrete page state instead. After signing in, report which page or app you land on and the logged-in user shown.",
+ "params": {
+  "v1": {
+   "example": "http://127.0.0.1:8069/",
+   "usedIn": [
+    1
+   ]
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8069/"
+ },
+ "steps": [
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e12",
+    "value": "admin"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Email"
+     },
+     {
+      "kind": "label",
+      "label": "Email"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Email"
+     },
+     {
+      "kind": "id",
+      "selector": "#login"
+     },
+     {
+      "kind": "css",
+      "selector": "#login"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 200,
+      "w": 268,
+      "h": 35,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web/login",
+    "addedContains": [
+     "- textbox \"Email\": {{*}}"
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-15T10:47:45.251Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-15T11:04:51.657Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_8d136c",
+  "index": 0,
+  "of": 3
+ },
+ "provenance": {
+  "session": "fwod46-n1",
+  "instruction": "Open http://127.0.0.1:8069/ and sign in with login 'admin' and password 'admin'. Important: the app long-polls and is never network-idle, so never wait for network idle — wait for concrete page state instead. After signing in, report which page or app you land on and the logged-in user shown.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-15T10:47:45.251Z"
+ },
+ "revision": 3
+}

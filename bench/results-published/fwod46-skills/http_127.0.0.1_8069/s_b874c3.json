@@ -1,0 +1,151 @@
+{
+ "id": "s_b874c3",
+ "origin": "http://127.0.0.1:8069",
+ "template": "Open {{v1}} and sign in with login 'admin' and password 'admin'. Important: the app long-polls and is never network-idle, so never wait for network idle — wait for concrete page state instead. After signing in, report which page or app you land on and the logged-in user shown.",
+ "params": {
+  "v1": {
+   "example": "http://127.0.0.1:8069/",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8069/web/login"
+ },
+ "steps": [
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e15",
+    "value": "admin"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Password"
+     },
+     {
+      "kind": "label",
+      "label": "Password"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Password"
+     },
+     {
+      "kind": "id",
+      "selector": "#password"
+     },
+     {
+      "kind": "css",
+      "selector": "#password"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 280,
+      "w": 268,
+      "h": 35,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web/login",
+    "addedContains": [
+     "- textbox \"Password\": {{*}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e17"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Log in"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div > form > div:nth-of-type(3) > button"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 347,
+      "w": 268,
+      "h": 35,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "mints": {
+    "at": "q.action"
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action={{d1}}&cids={{d2}}&menu_id={{d3}}",
+    "addedContains": [
+     "- button \"Home Menu\"",
+     "- menuitem \"Discuss\"",
+     "- menu \"6 3 YourCompany\"",
+     "- button \"6\"",
+     "- button \"3\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "derived": {
+  "d1": {
+   "step": 2,
+   "at": "q.action",
+   "example": "123"
+  },
+  "d2": {
+   "step": 2,
+   "at": "q.cids",
+   "example": "1"
+  },
+  "d3": {
+   "step": 2,
+   "at": "q.menu_id",
+   "example": "81"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-15T10:47:45.251Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-15T11:04:49.506Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_8d136c",
+  "index": 1,
+  "of": 3
+ },
+ "provenance": {
+  "session": "fwod46-n1",
+  "instruction": "Open http://127.0.0.1:8069/ and sign in with login 'admin' and password 'admin'. Important: the app long-polls and is never network-idle, so never wait for network idle — wait for concrete page state instead. After signing in, report which page or app you land on and the logged-in user shown.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-15T10:47:45.251Z"
+ },
+ "revision": 3
+}

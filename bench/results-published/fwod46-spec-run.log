@@ -1,0 +1,15 @@
+[spec-replay] resetting odoo
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile bench/results/flows/fwod46.json --out /home/user/sitelooper/bench/results/fwod46-spec-spec-tmp --overwrite-spec
+flow: /home/user/sitelooper/bench/results/fwod46-spec-spec-tmp/fwod46.flow.ts
+spec: /home/user/sitelooper/bench/results/fwod46-spec-spec-tmp/fwod46.spec.ts
+warning 09-verify: 09-verify read a value that contradicts what the previous step reported
+  why: 09-verify read order_status_on_form "Cancelled (statusbar: Cancelled aria-checked=true; Sales Order / Quotation Sent / Quotation all unchecked)" right after 08-open reported "Cancelled (aria-checked=true, current step; Sales Order / Quotation Sent / Quotation all unchecked and disabled)"; 08-open's change may not have landed and a later step may be retrying it. Re-record 08-open.
+  fix: sitelooper rerecord bench/results/flows/fwod46.json 08-open
+warning 03-create: it has no converged procedure, so the compiled spec throws here
+  why: nothing in the store resolves to a recorded procedure for this step; the emitted body is a throw, not a silent skip.
+  fix: sitelooper rerecord bench/results/flows/fwod46.json 03-create
+
+sitelooper: not compilable: 1 step(s) have no converged procedure: 03-create; TODO: no converged procedure for "In Odoo, create a new quotation (Sales app > Orders > Quotations > New) for the customer '{{runid}} Bench Customer'. The customer field is an autocomplete dropdown: type the name and actually pick the…"
+[spec-replay] fwod46-spec: not compilable — result written (exit 2)
