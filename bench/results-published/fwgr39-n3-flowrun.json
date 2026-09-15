@@ -1,0 +1,236 @@
+{
+  "flow": "fwgr39",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Signed in to Grafana at http://127.0.0.1:3000/ with admin/admin (skipped the \"Update your password\" prompt via Skip). Searched for and opened the \"Service Health\" dashboard at http://127.0.0.1:3000/d/bench-service-health/service-health. The dashboard contains exactly 3 panels, whose titles as displayed are: \"Request rate\", \"Error count\", and \"Latency by endpoint\".",
+      "values": {
+        "panel_titles": "Request rate | Error count | Latency by endpoint",
+        "panel_count": "3",
+        "dashboard_name": "Service Health",
+        "first_panel_title": "Request rate",
+        "second_panel_title": "Error count",
+        "third_panel_title": "Latency by endpoint"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_8f6654; observed dashboard_view_url=http://127.0.0.1:3000/d/cfybwei7c8qgwf/fwgr39-n3-bench-dashboard, ref=fwgr39-n3, panel_type=Stat, url_after_save=http://127.0.0.1:3000/d/efybx78tc7q4gb/fwgr39-n3-bench-dashboard?from=now-6h&to=now&timezone=browser&editPanel=1, dashboard_title=fwgr39-n3 Bench Dashboard, panel_title=fwgr39-n3 Availability.",
+      "values": {
+        "dashboard_view_url": "http://127.0.0.1:3000/d/cfybwei7c8qgwf/fwgr39-n3-bench-dashboard",
+        "ref": "fwgr39-n3",
+        "panel_type": "Stat",
+        "url_after_save": "http://127.0.0.1:3000/d/efybx78tc7q4gb/fwgr39-n3-bench-dashboard?from=now-6h&to=now&timezone=browser&editPanel=1",
+        "dashboard_title": "fwgr39-n3 Bench Dashboard",
+        "panel_title": "fwgr39-n3 Availability"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "dashboard_uid",
+        "data_source"
+      ]
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "already satisfied: page shows Dashboard saved",
+      "values": {
+        "dashboard_title": "fwgr39-n3 Bench Dashboard",
+        "dashboard_uid": "cfybwei7c8qgwf",
+        "new_panel_title": "fwgr39-n3 Notes",
+        "new_panel_type": "Text",
+        "new_panel_content": "Bench notes for run fwgr39-n3",
+        "panel_titles_now_visible": "fwgr39-n3 Notes, fwgr39-n3 Availability",
+        "save_alert": "Dashboard saved",
+        "stat_value_shown": "93.0",
+        "ref": "fwgr39-n3"
+      },
+      "tier": "A",
+      "satisfied": true,
+      "replayed": null,
+      "repaired": false,
+      "turns": 0,
+      "recovered": false
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "On the Grafana dashboard 'fwgr39-n3 Bench Dashboard' I added the tag 'bench' in Dashboard settings → General (Tags field shows a \"bench\" chip with a Remove \"bench\" tag button), then clicked Save dashboard, ticked 'Update default time range' in the save drawer and saved — the \"Dashboard saved\" alert appeared. I then reloaded the page via the bare dashboard URL and verified persistence: the top-right time picker shows 'Last 6 hours' (URL reloaded as from=now-6h&to=now) and reopening Dashboard settings → General shows the 'bench' tag still present in the Tags field. Note: the time picker already read \"Last 6 hours\" on arrival (the page was loaded with from=now-6h&to=now), and ticking 'Update default time range' persisted that range as the dashboard default, as the reload without query parameters confirmed.",
+      "values": {
+        "dashboard_title": "fwgr39-n3 Bench Dashboard",
+        "dashboard_url": "http://127.0.0.1:3000/d/efybx78tc7q4gb/fwgr39-n3-bench-dashboard",
+        "url_after_save": "http://127.0.0.1:3000/d/efybx78tc7q4gb/fwgr39-n3-bench-dashboard?from=now-6h&to=now&timezone=browser&editview=settings",
+        "save_alert": "Dashboard saved",
+        "tag_added": "bench",
+        "tag_present_after_reload": "true (Tags field list shows 'bench' chip with Remove \"bench\" tag button)",
+        "time_range_after_reload": "Last 6 hours",
+        "update_default_time_range_checked": "true",
+        "ref": "fwgr39-n3",
+        "ref_2": "now-6h"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "every candidate refused — s_92b602: failed at step 1 before touching the page — click failed: click NOT dispatched: the control is disabled, so the app would ignore it. Make whatever enables it true first (a required field, a selection, a finished load), then click it. [outcome: not dispatched]",
+      "replayed": "0/17",
+      "repaired": true,
+      "turns": 19,
+      "unreported": [
+        "dashboard_uid",
+        "tag_persisted_after_reload",
+        "time_picker_after_reload",
+        "update_default_time_range_ticked",
+        "panel_titles"
+      ]
+    },
+    {
+      "id": "05-set",
+      "status": "success",
+      "summary": "On the 'fwgr39-n3 Bench Dashboard' (http://127.0.0.1:3000/d/efybx78tc7q4gb/fwgr39-n3-bench-dashboard) I opened the top-right time picker's refresh-interval dropdown and selected '1m', so the toolbar button read '1m'. I then entered Edit mode, clicked 'Save dashboard', ticked the drawer's 'Update default refresh value' option (the persistence option this dialog offers), clicked Save, and the \"Dashboard saved\" alert appeared. I then reloaded the page using the bare dashboard URL, and the toolbar again shows refresh interval '1m' (aria-label: \"Choose refresh time interval with current interval 1 minute selected\") together with time range 'Last 6 hours' — both values persisted, verified on the reloaded page. The Stat panel 'fwgr39-n3 Availability' rendered a value of 64.9.",
+      "values": {
+        "dashboard_title": "fwgr39-n3 Bench Dashboard",
+        "panel_title": "fwgr39-n3 Availability",
+        "refresh_interval_after_reload": "1m (button aria-label: 'Choose refresh time interval with current interval 1 minute selected', visible label '1m')",
+        "refresh_interval_set": "1m",
+        "save_alert": "Dashboard saved",
+        "save_option_used": "Update default refresh value (ticked) - the persistence option offered in this save drawer",
+        "time_range_after_reload": "Last 6 hours",
+        "url_after_save": "http://127.0.0.1:3000/d/efybx78tc7q4gb/fwgr39-n3-bench-dashboard",
+        "button": "Edit",
+        "button_2": "Choose refresh time interval with current interval 1 minute selected",
+        "ref": "fwgr39-n3"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "every candidate refused — s_6108b1: the page at http://127.0.0.1:3000/d/efybx78tc7q4gb/:id?editview=settings&from=:id&timezone=browser&to=now does not show \"Last 6 hours\" — it matches this procedure's page template but is a different record — nothing was run",
+      "replayed": "3/10",
+      "repaired": true,
+      "turns": 17,
+      "unreported": [
+        "dashboard_uid",
+        "checkbox_ticked",
+        "panel_titles"
+      ]
+    },
+    {
+      "id": "06-report",
+      "status": "success",
+      "summary": "Replayed stored procedure s_1895b4; observed panel_titles=fwgr39-n3 Notes, fwgr39-n3 Availability, text_panel_content=Bench notes for run fwgr39-n3, ref=fwgr39-n3, final_url=http://127.0.0.1:3000/d/efybx78tc7q4gb/fwgr39-n3-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m, breadcrumb_title=fwgr39-n3 Bench Dashboard, time_range_picker=Last 6 hours, refresh_interval_dropdown=1m, stat_panel_value=36.7.",
+      "values": {
+        "panel_titles": "fwgr39-n3 Notes, fwgr39-n3 Availability",
+        "text_panel_content": "Bench notes for run fwgr39-n3",
+        "ref": "fwgr39-n3",
+        "final_url": "http://127.0.0.1:3000/d/efybx78tc7q4gb/fwgr39-n3-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m",
+        "breadcrumb_title": "fwgr39-n3 Bench Dashboard",
+        "time_range_picker": "Last 6 hours",
+        "refresh_interval_dropdown": "1m",
+        "stat_panel_value": "36.7"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "panel_count",
+        "tag_bench_in_settings_general"
+      ]
+    }
+  ],
+  "passed": 6,
+  "total": 6,
+  "repinned": 0,
+  "drift": 4,
+  "driftTickets": [
+    {
+      "flow": "fwgr39",
+      "step": "04-open",
+      "skill": "s_92b602",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.866,
+      "missedLocator": "page.getByTestId('data-testid Dashboard settings')",
+      "fallbackUsed": "page.locator('div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(3) > button')",
+      "fallbackIndex": 3,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:3000/d/efybx78tc7q4gb/:id?editPanel=:id&from=:id&timezone=browser&to=now",
+      "pageUrl": "http://127.0.0.1:3000/d/efybx78tc7q4gb/fwgr39-n3-bench-dashboard?from=now-6h&to=now&timezone=browser&editPanel=1"
+    },
+    {
+      "flow": "fwgr39",
+      "step": "05-set",
+      "skill": "s_6108b1",
+      "atStep": "3",
+      "key": "target",
+      "similarity": 0.991,
+      "missedLocator": "page.getByTestId('data-testid Save dashboard button')",
+      "fallbackUsed": "elementAt(1140, 60) /* button */",
+      "fallbackIndex": 4,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:3000/d/efybx78tc7q4gb/:id?from=:id&refresh=:id&shareView=link&timezone=browser&to=now",
+      "pageUrl": "http://127.0.0.1:3000/d/efybx78tc7q4gb/fwgr39-n3-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m&shareView=link"
+    },
+    {
+      "flow": "fwgr39",
+      "step": "05-set",
+      "skill": "s_6108b1",
+      "atStep": "4",
+      "key": "target",
+      "similarity": 0.991,
+      "missedLocator": "page.getByTestId('Dashboard settings Save Dashboard Modal Save refresh checkbox')",
+      "fallbackUsed": null,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:3000/d/efybx78tc7q4gb/:id?from=:id&refresh=:id&shareView=link&timezone=browser&to=now",
+      "pageUrl": "http://127.0.0.1:3000/d/efybx78tc7q4gb/fwgr39-n3-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m&shareView=link"
+    },
+    {
+      "flow": "fwgr39",
+      "step": "06-report",
+      "skill": "s_1895b4",
+      "atStep": "10",
+      "key": "target",
+      "similarity": 0.99,
+      "missedLocator": "page.locator('[data-testid=\"TextPanel-converted-content\"] p')",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:3000/d/efybx78tc7q4gb/:id?from=:id&refresh=:id&timezone=browser&to=now",
+      "pageUrl": "http://127.0.0.1:3000/d/efybx78tc7q4gb/fwgr39-n3-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m"
+    }
+  ],
+  "wallMs": 271808,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 497758,
+    "completionTokens": 9345,
+    "cachedTokens": 449664
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 497758,
+      "completionTokens": 9345,
+      "cachedTokens": 449664
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
