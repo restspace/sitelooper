@@ -10,6 +10,7 @@ function clickTarget() {
     evaluate: vi.fn().mockResolvedValue(undefined),
     elementHandle: vi.fn().mockResolvedValue(null),
     isDisabled: vi.fn().mockResolvedValue(false),
+    isEnabled: vi.fn().mockResolvedValue(false),
   };
   return { target, loc: target as unknown as Locator };
 }
@@ -77,6 +78,43 @@ describe('shared click dispatch safety', () => {
     expect(action).toHaveBeenCalledTimes(1);
     expect(target.evaluate).not.toHaveBeenCalled();
     expect(target.elementHandle).not.toHaveBeenCalled();
+  });
+
+  // fwgr39-n3: a control disabled only while the page settles is timing, not a wrong procedure.
+  it('waits a bounded time for a disabled control to become enabled, then clicks it the ordinary way', async () => {
+    const { target, loc } = clickTarget();
+    target.click.mockRejectedValueOnce(new Error('Timeout 100ms exceeded. waiting for element to be visible, enabled and stable - element is not enabled'));
+    target.isDisabled.mockResolvedValue(true);
+    target.isEnabled.mockResolvedValueOnce(false).mockResolvedValue(true);
+    const dispatched = vi.fn();
+    await expect(robustClick(loc, { timeout: 1_000, obs: { remaining: () => 1_000, dispatched } })).resolves.toBe('clicked');
+    expect(target.click).toHaveBeenCalledTimes(2);
+    expect(target.click).toHaveBeenNthCalledWith(2, { timeout: 1_000 });
+    expect(dispatched).toHaveBeenCalledWith('actionable');
+    expect(target.evaluate).not.toHaveBeenCalled();
+  });
+
+  it('refuses a control that stays disabled through the wait, waiting only once', async () => {
+    const { target, loc } = clickTarget();
+    target.click.mockRejectedValue(new Error('Timeout exceeded - element is not enabled'));
+    target.isDisabled.mockResolvedValue(true);
+    target.isEnabled.mockResolvedValueOnce(true).mockResolvedValue(false);
+    const refused = await robustClick(loc, { timeout: 200 }).catch((e: unknown) => e);
+    expect(refused).toMatchObject({ actionOutcome: 'not-dispatched', actionReason: 'disabled' });
+    // enabled for a moment, retried once, disabled again: refused without a second wait
+    expect(target.click).toHaveBeenCalledTimes(2);
+    expect(target.isEnabled).toHaveBeenCalledTimes(1);
+  });
+
+  it('the wait for enabled never outlasts the action deadline', async () => {
+    const { target, loc } = clickTarget();
+    target.click.mockRejectedValueOnce(new Error('Timeout exceeded - element is not enabled'));
+    target.isDisabled.mockResolvedValue(true);
+    const left = [50, 0];
+    const refused = await robustClick(loc, { timeout: 10_000, obs: { remaining: () => left.shift() ?? 0 } }).catch((e: unknown) => e);
+    expect(refused).toMatchObject({ actionOutcome: 'not-dispatched', actionReason: 'disabled' });
+    expect(target.isEnabled).not.toHaveBeenCalled();
+    expect(target.click).toHaveBeenCalledTimes(1);
   });
 
   it('an ordinary click never asks whether the control is disabled', async () => {

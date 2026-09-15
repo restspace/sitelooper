@@ -31,6 +31,7 @@ import { describeFramePath, stepEffect } from '../execution/context.js';
 import { OPENER_LINE, waitsForAbsence } from '../skills/replay.js';
 import { seedRecipes, snapshotRecipes } from '../skills/components.js';
 import type { SkillStep } from '../skills/store.js';
+import { recordedStandIn } from '../skills/flow.js';
 import { candidateSources, matcherSource, observationSources, stringSource } from './locators.js';
 import { unmeasuredPreconditionDiagnostic, type SpecFlow, type SpecSegment, type SpecStep } from './ir.js';
 import { diagnosticNote, formatDiagnostic, type Diagnostic } from './diagnostics.js';
@@ -827,6 +828,31 @@ const HELPERS: { token: string; source: string[] }[] = [
       '    );',
       '  }',
       '  return value;',
+      '}',
+    ],
+  },
+  {
+    token: 'needShown(page, outputs, ',
+    source: [
+      '/**',
+      ' * `need`, except that a reference this run did not publish resolves to its',
+      ' * RECORDED value when the live page shows it (the compiler emits this only',
+      ' * for a value `recordedStandIn` judged safe: not identifier-shaped, not',
+      " * holding a recorded var). WHICH REPLAY RULE THIS MIRRORS: the daemon's",
+      ' * runFlow asks recordedValueShown of the same page at the same moment —',
+      ' * before the consuming step runs — and banks the value for later steps.',
+      " * fwrd54's 07-edit clicked a \"Mark Ready\" its producer never re-read.",
+      " * A value published EMPTY is stood in for too: that is this artifact's",
+      " * spelling of a read that matched nothing (readOptional leaves ''), where",
+      ' * replay publishes no value at all — the same missing reference.',
+      ' */',
+      'async function needShown(page: Page, outputs: Outputs, ref: string, by: string, recorded: string, runValues: string[]): Promise<string> {',
+      "  const published = outputs[ref as keyof Outputs];",
+      "  if ((published === undefined || published === '') && (await recordedValueShown(page, recorded, runValues))) {",
+      '    (outputs as Record<string, string>)[ref] = recorded;',
+      '    console.log(`[sitelooper resolved] ${by}: {{${ref}}} to its recorded value ${JSON.stringify(recorded)}, shown on the page`);',
+      '  }',
+      '  return need(outputs, ref, by);',
       '}',
     ],
   },
@@ -2374,10 +2400,26 @@ function identityChecks(segment: SpecSegment, ctx: Ctx): string[] {
     // Polled, not asserted once: replay reaches this gate after its own
     // settleDom, and a spec arrives on a page that may still be rendering. A
     // look that stays 'unknown' fails the poll as 'unknown', not as absent.
+    //
+    // Except where the live url already names this run's record (its
+    // param-filled parts equal this run's values): then a missing marker is
+    // stale, not another record, and warns — replay's same shared verdict
+    // (identityMarkerVerdict, src/execution/gates.ts; fwgr39-n3 05-set refused
+    // the right dashboard on "Last 6 hours"). Asked once there, as replay asks.
+    const pattern = q(segment.preconditions.urlPattern);
+    noteSlots(segment.preconditions.urlPattern, ctx);
+    const where = `${ctx.stepId} ${segment.id}`;
     out.push(
-      `await expect.poll(async () => (await confirmPresence(page, [${src(marker)}], 2, { whole: true })).presence, { timeout: ${IDENTITY_WAIT_MS}, message: ${q(
+      `if (urlRecordParts(${pattern}, page.url(), p)) {`,
+      `  const seen = await confirmPresence(page, [${src(marker)}], 2, { whole: true });`,
+      `  const verdict = identityMarkerVerdict(${pattern}, page.url(), p, ${src(marker)}, seen.presence);`,
+      `  if (verdict.warning) logWarning(${q(`${where}: `)} + verdict.warning);`,
+      `  if (!verdict.pass) throw new Error(${q(`${where}: identity: ${commentSafe(marker)} is not confirmed on this page`)});`,
+      '} else {',
+      `  await expect.poll(async () => (await confirmPresence(page, [${src(marker)}], 2, { whole: true })).presence, { timeout: ${IDENTITY_WAIT_MS}, message: ${q(
         `identity: ${commentSafe(marker)} is not confirmed on this page`,
       )} }).toBe('present');`,
+      '}',
     );
   }
   return out;
@@ -2551,7 +2593,19 @@ function callArgs(step: SpecStep, slots: string[], vars: Set<string>, warnings: 
     // bench flows 1521 outputs are declared against 89 consumed downstream:
     // requiring every one of them would turn values nobody authored into
     // failure points.
-    if (bound !== undefined) return `${slot}: ${paramExpr(bound, vars, usedSlot(step, slot) ? step.id : undefined)}`;
+    if (bound !== undefined) {
+      const used = usedSlot(step, slot);
+      // A used slot bound to exactly one `{{step.output}}` whose recorded value
+      // is safe to stand in (recordedStandIn, the daemon runFlow's own rule):
+      // resolved from the page when this run did not publish it — fwrd54's
+      // 07-edit clicking `{{06-change.mark_ready_button}}`.
+      const exact = /^\s*\{\{([\w-]+\.[\w.-]+)\}\}\s*$/.exec(bound)?.[1];
+      const standIn = used && exact ? recordedStandIn(exact, step.params, step.segments) : undefined;
+      if (exact && standIn !== undefined) {
+        return `${slot}: await needShown(page, outputs, ${q(exact)}, ${q(step.id)}, ${q(standIn)}, Object.values(vars))`;
+      }
+      return `${slot}: ${paramExpr(bound, vars, used ? step.id : undefined)}`;
+    }
     const example = step.segments.map((s) => s.params[slot]?.example).find((e) => typeof e === 'string');
     if (example === undefined) return `${slot}: ''`;
     // No flow binding: the recording's own value is the only one there is,

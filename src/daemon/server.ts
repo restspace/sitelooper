@@ -8,11 +8,11 @@ import { urlPattern as compiledUrlPattern, dropDeadReadLocators, fillParams, str
 import type { DriftTicket } from '../skills/repair.js';
 import type { Page } from 'playwright-core';
 import { agentGesturesOutsideReplay, bindSkill, canAdoptPin, decideRepin, learnFromInstruction, matchTemplate, publishedOutputs, selectCandidates, synthesizeReport } from '../skills/learn.js';
-import { buildFlow, consumedReportedOutputs, consumedUrlOutputs, ignorableRefs, jsonLeaves, lintFlowRefs, lintUnpublishedOutputs, listFlows, liveReadsFor, loadFlow, loadFlowFile, lookupOutput, mutatingIntent, noteOutputEvidence, recoveryRoute, remapParams, resolveInstruction, resolveStepParams, softResolveInstruction, saveFlow, staleInstructionIds, unbankedMutations, unreportedOutputs, urlOutputs, varyingValues, type RunSpecific } from '../skills/flow.js';
+import { buildFlow, consumedReportedOutputs, consumedUrlOutputs, ignorableRefs, jsonLeaves, lintFlowRefs, lintUnpublishedOutputs, listFlows, liveReadsFor, loadFlow, loadFlowFile, lookupOutput, mutatingIntent, noteOutputEvidence, pruneUnsourcedOutputs, recoveryRoute, remapParams, resolveInstruction, resolveStepParams, softResolveInstruction, saveFlow, staleInstructionIds, unbankedMutations, unreportedOutputs, urlOutputs, varyingValues, type RunSpecific } from '../skills/flow.js';
 import { applyRelabelToEntries, applyRelabelToSkills, relabelCases, requestRelabelPlan } from '../skills/relabel.js';
 import { goalSatisfied, renderReplay } from '../skills/replay.js';
 import { drainDrift, llmProposer, recordCandidateEvidence } from '../skills/repair.js';
-import { RunLedger, bindingKey, describeLeaks, evidenced, fatal, navigationLeaks, scanForLeaks, type Leak } from '../skills/ledger.js';
+import { RunLedger, bindingKey, describeLeaks, evidenced, fatal, navigationLeaks, scanForLeaks, slotKnownRunValues, type Leak } from '../skills/ledger.js';
 import { quarantineLeakedSteps } from '../spec/rerecord.js';
 import { rerecordFix } from '../spec/diagnostics.js';
 import { originOf, type Skill } from '../skills/store.js';
@@ -24,6 +24,8 @@ import { encodeFrame, LineDecoder, type CommandName, type FlowStepResult, type F
 import { aliasLegacyEnv, ensureSessionDir, socketPath, validateSessionName } from '../shared/paths.js';
 import { BrowserSession } from './browser.js';
 import { DEFAULT_BROWSER_PROFILE } from '../execution/browser.js';
+import { recordedValueShown } from '../execution/snapshot.js';
+import { recordedStandIn } from '../skills/flow.js';
 import { SessionState } from './state.js';
 
 interface DaemonOptions {
@@ -823,6 +825,21 @@ ${describeLeaks(leaks.slice(0, 6))}`);
     // from the token's shape. A shape guess only ever demotes — see
     // `bookmarked` — and observation settles it.
     const stripped = this.stripLeakedCandidates(flow, store);
+    // The same provenance rule outside locators (ledger.ts slotKnownRunValues):
+    // fwod47 exported s_010d93 with a goal marker naming the recording's
+    // `&id=21` and report templates quoting `id=44`, all listed as KNOWN run
+    // values and left in place. Slotted where a bound param carries the value,
+    // dropped otherwise.
+    const slotted: string[] = [];
+    for (const sk of this.sessionSkills(flow, store)) {
+      let changes: string[] = [];
+      store.update(sk.id, (cur) => {
+        const r = slotKnownRunValues(cur, this.ledger);
+        changes = r?.changes ?? [];
+        return r ? r.skill : null;
+      });
+      for (const c of changes) slotted.push(`${sk.id}.${c}`);
+    }
     // What survives the strip and is still fatal poisons the STEPS that
     // replay it, not the recording. This used to throw and write the whole
     // flow to `.rejected.json`: one leaked locator voided every other step,
@@ -875,6 +892,13 @@ ${describeLeaks(leaks.slice(0, 6))}`);
       console.error(`[flow] ${line}`);
       readsAdded.push(line);
     }
+    // What still has no live source is not advertised (flow.ts
+    // pruneUnsourcedOutputs): fwod47's tier-A replays listed untaxed_amount,
+    // total … as unreported on every run because the flow declared them and no
+    // read could ever produce them. After the reads above, so a value that just
+    // gained a read is kept.
+    const pruned = pruneUnsourcedOutputs(flow, publishedOutputsOf);
+    flow = pruned.flow;
     const file = saveFlow(flow);
     // Reference lint (case 4a): warn now, while re-recording is still cheap,
     // about any {{step.output}} only model recovery could re-observe. A step's
@@ -919,6 +943,10 @@ ${describeLeaks(certain.slice(0, 30))}${certain.length > 30 ? `\n  … and ${cer
       );
     }
     for (const line of readsAdded.slice().reverse()) warnings.unshift(`note: ${line}`);
+    for (const d of pruned.dropped.slice().reverse()) {
+      warnings.unshift(`note: ${d.stepId} no longer publishes ${d.outputs.join(', ')} — no replay reads ${d.outputs.length === 1 ? 'it' : 'them'} from the page and the recording showed no line to read`);
+    }
+    if (slotted.length) warnings.unshift(`note: ${slotted.length} goal/report value(s) carrying a value this run made were slotted or dropped:\n${slotted.map((s) => `  ${s}`).join('\n')}`);
     if (stripped) warnings.unshift(`note: dropped ${stripped} locator candidate(s) carrying a value this run minted (known only by export time)`);
     // Loudest of all, so first: a quarantined step is the one thing in this
     // list that changes what `run` does. Each gets the command that fixes it.
@@ -1053,6 +1081,43 @@ ${describeLeaks(certain.slice(0, 30))}${certain.length > 30 ? `\n  … and ${cer
         }
       }
       prevRecovered = false;
+      const pinned = step.skill ? (this.browser.learn?.get(step.skill) ?? null) : null;
+      // A reference this run could not fill, whose RECORDED value the page is
+      // showing right now, resolves to that value (recordedStandIn says which
+      // values are safe; recordedValueShown looks). fwrd54: 06-change replayed
+      // at tier A without reading `mark_ready_button`, and 07-edit — started on
+      // the ticket page where "Mark Ready" stood — fell to model recovery on n2
+      // and n3 for it. Banked in `outputs`, so later steps see it too. Before
+      // the step runs, as the artifact's `needShown` asks it: a value that only
+      // appears on the page the step itself navigates to is not looked for.
+      if (pinned) {
+        const before = [...resolveInstruction(step, varsIn, outputs).missing, ...(resolveStepParams(step, varsIn, outputs)?.missing ?? [])];
+        const skippable = ignorableRefs(before, step, pinned);
+        const chain = pinned.seq && this.browser.learn ? this.browser.learn.list(pinned.origin).filter((s) => s.seq?.chain === pinned.seq!.chain) : [pinned];
+        const runValues = Object.values(varsIn);
+        for (const ref of new Set(before.filter((r) => !skippable.includes(r)))) {
+          const sid = ref.slice(0, ref.indexOf('.'));
+          const out = ref.slice(ref.indexOf('.') + 1);
+          const producer = flow.steps.find((s) => s.id === sid);
+          const raw = producer?.recorded?.[out];
+          const value = recordedStandIn(ref, step.params, chain, {
+            recorded: typeof raw === 'string' ? raw : undefined,
+            differed: (producer?.outputEvidence?.[out]?.differed ?? 0) > 0,
+          });
+          // This run's evidence the value is not furniture: an earlier run saw
+          // it change, or it carries an identifier this run already banked.
+          if (value === undefined || this.runSpecific(value) || this.ledger.runValuesIn(value).some((e) => e.kind === 'identifier')) continue;
+          let shown = false;
+          try {
+            shown = await recordedValueShown(await this.browser.getPage(), value, runValues);
+          } catch {
+            /* browser gone — the reference stays unresolved */
+          }
+          if (!shown) continue;
+          outputs[sid] = { ...(outputs[sid] ?? {}), [out]: value };
+          opts.progress(`[flow ${flow.name}] ${step.id}: resolved {{${ref}}} to its recorded value ${JSON.stringify(value)}, shown on the page`);
+        }
+      }
       const { text, missing } = resolveInstruction(step, varsIn, outputs);
       const bound = resolveStepParams(step, varsIn, outputs);
       // A reference that could not be threaded (an output an earlier step did
@@ -1062,7 +1127,6 @@ ${describeLeaks(certain.slice(0, 30))}${certain.length > 30 ? `\n  … and ${cer
       // missing). Only a genuine failure there halts.
       // ...unless the pinned skill cannot be affected by the reference at all
       // (see ignorableRefs): then the zero-model replay runs as pinned.
-      const pinned = step.skill ? (this.browser.learn?.get(step.skill) ?? null) : null;
       const allMissing = [...missing, ...(bound?.missing ?? [])];
       const ignorable = ignorableRefs(allMissing, step, pinned);
       const blocking = allMissing.filter((r) => !ignorable.includes(r));
@@ -1297,7 +1361,18 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
         // run's own adoptions are invisible — fwrd16-n3 re-pinned 02-create
         // AND 10-open onto the same s_738ec0 in one pass.
         const owned = flow.steps.map((st) => ({ id: st.id, skill: pendingPins.get(st.id) ?? st.skill }));
-        const adoptable = Boolean(outcome && canAdoptPin(this.browser.learn, owned, step.id, step.skill, outcome.skill, mutatingIntent(step.instruction) ? 'mutating' : 'read-only'));
+        // The candidate is the stored skill this step replayed in full, else
+        // the skill its successful recording compiled or merged into: a
+        // recovery with no pin (fwod47-n2 03-add) or whose pin refused before
+        // replaying (fwgr39-n3 04-open) has no replay outcome at all, and
+        // gating on one left both steps unpinned after a clean recovery.
+        const compiledId = learned?.compiled ?? learned?.merged;
+        const compiledSkill = compiledId ? this.browser.learn.get(compiledId) : null;
+        const compiled = compiledSkill ? { skill: compiledSkill.id, status: compiledSkill.status } : undefined;
+        const candidateId = outcome?.ok ? outcome.skill : compiled?.skill;
+        const incumbentSkill = step.skill ? this.browser.learn.get(step.skill) : null;
+        const incumbent = incumbentSkill ? incumbentSkill.status : 'missing';
+        const adoptable = Boolean(candidateId && canAdoptPin(this.browser.learn, owned, step.id, step.skill, candidateId, mutatingIntent(step.instruction) ? 'mutating' : 'read-only'));
         // A candidate whose navigation targets carry an identifier this run
         // made would replay onto this run's record: one THIS step's recovery
         // minted (a url part first banked under this instruction), or one an
@@ -1307,12 +1382,14 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
         // 04-open. A shape-only identifier from an earlier instruction is
         // still left alone: fwod19's odoo menu id looked minted and was an
         // app constant.
-        const candidate = outcome?.ok && outcome.skill ? (this.browser.learn?.get(outcome.skill) ?? null) : null;
-        const mintedLeaks = candidate ? navigationLeaks(scanForLeaks(candidate, this.ledger, outcome!.skill), ledgerStep) : [];
+        const candidate = candidateId ? (this.browser.learn.get(candidateId) ?? null) : null;
+        const mintedLeaks = candidate ? navigationLeaks(scanForLeaks(candidate, this.ledger, candidate.id), ledgerStep) : [];
         const decision = decideRepin({
           step,
           reportStatus: result.report.status,
           outcome,
+          compiled,
+          incumbent,
           stray: agentGesturesOutsideReplay(recoveryEntries),
           adoptable,
           mintedLeaks,
@@ -1349,7 +1426,9 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
             pendingPins.set(step.id, decision.skill);
             if (decision.graduated) {
               graduated.add(step.id);
-              opts.progress(`[flow ${flow.name}] ${step.id}: adopted step graduated — pinned ${decision.skill} (${outcome?.status}), shedding model-first replay`);
+              opts.progress(`[flow ${flow.name}] ${step.id}: adopted step graduated — pinned ${decision.skill} (${candidate.status}), shedding model-first replay`);
+            } else if (incumbent !== 'validated' && incumbent !== 'provisional') {
+              opts.progress(`[flow ${flow.name}] ${step.id}: pinned ${decision.skill} (${candidate.status}) — the step's pin was ${incumbent}`);
             }
           }
         }

@@ -492,16 +492,26 @@ export function canAdoptPin(
  * (usually MORE fragile than the clean original) makes the zero-model
  * fraction non-monotone: fail, recover, re-pin another provisional, churn.
  *
- * The one exception is an ADOPTED step: its incumbent (if any) is a partial
- * compiled from a non-success recording — scaffolding, strictly worse than a
- * recovery that just completed the whole step (rpod1's 01-open replayed 1/2
- * then paid ~90 turns of recovery on EVERY replay). So on the first clean
- * recovery the recovery skill is pinned, provisional or not, and the step
- * graduates to an ordinary one.
+ * The exception is a step with NOTHING WORTH KEEPING: an ADOPTED step (its
+ * incumbent, if any, is a partial compiled from a non-success recording —
+ * rpod1's 01-open replayed 1/2 then paid ~90 turns of recovery on EVERY
+ * replay), a step with no pin at all, or one pinned to a DEMOTED skill. None
+ * of those is better than a recovery that just completed the whole step, so
+ * on the first clean recovery its skill is pinned, provisional or not.
+ * fwgr39-n3's 04-open kept its pin on demoted s_92b602 after a clean recovery
+ * and the spec compile then refused the whole flow.
+ *
+ * The candidate is either the stored skill the recovery replayed in full
+ * (`outcome`) or, when no stored skill carried the step, the skill this
+ * successful recording compiled or merged into (`compiled`). fwod47-n2's
+ * adopted 03-add had no pin, so nothing was replayed, `outcome` was absent,
+ * and the s_8f8761 its 24-turn recovery compiled was never pinned — n3 paid
+ * 59 turns for the same step.
  *
  * `stray` is the model-driven gesture count outside the skill replay: a skill
  * that ran inside a recovery the model then finished by hand did not carry
- * the step, and pinning it would replay the same shortfall. `adoptable` is
+ * the step, and pinning it would replay the same shortfall. It says nothing
+ * about a `compiled` candidate, which IS those gestures. `adoptable` is
  * canAdoptPin's verdict (never steal another step's skill, never demote a
  * mutating step to a read-only one).
  */
@@ -509,6 +519,13 @@ export function decideRepin(input: {
   step: { id: string; skill?: string; adopted?: boolean };
   reportStatus: Report['status'];
   outcome: LearnedRecord['outcome'];
+  /** The skill this run's successful recording compiled or merged into, with its status after learning. */
+  compiled?: { skill: string; status: Skill['status'] };
+  /**
+   * The step's current pin's status in the store; 'missing' when the step
+   * has no pin or the store no longer holds it. Omitted means healthy.
+   */
+  incumbent?: Skill['status'] | 'missing';
   stray: number;
   adoptable: boolean;
   /**
@@ -521,20 +538,26 @@ export function decideRepin(input: {
   mintedLeaks?: string[];
 }): { skill: string; graduated: boolean } | { refused: string } | null {
   const { step, outcome } = input;
-  if (!outcome?.ok || outcome.skill === step.skill) return null;
-  if (input.stray > MAX_STRAY_GESTURES_FOR_PIN) {
-    return { refused: `not re-pinning ${outcome.skill} — the model drove ${input.stray} gesture(s) beyond its replay, so it did not carry the step` };
+  // A full replay of the incumbent itself leaves nothing to move.
+  if (outcome?.ok && outcome.skill === step.skill) return null;
+  const replayed = outcome?.ok ? outcome : undefined;
+  const cand = replayed ?? input.compiled;
+  if (!cand || cand.skill === step.skill) return null;
+  if (replayed && input.stray > MAX_STRAY_GESTURES_FOR_PIN) {
+    return { refused: `not re-pinning ${cand.skill} — the model drove ${input.stray} gesture(s) beyond its replay, so it did not carry the step` };
   }
   if (input.mintedLeaks?.length) {
-    return { refused: `not re-pinning ${outcome.skill} — its navigation carries an identifier this run made (${input.mintedLeaks.slice(0, 3).join(', ')}), so it would replay onto this run's record` };
+    return { refused: `not re-pinning ${cand.skill} — its navigation carries an identifier this run made (${input.mintedLeaks.slice(0, 3).join(', ')}), so it would replay onto this run's record` };
   }
-  if (input.reportStatus !== 'success' || !input.adoptable) return null;
+  if (input.reportStatus !== 'success' || !input.adoptable || cand.status === 'demoted') return null;
   // An adopted step graduates on its first clean recovery whatever the
   // candidate's status: it now owns a skill that completed it, and keeping
   // the flag would leave a pinned step on the model-first route (the local
   // re-record of odoo 08-open onto validated s_04d970 kept `adopted: true`).
-  if (outcome.status === 'validated') return { skill: outcome.skill, graduated: Boolean(step.adopted) };
-  if (step.adopted) return { skill: outcome.skill, graduated: true };
+  if (cand.status === 'validated') return { skill: cand.skill, graduated: Boolean(step.adopted) };
+  if (step.adopted) return { skill: cand.skill, graduated: true };
+  const nothingToKeep = !step.skill || input.incumbent === 'missing' || input.incumbent === 'demoted';
+  if (nothingToKeep) return { skill: cand.skill, graduated: false };
   return null;
 }
 

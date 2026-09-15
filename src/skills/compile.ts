@@ -469,8 +469,8 @@ export function compileSkills(input: CompileInput): Skill[] {
         // marker in the pattern would read as a wildcard segment.
         urlPattern: urlPattern(b.sg.startUrl, new Map([...keptSlots, ...b.mintedForStart])),
         ...(b.sg.fingerprint ? { fingerprint: b.sg.fingerprint } : {}),
-        ...(identityOf(b.sg.startText, keptSlots, knownVals).length
-          ? { requireText: identityOf(b.sg.startText, keptSlots, knownVals) }
+        ...(identityOf(b.sg.startText, keptSlots, knownVals, writtenSlots(b.folded)).length
+          ? { requireText: identityOf(b.sg.startText, keptSlots, knownVals, writtenSlots(b.folded)) }
           : {}),
       },
       // Only the LAST segment finishes the work, so only it can vouch for the
@@ -608,11 +608,16 @@ export function isVarOrigin(key: string): boolean {
   return key.startsWith('var:');
 }
 
-function identityOf(startText: string | undefined, slots: Map<string, string>, known: Set<string>): string[] {
+function identityOf(startText: string | undefined, slots: Map<string, string>, known: Set<string>, written: ReadonlySet<string> = new Set()): string[] {
   if (!startText) return [];
   const out: string[] = [];
   for (const [name, raw] of slots) {
     if (out.length >= MAX_IDENTITY) break;
+    // A value this segment itself SETS is the record's state, not its name:
+    // the page shows it before the work only because it is the setting being
+    // changed, and the next run (or a stale view) can show any other value on
+    // the very same record. See writtenSlots.
+    if (written.has(name)) continue;
     // Whitespace is not identity. fwkb3 published a column name as "Backlog "
     // (trailing space, copied from the header's text), the slot became a
     // requireText marker, and every replay refused the create step because
@@ -626,6 +631,82 @@ function identityOf(startText: string | undefined, slots: Map<string, string>, k
     if (!identityRe(value).test(startText.replace(/\s+/g, ' '))) continue;
     out.push(`{{${name}}}`);
   }
+  return out;
+}
+
+/** Roles whose element IS a value choice: clicking one sets state to its name. */
+const VALUE_CHOICE_ROLES = new Set(['option', 'menuitemradio', 'menuitemcheckbox', 'radio', 'checkbox', 'switch']);
+
+/**
+ * The slots whose value these steps WRITE into the application: typed or
+ * filled as a field's content, chosen as a select option, or named by the
+ * option, radio or checkbox a click or check sets. Such a value is state, and
+ * identityOf never makes it an identity marker — fwgr39's 05-set procedure was
+ * the shape (a refresh interval picked from a menuitemradio named by its slot),
+ * and a marker on a setting refuses the right record the moment the setting
+ * reads differently.
+ *
+ * A marker counts only when it is the WHOLE value set: a field typed as
+ * "Notes for {{v2}}" writes a value that merely contains the runid, which
+ * still names the record. What the steps only look at or navigate by stays
+ * eligible — a click on a link, row or button named by the slot opens that
+ * record, it does not change it — and so does text typed into a search box,
+ * which finds a record rather than editing one.
+ */
+function writtenSlots(steps: readonly SkillStep[]): Set<string> {
+  const out = new Set<string>();
+  const whole = (value: unknown) => {
+    const m = typeof value === 'string' ? /^\s*\{\{(v\d+)\}\}\s*$/.exec(value) : null;
+    if (m) out.add(m[1]);
+  };
+  const chain = (step: SkillStep) => (step.locators?.target ?? []) as LocatorCandidate[];
+  const searching = (step: SkillStep) =>
+    chain(step).some((c) => (c.kind === 'role' && c.role === 'searchbox') || (c.kind === 'css' && /type=["']?search\b|role=searchbox\b/i.test(c.selector)));
+  // `role=option[name="{{v8}}"]` as a raw selector names the option as surely as a role candidate does.
+  const roleSelector = (selector: string) => /^\s*role=(\w+)\s*\[\s*name\s*=\s*"((?:[^"\\]|\\.)*)"/.exec(selector);
+  const choices = (step: SkillStep, all: boolean) => {
+    for (const c of chain(step)) {
+      if (c.kind === 'role' && (all || VALUE_CHOICE_ROLES.has(c.role))) whole(c.name);
+      else if (all && c.kind === 'label') whole(c.label);
+      else if (all && c.kind === 'text') whole(c.text);
+      else if (c.kind === 'css') {
+        const m = roleSelector(c.selector);
+        if (m && (all || VALUE_CHOICE_ROLES.has(m[1]))) whole(m[2]);
+      }
+    }
+    if (typeof step.args.target === 'string') {
+      const m = roleSelector(step.args.target);
+      if (m && (all || VALUE_CHOICE_ROLES.has(m[1]))) whole(m[2]);
+    }
+  };
+  const visit = (list: readonly SkillStep[]) => {
+    for (const step of list) {
+      if (step.body) visit(step.body);
+      switch (step.tool) {
+        case 'fill':
+          if (!searching(step)) whole(step.args.value);
+          break;
+        case 'type':
+          if (!searching(step)) whole(step.args.text);
+          break;
+        case 'select':
+          whole(step.args.option);
+          break;
+        // A check's argument is its target: the checkbox or radio named by the
+        // slot is the option being set, whatever role the recorder gave it.
+        case 'check':
+          choices(step, true);
+          break;
+        case 'click':
+        case 'dblclick':
+        case 'right_click':
+        case 'modifier_click':
+          choices(step, false);
+          break;
+      }
+    }
+  };
+  visit(steps);
   return out;
 }
 
@@ -1129,7 +1210,7 @@ export function urlPattern(url: string, slots: Map<string, string> = new Map(), 
  * call site has to know which of the two owns the source.
  */
 export { TRANSIENT_LINE, maskMinted } from '../execution/expect.js';
-import { TRANSIENT_LINE, maskMinted } from '../execution/expect.js';
+import { TRANSIENT_LINE, identifiesNothing, maskMinted } from '../execution/expect.js';
 
 function expectationFor(step: RecordedStep, slots: Map<string, string>): StepExpectation | undefined {
   // A navigation's diff is its LANDING — the next segment's start url,
@@ -1144,8 +1225,16 @@ function expectationFor(step: RecordedStep, slots: Map<string, string>): StepExp
     // step left it: fwgr25's sign-in recorded `- status "Loading"` as its
     // click's only page change, and every replay — which caught the page
     // after the spinner — stopped there and recovered for 24 turns.
-    const lasting = step.diff.added.filter((l) => !TRANSIENT_LINE.test(l));
-    if (lasting.length) out.addedContains = lasting.slice(0, MAX_ADDED_LINES).map((l) => maskMinted(maskVolatile(substitute(l, slots))).slice(0, 120));
+    // A line that identifies no element — no name, no value, or only one the
+    // mask wildcarded — is on the page for incidental reasons and proves
+    // nothing about the step (fwod47-n3 04-open stopped on an unnamed inline-
+    // editor textbox). Judged after masking, so the budget goes to lines that
+    // can tell right from wrong.
+    const lasting = step.diff.added
+      .filter((l) => !TRANSIENT_LINE.test(l))
+      .map((l) => maskMinted(maskVolatile(substitute(l, slots))))
+      .filter((l) => !identifiesNothing(l));
+    if (lasting.length) out.addedContains = lasting.slice(0, MAX_ADDED_LINES).map((l) => l.slice(0, 120));
   }
   if (!Object.keys(out).length) return undefined;
   // The recording's dialect travels with its lines, so replay and the artifact

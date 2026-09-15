@@ -289,6 +289,21 @@ describe('volatile expectations and whitespace identity (fwkb3, fwod31)', () => 
     expect(s.steps[0].expect?.addedContains).toBeUndefined();
     expect(s.steps[1].expect?.addedContains).toEqual(['- heading "Board"']);
   });
+  it('a line that identifies no element is never a recorded effect (fwod47-n3 04-open)', () => {
+    const text = 'Open the second line for editing.';
+    const entries: RecordedEntry[] = [
+      { k: 'instruction', text, url: `${ORIGIN}/`, fingerprint: [1, 0, 0] },
+      step('click', { target: '@e3' }, [{ kind: 'role', role: 'cell', name: 'Qty' }], {
+        diff: { url: `${ORIGIN}/`, alerts: [], added: ['- textbox "": ', '- generic ""', '- textbox "": 13f9pv52yozr', '- checkbox "" [checked]', '- row "Corner Desk 2.00"', '- textbox "Quantity": 2.00'] },
+      }),
+      step('click', { target: '@e4' }, [{ kind: 'role', role: 'cell', name: 'Price' }], {
+        diff: { url: `${ORIGIN}/`, alerts: [], added: ['- textbox ""', '- cell ""'] },
+      }),
+    ];
+    const s = compileSkill({ entries, instruction: text, report, session: 's', model: 'm', now: '2026-09-15T00:00:00Z' })!;
+    expect(s.steps[0].expect?.addedContains).toEqual(['- row "Corner Desk 2.00"', '- textbox "Quantity": {{*}}']);
+    expect(s.steps[1].expect?.addedContains).toBeUndefined();
+  });
   it('a minted url part is rewritten in a navigation url at its own position only (fwod32 sign-in)', () => {
     const minted = [
       { name: 'd2', value: '135', at: 'q.action' },

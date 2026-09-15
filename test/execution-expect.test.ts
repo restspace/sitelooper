@@ -10,6 +10,7 @@ import {
   TRANSIENT_LINE,
   consequentialExpectations,
   expectedChangesVerdict,
+  identifiesNothing,
   isEchoLine,
   liveLines,
   maskMinted,
@@ -201,6 +202,18 @@ describe('expectedChangesVerdict', () => {
     });
   });
 
+  it('skips a line that identifies no element, so a stale store stops failing on it (fwod47-n3 04-open)', async () => {
+    // the stored shape: an unnamed textbox whose slot filled to "null", beside wildcarded unnamed ones
+    const recorded = ['- textbox "": {{*}}', '- textbox "": {{v5}}'];
+    expect(await expectedChangesVerdict(recorded, { v5: 'null' }, ctx(), seen([], []))).toEqual({ warnings: [] });
+    expect(await expectedChangesVerdict(recorded, { v5: '' }, ctx(), seen([], []))).toEqual({ warnings: [] });
+    // a slot that fills to a real value still identifies, and still stops when absent
+    expect((await expectedChangesVerdict(recorded, { v5: '147.00' }, ctx(), seen([], ['- textbox "": 12.00']))).stop).toMatch(/did not show "- textbox \\"\\": 147.00"/);
+    // the identifying lines of a group are still judged without the unidentifying ones
+    const mixed = await expectedChangesVerdict(['- row "20% £ 294.00"', '- textbox "": {{*}}'], {}, ctx(), seen([], ['- textbox "": 3']));
+    expect(mixed.stop).toBe('after step 3 none of the 1 recorded page change(s) appeared (e.g. "- row \\"20% £ 294.00\\"") — the step ran but did not have its recorded effect');
+  });
+
   it('reads the diff first: a change that landed in the diff needs no live look', async () => {
     let looked = 0;
     const obs: ChangeObservation = { added: ['- heading "Widget A"'], live: async () => { looked++; return { lines: [], complete: true }; } };
@@ -220,6 +233,15 @@ describe('the rules the verdict is built from', () => {
     expect(maskMinted('- textbox "Due" [checked]: 12/31/2026')).toBe('- textbox "Due" [checked]: {{*}}');
     expect(maskMinted('- textbox "Name": {{v1}}')).toBe('- textbox "Name": {{v1}}');
     expect(maskMinted('- heading "Panel: Title"')).toBe('- heading "Panel: Title"');
+  });
+
+  it('identifiesNothing: no name and no real value, whatever the role, except a popup container', () => {
+    for (const line of ['- textbox "": {{*}}', '- textbox ""', '- textbox "": ', '- textbox "": null', '- generic ""', '- cell "{{*}}"', '- checkbox "" [checked]', '- checkbox [checked]', '- row', 'button ""']) {
+      expect(identifiesNothing(line), line).toBe(true);
+    }
+    for (const line of ['- textbox "Name": {{*}}', '- textbox "": 147.00', '- textbox "": {{v5}}', '- row "20% £ 294.00"', '- cell "2.00', '- text: Saved', '- dialog ""', '- listbox', '- menu ""', 'not a line at all!']) {
+      expect(identifiesNothing(line), line).toBe(false);
+    }
   });
 
   it('liveLines masks, then fills, as both runners do at run time', () => {

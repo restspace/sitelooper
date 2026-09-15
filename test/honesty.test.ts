@@ -91,6 +91,36 @@ describe('decideRepin', () => {
     expect(decideRepin({ ...base, outcome: { ...validated, ok: false } })).toBeNull();
     expect(decideRepin({ ...base, outcome: { ...validated, skill: 's_old' } })).toBeNull();
   });
+
+  it('pins over a DEMOTED incumbent, provisional or not (fwgr39-n3 04-open, s_92b602)', () => {
+    const compiled = { skill: 's_rec', status: 'provisional' as const };
+    // The incumbent refused before replaying, so there is no outcome — only what the recovery compiled.
+    expect(decideRepin({ ...base, outcome: undefined, compiled, incumbent: 'demoted', stray: 17 })).toEqual({ skill: 's_rec', graduated: false });
+    expect(decideRepin({ ...base, outcome: provisional, incumbent: 'demoted' })).toEqual({ skill: 's_new', graduated: false });
+    // A healthy incumbent still makes a provisional candidate earn the pin.
+    expect(decideRepin({ ...base, outcome: undefined, compiled, incumbent: 'validated' })).toBeNull();
+    expect(decideRepin({ ...base, outcome: undefined, compiled })).toBeNull();
+  });
+
+  it('pins what a recovery compiled when no stored skill ran (fwod47-n2 03-add, no pin)', () => {
+    const compiled = { skill: 's_8f8761', status: 'provisional' as const };
+    // Every gesture is the model's when nothing replayed; the compiled skill IS those gestures, so stray does not apply.
+    expect(decideRepin({ ...base, step: { id: '03-add', adopted: true }, outcome: undefined, compiled, incumbent: 'missing', stray: 24 })).toEqual({ skill: 's_8f8761', graduated: true });
+    expect(decideRepin({ ...base, step: { id: '03-add' }, outcome: undefined, compiled, incumbent: 'missing', stray: 24 })).toEqual({ skill: 's_8f8761', graduated: false });
+    // A partial replay of the incumbent that the model finished: the variant is the candidate.
+    expect(decideRepin({ ...base, outcome: { ...provisional, skill: 's_old', ok: false }, compiled, incumbent: 'demoted' })).toEqual({ skill: 's_8f8761', graduated: false });
+  });
+
+  it('still refuses a compiled candidate that leaks, fails, is unadoptable, or is demoted', () => {
+    const compiled = { skill: 's_rec', status: 'provisional' as const };
+    const open = { ...base, outcome: undefined, compiled, incumbent: 'missing' as const };
+    const d = decideRepin({ ...open, mintedLeaks: ['22'] });
+    expect(d && 'refused' in d ? d.refused : null).toMatch(/identifier this run made/);
+    expect(decideRepin({ ...open, reportStatus: 'failure' })).toBeNull();
+    expect(decideRepin({ ...open, adoptable: false })).toBeNull();
+    expect(decideRepin({ ...open, compiled: { skill: 's_rec', status: 'demoted' } })).toBeNull();
+    expect(decideRepin({ ...open, step: { id: '03-add', skill: 's_rec' } })).toBeNull();
+  });
 });
 
 describe('parseRefLines', () => {

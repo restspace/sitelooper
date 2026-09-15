@@ -132,6 +132,56 @@ describe('identity precondition (compile)', () => {
     expect(tail.contract).toBe(2);
   });
 
+  /**
+   * fwgr39 05-set: a marker must name the record, not describe its state. A
+   * value the segment itself SETS — typed, filled, selected, or the option,
+   * radio or checkbox a click or check picks — is the setting being changed,
+   * and the same record shows another value the moment it differs.
+   */
+  describe('a value the segment writes is state, not identity', () => {
+    const SET = "On ticket 'r9-n2 RD Bench Ticket', set the priority to 'Urgent Level'.";
+    const START = '- heading "r9-n2 RD Bench Ticket"\n- combobox "Priority"\n- option "Urgent Level"\n- link "Urgent Level"\n- searchbox "Search"';
+    const known = { runid: 'r9-n2', 'output:i1:priority': 'Urgent Level' };
+    const markerValues = (steps: RecordedStep[]) => {
+      const [skill] = compileSkills({
+        entries: [{ k: 'instruction', text: SET, url: `${ORIGIN}/#/tickets/t15`, fingerprint: [1, 0, 0], startText: START }, ...steps],
+        instruction: SET,
+        report: REPORT,
+        session: 's',
+        now: '2026-08-27T00:00:00.000Z',
+        knownValues: known,
+      });
+      return (skill.preconditions.requireText ?? []).map((m) => skill.params[m.replace(/[{}]/g, '')]?.example);
+    };
+
+    it('drops a value a click picks as an option (a menuitemradio, an option, a raw role selector)', () => {
+      expect(markerValues([step('click', { target: '@e1' }, [{ kind: 'role', role: 'menuitemradio', name: 'Urgent Level' }])])).toEqual(['r9-n2']);
+      expect(markerValues([step('click', { target: '@e1' }, [{ kind: 'role', role: 'option', name: 'Urgent Level' }])])).toEqual(['r9-n2']);
+      expect(markerValues([step('click', { target: 'role=option[name="Urgent Level"]' }, [{ kind: 'css', selector: 'role=option[name="Urgent Level"]' }])])).toEqual(['r9-n2']);
+    });
+
+    it('drops a value filled, typed, selected or checked', () => {
+      expect(markerValues([step('fill', { target: '@e1', value: 'Urgent Level' }, [{ kind: 'label', label: 'Priority' }])])).toEqual(['r9-n2']);
+      expect(markerValues([step('type', { target: '@e1', text: 'Urgent Level' }, [{ kind: 'label', label: 'Priority' }])])).toEqual(['r9-n2']);
+      expect(markerValues([step('select', { target: '@e1', option: 'Urgent Level' }, [{ kind: 'role', role: 'combobox', name: 'Priority' }])])).toEqual(['r9-n2']);
+      expect(markerValues([step('check', { target: '@e1', checked: true }, [{ kind: 'label', label: 'Urgent Level' }])])).toEqual(['r9-n2']);
+    });
+
+    it('keeps a value the segment only navigates by, looks at, or searches with', () => {
+      const click = step('click', { target: '@e1' }, [{ kind: 'role', role: 'link', name: 'Urgent Level' }]);
+      expect(markerValues([click])).toEqual(['r9-n2', 'Urgent Level']);
+      const search = step('fill', { target: '@e1', value: 'Urgent Level' }, [{ kind: 'role', role: 'searchbox', name: 'Search' }]);
+      expect(markerValues([search])).toEqual(['r9-n2', 'Urgent Level']);
+      const read = step('read', { target: '@e1', what: 'text' }, [{ kind: 'role', role: 'combobox', name: 'Priority' }], { result: '"Urgent Level"' });
+      expect(markerValues([read])).toEqual(['r9-n2', 'Urgent Level']);
+    });
+
+    it('keeps the name inside a longer written value: the record is still named by it', () => {
+      const fill = step('fill', { target: '@e1', value: 'Urgent Level for r9-n2' }, [{ kind: 'label', label: 'Note' }]);
+      expect(markerValues([fill])).toContain('r9-n2');
+    });
+  });
+
   it('does not split at a goto the next step immediately replaces, so the superseded one is still dropped', () => {
     const entries: RecordedEntry[] = [
       { k: 'instruction', text: ADD_PART, url: `${ORIGIN}/#/home` },
@@ -439,6 +489,45 @@ describe('a self-navigating procedure is checked AFTER its goto', () => {
     // The goto ran — that is how we learn where it lands. Nothing after it did.
     expect(ran).toEqual(['goto']);
     expect(out.stepsRun).toBe(1); // the goto ran and is not pretended away
+  });
+
+  /**
+   * fwgr39-n3 05-set: the url carried this run's own record, and a second
+   * marker ("Last 6 hours", a setting) was not rendered. The url has answered
+   * which record this is, so the missing marker is stale: a warning, and the
+   * work runs (identityMarkerVerdict).
+   */
+  it('runs with a stale-marker warning when the url names this run’s record', async () => {
+    const { replaySkill } = await import('../src/skills/replay.js');
+    const skill = {
+      id: 's_stale', origin: 'http://x.test', template: 't',
+      params: { v1: { example: '41', usedIn: [], known: true as const }, v2: { example: 'Last 6 hours', usedIn: [], known: true as const } },
+      preconditions: { urlPattern: 'http://x.test/rec/{{v1}}', requireText: ['{{v2}}'] },
+      steps: [{ tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Edit' }] } }],
+      stats: { uses: 1, successes: 1, partial: 0, created: '', failedAtStep: {}, fallthroughs: 0 },
+      status: 'validated', provenance: { session: 's', instruction: 't', created: '' },
+    } as unknown as Skill;
+    const pageAt = (url: string) => ({
+      url: () => url,
+      async goto() {},
+      getByRole: () => ({ count: async () => 1, first: () => ({ textContent: async () => '' }) }),
+      locator: () => ({ count: async () => 1, first: () => ({ textContent: async () => '' }) }),
+      async evaluate(_fn: unknown, arg: unknown) { return isObserveArg(arg) ? documentOf(['- heading "Record 44"', '- button "Edit"']) : ''; },
+      async waitForLoadState() {},
+    }) as unknown as import('playwright-core').Page;
+
+    const ran: string[] = [];
+    const out = await replaySkill(skill, { v1: '44', v2: 'Last 6 hours' }, { page: pageAt('http://x.test/rec/44'), exec: async (tool) => { ran.push(tool); return { result: 'ok' }; } });
+    expect(out.refused, out.reason).toBeFalsy();
+    expect(out.wrongRecord).toBeUndefined();
+    expect(ran).toEqual(['click']);
+    expect(out.warnings.some((w) => /"Last 6 hours" is not on the page, but the url names this run's record \(path\[1\]=44\) — the marker is stale/.test(w))).toBe(true);
+
+    // The same missing marker where the url names no record still refuses.
+    const wild = { ...skill, preconditions: { urlPattern: 'http://x.test/rec/:id', requireText: ['{{v2}}'] } } as Skill;
+    const refused = await replaySkill(wild, { v1: '44', v2: 'Last 6 hours' }, { page: pageAt('http://x.test/rec/44'), exec: async () => ({ result: 'ok' }) });
+    expect(refused.refused).toBe(true);
+    expect(refused.wrongRecord).toMatch(/different record/);
   });
 
   /**

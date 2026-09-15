@@ -20,6 +20,7 @@
 
 /** How a later run obtains its own value for a slot. */
 import { MIN_ID_LEN, looksLikeId, tokenPattern } from './shape.js';
+import type { Skill } from './store.js';
 
 export type Binding =
   /** The caller declared it (a flow var). */
@@ -326,7 +327,18 @@ export class RunLedger {
  */
 export function occursAsToken(text: string, value: string): boolean {
   if (!value) return false;
-  return tokenPattern(value).test(text);
+  return tokenRe(value).test(text);
+}
+
+/** Every whole-token occurrence of `value` in `text` replaced — the same boundary rule as occursAsToken. */
+export function replaceAsToken(text: string, value: string, replacement: string): string {
+  if (!value) return text;
+  return text.replace(tokenRe(value, 'g'), () => replacement);
+}
+
+/** The module's one boundary pattern (shape-gate pins tokenPattern to a single site here). */
+function tokenRe(value: string, flags = ''): RegExp {
+  return tokenPattern(value, flags);
 }
 
 
@@ -530,4 +542,80 @@ export function fatal(leak: Leak): boolean {
  */
 export function inLocator(leak: Leak): boolean {
   return /(^|\.)locators(\.|\[)/.test(leak.where);
+}
+
+/**
+ * Slot or drop the run values the ledger KNOWS are this run's (`evidenced`)
+ * that survived into a skill's `goal.requireText` and `reportTemplate` — the
+ * export-time counterpart of dropping a locator's minted candidates.
+ *
+ * fwod47's export listed nine: s_010d93's goal waited for a marker naming the
+ * recording's url `…&id=21`, and s_55a5e1/s_7dbdeb's report templates carried
+ * `id=44` and `21`. A goal marker naming the recording's record is never shown
+ * on a later run's record, so the skill can never be found already done — or,
+ * where the recording's record survives, is found done on the wrong one. A
+ * report template's literal is dropped by synthesizeReport as stale anyway, so
+ * leaving it only keeps the leak in the artifact.
+ *
+ * Slotted when the value has an origin: a param whose `example` IS the value
+ * and which carries a `binding` resolves to this run's value wherever
+ * `{{vN}}` stands (goalSatisfied and synthesizeReport both fill params).
+ * Otherwise the carrier goes: the marker, the template value, or the summary
+ * (synthesizeReport falls back to its plain replay sentence). A goal left with
+ * no marker is removed, which goalSatisfied already reads as "never done".
+ *
+ * Shape-only values are left alone: those are usually page copy, and dropping
+ * a marker over a guess would weaken skills that were right. Pure; returns
+ * null when nothing changed.
+ */
+export function slotKnownRunValues(skill: Skill, ledger: RunLedger): { skill: Skill; changes: string[] } | null {
+  const changes: string[] = [];
+  const params = Object.entries(skill.params ?? {});
+  // One string: every evidenced value in it slotted, or null when one has no origin.
+  const rewrite = (text: string): { text: string; slotted: string[] } | null => {
+    let out = text;
+    const slotted: string[] = [];
+    for (const entry of ledger.runValuesIn(text)) {
+      if (entry.basis === 'shape' || !occursAsToken(out, entry.value)) continue;
+      const param = params.find(([, p]) => p.binding && String(p.example ?? '').trim() === entry.value);
+      if (!param) return null;
+      out = replaceAsToken(out, entry.value, `{{${param[0]}}}`);
+      slotted.push(`${JSON.stringify(entry.value)} → {{${param[0]}}}`);
+    }
+    return { text: out, slotted };
+  };
+  let goal = skill.goal;
+  if (goal?.requireText?.length) {
+    const kept: string[] = [];
+    goal.requireText.forEach((marker, i) => {
+      const r = rewrite(marker);
+      if (!r) changes.push(`goal.requireText[${i}] dropped (names a value this run made, with no slot to bind it)`);
+      else {
+        if (r.slotted.length) changes.push(`goal.requireText[${i}] slotted ${r.slotted.join(', ')}`);
+        kept.push(r.text);
+      }
+    });
+    goal = kept.length ? { ...goal, requireText: kept } : undefined;
+  }
+  let reportTemplate = skill.reportTemplate;
+  if (reportTemplate) {
+    const values: Record<string, string> = {};
+    for (const [k, v] of Object.entries(reportTemplate.values ?? {})) {
+      const r = typeof v === 'string' ? rewrite(v) : { text: v, slotted: [] };
+      if (!r) changes.push(`reportTemplate.values.${k} dropped (recorded literal of a value this run made)`);
+      else {
+        if (r.slotted.length) changes.push(`reportTemplate.values.${k} slotted ${r.slotted.join(', ')}`);
+        values[k] = r.text;
+      }
+    }
+    const s = typeof reportTemplate.summary === 'string' ? rewrite(reportTemplate.summary) : { text: reportTemplate.summary, slotted: [] };
+    if (!s) changes.push('reportTemplate.summary dropped (narrates a value this run made)');
+    else if (s.slotted.length) changes.push(`reportTemplate.summary slotted ${s.slotted.join(', ')}`);
+    reportTemplate = { summary: s ? s.text : '', values };
+  }
+  if (!changes.length) return null;
+  const next: Skill = { ...skill, ...(reportTemplate ? { reportTemplate } : {}) };
+  if (goal) next.goal = goal;
+  else delete next.goal;
+  return { skill: next, changes };
 }

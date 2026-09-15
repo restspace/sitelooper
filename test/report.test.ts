@@ -19,6 +19,7 @@ describe('report validation', () => {
       },
     });
     expect(v.ok).toBe(true);
+    if (v.ok) expect(v.report.evidence?.values).toEqual({ orgName: 'k7x2 MTP Supplies Ltd', count: 4, deleted: false });
   });
 
   it('rejects what cannot be repaired without guessing, with a readable error', () => {

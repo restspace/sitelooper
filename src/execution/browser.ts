@@ -133,7 +133,9 @@ export async function robustClick(loc: Locator, opts: ClickOpts): Promise<string
   const label = opts.dbl ? 'double-clicked' : 'clicked';
   const act: ClickAct = (o) => (opts.dbl ? loc.dblclick(o) : loc.click(o));
   let firstFailure = '';
-  for (const tier of CLICK_TIERS) {
+  let waitedForEnabled = false;
+  for (let i = 0; i < CLICK_TIERS.length; i++) {
+    const tier = CLICK_TIERS[i];
     // Every tier before this one failed in a way that proves nothing went out
     // (the throws below end the loop otherwise), so a deadline spent here is
     // a click that was never dispatched.
@@ -155,6 +157,20 @@ export async function robustClick(loc: Locator, opts: ClickOpts): Promise<string
       // failed, so an ordinary click costs nothing extra; an element that
       // cannot be asked (gone, re-rendering) goes on down the tiers as before.
       if (tier === CLICK_TIERS[0] && (await loc.isDisabled({ timeout: DISABLED_PROBE_MS }).catch(() => false))) {
+        // A control disabled only while the page settles (a save button
+        // enabled once the form hydrates) is timing, not a wrong procedure:
+        // fwgr39-n3's refusal demoted a whole skill at step 1. Give it one
+        // bounded wait, inside what is left of the action's deadline, then
+        // retry Playwright's own click once — its failure proved nothing
+        // went out, so the retry repeats nothing. Still disabled: refuse.
+        if (!waitedForEnabled) {
+          waitedForEnabled = true;
+          const settleMs = Math.min(DISABLED_SETTLE_MS, tierBudget(opts));
+          if (settleMs >= 1 && (await enabledWithin(loc, settleMs))) {
+            i = -1;
+            continue;
+          }
+        }
         throw actionFailure(
           'not-dispatched',
           'disabled',
@@ -189,6 +205,20 @@ export async function robustClick(loc: Locator, opts: ClickOpts): Promise<string
 
 /** How long robustClick asks whether a control that refused a click is disabled. */
 const DISABLED_PROBE_MS = 500;
+
+/** The most robustClick waits for a disabled control to become enabled before refusing it. */
+const DISABLED_SETTLE_MS = 3_000;
+
+/** Poll until the control reads enabled or `ms` passes. An element that cannot be asked counts as not enabled. */
+async function enabledWithin(loc: Locator, ms: number): Promise<boolean> {
+  const end = Date.now() + ms;
+  for (;;) {
+    const left = end - Date.now();
+    if (left <= 0) return false;
+    if (await Promise.resolve().then(() => loc.isEnabled({ timeout: Math.min(DISABLED_PROBE_MS, left) })).catch(() => false)) return true;
+    await new Promise((r) => setTimeout(r, Math.min(100, Math.max(1, end - Date.now()))));
+  }
+}
 
 /** Playwright's own words for an element that left the DOM mid-action — never its generic actionability wording. */
 const DETACHED = /element was detached|not attached to the DOM|element is not attached|element is not stable/i;

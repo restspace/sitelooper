@@ -17,12 +17,14 @@ import {
   describeUrl,
   errorPageVerdict,
   gotoLandingVerdict,
+  identityMarkerVerdict,
   isErrorPageUrl,
   landedOnRecordedPage,
   markersBound,
   preconditionVerdict,
   segmentGate,
   urlEffectVerdict,
+  urlRecordParts,
 } from '../src/execution/gates.js';
 import { liveAlerts, liveAlertsObserved } from '../src/execution/observe.js';
 import { SHADOW_LIMITS, SNAPSHOT_LIMITS, observeDocumentInPage } from '../src/execution/snapshot.js';
@@ -464,6 +466,49 @@ describe('markersBound', () => {
   it('refuses an empty or whitespace marker', () => {
     expect(markersBound([''], {})).toBe(false);
     expect(markersBound(['  '], {})).toBe(false);
+  });
+});
+
+describe('urlRecordParts / identityMarkerVerdict (fwgr39-n3 05-set: a stale marker on the right record)', () => {
+  const GRAFANA = 'http://127.0.0.1:3000/d/:var/{{v2}}-bench-dashboard?from=:id&timezone=browser&to=now';
+  const params = { v2: 'fwgr39-n3', v7: 'Last 6 hours' };
+
+  it("names the record when every param-filled part equals this run's value", () => {
+    const live = 'http://127.0.0.1:3000/d/efybx78tc7q4gb/fwgr39-n3-bench-dashboard?editview=settings&from=now-6h&timezone=browser&to=now';
+    expect(urlRecordParts(GRAFANA, live, params)).toEqual(['path[2]=fwgr39-n3-bench-dashboard']);
+    expect(urlRecordParts('http://x.test/edit?id={{d1}}', 'http://x.test/edit?id=17', { d1: '17' })).toEqual(['id=17']);
+    expect(urlRecordParts('http://x.test/web#id={{d1}}&model=sale.order', 'http://x.test/web#id=17&model=sale.order&cids=1', { d1: '17' })).toEqual(['#id=17']);
+  });
+
+  it('names nothing where the url cannot tell records apart, or tells a different one', () => {
+    // wildcards match every record
+    expect(urlRecordParts('http://x.test/rec/:id', 'http://x.test/rec/44', {})).toBeNull();
+    // another run's slug
+    expect(urlRecordParts(GRAFANA, 'http://127.0.0.1:3000/d/abc123/fwgr39-n2-bench-dashboard?from=now-6h&timezone=browser&to=now', params)).toBeNull();
+    // unbound, or bound to ''
+    expect(urlRecordParts('http://x.test/rec/{{v1}}', 'http://x.test/rec/44', {})).toBeNull();
+    expect(urlRecordParts('http://x.test/rec/{{d1}}', 'http://x.test/rec/', { d1: '' })).toBeNull();
+    // a bound query key the live url lacks, and a different page shape
+    expect(urlRecordParts('http://x.test/edit?id={{d1}}', 'http://x.test/edit', { d1: '17' })).toBeNull();
+    expect(urlRecordParts('http://x.test/rec/{{v1}}', 'http://x.test/rec/44/edit', { v1: '44' })).toBeNull();
+    // one record part right is not enough when another is wrong
+    expect(urlRecordParts('http://x.test/{{v1}}/items/{{d1}}', 'http://x.test/acme/items/9', { v1: 'acme', d1: '8' })).toBeNull();
+    expect(urlRecordParts(undefined, 'http://x.test/rec/44', {})).toBeNull();
+  });
+
+  it('masks a credential-named part in what it reports', () => {
+    expect(urlRecordParts('http://x.test/cb?token={{v1}}', 'http://x.test/cb?token=abc', { v1: 'abc' })).toEqual(['token=***']);
+  });
+
+  it('warns instead of refusing when the url names the record, and refuses when it cannot', () => {
+    const live = 'http://127.0.0.1:3000/d/efybx78tc7q4gb/fwgr39-n3-bench-dashboard?from=now-6h&timezone=browser&to=now';
+    expect(identityMarkerVerdict(GRAFANA, live, params, 'Last 6 hours', 'present')).toEqual({ pass: true });
+    const stale = identityMarkerVerdict(GRAFANA, live, params, 'Last 6 hours', 'absent');
+    expect(stale.pass).toBe(true);
+    expect(stale.warning).toMatch(/"Last 6 hours" is not on the page, but the url names this run's record \(path\[2\]=fwgr39-n3-bench-dashboard\) — the marker is stale/);
+    expect(identityMarkerVerdict(GRAFANA, live, params, 'Last 6 hours', 'unknown').warning).toMatch(/could not be confirmed/);
+    expect(identityMarkerVerdict('http://x.test/rec/:id', 'http://x.test/rec/44', {}, 'Record 45', 'absent')).toEqual({ pass: false });
+    expect(identityMarkerVerdict('http://x.test/rec/:id', 'http://x.test/rec/44', {}, 'Record 45', 'unknown')).toEqual({ pass: false });
   });
 });
 

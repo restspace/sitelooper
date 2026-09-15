@@ -1653,6 +1653,64 @@ describe('flow-level wiring', () => {
     });
   });
 
+  /**
+   * fwrd54 07-edit: a used slot bound to `{{06-change.mark_ready_button}}`,
+   * recorded "Mark Ready". The daemon resolves it to that value when the page
+   * shows it (recordedStandIn + recordedValueShown); the artifact must too.
+   */
+  describe('a reference whose recorded value is on the page resolves to it', () => {
+    const click: SkillStep = { tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'role', role: 'button', name: '{{v1}}' }] } };
+    const spec = (example: string, step: SkillStep = click) =>
+      specOf([step], {
+        params: { v1: '{{02-b.button}}' },
+        segments: [segment([step], { params: { v1: { example, usedIn: [1], known: true } } })],
+      });
+
+    it('takes a safe recorded label through needShown, with the recorded value inlined', () => {
+      const source = emit(spec('Mark Ready'));
+      expect(source).toContain("v1: await needShown(page, outputs, '02-b.button', '01-do', 'Mark Ready', Object.values(vars))");
+      expect(source).toContain('function need(outputs: Outputs, ref: string, by: string): string {');
+      expect(source).toContain('async function recordedValueShown(');
+      expect(syntaxErrors(source)).toEqual([]);
+    });
+
+    /**
+     * Evidence, not shape (recordedStandIn): the slot must be used only as the
+     * name of a control the procedure acts on. A link's name is how an app
+     * names a record, and a typed value is data — both keep need().
+     */
+    it('keeps need() when the slot names a link or is typed, whatever the value looks like', () => {
+      const link: SkillStep = { tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'role', role: 'link', name: '{{v1}}' }] } };
+      const typed: SkillStep = { tool: 'fill', args: { target: '@e1', value: '{{v1}}' }, locators: { target: [{ kind: 'id', selector: '#i' }] } };
+      for (const source of [emit(spec('Mark Ready', link)), emit(spec('Mark Ready', typed))]) {
+        expect(source).toContain("v1: need(outputs, '02-b.button', '01-do')");
+        expect(source).not.toContain('needShown(page');
+      }
+    });
+
+    it('banks a shown value, prefers a published one, and still stops when the page does not show it', async () => {
+      const src = emit(spec('Mark Ready'));
+      const logs: string[] = [];
+      let shown = true;
+      const helpers = runnableHelpers(src, { warn: () => {}, log: (l: string) => logs.push(l) });
+      // The page itself is the shared module's business (parity covers it);
+      // here only the helper's own decisions are on trial.
+      const needShown = new Function('need', 'recordedValueShown', `return ${helpers.needShown.toString()}`)(helpers.need, async () => shown);
+      const outputs: Record<string, string> = {};
+      expect(await needShown({}, outputs, '02-b.button', '01-do', 'Mark Ready', [])).toBe('Mark Ready');
+      expect(outputs['02-b.button']).toBe('Mark Ready');
+      expect(await needShown({}, { '02-b.button': 'Live' }, '02-b.button', '01-do', 'Mark Ready', [])).toBe('Live');
+      // A read that matched nothing publishes '' here (readOptional) where
+      // replay publishes nothing: the same missing reference, stood in for.
+      const empty: Record<string, string> = { '02-b.button': '' };
+      expect(await needShown({}, empty, '02-b.button', '01-do', 'Mark Ready', [])).toBe('Mark Ready');
+      expect(empty['02-b.button']).toBe('Mark Ready');
+      shown = false;
+      await expect(needShown({}, {}, '02-b.button', '01-do', 'Mark Ready', [])).rejects.toThrow(/02-b\.button/);
+      expect(logs).toEqual([]);
+    });
+  });
+
   it('inlines a recorded value with a warning when the flow binds no slot', () => {
     const step: SkillStep = { tool: 'fill', args: { target: '@e1', value: '{{v1}}' }, locators: { target: [{ kind: 'id', selector: '#i' }] } };
     const { source, warnings } = emitFlowFile(specOf([step], { params: {} }), { tier: 'plain' });

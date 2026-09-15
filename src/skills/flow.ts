@@ -757,14 +757,32 @@ function contradictionWarning(idI: string, gi: Group, idJ: string, gj: Group): s
     const jLine = jRaw.split('\n')[0].trim();
     const iLine = iRaw.split('\n')[0].trim();
     if (!jLine || !iLine) continue;
-    const lj = jLine.toLowerCase();
-    const li = iLine.toLowerCase();
+    // The LEADING value, not the narration after it: fwod47's 08-create read
+    // "Cancelled (current checked state in the status bar; …)" right after
+    // 07-open reported "Cancelled (status bar radio "Cancelled" is the checked
+    // state; …)" — the same state, described in different words, flagged as a
+    // contradiction because the tails share nothing.
+    const lj = leadingValue(jLine);
+    const li = leadingValue(iLine);
+    if (!lj || !li) continue;
     if (lj.includes(li) || li.includes(lj)) continue;
     return `contradicted-step: ${idJ} read ${label} "${jLine}" right after ${idI} reported "${iLine}"; ${idI}'s change may not have landed and a later step may be retrying it. Re-record ${idI}.`;
   }
   return null;
 }
 
+/**
+ * The value a reported line LEADS with, lower-cased and whitespace-normalised:
+ * the text before a parenthetical, a dash-led aside, or a `;` clause the
+ * recording model appends to explain where it saw the value. Not a colon:
+ * "Status: Cancelled" leads with its label. A line with no such tail is its
+ * own leading value.
+ */
+export function leadingValue(line: string): string {
+  const cut = /\s*(?:\(|\[|\s[—–-]\s|;)/.exec(line);
+  const lead = cut && cut.index > 0 ? line.slice(0, cut.index) : line;
+  return lead.replace(/\s+/g, ' ').replace(/[.,]+$/, '').trim().toLowerCase();
+}
 
 /**
  * Instructions that CHANGED the app but did not report success AND were not
@@ -1030,55 +1048,105 @@ export function liveReadsFor(
   const byId = new Map(flow.steps.map((s, i) => [s.id, i]));
   const out: LiveRead[] = [];
   const done = new Set<string>();
+  // Referenced outputs first, then every DATA output a step declares, so a
+  // value reported only to the caller gets a live source too: fwod47's
+  // 02-create declared line_subtotal and untaxed_amount, no later step quoted
+  // them, and every tier-A replay listed them `unreported`. What finds no
+  // source here is pruned from the flow instead (pruneUnsourcedOutputs).
+  const targets: [string, string][] = [];
   for (const step of flow.steps) {
     for (const text of [step.instruction, ...Object.values(step.params ?? {})]) {
-      for (const m of text.matchAll(/\{\{([\w-]+)\.([\w.#-]+)\}\}/g)) {
-        const [, sid, output] = m;
-        // Url parts are re-bound from every replay's landing; a JSON path's
-        // body is a response, not a line on the page.
-        if (output === 'url' || output.startsWith('url.') || output.includes('#')) continue;
-        const key = `${sid}.${output}`;
-        if (done.has(key)) continue;
-        done.add(key);
-        const index = byId.get(sid);
-        const producer = index === undefined ? undefined : flow.steps[index];
-        const g = index === undefined ? undefined : kept[index];
-        if (!producer?.skill || !g || stepId(g.instruction.text, index!) !== sid) continue;
-        const pubs = publishes(producer.skill);
-        if (pubs === null || pubs.includes(output)) continue;
-        const raw = producer.recorded?.[output];
-        if (typeof raw !== 'string' || raw.includes('\n')) continue;
-        const value = raw.replace(/\s+/g, ' ').trim();
-        // captureReadBack's bounds: too short to be distinctive, or prose.
-        if (value.length < 2 || value.length > 80 || runValue?.(value)) continue;
-        const next = groups[groups.indexOf(g) + 1];
-        const startLines =
-          next?.instruction.startText && !(g.endUrl && next.instruction.url && !samePage(g.endUrl, next.instruction.url))
-            ? next.instruction.startText.split('\n')
-            : [];
-        let source: LiveRead['source'] = 'start';
-        let candidates = valueLineCandidates(startLines, value);
-        if (!candidates.length) {
-          // Only diffs taken on the page the instruction ended on: the read is
-          // appended there, and a line an earlier page showed is not on it.
-          const finalUrl = g.diffs.length ? g.diffs[g.diffs.length - 1].url : undefined;
-          const added = g.diffs.filter((d) => d.url === finalUrl).flatMap((d) => d.added ?? []);
-          candidates = valueLineCandidates(added, value);
-          source = 'diff';
-        }
-        if (!candidates.length) continue;
-        out.push({
-          stepId: sid,
-          skill: producer.skill,
-          output,
-          value,
-          source,
-          read: { tool: 'read', args: { target: '@synth', what: 'text' }, locators: { target: candidates }, label: output },
-        });
-      }
+      for (const m of text.matchAll(/\{\{([\w-]+)\.([\w.#-]+)\}\}/g)) targets.push([m[1], m[2]]);
     }
   }
+  for (const step of flow.steps) {
+    // An adopted step replays model-first: the model reports its values.
+    if (!step.skill || step.adopted) continue;
+    for (const output of step.outputs) if (heldOutput(step, output)) targets.push([step.id, output]);
+  }
+  for (const [sid, output] of targets) {
+    // Url parts are re-bound from every replay's landing; a JSON path's
+    // body is a response, not a line on the page.
+    if (output === 'url' || output.startsWith('url.') || output.includes('#')) continue;
+    const key = `${sid}.${output}`;
+    if (done.has(key)) continue;
+    done.add(key);
+    const index = byId.get(sid);
+    const producer = index === undefined ? undefined : flow.steps[index];
+    const g = index === undefined ? undefined : kept[index];
+    if (!producer?.skill || !g || stepId(g.instruction.text, index!) !== sid) continue;
+    const pubs = publishes(producer.skill);
+    if (pubs === null || pubs.includes(output)) continue;
+    const raw = producer.recorded?.[output];
+    if (typeof raw !== 'string' || raw.includes('\n')) continue;
+    const value = raw.replace(/\s+/g, ' ').trim();
+    // captureReadBack's bounds: too short to be distinctive, or prose.
+    if (value.length < 2 || value.length > 80 || runValue?.(value)) continue;
+    const next = groups[groups.indexOf(g) + 1];
+    const startLines =
+      next?.instruction.startText && !(g.endUrl && next.instruction.url && !samePage(g.endUrl, next.instruction.url))
+        ? next.instruction.startText.split('\n')
+        : [];
+    let source: LiveRead['source'] = 'start';
+    let candidates = valueLineCandidates(startLines, value);
+    if (!candidates.length) {
+      // Only diffs taken on the page the instruction ended on: the read is
+      // appended there, and a line an earlier page showed is not on it.
+      const finalUrl = g.diffs.length ? g.diffs[g.diffs.length - 1].url : undefined;
+      const added = g.diffs.filter((d) => d.url === finalUrl).flatMap((d) => d.added ?? []);
+      candidates = valueLineCandidates(added, value);
+      source = 'diff';
+    }
+    if (!candidates.length) continue;
+    out.push({
+      stepId: sid,
+      skill: producer.skill,
+      output,
+      value,
+      source,
+      read: { tool: 'read', args: { target: '@synth', what: 'text' }, locators: { target: candidates }, label: output },
+    });
+  }
   return out;
+}
+
+/**
+ * Drop, from each pinned step's declared outputs, the DATA outputs (heldOutput)
+ * its skill chain still does not publish once the export's synthesized reads
+ * are in — so a flow never advertises a value its zero-model replay cannot
+ * produce. fwod47's n2/n3 replays ran 02-create, 05-change and 08-create at
+ * tier A with 0 turns and every one listed real data (untaxed_amount, total …)
+ * as `unreported`: the flow promised values nothing would ever read.
+ *
+ * Kept: an output any step references (dropping it would leave a dangling
+ * reference; lintFlowRefs already names it for re-recording), url parts, JSON
+ * paths' bodies that are referenced, narration (not held), and every output of
+ * an adopted or unpinned step, which replays through the model. The recorded
+ * values stay, so cross-run evidence and recorded-ref fallbacks are unchanged.
+ *
+ * Pure: returns the pruned flow and what was dropped, per step.
+ */
+export function pruneUnsourcedOutputs(
+  flow: Flow,
+  publishes: (skillId: string) => string[] | null,
+): { flow: Flow; dropped: { stepId: string; outputs: string[] }[] } {
+  const referenced = new Set<string>();
+  for (const step of flow.steps) {
+    for (const text of [step.instruction, ...Object.values(step.params ?? {})]) {
+      for (const m of text.matchAll(/\{\{([\w-]+)\.([\w.#-]+)\}\}/g)) referenced.add(`${m[1]}.${m[2].split('#')[0]}`);
+    }
+  }
+  const dropped: { stepId: string; outputs: string[] }[] = [];
+  const steps = flow.steps.map((step) => {
+    if (!step.skill || step.adopted) return step;
+    const pubs = publishes(step.skill);
+    if (pubs === null) return step;
+    const gone = step.outputs.filter((o) => heldOutput(step, o) && !o.includes('#') && !pubs.includes(o) && !referenced.has(`${step.id}.${o}`));
+    if (!gone.length) return step;
+    dropped.push({ stepId: step.id, outputs: gone });
+    return { ...step, outputs: step.outputs.filter((o) => !gone.includes(o)) };
+  });
+  return { flow: dropped.length ? { ...flow, steps } : flow, dropped };
 }
 
 /**
@@ -1508,4 +1576,125 @@ export function jsonLeaves(text: string, runSpecific?: RunSpecific): { path: str
   };
   walk(root, '', 0);
   return out;
+}
+
+/** Longest recorded value that may stand in for an unpublished reference; a longer one is prose, not a control's label. */
+const MAX_STAND_IN_CHARS = 80;
+
+/** Tools that ACT on a control (a read or a fill names data, not a control). */
+const CONTROL_ACTS = new Set(['click', 'dblclick', 'check', 'uncheck']);
+
+/**
+ * Roles whose accessible name is the app's own vocabulary. `link` is left out
+ * on purpose: a link is how an app names a RECORD (fwkb3's task sat on the
+ * board as `link "#4"` long after the run that made it), so a link's name is
+ * no evidence the value is furniture.
+ */
+const CONTROL_ROLES = new Set(['button', 'tab', 'menuitem', 'menuitemcheckbox', 'menuitemradio', 'option', 'radio', 'checkbox', 'switch']);
+
+/** One segment of the consuming step's pinned procedure: what both runners carry (a Skill, or a SpecSegment). */
+export interface StandInSegment {
+  params: Skill['params'];
+  steps: SkillStep[];
+  preconditions?: { requireText?: string[] };
+}
+
+/**
+ * Does this segment use `slot` ONLY as the accessible name of a control it
+ * acts on — and at least once? That use is the evidence that the value is page
+ * vocabulary (a button's label), not record data: a slot that is also typed,
+ * read, navigated by, or named as the record's identity marker is data.
+ */
+function slotNamesControl(seg: StandInSegment, slot: string): boolean {
+  const token = `{{${slot}}}`;
+  if ((seg.preconditions?.requireText ?? []).some((m) => m.includes(token))) return false;
+  let named = 0;
+  const walk = (steps: SkillStep[]): boolean => {
+    for (const step of steps) {
+      const { body, ...own } = step;
+      if (body?.length && !walk(body)) return false;
+      if (!JSON.stringify(own).includes(token)) continue;
+      const target = (step.locators as Record<string, unknown> | undefined)?.target;
+      const controls = Array.isArray(target)
+        ? target.filter((c): c is { kind: string; role?: string; name?: string } => Boolean(c) && typeof c === 'object' && (c as { kind?: unknown }).kind === 'role')
+        : [];
+      const isControl = CONTROL_ACTS.has(step.tool) && controls.some((c) => c.role !== undefined && CONTROL_ROLES.has(c.role) && c.name === token);
+      // The slot anywhere but a control's name on a control act — typed, read,
+      // in a url, a non-control role — makes it data.
+      if (!isControl || controls.some((c) => c.name?.includes(token) && !(c.role !== undefined && CONTROL_ROLES.has(c.role)))) return false;
+      named += 1;
+    }
+    return true;
+  };
+  return walk(seg.steps) && named > 0;
+}
+
+/**
+ * The RECORDED value a `{{step.output}}` reference may resolve to when this
+ * run did not publish it — provided the live page shows it (the caller asks
+ * `recordedValueShown`). Undefined when no stand-in is safe.
+ *
+ * fwrd54 is the case: 06-change declares `mark_ready_button` ("Mark Ready")
+ * but replays at tier A without reading it, so 07-edit, whose pinned
+ * procedure clicks `{{06-change.mark_ready_button}}`, skipped the zero-model
+ * replay and paid 6 and 11 model turns on n2 and n3 for a button its start
+ * page was showing.
+ *
+ * ONE rule for both runners, so it is keyed on what both carry: the consuming
+ * step's param bound to exactly `{{ref}}`, the example its pinned procedure's
+ * slot recorded, and that procedure's steps (`segments`). The compiled spec
+ * has no `recorded` map (see lower.ts's toFlowStep), so the producer's
+ * recorded value is only a CHECK here — the daemon passes it, and a value the
+ * slot and the producer disagree on is refused — never a source of its own.
+ *
+ * Evidence, not shape, says the value is furniture: every segment that uses
+ * the slot uses it only as the name of a control it acts on (slotNamesControl).
+ * Refused as run-specific, because such a value on the page is the RECORDING's
+ * record, not this run's (the reason `lookupRef` never falls back to a literal
+ * — `RunSpecific`): one holding a recorded var's value (a slot bound to
+ * `var:*`, or a param that is exactly `{{var}}`); one a later run already
+ * watched change (`differed`). The caller adds what only it knows at run
+ * time: this run's var values, ledger evidence. Url parts and JSON paths are
+ * never stood in for: those are bound from where the browser landed or from a
+ * response body, not from what a page shows.
+ */
+export function recordedStandIn(
+  ref: string,
+  params: Record<string, string> | undefined,
+  segments: ReadonlyArray<StandInSegment>,
+  producer?: { recorded?: string; differed?: boolean },
+): string | undefined {
+  const dot = ref.indexOf('.');
+  if (dot < 0 || ref.includes('#')) return undefined;
+  const out = ref.slice(dot + 1);
+  if (out === 'url' || out.startsWith('url.')) return undefined;
+  if (producer?.differed) return undefined;
+  const norm = (s: string) => s.replace(/\s+/g, ' ').trim();
+  const exactRef = (tmpl: string) => /^\s*\{\{([\w.#:-]+)\}\}\s*$/.exec(tmpl)?.[1];
+  const examples = new Set<string>();
+  const recordedVars = new Set<string>();
+  for (const [slot, tmpl] of Object.entries(params ?? {})) {
+    const exact = exactRef(tmpl);
+    for (const seg of segments) {
+      const p = seg.params[slot];
+      if (exact === ref && JSON.stringify(seg.steps).includes(`{{${slot}}}`) && !slotNamesControl(seg, slot)) return undefined;
+      if (typeof p?.example !== 'string') continue;
+      if (exact === ref) {
+        if (p.example.includes('\n')) return undefined;
+        examples.add(norm(p.example));
+      }
+      if ((exact !== undefined && !exact.includes('.')) || p.binding?.startsWith('var:')) recordedVars.add(norm(p.example));
+    }
+  }
+  if (examples.size !== 1) return undefined;
+  const value = [...examples][0];
+  // At least one segment must name a control by this slot: a slot no step
+  // uses at all carries no evidence either way.
+  const slotsForRef = Object.entries(params ?? {}).filter(([, t]) => exactRef(t) === ref).map(([s]) => s);
+  if (!segments.some((seg) => slotsForRef.some((slot) => slotNamesControl(seg, slot)))) return undefined;
+  if (producer?.recorded !== undefined && norm(producer.recorded) !== value) return undefined;
+  if (value.length < 2 || value.length > MAX_STAND_IN_CHARS || value.includes('{{')) return undefined;
+  const lower = value.toLowerCase();
+  for (const v of recordedVars) if (v.length >= 2 && lower.includes(v.toLowerCase())) return undefined;
+  return value;
 }

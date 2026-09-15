@@ -15,7 +15,7 @@
  * daemon, "<stepId> <segmentId>/<n>" in the artifact).
  */
 import { clip } from './text.js';
-import { CREDENTIAL_KEY, fillParams, mintedShape, oneSidedQueryKeys, serializeShape, softUrlMatch, urlMatches, urlShapeOf, type UrlSegDiff } from './url.js';
+import { boundQueryKeys, CREDENTIAL_KEY, fillParams, mintedShape, oneSidedQueryKeys, serializeShape, softUrlMatch, urlDiff, urlMatches, urlShapeOf, type UrlSegDiff } from './url.js';
 
 /**
  * How a LIVE url reads in a verdict's message. The message travels: into a
@@ -419,4 +419,80 @@ export function markersBound(markers: string[], params: Record<string, string>):
     const filled = fillParams(marker, params);
     return Boolean(filled.trim()) && !/\{\{/.test(filled);
   });
+}
+
+/**
+ * The parts of the live url that name THIS run's record, or null when the url
+ * cannot say. A record part is one the pattern fills from a param or a minted
+ * value (`/d/:var/{{v2}}-bench-dashboard`, `edit?id={{d1}}`, `#id={{d1}}`):
+ * the compiler put a marker there because the recording's record lived there.
+ * Every such part must be bound and equal, filled, to the live url's part, and
+ * the url must be the pattern's page shape at all (urlDiff; a literal that
+ * differs elsewhere is a volatile id, which the precondition gate judged
+ * already). A pattern with no marker part — `:id`/`:var` wildcards match every
+ * record — names no record, and neither does a marker left unbound.
+ */
+export function urlRecordParts(pattern: string | undefined, url: string, params: Record<string, string>): string[] | null {
+  if (!pattern) return null;
+  const filledPattern = fillParams(pattern, params);
+  const raw = urlShapeOf(pattern);
+  const want = urlShapeOf(filledPattern);
+  const live = urlShapeOf(url);
+  if (!raw || !want || !live) return null;
+  // A param value carrying '/' shifts segment positions between the raw and
+  // filled pattern; positions then no longer say which part is the record.
+  if (raw.path.length !== want.path.length || raw.hashPath.length !== want.hashPath.length) return null;
+  if (!urlDiff(filledPattern, url, boundQueryKeys(pattern, params))) return null;
+  const marked = /\{\{[vd]\d+\}\}/;
+  const parts: string[] = [];
+  const judge = (recorded: string | undefined, expected: string | undefined, actual: string | undefined, label: string): boolean => {
+    if (recorded === undefined || !marked.test(recorded)) return true;
+    if (expected === undefined || !expected.trim() || /\{\{/.test(expected) || [...recorded.matchAll(/\{\{([vd]\d+)\}\}/g)].some((m) => !params[m[1]])) return false;
+    if (actual !== expected) return false;
+    // The message travels (describeUrl's note): a credential key's value never does.
+    parts.push(`${label}=${CREDENTIAL_KEY.test(label) ? '***' : clip(actual, 40)}`);
+    return true;
+  };
+  for (const [i, seg] of raw.path.entries()) if (!judge(seg, want.path[i], live.path[i], `path[${i}]`)) return null;
+  for (const [key, val] of raw.query) if (!judge(val, want.query.get(key), live.query.get(key), key)) return null;
+  for (const [i, seg] of raw.hashPath.entries()) if (!judge(seg, want.hashPath[i], live.hashPath[i], `#[${i}]`)) return null;
+  for (const [key, val] of raw.hashState) if (!judge(val, want.hashState.get(key), live.hashState.get(key), `#${key}`)) return null;
+  return parts.length ? parts : null;
+}
+
+export interface IdentityMarkerVerdict {
+  /** The segment may run. */
+  pass: boolean;
+  /** Passed on the url's word while the marker was not seen: the marker is stale. */
+  warning?: string;
+}
+
+/**
+ * One identity marker, judged. Present passes. Not seen ('absent', or a look
+ * that could not establish absence — 'unknown') refuses — unless the live url
+ * already names this run's record (urlRecordParts): then the url has answered
+ * "which record" and the marker is only a stale description of the page, so
+ * it warns and the segment runs. Markers still decide wherever the url cannot
+ * tell records apart.
+ *
+ * fwgr39-n3 05-set refused s_6108b1 on the RIGHT dashboard — its url carried
+ * this run's own slug, `{{v2}}-bench-dashboard` — because its second marker was
+ * "Last 6 hours", a time-range setting the settings view does not render: a
+ * state, not a name, and not the question the url had already answered.
+ */
+export function identityMarkerVerdict(
+  pattern: string | undefined,
+  url: string,
+  params: Record<string, string>,
+  want: string,
+  presence: 'present' | 'absent' | 'unknown',
+): IdentityMarkerVerdict {
+  if (presence === 'present') return { pass: true };
+  const parts = urlRecordParts(pattern, url, params);
+  if (!parts) return { pass: false };
+  const seen = presence === 'unknown' ? 'could not be confirmed on the page' : 'is not on the page';
+  return {
+    pass: true,
+    warning: `identity marker ${JSON.stringify(clip(want, 60))} ${seen}, but the url names this run's record (${parts.join(', ')}) — the marker is stale; proceeding`,
+  };
 }

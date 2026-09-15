@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { alignSlots, rethreadParams } from '../src/spec/rethread.js';
+import { alignSlots, rethreadParams, statedPlainly } from '../src/spec/rethread.js';
 
 // The exact strings from the published odoo flow fwod34, step 06-open: the
 // pin was adopted during a replay, so its params froze that run's concrete
@@ -113,5 +113,36 @@ describe('rethreadParams', () => {
     });
     expect(out.warnings).toEqual([]);
     expect(out.params).toEqual({ v1: 'Acme' });
+  });
+
+  // fwkb9 03-verify: the template was reworded, so alignSlots fails, but the
+  // literal is the instruction's own plain words — nothing to rethread it to.
+  it('says nothing about a literal the instruction states outside its references, even unaligned', () => {
+    const out = rethreadParams(
+      '03-verify',
+      "In the Kanboard project 'Bench Board', move the task titled '{{runid}} Bench Task' (task {{02-create.task_id_display}}) to done.",
+      "In project '{{v1}}', move task '{{v2}}' somewhere.",
+      { v1: 'Bench Board', v2: '{{runid}} Bench Task' },
+    );
+    expect(out.warnings).toEqual([]);
+    expect(out.params.v1).toBe('Bench Board');
+  });
+
+  it('still warns for a literal found only by straddling a reference, or holding a run var value', () => {
+    const instruction = "open board {{02-create.id}} Board and the project 'fwkb9-n1 Bench Board'";
+    const out = rethreadParams('04-open', instruction, 'unaligned {{v1}}', { v1: 'Board and' }, []);
+    expect(out.warnings).toEqual([]); // "Board and" is plain text between refs
+    const straddle = rethreadParams('04-open', instruction, 'unaligned {{v1}}', { v1: 'board 7 Board' });
+    expect(straddle.warnings).toHaveLength(1);
+    const runVar = rethreadParams('04-open', instruction, 'unaligned {{v1}}', { v1: 'fwkb9-n1 Bench Board' }, ['fwkb9-n1']);
+    expect(runVar.warnings).toHaveLength(1);
+  });
+});
+
+describe('statedPlainly', () => {
+  it('matches on word boundaries only, ignoring case and quote style', () => {
+    expect(statedPlainly('in project "Bench Board" now', 'bench board')).toBe(true);
+    expect(statedPlainly('in project Bench Boards now', 'Bench Board')).toBe(false);
+    expect(statedPlainly('in {{a.b}} now', 'a.b')).toBe(false);
   });
 });

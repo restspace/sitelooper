@@ -220,12 +220,15 @@ document.querySelector('.mark').addEventListener('click', async (e) => {
  * Approve logs `mark:approve` when its handler runs. A browser suppresses
  * clicks on a disabled button, so a forced click there dispatches nothing the
  * app sees: a runner that reports it as clicked has claimed an action that
- * never happened (ROBUSTNESS.md, finding 2).
+ * never happened (ROBUSTNESS.md, finding 2). `/gate/late` starts disabled and
+ * enables Approve 1.5s after load: disabled only while the page settles, the
+ * timing a runner must wait out rather than refuse (fwgr39-n3).
  */
 const GATE = (mode: string) => `<!doctype html><html><head><meta charset="utf-8"><title>Gate</title></head><body>
 <h1>Gate</h1>
-<button id="approve" type="button"${mode === 'disabled' ? ' disabled' : ''}>Approve</button>
+<button id="approve" type="button"${mode === 'disabled' || mode === 'late' ? ' disabled' : ''}>Approve</button>
 <script>
+${mode === 'late' ? "setTimeout(() => { document.querySelector('#approve').disabled = false; }, 1500);" : ''}
 document.querySelector('#approve').addEventListener('click', async () => {
   await fetch('/mark/approve', { method: 'POST' });
 });

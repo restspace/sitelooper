@@ -27,6 +27,8 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { executeTool } from '../src/agent/tools.js';
 import { BrowserSession } from '../src/daemon/browser.js';
 import { presentOnPage } from '../src/execution/snapshot.js';
+import { recordedValueShown } from '../src/execution/snapshot.js';
+import { recordedStandIn } from '../src/skills/flow.js';
 import { fingerprintPage } from '../src/execution/fingerprint.js';
 import { SOFT_MATCH_MIN_SIMILARITY } from '../src/execution/gates.js';
 import { emitFlowFile } from '../src/spec/emit.js';
@@ -506,6 +508,67 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     expect(emittedLog).toEqual(['visit:Item 2', 'mark:Item 2']);
   }, 120_000);
 
+  /**
+   * fwrd54 07-edit. The producing read misses again, but the consuming
+   * procedure uses its slot only as the NAME of a button it clicks, recorded
+   * "Remove" — the evidence (recordedStandIn's slotNamesControl) that the value
+   * is the app's vocabulary, not record data — and the page the consumer starts
+   * from shows it. Both runners resolve the reference to it (recordedStandIn,
+   * then recordedValueShown against the live page), bank it, and click once.
+   * The 'Item 9' case above stays a stop on both: there the slot is navigated
+   * by (a goto url), which is data, so no stand-in is offered at all.
+   *
+   * The daemon half is runFlow's stand-in pass in the functions it calls, run
+   * against a fresh page at the start url (where replayOf starts the consumer).
+   */
+  it('both runners resolve an unpublished control label to its recorded value when the page shows it', async () => {
+    const pressSteps = (): SkillStep[] => [{ tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'role', role: 'button', name: '{{v1}}' }] } }];
+    const pressParams = (): Record<string, SkillParam> => ({ v1: { example: 'Remove', usedIn: [1], known: true } });
+    const pressSkill = (): Skill => ({ ...skillOf(pressSteps()), id: 's_press', template: 'press {{v1}}', params: pressParams() });
+    const pressStep: FlowStep = { id: '02-press', instruction: 'press {{01-read.x}}', skill: 's_press', params: { v1: '{{01-read.x}}' }, outputs: [], recorded: {} };
+    const pressFlow = (): SpecFlow => {
+      const flow = readMarkFlow('#nope');
+      flow.steps[1] = {
+        id: '02-press',
+        instruction: 'press {{01-read.x}}',
+        params: { v1: '{{01-read.x}}' },
+        outputs: [],
+        segments: [{ id: 's_press', template: 'press {{v1}}', params: pressParams(), preconditions: { urlPattern: `${origin}/` }, steps: pressSteps() }],
+      };
+      return flow;
+    };
+
+    reset(1);
+    const first = await replayOf(readSkill('#nope'));
+    const outputs: Record<string, Record<string, string>> = { '01-read': first.outputs };
+    const standIn = recordedStandIn('01-read.x', pressStep.params, [pressSkill()], { recorded: undefined, differed: false });
+    expect(standIn).toBe('Remove');
+    const session = new BrowserSession({ session: `parity-standin-${Date.now()}`, persist: false });
+    try {
+      const page = await session.getPage();
+      await page.goto(`${origin}/`);
+      if (await recordedValueShown(page, standIn!, [])) outputs['01-read'] = { ...outputs['01-read'], x: standIn! };
+    } finally {
+      await session.close();
+    }
+    const bound = resolveStepParams(pressStep, {}, outputs);
+    const allMissing = [...resolveInstruction(pressStep, {}, outputs).missing, ...(bound?.missing ?? [])];
+    expect(allMissing).toEqual([]);
+    const replay = await replayOf(pressSkill(), bound?.params ?? {});
+    const replayLog = [...fx.log];
+
+    reset(1);
+    const emitted = await emittedFlowOf(pressFlow());
+    const emittedLog = [...fx.log];
+
+    expect(replay.ok, replay.reason ?? '').toBe(true);
+    expect(emitted.ok, emitted.reason ?? '').toBe(true);
+    expect(replayLog).toEqual(['delete:Item 1']);
+    expect(emittedLog).toEqual(['delete:Item 1']);
+    expect(outputs['01-read'].x).toBe('Remove');
+    expect(emitted.outputs['01-read.x']).toBe('Remove');
+  }, 120_000);
+
   /** Run one loop contract through both runners against separately reset state. */
   async function both(steps: SkillStep[], startWith = 10) {
     reset(startWith);
@@ -905,6 +968,45 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     expect(replayLog.filter((l) => l.startsWith('mark:')), 'replay marked a record it was never given').toEqual([]);
     expect(emittedLog.filter((l) => l.startsWith('mark:')), 'the artifact marked a record it was never given').toEqual([]);
   }, 120_000);
+
+  /**
+   * A STALE text marker (identityMarkerVerdict, src/execution/gates.ts).
+   * fwgr39-n3 05-set: s_6108b1 refused the right dashboard — its url carried
+   * this run's own slug — because a second marker, "Last 6 hours", was a
+   * setting the page did not render. Where the url's param-filled parts name
+   * this run's record, a missing marker warns and the work runs; where the
+   * pattern names no record (`:id`), the markers still decide and both refuse.
+   */
+  it('both runners warn on a stale marker where the url names the record, and refuse where it cannot', async () => {
+    const staleOf = (pattern: string) => {
+      const pre = { urlPattern: pattern, requireText: ['Record {{v1}}', '{{v2}}'] };
+      const params = { v1: { example: RECORDED, usedIn: [1], known: true as const }, v2: { example: 'Last 6 hours', usedIn: [], known: true as const } };
+      const skill: Skill = { ...recordSkill(`${origin}/record/{{v1}}`), params, preconditions: pre };
+      const spec = recordFlow(`${origin}/record/{{v1}}`);
+      Object.assign(spec.steps[0], { params: { v1: RECORDED, v2: 'Last 6 hours' } });
+      Object.assign(spec.steps[0].segments[0], { params, preconditions: pre });
+      return { skill, spec };
+    };
+    const live = { v1: 'rec-77', v2: 'Last 6 hours' };
+
+    const named = staleOf(`${origin}/record/{{v1}}`);
+    const ok = await bothOf(named.skill, named.spec, live);
+    expect(ok.replay.ok, ok.replay.reason ?? '').toBe(true);
+    expect(ok.emitted.ok, ok.emitted.reason ?? '').toBe(true);
+    expect(ok.replayLog).toEqual(['visit:rec-77', 'mark:rec-77']);
+    expect(ok.emittedLog).toEqual(['visit:rec-77', 'mark:rec-77']);
+    expect(ok.replay.warnings?.some((w) => /stale/.test(w))).toBe(true);
+    expect(ok.emitted.warnings?.some((w) => /stale/.test(w))).toBe(true);
+
+    const unnamed = staleOf(`${origin}/record/:id`);
+    const refused = await bothOf(unnamed.skill, unnamed.spec, live);
+    expect(refused.replay.ok).toBe(false);
+    expect(refused.emitted.ok).toBe(false);
+    expect(refused.replay.reason).toMatch(/different record|does not show/);
+    expect(refused.emitted.reason).toMatch(/identity/i);
+    expect(refused.replayLog.filter((l) => l.startsWith('mark:'))).toEqual([]);
+    expect(refused.emittedLog.filter((l) => l.startsWith('mark:'))).toEqual([]);
+  }, 180_000);
 
   /**
    * C06, the identity gate on both sides, run as code against a real DOM.
@@ -1532,6 +1634,25 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     }, 120_000);
 
     /**
+     * A store minted before compile dropped lines that identify no element
+     * (fwod47-n3 04-open stopped on `- textbox "": null`): the select step
+     * also carries unnamed, valueless lines the /project page never shows.
+     * Both runners skip them in the shared verdict (identifiesNothing), still
+     * judge the named line, and save.
+     */
+    it('both runners ignore a recorded line that identifies no element, and still judge the named one', async () => {
+      const steps = projectSteps('open');
+      steps[1] = { ...steps[1], expect: { addedContains: ['- combobox "Project": {{v1}}', '- textbox "": {{*}}', '- cell ""', '- generic ""'] } };
+      const { skill, spec } = procedure('s_project', 'pick project {{v1}}', steps, `${origin}/project/:id`);
+      const { replay, emitted, replayLog, emittedLog } = await bothOf(skill, spec, { v1: 'Beta' });
+
+      expect(replayLog.filter((l) => l.startsWith('save:'))).toEqual(['save:Beta']);
+      expect(emittedLog.filter((l) => l.startsWith('save:'))).toEqual(['save:Beta']);
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+    }, 120_000);
+
+    /**
      * (b) A recorded dialog that does not open. `/discard/<mode>`: Exit opens
      * "Discard changes?" only when the page is dirty. The recording was dirty,
      * so Exit recorded `- dialog "Discard changes?"` and `- button "Discard"`,
@@ -2113,6 +2234,16 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(enabled.emitted.ok, enabled.emitted.reason ?? '').toBe(true);
       expect(enabled.replayLog).toEqual(['mark:approve']);
       expect(enabled.emittedLog).toEqual(['mark:approve']);
+    }, 180_000);
+
+    // fwgr39-n3: a control disabled only while the page settles is timing, not a
+    // wrong procedure — both runners wait it out and click it, once.
+    it('both runners click a button that is enabled shortly after load, once', async () => {
+      const { replay, emitted, replayLog, emittedLog } = await both(gateSteps('late'), 0);
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replayLog).toEqual(['mark:approve']);
+      expect(emittedLog).toEqual(['mark:approve']);
     }, 180_000);
 
     /**

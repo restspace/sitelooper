@@ -806,3 +806,34 @@ export async function sweepPage(page: Page): Promise<boolean> {
     return false;
   }
 }
+
+/**
+ * Does the live page show a flow reference's RECORDED value, so that value may
+ * stand in for one this run did not publish? Asked by both runners at the
+ * moment a step's references are resolved, before the step runs (the daemon's
+ * runFlow; the artifact's `needShown`). fwrd54: 06-change replays at tier A
+ * without re-reading `mark_ready_button` ("Mark Ready"), and 07-edit — whose
+ * pinned procedure clicks that button — fell to model recovery on n2 and n3
+ * although the button was on the page it started from.
+ *
+ * Only a whole-token match (identityRe's bounded rule, via lineShows) on the
+ * observation — visible text and accessible names alike — counts. A value
+ * holding one of this run's own values (a var: `fwrd54-n2 RD Part A`) is
+ * refused before looking: it names this run's record, and a page showing the
+ * RECORDING's version of it would be the wrong record. The caller refuses what
+ * it knows beyond that (id shapes, recorded vars, ledger evidence).
+ */
+export async function recordedValueShown(page: Page, value: string, runValues: readonly string[]): Promise<boolean> {
+  const want = value.replace(/\s+/g, ' ').trim();
+  if (!want || want.includes('{{')) return false;
+  const lower = want.toLowerCase();
+  for (const raw of runValues) {
+    const run = String(raw ?? '').trim().toLowerCase();
+    if (run.length >= 2 && lower.includes(run)) return false;
+  }
+  try {
+    return await presentOnPage(page, [want], { whole: true });
+  } catch {
+    return false;
+  }
+}

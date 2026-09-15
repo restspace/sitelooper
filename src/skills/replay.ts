@@ -1,7 +1,7 @@
 import { changedCreation, isMutatingAction, isReadAction, runStepLifecycle, type StepActionResult } from '../execution/lifecycle.js';
 import { outcomeLabel, outcomeOfError, type ActionOutcome } from '../execution/browser.js';
 import type { ActionExpectation } from '../execution/action.js';
-import { SOFT_MATCH_MIN_SIMILARITY, alertVerdict, errorPageVerdict, gotoLandingVerdict, isErrorPageUrl, landedOnRecordedPage, markersBound, preconditionVerdict, segmentGate, urlEffectVerdict } from '../execution/gates.js';
+import { SOFT_MATCH_MIN_SIMILARITY, alertVerdict, errorPageVerdict, gotoLandingVerdict, identityMarkerVerdict, isErrorPageUrl, landedOnRecordedPage, markersBound, preconditionVerdict, segmentGate, urlEffectVerdict } from '../execution/gates.js';
 import { LOOP_SHRINK_WAIT_MS, pageReadable, runFoldedLoop, type LoopPass } from '../execution/loop.js';
 import type { Locator, Page } from 'playwright-core';
 import { clip, identityRe, identitySource } from '../shared/text.js';
@@ -323,6 +323,14 @@ export async function replaySkill(
       // different record, only that this one could not be confirmed.
       const seen = await confirmPresence(page, [want], 2, { whole: true });
       if (seen.presence === 'present') continue;
+      // A url that already names this run's record answers the question the
+      // marker was asking; a marker missing there is stale, not another record
+      // (fwgr39-n3 05-set). Shared with the compiled spec (identityMarkerVerdict).
+      const verdict = identityMarkerVerdict(skill.preconditions.urlPattern, page.url(), params, want, seen.presence);
+      if (verdict.pass) {
+        if (verdict.warning) res.warnings.push(verdict.warning);
+        continue;
+      }
       if (seen.presence === 'unknown') {
         res.refused = true;
         res.reason = `could not confirm that the page at ${urlPattern(page.url())} shows ${JSON.stringify(clip(want, 60))} (capture incomplete: ${clip(seen.why ?? 'coverage unknown', 160)}) — nothing was run`;

@@ -55,9 +55,19 @@ export function rethreadParams(
   instruction: string,
   template: string,
   params: Record<string, string>,
+  runValues: string[] = [],
 ): RethreadOutcome {
   const out: RethreadOutcome = { params: { ...params }, warnings: [], rebound: {} };
   const literals = Object.entries(params).filter(([, v]) => typeof v === 'string' && !v.includes('{{'));
+  // A literal the instruction states in its own plain words is bound right,
+  // whether or not the template aligns: kanboard fwkb9's 03-verify/04-open/
+  // 05-set bound v1/v3 to "Bench Board", the instruction says "project 'Bench
+  // Board'" outside any reference, yet a reworded template failed alignSlots
+  // and each step warned it "could not be rethreaded". There is no reference
+  // it could be rethreaded TO. Only for the alignment's failure modes (no
+  // alignment, ambiguous slot): an alignment that puts DIFFERENT plain text
+  // at the slot is positive evidence and still warns.
+  const stated = (value: string): boolean => statedPlainly(instruction, value, runValues);
   // Nothing to repair unless the step has a literal AND an instruction that
   // threads something: a flow whose instruction has no references has no
   // better binding to offer than the literal it already carries.
@@ -66,6 +76,7 @@ export function rethreadParams(
   const align = alignSlots(template, instruction);
   if (!align) {
     for (const [slot, value] of literals) {
+      if (stated(value)) continue;
       out.warnings.push(
         `step ${stepId} param ${slot} is bound to the literal ${JSON.stringify(value)}; it could not be rethreaded — the step will run against the recording's record`,
       );
@@ -77,6 +88,7 @@ export function rethreadParams(
     const seen = align.get(slot);
     if (seen === undefined) continue; // the template has no such slot: nothing to align against
     if (seen === null) {
+      if (stated(value)) continue;
       out.warnings.push(
         `step ${stepId} param ${slot} is bound to the literal ${JSON.stringify(value)}; the alignment is ambiguous so it could not be rethreaded — the step will run against the recording's record`,
       );
@@ -98,6 +110,23 @@ export function rethreadParams(
     );
   }
   return out;
+}
+
+/**
+ * Whether `value` appears verbatim (quote style, whitespace and case aside) in
+ * the instruction's PLAIN text — every `{{…}}` reference cut out, so a literal
+ * never matches across one — on word boundaries, and carries none of the run's
+ * var values (a literal holding this run's runid is exactly the debt rethreading
+ * exists for, however it reads). Exported for tests.
+ */
+export function statedPlainly(instruction: string, value: string, runValues: string[] = []): boolean {
+  const want = squash(value).toLowerCase();
+  if (!want || want.includes('{{')) return false;
+  if (runValues.some((v) => v && want.includes(squash(v).toLowerCase()))) return false;
+  const re = new RegExp(`(?<![\\p{L}\\p{N}])${escapeRe(want)}(?![\\p{L}\\p{N}])`, 'u');
+  return instruction
+    .split(/\{\{[^}]*\}\}/)
+    .some((piece) => re.test(squash(piece).toLowerCase()));
 }
 
 /**

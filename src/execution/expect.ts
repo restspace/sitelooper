@@ -30,6 +30,42 @@ export const SLOT_LINE = /\{\{v\d+\}\}/;
 /** A recorded line naming a dialog, whose absence is conditional UI rather than a failed effect. */
 export const DIALOG_LINE = /^-\s*dialog\s+"([^"]*)"/;
 
+/** A popup container, whose opening is itself the effect whether or not it carries a name (replay's OPENER_LINE roles). */
+const POPUP_ROLE = /^(dialog|alertdialog|menu|menubar|listbox|tooltip)$/;
+
+/** `- role "name" [state]…: value` — the name may be cut short by the 120-char stored-line cap, so its closing quote is optional. */
+const LINE_PARTS = /^-?\s*([A-Za-z][\w-]*)(?:\s+"((?:[^"\\]|\\.)*)"?)?((?:\s+\[[^\]]*\])*)(?::\s*(.*))?$/;
+
+/** No content once wildcards are removed: empty, or a stringified absent value ("null", "undefined") a slot was filled with. */
+function blankContent(s: string | undefined): boolean {
+  const rest = (s ?? '').split(WILDCARD).join('').trim();
+  return !rest || /^(null|undefined)$/i.test(rest);
+}
+
+/**
+ * A page line that says nothing about WHICH element appeared: no accessible
+ * name (a label is part of it — dialect 2 names a control by its <label>), no
+ * value, or only a wildcard or blank one. `- textbox "": {{*}}`, `- cell ""`,
+ * `- generic ""`, `- checkbox [checked]`: some element of that role is on the
+ * page for reasons of its own. odoo's inline list editor puts unnamed
+ * textboxes in and out of the form as rows gain and lose focus, and fwod47-n3's
+ * 04-open stopped on `- textbox "": null` — a click that did exactly what it
+ * was recorded doing, failed on a line that could never have proved it. The
+ * role alone never identifies (any role: a named row does, an unnamed one does
+ * not), except a popup container, whose appearance IS the event.
+ *
+ * Judged on the line as it will be matched: at compile after substitution and
+ * masking, at run time after params are filled — so a slot that fills to
+ * nothing identifies nothing either. A line this cannot parse is kept.
+ */
+export function identifiesNothing(line: string): boolean {
+  const m = LINE_PARTS.exec(line.trim());
+  if (!m) return false;
+  const [, role, name, , value] = m;
+  if (POPUP_ROLE.test(role)) return false;
+  return blankContent(name) && blankContent(value);
+}
+
 /**
  * An effect expectation asserts what the PROCEDURE put on the page, and the
  * procedure only ever puts values there through its own fills and choices —
@@ -203,8 +239,13 @@ export async function expectedChangesVerdict(
   // store compiled before TRANSIENT_LINE existed stops failing on them.
   const lines = recorded.filter((l) => !TRANSIENT_LINE.test(l));
   if (!lines.length) return { warnings: [] };
-  let parameterised = liveLines(lines.filter(isParam), params);
-  const plain = liveLines(lines.filter((l) => !isParam(l)), params);
+  // A line that identifies no element proves nothing either way, so it is not
+  // looked for — filled first, so a store minted before compile dropped such
+  // lines (fwod47-n3 04-open's `- textbox "": {{v5}}`) is fixed without
+  // re-recording. All of them gone means the step has no expectation.
+  let parameterised = liveLines(lines.filter(isParam), params).filter((l) => !identifiesNothing(l));
+  const plain = liveLines(lines.filter((l) => !isParam(l)), params).filter((l) => !identifiesNothing(l));
+  if (!parameterised.length && !plain.length) return { warnings: [] };
   // A positionally-resolved fill must prove itself with a CONSEQUENTIAL
   // change: its own echo in a same-role element is what the wrong element
   // produces too (see consequentialExpectations). When the echo is all the
@@ -324,7 +365,7 @@ export function effectExpectation(
   params: Record<string, string>,
   d: LineDialect = 1,
 ): { holds(): Promise<boolean | null> } | undefined {
-  const hard = liveLines((recorded ?? []).filter((l) => SLOT_LINE.test(l) && !TRANSIENT_LINE.test(l)), params);
+  const hard = liveLines((recorded ?? []).filter((l) => SLOT_LINE.test(l) && !TRANSIENT_LINE.test(l)), params).filter((l) => !identifiesNothing(l));
   if (!hard.length) return undefined;
   return {
     holds: async () => {

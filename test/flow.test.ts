@@ -5,9 +5,11 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { RecordedEntry } from '../src/daemon/recorder.js';
 import {
   ignorableRefs,
+  leadingValue,
+  pruneUnsourcedOutputs,
   consumedReportedOutputs, consumedUrlOutputs, buildFlow, lintFlowRefs, lintUnpublishedOutputs, liveReadsFor, looksLikeReportedData, noteOutputEvidence, recoveryRoute, resolveInstruction, resolveStepParams, softResolveInstruction, unbankedMutations, unreportedOutputs, urlOutputs, valueLineCandidates, varyingValues, type Flow, type FlowStep } from '../src/skills/flow.js';
 import { bindSkill, publishedOutputs, synthesizeReport } from '../src/skills/learn.js';
-import { SkillStore, type Skill } from '../src/skills/store.js';
+import { SkillStore, type Skill, type SkillStep } from '../src/skills/store.js';
 import { compileSkill, dropDeadReadLocators } from '../src/skills/compile.js';
 
 let tmp: string;
@@ -1317,6 +1319,31 @@ describe('record-time contradiction between a mutating step and the read right a
     expect(flow.warnings ?? []).toEqual([]);
   });
 
+  it('compares the leading value, not the narration after it (fwod47 07-open/08-create)', () => {
+    const agree = pair(
+      'Cancel order O-1 and report its status.',
+      { order_status: 'Cancelled (status bar radio "Cancelled" is the checked state; all other states disabled)' },
+      'Open order O-1 and report its status. Do not click anything or change it — this is a read-only check.',
+      { order_status: 'Cancelled (current checked state in the status bar; Sales Order, Quotation Sent and Quotation are unchecked and disabled)' },
+    );
+    expect(agree.warnings ?? []).toEqual([]);
+    const disagree = pair(
+      'Cancel order O-1 and report its status.',
+      { order_status: 'Cancelled (status bar radio "Cancelled" is the checked state)' },
+      'Open order O-1 and report its status. Do not click anything or change it — this is a read-only check.',
+      { order_status: 'Sales Order — the status bar shows Cancelled unchecked' },
+    );
+    expect((disagree.warnings ?? []).some((w) => w.startsWith('contradicted-step:'))).toBe(true);
+  });
+
+  it('leadingValue cuts a parenthetical, a dash aside or a ; clause, never a label colon', () => {
+    expect(leadingValue('Cancelled (checked)')).toBe('cancelled');
+    expect(leadingValue('Sales  Order — confirmed')).toBe('sales order');
+    expect(leadingValue('Done; saved')).toBe('done');
+    expect(leadingValue('Status: Cancelled')).toBe('status: cancelled');
+    expect(leadingValue('(none)')).toBe('(none)');
+  });
+
   it('does not check a mutating step that did not report success', () => {
     const flow = pair(
       'Cancel order O-1 and report its status.',
@@ -1478,8 +1505,25 @@ describe('liveReadsFor', () => {
     f.steps[2].instruction = 'Open task {{01-open.task_ref}} in {{01-open.column_3_name}}.';
     f.steps[0].recorded = { ...f.steps[0].recorded, task_ref: '#4' };
     const withRef = entries().map((e) => (e.k === 'instruction' && e.startText ? { ...e, startText: `${e.startText}\n- link "#4"` } : e));
-    expect(liveReadsFor(withRef, f, () => []).map((r) => r.output)).toEqual(['task_ref', 'column_3_name']);
-    expect(liveReadsFor(withRef, f, () => [], (v) => v === '#4').map((r) => r.output)).toEqual(['column_3_name']);
+    // column_1_name: unreferenced, but declared data with a line on the page.
+    expect(liveReadsFor(withRef, f, () => []).map((r) => r.output)).toEqual(['task_ref', 'column_3_name', 'column_1_name']);
+    expect(liveReadsFor(withRef, f, () => [], (v) => v === '#4').map((r) => r.output)).toEqual(['column_3_name', 'column_1_name']);
+  });
+
+  it('reads an unreferenced DATA output too, but not one of an adopted step, nor narration (fwod47 02-create untaxed_amount)', () => {
+    const withTotal = entries().map((e) =>
+      e.k === 'report' && e.skill === 's_open'
+        ? { ...e, values: { ...e.values, untaxed_amount: '£ 885.00', how: 'clicked the board link then read every column header left to right' } }
+        : e.k === 'instruction' && e.startText
+          ? { ...e, startText: `${e.startText}\n- cell "£ 885.00"\n- cell "clicked the board link then read every column header left to right"` }
+          : e,
+    );
+    const f = buildFlow(withTotal, { name: 'kb', origin: ORIGIN, startUrl: `${ORIGIN}/`, vars: {}, session: 'kb-n1' })!;
+    const reads = liveReadsFor(withTotal, f, (id) => (id === 's_open' ? ['column_1_name'] : []));
+    expect(reads.map((r) => r.output)).toEqual(['column_3_name', 'untaxed_amount']);
+    f.steps[0].adopted = true;
+    // Still read: column_3_name is referenced, and an adopted producer's reference is not this rule's to skip.
+    expect(liveReadsFor(withTotal, f, (id) => (id === 's_open' ? ['column_1_name'] : [])).map((r) => r.output)).toEqual(['column_3_name']);
   });
 
   it('once appended to the producing skill, the lint sees the output as published and retirement can strip it', async () => {
@@ -1515,5 +1559,129 @@ describe('liveReadsFor', () => {
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }
+  });
+});
+
+describe('pruneUnsourcedOutputs (fwod47 tier-A unreported data)', () => {
+  const step = (over: Partial<FlowStep>): FlowStep => ({
+    id: '02-create',
+    instruction: 'Create a quotation.',
+    skill: 's_create',
+    outputs: ['quotation_reference', 'untaxed_amount', 'total', 'actions_taken', 'url.q.id'],
+    recorded: {
+      quotation_reference: 'S00021',
+      untaxed_amount: '£ 885.00',
+      total: '£ 1,062.00',
+      actions_taken: 'clicked New then typed the customer then picked the product and saved the form',
+      'url.q.id': '21',
+    },
+    ...over,
+  });
+  const flowOf = (steps: FlowStep[]): Flow => ({ name: 'f', origin: ORIGIN, startUrl: ORIGIN, vars: [], steps, provenance: { session: 's', created: 'now' } });
+
+  it('drops data a pinned skill does not publish and no step references; keeps published, referenced, narration and url parts', () => {
+    const f = flowOf([step({}), { id: '03-open', instruction: 'Check the total is {{02-create.total}}.', skill: 's_open', outputs: [], recorded: {} }]);
+    const out = pruneUnsourcedOutputs(f, (id) => (id === 's_create' ? ['quotation_reference'] : []));
+    expect(out.dropped).toEqual([{ stepId: '02-create', outputs: ['untaxed_amount'] }]);
+    expect(out.flow.steps[0].outputs).toEqual(['quotation_reference', 'total', 'actions_taken', 'url.q.id']);
+    // Recorded values stay: cross-run evidence and recorded-ref fallbacks read them.
+    expect(out.flow.steps[0].recorded.untaxed_amount).toBe('£ 885.00');
+    expect(f.steps[0].outputs).toContain('untaxed_amount');
+  });
+
+  it('leaves adopted, unpinned and unknown-skill steps alone', () => {
+    const publishes = (id: string): string[] | null => (id === 's_create' ? [] : null);
+    expect(pruneUnsourcedOutputs(flowOf([step({ adopted: true })]), publishes).dropped).toEqual([]);
+    expect(pruneUnsourcedOutputs(flowOf([step({ skill: undefined })]), publishes).dropped).toEqual([]);
+    expect(pruneUnsourcedOutputs(flowOf([step({ skill: 's_gone' })]), publishes).dropped).toEqual([]);
+  });
+});
+
+/**
+ * fwrd54 07-edit: `{{06-change.mark_ready_button}}` ("Mark Ready") was never
+ * re-read by 06's tier-A replay, so 07 fell to model recovery on n2 and n3.
+ * recordedStandIn decides which recorded values may stand in when the page
+ * shows them — on the evidence that the pinned procedure uses the slot only as
+ * a control's name, never on the value's characters; recordedValueShown
+ * refuses this run's values before looking.
+ */
+describe('recordedStandIn (fwrd54 07-edit)', async () => {
+  const { recordedStandIn: standIn } = await import('../src/skills/flow.js');
+  const { recordedValueShown } = await import('../src/execution/snapshot.js');
+  type Seg = Parameters<typeof standIn>[2][number];
+  const REF = '06-change.mark_ready_button';
+  const params = { v3: '{{runid}}', v5: '{{06-change.mark_ready_button}}', v2: '{{runid}} RD Part A' };
+  const fillA: SkillStep = { tool: 'fill', args: { target: '@e1', value: '{{v2}}' }, locators: { target: [{ kind: 'label', label: 'Name' }] } };
+  // 07-edit's recorded step 6, as s_8f60bc stores it.
+  const press = (role = 'button', tool = 'click'): SkillStep => ({
+    tool,
+    args: { target: 'role=' + role + '[name="{{v5}}"]' },
+    locators: { target: [{ kind: 'css', selector: 'role=' + role + '[name="{{v5}}"]' }, { kind: 'role', role, name: '{{v5}}' }] },
+  });
+  const seg = (v5: string, steps: SkillStep[] = [fillA, press()], over: Partial<Seg> = {}): Seg => ({
+    params: {
+      v2: { example: 'fwrd54-n1 RD Part A', usedIn: [1], known: true },
+      v3: { example: 'fwrd54-n1', usedIn: [], known: true, binding: 'var:runid' },
+      v5: { example: v5, usedIn: [2], known: true, binding: 'output:i6:mark_ready_button' },
+    },
+    steps,
+    ...over,
+  });
+
+  it("stands in a clicked button's recorded label when the producer recorded the same", () => {
+    expect(standIn(REF, params, [seg('Mark Ready')], { recorded: 'Mark Ready' })).toBe('Mark Ready');
+    expect(standIn(REF, params, [seg('Mark Ready')])).toBe('Mark Ready');
+    // Inside a loop body too, and for the other control roles.
+    const loop: SkillStep = { tool: 'loop', args: {}, locators: {}, body: [press('tab')] };
+    expect(standIn(REF, params, [seg('Mark Ready', [loop])])).toBe('Mark Ready');
+    expect(standIn(REF, params, [seg('Mark Ready', [press('checkbox', 'check')])])).toBe('Mark Ready');
+  });
+
+  it('refuses when the producer recorded something else, or a later run watched it change', () => {
+    expect(standIn(REF, params, [seg('Mark Ready')], { recorded: 'Mark Draft' })).toBeUndefined();
+    expect(standIn(REF, params, [seg('Mark Ready')], { recorded: 'Mark Ready', differed: true })).toBeUndefined();
+  });
+
+  /**
+   * Evidence, not shape: an id-shaped value the procedure clicks AS A BUTTON'S
+   * NAME is that button's label and stands in (the page check still has to
+   * find it); the same value named by a link, typed, read, navigated by or
+   * used as the identity marker is record data and is refused.
+   */
+  it('decides by how the procedure uses the slot, not by what the value looks like', () => {
+    expect(standIn(REF, params, [seg('RD-1015')])).toBe('RD-1015');
+    expect(standIn(REF, params, [seg('RD-1015', [press('link')])])).toBeUndefined();
+    const typed: SkillStep = { tool: 'fill', args: { target: '@e1', value: '{{v5}}' }, locators: { target: [{ kind: 'label', label: 'Status' }] } };
+    expect(standIn(REF, params, [seg('Mark Ready', [press(), typed])])).toBeUndefined();
+    const read: SkillStep = { tool: 'read', args: { target: '@e1', what: 'text' }, locators: { target: [{ kind: 'text', text: '{{v5}}' }] } };
+    expect(standIn(REF, params, [seg('Mark Ready', [read])])).toBeUndefined();
+    const goto: SkillStep = { tool: 'goto', args: { url: 'http://app.test/{{v5}}' }, locators: {} };
+    expect(standIn(REF, params, [seg('Mark Ready', [goto, press()])])).toBeUndefined();
+    expect(standIn(REF, params, [seg('Mark Ready', [press()], { preconditions: { requireText: ['{{v5}}'] } })])).toBeUndefined();
+    // A slot no step uses carries no evidence either way.
+    expect(standIn(REF, params, [seg('Mark Ready', [fillA])])).toBeUndefined();
+  });
+
+  it('refuses a value holding a recorded var', () => {
+    expect(standIn(REF, params, [seg('fwrd54-n1 RD Bench Ticket')])).toBeUndefined();
+  });
+
+  it('only for a param bound to exactly the reference, never a url part, a JSON path or a var', () => {
+    expect(standIn('06-change.other', params, [seg('Mark Ready')])).toBeUndefined();
+    expect(standIn('02-create.url.p1', { v5: '{{02-create.url.p1}}' }, [seg('Board')])).toBeUndefined();
+    expect(standIn('02-create.body#a.b', { v5: '{{02-create.body#a.b}}' }, [seg('Board')])).toBeUndefined();
+    expect(standIn('runid', params, [seg('Mark Ready')])).toBeUndefined();
+    expect(standIn(REF, { v5: 'click {{06-change.mark_ready_button}}' }, [seg('Mark Ready')])).toBeUndefined();
+  });
+
+  it('refuses segments that recorded different examples, and prose-length values', () => {
+    expect(standIn(REF, params, [seg('Mark Ready'), seg('Mark Done')])).toBeUndefined();
+    expect(standIn(REF, params, [seg('x'.repeat(81))])).toBeUndefined();
+  });
+
+  it("recordedValueShown refuses a value holding this run's var without reading the page", async () => {
+    const page = { evaluate: () => { throw new Error('the page must not be read'); } } as never;
+    expect(await recordedValueShown(page, 'fwrd54-n2 RD Part A', ['fwrd54-n2'])).toBe(false);
+    expect(await recordedValueShown(page, '   ', [])).toBe(false);
   });
 });

@@ -92,7 +92,7 @@ export function admitsIncompletion(summary: string): string | null {
 
 export function validateReport(input: unknown): ReportValidation {
   const validate = validator();
-  if (validate(input)) return { ok: true, report: input as Report };
+  if (validate(input)) return { ok: true, report: withoutNullValues(input as Report) };
 
   const { value, notes } = coerce(input);
   if (notes.length && validate(value)) {
@@ -103,6 +103,18 @@ export function validateReport(input: unknown): ReportValidation {
     .map((e) => `${e.instancePath || '(root)'} ${e.message}`)
     .join('; ');
   return { ok: false, error: error || 'report did not match the required schema' };
+}
+
+/**
+ * The schema accepts a null value, so a schema-valid report skips coerce's
+ * null drop; this applies the same rule there (see coerce for why a null is
+ * absent, not the string "null").
+ */
+function withoutNullValues(report: Report): Report {
+  const values = report.evidence?.values;
+  if (!values || !Object.values(values).some((v) => v === null)) return report;
+  const kept = Object.fromEntries(Object.entries(values).filter(([, v]) => v !== null));
+  return { ...report, evidence: { ...report.evidence, values: kept } };
 }
 
 /** A scalar the schema accepts, or null when the input cannot be reduced to one. */
@@ -174,7 +186,11 @@ function coerce(input: unknown): { value: Record<string, unknown>; notes: string
       const vals: Record<string, unknown> = {};
       const fixed: string[] = [];
       for (const [k, v] of Object.entries(ev.values as Record<string, unknown>)) {
-        if (v === undefined) {
+        // A null is the model saying it did NOT observe the value, and every
+        // consumer stringifies values: fwod47-n3's failed 03-add reported
+        // `second_product_unit_price: null`, 04-open bound "null" as the
+        // price and replayed against it. Absent, like undefined.
+        if (v === undefined || v === null) {
           fixed.push(k);
           continue; // JSON has no undefined; drop rather than invent a value
         }

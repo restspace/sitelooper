@@ -7,7 +7,8 @@
  * the finding.
  */
 import { describe, expect, it } from 'vitest';
-import { RunLedger, evidenced, fatal, inLocator, navigationLeaks, occursAsToken, scanForLeaks } from '../src/skills/ledger.js';
+import { RunLedger, evidenced, fatal, inLocator, navigationLeaks, occursAsToken, scanForLeaks, slotKnownRunValues } from '../src/skills/ledger.js';
+import type { Skill } from '../src/skills/store.js';
 import { looksLikeId } from '../src/skills/shape.js';
 import { primaryFor } from '../src/daemon/recorder.js';
 
@@ -433,5 +434,65 @@ describe('evidenced leaks', () => {
     expect(evidenced(byValue('fwrd45-n1'))).toBe(true);
     expect(evidenced(byValue('44'))).toBe(true);
     expect(evidenced(byValue('Ready'))).toBe(false);
+  });
+});
+
+describe('slotKnownRunValues (fwod47 goal/report leaks)', () => {
+  const orderUrl = 'http://app/web#model=sale.order&view_type=form&id=21';
+  const skill = (): Skill => ({
+    id: 's_cancel',
+    origin: 'http://app',
+    template: 'cancel order {{v1}} for {{v3}}',
+    params: {
+      v1: { example: 'S00021', usedIn: [1], known: true, binding: 'output:i2:quotation_reference' },
+      v3: { example: 'fwod47-n1', usedIn: [], known: true, binding: 'var:runid' },
+    },
+    preconditions: { urlPattern: 'http://app/web' },
+    steps: [],
+    goal: { requireText: ['Cancelled', orderUrl, 'fwod47-n1 Bench Customer'] },
+    reportTemplate: {
+      summary: 'Cancelled order {{v1}} (record id=21).',
+      values: { order_reference: '{{v1}}', url_after_cancel: orderUrl, customer: 'fwod47-n1 Bench Customer', status: 'Cancelled' },
+    },
+    stats: { uses: 1, successes: 1, partial: 0, created: 'now', failedAtStep: {}, fallthroughs: 0 },
+    status: 'provisional',
+    provenance: { session: 's', instruction: 'cancel', created: 'now' },
+  });
+  const ledger = (): RunLedger => {
+    const l = new RunLedger();
+    l.add('fwod47-n1', { from: 'var', name: 'runid' });
+    l.addUrlIds(orderUrl, '02-create', [{ label: 'q.id', value: '21' }]);
+    return l;
+  };
+
+  it('drops a carrier of an id with no bound param, slots a var-bound value, leaves the rest', () => {
+    const out = slotKnownRunValues(skill(), ledger())!;
+    expect(out.skill.goal).toEqual({ requireText: ['Cancelled', '{{v3}} Bench Customer'] });
+    expect(out.skill.reportTemplate).toEqual({
+      summary: '',
+      values: { order_reference: '{{v1}}', customer: '{{v3}} Bench Customer', status: 'Cancelled' },
+    });
+    expect(out.changes).toContain('goal.requireText[1] dropped (names a value this run made, with no slot to bind it)');
+    expect(scanForLeaks(out.skill, ledger(), 's').filter(evidenced)).toEqual([]);
+  });
+
+  it('slots an id when a bound param carries it, removes an emptied goal, and ignores shape-only values', () => {
+    const sk = skill();
+    sk.params.v2 = { example: '21', usedIn: [], known: true, binding: 'url:02-create:q.id' };
+    const out = slotKnownRunValues(sk, ledger())!;
+    expect(out.skill.reportTemplate!.summary).toBe('Cancelled order {{v1}} (record id={{v2}}).');
+    expect(out.skill.reportTemplate!.values.url_after_cancel).toBe('http://app/web#model=sale.order&view_type=form&id={{v2}}');
+
+    const bare = skill();
+    bare.goal = { requireText: [orderUrl] };
+    bare.reportTemplate = undefined;
+    expect(slotKnownRunValues(bare, ledger())!.skill.goal).toBeUndefined();
+
+    const shapeOnly = new RunLedger();
+    shapeOnly.add('S00021', { from: 'output', step: 'i2', name: 'quotation_reference' });
+    const plain = skill();
+    plain.goal = { requireText: ['S00021'] };
+    plain.reportTemplate = undefined;
+    expect(slotKnownRunValues(plain, shapeOnly)).toBeNull();
   });
 });
