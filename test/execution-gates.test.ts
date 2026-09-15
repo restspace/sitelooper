@@ -297,6 +297,8 @@ describe('gotoLandingVerdict', () => {
     expect(gotoLandingVerdict('http://graf/d/abc123/', 'http://graf/d/abc123/bench?from=now-6h&to=now', 'step 1')).toBeNull();
     // the id dropped, the menu id reissued
     expect(gotoLandingVerdict('http://odoo/web#menu_id=194&view_type=form&id=22', 'http://odoo/web#menu_id=201&view_type=form', 'step 1')).toBeNull();
+    // an empty requested value asks for no view: the app's default fills it (fwod48)
+    expect(gotoLandingVerdict('http://odoo/web#action=&model=&view_type=list&cids=1&menu_id=', 'http://odoo/web#action=123&model=res.partner&view_type=list&cids=1&menu_id=81', 'step 1')).toBeNull();
     // another origin is the error-page and origin gates' business
     expect(gotoLandingVerdict('http://app/x?view=a', 'http://other/x?view=b', 'step 1')).toBeNull();
   });

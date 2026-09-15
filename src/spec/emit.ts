@@ -2180,13 +2180,17 @@ function readLines(step: SkillStep, ctx: Ctx): string[] {
 
   const chain = step.locators?.target ?? [];
   if (!chain.length) {
-    return unsupportedCapability(ctx, ctx.stepIndex, {
-      what: `(${step.tool}) has no locator a spec can express`,
-      why: 'The recording kept no candidate for this target, so there is nothing for the artifact to resolve.',
-      fix: `re-record this step so the target is named (sitelooper rerecord), or write the locator for ${step.tool} by hand in the generated file`,
-      throws: `Unsupported recorded locator: ${step.tool} has no locator a standalone spec can express`,
-      todo: `no locator this compiler can express for ${step.tool} — fill it in by hand.`,
-    });
+    // A read is an observation: replay skips one whose chain resolves nothing
+    // ("skipped read — … (none recorded)") and the flow goes on. A chain can be
+    // empty by design — dropDeadReadLocators retires every candidate that
+    // looked for a value a later run saw change — and refusing the whole flow
+    // over it made fwrd55 and fwod48 uncompilable while both replays passed.
+    // So the artifact skips it the same way: one skip line, the value empty.
+    ctx.warnings.push(`${ctx.stepId}: step ${ctx.stepIndex} (${step.tool} ${step.label ?? ''}) has no locator left — it publishes nothing, as replay skips it`);
+    return [
+      `console.warn(${q(`[sitelooper skip] ${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex} target: no locator recorded — value left empty`)});`,
+      `${out} = '';`,
+    ];
   }
   // In a loop body a read's resolution is sunk for the progress guard too, as replay sinks every key.
   const frame = step.contexts?.target?.frame;

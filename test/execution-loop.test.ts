@@ -535,13 +535,20 @@ const UNSUPPORTED: [string, SkillStep, string, string][] = [
     'Unsupported recorded locator: click has no locator a standalone spec can express',
     '// TODO: no locator this compiler can express for click — fill it in by hand.',
   ],
-  [
-    'a read with no recorded locator at all',
-    { tool: 'read', args: { target: '@e1', what: 'text' }, locators: { target: NO_LOCATOR }, label: 'name' },
-    'Unsupported recorded locator: read has no locator a standalone spec can express',
-    '// TODO: no locator this compiler can express for read — fill it in by hand.',
-  ],
 ];
+
+describe('a read with no locator left', () => {
+  it('skips with one line and publishes nothing, as replay skips it — never a TODO that refuses the flow', () => {
+    const step = { tool: 'read', args: { target: '@e1', what: 'text' }, locators: { target: NO_LOCATOR }, label: 'name' };
+    const { source, warnings, diagnostics } = emitFlowFile(flowOf([step]), { tier: 'plain' });
+    expect(source).not.toContain('// TODO: no locator this compiler can express for read');
+    expect(source).not.toContain('Unsupported recorded locator: read');
+    expect(source).toContain('[sitelooper skip] 01-step');
+    expect(source).toContain(`outputs['01-step.name'] = '';`);
+    expect(diagnostics).toHaveLength(0);
+    expect(warnings.some((w) => w.startsWith('01-step: step 1 (read name) has no locator left'))).toBe(true);
+  });
+});
 
 describe('compile-time diagnostics for what the artifact cannot do', () => {
   it.each(UNSUPPORTED)('%s yields a diagnostic, a warning, a TODO and a throw', (_name, step, thrown, todo) => {

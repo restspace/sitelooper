@@ -257,7 +257,12 @@ export function gotoLandingVerdict(target: string, landed: string, where: string
   const pairs: [string, string, string][] = [];
   for (const [key, val] of t.query) if (l.query.has(key)) pairs.push([key, val, l.query.get(key)!]);
   for (const [key, val] of t.hashState) if (l.hashState.has(key)) pairs.push([key, val, l.hashState.get(key)!]);
-  const differ = pairs.filter(([, want, got]) => want !== got && !/\{\{/.test(want) && !(mintedShape(want) && mintedShape(got)));
+  // An EMPTY requested value asks for no particular view: the app filling in
+  // its default is the landing the request left open. fwod48's recording
+  // typed `web#action=&model=&view_type=list&cids=1&menu_id=`, Odoo landed on
+  // action=123&menu_id=81 exactly as it had at record time, and both replays
+  // stopped there as "another view".
+  const differ = pairs.filter(([, want, got]) => want !== '' && want !== got && !/\{\{/.test(want) && !(mintedShape(want) && mintedShape(got)));
   if (!differ.length) return null;
   const said = differ.map(([key, want, got]) => `${key}=${clip(got, 40)} where it was sent to ${key}=${clip(want, 40)}`).join(', ');
   return `${where} navigated but landed on another view: ${said} — the page it asked for was not given`;
