@@ -1,0 +1,84 @@
+
+[sweep] run 1/3: fwkb19-n1 (store: /home/user/sitelooper/bench/results/fwkb19-skills)
+[harness] kanboard: defaulting APP_URL
+[harness] kanboard: defaulting APP_EMAIL
+[harness] kanboard: defaulting APP_PASSWORD
+[reset] kanboard: no leftover bench tasks
+[harness] kanboard responded 302 at http://127.0.0.1:8085/
+stopped: fwkb19-n1
+  flow "fwkb19" saved: 6 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwkb19.json
+  warning: note: 01-open no longer publishes columns_left_to_right — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-create no longer publishes board_url, seed_task_1_title, seed_task_2_title, seed_task_3_title — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-edit no longer publishes task_id, seed_tasks_untouched — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-open no longer publishes comment_author, comment_created, comment_ip_address — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-set no longer publishes due_date_field_class — no replay reads it from the page and the recording showed no line to read
+  warning: note: 06-change no longer publishes task_card_column, task_due_date_displayed — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 183 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.origin: "127.0.0.1" (output) in "http://127.0.0.1:8085"
+  flow.startUrl: "127.0.0.1" (output) in "http://127.0.0.1:8085/"
+  flow.steps[0].instruction: "Bench Board" (output) in "Open http://127.0.0.1:8085/ and sign in with username admin and password admin. Then navigate to the board of the project named 'Bench Board' (do not modify or "
+  flow.steps[0].instruction: "127.0.0.1" (output) in "Open http://127.0.0.1:8085/ and sign in with username admin and password admin. Then navigate to the board of the project named 'Bench Board' (do not modify or "
+  flow.steps[0].instruction: "admin" (output) in "Open http://127.0.0.1:8085/ and sign in with username admin and password admin. Then navigate to the board of the project named 'Bench Board' (do not modify or "
+arm=sitelooper model=z-ai/glm-5.3 runid=fwkb19-n1 stop=completed
+turns=7 wall=413.6s
+commands=6 cmdTime=356.3s cmdBytes=6303 timeouts=0
+orchestrator in=16182 cw=0 cr=10592 out=2469
+inner prompt=1658670 cached=1521920 completion=20273
+spend=$0.0735 maxUsd=3
+learn: A_n=0 replayed=0/6 full=0 repaired=0 compiled=6 variants=0
+-> /home/user/sitelooper/bench/results/fwkb19-n1-sitelooper-result.json
+
+fwkb19-n1: objectives passed 6/6
+  obj 1: PASS — all 4 column names reported (Backlog | Ready | Work in progress | Done)
+  obj 2: PASS — description includes runid=true
+  obj 3: PASS — column=Work in progress
+  obj 4: PASS — 1 comment(s), 1 carrying the runid
+  obj 5: PASS — date_due=2026-12-31, want 2026-12-31
+  obj 6: PASS — task id 4 reported
+
+[sweep] run 2/3: fwkb19-n2 (replay flow fwkb19, no orchestrator)
+[reset] kanboard: deleted 1 leftover bench task(s)
+
+fwkb19-n2: objectives passed 6/6
+  obj 1: PASS — all 4 column names reported (Backlog | Ready | Work in progress | Done)
+  obj 2: PASS — description includes runid=true
+  obj 3: PASS — column=Work in progress
+  obj 4: PASS — 1 comment(s), 1 carrying the runid
+  obj 5: PASS — date_due=2026-12-31, want 2026-12-31
+  obj 6: PASS — task id 4 reported
+
+[sweep] run 3/3: fwkb19-n3 (replay flow fwkb19, no orchestrator)
+[reset] kanboard: deleted 1 leftover bench task(s)
+
+fwkb19-n3: objectives passed 6/6
+  obj 1: PASS — all 4 column names reported (Backlog | Ready | Work in progress | Done)
+  obj 2: PASS — description includes runid=true
+  obj 3: PASS — column=Work in progress
+  obj 4: PASS — 1 comment(s), 1 carrying the runid
+  obj 5: PASS — date_due=2026-12-31, want 2026-12-31
+  obj 6: PASS — task id 4 reported
+
+Learning sweep fwkb19 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwkb19-n1' │ '6/6'    │ 'completed' │ 7     │ 6    │ 0.0735    │ 0   │ '0/6'        │ 414    │
+│ 1       │ 2 │ 'fwkb19-n2' │ '6/6'    │ 'success'   │ 0     │ 6    │ 0         │ 1   │ '6/6 (flow)' │ 21     │
+│ 2       │ 3 │ 'fwkb19-n3' │ '6/6'    │ 'success'   │ 0     │ 6    │ 0         │ 1   │ '6/6 (flow)' │ 21     │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8085
+  s_006565  validated   13 steps  3/3 (100%)
+           Open {{v1}} and sign in with username admin and password admin. Then navigate to the board of the project name…
+  s_66f907  validated   10 steps  3/3 (100%)
+           In the Kanboard project '{{v1}}' (project_id 1), create a new task with title exactly '{{v3}}' and a descripti…
+  s_bb6369  validated    6 steps  3/3 (100%)
+           In the Kanboard project '{{v1}}' (project_id 1), move the task titled '{{v2}}' (task #4) from the {{v4}} colum…
+  s_c6f6cc  validated    3 steps  3/3 (100%)
+           Verification only, do not change anything: In Kanboard project '{{v1}}' (project_id 1), open the board page an…
+  s_d5ed6a  validated    8 steps  3/3 (100%)
+           In the Kanboard project '{{v1}}', open the task page for task #4 titled '{{v2}}' and add a comment whose text …
+  s_f0fef8  validated   19 steps  3/3 (100%)
+           On the Kanboard task page for task #4 titled '{{v1}}' (project '{{v3}}'), set the task's due date to 2026-12-3…
+store: /home/user/sitelooper/bench/results/fwkb19-skills
+
+summary: /home/user/sitelooper/bench/results/fwkb19-sweep.json
