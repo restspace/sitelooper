@@ -1494,6 +1494,29 @@ describe('runFlow decides a harmless stop from the recovery it watched (fwod49)'
     const call = source.slice(source.indexOf('const learned = learnFromInstruction'), source.indexOf('const outcome = learned?.outcome;'));
     expect(call).toMatch(/\bharmlessStop,/);
   });
+
+  /**
+   * The evidence half of "a read that has never resolved does not publish"
+   * (fwkb14, fwod52). A synthesized read is marked where it is BUILT
+   * (flow.ts liveReadsFor) and can only be unmarked where a run's outcome is
+   * recorded — which is here, beside the retirement that already reads this
+   * step's cross-run evidence. Source level for the same reason as above.
+   */
+  it('settles the synthesized reads on the chain from what the run just observed', () => {
+    // Alongside the existing retirement, on the same success-only branch: a
+    // blocked step's values say how far it got, not what the page shows.
+    const after = source.slice(source.indexOf('this.retireDeadReadLocators(flow, step, opts.progress);'));
+    expect(after.slice(0, 200)).toMatch(/this\.settleUnprovenReads\(flow, step, opts\.progress\);/);
+    const region = source.slice(source.indexOf('private settleUnprovenReads('), source.indexOf('Everything of this run\'s that survived'));
+    // Proven on the first value that comes back; retired only after a SECOND
+    // absent run, the same run-1-proposes / run-2-decides shape as its sibling.
+    expect(region).toMatch(/ev\.same \+ ev\.differed > 0/);
+    expect(region).toMatch(/\(ev\.absent \?\? 0\) >= 2/);
+    expect(region).toMatch(/markReadsProven\(copy\.steps, proven\)/);
+    expect(region).toMatch(/dropAbsentReadLocators\(copy\.steps, absent\)/);
+    // The whole chain: a synthesized read sits on its LAST segment.
+    expect(region).toMatch(/s\.seq\?\.chain === pinned\.seq!\.chain/);
+  });
 });
 
 /**

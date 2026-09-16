@@ -169,12 +169,28 @@ export const RESOLVE_WAIT_MS = 3_000;
  * — it names one control — while `#view > div > button:nth-of-type(2)` is a
  * route to wherever that shape currently sits. Demoting the first alongside
  * the second would push a deliberate selector below a role guess.
+ *
+ * A combinator is one form of position; a CHILD-INDEX pseudo-class is the
+ * other, and the family is settled by CSS grammar, not by guessing at a
+ * shape: `:nth-child`/`:nth-of-type` (and their `nth-last-` forms) and
+ * `:first|:last|:only-child`/`-of-type` all name a slot in a sibling list BY
+ * DEFINITION. Only `:nth-` was tested, so fwrd59's `table tbody tr:first-child a`
+ * was classified a HANDLE: it skipped keepsIdentity, plausible and leavesOrigin
+ * (all gated on `index > 0 || structural`), resolved on the first walk against
+ * whatever row 1 held, and opened ticket t14 while the run's own ticket was t15.
+ * Same defect, same app and page as recorder.ts's `tr:nth-of-type(1)` note.
+ *
+ * Matched case-insensitively because CSS pseudo-class names are: an agent may
+ * type `:First-child`. The two ways to be wrong are not equal — calling a
+ * handle positional only demotes it and asks it to prove identity, while
+ * calling a position a handle skips every guard, which is the bug above — so
+ * where the spelling is in doubt this errs toward position.
  */
 export function structuralCandidate(c: { kind: string; nth?: number; selector?: string }): boolean {
   if (c.nth !== undefined) return true;
   if (c.kind === 'point') return true; // where it was, not what it is
   if (c.kind !== 'css') return false;
-  return /[>+~]|:nth-/.test(c.selector ?? '');
+  return /[>+~]|:nth-|:(?:first|last|only)-(?:child|of-type)/i.test(c.selector ?? '');
 }
 
 /**

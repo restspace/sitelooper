@@ -1171,6 +1171,68 @@ export function dropDeadReadLocators(steps: SkillStep[], volatile: Record<string
 }
 
 /**
+ * The outcome `dropDeadReadLocators` cannot observe: a read that never
+ * resolved at all.
+ *
+ * Retirement there is driven by `differed > 0` — a value a later run watched
+ * CHANGE. A read whose locators match nothing produces no value, so it never
+ * reaches a same/differed verdict and is never retired: fwkb14's synthesized
+ * `column_3` read missed on n2 and again on n3 and the store learned nothing
+ * either time, while fwod52's had no candidates left at all and was
+ * guaranteed to publish nothing on any page, forever. `absent` (flow.ts
+ * noteOutputEvidence) is what makes the miss countable.
+ *
+ * Same run-1-proposes / run-2-decides shape as its sibling, and the same
+ * outcome — an emptied chain, which replay SKIPS — but narrowed to reads
+ * carrying `unproven`. A RECORDED read that misses may be missing for this
+ * run's reasons (a route the recovery took, a record in another state), and
+ * emptying it would spend evidence the run does not have. An unproven read
+ * has never resolved ANYWHERE: there is no run whose opinion is being
+ * overruled, because no run ever had one.
+ *
+ * `labels` are the read labels evidence says came back absent on every run
+ * that reached the step. Mutates `steps`; returns how many candidates went.
+ */
+export function dropAbsentReadLocators(steps: SkillStep[], labels: string[]): number {
+  let removed = 0;
+  for (const step of steps) {
+    if (step.body) removed += dropAbsentReadLocators(step.body, labels);
+    if (step.tool !== 'read' && step.tool !== 'read_all') continue;
+    if (!step.unproven || !step.label || !labels.includes(step.label)) continue;
+    for (const [key, chain] of Object.entries(step.locators ?? {})) {
+      if (!chain.length) continue;
+      removed += chain.length;
+      step.locators[key] = [];
+    }
+  }
+  return removed;
+}
+
+/**
+ * Drop the `unproven` mark from every read that has now PROVED itself: a run
+ * resolved it and read a value back, which is the only evidence that turns a
+ * candidate source into a source (SkillStep.unproven).
+ *
+ * Once, and permanently. The claim being retired is "no run has ever resolved
+ * this", and a later run that misses does not make that true again — a read
+ * that has resolved once is an ordinary read, judged by the ordinary
+ * evidence (`dropDeadReadLocators`).
+ *
+ * `labels` are the read labels this run reported a value for. Mutates
+ * `steps`; returns how many marks went.
+ */
+export function markReadsProven(steps: SkillStep[], labels: string[]): number {
+  let cleared = 0;
+  for (const step of steps) {
+    if (step.body) cleared += markReadsProven(step.body, labels);
+    if (!step.unproven || !step.label || !labels.includes(step.label)) continue;
+    delete step.unproven;
+    cleared += 1;
+  }
+  return cleared;
+}
+
+/**
  * An ADDRESS that is really a bookmark: a test hook or an id whose text
  * carries a minted identifier, like `ticket-link-t15`. Next run the record is
  * t16 and it matches nothing — or worse, on an app that reuses ids, it

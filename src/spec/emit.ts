@@ -2733,8 +2733,60 @@ function usedSlot(step: SpecStep, slot: string): boolean {
   );
 }
 
+/**
+ * Is the only thing that publishes `ref` a read no run has ever resolved?
+ *
+ * WHY THIS IS ASKED AT ALL. `publishedOutputs` (src/skills/learn.ts) counts a
+ * label as published on one fact: a read step carries it. That is right for
+ * what it is for — pruning an output nothing can ever source, and a wording-only
+ * reference must not start failing — but it says nothing about whether the read
+ * WORKS. The flow export synthesizes a read for a referenced value the
+ * producing skill never read (flow.ts `liveReadsFor`), located by the
+ * characters of the value the recording model reported; appending it is what
+ * makes the label "published", which is what stops the output being pruned,
+ * which is what turns a soft unreported output into a HARD dependency of a
+ * later step. fwkb14 and fwod52 both exported 6/6 with every skill validated
+ * 3/3 and then stopped their compiled arms at 1/6 and 3/6 — od52's synthesized
+ * chain was EMPTY, so it could never have published on any page.
+ *
+ * So: a read that has never resolved is a CANDIDATE source. `unproven` carries
+ * that as a fact from where the read is built, and is dropped the first time
+ * any run resolves it (SkillStep.unproven). A source is anything else — a
+ * recorded read, or a report-template value derived from the caller's own
+ * `{{vN}}`, which is what `publishedOutputs` counts beside reads.
+ */
+function unprovenSource(spec: SpecFlow, ref: string): { sid: string; output: string } | null {
+  const dot = ref.indexOf('.');
+  if (dot < 0) return null;
+  const sid = ref.slice(0, dot);
+  // A url part is re-bound from every replay's landing and a JSON leaf comes
+  // out of a body; neither is a read's label. `#` is stripped because the
+  // read that publishes `body` is what sources `body#task.id`.
+  const output = ref.slice(dot + 1).split('#')[0];
+  if (output === 'url' || output.startsWith('url.') || output === 'minted') return null;
+  const producer = spec.steps.find((s) => s.id === sid);
+  if (!producer) return null;
+  let reads = 0;
+  let proven = 0;
+  const walk = (steps: SkillStep[]): void => {
+    for (const s of steps) {
+      if ((s.tool === 'read' || s.tool === 'read_all') && s.label === output) {
+        reads += 1;
+        if (!s.unproven) proven += 1;
+      }
+      if (s.body) walk(s.body);
+    }
+  };
+  for (const segment of producer.segments) {
+    walk(segment.steps);
+    const templated = segment.report?.values?.[output];
+    if (typeof templated === 'string' && /\{\{v\d+\}\}/.test(templated)) proven += 1;
+  }
+  return reads > 0 && proven === 0 ? { sid, output } : null;
+}
+
 /** The `{ v1: …, d1: '' }` argument one step is called with. */
-function callArgs(step: SpecStep, slots: string[], vars: Set<string>, warnings: string[]): string {
+function callArgs(step: SpecStep, slots: string[], vars: Set<string>, warnings: string[], spec: SpecFlow, diagnostics: Diagnostic[]): string {
   const derived = new Set(step.segments.flatMap((s) => Object.keys(s.derived ?? {})));
   const fields = slots.map((slot) => {
     // A minted value has no caller binding by construction: the body reads it
@@ -2765,6 +2817,38 @@ function callArgs(step: SpecStep, slots: string[], vars: Set<string>, warnings: 
         // `needShown` without the throw, and the two runners fill alike.
         const helper = used ? 'needShown' : 'shownOr';
         return `${slot}: await ${helper}(page, outputs, ${q(exact)}, ${q(step.id)}, ${q(standIn)}, Object.values(vars))`;
+      }
+      // A used slot with no stand-in compiles to `need(…)`, which STOPS the
+      // run when the reference is unpublished. Where the only thing that
+      // could publish it is a read no run has ever resolved, that stop is not
+      // a risk, it is the plan: refuse the compile instead, with a cause that
+      // names the step, the output and the reason. A loud compile-time
+      // refusal beats a silent 1/6 with residue on the app (fwkb14 03-verify,
+      // fwod52 04-open).
+      //
+      // The discrimination is `usedSlot`'s, unchanged and exactly right: a
+      // reference merely QUOTED in the wording reaches nothing the procedure
+      // acts on, so its blank costs a sentence, not a record. And only the
+      // no-stand-in case — where a `recordedStandIn` exists, `needShown` fills
+      // the slot from the live page and the compile can stand behind the step.
+      //
+      // NOT fixed by carrying the recording's literal: a reference this run
+      // did not publish goes to recovery, never to a recorded value, or the
+      // step silently edits run 1's record (flow.ts lookupRef, `need` above).
+      if (used) {
+        for (const m of bound.matchAll(/\{\{([\w-]+\.[\w.#-]+)\}\}/g)) {
+          const src = unprovenSource(spec, m[1]);
+          if (!src) continue;
+          diagnostics.push({
+            code: 'unproven-source',
+            step: step.id,
+            what: `slot ${slot} is bound to {{${m[1]}}}, and nothing has ever published ${src.output}`,
+            why: `${src.sid}'s only source for ${src.output} is a read the flow export synthesized from the value the recording reported — no run has resolved it or read a value back through it. ${step.id} types or locates by ${slot}, so the artifact would stop here on every run, part-way through the flow and with everything earlier already done.`,
+            fix: `re-record ${src.sid} so it reads ${src.output} from an element (\`sitelooper rerecord <flow file> ${src.sid}\`), or take {{${m[1]}}} out of ${step.id}'s ${slot}`,
+            action: { command: 'rerecord', args: [src.sid], step: src.sid },
+            severity: 'error',
+          });
+        }
       }
       return `${slot}: ${paramExpr(bound, vars, used ? step.id : undefined)}`;
     }
@@ -2923,7 +3007,7 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
   // and `neededHelpers` decides what the file carries by what its text names.
   // Computed after the bodies because a call site's slot list is what the body
   // collected.
-  const calls = bodies.map((b) => callArgs(b.step, b.slots, vars, warnings));
+  const calls = bodies.map((b) => callArgs(b.step, b.slots, vars, warnings, spec, diagnostics));
   const body = [...bodies.flatMap((b) => b.lines), ...calls].join('\n');
   // runFlow judges the browser it is handed (profileMismatch, readLiveBrowser);
   // named here because runFlow is written after the helper scan.

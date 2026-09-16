@@ -77,8 +77,15 @@ export interface FlowStep {
    * for the same output — Odoo says "New (unsaved)" again (app furniture) and
    * "S00023" (this run's record). Same mechanism as a locator candidate's
    * `seen: {hit, miss}`; see PLAN-evidence-over-shape.md.
+   *
+   * `absent` is the third outcome, and the one this used to be blind to: the
+   * replay SUCCEEDED and reported no value for an output the recording did
+   * report. Without it a read that consistently MISSES tallies nothing at all,
+   * so `retireDeadReadLocators` (which fires on `differed > 0`) can never
+   * reach it — fwkb14's synthesized `column_3` read matched nothing in n2 and
+   * nothing again in n3, and the store learned the same nothing both times.
    */
-  outputEvidence?: Record<string, { same: number; differed: number }>;
+  outputEvidence?: Record<string, { same: number; differed: number; absent?: number }>;
   /**
    * The url PATTERN the recording ended this step on (compile.ts urlPattern,
    * so `/orders/1042` and `/orders/1043` are one route).
@@ -203,7 +210,20 @@ export function noteOutputEvidence(step: FlowStep, reported: Record<string, stri
   if (step.route && route && step.route !== route) return changed;
   for (const [name, recorded] of Object.entries(step.recorded ?? {})) {
     const seen = reported[name];
-    if (typeof seen !== 'string' || !seen || typeof recorded !== 'string' || !recorded) continue;
+    if (typeof recorded !== 'string' || !recorded) continue;
+    // Silence is not disagreement — but it is not nothing either. This run
+    // reached the step and finished it, and produced no value where the
+    // recording had one: whatever was supposed to publish `name` matched
+    // nothing. Tallied apart from same/differed so no verdict is built from
+    // it (`varyingValues` and `recordedRef` still read only `differed`); its
+    // one reader is the retirement of a read that has never once resolved
+    // (server.ts settleUnprovenReads; fwkb14 missed in n2 and again in n3).
+    if (typeof seen !== 'string' || !seen) {
+      const ev = (step.outputEvidence ??= {})[name] ?? { same: 0, differed: 0 };
+      ev.absent = (ev.absent ?? 0) + 1;
+      step.outputEvidence[name] = ev;
+      continue;
+    }
     const ev = (step.outputEvidence ??= {})[name] ?? { same: 0, differed: 0 };
     const agrees = seen.trim() === recorded.trim();
     const wasStable = ev.differed === 0 && ev.same >= 1;
@@ -1131,7 +1151,12 @@ export function liveReadsFor(
       output,
       value,
       source,
-      read: { tool: 'read', args: { target: '@synth', what: 'text' }, locators: { target: candidates }, label: output },
+      // `unproven`: this read was synthesized here, from the characters of the
+      // value the recording model reported, and no run has ever resolved it.
+      // The mark travels with the step so the fact can be acted on later
+      // without anyone having to re-derive it from `@synth` or from what the
+      // locator looks like (SkillStep.unproven; fwkb14, fwod52).
+      read: { tool: 'read', args: { target: '@synth', what: 'text' }, locators: { target: candidates }, label: output, unproven: true },
     });
   }
   return out;

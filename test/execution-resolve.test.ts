@@ -116,6 +116,42 @@ describe('structuralCandidate / candidateRank / orderCandidates', () => {
     expect(structuralCandidate({ kind: 'role' })).toBe(false);
   });
 
+  // fwrd59 `01-open s_22630a/4`: `table tbody tr:first-child a` was read as a
+  // handle, so the identity/plausibility/origin guards never ran and the click
+  // opened row 1's ticket (t14) instead of the run's own (t15). The whole
+  // child-index pseudo-class family names a position, by CSS grammar.
+  it('reads the whole child-index pseudo-class family as position', () => {
+    for (const sel of [
+      'table tbody tr:first-child a',
+      'li:last-child',
+      'div:only-child',
+      'tr:first-of-type',
+      'tr:last-of-type',
+      'section:only-of-type',
+      'tr:nth-of-type(1)',
+      'tr:nth-last-child(2)',
+    ]) {
+      expect(structuralCandidate({ kind: 'css', selector: sel }), sel).toBe(true);
+    }
+  });
+
+  // CSS pseudo-class names are case-insensitive, and an agent types the
+  // selector by hand. Reading a position as a handle is the fwrd59 bug;
+  // reading a handle as a position only asks it to prove identity.
+  it('reads a child-index pseudo-class whatever its case', () => {
+    for (const sel of ['table tbody tr:First-child a', 'li:LAST-CHILD', 'tr:Nth-Of-Type(1)']) {
+      expect(structuralCandidate({ kind: 'css', selector: sel }), sel).toBe(true);
+    }
+  });
+
+  // The comment's stated intent: a deliberate handle must NOT be demoted below
+  // a role guess just because it is css.
+  it('leaves a deliberate handle a handle', () => {
+    for (const sel of ['#modal-save', '.card a', 'button.primary', '[data-testid="save"]', 'a:hover', 'input:checked']) {
+      expect(structuralCandidate({ kind: 'css', selector: sel }), sel).toBe(false);
+    }
+  });
+
   it('ranks identity, handle, path, point', () => {
     expect(candidateRank({ kind: 'scoped', structural: false })).toBe(0);
     expect(candidateRank({ kind: 'role', structural: false })).toBe(1);

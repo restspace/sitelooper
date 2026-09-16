@@ -4,7 +4,7 @@ import path from 'node:path';
 import { AnthropicProvider, OpenAICompatProvider, resolveProviderConfig, type Provider } from '../agent/llm.js';
 import { runEscalatingInstruction, type InstructionResult, type SkillRecord } from '../agent/loop.js';
 import { executeTool } from '../agent/tools.js';
-import { urlPattern as compiledUrlPattern, dropDeadReadLocators, fillParams, stranded, urlParts } from '../skills/compile.js';
+import { urlPattern as compiledUrlPattern, dropAbsentReadLocators, dropDeadReadLocators, fillParams, markReadsProven, stranded, urlParts } from '../skills/compile.js';
 import type { DriftTicket } from '../skills/repair.js';
 import type { Page } from 'playwright-core';
 import { agentGesturesOutsideReplay, bindSkill, canAdoptPin, decideRepin, learnFromInstruction, matchTemplate, publishedOutputs, selectCandidates, synthesizeReport } from '../skills/learn.js';
@@ -216,6 +216,53 @@ ${describeLeaks(leaks.slice(0, 6))}`);
       if (!removed) continue;
       store.put(copy);
       progress(`[flow ${flow.name}] ${step.id}: retired ${removed} read locator(s) in ${skill.id} — the value they look for has changed since recording`);
+    }
+  }
+
+  /**
+   * Settle the SYNTHESIZED reads on this step's chain against what this run
+   * just did with them (SkillStep.unproven).
+   *
+   * Two outcomes, both of them evidence this step's replay has only now
+   * produced:
+   *  - the read resolved and a value came back, so it is proved and the mark
+   *    goes. That is the whole claim `unproven` makes — "no run has ever
+   *    resolved this" — and one run is enough to end it.
+   *  - the read has come back absent on every run that reached the step, so
+   *    its candidates are retired (dropAbsentReadLocators). fwkb14 missed in
+   *    n2 and again in n3 with nothing recording the fact; fwod52's chain was
+   *    empty from the start.
+   *
+   * Run 1 proposes, run 2 decides, exactly as `retireDeadReadLocators` above:
+   * one absent run is a miss, two are a dead locator. Proving needs no second
+   * run — a value that came back IS the observation.
+   */
+  private settleUnprovenReads(
+    flow: import('../skills/flow.js').Flow,
+    step: import('../skills/flow.js').FlowStep,
+    progress: (line: string) => void,
+  ): void {
+    const store = this.browser.learn;
+    const pinned = step.skill ? store?.get(step.skill) : null;
+    if (!store || !pinned) return;
+    const proven: string[] = [];
+    const absent: string[] = [];
+    for (const [name, ev] of Object.entries(step.outputEvidence ?? {})) {
+      if (ev.same + ev.differed > 0) proven.push(name);
+      else if ((ev.absent ?? 0) >= 2) absent.push(name);
+    }
+    if (!proven.length && !absent.length) return;
+    // The whole chain, for the reason retireDeadReadLocators gives: a
+    // synthesized read sits on the chain's LAST segment.
+    const chain = pinned.seq ? store.list(pinned.origin).filter((s) => s.seq?.chain === pinned.seq!.chain) : [pinned];
+    for (const skill of chain) {
+      const copy: Skill = JSON.parse(JSON.stringify(skill)) as Skill;
+      const cleared = proven.length ? markReadsProven(copy.steps, proven) : 0;
+      const retired = absent.length ? dropAbsentReadLocators(copy.steps, absent) : 0;
+      if (!cleared && !retired) continue;
+      store.put(copy);
+      if (cleared) progress(`[flow ${flow.name}] ${step.id}: ${cleared} synthesized read(s) in ${skill.id} proved — this run resolved them and read a value back`);
+      if (retired) progress(`[flow ${flow.name}] ${step.id}: retired ${retired} unproven read locator(s) in ${skill.id} — they have matched nothing on every run that reached this step`);
     }
   }
 
@@ -1628,6 +1675,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
           opts.progress(`[flow ${flow.name}] ${step.id}: ${changed.map((n) => `${n}=${verdict(n)}`).join(', ')}`);
         }
         this.retireDeadReadLocators(flow, step, opts.progress);
+        this.settleUnprovenReads(flow, step, opts.progress);
       }
       stepResults.push({
         id: step.id,

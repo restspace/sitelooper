@@ -10,7 +10,9 @@ import {
   consumedReportedOutputs, consumedUrlOutputs, buildFlow, lintFlowRefs, lintUnpublishedOutputs, liveReadsFor, looksLikeReportedData, mutatingIntent, noteOutputEvidence, recoveryRoute, resolveInstruction, resolveStepParams, softResolveInstruction, unbankedMutations, unreportedOutputs, urlOutputs, valueLineCandidates, varyingValues, type Flow, type FlowStep } from '../src/skills/flow.js';
 import { bindSkill, publishedOutputs, synthesizeReport } from '../src/skills/learn.js';
 import { SkillStore, type Skill, type SkillStep } from '../src/skills/store.js';
-import { compileSkill, dropDeadReadLocators } from '../src/skills/compile.js';
+import { compileSkill, dropAbsentReadLocators, dropDeadReadLocators, markReadsProven } from '../src/skills/compile.js';
+import { emitFlowFile } from '../src/spec/emit.js';
+import type { SpecFlow } from '../src/spec/ir.js';
 
 let tmp: string;
 beforeAll(() => {
@@ -806,8 +808,26 @@ describe('run 1 proposes, run 2 decides', () => {
   it('silence is not agreement — a tier-A replay that drops a value votes neither way', () => {
     const flow = build();
     noteOutputEvidence(flow.steps[0], {}); // republished nothing
-    expect(flow.steps[0].outputEvidence).toBeUndefined();
+    // Counted as absent and nothing else: no same, no differed, no verdict.
+    // The tally exists so a read that MISSES on every run is knowable at all
+    // (fwkb14 missed in n2 and n3 and nothing recorded either); it is never
+    // read by varyingValues or by a recorded-ref fallback.
+    expect(flow.steps[0].outputEvidence).toEqual({
+      quotation_reference: { same: 0, differed: 0, absent: 1 },
+      order_ref: { same: 0, differed: 0, absent: 1 },
+    });
     expect(varyingValues(flow).size).toBe(0);
+  });
+
+  it('absent accumulates across runs, and one value coming back ends it for that output', () => {
+    const flow = build();
+    const create = flow.steps[0];
+    noteOutputEvidence(create, {});
+    noteOutputEvidence(create, { order_ref: 'S00023' });
+    // order_ref resolved once, so it is an ordinary output from now on; the
+    // read for quotation_reference has still never produced anything.
+    expect(create.outputEvidence!.order_ref).toEqual({ same: 0, differed: 1, absent: 1 });
+    expect(create.outputEvidence!.quotation_reference).toEqual({ same: 0, differed: 0, absent: 2 });
   });
 
   it('a param binding resolves from this run only, like the instruction', () => {
@@ -1495,6 +1515,9 @@ describe('liveReadsFor', () => {
           args: { target: '@synth', what: 'text' },
           locators: { target: [{ kind: 'role', role: 'columnheader', name: 'Work in progress' }, { kind: 'role', role: 'link', name: 'Work in progress' }] },
           label: 'column_3_name',
+          // Synthesized here and never resolved by anything: a CANDIDATE
+          // source until a run proves it (fwkb14, fwod52).
+          unproven: true,
         },
       },
     ]);
@@ -1569,6 +1592,146 @@ describe('liveReadsFor', () => {
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }
+  });
+});
+
+/**
+ * A read that has never resolved does not publish (fwkb14, fwod52).
+ *
+ * Both flows swept 6/6 on all three runs with every skill validated 3/3, and
+ * both compiled arms then stopped — kb14 at 1/6 on
+ * `03-verify needs {{01-signin.column_3}}`, od52 at 3/6 on
+ * `04-open needs {{02-create.product_name}}`. The daemon replay survived only
+ * by falling back to the model. In both, the thing that "published" the output
+ * was a read the export SYNTHESIZED from the characters of the value the
+ * recording reported: kb14's chain was two self-referential role rungs,
+ * od52's was empty outright.
+ *
+ * `publishedOutputs` counting it is not the bug and does not change here —
+ * pruning must stay as it is, and a wording-only reference must not start
+ * failing. The bug is that a slot the procedure ACTS ON was bound from it.
+ */
+describe('an unproven read is a candidate source, not a source (fwkb14, fwod52)', () => {
+  const synth = (over: Partial<SkillStep> = {}): SkillStep => ({
+    tool: 'read',
+    args: { target: '@synth', what: 'text' },
+    locators: { target: [{ kind: 'role', role: 'columnheader', name: 'Work in progress' }, { kind: 'role', role: 'link', name: 'Work in progress' }] },
+    label: 'column_3',
+    unproven: true,
+    ...over,
+  });
+  const fill: SkillStep = { tool: 'fill', args: { target: '@e1', value: '{{v1}}' }, locators: { target: [{ kind: 'id', selector: '#i' }] } };
+  const spec = (read: SkillStep | null, usedIn: number[]): SpecFlow => ({
+    version: 1,
+    name: 'kb',
+    origin: 'http://app.test',
+    startUrl: 'http://app.test/',
+    vars: [],
+    steps: [
+      {
+        id: '01-signin',
+        instruction: 'sign in',
+        params: {},
+        outputs: ['column_3'],
+        segments: [{ id: 's_signin', template: 'sign in', params: {}, preconditions: { urlPattern: 'http://app.test/' }, steps: read ? [read] : [] }],
+      },
+      {
+        id: '03-verify',
+        instruction: 'verify the {{01-signin.column_3}} column',
+        params: { v1: '{{01-signin.column_3}}' },
+        outputs: [],
+        segments: [
+          {
+            id: 's_verify',
+            template: 'verify the {{v1}} column',
+            params: { v1: { example: 'Work in progress', usedIn, known: true } },
+            preconditions: { urlPattern: 'http://app.test/board' },
+            steps: [fill],
+          },
+        ],
+      },
+    ],
+  });
+  const codes = (s: SpecFlow) => emitFlowFile(s, { tier: 'plain' }).diagnostics.map((d) => d.code);
+
+  it('refuses the compile where a used slot has no other source, naming the step, the output and why', () => {
+    const found = emitFlowFile(spec(synth(), [1]), { tier: 'plain' }).diagnostics;
+    expect(found.map((d) => [d.code, d.severity, d.step])).toEqual([['unproven-source', 'error', '03-verify']]);
+    expect(found[0].what).toContain('slot v1 is bound to {{01-signin.column_3}}');
+    expect(found[0].what).toContain('nothing has ever published column_3');
+    expect(found[0].why).toContain('no run has resolved it');
+    expect(found[0].fix).toContain('01-signin');
+  });
+
+  it('refuses an EMPTY synthesized chain the same way — od52 could never have published on any page', () => {
+    expect(codes(spec(synth({ locators: { target: [] } }), [1]))).toEqual(['unproven-source']);
+  });
+
+  it('says nothing about a reference only the WORDING quotes: the same line ignorableRefs draws', () => {
+    // usedIn empty and no requireText marker — nothing the pinned procedure
+    // does can change with the value, so its blank costs a sentence, and
+    // refusing the flow over it would regress fwgr23.
+    expect(codes(spec(synth(), []))).toEqual([]);
+  });
+
+  it('is about provenance, not about the read: the same read, proven, compiles', () => {
+    expect(codes(spec(synth({ unproven: undefined }), [1]))).toEqual([]);
+    // …and a recorded read beside the synthesized one is a source on its own.
+    const both = spec(synth(), [1]);
+    both.steps[0].segments[0].steps.unshift({ tool: 'read', args: { target: '@e2', what: 'text' }, locators: { target: [{ kind: 'id', selector: '#c3' }] }, label: 'column_3' });
+    expect(codes(both)).toEqual([]);
+  });
+
+  it('changes nothing about PUBLISHING: the refusal is at the binding, not at the pruning', () => {
+    // publishedOutputs must keep counting the label, or pruneUnsourcedOutputs
+    // drops the output and a wording-only reference (fwgr23's shape) starts
+    // dangling — which is the fwkb8/fwod47 pair this synthesis exists for.
+    const skill = { id: 's_signin', origin: ORIGIN, template: 'sign in', params: {}, preconditions: { urlPattern: ORIGIN }, steps: [synth()], stats: { uses: 1, successes: 1, partial: 0, created: 'now', failedAtStep: {}, fallthroughs: 0 }, status: 'provisional', provenance: { session: 's', instruction: 'sign in', created: 'now' } } as unknown as Skill;
+    expect(publishedOutputs(skill)).toEqual(['column_3']);
+  });
+
+  it('leaves a reference with no producing step in the flow to the compiler that diagnoses it', () => {
+    const orphan = spec(synth(), [1]);
+    orphan.steps[0].id = '02-other';
+    expect(codes(orphan)).toEqual([]);
+  });
+});
+
+/**
+ * The self-correction, which is what stops this recurring: the store learns
+ * from a read that MISSES, not only from one that reports a changed value.
+ */
+describe('proving and retiring a synthesized read (fwkb14 n2/n3)', () => {
+  const synth = (label: string): SkillStep => ({
+    tool: 'read',
+    args: { target: '@synth', what: 'text' },
+    locators: { target: [{ kind: 'role', role: 'cell', name: 'Work in progress' }, { kind: 'role', role: 'link', name: 'Work in progress' }] },
+    label,
+    unproven: true,
+  });
+
+  it('drops the mark for a read a run resolved, and leaves its locators alone', () => {
+    const steps: SkillStep[] = [synth('column_3'), synth('other')];
+    expect(markReadsProven(steps, ['column_3'])).toBe(1);
+    expect(steps[0].unproven).toBeUndefined();
+    expect(steps[0].locators.target).toHaveLength(2);
+    expect(steps[1].unproven).toBe(true);
+    // Once, and permanently: an ordinary read has no mark to drop.
+    expect(markReadsProven(steps, ['column_3'])).toBe(0);
+  });
+
+  it('empties the chain of a read that came back absent on every run, inside a loop body too', () => {
+    const body = synth('column_3');
+    const steps: SkillStep[] = [{ tool: 'loop', args: {}, locators: {}, body: [body] }, synth('other')];
+    expect(dropAbsentReadLocators(steps, ['column_3'])).toBe(2);
+    expect(body.locators.target).toEqual([]);
+    expect(steps[1].locators.target).toHaveLength(2);
+  });
+
+  it('never retires a RECORDED read: an unproven one has no run whose opinion is being overruled', () => {
+    const recorded: SkillStep = { tool: 'read', args: { target: '@e1', what: 'text' }, locators: { target: [{ kind: 'id', selector: '#c3' }] }, label: 'column_3' };
+    expect(dropAbsentReadLocators([recorded], ['column_3'])).toBe(0);
+    expect(recorded.locators.target).toHaveLength(1);
   });
 });
 

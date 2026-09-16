@@ -300,6 +300,27 @@ export interface SkillStep {
   /** Step-level provenance: executed by replay of another skill, or chosen by the agent. */
   via?: { skill: string; step: number };
   /**
+   * Step-level provenance, the other kind: this step was SYNTHESIZED, never
+   * recorded. The flow export appends a read for a value the producing skill
+   * never read (flow.ts `liveReadsFor`), and its locator is derived from the
+   * string the recording model reported — no run has opened a page, resolved a
+   * candidate, or read anything back through it.
+   *
+   * Such a read is a CANDIDATE source, not a source. It is dropped the first
+   * time any run resolves the read and reads a value back (the store's
+   * per-skill evidence, server.ts `settleUnprovenReads`), and until then a
+   * compile refuses to bind a slot the procedure ACTS ON from it: fwkb14 and
+   * fwod52 both exported 6/6 with every skill validated and then stopped their
+   * compiled arms at 1/6 and 3/6 on `needs {{01-signin.column_3}}` /
+   * `needs {{02-create.product_name}}` — od52's synthesized chain was EMPTY, so
+   * it could never have published on any page.
+   *
+   * Carried as a FACT, deliberately: `args.target === '@synth'` and the shape
+   * of the selector are both guesses about a step, and a guess is what this
+   * defect was made of.
+   */
+  unproven?: true;
+  /**
    * This step CREATED a record: the run's url carried an identifier after it
    * that had never appeared before. `at` is the url part that held it, so a
    * later run can re-read ITS identifier from the live page rather than
