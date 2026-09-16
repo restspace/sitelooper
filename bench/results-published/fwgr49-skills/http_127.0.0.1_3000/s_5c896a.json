@@ -1,0 +1,486 @@
+{
+ "id": "s_5c896a",
+ "origin": "http://127.0.0.1:3000",
+ "template": "On the Grafana dashboard '{{v1}}', set the dashboard's auto-refresh interval to '1m'. Use the refresh-rate dropdown in the top bar (next to the time picker) to select '1m', then save the dashboard explicitly (Save dashboard), ticking the 'Update default time range' checkbox in the save dialog if it appears so the refresh interval is persisted into the saved dashboard. Confirm the save succeeded. Afterwards report the refresh interval shown in the top bar dropdown and whether the save was confirmed.",
+ "params": {
+  "v1": {
+   "example": "fwgr49-n2 Bench Dashboard",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:dashboard_title_after_saving"
+  },
+  "v2": {
+   "example": "fwgr49-n2",
+   "usedIn": [
+    9
+   ],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v4": {
+   "example": "cfygp6bxhgqo0e",
+   "usedIn": [
+    9
+   ],
+   "known": true,
+   "binding": "04-edit.url.p1"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:3000/d/{{v4}}/{{v2}}-bench-dashboard?from=:id&timezone=browser&to=now"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Auto refresh turned off. Choose refresh time interval\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid RefreshPicker interval button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Auto refresh turned off. Choose refresh time interval"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid dashboard controls\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div:nth-of-type(2) > div:nth-of-type(2) > div > button"
+     },
+     {
+      "kind": "point",
+      "x": 1247,
+      "y": 112,
+      "w": 34,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v4}}/fwgr49-n2-bench-dashboard?from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- menu \"Off Auto 5s 10s 30s 1m 5m 15m 30m 1h 2h 1d\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_9969ed",
+    "step": 1
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e8694"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "menuitemradio",
+      "name": "1 minute"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid dashboard controls\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div > div > div > button:nth-of-type(6)"
+     },
+     {
+      "kind": "point",
+      "x": 1229,
+      "y": 308,
+      "w": 71.4,
+      "h": 32,
+      "role": "menuitemradio",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v4}}/fwgr49-n2-bench-dashboard?from=:id&refresh=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- button \"Choose refresh time interval with current interval 1 minute selected\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_9969ed",
+    "step": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e8601"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Share dashboard"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Share"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(4) > button"
+     },
+     {
+      "kind": "point",
+      "x": 1138,
+      "y": 60,
+      "w": 49.9,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v4}}/fwgr49-n2-bench-dashboard?from=:id&refresh=:id&shareView=link&timezone=browser&to=now",
+    "addedContains": [
+     "- dialog \"\"",
+     "- heading \"Share\"",
+     "- tab \"Link\"",
+     "- tab \"Export\"",
+     "- tab \"Snapshot\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_9969ed",
+    "step": 3
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e160"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Close"
+     },
+     {
+      "kind": "css",
+      "selector": "body > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > button"
+     },
+     {
+      "kind": "point",
+      "x": 982,
+      "y": 120,
+      "w": 24,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v4}}/fwgr49-n2-bench-dashboard?from=:id&refresh=:id&timezone=browser&to=now",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e67"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Edit dashboard button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Edit"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(5) > button"
+     },
+     {
+      "kind": "point",
+      "x": 1198,
+      "y": 60,
+      "w": 38.3,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v4}}/fwgr49-n2-bench-dashboard?from=:id&refresh=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- button \"Add\"",
+     "- button \"Settings\"",
+     "- button \"Exit edit\"",
+     "- button \"Save dashboard\"",
+     "- button \"More save options\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Save dashboard\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=button[name=\"Save dashboard\"]"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Save dashboard button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Save dashboard"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(6) > div > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1140,
+      "y": 60,
+      "w": 109.4,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v4}}/fwgr49-n2-bench-dashboard?from=:id&refresh=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- dialog \"\"",
+     "- dialog \"Drawer title Save dashboard\"",
+     "- button \"Close\"",
+     "- heading \"Save dashboard\"",
+     "- tab \"Details\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "check",
+   "args": {
+    "target": "@e263",
+    "checked": true
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "Dashboard settings Save Dashboard Modal Save refresh checkbox"
+     },
+     {
+      "kind": "role",
+      "role": "checkbox",
+      "name": "Update default refresh valueWill make the current refresh the new default"
+     },
+     {
+      "kind": "label",
+      "label": "Update default refresh valueWill make the current refresh the new default"
+     },
+     {
+      "kind": "id",
+      "selector": "#save-refresh"
+     },
+     {
+      "kind": "css",
+      "selector": "#save-refresh"
+     },
+     {
+      "kind": "point",
+      "x": 799,
+      "y": 155,
+      "w": 286.1,
+      "h": 36,
+      "role": "checkbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v4}}/fwgr49-n2-bench-dashboard?from=:id&refresh=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- tab \"Changes1\"",
+     "- checkbox \"Update default refresh valueWill make the current refresh the new default\" [checked]",
+     "- button \"Save\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e277"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Save dashboard drawer button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Save"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(3) > div:nth-of-type(1) > div > div > div:nth-of-type(3) > button:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 776,
+      "y": 372,
+      "w": 65.4,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v4}}/fwgr49-n2-bench-dashboard?from=:id&refresh=:id&timezone=browser&to=now",
+    "alertContains": "Dashboard saved",
+    "addedContains": [
+     "- button \"Add\"",
+     "- button \"Settings\"",
+     "- button \"Exit edit\"",
+     "- button \"Save dashboard\"",
+     "- button \"More save options\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:3000/d/{{v4}}/{{v2}}-bench-dashboard"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid TimePicker Open Button\"] span",
+      "nth": 1
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(1) > div > span > span:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 991,
+      "y": 112,
+      "w": 84.5,
+      "h": 30,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "main_button"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Auto-refresh interval set to 1m and dashboard saved explicitly. Continuing from the partially-replayed procedure s_9969ed (its first 3 steps had already run, leaving a Share drawer open, which I closed), the top-bar refresh control showed \"1m\". No Save dashboard button exists in view mode, so I clicked Edit (toolbar then had Add/Settings/Exit edit/Save dashboard/More save options) and clicked Save dashboard. The save dialog opened with the 'Update default refresh value — Will make the current refresh the new default' checkbox unticked and Save disabled (\"No changes to save\"); I ticked the checkbox (dialog showed Changes1 and Save became enabled) and clicked Save — the app displayed the \"Dashboard saved\" alert. A clean reload of the dashboard URL with no refresh parameter still renders the top-bar refresh dropdown as \"1m\" (aria \"Choose refresh time interval with current interval 1 minute selected\"), proving the refresh interval persisted; the time range still reads \"Last 6 hours\" and both panels are present.",
+  "values": {
+   "main_button": "Last 6 hours",
+   "ref": "s_9969ed"
+  }
+ },
+ "contract": 4,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-16T21:15:00.812Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4
+ },
+ "status": "provisional",
+ "variantOf": "s_9969ed",
+ "provenance": {
+  "session": "fwgr49-n2",
+  "instruction": "On the Grafana dashboard 'fwgr49-n2 Bench Dashboard', set the dashboard's auto-refresh interval to '1m'. Use the refresh-rate dropdown in the top bar (next to the time picker) to select '1m', then save the dashboard explicitly (Save dashboard), ticking the 'Update default time range' checkbox in the save dialog if it appears so the refresh interval is persisted into the saved dashboard. Confirm the save succeeded. Afterwards report the refresh interval shown in the top bar dropdown and whether the save was confirmed.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-16T21:15:00.812Z"
+ },
+ "revision": 1
+}

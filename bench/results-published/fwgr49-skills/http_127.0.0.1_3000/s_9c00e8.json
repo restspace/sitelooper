@@ -1,0 +1,652 @@
+{
+ "id": "s_9c00e8",
+ "origin": "http://127.0.0.1:3000",
+ "template": "On the currently open Grafana dashboard '{{v1}}', add a NEW {{v4}} panel. Set its title to exactly '{{v5}}' and its text content to include the runid '{{v2}}' (e.g. '{{v6}}'). Then save the dashboard (explicit Save, confirming the save dialog). Report the panel title shown on the dashboard after saving and the text content rendered in the panel.",
+ "params": {
+  "v1": {
+   "example": "fwgr49-n3 Bench Dashboard",
+   "usedIn": [
+    12
+   ],
+   "known": true,
+   "binding": "output:i2:dashboard_title_after_saving"
+  },
+  "v2": {
+   "example": "fwgr49-n3",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v4": {
+   "example": "Text",
+   "usedIn": [
+    4
+   ],
+   "known": true,
+   "binding": "output:i3:panel_type"
+  },
+  "v5": {
+   "example": "fwgr49-n3 Notes",
+   "usedIn": [
+    5,
+    13
+   ],
+   "known": true,
+   "binding": "output:i3:panel_title_shown"
+  },
+  "v6": {
+   "example": "Notes for run fwgr49-n3",
+   "usedIn": [
+    6
+   ],
+   "known": true,
+   "binding": "output:i3:panel_text_rendered"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:3000/d/bfygpupuu84qoc/{{v2}}-bench-dashboard?from=2026-09-16T15:15:29.107Z&timezone=browser&to=2026-09-16T21:15:29.107Z"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1189"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Add button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Add"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(1) > button"
+     },
+     {
+      "kind": "point",
+      "x": 884,
+      "y": 60,
+      "w": 57.6,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/bfygpupuu84qoc/{{v2}}-bench-dashboard?from=2026-09-16T15:15:29.107Z&timezone=browser&to=2026-09-16T21:15:29.107Z",
+    "addedContains": [
+     "- menu \"Visualization Import from library Row Paste panel\"",
+     "- menuitem \"Visualization\"",
+     "- menuitem \"Import from library\"",
+     "- menuitem \"Row\"",
+     "- menuitem \"Paste panel\" [disabled]"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=menuitem[name=\"Visualization\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=menuitem[name=\"Visualization\"]"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Add new visualization menu item"
+     },
+     {
+      "kind": "role",
+      "role": "menuitem",
+      "name": "Visualization"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div > div > div > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 890,
+      "y": 92,
+      "w": 166.5,
+      "h": 32,
+      "role": "menuitem",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/bfygpupuu84qoc/{{v2}}-bench-dashboard?editPanel=:id&from=2026-09-16T15:15:29.107Z&timezone=browser&to=2026-09-16T21:15:29.107Z",
+    "addedContains": [
+     "- link \"{{v1}}\"",
+     "- button \"Back to dashboard\"",
+     "- button \"Discard panel\" [disabled]",
+     "- checkbox \"toggle-table-view\"",
+     "- heading \"Panel Title\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1542"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid toggle-viz-picker"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Change Visualization"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Panel editor content\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > button"
+     },
+     {
+      "kind": "point",
+      "x": 1122,
+      "y": 112,
+      "w": 299.8,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/bfygpupuu84qoc/{{v2}}-bench-dashboard?editPanel=:id&from=2026-09-16T15:15:29.107Z&timezone=browser&to=2026-09-16T21:15:29.107Z",
+    "addedContains": [
+     "- textbox \"Search for...\"",
+     "- button \"Close\"",
+     "- radio \"Visualizations\" [checked]",
+     "- radio \"Suggestions\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e2398"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "Plugin visualization item {{v4}}"
+     },
+     {
+      "kind": "text",
+      "text": "{{v4}} Supports markdown and html content"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Panel editor content\"] div"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(3) > div > div:nth-of-type(3) > div:nth-of-type(1) > div > div:nth-of-type(12)"
+     },
+     {
+      "kind": "point",
+      "x": 1123,
+      "y": 914,
+      "w": 298.8,
+      "h": 56,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/bfygpupuu84qoc/{{v2}}-bench-dashboard?editPanel=:id&from=2026-09-16T15:15:29.107Z&timezone=browser&to=2026-09-16T21:15:29.107Z",
+    "addedContains": [
+     "- button \"Discard panel\"",
+     "- heading \"Title\"",
+     "- link \"commonmark.org/help\"",
+     "- button \"Change Visualization\"",
+     "- textbox \"Search options\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e2491",
+    "value": "{{v5}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Panel editor option pane field input Title"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"input-wrapper\"] input"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(2) > div > div > div > input"
+     },
+     {
+      "kind": "point",
+      "x": 1130,
+      "y": 268,
+      "w": 267.8,
+      "h": 32,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/bfygpupuu84qoc/{{v2}}-bench-dashboard?editPanel=:id&from=2026-09-16T15:15:29.107Z&timezone=browser&to=2026-09-16T21:15:29.107Z",
+    "addedContains": [
+     "- heading \"{{v5}}\"",
+     "- button \"Menu for panel with title {{v5}}\"",
+     "- textbox \"\": {{v5}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e2583",
+    "value": "{{v6}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Editor content;Press Alt+F1 for Accessibility Options."
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid ReactMonacoEditor editorLazy\"] textarea"
+     },
+     {
+      "kind": "css",
+      "selector": "div > section > div > div > div:nth-of-type(1) > textarea"
+     },
+     {
+      "kind": "point",
+      "x": 1007,
+      "y": 648,
+      "w": 1,
+      "h": 1,
+      "role": "textbox",
+      "tag": "textarea",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/bfygpupuu84qoc/{{v2}}-bench-dashboard?editPanel=:id&from=2026-09-16T15:15:29.107Z&timezone=browser&to=2026-09-16T21:15:29.107Z",
+    "addedContains": [
+     "- textbox \"Editor content;Press Alt+F1 for Accessibility Options.\": {{v6}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1290"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Save dashboard button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Save dashboard"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(4) > div > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1140,
+      "y": 60,
+      "w": 109.4,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/bfygpupuu84qoc/{{v2}}-bench-dashboard?editPanel=:id&from=2026-09-16T15:15:29.107Z&timezone=browser&to=2026-09-16T21:15:29.107Z",
+    "addedContains": [
+     "- dialog \"\"",
+     "- dialog \"Drawer title Save dashboard\"",
+     "- button \"Close\"",
+     "- heading \"Save dashboard\"",
+     "- tab \"Details\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e2636"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Save dashboard drawer button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Save"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(3) > div:nth-of-type(1) > div > div > div:nth-of-type(3) > button:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 776,
+      "y": 372,
+      "w": 65.4,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/bfygpupuu84qoc/{{v2}}-bench-dashboard?editPanel=:id&from=2026-09-16T15:15:29.107Z&timezone=browser&to=2026-09-16T21:15:29.107Z",
+    "alertContains": "Dashboard saved",
+    "addedContains": [
+     "- button \"Back to dashboard\"",
+     "- button \"Discard panel\" [disabled]",
+     "- button \"Save dashboard\"",
+     "- button \"More save options\"",
+     "- button \"Toggle top search bar\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1279"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Back to dashboard button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Back to dashboard"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(1) > button"
+     },
+     {
+      "kind": "point",
+      "x": 888,
+      "y": 60,
+      "w": 143.5,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/bfygpupuu84qoc/{{v2}}-bench-dashboard?from=2026-09-16T15:15:29.107Z&timezone=browser&to=2026-09-16T21:15:29.107Z",
+    "addedContains": [
+     "- button \"Add\"",
+     "- button \"Settings\"",
+     "- button \"Exit edit\"",
+     "- heading \"{{v2}} Availability\"",
+     "- button \"Menu for panel with title {{v2}} Availability\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"header-container\"] h2",
+      "nth": 0
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > section > div:nth-of-type(2) > div:nth-of-type(1) > h2",
+      "nth": 0
+     },
+     {
+      "kind": "point",
+      "x": 84,
+      "y": 165,
+      "w": 118.1,
+      "h": 22,
+      "role": "heading",
+      "tag": "h2",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "panel_title_shown"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"TextPanel-converted-content\"] p"
+     },
+     {
+      "kind": "css",
+      "selector": "section > div:nth-of-type(3) > div > div:nth-of-type(1) > div > p"
+     },
+     {
+      "kind": "point",
+      "x": 326,
+      "y": 200,
+      "w": 602,
+      "h": 22,
+      "role": null,
+      "tag": "p",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "panel_text_rendered"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid {{v1}} breadcrumb"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] span",
+      "nth": 0
+     },
+     {
+      "kind": "css",
+      "selector": "header > div:nth-of-type(2) > nav > ol > li:nth-of-type(3) > span"
+     },
+     {
+      "kind": "point",
+      "x": 324,
+      "y": 60,
+      "w": 197.2,
+      "h": 22,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "dashboard_title_after_saving"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "heading",
+      "name": "{{v5}}"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"header-container\"] h2",
+      "nth": 0
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > section > div:nth-of-type(2) > div:nth-of-type(1) > h2",
+      "nth": 0
+     },
+     {
+      "kind": "point",
+      "x": 84,
+      "y": 165,
+      "w": 118.1,
+      "h": 22,
+      "role": "heading",
+      "tag": "h2",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "ref"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Added a new {{v4}} panel to the open dashboard '{{v1}}' (Add → Visualization, then changed the type to {{v4}}), set its title to exactly '{{v5}}' and its content to '{{v6}}', then saved via Save dashboard → Save (the editor confirmed \"Dashboard saved\"). After returning to the dashboard view, the live DOM shows a panel region/heading \"{{v5}}\" rendering the paragraph \"{{v6}}\", alongside the existing \"{{v2}} Availability\" panel, with the breadcrumb title still \"{{v1}}\".",
+  "values": {
+   "panel_title_shown": "{{v5}}",
+   "panel_text_rendered": "{{v6}}",
+   "panel_type": "{{v4}}",
+   "dashboard_title_after_saving": "{{v1}}",
+   "panel_title_field_value": "{{v5}}",
+   "panel_editor_content_value": "{{v6}}",
+   "save_confirmation": "Dashboard saved (alert shown)",
+   "ref": "{{v2}}"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-16T21:16:18.352Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "provenance": {
+  "session": "fwgr49-n3",
+  "instruction": "On the currently open Grafana dashboard 'fwgr49-n3 Bench Dashboard', add a NEW Text panel. Set its title to exactly 'fwgr49-n3 Notes' and its text content to include the runid 'fwgr49-n3' (e.g. 'Notes for run fwgr49-n3'). Then save the dashboard (explicit Save, confirming the save dialog). Report the panel title shown on the dashboard after saving and the text content rendered in the panel.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-16T21:16:18.352Z"
+ },
+ "revision": 1
+}

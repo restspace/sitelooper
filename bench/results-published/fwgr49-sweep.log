@@ -1,0 +1,120 @@
+
+[sweep] run 1/3: fwgr49-n1 (store: /home/user/sitelooper/bench/results/fwgr49-skills)
+[harness] grafana: defaulting APP_URL
+[harness] grafana: defaulting APP_EMAIL
+[harness] grafana: defaulting APP_PASSWORD
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+[harness] grafana responded 302 at http://127.0.0.1:3000/
+stopped: fwgr49-n1
+  flow "fwgr49" saved: 6 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwgr49.json
+  warning: note: 01-open no longer publishes panel_count — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-create no longer publishes dashboard_uid, panel_value_rendered — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-open no longer publishes dashboard_uid — no replay reads it from the page and the recording showed no line to read
+  warning: note: 04-edit no longer publishes dashboard_uid, tags_shown_in_dashboard_settings, update_default_time_range_checkbox, time_range_from_expression, time_from_timestamp — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-set no longer publishes dashboard_uid, update_default_refresh_checkbox, save_confirmed — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-open no longer publishes panel_body_availability, dashboard_tags, edit_mode — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-open: added a read for save_confirmation to s_e78a8a (page.getByRole('status', { name: 'Dashboard saved', exact: true }); seen on the instruction's own page)
+  warning: note: 04-edit: added a read for save_confirmation to s_40aa90 (page.getByRole('status', { name: 'Dashboard saved', exact: true }); seen on the instruction's own page)
+  warning: warning: 4 value(s) KNOWN to be this run's survived unslotted — a replay will act on or wait for the recording's value (non-fatal outside locators):
+  s_eb8b87.steps[2].expect.urlPattern: "fwgr49-n1" (var) in "http://127.0.0.1:3000/d/afygoex55iarka/fwgr49-n1-bench-dashboard?from=:id&refresh=:id&timezone=browser&to=now"
+  s_eb8b87.steps[3].expect.urlPattern: "fwgr49-n1" (var) in "http://127.0.0.1:3000/d/afygoex55iarka/fwgr49-n1-bench-dashboard?editview=settings&from=:id&refresh=:id&timezone=browser&to=now"
+  s_eb8b87.steps[4].expect.urlPattern: "fwgr49-n1" (var) in "http://127.0.0.1:3000/d/afygoex55iarka/fwgr49-n1-bench-dashboard?from=:id&refresh=:id&timezone=browser&to=now"
+  s_eb8b87.steps[5].expect.urlPattern: "fwgr49-n1" (var) in "http://127.0.0.1:3000/d/afygoex55iarka/fwgr49-n1-bench-dashboard?from=:id&refresh=:id&timezone=browser&to=now"
+  warning: warning: 228 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[1].instruction: "Stat" (output) in "In Grafana, create a NEW dashboard. Add a visualization panel, choose the 'TestData' (TestData DB) data source for its query, change the panel type from the def"
+  flow.steps[1].route: "afygoex55iarka" (url) in "http://127.0.0.1:3000/d/afygoex55iarka/:id"
+  flow.steps[2].instruction: "Text" (output) in "On the currently open Grafana dashboard '{{runid}} {{01-open.dashboard_folder}} Dashboard', add a NEW Text panel. Set its title to exactly '{{runid}} Notes' and"
+  flow.steps[2].route: "afygoex55iarka" (url) in "http://127.0.0.1:3000/d/afygoex55iarka/:id"
+  flow.steps[3].instruction: "Last 6 hours" (output) in "On the Grafana dashboard '{{runid}} {{01-open.dashboard_folder}} Dashboard' (currently in edit mode), open the dashboard settings (gear/cog icon 'Dashboard sett"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwgr49-n1 stop=completed
+turns=7 wall=683.4s
+commands=6 cmdTime=619.9s cmdBytes=10170 timeouts=0
+orchestrator in=19550 cw=0 cr=10176 out=2666
+inner prompt=2920591 cached=2714368 completion=29529
+spend=$0.0985 maxUsd=3
+learn: A_n=0 replayed=0/6 full=0 repaired=0 compiled=6 variants=0
+-> /home/user/sitelooper/bench/results/fwgr49-n1-sitelooper-result.json
+
+fwgr49-n1: objectives passed 6/6
+  obj 1: PASS — all 3 provisioned titles reported
+  obj 2: PASS — type=stat, datasource ok=true
+  obj 3: PASS — type=text, content includes runid=true
+  obj 4: PASS — tags=["bench"], time=now-6h..now
+  obj 5: PASS — refresh="1m"
+  obj 6: PASS — uid afygoex55iarka reported
+
+[sweep] run 2/3: fwgr49-n2 (replay flow fwgr49, no orchestrator)
+[reset] grafana: deleted leftover dashboard "fwgr49-n1 Bench Dashboard" (200)
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+[sweep] fwgr49-n2: 2 drift ticket(s) → fwgr49-n2-drift.json
+
+fwgr49-n2: objectives passed 6/6
+  obj 1: PASS — all 3 provisioned titles reported
+  obj 2: PASS — type=stat, datasource ok=true
+  obj 3: PASS — type=text, content includes runid=true
+  obj 4: PASS — tags=["bench"], time=now-6h..now
+  obj 5: PASS — refresh="1m"
+  obj 6: PASS — uid cfygp6bxhgqo0e reported
+[sweep] z-ai/glm-5.3 was served by Together, Modal — priced at one rate, so total_usd is approximate
+
+[sweep] run 3/3: fwgr49-n3 (replay flow fwgr49, no orchestrator)
+[reset] grafana: deleted leftover dashboard "fwgr49-n2 Bench Dashboard" (200)
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+[sweep] fwgr49-n3: 1 drift ticket(s) → fwgr49-n3-drift.json
+
+fwgr49-n3: objectives passed 6/6
+  obj 1: PASS — all 3 provisioned titles reported
+  obj 2: PASS — type=stat, datasource ok=true
+  obj 3: PASS — type=text, content includes runid=true
+  obj 4: PASS — tags=["bench"], time=now-6h..now
+  obj 5: PASS — refresh="1m"
+  obj 6: PASS — uid bfygpupuu84qoc reported
+
+Learning sweep fwgr49 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwgr49-n1' │ '6/6'    │ 'completed' │ 7     │ 6    │ 0.0985    │ 0   │ '0/6'        │ 683    │
+│ 1       │ 2 │ 'fwgr49-n2' │ '6/6'    │ 'success'   │ 74    │ 6    │ 0.0816    │ 0.5 │ '6/6 (flow)' │ 479    │
+│ 2       │ 3 │ 'fwgr49-n3' │ '6/6'    │ 'success'   │ 44    │ 6    │ 0.0166    │ 0.5 │ '6/6 (flow)' │ 204    │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:3000
+  s_9969ed  demoted      7 steps  1/4 (25%)
+           On the Grafana dashboard '{{v1}}', set the dashboard's auto-refresh interval to '1m'. Use the refresh-rate dro…
+  s_26ca3a  validated    4 steps  3/3 (100%)
+           Open {{v1}} and sign in with username admin and password admin (skip any password-change prompt if it appears)…
+  s_2d2d1d  validated    2 steps  3/3 (100%)
+           In Grafana, create a NEW dashboard. Add a visualization panel, choose the 'TestData' (TestData DB) data source…
+  s_51a59c  validated    2 steps  3/3 (100%)
+           In Grafana, create a NEW dashboard. Add a visualization panel, choose the 'TestData' (TestData DB) data source…
+  s_889fc8  validated    1 steps  3/3 (100%)
+           Open {{v1}} and sign in with username admin and password admin (skip any password-change prompt if it appears)…
+  s_a7210f  validated   16 steps  3/3 (100%)
+           In Grafana, create a NEW dashboard. Add a visualization panel, choose the 'TestData' (TestData DB) data source…
+  s_bbb748  validated    2 steps  3/3 (100%)
+           Open {{v1}} and sign in with username admin and password admin (skip any password-change prompt if it appears)…
+  s_e8aec7  validated    8 steps  3/3 (100%)
+           Open {{v1}} and sign in with username admin and password admin (skip any password-change prompt if it appears)…
+  s_eb8b87  validated   14 steps  3/3 (100%)
+           Do a final verification of the Grafana dashboard '{{v1}}'. Navigate to it fresh (reload the page, e.g. open {{…
+  s_f58d8d  validated    1 steps  3/3 (100%)
+           Open {{v1}} and sign in with username admin and password admin (skip any password-change prompt if it appears)…
+  s_091da5  provisional 14 steps  1/1 (100%)
+           On the Grafana dashboard '{{v1}}' (currently in edit mode), open the dashboard settings (gear/cog icon 'Dashbo…
+  s_40aa90  provisional 23 steps  1/1 (100%)
+           On the Grafana dashboard '{{v1}}' (currently in edit mode), open the dashboard settings (gear/cog icon 'Dashbo…
+  s_4ebeef  provisional 12 steps  1/1 (100%)  variant of s_9969ed
+           On the Grafana dashboard '{{v1}}', set the dashboard's auto-refresh interval to '1m'. Use the refresh-rate dro…
+  s_5c896a  provisional 10 steps  1/1 (100%)  variant of s_9969ed
+           On the Grafana dashboard '{{v1}}', set the dashboard's auto-refresh interval to '1m'. Use the refresh-rate dro…
+  s_9c00e8  provisional 13 steps  1/1 (100%)
+           On the currently open Grafana dashboard '{{v1}}', add a NEW {{v4}} panel. Set its title to exactly '{{v5}}' an…
+  s_d79cef  provisional 17 steps  1/1 (100%)
+           On the Grafana dashboard '{{v1}}' (currently in edit mode), open the dashboard settings (gear/cog icon 'Dashbo…
+  s_e78a8a  provisional 22 steps  1/1 (100%)
+           On the currently open Grafana dashboard '{{v1}}', add a NEW Text panel. Set its title to exactly '{{v4}}' and …
+  s_fd17d4  provisional 19 steps  1/1 (100%)
+           On the currently open Grafana dashboard '{{v1}}', add a NEW {{v4}} panel. Set its title to exactly '{{v5}}' an…
+store: /home/user/sitelooper/bench/results/fwgr49-skills
+
+summary: /home/user/sitelooper/bench/results/fwgr49-sweep.json

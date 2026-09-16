@@ -1,0 +1,34 @@
+{
+  "arm": "spec",
+  "runid": "fwgr49-spec",
+  "target": "grafana",
+  "flow": "fwgr49.json",
+  "flowName": "fwgr49",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwgr49-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwgr49-spec-spec-tmp/fwgr49.flow.ts",
+  "specFile": "bench/results/fwgr49-spec-spec-tmp/fwgr49.spec.ts",
+  "wallMs": 26823,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwgr49",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 23693,
+      "error": "Error: 03-open s_e78a8a: not on the page this procedure starts from (expects http://127.0.0.1:3000/d/afygoex55iarka/fwgr49-spec-bench-dashboard?from=2026-09-16T14:56:44.986Z&timezone=browser&to=2026-09-16T20:56:44.986Z, browser is at http://127.0.0.1:3000/d/ffygq8lk6gwsge/fwgr49-spec-bench-dashboard?from=2026-09-16T15:19:52.873Z&timezone=browser&to=2026-09-16T21:19:52.873Z) — nothing of this segment has run",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "logTail": "\nRunning 1 test using 1 worker\n\n[sitelooper step] 01-open\n[sitelooper step] 02-create\n  ✘  1 fwgr49.spec.ts:9:1 › fwgr49 (23.7s)\n\n\n  1) fwgr49.spec.ts:9:1 › fwgr49 › 03-open: On the currently open Grafana dashboard '{{runid}} {{01-open.dashboard_folder}} Dashboard', add a NEW Text panel. Set its title to exactly '{{runid}} Notes' and its text content to include the runid '{{runid}}' (e.g. 'Notes for run {{runid}}'). Then save the dashboard (explicit Save, confirming the save dialog). Report the panel title shown on the dashboard after saving and the text content rendered in the panel. \n\n    Error: 03-open s_e78a8a: not on the page this procedure starts from (expects http://127.0.0.1:3000/d/afygoex55iarka/fwgr49-spec-bench-dashboard?from=2026-09-16T14:56:44.986Z&timezone=browser&to=2026-09-16T20:56:44.986Z, browser is at http://127.0.0.1:3000/d/ffygq8lk6gwsge/fwgr49-spec-bench-dashboard?from=2026-09-16T15:19:52.873Z&timezone=browser&to=2026-09-16T21:19:52.873Z) — nothing of this segment has run\n\n       at fwgr49.flow.ts:10925\n\n      10923 |   const verdict = preconditionVerdict(pattern, url, p, similarity);\n      10924 |   for (const line of verdict.warnings) logWarning(`${where}: ${line}`);\n    > 10925 |   if (verdict.refuse) throw new Error(`${where}: ${verdict.refuse} — nothing of this segment has run`);\n            |                             ^\n      10926 | }\n      10927 |\n      10928 | /**\n        at preconditionGate (/home/user/sitelooper/bench/results/fwgr49-spec-spec-tmp/fwgr49.flow.ts:10925:29)\n        at Object.03-open (/home/user/sitelooper/bench/results/fwgr49-spec-spec-tmp/fwgr49.flow.ts:13084:11)\n        at /home/user/sitelooper/bench/results/fwgr49-spec-spec-tmp/fwgr49.flow.ts:16260:7\n        at runFlow (/home/user/sitelooper/bench/results/fwgr49-spec-spec-tmp/fwgr49.flow.ts:16259:5)\n        at /home/user/sitelooper/bench/results/fwgr49-spec-spec-tmp/fwgr49.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: ../../../test-results/fwgr49-fwgr49/error-context.md\n\n  1 failed\n    fwgr49.spec.ts:9:1 › fwgr49 ────────────────────────────────────────────────────────────────────\n[sitelooper warn] 02-create s_a7210f/9: read 'panel_title_shown' returned a value the skill itself set/selected ('fwgr49-spec Availability') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper warn] 02-create s_a7210f/15: read 'dashboard_title_after_saving' returned a value the skill itself set/selected ('fwgr49-spec Bench Dashboard') — confirms the control, not persistence; dropped from the report's confident values\n"
+}

@@ -1,0 +1,202 @@
+{
+  "flow": "fwgr49",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Signed in to Grafana at http://127.0.0.1:3000/ as admin/admin, skipped the default-password-change prompt, found the provisioned dashboard \"Service Health\" (folder \"Bench\") via the Dashboards browse page, and opened it. The dashboard shows exactly three panels; their titles as shown on screen are \"Request rate\", \"Error count\" and \"Latency by endpoint\".",
+      "values": {
+        "dashboard_title": "Service Health",
+        "dashboard_folder": "Bench",
+        "panel_title_request_rate": "Request rate",
+        "panel_title_error_count": "Error count",
+        "panel_title_latency_by_endpoint": "Latency by endpoint",
+        "panel_titles_1": "Request rate",
+        "panel_titles_2": "Error count",
+        "panel_titles_3": "Latency by endpoint"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_51a59c; observed panel_title_shown=fwgr49-n2 Availability, dashboard_title_after_saving=fwgr49-n2 Bench Dashboard, save_dialog_title_field=fwgr49-n2 Bench Dashboard, runid=fwgr49-n2, dashboard_slug=fwgr49-n2-bench-dashboard, query_row_title=A, panel_type=Stat.",
+      "values": {
+        "panel_title_shown": "fwgr49-n2 Availability",
+        "dashboard_title_after_saving": "fwgr49-n2 Bench Dashboard",
+        "save_dialog_title_field": "fwgr49-n2 Bench Dashboard",
+        "runid": "fwgr49-n2",
+        "dashboard_slug": "fwgr49-n2-bench-dashboard",
+        "query_row_title": "A",
+        "panel_type": "Stat"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "20/20",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "The Text panel was already created and saved by the previous attempt; I verified it by reloading the dashboard. The live page (view mode, after a fresh navigation to http://127.0.0.1:3000/d/cfygp6bxhgqo0e/fwgr49-n2-bench-dashboard) shows a region titled \"fwgr49-n2 Notes\" with heading \"fwgr49-n2 Notes\" and rendered paragraph \"Notes for run fwgr49-n2\", alongside the existing \"fwgr49-n2 Availability\" stat panel. Persistence across reload confirms the explicit Save was confirmed. Screenshot captured at /root/.sitelooper/sessions/fwgr49-n2/screenshots/shot-1789593049501.jpg.",
+      "values": {
+        "ref": "fwgr49-n2",
+        "ref_2": "shot-1789593049501.jpg"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "every candidate refused — s_e78a8a: not on the page this procedure starts from (expects http://127.0.0.1:3000/d/afygoex55iarka/fwgr49-n2-bench-dashboard?from=2026-09-16T14:56:44.986Z&timezone=browser&to=2026-09-16T20:56:44.986Z, browser is at http://127.0.0.1:3000/d/cfygp6bxhgqo0e/fwgr49-n2-bench-dashboard?from=2026-09-16T15:07:26.609Z&timezone=browser&to=2026-09-16T21:07:26.609Z) — nothing was run",
+      "replayed": null,
+      "repaired": false,
+      "turns": 34,
+      "unreported": [
+        "dashboard_title",
+        "panel_type",
+        "panel_title_shown_after_saving",
+        "panel_title_in_options_field",
+        "panel_text_content_rendered",
+        "save_confirmation",
+        "page_url_after_saving",
+        "runid"
+      ]
+    },
+    {
+      "id": "04-edit",
+      "status": "success",
+      "summary": "Entered edit mode on 'fwgr49-n2 Bench Dashboard', opened Dashboard settings (gear), typed 'bench' in the General → Tags field and pressed Enter (a new \"Remove \\\"bench\\\" tag\" control appeared), then returned to the dashboard to apply the settings. The time picker was opened and 'Last 6 hours' selected. Clicked Save dashboard, ticked the 'Update default time range - Will make current time range the new default' checkbox (dialog change count went Changes1 → Changes2), and saved — the app showed the \"Dashboard saved\" alert. Verification: reopening Dashboard settings showed the tag 'bench' in the Tags list, and a fresh reload of the dashboard URL (no from/to params) renders the top-bar time range as \"Last 6 hours\", confirming the default time range persisted.",
+      "values": {
+        "time_range_top_bar": "Last 6 hours",
+        "input_aria_label_tag_i_i": "bench",
+        "ref": "fwgr49-n2"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "every candidate refused — s_40aa90: not on the page this procedure starts from (expects http://127.0.0.1:3000/d/afygoex55iarka/fwgr49-n2-bench-dashboard?editPanel=:id&from=2026-09-16T14:56:44.986Z&showCategory=Text&timezone=browser&to=2026-09-16T20:56:44.986Z, browser is at http://127.0.0.1:3000/d/cfygp6bxhgqo0e/fwgr49-n2-bench-dashboard?from=now-6h&timezone=browser&to=now) — nothing was run",
+      "replayed": null,
+      "repaired": false,
+      "turns": 27,
+      "unreported": [
+        "dashboard_title",
+        "save_confirmation",
+        "tags_shown",
+        "runid",
+        "panel_titles_on_dashboard_1",
+        "panel_titles_on_dashboard_2"
+      ]
+    },
+    {
+      "id": "05-set",
+      "status": "success",
+      "summary": "Auto-refresh interval set to 1m and dashboard saved explicitly. Continuing from the partially-replayed procedure s_9969ed (its first 3 steps had already run, leaving a Share drawer open, which I closed), the top-bar refresh control showed \"1m\". No Save dashboard button exists in view mode, so I clicked Edit (toolbar then had Add/Settings/Exit edit/Save dashboard/More save options) and clicked Save dashboard. The save dialog opened with the 'Update default refresh value — Will make the current refresh the new default' checkbox unticked and Save disabled (\"No changes to save\"); I ticked the checkbox (dialog showed Changes1 and Save became enabled) and clicked Save — the app displayed the \"Dashboard saved\" alert. A clean reload of the dashboard URL with no refresh parameter still renders the top-bar refresh dropdown as \"1m\" (aria \"Choose refresh time interval with current interval 1 minute selected\"), proving the refresh interval persisted; the time range still reads \"Last 6 hours\" and both panels are present.",
+      "values": {
+        "main_button": "Last 6 hours",
+        "ref": "s_9969ed"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_9969ed stopped at step 4 — no element matched any known locator for target (tried 6: page.getByTestId('Dashboard settings Save Dashboard Modal Save refresh checkbox'), page.getByRole('checkbox', { name: 'Update default refresh valueWill make the current refresh the new default', exact: true }), page.getByLabel('Update default refresh valueWill make the current refresh the new default'), …)",
+      "replayed": "3/7",
+      "repaired": false,
+      "turns": 13,
+      "unreported": [
+        "dashboard_title",
+        "time_range_top_bar",
+        "runid"
+      ]
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_eb8b87; observed runid=fwgr49-n2, current_page_url=http://127.0.0.1:3000/d/cfygp6bxhgqo0e/fwgr49-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m, panel_body_notes=Notes for run fwgr49-n2, time_range_top_bar=Last 6 hours, auto_refresh_top_bar=1m, panel_title_notes=fwgr49-n2 Notes, panel_title_availability=fwgr49-n2 Availability, panel_titles_1=fwgr49-n2 Notes, panel_titles_2=fwgr49-n2 Availability.",
+      "values": {
+        "runid": "fwgr49-n2",
+        "current_page_url": "http://127.0.0.1:3000/d/cfygp6bxhgqo0e/fwgr49-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m",
+        "panel_body_notes": "Notes for run fwgr49-n2",
+        "time_range_top_bar": "Last 6 hours",
+        "auto_refresh_top_bar": "1m",
+        "panel_title_notes": "fwgr49-n2 Notes",
+        "panel_title_availability": "fwgr49-n2 Availability",
+        "panel_titles_1": "fwgr49-n2 Notes",
+        "panel_titles_2": "fwgr49-n2 Availability"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 6,
+  "total": 6,
+  "repinned": 0,
+  "drift": 2,
+  "driftTickets": [
+    {
+      "flow": "fwgr49",
+      "step": "05-set",
+      "skill": "s_9969ed",
+      "atStep": "3",
+      "key": "target",
+      "similarity": 0.994,
+      "missedLocator": "page.getByTestId('data-testid Save dashboard button')",
+      "fallbackUsed": "elementAt(1140, 60) /* button */",
+      "fallbackIndex": 4,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:3000/d/cfygp6bxhgqo0e/:id?from=:id&refresh=:id&shareView=link&timezone=browser&to=now",
+      "pageUrl": "http://127.0.0.1:3000/d/cfygp6bxhgqo0e/fwgr49-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m&shareView=link"
+    },
+    {
+      "flow": "fwgr49",
+      "step": "05-set",
+      "skill": "s_9969ed",
+      "atStep": "4",
+      "key": "target",
+      "similarity": 0.994,
+      "missedLocator": "page.getByTestId('Dashboard settings Save Dashboard Modal Save refresh checkbox')",
+      "fallbackUsed": null,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:3000/d/cfygp6bxhgqo0e/:id?from=:id&refresh=:id&shareView=link&timezone=browser&to=now",
+      "pageUrl": "http://127.0.0.1:3000/d/cfygp6bxhgqo0e/fwgr49-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m&shareView=link"
+    }
+  ],
+  "wallMs": 479455,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 1134520,
+    "completionTokens": 13661,
+    "cachedTokens": 1012736
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 1080739,
+      "completionTokens": 12327,
+      "cachedTokens": 992384
+    },
+    "z-ai/glm-5.3": {
+      "promptTokens": 53781,
+      "completionTokens": 1334,
+      "cachedTokens": 20352
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ],
+    "z-ai/glm-5.3": [
+      "Together",
+      "Modal"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
