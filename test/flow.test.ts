@@ -7,7 +7,7 @@ import {
   ignorableRefs,
   leadingValue,
   pruneUnsourcedOutputs,
-  consumedReportedOutputs, consumedUrlOutputs, buildFlow, lintFlowRefs, lintUnpublishedOutputs, liveReadsFor, looksLikeReportedData, noteOutputEvidence, recoveryRoute, resolveInstruction, resolveStepParams, softResolveInstruction, unbankedMutations, unreportedOutputs, urlOutputs, valueLineCandidates, varyingValues, type Flow, type FlowStep } from '../src/skills/flow.js';
+  consumedReportedOutputs, consumedUrlOutputs, buildFlow, lintFlowRefs, lintUnpublishedOutputs, liveReadsFor, looksLikeReportedData, mutatingIntent, noteOutputEvidence, recoveryRoute, resolveInstruction, resolveStepParams, softResolveInstruction, unbankedMutations, unreportedOutputs, urlOutputs, valueLineCandidates, varyingValues, type Flow, type FlowStep } from '../src/skills/flow.js';
 import { bindSkill, publishedOutputs, synthesizeReport } from '../src/skills/learn.js';
 import { SkillStore, type Skill, type SkillStep } from '../src/skills/store.js';
 import { compileSkill, dropDeadReadLocators } from '../src/skills/compile.js';
@@ -1207,6 +1207,16 @@ describe('record-time no-op steps (fwod34 08-open)', () => {
   it('a read-only check that quotes a mutating verb is not flagged (fwod34 09-change)', () => {
     expect(warnings(session('Read-only check, do not change anything: open order O-1 and report its status.', [read]))).toEqual([]);
     expect(warnings(session('Open order O-1 and report its status. Do not click any buttons or change anything — this is a read-only check.', [read]))).toEqual([]);
+  });
+
+  it('a SCOPED prohibition does not make a writing step read-only (fwod50 04-open)', () => {
+    // "Do not modify the first line" scopes the change this step makes; it is
+    // not a claim that the step changes nothing. Read as read-only, 04-open's
+    // recomputed tax over two lines contradicted 03-create's over one.
+    expect(mutatingIntent('Open the quotation and add a SECOND order line. Set its Quantity to 2. Do not modify the first line. Save.')).toBe('add');
+    expect(mutatingIntent('Add a line without modifying the first line.')).toBe('add');
+    expect(mutatingIntent('Read-only check, do not change anything: open order O-1 and report its status.')).toBeNull();
+    expect(mutatingIntent('Report the totals without changing anything on the page.')).toBeNull();
   });
 
   it('an observing instruction with no mutating verb is not flagged', () => {

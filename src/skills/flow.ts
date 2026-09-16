@@ -635,8 +635,15 @@ const NEGATOR_RE = /^(?:not|never|no|without|cannot|don't|dont|doesn't|isn't|avo
  * check, do not change anything") while both quote a mutating verb — 09's
  * step id is literally `09-change`. Cheap, exact, and it costs only warnings
  * we would rather not have made.
+ *
+ * A prohibition must be GLOBAL to count. fwod50's 04-open adds a second order
+ * line and says "Do not modify the first line" — a scope for the change it is
+ * making, not a claim that it makes none. Read as read-only, that step became
+ * a "read-only check" whose recomputed tax (£205 over two lines) contradicted
+ * 03-create's (£177 over one), and it could have adopted a read-only pin for
+ * a step that writes.
  */
-const READ_ONLY_RE = /read[- ]?only|do(?: not|n't|nt) (?:change|modify|edit|alter)|without (?:chang|modify|edit)/i;
+const READ_ONLY_RE = /read[- ]?only|do(?: not|n't|nt) (?:change|modify|edit|alter) (?:any|anything|the app|the record|the data|it\b)|without (?:chang|modify|edit)(?:\w*) (?:any|anything|the app|the record|the data|it\b)/i;
 
 /**
  * The verb this instruction asks for, or null if it asks for nothing that
