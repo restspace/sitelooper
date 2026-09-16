@@ -1,0 +1,86 @@
+
+[sweep] run 1/3: fwkb18-n1 (store: /home/user/sitelooper/bench/results/fwkb18-skills)
+[harness] kanboard: defaulting APP_URL
+[harness] kanboard: defaulting APP_EMAIL
+[harness] kanboard: defaulting APP_PASSWORD
+[reset] kanboard: no leftover bench tasks
+[harness] kanboard responded 302 at http://127.0.0.1:8085/
+stopped: fwkb18-n1
+  flow "fwkb18" saved: 6 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwkb18.json
+  warning: note: 01-open no longer publishes columns_in_order — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-create no longer publishes task_id, project — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-open no longer publishes task_id — no replay reads it from the page and the recording showed no line to read
+  warning: note: 04-add no longer publishes task_id, comment_author, comment_created_at — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-set no longer publishes task_id, due_date_entered — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-change no longer publishes a_columns_left_to_right, f_due_date, g_seed_tasks_column — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 83 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "admin" (output) in "Open http://127.0.0.1:8085/ and sign in with username admin and password admin. Then navigate to the project named 'Bench Board' and open its board view. Report"
+  s_611a60.template: "admin" (output) in "Open {{v1}} and sign in with username admin and password admin. Then navigate to the project named 'Bench Board' and open its board view. Report the names of th"
+  s_611a60.steps[1].args.value: "admin" (output) in "admin"
+  s_611a60.steps[2].args.value: "admin" (output) in "admin"
+  s_611a60.steps[3].expect.addedContains[0]: "admin" (output) in "- heading \"KB Dashboard for admin\""
+  warning: {{02-create.task_number_shown}} (used by 03-open) can only be re-observed by model recovery — consider re-recording so the value is read from the page.
+  warning: 02-create reports task_number_shown, but s_e106ab re-reads none of it from the page — a replay without the model will succeed without that value; re-record so it is read.
+arm=sitelooper model=z-ai/glm-5.3 runid=fwkb18-n1 stop=completed
+turns=7 wall=181.8s
+commands=6 cmdTime=154.8s cmdBytes=5347 timeouts=0
+orchestrator in=8697 cw=0 cr=16512 out=1556
+inner prompt=1049887 cached=948992 completion=14003
+spend=$0.0497 maxUsd=3
+learn: A_n=0 replayed=0/6 full=0 repaired=0 compiled=6 variants=0
+-> /home/user/sitelooper/bench/results/fwkb18-n1-sitelooper-result.json
+
+fwkb18-n1: objectives passed 6/6
+  obj 1: PASS — all 4 column names reported (Backlog | Ready | Work in progress | Done)
+  obj 2: PASS — description includes runid=true
+  obj 3: PASS — column=Work in progress
+  obj 4: PASS — 1 comment(s), 1 carrying the runid
+  obj 5: PASS — date_due=2026-12-31, want 2026-12-31
+  obj 6: PASS — task id 4 reported
+
+[sweep] run 2/3: fwkb18-n2 (replay flow fwkb18, no orchestrator)
+[reset] kanboard: deleted 1 leftover bench task(s)
+
+fwkb18-n2: objectives passed 6/6
+  obj 1: PASS — all 4 column names reported (Backlog | Ready | Work in progress | Done)
+  obj 2: PASS — description includes runid=true
+  obj 3: PASS — column=Work in progress
+  obj 4: PASS — 1 comment(s), 1 carrying the runid
+  obj 5: PASS — date_due=2026-12-31, want 2026-12-31
+  obj 6: PASS — task id 4 reported
+
+[sweep] run 3/3: fwkb18-n3 (replay flow fwkb18, no orchestrator)
+[reset] kanboard: deleted 1 leftover bench task(s)
+
+fwkb18-n3: objectives passed 6/6
+  obj 1: PASS — all 4 column names reported (Backlog | Ready | Work in progress | Done)
+  obj 2: PASS — description includes runid=true
+  obj 3: PASS — column=Work in progress
+  obj 4: PASS — 1 comment(s), 1 carrying the runid
+  obj 5: PASS — date_due=2026-12-31, want 2026-12-31
+  obj 6: PASS — task id 4 reported
+
+Learning sweep fwkb18 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwkb18-n1' │ '6/6'    │ 'completed' │ 7     │ 6    │ 0.0497    │ 0   │ '0/6'        │ 182    │
+│ 1       │ 2 │ 'fwkb18-n2' │ '6/6'    │ 'success'   │ 0     │ 6    │ 0         │ 1   │ '6/6 (flow)' │ 16     │
+│ 2       │ 3 │ 'fwkb18-n3' │ '6/6'    │ 'success'   │ 0     │ 6    │ 0         │ 1   │ '6/6 (flow)' │ 16     │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8085
+  s_611a60  validated   10 steps  3/3 (100%)
+           Open {{v1}} and sign in with username admin and password admin. Then navigate to the project named 'Bench Boar…
+  s_730254  validated    5 steps  3/3 (100%)
+           Verification only, do not change anything: open the 'Bench Board' project board and then the task page for the…
+  s_992e72  validated    9 steps  3/3 (100%)
+           On the task page for task #4 ('{{v1}}') in the 'Bench Board' project, add a comment whose text includes '{{v2}…
+  s_b345a4  validated    8 steps  3/3 (100%)
+           On the task page for task #4 ('{{v1}}') in the 'Bench Board' project, set the task's due date to 2026-12-31 (D…
+  s_cc2438  validated    8 steps  3/3 (100%)
+           Move the task titled '{{v1}}' (task #4) in the 'Bench Board' project so that it sits in the '{{v3}}' column of…
+  s_e106ab  validated    8 steps  3/3 (100%)
+           In the 'Bench Board' project, create a new task with title exactly '{{v2}}' and a description that includes th…
+store: /home/user/sitelooper/bench/results/fwkb18-skills
+
+summary: /home/user/sitelooper/bench/results/fwkb18-sweep.json
