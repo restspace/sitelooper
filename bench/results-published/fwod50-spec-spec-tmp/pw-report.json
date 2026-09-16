@@ -1,0 +1,183 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwod50-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwod50-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwod50-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwod50-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwod50.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwod50-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwod50.spec.ts",
+      "file": "fwod50.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwod50",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 4320000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 51057,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 07-open\n"
+                    }
+                  ],
+                  "stderr": [
+                    {
+                      "text": "[sitelooper skip] 01-open s_830a2b/6 target: read target not found — value left empty\n"
+                    }
+                  ],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:8069/ in the browser and sign in with username 'admin' and password 'admin'. Important: do not wait for network idle (the app long-polls and is never idle) — wait on concrete page state instead. Verify you are signed in to the Odoo backend and report which page/menu you see.",
+                      "duration": 8307
+                    },
+                    {
+                      "title": "02-create: In the Odoo backend, create a new contact/customer record with Name exactly '{{runid}} Bench Customer' and City set to 'Benchville'. Navigate via the Contacts app (or Sales > Customers), click New, fill the Name field and the City field (City is under the Address section), then save. Verify the record is saved by reopening/reading the form and report the Name and City values shown on the saved record. Do not wait for network idle (the app long-polls) — wait on concrete page state.",
+                      "duration": 9338
+                    },
+                    {
+                      "title": "03-create: In the Odoo backend, go to the Sales app and create a NEW quotation (Sales > Orders > Quotations, click New). Set the Customer field to '{{runid}} Bench Customer' — this is an autocomplete dropdown, so type the name and actually select the option from the dropdown list that appears (do not just type and leave it). Then add EXACTLY ONE order line: in the Order Lines notebook section, click 'Add a product', and in the product field of that single line pick ANY product from the catalogue (again via the autocomplete dropdown — select an actual option). Set that line's Quantity to 3. Do NOT add any second line. Let Odoo auto-fill the Unit Price and the Untaxed Amount. Then save the quotation. Report: (a) the product name you chose, (b) the Unit Price the app filled in for that line, (c) the Untaxed Amount the app computes, and (d) the quotation's reference/name (e.g. S00042) shown on the form. Do not wait for network idle (the app long-polls) — wait on concrete page state.",
+                      "duration": 9549
+                    },
+                    {
+                      "title": "04-open: Open the existing quotation {{03-create.order_reference}} (customer '{{runid}} Bench Customer') in the Odoo Sales app — it currently has exactly ONE order line: '{{03-create.product_name}}', quantity 3, unit price {{03-create.unit_price}}, Untaxed Amount £885.00. Edit it and add a SECOND order line: click 'Add a product' in the Order Lines section, and in the new line's product field pick a DIFFERENT product from the catalogue (any product other than Acoustic Bloc Screens) via the autocomplete dropdown — actually select the option from the dropdown. Set that second line's Quantity to 2. Do not modify the first line. Let Odoo auto-fill the unit price and recompute the totals. Save. Report: (a) the product name you chose for the second line, (b) its unit price, (c) the new Untaxed Amount the app computes, and (d) confirm the first line is still Acoustic Bloc Screens qty 3. Do not wait for network idle (the app long-polls) — wait on concrete page state.",
+                      "duration": 5623
+                    },
+                    {
+                      "title": "05-open: Open the existing quotation {{03-create.order_reference}} (customer '{{runid}} Bench Customer') in the Odoo Sales app. It currently has TWO order lines: line 1 '{{03-create.product_name}}' quantity {{03-create.quantity}} unit price {{03-create.unit_price}}, and line 2 '{{04-open.second_line_product}}' quantity {{04-open.second_line_quantity}} unit price {{04-open.second_line_unit_price}}; Untaxed Amount is £1,025.00. Edit it and change ONLY the FIRST line's Quantity from 3 to 5 (leave the second line and all other fields untouched). Let Odoo recompute the totals. Save. Report: (a) the new Untaxed Amount the app computes, (b) the first line's quantity and line total as shown, and (c) the second line unchanged. Do not wait for network idle (the app long-polls) — wait on concrete page state.",
+                      "duration": 3501
+                    },
+                    {
+                      "title": "06-open: Open the existing quotation {{03-create.order_reference}} (customer '{{runid}} Bench Customer') in the Odoo Sales app — it has two lines: '{{03-create.product_name}}' qty {{05-open.first_line_quantity}} and '{{04-open.second_line_product}}' qty {{04-open.second_line_quantity}}, Untaxed Amount £1,615.00, currently in {{03-create.state}} state. Confirm it so it becomes a sales order: click the 'Confirm' button on the form. After confirming, report: (a) the order reference/name shown on the form (e.g. {{03-create.order_reference}}), (b) the status the app now shows in the statusbar (e.g. 'Sales Order'), and (c) confirm the two order lines and Untaxed Amount are still as expected. Do not wait for network idle (the app long-polls) — wait on concrete page state.",
+                      "duration": 2565
+                    },
+                    {
+                      "title": "07-open: Open the sales order {{03-create.order_reference}} (customer '{{runid}} Bench Customer') in the Odoo Sales app — it is currently confirmed, statusbar shows 'Sales Order', with two lines and Untaxed Amount £1,615.00. Cancel it: click the 'Cancel' button on the form (if a confirmation dialog appears, accept it). After cancelling, report: (a) the status the app now shows in the statusbar (e.g. 'Cancelled'), (b) the order reference/name shown, and (c) confirm the two order lines are still visible. Do not wait for network idle (the app long-polls) — wait on concrete page state.",
+                      "duration": 11788
+                    }
+                  ],
+                  "startTime": "2026-09-16T06:51:33.628Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "063be510c415bea5a7cd-0853617af1aa447bf231",
+          "file": "fwod50.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-16T06:51:32.050Z",
+    "duration": 52788.414000000004,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

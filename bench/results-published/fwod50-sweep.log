@@ -1,0 +1,127 @@
+
+[sweep] run 1/3: fwod50-n1 (store: /home/user/sitelooper/bench/results/fwod50-skills)
+[harness] odoo: defaulting APP_URL
+[harness] odoo: defaulting APP_EMAIL
+[harness] odoo: defaulting APP_PASSWORD
+[reset] odoo: no leftover bench customers
+[harness] odoo responded 303 at http://127.0.0.1:8069/
+stopped: fwod50-n1
+  flow "fwod50" saved: 7 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwod50.json
+  warning: note: dropped 11 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: note: 10 goal/report value(s) carrying a value this run made were slotted or dropped:
+  s_49efd8.reportTemplate.values.partner_id dropped (recorded literal of a value this run made)
+  s_49efd8.reportTemplate.summary dropped (narrates a value this run made)
+  s_57aec4.reportTemplate.values.sale_order_id dropped (recorded literal of a value this run made)
+  s_77734f.reportTemplate.values.customer_partner_id dropped (recorded literal of a value this run made)
+  s_77734f.reportTemplate.values.sale_order_id dropped (recorded literal of a value this run made)
+  s_77734f.reportTemplate.values.current_url dropped (recorded literal of a value this run made)
+  s_77734f.reportTemplate.summary dropped (narrates a value this run made)
+  s_7cc5b3.reportTemplate.summary slotted "21" → {{v7}}
+  s_be72f2.reportTemplate.values.sale_order_id dropped (recorded literal of a value this run made)
+  s_e2659f.reportTemplate.summary slotted "21" → {{v12}}
+  warning: note: 01-open no longer publishes user_email, action_id, menu_id, messages_counter, activities_counter, discuss_sidebar — no replay reads them from the page and the recording showed no line to read
+  warning: note: 02-create no longer publishes partner_id, address_section_present, search_result_count — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-create no longer publishes customer_partner_id, sale_order_id, product_default_code, untaxed_amount, verified_after_page_reload, tax, line1_subtotal — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-open no longer publishes order_line_count, verified_after_page_reload — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-open no longer publishes second_line_unchanged, verified_after_page_reload, line1_tax — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-open no longer publishes sale_order_id, statusbar_options, order_line_count — no replay reads them from the page and the recording showed no line to read
+  warning: note: 07-open no longer publishes order_line_count, sale_order_id, statusbar_options, line1_tax, line2_product, first_line_product_code, second_line_product_code — no replay reads them from the page and the recording showed no line to read
+  warning: note: 01-open: added a read for signed_in_user to s_830a2b (page.getByRole('heading', { name: 'Mitchell Admin', exact: true }); seen on the instruction's own page)
+  warning: warning: contradicted-step: 04-open read tax_20_percent "£ 205.00" right after 03-create reported "£ 177.00"; 03-create's change may not have landed and a later step may be retrying it. Re-record 03-create.
+  warning: warning: 252 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[1].instruction: "Benchville" (output) in "In the Odoo backend, create a new contact/customer record with Name exactly '{{runid}} Bench Customer' and City set to 'Benchville'. Navigate via the Contacts a"
+  flow.steps[1].params.v3: "Benchville" (output) in "Benchville"
+  flow.warnings[0]: "£ 177.00" (output) in "contradicted-step: 04-open read tax_20_percent \"£ 205.00\" right after 03-create reported \"£ 177.00\"; 03-create's change may not have landed and a later step may"
+  flow.warnings[0]: "£ 205.00" (output) in "contradicted-step: 04-open read tax_20_percent \"£ 205.00\" right after 03-create reported \"£ 177.00\"; 03-create's change may not have landed and a later step may"
+  s_1728c5.steps[0].expect.addedContains[0]: "Discuss" (output) in "- menu \"Discuss Contacts Sales Dashboards Invoicing Apps Settings\""
+  warning: {{03-create.state}} (used by 06-open) can only be re-observed by model recovery — consider re-recording so the value is read from the page.
+  warning: 03-create reports state, but s_1728c5 re-reads none of it from the page — a replay without the model will succeed without that value; re-record so it is read.
+arm=sitelooper model=z-ai/glm-5.3 runid=fwod50-n1 stop=completed
+turns=8 wall=479.4s
+commands=7 cmdTime=446.4s cmdBytes=12713 timeouts=0
+orchestrator in=16036 cw=0 cr=23808 out=3764
+inner prompt=2378998 cached=2196608 completion=29517
+spend=$0.0969 maxUsd=3
+learn: A_n=0 replayed=0/7 full=0 repaired=0 compiled=7 variants=0
+-> /home/user/sitelooper/bench/results/fwod50-n1-sitelooper-result.json
+
+fwod50-n1: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00021
+
+[sweep] run 2/3: fwod50-n2 (replay flow fwod50, no orchestrator)
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+[sweep] fwod50-n2: 1 drift ticket(s) → fwod50-n2-drift.json
+
+fwod50-n2: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00022
+
+[sweep] run 3/3: fwod50-n3 (replay flow fwod50, no orchestrator)
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+[sweep] fwod50-n3: 1 drift ticket(s) → fwod50-n3-drift.json
+
+fwod50-n3: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00023
+
+Learning sweep fwod50 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwod50-n1' │ '6/6'    │ 'completed' │ 8     │ 7    │ 0.0969    │ 0   │ '0/7'        │ 479    │
+│ 1       │ 2 │ 'fwod50-n2' │ '6/6'    │ 'success'   │ 0     │ 7    │ 0         │ 1   │ '7/7 (flow)' │ 53     │
+│ 2       │ 3 │ 'fwod50-n3' │ '6/6'    │ 'success'   │ 0     │ 7    │ 0         │ 1   │ '7/7 (flow)' │ 53     │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8069
+  s_1728c5  validated    2 steps  3/3 (100%)
+           In the Odoo backend, go to the Sales app and create a NEW quotation (Sales > Orders > Quotations, click New). …
+  s_178fa5  validated    2 steps  3/3 (100%)
+           In the Odoo backend, create a new contact/customer record with Name exactly '{{v2}}' and City set to '{{v3}}'.…
+  s_49efd8  validated    3 steps  3/3 (100%)
+           In the Odoo backend, create a new contact/customer record with Name exactly '{{v2}}' and City set to '{{v3}}'.…
+  s_4be4a5  validated    4 steps  3/3 (100%)
+           In the Odoo backend, create a new contact/customer record with Name exactly '{{v2}}' and City set to '{{v3}}'.…
+  s_57aec4  validated   22 steps  3/3 (100%)
+           Open the existing quotation {{v1}} (customer '{{v2}}') in the Odoo Sales app — it has two lines: '{{v4}}' qty …
+  s_60a496  validated    1 steps  3/3 (100%)
+           In the Odoo backend, create a new contact/customer record with Name exactly '{{v2}}' and City set to '{{v3}}'.…
+  s_646279  validated    1 steps  3/3 (100%)
+           In the Odoo backend, go to the Sales app and create a NEW quotation (Sales > Orders > Quotations, click New). …
+  s_68ae7d  validated    3 steps  3/3 (100%)
+           In the Odoo backend, create a new contact/customer record with Name exactly '{{v2}}' and City set to '{{v3}}'.…
+  s_77734f  validated   17 steps  3/3 (100%)
+           In the Odoo backend, go to the Sales app and create a NEW quotation (Sales > Orders > Quotations, click New). …
+  s_7cc5b3  validated   31 steps  3/3 (100%)
+           Open the existing quotation {{v1}} (customer '{{v2}}') in the Odoo Sales app — it currently has exactly ONE or…
+  s_830a2b  validated    6 steps  3/3 (100%)
+           Open {{v1}} in the browser and sign in with username 'admin' and password 'admin'. Important: do not wait for …
+  s_922f18  validated    1 steps  3/3 (100%)
+           In the Odoo backend, create a new contact/customer record with Name exactly '{{v2}}' and City set to '{{v3}}'.…
+  s_be72f2  validated   17 steps  3/3 (100%)
+           Open the sales order {{v1}} (customer '{{v2}}') in the Odoo Sales app — it is currently confirmed, statusbar s…
+  s_c617fd  validated    1 steps  3/3 (100%)
+           Open {{v1}} in the browser and sign in with username 'admin' and password 'admin'. Important: do not wait for …
+  s_ce0686  validated    8 steps  3/3 (100%)
+           In the Odoo backend, go to the Sales app and create a NEW quotation (Sales > Orders > Quotations, click New). …
+  s_e2659f  validated   22 steps  3/3 (100%)
+           Open the existing quotation {{v1}} (customer '{{v2}}') in the Odoo Sales app. It currently has TWO order lines…
+  s_fba866  validated    3 steps  3/3 (100%)
+           Open {{v1}} in the browser and sign in with username 'admin' and password 'admin'. Important: do not wait for …
+store: /home/user/sitelooper/bench/results/fwod50-skills
+
+summary: /home/user/sitelooper/bench/results/fwod50-sweep.json
