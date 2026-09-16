@@ -1,0 +1,51 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-open
+[sitelooper step] 02-create
+[sitelooper step] 03-create
+[sitelooper step] 04-open
+[sitelooper step] 05-open
+[sitelooper step] 06-open
+  ✘  1 fwod55.spec.ts:9:1 › fwod55 (32.3s)
+
+
+  1) fwod55.spec.ts:9:1 › fwod55 › 07-open: In Odoo, open the confirmed Sales Order {{03-create.quotation_reference}} (customer '{{runid}} Bench Customer') in the Sales app and cancel it (use the Cancel button; if a confirmation dialog appears, accept it). After cancelling, report the status the app now shows on the record (e.g. 'Cancelled'). Note: Odoo long-polls so the page is never network-idle — wait for concrete page elements instead. 
+
+    Error: identity: {{v2}} is not confirmed on this page
+
+    identity: {{v2}} is not confirmed on this page
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "present"
+    Received: "absent"
+
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+
+       at fwod55.flow.ts:13051
+
+      13049 |       if (!verdict.pass) throw new Error('07-open s_3633eb: identity: {{v2}} is not confirmed on this page');
+      13050 |     } else {
+    > 13051 |       await expect.poll(async () => (await confirmPresence(page, [`${p.v2}`], 2, { whole: true })).presence, { timeout: 5000, message: 'identity: {{v2}} is not confirmed on this page' }).toBe('present');
+            |                                                                                                                                                                                            ^
+      13052 |     }
+      13053 |
+      13054 |     // @step 07-open s_3633eb/2
+        at Object.07-open (/home/user/sitelooper/bench/results/fwod55-spec-spec-tmp/fwod55.flow.ts:13051:188)
+        at /home/user/sitelooper/bench/results/fwod55-spec-spec-tmp/fwod55.flow.ts:13729:7
+        at runFlow (/home/user/sitelooper/bench/results/fwod55-spec-spec-tmp/fwod55.flow.ts:13728:5)
+        at /home/user/sitelooper/bench/results/fwod55-spec-spec-tmp/fwod55.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../test-results/fwod55-fwod55/error-context.md
+
+  1 failed
+    fwod55.spec.ts:9:1 › fwod55 ────────────────────────────────────────────────────────────────────
+[sitelooper skip] 03-create s_ff5b68/13 target: no locator recorded — value left empty
+[sitelooper skip] 04-open s_aa3cd3/17 target: no locator recorded — value left empty
+[sitelooper skip] 05-open s_2a6c81/15 target: no locator recorded — value left empty

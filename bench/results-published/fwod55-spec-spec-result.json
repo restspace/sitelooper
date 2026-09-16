@@ -1,0 +1,34 @@
+{
+  "arm": "spec",
+  "runid": "fwod55-spec",
+  "target": "odoo",
+  "flow": "fwod55.json",
+  "flowName": "fwod55",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwod55-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwod55-spec-spec-tmp/fwod55.flow.ts",
+  "specFile": "bench/results/fwod55-spec-spec-tmp/fwod55.spec.ts",
+  "wallMs": 34999,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwod55",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 32273,
+      "error": "Error: identity: {{v2}} is not confirmed on this page\n\nidentity: {{v2}} is not confirmed on this page\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m\"\u001b[7mpre\u001b[27msent\"\u001b[39m\nReceived: \u001b[31m\"\u001b[7mab\u001b[27msent\"\u001b[39m\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "logTail": "\nRunning 1 test using 1 worker\n\n[sitelooper step] 01-open\n[sitelooper step] 02-create\n[sitelooper step] 03-create\n[sitelooper step] 04-open\n[sitelooper step] 05-open\n[sitelooper step] 06-open\n  ✘  1 fwod55.spec.ts:9:1 › fwod55 (32.3s)\n\n\n  1) fwod55.spec.ts:9:1 › fwod55 › 07-open: In Odoo, open the confirmed Sales Order {{03-create.quotation_reference}} (customer '{{runid}} Bench Customer') in the Sales app and cancel it (use the Cancel button; if a confirmation dialog appears, accept it). After cancelling, report the status the app now shows on the record (e.g. 'Cancelled'). Note: Odoo long-polls so the page is never network-idle — wait for concrete page elements instead. \n\n    Error: identity: {{v2}} is not confirmed on this page\n\n    identity: {{v2}} is not confirmed on this page\n\n    expect(received).toBe(expected) // Object.is equality\n\n    Expected: \"present\"\n    Received: \"absent\"\n\n    Call Log:\n    - Timeout 5000ms exceeded while waiting on the predicate\n\n       at fwod55.flow.ts:13051\n\n      13049 |       if (!verdict.pass) throw new Error('07-open s_3633eb: identity: {{v2}} is not confirmed on this page');\n      13050 |     } else {\n    > 13051 |       await expect.poll(async () => (await confirmPresence(page, [`${p.v2}`], 2, { whole: true })).presence, { timeout: 5000, message: 'identity: {{v2}} is not confirmed on this page' }).toBe('present');\n            |                                                                                                                                                                                            ^\n      13052 |     }\n      13053 |\n      13054 |     // @step 07-open s_3633eb/2\n        at Object.07-open (/home/user/sitelooper/bench/results/fwod55-spec-spec-tmp/fwod55.flow.ts:13051:188)\n        at /home/user/sitelooper/bench/results/fwod55-spec-spec-tmp/fwod55.flow.ts:13729:7\n        at runFlow (/home/user/sitelooper/bench/results/fwod55-spec-spec-tmp/fwod55.flow.ts:13728:5)\n        at /home/user/sitelooper/bench/results/fwod55-spec-spec-tmp/fwod55.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: ../../../test-results/fwod55-fwod55/error-context.md\n\n  1 failed\n    fwod55.spec.ts:9:1 › fwod55 ────────────────────────────────────────────────────────────────────\n[sitelooper skip] 03-create s_ff5b68/13 target: no locator recorded — value left empty\n[sitelooper skip] 04-open s_aa3cd3/17 target: no locator recorded — value left empty\n[sitelooper skip] 05-open s_2a6c81/15 target: no locator recorded — value left empty\n"
+}

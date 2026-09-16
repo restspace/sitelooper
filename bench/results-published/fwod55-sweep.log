@@ -1,0 +1,128 @@
+
+[sweep] run 1/3: fwod55-n1 (store: /home/user/sitelooper/bench/results/fwod55-skills)
+[harness] odoo: defaulting APP_URL
+[harness] odoo: defaulting APP_EMAIL
+[harness] odoo: defaulting APP_PASSWORD
+[reset] odoo: no leftover bench customers
+[harness] odoo responded 303 at http://127.0.0.1:8069/
+stopped: fwod55-n1
+  flow "fwod55" saved: 7 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwod55.json
+  warning: note: dropped 2 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: note: 8 goal/report value(s) carrying a value this run made were slotted or dropped:
+  s_2a6c81.reportTemplate.values.quotation_id dropped (recorded literal of a value this run made)
+  s_536a22.reportTemplate.values.contact_id dropped (recorded literal of a value this run made)
+  s_536a22.reportTemplate.values.record_url dropped (recorded literal of a value this run made)
+  s_536a22.reportTemplate.summary dropped (narrates a value this run made)
+  s_a5379c.reportTemplate.summary dropped (narrates a value this run made)
+  s_aa3cd3.reportTemplate.values.quotation_id dropped (recorded literal of a value this run made)
+  s_ff5b68.reportTemplate.values.quotation_id dropped (recorded literal of a value this run made)
+  s_ff5b68.reportTemplate.summary dropped (narrates a value this run made)
+  warning: note: 02-create no longer publishes contact_id, record_url — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-create no longer publishes quotation_id, line_subtotal, amount_untaxed — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-open no longer publishes quotation_id, second_line_product, footer_tax_row — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-open no longer publishes quotation_id, first_line_old_quantity, second_line_product, footer_tax_row — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-open no longer publishes buttons_after_confirm — no replay reads it from the page and the recording showed no line to read
+  warning: note: 07-open no longer publishes notification_shown, status_quotation — no replay reads them from the page and the recording showed no line to read
+  warning: note: 01-open: added a read for app_menu to s_5e20ab (page.getByRole('menuitem', { name: 'Discuss', exact: true }); seen on the next instruction's start page)
+  warning: note: 03-create: added a read for footer_total_row to s_ff5b68 (page.getByRole('row', { name: 'Total £ 1,062.00', exact: true }); seen on the next instruction's start page)
+  warning: note: 04-open: added a read for footer_total_row to s_aa3cd3 (page.getByRole('row', { name: 'Total £ 1,398.00', exact: true }); seen on the next instruction's start page)
+  warning: note: 05-open: added a read for footer_total_row to s_2a6c81 (page.getByRole('row', { name: 'Total £ 2,106.00', exact: true }); seen on the next instruction's start page)
+  warning: warning: 180 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[1].instruction: "Benchville" (output) in "In Odoo, go to the Contacts app and create a new contact/customer with Name exactly '{{runid}} Bench Customer' and City set to 'Benchville'. Fill any other requ"
+  flow.steps[1].params.v3: "Benchville" (output) in "Benchville"
+  flow.steps[2].instruction: "Quotation" (output) in "In Odoo, go to the Sales app and create a new Quotation. Set the Customer field to '{{runid}} Bench Customer' — IMPORTANT: the Customer field is an autocomplete"
+  flow.steps[3].instruction: "Quotation" (output) in "In Odoo, open the existing Quotation {{03-create.quotation_reference}} (customer '{{runid}} Bench Customer') in the Sales app. Add a SECOND order line: a DIFFER"
+  flow.steps[3].params.v1: "Quotation" (output) in "Quotation"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwod55-n1 stop=completed
+turns=8 wall=562.2s
+commands=7 cmdTime=522.7s cmdBytes=8501 timeouts=0
+orchestrator in=14198 cw=0 cr=20096 out=2941
+inner prompt=2750841 cached=2567168 completion=34136
+spend=$0.0938 maxUsd=3
+learn: A_n=0 replayed=0/7 full=0 repaired=0 compiled=7 variants=0
+-> /home/user/sitelooper/bench/results/fwod55-n1-sitelooper-result.json
+
+fwod55-n1: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00021
+
+[sweep] run 2/3: fwod55-n2 (replay flow fwod55, no orchestrator)
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+[sweep] fwod55-n2: 4 drift ticket(s) → fwod55-n2-drift.json
+
+fwod55-n2: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00022
+
+[sweep] run 3/3: fwod55-n3 (replay flow fwod55, no orchestrator)
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+[sweep] fwod55-n3: 4 drift ticket(s) → fwod55-n3-drift.json
+
+fwod55-n3: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00023
+
+Learning sweep fwod55 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwod55-n1' │ '6/6'    │ 'completed' │ 8     │ 7    │ 0.0938    │ 0    │ '0/7'        │ 562    │
+│ 1       │ 2 │ 'fwod55-n2' │ '6/6'    │ 'success'   │ 22    │ 7    │ 0.0119    │ 0.86 │ '7/7 (flow)' │ 138    │
+│ 2       │ 3 │ 'fwod55-n3' │ '6/6'    │ 'success'   │ 19    │ 7    │ 0.0086    │ 0.86 │ '7/7 (flow)' │ 131    │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8069
+  s_08f2d3  validated    1 steps  3/3 (100%)
+           Open {{v1}} in the browser and sign in to Odoo with username 'admin' and password 'admin'. Important: Odoo lon…
+  s_0ed9fd  validated    6 steps  3/3 (100%)
+           In Odoo, open the existing {{v1}} {{v2}} (customer '{{v3}}') in the Sales app and confirm it so it becomes a s…
+  s_2a6c81  validated   15 steps  3/3 (100%)
+           In Odoo, open the existing {{v1}} {{v2}} (customer '{{v3}}') in the Sales app. Change the Quantity of the FIRS…
+  s_3f4868  validated    3 steps  3/3 (100%)
+           Open {{v1}} in the browser and sign in to Odoo with username 'admin' and password 'admin'. Important: Odoo lon…
+  s_3fa2b0  validated    1 steps  3/3 (100%)
+           In Odoo, go to the Contacts app and create a new contact/customer with Name exactly '{{v2}}' and City set to '…
+  s_411dc3  validated    7 steps  3/3 (100%)
+           In Odoo, go to the Sales app and create a new Quotation. Set the Customer field to '{{v1}}' — IMPORTANT: the C…
+  s_536a22  validated    3 steps  3/3 (100%)
+           In Odoo, go to the Contacts app and create a new contact/customer with Name exactly '{{v2}}' and City set to '…
+  s_5e20ab  validated    4 steps  3/3 (100%)
+           Open {{v1}} in the browser and sign in to Odoo with username 'admin' and password 'admin'. Important: Odoo lon…
+  s_6929ca  validated    2 steps  3/3 (100%)
+           In Odoo, go to the Contacts app and create a new contact/customer with Name exactly '{{v2}}' and City set to '…
+  s_7c695f  validated    1 steps  3/3 (100%)
+           In Odoo, go to the Sales app and create a new Quotation. Set the Customer field to '{{v1}}' — IMPORTANT: the C…
+  s_847955  validated    3 steps  3/3 (100%)
+           In Odoo, go to the Contacts app and create a new contact/customer with Name exactly '{{v2}}' and City set to '…
+  s_aa3cd3  validated   17 steps  3/3 (100%)
+           In Odoo, open the existing {{v1}} {{v2}} (customer '{{v3}}') in the Sales app. Add a SECOND order line: a DIFF…
+  s_abeeb5  validated    2 steps  3/3 (100%)
+           In Odoo, go to the Sales app and create a new Quotation. Set the Customer field to '{{v1}}' — IMPORTANT: the C…
+  s_ff5b68  validated   13 steps  3/3 (100%)
+           In Odoo, go to the Sales app and create a new Quotation. Set the Customer field to '{{v1}}' — IMPORTANT: the C…
+  s_3633eb  provisional  7 steps  1/2 (50%)
+           In Odoo, open the confirmed {{v1}} {{v2}} (customer '{{v3}}') in the Sales app and cancel it (use the Cancel b…
+  s_a4d588  provisional 10 steps  1/2 (50%)  variant of s_3633eb
+           In Odoo, open the confirmed {{v1}} {{v2}} (customer '{{v3}}') in the Sales app and cancel it (use the {{v5}} b…
+  s_719153  provisional 12 steps  1/1 (100%)  variant of s_a4d588
+           In Odoo, open the confirmed {{v1}} {{v2}} (customer '{{v3}}') in the Sales app and cancel it (use the Cancel b…
+  s_7c5eb9  provisional  5 steps  1/1 (100%)
+           In Odoo, open the confirmed {{v1}} {{v2}} (customer '{{v3}}') in the Sales app and cancel it (use the Cancel b…
+  s_a5379c  provisional  8 steps  1/1 (100%)
+           In Odoo, open the confirmed {{v1}} {{v2}} (customer '{{v3}}') in the Sales app and cancel it (use the Cancel b…
+store: /home/user/sitelooper/bench/results/fwod55-skills
+
+summary: /home/user/sitelooper/bench/results/fwod55-sweep.json

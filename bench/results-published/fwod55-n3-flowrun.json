@@ -1,0 +1,258 @@
+{
+  "flow": "fwod55",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Signed in to Odoo at http://127.0.0.1:8069/ with admin/admin. The login form submitted successfully and the page redirected to the web client, landing on the Discuss app (Odoo - Discuss). The URL became http://127.0.0.1:8069/web#action=123&cids=1&menu_id=81, the app menu shows menuitem \"Discuss\", and the page shows the Discuss Inbox with the message \"Congratulations, your inbox is empty\" plus Channels/Direct messages sidebar.",
+      "values": {
+        "final_url": "http://127.0.0.1:8069/web#action=123&cids=1&menu_id=81",
+        "landing_app": "Discuss",
+        "page_heading": "Congratulations, your inbox is empty",
+        "app_menu": "Discuss"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_536a22 (3 steps).",
+      "values": {
+        "contact_reference": "fwod55-n3",
+        "name": "fwod55-n3 Bench Customer",
+        "city": "Benchville"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_ff5b68 (13 steps).",
+      "values": {
+        "customer_reference": "fwod55-n3",
+        "amount_untaxed_confirmed": "£ 885.00",
+        "product_name": "[FURN_6666] Acoustic Bloc Screens",
+        "quantity": "3.00",
+        "unit_price": "295.00",
+        "quotation_reference": "S00023",
+        "customer": "fwod55-n3 Bench Customer",
+        "customer_city_shown": "Benchville",
+        "line_taxes": "20%",
+        "taxes_20pct": "£ 177.00",
+        "total": "£ 1,062.00",
+        "status": "Quotation",
+        "product_default_code": "[FURN_6666] Acoustic Bloc Screens"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "23/23",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "footer_total_row"
+      ]
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_aa3cd3; observed first_line_product=[FURN_6666] Acoustic Bloc Screens, status=Quotation, customer_reference=fwod55-n3, quotation_reference=S00023, customer=fwod55-n3 Bench Customer, second_line_quantity=2.00, second_line_unit_price=140.00, second_line_subtotal=£ 280.00, first_line_quantity=3.00, first_line_unit_price=295.00, first_line_subtotal=£ 885.00, amount_untaxed=£ 1,165.00, taxes_20pct=£ 233.00, total=£ 1,398.00.",
+      "values": {
+        "first_line_product": "[FURN_6666] Acoustic Bloc Screens",
+        "status": "Quotation",
+        "customer_reference": "fwod55-n3",
+        "quotation_reference": "S00023",
+        "customer": "fwod55-n3 Bench Customer",
+        "second_line_quantity": "2.00",
+        "second_line_unit_price": "140.00",
+        "second_line_subtotal": "£ 280.00",
+        "first_line_quantity": "3.00",
+        "first_line_unit_price": "295.00",
+        "first_line_subtotal": "£ 885.00",
+        "amount_untaxed": "£ 1,165.00",
+        "taxes_20pct": "£ 233.00",
+        "total": "£ 1,398.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "footer_total_row",
+        "product_default_code"
+      ]
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_2a6c81; observed first_line_product=[FURN_6666] Acoustic Bloc Screens, status=Quotation, quotation_reference=S00023, customer=fwod55-n3 Bench Customer, first_line_new_quantity=5.00, first_line_unit_price=295.00, first_line_new_subtotal=£ 1,475.00, second_line_quantity=2.00, second_line_unit_price=140.00, second_line_subtotal=£ 280.00, amount_untaxed=£ 1,755.00, taxes_20pct=£ 351.00, total=£ 2,106.00.",
+      "values": {
+        "first_line_product": "[FURN_6666] Acoustic Bloc Screens",
+        "status": "Quotation",
+        "quotation_reference": "S00023",
+        "customer": "fwod55-n3 Bench Customer",
+        "first_line_new_quantity": "5.00",
+        "first_line_unit_price": "295.00",
+        "first_line_new_subtotal": "£ 1,475.00",
+        "second_line_quantity": "2.00",
+        "second_line_unit_price": "140.00",
+        "second_line_subtotal": "£ 280.00",
+        "amount_untaxed": "£ 1,755.00",
+        "taxes_20pct": "£ 351.00",
+        "total": "£ 2,106.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "footer_total_row",
+        "product_default_code"
+      ]
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "On quotation S00023 in the Sales app (customer 'fwod55-n3 Bench Customer') I clicked the Confirm button. The page then re-rendered as a confirmed order: the statusbar's checked state moved from \"Quotation\" to \"Sales Order\" (verified on the live DOM — .o_statusbar_status button[aria-checked=\"true\"] reads \"Sales Order\"; the other two states, \"Quotation Sent\" and \"Quotation\", are now disabled), the breadcrumb shows \"Quotations / S00023\", and post-confirmation action buttons \"Create Invoice\", \"Send by Email\", \"Preview\" and \"Cancel\" are present. So (a) the order reference/name shown is S00023, and (b) the status the app now shows is \"Sales Order\".",
+      "values": {
+        "statusbar_states": "Sales Order (checked), Quotation Sent, Quotation",
+        "breadcrumb": "Quotations / S00023",
+        "status_quotation": "Quotation",
+        "customer_reference": "fwod55-n3",
+        "order_reference": "S00023",
+        "status_label": "Sales Order",
+        "customer": "fwod55-n3 Bench Customer",
+        "total": "£ 2,106.00",
+        "status_quotation_sent": "Quotation Sent"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "07-open",
+      "status": "success",
+      "summary": "Resumed from the partially-replayed skill: on sales order S00023 the \"Cancel Sales Order\" confirmation dialog was already open (and, unexpectedly, a customer \"Edit: fwod55-n3 Bench Customer\" dialog had been opened on top of it by the aborted step). I discarded the stray contact dialog, then clicked \"Send and cancel\" in the Cancel Sales Order dialog. The record re-rendered as cancelled: the statusbar's checked state is now \"Cancelled\" (all other states disabled), the heading/breadcrumb still read S00023, no dialogs remain open, and the \"Set to Quotation\" button is now available. So the status the app shows on the record is \"Cancelled\".",
+      "values": {
+        "order_reference": "S00023",
+        "page_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=23",
+        "status_label_after_cancel": "Cancelled",
+        "customer_name": "fwod55-n3 Bench Customer",
+        "statusbar_states": "Cancelled (checked, disabled), Sales Order (disabled), Quotation Sent (disabled), Quotation (disabled)",
+        "available_action_after_cancel": "Set to Quotation",
+        "screenshot": "/home/user/sitelooper/s00023_cancelled.png",
+        "ref": "fwod55-n3"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_a4d588 stopped at step 2 — after step 2 the page did not show \"- heading \\\"Cancel Sales\\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "replayed": "1/10",
+      "repaired": false,
+      "turns": 19,
+      "unreported": [
+        "final_status",
+        "status_before_cancel",
+        "amount_untaxed",
+        "order_total",
+        "breadcrumb",
+        "cancelled_status_checked",
+        "status_quotation_sent"
+      ]
+    }
+  ],
+  "passed": 7,
+  "total": 7,
+  "repinned": 0,
+  "drift": 4,
+  "driftTickets": [
+    {
+      "flow": "fwod55",
+      "step": "03-create",
+      "skill": "s_ff5b68",
+      "atStep": "13",
+      "key": "target",
+      "similarity": 1.002,
+      "missedLocator": "page.getByRole('row', { name: 'Total £ 1,062.00', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=23"
+    },
+    {
+      "flow": "fwod55",
+      "step": "04-open",
+      "skill": "s_aa3cd3",
+      "atStep": "17",
+      "key": "target",
+      "similarity": 1.002,
+      "missedLocator": "page.getByRole('row', { name: 'Total £ 1,398.00', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=23"
+    },
+    {
+      "flow": "fwod55",
+      "step": "05-open",
+      "skill": "s_2a6c81",
+      "atStep": "15",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.getByRole('row', { name: 'Total £ 2,106.00', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=23"
+    },
+    {
+      "flow": "fwod55",
+      "step": "07-open",
+      "skill": "s_a4d588",
+      "similarity": null,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_a4d588 stopped at step 2 — after step 2 the page did not show \"- heading \\\"Cancel Sales\\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "reason": "after step 2 the page did not show \"- heading \\\"Cancel Sales\\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=23"
+    }
+  ],
+  "wallMs": 131257,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 306411,
+    "completionTokens": 5825,
+    "cachedTokens": 278144
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 306411,
+      "completionTokens": 5825,
+      "cachedTokens": 278144
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

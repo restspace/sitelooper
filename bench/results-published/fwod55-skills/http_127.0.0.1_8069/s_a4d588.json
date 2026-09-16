@@ -1,0 +1,409 @@
+{
+ "id": "s_a4d588",
+ "origin": "http://127.0.0.1:8069",
+ "template": "In Odoo, open the confirmed {{v1}} {{v2}} (customer '{{v3}}') in the Sales app and cancel it (use the {{v5}} button; if a confirmation dialog appears, accept it). After cancelling, report the status the app now shows on the record (e.g. '{{v6}}'). Note: Odoo long-polls so the page is never network-idle — wait for concrete page elements instead.",
+ "params": {
+  "v1": {
+   "example": "Sales Order",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i6:status_label"
+  },
+  "v2": {
+   "example": "S00022",
+   "usedIn": [],
+   "known": true,
+   "binding": "03-create.quotation_reference"
+  },
+  "v3": {
+   "example": "fwod55-n2 Bench Customer",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:name"
+  },
+  "v4": {
+   "example": "fwod55-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v5": {
+   "example": "Cancel",
+   "usedIn": [
+    3,
+    4,
+    6
+   ],
+   "known": true,
+   "binding": "output:i7:div_modal_d_block_button_2"
+  },
+  "v6": {
+   "example": "Cancelled",
+   "usedIn": [
+    7
+   ],
+   "known": true,
+   "binding": "output:i7:status_label_after_cancel"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form"
+ },
+ "steps": [
+  {
+   "tool": "dialog_expect",
+   "args": {
+    "action": "accept"
+   },
+   "locators": {},
+   "via": {
+    "skill": "s_3633eb",
+    "step": 1
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1665"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "{{v5}}"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 357,
+      "y": 129,
+      "w": 65.6,
+      "h": 33,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+    "alertContains": "Are you sure you want to cancel this order?",
+    "addedContains": [
+     "- dialog \"\"",
+     "- heading \"{{v5}} {{v1}}\"",
+     "- button \"Close\"",
+     "- button \"Send and cancel\"",
+     "- button \"Discard\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "div.modal.d-block button[name=\"action_cancel\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div.modal.d-block button[name=\"action_cancel\"]"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "{{v5}}",
+      "nth": 1
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div > footer > footer > button:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 334,
+      "y": 661,
+      "w": 65.6,
+      "h": 33,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "div.modal.d-block button.o_form_button_cancel"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div.modal.d-block button.o_form_button_cancel"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > footer > div > div > button:nth-of-type(3)"
+     },
+     {
+      "kind": "point",
+      "x": 416,
+      "y": 590,
+      "w": 69.5,
+      "h": 33,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "div.modal.d-block button[name=\"action_cancel\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div.modal.d-block button[name=\"action_cancel\"]"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "{{v5}}",
+      "nth": 1
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div > footer > footer > button:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 334,
+      "y": 661,
+      "w": 65.6,
+      "h": 33,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+    "addedContains": [
+     "- button \"Set to Quotation\"",
+     "- radio \"{{v6}}\" [disabled]",
+     "- row \"Product Description Quantity Unit Price Taxes Tax excl.\"",
+     "- link \"[FURN_6666] Acoustic Bloc Screens\"",
+     "- link \"[E-COM11] Cabinet with Doors\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "status_label_after_cancel",
+    "target": ".o_statusbar_status button[aria-checked=\"true\"]",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_statusbar_status button[aria-checked=\"true\"]"
+     },
+     {
+      "kind": "role",
+      "role": "radio",
+      "name": "{{v6}}"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div > button:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 1213,
+      "y": 129,
+      "w": 101.3,
+      "h": 33,
+      "role": "radio",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "status_label_after_cancel"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > h1 > div > span"
+     },
+     {
+      "kind": "point",
+      "x": 89,
+      "y": 195,
+      "w": 96.5,
+      "h": 31,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "order_reference"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div > a > span:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 265,
+      "y": 245,
+      "w": 173.5,
+      "h": 23,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "customer"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(2) > span",
+      "nth": 1
+     },
+     {
+      "kind": "point",
+      "x": 153,
+      "y": 129,
+      "w": 101.2,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "available_action_after_cancel"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "body > div:nth-of-type(3) > div > div > div:nth-of-type(6) > button:nth-of-type(2)"
+     }
+    ]
+   },
+   "label": "div_modal_d_block_button_3"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Opened confirmed {{v1}} {{v2}} (customer '{{v3}}', Benchville) in the Sales app and cancelled it. The {{v5}} button opened the \"{{v5}} {{v1}}\" confirmation dialog (\"Are you sure you want to cancel this order?\", buttons: \"Send and cancel\" = action_send_mail_and_cancel, \"{{v5}}\" = action_cancel, \"Discard\"). A stray \"Edit: {{v3}}\" contact dialog was stacked on top of the wizard (left over from the interrupted skill replay) and was blocking the wizard's buttons, so I dismissed it with Discard and then clicked the wizard's \"{{v5}}\" (action_cancel). The record now shows status \"{{v6}}\": the statusbar's checked state is \"{{v6}}\" ({{v1}} / Quotation Sent / Quotation all disabled) and a \"Set to Quotation\" button has appeared; breadcrumb reads \"Quotations / {{v2}}\". Note: the replayed procedure s_3633eb stopped after step 2, so I finished the cancel by hand.",
+  "values": {
+   "order_reference": "{{v2}}",
+   "status_label_after_cancel": "{{v6}}",
+   "statusbar_states": "{{v6}} (checked, disabled), {{v1}} (disabled), Quotation Sent (disabled), Quotation (disabled)",
+   "breadcrumb": "Quotations / {{v2}}",
+   "customer": "{{v3}}",
+   "customer_link_text": "{{v3}} Benchville",
+   "available_action_after_cancel": "Set to Quotation",
+   "cancel_dialog_buttons": "Send and cancel (action_send_mail_and_cancel), {{v5}} (action_cancel), Discard (special=cancel)",
+   "div_modal_d_block_button": "Send and cancel",
+   "div_modal_d_block_button_2": "{{v5}}",
+   "div_modal_d_block_button_3": "Discard",
+   "ref": "{{v4}}",
+   "ref_2": "s_3633eb"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 2,
+  "successes": 1,
+  "partial": 1,
+  "created": "2026-09-16T15:23:52.658Z",
+  "failedAtStep": {
+   "2": 1
+  },
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-16T15:26:07.027Z",
+  "recoveredStops": 1,
+  "lastFailedAt": 2
+ },
+ "status": "provisional",
+ "variantOf": "s_3633eb",
+ "provenance": {
+  "session": "fwod55-n2",
+  "instruction": "In Odoo, open the confirmed Sales Order S00022 (customer 'fwod55-n2 Bench Customer') in the Sales app and cancel it (use the Cancel button; if a confirmation dialog appears, accept it). After cancelling, report the status the app now shows on the record (e.g. 'Cancelled'). Note: Odoo long-polls so the page is never network-idle — wait for concrete page elements instead.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-16T15:23:52.658Z",
+  "transforms": [
+   {
+    "name": "coalesceControls",
+    "at": 2,
+    "reason": "repeat of the previous dialog_expect with identical args and no target of its own"
+   }
+  ]
+ },
+ "revision": 2
+}
