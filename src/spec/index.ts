@@ -126,7 +126,7 @@ export function compileFlow(
   // clear EVERY error, so any future error-severity diagnostic would be
   // waivable by a flag that says nothing about it — a contract refusal
   // bypassed by an unrelated option is not a refusal.
-  // Emission's own errors refuse too. `unproven-source` is found only while
+  // Emission's own errors refuse too. `unsourced-ref` is found only while
   // the call sites are written — nothing before emission knows which slot a
   // reference is bound into — and a refusal the writer does not honour is not
   // a refusal (fwkb14, fwod52: both compiled clean and stopped at 1/6 and

@@ -2754,8 +2754,20 @@ function usedSlot(step: SpecStep, slot: string): boolean {
  * any run resolves it (SkillStep.unproven). A source is anything else — a
  * recorded read, or a report-template value derived from the caller's own
  * `{{vN}}`, which is what `publishedOutputs` counts beside reads.
+ *
+ * Having NO source at all is the same defect with one fewer read, and it is
+ * the commoner half: fwkb15's `{{02-create.task_url}}` and fwod52's
+ * `{{02-create.product_name}}` are each referenced by steps that type them,
+ * recorded as a literal in a report template, and read from the page by
+ * nothing. Asking only "is the one source unproven" shipped those artifacts
+ * to a guaranteed stop. The question is whether anything can EVER publish the
+ * key, so the exclusions below are not a filter on what a name looks like:
+ * they are the complete set of sites that assign `outputs[...]` in the file
+ * being written — minted, a labelled read (including a url read and a loop
+ * body's), a report value the caller's `{{vN}}` reaches, and the url parts.
+ * A ref a stand-in can fill never reaches here; callArgs tries that first.
  */
-function unprovenSource(spec: SpecFlow, ref: string): { sid: string; output: string } | null {
+function unsourcedRef(spec: SpecFlow, ref: string): { sid: string; output: string; kind: 'unproven' | 'none' } | null {
   const dot = ref.indexOf('.');
   if (dot < 0) return null;
   const sid = ref.slice(0, dot);
@@ -2772,7 +2784,12 @@ function unprovenSource(spec: SpecFlow, ref: string): { sid: string; output: str
     for (const s of steps) {
       if ((s.tool === 'read' || s.tool === 'read_all') && s.label === output) {
         reads += 1;
-        if (!s.unproven) proven += 1;
+        // A read whose every candidate was retired (dropDeadReadLocators, or
+        // the absent-only retirement) publishes '' on every run, and `need`
+        // treats '' as missing — so an empty chain is no more a source than
+        // an unproven one. A url read is the exception: it needs no locator.
+        const empty = !(s.locators?.target ?? []).length && s.args?.what !== 'url';
+        if (!s.unproven && !empty) proven += 1;
       }
       if (s.body) walk(s.body);
     }
@@ -2782,7 +2799,7 @@ function unprovenSource(spec: SpecFlow, ref: string): { sid: string; output: str
     const templated = segment.report?.values?.[output];
     if (typeof templated === 'string' && /\{\{v\d+\}\}/.test(templated)) proven += 1;
   }
-  return reads > 0 && proven === 0 ? { sid, output } : null;
+  return proven === 0 ? { sid, output, kind: reads > 0 ? 'unproven' : 'none' } : null;
 }
 
 /** The `{ v1: …, d1: '' }` argument one step is called with. */
@@ -2837,13 +2854,17 @@ function callArgs(step: SpecStep, slots: string[], vars: Set<string>, warnings: 
       // step silently edits run 1's record (flow.ts lookupRef, `need` above).
       if (used) {
         for (const m of bound.matchAll(/\{\{([\w-]+\.[\w.#-]+)\}\}/g)) {
-          const src = unprovenSource(spec, m[1]);
+          const src = unsourcedRef(spec, m[1]);
           if (!src) continue;
+          const because =
+            src.kind === 'unproven'
+              ? `${src.sid}'s only source for ${src.output} is a read the flow export synthesized from the value the recording reported — no run has resolved it or read a value back through it.`
+              : `nothing in ${src.sid}'s procedure reads ${src.output} from the page, and no report value derives it from a parameter, so no run can publish it. The recording's own value is not a substitute: passing it would make every replay work run 1's record.`;
           diagnostics.push({
-            code: 'unproven-source',
+            code: 'unsourced-ref',
             step: step.id,
             what: `slot ${slot} is bound to {{${m[1]}}}, and nothing has ever published ${src.output}`,
-            why: `${src.sid}'s only source for ${src.output} is a read the flow export synthesized from the value the recording reported — no run has resolved it or read a value back through it. ${step.id} types or locates by ${slot}, so the artifact would stop here on every run, part-way through the flow and with everything earlier already done.`,
+            why: `${because} ${step.id} types or locates by ${slot}, so the artifact would stop here on every run, part-way through the flow and with everything earlier already done.`,
             fix: `re-record ${src.sid} so it reads ${src.output} from an element (\`sitelooper rerecord <flow file> ${src.sid}\`), or take {{${m[1]}}} out of ${step.id}'s ${slot}`,
             action: { command: 'rerecord', args: [src.sid], step: src.sid },
             severity: 'error',

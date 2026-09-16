@@ -35,7 +35,7 @@ export type DiagnosticCode =
   | 'future-contract' // the step's pinned skill was written by a newer sitelooper
   | 'unmeasured-precondition' // a segment's skill carries a page fingerprint the compiled spec cannot measure against
   | 'unsupported-capability' // the recording uses something the standalone artifact cannot carry (a tab switch, an attribute read, a position-only locator)
-  | 'unproven-source' // a slot the procedure acts on is bound to an output whose only source is a synthesized read no run has ever resolved
+  | 'unsourced-ref' // a slot the procedure acts on is bound to an output nothing can publish: no read, or only a synthesized read no run has ever resolved
   | 'recipe-snapshot' // flow-level: the component store holds state the artifact's compile-time recipe snapshot cannot express (a demoted recipe, a family with none usable, a learned variant travelling as data)
   | 'no-procedure'; // step has no converged procedure
 

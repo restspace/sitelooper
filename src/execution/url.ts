@@ -147,6 +147,25 @@ export function isWildcardSeg(seg: string): boolean {
   return seg === ':id' || seg === ':var' || /\{\{[\w.-]+\}\}/.test(seg);
 }
 
+/**
+ * A slot the run could not fill asks for no particular value. `fillParams`
+ * substitutes on `name in params`, so a slot whose value is '' becomes an
+ * empty literal, and an empty literal matches only emptiness. But '' is how
+ * an unpublished reference reaches a call site — the artifact defaults one to
+ * the empty string — so it means NEVER PUBLISHED, not "known to be empty".
+ * Everything else that reads a bound slot already says so: boundQueryKeys,
+ * markersBound, urlRecordParts, gotoLandingVerdict's `want !== ''`, and the
+ * artifact's own `need`, whose message for '' is "this run never published it".
+ *
+ * fwgr45: a step reported the word "browser", the flow threaded it into
+ * `timezone={{v5}}`, no read published it, so v5 filled to '' and the compiled
+ * arm stopped on the RIGHT dashboard — `timezone=` against `timezone=browser`
+ * — while both replays ran 7/7 at 0 turns.
+ */
+function unfilled(seg: string): boolean {
+  return seg === '';
+}
+
 /** One segment where a pattern's literal disagrees with the live url. */
 export interface UrlSegDiff {
   where: 'path' | 'query' | 'hashPath' | 'hashState';
@@ -197,7 +216,7 @@ export function urlDiff(pattern: string, url: string, boundKeys: ReadonlySet<str
       continue;
     }
     const lv = l.query.get(key)!;
-    if (!isWildcardSeg(val) && val !== lv) diffs.push({ where: 'query', key, expected: val, actual: lv });
+    if (!isWildcardSeg(val) && !unfilled(val) && val !== lv) diffs.push({ where: 'query', key, expected: val, actual: lv });
   }
   if (p.hashKind === 'path') {
     if (l.hashKind !== 'path' || p.hashPath.length !== l.hashPath.length) return null;
@@ -217,7 +236,7 @@ export function urlDiff(pattern: string, url: string, boundKeys: ReadonlySet<str
         return null;
       }
       const lv = l.hashState.get(key)!;
-      if (!isWildcardSeg(val) && val !== lv) diffs.push({ where: 'hashState', key, expected: val, actual: lv });
+      if (!isWildcardSeg(val) && !unfilled(val) && val !== lv) diffs.push({ where: 'hashState', key, expected: val, actual: lv });
     }
   } else if (l.hashKind === 'path' && l.hashPath.length) {
     return null; // pattern names no route; the live url is on one

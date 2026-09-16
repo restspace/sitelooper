@@ -1656,7 +1656,7 @@ describe('an unproven read is a candidate source, not a source (fwkb14, fwod52)'
 
   it('refuses the compile where a used slot has no other source, naming the step, the output and why', () => {
     const found = emitFlowFile(spec(synth(), [1]), { tier: 'plain' }).diagnostics;
-    expect(found.map((d) => [d.code, d.severity, d.step])).toEqual([['unproven-source', 'error', '03-verify']]);
+    expect(found.map((d) => [d.code, d.severity, d.step])).toEqual([['unsourced-ref', 'error', '03-verify']]);
     expect(found[0].what).toContain('slot v1 is bound to {{01-signin.column_3}}');
     expect(found[0].what).toContain('nothing has ever published column_3');
     expect(found[0].why).toContain('no run has resolved it');
@@ -1664,7 +1664,41 @@ describe('an unproven read is a candidate source, not a source (fwkb14, fwod52)'
   });
 
   it('refuses an EMPTY synthesized chain the same way — od52 could never have published on any page', () => {
-    expect(codes(spec(synth({ locators: { target: [] } }), [1]))).toEqual(['unproven-source']);
+    expect(codes(spec(synth({ locators: { target: [] } }), [1]))).toEqual(['unsourced-ref']);
+  });
+
+  // fwkb15 `{{02-create.task_url}}` and fwod52 `{{02-create.product_name}}`:
+  // referenced by steps that TYPE them, recorded as a report literal, read
+  // from the page by nothing at all. Asking only whether the one source was
+  // unproven shipped both artifacts to a guaranteed stop, so no read is the
+  // same refusal with one fewer read — and it must say something different,
+  // because there is no synthesized read to re-record.
+  it('refuses a used slot whose output NO read publishes, and says so in its own words', () => {
+    const found = emitFlowFile(spec(null, [1]), { tier: 'plain' }).diagnostics;
+    expect(found.map((d) => [d.code, d.severity, d.step])).toEqual([['unsourced-ref', 'error', '03-verify']]);
+    expect(found[0].why).toContain('nothing in 01-signin');
+    expect(found[0].why).not.toContain('synthesized');
+    expect(found[0].fix).toContain('01-signin');
+  });
+
+  // A report template sources the output only when the caller's own {{vN}}
+  // reaches it. od52 carried the product name as a recorded LITERAL, which
+  // republishes run 1's value and sources nothing.
+  it('does not accept a report value that is a recorded literal rather than a parameter', () => {
+    const literal = spec(null, [1]);
+    literal.steps[0].segments[0].report = { values: { column_3: 'Work in progress' } } as never;
+    expect(codes(literal)).toEqual(['unsourced-ref']);
+    const derived = spec(null, [1]);
+    derived.steps[0].segments[0].report = { values: { column_3: '{{v1}}' } } as never;
+    expect(codes(derived)).toEqual([]);
+  });
+
+  // dropDeadReadLocators can empty a RECORDED read's chain; it then publishes
+  // '' on every run and `need` treats '' as missing. A url read is exempt —
+  // it reads the landing, not an element.
+  it('does not accept a recorded read whose locators were all retired', () => {
+    expect(codes(spec(synth({ unproven: undefined, locators: { target: [] } }), [1]))).toEqual(['unsourced-ref']);
+    expect(codes(spec(synth({ unproven: undefined, locators: { target: [] }, args: { target: '@e1', what: 'url' } }), [1]))).toEqual([]);
   });
 
   it('says nothing about a reference only the WORDING quotes: the same line ignorableRefs draws', () => {

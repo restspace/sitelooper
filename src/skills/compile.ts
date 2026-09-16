@@ -1482,6 +1482,16 @@ function readLabel(step: RecordedStep, values: Record<string, unknown>): string 
   if (flat.length > 1) {
     const joined = new Set([', ', ' | ', '; ', ' ', '\n', ','].map((sep) => flat.map((f) => f.trim()).join(sep)));
     for (const [key, v] of Object.entries(values)) if (joined.has(String(v).trim())) return key;
+    // …and ONLY the joined form. A plural read publishes what flattenRead
+    // joins, so labelling it from one element names a value it will never
+    // produce. fwod53: `read_all td` over an order row matched the reported
+    // product_name on element two and took that label, so the reference
+    // filled to the whole row — " | [FURN…] | [FURN…] | 3.00 | 295.00 | 20% |
+    // £ 885.00 | " — and `- cell "{{v4}}"` could not match any cell. The step
+    // had done its work; the value was garbage. Unlabelled, the output goes
+    // unpublished and liveReadsFor synthesizes a real single-element read for
+    // it, which the unproven machinery then proves, retires or refuses.
+    return undefined;
   }
   for (const [key, v] of Object.entries(values)) {
     const s = String(v).trim();

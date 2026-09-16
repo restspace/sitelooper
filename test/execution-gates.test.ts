@@ -160,7 +160,8 @@ describe('a verdict shows what it actually compared (fwod51)', () => {
     expect(shownPattern('http://app.test/items/{{v1}}', { v1: '42' })).toBe('http://app.test/items/42');
     expect(shownPattern('http://app.test/items/{{v1}}', {})).toBe('http://app.test/items/:var');
     expect(shownPattern('http://app.test/web#id={{d3}}&cids=:id', {})).toBe('http://app.test/web#id=:id&cids=:id');
-    // A slot bound to '' is bound: the run had a value and it was empty.
+    // Display shows what fillParams did, empty included — what the MATCHER
+    // makes of an empty value is urlDiff's business, not this function's.
     expect(shownPattern('http://app.test/items/{{d1}}', { d1: '' })).toBe('http://app.test/items/');
     expect(shownPattern('http://app.test/items/:id', {})).toBe('http://app.test/items/:id');
   });
@@ -190,6 +191,21 @@ describe('a verdict shows what it actually compared (fwod51)', () => {
     // url, and now says the id it compared — the caller named that record.
     expect(urlEffectVerdict(pattern, sameShape, { d3: '99' }, 'step 3').stop).toContain('id=99');
     expect(urlEffectVerdict(pattern, 'http://app.test/web#action=330&cids=1&id=45&menu_id=109&model=sale.order&view_type=list', {}, 'step 3').stop).toBeDefined();
+  });
+
+  // fwgr45: a slot that filled to '' asked for emptiness and stopped the
+  // compiled arm on the RIGHT dashboard, while both replays ran 7/7 at 0
+  // turns. '' in the artifact is `outputs[ref] ?? ''` — never published —
+  // which is what boundQueryKeys, markersBound, urlRecordParts and need()
+  // all already say. A key the run could not fill asks for no view.
+  it('a slot that filled to nothing asks for no particular value, in query and in hash state', () => {
+    const q = 'http://app.test/d/:var/board?from=:id&timezone={{v5}}&to=now';
+    expect(urlEffectVerdict(q, 'http://app.test/d/abc/board?from=now-6h&timezone=browser&to=now', { v5: '' }, 'step 7')).toEqual({ warnings: [] });
+    // …and a slot the run DID fill is still compared.
+    expect(urlEffectVerdict(q, 'http://app.test/d/abc/board?from=now-6h&timezone=browser&to=now', { v5: 'utc' }, 'step 7').stop).toContain('timezone=utc');
+    const h = 'http://app.test/web#model=res.partner&view={{v1}}';
+    expect(urlEffectVerdict(h, 'http://app.test/web#model=res.partner&view=form', { v1: '' }, 'step 3')).toEqual({ warnings: [] });
+    expect(urlEffectVerdict(h, 'http://app.test/web#model=res.partner&view=form', { v1: 'list' }, 'step 3').stop).toBeDefined();
   });
 });
 

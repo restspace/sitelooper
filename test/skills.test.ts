@@ -405,6 +405,30 @@ describe('volatile expectations and whitespace identity (fwkb3, fwod31)', () => 
     const s = compileSkill({ entries, instruction: text, report: listReport, session: 's', model: 'm', now: '2026-09-03T00:00:00Z' })!;
     expect(s.steps[1].label).toBe('panel_titles');
   });
+
+  // …and ONLY the whole list. fwod53: a `read_all td` over an order row
+  // matched the reported product_name on ONE element and took that label, so
+  // every reference to it filled to the joined row and the step's
+  // `- cell "{{v4}}"` could not match any cell — the work was done, the value
+  // was garbage. Unlabelled, the output goes unpublished and liveReadsFor
+  // synthesizes a real single-element read the unproven machinery can judge.
+  it('leaves a list read UNLABELLED when only one element matches a report value (fwod53 02-create)', () => {
+    const text = 'Create the quotation.';
+    const entries: RecordedEntry[] = [
+      { k: 'instruction', text, url: `${ORIGIN}/orders`, fingerprint: [1, 0, 0] },
+      step('read_all', { target: 'tr.o_data_row td', what: 'text' }, [{ kind: 'css', selector: 'tr.o_data_row td' }], {
+        result: '["","[FURN_6666] Acoustic Bloc Screens","3.00","295.00","20%","£ 885.00",""]',
+      }),
+    ];
+    const rowReport = {
+      status: 'success' as const,
+      summary: 'Added a line.',
+      evidence: { values: { product_name: '[FURN_6666] Acoustic Bloc Screens' } },
+    };
+    const s = compileSkill({ entries, instruction: text, report: rowReport, session: 's', model: 'm', now: '2026-09-16T00:00:00Z' })!;
+    expect(s.steps[0].label).toBeUndefined();
+    expect(publishedOutputs(s)).not.toContain('product_name');
+  });
   it('a transient status or progress line is never a recorded effect (fwgr25 sign-in)', () => {
     const text = 'Sign in and open the board.';
     const entries: RecordedEntry[] = [
