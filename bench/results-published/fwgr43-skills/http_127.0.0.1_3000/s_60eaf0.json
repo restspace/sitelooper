@@ -1,0 +1,69 @@
+{
+ "id": "s_60eaf0",
+ "origin": "http://127.0.0.1:3000",
+ "template": "Open http://127.0.0.1:3000/ and sign in with username admin and password admin (if a 'change password' prompt appears, skip it). Then navigate to the provisioned dashboard named '{{v2}} health' and report the titles of all its panels exactly as displayed on the dashboard.",
+ "params": {
+  "v2": {
+   "example": "Service",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:3000/login"
+ },
+ "steps": [
+  {
+   "tool": "read_all",
+   "args": {
+    "target": "h2",
+    "what": "text"
+   },
+   "locators": {
+    "target": []
+   },
+   "via": {
+    "skill": "s_1b8c84",
+    "step": 1
+   }
+  },
+  {
+   "tool": "press",
+   "args": {
+    "key": "End"
+   },
+   "locators": {},
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/bench-service-health/service-health?from=:id&timezone=browser&to=now",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_1b8c84",
+    "step": 2
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-16T07:32:40.393Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_3fd055",
+  "index": 0,
+  "of": 2
+ },
+ "variantOf": "s_1b8c84",
+ "provenance": {
+  "session": "fwgr43-n3",
+  "instruction": "Open http://127.0.0.1:3000/ and sign in with username admin and password admin (if a 'change password' prompt appears, skip it). Then navigate to the provisioned dashboard named 'Service health' and report the titles of all its panels exactly as displayed on the dashboard.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-16T07:32:40.393Z"
+ },
+ "revision": 1
+}

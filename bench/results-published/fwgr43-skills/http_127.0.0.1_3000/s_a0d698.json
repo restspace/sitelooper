@@ -1,0 +1,251 @@
+{
+ "id": "s_a0d698",
+ "origin": "http://127.0.0.1:3000",
+ "template": "Open http://127.0.0.1:3000/ and sign in with username admin and password admin (if a 'change password' prompt appears, skip it). Then navigate to the provisioned dashboard named '{{v2}} health' and report the titles of all its panels exactly as displayed on the dashboard.",
+ "params": {
+  "v2": {
+   "example": "Service",
+   "usedIn": [
+    3
+   ]
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:3000/d/bench-service-health/service-health?from=:id&timezone=browser&to=now"
+ },
+ "steps": [
+  {
+   "tool": "read_all",
+   "args": {
+    "target": "h2",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "h2"
+     }
+    ]
+   },
+   "label": "panel_titles"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "dashboard_folder",
+    "target": "@e160",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] a"
+     },
+     {
+      "kind": "css",
+      "selector": "header > div:nth-of-type(2) > nav > ol > li:nth-of-type(3) > a"
+     },
+     {
+      "kind": "point",
+      "x": 246,
+      "y": 60,
+      "w": 42.6,
+      "h": 22,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "dashboard_folder"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "dashboard_title",
+    "target": "@e165",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid {{v2}} Health breadcrumb"
+     },
+     {
+      "kind": "text",
+      "text": "{{v2}} Health"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] span"
+     },
+     {
+      "kind": "css",
+      "selector": "header > div:nth-of-type(2) > nav > ol > li:nth-of-type(4) > span"
+     },
+     {
+      "kind": "point",
+      "x": 341,
+      "y": 60,
+      "w": 99.1,
+      "h": 22,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "dashboard_title"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "address_bar_url",
+    "what": "url"
+   },
+   "locators": {},
+   "label": "address_bar_url"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"header-container\"] h2",
+      "nth": 0
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > section > div:nth-of-type(2) > div:nth-of-type(1) > h2",
+      "nth": 0
+     },
+     {
+      "kind": "point",
+      "x": 68,
+      "y": 165,
+      "w": 86.4,
+      "h": 22,
+      "role": "heading",
+      "tag": "h2",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "h2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"header-container\"] h2",
+      "nth": 1
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > section > div:nth-of-type(2) > div:nth-of-type(1) > h2",
+      "nth": 1
+     },
+     {
+      "kind": "point",
+      "x": 691,
+      "y": 165,
+      "w": 76.6,
+      "h": 22,
+      "role": "heading",
+      "tag": "h2",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "h2_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"header-container\"] h2",
+      "nth": 2
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > section > div:nth-of-type(2) > div:nth-of-type(1) > h2",
+      "nth": 2
+     },
+     {
+      "kind": "point",
+      "x": 1036,
+      "y": 165,
+      "w": 138.9,
+      "h": 22,
+      "role": "heading",
+      "tag": "h2",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "h2_3"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Signed in as admin (done in earlier replayed segments) and confirmed the browser is on the provisioned dashboard \"{{v2}} Health\" (UID bench-service-health) in folder \"Bench\". The procedure had already halted at the point of the panel-title read, so I verified the live page read-only: the dashboard renders exactly three panels, headed \"Request rate\", \"Error count\" and \"Latency by endpoint\", each with a matching panel menu button. No changes were made.",
+  "values": {
+   "panel_titles": "Request rate, Error count, Latency by endpoint",
+   "dashboard_folder": "Bench",
+   "dashboard_title": "{{v2}} Health",
+   "address_bar_url": "http://127.0.0.1:3000/d/bench-service-health/service-health?from=now-6h&to=now&timezone=browser",
+   "h2": "Request rate",
+   "h2_2": "Error count",
+   "h2_3": "Latency by endpoint"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-16T07:32:40.393Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_3fd055",
+  "index": 1,
+  "of": 2
+ },
+ "variantOf": "s_1b8c84",
+ "provenance": {
+  "session": "fwgr43-n3",
+  "instruction": "Open http://127.0.0.1:3000/ and sign in with username admin and password admin (if a 'change password' prompt appears, skip it). Then navigate to the provisioned dashboard named 'Service health' and report the titles of all its panels exactly as displayed on the dashboard.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-16T07:32:40.393Z"
+ },
+ "revision": 1
+}

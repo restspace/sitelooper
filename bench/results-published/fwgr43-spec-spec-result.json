@@ -1,0 +1,34 @@
+{
+  "arm": "spec",
+  "runid": "fwgr43-spec",
+  "target": "grafana",
+  "flow": "fwgr43.json",
+  "flowName": "fwgr43",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwgr43-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwgr43-spec-spec-tmp/fwgr43.flow.ts",
+  "specFile": "bench/results/fwgr43-spec-spec-tmp/fwgr43.spec.ts",
+  "wallMs": 14613,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwgr43",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 11530,
+      "error": "Error: none of 1 recorded locators resolved at 01-open s_1b8c84/3 target (page is at http://127.0.0.1:3000/d/bench-service-health/service-health?from=now-6h&to=now&timezone=browser): locator('h2')",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "logTail": "\nRunning 1 test using 1 worker\n\n  ✘  1 fwgr43.spec.ts:9:1 › fwgr43 (11.5s)\n\n\n  1) fwgr43.spec.ts:9:1 › fwgr43 › 01-open: Open http://127.0.0.1:3000/ and sign in with username admin and password admin (if a 'change password' prompt appears, skip it). Then navigate to the provisioned dashboard named 'Service health' and report the titles of all its panels exactly as displayed on the dashboard. \n\n    Error: none of 1 recorded locators resolved at 01-open s_1b8c84/3 target (page is at http://127.0.0.1:3000/d/bench-service-health/service-health?from=now-6h&to=now&timezone=browser): locator('h2')\n\n       at fwgr43.flow.ts:10665\n\n      10663 | /** The stop for a chain that resolved nothing, shared by `pick` and `pickOrNavigate`. */\n      10664 | function pickMiss(page: Page, candidates: CandidateObservation[], where: string, note?: string): Error {\n    > 10665 |   return new Error(\n            |          ^\n      10666 |     // The url and the recorded step are half the answer whenever a chain\n      10667 |     // misses wholesale: a locator that named the control on the day it was\n      10668 |     // recorded usually misses because the page is not the page the step\n        at pickMiss (/home/user/sitelooper/bench/results/fwgr43-spec-spec-tmp/fwgr43.flow.ts:10665:10)\n        at pick (/home/user/sitelooper/bench/results/fwgr43-spec-spec-tmp/fwgr43.flow.ts:10660:9)\n        at Object.act (/home/user/sitelooper/bench/results/fwgr43-spec-spec-tmp/fwgr43.flow.ts:11453:22)\n        at runStepLifecycle (/home/user/sitelooper/bench/results/fwgr43-spec-spec-tmp/fwgr43.flow.ts:8468:18)\n        at Object.01-open (/home/user/sitelooper/bench/results/fwgr43-spec-spec-tmp/fwgr43.flow.ts:11442:5)\n        at /home/user/sitelooper/bench/results/fwgr43-spec-spec-tmp/fwgr43.flow.ts:15870:7\n        at runFlow (/home/user/sitelooper/bench/results/fwgr43-spec-spec-tmp/fwgr43.flow.ts:15869:5)\n        at /home/user/sitelooper/bench/results/fwgr43-spec-spec-tmp/fwgr43.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: ../../../test-results/fwgr43-fwgr43/error-context.md\n\n  1 failed\n    fwgr43.spec.ts:9:1 › fwgr43 ────────────────────────────────────────────────────────────────────\n"
+}

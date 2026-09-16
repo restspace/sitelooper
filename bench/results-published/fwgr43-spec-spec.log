@@ -1,0 +1,36 @@
+
+Running 1 test using 1 worker
+
+  ✘  1 fwgr43.spec.ts:9:1 › fwgr43 (11.5s)
+
+
+  1) fwgr43.spec.ts:9:1 › fwgr43 › 01-open: Open http://127.0.0.1:3000/ and sign in with username admin and password admin (if a 'change password' prompt appears, skip it). Then navigate to the provisioned dashboard named 'Service health' and report the titles of all its panels exactly as displayed on the dashboard. 
+
+    Error: none of 1 recorded locators resolved at 01-open s_1b8c84/3 target (page is at http://127.0.0.1:3000/d/bench-service-health/service-health?from=now-6h&to=now&timezone=browser): locator('h2')
+
+       at fwgr43.flow.ts:10665
+
+      10663 | /** The stop for a chain that resolved nothing, shared by `pick` and `pickOrNavigate`. */
+      10664 | function pickMiss(page: Page, candidates: CandidateObservation[], where: string, note?: string): Error {
+    > 10665 |   return new Error(
+            |          ^
+      10666 |     // The url and the recorded step are half the answer whenever a chain
+      10667 |     // misses wholesale: a locator that named the control on the day it was
+      10668 |     // recorded usually misses because the page is not the page the step
+        at pickMiss (/home/user/sitelooper/bench/results/fwgr43-spec-spec-tmp/fwgr43.flow.ts:10665:10)
+        at pick (/home/user/sitelooper/bench/results/fwgr43-spec-spec-tmp/fwgr43.flow.ts:10660:9)
+        at Object.act (/home/user/sitelooper/bench/results/fwgr43-spec-spec-tmp/fwgr43.flow.ts:11453:22)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwgr43-spec-spec-tmp/fwgr43.flow.ts:8468:18)
+        at Object.01-open (/home/user/sitelooper/bench/results/fwgr43-spec-spec-tmp/fwgr43.flow.ts:11442:5)
+        at /home/user/sitelooper/bench/results/fwgr43-spec-spec-tmp/fwgr43.flow.ts:15870:7
+        at runFlow (/home/user/sitelooper/bench/results/fwgr43-spec-spec-tmp/fwgr43.flow.ts:15869:5)
+        at /home/user/sitelooper/bench/results/fwgr43-spec-spec-tmp/fwgr43.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../test-results/fwgr43-fwgr43/error-context.md
+
+  1 failed
+    fwgr43.spec.ts:9:1 › fwgr43 ────────────────────────────────────────────────────────────────────
