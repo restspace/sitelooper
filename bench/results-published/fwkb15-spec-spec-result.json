@@ -1,0 +1,34 @@
+{
+  "arm": "spec",
+  "runid": "fwkb15-spec",
+  "target": "kanboard",
+  "flow": "fwkb15.json",
+  "flowName": "fwkb15",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwkb15-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwkb15-spec-spec-tmp/fwkb15.flow.ts",
+  "specFile": "bench/results/fwkb15-spec-spec-tmp/fwkb15.spec.ts",
+  "wallMs": 11305,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwkb15",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 8610,
+      "error": "Error: 04-open needs {{02-create.task_url}}, and this run never published it. The step that publishes 02-create.task_url read nothing — look above for its `[sitelooper skip] … read target not found` line, which is where this run diverged. Stopping here instead of passing an empty value into 04-open: blank, a record-scoped locator matches every record and a known slot loses its identity, so the step would do its work to the wrong one. Everything earlier steps did stands; nothing of 04-open has run.",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "logTail": "\nRunning 1 test using 1 worker\n\n[sitelooper step] 01-open\n[sitelooper step] 02-create\n[sitelooper step] 03-verify\n  ✘  1 fwkb15.spec.ts:9:1 › fwkb15 (8.6s)\n\n\n  1) fwkb15.spec.ts:9:1 › fwkb15 › 04-open: Open the task page for task #4 titled '{{runid}} Bench Task' ({{02-create.task_url}}) and add a comment whose text includes '{{runid}}' (e.g. 'Comment for run {{runid}}'). Use the comments section / 'Add a comment' form on the task page. Submit and verify the comment appears on the task page, then report the exact comment text shown. \n\n    Error: 04-open needs {{02-create.task_url}}, and this run never published it. The step that publishes 02-create.task_url read nothing — look above for its `[sitelooper skip] … read target not found` line, which is where this run diverged. Stopping here instead of passing an empty value into 04-open: blank, a record-scoped locator matches every record and a known slot loses its identity, so the step would do its work to the wrong one. Everything earlier steps did stands; nothing of 04-open has run.\n\n       at fwkb15.flow.ts:7563\n\n      7561 |   const value = outputs[ref as keyof Outputs];\n      7562 |   if (value === undefined || value === '') {\n    > 7563 |     throw new Error(\n           |           ^\n      7564 |       `${by} needs {{${ref}}}, and this run never published it` +\n      7565 |         (value === '' ? ' (it was published empty)' : '') +\n      7566 |         `. The step that publishes ${ref} read nothing — look above for its` +\n        at need (/home/user/sitelooper/bench/results/fwkb15-spec-spec-tmp/fwkb15.flow.ts:7563:11)\n        at /home/user/sitelooper/bench/results/fwkb15-spec-spec-tmp/fwkb15.flow.ts:9397:90\n        at runFlow (/home/user/sitelooper/bench/results/fwkb15-spec-spec-tmp/fwkb15.flow.ts:9396:5)\n        at /home/user/sitelooper/bench/results/fwkb15-spec-spec-tmp/fwkb15.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: ../../../test-results/fwkb15-fwkb15/error-context.md\n\n  1 failed\n    fwkb15.spec.ts:9:1 › fwkb15 ────────────────────────────────────────────────────────────────────\n[sitelooper skip] 01-open s_1ad16f/10 target: no locator recorded — value left empty\n[sitelooper skip] 01-open s_1ad16f/11 target: no locator recorded — value left empty\n[sitelooper warn] 02-create s_765f48/8: read 'task_title' returned a value the skill itself set/selected ('fwkb15-spec Bench Task') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper skip] 02-create s_765f48/9 target: no locator recorded — value left empty\n[sitelooper warn] 03-verify s_4b8dfe/3: read 'task_title' returned a value the skill itself set/selected ('fwkb15-spec Bench Task') — confirms the control, not persistence; dropped from the report's confident values\n"
+}

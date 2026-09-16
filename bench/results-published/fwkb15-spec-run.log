@@ -1,0 +1,14 @@
+[spec-replay] resetting kanboard
+[reset] kanboard: deleted 1 leftover bench task(s)
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile bench/results/flows/fwkb15.json --out /home/user/sitelooper/bench/results/fwkb15-spec-spec-tmp --overwrite-spec
+flow: /home/user/sitelooper/bench/results/fwkb15-spec-spec-tmp/fwkb15.flow.ts
+spec: /home/user/sitelooper/bench/results/fwkb15-spec-spec-tmp/fwkb15.spec.ts
+warning 03-verify: 03-verify changed nothing when it was recorded, though its instruction asks for a change
+  why: 03-verify changed nothing: its instruction asks to move, the recording's 1 state-changing action left the page unchanged, and the page already showed 'fwkb15-n1 Bench Task' before it ran. The step may be redundant.
+  fix: sitelooper rerecord bench/results/flows/fwkb15.json 03-verify
+
+  warning: 01-open: step 10 (read column_3) has no locator left — it publishes nothing, as replay skips it
+  warning: 01-open: step 11 (read column_4) has no locator left — it publishes nothing, as replay skips it
+  warning: 02-create: step 9 (read column) has no locator left — it publishes nothing, as replay skips it
+[spec-replay] running: npx playwright test --config /home/user/sitelooper/bench/results/fwkb15-spec-spec-tmp/playwright.config.mjs
+[spec-replay] fwkb15-spec: 0/1 passed, exit=1, 11s, 0 drift line(s) — result written

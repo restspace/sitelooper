@@ -1,0 +1,40 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-open
+[sitelooper step] 02-create
+[sitelooper step] 03-verify
+  ✘  1 fwkb15.spec.ts:9:1 › fwkb15 (8.6s)
+
+
+  1) fwkb15.spec.ts:9:1 › fwkb15 › 04-open: Open the task page for task #4 titled '{{runid}} Bench Task' ({{02-create.task_url}}) and add a comment whose text includes '{{runid}}' (e.g. 'Comment for run {{runid}}'). Use the comments section / 'Add a comment' form on the task page. Submit and verify the comment appears on the task page, then report the exact comment text shown. 
+
+    Error: 04-open needs {{02-create.task_url}}, and this run never published it. The step that publishes 02-create.task_url read nothing — look above for its `[sitelooper skip] … read target not found` line, which is where this run diverged. Stopping here instead of passing an empty value into 04-open: blank, a record-scoped locator matches every record and a known slot loses its identity, so the step would do its work to the wrong one. Everything earlier steps did stands; nothing of 04-open has run.
+
+       at fwkb15.flow.ts:7563
+
+      7561 |   const value = outputs[ref as keyof Outputs];
+      7562 |   if (value === undefined || value === '') {
+    > 7563 |     throw new Error(
+           |           ^
+      7564 |       `${by} needs {{${ref}}}, and this run never published it` +
+      7565 |         (value === '' ? ' (it was published empty)' : '') +
+      7566 |         `. The step that publishes ${ref} read nothing — look above for its` +
+        at need (/home/user/sitelooper/bench/results/fwkb15-spec-spec-tmp/fwkb15.flow.ts:7563:11)
+        at /home/user/sitelooper/bench/results/fwkb15-spec-spec-tmp/fwkb15.flow.ts:9397:90
+        at runFlow (/home/user/sitelooper/bench/results/fwkb15-spec-spec-tmp/fwkb15.flow.ts:9396:5)
+        at /home/user/sitelooper/bench/results/fwkb15-spec-spec-tmp/fwkb15.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../test-results/fwkb15-fwkb15/error-context.md
+
+  1 failed
+    fwkb15.spec.ts:9:1 › fwkb15 ────────────────────────────────────────────────────────────────────
+[sitelooper skip] 01-open s_1ad16f/10 target: no locator recorded — value left empty
+[sitelooper skip] 01-open s_1ad16f/11 target: no locator recorded — value left empty
+[sitelooper warn] 02-create s_765f48/8: read 'task_title' returned a value the skill itself set/selected ('fwkb15-spec Bench Task') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper skip] 02-create s_765f48/9 target: no locator recorded — value left empty
+[sitelooper warn] 03-verify s_4b8dfe/3: read 'task_title' returned a value the skill itself set/selected ('fwkb15-spec Bench Task') — confirms the control, not persistence; dropped from the report's confident values
