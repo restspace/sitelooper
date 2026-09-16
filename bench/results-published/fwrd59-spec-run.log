@@ -1,0 +1,14 @@
+[spec-replay] resetting repairdesk
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile bench/results/flows/fwrd59.json --out /home/user/sitelooper/bench/results/fwrd59-spec-spec-tmp --overwrite-spec
+flow: /home/user/sitelooper/bench/results/fwrd59-spec-spec-tmp/fwrd59.flow.ts
+spec: /home/user/sitelooper/bench/results/fwrd59-spec-spec-tmp/fwrd59.spec.ts
+warning 05-report: 05-report read a value that contradicts what the previous step reported
+  why: 05-report read final_status "Ready" right after 04-edit reported "Draft"; 04-edit's change may not have landed and a later step may be retrying it. Re-record 04-edit.
+  fix: sitelooper rerecord bench/results/flows/fwrd59.json 04-edit
+
+  warning: 02-add: step 18 (read parts_total_row) has no locator left — it publishes nothing, as replay skips it
+  warning: 03-add: step 18 (read parts_total_row) has no locator left — it publishes nothing, as replay skips it
+  warning: 04-edit: step 14 (read updated_total) has no locator left — it publishes nothing, as replay skips it
+[spec-replay] running: npx playwright test --config /home/user/sitelooper/bench/results/fwrd59-spec-spec-tmp/playwright.config.mjs
+[spec-replay] fwrd59-spec: 0/1 passed, exit=1, 16s, 0 drift line(s) — result written

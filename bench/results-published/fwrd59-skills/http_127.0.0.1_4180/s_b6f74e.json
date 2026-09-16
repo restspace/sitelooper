@@ -1,0 +1,219 @@
+{
+ "id": "s_b6f74e",
+ "origin": "http://127.0.0.1:4180",
+ "template": "Open http://127.0.0.1:4180/ and sign in with email bench@example.com and password bench-pass-1234. Then create a new ticket titled exactly '{{v1}}', filling in any required fields the form demands (discover what they are). Submit it and wait for the list/detail view to refresh and show the new ticket. Report the ticket's title, its status, and any other fields shown on its detail page.",
+ "params": {
+  "v1": {
+   "example": "fwrd59-n3 RD Bench Ticket",
+   "usedIn": [
+    1
+   ],
+   "known": true,
+   "binding": "output:i1:ticket_title"
+  },
+  "v2": {
+   "example": "fwrd59-n3",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:4180/#/tickets"
+ },
+ "steps": [
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e170",
+    "value": "{{v1}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "field-title"
+     },
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Title *"
+     },
+     {
+      "kind": "label",
+      "label": "Title *"
+     },
+     {
+      "kind": "id",
+      "selector": "#f-title"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"form-dialog\"] input"
+     },
+     {
+      "kind": "css",
+      "selector": "#f-title"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 405,
+      "w": 478,
+      "h": 39,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "addedContains": [
+     "- textbox \"Title *\": {{v1}}"
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_22630a",
+    "step": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e178"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "modal-save"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Create ticket"
+     },
+     {
+      "kind": "id",
+      "selector": "#modal-save"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"form-dialog\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "#modal-save"
+     },
+     {
+      "kind": "point",
+      "x": 825,
+      "y": 602,
+      "w": 108.6,
+      "h": 39,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_22630a",
+    "step": 3
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "table tbody tr:first-child a"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#ticket-rows > tr:nth-of-type(1) > td:nth-of-type(1) > a"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"ticket-row-t14\"] a"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "ticket-link-t14"
+     },
+     {
+      "kind": "point",
+      "x": 152,
+      "y": 471,
+      "w": 54.6,
+      "h": 15,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "mints": {
+    "at": "h1"
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets/{{d1}}",
+    "addedContains": [
+     "- heading \"Under-counter fridge door misaligned\"",
+     "- button \"Mark Ready\"",
+     "- button \"Archive ticket\"",
+     "- heading \"Parts\"",
+     "- button \"Add part\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_22630a",
+    "step": 4
+   }
+  }
+ ],
+ "derived": {
+  "d1": {
+   "step": 3,
+   "at": "h1",
+   "example": "t14"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-16T10:09:28.992Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_4b02e2",
+  "index": 1,
+  "of": 7
+ },
+ "variantOf": "s_22630a",
+ "provenance": {
+  "session": "fwrd59-n3",
+  "instruction": "Open http://127.0.0.1:4180/ and sign in with email bench@example.com and password bench-pass-1234. Then create a new ticket titled exactly 'fwrd59-n3 RD Bench Ticket', filling in any required fields the form demands (discover what they are). Submit it and wait for the list/detail view to refresh and show the new ticket. Report the ticket's title, its status, and any other fields shown on its detail page.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-16T10:09:28.992Z"
+ },
+ "revision": 1
+}

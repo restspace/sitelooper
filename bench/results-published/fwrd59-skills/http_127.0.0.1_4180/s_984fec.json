@@ -1,0 +1,98 @@
+{
+ "id": "s_984fec",
+ "origin": "http://127.0.0.1:4180",
+ "template": "Open http://127.0.0.1:4180/ and sign in with email bench@example.com and password bench-pass-1234. Then create a new ticket titled exactly '{{v1}}', filling in any required fields the form demands (discover what they are). Submit it and wait for the list/detail view to refresh and show the new ticket. Report the ticket's title, its status, and any other fields shown on its detail page.",
+ "params": {
+  "v1": {
+   "example": "fwrd59-n3 RD Bench Ticket",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i1:ticket_title"
+  },
+  "v2": {
+   "example": "fwrd59-n3",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:4180/#/login"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e39"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "new-ticket"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "New ticket"
+     },
+     {
+      "kind": "css",
+      "selector": "#view > div > div:nth-of-type(2) > button"
+     },
+     {
+      "kind": "point",
+      "x": 1129,
+      "y": 110,
+      "w": 94.6,
+      "h": 39,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "addedContains": [
+     "- dialog \"New ticket\"",
+     "- heading \"New ticket\"",
+     "- textbox \"Title *\"",
+     "- textbox \"Customer\"",
+     "- button \"Cancel\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_22630a",
+    "step": 1
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-16T10:09:28.992Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_4b02e2",
+  "index": 0,
+  "of": 7
+ },
+ "variantOf": "s_22630a",
+ "provenance": {
+  "session": "fwrd59-n3",
+  "instruction": "Open http://127.0.0.1:4180/ and sign in with email bench@example.com and password bench-pass-1234. Then create a new ticket titled exactly 'fwrd59-n3 RD Bench Ticket', filling in any required fields the form demands (discover what they are). Submit it and wait for the list/detail view to refresh and show the new ticket. Report the ticket's title, its status, and any other fields shown on its detail page.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-16T10:09:28.992Z"
+ },
+ "revision": 1
+}

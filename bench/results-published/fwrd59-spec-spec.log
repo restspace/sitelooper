@@ -1,0 +1,44 @@
+
+Running 1 test using 1 worker
+
+  ✘  1 fwrd59.spec.ts:9:1 › fwrd59 (12.9s)
+
+
+  1) fwrd59.spec.ts:9:1 › fwrd59 › 01-open: Open http://127.0.0.1:4180/ and sign in with email bench@example.com and password bench-pass-1234. Then create a new ticket titled exactly '{{runid}} RD Bench Ticket', filling in any required fields the form demands (discover what they are). Submit it and wait for the list/detail view to refresh and show the new ticket. Report the ticket's title, its status, and any other fields shown on its detail page. 
+
+    Error: 01-open s_22630a/4: the recorded page change did not appear
+
+    01-open s_22630a/4: the recorded page change did not appear
+
+    expect(received).toBeNull()
+
+    Received: "after step 01-open s_22630a/4 the page did not show \"- heading \\\"fwrd59-spec RD Bench Ticket\\\"\" as it did when recorded — the step ran but probably acted on the wrong element"
+
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+
+       at fwrd59.flow.ts:10523
+
+      10521 |       { timeout: EXPECT_WAIT_MS, message: `${ctx.tag}: the recorded page change did not appear` },
+      10522 |     )
+    > 10523 |     .toBeNull();
+            |      ^
+      10524 |   for (const warning of last.warnings) console.warn(`[sitelooper warn] ${warning}`);
+      10525 |   if (last.unobserved) console.warn(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);
+      10526 |   return last;
+        at expectChanges (/home/user/sitelooper/bench/results/fwrd59-spec-spec-tmp/fwrd59.flow.ts:10523:6)
+        at Object.verify (/home/user/sitelooper/bench/results/fwrd59-spec-spec-tmp/fwrd59.flow.ts:10979:32)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwrd59-spec-spec-tmp/fwrd59.flow.ts:8009:24)
+        at Object.01-open (/home/user/sitelooper/bench/results/fwrd59-spec-spec-tmp/fwrd59.flow.ts:10935:5)
+        at /home/user/sitelooper/bench/results/fwrd59-spec-spec-tmp/fwrd59.flow.ts:14478:7
+        at runFlow (/home/user/sitelooper/bench/results/fwrd59-spec-spec-tmp/fwrd59.flow.ts:14477:5)
+        at /home/user/sitelooper/bench/results/fwrd59-spec-spec-tmp/fwrd59.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../test-results/fwrd59-fwrd59/error-context.md
+
+  1 failed
+    fwrd59.spec.ts:9:1 › fwrd59 ────────────────────────────────────────────────────────────────────
