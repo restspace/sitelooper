@@ -1,0 +1,11 @@
+error 03-open: slot v3 is bound to {{01-signin.column_header_work_in_progress}}, and nothing has ever published column_header_work_in_progress
+  why: 01-signin's only source for column_header_work_in_progress is a read the flow export synthesized from the value the recording reported — no run has resolved it or read a value back through it. 03-open types or locates by v3, so the artifact would stop here on every run, part-way through the flow and with everything earlier already done.
+  fix: re-record 01-signin so it reads column_header_work_in_progress from an element (`sitelooper rerecord <flow file> 01-signin`), or take {{01-signin.column_header_work_in_progress}} out of 03-open's v3
+
+nothing written: the error(s) above are about the RECORDING, not the app — a compiled spec would fail at a locator and read as drift.
+re-record the step(s) with the fix command above.
+  warning: 01-signin: step 6 (read column_header_work_in_progress) has no locator left — it publishes nothing, as replay skips it
+  warning: 01-signin: step 7 (read column_header_ready) has no locator left — it publishes nothing, as replay skips it
+  warning: 01-signin: step 8 (read column_header_done) has no locator left — it publishes nothing, as replay skips it
+  warning: 03-open: step 8 (read move_form_first_column_option) has no locator left — it publishes nothing, as replay skips it
+sitelooper: refused: unsourced-ref — see the diagnostics above
