@@ -1,0 +1,117 @@
+
+[sweep] run 1/3: fwod52-n1 (store: /home/user/sitelooper/bench/results/fwod52-skills)
+[harness] odoo: defaulting APP_URL
+[harness] odoo: defaulting APP_EMAIL
+[harness] odoo: defaulting APP_PASSWORD
+[reset] odoo: no leftover bench customers
+[harness] odoo responded 303 at http://127.0.0.1:8069/
+stopped: fwod52-n1
+  flow "fwod52" saved: 6 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwod52.json
+  warning: note: dropped 2 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: note: 8 goal/report value(s) carrying a value this run made were slotted or dropped:
+  s_362d71.reportTemplate.values.customer dropped (recorded literal of a value this run made)
+  s_a9ecb1.reportTemplate.values.order_id dropped (recorded literal of a value this run made)
+  s_a9ecb1.reportTemplate.values.quotation_url dropped (recorded literal of a value this run made)
+  s_b550aa.reportTemplate.values.order_id dropped (recorded literal of a value this run made)
+  s_b550aa.reportTemplate.values.order_url dropped (recorded literal of a value this run made)
+  s_df2298.reportTemplate.values.record_id dropped (recorded literal of a value this run made)
+  s_df2298.reportTemplate.values.record_url dropped (recorded literal of a value this run made)
+  s_df2298.reportTemplate.summary dropped (narrates a value this run made)
+  warning: note: 01-open no longer publishes record_id, model — no replay reads them from the page and the recording showed no line to read
+  warning: note: 02-create no longer publishes order_id, quotation_status, taxes, untaxed_amount, model, ref_2 — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-open no longer publishes line1_product, line2_variant_selected, status, ref_2 — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-open no longer publishes status — no replay reads it from the page and the recording showed no line to read
+  warning: note: 05-open no longer publishes statusbar_stages, confirm_button_present, order_id, statusbar_quotation_stage — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-open no longer publishes statusbar_stages, statusbar_cancelled_radio_state, statusbar_quotation_stage — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-open: added a read for taxes to s_362d71 (page.getByRole('row', { name: 'TAX 20% £ 308.20', exact: true }); seen on the next instruction's start page)
+  warning: warning: 285 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "Benchville" (output) in "Open http://127.0.0.1:8069/ and sign in with username admin and password admin. Then create a new customer contact named exactly '{{runid}} Bench Customer' with"
+  flow.steps[0].params.v4: "Benchville" (output) in "Benchville"
+  flow.steps[0].route: "res.partner" (output) in "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=res.partner&view_type=form"
+  flow.steps[1].route: "sale.order" (output) in "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form"
+  flow.steps[2].route: "sale.order" (output) in "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form"
+  warning: {{02-create.product_name}} (used by 04-open) can only be re-observed by model recovery — consider re-recording so the value is read from the page.
+  warning: 02-create reports product_name, but s_445ef6 re-reads none of it from the page — a replay without the model will succeed without that value; re-record so it is read.
+arm=sitelooper model=z-ai/glm-5.3 runid=fwod52-n1 stop=completed
+turns=7 wall=394.5s
+commands=6 cmdTime=350.1s cmdBytes=7691 timeouts=0
+orchestrator in=7426 cw=0 cr=21504 out=2308
+inner prompt=2142762 cached=1986048 completion=25478
+spend=$0.0709 maxUsd=3
+learn: A_n=0 replayed=0/6 full=0 repaired=0 compiled=6 variants=0
+-> /home/user/sitelooper/bench/results/fwod52-n1-sitelooper-result.json
+
+fwod52-n1: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00021
+
+[sweep] run 2/3: fwod52-n2 (replay flow fwod52, no orchestrator)
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+[sweep] fwod52-n2: 1 drift ticket(s) → fwod52-n2-drift.json
+
+fwod52-n2: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00022
+
+[sweep] run 3/3: fwod52-n3 (replay flow fwod52, no orchestrator)
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+[sweep] fwod52-n3: 1 drift ticket(s) → fwod52-n3-drift.json
+
+fwod52-n3: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00023
+
+Learning sweep fwod52 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwod52-n1' │ '6/6'    │ 'completed' │ 7     │ 6    │ 0.0709    │ 0    │ '0/6'        │ 395    │
+│ 1       │ 2 │ 'fwod52-n2' │ '6/6'    │ 'success'   │ 5     │ 6    │ 0.0026    │ 0.83 │ '6/6 (flow)' │ 82     │
+│ 2       │ 3 │ 'fwod52-n3' │ '6/6'    │ 'success'   │ 7     │ 6    │ 0.0045    │ 0.83 │ '6/6 (flow)' │ 90     │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8069
+  s_07bd20  validated    1 steps  3/3 (100%)
+           Open {{v2}} and sign in with username admin and password admin. Then create a new customer contact named exact…
+  s_362d71  validated   21 steps  3/3 (100%)
+           Open the existing draft quotation {{v1}} in the Sales app. Change the FIRST order line's quantity from 3 to 5 …
+  s_43988a  validated   23 steps  3/3 (100%)
+           Open the existing draft quotation {{v1}} (for customer {{v2}}) in the Sales app. Add a SECOND order line: a pr…
+  s_445ef6  validated    2 steps  3/3 (100%)
+           In the Sales app, create a new quotation for the customer '{{v1}}' (choose the customer from the autocomplete …
+  s_614bf3  validated    3 steps  3/3 (100%)
+           Open {{v2}} and sign in with username admin and password admin. Then create a new customer contact named exact…
+  s_73d524  validated    7 steps  3/3 (100%)
+           In the Sales app, create a new quotation for the customer '{{v1}}' (choose the customer from the autocomplete …
+  s_93ceda  validated    3 steps  3/3 (100%)
+           Open {{v2}} and sign in with username admin and password admin. Then create a new customer contact named exact…
+  s_a47071  validated    2 steps  3/3 (100%)
+           Open {{v2}} and sign in with username admin and password admin. Then create a new customer contact named exact…
+  s_a9ecb1  validated   17 steps  3/3 (100%)
+           In the Sales app, create a new quotation for the customer '{{v1}}' (choose the customer from the autocomplete …
+  s_b550aa  validated    9 steps  3/3 (100%)
+           Open the draft quotation {{v1}} in the Sales app and confirm it so it becomes a sales order (click the Confirm…
+  s_bfc0cb  validated    1 steps  3/3 (100%)
+           Open {{v2}} and sign in with username admin and password admin. Then create a new customer contact named exact…
+  s_c65830  validated   15 steps  3/3 (100%)
+           Open the confirmed sales order {{v1}} in the Sales app and cancel it (use the Cancel action from the order's m…
+  s_cf25b0  validated    1 steps  3/3 (100%)
+           In the Sales app, create a new quotation for the customer '{{v1}}' (choose the customer from the autocomplete …
+  s_df2298  validated    3 steps  3/3 (100%)
+           Open {{v2}} and sign in with username admin and password admin. Then create a new customer contact named exact…
+store: /home/user/sitelooper/bench/results/fwod52-skills
+
+summary: /home/user/sitelooper/bench/results/fwod52-sweep.json

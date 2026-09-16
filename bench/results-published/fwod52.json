@@ -1,0 +1,586 @@
+{
+  "name": "fwod52",
+  "origin": "http://127.0.0.1:8069",
+  "startUrl": "http://127.0.0.1:8069/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-open",
+      "instruction": "Open http://127.0.0.1:8069/ and sign in with username admin and password admin. Then create a new customer contact named exactly '{{runid}} Bench Customer' with the City field set to 'Benchville' (use the Contacts app or Sales > Customers > New). Save it and report the contact's name and city exactly as shown on the saved record page.",
+      "skill": "s_07bd20",
+      "params": {
+        "v2": "http://127.0.0.1:8069/",
+        "v3": "{{runid}} Bench Customer",
+        "v4": "Benchville",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "contact_name",
+        "contact_city",
+        "screenshot",
+        "record_url",
+        "ref"
+      ],
+      "recorded": {
+        "contact_name": "fwod52-n1 Bench Customer",
+        "contact_city": "Benchville",
+        "record_id": "44",
+        "model": "res.partner",
+        "screenshot": "/home/user/sitelooper/saved_contact.png",
+        "record_url": "http://127.0.0.1:8069/web#cids=1&menu_id=109&action=156&model=res.partner&view_type=form&id=44",
+        "ref": "fwod52-n1",
+        "url": "http://127.0.0.1:8069/web#cids=1&menu_id=109&action=156&model=res.partner&view_type=form&id=44",
+        "url.q.menu_id": "109",
+        "url.q.action": "156",
+        "url.q.id": "44"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=res.partner&view_type=form",
+      "outputEvidence": {
+        "contact_name": {
+          "same": 0,
+          "differed": 2
+        },
+        "contact_city": {
+          "same": 2,
+          "differed": 0
+        },
+        "record_url": {
+          "same": 0,
+          "differed": 2
+        },
+        "ref": {
+          "same": 0,
+          "differed": 2
+        },
+        "url": {
+          "same": 0,
+          "differed": 2
+        },
+        "url.q.menu_id": {
+          "same": 2,
+          "differed": 0
+        },
+        "url.q.action": {
+          "same": 2,
+          "differed": 0
+        },
+        "url.q.id": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "In the Sales app, create a new quotation for the customer '{{runid}} Bench Customer' (choose the customer from the autocomplete dropdown so it is properly set). Add exactly ONE order line: pick any product from the product catalogue via the product autocomplete dropdown, with quantity 3. Do NOT confirm the quotation yet — leave it as a draft quotation. Save it. Report: (a) the product name you chose, (b) the unit price the app filled in for that line, (c) the untaxed amount the app computes for the quotation, and (d) the quotation's reference name shown in the breadcrumb/title.",
+      "skill": "s_445ef6",
+      "params": {
+        "v1": "{{runid}} Bench Customer",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "customer_name",
+        "customer_city",
+        "product_name",
+        "quotation_reference",
+        "quantity",
+        "screenshot",
+        "total",
+        "unit_price",
+        "menu_title",
+        "quotation_url",
+        "page_title",
+        "statusbar_text",
+        "quotation_totals",
+        "current_stage",
+        "untaxed_amount_cell",
+        "tax_label_cell",
+        "total_cell",
+        "ref"
+      ],
+      "recorded": {
+        "customer_name": "fwod52-n1 Bench Customer",
+        "customer_city": "Benchville",
+        "order_id": "21",
+        "product_name": "[FURN_6666] Acoustic Bloc Screens",
+        "quotation_reference": "S00021",
+        "quotation_status": "Quotation (draft)",
+        "quantity": "3.00",
+        "screenshot": "/home/user/sitelooper/quotation_draft.png",
+        "taxes": "20% (£ 177.00)",
+        "total": "£ 1,062.00",
+        "unit_price": "295.00",
+        "untaxed_amount": "£ 885.00",
+        "model": "sale.order",
+        "menu_title": "Quotations",
+        "quotation_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=21",
+        "page_title": "Odoo - S00021",
+        "statusbar_text": "Sales Order\nQuotation Sent\nQuotation",
+        "quotation_totals": "Untaxed Amount\t£ 885.00\nTAX 20%\t\n£ 177.00\n\nTotal\t£ 1,062.00",
+        "current_stage": "Quotation",
+        "untaxed_amount_cell": "£ 885.00",
+        "tax_label_cell": "TAX 20%",
+        "total_cell": "£ 1,062.00",
+        "ref": "fwod52-n1",
+        "ref_2": "FURN_6666",
+        "url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=21",
+        "url.q.menu_id": "194",
+        "url.q.action": "316",
+        "url.q.id": "21"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "customer_name": {
+          "same": 0,
+          "differed": 2
+        },
+        "customer_city": {
+          "same": 2,
+          "differed": 0
+        },
+        "quotation_reference": {
+          "same": 0,
+          "differed": 2
+        },
+        "quantity": {
+          "same": 2,
+          "differed": 0
+        },
+        "total": {
+          "same": 0,
+          "differed": 2
+        },
+        "unit_price": {
+          "same": 2,
+          "differed": 0
+        },
+        "menu_title": {
+          "same": 2,
+          "differed": 0
+        },
+        "quotation_url": {
+          "same": 0,
+          "differed": 2
+        },
+        "page_title": {
+          "same": 0,
+          "differed": 2
+        },
+        "statusbar_text": {
+          "same": 2,
+          "differed": 0
+        },
+        "quotation_totals": {
+          "same": 2,
+          "differed": 0
+        },
+        "current_stage": {
+          "same": 2,
+          "differed": 0
+        },
+        "untaxed_amount_cell": {
+          "same": 0,
+          "differed": 2
+        },
+        "tax_label_cell": {
+          "same": 2,
+          "differed": 0
+        },
+        "total_cell": {
+          "same": 2,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 2
+        },
+        "url": {
+          "same": 0,
+          "differed": 2
+        },
+        "url.q.menu_id": {
+          "same": 2,
+          "differed": 0
+        },
+        "url.q.action": {
+          "same": 2,
+          "differed": 0
+        },
+        "url.q.id": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "03-open",
+      "instruction": "Open the existing draft quotation {{02-create.quotation_reference}} (for customer {{runid}} Bench Customer) in the Sales app. Add a SECOND order line: a product DIFFERENT from 'Acoustic Bloc Screens', chosen from the product autocomplete dropdown, with quantity 2. Keep the first line (Acoustic Bloc Screens, quantity 3) unchanged. Save the quotation (still draft, do not confirm). Report: (a) the product name of the new second line, (b) its unit price, and (c) the new untaxed amount the app computes for the whole quotation.",
+      "skill": "s_43988a",
+      "params": {
+        "v1": "{{02-create.quotation_reference}}",
+        "v2": "{{runid}} Bench Customer",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "customer",
+        "line1_qty",
+        "line1_subtotal",
+        "line1_unit_price",
+        "line2_product",
+        "line2_qty",
+        "line2_subtotal",
+        "line2_unit_price",
+        "quotation_reference",
+        "screenshot",
+        "taxes",
+        "total",
+        "untaxed_amount",
+        "quotation_totals",
+        "quotation_status",
+        "ref"
+      ],
+      "recorded": {
+        "customer": "fwod52-n1 Bench Customer",
+        "line1_product": "[FURN_6666] Acoustic Bloc Screens",
+        "line1_qty": "3.00",
+        "line1_subtotal": "£ 885.00",
+        "line1_unit_price": "295.00",
+        "line2_product": "[E-COM12] Conference Chair (Steel)",
+        "line2_qty": "2.00",
+        "line2_subtotal": "£ 66.00",
+        "line2_unit_price": "33.00",
+        "line2_variant_selected": "Conference Chair, Legs: Steel",
+        "quotation_reference": "S00021",
+        "screenshot": "/home/user/sitelooper/quotation_two_lines.png",
+        "status": "Quotation (draft)",
+        "taxes": "£ 190.20",
+        "total": "£ 1,141.20",
+        "untaxed_amount": "£ 951.00",
+        "quotation_totals": "Untaxed Amount\t£ 951.00\nTAX 20%\t\n£ 190.20\n\nTotal\t£ 1,141.20",
+        "quotation_status": "Quotation",
+        "ref": "fwod52-n1",
+        "ref_2": "FURN_6666"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "customer": {
+          "same": 0,
+          "differed": 2
+        },
+        "line1_qty": {
+          "same": 2,
+          "differed": 0
+        },
+        "line1_subtotal": {
+          "same": 0,
+          "differed": 2
+        },
+        "line1_unit_price": {
+          "same": 2,
+          "differed": 0
+        },
+        "line2_product": {
+          "same": 2,
+          "differed": 0
+        },
+        "line2_qty": {
+          "same": 2,
+          "differed": 0
+        },
+        "line2_subtotal": {
+          "same": 0,
+          "differed": 2
+        },
+        "line2_unit_price": {
+          "same": 2,
+          "differed": 0
+        },
+        "quotation_reference": {
+          "same": 0,
+          "differed": 2
+        },
+        "taxes": {
+          "same": 0,
+          "differed": 2
+        },
+        "total": {
+          "same": 0,
+          "differed": 2
+        },
+        "untaxed_amount": {
+          "same": 0,
+          "differed": 2
+        },
+        "quotation_totals": {
+          "same": 2,
+          "differed": 0
+        },
+        "quotation_status": {
+          "same": 2,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "04-open",
+      "instruction": "Open the existing draft quotation {{02-create.quotation_reference}} in the Sales app. Change the FIRST order line's quantity from 3 to 5 (the line for {{02-create.product_name}}). Leave the second line ({{03-open.line2_product}}, quantity 2) unchanged. Save the quotation (still draft, do not confirm). Report the new untaxed amount the app computes for the whole quotation, plus the per-line subtotals you see.",
+      "skill": "s_362d71",
+      "params": {
+        "v1": "{{02-create.quotation_reference}}",
+        "v2": "{{02-create.product_name}}",
+        "v4": "{{03-open.line2_product}}"
+      },
+      "outputs": [
+        "customer",
+        "line1_product",
+        "line1_qty",
+        "line1_subtotal",
+        "line1_unit_price",
+        "line2_product",
+        "line2_qty",
+        "line2_subtotal",
+        "line2_unit_price",
+        "quotation_reference",
+        "screenshot",
+        "taxes",
+        "total",
+        "untaxed_amount",
+        "quotation_totals",
+        "quotation_status",
+        "line2_row_text",
+        "ref"
+      ],
+      "recorded": {
+        "customer": "fwod52-n1 Bench Customer",
+        "line1_product": "[FURN_6666] Acoustic Bloc Screens",
+        "line1_qty": "5.00",
+        "line1_subtotal": "£ 1,475.00",
+        "line1_unit_price": "295.00",
+        "line2_product": "[E-COM12] Conference Chair (Steel)",
+        "line2_qty": "2.00",
+        "line2_subtotal": "£ 66.00",
+        "line2_unit_price": "33.00",
+        "quotation_reference": "S00021",
+        "screenshot": "/home/user/sitelooper/quotation_qty5.png",
+        "status": "Quotation (draft)",
+        "taxes": "TAX 20% £ 308.20",
+        "total": "£ 1,849.20",
+        "untaxed_amount": "£ 1,541.00",
+        "quotation_totals": "Untaxed Amount\t£ 1,541.00\nTAX 20%\t\n£ 308.20\n\nTotal\t£ 1,849.20",
+        "quotation_status": "Quotation",
+        "line2_row_text": "Conference Chair\t\n[E-COM12] Conference Chair (Steel)\n\t2.00\t33.00\t\n20%\n\t£ 66.00",
+        "ref": "FURN_6666"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "customer": {
+          "same": 0,
+          "differed": 1
+        },
+        "line1_product": {
+          "same": 2,
+          "differed": 0
+        },
+        "line1_qty": {
+          "same": 2,
+          "differed": 0
+        },
+        "line1_subtotal": {
+          "same": 2,
+          "differed": 0
+        },
+        "line1_unit_price": {
+          "same": 2,
+          "differed": 0
+        },
+        "line2_product": {
+          "same": 2,
+          "differed": 0
+        },
+        "line2_qty": {
+          "same": 2,
+          "differed": 0
+        },
+        "line2_subtotal": {
+          "same": 2,
+          "differed": 0
+        },
+        "line2_unit_price": {
+          "same": 2,
+          "differed": 0
+        },
+        "quotation_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "taxes": {
+          "same": 0,
+          "differed": 2
+        },
+        "total": {
+          "same": 2,
+          "differed": 0
+        },
+        "untaxed_amount": {
+          "same": 2,
+          "differed": 0
+        },
+        "quotation_totals": {
+          "same": 1,
+          "differed": 1
+        },
+        "quotation_status": {
+          "same": 1,
+          "differed": 0
+        },
+        "line2_row_text": {
+          "same": 2,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "05-open",
+      "instruction": "Open the draft quotation {{02-create.quotation_reference}} in the Sales app and confirm it so it becomes a sales order (click the Confirm button, accepting any confirmation dialog if one appears). Report: (a) the order reference/name shown in the breadcrumb or title after confirmation, and (b) the status the app now shows for the order (e.g. from the statusbar at the top of the form).",
+      "skill": "s_b550aa",
+      "params": {
+        "v1": "{{02-create.quotation_reference}}",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "order_reference",
+        "breadcrumb",
+        "order_status",
+        "page_title",
+        "screenshot",
+        "order_url",
+        "breadcrumb_quotations_link"
+      ],
+      "recorded": {
+        "order_reference": "S00021",
+        "breadcrumb": "Quotations / S00021",
+        "order_status": "Sales Order",
+        "statusbar_stages": "[\"Sales Order\" (current), \"Quotation Sent\", \"Quotation\"]",
+        "page_title": "Odoo - S00021",
+        "confirm_button_present": "no (count 0)",
+        "order_id": "21",
+        "screenshot": "/home/user/sitelooper/confirmed_sales_order.png",
+        "order_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=21",
+        "breadcrumb_quotations_link": "Quotations",
+        "statusbar_quotation_stage": "Quotation"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "order_reference": {
+          "same": 0,
+          "differed": 2
+        },
+        "breadcrumb": {
+          "same": 0,
+          "differed": 2
+        },
+        "order_status": {
+          "same": 0,
+          "differed": 2
+        },
+        "page_title": {
+          "same": 0,
+          "differed": 2
+        },
+        "order_url": {
+          "same": 0,
+          "differed": 2
+        },
+        "breadcrumb_quotations_link": {
+          "same": 2,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "06-open",
+      "instruction": "Open the confirmed sales order {{02-create.quotation_reference}} in the Sales app and cancel it (use the Cancel action from the order's menu/Status dropdown, accepting any confirmation dialog that appears). Report the status the app shows for the order after cancelling (e.g. the statusbar state or any 'Cancelled' label on the form).",
+      "skill": "s_c65830",
+      "params": {
+        "v1": "{{02-create.quotation_reference}}",
+        "v2": "{{runid}}",
+        "v3": "{{02-create.url.q.id}}"
+      },
+      "outputs": [
+        "order_reference",
+        "order_status_after_cancel",
+        "cancel_wizard",
+        "post_cancel_button",
+        "screenshots",
+        "chatter_notice",
+        "statusbar_stages_before_cancel",
+        "statusbar_text",
+        "statusbar_sales_order_stage",
+        "statusbar_quotation_sent_stage"
+      ],
+      "recorded": {
+        "order_reference": "S00021",
+        "order_status_after_cancel": "Cancelled",
+        "statusbar_stages": "Cancelled (checked), Sales Order, Quotation Sent, Quotation",
+        "statusbar_cancelled_radio_state": "[checked] [disabled]",
+        "cancel_wizard": "Cancel Sales Order — clicked 'Send and cancel' (name=action_send_mail_and_cancel)",
+        "post_cancel_button": "Set to Quotation (shown on cancelled order)",
+        "screenshots": "/home/user/sitelooper/order_cancelled.png, /home/user/sitelooper/order_cancelled_reloaded.png",
+        "chatter_notice": "Delivery failure (system notification in chatter, side effect only)",
+        "statusbar_stages_before_cancel": "Sales Order\nQuotation Sent\nQuotation",
+        "statusbar_text": "Cancelled\nSales Order\nQuotation Sent\nQuotation",
+        "statusbar_sales_order_stage": "Sales Order",
+        "statusbar_quotation_sent_stage": "Quotation Sent",
+        "statusbar_quotation_stage": "Quotation"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "order_reference": {
+          "same": 0,
+          "differed": 2
+        },
+        "order_status_after_cancel": {
+          "same": 2,
+          "differed": 0
+        },
+        "statusbar_stages_before_cancel": {
+          "same": 2,
+          "differed": 0
+        },
+        "statusbar_text": {
+          "same": 2,
+          "differed": 0
+        },
+        "statusbar_sales_order_stage": {
+          "same": 0,
+          "differed": 2
+        },
+        "statusbar_quotation_sent_stage": {
+          "same": 2,
+          "differed": 0
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwod52-n1",
+    "created": "2026-09-16T10:13:10.045Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  }
+}

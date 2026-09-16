@@ -1,0 +1,34 @@
+{
+  "arm": "spec",
+  "runid": "fwod52-spec",
+  "target": "odoo",
+  "flow": "fwod52.json",
+  "flowName": "fwod52",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwod52-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwod52-spec-spec-tmp/fwod52.flow.ts",
+  "specFile": "bench/results/fwod52-spec-spec-tmp/fwod52.spec.ts",
+  "wallMs": 30168,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwod52",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 26963,
+      "error": "Error: 04-open needs {{02-create.product_name}}, and this run never published it. The step that publishes 02-create.product_name read nothing — look above for its `[sitelooper skip] … read target not found` line, which is where this run diverged. Stopping here instead of passing an empty value into 04-open: blank, a record-scoped locator matches every record and a known slot loses its identity, so the step would do its work to the wrong one. Everything earlier steps did stands; nothing of 04-open has run.",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "logTail": "\nRunning 1 test using 1 worker\n\n[sitelooper step] 01-open\n[sitelooper step] 02-create\n[sitelooper step] 03-open\n  ✘  1 fwod52.spec.ts:9:1 › fwod52 (27.0s)\n\n\n  1) fwod52.spec.ts:9:1 › fwod52 › 04-open: Open the existing draft quotation {{02-create.quotation_reference}} in the Sales app. Change the FIRST order line's quantity from 3 to 5 (the line for {{02-create.product_name}}). Leave the second line ({{03-open.line2_product}}, quantity 2) unchanged. Save the quotation (still draft, do not confirm). Report the new untaxed amount the app computes for the whole quotation, plus the per-line subtotals you see. \n\n    Error: 04-open needs {{02-create.product_name}}, and this run never published it. The step that publishes 02-create.product_name read nothing — look above for its `[sitelooper skip] … read target not found` line, which is where this run diverged. Stopping here instead of passing an empty value into 04-open: blank, a record-scoped locator matches every record and a known slot loses its identity, so the step would do its work to the wrong one. Everything earlier steps did stands; nothing of 04-open has run.\n\n       at fwod52.flow.ts:10152\n\n      10150 |   const value = outputs[ref as keyof Outputs];\n      10151 |   if (value === undefined || value === '') {\n    > 10152 |     throw new Error(\n            |           ^\n      10153 |       `${by} needs {{${ref}}}, and this run never published it` +\n      10154 |         (value === '' ? ' (it was published empty)' : '') +\n      10155 |         `. The step that publishes ${ref} read nothing — look above for its` +\n        at need (/home/user/sitelooper/bench/results/fwod52-spec-spec-tmp/fwod52.flow.ts:10152:11)\n        at /home/user/sitelooper/bench/results/fwod52-spec-spec-tmp/fwod52.flow.ts:14410:105\n        at runFlow (/home/user/sitelooper/bench/results/fwod52-spec-spec-tmp/fwod52.flow.ts:14409:5)\n        at /home/user/sitelooper/bench/results/fwod52-spec-spec-tmp/fwod52.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: ../../../test-results/fwod52-fwod52/error-context.md\n\n  1 failed\n    fwod52.spec.ts:9:1 › fwod52 ────────────────────────────────────────────────────────────────────\n"
+}

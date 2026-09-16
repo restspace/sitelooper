@@ -1,0 +1,35 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-open
+[sitelooper step] 02-create
+[sitelooper step] 03-open
+  ✘  1 fwod52.spec.ts:9:1 › fwod52 (27.0s)
+
+
+  1) fwod52.spec.ts:9:1 › fwod52 › 04-open: Open the existing draft quotation {{02-create.quotation_reference}} in the Sales app. Change the FIRST order line's quantity from 3 to 5 (the line for {{02-create.product_name}}). Leave the second line ({{03-open.line2_product}}, quantity 2) unchanged. Save the quotation (still draft, do not confirm). Report the new untaxed amount the app computes for the whole quotation, plus the per-line subtotals you see. 
+
+    Error: 04-open needs {{02-create.product_name}}, and this run never published it. The step that publishes 02-create.product_name read nothing — look above for its `[sitelooper skip] … read target not found` line, which is where this run diverged. Stopping here instead of passing an empty value into 04-open: blank, a record-scoped locator matches every record and a known slot loses its identity, so the step would do its work to the wrong one. Everything earlier steps did stands; nothing of 04-open has run.
+
+       at fwod52.flow.ts:10152
+
+      10150 |   const value = outputs[ref as keyof Outputs];
+      10151 |   if (value === undefined || value === '') {
+    > 10152 |     throw new Error(
+            |           ^
+      10153 |       `${by} needs {{${ref}}}, and this run never published it` +
+      10154 |         (value === '' ? ' (it was published empty)' : '') +
+      10155 |         `. The step that publishes ${ref} read nothing — look above for its` +
+        at need (/home/user/sitelooper/bench/results/fwod52-spec-spec-tmp/fwod52.flow.ts:10152:11)
+        at /home/user/sitelooper/bench/results/fwod52-spec-spec-tmp/fwod52.flow.ts:14410:105
+        at runFlow (/home/user/sitelooper/bench/results/fwod52-spec-spec-tmp/fwod52.flow.ts:14409:5)
+        at /home/user/sitelooper/bench/results/fwod52-spec-spec-tmp/fwod52.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../test-results/fwod52-fwod52/error-context.md
+
+  1 failed
+    fwod52.spec.ts:9:1 › fwod52 ────────────────────────────────────────────────────────────────────
