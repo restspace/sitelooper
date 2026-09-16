@@ -603,9 +603,11 @@ export function markersBound(markers: string[], params: Record<string, string>):
  * `unfilled` — and is not reported here.
  *
  * Scoped to the two markers `fillParams` itself recognises and to nothing
- * else: a `{{stepId.output}}` reference is a different mechanism with its own
- * diagnosis (the artifact's `need`, and the `unsourced-ref` diagnostic), and a
- * page that legitimately displays braces is not a marker at all.
+ * else: a `{{stepId.output}}` reference reaching a value is a different
+ * mechanism, answered for an ACTION's args by `unresolvedArgMarkers` and at
+ * compile time by the artifact's `need` / `unsourced-ref`; and a page that
+ * legitimately displays braces is not a marker at all. This narrow reading is
+ * what the locator-chain arm and every marker CHECK want, and only those.
  *
  * WHY A CALLER WOULD ASK. "A slot the run could not fill asks for no
  * particular value" is the right reading for a CHECK, and every gate here
@@ -621,6 +623,66 @@ export function unfilledSlots(value: unknown, params: Record<string, string>): s
     if (typeof v === 'string') {
       for (const m of v.matchAll(/\{\{([vd]\d+)\}\}/g)) {
         if (!(m[1] in params) && !out.includes(m[1])) out.push(m[1]);
+      }
+      return;
+    }
+    if (Array.isArray(v)) {
+      for (const item of v) walk(item);
+      return;
+    }
+    if (v && typeof v === 'object') for (const item of Object.values(v as Record<string, unknown>)) walk(item);
+  };
+  walk(value);
+  return out;
+}
+
+/**
+ * Any `{{…}}` marker that is not the wildcard — the same reading as
+ * `expect.ts`'s UNFILLED_MARKER, restated here because this module may import
+ * nothing but a sibling.
+ *
+ * The NAME must differ from expect.ts's. Both modules are embedded VERBATIM,
+ * side by side, into the compiled artifact, so two file-scope `const`s sharing
+ * a name are one `SyntaxError: Identifier 'UNFILLED_MARKER' has already been
+ * declared` and every emitted flow fails to import — which is exactly what the
+ * parity suite caught. A shared reading is fine; a shared identifier is not.
+ * (`g` here, unlike expect.ts's, because this one is used with `matchAll`.)
+ */
+const UNRESOLVED_ARG_MARKER = /\{\{(?!\*\}\})[^{}]*\}\}/g;
+
+/**
+ * Every marker still standing in a value once this run's params are in — the
+ * BROAD reading, and the one `expect.ts:unfilledSlot` has taken for some time
+ * (its `{{02-open.product_name}}` case, fwod49-n2). Returned as the marker text
+ * (`{{03-create.product_name}}`), not a slot name, because the thing left
+ * standing need not be a slot.
+ *
+ * WHY THE ARGS ARM NEEDS THIS AND `unfilledSlots` CANNOT GIVE IT.
+ * `fillParams` is a SINGLE PASS: a param bound to the string
+ * `"{{03-create.product_name}}"` substitutes that text into the args and
+ * nothing re-scans the result. `unfilledSlots` asks `name in params`, and the
+ * slot IS in params — bound, just bound to a placeholder — so it is
+ * structurally unable to see this. The daemon has no `{{stepId.output}}`
+ * diagnosis of its own either: `emit.ts`'s `need`/`unsourced-ref` is compile
+ * time only. fwod56's witness: `10-verify` pinned a chain head whose `v4` held
+ * `{{05-open.quotation_reference}}`, and segment 3 of that chain types `{{v4}}`
+ * into odoo's search box — 31 characters of marker text, as real keystrokes.
+ *
+ * ACTIONS MUST NOT BE LAXER THAN ASSERTIONS. An expectation over a line this
+ * run could not fill is dropped; an action carrying one would be dispatched.
+ * The wildcard is excluded because it is deliberate (lineShows matches it
+ * against anything), and a value bound to '' leaves no marker at all, so the
+ * "bound to '' is BOUND" rule (url.ts's `unfilled`) survives untouched.
+ */
+export function unresolvedArgMarkers(value: unknown, params: Record<string, string>): string[] {
+  const out: string[] = [];
+  const walk = (v: unknown): void => {
+    if (typeof v === 'string') {
+      // Filled here rather than trusted to the caller: replay hands this
+      // already-substituted args and the predicate must answer the same for
+      // both, and `fillParams` over filled text is a no-op by construction.
+      for (const m of fillParams(v, params).matchAll(UNRESOLVED_ARG_MARKER)) {
+        if (!out.includes(m[0])) out.push(m[0]);
       }
       return;
     }
@@ -667,9 +729,12 @@ export interface UnfilledStep {
  *
  * The split inside the step is the point, and it is not the same question
  * twice:
- *  - the ARGS carry the value the step acts WITH. An unfilled marker there is
- *    fatal: there is no second choice, and the step would type or navigate to
- *    the literal marker text.
+ *  - the ARGS carry the value the step acts WITH. ANY marker left standing
+ *    there once the params are in is fatal — an unbound slot (unfilledSlots)
+ *    or a slot bound to an unresolved reference (unresolvedArgMarkers, the
+ *    reading expect.ts takes of a recorded line). There is no second choice,
+ *    and the step would type or navigate to the literal marker text. An action
+ *    must not be laxer than an assertion about the same run.
  *  - a LOCATOR CHAIN is how the step names WHAT to act on, in preference
  *    order. An unfilled rung is dropped (fillableChain); only an entirely dead
  *    chain is fatal, and then because the step has no way left to find its
@@ -686,6 +751,15 @@ export function unfilledStepVerdict(step: UnfilledStep, params: Record<string, s
   const inArgs = unfilledSlots(step.args, params);
   if (inArgs.length) {
     return `${where}: ${said(inArgs)} ${inArgs.length > 1 ? 'were' : 'was'} left unbound — this run has no value for ${inArgs.length > 1 ? 'those slots' : 'that slot'}, and the step would otherwise act on the literal marker text`;
+  }
+  // The second reading of the same question, and only over the args: a slot
+  // that IS bound, to a reference nothing resolved. See unresolvedArgMarkers.
+  const leftInArgs = unresolvedArgMarkers(step.args, params);
+  if (leftInArgs.length) {
+    const many = leftInArgs.length > 1;
+    return `${where}: ${leftInArgs.join(', ')} ${many ? 'are' : 'is'} still unresolved after this run's params were filled in — ${
+      many ? 'those markers name values' : 'that marker names a value'
+    } nothing published, and the step would otherwise act on the literal marker text`;
   }
   for (const [key, chain] of Object.entries(step.locators ?? {})) {
     if (!chain?.length || fillableChain(chain, params).length) continue;

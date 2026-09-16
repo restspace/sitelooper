@@ -16,7 +16,7 @@ import { identityMarkerVerdict, markersBound } from '../src/execution/gates.js';
 import { observedChange } from '../src/execution/lifecycle.js';
 import type { LocatorCandidate } from '../src/daemon/recorder.js';
 import type { SkillStep } from '../src/skills/store.js';
-import { bindSkill, canAdoptPin, learnFromInstruction, matchTemplate, publishedOutputs, selectCandidates, synthesizeReport } from '../src/skills/learn.js';
+import { bindSkill, canAdoptPin, learnFromInstruction, matchTemplate, publishedOutputs, sameChainProcedure, selectCandidates, synthesizeReport } from '../src/skills/learn.js';
 import { candidatesFor, renderCandidates } from '../src/skills/replay.js';
 import { SKILL_CONTRACT, SITEMAP_FILE, SkillStore, contractOf, isVerified, originOf, originSlug, type Skill } from '../src/skills/store.js';
 
@@ -1621,6 +1621,21 @@ describe('zero-model template match', () => {
     expect(r.summary).toContain('375.00');
     expect(r.summary).not.toContain('125.00');
   });
+  // fwod56 n2/n3: `07-change` published `line1_product: "{{03-create.product_name}}"`.
+  // The param itself arrived still holding a flow reference the run never
+  // resolved, and the residual test only looked for `{{vN}}`.
+  it('never publishes a value or a sentence still holding an unresolved reference', () => {
+    const skill = compileSkill({ entries: recording(), instruction: INSTRUCTION, report, session: 's' })!;
+    const r = synthesizeReport(skill, { v1: '{{03-create.product_name}}', v2: '300', v3: '40' }, {});
+    expect(JSON.stringify(r.evidence?.values ?? {})).not.toContain('{{');
+    expect(r.evidence?.values?.partName).toBeUndefined();
+    expect(r.summary).not.toContain('{{');
+    expect(r.summary).toContain(skill.id);
+    // a live read is still published alongside the dropped one
+    const live = synthesizeReport(skill, { v1: '{{03-create.product_name}}', v2: '300', v3: '40' }, { partPrice: '375.00' });
+    expect(live.evidence?.values).toEqual({ partPrice: '375.00' });
+  });
+
   it('sameProcedure compares tools and primary locators', () => {
     const a = compileSkill({ entries: recording(), instruction: INSTRUCTION, report, session: 's' })!;
     const b = compileSkill({ entries: recording(), instruction: 'totally different words x7 RD Part A 100 25', report, session: 's' })!;
@@ -1708,6 +1723,91 @@ describe('selectCandidates (lifecycle-gated adoption)', () => {
     const out = selectCandidates([hint, sibling], hint.id, same, params);
     expect(out.map((c) => c.skill.id)).toEqual([sibling.id, hint.id]);
     expect(out[0].params).toEqual(params);
+  });
+
+  // fwod56: `10-verify`'s pin was the head of a five-segment chain; `02-create`'s
+  // head was a four-segment chain that creates a contact. Both heads are the
+  // same shape, so `sameProcedure` said yes, the create head was validated where
+  // the verify head was provisional, it sorted first — and the daemon's chain
+  // walk ran the rest of ITS chain and minted a second contact, while the flow
+  // reported success 10/10. A head is not the procedure; the chain is.
+  describe('a chain head is compared as its whole chain', () => {
+    // A differently-worded sibling that can only reach the step through
+    // inheritance, with every slot bound so inheritance would otherwise succeed.
+    const pair = (): { hint: Skill; sibling: Skill } => {
+      const hint = make('provisional');
+      const sibling = compileSkill({ entries: recording(), instruction: 'totally different words x7 RD Part A 100 25', report, session: 's' })!;
+      sibling.status = 'validated';
+      sibling.id = 's_sibling_head';
+      hint.params.v1 = { ...hint.params.v1, binding: 'output:i2:part_name' };
+      sibling.params.v1 = { ...sibling.params.v1, binding: 'output:i2:part_name' };
+      for (const p of ['v2', 'v3'] as const) {
+        hint.params[p] = { ...hint.params[p], binding: `var:${p}` };
+        sibling.params[p] = { ...sibling.params[p], binding: `var:${p}` };
+      }
+      return { hint, sibling };
+    };
+    const seg = (id: string, chain: string, index: number, of: number, steps?: SkillStep[]): Skill => {
+      const s = compileSkill({ entries: recording(), instruction: INSTRUCTION, report, session: 's' })!;
+      return { ...s, id, status: 'validated', seq: { chain, index, of }, ...(steps ? { steps } : {}) };
+    };
+    const params = { v1: 'z9 RD Part B', v2: '300', v3: '40' };
+    const chain = (s: Skill, c: string, of: number): Skill => ({ ...s, seq: { chain: c, index: 0, of } });
+
+    it('refuses a sibling whose chain is a different length (the fwod56 shape)', () => {
+      const { hint, sibling } = pair();
+      const h = chain(hint, 'c_verify', 5);
+      const sib = chain(sibling, 'c_create', 4);
+      const skills = [h, sib, seg('s_v1', 'c_verify', 1, 5), seg('s_c1', 'c_create', 1, 4)];
+      expect(selectCandidates(skills, h.id, same, params).map((c) => c.skill.id)).toEqual([h.id]);
+      expect(sameChainProcedure(sib, h, skills)).toBe(false);
+    });
+
+    it('refuses a sibling whose chain is the same length but whose segments differ', () => {
+      const { hint, sibling } = pair();
+      const h = chain(hint, 'c_h', 2);
+      const sib = chain(sibling, 'c_s', 2);
+      const tail = seg('s_h1', 'c_h', 1, 2);
+      const skills = [h, sib, tail, seg('s_s1', 'c_s', 1, 2, tail.steps.slice(1))];
+      expect(selectCandidates(skills, h.id, same, params).map((c) => c.skill.id)).toEqual([h.id]);
+      expect(sameChainProcedure(sib, h, skills)).toBe(false);
+    });
+
+    it('refuses a sibling when a segment of either chain is missing from the store', () => {
+      const { hint, sibling } = pair();
+      const h = chain(hint, 'c_h', 2);
+      const sib = chain(sibling, 'c_s', 2);
+      const skills = [h, sib, seg('s_h1', 'c_h', 1, 2)];
+      expect(selectCandidates(skills, h.id, same, params).map((c) => c.skill.id)).toEqual([h.id]);
+      expect(sameChainProcedure(sib, h, skills)).toBe(false);
+    });
+
+    it('still accepts a sibling whose whole chain matches segment for segment', () => {
+      const { hint, sibling } = pair();
+      const h = chain(hint, 'c_h', 2);
+      const sib = chain(sibling, 'c_s', 2);
+      const skills = [h, sib, seg('s_h1', 'c_h', 1, 2), seg('s_s1', 'c_s', 1, 2)];
+      const out = selectCandidates(skills, h.id, same, params);
+      expect(out.map((c) => c.skill.id)).toEqual([sib.id, h.id]);
+      expect(out[0].params).toEqual(params);
+      expect(sameChainProcedure(sib, h, skills)).toBe(true);
+    });
+
+    it('refuses a chained sibling for an unchained hint, and the reverse', () => {
+      const { hint, sibling } = pair();
+      const sib = chain(sibling, 'c_s', 2);
+      const skills = [hint, sib, seg('s_s1', 'c_s', 1, 2)];
+      expect(selectCandidates(skills, hint.id, same, params).map((c) => c.skill.id)).toEqual([hint.id]);
+      expect(sameChainProcedure(sib, hint, skills)).toBe(false);
+      expect(sameChainProcedure(hint, sib, skills)).toBe(false);
+    });
+
+    it('leaves two unchained skills exactly as they were', () => {
+      const { hint, sibling } = pair();
+      const skills = [hint, sibling];
+      expect(sameChainProcedure(sibling, hint, skills)).toBe(true);
+      expect(selectCandidates(skills, hint.id, same, params).map((c) => c.skill.id)).toEqual([sibling.id, hint.id]);
+    });
   });
 });
 

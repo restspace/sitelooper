@@ -1010,7 +1010,11 @@ export interface LiveRead {
   /** That step's pinned skill; the caller appends the read to the LAST segment of its chain. */
   skill: string;
   output: string;
-  /** The value the recording saw, and so the name the read's locators look for. */
+  /**
+   * The value the recording REPORTED. The read's locators look for the name as
+   * the PAGE spells it, which is the same string up to foldValue and may differ
+   * in case (grafana reported "bench" for a folder rendered "Bench").
+   */
   value: string;
   /** Where the recording showed it: the next instruction's start page, or this instruction's own page diffs. */
   source: 'start' | 'diff';
@@ -1027,16 +1031,51 @@ const DISPLAY_ROLES = ['heading', 'columnheader', 'rowheader', 'cell', 'status']
 const MAX_LIVE_READ_CANDIDATES = 3;
 
 /**
- * Role+name candidates for the snapshot lines whose accessible NAME is exactly
- * `value` (whitespace-normalised; never a substring of a longer name, so
- * "Ready" does not match "Mark Ready" — the same bounded rule as identityRe).
- * A role+name that occurs more than once in the lines is left out: a
- * candidate without `nth` must resolve to one element at replay, and an
- * index guessed from line order is a position, which is what a read must not
- * publish by.
+ * The form two DISPLAYED strings are compared in when the question is "are
+ * these the same value?": whitespace collapsed, trimmed, case folded.
+ *
+ * This is normalisation of two strings compared for IDENTITY, not a guess
+ * about what a string means — nothing here reads a value's characters to
+ * decide what kind of thing it is (that rule lives in shape.ts, fenced by
+ * test/shape-gate.test.ts). An app renders a value in whatever case it likes:
+ * grafana's 02-open reported `folder = "bench"` where the page shows "Bench",
+ * the exact comparison refused it, no read was synthesized, and that one value
+ * was the whole of the compiled arm's refusal
+ * (`05-open: slot v3 is bound to {{02-open.folder}}, and nothing has ever
+ * published folder`).
+ *
+ * ONE exported spelling, because record time (recorder.ts captureReadBack) and
+ * export time (valueLineCandidates) must agree about what counts as the same
+ * value: two subtly different predicates would pin at one site and refuse at
+ * the other.
+ */
+export function foldValue(value: string): string {
+  return value.replace(/\s+/g, ' ').trim().toLowerCase();
+}
+
+/** True when two displayed strings are the same value — see foldValue for the folding and why. */
+export function sameValue(a: string, b: string): boolean {
+  return foldValue(a) === foldValue(b);
+}
+
+/**
+ * Role+name candidates for the snapshot lines whose accessible NAME is the
+ * value under foldValue (so a page's "Bench" answers for a reported "bench");
+ * never a substring of a longer name, so "Ready" does not match "Mark Ready"
+ * — the same bounded rule as identityRe.
+ *
+ * A role+name that occurs more than once in the lines is left out: a candidate
+ * without `nth` must resolve to one element at replay, and an index guessed
+ * from line order is a position, which is what a read must not publish by.
+ * Occurrences are counted on the FOLDED name, so two lines differing only in
+ * case are ambiguous and both are refused — folding may only ever make a
+ * candidate set smaller, never let it silently take the first of two.
+ *
+ * The candidate carries the PAGE's spelling of the name: the locator has to
+ * find what the page renders, not what the run happened to report.
  */
 export function valueLineCandidates(lines: string[], value: string): LocatorCandidate[] {
-  const want = value.replace(/\s+/g, ' ').trim();
+  const want = foldValue(value);
   if (!want) return [];
   const seen = new Map<string, { role: string; name: string; count: number; order: number }>();
   lines.forEach((line, order) => {
@@ -1048,7 +1087,7 @@ export function valueLineCandidates(lines: string[], value: string): LocatorCand
     } catch {
       return;
     }
-    const key = `${m[1]} ${name}`;
+    const key = `${m[1]}\u0000${foldValue(name)}`;
     const hit = seen.get(key);
     if (hit) hit.count += 1;
     else seen.set(key, { role: m[1], name, count: 1, order });
@@ -1058,7 +1097,7 @@ export function valueLineCandidates(lines: string[], value: string): LocatorCand
     return i < 0 ? DISPLAY_ROLES.length : i;
   };
   return [...seen.values()]
-    .filter((c) => c.name === want && c.count === 1 && !LABELLED_ROLES.has(c.role))
+    .filter((c) => foldValue(c.name) === want && c.count === 1 && !LABELLED_ROLES.has(c.role))
     .sort((a, b) => rank(a.role) - rank(b.role) || a.order - b.order)
     .slice(0, MAX_LIVE_READ_CANDIDATES)
     .map((c) => ({ kind: 'role' as const, role: c.role, name: c.name }));
@@ -1272,8 +1311,31 @@ export function unreportedOutputs(step: Pick<FlowStep, 'outputs' | 'recorded'>, 
  * chain it compiled into read only `dashboard_name`, and every replay reported
  * no panel titles at tier A. lintFlowRefs catches this only when a later step
  * consumes the value — a value reported to the CALLER has no consumer.
+ *
+ * The subject of the sentence is the PROCEDURE, not `step.skill`. A pin may be
+ * the HEAD of a chain, `publishes` unions the whole chain (see the caller), and
+ * a synthesized read is appended to the chain's LAST segment (LiveRead.skill
+ * says so, and the server resolves the tail before updating). Naming the head
+ * asserted something false about it: odoo's export said
+ * `03-create reports product_name, untaxed_amount, but s_d401a3 re-reads none
+ * of them` while the same export logged
+ * `03-create: added a read for untaxed_amount_row to s_2df673` — the tail. The
+ * head legitimately has no reads and the chain publishes nine values, so the
+ * diagnostic read as "this skill publishes nothing" and cost an hour of a
+ * round-15 diagnosis. A diagnostic that asserts something untrue about the
+ * code is worse than no diagnostic: it must name what would have to change.
+ *
+ * `tailOf` is optional and only sharpens the sentence: the caller already
+ * walks the chain to union its published outputs, so it can say WHICH segment
+ * a re-recorded read has to land in (`s_2df673`) instead of "that procedure's
+ * last segment". Without it — or when the tail is the pin itself — the
+ * chain-shaped wording above stands unchanged.
  */
-export function lintUnpublishedOutputs(flow: Flow, publishes: (skillId: string) => string[] | null): string[] {
+export function lintUnpublishedOutputs(
+  flow: Flow,
+  publishes: (skillId: string) => string[] | null,
+  tailOf?: (skillId: string) => string | null | undefined,
+): string[] {
   const warnings: string[] = [];
   for (const step of flow.steps) {
     if (!step.skill) continue;
@@ -1281,9 +1343,15 @@ export function lintUnpublishedOutputs(flow: Flow, publishes: (skillId: string) 
     if (pubs === null) continue;
     const missing = step.outputs.filter((o) => heldOutput(step, o) && !pubs.includes(o.split('#')[0]));
     if (!missing.length) continue;
+    const one = missing.length === 1;
+    const tail = tailOf?.(step.skill);
+    const named = tail && tail !== step.skill ? tail : null;
     warnings.push(
-      `${step.id} reports ${missing.join(', ')}, but ${step.skill} re-reads none of ${missing.length === 1 ? 'it' : 'them'} from the page — ` +
-        `a replay without the model will succeed without ${missing.length === 1 ? 'that value' : 'those values'}; re-record so ${missing.length === 1 ? 'it is' : 'they are'} read.`,
+      `${step.id} reports ${missing.join(', ')}, but no segment of the procedure it pins ` +
+        `(${step.skill}, ${named ? `through its last segment ${named}` : 'with any later segment of its chain'}) ` +
+        `re-reads ${one ? 'it' : 'them'} from the page — ` +
+        `a replay without the model will succeed without ${one ? 'that value' : 'those values'}; ` +
+        `re-record so a read for ${one ? 'it' : 'them'} lands in ${named ?? "that procedure's last segment"}.`,
     );
   }
   return warnings;
@@ -1511,12 +1579,34 @@ function recordedRef(ref: string, steps: FlowStep[]): string | undefined {
  * zero-model replay, so its absence is no reason to skip one. fwgr23 05-open
  * went to 19–44 model turns on both replays because `{{04-open.tag}}` was
  * blank, bound to a param no step used.
+ *
+ * THE WHOLE CHAIN, not the pinned head. A pin is one segment of a segment
+ * chain and the replay runs every later segment with the same params
+ * (server.ts replays each with `{ ...match.params, ...derived }`), so a slot
+ * the head never touches can still be TYPED two segments on. fwod56's store
+ * holds the witness: `s_73bb71` is the head 10-verify pins, its `v4`
+ * (`{{05-open.quotation_reference}}`) reports `usedIn: []` — yet segment 3 of
+ * the same chain, `s_4404a9`, step 1 is `type { text: "{{v4}}" }`. Judged on
+ * the head alone the blank was "ignorable", tier A proceeded, and the literal
+ * `{{05-open.quotation_reference}}` would have been typed into the page.
+ *
+ * This is the daemon half of one rule: the compile-time twin is `usedSlot`
+ * (src/spec/emit.ts), which has always done `step.segments.some(…)` and whose
+ * comment calls itself "the port of ignorableRefs". The two must stay tied —
+ * change one, change the other, or the daemon and the artifact disagree about
+ * whether a step may act with an unresolved reference in its slots.
  */
-export function ignorableRefs(missing: string[], step: FlowStep, skill: Skill | null | undefined): string[] {
-  if (!skill) return [];
+export function ignorableRefs(
+  missing: string[],
+  step: FlowStep,
+  chain: ReadonlyArray<Pick<StandInSegment, 'params' | 'preconditions'>>,
+): string[] {
+  if (!chain.length) return [];
   const needed = new Set<string>();
-  for (const [name, p] of Object.entries(skill.params)) if (p.usedIn.length) needed.add(name);
-  for (const marker of skill.preconditions.requireText ?? []) for (const m of marker.matchAll(/\{\{(v\d+)\}\}/g)) needed.add(m[1]);
+  for (const seg of chain) {
+    for (const [name, p] of Object.entries(seg.params)) if (p.usedIn.length) needed.add(name);
+    for (const marker of seg.preconditions?.requireText ?? []) for (const m of marker.matchAll(/\{\{(v\d+)\}\}/g)) needed.add(m[1]);
+  }
   return [...new Set(missing)].filter((ref) => {
     const token = `{{${ref}}}`;
     return !Object.entries(step.params ?? {}).some(([name, tmpl]) => needed.has(name) && tmpl.includes(token));

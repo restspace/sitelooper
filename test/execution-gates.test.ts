@@ -30,6 +30,7 @@ import {
   fillableChain,
   unfilledSlots,
   unfilledStepVerdict,
+  unresolvedArgMarkers,
   urlEffectVerdict,
   urlRecordParts,
 } from '../src/execution/gates.js';
@@ -849,6 +850,69 @@ describe('unfilledSlots', () => {
     expect(unfilledStepVerdict({ args: { text: 'Order 7' } }, { v1: '7' }, 'step 4')).toBeNull();
     expect(unfilledStepVerdict({ args: { text: '{{v2}}' } }, { v1: '7' }, 'step 4')).toMatch(/^step 4: \{\{v2\}\} was left unbound/);
     expect(unfilledStepVerdict({ args: { text: '{{v2}} {{v3}}' } }, {}, 'step 4')).toMatch(/\{\{v2\}\}, \{\{v3\}\} were left unbound/);
+  });
+});
+
+/**
+ * fwod56. `fillParams` is a SINGLE pass, so a param bound to the string
+ * `{{03-create.product_name}}` puts that text into the args and nothing
+ * re-scans it. The slot IS in `params`, so `unfilledSlots` — which asks
+ * exactly what `fillParams` substitutes on — cannot see it, and the witness
+ * (`s_4404a9` step 1, `type { text: "{{v4}}" }` with `v4` holding
+ * `{{05-open.quotation_reference}}`) would have typed 31 characters of marker
+ * text into odoo's search box. The args arm therefore takes expect.ts's
+ * reading of the same question: an ACTION must not be laxer than an
+ * ASSERTION about the same value.
+ */
+describe('unresolvedArgMarkers', () => {
+  it('sees a slot bound to an unresolved reference, which membership in params cannot', () => {
+    const args = { target: '@e5390', text: '{{v4}}', delay_ms: 40 };
+    const params = { v4: '{{05-open.quotation_reference}}' };
+    // The narrow predicate is blind to it, by construction — v4 IS bound.
+    expect(unfilledSlots(args, params)).toEqual([]);
+    expect(unresolvedArgMarkers(args, params)).toEqual(['{{05-open.quotation_reference}}']);
+    expect(unfilledStepVerdict({ args, locators: {} }, params, 'step 1')).toMatch(
+      /^step 1: \{\{05-open\.quotation_reference\}\} is still unresolved after this run's params were filled in/,
+    );
+  });
+
+  it('answers the same for args already filled and args still raw', () => {
+    const params = { v4: '{{05-open.quotation_reference}}' };
+    // replay hands this verdict `fillParamsDeep(step.args, params)`; the
+    // artifact's call sites need not have filled anything.
+    expect(unresolvedArgMarkers({ text: '{{05-open.quotation_reference}}' }, params)).toEqual(['{{05-open.quotation_reference}}']);
+    expect(unresolvedArgMarkers({ text: '{{v4}}' }, params)).toEqual(['{{05-open.quotation_reference}}']);
+  });
+
+  it('reports each marker once, anywhere inside the value, and nothing for a resolved one', () => {
+    expect(unresolvedArgMarkers(['{{a.b}} {{a.b}}', { u: '{{c.d}}' }], {})).toEqual(['{{a.b}}', '{{c.d}}']);
+    expect(unresolvedArgMarkers({ text: 'Order 7' }, {})).toEqual([]);
+    expect(unresolvedArgMarkers({ text: '{{v1}}' }, { v1: 'Order 7' })).toEqual([]);
+    expect(unresolvedArgMarkers(null, {})).toEqual([]);
+    expect(unresolvedArgMarkers(42, {})).toEqual([]);
+  });
+
+  it('leaves the two rules the round before it settled exactly where they were', () => {
+    // Bound to '' is BOUND — url.ts's `unfilled`. Filling leaves no marker at
+    // all, so the broad reading never meets it.
+    expect(unresolvedArgMarkers({ url: '/record/{{v1}}' }, { v1: '' })).toEqual([]);
+    expect(unfilledStepVerdict({ args: { url: '/record/{{v1}}' } }, { v1: '' }, 'step 4')).toBeNull();
+    // The wildcard is deliberate: lineShows matches it against anything.
+    expect(unresolvedArgMarkers({ text: '{{*}}' }, {})).toEqual([]);
+    // An unbound slot keeps its OWN wording — the repair differs (nobody bound
+    // it, versus nobody published it).
+    expect(unfilledStepVerdict({ args: { text: '{{v2}}' } }, {}, 'step 4')).toMatch(/was left unbound/);
+  });
+
+  it('judges the ARGS only: a locator chain keeps fillableChain', () => {
+    const role = { kind: 'role', role: 'textbox', name: 'Search' };
+    const ref = { kind: 'id', selector: '#row_{{05-open.quotation_reference}}' };
+    // A rung that resolved to a placeholder is an exhausted preference, not a
+    // failure: the role rung behind it takes the step exactly as recorded.
+    expect(unfilledStepVerdict({ args: { target: '@e1', text: 'Beta' }, locators: { target: [ref, role] } }, {}, 'step 2')).toBeNull();
+    // fillableChain answers on membership, unchanged: the reference-bearing
+    // rung is not a slot this run failed to fill, so it is not even dropped.
+    expect(fillableChain([ref, role], {})).toEqual([ref, role]);
   });
 });
 

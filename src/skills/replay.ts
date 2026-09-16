@@ -476,6 +476,14 @@ export async function replaySkill(
     // adjacent slots UNBOUND rather than guess where one ends, so this is a
     // reachable state, not a theoretical one.
     //
+    // Widened for the args since fwod56: `fillParams` is a SINGLE pass, so a
+    // param bound to `{{05-open.quotation_reference}}` substitutes that text
+    // into the args and nothing re-scans it — the slot IS in `params`, so the
+    // membership question above cannot see it. The args arm therefore asks
+    // expect.ts's question instead (any `{{…}}` but the wildcard), which is
+    // what an expectation over the same value has asked all along; the marker
+    // and check arms keep the narrow reading.
+    //
     // Not a hard stop — a fallback, like every other replay stop: the step is
     // handed to the model, which is the whole point of the trade that made
     // the slots unbound. Reads, waits and checks are untouched; they keep the

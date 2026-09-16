@@ -959,7 +959,15 @@ ${describeLeaks(leaks.slice(0, 6))}`);
     // about any {{step.output}} only model recovery could re-observe. A step's
     // pin may be one segment of a chain whose LATER segment does the read, so
     // publishes() unions the whole chain.
-    const warnings = [...lintFlowRefs(flow, publishedOutputsOf), ...lintUnpublishedOutputs(flow, publishedOutputsOf)];
+    // …and the same walk names the segment a re-recorded read has to land in,
+    // so the warning says `s_2df673` rather than "that procedure's last
+    // segment" — the tail is exactly where liveReadsFor appends, above.
+    const chainTailOf = (id: string): string | null => {
+      const sk = store.get(id);
+      if (!sk?.seq) return null;
+      return store.list(sk.origin).filter((s) => s.seq?.chain === sk.seq!.chain).sort((a, b) => a.seq!.index - b.seq!.index).pop()?.id ?? null;
+    };
+    const warnings = [...lintFlowRefs(flow, publishedOutputsOf), ...lintUnpublishedOutputs(flow, publishedOutputsOf, chainTailOf)];
     // Phase 2 of PLAN-provenance: report anything of this run's that survived
     // into the flow. WARN for now — the ledger's coverage is what is being
     // measured, and a false alarm must not block an export.
@@ -1139,6 +1147,12 @@ ${describeLeaks(certain.slice(0, 30))}${certain.length > 30 ? `\n  … and ${cer
       }
       prevRecovered = false;
       const pinned = step.skill ? (this.browser.learn?.get(step.skill) ?? null) : null;
+      // The pin's whole segment chain, computed once: a replay runs EVERY
+      // segment with the same params, so both questions asked below — what
+      // page vocabulary the procedure knows (recordedStandIn) and whether an
+      // unresolved reference can change what it does (ignorableRefs) — are
+      // questions about the chain, never about the head alone.
+      const chain = pinned ? (pinned.seq && this.browser.learn ? this.browser.learn.list(pinned.origin).filter((s) => s.seq?.chain === pinned.seq!.chain) : [pinned]) : [];
       // A reference this run could not fill, whose RECORDED value the page is
       // showing right now, resolves to that value (recordedStandIn says which
       // values are safe; recordedValueShown looks). fwrd54: 06-change replayed
@@ -1160,7 +1174,6 @@ ${describeLeaks(certain.slice(0, 30))}${certain.length > 30 ? `\n  … and ${cer
       // the procedure uses as page vocabulary, and the page must be showing it.
       if (pinned) {
         const before = [...resolveInstruction(step, varsIn, outputs).missing, ...(resolveStepParams(step, varsIn, outputs)?.missing ?? [])];
-        const chain = pinned.seq && this.browser.learn ? this.browser.learn.list(pinned.origin).filter((s) => s.seq?.chain === pinned.seq!.chain) : [pinned];
         const runValues = Object.values(varsIn);
         for (const ref of new Set(before)) {
           const sid = ref.slice(0, ref.indexOf('.'));
@@ -1192,10 +1205,13 @@ ${describeLeaks(certain.slice(0, 30))}${certain.length > 30 ? `\n  … and ${cer
       // skipped and the step goes to recovery on the strong model, built from
       // what IS known (softResolve keeps the resolved title even when the id is
       // missing). Only a genuine failure there halts.
-      // ...unless the pinned skill cannot be affected by the reference at all
-      // (see ignorableRefs): then the zero-model replay runs as pinned.
+      // ...unless the pinned procedure cannot be affected by the reference at
+      // all (see ignorableRefs): then the zero-model replay runs as pinned.
+      // The whole CHAIN is the procedure — a slot the head never touches can
+      // still be typed by a later segment (fwod56 s_4404a9) — so the chain
+      // goes in, matching emit.ts's `usedSlot`.
       const allMissing = [...missing, ...(bound?.missing ?? [])];
-      const ignorable = ignorableRefs(allMissing, step, pinned);
+      const ignorable = ignorableRefs(allMissing, step, chain);
       const blocking = allMissing.filter((r) => !ignorable.includes(r));
       if (allMissing.length && !blocking.length) opts.progress(`[flow ${flow.name}] ${step.id}: reference(s) ${ignorable.join(', ')} unresolved but unused by the pinned procedure — replaying as pinned`);
       const unresolved = blocking.length > 0;
@@ -1576,7 +1592,16 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       usage.completionTokens += result.usage.completionTokens;
       usage.cachedTokens += result.usage.cachedTokens;
       const values: Record<string, string> = {};
-      for (const [k, v] of Object.entries(result.report.evidence?.values ?? {})) values[k] = String(v);
+      // A value that still carries a `{{…}}` is not a finding, it is an
+      // unresolved reference that survived filling: banking it would publish
+      // the literal `{{05-open.quotation_reference}}` as this step's output,
+      // and every later step referencing it would inherit the marker and,
+      // worse, type it. The already-satisfied path above has always dropped
+      // these (`if (!/\{\{/.test(filled))`); one rule, both paths.
+      for (const [k, v] of Object.entries(result.report.evidence?.values ?? {})) {
+        const s = String(v);
+        if (!/\{\{/.test(s)) values[k] = s;
+      }
       // A recovery's model names its read-backs freely (ticketRef vs
       // ticket_ref vs ticket-id); later steps reference the names recorded at
       // capture time. Alias each expected output that is missing but present

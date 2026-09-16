@@ -2,11 +2,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { ElementHandle, Frame, Locator, Page } from 'playwright-core';
 import { ensureSessionDir } from '../shared/paths.js';
-import { volatileMatcher } from '../shared/text.js';
+import { escapeRe, volatileMatcher } from '../shared/text.js';
 import { pointLocator } from '../execution/point.js';
 import { dispatchesFirstMatch } from '../execution/lifecycle.js';
 import { rootFor, type FramePath, type PageEffect, type Root } from '../execution/context.js';
 import { urlPattern } from '../skills/compile.js';
+import { foldValue } from '../skills/flow.js';
 import { isRefTarget, refHint, resolveTarget } from './refs.js';
 import { tagComponent } from '../skills/components.js';
 import { GENERATED_ID_HEX_RUN, skeleton } from '../skills/shape.js';
@@ -817,6 +818,31 @@ function candidateIdentity(c: LocatorCandidate): string | null {
 }
 
 /**
+ * `v` as an anchored case-insensitive matcher for Playwright's text engines.
+ *
+ * Record time applies the SAME rule compile time does: `foldValue` (imported
+ * from skills/flow.ts, where valueLineCandidates applies it to a snapshot line)
+ * is the one spelling of "are these two strings the same value" — whitespace
+ * collapsed, trimmed, case folded. Record time is where grafana's
+ * `folder = "bench"` first failed to pin against a page rendering "Bench", so
+ * the exact comparison had to go here too; two subtly different predicates for
+ * one rule would be the defect, not the duplication.
+ *
+ * Folding LOOSENS what matches, so every uniqueness test below is judged AFTER
+ * folding: two showings differing only in case are ambiguous and refused, not
+ * silently resolved to the first.
+ *
+ * A RegExp, because `getByText(s, { exact: true })` is case-SENSITIVE and has no
+ * option that is not. Playwright tests a RegExp against the element's full text
+ * rather than its normalised text, so the anchors absorb surrounding whitespace
+ * and each literal space matches any whitespace run — the equivalent of the
+ * normalisation `exact: true` would have done.
+ */
+function foldedTextRe(v: string): RegExp {
+  return new RegExp(`^\\s*${escapeRe(foldValue(v)).replace(/ /g, '\\s+')}\\s*$`, 'i');
+}
+
+/**
  * Record-time read-back synthesis (progressive automation option (c)): given a
  * value the agent just reported, find the live element showing it and derive a
  * durable, NON-value locator for it, so the same value can be re-read on a
@@ -827,8 +853,19 @@ function candidateIdentity(c: LocatorCandidate): string | null {
  */
 export async function captureReadBack(page: Page, value: string, label?: string): Promise<RecordedStep | null> {
   const v = value.trim();
-  if (v.length < 2 || v.length > 80) return null; // too short to be distinctive, or prose
-  const loc = page.getByText(v, { exact: true });
+  const want = foldValue(v);
+  // The floor was "too short to be distinctive": a one-character value was
+  // assumed to match half the page, so the search was skipped rather than run.
+  // That is a guess about the value; the page answers the same question for
+  // real, one line down. Every path out of here already requires either
+  // count === 1 (nothing else on the page shows this string) or a second,
+  // independent identity — a row anchor, the page's only heading, the one
+  // stable test hook — so a digit that IS noise is refused by the count and a
+  // digit that is the page's own answer is kept. grafana's
+  // `panel_count = "3"` was refused here, unique on the page, for being one
+  // character long. 1, not 0: an empty value has nothing to find.
+  if (want.length < 1 || want.length > 80) return null; // nothing to find, or prose
+  const loc = page.getByText(foldedTextRe(v));
   const count = await loc.count().catch(() => 0);
   // Ambiguity is acceptable for a READ-BACK only when something ELSE names the
   // record. Within one page state, two matches of the same string do both read
@@ -866,7 +903,7 @@ export async function captureReadBack(page: Page, value: string, label?: string)
   // BOTH replays — for a value that was on screen, correctly named, the
   // whole time.
   if (count > 1) {
-    const inHeading = page.locator('h1, h2, h3').getByText(v, { exact: true });
+    const inHeading = page.locator('h1, h2, h3').getByText(foldedTextRe(v));
     if ((await inHeading.count().catch(() => 0)) === 1) {
       const handle = await inHeading.elementHandle({ timeout: 1_000 }).catch(() => null);
       if (handle) {
@@ -888,14 +925,16 @@ export async function captureReadBack(page: Page, value: string, label?: string)
     // `<p data-testid="ticket-ref">`, the pin bailed, and the recording's
     // RD-1128 rode into four flow instructions as a literal. A list page with
     // the same hook on every row matches it more than once and still refuses.
+    // `foldValue` inlined: this body is serialised into the page, where nothing
+    // of this module exists. Same three operations, in the same order.
     const hooked = await loc
-      .evaluateAll((els, want) =>
+      .evaluateAll((els, folded) =>
         els.map((el) => {
           const holder = (el as Element).closest('[data-testid]') as HTMLElement | null;
-          const own = holder ? (holder.innerText ?? holder.textContent ?? '').replace(/\s+/g, ' ').trim() : '';
-          return holder && own === want ? holder.getAttribute('data-testid') ?? '' : '';
+          const own = holder ? (holder.innerText ?? holder.textContent ?? '').replace(/\s+/g, ' ').trim().toLowerCase() : '';
+          return holder && own === folded ? holder.getAttribute('data-testid') ?? '' : '';
         }),
-      v)
+      want)
       .catch(() => [] as string[]);
     const stable = hooked.map((t, i) => ({ t, i })).filter(({ t }) => t && skeleton(t) === t);
     if (stable.length === 1) {
@@ -930,9 +969,18 @@ async function captureFormValue(page: Page, v: string): Promise<RecordedStep | n
   const controls = page.locator('input, textarea, select');
   let hits: number[];
   try {
+    // `foldValue` inlined — this body runs in the page. Same rule as the text
+    // path: a control holding "Bench" answers for a reported "bench", and
+    // uniqueness is judged after folding, so two controls differing only in
+    // case are ambiguous and refused below.
     hits = await controls.evaluateAll(
-      (els, want) => els.map((el, i) => ((((el as HTMLInputElement).value ?? '') as string).trim() === want ? i : -1)).filter((i) => i >= 0),
-      v,
+      (els, folded) =>
+        els
+          .map((el, i) =>
+            ((((el as HTMLInputElement).value ?? '') as string).replace(/\s+/g, ' ').trim().toLowerCase() === folded ? i : -1),
+          )
+          .filter((i) => i >= 0),
+      foldValue(v),
     );
   } catch {
     return null;
@@ -956,7 +1004,14 @@ async function captureFormValue(page: Page, v: string): Promise<RecordedStep | n
  */
 export async function captureReadBackAt(page: Page, value: string, selector: string): Promise<RecordedStep | null> {
   const v = value.trim();
-  if (!selector.trim() || v.length < 2 || v.length > 80) return null;
+  // Same floor and same fold as captureReadBack/captureFormValue: one rule for
+  // "are these two strings the same value", three sites. 1, not 2 — a
+  // one-character value is refused by the page (count !== 1 below), not by a
+  // guess about its length; grafana's `panel_count = "3"` is the case that
+  // guess cost. The length window is measured on the folded form for the same
+  // reason the comparison is.
+  const want = foldValue(v);
+  if (!selector.trim() || want.length < 1 || want.length > 80) return null;
   let loc;
   try {
     loc = resolveTarget(page, selector);
@@ -971,7 +1026,24 @@ export async function captureReadBackAt(page: Page, value: string, selector: str
     const raw = await handle
       .evaluate((el) => ((el as HTMLElement).innerText ?? (el as HTMLInputElement).value ?? '').trim())
       .catch(() => '');
-    if (raw !== v && !raw.includes(v)) return null; // the model pointed at the wrong element
+    // Folded, like the two deterministic sites: an app renders a value in
+    // whatever case it likes, and a model-supplied selector resolving to the
+    // element showing "Bench" answers for a reported "bench" exactly as the
+    // text path does — the exact comparison here was the third copy of the bug
+    // grafana's `folder` found.
+    //
+    // CONTAINMENT is kept, unlike the deterministic path, and deliberately: the
+    // text path locates the text node itself (getByText), so equality is all it
+    // ever needs, while the model hands back a SELECTOR — usually the enclosing
+    // cell, row or field wrapper, whose innerText carries a label or sibling
+    // text around the value. Demanding equality here would refuse most correct
+    // model answers. It stays safe because the trust is not in this predicate:
+    // the selector must already resolve to exactly one element (count !== 1
+    // above refuses), and readBackFromHandle then derives a NON-value locator
+    // for that element, so a wrapper that merely contains the string still has
+    // to yield an identity of its own.
+    const got = foldValue(raw);
+    if (got !== want && !got.includes(want)) return null; // the model pointed at the wrong element
     return await readBackFromHandle(page, handle, v);
   } finally {
     await handle.dispose().catch(() => {});
@@ -983,10 +1055,16 @@ async function readBackFromHandle(page: Page, handle: ElementHandle<Node>, v: st
   const info = (await handle.evaluate(describeInPage)) as ElementInfo;
   const chain: LocatorCandidate[] = [];
   let winner: LocatorCandidate | null = null;
+  const want = foldValue(v);
   for (const candidate of candidatesFor(info)) {
     // Skip any candidate whose identity IS the value — locating the price by
-    // "125.00" would never match a different price on the next run.
-    if (candidateIdentity(candidate.spec) === v) continue;
+    // "125.00" would never match a different price on the next run. Folded for
+    // the same reason the search is: now that a reported "bench" reaches the
+    // element the page names "Bench", a locator named "Bench" is exactly as
+    // circular as one named "bench", and an exact comparison here would let it
+    // through.
+    const identity = candidateIdentity(candidate.spec);
+    if (identity && foldValue(identity) === want) continue;
     // Same uniqueness rule as verifiedChain: an ambiguous anchor is not identity.
     if (candidate.spec.kind === 'scoped' && (await candidate.make(page).count().catch(() => 0)) !== 1) continue;
     if (candidate.spec.kind === 'point') {

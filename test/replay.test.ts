@@ -814,6 +814,92 @@ d('read-back synthesis (fixture page)', () => {
       await session.close();
     }
   }, 30_000);
+
+  it('pins a value the page shows in a different case, and refuses when only the case differs', async () => {
+    const { captureReadBack, setIdentityHints } = await import('../src/daemon/recorder.js');
+    const session = new BrowserSession({ session: 'rbfold', persist: false });
+    try {
+      const page = await session.getPage();
+      setIdentityHints([]);
+      // grafana fwgr48 02-open reported `folder = "bench"`; the page renders
+      // "Bench". The exact comparison pinned nothing, no read was ever
+      // captured, and that single value was the whole of grafana's compiled-arm
+      // refusal: `05-open: slot v3 is bound to {{02-open.folder}}, and nothing
+      // has ever published folder`.
+      await page.setContent(`
+        <div id="crumbs"><span id="folder-name">Bench</span></div>
+        <div id="stats"><span id="panel-count">3</span></div>`);
+      const folder = await captureReadBack(page, 'bench', 'folder');
+      expect(folder).toBeTruthy();
+      expect(folder!.label).toBe('folder');
+      // The reported value is what the read publishes; the page's casing is
+      // how it was FOUND, not a second value.
+      expect(JSON.parse(folder!.result!)).toBe('bench');
+      // Still never circular — and the page's own casing is just as circular
+      // as the reported one now that either would match.
+      expect(JSON.stringify(folder!.locators.target.chain).toLowerCase()).not.toContain('"bench"');
+
+      // A single digit, unique on the page, is a good read-back: the old
+      // `length < 2` floor refused grafana's `panel_count = "3"` for being one
+      // character long, without ever asking the page.
+      const panels = await captureReadBack(page, '3', 'panel_count');
+      expect(panels).toBeTruthy();
+      expect(JSON.parse(panels!.result!)).toBe('3');
+
+      // Uniqueness is judged AFTER folding: two lines differing only in case
+      // are two candidates, so this is ambiguous and refused — not silently
+      // resolved to whichever comes first.
+      await page.setContent('<p id="a">Bench</p><p id="b">bench</p>');
+      expect(await captureReadBack(page, 'bench')).toBeNull();
+
+      // And the form path folds the same way: a control holding "Bench"
+      // answers for a reported "bench".
+      await page.setContent('<input id="folder" type="text">');
+      await page.fill('#folder', 'Bench');
+      const control = await captureReadBack(page, ' bench ', 'folder');
+      expect(control).toBeTruthy();
+      expect(control!.args.what).toBe('value');
+      expect(JSON.parse(control!.result!)).toBe('bench');
+    } finally {
+      await session.close();
+    }
+  }, 30_000);
+
+  it('folds the same way on the model-supplied-selector fallback, and keeps the same floor', async () => {
+    const { captureReadBackAt, setIdentityHints } = await import('../src/daemon/recorder.js');
+    const session = new BrowserSession({ session: 'rbat', persist: false });
+    try {
+      const page = await session.getPage();
+      setIdentityHints([]);
+      await page.setContent(`
+        <div id="crumbs"><span id="folder-name" data-testid="folder-name">Bench</span></div>
+        <div id="stats"><span id="panel-count" data-testid="panel-count">3</span></div>
+        <div id="field"><label>Folder</label> <span data-testid="folder-field">Folder: Bench</span></div>
+        <div id="other" data-testid="other">Something else</div>`);
+      // Same rule as the deterministic path, third site: the page's "Bench"
+      // answers for a reported "bench".
+      const folder = await captureReadBackAt(page, 'bench', '#folder-name');
+      expect(folder).toBeTruthy();
+      expect(JSON.parse(folder!.result!)).toBe('bench');
+
+      // Floor of 1, not 2: a single character is refused by the page, not by
+      // its length.
+      const panels = await captureReadBackAt(page, '3', '#panel-count');
+      expect(panels).toBeTruthy();
+      expect(JSON.parse(panels!.result!)).toBe('3');
+
+      // Containment survives here (it does not on the text path): the model
+      // typically points at the enclosing field, whose text carries a label.
+      expect(await captureReadBackAt(page, 'bench', '[data-testid="folder-field"]')).toBeTruthy();
+
+      // A selector pointing at the wrong element is still refused.
+      expect(await captureReadBackAt(page, 'bench', '#other')).toBeNull();
+      // And an empty value has nothing to find.
+      expect(await captureReadBackAt(page, '  ', '#folder-name')).toBeNull();
+    } finally {
+      await session.close();
+    }
+  }, 30_000);
 });
 
 d('delete-loop replay (fixture page)', () => {

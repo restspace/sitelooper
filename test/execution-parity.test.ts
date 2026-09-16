@@ -370,7 +370,10 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     const { missing } = resolveInstruction(step, {}, outputs);
     const bound = resolveStepParams(step, {}, outputs);
     const allMissing = [...missing, ...(bound?.missing ?? [])];
-    const ignorable = ignorableRefs(allMissing, step, consumer);
+    // The whole segment chain, as the daemon passes it: a slot unused by the
+    // head but typed by a later segment is NOT ignorable (fwod56). These
+    // fixtures are single-segment, so the chain is the consumer itself.
+    const ignorable = ignorableRefs(allMissing, step, [consumer]);
     const blocking = allMissing.filter((r) => !ignorable.includes(r));
     if (blocking.length) {
       return {
@@ -1228,10 +1231,19 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     // Bound to '' is BOUND: an unpublished reference, whose own rule is
     // url.ts's `unfilled`. The evidence is membership in params, not the text.
     expect(await verdict({ args: { value: '{{v2}}' } }, { v2: '' })).toBeNull();
-    // A flow reference is a different mechanism with its own diagnosis, and a
-    // page that legitimately shows braces is not a marker at all.
-    expect(await verdict({ args: { url: '{{02-create.uid}}' } }, {})).toBeNull();
-    expect(await verdict({ args: { text: 'function f() {{ return 1 }}' } }, {})).toBeNull();
+    // A flow reference IS one, once it reaches the value a step acts with.
+    // `fillParams` is a single pass, so `{{v2}}` bound to `{{02-create.uid}}`
+    // leaves that text standing in the args — and it used to pass here, which
+    // is exactly the hole fwod56 witnessed. Both readings of it agree on both
+    // sides: the marker the run arrived with, and the one a param resolved to.
+    expect(await verdict({ args: { url: '{{02-create.uid}}' } }, {})).toMatch(/still unresolved/);
+    expect(await verdict({ args: { url: '{{v2}}' } }, { v2: '{{02-create.uid}}' })).toMatch(/\{\{02-create\.uid\}\} is still unresolved/);
+    // The price of expect.ts's reading, taken knowingly and identically on
+    // both sides: text that legitimately doubles a brace reads as a marker.
+    // In replay that is a fallback to the model, and the artifact never calls
+    // this at run time (emit.ts's unfillableStep is its compile-time twin), so
+    // the cost is one recovery turn on a step no bench recording has.
+    expect(await verdict({ args: { text: 'function f() {{ return 1 }}' } }, {})).toMatch(/still unresolved/);
 
     // THE CHAIN: a preference order. fwod34 s_eee5b1 step 2's own shape — the
     // dead rung drops, the role rung takes the step, nothing refuses.
@@ -1239,6 +1251,60 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     expect(await verdict({ args: { target: '@e1', value: 'Beta' }, locators: { target: [dead, role] } }, {})).toBeNull();
     // Only a chain with no rung left is fatal, and then for want of a target.
     expect(await verdict({ args: { target: '@e1', value: 'Beta' }, locators: { target: [dead] } }, {})).toMatch(/no way left to name the element/);
+  }, 120_000);
+
+  /**
+   * F2 (fwod56). A step whose arg RESOLVES to a placeholder, run for real.
+   *
+   * The witness: `10-verify` pinned the head of a 5-segment chain whose `v4`
+   * held `{{05-open.quotation_reference}}`, and segment 3 of that chain types
+   * `{{v4}}`. `server.ts` replays each later segment with
+   * `{ ...match.params, ...derived }`, so the placeholder arrives at the
+   * segment as a bound param — which is what this case hands replay directly,
+   * `v1: '{{01-read.x}}'`, no flow gate in the way. `fillParams` is a single
+   * pass, so the goto's url becomes `/record/{{01-read.x}}` and the old guard
+   * (`name in params`) could not see it: v1 IS bound.
+   *
+   * Neither runner acts, EACH BY ITS OWN ROUTE, which is the ordinary
+   * tier-A/tier-B split and not a divergence:
+   *  - the daemon refuses at run time, from the shared verdict, and falls back
+   *    to the model (no model here, so the replay simply stops);
+   *  - the artifact refuses at COMPILE time with `unsourced-ref` — its
+   *    `usedSlot` is chain-aware, so it sees that 02-mark's used slot is bound
+   *    to an output no procedure can publish, and no artifact is written at all.
+   *
+   * The mutation log is the oracle on the daemon side: no `visit:` and no
+   * `mark:` means nothing was dispatched, which no runner's own report can
+   * establish about itself.
+   */
+  it('neither runner acts on a step whose arg resolves to an unpublished reference', async () => {
+    // 01-read declares `x` and its procedure reads nothing — the commoner half
+    // of unsourcedRef ('none'), fwkb15 and fwod52's shape.
+    const blindFlow = (): SpecFlow => {
+      const flow = readMarkFlow('#target');
+      flow.steps[0].segments[0].steps = [MARK];
+      return flow;
+    };
+
+    reset(2);
+    const replay = await replayOf(markSkill(), { v1: '{{01-read.x}}' });
+    const replayLog = [...fx.log];
+
+    // The daemon: stopped before the goto, by the shared verdict.
+    expect(replayLog, 'replay must not navigate to a url carrying a marker').toEqual([]);
+    expect(replay.ok).toBe(false);
+    expect(replay.reason, replay.reason ?? '').toMatch(/\{\{01-read\.x\}\}/);
+    expect(replay.reason, replay.reason ?? '').toMatch(/still unresolved|nothing was dispatched/);
+
+    // The artifact: refused where there is still somebody to tell.
+    const { diagnostics } = emitFlowFile(blindFlow(), { tier: 'plain' });
+    const unsourced = diagnostics.filter((dg) => dg.code === 'unsourced-ref');
+    expect(unsourced.map((dg) => [dg.step, dg.severity]), JSON.stringify(diagnostics)).toEqual([['02-mark', 'error']]);
+    expect(unsourced[0].what).toContain('{{01-read.x}}');
+
+    // And the counterfactual, so this is not satisfied by a compiler that
+    // refuses everything: the same flow with a read that CAN publish compiles.
+    expect(emitFlowFile(readMarkFlow('#target'), { tier: 'plain' }).diagnostics.filter((dg) => dg.severity === 'error')).toEqual([]);
   }, 120_000);
 
   /**

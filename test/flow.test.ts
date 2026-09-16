@@ -7,7 +7,7 @@ import {
   ignorableRefs,
   leadingValue,
   pruneUnsourcedOutputs,
-  consumedReportedOutputs, consumedUrlOutputs, buildFlow, lintFlowRefs, lintUnpublishedOutputs, liveReadsFor, looksLikeReportedData, mutatingIntent, noteOutputEvidence, recoveryRoute, resolveInstruction, resolveStepParams, softResolveInstruction, unbankedMutations, unreportedOutputs, urlOutputs, valueLineCandidates, varyingValues, type Flow, type FlowStep } from '../src/skills/flow.js';
+  consumedReportedOutputs, consumedUrlOutputs, buildFlow, foldValue, lintFlowRefs, lintUnpublishedOutputs, liveReadsFor, looksLikeReportedData, mutatingIntent, noteOutputEvidence, recoveryRoute, resolveInstruction, resolveStepParams, sameValue, softResolveInstruction, unbankedMutations, unreportedOutputs, urlOutputs, valueLineCandidates, varyingValues, type Flow, type FlowStep } from '../src/skills/flow.js';
 import { bindSkill, publishedOutputs, synthesizeReport } from '../src/skills/learn.js';
 import { SkillStore, type Skill, type SkillStep } from '../src/skills/store.js';
 import { compileSkill, dropAbsentReadLocators, dropDeadReadLocators, markReadsProven } from '../src/skills/compile.js';
@@ -369,8 +369,41 @@ describe('lintUnpublishedOutputs / unreportedOutputs (fwgr36 01-open)', () => {
   it('warns about a declared output the pinned skill cannot re-read, unreferenced or not', () => {
     const warnings = lintUnpublishedOutputs(flow, () => ['dashboard_name']);
     expect(warnings).toHaveLength(1);
-    expect(warnings[0]).toContain('01-open reports panel_titles_in_order, but s_open re-reads none of it');
+    expect(warnings[0]).toContain('01-open reports panel_titles_in_order, but no segment of the procedure it pins (s_open');
     expect(warnings[0]).not.toContain('url');
+  });
+
+  it('accuses the procedure, not the chain head, and points the advice at the segment a read lands in (fwod56/fwgr48)', () => {
+    // The pin is a chain HEAD that legitimately holds no reads; publishes()
+    // unions the chain, and the server appends a synthesized read to the TAIL.
+    // "s_d401a3 re-reads none of them" was true of the head and false of the
+    // procedure — the sentence must never be readable as "this skill
+    // publishes nothing".
+    const chained: Flow = {
+      ...flow,
+      steps: [{ id: '03-create', instruction: 'Create the order; report the product and the untaxed amount.', skill: 's_d401a3', outputs: ['product_name', 'untaxed_amount'], recorded: {} }],
+    };
+    const [w] = lintUnpublishedOutputs(chained, () => ['order_ref']);
+    expect(w).toContain('03-create reports product_name, untaxed_amount');
+    expect(w).not.toContain('s_d401a3 re-reads none');
+    expect(w).toContain('no segment of the procedure it pins (s_d401a3, with any later segment of its chain) re-reads them');
+    expect(w).toContain("lands in that procedure's last segment");
+  });
+
+  it('names the actual tail when the caller can resolve one, and keeps the generic wording when it cannot', () => {
+    const chained: Flow = {
+      ...flow,
+      steps: [{ id: '03-create', instruction: 'Create the order; report the product.', skill: 's_d401a3', outputs: ['product_name'], recorded: {} }],
+    };
+    const [named] = lintUnpublishedOutputs(chained, () => ['order_ref'], () => 's_2df673');
+    expect(named).toContain('(s_d401a3, through its last segment s_2df673) re-reads it from the page');
+    expect(named).toContain('lands in s_2df673.');
+    // A pin that is its own tail, or a resolver with no answer, says what it
+    // always said — the caller is not required to have a store.
+    const [self] = lintUnpublishedOutputs(chained, () => ['order_ref'], () => 's_d401a3');
+    expect(self).toContain('(s_d401a3, with any later segment of its chain)');
+    const [none] = lintUnpublishedOutputs(chained, () => ['order_ref'], () => null);
+    expect(none).toContain("lands in that procedure's last segment");
   });
 
   it('is quiet when everything is re-published, or the skill is not in the store', () => {
@@ -1029,13 +1062,44 @@ describe('ignorableRefs (fwgr23 05-open)', () => {
     params: { v1: '{{01.title}}', v3: '{{04.range}}', v4: '{{04.tag}}', v5: '{{02.board}}' },
   } as unknown as Parameters<typeof ignorableRefs>[1];
   it('a reference that reaches only unused params, or only the wording, is ignorable', () => {
-    expect(ignorableRefs(['04.tag', '04.range', '09.note'], step, skill)).toEqual(['04.tag', '04.range', '09.note']);
+    expect(ignorableRefs(['04.tag', '04.range', '09.note'], step, [skill])).toEqual(['04.tag', '04.range', '09.note']);
   });
   it('a reference a step types by, or that names the record (requireText), is not', () => {
-    expect(ignorableRefs(['01.title', '02.board', '04.tag'], step, skill)).toEqual(['04.tag']);
+    expect(ignorableRefs(['01.title', '02.board', '04.tag'], step, [skill])).toEqual(['04.tag']);
   });
   it('without a pinned skill nothing is ignorable', () => {
-    expect(ignorableRefs(['04.tag'], step, null)).toEqual([]);
+    expect(ignorableRefs(['04.tag'], step, [])).toEqual([]);
+  });
+
+  // fwod56: the witness. `s_73bb71` is the head 10-verify pins and its v4
+  // reports usedIn: [] — but segment 3 of the same chain (`s_4404a9`) step 1
+  // is `type { text: "{{v4}}" }`. Judged on the head alone the blank is
+  // "ignorable", tier A proceeds, and the 31 literal characters
+  // `{{05-open.quotation_reference}}` get typed into Odoo's search box.
+  it('a slot the HEAD never touches but a later segment types by is not ignorable (fwod56)', () => {
+    const head = { params: { v4: { example: 'S00042', usedIn: [] } }, preconditions: { urlPattern: 'http://x/' } } as unknown as Skill;
+    const seg3 = { params: { v4: { example: 'S00042', usedIn: [1, 3] } }, preconditions: { urlPattern: 'http://x/' } } as unknown as Skill;
+    const verify = {
+      id: '10-verify',
+      instruction: 'Verify {{05-open.quotation_reference}}',
+      skill: 's_73bb71',
+      params: { v4: '{{05-open.quotation_reference}}' },
+    } as unknown as Parameters<typeof ignorableRefs>[1];
+    const ref = ['05-open.quotation_reference'];
+    expect(ignorableRefs(ref, verify, [head])).toEqual(ref); // the old, head-only reading
+    expect(ignorableRefs(ref, verify, [head, seg3])).toEqual([]); // the chain's
+  });
+
+  // The daemon and the artifact must answer this question the same way, or a
+  // spec refuses a step the daemon happily acts on. emit.ts's `usedSlot` has
+  // always been chain-wide; this is the pin that keeps the pair together.
+  it('matches its compile-time twin usedSlot, which reads every segment', () => {
+    const emit = fs.readFileSync(path.resolve(__dirname, '../src/spec/emit.ts'), 'utf8');
+    const twin = emit.slice(emit.indexOf('function usedSlot('));
+    expect(twin.slice(0, 400)).toMatch(/step\.segments\.some\(/);
+    const flowSrc = fs.readFileSync(path.resolve(__dirname, '../src/skills/flow.ts'), 'utf8');
+    const mine = flowSrc.slice(flowSrc.indexOf('export function ignorableRefs('));
+    expect(mine.slice(0, 600)).toMatch(/for \(const seg of chain\)/);
   });
 });
 
@@ -1525,6 +1589,19 @@ describe('valueLineCandidates', () => {
     expect(valueLineCandidates(lines, 'Ready')).toEqual([]);
     expect(valueLineCandidates(['- heading "Ready" [disabled]'], ' Ready ')).toEqual([{ kind: 'role', role: 'heading', name: 'Ready' }]);
   });
+
+  it('folds case, and keeps the page\'s spelling (fwgr48 02-open reported "bench", the page shows "Bench")', () => {
+    expect(valueLineCandidates(['- link "Bench"'], 'bench')).toEqual([{ kind: 'role', role: 'link', name: 'Bench' }]);
+    expect(valueLineCandidates(['- heading " BENCH "'], ' bench')).toEqual([{ kind: 'role', role: 'heading', name: 'BENCH' }]);
+    // folding may only ever shrink the candidate set: two lines that differ
+    // only in case are ambiguous, so neither is taken.
+    expect(valueLineCandidates(['- link "Bench"', '- link "bench"'], 'BENCH')).toEqual([]);
+    // and it is still the whole name, never a substring of a longer one
+    expect(valueLineCandidates(['- link "Bench folder"'], 'bench')).toEqual([]);
+    expect(sameValue(' Bench ', 'bench')).toBe(true);
+    expect(sameValue('Bench', 'Benched')).toBe(false);
+    expect(foldValue('  Work   In Progress ')).toBe('work in progress');
+  });
 });
 
 describe('liveReadsFor', () => {
@@ -1580,6 +1657,17 @@ describe('liveReadsFor', () => {
     const reads = liveReadsFor(noStart, f, () => []);
     expect(reads.map((r) => [r.output, r.source, r.read.locators.target])).toEqual([['board_title', 'diff', [{ kind: 'role', role: 'heading', name: 'Bench Board' }]]]);
     expect(liveReadsFor(entries(), flow(), () => null)).toEqual([]);
+  });
+
+  it('synthesizes the read when only the case differs (fwgr48: reported "bench", rendered "Bench")', () => {
+    const f = flow();
+    f.steps[0].recorded = { ...f.steps[0].recorded, folder: 'backlog' };
+    f.steps[2].instruction = 'Open {{01-open.folder}}.';
+    const reads = liveReadsFor(entries(), f, () => []);
+    const folder = reads.find((r) => r.output === 'folder');
+    // The value stays as reported; the locator carries the page's spelling.
+    expect(folder?.value).toBe('backlog');
+    expect(folder?.read.locators.target).toEqual([{ kind: 'role', role: 'link', name: 'Backlog' }]);
   });
 
   it('adds no read for a value the run is known to have made (fwkb3: task_id "#4" shown as link "#4")', () => {
@@ -2025,10 +2113,15 @@ describe('the recorded stand-in reaches every unresolved reference (fwod49)', as
   } as unknown as Seg;
   const step = { id: '03-open', instruction: 'add {{02-open.product_name}}', skill: 's_head', params: stepParams } as unknown as FlowStep;
 
-  it('a reference the pinned head cannot act on is ignorable, and still has a stand-in', () => {
-    // Ignorable — the head's own slot is used by no step of the head.
-    expect(ignorableRefs([REF], step, head as unknown as Skill)).toEqual([REF]);
-    // …and the chain nevertheless knows exactly what the page should be showing.
+  it('a reference the pinned head cannot act on is judged on the chain, and still has a stand-in', () => {
+    // Head-only, the old reading: the head's own slot is used by no step of
+    // the head, so the blank looked harmless.
+    expect(ignorableRefs([REF], step, [head])).toEqual([REF]);
+    // The chain's reading (fwod56): the next segment LOCATES by the slot, so
+    // the blank is blocking — the same answer emit.ts's usedSlot gives.
+    expect(ignorableRefs([REF], step, [head, tail])).toEqual([]);
+    // …and the chain nevertheless knows exactly what the page should be showing,
+    // which is why the rescue below runs over every reference regardless.
     expect(standIn(REF, stepParams, [head, tail], { recorded: 'Ergonomic Chair' })).toBe('Ergonomic Chair');
   });
 
@@ -2039,5 +2132,21 @@ describe('the recorded stand-in reaches every unresolved reference (fwod49)', as
     const region = source.slice(start, source.indexOf('const { text, missing } = resolveInstruction(step, varsIn, outputs);', start));
     expect(region).toMatch(/for \(const ref of new Set\(before\)\)/);
     expect(region).not.toMatch(/ignorableRefs/); // the rescue no longer filters by it
+  });
+
+  /**
+   * One rule, both paths. The already-satisfied path has always refused to
+   * bank a report value that still carries a `{{…}}`; the normal replay path
+   * banked whatever the report said, so an unfilled marker became a published
+   * output a later step could reference — and then type.
+   */
+  it('neither banking path publishes a value that still holds an unfilled marker', () => {
+    const source = fs.readFileSync(path.resolve(__dirname, '../src/daemon/server.ts'), 'utf8');
+    const satisfied = source.indexOf('const filled = fillParams(v, bound.params);');
+    expect(satisfied).toBeGreaterThan(0);
+    expect(source.slice(satisfied, satisfied + 200)).toMatch(/if \(!\/\\\{\\\{\/\.test\(filled\)\)/);
+    const normal = source.indexOf("Object.entries(result.report.evidence?.values ?? {})");
+    expect(normal).toBeGreaterThan(0);
+    expect(source.slice(normal, normal + 200)).toMatch(/if \(!\/\\\{\\\{\/\.test\(s\)\)/);
   });
 });

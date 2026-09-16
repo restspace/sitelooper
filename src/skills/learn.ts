@@ -227,6 +227,49 @@ function inheritByBinding(
   return out;
 }
 
+/**
+ * Do two stored skills carry out the same PROCEDURE — the whole procedure,
+ * not its first segment?
+ *
+ * A compiled procedure that spans pages is stored as a chain of segments, and
+ * a chain's head is one segment of it. `sameProcedure` answers a per-segment
+ * question (same tools, same locator shapes, same frames/pages/effects), so
+ * asking it of two heads compares the first line of two functions and calls
+ * the functions equal.
+ *
+ * fwod56 is what that costs. `10-verify`'s pin was the head of a five-segment
+ * chain; `02-create`'s head was a four-segment chain that creates a contact.
+ * Both heads are two clicks with the same locator shapes, so `sameProcedure`
+ * said yes, the create head was validated where the verify head was only
+ * provisional, and it sorted first. The chain walk in the daemon then ran the
+ * remaining create segments and minted a second contact — while the flow
+ * reported `status: success, passed 10/10`, and the verifier looked at the
+ * duplicate. Wrong work done silently under a passing verdict.
+ *
+ * So the comparison is made of the chain: both chained or neither, the same
+ * number of segments, and every corresponding segment pair `sameProcedure`.
+ * Segments are resolved out of `skills` by `seq.chain`/`seq.index`; a segment
+ * that is missing from the store refuses the comparison, because a chain that
+ * cannot be read cannot be shown to do this work.
+ *
+ * `sameProcedure` itself is deliberately left alone — store merging asks the
+ * per-segment question at a matching chain position, and that use is sound.
+ */
+export function sameChainProcedure(a: Skill, b: Skill, skills: Skill[]): boolean {
+  if (a.id === b.id) return true;
+  if (Boolean(a.seq) !== Boolean(b.seq)) return false;
+  if (!a.seq || !b.seq) return sameProcedure(a, b);
+  if (a.seq.of !== b.seq.of) return false;
+  const segment = (chain: string, index: number): Skill | undefined =>
+    [a, b, ...skills].find((s) => s.seq !== undefined && s.seq.chain === chain && s.seq.index === index);
+  for (let i = 0; i < a.seq.of; i++) {
+    const sa = segment(a.seq.chain, i);
+    const sb = segment(b.seq.chain, i);
+    if (!sa || !sb || !sameProcedure(sa, sb)) return false;
+  }
+  return true;
+}
+
 export function selectCandidates(
   skills: Skill[],
   hintId: string | undefined,
@@ -246,7 +289,12 @@ export function selectCandidates(
     let params: Record<string, string> | null = null;
     if (s.id === hintId && pinned) params = pinned;
     else params = bindSkill(s, instruction, known);
-    if (!params && pinned && hint && (s.template === hint.template || sameProcedure(s, hint))) {
+    // A sibling may stand in for the hint only if it does the hint's WHOLE
+    // work: `sameChainProcedure` compares chain against chain, because the
+    // daemon replays the head's whole chain and not just the head (fwod56).
+    // The shared template is checked at the same depth — identical wording on
+    // two chains of different lengths says the words matched, not the work.
+    if (!params && pinned && hint && (s.template === hint.template || sameProcedure(s, hint)) && sameChainProcedure(s, hint, skills)) {
       params = inheritByBinding(s, hint, pinned, known);
     }
     if (!params) continue;
@@ -452,8 +500,17 @@ export function synthesizeReport(skill: Skill, params: Record<string, string>, l
   for (const [k, v] of Object.entries(template.values)) {
     if (k in liveValues) continue; // a live read wins outright, below
     const filled = fillParams(v, params);
-    // Kept only if every part of it came from a parameter: no residual literal.
-    if (/\{\{v\d+\}\}/.test(v) && !/\{\{v\d+\}\}/.test(filled)) values[k] = filled;
+    // Kept only if every part of it came from a parameter: no residual literal,
+    // and no residual MARKER of any spelling. A param can itself arrive still
+    // holding a reference the run never resolved — fwod56's `07-change`
+    // published `line1_product: "{{03-create.product_name}}"`, because the
+    // residual test only looked for `{{vN}}` and a `{{step.output}}` reference
+    // is not one. A value that still asks for something is not a value: it
+    // stays unpublished, exactly as an unfilled slot "asks for nothing"
+    // elsewhere (src/execution/url.ts `unfilled`, gates.ts `markersBound`).
+    // Published, it is a placeholder that any consumer can bank, compare and
+    // re-publish as data.
+    if (/\{\{v\d+\}\}/.test(v) && !/\{\{/.test(filled)) values[k] = filled;
     else stale.push(v);
   }
   for (const [k, live] of Object.entries(liveValues)) values[k] = live;
@@ -516,7 +573,11 @@ export function synthesizeReport(skill: Skill, params: Record<string, string>, l
     // procedure s_x"). The values the replay did observe are listed either
     // way, and the step's status still says the procedure ran. That is a
     // worse report, never a wrong one.
-    (!Object.keys(liveValues).length && summary === template.summary);
+    (!Object.keys(liveValues).length && summary === template.summary) ||
+    // The same rule for the prose: a sentence still carrying an unresolved
+    // marker states a placeholder as a finding. Falling back to the plain
+    // replay sentence loses nothing this run could vouch for.
+    /\{\{/.test(summary);
   const clean = dropped
     ? `Replayed stored procedure ${skill.id}${Object.keys(values).length ? `; observed ${Object.entries(values).map(([k, v]) => `${k}=${v}`).join(', ')}` : ''}.`
     : summary;
