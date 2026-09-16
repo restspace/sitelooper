@@ -1,0 +1,319 @@
+{
+  "name": "fwkb14",
+  "origin": "http://127.0.0.1:8085",
+  "startUrl": "http://127.0.0.1:8085/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in with username 'admin' and password 'admin'. Then navigate to the project named 'Bench Board' and open its board view. Report the names of the board's columns in their left-to-right order, exactly as shown on the board page. Do not modify anything.",
+      "skill": "s_10a220",
+      "params": {},
+      "outputs": [
+        "project_name",
+        "board_url",
+        "column_1",
+        "column_2",
+        "column_3",
+        "column_4"
+      ],
+      "recorded": {
+        "project_name": "Bench Board",
+        "board_url": "http://127.0.0.1:8085/?controller=BoardViewController&action=show&project_id=1",
+        "column_1": "Backlog",
+        "column_2": "Ready",
+        "column_3": "Work in progress",
+        "column_4": "Done",
+        "column_count": "4",
+        "tasks_visible_in_backlog": "3 (#1, #2, #3)",
+        "url": "http://127.0.0.1:8085/?controller=BoardViewController&action=show&project_id=1"
+      },
+      "route": "http://127.0.0.1:8085/",
+      "outputEvidence": {
+        "board_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "On the 'Bench Board' project board, create a new task with title exactly '{{runid}} Bench Task' and a description that includes the text '{{runid}}' (e.g. 'Bench task for run {{runid}}'). Fill any other required fields as needed. Submit the form and report the task's numeric ID as displayed (shown as #<number> on the task card or task page), plus the title and description you saved. Do not modify the seed tasks whose titles start with 'Seed:'.",
+      "skill": "s_e30f0d",
+      "params": {
+        "v1": "Bench Board",
+        "v3": "{{runid}} Bench Task",
+        "v2": "{{runid}}",
+        "v4": "Bench task for run {{runid}}"
+      },
+      "outputs": [
+        "task_title",
+        "task_description",
+        "project",
+        "column",
+        "ref"
+      ],
+      "recorded": {
+        "task_id": "4",
+        "task_title": "fwkb14-n1 Bench Task",
+        "task_description": "Bench task for run fwkb14-n1",
+        "project": "Bench Board (project_id=1)",
+        "board_url": "http://127.0.0.1:8085/?controller=BoardViewController&action=show&project_id=1",
+        "task_url": "http://127.0.0.1:8085/?controller=TaskViewController&action=show&task_id=4",
+        "column": "Backlog",
+        "ref": "fwkb14-n1",
+        "url": "http://127.0.0.1:8085/?controller=TaskViewController&action=show&task_id=4"
+      },
+      "route": "http://127.0.0.1:8085/",
+      "outputEvidence": {
+        "task_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "task_description": {
+          "same": 0,
+          "differed": 1
+        },
+        "project": {
+          "same": 1,
+          "differed": 0
+        },
+        "column": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "03-verify",
+      "instruction": "Move the task titled '{{runid}} Bench Task' (task #4) on the 'Bench Board' board so that it sits in the '{{01-signin.column_3}}' column. You may drag the card between columns or use the card's menu / task page 'move' action — whichever works. Then verify on the board that the card is now in the '{{01-signin.column_3}}' column and report the column it is in. Do not move or modify the seed tasks whose titles start with 'Seed:'.",
+      "skill": "s_06bbb3",
+      "params": {
+        "v1": "{{runid}} Bench Task",
+        "v3": "Bench Board",
+        "v4": "{{01-signin.column_3}}",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "task_title",
+        "current_column",
+        "column_counts",
+        "work_in_progress_card",
+        "move_method",
+        "ref"
+      ],
+      "recorded": {
+        "task_id": "4",
+        "task_title": "fwkb14-n1 Bench Task",
+        "current_column": "Work in progress",
+        "column_counts": "Backlog 3, Ready 0, Work in progress 1, Done 0",
+        "work_in_progress_card": "fwkb14-n1 Bench Task (href task_id=4)",
+        "backlog_cards": "Seed: triage inbox, Seed: order missing parts, Seed: ship repaired device",
+        "move_method": "Task page 'Move position' action, Column = Work in progress",
+        "ref": "fwkb14-n1"
+      },
+      "route": "http://127.0.0.1:8085/",
+      "outputEvidence": {
+        "task_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "task_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "current_column": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "04-add",
+      "instruction": "On the task page for task #4 ('{{runid}} Bench Task'), add a comment whose text includes '{{runid}}' (e.g. 'Comment for run {{runid}}'). Submit it and verify the comment appears on the task page, then report the exact comment text as displayed.",
+      "skill": "s_c8418d",
+      "params": {
+        "v1": "{{runid}} Bench Task",
+        "v2": "{{runid}}",
+        "v3": "Comment for run {{runid}}"
+      },
+      "outputs": [
+        "task_title",
+        "comment_text_as_displayed",
+        "comment_visibility",
+        "ref"
+      ],
+      "recorded": {
+        "task_id": "4",
+        "task_title": "fwkb14-n1 Bench Task",
+        "comment_text_as_displayed": "Comment for run fwkb14-n1",
+        "comment_author": "admin",
+        "comment_visibility": "Standard users",
+        "comment_created_at": "09/16/2026 10:07",
+        "ref": "fwkb14-n1"
+      },
+      "route": "http://127.0.0.1:8085/",
+      "outputEvidence": {
+        "task_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_text_as_displayed": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_visibility": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "05-set",
+      "instruction": "On the task page for task #4 ('{{runid}} Bench Task'), set the task's due date to 2026-12-31 (December 31, 2026). Use the task's edit/details form or the due-date field on the task page. Save and then verify the task page displays the due date as 2026-12-31 (or 12/31/2026), and report exactly how the due date is displayed on the task page.",
+      "skill": "s_f4be94",
+      "params": {
+        "v1": "{{runid}} Bench Task",
+        "v3": "12/31/2026",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "task_title",
+        "due_date_row_as_displayed",
+        "due_date_only",
+        "value_entered",
+        "modified_timestamp",
+        "due_date_label"
+      ],
+      "recorded": {
+        "task_id": "4",
+        "task_title": "fwkb14-n1 Bench Task",
+        "due_date_row_as_displayed": "Due date: 12/31/2026 10:07",
+        "due_date_only": "12/31/2026",
+        "date_format_used_in_field": "m/d/Y H:i (placeholder 09/16/2026 10:07)",
+        "value_entered": "12/31/2026",
+        "modified_timestamp": "09/16/2026 10:07",
+        "due_date_label": "Due date:"
+      },
+      "route": "http://127.0.0.1:8085/",
+      "outputEvidence": {
+        "task_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "due_date_row_as_displayed": {
+          "same": 0,
+          "differed": 1
+        },
+        "due_date_only": {
+          "same": 1,
+          "differed": 0
+        },
+        "value_entered": {
+          "same": 1,
+          "differed": 0
+        },
+        "modified_timestamp": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "06-open",
+      "instruction": "Verification only, do not modify anything. Open the 'Bench Board' board and the task page for the task titled '{{runid}} Bench Task'. Report: (1) the board's column names in left-to-right order; (2) the task's numeric ID as displayed (the #number shown on the task page); (3) the task's title; (4) the task's description text; (5) which column the task currently sits in on the board; (6) the text of the comments on the task page; (7) the due date as displayed on the task page.",
+      "skill": "s_807211",
+      "params": {
+        "v1": "Bench Board",
+        "v2": "{{runid}} Bench Task",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "task_displayed_as",
+        "task_title",
+        "task_description",
+        "current_column",
+        "comment_text",
+        "column_ready",
+        "column_done",
+        "ref"
+      ],
+      "recorded": {
+        "board_columns_left_to_right": "Backlog, Ready, Work in progress, Done",
+        "task_id": "4",
+        "task_displayed_as": "#4",
+        "task_title": "fwkb14-n1 Bench Task",
+        "task_description": "Bench task for run fwkb14-n1",
+        "current_column": "Work in progress",
+        "column_card_counts": "Backlog 3 (Seed tasks), Ready 0, Work in progress 1, Done 0",
+        "comment_text": "Comment for run fwkb14-n1",
+        "comment_count": "1",
+        "due_date_as_displayed": "Due date: 12/31/2026 10:07",
+        "board_url": "http://127.0.0.1:8085/?controller=BoardViewController&action=show&project_id=1",
+        "column_ready": "Ready",
+        "column_done": "Done",
+        "ref": "fwkb14-n1"
+      },
+      "route": "http://127.0.0.1:8085/",
+      "outputEvidence": {
+        "task_displayed_as": {
+          "same": 1,
+          "differed": 0
+        },
+        "task_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "task_description": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "column_ready": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwkb14-n1",
+    "created": "2026-09-16T10:08:38.905Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  }
+}

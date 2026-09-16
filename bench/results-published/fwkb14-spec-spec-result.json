@@ -1,0 +1,34 @@
+{
+  "arm": "spec",
+  "runid": "fwkb14-spec",
+  "target": "kanboard",
+  "flow": "fwkb14.json",
+  "flowName": "fwkb14",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwkb14-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwkb14-spec-spec-tmp/fwkb14.flow.ts",
+  "specFile": "bench/results/fwkb14-spec-spec-tmp/fwkb14.spec.ts",
+  "wallMs": 23661,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwkb14",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 21236,
+      "error": "Error: 03-verify needs {{01-signin.column_3}}, and this run never published it (it was published empty). The step that publishes 01-signin.column_3 read nothing — look above for its `[sitelooper skip] … read target not found` line, which is where this run diverged. Stopping here instead of passing an empty value into 03-verify: blank, a record-scoped locator matches every record and a known slot loses its identity, so the step would do its work to the wrong one. Everything earlier steps did stands; nothing of 03-verify has run.",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "logTail": "\nRunning 1 test using 1 worker\n\n[sitelooper step] 01-signin\n[sitelooper step] 02-create\n  ✘  1 fwkb14.spec.ts:9:1 › fwkb14 (21.2s)\n\n\n  1) fwkb14.spec.ts:9:1 › fwkb14 › 03-verify: Move the task titled '{{runid}} Bench Task' (task #4) on the 'Bench Board' board so that it sits in the '{{01-signin.column_3}}' column. You may drag the card between columns or use the card's menu / task page 'move' action — whichever works. Then verify on the board that the card is now in the '{{01-signin.column_3}}' column and report the column it is in. Do not move or modify the seed tasks whose titles start with 'Seed:'. \n\n    Error: 03-verify needs {{01-signin.column_3}}, and this run never published it (it was published empty). The step that publishes 01-signin.column_3 read nothing — look above for its `[sitelooper skip] … read target not found` line, which is where this run diverged. Stopping here instead of passing an empty value into 03-verify: blank, a record-scoped locator matches every record and a known slot loses its identity, so the step would do its work to the wrong one. Everything earlier steps did stands; nothing of 03-verify has run.\n\n       at fwkb14.flow.ts:7712\n\n      7710 |   const value = outputs[ref as keyof Outputs];\n      7711 |   if (value === undefined || value === '') {\n    > 7712 |     throw new Error(\n           |           ^\n      7713 |       `${by} needs {{${ref}}}, and this run never published it` +\n      7714 |         (value === '' ? ' (it was published empty)' : '') +\n      7715 |         `. The step that publishes ${ref} read nothing — look above for its` +\n        at need (/home/user/sitelooper/bench/results/fwkb14-spec-spec-tmp/fwkb14.flow.ts:7712:11)\n        at /home/user/sitelooper/bench/results/fwkb14-spec-spec-tmp/fwkb14.flow.ts:9644:111\n        at runFlow (/home/user/sitelooper/bench/results/fwkb14-spec-spec-tmp/fwkb14.flow.ts:9643:5)\n        at /home/user/sitelooper/bench/results/fwkb14-spec-spec-tmp/fwkb14.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: ../../../test-results/fwkb14-fwkb14/error-context.md\n\n  1 failed\n    fwkb14.spec.ts:9:1 › fwkb14 ────────────────────────────────────────────────────────────────────\n[sitelooper warn] 01-signin s_10a220/7: read 'project_name' returned a value the skill itself set/selected ('Bench Board') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper skip] 01-signin s_10a220/8 target: read target not found — value left empty\n[sitelooper skip] 01-signin s_10a220/9 target: read target not found — value left empty\n[sitelooper skip] 01-signin s_10a220/10 target: read target not found — value left empty\n[sitelooper skip] 01-signin s_10a220/11 target: read target not found — value left empty\n[sitelooper warn] 02-create s_e30f0d/7: read 'task_title' returned a value the skill itself set/selected ('fwkb14-spec Bench Task') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper warn] 02-create s_e30f0d/8: read 'task_description' returned a value the skill itself set/selected ('Bench task for run fwkb14-spec') — confirms the control, not persistence; dropped from the report's confident values\n"
+}

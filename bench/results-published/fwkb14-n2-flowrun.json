@@ -1,0 +1,261 @@
+{
+  "flow": "fwkb14",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_10a220; observed board_url=http://127.0.0.1:8085/?controller=BoardViewController&action=show&project_id=1.",
+      "values": {
+        "board_url": "http://127.0.0.1:8085/?controller=BoardViewController&action=show&project_id=1"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "project_name",
+        "column_1",
+        "column_2",
+        "column_3",
+        "column_4"
+      ]
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "On the 'Bench Board' board I clicked \"Add a new task\" in the Backlog column, filled title \"fwkb14-n2 Bench Task\" and description \"Bench task for run fwkb14-n2\", left the other fields at their defaults (Backlog column, yellow, no owner), and clicked Save. The task was created and its card appeared in Backlog; its task page confirms \"Bench Board, #4 - fwkb14-n2 Bench Task\" with the description shown as \"Bench task for run fwkb14-n2\". Numeric ID = 4. The three 'Seed:' tasks were untouched.",
+      "values": {
+        "task_title": "fwkb14-n2 Bench Task",
+        "task_description": "Bench task for run fwkb14-n2",
+        "project": "Bench Board (project_id=1)",
+        "ref": "fwkb14-n2",
+        "column": "Backlog"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-verify",
+      "status": "success",
+      "summary": "Moved task #4 'fwkb14-n2 Bench Task' into the 'Work in progress' column via the task page's column/move form (selected \"Work in progress\", saved) and verified on the Bench Board: the board table now shows the card #4 fwkb14-n2 Bench Task in the third column, whose header is \"Work in progress (Task count 1)\". The three seed tasks #1-#3 remain untouched in the Backlog column (Backlog count 3), and the Ready and Done columns are empty.",
+      "values": {
+        "task_id": "4",
+        "task_title": "fwkb14-n2 Bench Task",
+        "current_column": "Work in progress",
+        "board_columns_left_to_right": "Backlog, Ready, Work in progress, Done",
+        "work_in_progress_task_count": "1",
+        "backlog_task_count": "3",
+        "seed_tasks_in_backlog": "#1 Seed: triage inbox, #2 Seed: order missing parts, #3 Seed: ship repaired device",
+        "ref": "fwkb14-n2"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 01-signin.column_3, 01-signin.column_3, 01-signin.column_3",
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 4,
+      "unreported": [
+        "column_counts",
+        "work_in_progress_card"
+      ]
+    },
+    {
+      "id": "04-add",
+      "status": "success",
+      "summary": "On task #4's page (Bench Board, 'fwkb14-n2 Bench Task') I opened the \"Add a comment\" form, entered \"Comment for run fwkb14-n2\" in the New comment field (Visibility: Standard users, left at default) and clicked Save. The form closed and the comment now renders on the task page under the comments section; the rendered comment body text is exactly \"Comment for run fwkb14-n2\".",
+      "values": {
+        "comment_text_as_displayed": "Comment for run fwkb14-n2",
+        "ref": "fwkb14-n2",
+        "task_title": "fwkb14-n2 Bench Task",
+        "comment_visibility": "Standard users"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-set",
+      "status": "success",
+      "summary": "Replayed stored procedure s_f4be94; observed due_date_only=12/31/2026, value_entered=12/31/2026, due_date_row_as_displayed=Due date: 12/31/2026 10:09, task_title=fwkb14-n2 Bench Task, modified_timestamp=09/16/2026 10:09.",
+      "values": {
+        "due_date_only": "12/31/2026",
+        "value_entered": "12/31/2026",
+        "due_date_row_as_displayed": "Due date: 12/31/2026 10:09",
+        "task_title": "fwkb14-n2 Bench Task",
+        "modified_timestamp": "09/16/2026 10:09"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "due_date_label"
+      ]
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_807211; observed task_description=Bench task for run fwkb14-n2, comment_text=Comment for run fwkb14-n2, ref=fwkb14-n2, column_ready=Backlog  \nTask count\n3  (\nTotal number of tasks in this column across all swimlanes\n3) | Ready  | Work in progress  \nTask count\n1  (\nTotal number of tasks in this column across all swimlanes\n1) | Done , task_displayed_as=#4 , task_title=fwkb14-n2 Bench Task.",
+      "values": {
+        "task_description": "Bench task for run fwkb14-n2",
+        "comment_text": "Comment for run fwkb14-n2",
+        "ref": "fwkb14-n2",
+        "column_ready": "Backlog  \nTask count\n3  (\nTotal number of tasks in this column across all swimlanes\n3) | Ready  | Work in progress  \nTask count\n1  (\nTotal number of tasks in this column across all swimlanes\n1) | Done ",
+        "task_displayed_as": "#4 ",
+        "task_title": "fwkb14-n2 Bench Task"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "current_column",
+        "column_done"
+      ]
+    }
+  ],
+  "passed": 6,
+  "total": 6,
+  "repinned": 0,
+  "drift": 8,
+  "driftTickets": [
+    {
+      "flow": "fwkb14",
+      "step": "01-signin",
+      "skill": "s_10a220",
+      "atStep": "8",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByRole('cell', { name: 'Work in progress', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8085/?action=show&controller=BoardViewController&project_id=:id",
+      "pageUrl": "http://127.0.0.1:8085/?controller=BoardViewController&action=show&project_id=1"
+    },
+    {
+      "flow": "fwkb14",
+      "step": "01-signin",
+      "skill": "s_10a220",
+      "atStep": "9",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByRole('link', { name: 'Backlog', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8085/?action=show&controller=BoardViewController&project_id=:id",
+      "pageUrl": "http://127.0.0.1:8085/?controller=BoardViewController&action=show&project_id=1"
+    },
+    {
+      "flow": "fwkb14",
+      "step": "01-signin",
+      "skill": "s_10a220",
+      "atStep": "10",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByRole('cell', { name: 'Ready', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8085/?action=show&controller=BoardViewController&project_id=:id",
+      "pageUrl": "http://127.0.0.1:8085/?controller=BoardViewController&action=show&project_id=1"
+    },
+    {
+      "flow": "fwkb14",
+      "step": "01-signin",
+      "skill": "s_10a220",
+      "atStep": "11",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByRole('cell', { name: 'Done', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8085/?action=show&controller=BoardViewController&project_id=:id",
+      "pageUrl": "http://127.0.0.1:8085/?controller=BoardViewController&action=show&project_id=1"
+    },
+    {
+      "flow": "fwkb14",
+      "step": "03-verify",
+      "skill": "s_06bbb3",
+      "similarity": 1.002,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 01-signin.column_3, 01-signin.column_3, 01-signin.column_3",
+      "pageUrlPattern": "http://127.0.0.1:8085/?action=show&controller=BoardViewController&project_id=:id",
+      "pageUrl": "http://127.0.0.1:8085/?controller=BoardViewController&action=show&project_id=1"
+    },
+    {
+      "flow": "fwkb14",
+      "step": "05-set",
+      "skill": "s_f4be94",
+      "atStep": "4",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.locator('#task-summary >> text=Due date')",
+      "fallbackUsed": "page.getByText('Due date:', { exact: true })",
+      "fallbackIndex": 2,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8085/?action=show&controller=TaskViewController&task_id=:id",
+      "pageUrl": "http://127.0.0.1:8085/?controller=TaskViewController&action=show&task_id=4"
+    },
+    {
+      "flow": "fwkb14",
+      "step": "06-open",
+      "skill": "s_807211",
+      "atStep": "5",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByRole('link', { name: 'Work in progress', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8085/?action=show&controller=BoardViewController&project_id=:id",
+      "pageUrl": "http://127.0.0.1:8085/?controller=BoardViewController&action=show&project_id=1"
+    },
+    {
+      "flow": "fwkb14",
+      "step": "06-open",
+      "skill": "s_807211",
+      "atStep": "6",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByRole('cell', { name: 'Done', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8085/?action=show&controller=BoardViewController&project_id=:id",
+      "pageUrl": "http://127.0.0.1:8085/?controller=BoardViewController&action=show&project_id=1"
+    }
+  ],
+  "wallMs": 45359,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 47133,
+    "completionTokens": 1539,
+    "cachedTokens": 37120
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 47133,
+      "completionTokens": 1539,
+      "cachedTokens": 37120
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
