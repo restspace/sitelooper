@@ -237,10 +237,47 @@ describe('the policy the artifact derives at compile time', () => {
     // would refuse the several matches instead of waiting for them
     expect(body).toContain('if (hit1) await expect(hit1.locator.first()).toBeHidden();');
     expect(body).not.toContain('.or(');
-    // a presence wait resolves as an action does: unique, with the wait
+    // a presence wait resolves WITH the wait, as an action does — and with
+    // ambiguity allowed and on the first match, because that is what it
+    // dispatches. `hidden` was never the special case; the dispatch is
+    // (dispatchesFirstMatch). grafana fwgr43's `wait_for h2 state:visible`
+    // was held to exactly one element with three panel headings on the page:
+    // both replays stopped and the compiled arm failed 0/6.
     const visible = emit(flowOf([{ tool: 'wait_for', args: { target: 'text=x', state: 'visible' }, locators: { target: [{ kind: 'css', selector: 'td.name' }] } }])).source;
-    expect(policyOf(visible)).toBe('{ stayOnOrigin: originOf(page.url()) ?? undefined, waitMs: RESOLVE_WAIT_MS }');
-    expect(bodyOf(visible)).toContain('await expect(hit1.locator).toBeVisible();');
+    expect(policyOf(visible)).toBe('{ allowMultiple: true, stayOnOrigin: originOf(page.url()) ?? undefined, waitMs: RESOLVE_WAIT_MS }');
+    expect(bodyOf(visible)).toContain('await expect(hit1.locator.first()).toBeVisible();');
+    // a COUNT wait keeps the whole locator: the question is how many, and
+    // `.first()` would always answer one (spansEveryMatch).
+    const counted = emit(flowOf([{ tool: 'wait_for', args: { target: '.row', state: 'count', count: 3 }, locators: { target: [{ kind: 'css', selector: '.row' }] } }])).source;
+    expect(policyOf(counted)).toBe('{ allowMultiple: true, stayOnOrigin: originOf(page.url()) ?? undefined, waitMs: RESOLVE_WAIT_MS }');
+    expect(bodyOf(counted)).toContain('await expect(hit1.locator).toHaveCount(3);');
+  });
+
+  /**
+   * The compile diagnostic for the fwgr43 shape: the artifact would run, and
+   * nothing in it says the locator was never proved to name one element.
+   */
+  it('warns where a step that acts on one element has only an unindexed primary to find it by', () => {
+    const bare: SkillStep['locators']['target'] = [{ kind: 'css', selector: 'h2' }];
+    const { warnings } = emit(flowOf([{ tool: 'wait_for', args: { target: 'h2', state: 'visible' }, locators: { target: bare } }]));
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain("page.locator('h2')");
+    expect(warnings[0]).toContain('never proved to identify one element');
+    // and it names the way out
+    expect(warnings[0]).toContain('sitelooper rerecord');
+
+    // the same selector with the index the dispatch used is proved: it names
+    // match 0, which is what the wait acts on (the recorder stores it now)
+    const indexed = emit(flowOf([{ tool: 'wait_for', args: { target: 'h2', state: 'visible' }, locators: { target: [{ kind: 'css', selector: 'h2', nth: 0 }] } }]));
+    expect(indexed.warnings).toEqual([]);
+    // a chain with alternates was derived from the element itself
+    const derived = emit(flowOf([{ tool: 'wait_for', args: { target: 'h2', state: 'visible' }, locators: { target: [{ kind: 'css', selector: 'h2' }, { kind: 'role', role: 'heading', name: 'Panel' }] } }]));
+    expect(derived.warnings).toEqual([]);
+    // a count wait claims nothing about one element, and a click's ambiguity
+    // is not silent — Playwright's strict mode says so out loud
+    const plural = emit(flowOf([{ tool: 'wait_for', args: { target: 'h2', state: 'count', count: 3 }, locators: { target: bare } }]));
+    expect(plural.warnings).toEqual([]);
+    expect(emit(flowOf([click(bare)])).warnings).toEqual([]);
   });
 
   it('reports positional resolution from the resolution itself into the effect gate', () => {

@@ -629,10 +629,16 @@ describe('emitted step lifecycle', () => {
     expect(acts[1].body).toContain("], '01-step s_emit/2 target', { allowMultiple: true, stayOnOrigin: originOf(page.url()) ?? undefined, waitMs: 0 }, { drift: run.drift });");
     expect(acts[1].body).toContain('const hit2 = await resolveTarget(page, [');
     expect(acts[1].body).toContain('if (hit2) await expect(hit2.locator).toHaveCount(0);');
-    // A presence wait is a target like any other: it must resolve, so it picks.
-    expect(acts[2].body).toContain("], '01-step s_emit/3 target', { stayOnOrigin: originOf(page.url()) ?? undefined, waitMs: RESOLVE_WAIT_MS }, { drift: run.drift });");
-    expect(acts[2].body).toContain('await expect(hit3.locator).toBeVisible();');
-    expect(acts[3].body).toContain("await expect(hit4.locator).toContainText('Saved');");
+    // A presence wait must resolve, so it picks — but with ambiguity allowed
+    // and on the FIRST match, because that is what it dispatches (tools.ts
+    // waitFor). grafana fwgr43's `wait_for h2 state:visible` was held to
+    // exactly one element on a page showing three panels: both replays
+    // stopped and the compiled arm failed 0/6, on a wait that would have
+    // looked at `h2` number one. `hidden` was never the special case — the
+    // dispatch is (dispatchesFirstMatch).
+    expect(acts[2].body).toContain("], '01-step s_emit/3 target', { allowMultiple: true, stayOnOrigin: originOf(page.url()) ?? undefined, waitMs: RESOLVE_WAIT_MS }, { drift: run.drift });");
+    expect(acts[2].body).toContain('await expect(hit3.locator.first()).toBeVisible();');
+    expect(acts[3].body).toContain("await expect(hit4.locator.first()).toContainText('Saved');");
     for (const act of acts) expect(act.body).not.toMatch(/\bthrow\b/);
   });
 

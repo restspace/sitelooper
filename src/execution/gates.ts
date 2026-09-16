@@ -45,6 +45,25 @@ export function describeUrl(url: string, against?: string): string {
   return serializeShape(shape);
 }
 
+/**
+ * A stored pattern as a verdict must SHOW it: filled from this run's params,
+ * and any marker the run never bound rendered as the wildcard the matcher
+ * already treats it as (url.ts isWildcardSeg). DISPLAY ONLY — every matcher
+ * here goes on reading the raw pattern, so which urls pass is unchanged.
+ *
+ * fwod51's 07-verify printed "expected url …&id={{d3}}&…": the literal text of
+ * a marker no page ever shows, inside a sentence reading "expected url". The
+ * gate was right — the click had overshot onto another record's list — but the
+ * refusal read as a broken gate in the drift ticket, the flowrun and the
+ * compile diagnostic, and sent the fix hunting in the wrong place. A `{{vN}}`
+ * is a value the caller supplies and reads as `:var`; anything else is a
+ * position the run derives, and reads as `:id`, which is how the compiler
+ * already spells the id positions beside it.
+ */
+export function shownPattern(pattern: string, params: Record<string, string>): string {
+  return fillParams(pattern, params).replace(/\{\{([\w.-]+)\}\}/g, (_m, name: string) => (/^v\d+$/.test(name) ? ':var' : ':id'));
+}
+
 /** The tab is on a browser error page: a crashed renderer, a navigation the network refused. */
 export function isErrorPageUrl(url: string): boolean {
   return /^chrome-error:|^about:neterror/.test(url);
@@ -84,7 +103,10 @@ export function urlEffectVerdict(
 ): UrlEffectVerdict {
   if (!pattern || urlMatches(pattern, liveUrl, params)) return { warnings: [] };
   const soft = softUrlMatch(pattern, liveUrl, params);
-  if (!soft) return { warnings: [], stop: `after ${where} expected url ${fillParams(pattern, params)} but browser is at ${describeUrl(liveUrl, pattern)}` };
+  if (!soft) {
+    const shown = shownPattern(pattern, params);
+    return { warnings: [], stop: `after ${where} expected url ${shown} but browser is at ${describeUrl(liveUrl, shown)}` };
+  }
   return {
     warnings: [`${where}: url segment(s) differ from recorded (${describeDiffs(soft.diffs)}) — treated as volatile`],
     generalised: soft.generalised,
@@ -511,6 +533,8 @@ export function preconditionVerdict(
   params: Record<string, string>,
   similarity: FingerprintSimilarity,
 ): PreconditionVerdict {
+  // What this verdict actually compared, for every message below (fwod51).
+  const shown = shownPattern(pattern, params);
   if (urlMatches(pattern, url, params)) {
     // A strict match that let a one-sided query key pass took that key on
     // trust. When the caller measured the page, that trust is checked like a
@@ -522,7 +546,7 @@ export function preconditionVerdict(
     if (trusted.length && typeof similarity === 'number' && similarity < SOFT_MATCH_MIN_SIMILARITY) {
       return {
         warnings: [],
-        refuse: `not on the page this procedure starts from (expects ${fillParams(pattern, params)}, browser is at ${describeUrl(url, pattern)}; the urls differ only in query key(s) ${trusted.join(', ')}, and the page structure is not the recorded one — similarity ${similarity}, so this is another view of the page)`,
+        refuse: `not on the page this procedure starts from (expects ${shown}, browser is at ${describeUrl(url, shown)}; the urls differ only in query key(s) ${trusted.join(', ')}, and the page structure is not the recorded one — similarity ${similarity}, so this is another view of the page)`,
       };
     }
     return { warnings: [] };
@@ -538,7 +562,7 @@ export function preconditionVerdict(
           : `; the url shape is close but the page structure is not — similarity ${similarity}`;
     return {
       warnings: [],
-      refuse: `not on the page this procedure starts from (expects ${fillParams(pattern, params)}, browser is at ${describeUrl(url, pattern)}${because})`,
+      refuse: `not on the page this procedure starts from (expects ${shown}, browser is at ${describeUrl(url, shown)}${because})`,
     };
   }
   return {

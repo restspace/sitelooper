@@ -24,6 +24,7 @@ import {
   preconditionVerdict,
   retargetNavigation,
   segmentGate,
+  shownPattern,
   urlEffectVerdict,
   urlRecordParts,
 } from '../src/execution/gates.js';
@@ -143,6 +144,52 @@ describe('urlEffectVerdict', () => {
     const pattern = 'http://app.test/web#action=:id&cids=1&menu_id={{v1}}';
     expect(urlEffectVerdict(pattern, 'http://app.test/web#menu_id=42&model=x&action=9&cids=1', p, 's')).toEqual({ warnings: [] });
     expect(urlEffectVerdict(pattern, 'http://app.test/web#action=9&cids=2&menu_id=42', p, 's')).toMatchObject({ generalised: 'http://app.test/web#action=:id&cids=:var&menu_id={{v1}}' });
+  });
+});
+
+/**
+ * fwod51 07-verify: the url gate correctly refused a click that had overshot
+ * the contact form onto a sales-order list, and said "expected url
+ * …&id={{d3}}&…" — the literal text of a marker no page ever shows. A correct
+ * refusal read as a broken gate in the drift ticket, the flowrun and the
+ * compile diagnostic. An unfilled marker IS a wildcard to the matcher, so the
+ * verdict now says so, and says nothing else different.
+ */
+describe('a verdict shows what it actually compared (fwod51)', () => {
+  it('fills what the run bound and renders what it did not as the wildcard the matcher treats it as', () => {
+    expect(shownPattern('http://app.test/items/{{v1}}', { v1: '42' })).toBe('http://app.test/items/42');
+    expect(shownPattern('http://app.test/items/{{v1}}', {})).toBe('http://app.test/items/:var');
+    expect(shownPattern('http://app.test/web#id={{d3}}&cids=:id', {})).toBe('http://app.test/web#id=:id&cids=:id');
+    // A slot bound to '' is bound: the run had a value and it was empty.
+    expect(shownPattern('http://app.test/items/{{d1}}', { d1: '' })).toBe('http://app.test/items/');
+    expect(shownPattern('http://app.test/items/:id', {})).toBe('http://app.test/items/:id');
+  });
+
+  it('never prints a marker in a stop or a refusal, wherever the marker sits', () => {
+    const pattern = 'http://app.test/web#action=156&cids=:id&id={{d3}}&menu_id=109&model=res.partner&view_type=form';
+    const live = 'http://app.test/web#action=330&active_id=45&cids=1&menu_id=109&model=sale.order&view_type=list';
+    const stop = urlEffectVerdict(pattern, live, {}, 'step 3').stop!;
+    expect(stop).toContain('expected url http://app.test/web#action=156&cids=:id&id=:id&menu_id=109&model=res.partner&view_type=form');
+    expect(stop).not.toContain('{{');
+    const refused = preconditionVerdict(pattern, live, {}, 0.1).refuse!;
+    expect(refused).toContain('expects http://app.test/web#action=156&cids=:id&id=:id&menu_id=109&model=res.partner&view_type=form');
+    expect(refused).not.toContain('{{');
+    // The live url is still described by the pattern it was judged against:
+    // only the keys that pattern names, credentials masked.
+    expect(urlEffectVerdict('http://app.test/done?status=success&id={{d1}}', 'http://app.test/done?status=failure&sid=abc', {}, 'step 3').stop).toBe(
+      'after step 3 expected url http://app.test/done?status=success&id=:id but browser is at http://app.test/done?status=failure',
+    );
+  });
+
+  it('changes no matching: an unfilled marker still matches the recorded shape, and only a different view stops', () => {
+    const pattern = 'http://app.test/web#action=156&cids=:id&id={{d3}}&menu_id=109&model=res.partner&view_type=form';
+    const sameShape = 'http://app.test/web#action=156&cids=1&id=45&menu_id=109&model=res.partner&view_type=form';
+    expect(urlEffectVerdict(pattern, sameShape, {}, 'step 3')).toEqual({ warnings: [] });
+    expect(preconditionVerdict(pattern, sameShape, {}, 1).refuse).toBeUndefined();
+    // …while the same marker BOUND to another record's id still stops on this
+    // url, and now says the id it compared — the caller named that record.
+    expect(urlEffectVerdict(pattern, sameShape, { d3: '99' }, 'step 3').stop).toContain('id=99');
+    expect(urlEffectVerdict(pattern, 'http://app.test/web#action=330&cids=1&id=45&menu_id=109&model=sale.order&view_type=list', {}, 'step 3').stop).toBeDefined();
   });
 });
 

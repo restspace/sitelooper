@@ -1,4 +1,4 @@
-import { isMutatingAction, isReadAction } from '../execution/lifecycle.js';
+import { dispatchesFirstMatch, isMutatingAction, isReadAction, spansEveryMatch } from '../execution/lifecycle.js';
 import { DEFAULT_BROWSER_PROFILE, isNavigatingAction, type BrowserProfile } from '../execution/browser.js';
 import { setsSomething } from '../execution/echo.js';
 import { segmentGate } from '../execution/gates.js';
@@ -23,7 +23,7 @@ import { segmentGate } from '../execution/gates.js';
  * never observed is worse than one that admits the gap.
  */
 import { EXECUTION_MODULES, executionClosure } from './runtime-source.js';
-import type { LocatorCandidate } from '../daemon/recorder.js';
+import { candidateExpr, type LocatorCandidate } from '../daemon/recorder.js';
 import { DIALOG_LINE, SLOT_LINE, TRANSIENT_LINE } from '../execution/expect.js';
 import { identityFields } from '../execution/resolve.js';
 import { originOf } from '../execution/url.js';
@@ -1267,10 +1267,13 @@ function recordedChanges(step: SkillStep): string[] {
  * The `ResolvePolicy` for one chain, as source — the same inputs replay's
  * runOneStep builds for `resolveChain`, derived at compile time:
  *
- *  - `allowMultiple` for `read_all`, which reads across every match, and for
- *    an absence wait: a chain that still matches several visible elements
- *    has not met "hidden", and must resolve so it can be waited on to go
- *    rather than read as "nothing matched" (replay's own rule, runOneStep);
+ *  - `allowMultiple` wherever the DISPATCH may match several (the shared
+ *    spansEveryMatch / dispatchesFirstMatch): `read_all` and a count read or
+ *    wait read across every match, and every other wait acts on the first of
+ *    them — a chain that still matches several visible elements has not met
+ *    "hidden", and one that matches three panel headings has not failed
+ *    `wait_for h2 state:visible` (grafana fwgr43). Replay's own rule,
+ *    runOneStep;
  *  - `ambiguousNth`: the loop cursor, inside a folded loop's body — the
  *    policy narrows an ambiguous candidate to it only when it matched
  *    several, exactly as replay does, never an unconditional `.nth()`;
@@ -1485,7 +1488,21 @@ function actionTarget(step: SkillStep, key: 'target' | 'source', ctx: Ctx, out: 
   if (!chain.length) return null;
   const root = frameRootLines(step, key, ctx, out);
   const name = `hit${++ctx.picks}`;
-  const { open, where, policy, opts } = resolutionLines(chain, step, key, ctx, { waitMs: 'RESOLVE_WAIT_MS' }, root);
+  // The same rule replay applies at its own allowMultiple: a step whose
+  // dispatch spans every match, or acts on the first of them, has not failed
+  // to name its element by matching two. Without it the artifact held
+  // fwgr43's `wait_for h2 state:visible` to exactly one element and failed
+  // 0/6 on a page that showed three panels — while the wait it was about to
+  // run looks only at the first.
+  const args = step.args ?? {};
+  // Replay's own expression (runOneStep): inside a folded loop the cursor is
+  // what names this pass's record, so a wait that could be narrowed to it is
+  // not widened back to match 0; a step that spans every match is plural
+  // whatever the cursor says. (An absence wait never reaches here.)
+  const allowMultiple =
+    key === 'target' && (spansEveryMatch(step.tool, args) || (dispatchesFirstMatch(step.tool, args) && !ctx.loopCursor));
+  warnUnprovenTarget(step, key, chain, ctx);
+  const { open, where, policy, opts } = resolutionLines(chain, step, key, ctx, { ...(allowMultiple ? { allowMultiple } : {}), waitMs: 'RESOLVE_WAIT_MS' }, root);
   // `hoist` names the observations as a local, for a step that consults them
   // again after acting (a text wait's held-elsewhere fallback).
   const candidates = hoist ? hoist : null;
@@ -1517,6 +1534,38 @@ function actionTarget(step: SkillStep, key: 'target' | 'source', ctx: Ctx, out: 
     out.push(...echoNoteLines(chain.map((c) => (c as { name?: unknown; label?: unknown }).name ?? (c as { name?: unknown; label?: unknown }).label), ctx));
   }
   return `${name}.locator`;
+}
+
+/**
+ * A step that ACTS ON ONE element (dispatchesFirstMatch) whose whole chain is
+ * one unindexed PRIMARY was never proved to identify one element.
+ *
+ * The recorder derives a chain — testid, role+name, anchored path, point —
+ * from the element it saw; what it hands back instead is the agent's own raw
+ * selector alone, as the `css`/`text` candidate `primaryFor` builds, when it
+ * could derive nothing (it used to bail on an ambiguous selector; it still
+ * does for a target that matches nothing). grafana fwgr43 stored exactly that
+ * for `wait_for h2 state:visible`, and the shape is invisible in the
+ * artifact: a locator that looked fine on the recording machine and names
+ * three panel headings on the next page load.
+ *
+ * Only these steps, because only their ambiguity is SILENT: a click hands its
+ * locator to Playwright, whose strict mode says so out loud, while a wait
+ * takes match 0 and reports success. A step that spans every match (read_all,
+ * a count) makes no claim about one element at all.
+ *
+ * A warning, not a blocker: the artifact still runs, and the run it warns
+ * about may well pass.
+ */
+function warnUnprovenTarget(step: SkillStep, key: 'target' | 'source', chain: readonly LocatorCandidate[], ctx: Ctx): void {
+  if (key !== 'target' || !dispatchesFirstMatch(step.tool, step.args ?? {})) return;
+  const only = chain.length === 1 ? chain[0] : undefined;
+  if (!only || only.nth !== undefined || (only.kind !== 'css' && only.kind !== 'text')) return;
+  ctx.warnings.push(
+    `${ctx.stepId}: step ${ctx.stepIndex} (${step.tool} ${String((step.args ?? {}).state ?? '')}) acts on one element through a single unindexed candidate, ` +
+      `${candidateExpr(only)} — never proved to identify one element on the page that produced it, so this run acts on whatever it matches first; ` +
+      `re-record the step (sitelooper rerecord) to derive a full chain for it`,
+  );
 }
 
 /**
@@ -1935,6 +1984,7 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
       return out;
     }
     const name = `hit${++ctx.picks}`;
+    warnUnprovenTarget(step, 'target', chain, ctx);
     // Inside a recorded frame: a frame that is not there shows nothing, so the
     // absence is met; an ambiguous one is a stop (replay's own reading).
     const frame = step.contexts?.target?.frame;
@@ -1951,11 +2001,12 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
     // not met "hidden", and an 'ambiguous' miss read as "nothing matched"
     // was a false success. Replay's own policy for this step.
     const { open, where, policy, opts } = resolutionLines(chain, step, 'target', ctx, { allowMultiple: true, waitMs: '0' }, root);
-    // A hidden wait is on the FIRST match, as replay dispatches it
-    // (tools.ts waitFor: `loc.first().waitFor({ state })`); Playwright's
-    // strict expect would otherwise refuse the several matches allowed above
-    // instead of waiting for them to go. A count wait is plural by nature.
-    const target = String(args.state) === 'hidden' ? `${name}.locator.first()` : `${name}.locator`;
+    // The wait is on the FIRST match, as replay dispatches it (tools.ts
+    // waitFor: `loc.first().waitFor({ state })`); Playwright's strict expect
+    // would otherwise refuse the several matches allowed above instead of
+    // waiting for them to go. A count wait is plural by nature — and this is
+    // the general rule now (dispatchesFirstMatch), not a rule about `hidden`.
+    const target = dispatchesFirstMatch(step.tool, args) ? `${name}.locator.first()` : `${name}.locator`;
     out.push(
       '// Absence is the condition: a chain that resolves nothing has met it (replay treats',
       '// the miss as the recorded outcome, not as drift), so the resolution is asked once,',
@@ -2074,20 +2125,28 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
       }
       break;
     }
-    case 'wait_for':
+    case 'wait_for': {
+      // On the FIRST match, exactly as replay dispatches it (tools.ts waitFor:
+      // `loc.first().waitFor({ state })`, `loc.first().innerText()`) and as
+      // the absence branch above already did — `hidden` was never a special
+      // case, the dispatch is. Playwright's strict expect would otherwise
+      // refuse the several matches the resolution now allows. A count wait is
+      // plural by nature and keeps the whole locator.
+      const waited = dispatchesFirstMatch(step.tool, args) ? `${target}.first()` : target;
       if (observations) {
         const where = `${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`;
         out.push(
           'try {',
-          `  ${waitForLine(target, args, num('timeout_ms'), ctx, index)}`,
+          `  ${waitForLine(waited, args, num('timeout_ms'), ctx, index)}`,
           '} catch (err) {',
           `  await textHeldOrThrow(err, ${observations}, ${q(String(args.state))}, ${src(str('text'))}, ${q(where)}, run.drift);`,
           '}',
         );
       } else {
-        out.push(waitForLine(target, args, num('timeout_ms'), ctx, index));
+        out.push(waitForLine(waited, args, num('timeout_ms'), ctx, index));
       }
       break;
+    }
     default:
       out.push(`// TODO: recorded tool ${step.tool} has no Tier 2 form.`);
       out.push(`throw new Error(${q(`Unsupported recorded action: ${step.tool}`)});`);
@@ -2280,7 +2339,7 @@ function readLines(step: SkillStep, ctx: Ctx): string[] {
     // A read inside a recorded frame that is not there is skipped, as replay
     // skips a read it cannot resolve: an observation, never a stop.
     const framed = `framed${(ctx.roots = (ctx.roots ?? 0) + 1)}`;
-    const r = resolutionLines(chain, step, 'target', ctx, { allowMultiple: step.tool === 'read_all', waitMs: 'RESOLVE_WAIT_MS' }, `${framed}.root`);
+    const r = resolutionLines(chain, step, 'target', ctx, { allowMultiple: spansEveryMatch(step.tool, step.args ?? {}), waitMs: 'RESOLVE_WAIT_MS' }, `${framed}.root`);
     return [
       `const ${framed} = await rootFor(page, ${JSON.stringify(frame)}, RESOLVE_WAIT_MS);`,
       `if ('error' in ${framed}) console.warn(${q(`[sitelooper skip] ${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex} target: `)} + ${framed}.error + ' — value left empty');`,
@@ -2290,7 +2349,7 @@ function readLines(step: SkillStep, ctx: Ctx): string[] {
       ...echoReadLines(step, ctx),
     ];
   }
-  const { open, where, policy, opts } = resolutionLines(chain, step, 'target', ctx, { allowMultiple: step.tool === 'read_all', waitMs: 'RESOLVE_WAIT_MS' });
+  const { open, where, policy, opts } = resolutionLines(chain, step, 'target', ctx, { allowMultiple: spansEveryMatch(step.tool, step.args ?? {}), waitMs: 'RESOLVE_WAIT_MS' });
   return [`${out} = await readOptional(page, [`, ...open, `], ${where}, ${policy}, ${read}, ${opts});`, ...echoReadLines(step, ctx)];
 }
 

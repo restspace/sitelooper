@@ -4,6 +4,7 @@ import type { ElementHandle, Frame, Locator, Page } from 'playwright-core';
 import { ensureSessionDir } from '../shared/paths.js';
 import { volatileMatcher } from '../shared/text.js';
 import { pointLocator } from '../execution/point.js';
+import { dispatchesFirstMatch } from '../execution/lifecycle.js';
 import { rootFor, type FramePath, type PageEffect, type Root } from '../execution/context.js';
 import { urlPattern } from '../skills/compile.js';
 import { isRefTarget, refHint, resolveTarget } from './refs.js';
@@ -592,7 +593,11 @@ export class ScriptRecorder {
         continue;
       }
       if (typeof raw !== 'string' || !raw.trim()) continue;
-      locators[key] = await describeTarget(page, raw, retarget).catch(() => ({ expr: '', verified: false, raw }));
+      // Only this caller knows the step's tool, so only it can say whether an
+      // ambiguous target is still describable — the dispatch acts on match 0
+      // (fwgr43's `wait_for h2`) — or genuinely plural (read_all, a count).
+      const firstOfMany = key === 'target' && dispatchesFirstMatch(tool, args);
+      locators[key] = await describeTarget(page, raw, retarget, firstOfMany).catch(() => ({ expr: '', verified: false, raw }));
     }
     // Component tagging (PLAN-component-recipes): note which recognized
     // widget family the target sits inside, so a successful agent-driven
@@ -714,22 +719,45 @@ export function primaryFor(raw: string): LocatorCandidate {
   return text ? { kind: 'text', text } : { kind: 'css', selector: raw };
 }
 
-export async function describeTarget(page: Page, raw: string, retarget = false): Promise<LocatorExpr> {
+export async function describeTarget(
+  page: Page,
+  raw: string,
+  retarget = false,
+  /**
+   * The step's dispatch acts on the FIRST match (src/execution/lifecycle.ts
+   * dispatchesFirstMatch), so a target matching several still names one
+   * element — the one at index 0 — and is described as such.
+   */
+  firstOfMany = false,
+): Promise<LocatorExpr> {
   if (!isRefTarget(raw)) {
     // A raw selector the agent chose: keep it as the primary, but still
     // describe the element it hit so replay has attribute-based fallbacks.
     const loc = page.locator(raw);
     const count = await loc.count().catch(() => 0);
     const primary: LocatorCandidate = primaryFor(raw);
-    if (count !== 1) return { expr: candidateExpr(primary), verified: false, raw, chain: [primary] };
-    const handle = await loc.elementHandle({ timeout: 2_000 }).catch(() => null);
-    if (!handle) return { expr: candidateExpr(primary), verified: true, raw, chain: [primary] };
+    // A step that ACTS ON ONE of several matches is describable: it acted on
+    // match 0, and that element has a testid, a role+name and a path like any
+    // other. Bailing here — storing the bare plural selector with no index and
+    // no alternates — is what stopped grafana fwgr43's `wait_for h2` on both
+    // replays and failed its compiled arm 0/6: `h2` matched THREE panels, and
+    // the very next steps of that same skill prove better locators were
+    // derivable on that page. An ambiguous candidate needs its index to be
+    // reproducible (the rule verifiedChain and readBackFromHandle state); this
+    // was the third place that had to say so.
+    //
+    // A dispatch that spans every match (read_all, a count read or wait) keeps
+    // the bare plural selector with no index: several matches are its point.
+    const indexed: LocatorCandidate = count > 1 ? { ...primary, nth: 0 } : primary;
+    if (count === 0 || (count > 1 && !firstOfMany)) return { expr: candidateExpr(primary), verified: false, raw, chain: [primary] };
+    const handle = await loc.first().elementHandle({ timeout: 2_000 }).catch(() => null);
+    if (!handle) return { expr: candidateExpr(indexed), verified: true, raw, chain: [indexed] };
     try {
       const info = (await handle.evaluate(describeInPage)) as ElementInfo;
       // Dedupe: a `text="X"` primary is now the same candidate the described
       // element yields, and carrying it twice only shortens the useful chain.
-      const rest = (await verifiedChain(page, info, handle)).chain.filter((c) => candidateExpr(c) !== candidateExpr(primary));
-      return { expr: candidateExpr(primary), verified: true, raw, chain: [primary, ...rest] };
+      const rest = (await verifiedChain(page, info, handle)).chain.filter((c) => candidateExpr(c) !== candidateExpr(indexed));
+      return { expr: candidateExpr(indexed), verified: true, raw, chain: [indexed, ...rest] };
     } finally {
       await handle.dispose().catch(() => {});
     }

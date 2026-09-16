@@ -1187,7 +1187,10 @@ async function dispatch(
       // recorded `@eN` ref as its target, which names nothing in a session
       // that took no snapshot, and a hidden wait on nothing is met at once —
       // whatever the resolved chain still shows.
-      return waitFor(page, args, signal, t());
+      // `resolved.target` is replay's own chain; its absence says this wait is
+      // being RECORDED, which is the only moment the agent can still be asked
+      // to name the element (see waitFor's refusal).
+      return waitFor(page, args, signal, resolved?.target);
 
     case 'read': {
       // The page URL is an observation with no element behind it: a record's
@@ -1377,11 +1380,34 @@ async function waitFor(
   page: Page,
   args: Record<string, unknown>,
   signal?: AbortSignal,
-  /** The target to wait on; replay passes what its chain resolved to. */
-  loc: Locator = resolveTarget(page, String(args.target)),
+  /** The target to wait on; replay passes what its chain resolved to, recording passes nothing. */
+  resolved?: Locator,
 ): Promise<string> {
   const timeout = typeof args.timeout_ms === 'number' ? args.timeout_ms : 10_000;
   const state = String(args.state);
+  const loc = resolved ?? resolveTarget(page, String(args.target));
+
+  // A SINGULAR wait state asks about one element — is it visible, does it show
+  // this text — and the dispatch below answers by looking at match 0 only. On
+  // an ambiguous target that is a guess about which element the instruction
+  // meant, exactly as an ambiguous singular `read` is (see the read case), and
+  // it is refused at record time in the same shape so the agent names the one
+  // it means while the page that would answer is still live.
+  //
+  // grafana fwgr43 recorded `wait_for h2 state:visible` against THREE panel
+  // headings; nothing at record time objected, and the ambiguity then became
+  // the replays' problem. `state: count` and read_all are plural by contract
+  // and are not touched; recording is also the only moment this applies —
+  // replay resolves through a stored chain and dispatches `.first()`.
+  if (!resolved && state !== 'count' && state !== 'hidden') {
+    const n = await loc.count().catch(() => 1);
+    if (n > 1) {
+      throw new Error(
+        `wait_for ${state} matched ${n} elements for ${JSON.stringify(String(args.target))} — a wait on one element must name exactly one. ` +
+          `Use a snapshot ref (@e123) for the one you mean, or a more specific selector; use state=count to assert on all ${n}.`,
+      );
+    }
+  }
 
   if (state === 'visible' || state === 'hidden') {
     await loc.first().waitFor({ state, timeout });

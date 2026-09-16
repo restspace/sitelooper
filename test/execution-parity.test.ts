@@ -630,6 +630,51 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     expect(emittedLog.filter((entry) => entry.startsWith('mark:'))).toEqual([]);
   }, 120_000);
 
+  /**
+   * fwod51 07-verify. The gate was RIGHT — a click had overshot onto another
+   * record's list — and it said "expected url …&id={{d3}}&…", the literal text
+   * of a marker no page ever shows. That sentence is written once, in the
+   * shared gates module, and reaches a drift ticket from one runner and a
+   * Playwright failure from the other, so both must say the same thing.
+   *
+   * The marker is never bound here (the procedure declares no params), which
+   * is exactly the fwod51 condition. Both halves are pinned: an unfilled
+   * marker still MATCHES, because to the matcher it is a wildcard, and when
+   * the url really is another page the stop names the wildcard rather than
+   * the marker.
+   */
+  it('both runners render an unfilled marker as the wildcard they matched it as', async () => {
+    const pattern = `${origin}/record/{{v1}}`;
+    const passing: SkillStep[] = [
+      { tool: 'goto', args: { url: `${origin}/record/current` }, locators: {}, expect: { urlPattern: pattern } },
+      MARK,
+    ];
+    const ok = await both(passing, 1);
+    // Matching is unchanged: the marker stood for any record, so the step passed.
+    expect(ok.replay.ok, ok.replay.reason ?? '').toBe(true);
+    expect(ok.emitted.ok, ok.emitted.reason ?? '').toBe(true);
+    expect(ok.replayLog.filter((e) => e.startsWith('mark:'))).toEqual(ok.emittedLog.filter((e) => e.startsWith('mark:')));
+    expect(ok.replayLog.filter((e) => e.startsWith('mark:'))).not.toEqual([]);
+
+    const stopping: SkillStep[] = [
+      { tool: 'goto', args: { url: `${origin}/record/current` }, locators: {} },
+      { tool: 'goto', args: { url: `${origin}/` }, locators: {}, expect: { urlPattern: pattern } },
+      MARK,
+    ];
+    const stopped = await both(stopping, 1);
+    expect(stopped.replay.ok).toBe(false);
+    expect(stopped.emitted.ok).toBe(false);
+    // The identical sentence from both runners, up to the name each gives the
+    // step ("step 2" in the daemon, "<stepId> <segmentId>/2" in the artifact).
+    const sentence = `expected url ${origin}/record/:var but browser is at ${origin}/`;
+    expect(stopped.replay.reason).toContain(sentence);
+    expect(stopped.emitted.reason).toContain(sentence);
+    expect(stopped.replay.reason).not.toContain('{{');
+    expect(stopped.emitted.reason).not.toContain('{{');
+    expect(stopped.replayLog.filter((e) => e.startsWith('mark:'))).toEqual([]);
+    expect(stopped.emittedLog.filter((e) => e.startsWith('mark:'))).toEqual([]);
+  }, 120_000);
+
   it.each(['goto', 'back'] as const)('both runners bind a %s result before its own URL gate and later actions', async (tool) => {
     const destination = `${origin}/record/current-run`;
     const steps: SkillStep[] = tool === 'back'
@@ -2062,6 +2107,56 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(gone.replay.ok, gone.replay.reason ?? '').toBe(true);
       expect(gone.emitted.ok, gone.emitted.reason ?? '').toBe(true);
     }, 180_000);
+
+    /**
+     * grafana fwgr43. "May match several" follows the DISPATCH, not the tool
+     * name: BOTH runners dispatch a wait as `.first()` (tools.ts waitFor), so
+     * a wait whose chain matches two elements has met its condition when the
+     * first one has — it is `hidden` that was an instance of the rule, not
+     * the rule itself.
+     *
+     * Before this, only an absence wait resolved with ambiguity allowed. A
+     * presence wait was held to exactly one element, so `wait_for h2
+     * state:visible` on a dashboard showing three panels stopped both replays
+     * and failed the compiled arm 0/6 — on a heading that was plainly there.
+     * Both runners must now meet the wait and reach the next mutation, and
+     * they must say the same thing.
+     *
+     * The rule is "first of several", not "anything goes": with a chain that
+     * matches NOTHING both must still stop, with no mark in the log.
+     */
+    const presenceSteps = (chain: SkillStep['locators']['target'], state = 'visible'): SkillStep[] => [
+      { tool: 'wait_for', args: { target: '@e1', state, ...(state === 'visible' ? {} : { text: 'Mark' }), timeout_ms: 5_000 }, locators: { target: chain } },
+      { tool: 'click', args: { target: '@e2' }, locators: { target: [{ kind: 'css', selector: '.mark[data-id="Item 1"]' }] } },
+    ];
+
+    it('both runners meet a singular wait whose chain matches several, and both reach the next mutation', async () => {
+      const ambiguous: SkillStep['locators']['target'] = [{ kind: 'role', role: 'button', name: 'Mark' }];
+      const several = await both(presenceSteps(ambiguous), 2);
+
+      expect(several.replayLog, 'replay must meet a visible wait that two elements satisfy').toEqual(['mark:Item 1']);
+      expect(several.emittedLog, 'the artifact must meet a visible wait that two elements satisfy').toEqual(['mark:Item 1']);
+      expect(several.replay.ok, several.replay.reason ?? '').toBe(true);
+      expect(several.emitted.ok, several.emitted.reason ?? '').toBe(true);
+
+      // the same for a TEXT wait, the other singular state: it reads
+      // `locator.first().innerText()` in replay and asserts on
+      // `expect(locator.first())` in the artifact
+      const text = await both(presenceSteps(ambiguous, 'text_contains'), 2);
+      expect(text.replayLog).toEqual(['mark:Item 1']);
+      expect(text.emittedLog).toEqual(['mark:Item 1']);
+      expect(text.replay.ok, text.replay.reason ?? '').toBe(true);
+      expect(text.emitted.ok, text.emitted.reason ?? '').toBe(true);
+
+      // a chain that names nothing is still a stop in both runners
+      const missing = await both(presenceSteps([{ kind: 'css', selector: '.mark[data-id="Item 9"]' }]), 2);
+      expect(missing.replayLog, 'replay must not act after a wait that resolved nothing').toEqual([]);
+      expect(missing.emittedLog, 'the artifact must not act after a wait that resolved nothing').toEqual([]);
+      expect(missing.replay.ok).toBe(false);
+      expect(missing.emitted.ok).toBe(false);
+      expect(missing.replay.reason).toMatch(/no element matched any known locator/);
+      expect(missing.emitted.reason).toMatch(/none of 1 recorded locators resolved/);
+    }, 240_000);
   });
 
   // -------------------------------------------------------------------------

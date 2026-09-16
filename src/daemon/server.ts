@@ -24,7 +24,7 @@ import { encodeFrame, LineDecoder, type CommandName, type FlowStepResult, type F
 import { aliasLegacyEnv, ensureSessionDir, socketPath, validateSessionName } from '../shared/paths.js';
 import { BrowserSession } from './browser.js';
 import { DEFAULT_BROWSER_PROFILE } from '../execution/browser.js';
-import { isMutatingAction } from '../execution/lifecycle.js';
+import { observedChange } from '../execution/lifecycle.js';
 import { recordedValueShown } from '../execution/snapshot.js';
 import { recordedStandIn } from '../skills/flow.js';
 import { SessionState } from './state.js';
@@ -1367,17 +1367,31 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
         // stopped part-way is a strike in the store — two at the same step
         // demote it, and a demoted pin refuses the compile. But the step's own
         // outcome can prove the stop harmless: the instruction reported
-        // success and NOTHING changed the page after the replay stopped (no
-        // state-changing gesture past the resume point, the model's own or one
-        // it replayed), so the gesture the stop interrupted was never redone —
-        // the page was already where the procedure was trying to take it, and
-        // the stop was about this run's gate, not about the procedure.
+        // success and NOTHING the repair did past the resume point changed
+        // anything the run can account for, so the gesture the stop
+        // interrupted was never redone — the page was already where the
+        // procedure was trying to take it, and the stop was about this run's
+        // gate, not about the procedure.
         // fwod49 is the cost of not knowing: two stops at step 1 of a skill
         // whose flow passed both times demoted it and refused the compile.
-        const harmlessStop =
-          recovered &&
-          result.report.status === 'success' &&
-          !(this.browser.script?.entriesSince(replayMark) ?? []).some((e) => e.k === 'step' && isMutatingAction(e.tool));
+        // WHAT a gesture cost is observedChange's (src/execution/lifecycle.ts),
+        // not a vocabulary of tool names: fwod51's 07-verify is a READ-ONLY
+        // instruction whose recovery could only reach the record by clicking,
+        // and `isMutatingAction('click')` struck the skill twice over a
+        // navigation while both mutation logs were empty.
+        // Every entry since `mark` is walked, so each gesture is judged
+        // against the url it STARTED on (the replay's own entries establish
+        // it); only what is past `replayMark` — the repair — is judged.
+        const judgeFrom = Math.max(0, replayMark - mark);
+        let urlWas: string | undefined;
+        let costlyRepair = false;
+        for (const [i, e] of recoveryEntries.entries()) {
+          if (e.k === 'instruction') urlWas = e.url ?? urlWas;
+          if (e.k !== 'step') continue;
+          if (i >= judgeFrom && observedChange(e, urlWas)) costlyRepair = true;
+          urlWas = e.diff?.url ?? urlWas;
+        }
+        const harmlessStop = recovered && result.report.status === 'success' && !costlyRepair;
         if (harmlessStop && result.skill?.invoked && !result.skill.refused && result.skill.stepsReplayed < result.skill.stepsTotal) {
           opts.progress(
             `[flow ${flow.name}] ${step.id}: ${result.skill.invoked} stopped at step ${result.skill.stepsReplayed + 1}, but the step finished with nothing further changed — recorded as inconclusive, not a strike`,

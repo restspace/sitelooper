@@ -186,6 +186,38 @@ d('browser primitives (fixture page)', () => {
     expect(out.result).toContain('@e');
   });
 
+  it('a singular wait refuses an ambiguous target at record time, as a singular read does', async () => {
+    // grafana fwgr43: `wait_for h2 state:visible` was recorded against THREE
+    // panel headings. Nothing objected at record time; the wait dispatches
+    // `.first()`, so it passed — and the ambiguity became the replays' problem
+    // (both stopped) and the compiled arm's (0/6). Recording is the last
+    // moment the agent can still say which element it meant.
+    const out = await run('wait_for', { target: '#rows .row', state: 'visible', timeout_ms: 1_000 });
+    expect(out.isError).toBe(true);
+    expect(out.result).toContain('matched 3 elements');
+    // the way out, or the agent retries the same thing
+    expect(out.result).toContain('@e');
+    expect(out.result).toContain('state=count');
+    const text = await run('wait_for', { target: '#rows .row', state: 'text_contains', text: 'Row', timeout_ms: 1_000 });
+    expect(text.isError).toBe(true);
+    expect(text.result).toContain('matched 3 elements');
+    // ...and naming one of them is accepted
+    const one = await run('wait_for', { target: '#rows .row >> nth=0', state: 'visible', timeout_ms: 1_000 });
+    expect(one.isError).toBe(false);
+  }, 30_000);
+
+  it('wait_for count and an absence wait stay plural — several matches are their point', async () => {
+    const counted = await run('wait_for', { target: '#rows .row', state: 'count', count: 3, timeout_ms: 1_000 });
+    expect(counted.isError).toBe(false);
+    const page = await session.getPage();
+    await page.evaluate(() =>
+      document.body.insertAdjacentHTML('beforeend', '<div id="ghosts"><p class="ghost" style="visibility:hidden">Ghost A</p><p class="ghost" style="visibility:hidden">Ghost B</p></div>'),
+    );
+    const gone = await run('wait_for', { target: '.ghost', state: 'hidden', timeout_ms: 2_000 });
+    expect(gone.isError).toBe(false);
+    await page.evaluate(() => document.getElementById('ghosts')?.remove());
+  }, 30_000);
+
   it('read what=count still answers for a plural target — the question IS how many', async () => {
     const out = await run('read', { target: '#rows .row', what: 'count' });
     expect(out.isError).toBe(false);
@@ -408,6 +440,49 @@ d('script recording (fixture page)', () => {
       raw: '.dup',
       chain: [{ kind: 'css', selector: '.dup' }],
     });
+  }, 30_000);
+
+  it('records the index the dispatch used, and a full chain, when the step acts on ONE of several matches', async () => {
+    // fwgr43's defect at its source: `wait_for h2 state:visible` matched three
+    // panels, the recorder saw a count that was not 1 and bailed BEFORE
+    // deriving any rung — so the stored locator was the bare tag with no index
+    // and no alternates, which no replay could resolve to one element. A step
+    // whose dispatch acts on match 0 (tools.ts waitFor `.first()`) is
+    // describable: it acted on an element, and that element has a text, a path
+    // and a place like any other.
+    const page = await session.getPage();
+    await page.evaluate(() =>
+      document.body.insertAdjacentHTML('beforeend', '<div id="ghosts"><p class="ghost" style="visibility:hidden">Ghost A</p><p class="ghost" style="visibility:hidden">Ghost B</p></div>'),
+    );
+    const recorder = session.script!;
+    const out = await run('wait_for', { target: '.ghost', state: 'hidden', timeout_ms: 2_000 });
+    expect(out.isError).toBe(false);
+    const step = recorder.entries.at(-1);
+    const described = step!.k === 'step' ? step!.locators.target : undefined;
+    expect(described!.verified).toBe(true);
+    expect(described!.expr).toBe("page.locator('.ghost').nth(0)");
+    // the index the dispatch used, on the primary...
+    expect(described!.chain![0]).toEqual({ kind: 'css', selector: '.ghost', nth: 0 });
+    // ...and the rungs the unique-match branch derives, so replay has
+    // somewhere to go when the primary stops matching
+    expect(described!.chain!.length).toBeGreaterThan(1);
+    // Some rung that is not the plural selector itself. WHICH rungs exist is
+    // the page's business — these ghosts are `visibility:hidden`, so they have
+    // no visible text to be named by, and the derived rungs are a path and a
+    // place. What matters is that the bail no longer left the chain at one.
+    expect(described!.chain!.slice(1).every((c) => JSON.stringify(c) !== JSON.stringify({ kind: 'css', selector: '.ghost' }))).toBe(true);
+
+    // A dispatch that spans every match keeps the bare plural selector with no
+    // index: reading all three rows is what read_all is for.
+    await run('read_all', { target: '.ghost', what: 'text' });
+    const plural = recorder.entries.at(-1);
+    expect(plural!.k === 'step' && plural!.locators.target).toEqual({
+      expr: "page.locator('.ghost')",
+      verified: false,
+      raw: '.ghost',
+      chain: [{ kind: 'css', selector: '.ghost' }],
+    });
+    await page.evaluate(() => document.getElementById('ghosts')?.remove());
   }, 30_000);
 
   it('drops actions that failed — a recording is of what worked', async () => {

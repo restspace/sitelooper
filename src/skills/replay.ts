@@ -1,4 +1,4 @@
-import { changedCreation, isMutatingAction, isReadAction, runStepLifecycle, type StepActionResult } from '../execution/lifecycle.js';
+import { changedCreation, dispatchesFirstMatch, isMutatingAction, isReadAction, runStepLifecycle, spansEveryMatch, type StepActionResult } from '../execution/lifecycle.js';
 import { outcomeLabel, outcomeOfError, type ActionOutcome } from '../execution/browser.js';
 import type { ActionExpectation } from '../execution/action.js';
 import { SOFT_MATCH_MIN_SIMILARITY, alertVerdict, errorPageVerdict, gotoLandingVerdict, identityMarkerVerdict, isErrorPageUrl, landedOnRecordedPage, markersBound, preconditionVerdict, retargetNavigation, segmentGate, urlEffectVerdict } from '../execution/gates.js';
@@ -509,9 +509,22 @@ export async function replaySkill(
       // false success in both runners. Several still there resolve, and are
       // then waited on to go, exactly as one would be.
       const absence = waitsForAbsence(step, args);
+      // "May match several" follows the DISPATCH, not the tool name: a step
+      // that spans every match (read_all, a count read or wait) or that acts
+      // on the first one (every other wait — tools.ts waitFor dispatches
+      // `loc.first()`) has not failed to name its element by matching two.
+      // Absence was the only wait let through here, which stopped grafana
+      // fwgr43's `wait_for h2 state:visible` on both replays with three
+      // panel headings on the page — the very thing the wait was for.
+      // Inside a folded loop the cursor is what names THIS pass's record, so a
+      // wait that could be narrowed to it must not be widened back to match 0;
+      // a step that spans every match, and an absence wait, were plural before
+      // the cursor existed and stay so.
+      const multiple =
+        spansEveryMatch(step.tool, args) || absence || (dispatchesFirstMatch(step.tool, args) && ambiguousNth === undefined);
       const policy = {
         rawTarget: typeof args[key] === 'string' ? String(args[key]) : '',
-        allowMultiple: step.tool === 'read_all' || absence,
+        allowMultiple: multiple,
         ambiguousNth,
         requireIdentity: identity,
         // Polling to FIND something that is supposed to be gone only delays

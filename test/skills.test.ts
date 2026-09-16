@@ -12,6 +12,7 @@ import { recordCandidateEvidence, retired } from '../src/skills/repair.js';
 import { SkillStore } from '../src/skills/store.js';
 import { type TransformNote, coalesceControls, compileSkill, dropDeadReadLocators, dropDismissedDialogs, dropSupersededNavigation, compileSkills, discoverSlots, fillParams, fillParamsDeep, foldLoops, sameProcedure, softUrlMatch, stableFirst, substitute, substituteUrlId, substituteUrlParts, urlDiff, urlMatches, urlOriginPositions, urlParts, urlPattern } from '../src/skills/compile.js';
 import { mintedShape } from '../src/execution/url.js';
+import { observedChange } from '../src/execution/lifecycle.js';
 import type { LocatorCandidate } from '../src/daemon/recorder.js';
 import type { SkillStep } from '../src/skills/store.js';
 import { bindSkill, canAdoptPin, learnFromInstruction, matchTemplate, publishedOutputs, selectCandidates, synthesizeReport } from '../src/skills/learn.js';
@@ -1470,18 +1471,84 @@ describe('learnFromInstruction', () => {
 describe('runFlow decides a harmless stop from the recovery it watched (fwod49)', () => {
   const source = fs.readFileSync(path.resolve(__dirname, '../src/daemon/server.ts'), 'utf8');
 
-  it('marks the resume point before recovery and asks what changed after it', () => {
+  it('marks the resume point before recovery and asks what the repair cost', () => {
     expect(source).toMatch(/const replayMark = this\.browser\.script\?\.mark\(\) \?\? mark;/);
-    const region = source.slice(source.indexOf('const harmlessStop ='), source.indexOf('const learned = learnFromInstruction'));
+    const region = source.slice(source.indexOf('const judgeFrom ='), source.indexOf('const learned = learnFromInstruction'));
     expect(region).toMatch(/result\.report\.status === 'success'/);
-    expect(region).toMatch(/entriesSince\(replayMark\)/);
-    expect(region).toMatch(/isMutatingAction\(e\.tool\)/);
-    expect(region).toMatch(/^\s*!\(/m); // …and it is the ABSENCE of such a gesture
+    // Judged from the resume point, over the entries of the whole step: a
+    // gesture is judged against the url it STARTED on, which only the
+    // replay's own entries before the stop can establish (fwod51).
+    expect(region).toMatch(/replayMark - mark/);
+    expect(region).toMatch(/recoveryEntries\.entries\(\)/);
+    expect(region).toMatch(/urlWas = e\.diff\?\.url \?\? urlWas;/);
+    // The cost is the shared predicate's question, never a vocabulary of
+    // tool names: `isMutatingAction(e.tool)` here read fwod51's read-only
+    // recovery as a mutation because it could only reach the record by
+    // clicking.
+    expect(region).toMatch(/observedChange\(e, urlWas\)/);
+    expect(region).not.toMatch(/isMutatingAction\(e\.tool\)/);
+    expect(region).toMatch(/&& !costlyRepair/); // …and it is the ABSENCE of a cost
   });
 
   it('hands the fact to learning, which is what records the outcome', () => {
     const call = source.slice(source.indexOf('const learned = learnFromInstruction'), source.indexOf('const outcome = learned?.outcome;'));
     expect(call).toMatch(/\bharmlessStop,/);
+  });
+});
+
+/**
+ * What a recovery gesture COST, which is what decides whether the stop before
+ * it was a strike (src/execution/lifecycle.ts). fwod51: 07-verify is a
+ * READ-ONLY instruction, the url gate correctly refused a click that had
+ * overshot onto a sales-order list, recovery finished the step both times and
+ * both mutation logs were empty — yet each stop struck, two strikes demoted
+ * the skill and the compile refused the flow, because the question asked was
+ * `isMutatingAction('click')`.
+ */
+describe('observedChange: a gesture costs something only when the run observed it (fwod51)', () => {
+  const ODOO_LIST = 'http://app.test/web#action=330&active_id=45&cids=1&menu_id=109&model=sale.order&view_type=list';
+  const ODOO_FORM = 'http://app.test/web#action=156&cids=1&id=45&menu_id=109&model=res.partner&view_type=form';
+  const quiet = (url: string) => ({ url, alerts: [], added: [] });
+
+  it('never counts a tool that cannot change anything, whatever it observed', () => {
+    for (const tool of ['read', 'read_all', 'goto', 'back', 'wait_for', 'screenshot']) {
+      expect(observedChange({ tool, diff: { url: ODOO_FORM, alerts: ['Saved'], added: ['+ Contact created'] } }, ODOO_LIST)).toBe(false);
+    }
+  });
+
+  it('counts content left on a page the gesture stayed on, and nothing when the page did not react', () => {
+    expect(observedChange({ tool: 'click', diff: { ...quiet(ODOO_FORM), added: ['- dialog "Discard"'] } }, ODOO_FORM)).toBe(true);
+    expect(observedChange({ tool: 'fill', diff: { ...quiet(ODOO_FORM), alerts: ['Record saved'] } }, ODOO_FORM)).toBe(true);
+    expect(observedChange({ tool: 'click', diff: quiet(ODOO_FORM) }, ODOO_FORM)).toBe(false);
+  });
+
+  /** The fwod51 gesture itself: a click that could only reach the record by moving to it. */
+  it('never counts a move from one page to another, however many lines the landing brought', () => {
+    const landing = { url: ODOO_FORM, alerts: [], added: ['+ Name fwod51-n2 Bench Customer', '+ City Benchville'] };
+    expect(observedChange({ tool: 'click', diff: landing }, ODOO_LIST)).toBe(false);
+    // …and back the other way, where the url LOSES the record it named.
+    expect(observedChange({ tool: 'click', diff: quiet(ODOO_LIST) }, ODOO_FORM)).toBe(false);
+    // A path that grew a segment is a different page shape, not a mint.
+    expect(observedChange({ tool: 'click', diff: quiet('http://app.test/orders/42') }, 'http://app.test/orders')).toBe(false);
+  });
+
+  it('counts a record identifier minted into the url where the page stayed the same', () => {
+    // The draft saved: the same view, one position that had no id and now has one.
+    expect(observedChange({ tool: 'click', diff: quiet('http://app.test/orders/42') }, 'http://app.test/orders/new')).toBe(true);
+    expect(observedChange({ tool: 'click', diff: quiet('http://app.test/web#action=316&cids=1&id=22&model=sale.order&view_type=form') }, 'http://app.test/web#action=316&cids=1&model=sale.order&view_type=form')).toBe(true);
+    // One record swapped for another is the app routing, not a mint.
+    expect(observedChange({ tool: 'click', diff: quiet('http://app.test/orders/43') }, 'http://app.test/orders/42')).toBe(false);
+    // A word changing beside it says the same: this is another view.
+    expect(observedChange({ tool: 'click', diff: quiet('http://app.test/orders/42/edit') }, 'http://app.test/orders/new/edit')).toBe(true);
+    expect(observedChange({ tool: 'click', diff: quiet('http://app.test/orders/42/edit') }, 'http://app.test/orders/new/view')).toBe(false);
+  });
+
+  it('stays conservative where the run has no evidence', () => {
+    expect(observedChange({ tool: 'click' }, ODOO_FORM)).toBe(true);
+    expect(observedChange({ tool: 'click' }, undefined)).toBe(true);
+    // An unknown starting url cannot say the page moved; content decides.
+    expect(observedChange({ tool: 'click', diff: { ...quiet(ODOO_FORM), added: ['+ Contact created'] } }, undefined)).toBe(true);
+    expect(observedChange({ tool: 'click', diff: quiet(ODOO_FORM) }, undefined)).toBe(false);
   });
 });
 
