@@ -1,0 +1,11 @@
+[spec-replay] resetting grafana
+[reset] grafana: deleted leftover dashboard "fwgr47-spec Bench Dashboard" (200)
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile bench/results/flows/fwgr47.json --out /home/user/sitelooper/bench/results/fwgr47-spec-spec-tmp --overwrite-spec
+flow: /home/user/sitelooper/bench/results/fwgr47-spec-spec-tmp/fwgr47.flow.ts
+spec: /home/user/sitelooper/bench/results/fwgr47-spec-spec-tmp/fwgr47.spec.ts
+warning 07-verify: 07-verify read a value that contradicts what the previous step reported
+  why: 07-verify read screenshot "/home/user/sitelooper/fwgr47-n1-final-verification.png" right after 06-open reported "/home/user/sitelooper/fwgr47-n1-json-model-refresh-1m.png"; 06-open's change may not have landed and a later step may be retrying it. Re-record 06-open.
+  fix: sitelooper rerecord bench/results/flows/fwgr47.json 06-open
+[spec-replay] running: npx playwright test --config /home/user/sitelooper/bench/results/fwgr47-spec-spec-tmp/playwright.config.mjs
+[spec-replay] fwgr47-spec: 0/1 passed, exit=1, 64s, 0 drift line(s) — result written

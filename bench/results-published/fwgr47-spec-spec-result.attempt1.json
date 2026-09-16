@@ -1,0 +1,34 @@
+{
+  "arm": "spec",
+  "runid": "fwgr47-spec",
+  "target": "grafana",
+  "flow": "fwgr47.json",
+  "flowName": "fwgr47",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwgr47-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwgr47-spec-spec-tmp/fwgr47.flow.ts",
+  "specFile": "bench/results/fwgr47-spec-spec-tmp/fwgr47.spec.ts",
+  "wallMs": 65111,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwgr47",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 62294,
+      "error": "Error: 07-verify needs {{i2.dashboard_title_saved}}, and this run never published it. The step that publishes i2.dashboard_title_saved read nothing — look above for its `[sitelooper skip] … read target not found` line, which is where this run diverged. Stopping here instead of passing an empty value into 07-verify: blank, a record-scoped locator matches every record and a known slot loses its identity, so the step would do its work to the wrong one. Everything earlier steps did stands; nothing of 07-verify has run.",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "logTail": "rafana at http://127.0.0.1:3000, do a final verification of the dashboard titled '{{runid}} Bench Dashboard'. Navigate to it fresh (full page load, e.g. via search or by going to http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard with no query params). Then verify and report ALL of the following from the live page: (1) the exact dashboard title shown in the breadcrumb/page, (2) the exact titles of all panels on the dashboard and their types (one should be a Stat panel titled '{{runid}} Availability' using the TestData data source, one a Text panel titled '{{runid}} Notes' whose content contains '{{runid}}'), (3) the dashboard's tags (open Dashboard settings → General if needed) — should include '{{05-open.persisted_tags}}', (4) the persisted default time range (Dashboard settings → JSON Model: the top-level 'time' object) — should be from {{06-open.json_model_time_from}} to {{06-open.json_model_time_to}}, (5) the persisted auto-refresh (JSON Model top-level 'refresh') — should be '1m', and (6) the exact URL currently shown in the browser address bar for this dashboard page. Report each item with the concrete value you read. \n\n    Error: 07-verify needs {{i2.dashboard_title_saved}}, and this run never published it. The step that publishes i2.dashboard_title_saved read nothing — look above for its `[sitelooper skip] … read target not found` line, which is where this run diverged. Stopping here instead of passing an empty value into 07-verify: blank, a record-scoped locator matches every record and a known slot loses its identity, so the step would do its work to the wrong one. Everything earlier steps did stands; nothing of 07-verify has run.\n\n       at fwgr47.flow.ts:11037\n\n      11035 |   const value = outputs[ref as keyof Outputs];\n      11036 |   if (value === undefined || value === '') {\n    > 11037 |     throw new Error(\n            |           ^\n      11038 |       `${by} needs {{${ref}}}, and this run never published it` +\n      11039 |         (value === '' ? ' (it was published empty)' : '') +\n      11040 |         `. The step that publishes ${ref} read nothing — look above for its` +\n        at need (/home/user/sitelooper/bench/results/fwgr47-spec-spec-tmp/fwgr47.flow.ts:11037:11)\n        at /home/user/sitelooper/bench/results/fwgr47-spec-spec-tmp/fwgr47.flow.ts:16356:44\n        at runFlow (/home/user/sitelooper/bench/results/fwgr47-spec-spec-tmp/fwgr47.flow.ts:16355:5)\n        at /home/user/sitelooper/bench/results/fwgr47-spec-spec-tmp/fwgr47.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: ../../../test-results/fwgr47-fwgr47/error-context.md\n\n  1 failed\n    fwgr47.spec.ts:9:1 › fwgr47 ────────────────────────────────────────────────────────────────────\n[sitelooper warn] 03-open s_9bc718/15: read 'text_panel_title' returned a value the skill itself set/selected ('fwgr47-spec Notes') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper warn] 03-open s_9bc718/16: read 'text_panel_rendered_content' returned a value the skill itself set/selected ('Bench notes for run fwgr47-spec') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper warn] 04-open s_fac643/15: read 'tags_saved' returned a value the skill itself set/selected ('bench') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper warn] 05-open s_ba9642: identity marker \"fwgr47-spec Bench Dashboard\" is not on the page, but the url names this run's record (path[2]=fwgr47-spec-bench-dashboard) — the marker is stale; proceeding\n[sitelooper warn] 06-open s_1ddc84: identity marker \"fwgr47-spec Bench Dashboard\" is not on the page, but the url names this run's record (path[2]=fwgr47-spec-bench-dashboard) — the marker is stale; proceeding\n"
+}

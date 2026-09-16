@@ -1,0 +1,992 @@
+{
+ "id": "s_37b2bd",
+ "origin": "http://127.0.0.1:3000",
+ "template": "In Grafana at http://127.0.0.1:3000, do a final verification of the dashboard titled '{{v1}}'. Navigate to it fresh (full page load, e.g. via search or by going to {{v11}} with no query params). Then verify and report ALL of the following from the live page: (1) the exact dashboard title shown in the breadcrumb/page, (2) the exact titles of all panels on the dashboard and their types (one should be a Stat panel titled '{{v6}}' using the {{v7}} data source, one a Text panel titled '{{v8}}' whose content contains '{{v2}}'), (3) the dashboard's tags (open Dashboard settings → General if needed) — should include '{{v5}}', (4) the persisted default time range (Dashboard settings → JSON Model: the top-level 'time' object) — should be from {{v9}} to {{v10}}, (5) the persisted auto-refresh (JSON Model top-level 'refresh') — should be '1m', and (6) the exact URL currently shown in the browser address bar for this dashboard page. Report each item with the concrete value you read.",
+ "params": {
+  "v1": {
+   "example": "fwgr47-n1 Bench Dashboard",
+   "usedIn": [
+    8
+   ],
+   "known": true,
+   "binding": "output:i2:dashboard_title_saved"
+  },
+  "v2": {
+   "example": "fwgr47-n1",
+   "usedIn": [
+    11
+   ],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v5": {
+   "example": "bench",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i4:tags_saved"
+  },
+  "v6": {
+   "example": "fwgr47-n1 Availability",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:panel_title"
+  },
+  "v7": {
+   "example": "TestData",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:data_source"
+  },
+  "v8": {
+   "example": "fwgr47-n1 Notes",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i3:text_panel_title"
+  },
+  "v9": {
+   "example": "now-6h",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i5:persisted_time_from"
+  },
+  "v10": {
+   "example": "now",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i5:persisted_time_to"
+  },
+  "v11": {
+   "example": "http://127.0.0.1:3000/d/afyftk6oab3eoc/fwgr47-n1-bench-dashboard",
+   "usedIn": [
+    1,
+    6
+   ],
+   "known": true
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:3000/d/afyftk6oab3eoc/{{v2}}-bench-dashboard?editview=json-model&from={{v9}}&refresh=:id&timezone=browser&to={{v10}}",
+  "fingerprint": [
+   0.007,
+   0,
+   0.01,
+   0.013,
+   0,
+   0,
+   0.003,
+   0,
+   0.003,
+   0.007,
+   0,
+   0,
+   0,
+   0,
+   0.003,
+   0.007,
+   0.033,
+   0,
+   0,
+   0,
+   0.023,
+   0,
+   0,
+   0,
+   0.264,
+   0.007,
+   0,
+   0,
+   0,
+   0.201,
+   0,
+   0.003,
+   0.007,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.007,
+   0,
+   0.007,
+   0.007,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.003,
+   0,
+   0,
+   0.007,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.003,
+   0,
+   0,
+   0.097,
+   0.003,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.013,
+   0.047,
+   0,
+   0.007,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.003,
+   0.007,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.007,
+   0,
+   0.007,
+   0.053,
+   0.003,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.003,
+   0,
+   0.007,
+   0.007,
+   0,
+   0,
+   0.003,
+   0.013,
+   0,
+   0.003,
+   0.007,
+   0,
+   0,
+   0.388,
+   0,
+   0.033,
+   0.007,
+   0,
+   0,
+   0,
+   0.094,
+   0,
+   0,
+   0,
+   0.027,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.003,
+   0,
+   0.007,
+   0,
+   0,
+   0,
+   0.01,
+   0,
+   0.194,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.003,
+   0,
+   0,
+   0,
+   0,
+   0.003,
+   0,
+   0.187,
+   0.01,
+   0,
+   0,
+   0,
+   0.401,
+   0,
+   0,
+   0,
+   0,
+   0.03,
+   0,
+   0,
+   0.007,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0.003,
+   0.01,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.084,
+   0,
+   0,
+   0.003,
+   0,
+   0,
+   0,
+   0.013,
+   0,
+   0.013,
+   0,
+   0,
+   0,
+   0,
+   0.007,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.007,
+   0,
+   0.07,
+   0,
+   0,
+   0.007,
+   0.027,
+   0,
+   0.003,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.003,
+   0.013,
+   0,
+   0.003,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.007,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.02,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.007,
+   0,
+   0.003,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.007,
+   0.194,
+   0,
+   0,
+   0,
+   0.007,
+   0,
+   0,
+   0,
+   0,
+   0.007,
+   0,
+   0,
+   0.007,
+   0.007,
+   0,
+   0,
+   0,
+   0,
+   0.013,
+   0.007,
+   0,
+   0.04,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.007,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.007,
+   0,
+   0.027,
+   0,
+   0,
+   0,
+   0.003,
+   0.007,
+   0.007,
+   0.154,
+   0.007,
+   0,
+   0.033,
+   0.003,
+   0.003,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.01,
+   0.033,
+   0,
+   0.003,
+   0.007,
+   0,
+   0,
+   0.01,
+   0,
+   0,
+   0.007,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.528,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.003,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.033,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.007,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.003,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.007,
+   0,
+   0,
+   0,
+   0.003,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.003,
+   0,
+   0.12,
+   0,
+   0.003,
+   0,
+   0,
+   0.02,
+   0.007,
+   0,
+   0.02,
+   0,
+   0,
+   0.201,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.007,
+   0,
+   0.027,
+   0,
+   0.007,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.013,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.007,
+   0.007,
+   0,
+   0.003,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.003,
+   0,
+   0,
+   0.007,
+   0.007,
+   0,
+   0.003,
+   0.003,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.003,
+   0.003,
+   0,
+   0,
+   0,
+   0.007,
+   0,
+   0,
+   0.007,
+   0,
+   0.023,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.007,
+   0,
+   0.007,
+   0.194,
+   0,
+   0,
+   0.007,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.007,
+   0.134,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.02,
+   0.003,
+   0.003,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "requireText": [
+   "{{v1}}",
+   "{{v2}}"
+  ]
+ },
+ "goal": {
+  "requireText": [
+   "A-series: 51.2"
+  ]
+ },
+ "steps": [
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v11}}"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e67"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Edit dashboard button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Edit"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(5) > button"
+     },
+     {
+      "kind": "point",
+      "x": 1198,
+      "y": 60,
+      "w": 38.3,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/afyftk6oab3eoc/fwgr47-n1-bench-dashboard?from={{v9}}&refresh=:id&timezone=browser&to={{v10}}",
+    "addedContains": [
+     "- button \"Add\"",
+     "- button \"Settings\"",
+     "- button \"Exit edit\"",
+     "- button \"Save dashboard\"",
+     "- button \"More save options\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Settings\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=button[name=\"Settings\"]"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Dashboard settings"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Settings"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(3) > button"
+     },
+     {
+      "kind": "point",
+      "x": 962,
+      "y": 60,
+      "w": 63.8,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/afyftk6oab3eoc/fwgr47-n1-bench-dashboard?editview=settings&from={{v9}}&refresh=:id&timezone=browser&to={{v10}}",
+    "addedContains": [
+     "- link \"{{v1}}\"",
+     "- button \"Back to dashboard\"",
+     "- heading \"Settings\"",
+     "- tab \"General\"",
+     "- tab \"Annotations\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=tab[name=\"JSON Model\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=tab[name=\"JSON Model\"]"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Tab JSON Model"
+     },
+     {
+      "kind": "role",
+      "role": "tab",
+      "name": "JSON Model"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div > div > div:nth-of-type(7) > a"
+     },
+     {
+      "kind": "point",
+      "x": 654,
+      "y": 181,
+      "w": 108.8,
+      "h": 34,
+      "role": "tab",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/afyftk6oab3eoc/fwgr47-n1-bench-dashboard?editview=json-model&from={{v9}}&refresh=:id&timezone=browser&to={{v10}}",
+    "addedContains": [
+     "- link \"Settings\"",
+     "- textbox \"Editor content;Press Alt+F1 for Accessibility Options.\": {{*}}",
+     "- button \"Save changes\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e181"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Tab General"
+     },
+     {
+      "kind": "role",
+      "role": "tab",
+      "name": "General"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div > div > div:nth-of-type(1) > a"
+     },
+     {
+      "kind": "point",
+      "x": 74,
+      "y": 181,
+      "w": 76.6,
+      "h": 34,
+      "role": "tab",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/afyftk6oab3eoc/fwgr47-n1-bench-dashboard?editview=settings&from={{v9}}&refresh=:id&timezone=browser&to={{v10}}",
+    "addedContains": [
+     "- textbox \"Title\": {{*}}",
+     "- textbox \"Description\"",
+     "- textbox \"New tag (enter key to add)\"",
+     "- button \"Add\" [disabled]",
+     "- button \"Remove \\\"{{v5}}\\\" tag\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v11}}"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "dashboard_url",
+    "what": "url"
+   },
+   "locators": {},
+   "label": "6_address_bar_url"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid {{v1}} breadcrumb"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] span",
+      "nth": 0
+     },
+     {
+      "kind": "css",
+      "selector": "header > div:nth-of-type(2) > nav > ol > li:nth-of-type(3) > span"
+     },
+     {
+      "kind": "point",
+      "x": 321,
+      "y": 60,
+      "w": 193,
+      "h": 22,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "1_dashboard_title"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"TextPanel-converted-content\"] p"
+     },
+     {
+      "kind": "css",
+      "selector": "section > div:nth-of-type(3) > div > div:nth-of-type(1) > div > p"
+     },
+     {
+      "kind": "point",
+      "x": 326,
+      "y": 200,
+      "w": 602,
+      "h": 22,
+      "role": null,
+      "tag": "p",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "text_panel_rendered_content"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid RefreshPicker interval button\"] div"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(2) > div > button > div"
+     },
+     {
+      "kind": "point",
+      "x": 1228,
+      "y": 112,
+      "w": 22.5,
+      "h": 30,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "5_persisted_refresh"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "text",
+      "text": "Bench notes for run {{v2}}"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"TextPanel-converted-content\"] p"
+     },
+     {
+      "kind": "css",
+      "selector": "section > div:nth-of-type(3) > div > div:nth-of-type(1) > div > p"
+     },
+     {
+      "kind": "point",
+      "x": 326,
+      "y": 200,
+      "w": 602,
+      "h": 22,
+      "role": null,
+      "tag": "p",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "ref"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Final verification done after a fresh full load of the bare dashboard URL. (1) Title shown: \"{{v1}}\" (breadcrumb Home / Dashboards / {{v1}}). (2) Two panels, in layout order: \"{{v8}}\" — Text panel, rendering \"Bench notes for run {{v2}}\"; \"{{v6}}\" — Stat panel using data source grafana-testdata-datasource ({{v7}}), rendering 51.2 (A-series). (3) Tags: [\"{{v5}}\"]. (4) Persisted default time range (JSON Model \"time\"): {\"from\":\"{{v9}}\",\"to\":\"{{v10}}\"}. (5) Persisted auto-refresh (JSON Model \"refresh\"): \"1m\". (6) Address bar: {{v11}}?from={{v9}}&to={{v10}}&timezone=browser&refresh=1m — Grafana re-added the from/to/timezone/refresh params on load. All six items read directly off the live page.",
+  "values": {
+   "1_dashboard_title": "{{v1}}",
+   "2_panels_in_order": "{{v8}} (type: text (Text)), {{v6}} (type: stat (Stat))",
+   "text_panel_rendered_content": "Bench notes for run {{v2}}",
+   "stat_panel_datasource": "grafana-testdata-datasource ({{v7}})",
+   "stat_panel_rendered_value": "A-series: 51.2",
+   "3_tags": "{{v5}}",
+   "5_persisted_refresh": "1m",
+   "6_address_bar_url": "{{v11}}?from={{v9}}&to={{v10}}&timezone=browser&refresh=1m",
+   "dashboard_uid": "{{v3}}",
+   "dashboard_version": "5",
+   "screenshot": "/home/user/sitelooper/{{v2}}-final-verification.png",
+   "4_persisted_time_from": "{{v9}}",
+   "4_persisted_time_to": "{{v10}}",
+   "ref": "{{v2}}"
+  }
+ },
+ "contract": 4,
+ "stats": {
+  "uses": 2,
+  "successes": 1,
+  "partial": 1,
+  "created": "2026-09-16T15:21:29.205Z",
+  "failedAtStep": {
+   "2": 1
+  },
+  "fallthroughs": 0,
+  "verifiedContract": 4,
+  "lastUsed": "2026-09-16T15:26:09.606Z",
+  "recoveredStops": 1,
+  "lastFailedAt": 2
+ },
+ "status": "demoted",
+ "provenance": {
+  "session": "fwgr47-n1",
+  "instruction": "In Grafana at http://127.0.0.1:3000, do a final verification of the dashboard titled 'fwgr47-n1 Bench Dashboard'. Navigate to it fresh (full page load, e.g. via search or by going to http://127.0.0.1:3000/d/afyftk6oab3eoc/fwgr47-n1-bench-dashboard with no query params). Then verify and report ALL of the following from the live page: (1) the exact dashboard title shown in the breadcrumb/page, (2) the exact titles of all panels on the dashboard and their types (one should be a Stat panel titled 'fwgr47-n1 Availability' using the TestData data source, one a Text panel titled 'fwgr47-n1 Notes' whose content contains 'fwgr47-n1'), (3) the dashboard's tags (open Dashboard settings → General if needed) — should include 'bench', (4) the persisted default time range (Dashboard settings → JSON Model: the top-level 'time' object) — should be from now-6h to now, (5) the persisted auto-refresh (JSON Model top-level 'refresh') — should be '1m', and (6) the exact URL currently shown in the browser address bar for this dashboard page. Report each item with the concrete value you read.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-16T15:21:29.205Z"
+ },
+ "revision": 3
+}
