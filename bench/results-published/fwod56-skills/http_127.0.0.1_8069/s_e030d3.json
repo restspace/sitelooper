@@ -1,0 +1,529 @@
+{
+ "id": "s_e030d3",
+ "origin": "http://127.0.0.1:8069",
+ "template": "In Odoo, on the currently open draft quotation {{v1}} (customer '{{v2}}', statusbar '{{v4}}'). The Order Lines table has two lines: line 1 = {{03-create.product_name}} qty {{v5}} unit price {{v6}} subtotal £885.00; line 2 = {{v7}} (product committed, but its Quantity cell may still be blank or at default 1.00, and its Unit Price cell may not have been read). Task: (1) If any 'Configure your product' modal or notification banner is open, dismiss it first. (2) Set line 2's Quantity to exactly 2 (click into the Quantity cell of the Four Person Desk row, clear it, type 2, then click outside the table on a neutral area like the quotation title to commit). (3) Read line 2's Unit Price cell value and its Subtotal. (4) Read the Untaxed Amount in the totals footer — it should now reflect both lines (line 1 £885.00 + line 2). (5) Click Save and confirm the save succeeded (no error dialog; breadcrumb still {{v1}}). (6) Report: line 2's product name, its unit price, its quantity, its subtotal, and the new Untaxed Amount (and Total) from the totals. Do NOT confirm the quotation — leave it in draft. Do not wait for network idle; wait on concrete page state instead.",
+ "params": {
+  "v1": {
+   "example": "S00024",
+   "usedIn": [
+    7
+   ],
+   "known": true,
+   "binding": "05-open.quotation_reference"
+  },
+  "v2": {
+   "example": "fwod56-n2 Bench Customer",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:breadcrumb_shows"
+  },
+  "v3": {
+   "example": "fwod56-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v4": {
+   "example": "Quotation",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i5:statusbar"
+  },
+  "v5": {
+   "example": "3.00",
+   "usedIn": [],
+   "known": true,
+   "binding": "03-create.quantity"
+  },
+  "v6": {
+   "example": "295.00",
+   "usedIn": [],
+   "known": true,
+   "binding": "03-create.unit_price"
+  },
+  "v7": {
+   "example": "[FURN_7777] Office Chair",
+   "usedIn": [],
+   "known": true,
+   "binding": "05-open.line2_product"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form"
+ },
+ "steps": [
+  {
+   "tool": "read",
+   "args": {
+    "target": "@e1826",
+    "what": "text",
+    "label": "line2_qty"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(2) > td:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 691,
+      "y": 482,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line2_qty"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "@e1827",
+    "what": "text",
+    "label": "line2_unit_price"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(2) > td:nth-of-type(5)"
+     },
+     {
+      "kind": "point",
+      "x": 783,
+      "y": 482,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line2_unit_price"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "@e1833",
+    "what": "text",
+    "label": "line2_subtotal"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(2) > td:nth-of-type(7)"
+     },
+     {
+      "kind": "point",
+      "x": 1179,
+      "y": 482,
+      "w": 104,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line2_subtotal_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "@e1780",
+    "what": "text",
+    "label": "untaxed_amount"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div > table > tbody > tr:nth-of-type(1) > td:nth-of-type(2)",
+      "nth": 1
+     },
+     {
+      "kind": "point",
+      "x": 1195,
+      "y": 621,
+      "w": 88,
+      "h": 23,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "untaxed_amount_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "@e1784",
+    "what": "text",
+    "label": "total"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div > table > tbody > tr:nth-of-type(3) > td:nth-of-type(2)",
+      "nth": 1
+     },
+     {
+      "kind": "point",
+      "x": 1195,
+      "y": 671,
+      "w": 88,
+      "h": 29.3,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "total_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "@e1463",
+    "what": "text",
+    "label": "quotation_reference"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div:nth-of-type(2) > ol > li > a"
+     },
+     {
+      "kind": "point",
+      "x": 101,
+      "y": 62,
+      "w": 62.9,
+      "h": 16.3,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "quotation_reference_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "@e1466",
+    "what": "text",
+    "label": "quotation_reference"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "text",
+      "text": "{{v1}}",
+      "nth": 0
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div:nth-of-type(2) > div > div:nth-of-type(1) > span"
+     },
+     {
+      "kind": "point",
+      "x": 94,
+      "y": 79,
+      "w": 48.3,
+      "h": 17.5,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "quotation_reference"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": ".o_statusbar_status",
+    "what": "text",
+    "label": "statusbar"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_statusbar_status"
+     },
+     {
+      "kind": "role",
+      "role": "radiogroup",
+      "name": "Statusbar"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div"
+     },
+     {
+      "kind": "point",
+      "x": 1100,
+      "y": 129,
+      "w": 328.8,
+      "h": 33,
+      "role": "radiogroup",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "statusbar_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(2) > td:nth-of-type(7)"
+     },
+     {
+      "kind": "point",
+      "x": 1179,
+      "y": 482,
+      "w": 104,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line2_subtotal"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 691,
+      "y": 442,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line1_qty"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(5)"
+     },
+     {
+      "kind": "point",
+      "x": 783,
+      "y": 442,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line1_unit_price"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(7)"
+     },
+     {
+      "kind": "point",
+      "x": 1179,
+      "y": 442,
+      "w": 104,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line1_subtotal"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(1) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1205,
+      "y": 621,
+      "w": 66.2,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "untaxed_amount"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(2) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1195,
+      "y": 644,
+      "w": 86,
+      "h": 21,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "tax_20_percent"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(3) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1195,
+      "y": 669,
+      "w": 86,
+      "h": 21,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "total"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "On draft quotation {{v1}} (customer '{{v2}}', statusbar current state \"{{v4}}\"), line 2 already carried the required values when I inspected the page: {{v7}}, Quantity 2.00, Unit Price 70.00, Subtotal £140.00 — the qty had been set to 2 in the immediately preceding step of this run, so no edit was needed (the instruction's reference to a \"Four Person Desk\" row does not match the live page; line 2 is Office Chair). No 'Configure your product' modal or notification banner was present. The Save button was not rendered in the control panel (form had no pending changes), confirming the record is already saved with no error dialog, and the breadcrumb still reads Quotations > {{v1}}. Totals footer as shown: Untaxed Amount £1,025.00, TAX 20% £205.00, Total £1,230.00 (line 1 Acoustic Bloc Screens qty {{v5}} @ {{v6}} = £885.00 plus line 2 £140.00). The quotation remains an unconfirmed draft.",
+  "values": {
+   "line2_qty": "2.00",
+   "line2_unit_price": "70.00",
+   "line2_product": "{{v7}}",
+   "line2_subtotal": "£ 140.00",
+   "line1_product": "[FURN_6666] Acoustic Bloc Screens",
+   "line1_qty": "{{v5}}",
+   "line1_unit_price": "{{v6}}",
+   "line1_subtotal": "£ 885.00",
+   "untaxed_amount": "£ 1,025.00",
+   "tax_20_percent": "£ 205.00",
+   "total": "£ 1,230.00",
+   "quotation_reference": "{{v1}}",
+   "statusbar": "Sales Order / {{v4}} Sent / {{v4}}",
+   "line2_subtotal_2": "£ 140.00",
+   "untaxed_amount_2": "£ 1,025.00",
+   "total_2": "£ 1,230.00",
+   "quotation_reference_2": "Quotations",
+   "statusbar_2": "Sales Order\n{{v4}} Sent\n{{v4}}",
+   "ref": "{{v3}}",
+   "ref_2": "{{v8}}"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 2,
+  "successes": 2,
+  "partial": 0,
+  "created": "2026-09-16T18:22:38.748Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-16T18:27:00.945Z"
+ },
+ "status": "validated",
+ "provenance": {
+  "session": "fwod56-n2",
+  "instruction": "In Odoo, on the currently open draft quotation S00024 (customer 'fwod56-n2 Bench Customer', statusbar 'Quotation'). The Order Lines table has two lines: line 1 = {{03-create.product_name}} qty 3.00 unit price 295.00 subtotal £885.00; line 2 = [FURN_7777] Office Chair (product committed, but its Quantity cell may still be blank or at default 1.00, and its Unit Price cell may not have been read). Task: (1) If any 'Configure your product' modal or notification banner is open, dismiss it first. (2) Set line 2's Quantity to exactly 2 (click into the Quantity cell of the Four Person Desk row, clear it, type 2, then click outside the table on a neutral area like the quotation title to commit). (3) Read line 2's Unit Price cell value and its Subtotal. (4) Read the Untaxed Amount in the totals footer — it should now reflect both lines (line 1 £885.00 + line 2). (5) Click Save and confirm the save succeeded (no error dialog; breadcrumb still S00024). (6) Report: line 2's product name, its unit price, its quantity, its subtotal, and the new Untaxed Amount (and Total) from the totals. Do NOT confirm the quotation — leave it in draft. Do not wait for network idle; wait on concrete page state instead.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-16T18:22:38.748Z"
+ },
+ "revision": 2
+}
