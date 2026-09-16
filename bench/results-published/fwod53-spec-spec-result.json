@@ -1,0 +1,34 @@
+{
+  "arm": "spec",
+  "runid": "fwod53-spec",
+  "target": "odoo",
+  "flow": "fwod53.json",
+  "flowName": "fwod53",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwod53-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwod53-spec-spec-tmp/fwod53.flow.ts",
+  "specFile": "bench/results/fwod53-spec-spec-tmp/fwod53.spec.ts",
+  "wallMs": 39043,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwod53",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 35078,
+      "error": "Error: 04-open s_d30329/4: the recorded page change did not appear\n\n04-open s_d30329/4: the recorded page change did not appear\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeNull\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"after step 04-open s_d30329/4 the page did not show \\\"- cell \\\\\\\" | [FURN_6666] Acoustic Bloc Screens | [FURN_6666] Acoustic Bloc Screens | 3.00 | 295.00 | 20% | £ 885.00 | \\\\\\\"\\\" / \\\"- cell \\\\\\\" | [FURN_6666] Acoustic Bloc Screens | [FURN_6666] Acoustic Bloc Screens | 3.00 | 295.00 | 20% | £ 885.00 | \\\\\\\"\\\" as it did when recorded — the step ran but probably acted on the wrong element\"\u001b[39m\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "logTail": "\nRunning 1 test using 1 worker\n\n[sitelooper step] 01-signin\n[sitelooper step] 02-create\n[sitelooper step] 03-open\n  ✘  1 fwod53.spec.ts:9:1 › fwod53 (35.1s)\n\n\n  1) fwod53.spec.ts:9:1 › fwod53 › 04-open: Open the existing draft quotation {{02-create.order_reference}} in the Odoo Sales app (Sales > Orders > Quotations, open the record named {{02-create.order_reference}} for customer '{{runid}} Bench Customer'). It has two order lines: line 1 is product '{{02-create.product_name}}' with quantity {{02-create.quantity}} and unit price {{02-create.unit_price}}; line 2 is product '{{03-open.second_product_name}}' with quantity {{03-open.second_line_quantity}} and unit price {{03-open.second_line_unit_price}}. Change ONLY the first line's quantity from 3 to 5 (leave the second line and all prices untouched). Save the quotation (keep it a draft, do not confirm). Read and report from the page: (a) the first line's quantity now shown, (b) the first line's subtotal, and (c) the new Untaxed Amount the app computes at the bottom of the order. Note: Odoo long-polls so never wait for network idle; wait for concrete page state instead. \n\n    Error: 04-open s_d30329/4: the recorded page change did not appear\n\n    04-open s_d30329/4: the recorded page change did not appear\n\n    expect(received).toBeNull()\n\n    Received: \"after step 04-open s_d30329/4 the page did not show \\\"- cell \\\\\\\" | [FURN_6666] Acoustic Bloc Screens | [FURN_6666] Acoustic Bloc Screens | 3.00 | 295.00 | 20% | £ 885.00 | \\\\\\\"\\\" / \\\"- cell \\\\\\\" | [FURN_6666] Acoustic Bloc Screens | [FURN_6666] Acoustic Bloc Screens | 3.00 | 295.00 | 20% | £ 885.00 | \\\\\\\"\\\" as it did when recorded — the step ran but probably acted on the wrong element\"\n\n    Call Log:\n    - Timeout 5000ms exceeded while waiting on the predicate\n\n       at fwod53.flow.ts:9560\n\n      9558 |       { timeout: EXPECT_WAIT_MS, message: `${ctx.tag}: the recorded page change did not appear` },\n      9559 |     )\n    > 9560 |     .toBeNull();\n           |      ^\n      9561 |   for (const warning of last.warnings) console.warn(`[sitelooper warn] ${warning}`);\n      9562 |   if (last.unobserved) console.warn(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);\n      9563 |   return last;\n        at expectChanges (/home/user/sitelooper/bench/results/fwod53-spec-spec-tmp/fwod53.flow.ts:9560:6)\n        at Object.verify (/home/user/sitelooper/bench/results/fwod53-spec-spec-tmp/fwod53.flow.ts:12032:32)\n        at runStepLifecycle (/home/user/sitelooper/bench/results/fwod53-spec-spec-tmp/fwod53.flow.ts:7045:24)\n        at Object.04-open (/home/user/sitelooper/bench/results/fwod53-spec-spec-tmp/fwod53.flow.ts:11997:5)\n        at /home/user/sitelooper/bench/results/fwod53-spec-spec-tmp/fwod53.flow.ts:13049:7\n        at runFlow (/home/user/sitelooper/bench/results/fwod53-spec-spec-tmp/fwod53.flow.ts:13048:5)\n        at /home/user/sitelooper/bench/results/fwod53-spec-spec-tmp/fwod53.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: ../../../test-results/fwod53-fwod53/error-context.md\n\n  1 failed\n    fwod53.spec.ts:9:1 › fwod53 ────────────────────────────────────────────────────────────────────\n[sitelooper skip] 03-open s_2f3a37/14 target: no locator recorded — value left empty\n"
+}

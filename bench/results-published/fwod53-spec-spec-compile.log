@@ -1,0 +1,7 @@
+flow: /home/user/sitelooper/bench/results/fwod53-spec-spec-tmp/fwod53.flow.ts
+spec: /home/user/sitelooper/bench/results/fwod53-spec-spec-tmp/fwod53.spec.ts
+warning 03-open: 03-open read a value that contradicts what the previous step reported
+  why: 03-open read order_line_count "2" right after 02-create reported "1"; 02-create's change may not have landed and a later step may be retrying it. Re-record 02-create.
+  fix: sitelooper rerecord bench/results/flows/fwod53.json 02-create
+
+  warning: 03-open: step 14 (read second_line_unit_price) has no locator left — it publishes nothing, as replay skips it

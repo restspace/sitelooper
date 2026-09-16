@@ -1,0 +1,649 @@
+{
+ "id": "s_c0b8b7",
+ "origin": "http://127.0.0.1:8069",
+ "template": "Open the existing draft quotation {{v1}} in the Odoo Sales app (Sales > Orders > Quotations, open the record named {{v1}} for customer '{{v2}}'). It has two order lines: line 1 is product ' {{v4}} ' with quantity {{v7}} and unit price {{02-create.unit_price}}; line 2 is product '{{03-open.second_product_name}}' with quantity {{v11}} and unit price {{03-open.second_line_unit_price}}. Change ONLY the first line's quantity from 3 to 5 (leave the second line and all prices untouched). Save the quotation (keep it a draft, do not confirm). Read and report from the page: (a) the first line's quantity now shown, (b) the first line's subtotal, and (c) the new Untaxed Amount the app computes at the bottom of the order. Note: Odoo long-polls so never wait for network idle; wait for concrete page state instead.",
+ "params": {
+  "v1": {
+   "example": "S00022",
+   "usedIn": [],
+   "known": true,
+   "binding": "02-create.order_reference"
+  },
+  "v2": {
+   "example": "fwod53-n2 Bench Customer",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i1:customer_name"
+  },
+  "v3": {
+   "example": "fwod53-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v4": {
+   "example": "| [FURN_6666] Acoustic Bloc Screens | [FURN_6666] Acoustic Bloc Screens | 3.00 | 295.00 | 20% | £ 885.00 |",
+   "usedIn": [],
+   "known": true,
+   "binding": "02-create.product_name"
+  },
+  "v7": {
+   "example": "3.00",
+   "usedIn": [
+    1
+   ],
+   "known": true,
+   "binding": "02-create.quantity"
+  },
+  "v11": {
+   "example": "2.00",
+   "usedIn": [],
+   "known": true,
+   "binding": "03-open.second_line_quantity"
+  },
+  "v12": {
+   "example": "22",
+   "usedIn": [
+    6
+   ],
+   "known": true,
+   "binding": "03-open.url.q.id"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id={{v12}}&menu_id=:id&model=sale.order&view_type=form"
+ },
+ "steps": [
+  {
+   "tool": "dblclick",
+   "args": {
+    "target": "@e1630"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "text",
+      "text": "{{v7}}"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 691,
+      "y": 442,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id={{v12}}&menu_id=:id&model=sale.order&view_type=form",
+    "addedContains": [
+     "- row \"20% £ 885.00\"",
+     "- combobox \"Type to find a product...\": {{*}}",
+     "- link \"Delete\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_d30329",
+    "step": 1
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e1670",
+    "value": "5"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "table > tbody > tr:nth-of-type(1) > td:nth-of-type(4) > div > input"
+     },
+     {
+      "kind": "point",
+      "x": 691,
+      "y": 440,
+      "w": 82.4,
+      "h": 21,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id={{v12}}&menu_id=:id&model=sale.order&view_type=form",
+    "addedContains": [
+     "- row \"20% £ 1,475.00\"",
+     "- cell \"£ 1,475.00\"",
+     "- row \"Untaxed Amount £ 1,755.00\"",
+     "- cell \"£ 1,755.00\"",
+     "- row \"TAX 20% £ 351.00\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_d30329",
+    "step": 2
+   }
+  },
+  {
+   "tool": "read_all",
+   "args": {
+    "target": "table.o_list_table tbody tr.o_data_row:first-child input",
+    "what": "value"
+   },
+   "locators": {
+    "target": []
+   },
+   "via": {
+    "skill": "s_d30329",
+    "step": 3
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1255"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Save manually"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 163,
+      "y": 79,
+      "w": 26,
+      "h": 17.5,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id={{v12}}&menu_id=:id&model=sale.order&view_type=form",
+    "addedContains": [
+     "- cell \"[FURN_6666] Acoustic Bloc Screens\"",
+     "- cell \"[FURN_6666] Acoustic Bloc Screens\"",
+     "- cell \"5.00\"",
+     "- cell \"295.00\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_d30329",
+    "step": 4
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": ".o_form_button_save"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_form_button_save"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 163,
+      "y": 79,
+      "w": 26,
+      "h": 17.5,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id={{v12}}&menu_id=:id&model=sale.order&view_type=form",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:8069/web#cids=1&menu_id=196&action=316&model=sale.order&view_type=form&id={{v12}}"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "read_all",
+   "args": {
+    "target": ".o_tax_totals, .oe_subtotal_footer tr",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_tax_totals, .oe_subtotal_footer tr"
+     }
+    ]
+   },
+   "label": "o_tax_totals_oe_subtotal"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "first_line_quantity_now",
+    "target": ".o_list_table tbody tr.o_data_row:nth-child(1) td[name='product_uom_qty']",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_list_table tbody tr.o_data_row:nth-child(1) td[name='product_uom_qty']"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 691,
+      "y": 442,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "first_line_quantity_now"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "first_line_subtotal",
+    "target": ".o_list_table tbody tr.o_data_row:nth-child(1) td[name='price_subtotal']",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_list_table tbody tr.o_data_row:nth-child(1) td[name='price_subtotal']"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(7)"
+     },
+     {
+      "kind": "point",
+      "x": 1179,
+      "y": 442,
+      "w": 104,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "first_line_subtotal_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "untaxed_amount",
+    "target": ".oe_subtotal_footer tr:first-child td:last-child span",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".oe_subtotal_footer tr:first-child td:last-child span"
+     },
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(1) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1205,
+      "y": 621,
+      "w": 66.2,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "untaxed_amount_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "value"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "combobox",
+      "name": "Type to find a customer..."
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Type to find a customer..."
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(1) > div > div > input",
+      "nth": 0
+     },
+     {
+      "kind": "point",
+      "x": 383,
+      "y": 247,
+      "w": 409.8,
+      "h": 26,
+      "role": "combobox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "customer_name"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(7)"
+     },
+     {
+      "kind": "point",
+      "x": 1179,
+      "y": 442,
+      "w": 104,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "first_line_subtotal"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(5)"
+     },
+     {
+      "kind": "point",
+      "x": 783,
+      "y": 442,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "first_line_unit_price"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > h1 > div > span"
+     },
+     {
+      "kind": "point",
+      "x": 89,
+      "y": 195,
+      "w": 96.5,
+      "h": 31,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "order_reference"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(2) > td:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 691,
+      "y": 482,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "second_line_quantity"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(2) > td:nth-of-type(7)"
+     },
+     {
+      "kind": "point",
+      "x": 1179,
+      "y": 482,
+      "w": 104,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "second_line_subtotal"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(2) > td:nth-of-type(5)"
+     },
+     {
+      "kind": "point",
+      "x": 783,
+      "y": 482,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "second_line_unit_price"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(3) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1195,
+      "y": 669,
+      "w": 86,
+      "h": 21,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "total"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(1) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1205,
+      "y": 621,
+      "w": 66.2,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "untaxed_amount"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Completed: quotation {{v1}} (customer '{{v2}}') has been saved as a draft with the first line's quantity changed from 3 to 5. Reading the live form after Save: first line '{{v5}}' shows quantity 5.00, unit price £ {{v8}}, subtotal £ 1,475.00; the second line is unchanged ('[E-COM11] Cabinet with Doors', qty {{v11}}, £ 140.00, subtotal £ 280.00); the footer shows Untaxed Amount £ 1,755.00, TAX {{v9}} £ 351.00 and Total £ 2,106.00. The form's dirty indicator is hidden (.o_form_status_indicator_buttons has class \"invisible\"), confirming the edit is committed, and the statusbar is on 'Quotation' (still a draft, not confirmed).",
+  "values": {
+   "customer_name": "{{v2}}",
+   "first_line_product": "{{v5}}",
+   "first_line_quantity_now": "5.00",
+   "first_line_subtotal": "£ 1,475.00",
+   "first_line_unit_price": "{{v8}}",
+   "order_reference": "{{v1}}",
+   "second_line_product": "[E-COM11] Cabinet with Doors",
+   "second_line_quantity": "{{v11}}",
+   "second_line_subtotal": "£ 280.00",
+   "second_line_unit_price": "140.00",
+   "statusbar_current_status": "Quotation",
+   "total": "£ 2,106.00",
+   "untaxed_amount": "£ 1,755.00",
+   "first_line_subtotal_2": "£ 1,475.00",
+   "untaxed_amount_2": "£ 1,755.00",
+   "o_tax_totals_oe_subtotal": "Untaxed Amount\t£ 1,755.00",
+   "o_tax_totals_oe_subtotal_2": "TAX {{v9}}\t\n£ 351.00",
+   "o_tax_totals_oe_subtotal_3": "Total\t£ 2,106.00",
+   "ref": "{{v3}}",
+   "ref_2": "{{v6}}",
+   "ref_3": "s00022_line1_qty5.png"
+  }
+ },
+ "contract": 4,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-16T11:53:30.047Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4
+ },
+ "status": "provisional",
+ "variantOf": "s_d30329",
+ "provenance": {
+  "session": "fwod53-n2",
+  "instruction": "Open the existing draft quotation S00022 in the Odoo Sales app (Sales > Orders > Quotations, open the record named S00022 for customer 'fwod53-n2 Bench Customer'). It has two order lines: line 1 is product ' | [FURN_6666] Acoustic Bloc Screens | [FURN_6666] Acoustic Bloc Screens | 3.00 | 295.00 | 20% | £ 885.00 | ' with quantity 3.00 and unit price {{02-create.unit_price}}; line 2 is product '{{03-open.second_product_name}}' with quantity 2.00 and unit price {{03-open.second_line_unit_price}}. Change ONLY the first line's quantity from 3 to 5 (leave the second line and all prices untouched). Save the quotation (keep it a draft, do not confirm). Read and report from the page: (a) the first line's quantity now shown, (b) the first line's subtotal, and (c) the new Untaxed Amount the app computes at the bottom of the order. Note: Odoo long-polls so never wait for network idle; wait for concrete page state instead.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-16T11:53:30.047Z"
+ },
+ "revision": 1
+}

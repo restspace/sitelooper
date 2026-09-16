@@ -1,0 +1,48 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-signin
+[sitelooper step] 02-create
+[sitelooper step] 03-open
+  ✘  1 fwod53.spec.ts:9:1 › fwod53 (35.1s)
+
+
+  1) fwod53.spec.ts:9:1 › fwod53 › 04-open: Open the existing draft quotation {{02-create.order_reference}} in the Odoo Sales app (Sales > Orders > Quotations, open the record named {{02-create.order_reference}} for customer '{{runid}} Bench Customer'). It has two order lines: line 1 is product '{{02-create.product_name}}' with quantity {{02-create.quantity}} and unit price {{02-create.unit_price}}; line 2 is product '{{03-open.second_product_name}}' with quantity {{03-open.second_line_quantity}} and unit price {{03-open.second_line_unit_price}}. Change ONLY the first line's quantity from 3 to 5 (leave the second line and all prices untouched). Save the quotation (keep it a draft, do not confirm). Read and report from the page: (a) the first line's quantity now shown, (b) the first line's subtotal, and (c) the new Untaxed Amount the app computes at the bottom of the order. Note: Odoo long-polls so never wait for network idle; wait for concrete page state instead. 
+
+    Error: 04-open s_d30329/4: the recorded page change did not appear
+
+    04-open s_d30329/4: the recorded page change did not appear
+
+    expect(received).toBeNull()
+
+    Received: "after step 04-open s_d30329/4 the page did not show \"- cell \\\" | [FURN_6666] Acoustic Bloc Screens | [FURN_6666] Acoustic Bloc Screens | 3.00 | 295.00 | 20% | £ 885.00 | \\\"\" / \"- cell \\\" | [FURN_6666] Acoustic Bloc Screens | [FURN_6666] Acoustic Bloc Screens | 3.00 | 295.00 | 20% | £ 885.00 | \\\"\" as it did when recorded — the step ran but probably acted on the wrong element"
+
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+
+       at fwod53.flow.ts:9560
+
+      9558 |       { timeout: EXPECT_WAIT_MS, message: `${ctx.tag}: the recorded page change did not appear` },
+      9559 |     )
+    > 9560 |     .toBeNull();
+           |      ^
+      9561 |   for (const warning of last.warnings) console.warn(`[sitelooper warn] ${warning}`);
+      9562 |   if (last.unobserved) console.warn(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);
+      9563 |   return last;
+        at expectChanges (/home/user/sitelooper/bench/results/fwod53-spec-spec-tmp/fwod53.flow.ts:9560:6)
+        at Object.verify (/home/user/sitelooper/bench/results/fwod53-spec-spec-tmp/fwod53.flow.ts:12032:32)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwod53-spec-spec-tmp/fwod53.flow.ts:7045:24)
+        at Object.04-open (/home/user/sitelooper/bench/results/fwod53-spec-spec-tmp/fwod53.flow.ts:11997:5)
+        at /home/user/sitelooper/bench/results/fwod53-spec-spec-tmp/fwod53.flow.ts:13049:7
+        at runFlow (/home/user/sitelooper/bench/results/fwod53-spec-spec-tmp/fwod53.flow.ts:13048:5)
+        at /home/user/sitelooper/bench/results/fwod53-spec-spec-tmp/fwod53.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../test-results/fwod53-fwod53/error-context.md
+
+  1 failed
+    fwod53.spec.ts:9:1 › fwod53 ────────────────────────────────────────────────────────────────────
+[sitelooper skip] 03-open s_2f3a37/14 target: no locator recorded — value left empty
