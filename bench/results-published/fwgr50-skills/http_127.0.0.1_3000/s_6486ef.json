@@ -1,0 +1,979 @@
+{
+ "id": "s_6486ef",
+ "origin": "http://127.0.0.1:3000",
+ "template": "Open the dashboard '{{v1}}' at http://127.0.0.1:3000/d/{{v4}}/. Open the dashboard settings (gear icon / 'Dashboard settings') and add the tag '{{v5}}' to the dashboard (in the General settings page, the Tags field — type '{{v5}}' and press Enter so it becomes a tag chip). Save the settings. Verify the tag '{{v5}}' is now shown on the dashboard (e.g. in the dashboard settings or the dashboard's breadcrumb/tags area) and report what you observed.",
+ "params": {
+  "v1": {
+   "example": "fwgr50-n2 Bench Dashboard",
+   "usedIn": [
+    18
+   ],
+   "known": true,
+   "binding": "output:i2:dashboard_title"
+  },
+  "v2": {
+   "example": "fwgr50-n2",
+   "usedIn": [
+    15
+   ],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v4": {
+   "example": "ffygxomw86w3kd",
+   "usedIn": [
+    15
+   ],
+   "known": true,
+   "binding": "03-open.url.p1"
+  },
+  "v5": {
+   "example": "bench",
+   "usedIn": [
+    4,
+    5,
+    7
+   ],
+   "known": true,
+   "binding": "output:i3:tag_chip_text"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:3000/d/{{v4}}/{{v2}}-bench-dashboard?from=:id&timezone=browser&to=now"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Edit\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Exit edit mode button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Exit edit"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(5) > button"
+     },
+     {
+      "kind": "point",
+      "x": 1042,
+      "y": 60,
+      "w": 63,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v4}}/:var?from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- dialog \"Discard changes to dashboard?\"",
+     "- heading \"Discard changes to dashboard?\"",
+     "- button \"Close\"",
+     "- button \"Cancel\"",
+     "- button \"Discard\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_b52281",
+    "step": 1
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Settings\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Dashboard settings"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Settings"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(3) > button"
+     },
+     {
+      "kind": "point",
+      "x": 962,
+      "y": 60,
+      "w": 63.8,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v4}}/:var?from=:id&timezone=browser&to=now",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_b52281",
+    "step": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1181"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Dashboard settings"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Settings"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(3) > button"
+     },
+     {
+      "kind": "point",
+      "x": 962,
+      "y": 60,
+      "w": 63.8,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v4}}/:var?editview=settings&from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- link \"{{v1}}\"",
+     "- button \"Back to dashboard\"",
+     "- heading \"Settings\"",
+     "- tab \"General\"",
+     "- tab \"Annotations\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "type",
+   "args": {
+    "target": "@e1327",
+    "text": "{{v5}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Tags"
+     },
+     {
+      "kind": "label",
+      "label": "Tags"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "New tag (enter key to add)"
+     },
+     {
+      "kind": "id",
+      "selector": "#tags-input"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"input-wrapper\"] input"
+     },
+     {
+      "kind": "css",
+      "selector": "#tags-input"
+     },
+     {
+      "kind": "point",
+      "x": 192,
+      "y": 414,
+      "w": 320,
+      "h": 32,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v4}}/:var?editview=settings&from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- textbox \"New tag (enter key to add)\": {{v5}}",
+     "- button \"Add\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "type",
+   "args": {
+    "target": "@e1327",
+    "text": "{{v5}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Tags"
+     },
+     {
+      "kind": "label",
+      "label": "Tags"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "New tag (enter key to add)"
+     },
+     {
+      "kind": "id",
+      "selector": "#tags-input"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"input-wrapper\"] input"
+     },
+     {
+      "kind": "css",
+      "selector": "#tags-input"
+     },
+     {
+      "kind": "point",
+      "x": 192,
+      "y": 414,
+      "w": 320,
+      "h": 32,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v4}}/:var?editview=settings&from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- textbox \"New tag (enter key to add)\": {{*}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "@e1327",
+    "what": "value",
+    "label": "tags_field_value"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Tags"
+     },
+     {
+      "kind": "label",
+      "label": "Tags"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "New tag (enter key to add)"
+     },
+     {
+      "kind": "id",
+      "selector": "#tags-input"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"input-wrapper\"] input"
+     },
+     {
+      "kind": "css",
+      "selector": "#tags-input"
+     },
+     {
+      "kind": "point",
+      "x": 192,
+      "y": 414,
+      "w": 320,
+      "h": 32,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "tags_field_value"
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e1327",
+    "value": "{{v5}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Tags"
+     },
+     {
+      "kind": "label",
+      "label": "Tags"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "New tag (enter key to add)"
+     },
+     {
+      "kind": "id",
+      "selector": "#tags-input"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"input-wrapper\"] input"
+     },
+     {
+      "kind": "css",
+      "selector": "#tags-input"
+     },
+     {
+      "kind": "point",
+      "x": 192,
+      "y": 414,
+      "w": 320,
+      "h": 32,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v4}}/:var?editview=settings&from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- textbox \"New tag (enter key to add)\": {{v5}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "tags_field_value",
+    "target": "@e1327",
+    "what": "value"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Tags"
+     },
+     {
+      "kind": "label",
+      "label": "Tags"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "New tag (enter key to add)"
+     },
+     {
+      "kind": "id",
+      "selector": "#tags-input"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"input-wrapper\"] input"
+     },
+     {
+      "kind": "css",
+      "selector": "#tags-input"
+     },
+     {
+      "kind": "point",
+      "x": 192,
+      "y": 414,
+      "w": 320,
+      "h": 32,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "tag_chip_text"
+  },
+  {
+   "tool": "press",
+   "args": {
+    "key": "Enter",
+    "target": "@e1327"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Tags"
+     },
+     {
+      "kind": "label",
+      "label": "Tags"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "New tag (enter key to add)"
+     },
+     {
+      "kind": "id",
+      "selector": "#tags-input"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"input-wrapper\"] input"
+     },
+     {
+      "kind": "css",
+      "selector": "#tags-input"
+     },
+     {
+      "kind": "point",
+      "x": 192,
+      "y": 414,
+      "w": 320,
+      "h": 32,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v4}}/:var?editview=settings&from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- textbox \"New tag (enter key to add)\"",
+     "- button \"Add\" [disabled]",
+     "- button \"Remove \\\"{{v5}}\\\" tag\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1268"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Save dashboard button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Save dashboard"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(3) > div > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1140,
+      "y": 60,
+      "w": 109.4,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v4}}/:var?editview=settings&from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- dialog \"\"",
+     "- dialog \"Drawer title Save dashboard\"",
+     "- button \"Close\"",
+     "- heading \"Save dashboard\"",
+     "- tab \"Details\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1518"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Save dashboard drawer button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Save"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(3) > div:nth-of-type(1) > div > div > div:nth-of-type(3) > button:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 776,
+      "y": 372,
+      "w": 65.4,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v4}}/:var?editview=settings&from=:id&timezone=browser&to=now",
+    "alertContains": "Dashboard saved",
+    "addedContains": [
+     "- button \"Back to dashboard\"",
+     "- button \"Save dashboard\"",
+     "- button \"More save options\"",
+     "- button \"Toggle top search bar\"",
+     "- button \"Close alert\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1260"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Back to dashboard button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Back to dashboard"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(1) > button"
+     },
+     {
+      "kind": "point",
+      "x": 993,
+      "y": 60,
+      "w": 143.5,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v4}}/:var?from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- button \"Add\"",
+     "- button \"Settings\"",
+     "- button \"Exit edit\"",
+     "- button \"Time range selected: Last 6 hours\"",
+     "- button \"Zoom out time range\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1542"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Dashboard settings"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Settings"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(3) > button"
+     },
+     {
+      "kind": "point",
+      "x": 962,
+      "y": 60,
+      "w": 63.8,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v4}}/:var?editview=settings&from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- link \"{{v1}}\"",
+     "- button \"Back to dashboard\"",
+     "- heading \"Settings\"",
+     "- tab \"General\"",
+     "- tab \"Annotations\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1622"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Back to dashboard button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Back to dashboard"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(1) > button"
+     },
+     {
+      "kind": "point",
+      "x": 993,
+      "y": 60,
+      "w": 143.5,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v4}}/:var?from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- button \"Add\"",
+     "- button \"Settings\"",
+     "- button \"Exit edit\"",
+     "- button \"Time range selected: Last 6 hours\"",
+     "- button \"Zoom out time range\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:3000/d/{{v4}}/{{v2}}-bench-dashboard"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e67"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Edit dashboard button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Edit"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(5) > button"
+     },
+     {
+      "kind": "point",
+      "x": 1198,
+      "y": 60,
+      "w": 38.3,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v4}}/:var?from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- button \"Add\"",
+     "- button \"Settings\"",
+     "- button \"Exit edit\"",
+     "- button \"Save dashboard\"",
+     "- button \"More save options\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Settings\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=button[name=\"Settings\"]"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Dashboard settings"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Settings"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(3) > button"
+     },
+     {
+      "kind": "point",
+      "x": 962,
+      "y": 60,
+      "w": 63.8,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v4}}/:var?editview=settings&from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- link \"{{v1}}\"",
+     "- button \"Back to dashboard\"",
+     "- heading \"Settings\"",
+     "- tab \"General\"",
+     "- tab \"Annotations\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid {{v1}} breadcrumb"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] a",
+      "nth": 2
+     },
+     {
+      "kind": "css",
+      "selector": "header > div:nth-of-type(2) > nav > ol > li:nth-of-type(3) > a"
+     },
+     {
+      "kind": "point",
+      "x": 323,
+      "y": 60,
+      "w": 196.8,
+      "h": 22,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "dashboard_title"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] a",
+      "nth": 1
+     },
+     {
+      "kind": "css",
+      "selector": "header > div:nth-of-type(2) > nav > ol > li:nth-of-type(2) > a"
+     },
+     {
+      "kind": "point",
+      "x": 160,
+      "y": 60,
+      "w": 81.1,
+      "h": 22,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "folder"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Task completed: on the '{{v1}}' I opened Dashboard settings, typed '{{v5}}' into the General tab's Tags field and pressed Enter so it became a tag chip, then clicked 'Save dashboard' and got the green \"Dashboard saved\" confirmation. Persistence was verified after a fresh full page load: reopening Settings > General shows the tag chip \"{{v5}}\" (with a \"Remove \\\"{{v5}}\\\" tag\" button) in the Tags list, read from the live DOM. Grafana's dashboard header/breadcrumb does not render dashboard tags, so Dashboard settings > General > Tags is the only place the tag is displayed.",
+  "values": {
+   "breadcrumb": "Home > Dashboards > {{v1}} > Settings",
+   "dashboard_title": "{{v1}}",
+   "dashboard_url": "http://127.0.0.1:3000/d/{{v4}}/{{v6}}?from=now-6h&to=now&timezone=browser",
+   "folder": "Dashboards",
+   "remove_button": "Remove \"{{v5}}\" tag",
+   "save_confirmation": "Dashboard saved",
+   "settings_url": "http://127.0.0.1:3000/d/{{v4}}/{{v6}}?from=now-6h&to=now&timezone=browser&editview=settings",
+   "tag_chip_text": "{{v5}}",
+   "tags_list_item_1": "{{v5}}",
+   "tags_field_value": "benchbench",
+   "ref": "{{v2}}",
+   "ref_2": "s_b52281",
+   "ref_3": "fwgr50-n1"
+  }
+ },
+ "contract": 4,
+ "stats": {
+  "uses": 2,
+  "successes": 2,
+  "partial": 0,
+  "created": "2026-09-16T22:45:35.350Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4,
+  "lastUsed": "2026-09-16T22:48:32.174Z"
+ },
+ "status": "validated",
+ "variantOf": "s_b52281",
+ "provenance": {
+  "session": "fwgr50-n2",
+  "instruction": "Open the dashboard 'fwgr50-n2 Bench Dashboard' at http://127.0.0.1:3000/d/ffygxomw86w3kd/. Open the dashboard settings (gear icon / 'Dashboard settings') and add the tag 'bench' to the dashboard (in the General settings page, the Tags field — type 'bench' and press Enter so it becomes a tag chip). Save the settings. Verify the tag 'bench' is now shown on the dashboard (e.g. in the dashboard settings or the dashboard's breadcrumb/tags area) and report what you observed.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-16T22:45:35.350Z"
+ },
+ "revision": 3
+}
