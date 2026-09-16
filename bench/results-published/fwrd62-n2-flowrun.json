@@ -1,0 +1,165 @@
+{
+  "flow": "fwrd62",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Signed in to http://127.0.0.1:4180/ as bench@example.com and created a new ticket via the \"New ticket\" dialog, filling the required Title field (Customer is optional and was left blank, so the app recorded \"Not recorded\"). The list refreshed with the new row RD-1016 / 'fwrd62-n2 RD Bench Ticket RD Bench Ticket' / Not recorded / Draft, and opening it shows a detail page at http://127.0.0.1:4180/#/tickets/t15 with heading \"fwrd62-n2 RD Bench Ticket RD Bench Ticket\", \"Customer: Not recorded · Raised Customer: Not recorded · Raised 2026-09-16\" and Status \"Draft\", plus a \"Mark Ready\" button (no parts yet).",
+      "values": {
+        "detail_url": "http://127.0.0.1:4180/#/tickets/t15",
+        "list_row_observed": "RD-1015\tfwrd62-n2 RD Bench Ticket\tNot recorded\tDraft\t0\t2026-09-16",
+        "ticket_reference": "RD-1016",
+        "ticket_title": "fwrd62-n2 RD Bench Ticket",
+        "ticket_status": "Draft",
+        "ticket_customer": "Not recorded",
+        "ticket_raised_date": "Customer: Not recorded · Raised 2026-09-16",
+        "ref": "fwrd62-n2 RD Bench Ticket"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-add",
+      "status": "success",
+      "summary": "On ticket RD-1016 ('fwrd62-n2 RD Bench Ticket', http://127.0.0.1:4180/#/tickets/t15) I opened the \"Add part\" dialog, filled Part name * = 'No parts on this ticket yet.', Cost * = 100, Markup % * = 25 (Quantity defaulted to 1, Supplier left optional/blank) and clicked \"Add part\". The dialog closed and the Parts table refreshed to show one row: 'No parts on this ticket yet. | $100.00 | 25% | 1 | No supplier | $125.00 | Edit Delete' — the app computes a price of $125.00 (100 + 25% markup).",
+      "values": {
+        "ref": "fwrd62-n2",
+        "parts_row_raw": "No parts on this ticket yet.",
+        "ticket_reference": "RD-1016",
+        "part_name": "No parts on this ticket yet.",
+        "part_cost": "$100.00",
+        "part_markup": "25%",
+        "part_supplier": "No supplier",
+        "part_computed_price": "$125.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-add",
+      "status": "success",
+      "summary": "Used the 'Add part' dialog on ticket RD-1016 (http://127.0.0.1:4180/#/tickets/t15) to add 'fwrd62-n2 RD Part B' with Cost 200, Markup % 25 and Quantity left at its default 1. After submitting, the dialog closed and the Parts table shows both rows: 'fwrd62-n2 RD Part A | $100.00 | 25% | 1 | No supplier | $125.00' and 'fwrd62-n2 RD Part B | $200.00 | 25% | 1 | No supplier | $250.00', with a footer row 'Total (price × quantity)\t$375.00\t\t'. The app computes $250.00 for Part B, and Part A is still listed at its original $125.00.",
+      "values": {
+        "part_a_row": "fwrd62-n2 RD Part A | $100.00 | 25% | 1 | No supplier | $125.00",
+        "part_b_row": "fwrd62-n2 RD Part B | $200.00 | 25% | 1 | No supplier | $250.00",
+        "ref": "fwrd62-n2",
+        "ticket_reference": "RD-1016",
+        "part_b_computed_price": "$250.00",
+        "part_a_price_still_listed": "$125.00",
+        "parts_total": "Total (price × quantity)\t$375.00\t",
+        "parts_total_row_text": "Total (price × quantity)\t$375.00\t"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-edit",
+      "status": "success",
+      "summary": "On ticket RD-1016 (http://127.0.0.1:4180/#/tickets/t15) I clicked the Edit control in the 'fwrd62-n2 RD Part A' row, which opened the \"Edit part\" dialog pre-filled (Part name 'fwrd62-n2 RD Part A', Cost 100, Markup % 25, Quantity 1, Supplier blank). I changed only Cost to 150 and clicked \"Save part\"; the dialog closed and the Parts table refreshed. The row now reads 'fwrd62-n2 RD Part A | $150.00 | 25% | 1 | No supplier | $187.50' — the app's computed price is $187.50 — and the footer total updated to $437.50 (Part B unchanged at $200.00/$250.00).",
+      "values": {
+        "part_a_row": "fwrd62-n2 RD Part A | $150.00 | 25% | 1 | No supplier | $187.50",
+        "part_b_row_unchanged": "fwrd62-n2 RD Part B | $200.00 | 25% | 1 | No supplier | $250.00",
+        "ref": "fwrd62-n2",
+        "ticket_reference": "RD-1016",
+        "part_a_computed_price": "$187.50",
+        "updated_parts_total": "$437.50"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-set",
+      "status": "success",
+      "summary": "I clicked 'Mark Ready' once on ticket RD-1016 (http://127.0.0.1:4180/#/tickets/t15). The app refused and rendered an in-page alert (role=alert), read verbatim: 'Ticket is not ready' followed by a list: 'Part \"Part \"fwrd62-n2 RD Part A\" has no supplier RD Part A\" has no supplier' and 'Part \"Part \"fwrd62-n2 RD Part A\" has no supplier RD Part B\" has no supplier' — i.e. the missing precondition is a supplier on every part. Per instructions I did not fix anything; the ticket status still reads 'Draft' and the 'Mark Ready' button is still present.",
+      "values": {
+        "ready_error_text": "Ticket is not ready\n\nPart \"fwrd62-n2 RD Part A\" has no supplier\nPart \"fwrd62-n2 RD Part B\" has no supplier",
+        "ticket_status_after_attempt": "Draft",
+        "ref": "RD-1016",
+        "ref_2": "Part \"fwrd62-n2 RD Part A\" has no supplier"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "06-edit",
+      "status": "success",
+      "summary": "Completed: on ticket RD-1016 I set Supplier = 'Acme Supply' on both parts through the Edit part dialog (cost/markup unchanged — Part A 150/25% = $187.50, Part B 200/25% = $250.00, total $437.50), then clicked 'Mark Ready'. The page now shows Status 'Ready' and the header buttons are 'Mark Draft' and 'Mark Closed'; no separate confirmation toast/text was rendered. The parts table displays both rows with supplier 'Acme Supply' and their computed prices $187.50 and $250.00.",
+      "values": {
+        "ref": "RD-1016"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "07-delete",
+      "status": "success",
+      "summary": "Deleted both parts on RD-1016 (each row's Delete → in-page \"Confirm\" dialog with a \"Delete part\" button, accepted); the Parts table then showed the empty state 'No parts on this ticket yet.' (0 parts). I then clicked 'Archive ticket' on the detail page — no precondition was enforced and no confirmation text was shown; the control became 'Unarchive ticket' and an 'Archived' badge appeared beside the status. Final detail state: RD-1016 'fwrd62-n2 RD Bench Ticket', Status Ready + Archived, actions Mark Draft / Mark Closed / Unarchive ticket. The ticket no longer appears in the active Tickets list (search 'fwrd62' → 'No tickets match the current filters.'), and it is found in the Tickets list only when the 'Show archived' checkbox is ticked, where the row reads 'RD-1016 | fwrd62-n2 RD Bench Ticket (Archived) | Not recorded | Ready | 0 | 2026-09-16'.",
+      "values": {
+        "ref_2": "fwrd62-n2",
+        "archived_row_text": "RD-1016\tfwrd62-n2 RD Bench Ticket Archived\tNot recorded\tReady\t0\t2026-09-16",
+        "ref": "RD-1016"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "08-report",
+      "status": "success",
+      "summary": "Verification only, nothing else modified. On the Tickets list (http://127.0.0.1:4180/#/tickets) with Status = All statuses, Search = 'fwrd62' and 'Show archived' UNCHECKED, no ticket appears in the active list — the region reads 'No tickets' / 'No tickets match the current filters.'. After ticking 'Show archived', one row appears (Showing 1–1 of 1) with full row text 'RD-1016 | fwrd62-n2 RD Bench Ticket (Archived) | Not recorded | Ready | 0 | 2026-09-16' — ref RD-1016, title 'fwrd62-n2 RD Bench Ticket' with an 'Archived' marker in the title cell, customer 'Not recorded', status 'Ready', parts 0, created 2026-09-16.",
+      "values": {
+        "ref_2": "fwrd62-n2",
+        "active_list_region_text": "Tickets\n\nNo tickets\n\nREF\tTITLE\tCUSTOMER\tSTATUS\tPARTS\tCREATED\nNo tickets match the current filters.\nPrevious\nPage 1 of 1\nNext",
+        "active_list_rows": "No tickets match the current filters.",
+        "search_value": "fwrd62",
+        "archived_list_rows": "RD-1016\tfwrd62-n2 RD Bench Ticket Archived\tNot recorded\tReady\t0\t2026-09-16",
+        "ref": "RD-1016"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 8,
+  "total": 8,
+  "repinned": 0,
+  "drift": 0,
+  "wallMs": 23616,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

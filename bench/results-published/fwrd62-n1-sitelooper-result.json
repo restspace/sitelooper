@@ -1,0 +1,103 @@
+{
+  "arm": "sitelooper",
+  "target": "repairdesk",
+  "machine": {
+    "platform": "linux",
+    "arch": "x64",
+    "node": "v22.22.2",
+    "cpus": 4,
+    "memGB": 17,
+    "tool": "sitelooper ? author browser tests with an agent; run compiled tests with Playwri",
+    "commit": "6f966e1"
+  },
+  "mutationLogPath": "/home/user/sitelooper/bench/results/fwrd62-n1-sitelooper-mutationlog.json",
+  "provider": "openrouter",
+  "model": "z-ai/glm-5.3",
+  "runid": "fwrd62-n1",
+  "task": "bench/tasks/repairdesk-ticket-flow.md",
+  "briefed": false,
+  "reset": true,
+  "stopReason": "completed",
+  "turns": 9,
+  "wallMs": 418796,
+  "orchestrator": {
+    "input": 12412,
+    "cacheWrite": 0,
+    "cacheRead": 27520,
+    "output": 2839
+  },
+  "inner": {
+    "promptTokens": 1961763,
+    "cachedTokens": 1833216,
+    "completionTokens": 17413,
+    "instructions": 8,
+    "byModel": {
+      "deepseek/deepseek-v4.1-flash": {
+        "promptTokens": 1961763,
+        "completionTokens": 17413,
+        "cachedTokens": 1833216,
+        "instructions": 8
+      }
+    },
+    "servedByModel": {
+      "deepseek/deepseek-v4.1-flash": [
+        "DeepSeek"
+      ]
+    },
+    "skills": {
+      "instructions": 8,
+      "offered": 6,
+      "invoked": 0,
+      "fullReplays": 0,
+      "repaired": 0,
+      "refused": 0,
+      "tierA": 0,
+      "stepsReplayed": 0,
+      "deterministicActions": 0,
+      "totalActions": 82,
+      "compiled": 8,
+      "merged": 0,
+      "variants": 0
+    },
+    "model": "deepseek/deepseek-v4.1-flash",
+    "fallbackModel": "z-ai/glm-5.3",
+    "provider": "openrouter"
+  },
+  "commandCount": 8,
+  "subcommands": {
+    "do": 8
+  },
+  "invocationCount": 8,
+  "commandMs": 388725,
+  "commandBytes": 7611,
+  "timeouts": 0,
+  "contextTruncations": 0,
+  "coarse": true,
+  "learn": {
+    "dir": "/home/user/sitelooper/bench/results/fwrd62-skills",
+    "instructions": 8,
+    "offered": 6,
+    "invoked": 0,
+    "fullReplays": 0,
+    "repaired": 0,
+    "refused": 0,
+    "tierA": 0,
+    "stepsReplayed": 0,
+    "deterministicActions": 0,
+    "totalActions": 82,
+    "compiled": 8,
+    "merged": 0,
+    "variants": 0,
+    "deterministicFraction": 0
+  },
+  "orBackends": [
+    "Crusoe",
+    "Together",
+    "Modal"
+  ],
+  "orReportedCostUsd": 0.037,
+  "maxUsd": 3,
+  "spendUsd": 0.0723,
+  "finalText": "All objectives verified complete.\n\n## Final Report\n\n**Objective 1 — DONE:** Ticket `fwrd62-n1 RD Bench Ticket` created (ref **RD-1015**, detail URL `http://127.0.0.1:4180/#/tickets/t15`). Customer recorded as \"Not recorded\" (optional field), raised date 2026-09-16, initial status Draft.\n\n**Objective 2 — DONE:** Part `fwrd62-n1 RD Part A` added with cost 100, markup 25, qty 1. Computed price: **$125.00** (row: `fwrd62-n1 RD Part A | $100.00 | 25% | 1 | No supplier | $125.00`).\n\n**Objective 3 — DONE:** Part `fwrd62-n1 RD Part B` added with cost 200, markup 25, qty 1. Computed price: **$250.00** (row: `fwrd62-n1 RD Part B | $200.00 | 25% | 1 | No supplier | $250.00`). Parts total at that point: $375.00.\n\n**Objective 4 — DONE:** Part A's cost edited from 100 → 150 (markup still 25). Computed price afterwards: **$187.50** (row: `fwrd62-n1 RD Part A | $150.00 | 25% | 1 | No supplier | $187.50`); parts total updated to $437.50.\n\n**Objective 5 — DONE:** Status set to **Ready**. Precondition discovered: clicking \"Mark Ready\" initially failed with an in-page alert reading verbatim:\n> Ticket is not ready\n> Part \"fwrd62-n1 RD Part A\" has no supplier\n> Part \"fwrd62-n1 RD Part B\" has no supplier\n\n**Exactly what was required:** every part on the ticket must have a supplier assigned. I set Supplier = \"Acme Supply\" on both parts via the Edit part dialog (costs/markups unchanged), after which \"Mark Ready\" succeeded — the page showed Status \"Ready\" with header buttons changing to \"Mark Draft\" / \"Mark Closed\". No other precondition was enforced.\n\n**Objective 6 — DONE:** Both parts deleted (each via row Delete → in-page Confirm dialog → \"Delete part\"); the parts table then showed the empty state \"No parts on this ticket yet.\" (0 parts). The ticket was then archived via the \"Archive ticket\" control on the detail page — no precondition enforced, no confirmation text; the control became \"Unarchive ticket\" and an \"Archived\" badge appeared beside the status. Final verified state: the active Tickets list (search \"fwrd62\", \"Show archived\" unchecked) shows **no tickets** (\"No tickets match the current filters.\"), and with \"Show archived\" ticked the single row reads `RD-1015 | fwrd62-n1 RD Bench Ticket (Archived) | Not recorded | Ready | 0 | 2026-09-16`. Nothing created by this run remains active.",
+  "transcriptPath": "/home/user/sitelooper/bench/results/fwrd62-n1-sitelooper-transcript.jsonl"
+}
