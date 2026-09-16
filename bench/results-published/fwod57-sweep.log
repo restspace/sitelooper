@@ -1,0 +1,118 @@
+
+[sweep] run 1/3: fwod57-n1 (store: /home/user/sitelooper/bench/results/fwod57-skills)
+[harness] odoo: defaulting APP_URL
+[harness] odoo: defaulting APP_EMAIL
+[harness] odoo: defaulting APP_PASSWORD
+[reset] odoo: no leftover bench customers
+[harness] odoo responded 303 at http://127.0.0.1:8069/
+stopped: fwod57-n1
+  flow "fwod57" saved: 6 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwod57.json
+  warning: note: dropped 2 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: note: 7 goal/report value(s) carrying a value this run made were slotted or dropped:
+  s_29448c.reportTemplate.values.sale_order_id dropped (recorded literal of a value this run made)
+  s_29448c.reportTemplate.summary dropped (narrates a value this run made)
+  s_2d4b61.reportTemplate.values.sale_order_id dropped (recorded literal of a value this run made)
+  s_4742fd.reportTemplate.values.record_url_before_cancel slotted "21" → {{v4}}
+  s_4990f3.reportTemplate.values.record_id dropped (recorded literal of a value this run made)
+  s_4990f3.reportTemplate.values.record_url dropped (recorded literal of a value this run made)
+  s_4990f3.reportTemplate.summary dropped (narrates a value this run made)
+  warning: note: 01-open no longer publishes contact_type, model, record_id — no replay reads them from the page and the recording showed no line to read
+  warning: note: 02-create no longer publishes line_subtotal, sale_order_id, status, untaxed_amount, order_line_subtotal, product_internal_reference — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-open no longer publishes order_line_count, sale_order_id, status — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-open no longer publishes status — no replay reads it from the page and the recording showed no line to read
+  warning: note: 05-open no longer publishes statusbar_state, signals — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-open no longer publishes statusbar_after_cancel, statusbar_state_sales_order, statusbar_state_quotation — no replay reads them from the page and the recording showed no line to read
+  warning: warning: contradicted-step: 04-open read line1_subtotal "£ 1,475.00" right after 03-open reported "£ 885.00"; 03-open's change may not have landed and a later step may be retrying it. Re-record 03-open.
+  warning: warning: 182 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "Benchville" (output) in "Open http://127.0.0.1:8069/ in the browser. If a login page appears, sign in with username admin and password admin. Then create a new customer contact named '{"
+  flow.steps[0].params.v4: "Benchville" (output) in "Benchville"
+  flow.steps[0].route: "res.partner" (output) in "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=res.partner&view_type=form"
+  flow.steps[4].instruction: "Sales Order" (output) in "Open the existing quotation {{02-create.quotation_reference}} (for customer '{{runid}} Bench Customer') in the Odoo Sales app and confirm it so it becomes a sal"
+  flow.steps[5].instruction: "Sales Order" (output) in "Open the sales order {{02-create.quotation_reference}} (for customer '{{runid}} Bench Customer') in the Odoo Sales app — it is currently confirmed with status '"
+  warning: {{02-create.product_name}} (used by 03-open) can only be re-observed by model recovery — consider re-recording so the value is read from the page.
+  warning: {{03-open.line2_product}} (used by 04-open) can only be re-observed by model recovery — consider re-recording so the value is read from the page.
+  warning: 02-create reports product_name, but no segment of the procedure it pins (s_613fe2, through its last segment s_29448c) re-reads it from the page — a replay without the model will succeed without that value; re-record so a read for it lands in s_29448c.
+  warning: 03-open reports line2_product, but no segment of the procedure it pins (s_2d4b61, with any later segment of its chain) re-reads it from the page — a replay without the model will succeed without that value; re-record so a read for it lands in that procedure's last segment.
+arm=sitelooper model=z-ai/glm-5.3 runid=fwod57-n1 stop=completed
+turns=7 wall=456.3s
+commands=6 cmdTime=431.1s cmdBytes=7196 timeouts=0
+orchestrator in=4920 cw=0 cr=24192 out=2347
+inner prompt=2080586 cached=1930368 completion=22248
+spend=$0.0652 maxUsd=3
+learn: A_n=0 replayed=0/6 full=0 repaired=0 compiled=6 variants=0
+-> /home/user/sitelooper/bench/results/fwod57-n1-sitelooper-result.json
+
+fwod57-n1: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00021
+
+[sweep] run 2/3: fwod57-n2 (replay flow fwod57, no orchestrator)
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+
+fwod57-n2: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00022
+
+[sweep] run 3/3: fwod57-n3 (replay flow fwod57, no orchestrator)
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+
+fwod57-n3: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00023
+
+Learning sweep fwod57 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwod57-n1' │ '6/6'    │ 'completed' │ 7     │ 6    │ 0.0652    │ 0   │ '0/6'        │ 456    │
+│ 1       │ 2 │ 'fwod57-n2' │ '6/6'    │ 'success'   │ 0     │ 6    │ 0         │ 1   │ '6/6 (flow)' │ 53     │
+│ 2       │ 3 │ 'fwod57-n3' │ '6/6'    │ 'success'   │ 0     │ 6    │ 0         │ 1   │ '6/6 (flow)' │ 53     │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8069
+  s_1a3ec8  validated   13 steps  3/3 (100%)
+           Open the sales order {{v1}} (for customer '{{v2}}') in the Odoo Sales app — it is currently confirmed with sta…
+  s_28a202  validated   18 steps  3/3 (100%)
+           Open the existing quotation {{v1}} (for customer '{{v2}}') in the Odoo Sales app. It has two order lines: line…
+  s_29448c  validated    7 steps  3/3 (100%)
+           In the Odoo Sales app, create a new quotation for the customer '{{v1}}' (choose the customer from the autocomp…
+  s_2d007c  validated    1 steps  3/3 (100%)
+           Open {{v2}} in the browser. If a login page appears, sign in with username admin and password admin. Then crea…
+  s_2d4b61  validated   16 steps  3/3 (100%)
+           Open the existing quotation {{v1}} (for customer '{{v2}}') in the Odoo Sales app. Add a SECOND order line belo…
+  s_4742fd  validated    8 steps  3/3 (100%)
+           Open the sales order {{v1}} (for customer '{{v2}}') in the Odoo Sales app — it is currently confirmed with sta…
+  s_4990f3  validated    4 steps  3/3 (100%)
+           Open {{v2}} in the browser. If a login page appears, sign in with username admin and password admin. Then crea…
+  s_4a76a2  validated    1 steps  3/3 (100%)
+           In the Odoo Sales app, create a new quotation for the customer '{{v1}}' (choose the customer from the autocomp…
+  s_613fe2  validated    2 steps  3/3 (100%)
+           In the Odoo Sales app, create a new quotation for the customer '{{v1}}' (choose the customer from the autocomp…
+  s_7335cd  validated    3 steps  3/3 (100%)
+           Open the existing quotation {{v1}} (for customer '{{v2}}') in the Odoo Sales app and confirm it so it becomes …
+  s_87cc16  validated    3 steps  3/3 (100%)
+           Open {{v2}} in the browser. If a login page appears, sign in with username admin and password admin. Then crea…
+  s_b63b1d  validated    1 steps  3/3 (100%)
+           Open {{v2}} in the browser. If a login page appears, sign in with username admin and password admin. Then crea…
+  s_ba27f3  validated    7 steps  3/3 (100%)
+           In the Odoo Sales app, create a new quotation for the customer '{{v1}}' (choose the customer from the autocomp…
+  s_eb3c8d  validated    3 steps  3/3 (100%)
+           Open {{v2}} in the browser. If a login page appears, sign in with username admin and password admin. Then crea…
+  s_f1fcb3  validated    2 steps  3/3 (100%)
+           Open {{v2}} in the browser. If a login page appears, sign in with username admin and password admin. Then crea…
+store: /home/user/sitelooper/bench/results/fwod57-skills
+
+summary: /home/user/sitelooper/bench/results/fwod57-sweep.json

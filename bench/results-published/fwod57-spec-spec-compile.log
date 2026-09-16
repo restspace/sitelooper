@@ -1,0 +1,10 @@
+warning 04-open: 04-open read a value that contradicts what the previous step reported
+  why: 04-open read line1_subtotal "£ 1,475.00" right after 03-open reported "£ 885.00"; 03-open's change may not have landed and a later step may be retrying it. Re-record 03-open.
+  fix: sitelooper rerecord bench/results/flows/fwod57.json 03-open
+error 01-open: s_4990f3 step 4 (goto) acts on {{d2}}, {{d5}}, {{d4}}, {{d6}}, and nothing can fill them by the time it acts
+  why: {{d2}}, {{d5}}, {{d4}}, {{d6}} are not caller parameters of s_4990f3, and no step before step 4 mints them, so the artifact has no value to substitute. fillParams leaves an unfilled marker standing, which is the right reading for a CHECK ("asks for no particular value") and the wrong one for the value an action carries: this step would navigate to a url still spellingthe literal text {{d2}}, {{d5}}, {{d4}}, {{d6}}. Daemon replay meets the same condition at run time and hands the step to the model; a compiled artifact has no model to hand it to.
+  fix: re-record 01-open so {{d2}}, {{d5}}, {{d4}}, {{d6}} is read before step 4 (`sitelooper rerecord <flow file> 01-open`), or take {{d2}}, {{d5}}, {{d4}}, {{d6}} out of the step's url
+
+nothing written: the error(s) above are about the RECORDING, not the app — a compiled spec would fail at a locator and read as drift.
+re-record the step(s) with the fix command above.
+sitelooper: refused: unfilled-slot — see the diagnostics above
