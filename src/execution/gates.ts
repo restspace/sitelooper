@@ -527,6 +527,25 @@ export function landedOnRecordedPage(pattern: string, url: string): boolean {
   return urlMatches(pattern, url) || softUrlMatch(pattern, url) !== null;
 }
 
+/**
+ * The soft-match budget this verdict spends, above url.ts's default — BECAUSE
+ * AND ONLY BECAUSE it goes on to require `structurallySame` before accepting.
+ * url.ts's count is a proxy for "is this a different page?"; this caller holds
+ * the real measurement (SOFT_MATCH_MIN_SIMILARITY against the recorded
+ * fingerprint), so the proxy yields to it. `urlEffectVerdict` warns and
+ * proceeds with no similarity check at all, and keeps the default.
+ *
+ * Three, derived from fwgr49 and not from taste: the positions that varied
+ * between two runs of one grafana dashboard were the record identifier
+ * (`path[1]`, the uid) plus a time range, which occupies TWO positions
+ * (`from`, `to`) for one varying thing. One identifier plus one range is the
+ * most any url in the evidence varies by; a fourth disagreeing position is not
+ * something a recording has shown, so it still refuses. The per-diff guards in
+ * softUrlMatch (no WORD position, no parameter-filled position) are what make
+ * each of the three safe, and they do not move with this number.
+ */
+const PRECONDITION_SOFT_DIFFS = 3;
+
 export function preconditionVerdict(
   pattern: string,
   url: string,
@@ -551,7 +570,7 @@ export function preconditionVerdict(
     }
     return { warnings: [] };
   }
-  const soft = softUrlMatch(pattern, url, params);
+  const soft = softUrlMatch(pattern, url, params, PRECONDITION_SOFT_DIFFS);
   const structurallySame = similarity === null || (typeof similarity === 'number' && similarity >= SOFT_MATCH_MIN_SIMILARITY);
   if (!soft || !structurallySame) {
     const because =

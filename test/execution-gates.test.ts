@@ -559,6 +559,99 @@ describe('preconditionVerdict', () => {
     );
   });
 
+  /**
+   * fwgr49 03-open. One grafana dashboard, two runs: the uid at path[1] and
+   * both halves of the `from`/`to` range disagree, `timezone` and the slug do
+   * not. Three positions, so url.ts's default budget of two refused the
+   * segment on the COUNT — while the same round's sibling skill, carrying the
+   * uid in a derived slot, had two diffs, soft-matched and ran. The count is a
+   * proxy for "is this a different page?"; this verdict holds the real
+   * measurement, so the proxy yields to it and the fingerprint decides.
+   */
+  describe('the soft-match budget yields to the structural measurement (fwgr49)', () => {
+    const PATTERN = 'http://app.test/d/afygoex55iarka/fwgr49-spec-bench-dashboard?from=2026-09-16T14:56:44.986Z&timezone=browser&to=2026-09-16T20:56:44.986Z';
+    const LIVE = 'http://app.test/d/ffygq8lk6gwsge/fwgr49-spec-bench-dashboard?from=2026-09-16T15:19:52.873Z&timezone=browser&to=2026-09-16T21:19:52.873Z';
+    const DIFFS = 'afygoex55iarka→ffygq8lk6gwsge, 2026-09-16T14:56:44.986Z→2026-09-16T15:19:52.873Z, 2026-09-16T20:56:44.986Z→2026-09-16T21:19:52.873Z';
+
+    it('proceeds on three disagreeing positions when the page measures as the recorded one', () => {
+      const out = preconditionVerdict(PATTERN, LIVE, {}, 0.994);
+      expect(out.refuse).toBeUndefined();
+      expect(out.warnings).toEqual([`start url differs from the recorded pattern in 3 segment(s) (${DIFFS}) — proceeding optimistically`]);
+      expect(out.soft?.generalised).toBe('http://app.test/d/:var/fwgr49-spec-bench-dashboard?from=:var&timezone=browser&to=:var');
+      expect(out.soft?.diffs).toHaveLength(3);
+      // and with no fingerprint at all the url still decides alone (as at 1 and 2 diffs)
+      expect(preconditionVerdict(PATTERN, LIVE, {}, null).refuse).toBeUndefined();
+    });
+
+    it('still refuses those same three positions when the structure is not the recorded page', () => {
+      const out = preconditionVerdict(PATTERN, LIVE, {}, 0.41);
+      expect(out.soft).toBeUndefined();
+      expect(out.refuse).toBe(
+        'not on the page this procedure starts from (expects http://app.test/d/afygoex55iarka/fwgr49-spec-bench-dashboard?from=2026-09-16T14:56:44.986Z&timezone=browser&to=2026-09-16T20:56:44.986Z, ' +
+          'browser is at http://app.test/d/ffygq8lk6gwsge/fwgr49-spec-bench-dashboard?from=2026-09-16T15:19:52.873Z&timezone=browser&to=2026-09-16T21:19:52.873Z' +
+          '; the url shape is close but the page structure is not — similarity 0.41)',
+      );
+    });
+
+    /**
+     * The per-diff guards are what make a softening safe, and they do not move
+     * with the budget: a WORD position is a page the application chose, and a
+     * position the pattern fills from a parameter is the record the CALLER
+     * named. Either one refuses however close the page measures.
+     */
+    it('refuses a WORD position and a parameter-filled position at any budget', () => {
+      const word = preconditionVerdict('http://app.test/orders/success?from=1000&to=2000', 'http://app.test/orders/failure?from=1100&to=2100', {}, 0.999);
+      expect(word.soft).toBeUndefined();
+      // no `because`: softUrlMatch refused it, the structure agreed
+      expect(word.refuse).toBe(
+        'not on the page this procedure starts from (expects http://app.test/orders/success?from=1000&to=2000, browser is at http://app.test/orders/failure?from=1100&to=2100)',
+      );
+      const named = preconditionVerdict('http://app.test/d/{{v1}}/board?from=1000&to=2000', 'http://app.test/d/xyz2/board?from=1100&to=2100', { v1: 'abc1' }, 0.999);
+      expect(named.soft).toBeUndefined();
+      expect(named.refuse).toMatch(/^not on the page this procedure starts from/);
+    });
+
+    it('spends three and no more: a fourth disagreeing position refuses', () => {
+      const four = preconditionVerdict(
+        'http://app.test/d/abc1/board?from=1000&to=2000&viewPanel=7',
+        'http://app.test/d/xyz2/board?from=1100&to=2100&viewPanel=8',
+        {},
+        0.999,
+      );
+      expect(four.soft).toBeUndefined();
+      expect(four.refuse).toMatch(/^not on the page this procedure starts from/);
+      // the same url three positions apart passes, so it is the fourth that refused
+      const three = preconditionVerdict(
+        'http://app.test/d/abc1/board?from=1000&to=2000&viewPanel=7',
+        'http://app.test/d/xyz2/board?from=1100&to=2100&viewPanel=7',
+        {},
+        0.999,
+      );
+      expect(three.refuse).toBeUndefined();
+    });
+
+    /**
+     * `urlEffectVerdict` keeps url.ts's default. It warns and PROCEEDS with no
+     * similarity check of its own, so it holds nothing the count could yield
+     * to: three positions stop the step there, exactly as before.
+     */
+    it('leaves urlEffectVerdict on the default budget of two', () => {
+      const out = urlEffectVerdict(PATTERN, LIVE, {}, 'step 3');
+      expect(out.generalised).toBeUndefined();
+      expect(out.stop).toMatch(/^after step 3 expected url http:\/\/app\.test\/d\/afygoex55iarka\//);
+      // two of the same positions is what it does soften
+      const two = urlEffectVerdict('http://app.test/d/abc1/board?from=1000&to=2000', 'http://app.test/d/abc1/board?from=1100&to=2100', {}, 'step 3');
+      expect(two.stop).toBeUndefined();
+      expect(two.generalised).toBe('http://app.test/d/abc1/board?from=:var&to=:var');
+    });
+
+    /** `landedOnRecordedPage` asks the url alone, so it too keeps the default. */
+    it('leaves landedOnRecordedPage on the default budget of two', () => {
+      expect(landedOnRecordedPage(PATTERN, LIVE)).toBe(false);
+      expect(landedOnRecordedPage('http://app.test/d/abc1/board?from=1000&to=2000', 'http://app.test/d/xyz2/board?from=1100&to=2000')).toBe(true);
+    });
+  });
+
   it('checks a query key a strict match took on trust against the fingerprint (fwgr36 04-open)', () => {
     const pattern = 'http://app.test/d/{{v3}}/board?editview=json-model&from=:id&to=now';
     const live = 'http://app.test/d/cfy9/board?from=now-6h&to=now';

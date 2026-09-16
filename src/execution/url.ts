@@ -280,6 +280,25 @@ export function boundQueryKeys(pattern: string, params: Record<string, string>):
   return out;
 }
 
+/**
+ * The default soft-match budget: how many disagreeing positions a caller who
+ * has nothing but the url will soften. It is a PROXY for "is this a different
+ * page?" — many disagreements used to stand in for that question — and it is
+ * the weakest thing in this module, so it is a default and not a law.
+ *
+ * What actually makes a softening safe is enforced PER DIFF in softUrlMatch,
+ * not by this count: no WORD position (`/orders/success` against
+ * `/orders/failure`), no position the pattern fills from a parameter. Those
+ * hold at any budget.
+ *
+ * fwgr49: three positions disagreed on one grafana dashboard — the uid and the
+ * two halves of a `from`/`to` range — and the count alone refused the segment,
+ * while the SAME round's sibling skill carried the uid in a derived slot,
+ * left two diffs, soft-matched and ran. Two vary and it works, three and it
+ * collapses: the discriminator was the count, on a page measuring 0.994
+ * similar to the recording. A caller that can ask the real question instead
+ * passes its own budget (see preconditionVerdict).
+ */
 const MAX_SOFT_DIFFS = 2;
 
 /**
@@ -300,7 +319,7 @@ export function mintedShape(value: string): boolean {
 
 /**
  * Mechanism-2 tolerance (PLAN-replay-v2): the live url is the same page
- * SHAPE as the pattern but 1–2 literal segments disagree — the signature of
+ * SHAPE as the pattern but a few literal segments disagree — the signature of
  * an environment-minted identifier (a Grafana uid, an Odoo action id) that
  * this run minted differently. Returns the pattern with exactly the
  * disagreeing segments generalised to `:var`, for the caller to proceed
@@ -317,15 +336,21 @@ export function mintedShape(value: string): boolean {
  *  - a segment the pattern fills from a PARAMETER (`{{v1}}`, a bound
  *    `{{d1}}`): the caller named that record, and a different value there is
  *    a different record, not a volatile one.
+ *
+ * `maxDiffs` is how many disagreeing positions this caller will soften,
+ * defaulting to MAX_SOFT_DIFFS — see there for why it is a proxy and what a
+ * caller has to hold to raise it. The two guards above are per diff and do not
+ * move with it.
  */
 export function softUrlMatch(
   pattern: string,
   url: string,
   params: Record<string, string> = {},
+  maxDiffs: number = MAX_SOFT_DIFFS,
 ): { generalised: string; diffs: UrlSegDiff[] } | null {
   const filled = fillParams(pattern, params);
   const diffs = urlDiff(filled, url, boundQueryKeys(pattern, params));
-  if (!diffs || !diffs.length || diffs.length > MAX_SOFT_DIFFS) return null;
+  if (!diffs || !diffs.length || diffs.length > maxDiffs) return null;
   // Generalise in the ORIGINAL pattern (markers intact). A param value
   // containing '/' would shift segment positions between the two — bail.
   const orig = urlShapeOf(pattern);

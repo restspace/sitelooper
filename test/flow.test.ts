@@ -12,7 +12,7 @@ import { bindSkill, publishedOutputs, synthesizeReport } from '../src/skills/lea
 import { SkillStore, type Skill, type SkillStep } from '../src/skills/store.js';
 import { compileSkill, dropAbsentReadLocators, dropDeadReadLocators, markReadsProven } from '../src/skills/compile.js';
 import { emitFlowFile } from '../src/spec/emit.js';
-import type { SpecFlow } from '../src/spec/ir.js';
+import type { SpecFlow, SpecSegment } from '../src/spec/ir.js';
 
 let tmp: string;
 beforeAll(() => {
@@ -2148,5 +2148,86 @@ describe('the recorded stand-in reaches every unresolved reference (fwod49)', as
     const normal = source.indexOf("Object.entries(result.report.evidence?.values ?? {})");
     expect(normal).toBeGreaterThan(0);
     expect(source.slice(normal, normal + 200)).toMatch(/if \(!\/\\\{\\\{\/\.test\(s\)\)/);
+  });
+});
+
+/**
+ * fwod57 round 16. The compile-time fillability guard read one segment and
+ * refused `s_4990f3` step 4 (a goto) for `{{d2}}`, `{{d4}}`, `{{d5}}`, `{{d6}}`
+ * — "no step before step 4 mints them". `s_4990f3` is segment 6 of 6 of chain
+ * `s_1ee8dc` and mints nothing of its own: the five segments ahead of it bound
+ * those parts and threaded them forward, as the daemon does
+ * (`{ ...match.params, ...derived }`, src/daemon/server.ts) and as the artifact
+ * does by keeping ONE `p` per flow step (emit.ts slotsOf). The flow's
+ * zero-model replays scored 6/6 on both profiles with every step tier A, and
+ * `unfilledStepVerdict` runs BEFORE the goto retarget, so the slots were
+ * demonstrably filled at run time. The refusal was false and cost odoo its
+ * compiled arm.
+ *
+ * The ordering guarantee is not relaxed: only segments AHEAD of this one count,
+ * because `bindPart` runs after its own step's action.
+ */
+describe('a derived value minted by an earlier segment of the chain (fwod57)', () => {
+  const mints: SkillStep = { tool: 'goto', args: { url: 'http://app.test/odoo/orders/7' }, locators: {} };
+  const actsOn = (url: string): SkillStep => ({ tool: 'goto', args: { url }, locators: {} });
+  const seg = (id: string, steps: SkillStep[], derived?: Skill['derived']): SpecSegment =>
+    ({
+      id,
+      template: 'open {{v1}}',
+      params: { v1: { example: 'Beta', usedIn: [], known: true } },
+      preconditions: { urlPattern: 'http://app.test/odoo/orders' },
+      ...(derived ? { derived } : {}),
+      steps,
+    }) as unknown as SpecSegment;
+  const chain = (segments: SpecSegment[]): SpecFlow => ({
+    version: 1,
+    name: 'od',
+    origin: 'http://app.test',
+    startUrl: 'http://app.test/',
+    vars: ['name'],
+    steps: [{ id: '01-open', instruction: 'open it', params: { v1: '{{name}}' }, outputs: [], segments }],
+  });
+  const at = (step: number, part: string) => ({ step, at: part, example: '7' });
+  const codes = (s: SpecFlow) => emitFlowFile(s, { tier: 'plain' }).diagnostics.map((d) => d.code);
+
+  it('compiles: the segment that acts never minted it, and the segment ahead of it did', () => {
+    expect(codes(chain([seg('s_first', [mints], { d2: at(1, 'p3') }), seg('s_sixth', [actsOn('http://app.test/odoo/orders/{{d2}}/line')])]))).toEqual([]);
+  });
+
+  it("compiles fwod57's own shape: the sixth segment acts on four parts four earlier segments bound", () => {
+    const url = 'http://app.test/odoo/{{d2}}/{{d5}}/{{d4}}/{{d6}}';
+    const spec = chain([
+      seg('s_a', [mints], { d2: at(1, 'p1') }),
+      seg('s_b', [mints], { d4: at(1, 'p2'), d5: at(1, 'p3') }),
+      seg('s_c', [mints], { d6: at(1, 'p4') }),
+      seg('s_4990f3', [mints, mints, mints, actsOn(url)]),
+    ]);
+    expect(codes(spec)).toEqual([]);
+  });
+
+  it('still refuses a slot minted by a LATER segment — the ordering guarantee is the point', () => {
+    const late = chain([seg('s_first', [actsOn('http://app.test/odoo/orders/{{d2}}/line')]), seg('s_sixth', [mints], { d2: at(1, 'p3') })]);
+    expect(codes(late)).toEqual(['unfilled-slot']);
+  });
+
+  it('still refuses a slot no segment of the chain mints at all', () => {
+    const never = chain([seg('s_first', [mints]), seg('s_sixth', [actsOn('http://app.test/odoo/orders/{{d2}}/line')])]);
+    expect(codes(never)).toEqual(['unfilled-slot']);
+  });
+
+  it('still refuses a slot a LATER STEP of the acting segment mints', () => {
+    const own = chain([seg('s_first', [mints], { d2: at(1, 'p3') }), seg('s_sixth', [actsOn('http://app.test/odoo/orders/{{d3}}/line'), mints], { d3: at(2, 'p3') })]);
+    expect(codes(own)).toEqual(['unfilled-slot']);
+  });
+
+  it('says something true of the whole chain when it does refuse', () => {
+    const never = chain([seg('s_first', [mints]), seg('s_sixth', [actsOn('http://app.test/odoo/orders/{{d2}}/line')])]);
+    const found = emitFlowFile(never, { tier: 'plain' }).diagnostics.filter((d) => d.code === 'unfilled-slot');
+    expect(found).toHaveLength(1);
+    // The old wording asserted a fact about one segment's steps, which is not
+    // the fact being checked any more.
+    expect(found[0].why).not.toContain('no step before step');
+    expect(found[0].why).toContain('nothing that runs before step 1 mints it');
+    expect(found[0].why).toContain('neither a segment of this procedure ahead of s_sixth nor a step of s_sixth before step 1');
   });
 });

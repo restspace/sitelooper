@@ -1849,6 +1849,74 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(emitted.reason).toMatch(refused);
       expect(Number(refused.exec(emitted.reason!)![1])).toBe(Number(refused.exec(replay.reason!)![1]));
     }, 180_000);
+
+    /**
+     * G05c. fwgr49 03-open: THREE positions disagree on the same page — the
+     * record id in the path and both halves of a `from`/`to` range — and the
+     * recording kept a fingerprint of that very page. url.ts's default budget
+     * of two refused this on the COUNT alone, while the same round's sibling
+     * skill, which carried the id in a derived slot and so had two diffs,
+     * soft-matched and ran. The count is a proxy for "is this a different
+     * page?"; preconditionVerdict holds the real measurement and requires it,
+     * so it spends more of the budget. Both runners must now proceed here, and
+     * act on the record the browser is actually on.
+     */
+    it('both runners continue past a three-position url mismatch on a structurally identical page, measured against the recorded fingerprint', async () => {
+      const recordedRange = 'from=1758041804986&to=1758063404986';
+      const liveRange = 'from=1758043192873&to=1758064792873';
+      // The fixture's record page takes everything after /record/ as the id, so
+      // the live id — and the log lines — carry the query with them.
+      const liveId = `rec-2?${liveRange}`;
+      reset(0);
+      const recorded = await fingerprintOf(`${origin}/record/rec-1?${recordedRange}`);
+      const { skill, spec } = fingerprintedAt(`${origin}/record/rec-1?${recordedRange}`, recorded, [MARK]);
+      reset(0);
+      const replay = await replayAt(skill, `${origin}/record/${liveId}`);
+      const replayLog = [...fx.log];
+      reset(0);
+      const emitted = await emittedAt(spec, `${origin}/record/${liveId}`);
+      const emittedLog = [...fx.log];
+
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replayLog).toEqual([`visit:${liveId}`, `mark:${liveId}`]);
+      expect(emittedLog).toEqual([`visit:${liveId}`, `mark:${liveId}`]);
+      const said = /start url differs from the recorded pattern in 3 segment\(s\) \(rec-1→rec-2, 1758041804986→1758043192873, 1758063404986→1758064792873\) — proceeding optimistically/;
+      expect(replay.warnings.some((w) => said.test(w)), replay.warnings.join('\n')).toBe(true);
+      expect(emitted.warnings.some((w) => said.test(w) && w.startsWith('[sitelooper warn] 01-clear s_parity:')), emitted.warnings.join('\n')).toBe(true);
+      // Measured, and measured as the same page: the larger budget is spent
+      // only because this verdict required the structure to agree.
+      expect(typeof replay.similarity, 'replay must have measured the live page against the recorded fingerprint').toBe('number');
+      expect(replay.similarity!).toBeGreaterThanOrEqual(SOFT_MATCH_MIN_SIMILARITY);
+    }, 180_000);
+
+    /**
+     * G05d. The negative the budget must never reach: three positions again,
+     * but one of them is a WORD the application chose (`success` against
+     * `failure`), which softUrlMatch refuses PER DIFF, at any budget. Both
+     * runners must refuse before Mark — a generalisation here would teach the
+     * gate to accept either outcome page forever after. No fingerprint on
+     * either side, so the url is refusing this on its own, and the message
+     * carries no structural `because`.
+     */
+    it('both runners still refuse a url mismatch at a WORD position, however many positions the budget allows', async () => {
+      const { skill, spec } = startingAt(`${origin}/outcome/success?from=1000&to=2000`, [MARK]);
+      reset(0);
+      const replay = await replayAt(skill, `${origin}/outcome/failure?from=1100&to=2100`);
+      const replayLog = [...fx.log];
+      reset(0);
+      const emitted = await emittedAt(spec, `${origin}/outcome/failure?from=1100&to=2100`);
+      const emittedLog = [...fx.log];
+
+      expect(replayLog, 'replay must not mark the outcome page it was not recorded on').toEqual([]);
+      expect(emittedLog, 'the artifact must not mark the outcome page it was not recorded on').toEqual([]);
+      expect(replay.ok).toBe(false);
+      expect(emitted.ok).toBe(false);
+      const refused = /not on the page this procedure starts from \(expects \S+\/outcome\/success\?from=1000&to=2000, browser is at \S+\/outcome\/failure\?from=1100&to=2100\)/;
+      expect(replay.reason).toMatch(refused);
+      expect(emitted.reason).toMatch(refused);
+      expect(emitted.reason).toContain('01-clear s_parity');
+    }, 120_000);
   });
 
   // -------------------------------------------------------------------------

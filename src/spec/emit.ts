@@ -1266,6 +1266,24 @@ interface Ctx {
   navTarget?: string;
   /** Segments emitted so far in this body, so each ledger names its own local. */
   segments?: number;
+  /**
+   * The derived slots minted by segments of this body that have ALREADY been
+   * emitted — what an earlier segment of the chain threaded forward.
+   *
+   * `p` is one object per flow STEP, not per segment (see `slotsOf`), and
+   * `bindPart` writes into it; the daemon threads the same values the same way
+   * (`{ ...match.params, ...derived }`, src/daemon/server.ts). So a `{{dN}}`
+   * minted in segment 1 is still on `p` when segment 6 acts on it, and the
+   * compile-time fillability check has to read the whole chain rather than one
+   * segment — fwod57's s_4990f3, segment 6 of 6, whose goto acts on d2/d4/d5/d6
+   * minted by the segments ahead of it, was refused a compiled arm on a flow
+   * whose zero-model replays scored 6/6.
+   *
+   * Only segments already emitted are in it: a slot a LATER segment mints is
+   * still unfillable here, exactly as a slot a later step of this segment
+   * mints is (bindPart runs after its own step's action).
+   */
+  minted?: Set<string>;
   /** Frame roots emitted so far, so each resolution in a frame names its own local. */
   roots?: number;
   /**
@@ -1723,19 +1741,30 @@ function slotsNamed(value: unknown, out: Set<string> = new Set()): Set<string> {
 
 /**
  * Whether the artifact can have put a value in `slot` by the time step `index`
- * acts: it is one of the segment's caller params (which `callArgs` always
- * passes, even as a blank), or an EARLIER step mints it (`bindPart` runs after
- * its own step's action, so a step cannot consume what it mints).
+ * of `segment` acts. Three ways, and they are the only three:
+ *  - it is one of the segment's caller params (which `callArgs` always passes,
+ *    even as a blank);
+ *  - an EARLIER STEP of this segment mints it (`bindPart` runs after its own
+ *    step's action, so a step cannot consume what it mints);
+ *  - an EARLIER SEGMENT of this chain minted it and threaded it forward
+ *    (`minted`). A procedure's segments share one `p` (slotsOf), and the
+ *    daemon shares the same values the same way; reading only the segment in
+ *    hand refused fwod57's sixth-of-six segment for d2/d4/d5/d6 that its first
+ *    five had already bound — a flow whose zero-model replays were 6/6.
+ *
+ * A LATER segment's mint is not in `minted`, so it still refuses: the ordering
+ * guarantee is the whole point of the check.
  */
-function fillableSlot(slot: string, segment: SpecSegment, index: number): boolean {
+function fillableSlot(slot: string, segment: SpecSegment, index: number, minted: ReadonlySet<string>): boolean {
   if (slot in segment.params) return true;
+  if (minted.has(slot)) return true;
   const derived = segment.derived?.[slot];
   return Boolean(derived && derived.step < index);
 }
 
 /** A recorded chain less the rungs the artifact could not fill — the shared fillableChain's compile-time twin. */
-function fillableRungs(chain: readonly unknown[] | undefined, segment: SpecSegment, index: number): unknown[] {
-  return (chain ?? []).filter((rung) => [...slotsNamed(rung)].every((slot) => fillableSlot(slot, segment, index)));
+function fillableRungs(chain: readonly unknown[] | undefined, segment: SpecSegment, index: number, minted: ReadonlySet<string>): unknown[] {
+  return (chain ?? []).filter((rung) => [...slotsNamed(rung)].every((slot) => fillableSlot(slot, segment, index, minted)));
 }
 
 /**
@@ -1761,13 +1790,13 @@ function fillableRungs(chain: readonly unknown[] | undefined, segment: SpecSegme
  * Only steps that act: a read, a wait or a check carrying an unfilled marker
  * keeps the "asks for no particular value" reading every marker gate takes.
  */
-function unfillableStep(step: SkillStep, segment: SpecSegment, index: number): { where: string; slots: string[] } | null {
+function unfillableStep(step: SkillStep, segment: SpecSegment, index: number, minted: ReadonlySet<string>): { where: string; slots: string[] } | null {
   if (!isMutatingAction(step.tool) && step.tool !== 'goto') return null;
-  const dead = (value: unknown): string[] => [...slotsNamed(value)].filter((slot) => !fillableSlot(slot, segment, index));
+  const dead = (value: unknown): string[] => [...slotsNamed(value)].filter((slot) => !fillableSlot(slot, segment, index, minted));
   const inArgs = dead(step.args);
   if (inArgs.length) return { where: 'args', slots: inArgs };
   for (const [key, chain] of Object.entries(step.locators ?? {})) {
-    if (!chain?.length || fillableRungs(chain, segment, index).length) continue;
+    if (!chain?.length || fillableRungs(chain, segment, index, minted).length) continue;
     return { where: key, slots: dead(chain) };
   }
   return null;
@@ -1779,12 +1808,12 @@ function unfillableStep(step: SkillStep, segment: SpecSegment, index: number): {
  * match. Acting steps only — a read or a wait keeps its chain as recorded,
  * where an unfillable rung costs a resolve attempt and nothing else.
  */
-function withLiveRungs(step: SkillStep, segment: SpecSegment, index: number): SkillStep {
+function withLiveRungs(step: SkillStep, segment: SpecSegment, index: number, minted: ReadonlySet<string>): SkillStep {
   if (!isMutatingAction(step.tool) && step.tool !== 'goto') return step;
   let changed = false;
   const locators: Record<string, unknown[]> = {};
   for (const [key, chain] of Object.entries(step.locators ?? {})) {
-    const live = fillableRungs(chain, segment, index);
+    const live = fillableRungs(chain, segment, index, minted);
     if (live.length !== (chain ?? []).length) changed = true;
     locators[key] = live;
   }
@@ -1794,7 +1823,8 @@ function withLiveRungs(step: SkillStep, segment: SpecSegment, index: number): Sk
 function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number, ctx: Ctx, first = false): string[] {
   ctx.segmentId = segment.id;
   ctx.stepIndex = index;
-  const unfillable = unfillableStep(recorded, segment, index);
+  const minted: ReadonlySet<string> = ctx.minted ?? new Set<string>();
+  const unfillable = unfillableStep(recorded, segment, index, minted);
   if (unfillable) {
     const named = unfillable.slots.map((s) => `{{${s}}}`).join(', ');
     const one = unfillable.slots.length === 1;
@@ -1806,7 +1836,8 @@ function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number,
         ? `${segment.id} step ${index} (${recorded.tool}) acts on ${named}, and nothing can fill ${one ? 'it' : 'them'} by the time it acts`
         : `${segment.id} step ${index} (${recorded.tool}) has no locator left for its ${unfillable.where}: every recorded one names ${named}, which nothing can fill`,
       why: inArgs
-        ? `${named} ${one ? 'is not a caller parameter' : 'are not caller parameters'} of ${segment.id}, and no step before step ${index} mints ${one ? 'it' : 'them'}, so the artifact has no value to substitute. ` +
+        ? `${named} ${one ? 'is not a caller parameter' : 'are not caller parameters'} of ${segment.id}, and nothing that runs before step ${index} mints ${one ? 'it' : 'them'} — ` +
+          `neither a segment of this procedure ahead of ${segment.id} nor a step of ${segment.id} before step ${index} — so the artifact has no value to substitute. ` +
           `fillParams leaves an unfilled marker standing, which is the right reading for a CHECK ("asks for no particular value") and the wrong one for the value an action carries: ` +
           `this step would ${recorded.tool === 'goto' ? 'navigate to a url still spelling' : recorded.tool + ' '}the literal text ${named}. ` +
           `Daemon replay meets the same condition at run time and hands the step to the model; a compiled artifact has no model to hand it to.`
@@ -1821,7 +1852,7 @@ function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number,
   }
   // Every locator rung the artifact could never fill is dropped before
   // emission: it could only ever waste a resolve attempt (see withLiveRungs).
-  const step = withLiveRungs(recorded, segment, index);
+  const step = withLiveRungs(recorded, segment, index, minted);
   const urlBefore = `urlBefore${++ctx.urls}`;
   // The page-change gate sharpens on a positional resolution, so a step that
   // carries one is given a flag its resolution reports into (see actionTarget).
@@ -2754,6 +2785,10 @@ function emitSegment(segment: SpecSegment, ctx: Ctx): string[] {
     const lines = step.tool === 'loop' ? emitLoop(step, segment, i + 1, ctx) : emitSkillStep(step, segment, i + 1, ctx);
     out.push(...lines);
   }
+  // Everything this segment mints is on `p` from here to the end of the body,
+  // so the segments BEHIND it can act on it (see Ctx.minted). Added after the
+  // steps, never before: within this segment the per-step ordering still rules.
+  for (const name of Object.keys(segment.derived ?? {})) (ctx.minted ??= new Set()).add(name);
   if (ctx.volatileUsed) {
     out.splice(2, 0, `// Url positions this segment has watched vary, for a later navigation (see navigationTarget).`, `const ${ctx.volatile}: UrlSegDiff[] = [];`);
   }
@@ -3182,7 +3217,7 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
   const followsPages = spec.steps.some((step) => step.segments.some((seg) => carriesEffect(seg.steps)));
   // Bodies first: which helpers the file needs is decided by what they use.
   const bodies = spec.steps.map((step) => {
-    const ctx: Ctx = { stepId: step.id, slots: new Set(), warnings, diagnostics, downloads: 0, loops: 0, picks: 0, urls: 0, binds: 0, segmentId: '', stepIndex: 0, note: stepNote(flagged.get(step.id)), known: new Set() };
+    const ctx: Ctx = { stepId: step.id, slots: new Set(), warnings, diagnostics, downloads: 0, loops: 0, picks: 0, urls: 0, binds: 0, segmentId: '', stepIndex: 0, note: stepNote(flagged.get(step.id)), known: new Set(), minted: new Set() };
     const lines: string[] = [];
     if (!step.segments.length) {
       lines.push(`// TODO: no converged procedure for ${JSON.stringify(commentSafe(step.instruction))}`);
