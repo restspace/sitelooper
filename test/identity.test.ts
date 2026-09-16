@@ -20,6 +20,13 @@ import { identityOfPrimary } from '../src/skills/replay.js';
 import type { Skill } from '../src/skills/store.js';
 import { documentOf, isObserveArg } from './fixture/observation.js';
 
+// checkIdentity waits IDENTITY_WAIT_MS for a bound marker on a page that may
+// still be arriving (fwgr47-n2 07-verify judged a grafana dashboard during its
+// boot). A stub page here never changes, so every look it will ever give is
+// the first one: waiting only spends the suite's timeout. The tests that
+// exercise the wait itself set their own budget (`SITELOOPER_IDENTITY_WAIT_MS`).
+process.env.SITELOOPER_IDENTITY_WAIT_MS = '0';
+
 let tmp: string;
 beforeAll(() => {
   tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'bp-identity-'));
@@ -574,6 +581,203 @@ describe('a self-navigating procedure is checked AFTER its goto', () => {
     // the page swept, and asked again
     expect(looks).toBe(4);
   });
+
+  /**
+   * fwgr47-n2 07-verify: the skill's step 1 is a `goto` to a BARE dashboard
+   * url, grafana renders the title and rewrites the address bar a moment
+   * later, and replay judged identity during the boot — "does not show
+   * 'fwgr47-n2 Bench Dashboard' … but is a different record" on the RIGHT
+   * dashboard (that run's verifier: obj 6 PASS, uid bfyfuaptu20aoa). The
+   * compiled artifact polls IDENTITY_WAIT_MS here and did not stop; replay
+   * asked once. Both wait now.
+   */
+  it('waits for a marker on a page that has not finished arriving', async () => {
+    const { replaySkill } = await import('../src/skills/replay.js');
+    process.env.SITELOOPER_IDENTITY_WAIT_MS = '800';
+    try {
+      const skill = {
+        id: 's_37b2bd', origin: 'http://x.test', template: 't',
+        params: { v2: { example: 'n1 Bench Dashboard', usedIn: [], known: true as const } },
+        preconditions: { urlPattern: 'http://x.test/d/:id/{{v2}}?from={{v2}}', requireText: ['{{v2}}'] },
+        steps: [
+          { tool: 'goto', args: { url: 'http://x.test/d/bfyfuaptu20aoa' }, locators: {} },
+          { tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Edit' }] } },
+        ],
+        stats: { uses: 1, successes: 1, partial: 0, created: '', failedAtStep: {}, fallthroughs: 0 },
+        status: 'validated', provenance: { session: 's', instruction: 't', created: '' },
+      } as unknown as Skill;
+      const ran: string[] = [];
+      let identityLooks = 0;
+      const page = {
+        // The address bar stays the bare url the goto asked for: the wait is
+        // for the PAGE, and nothing about the url rescues this one.
+        url: () => 'http://x.test/d/bfyfuaptu20aoa',
+        async goto() {},
+        getByRole: () => ({ count: async () => 1, first: () => ({ textContent: async () => '' }) }),
+        locator: () => ({ count: async () => 1, first: () => ({ textContent: async () => '' }) }),
+        async evaluate(_fn: unknown, arg: unknown) {
+          if (!isObserveArg(arg)) return '';
+          // The dashboard title only renders once the boot is done.
+          return documentOf(identityLooks++ < 3 ? ['- heading "Loading"'] : ['- heading "fwgr47-n2 Bench Dashboard"', '- button "Edit"']);
+        },
+        async waitForLoadState() {},
+      } as unknown as import('playwright-core').Page;
+      const out = await replaySkill(skill, { v2: 'fwgr47-n2 Bench Dashboard' }, { page, exec: async (tool) => { ran.push(tool); return { result: 'ok' }; } });
+      expect(out.wrongRecord, out.reason ?? '').toBeUndefined();
+      expect(out.reason ?? null).toBeNull();
+      expect(ran).toEqual(['goto', 'click']);
+    } finally {
+      process.env.SITELOOPER_IDENTITY_WAIT_MS = '0';
+    }
+  });
+
+  /**
+   * The other half of fwgr47: the url escape hatch was unavailable in the
+   * instant replay looked, because the pattern's bound query keys were missing
+   * from a url the app had not rewritten yet (urlDiff, and with it
+   * urlRecordParts, says null). The verdict therefore asks the url AFTER the
+   * wait, not at the first look.
+   */
+  it('asks the url again once the wait is spent, not only at the first look', async () => {
+    const { replaySkill } = await import('../src/skills/replay.js');
+    process.env.SITELOOPER_IDENTITY_WAIT_MS = '800';
+    try {
+      const skill = {
+        id: 's_late', origin: 'http://x.test', template: 't',
+        params: {
+          v1: { example: 'n1-bench-dashboard', usedIn: [], known: true as const },
+          v2: { example: 'Last 6 hours', usedIn: [], known: true as const },
+        },
+        preconditions: { urlPattern: 'http://x.test/d/:id/{{v1}}?from={{v2}}', requireText: ['{{v2}}'] },
+        // As fwgr47's 07-verify: a goto, then the page-dependent step the
+        // segment gate sits before — so identity is asked of the landing.
+        steps: [
+          { tool: 'goto', args: { url: 'http://x.test/d/abc123/n1-bench-dashboard' }, locators: {} },
+          { tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Edit' }] } },
+        ],
+        stats: { uses: 1, successes: 1, partial: 0, created: '', failedAtStep: {}, fallthroughs: 0 },
+        status: 'validated', provenance: { session: 's', instruction: 't', created: '' },
+      } as unknown as Skill;
+      // Bare at first — no `from`, so urlRecordParts cannot answer — then
+      // normalised by the app, carrying this run's own slug.
+      let looks = 0;
+      const urlsSeen: string[] = [];
+      const page = {
+        url: () => {
+          const u = looks < 3 ? 'http://x.test/d/abc123/fwgr47-n2-bench-dashboard' : 'http://x.test/d/abc123/fwgr47-n2-bench-dashboard?from=Last%206%20hours';
+          if (looks >= 2) urlsSeen.push(u); // from the identity gate on; the goto's own looks come first
+          return u;
+        },
+        async goto() {},
+        getByRole: () => ({ count: async () => 1, first: () => ({ textContent: async () => '' }) }),
+        locator: () => ({ count: async () => 1, first: () => ({ textContent: async () => '' }) }),
+        async evaluate(_fn: unknown, arg: unknown) {
+          if (!isObserveArg(arg)) return '';
+          looks++;
+          // "Last 6 hours" is a SETTING this view never renders (fwgr39-n3).
+          return documentOf(['- heading "fwgr47-n2 Bench Dashboard"', '- button "Edit"']);
+        },
+        async waitForLoadState() {},
+      } as unknown as import('playwright-core').Page;
+      const ran: string[] = [];
+      const out = await replaySkill(skill, { v1: 'fwgr47-n2-bench-dashboard', v2: 'Last 6 hours' }, { page, exec: async (tool) => { ran.push(tool); return { result: 'ok' }; } });
+      expect(out.wrongRecord, out.reason ?? '').toBeUndefined();
+      expect(ran).toEqual(['goto', 'click']);
+      // The url the FIRST look saw could not answer: no `from`, so urlDiff —
+      // and with it urlRecordParts — said null. The wait is what changed that.
+      expect(urlsSeen[0]).not.toMatch(/from=/);
+      expect(out.warnings.some((w) => /the url names this run's record \(path\[2\]=fwgr47-n2-bench-dashboard, from=Last 6 hours\) — the marker is stale/.test(w)), JSON.stringify(out.warnings)).toBe(true);
+    } finally {
+      process.env.SITELOOPER_IDENTITY_WAIT_MS = '0';
+    }
+  });
+
+  /**
+   * MUST STILL CATCH. On odoo the url is `id=:id` throughout: no url part is
+   * ever MARKED, so urlRecordParts names no record however often it is asked,
+   * and the marker is the only identity there is. Waiting changes what is
+   * asked, never what is decided — the wrong record still hard-stops, with the
+   * same words and no stale-marker warning.
+   */
+  it('changes nothing where no url part is marked (odoo)', async () => {
+    const { replaySkill } = await import('../src/skills/replay.js');
+    process.env.SITELOOPER_IDENTITY_WAIT_MS = '400';
+    try {
+      const skill = {
+        id: 's_odoo', origin: 'http://x.test', template: 't',
+        params: { v2: { example: 'S00021', usedIn: [], known: true as const } },
+        preconditions: { urlPattern: 'http://x.test/web#id=:id&model=sale.order', requireText: ['Sales Order {{v2}}'] },
+        steps: [{ tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Cancel' }] } }],
+        stats: { uses: 1, successes: 1, partial: 0, created: '', failedAtStep: {}, fallthroughs: 0 },
+        status: 'validated', provenance: { session: 's', instruction: 't', created: '' },
+      } as unknown as Skill;
+      const ran: string[] = [];
+      const page = {
+        // The run asked for S00024; the browser is on S00019's page, and the
+        // url cannot tell the two apart — it never could.
+        url: () => 'http://x.test/web#id=19&model=sale.order&cids=1',
+        async goto() {},
+        getByRole: () => ({ count: async () => 1, first: () => ({ textContent: async () => '' }) }),
+        locator: () => ({ count: async () => 1, first: () => ({ textContent: async () => '' }) }),
+        async evaluate(_fn: unknown, arg: unknown) {
+          return isObserveArg(arg) ? documentOf(['- heading "Sales Order S00019"', '- button "Cancel"']) : '';
+        },
+        async waitForLoadState() {},
+      } as unknown as import('playwright-core').Page;
+      const out = await replaySkill(skill, { v2: 'S00024' }, { page, exec: async (tool) => { ran.push(tool); return { result: 'ok' }; } });
+      expect(out.refused).toBe(true);
+      expect(out.wrongRecord).toMatch(/does not show "Sales Order S00024" — it matches this procedure's page template but is a different record/);
+      expect(out.warnings.some((w) => /the marker is stale/.test(w))).toBe(false);
+      expect(ran).toEqual([]);
+    } finally {
+      process.env.SITELOOPER_IDENTITY_WAIT_MS = '0';
+    }
+  });
+
+  /**
+   * MUST STILL CATCH. A goto retargeted to the RECORDING's record carries the
+   * recording's values, so urlRecordParts' judge rejects it (the marked part
+   * is not this run's value) and the marker goes on deciding: a url naming
+   * record A with a marker saying record B stops, however long it is waited.
+   */
+  it('still stops when the url names another run’s record', async () => {
+    const { replaySkill } = await import('../src/skills/replay.js');
+    process.env.SITELOOPER_IDENTITY_WAIT_MS = '400';
+    try {
+      const skill = {
+        id: 's_other', origin: 'http://x.test', template: 't',
+        params: { v1: { example: 'n1-bench-dashboard', usedIn: [], known: true as const } },
+        preconditions: { urlPattern: 'http://x.test/d/:id/{{v1}}', requireText: ['{{v1}}'] },
+        // The recorded goto carries the RECORDING's record, and nothing this
+        // run watched vary retargets it (fwod10): the landing is n1's page.
+        steps: [
+          { tool: 'goto', args: { url: 'http://x.test/d/abc123/n1-bench-dashboard' }, locators: {} },
+          { tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Edit' }] } },
+        ],
+        stats: { uses: 1, successes: 1, partial: 0, created: '', failedAtStep: {}, fallthroughs: 0 },
+        status: 'validated', provenance: { session: 's', instruction: 't', created: '' },
+      } as unknown as Skill;
+      const ran: string[] = [];
+      const page = {
+        url: () => 'http://x.test/d/abc123/n1-bench-dashboard',
+        async goto() {},
+        getByRole: () => ({ count: async () => 1, first: () => ({ textContent: async () => '' }) }),
+        locator: () => ({ count: async () => 1, first: () => ({ textContent: async () => '' }) }),
+        async evaluate(_fn: unknown, arg: unknown) {
+          return isObserveArg(arg) ? documentOf(['- heading "n1 Bench Dashboard"', '- button "Edit"']) : '';
+        },
+        async waitForLoadState() {},
+      } as unknown as import('playwright-core').Page;
+      const out = await replaySkill(skill, { v1: 'fwgr47-n2-bench-dashboard' }, { page, exec: async (tool) => { ran.push(tool); return { result: 'ok' }; } });
+      // A partial stop, not a refusal: the goto has already moved the browser.
+      expect(out.wrongRecord).toMatch(/different record/);
+      expect(out.failedAt).toBe(2);
+      expect(out.warnings.some((w) => /the marker is stale/.test(w))).toBe(false);
+      expect(ran).toEqual(['goto']);
+    } finally {
+      process.env.SITELOOPER_IDENTITY_WAIT_MS = '0';
+    }
+  });
 });
 
 describe('a step that MINTS a record is known as such', () => {
@@ -716,5 +920,111 @@ describe('a two-digit record id still marks its minting step', () => {
     const minting = skill.steps.filter((s) => s.mints);
     expect(minting).toHaveLength(1);
     expect(skill.steps.indexOf(minting[0])).toBe(0); // the Save, not the Close
+  });
+});
+
+/**
+ * A slot the run could not fill, asked of a step that ACTS (Section F).
+ *
+ * "Asks for no particular value" is what every marker CHECK here reads an
+ * unfilled `{{vN}}`/`{{dN}}` as — checkIdentity skips one, markersBound
+ * refuses one, urlDiff treats one as a wildcard — and it is the wrong reading
+ * for an action: `fillParams` leaves the marker standing, so a `type` puts
+ * those five characters into a live field and a locator hunts the page for
+ * them. The shared predicate (unfilledSlotVerdict, src/execution/gates.ts) is
+ * asked of a step's filled args and its locator chains before it dispatches.
+ *
+ * A derived slot no run minted is the reachable shape of it in replay: a
+ * `{{dN}}` is never declared in `skill.params`, so the "missing params"
+ * refusal at the top of replaySkill — which does catch an undeclared caller
+ * slot — never sees it.
+ */
+describe('a step never acts on a slot the run could not fill', () => {
+  const skillWith = (steps: unknown[]): Skill =>
+    ({
+      id: 's_slot', origin: 'http://x.test', template: 't',
+      params: {},
+      // p3 is not a position this url has, so nothing ever binds d1.
+      derived: { d1: { step: 1, at: 'p3', example: 'ORD-1' } },
+      preconditions: { urlPattern: 'http://x.test/rec' },
+      steps,
+      stats: { uses: 1, successes: 1, partial: 0, created: '', failedAtStep: {}, fallthroughs: 0 },
+      status: 'validated', provenance: { session: 's', instruction: 't', created: '' },
+    }) as unknown as Skill;
+
+  const pageOf = () =>
+    ({
+      url: () => 'http://x.test/rec',
+      async goto() {},
+      getByRole: () => ({ count: async () => 1, first: () => ({ textContent: async () => '' }) }),
+      locator: () => ({ count: async () => 1, first: () => ({ textContent: async () => '' }) }),
+      async evaluate(_fn: unknown, arg: unknown) { return isObserveArg(arg) ? documentOf(['- textbox "Name"']) : ''; },
+      async waitForLoadState() {},
+    }) as unknown as import('playwright-core').Page;
+
+  const GOTO = { tool: 'goto', args: { url: 'http://x.test/rec' }, locators: {} };
+
+  it('falls back rather than typing the literal marker', async () => {
+    const { replaySkill } = await import('../src/skills/replay.js');
+    const ran: string[] = [];
+    const out = await replaySkill(
+      skillWith([GOTO, { tool: 'type', args: { target: '@e1', text: '{{d1}}' }, locators: { target: [{ kind: 'role', role: 'textbox', name: 'Name' }] } }]),
+      {},
+      { page: pageOf(), exec: async (tool) => { ran.push(tool); return { result: 'ok' }; } },
+    );
+    expect(out.ok).toBe(false);
+    expect(out.failedAt).toBe(2);
+    expect(out.reason).toMatch(/^step 2: \{\{d1\}\} was left unbound/);
+    // A fallback, not a hard stop: the daemon hands the step to the model
+    // (server.ts `fellBack`). Nothing was dispatched at step 2.
+    expect(ran).toEqual(['goto']);
+  });
+
+  /**
+   * A chain is a PREFERENCE ORDER, not a conjunction (fwod34 s_eee5b1 step 2:
+   * two `#name_{{d2}}` rungs behind a role and a placeholder rung that resolve
+   * perfectly well). A dead rung is dropped; only a chain with none left is a
+   * step that cannot name what it acts on.
+   */
+  it('drops a dead locator rung and acts through the rung behind it', async () => {
+    const { replaySkill } = await import('../src/skills/replay.js');
+    const ran: string[] = [];
+    const out = await replaySkill(
+      skillWith([
+        GOTO,
+        { tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'id', selector: '#name_{{d1}}' }, { kind: 'role', role: 'button', name: 'Open' }] } },
+      ]),
+      {},
+      { page: pageOf(), exec: async (tool) => { ran.push(tool); return { result: 'ok' }; } },
+    );
+    expect(out.reason ?? '').not.toMatch(/left unbound|no way left/);
+    expect(ran).toEqual(['goto', 'click']);
+  });
+
+  it('refuses only when every rung of the chain is dead', async () => {
+    const { replaySkill } = await import('../src/skills/replay.js');
+    const ran: string[] = [];
+    const out = await replaySkill(
+      skillWith([
+        GOTO,
+        { tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'id', selector: '#name_{{d1}}' }, { kind: 'css', selector: 'div#name_{{d1}} > a' }] } },
+      ]),
+      {},
+      { page: pageOf(), exec: async (tool) => { ran.push(tool); return { result: 'ok' }; } },
+    );
+    expect(out.reason).toMatch(/^step 2: every recorded locator for target names \{\{d1\}\}/);
+    expect(ran).toEqual(['goto']);
+  });
+
+  it('leaves a read alone: a check that asks for nothing keeps asking for nothing', async () => {
+    const { replaySkill } = await import('../src/skills/replay.js');
+    const ran: string[] = [];
+    const out = await replaySkill(
+      skillWith([GOTO, { tool: 'read', args: { target: '@e1', label: 'name' }, locators: { target: [{ kind: 'role', role: 'textbox', name: '{{d1}}' }] } }]),
+      {},
+      { page: pageOf(), exec: async (tool) => { ran.push(tool); return { result: 'ok' }; } },
+    );
+    expect(out.reason ?? '').not.toMatch(/left unbound/);
+    expect(ran).toContain('read');
   });
 });

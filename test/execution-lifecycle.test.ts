@@ -680,7 +680,7 @@ describe('emitted step lifecycle', () => {
         { tool: 'click', args: { target: '@e1' }, locators: { target } },
       ],
     }), { tier: 'plain' });
-    const identity = source.indexOf('await expect.poll(async () => (await confirmPresence(page, [`${p.v1}`], 2, { whole: true })).presence');
+    const identity = source.indexOf('let seen = await confirmPresence(page, [`${p.v1}`], 2, { whole: true });');
     const gotoStep = source.indexOf('// @step 01-step s_emit/1');
     const clickStep = source.indexOf('// @step 01-step s_emit/2');
     expect(identity).toBeGreaterThan(gotoStep);

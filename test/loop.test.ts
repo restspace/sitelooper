@@ -822,3 +822,121 @@ describe('naming ask', () => {
     expect(result.turns).toBe(1);
   });
 });
+
+/**
+ * The live-page gate for a composite report value (kanboard fwkb17). Needs a
+ * real browser, so it is opt-in like the other browser-backed suites:
+ *
+ *   BP_BROWSER_TESTS=1 npx vitest run test/loop.test.ts
+ *
+ * The point of the whole change is that the PAGE decides the split, so a test
+ * with a stubbed pin can only ever check the bookkeeping — this is the one
+ * that checks the property.
+ */
+const browserEnabled = process.env.BP_BROWSER_TESTS === '1';
+(browserEnabled ? describe : describe.skip)('composite report values, judged by the live page', () => {
+  // A board like kanboard's: four column headers, each its own element, plus
+  // prose that happens to carry commas.
+  const board = `<!doctype html><title>Bench Board</title><main>
+    <div class="board">
+      <div class="column"><h3 class="col-title">Backlog</h3></div>
+      <div class="column"><h3 class="col-title">Ready</h3></div>
+      <div class="column"><h3 class="col-title">Work in progress</h3></div>
+      <div class="column"><h3 class="col-title">Done</h3></div>
+    </div>
+    <p id="note">the board opened cleanly, the columns were already in place, nothing was moved</p>
+  </main>`;
+
+  let session: { getPage: () => Promise<any>; close: () => Promise<unknown> };
+  let page: any;
+  beforeAll(async () => {
+    const { BrowserSession } = await import('../src/daemon/browser.js');
+    session = new BrowserSession({ session: 'composite', persist: false }) as any;
+    page = await session.getPage();
+    await page.setContent(board);
+  }, 60_000);
+  afterAll(async () => {
+    await session?.close();
+  });
+
+  /** The instruction's recorder, as far as `finish` uses it. */
+  const recorder = () => {
+    const steps: Array<{ label?: string; args?: Record<string, unknown> }> = [];
+    const ended: Array<Record<string, unknown>> = [];
+    return {
+      steps,
+      ended,
+      browser: {
+        dialogs: { drain: () => [] },
+        isOpen: true,
+        getPage: async () => page,
+        script: {
+          beginInstruction: () => {},
+          endInstruction: (o: Record<string, unknown>) => ended.push(o),
+          readsThisInstruction: () => [],
+          readResultsThisInstruction: () => new Set<string>(),
+          addStep: (s: { label?: string; args?: Record<string, unknown> }) => steps.push(s),
+          mark: () => 0,
+          entriesSince: () => [],
+        },
+      } as unknown as BrowserSession,
+    };
+  };
+
+  it('splits the joined column list into four proven read-backs', async () => {
+    // fwkb17's 01-open verbatim: the recording scored 6/6 reporting four
+    // scalars, this one joined them and both replays failed obj 1 for
+    // "column(s) not in report: Ready, Done".
+    const rec = recorder();
+    const state = new SessionState('t-composite-live');
+    const provider = scriptedProvider([
+      {
+        toolCalls: [
+          reportCall({
+            status: 'success',
+            summary: 'The board has four columns.',
+            evidence: { values: { columns_left_to_right: 'Backlog, Ready, Work in progress, Done' } },
+          }),
+        ],
+      },
+    ]);
+    const result = await runInstruction(provider, rec.browser, state, 'open the board', loopOpts);
+    expect(result.report.status).toBe('success');
+    // The composite is gone and each part is published under its own name.
+    expect(result.report.evidence?.values).toEqual({
+      columns_left_to_right_1: 'Backlog',
+      columns_left_to_right_2: 'Ready',
+      columns_left_to_right_3: 'Work in progress',
+      columns_left_to_right_4: 'Done',
+    });
+    // Each part is a REAL read-back the page vouched for — labelled, not @synth.
+    expect(rec.steps.map((s) => s.label)).toEqual([
+      'columns_left_to_right_1',
+      'columns_left_to_right_2',
+      'columns_left_to_right_3',
+      'columns_left_to_right_4',
+    ]);
+    expect(rec.steps.every((s) => s.args?.target !== '@synth')).toBe(true);
+    // And the instruction the flow is built from publishes the parts.
+    expect(rec.ended[0].values).toEqual(result.report.evidence?.values);
+  });
+
+  it('leaves a comma-joined sentence exactly as it was: its parts pin nothing', async () => {
+    const rec = recorder();
+    const state = new SessionState('t-composite-prose');
+    // Narration the page does not show, so the whole string fails to pin and
+    // the split is offered its commas — whose parts the page will not vouch
+    // for either. The value comes through untouched.
+    const note = 'opened the board without incident, checked each column, moved nothing at all';
+    const provider = scriptedProvider([
+      {
+        toolCalls: [
+          reportCall({ status: 'success', summary: 'Opened the board.', evidence: { values: { note } } }),
+        ],
+      },
+    ]);
+    const result = await runInstruction(provider, rec.browser, state, 'open the board', loopOpts);
+    expect(result.report.evidence?.values).toEqual({ note });
+    expect(rec.steps).toEqual([]);
+  });
+});

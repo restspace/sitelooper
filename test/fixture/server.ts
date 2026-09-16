@@ -101,6 +101,60 @@ document.querySelector('.mark').addEventListener('click', async (e) => {
 </body></html>`;
 
 /**
+ * The same record page, not yet ARRIVED: a placeholder first, then a moment
+ * later the record's own name and a url the app normalises for itself. That is
+ * what Grafana does to a bare dashboard address (fwgr47-n2 07-verify judged
+ * identity during exactly this window and called the RIGHT dashboard "a
+ * different record"), and it is the page an identity gate must wait for
+ * instead of concluding at the first look.
+ */
+const BOOTING = (id: string) => `<!doctype html><html><head><meta charset="utf-8"><title>Record</title></head><body>
+<h1>Loading</h1>
+<script>
+const id = ${JSON.stringify(id)};
+setTimeout(() => {
+  document.querySelector('h1').textContent = 'Record ' + id;
+  const b = document.createElement('button');
+  b.className = 'mark';
+  b.type = 'button';
+  b.textContent = 'Mark';
+  b.addEventListener('click', async () => {
+    await fetch('/mark/' + encodeURIComponent(id), { method: 'POST' });
+  });
+  document.body.append(b);
+  history.replaceState(null, '', '/booting/' + encodeURIComponent(id) + '?ready=1');
+}, 700);
+</script>
+</body></html>`;
+
+/**
+ * BOOTING's sibling, for the other half of that window: the marker NEVER
+ * renders, and the url only names the record after the wait. The page offers
+ * its work from the start and keeps saying "Loading" forever, while a moment
+ * later it rewrites its own address to carry the record id in a query key.
+ *
+ * That is fwgr47-n2's shape taken to its end: the escape hatch a missing
+ * marker has — the url already naming this run's record (urlRecordParts) — was
+ * unavailable at the FIRST look only because the app had not yet written the
+ * pattern's bound query keys. A runner that polls for the marker and then
+ * throws without asking the url again stops on a page whose url has, by then,
+ * answered the very question the marker was asked.
+ */
+const SILENT = (id: string) => `<!doctype html><html><head><meta charset="utf-8"><title>Record</title></head><body>
+<h1>Loading</h1>
+<button class="mark" type="button">Mark</button>
+<script>
+const id = ${JSON.stringify(id)};
+document.querySelector('button.mark').addEventListener('click', async () => {
+  await fetch('/mark/' + encodeURIComponent(id), { method: 'POST' });
+});
+setTimeout(() => {
+  history.replaceState(null, '', '/silent/' + encodeURIComponent(id) + '?rec=' + encodeURIComponent(id) + '&ready=1');
+}, 700);
+</script>
+</body></html>`;
+
+/**
  * The page a navigation lands on when its record is gone: Odoo answers a url
  * for a deleted record with a toast ("Can't fetch record(s) 22") a moment after
  * the page renders, and a page that still offers work. fwod45-n3 replayed a
@@ -873,6 +927,24 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
       log.push(`visit:${id}`);
       res.writeHead(200, { 'content-type': 'text/html' });
       res.end(RECORD(id));
+      return;
+    }
+    if (url.startsWith('/booting/')) {
+      // The page normalises its own url to `?ready=1`, so the id is the path
+      // part alone; the visit reads the same as the record page's.
+      const id = decodeURIComponent(url.slice('/booting/'.length).split('?')[0]);
+      log.push(`visit:${id}`);
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end(BOOTING(id));
+      return;
+    }
+    if (url.startsWith('/silent/')) {
+      // As /booting: the page rewrites its own url, so the id is the path part
+      // alone and the visit reads the same as the record page's.
+      const id = decodeURIComponent(url.slice('/silent/'.length).split('?')[0]);
+      log.push(`visit:${id}`);
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end(SILENT(id));
       return;
     }
     if (url.startsWith('/project/') && req.method === 'GET') {

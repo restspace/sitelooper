@@ -947,6 +947,13 @@ ${describeLeaks(leaks.slice(0, 6))}`);
     // gained a read is kept.
     const pruned = pruneUnsourcedOutputs(flow, publishedOutputsOf);
     flow = pruned.flow;
+    // On the FLOW, not just in this response's warnings (below): "this step
+    // declared a value no replay can produce" is a fact about the recording,
+    // and the session that learned it ends. kanboard fwkb17 pruned 01-open's
+    // columns_left_to_right and both replays then scored 5/6 on that very
+    // value, with nothing left on disk saying why. Record only — see
+    // Flow.pruned for why this is not a compile refusal.
+    if (pruned.dropped.length) flow = { ...flow, pruned: pruned.dropped };
     const file = saveFlow(flow);
     // Reference lint (case 4a): warn now, while re-recording is still cheap,
     // about any {{step.output}} only model recovery could re-observe. A step's
@@ -1542,7 +1549,14 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
           // carries that step's flow bindings: inherit them for slots the
           // store recorded no origin for.
           const sibling = flow.steps.find((st) => st.id !== step.id && st.skill === candidate.id && st.params);
-          const remap = remapParams(candidate, sibling?.params ?? {});
+          // An origin is only an origin if this flow can name it: a slot bound
+          // to `output:i2:…` records a ledger instruction index, not a step of
+          // this flow, and nothing publishes `i2.*` (fwgr47).
+          const remap = remapParams(
+            candidate,
+            sibling?.params ?? {},
+            flow.steps.map((st) => st.id),
+          );
           if (remap.unbound.length) {
             opts.progress(`[flow ${flow.name}] ${step.id}: not re-pinning ${candidate.id} — slot(s) ${remap.unbound.join(', ')} identify the record but carry no origin to rebind from`);
           } else {

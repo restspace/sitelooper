@@ -30,7 +30,7 @@ import { presentOnPage } from '../src/execution/snapshot.js';
 import { recordedValueShown } from '../src/execution/snapshot.js';
 import { recordedStandIn } from '../src/skills/flow.js';
 import { fingerprintPage } from '../src/execution/fingerprint.js';
-import { SOFT_MATCH_MIN_SIMILARITY } from '../src/execution/gates.js';
+import { SOFT_MATCH_MIN_SIMILARITY, fillableChain, unfilledStepVerdict } from '../src/execution/gates.js';
 import { emitFlowFile } from '../src/spec/emit.js';
 import type { SpecFlow } from '../src/spec/ir.js';
 import { goalSatisfied, type ReplayResult } from '../src/skills/replay.js';
@@ -1117,6 +1117,129 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     expect(refused.replayLog.filter((l) => l.startsWith('mark:'))).toEqual([]);
     expect(refused.emittedLog.filter((l) => l.startsWith('mark:'))).toEqual([]);
   }, 180_000);
+
+  /**
+   * WHEN identity is judged, asked of a page that has not finished ARRIVING.
+   *
+   * fwgr47-n2 07-verify: step 1 `goto`-ed a bare dashboard url, Grafana
+   * painted the title and normalised its own address bar a moment later, and
+   * replay looked once — during the boot — and stopped the flow on the RIGHT
+   * dashboard ("does not show 'fwgr47-n2 Bench Dashboard' … is a different
+   * record"; that run's own verifier: obj 6 PASS, uid bfyfuaptu20aoa). It then
+   * fell back 21 turns. The artifact never stopped there, because
+   * `identityChecks` polls IDENTITY_WAIT_MS. A rule only ONE runner applies is
+   * the class this harness exists to catch, so replay polls the same budget
+   * (checkIdentity, src/skills/replay.ts) and both must mark the record.
+   *
+   * `/booting/<id>` is that page: "Loading" first, the record's name and its
+   * Mark button at 700ms, and a url the page rewrites for itself. The server's
+   * own mark log is the witness — no runner's report can establish it.
+   */
+  it('both runners wait for a page that has not finished arriving before judging its record', async () => {
+    const pre = { urlPattern: `${origin}/booting/:id`, requireText: ['Record {{v1}}'] };
+    const params = { v1: { example: RECORDED, usedIn: [1], known: true as const } };
+    const steps = selfNavSteps(`${origin}/booting/{{v1}}`);
+    const skill: Skill = { ...recordSkill(`${origin}/booting/{{v1}}`), preconditions: pre, steps };
+    const spec = recordFlow(`${origin}/booting/{{v1}}`);
+    Object.assign(spec.steps[0], { params: { v1: RECORDED } });
+    Object.assign(spec.steps[0].segments[0], { params, preconditions: pre, steps });
+
+    const { replay, emitted, replayLog, emittedLog } = await bothOf(skill, spec, { v1: 'rec-77' });
+    expect(replay.ok, replay.reason ?? '').toBe(true);
+    expect(emitted.ok, emitted.reason ?? '').toBe(true);
+    // The work happened once, on this run's record, on both sides.
+    expect(replayLog).toEqual(['visit:rec-77', 'mark:rec-77']);
+    expect(emittedLog).toEqual(['visit:rec-77', 'mark:rec-77']);
+  }, 180_000);
+
+  /**
+   * The OTHER half of that window, and the divergence the wait itself
+   * introduced: the marker never renders AND the url only names the record
+   * after the wait.
+   *
+   * Daemon replay reads the url again once its budget is spent, so the escape
+   * hatch a stale marker has (urlRecordParts, identityMarkerVerdict) is
+   * available to it. The artifact used to compute `urlRecordParts` BEFORE its
+   * poll and, when the poll never saw the marker, throw — it never asked the
+   * url again, so it stopped exactly where replay warns and proceeds. That is
+   * fwgr47-n2's cause taken to its end: the hatch was shut at the first look
+   * only because the app had not yet written the pattern's bound query key
+   * (`rec`) into its address, which is a reason that expires.
+   *
+   * `/silent/<id>` is that page: "Loading" forever, its work offered from the
+   * start, and its own url rewritten to `?rec=<id>` at 700ms. The server's
+   * mark log is the witness.
+   */
+  it('both runners ask the url again once the identity wait is spent', async () => {
+    const pattern = `${origin}/silent/:id?rec={{v1}}`;
+    const pre = { urlPattern: pattern, requireText: ['Record {{v1}}'] };
+    const params = { v1: { example: RECORDED, usedIn: [1], known: true as const } };
+    const steps = selfNavSteps(`${origin}/silent/{{v1}}`);
+    const skill: Skill = { ...recordSkill(`${origin}/silent/{{v1}}`), preconditions: pre, steps };
+    const spec = recordFlow(`${origin}/silent/{{v1}}`);
+    Object.assign(spec.steps[0], { params: { v1: RECORDED } });
+    Object.assign(spec.steps[0].segments[0], { params, preconditions: pre, steps });
+
+    const { replay, emitted, replayLog, emittedLog } = await bothOf(skill, spec, { v1: 'rec-77' });
+    expect(replay.ok, replay.reason ?? '').toBe(true);
+    expect(emitted.ok, emitted.reason ?? '').toBe(true);
+    // Not silently: both say the marker is stale and the url answered instead.
+    expect(replay.warnings?.some((w) => /stale/.test(w)), replay.warnings?.join(' | ')).toBe(true);
+    expect(emitted.warnings?.some((w) => /stale/.test(w)), emitted.warnings?.join(' | ')).toBe(true);
+    expect(replayLog).toEqual(['visit:rec-77', 'mark:rec-77']);
+    expect(emittedLog).toEqual(['visit:rec-77', 'mark:rec-77']);
+  }, 180_000);
+
+  /**
+   * F. A slot the run COULD NOT FILL, asked of a step that acts.
+   *
+   * `bindSkill` now leaves two adjacent slots unbound rather than guess where
+   * one ends, so `fillParams` leaves `{{v2}}` standing in a step's args — and
+   * "asks for no particular value", which is right for every marker CHECK
+   * here, would have a `type` put those five characters into a live field.
+   * The rule is one shared predicate; what each runner does about it differs
+   * (replay falls back to the model, the artifact refuses at compile time),
+   * which is the ordinary tier-A/tier-B split. The predicate itself must not
+   * differ, so it is asked of both copies — the daemon's import and the
+   * artifact's embedded source — with the same step and the same params.
+   */
+  it('both runners find the same unfilled slots in a step that acts', async () => {
+    const emitted = emittedHelpers(scopeFlow());
+    const verdict = async (step: unknown, params: Record<string, string>): Promise<string | null> => {
+      const daemon = unfilledStepVerdict(step as never, params, 'step 2');
+      const artifact = (await emitted.unfilledStepVerdict(step, params, 'step 2')) as string | null;
+      expect(artifact, `the artifact must agree with the daemon about ${JSON.stringify(step)} / ${JSON.stringify(params)}`).toEqual(daemon);
+      return daemon;
+    };
+    const chain = async (rungs: unknown[], params: Record<string, string>): Promise<unknown[]> => {
+      const daemon = fillableChain(rungs, params);
+      const artifact = (await emitted.fillableChain(rungs, params)) as unknown[];
+      expect(artifact, `the artifact must agree about ${JSON.stringify(rungs)}`).toEqual(daemon);
+      return daemon;
+    };
+
+    const role = { kind: 'role', role: 'textbox', name: 'e.g. Brandom Freeman' };
+    const dead = { kind: 'id', selector: '#name_{{d2}}' };
+
+    // THE FATAL CASE: the value the step acts WITH. There is no second choice —
+    // the step would put the five characters `{{v2}}` into a live field.
+    expect(await verdict({ args: { target: '@e1', value: '{{v2}}' }, locators: { target: [role] } }, { v1: 'a' })).toMatch(/left unbound/);
+    expect(await verdict({ args: { target: '@e1', value: '{{v2}}' } }, { v2: 'Beta' })).toBeNull();
+    // Bound to '' is BOUND: an unpublished reference, whose own rule is
+    // url.ts's `unfilled`. The evidence is membership in params, not the text.
+    expect(await verdict({ args: { value: '{{v2}}' } }, { v2: '' })).toBeNull();
+    // A flow reference is a different mechanism with its own diagnosis, and a
+    // page that legitimately shows braces is not a marker at all.
+    expect(await verdict({ args: { url: '{{02-create.uid}}' } }, {})).toBeNull();
+    expect(await verdict({ args: { text: 'function f() {{ return 1 }}' } }, {})).toBeNull();
+
+    // THE CHAIN: a preference order. fwod34 s_eee5b1 step 2's own shape — the
+    // dead rung drops, the role rung takes the step, nothing refuses.
+    expect(await chain([dead, role], {})).toEqual([role]);
+    expect(await verdict({ args: { target: '@e1', value: 'Beta' }, locators: { target: [dead, role] } }, {})).toBeNull();
+    // Only a chain with no rung left is fatal, and then for want of a target.
+    expect(await verdict({ args: { target: '@e1', value: 'Beta' }, locators: { target: [dead] } }, {})).toMatch(/no way left to name the element/);
+  }, 120_000);
 
   /**
    * C06, the identity gate on both sides, run as code against a real DOM.

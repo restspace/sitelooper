@@ -9,7 +9,7 @@ import { componentsOnPage, renderComponents } from '../skills/components.js';
 import { originOf } from '../skills/store.js';
 import { siteModel } from '../skills/sitemap.js';
 import { buildSystemPrompt } from './prompt.js';
-import { admitsIncompletion, backfillReadValues, flattenComposedValues, mergeReportValues, namingAskMessage, promoteLabelledReads, publishProseIdentifiers, unnamedReadValues, validateReport, type Report } from './report.js';
+import { admitsIncompletion, backfillReadValues, flattenComposedValues, flattenProvenComposite, mergeReportValues, namingAskMessage, promoteLabelledReads, publishProseIdentifiers, unnamedReadValues, validateReport, type Report } from './report.js';
 import { executeTool, toolDefsFor, type ToolExecution } from './tools.js';
 import { captureReadBack, captureReadBackAt, setIdentityHints } from '../daemon/recorder.js';
 
@@ -429,12 +429,41 @@ export async function runInstruction(
           // the read's result against every reported value for an exact hit —
           // so a read differing by a currency symbol was stored unlabelled,
           // published nothing, and stranded every reference to it.
+          const composites: { name: string; value: string }[] = [];
           for (const [name, value] of Object.entries(values)) {
             if (!value || alreadyRead.has(value) || seenValue.has(value)) continue;
             seenValue.add(value);
             const step = await captureReadBack(page, value, name);
             if (step) browser.script.addStep(step);
-            else stragglers.push(value); // not pinnable by text — try the model next
+            else composites.push({ name, value }); // maybe several values — try splitting, then the model
+          }
+          // A value the page refuses AS ONE STRING may be several values the
+          // page vouches for individually: kanboard fwkb17 reported
+          // `columns_left_to_right = "Backlog, Ready, Work in progress, Done"`,
+          // nothing pinned, the outputs were pruned and both replays scored
+          // 5/6 where the recording scored 6/6.
+          //
+          // Sited HERE, after captureReadBack already returned null, so it can
+          // only ADD reads: a value that pins today never reaches this line,
+          // and a split that the page does not vouch for in full changes
+          // nothing and falls through to the model exactly as before. Worst
+          // case is one extra count() per candidate part.
+          for (const { name, value } of composites) {
+            const { names, pinned } = await flattenProvenComposite(report, name, (part, partName) =>
+              captureReadBack(page, part, partName),
+            );
+            if (!names.length) {
+              stragglers.push(value); // not pinnable, whole or in parts — try the model next
+              continue;
+            }
+            for (const step of pinned) browser.script.addStep(step);
+            opts.onProgress?.(`[report] ${name} is several values the page shows: split into ${names.join(', ')} (read-back)`);
+          }
+          // The instruction's recorded values must follow the report: a split
+          // composite publishes its parts, not the joined string.
+          if (composites.length) {
+            for (const k of Object.keys(values)) delete values[k];
+            for (const [k, v] of Object.entries(report.evidence?.values ?? {})) values[k] = String(v);
           }
           // Verified model fallback: for values the deterministic search could
           // not pin (typically because they are not unique on the page), ask

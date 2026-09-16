@@ -590,6 +590,111 @@ export function markersBound(markers: string[], params: Record<string, string>):
 }
 
 /**
+ * The slots a value still ASKS FOR that this run has no answer for: every
+ * `{{vN}}`/`{{dN}}` marker anywhere inside it (a string, or any string reached
+ * through an array or object — a step's args and its locator chains alike)
+ * whose name is absent from `params`.
+ *
+ * EVIDENCE, NOT SHAPE. The question asked of each marker is `name in params`,
+ * which is exactly what `fillParams` substitutes on (url.ts): a marker still
+ * standing in already-filled text is, by construction, one this run had no
+ * value for. Nothing here reads what the text looks like. A slot bound to ''
+ * is BOUND — an unpublished reference, whose own rule is stated at url.ts's
+ * `unfilled` — and is not reported here.
+ *
+ * Scoped to the two markers `fillParams` itself recognises and to nothing
+ * else: a `{{stepId.output}}` reference is a different mechanism with its own
+ * diagnosis (the artifact's `need`, and the `unsourced-ref` diagnostic), and a
+ * page that legitimately displays braces is not a marker at all.
+ *
+ * WHY A CALLER WOULD ASK. "A slot the run could not fill asks for no
+ * particular value" is the right reading for a CHECK, and every gate here
+ * already takes it: markersBound, urlRecordParts, gotoLandingVerdict's
+ * `want !== ''`, isWildcardSeg. It is the wrong reading for the VALUE an
+ * action carries: a `type`/`fill` whose text is still `{{v2}}` puts those
+ * five characters into a live field, and a goto navigates to the literal. See
+ * `fillableChain` for why a locator chain is judged differently.
+ */
+export function unfilledSlots(value: unknown, params: Record<string, string>): string[] {
+  const out: string[] = [];
+  const walk = (v: unknown): void => {
+    if (typeof v === 'string') {
+      for (const m of v.matchAll(/\{\{([vd]\d+)\}\}/g)) {
+        if (!(m[1] in params) && !out.includes(m[1])) out.push(m[1]);
+      }
+      return;
+    }
+    if (Array.isArray(v)) {
+      for (const item of v) walk(item);
+      return;
+    }
+    if (v && typeof v === 'object') for (const item of Object.values(v as Record<string, unknown>)) walk(item);
+  };
+  walk(value);
+  return out;
+}
+
+/**
+ * A recorded locator chain less the rungs this run could not fill.
+ *
+ * A CHAIN IS A PREFERENCE ORDER, NOT A CONJUNCTION. Its rungs are the ways
+ * the recording could name one element, best first, and the resolver takes the
+ * first that matches (execution/resolve.ts). A rung carrying a slot this run
+ * has no value for — odoo fwod34's `#name_{{d2}}`, where `d2` is a url-pattern
+ * wildcard and not a value at all — cannot match anything once `fillParams`
+ * leaves the marker standing, so it is not a defect in the step: it is one
+ * exhausted preference, dropped, and the `role`/`placeholder` rungs behind it
+ * take the step exactly as they were recorded to.
+ *
+ * Only a chain whose EVERY rung is dead leaves the step with no way to name
+ * its element, and that is the case a runner must act on.
+ */
+export function fillableChain<T>(chain: readonly T[] | undefined, params: Record<string, string>): T[] {
+  return (chain ?? []).filter((rung) => !unfilledSlots(rung, params).length);
+}
+
+/** A step as this verdict reads it: the values it carries, and the chains it resolves through. */
+export interface UnfilledStep {
+  args?: unknown;
+  locators?: Record<string, readonly unknown[] | undefined>;
+}
+
+/**
+ * Why a step that ACTS must not act, or null when nothing stops it. The caller
+ * decides what "acts" means for it (a type, fill, click, select, goto) — a
+ * read, a wait and a check keep the "asks for nothing" reading and never ask
+ * this.
+ *
+ * The split inside the step is the point, and it is not the same question
+ * twice:
+ *  - the ARGS carry the value the step acts WITH. An unfilled marker there is
+ *    fatal: there is no second choice, and the step would type or navigate to
+ *    the literal marker text.
+ *  - a LOCATOR CHAIN is how the step names WHAT to act on, in preference
+ *    order. An unfilled rung is dropped (fillableChain); only an entirely dead
+ *    chain is fatal, and then because the step has no way left to find its
+ *    target, not because a marker survived.
+ *
+ * Since bindSkill stopped guessing a split between two adjacent slots and left
+ * both unbound instead, the args case is reachable rather than theoretical.
+ * What each runner DOES about it differs — daemon replay falls back to the
+ * model, the artifact has no model and refuses at compile time — but the
+ * question is this one, asked here, once.
+ */
+export function unfilledStepVerdict(step: UnfilledStep, params: Record<string, string>, where: string): string | null {
+  const said = (slots: string[]): string => slots.map((s) => `{{${s}}}`).join(', ');
+  const inArgs = unfilledSlots(step.args, params);
+  if (inArgs.length) {
+    return `${where}: ${said(inArgs)} ${inArgs.length > 1 ? 'were' : 'was'} left unbound — this run has no value for ${inArgs.length > 1 ? 'those slots' : 'that slot'}, and the step would otherwise act on the literal marker text`;
+  }
+  for (const [key, chain] of Object.entries(step.locators ?? {})) {
+    if (!chain?.length || fillableChain(chain, params).length) continue;
+    return `${where}: every recorded locator for ${key} names ${said(unfilledSlots(chain, params))}, which this run could not fill — the step has no way left to name the element it acts on`;
+  }
+  return null;
+}
+
+/**
  * The parts of the live url that name THIS run's record, or null when the url
  * cannot say. A record part is one the pattern fills from a param or a minted
  * value (`/d/:var/{{v2}}-bench-dashboard`, `edit?id={{d1}}`, `#id={{d1}}`):
@@ -628,6 +733,23 @@ export function urlRecordParts(pattern: string | undefined, url: string, params:
   return parts.length ? parts : null;
 }
 
+/**
+ * How long a runner waits for a BOUND identity marker to appear before it
+ * judges which record the page is, and the cadence of that wait. A page that
+ * has not finished arriving cannot say which record it is: fwgr47-n2
+ * 07-verify stopped on the RIGHT dashboard (its own verifier reported uid
+ * bfyfuaptu20aoa PASS) because step 1 was a `goto` to a bare dashboard url
+ * that grafana normalises a moment later, and the gate looked during the
+ * boot. Stated here because BOTH runners must wait the same: the compiled
+ * artifact polls it (spec/emit.ts identityChecks) and daemon replay polls it
+ * (skills/replay.ts checkIdentity) — a rule only one runner applies is the
+ * class of defect the parity harness exists to catch.
+ */
+export const IDENTITY_WAIT_MS = 5_000;
+
+/** Cadence of that wait, for a runner with no poll helper of its own. */
+export const IDENTITY_POLL_MS = 100;
+
 export interface IdentityMarkerVerdict {
   /** The segment may run. */
   pass: boolean;
@@ -647,6 +769,15 @@ export interface IdentityMarkerVerdict {
  * this run's own slug, `{{v2}}-bench-dashboard` — because its second marker was
  * "Last 6 hours", a time-range setting the settings view does not render: a
  * state, not a name, and not the question the url had already answered.
+ *
+ * `url` must be the url as it reads AFTER the runner's identity wait
+ * (IDENTITY_WAIT_MS), not the one the first look saw. The escape hatch was
+ * unavailable to fwgr47-n2 at the first look for a reason that expires: the
+ * pattern's bound query keys (from, to) were missing from a url the app had
+ * not rewritten yet, so urlDiff — and with it urlRecordParts — said null.
+ * Asking again once the wait is spent costs nothing and is the same question
+ * the app has by then answered; one step earlier the SAME app warn-and-
+ * proceeded twice on exactly this fallback.
  */
 export function identityMarkerVerdict(
   pattern: string | undefined,

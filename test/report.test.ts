@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addEvidenceValue, backfillReadValues, flattenComposedValues, promoteLabelledReads, proseIdentifiers, publishProseIdentifiers, unnamedReadValues, validateReport, type Report } from '../src/agent/report.js';
+import { addEvidenceValue, backfillReadValues, flattenComposedValues, flattenProvenComposite, promoteLabelledReads, proseIdentifiers, publishProseIdentifiers, unnamedReadValues, validateReport, type Report } from '../src/agent/report.js';
 
 describe('report validation', () => {
   it('accepts a minimal valid report', () => {
@@ -265,6 +265,103 @@ describe('composed report values', () => {
     const report = of({ line_1_qty: 'taken', lines: '["A","B"]' });
     expect(flattenComposedValues(report)).toEqual(['lines_1', 'lines_2']);
     expect(report.evidence?.values).toEqual({ line_1_qty: 'taken', lines_1: 'A', lines_2: 'B' });
+  });
+});
+
+describe('delimiter-joined report values (the page is the judge)', () => {
+  const of = (values: Record<string, string>): Report => ({
+    status: 'success',
+    summary: 'opened the board',
+    evidence: { values },
+  });
+  /** Stands in for captureReadBack: a page that shows exactly these strings. */
+  const pageShowing = (...shown: string[]) => {
+    const asked: string[] = [];
+    const pin = async (value: string, name: string) => {
+      asked.push(value);
+      return shown.includes(value) ? { read: value, label: name } : null;
+    };
+    return { pin, asked };
+  };
+
+  it('splits a joined list every part of which the page shows', async () => {
+    // kanboard fwkb17's 01-open, verbatim. The recording scored 6/6 reporting
+    // four scalars; this round's agent joined them and both replays scored 5/6
+    // with `obj 1: FAIL — column(s) not in report: Ready, Done`.
+    const report = of({ columns_left_to_right: 'Backlog, Ready, Work in progress, Done' });
+    const page = pageShowing('Backlog', 'Ready', 'Work in progress', 'Done');
+    const { names, pinned } = await flattenProvenComposite(report, 'columns_left_to_right', page.pin);
+    expect(names).toEqual([
+      'columns_left_to_right_1',
+      'columns_left_to_right_2',
+      'columns_left_to_right_3',
+      'columns_left_to_right_4',
+    ]);
+    // Each part is a real read the page vouched for, carrying the part's name.
+    expect(pinned).toEqual([
+      { read: 'Backlog', label: 'columns_left_to_right_1' },
+      { read: 'Ready', label: 'columns_left_to_right_2' },
+      { read: 'Work in progress', label: 'columns_left_to_right_3' },
+      { read: 'Done', label: 'columns_left_to_right_4' },
+    ]);
+    expect(report.evidence?.values).toEqual({
+      columns_left_to_right_1: 'Backlog',
+      columns_left_to_right_2: 'Ready',
+      columns_left_to_right_3: 'Work in progress',
+      columns_left_to_right_4: 'Done',
+    });
+  });
+
+  it('refuses the split when the page does not show every part', async () => {
+    // Prose that merely contains commas. Its "parts" pin nothing, so the
+    // delimiter is exactly as unauthoritative as it should be.
+    const raw = 'the board opened cleanly, the columns were already in place, nothing was moved';
+    const report = of({ note: raw });
+    const page = pageShowing('the board opened cleanly');
+    const { names, pinned } = await flattenProvenComposite(report, 'note', page.pin);
+    expect(names).toEqual([]);
+    expect(pinned).toEqual([]);
+    expect(report.evidence?.values).toEqual({ note: raw });
+    // And it stops at the first part the page will not vouch for, rather than
+    // asking about all of them.
+    expect(page.asked).toEqual(['the board opened cleanly', 'the columns were already in place']);
+  });
+
+  it('splits on slashes and dashes too, and not on a value with no join', async () => {
+    const slashes = of({ columns: 'Backlog / Ready / Done' });
+    expect((await flattenProvenComposite(slashes, 'columns', pageShowing('Backlog', 'Ready', 'Done').pin)).names)
+      .toEqual(['columns_1', 'columns_2', 'columns_3']);
+
+    const dashes = of({ range: 'Request rate — Error count' });
+    expect((await flattenProvenComposite(dashes, 'range', pageShowing('Request rate', 'Error count').pin)).names)
+      .toEqual(['range_1', 'range_2']);
+
+    const scalar = of({ total: '2316.00' });
+    const page = pageShowing('2316.00');
+    expect((await flattenProvenComposite(scalar, 'total', page.pin)).names).toEqual([]);
+    expect(page.asked).toEqual([]); // one part is not a join: the page is never asked
+    expect(scalar.evidence?.values).toEqual({ total: '2316.00' });
+  });
+
+  it('keeps the MAX_LEAVES cap: a table is not a record', async () => {
+    const many = Array.from({ length: 9 }, (_, i) => `Col ${i + 1}`);
+    const report = of({ columns: many.join(', ') });
+    const page = pageShowing(...many);
+    expect((await flattenProvenComposite(report, 'columns', page.pin)).names).toEqual([]);
+    expect(page.asked).toEqual([]);
+    expect(report.evidence?.values?.columns).toBe(many.join(', '));
+  });
+
+  it('does not collide with a name already taken, or with a sibling', async () => {
+    const report = of({ columns_1: 'taken', columns: 'Backlog, Done' });
+    const { names } = await flattenProvenComposite(report, 'columns', pageShowing('Backlog', 'Done').pin);
+    expect(names).toEqual(['columns_1_2', 'columns_2']);
+    expect(report.evidence?.values).toEqual({ columns_1: 'taken', columns_1_2: 'Backlog', columns_2: 'Done' });
+  });
+
+  it('does nothing for a key the report does not carry', async () => {
+    const report = of({ a: 'x, y' });
+    expect((await flattenProvenComposite(report, 'missing', pageShowing('x', 'y').pin)).names).toEqual([]);
   });
 });
 

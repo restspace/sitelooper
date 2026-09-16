@@ -1123,9 +1123,17 @@ describe('preconditions, minting and loops', () => {
     // instead — bounded (`whole`) so a neighbouring record's id cannot pass,
     // and answering 'unknown' (never 'absent') on a look that could not cover
     // the page. No dialect of the artifact's own.
-    expect(bound).toContain(
-      "await expect.poll(async () => (await confirmPresence(page, [`${p.v1}`], 2, { whole: true })).presence, { timeout: 5000, message: 'identity: {{v1}} is not confirmed on this page' }).toBe('present');",
-    );
+    // Polled on the SHARED budget and cadence (gates.ts IDENTITY_WAIT_MS /
+    // IDENTITY_POLL_MS, embedded with the module), not a literal of its own,
+    // and the exhausted poll ends in the shared verdict read off the POST-WAIT
+    // url rather than a bare throw — replay's own loop, step for step.
+    expect(bound).toContain('let seen = await confirmPresence(page, [`${p.v1}`], 2, { whole: true });');
+    expect(bound).toContain("if (!urlRecordParts('http://app.test/x', page.url(), p)) {");
+    expect(bound).toContain('const deadline = Date.now() + IDENTITY_WAIT_MS;');
+    expect(bound).toContain('await new Promise((r) => setTimeout(r, Math.max(1, Math.min(IDENTITY_POLL_MS, deadline - Date.now()))));');
+    expect(bound).toContain("const verdict = identityMarkerVerdict('http://app.test/x', page.url(), p, `${p.v1}`, seen.presence);");
+    expect(bound).toContain("if (!verdict.pass) throw new Error('01-do s_test1: identity: {{v1}} is not confirmed on this page');");
+    expect(bound).not.toContain('await expect.poll(async () => (await confirmPresence(');
     expect(bound).toContain('async function confirmPresence(page: Page, lines: string[], d: LineDialect, opts: LineShowsOptions = {}): Promise<{ presence: Presence; why?: string }> {');
     expect(bound).not.toContain('async function present(');
     expect(bound).not.toContain('getByText(re ?? text)');
@@ -1168,7 +1176,7 @@ describe('preconditions, minting and loops', () => {
     const goto: SkillStep = { tool: 'goto', args: { url: 'http://app.test/items/42' }, locators: {} };
     const click: SkillStep = { tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'id', selector: '#b' }] } };
     const pre = { urlPattern: 'http://app.test/items/:id', requireText: ['{{v1}}'] };
-    const pollText = 'await expect.poll(async () => (await confirmPresence(page, [`${p.v1}`], 2, { whole: true })).presence';
+    const pollText = 'let seen = await confirmPresence(page, [`${p.v1}`], 2, { whole: true });';
     const source = emit(specOf([goto, click], { segments: [segment([goto, click], { preconditions: pre })] }));
     const poll = source.indexOf(pollText);
     expect(poll).toBeGreaterThan(-1);
@@ -1271,7 +1279,7 @@ describe('preconditions, minting and loops', () => {
 
     // the guard sits ahead of the identity check, as replay orders them
     const identity = emit(specOf([step], { segments: [segment([step], { preconditions: { urlPattern: 'http://app.test/items', requireText: ['{{v1}}'] } })] }));
-    expect(identity.indexOf('await preconditionGate(')).toBeLessThan(identity.indexOf('await expect.poll(async () => (await confirmPresence(page,'));
+    expect(identity.indexOf('await preconditionGate(')).toBeLessThan(identity.indexOf('let seen = await confirmPresence(page,'));
   });
 
   /**

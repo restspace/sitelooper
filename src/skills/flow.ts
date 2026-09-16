@@ -41,6 +41,22 @@ export interface Flow {
    * re-surfaces them as Diagnostics — see src/spec/diagnostics.ts.
    */
   warnings?: string[];
+  /**
+   * What `pruneUnsourcedOutputs` took off each step at export: a value the
+   * step's instruction declared that no replay can produce from the page.
+   *
+   * Persisted because it is a fact about the RECORDING, and the session that
+   * knows it ends. It reached only the export response's warnings, so
+   * "01-open declared columns_left_to_right and nothing reads it" was gone by
+   * the time kanboard fwkb17's replays scored 5/6 on exactly that value.
+   *
+   * Deliberately NOT a flow `warning`: warnings carry a diagnostic code prefix
+   * and re-surface through compile (spec/ir.ts noopDiagnostics). Refusing a
+   * compile over a pruned output was measured at twelve refused steps across
+   * three currently-green flows (odoo prunes 6 of 7 steps and scores 6/6), so
+   * this is a record, not a gate.
+   */
+  pruned?: { stepId: string; outputs: string[] }[];
 }
 
 export interface FlowStep {
@@ -1220,7 +1236,13 @@ export function looksLikeReportedData(value: string | undefined): boolean {
   if (/\.(png|jpe?g|gif|webp|pdf)\b/i.test(v)) return false;
   const words = v.split(/\s+/).length;
   if (words < 6) return true;
-  const parts = v.split(/[,;|\n\t]+/).map((s) => s.trim()).filter(Boolean);
+  // `/` and the en/em dashes join a list as readily as a comma does: kanboard
+  // fwkb17's `"Backlog / Ready / Work in progress / Done (each with a sort
+  // drop-down)"` split into ONE part, so it counted as narration and was
+  // invisible to prune, lint and unreportedOutputs alike — the one value the
+  // objective was about. Same separator class the report splitter offers as
+  // candidate boundaries (report.ts COMPOSED_SEPARATOR).
+  const parts = v.split(/[,;|/–—\n\t]+/).map((s) => s.trim()).filter(Boolean);
   return parts.length >= 3 && words / parts.length <= 4;
 }
 
@@ -1514,23 +1536,40 @@ export function ignorableRefs(missing: string[], step: FlowStep, skill: Skill | 
  * value is templated on that part; anything else stays literal, which is
  * what the recovery typed. `inherited` are the bindings a sibling step
  * that already pins this skill stores, used for slots with no origin.
+ * `stepIds` are the step ids THIS flow can resolve; omitted means "trust
+ * every origin", which is what the pre-fwgr47 callers did.
  */
-export function remapParams(skill: Skill, inherited: Record<string, string> = {}): { params: Record<string, string>; unbound: string[] } {
+export function remapParams(
+  skill: Skill,
+  inherited: Record<string, string> = {},
+  stepIds?: Iterable<string>,
+): { params: Record<string, string>; unbound: string[] } {
   // A binding key names where a value comes from: "runid" / "var:runid" (a
-  // declared var), "01-open.landed_page" / "output:01-open:landed_page" (an
-  // earlier step's output), "02-create.url.p1" / "url:02-create:p1" (a url
-  // part a step minted). All of them are a {{ref}} the flow resolves.
+  // declared var), "…:landed_page" / "output:…:landed_page" (an output), or
+  // "url:…:p1" (a url part). The `step` inside an output/url key is whatever
+  // MINTED the fact, and that is not always a flow step id: the flow's own
+  // threading mints one, but the daemon mints `i2` — an instruction index
+  // (`i${instructionIndex}`, server.ts) that ledger.ts serialises into
+  // "output:i2:dashboard_title_saved". Nothing publishes `i2.*`, so emitting
+  // `{{i2.dashboard_title_saved}}` hands the flow a reference no run can
+  // resolve — grafana fwgr47's compiled 07-verify stopped at
+  // "needs {{i2.dashboard_title_saved}}, and this run never published it".
+  // Only the caller knows which ids this flow resolves, so it passes them in
+  // and an origin naming anything else is no origin at all: the slot falls
+  // through to `inherited`, then the literal example, then `unbound`.
+  const known = stepIds ? new Set(stepIds) : null;
+  const resolvable = (step: string): boolean => !known || known.has(step);
   const templateOf = (key: string): string | null => {
     const m = /^(var|url|output|input)(?::(.*))?$/.exec(key);
     if (!m) return `{{${key}}}`;
     if (m[1] === 'var') return `{{${m[2]}}}`;
     if (m[1] === 'url') {
       const [step, label] = String(m[2]).split(':');
-      return step && label ? `{{${step}.url.${label}}}` : null;
+      return step && label && resolvable(step) ? `{{${step}.url.${label}}}` : null;
     }
     if (m[1] === 'output') {
       const [step, name] = String(m[2]).split(':');
-      return step && name ? `{{${step}.${name}}}` : null;
+      return step && name && resolvable(step) ? `{{${step}.${name}}}` : null;
     }
     return null; // 'input': the run typed it — the example is the value
   };

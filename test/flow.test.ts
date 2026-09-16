@@ -1118,6 +1118,55 @@ describe('remapParams', () => {
       unbound: [],
     });
   });
+
+  // fwgr47: the daemon mints a ledger fact's step as an instruction index
+  // (`i2`), which ledger.ts serialises into `output:i2:dashboard_title_saved`.
+  // Nothing publishes `i2.*`, so templating it handed 07-verify a reference no
+  // run could resolve. The caller now says which ids this flow can name.
+  it('does not template an origin naming a step this flow cannot resolve', async () => {
+    const { remapParams } = await import('../src/skills/flow.js');
+    const skill = {
+      params: {
+        v1: { example: 'Ops dashboard', usedIn: [2], known: true, binding: 'output:01-open:dashboard_title_saved' },
+        v2: { example: 'k9', usedIn: [1], known: true, binding: 'var:runid' },
+      },
+    } as never;
+    const ids = ['01-open', '07-verify'];
+    expect(remapParams(skill, {}, ids)).toEqual({
+      params: { v1: '{{01-open.dashboard_title_saved}}', v2: '{{runid}}' },
+      unbound: [],
+    });
+
+    const ledgerMinted = {
+      params: {
+        v1: { example: 'Ops dashboard', usedIn: [2], known: true, binding: 'output:i2:dashboard_title_saved' },
+        v2: { example: 'k9', usedIn: [1], known: true, binding: 'var:runid' },
+      },
+    } as never;
+    const remapped = remapParams(ledgerMinted, {}, ids);
+    // the slot identifies the record and has no resolvable origin: it is named
+    // so the re-pin is refused, and `i2` reaches nothing
+    expect(remapped).toEqual({ params: { v1: 'Ops dashboard', v2: '{{runid}}' }, unbound: ['v1'] });
+    expect(JSON.stringify(remapped.params)).not.toContain('i2');
+
+    // a url part minted by the ledger is filtered the same way
+    const urlMinted = { params: { v1: { example: '22', usedIn: [1], known: true, binding: 'url:i2:p1' } } } as never;
+    expect(remapParams(urlMinted, {}, ids)).toEqual({ params: { v1: '22' }, unbound: ['v1'] });
+  });
+
+  it('templates every origin when the caller lists no ids (back-compatible)', async () => {
+    const { remapParams } = await import('../src/skills/flow.js');
+    const skill = {
+      params: {
+        v1: { example: 'Ops dashboard', usedIn: [2], known: true, binding: 'output:01-open:dashboard_title_saved' },
+        v2: { example: '22', usedIn: [1], known: true, binding: 'url:i2:p1' },
+      },
+    } as never;
+    expect(remapParams(skill)).toEqual({
+      params: { v1: '{{01-open.dashboard_title_saved}}', v2: '{{i2.url.p1}}' },
+      unbound: [],
+    });
+  });
 });
 
 /**
@@ -1724,10 +1773,62 @@ describe('an unproven read is a candidate source, not a source (fwkb14, fwod52)'
     expect(publishedOutputs(skill)).toEqual(['column_3']);
   });
 
-  it('leaves a reference with no producing step in the flow to the compiler that diagnoses it', () => {
-    const orphan = spec(synth(), [1]);
+  // grafana fwgr47: the compiled arm stopped at
+  // `07-verify needs {{i2.dashboard_title_saved}}`. That read is fine — it
+  // exists, is proven, and published on all three runs as
+  // `02-create.dashboard_title_saved`. The REFERENCE names `i2`, a ledger
+  // instruction-index id, and nothing in the emitted file ever assigns
+  // `outputs['i2.…']`. The check 6f966e1 added refused a producer that CANNOT
+  // publish while waving through one that DOES NOT EXIST; a step that is not
+  // there is the worst of the three cases, not an exempt one.
+  it('refuses a used slot whose reference names NO step of the flow (fwgr47 {{i2.…}})', () => {
+    const orphan = spec(synth({ unproven: undefined }), [1]);
+    orphan.steps[0].id = '02-other';
+    const found = emitFlowFile(orphan, { tier: 'plain' }).diagnostics;
+    expect(found.map((d) => [d.code, d.severity, d.step])).toEqual([['unsourced-ref', 'error', '03-verify']]);
+    expect(found[0].what).toContain('this flow has no step 01-signin');
+    // Its own wording and its own repair: there is no read to re-record, so it
+    // must not send the reader after one, and the ids that DO exist are the fix.
+    expect(found[0].why).not.toContain('synthesized');
+    expect(found[0].why).toContain('02-other, 03-verify');
+    expect(found[0].fix).toContain('02-other, 03-verify');
+    expect(found[0].fix).not.toContain('rerecord');
+    expect(found[0].action).toBeUndefined();
+  });
+
+  // `url` and `minted` are exempt for a step that EXISTS, because every replay
+  // re-binds them from where its own browser lands — but the publisher is
+  // emitted per flow step, so `{{i2.url}}` is published by nothing either.
+  it('does not let the url exemption cover a step that is not there', () => {
+    const live = spec(synth({ unproven: undefined }), [1]);
+    live.steps[1].params = { v1: '{{01-signin.url.p1}}' };
+    expect(codes(live)).toEqual([]);
+    const orphan = spec(synth({ unproven: undefined }), [1]);
+    orphan.steps[1].params = { v1: '{{i2.url.p1}}' };
+    expect(codes(orphan)).toEqual(['unsourced-ref']);
+  });
+
+  it('still says nothing about a dangling reference only the WORDING quotes', () => {
+    // Same line ignorableRefs and the two cases above draw: nothing the pinned
+    // procedure does can change with the value, so its blank costs a sentence.
+    const orphan = spec(synth(), []);
     orphan.steps[0].id = '02-other';
     expect(codes(orphan)).toEqual([]);
+  });
+
+  // FIX THE LYING MESSAGE (fwgr47). `need`'s error told the reader to look
+  // above for a `[sitelooper skip] … read target not found` line; for this
+  // failure the string occurred exactly once in the whole log — inside the
+  // message itself — and it cost a wrong diagnosis. The claim is now made
+  // only when the run actually logged a skip for that step.
+  it('only claims a skip line when one was logged for the output being needed', () => {
+    const src = emitFlowFile(spec(synth({ unproven: undefined }), [1]), { tier: 'plain' }).source;
+    expect(src).toContain('const skippedReads: string[] = [];');
+    expect(src).toContain('skippedReads.push(where);');
+    expect(src).toMatch(/const skips = skippedReads\.filter/);
+    // Both halves present, and neither unconditional.
+    expect(src).toContain('No \\`[sitelooper skip]\\` line was logged for ${sid}');
+    expect(src).not.toMatch(/`\. The step that publishes \$\{ref\} read nothing/);
   });
 });
 

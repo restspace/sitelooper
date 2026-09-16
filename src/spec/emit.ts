@@ -104,9 +104,6 @@ const END_MARKER = '// @sitelooper-flow-end';
  */
 const URL_WAIT_MS = 5_000;
 
-/** How long a segment's identity marker has to appear before the segment is on the wrong record. */
-const IDENTITY_WAIT_MS = 5_000;
-
 /** Playwright's own default; only a different timeout is worth carrying over. */
 const DEFAULT_WAIT_MS = 10_000;
 
@@ -759,6 +756,25 @@ const HELPERS: { token: string; source: string[] }[] = [
     ],
   },
   {
+    token: 'skippedReads',
+    source: [
+      '/**',
+      ' * Every `[sitelooper skip]` line this run logged, by the `where` that',
+      ' * logged it (`<step id> <skill step>/<n> <role>`).',
+      ' *',
+      " * WHY THIS EXISTS. `need`'s error used to tell the reader, unconditionally,",
+      ' * to look above for the producing step\'s `[sitelooper skip] … read target',
+      ' * not found` line. When the reference names something that is not a step of',
+      ' * the flow (grafana fwgr47: `07-verify needs {{i2.dashboard_title_saved}}`,',
+      ' * a ledger instruction id no step publishes) no such line was ever emitted —',
+      ' * the only occurrence of that string in the entire log was inside the error',
+      ' * itself, and it sent the diagnosis after a read that was working all along.',
+      ' * So the claim is now made only when the log bears it out.',
+      ' */',
+      'const skippedReads: string[] = [];',
+    ],
+  },
+  {
     token: 'readOptional(',
     source: [
       '/**',
@@ -795,11 +811,13 @@ const HELPERS: { token: string; source: string[] }[] = [
       '): Promise<string> {',
       '  const hit = await resolveForRead(page, (again) => resolveTarget(page, candidates, where, again ? { ...policy, waitMs: 0 } : policy, opts));',
       '  if (!hit) {',
+      '    skippedReads.push(where);',
       '    console.warn(`[sitelooper skip] ${where}: read target not found — value left empty`);',
       "    return '';",
       '  }',
       '  const taken = await takeRead(() => read(hit.locator));',
       '  if (taken.ok) return taken.value;',
+      '  skippedReads.push(where);',
       '  console.warn(`[sitelooper skip] ${where}: read errored (${taken.message}) — value left empty`);',
       "  return '';",
       '}',
@@ -834,16 +852,29 @@ const HELPERS: { token: string; source: string[] }[] = [
       ' * Raised at CONSUMPTION, never at the read: the producing step keeps its',
       ' * verdict, the browser is at rest, and nothing of the consuming step has',
       ' * run when this throws.',
+      ' *',
+      ' * What it says about the LOG is checked against the log (skippedReads): an',
+      ' * unpublished reference whose producing step never skipped a read has a',
+      ' * different cause and a different fix, and pointing at a line that was',
+      ' * never printed costs a diagnosis (grafana fwgr47).',
       ' */',
       'function need(outputs: Outputs, ref: string, by: string): string {',
       '  const value = outputs[ref as keyof Outputs];',
       "  if (value === undefined || value === '') {",
+      "    const dot = ref.indexOf('.');",
+      '    const sid = dot < 0 ? ref : ref.slice(0, dot);',
+      '    const skips = skippedReads.filter((w) => w === sid || w.startsWith(`${sid} `));',
+      '    const trail = skips.length',
+      '      ? `The step that publishes ${ref} read nothing — look above for its \\`[sitelooper skip]\\` line` +',
+      '        ` (${skips[0]}), which is where this run diverged.`',
+      '      : `No \\`[sitelooper skip]\\` line was logged for ${sid} on this run, so no read of ${ref} was even` +',
+      '        ` attempted: check that ${sid} is a step of this flow and that it is the step that publishes` +',
+      '        ` this value, rather than re-recording a read that may be working.`;',
       '    throw new Error(',
       '      `${by} needs {{${ref}}}, and this run never published it` +',
       "        (value === '' ? ' (it was published empty)' : '') +",
-      '        `. The step that publishes ${ref} read nothing — look above for its` +',
-      '        ` \\`[sitelooper skip] … read target not found\\` line, which is where this run` +',
-      '        ` diverged. Stopping here instead of passing an empty value into ${by}:` +',
+      '        `. ${trail}` +',
+      '        ` Stopping here instead of passing an empty value into ${by}:` +',
       '        ` blank, a record-scoped locator matches every record and a known slot loses` +',
       '        ` its identity, so the step would do its work to the wrong one. Everything` +',
       '        ` earlier steps did stands; nothing of ${by} has run.`,',
@@ -1679,9 +1710,118 @@ function openerExpectations(step: SkillStep): string[] {
  * One recorded step as source. `first` marks a loop body, where every target
  * is taken at its first match (see emitLoop).
  */
-function emitSkillStep(step: SkillStep, segment: SpecSegment, index: number, ctx: Ctx, first = false): string[] {
+/** Every `{{vN}}`/`{{dN}}` slot a value names, anywhere inside it. */
+function slotsNamed(value: unknown, out: Set<string> = new Set()): Set<string> {
+  if (typeof value === 'string') {
+    for (const m of value.matchAll(/\{\{([vd]\d+)\}\}/g)) out.add(m[1]);
+    return out;
+  }
+  if (Array.isArray(value)) for (const v of value) slotsNamed(v, out);
+  else if (value && typeof value === 'object') for (const v of Object.values(value as Record<string, unknown>)) slotsNamed(v, out);
+  return out;
+}
+
+/**
+ * Whether the artifact can have put a value in `slot` by the time step `index`
+ * acts: it is one of the segment's caller params (which `callArgs` always
+ * passes, even as a blank), or an EARLIER step mints it (`bindPart` runs after
+ * its own step's action, so a step cannot consume what it mints).
+ */
+function fillableSlot(slot: string, segment: SpecSegment, index: number): boolean {
+  if (slot in segment.params) return true;
+  const derived = segment.derived?.[slot];
+  return Boolean(derived && derived.step < index);
+}
+
+/** A recorded chain less the rungs the artifact could not fill — the shared fillableChain's compile-time twin. */
+function fillableRungs(chain: readonly unknown[] | undefined, segment: SpecSegment, index: number): unknown[] {
+  return (chain ?? []).filter((rung) => [...slotsNamed(rung)].every((slot) => fillableSlot(slot, segment, index)));
+}
+
+/**
+ * Why a step that ACTS cannot be compiled, or null when nothing stops it —
+ * the compile-time reading of the shared `unfilledStepVerdict`, split the same
+ * way:
+ *  - its ARGS carry the value it acts WITH. A slot nothing can fill is fatal:
+ *    there is no second choice, and the artifact would type the literal
+ *    `{{v2}}` into a live field or navigate to it.
+ *  - a LOCATOR CHAIN is how it names WHAT to act on, best first. A rung naming
+ *    an unfillable slot — odoo fwod34's `#name_{{d2}}`, where d2 is a
+ *    url-pattern wildcard and never a value — is an exhausted preference: it
+ *    is dropped from the emitted chain and the `role`/`placeholder` rungs
+ *    behind it take the step, exactly as they were recorded to. Only a chain
+ *    with no rung left is fatal, and then because the step has no way to find
+ *    its target, not because a marker survived.
+ *
+ * Daemon replay meets the same condition at run time and hands the step to the
+ * model; a compiled artifact has no model to hand it to, so it refuses here,
+ * where there is still somebody to tell — the trade the artifact already makes
+ * for an unsourced ref.
+ *
+ * Only steps that act: a read, a wait or a check carrying an unfilled marker
+ * keeps the "asks for no particular value" reading every marker gate takes.
+ */
+function unfillableStep(step: SkillStep, segment: SpecSegment, index: number): { where: string; slots: string[] } | null {
+  if (!isMutatingAction(step.tool) && step.tool !== 'goto') return null;
+  const dead = (value: unknown): string[] => [...slotsNamed(value)].filter((slot) => !fillableSlot(slot, segment, index));
+  const inArgs = dead(step.args);
+  if (inArgs.length) return { where: 'args', slots: inArgs };
+  for (const [key, chain] of Object.entries(step.locators ?? {})) {
+    if (!chain?.length || fillableRungs(chain, segment, index).length) continue;
+    return { where: key, slots: dead(chain) };
+  }
+  return null;
+}
+
+/**
+ * The step as the artifact should carry it: every locator rung the artifact
+ * could never fill dropped, so the emitted chain holds only rungs that can
+ * match. Acting steps only — a read or a wait keeps its chain as recorded,
+ * where an unfillable rung costs a resolve attempt and nothing else.
+ */
+function withLiveRungs(step: SkillStep, segment: SpecSegment, index: number): SkillStep {
+  if (!isMutatingAction(step.tool) && step.tool !== 'goto') return step;
+  let changed = false;
+  const locators: Record<string, unknown[]> = {};
+  for (const [key, chain] of Object.entries(step.locators ?? {})) {
+    const live = fillableRungs(chain, segment, index);
+    if (live.length !== (chain ?? []).length) changed = true;
+    locators[key] = live;
+  }
+  return changed ? ({ ...step, locators } as unknown as SkillStep) : step;
+}
+
+function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number, ctx: Ctx, first = false): string[] {
   ctx.segmentId = segment.id;
   ctx.stepIndex = index;
+  const unfillable = unfillableStep(recorded, segment, index);
+  if (unfillable) {
+    const named = unfillable.slots.map((s) => `{{${s}}}`).join(', ');
+    const one = unfillable.slots.length === 1;
+    const inArgs = unfillable.where === 'args';
+    ctx.diagnostics.push({
+      code: 'unfilled-slot',
+      step: ctx.stepId,
+      what: inArgs
+        ? `${segment.id} step ${index} (${recorded.tool}) acts on ${named}, and nothing can fill ${one ? 'it' : 'them'} by the time it acts`
+        : `${segment.id} step ${index} (${recorded.tool}) has no locator left for its ${unfillable.where}: every recorded one names ${named}, which nothing can fill`,
+      why: inArgs
+        ? `${named} ${one ? 'is not a caller parameter' : 'are not caller parameters'} of ${segment.id}, and no step before step ${index} mints ${one ? 'it' : 'them'}, so the artifact has no value to substitute. ` +
+          `fillParams leaves an unfilled marker standing, which is the right reading for a CHECK ("asks for no particular value") and the wrong one for the value an action carries: ` +
+          `this step would ${recorded.tool === 'goto' ? 'navigate to a url still spelling' : recorded.tool + ' '}the literal text ${named}. ` +
+          `Daemon replay meets the same condition at run time and hands the step to the model; a compiled artifact has no model to hand it to.`
+        : `A locator chain is a preference order, and a rung naming a slot nothing can fill is dropped rather than tried. Every recorded rung for ${unfillable.where} names ${named}, ` +
+          `so the step has no way left to name the element it acts on. Daemon replay drops the same rungs and falls back to the model only when none survive.`,
+      fix: inArgs
+        ? `re-record ${ctx.stepId} so ${named} is read before step ${index} (\`sitelooper rerecord <flow file> ${ctx.stepId}\`), or take ${named} out of the step's ${recorded.tool === 'goto' ? 'url' : 'text'}`
+        : `re-record ${ctx.stepId} so step ${index} names its ${unfillable.where} by something this run has (\`sitelooper rerecord <flow file> ${ctx.stepId}\`)`,
+      action: { command: 'rerecord', args: [ctx.stepId], step: ctx.stepId },
+      severity: 'error',
+    });
+  }
+  // Every locator rung the artifact could never fill is dropped before
+  // emission: it could only ever waste a resolve attempt (see withLiveRungs).
+  const step = withLiveRungs(recorded, segment, index);
   const urlBefore = `urlBefore${++ctx.urls}`;
   // The page-change gate sharpens on a positional resolution, so a step that
   // carries one is given a flag its resolution reports into (see actionTarget).
@@ -2551,19 +2691,38 @@ function identityChecks(segment: SpecSegment, ctx: Ctx): string[] {
     // stale, not another record, and warns — replay's same shared verdict
     // (identityMarkerVerdict, src/execution/gates.ts; fwgr39-n3 05-set refused
     // the right dashboard on "Last 6 hours"). Asked once there, as replay asks.
+    //
+    // And the poll's EXHAUSTED branch ends in that same verdict, never in a
+    // bare throw. The escape hatch was unavailable at the first look for a
+    // reason that expires: fwgr47-n2's app had not yet written the pattern's
+    // bound query keys into its url, so urlDiff — and with it urlRecordParts —
+    // said null. Asking again once the budget is spent reads the POST-WAIT
+    // url, which is the whole point of having waited. Without it the artifact
+    // stopped exactly where replay (checkIdentity, src/skills/replay.ts) warns
+    // and proceeds: a live parity divergence in the window "the marker never
+    // renders AND the url only names the record after the wait".
+    //
+    // IDENTITY_WAIT_MS / IDENTITY_POLL_MS come from the shared module this
+    // file embeds, not from a private literal beside it: two literals of one
+    // budget is how the original divergence survived unnoticed.
     const pattern = q(segment.preconditions.urlPattern);
     noteSlots(segment.preconditions.urlPattern, ctx);
     const where = `${ctx.stepId} ${segment.id}`;
     out.push(
-      `if (urlRecordParts(${pattern}, page.url(), p)) {`,
-      `  const seen = await confirmPresence(page, [${src(marker)}], 2, { whole: true });`,
-      `  const verdict = identityMarkerVerdict(${pattern}, page.url(), p, ${src(marker)}, seen.presence);`,
-      `  if (verdict.warning) logWarning(${q(`${where}: `)} + verdict.warning);`,
-      `  if (!verdict.pass) throw new Error(${q(`${where}: identity: ${commentSafe(marker)} is not confirmed on this page`)});`,
-      '} else {',
-      `  await expect.poll(async () => (await confirmPresence(page, [${src(marker)}], 2, { whole: true })).presence, { timeout: ${IDENTITY_WAIT_MS}, message: ${q(
-        `identity: ${commentSafe(marker)} is not confirmed on this page`,
-      )} }).toBe('present');`,
+      '{',
+      `  let seen = await confirmPresence(page, [${src(marker)}], 2, { whole: true });`,
+      `  if (!urlRecordParts(${pattern}, page.url(), p)) {`,
+      '    const deadline = Date.now() + IDENTITY_WAIT_MS;',
+      "    while (seen.presence !== 'present' && Date.now() < deadline) {",
+      '      await new Promise((r) => setTimeout(r, Math.max(1, Math.min(IDENTITY_POLL_MS, deadline - Date.now()))));',
+      `      seen = await confirmPresence(page, [${src(marker)}], 2, { whole: true });`,
+      '    }',
+      '  }',
+      "  if (seen.presence !== 'present') {",
+      `    const verdict = identityMarkerVerdict(${pattern}, page.url(), p, ${src(marker)}, seen.presence);`,
+      `    if (verdict.warning) logWarning(${q(`${where}: `)} + verdict.warning);`,
+      `    if (!verdict.pass) throw new Error(${q(`${where}: identity: ${commentSafe(marker)} is not confirmed on this page`)});`,
+      '  }',
       '}',
     );
   }
@@ -2767,7 +2926,7 @@ function usedSlot(step: SpecStep, slot: string): boolean {
  * body's), a report value the caller's `{{vN}}` reaches, and the url parts.
  * A ref a stand-in can fill never reaches here; callArgs tries that first.
  */
-function unsourcedRef(spec: SpecFlow, ref: string): { sid: string; output: string; kind: 'unproven' | 'none' } | null {
+function unsourcedRef(spec: SpecFlow, ref: string): { sid: string; output: string; kind: 'unproven' | 'none' | 'dangling' } | null {
   const dot = ref.indexOf('.');
   if (dot < 0) return null;
   const sid = ref.slice(0, dot);
@@ -2775,9 +2934,19 @@ function unsourcedRef(spec: SpecFlow, ref: string): { sid: string; output: strin
   // out of a body; neither is a read's label. `#` is stripped because the
   // read that publishes `body` is what sources `body#task.id`.
   const output = ref.slice(dot + 1).split('#')[0];
-  if (output === 'url' || output.startsWith('url.') || output === 'minted') return null;
   const producer = spec.steps.find((s) => s.id === sid);
-  if (!producer) return null;
+  // A reference naming NO step of the flow was waved through here while a
+  // producer that merely cannot publish was refused — the exemption ran the
+  // wrong way round. grafana fwgr47's compiled arm stopped at
+  // `07-verify needs {{i2.dashboard_title_saved}}`: the read is fine and does
+  // publish, as `02-create.dashboard_title_saved`, but `i2` is a ledger
+  // instruction-index id and nothing ever assigns `outputs['i2.…']`. Nothing
+  // can: every site that writes `outputs[...]` in the emitted file is keyed by
+  // a step of `spec.steps` — the url publisher (urlOutputLines, emitted per
+  // step) included, which is why this is asked BEFORE the url/minted
+  // exemptions. So it is the worst case of the three, not an exempt one.
+  if (!producer) return { sid, output, kind: 'dangling' };
+  if (output === 'url' || output.startsWith('url.') || output === 'minted') return null;
   let reads = 0;
   let proven = 0;
   const walk = (steps: SkillStep[]): void => {
@@ -2856,6 +3025,25 @@ function callArgs(step: SpecStep, slots: string[], vars: Set<string>, warnings: 
         for (const m of bound.matchAll(/\{\{([\w-]+\.[\w.#-]+)\}\}/g)) {
           const src = unsourcedRef(spec, m[1]);
           if (!src) continue;
+          // Its own wording, because its own repair: there is no read to
+          // re-record — the reference is simply pointed at something that is
+          // not a step. Naming the ids that DO exist is the whole fix in one
+          // line (fwgr47: `i2` for `02-create`).
+          if (src.kind === 'dangling') {
+            const ids = spec.steps.map((s) => s.id);
+            diagnostics.push({
+              code: 'unsourced-ref',
+              step: step.id,
+              what: `slot ${slot} is bound to {{${m[1]}}}, and this flow has no step ${src.sid}`,
+              why:
+                `${src.sid} is not one of this flow's steps (${ids.join(', ')}), so nothing in the artifact can ever publish ${m[1]} — ` +
+                `every value a step reads, mints or takes off the url is published under a step id from that list. ` +
+                `${step.id} types or locates by ${slot}, so the artifact would stop here on every run, part-way through the flow and with everything earlier already done.`,
+              fix: `bind ${step.id}'s ${slot} to the step that publishes ${src.output} (one of: ${ids.join(', ')}), or take {{${m[1]}}} out of it`,
+              severity: 'error',
+            });
+            continue;
+          }
           const because =
             src.kind === 'unproven'
               ? `${src.sid}'s only source for ${src.output} is a read the flow export synthesized from the value the recording reported — no run has resolved it or read a value back through it.`

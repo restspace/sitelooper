@@ -531,6 +531,80 @@ export function flattenComposedValues(report: Report): string[] {
   return added;
 }
 
+/**
+ * Candidate boundaries inside a value the model JOINED out of several page
+ * values. Comma and semicolon are what a model reaches for first; `/` and the
+ * en/em dashes are the other separators seen in reports, and a newline or tab
+ * is a pasted list.
+ *
+ * These are candidates only — nothing here decides anything. The split is
+ * committed by the PAGE (see flattenProvenComposite), so a decimal comma
+ * ("1,599.00") or a comma-joined sentence simply fails to pin and stays whole.
+ */
+const COMPOSED_SEPARATOR = /\s*[,;|/–—]\s*|[\n\t]+/;
+
+/**
+ * The delimiter-joined sibling of `flattenComposedValues`: same "a composite is
+ * really several values" rule in the notation a model uses when it does not
+ * reach for JSON.
+ *
+ * kanboard fwkb17: 01-open reported
+ * `columns_left_to_right = "Backlog, Ready, Work in progress, Done"` where the
+ * previous round's agent reported four scalars. No element shows the joined
+ * string, so `captureReadBack` pinned nothing, no read got a label,
+ * `liveReadsFor` found no snapshot line with that accessible name and
+ * `pruneUnsourcedOutputs` correctly dropped the outputs — both replays scored
+ * 5/6 (`obj 1: FAIL — column(s) not in report: Ready, Done`) against the
+ * recording's 6/6, with no code change between the rounds.
+ *
+ * Shape is NOT the gate: `pin` is, and the caller hands it `captureReadBack`
+ * against the live recording page. The split is committed only when EVERY part
+ * independently pins, so the parts become real `(read-back)` reads — resolved
+ * once, on a real page, at record time — rather than `unproven` `@synth` ones.
+ * A comma-joined prose sentence pins nothing and is left exactly as it was.
+ *
+ * The cap and the positional naming are `flattenComposedValues`' own: parts run
+ * through the same two-level `leavesOf` and the same MAX_LEAVES bound, so
+ * `columns_left_to_right` becomes `columns_left_to_right_1…_4`.
+ *
+ * Returns the names added and whatever `pin` produced for each (the caller's
+ * recorded steps), or two empty lists when the page did not vouch for the
+ * split. Mutates the report only on commit.
+ */
+export async function flattenProvenComposite<T>(
+  report: Report,
+  key: string,
+  pin: (value: string, name: string) => Promise<T | null>,
+): Promise<{ names: string[]; pinned: T[] }> {
+  const empty = { names: [] as string[], pinned: [] as T[] };
+  const values = report.evidence?.values;
+  const raw = values?.[key];
+  if (!values || typeof raw !== 'string') return empty;
+  const parts = raw.split(COMPOSED_SEPARATOR).map((s) => s.trim()).filter(Boolean);
+  // One part is not a join; more than MAX_LEAVES is a table, not a record.
+  if (parts.length < 2 || parts.length > MAX_LEAVES) return empty;
+  const leaves = leavesOf(parts);
+  if (leaves.length < 2 || leaves.length > MAX_LEAVES) return empty;
+  const pending: Record<string, string> = {};
+  const names: string[] = [];
+  const pinned: T[] = [];
+  for (const [path, value] of leaves) {
+    // Against values AND the siblings staged so far: two parts of one
+    // composite must not claim the same name.
+    const name = uniqueName(`${key}_${slug(path)}`, { ...values, ...pending });
+    const got = await pin(value, name);
+    if (!got) return empty; // one part the page does not show ends the split
+    pending[name] = value;
+    names.push(name);
+    pinned.push(got);
+  }
+  // Only now, with every part proven: drop the composite (keeping it would
+  // leave the unreferencable form available to reference) and publish the parts.
+  delete values[key];
+  Object.assign(values, pending);
+  return { names, pinned };
+}
+
 /** Scalar leaves of a parsed value, two levels deep, as [path, text] pairs. */
 function leavesOf(node: unknown, prefix = '', depth = 0): [string, string][] {
   if (node === null || typeof node !== 'object') {

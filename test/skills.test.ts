@@ -12,6 +12,7 @@ import { recordCandidateEvidence, retired } from '../src/skills/repair.js';
 import { SkillStore } from '../src/skills/store.js';
 import { type TransformNote, coalesceControls, compileSkill, dropDeadReadLocators, dropDismissedDialogs, dropSupersededNavigation, compileSkills, discoverSlots, fillParams, fillParamsDeep, foldLoops, sameProcedure, softUrlMatch, stableFirst, substitute, substituteUrlId, substituteUrlParts, urlDiff, urlMatches, urlOriginPositions, urlParts, urlPattern } from '../src/skills/compile.js';
 import { mintedShape } from '../src/execution/url.js';
+import { identityMarkerVerdict, markersBound } from '../src/execution/gates.js';
 import { observedChange } from '../src/execution/lifecycle.js';
 import type { LocatorCandidate } from '../src/daemon/recorder.js';
 import type { SkillStep } from '../src/skills/store.js';
@@ -2243,5 +2244,81 @@ describe("a step's expectation is only what the step itself put there (fwod49)",
     expect(added.some((l) => /^- option .*\{\{v\d+\}\}/.test(l))).toBe(false);
     // the popup's opening is still the evidence
     expect(added).toContain('- menu ""');
+  });
+});
+
+describe('adjacent slots are not split on a guess (fwod55)', () => {
+  // bindSkill reads only these two fields, so the fixtures say only what the
+  // defect is about: the template's shape and what the recording observed.
+  const skillOf = (template: string, params: Record<string, { example: string; binding?: string }>): Skill =>
+    ({ template, params: Object.fromEntries(Object.entries(params).map(([n, p]) => [n, { usedIn: [1], ...p }])) }) as unknown as Skill;
+
+  const TEMPLATE = 'Open the confirmed {{v1}} {{v2}} and cancel it.';
+  const INSTR = 'Open the confirmed Sales Order S00024 and cancel it.';
+
+  it('places the boundary where the recorded example does, not where the regex stops', () => {
+    // The whole defect: the non-greedy split gave v1="Sales", v2="Order S00024",
+    // no page ever showed "Order S00024", and all three arms hard-stopped on the
+    // RIGHT record leaving the order uncancelled.
+    const skill = skillOf(TEMPLATE, {
+      v1: { example: 'Sales Order' },
+      v2: { example: 'S00021', binding: 'output:03-create:quotation_reference' },
+    });
+    expect(bindSkill(skill, INSTR)).toEqual({ v1: 'Sales Order', v2: 'S00024' });
+  });
+
+  it('a value this run published outranks the minimal split even with no usable example', () => {
+    const skill = skillOf(TEMPLATE, {
+      v1: { example: 'was something else entirely' },
+      v2: { example: 'S00021', binding: 'output:03-create:quotation_reference' },
+    });
+    const bound = bindSkill(skill, INSTR, { 'output:03-create:quotation_reference': 'S00024' });
+    expect(bound).toEqual({ v1: 'Sales Order', v2: 'S00024' });
+  });
+
+  it('refuses a split nothing vouches for, leaving those slots unbound rather than guessing', () => {
+    const skill = skillOf(TEMPLATE, { v1: { example: 'no' }, v2: { example: 'match' } });
+    const bound = bindSkill(skill, INSTR);
+    // The skill still binds — the step costs a model turn instead of stopping
+    // the flow on the right record — but the ambiguous slots carry no value, so
+    // every marker over them is unbound and proves nothing.
+    expect(bound).toEqual({});
+    expect(fillParams('{{v2}}', bound!)).toBe('{{v2}}');
+    expect(markersBound(['{{v2}}'], bound!)).toBe(false);
+  });
+
+  it('does not touch slots the template separates by real text', () => {
+    const skill = skillOf('Open the confirmed {{v1}} named {{v2}} and cancel it.', {
+      v1: { example: 'no' },
+      v2: { example: 'match' },
+    });
+    expect(bindSkill(skill, 'Open the confirmed Sales Order named S00024 and cancel it.')).toEqual({
+      v1: 'Sales Order',
+      v2: 'S00024',
+    });
+  });
+
+  it('an unambiguous one-token-per-slot split needs no evidence', () => {
+    const skill = skillOf('Open {{v1}} {{v2}}.', { v1: { example: 'a' }, v2: { example: 'b' } });
+    expect(bindSkill(skill, 'Open x y.')).toEqual({ v1: 'x', v2: 'y' });
+  });
+
+  it('still hard-stops on a genuinely wrong record', () => {
+    // On odoo the url is `id=:id` throughout, so urlRecordParts returns null and
+    // the marker is the only identity there is. With v2 correctly bound to
+    // S00024 (the fix above), landing on S00019 must still stop the step.
+    const skill = skillOf(TEMPLATE, {
+      v1: { example: 'Sales Order' },
+      v2: { example: 'S00021', binding: 'output:03-create:quotation_reference' },
+    });
+    const params = bindSkill(skill, INSTR)!;
+    const marker = '{{v2}}';
+    expect(markersBound([marker], params)).toBe(true); // bound, so it is asked
+    const want = fillParams(marker, params);
+    expect(want).toBe('S00024');
+    // The page shows S00019: the marker is absent, and the url cannot excuse it.
+    const pattern = `${ORIGIN}/web#cids=1&model=sale.order&view_type=form&id=:id`;
+    const verdict = identityMarkerVerdict(pattern, `${ORIGIN}/web#cids=1&model=sale.order&view_type=form&id=19`, params, want, 'absent');
+    expect(verdict.pass).toBe(false);
   });
 });

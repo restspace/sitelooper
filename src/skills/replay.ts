@@ -1,7 +1,7 @@
 import { changedCreation, dispatchesFirstMatch, isMutatingAction, isReadAction, runStepLifecycle, spansEveryMatch, type StepActionResult } from '../execution/lifecycle.js';
 import { outcomeLabel, outcomeOfError, type ActionOutcome } from '../execution/browser.js';
 import type { ActionExpectation } from '../execution/action.js';
-import { SOFT_MATCH_MIN_SIMILARITY, alertVerdict, errorPageVerdict, gotoLandingVerdict, identityMarkerVerdict, isErrorPageUrl, landedOnRecordedPage, markersBound, preconditionVerdict, retargetNavigation, segmentGate, urlEffectVerdict } from '../execution/gates.js';
+import { IDENTITY_POLL_MS, IDENTITY_WAIT_MS, SOFT_MATCH_MIN_SIMILARITY, alertVerdict, errorPageVerdict, gotoLandingVerdict, identityMarkerVerdict, isErrorPageUrl, landedOnRecordedPage, markersBound, preconditionVerdict, retargetNavigation, segmentGate, fillableChain, unfilledStepVerdict, urlEffectVerdict, urlRecordParts } from '../execution/gates.js';
 import type { UrlSegDiff } from '../execution/url.js';
 import { LOOP_SHRINK_WAIT_MS, pageReadable, runFoldedLoop, type LoopPass } from '../execution/loop.js';
 import type { Locator, Page } from 'playwright-core';
@@ -348,12 +348,38 @@ export async function replaySkill(
       // virtualised list) sweeps the page once and asks again; still unknown
       // is a refusal of its own, NOT a wrong record: nothing showed a
       // different record, only that this one could not be confirmed.
-      const seen = await confirmPresence(page, [want], 2, { whole: true });
+      //
+      // Waited for, not asked once: a page that has not finished arriving
+      // cannot say which record it is. The compiled artifact already polls
+      // IDENTITY_WAIT_MS here (emit.ts identityChecks) whenever the live url
+      // does not already name this run's record; replay looked exactly once,
+      // and fwgr47-n2 07-verify stopped on the RIGHT dashboard (that run's
+      // own verifier: "obj 6: PASS — uid bfyfuaptu20aoa reported") because
+      // step 1 was a goto to a BARE dashboard url grafana normalises a moment
+      // later. Replay looked during the boot and the flow fell back 21 turns.
+      // Same budget, same condition, so the two runners decide alike
+      // (test/execution-parity.test.ts).
+      const pattern = skill.preconditions.urlPattern;
+      const urlNamesRecord = Boolean(urlRecordParts(pattern, page.url(), params));
+      let seen = await confirmPresence(page, [want], 2, { whole: true });
+      if (!urlNamesRecord) {
+        const deadline = Date.now() + identityWaitMs();
+        while (seen.presence !== 'present' && Date.now() < deadline) {
+          await new Promise((r) => setTimeout(r, Math.max(1, Math.min(IDENTITY_POLL_MS, deadline - Date.now()))));
+          seen = await confirmPresence(page, [want], 2, { whole: true });
+        }
+      }
       if (seen.presence === 'present') continue;
       // A url that already names this run's record answers the question the
       // marker was asking; a marker missing there is stale, not another record
       // (fwgr39-n3 05-set). Shared with the compiled spec (identityMarkerVerdict).
-      const verdict = identityMarkerVerdict(skill.preconditions.urlPattern, page.url(), params, want, seen.presence);
+      //
+      // Read HERE, after the wait, never at the first look: fwgr47-n2's url
+      // carried neither of the pattern's bound query keys while the app was
+      // still rewriting it, which is the one reason urlRecordParts failed —
+      // and it is a reason that expires. A url naming another record does not
+      // expire, so this re-ask can only rescue the page that had not arrived.
+      const verdict = identityMarkerVerdict(pattern, page.url(), params, want, seen.presence);
       if (verdict.pass) {
         if (verdict.warning) res.warnings.push(verdict.warning);
         continue;
@@ -441,6 +467,31 @@ export async function replaySkill(
     ambiguousNth?: number,
   ): Promise<'ran' | 'skipped' | 'stop'> => {
     const args = fillParamsDeep(step.args, params) as Record<string, unknown>;
+    // A slot the run could not fill "asks for no particular value" — the
+    // reading every marker gate here already takes (markersBound,
+    // urlRecordParts, gotoLandingVerdict). It is the right reading for a
+    // CHECK and the wrong one for an ACTION: fillParams leaves `{{v2}}`
+    // standing, so a type would put those five characters into a live field
+    // and a locator would hunt the page for them. bindSkill now leaves two
+    // adjacent slots UNBOUND rather than guess where one ends, so this is a
+    // reachable state, not a theoretical one.
+    //
+    // Not a hard stop — a fallback, like every other replay stop: the step is
+    // handed to the model, which is the whole point of the trade that made
+    // the slots unbound. Reads, waits and checks are untouched; they keep the
+    // "asks for nothing" reading. The locator chains go in unfilled because
+    // the shared predicate keys on membership in `params`, never on what the
+    // text looks like, so filling them first could not change its answer.
+    const acts = isMutatingAction(step.tool) || step.tool === 'goto';
+    if (acts) {
+      const unfilled = unfilledStepVerdict({ args, locators: step.locators }, params, `step ${tag}`);
+      if (unfilled) {
+        res.failedAt = failIndex;
+        res.reason = `${unfilled} — nothing was dispatched`;
+        res.lines.push(`${tag}. ${step.tool} → FAILED: ${unfilled}`);
+        return 'stop';
+      }
+    }
     // A recorded goto target is a literal from the RECORDING's run. Where this
     // replay has already watched one of its positions vary, the shared verdict
     // sends the browser to the live value instead — and says so when it cannot,
@@ -501,8 +552,15 @@ export async function replaySkill(
     let frameMissed = false;
     for (const key of ['target', 'source'] as const) {
       if (!(key in args)) continue;
-      const chain = (fillParamsDeep(step.locators[key] ?? [], params) as LocatorCandidate[]) ?? [];
-      const identity = identityOfPrimary(step.locators[key] ?? [], skill, params);
+      // A chain is a PREFERENCE ORDER, not a conjunction (shared fillableChain):
+      // a rung naming a slot this run could not fill — fwod34's `#name_{{d2}}`,
+      // where d2 is a url-pattern wildcard and never a value — can only ever
+      // waste a resolve attempt, so it is dropped and the rungs behind it take
+      // the step. A chain with no live rung left never reaches here: the verdict
+      // above stopped the step, and only for a step that acts.
+      const recorded = acts ? fillableChain(step.locators[key] ?? [], params) : (step.locators[key] ?? []);
+      const chain = (fillParamsDeep(recorded, params) as LocatorCandidate[]) ?? [];
+      const identity = identityOfPrimary(recorded, skill, params);
       // An absence wait allows several matches too: a chain that still
       // matches two visible elements has NOT met "hidden", and reading the
       // policy's 'ambiguous' miss as "nothing matched → condition met" was a
@@ -1405,6 +1463,16 @@ function heldObservations(page: Root, chain: LocatorCandidate[]): { index: numbe
 function resolveWaitMs(): number {
   const raw = Number(process.env.SITELOOPER_RESOLVE_WAIT_MS);
   return Number.isFinite(raw) && raw >= 0 ? raw : RESOLVE_WAIT_MS;
+}
+
+/**
+ * How long checkIdentity waits for a bound marker (the artifact's shared
+ * IDENTITY_WAIT_MS), overridable exactly as the resolve budget is — a unit
+ * test that drives a stub page has no page to wait for.
+ */
+function identityWaitMs(): number {
+  const raw = Number(process.env.SITELOOPER_IDENTITY_WAIT_MS);
+  return Number.isFinite(raw) && raw >= 0 ? raw : IDENTITY_WAIT_MS;
 }
 // The locator chain has no single DOM condition to wait on — each rung is a
 // different candidate and the preference order has to be re-read as a whole

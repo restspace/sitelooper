@@ -15,6 +15,8 @@ import {
   alertVerdict,
   dependsOnPage,
   describeUrl,
+  IDENTITY_POLL_MS,
+  IDENTITY_WAIT_MS,
   errorPageVerdict,
   gotoLandingVerdict,
   identityMarkerVerdict,
@@ -25,6 +27,9 @@ import {
   retargetNavigation,
   segmentGate,
   shownPattern,
+  fillableChain,
+  unfilledSlots,
+  unfilledStepVerdict,
   urlEffectVerdict,
   urlRecordParts,
 } from '../src/execution/gates.js';
@@ -32,6 +37,8 @@ import { liveAlerts, liveAlertsObserved } from '../src/execution/observe.js';
 import { SHADOW_LIMITS, SNAPSHOT_LIMITS, observeDocumentInPage } from '../src/execution/snapshot.js';
 import { documentOf } from './fixture/observation.js';
 import { flowToSpec, unmeasuredPreconditionDiagnostic } from '../src/spec/ir.js';
+import { emitFlowFile } from '../src/spec/emit.js';
+import type { SpecFlow } from '../src/spec/ir.js';
 import { FINGERPRINT_DIMS, cosine } from '../src/execution/fingerprint.js';
 import type { Flow } from '../src/skills/flow.js';
 import { SkillStore, type Skill } from '../src/skills/store.js';
@@ -674,6 +681,64 @@ describe('urlRecordParts / identityMarkerVerdict (fwgr39-n3 05-set: a stale mark
     expect(identityMarkerVerdict('http://x.test/rec/:id', 'http://x.test/rec/44', {}, 'Record 45', 'absent')).toEqual({ pass: false });
     expect(identityMarkerVerdict('http://x.test/rec/:id', 'http://x.test/rec/44', {}, 'Record 45', 'unknown')).toEqual({ pass: false });
   });
+
+  /**
+   * fwgr47-n2 07-verify: the url escape hatch was unavailable in the instant
+   * replay looked. `boundQueryKeys` of that pattern is {from, to}; step 1 had
+   * just `goto`-ed a BARE dashboard url carrying neither, so urlDiff said null
+   * and urlRecordParts had nothing to offer — on the RIGHT dashboard. The
+   * reason EXPIRES: grafana normalises its own address bar a moment later.
+   * So the verdict must be asked of the url AFTER the identity wait, and the
+   * same url then answers.
+   */
+  it('answers once the app has finished writing the url it had not written yet', () => {
+    // fwgr47's own pattern: its time range was RECORDED as values, so `from`
+    // and `to` are bound query keys — the pair the bare url lacks.
+    const BOOTING = 'http://127.0.0.1:3000/d/:var/{{v2}}-bench-dashboard?from={{d1}}&timezone=browser&to={{d2}}';
+    const p = { v2: 'fwgr47-n2', d1: 'now-6h', d2: 'now' };
+    const boot = 'http://127.0.0.1:3000/d/bfyfuaptu20aoa/fwgr47-n2-bench-dashboard';
+    expect(urlRecordParts(BOOTING, boot, p)).toBeNull();
+    expect(identityMarkerVerdict(BOOTING, boot, p, 'fwgr47-n2 Bench Dashboard', 'absent')).toEqual({ pass: false });
+    const normalised = `${boot}?from=now-6h&timezone=browser&to=now`;
+    expect(urlRecordParts(BOOTING, normalised, p)).toEqual(['path[2]=fwgr47-n2-bench-dashboard', 'from=now-6h', 'to=now']);
+    expect(identityMarkerVerdict(BOOTING, normalised, p, 'fwgr47-n2 Bench Dashboard', 'absent').pass).toBe(true);
+    // Waiting cannot rescue a url that names ANOTHER record: that is not a
+    // reason that expires, so the marker goes on deciding.
+    const other = 'http://127.0.0.1:3000/d/bfyfuaptu20aoa/fwgr47-n3-bench-dashboard?from=now-6h&timezone=browser&to=now';
+    expect(identityMarkerVerdict(BOOTING, other, p, 'fwgr47-n2 Bench Dashboard', 'absent')).toEqual({ pass: false });
+  });
+
+  /**
+   * MUST STILL CATCH (odoo). Its url is `id=:id` and `model=sale.order`
+   * throughout: nothing in the pattern is MARKED, so no url, at any moment of
+   * any wait, names the record — the marker is the only identity there is, and
+   * asking the url again changes nothing whatsoever there.
+   */
+  it('names no record where no url part is marked, however often it is asked', () => {
+    const ODOO = 'http://127.0.0.1:8069/odoo/sales/:id#id=:id&model=sale.order';
+    const p = { v2: 'S00024' };
+    for (const live of [
+      'http://127.0.0.1:8069/odoo/sales/19',
+      'http://127.0.0.1:8069/odoo/sales/19#id=19&model=sale.order',
+      'http://127.0.0.1:8069/odoo/sales/19#id=19&model=sale.order&cids=1&menu_id=9',
+    ]) {
+      expect(urlRecordParts(ODOO, live, p)).toBeNull();
+      expect(identityMarkerVerdict(ODOO, live, p, 'Sales Order S00024', 'absent')).toEqual({ pass: false });
+      expect(identityMarkerVerdict(ODOO, live, p, 'Sales Order S00024', 'unknown')).toEqual({ pass: false });
+    }
+  });
+
+  /**
+   * One budget, stated once: the artifact polls it (spec/emit.ts
+   * identityChecks) and daemon replay polls it (skills/replay.ts
+   * checkIdentity). A budget that differed between them would be a rule only
+   * one runner applies — the class the parity harness exists to catch.
+   */
+  it('states the identity wait both runners use', () => {
+    expect(IDENTITY_WAIT_MS).toBe(5_000);
+    expect(IDENTITY_POLL_MS).toBeGreaterThan(0);
+    expect(IDENTITY_POLL_MS).toBeLessThan(IDENTITY_WAIT_MS);
+  });
 });
 
 describe('the page fingerprint at compile, and the unmeasured-precondition diagnostic', () => {
@@ -741,5 +806,158 @@ describe('the page fingerprint at compile, and the unmeasured-precondition diagn
       }),
     );
     expect(unmeasuredPreconditionDiagnostic('01-do', 's_fp').fix).toMatch(/recompile/);
+  });
+});
+
+/**
+ * A slot the run could not fill: "asks for no particular value" is right for a
+ * CHECK and wrong for an ACTION. The predicate itself only answers which slots
+ * are missing; which steps may not act on one is the caller's question
+ * (replay's runOneStep, emit's unfillableSlots).
+ */
+describe('unfilledSlots', () => {
+  it('reports a marker whose slot is absent from params, anywhere inside the value', () => {
+    expect(unfilledSlots('{{v2}}', {})).toEqual(['v2']);
+    expect(unfilledSlots({ text: 'Order {{v2}}' }, { v1: 'a' })).toEqual(['v2']);
+    expect(unfilledSlots([{ kind: 'text', selector: '{{d1}}' }], { v1: 'a' })).toEqual(['d1']);
+    // Each slot once, in the order met.
+    expect(unfilledSlots(['{{v3}} {{v2}}', { a: '{{v3}}' }], {})).toEqual(['v3', 'v2']);
+  });
+
+  it('keys on membership in params, never on what the text looks like', () => {
+    // Bound to '' is BOUND — an unpublished reference, whose rule is url.ts's
+    // `unfilled`, not this one. fillParams substitutes on `name in params`, and
+    // so does this.
+    expect(unfilledSlots('{{v2}}', { v2: '' })).toEqual([]);
+    expect(unfilledSlots('{{v2}}', { v2: 'Order 7' })).toEqual([]);
+    // Already-filled text answers the same as the raw template: the text the
+    // value happens to carry decides nothing.
+    expect(unfilledSlots('Order 7', {})).toEqual([]);
+  });
+
+  it('is scoped to the markers fillParams recognises and to nothing else', () => {
+    expect(unfilledSlots('{{02-create.uid}}', {})).toEqual([]);
+    expect(unfilledSlots('{{env:TOKEN}}', {})).toEqual([]);
+    expect(unfilledSlots('a {{ v1 }} b', {})).toEqual([]);
+    expect(unfilledSlots('function f() {{ return 1 }}', {})).toEqual([]);
+    expect(unfilledSlots('{{vv1}}', {})).toEqual([]);
+    expect(unfilledSlots(null, {})).toEqual([]);
+    expect(unfilledSlots(42, {})).toEqual([]);
+  });
+
+  it('names the slot in a verdict when it is the value the step acts with', () => {
+    expect(unfilledStepVerdict({ args: { text: 'Order 7' } }, { v1: '7' }, 'step 4')).toBeNull();
+    expect(unfilledStepVerdict({ args: { text: '{{v2}}' } }, { v1: '7' }, 'step 4')).toMatch(/^step 4: \{\{v2\}\} was left unbound/);
+    expect(unfilledStepVerdict({ args: { text: '{{v2}} {{v3}}' } }, {}, 'step 4')).toMatch(/\{\{v2\}\}, \{\{v3\}\} were left unbound/);
+  });
+});
+
+/**
+ * A locator chain is a PREFERENCE ORDER, not a conjunction. odoo fwod34's
+ * s_eee5b1 step 2 is the case: its `id` and `css` rungs are `#name_{{d2}}`,
+ * where `d2` is a url-pattern wildcard and never a value, behind a `role` and
+ * a `placeholder` rung that resolve perfectly well. Reading the dead rungs as
+ * a defect refused the whole compile of a green bench flow.
+ */
+describe('fillableChain', () => {
+  const role = { kind: 'role', role: 'textbox', name: 'e.g. Brandom Freeman' };
+  const byId = { kind: 'id', selector: '#name_{{d2}}' };
+  const css = { kind: 'css', selector: 'div#name_{{d2}} > input' };
+
+  it('drops the rungs this run could not fill and keeps the order of the rest', () => {
+    expect(fillableChain([byId, role, css], {})).toEqual([role]);
+    expect(fillableChain([byId, role], { d2: '7' })).toEqual([byId, role]);
+    expect(fillableChain([], {})).toEqual([]);
+    expect(fillableChain(undefined, {})).toEqual([]);
+  });
+
+  it('is not fatal while one rung survives, and is fatal when none does', () => {
+    const acts = (chain: unknown[]) => unfilledStepVerdict({ args: { target: '@e1' }, locators: { target: chain } }, {}, 'step 2');
+    expect(acts([byId, role, css])).toBeNull();
+    expect(acts([byId, css])).toMatch(/^step 2: every recorded locator for target names \{\{d2\}\}/);
+    // An empty chain is a step with no recorded locator at all, which is the
+    // resolver's own miss and not this verdict's business.
+    expect(acts([])).toBeNull();
+    // The args still decide first: a dead value is fatal whatever the chain.
+    expect(unfilledStepVerdict({ args: { value: '{{v2}}' }, locators: { target: [role] } }, {}, 'step 2')).toMatch(/\{\{v2\}\} was left unbound/);
+  });
+});
+
+/**
+ * The other side of the same rule: the artifact has no model to fall back on,
+ * so what daemon replay meets at run time the compiler refuses at compile
+ * time, where there is still somebody to tell (emit.ts unfillableSlots).
+ */
+describe('a step that acts on a slot the artifact can never fill', () => {
+  const flowOf = (steps: SkillStep[], derived?: Skill['derived']): SpecFlow => ({
+    version: 1,
+    name: 'f',
+    origin: 'http://app.test',
+    startUrl: 'http://app.test/',
+    vars: ['name'],
+    steps: [
+      {
+        id: '01-do',
+        instruction: 'do it',
+        params: { v1: '{{name}}' },
+        outputs: [],
+        segments: [
+          {
+            id: 's_x',
+            template: 'do {{v1}}',
+            params: { v1: { example: 'Beta', usedIn: [1], known: true } },
+            preconditions: { urlPattern: 'http://app.test/' },
+            ...(derived ? { derived } : {}),
+            steps,
+          },
+        ],
+      },
+    ],
+  });
+  const codes = (spec: SpecFlow) => emitFlowFile(spec, { tier: 'plain' }).diagnostics.map((d) => d.code);
+
+  it('refuses a type whose text names a slot nothing binds', () => {
+    const typed: SkillStep = { tool: 'type', args: { target: '@e1', text: '{{v2}}' }, locators: { target: [{ kind: 'id', selector: '#f' }] } };
+    const found = emitFlowFile(flowOf([typed]), { tier: 'plain' }).diagnostics.filter((d) => d.code === 'unfilled-slot');
+    expect(found.map((d) => [d.code, d.severity, d.step])).toEqual([['unfilled-slot', 'error', '01-do']]);
+    expect(found[0].what).toContain('{{v2}}');
+    expect(found[0].fix).toMatch(/rerecord/);
+    // And a goto's destination.
+    expect(codes(flowOf([{ tool: 'goto', args: { url: 'http://app.test/o/{{v2}}' }, locators: {} }]))).toEqual(['unfilled-slot']);
+  });
+
+  it('drops a dead locator rung rather than refusing, and refuses only when none survives', () => {
+    const dead = { kind: 'id', selector: '#name_{{v2}}' };
+    const live = { kind: 'role', role: 'button', name: 'Open' };
+    const clickWith = (target: unknown[]) => flowOf([{ tool: 'click', args: { target: '@e1' }, locators: { target } }]);
+    // fwod34's shape: two dead rungs behind two live ones. Compiles, and the
+    // dead rungs are not in the artifact at all.
+    const ok = emitFlowFile(clickWith([dead, live]), { tier: 'plain' });
+    expect(ok.diagnostics.map((d) => d.code)).toEqual([]);
+    // Not in the executed chain — the embedded FLOW json still carries the
+    // recording verbatim, as it must; what is gone is the rung that would run.
+    expect(ok.source).not.toContain("page.locator('#name_");
+    expect(ok.source).toContain("page.getByRole('button', { name: 'Open', exact: true })");
+    // Every rung dead: the step has no way left to name what it acts on.
+    const none = emitFlowFile(clickWith([dead, { kind: 'css', selector: 'div#name_{{v2}} > a' }]), { tier: 'plain' });
+    const said = none.diagnostics.filter((d) => d.code === 'unfilled-slot');
+    expect(said.map((d) => [d.code, d.severity])).toEqual([['unfilled-slot', 'error']]);
+    expect(said[0].what).toContain('no locator left for its target');
+  });
+
+  it('says nothing about a slot the caller supplies, or one an earlier step minted', () => {
+    const typed = (text: string): SkillStep => ({ tool: 'type', args: { target: '@e1', text }, locators: { target: [{ kind: 'id', selector: '#f' }] } });
+    expect(codes(flowOf([typed('{{v1}}')]))).toEqual([]);
+    const goto: SkillStep = { tool: 'goto', args: { url: 'http://app.test/o/1' }, locators: {} };
+    expect(codes(flowOf([goto, typed('{{d1}}')], { d1: { step: 1, at: 'p1', example: '1' } }))).toEqual([]);
+    // Minted by the step that would act on it: bindPart runs after the action,
+    // so at that moment there is still nothing to substitute.
+    expect(codes(flowOf([goto, typed('{{d1}}')], { d1: { step: 2, at: 'p1', example: '1' } }))).toEqual(['unfilled-slot']);
+  });
+
+  it('leaves a read, a wait and a check with the "asks for nothing" reading', () => {
+    const marked = [{ kind: 'role', role: 'button', name: '{{v2}}' }];
+    expect(codes(flowOf([{ tool: 'read', args: { target: '@e1', label: 'x' }, locators: { target: marked } }]))).toEqual([]);
+    expect(codes(flowOf([{ tool: 'wait_for', args: { target: '@e1', state: 'visible' }, locators: { target: marked } }]))).toEqual([]);
   });
 });

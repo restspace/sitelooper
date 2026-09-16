@@ -264,30 +264,170 @@ export function selectCandidates(
 }
 
 /**
+ * Occurrence indices of `{{vN}}` slots the template separates by nothing but
+ * whitespace, grouped into runs. Each returned array holds the OCCURRENCE
+ * indices (capture group i+1 in `bindSkill`'s pattern), not slot names, because
+ * a slot may appear more than once and only some of its occurrences abut.
+ *
+ * `alignSlots` (src/spec/rethread.ts:151-161) applies this same rule, and that
+ * module's doc states the principle it comes from: adjacent slots are an
+ * ambiguity "left alone and reported, never guessed at". The predicate is
+ * restated here rather than imported because alignSlots answers a different
+ * question — it DISCARDS the captured text of an adjacent slot, which is
+ * exactly the text this path must re-split — and src/skills does not otherwise
+ * depend on src/spec.
+ */
+function adjacentSlotRuns(squashedTemplate: string): number[][] {
+  const spans = [...squashedTemplate.matchAll(/\{\{v\d+\}\}/g)];
+  const runs: number[][] = [];
+  let run: number[] = [];
+  for (let i = 1; i < spans.length; i++) {
+    const prev = spans[i - 1];
+    const end = (prev.index ?? 0) + prev[0].length;
+    if (!squashedTemplate.slice(end, spans[i].index ?? 0).trim()) {
+      if (!run.length) run.push(i - 1);
+      run.push(i);
+    } else if (run.length) {
+      runs.push(run);
+      run = [];
+    }
+  }
+  if (run.length) runs.push(run);
+  return runs;
+}
+
+/** Every way to cut `tokens` into `k` non-empty consecutive parts, capped. */
+const MAX_ADJACENT_SPLITS = 200;
+function splitsOf(tokens: string[], k: number): string[][] | null {
+  if (k < 1 || tokens.length < k) return null;
+  let out: string[][] = [[]];
+  for (let part = 0; part < k; part++) {
+    const next: string[][] = [];
+    for (const acc of out) {
+      const used = acc.reduce((n, p) => n + p.split(' ').length, 0);
+      const left = tokens.length - used;
+      const remaining = k - part - 1;
+      const max = left - remaining; // leave one token for each later part
+      for (let take = 1; take <= max; take++) {
+        next.push([...acc, tokens.slice(used, used + take).join(' ')]);
+        if (next.length > MAX_ADJACENT_SPLITS) return null;
+      }
+    }
+    out = next;
+  }
+  return out;
+}
+
+/**
+ * Re-split the text the regex minimally divided between adjacent slots, on
+ * evidence rather than on where a non-greedy `(.+?)` happened to stop.
+ *
+ * WHY (odoo fwod55). `…open the confirmed {{v1}} {{v2}}…` against
+ * `…open the confirmed Sales Order S00024…` splits minimally as
+ * v1="Sales", v2="Order S00024". No page ever shows "Order S00024", so the
+ * identity marker was absent after the full poll and all three arms hard-
+ * stopped on the RIGHT record, leaving the order uncancelled. The split is a
+ * guess; the recording's own evidence can decide it.
+ *
+ * Evidence, in order: the split each slot's recorded `example` vouches for;
+ * then a value this run already published for the slot's binding (a hard
+ * requirement — a split that contradicts a known value is never taken).
+ * Returns null when the evidence does not single one split out: the slots are
+ * then left UNBOUND, which is a first-class state (checkIdentity skips an
+ * unbound marker, identityChecks emits a comment, markersBound refuses one).
+ * The step costs a model turn instead of stopping the flow on the right
+ * record. That is the intended trade.
+ */
+function resolveAdjacentRun(
+  skill: Skill,
+  slots: string[],
+  captured: string[],
+  known: Record<string, string>,
+  pinned: Record<string, string>,
+): string[] | null {
+  const tokens = captured.join(' ').split(' ').filter(Boolean);
+  const candidates = splitsOf(tokens, slots.length);
+  if (!candidates) return null;
+  if (candidates.length === 1) return candidates[0]; // one token per slot: nothing to guess
+
+  const same = (a: string | undefined, b: string | undefined): boolean =>
+    Boolean(a) && Boolean(b) && squash(a!).toLowerCase() === squash(b!).toLowerCase();
+
+  let best: { parts: string[]; hits: number } | null = null;
+  let tied = false;
+  for (const parts of candidates) {
+    let ok = true;
+    let hits = 0;
+    slots.forEach((n, i) => {
+      const p = skill.params[n];
+      // (b) a value this run published for this slot's binding, and a value a
+      // NON-adjacent occurrence of the same slot already bound, are both facts,
+      // not hints: a split that disagrees with either is not a candidate.
+      const required = (p?.binding ? known[p.binding] : undefined) ?? pinned[n];
+      if (required && !same(parts[i], required)) ok = false;
+      // (a) the recording's own example for the slot. The varying slot will not
+      // match it (S00024 is not the recorded S00021) — the fixed one does, and
+      // that is enough to place the boundary.
+      if (same(parts[i], p?.example)) hits++;
+    });
+    if (!ok) continue;
+    if (!best || hits > best.hits) {
+      best = { parts, hits };
+      tied = false;
+    } else if (hits === best.hits) tied = true;
+  }
+  // A tie is exactly the case this exists to refuse. A lone survivor with no
+  // example hit got there through the required-value filter, which is evidence
+  // of the stronger kind; with no required value at all every candidate
+  // survives, so a lone survivor cannot arise that way.
+  return best && !tied ? best.parts : null;
+}
+
+/**
  * Bind a specific skill's {{vN}} slots from an instruction by reading its
  * template as a pattern. Used by flow replay, where the skill is already
  * chosen (pinned), so its status and the page are the flow's concern, not this
- * function's. Returns null unless every slot binds.
+ * function's. Returns null unless every slot binds — except a slot the
+ * template cannot justify splitting from its neighbour, which is deliberately
+ * left unbound (see `resolveAdjacentRun`).
  */
 export function bindSkill(skill: Skill, instruction: string, known: Record<string, string> = {}): Record<string, string> | null {
   const names: string[] = [];
-  const pattern = escapeRe(squash(skill.template)).replace(/\\\{\\\{(v\d+)\\\}\\\}/g, (_m, name: string) => {
+  const template = squash(skill.template);
+  const pattern = escapeRe(template).replace(/\\\{\\\{(v\d+)\\\}\\\}/g, (_m, name: string) => {
     names.push(name);
     return '(.+?)';
   });
   const m = new RegExp(`^${pattern}$`, 'i').exec(squash(instruction));
   if (!m) return null;
   const params: Record<string, string> = {};
-  names.forEach((n, i) => (params[n] = m[i + 1].trim()));
+  const runs = adjacentSlotRuns(template);
+  const adjacent = new Set<number>(runs.flat());
+  // An occurrence the template separates by real text is unambiguous, so it is
+  // bound first and then stands as evidence for any adjacent occurrence of the
+  // same slot.
+  names.forEach((n, i) => {
+    if (!adjacent.has(i)) params[n] = m[i + 1].trim();
+  });
+  const refused = new Set<string>();
+  for (const run of runs) {
+    const slots = run.map((i) => names[i]);
+    const parts = resolveAdjacentRun(skill, slots, run.map((i) => m[i + 1].trim()), known, params);
+    if (parts) slots.forEach((n, k) => (params[n] = parts[k]));
+    else for (const n of slots) if (!params[n]) refused.add(n);
+  }
+  for (const n of refused) delete params[n];
   // A param the template cannot supply binds to its ORIGIN instead: the value
   // came from an earlier instruction, so this run resolves its own from the
-  // same place rather than the skill carrying the recorded literal.
+  // same place rather than the skill carrying the recorded literal. A refused
+  // slot is skipped here: the split was refused precisely because no reading of
+  // the instruction produces the known value at that position.
   for (const [n, p] of Object.entries(skill.params)) {
-    if (params[n] || !p.binding) continue;
+    if (params[n] || refused.has(n) || !p.binding) continue;
     const value = known[p.binding];
     if (value) params[n] = value;
   }
-  return Object.keys(skill.params).every((n) => params[n]) ? params : null;
+  return Object.keys(skill.params).every((n) => params[n] || refused.has(n)) ? params : null;
 }
 
 function squash(text: string): string {
