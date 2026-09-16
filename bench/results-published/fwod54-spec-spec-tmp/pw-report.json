@@ -1,0 +1,189 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwod54-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwod54-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwod54-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwod54-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwod54.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwod54-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwod54.spec.ts",
+      "file": "fwod54.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwod54",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 2160000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 33291,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 07-verify\n"
+                    }
+                  ],
+                  "stderr": [
+                    {
+                      "text": "[sitelooper skip] 02-create s_acf23f/6 target: no locator recorded — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 03-open s_9d020e/12 target: no locator recorded — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 04-open s_34f8cb/7 target: no locator recorded — value left empty\n"
+                    }
+                  ],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:8069/ in the browser and sign in with username 'admin' and password 'admin' using the login form (do not wait for network idle - the app long-polls; wait for concrete page state instead). Once signed in, create a new customer contact named exactly '{{runid}} Bench Customer' with the City field set to 'Benchville' (use the Contacts app or the Sales app's Customers menu). Save the record and report the customer name and city exactly as shown on the saved record.",
+                      "duration": 9586
+                    },
+                    {
+                      "title": "02-create: In the Odoo Sales app, create a new quotation for the customer named '{{runid}} Bench Customer' (choose the customer from the autocomplete dropdown - typing alone does not count). Add exactly ONE order line: pick any product from the product catalogue via the product autocomplete dropdown, and set the quantity to 3. Do NOT confirm the quotation yet - leave it as a draft quotation. Save the quotation and report: (a) the product name you chose, (b) the unit price the app filled in on the line, and (c) the untaxed amount the quotation computes (Untaxed Amount in the totals section). Do not wait for network idle - wait on concrete page state.",
+                      "duration": 8975
+                    },
+                    {
+                      "title": "03-open: In the Odoo Sales app, open the existing draft quotation {{02-create.order_reference}} for customer '{{runid}} Bench Customer' (it currently has one order line: '{{02-create.product_name}}', quantity 3). Add a SECOND order line: pick a DIFFERENT product from the product catalogue via the product autocomplete dropdown (not Acoustic Bloc Screens), and set its quantity to 2. Keep the quotation as a draft - do NOT confirm it. Save and report: (a) the name of the second product you chose, and (b) the new untaxed amount the quotation computes in the totals section. Do not wait for network idle - wait on concrete page state.",
+                      "duration": 3792
+                    },
+                    {
+                      "title": "04-open: In the Odoo Sales app, open the existing draft quotation {{02-create.order_reference}} for customer '{{runid}} Bench Customer'. It has two order lines: line 1 is '{{02-create.product_name}}' with quantity 3, line 2 is '{{03-open.second_product_name}}' with quantity 2. Change ONLY the first line's quantity from 3 to 5 (leave the second line untouched at quantity 2). Keep the quotation as a draft - do NOT confirm it. Save and report the untaxed amount the quotation now computes in the totals section. Do not wait for network idle - wait on concrete page state.",
+                      "duration": 1919
+                    },
+                    {
+                      "title": "05-open: In the Odoo Sales app, open the draft quotation {{02-create.order_reference}} for customer '{{runid}} Bench Customer' (two lines: Acoustic Bloc Screens qty 5, Cabinet with Doors qty 2) and confirm it so it becomes a sales order (use the Confirm button; if a confirmation dialog appears, accept it). After confirming, report: (a) the order reference / name shown (e.g. {{02-create.order_reference}}), and (b) the status the app now shows on the record (e.g. 'Sales Order' or 'Sales' in the statusbar). Do not wait for network idle - wait on concrete page state.",
+                      "duration": 1182
+                    },
+                    {
+                      "title": "06-open: In the Odoo Sales app, open the confirmed sales order {{02-create.order_reference}} for customer '{{runid}} Bench Customer' (status 'Sales Order') and cancel it (use the Cancel button; if a confirmation dialog appears, accept it). After cancelling, report the status the app now shows on the record (e.g. 'Cancelled' in the statusbar). Do not wait for network idle - wait on concrete page state.",
+                      "duration": 2644
+                    },
+                    {
+                      "title": "07-verify: Verify two things in Odoo and report them: (1) Open the contact named '{{runid}} Bench Customer' in the Contacts app and report the City value shown on the saved record. (2) Open the sales order {{02-create.order_reference}} in the Sales app and report its current status from the statusbar. Just read and report these two facts - do not modify anything. Do not wait for network idle - wait on concrete page state.",
+                      "duration": 4849
+                    }
+                  ],
+                  "startTime": "2026-09-16T13:50:12.596Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0b4d9fa6af34cf04690b-49e1bf05691f064f92a8",
+          "file": "fwod54.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-16T13:50:10.944Z",
+    "duration": 35090.074,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

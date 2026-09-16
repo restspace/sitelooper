@@ -1,0 +1,16 @@
+[spec-replay] resetting odoo
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile bench/results/flows/fwod54.json --out /home/user/sitelooper/bench/results/fwod54-spec-spec-tmp --overwrite-spec
+flow: /home/user/sitelooper/bench/results/fwod54-spec-spec-tmp/fwod54.flow.ts
+spec: /home/user/sitelooper/bench/results/fwod54-spec-spec-tmp/fwod54.spec.ts
+warning 04-open: 04-open read a value that contradicts what the previous step reported
+  why: 04-open read line1 "[FURN_6666] Acoustic Bloc Screens qty 5.00 @ £295.00 = £1,475.00" right after 03-open reported "[FURN_6666] Acoustic Bloc Screens qty 3.00 @ £295.00 = £885.00"; 03-open's change may not have landed and a later step may be retrying it. Re-record 03-open.
+  fix: sitelooper rerecord bench/results/flows/fwod54.json 03-open
+
+  warning: 02-create: step 6 (read tax) has no locator left — it publishes nothing, as replay skips it
+  warning: 03-open: step 12 (read tax) has no locator left — it publishes nothing, as replay skips it
+  warning: 04-open: step 7 (read tax) has no locator left — it publishes nothing, as replay skips it
+[spec-replay] running: npx playwright test --config /home/user/sitelooper/bench/results/fwod54-spec-spec-tmp/playwright.config.mjs
+[spec-replay] fwod54-spec: 1/1 passed, exit=0, 36s, 0 drift line(s) — result written
+SPEC_EXIT=0
