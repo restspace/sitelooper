@@ -1,0 +1,151 @@
+{
+  "flow": "fwkb16",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_b49059; observed column_2_name=Ready , column_3_name=Work in progress , column_4_name=Done .",
+      "values": {
+        "column_2_name": "Ready ",
+        "column_3_name": "Work in progress ",
+        "column_4_name": "Done "
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "project"
+      ]
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Created the task on the 'Bench Board' board via \"Add a new task\" in the first (Backlog) column, with title \"fwkb16-n2 Bench Task\" and description \"Bench task for run fwkb16-n2\"; the form submitted with a \"Task created successfully\" confirmation. Opened the task page at ?controller=TaskViewController&action=show&task_id=4, whose heading reads \"Task #4\" / \"fwkb16-n2 Bench Task\", confirming the new task is ID #4.",
+      "values": {
+        "task_title": "fwkb16-n2 Bench Task",
+        "task_description_on_page": "Bench task for run fwkb16-n2",
+        "project": "Bench Board (project_id=1)",
+        "ref": "fwkb16-n2",
+        "task_page_title": "KB"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "task_number_displayed"
+      ]
+    },
+    {
+      "id": "03-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_22521b; observed column_after_move=Work in progress , column_cells_text=Backlog: #1 Seed: triage inbox, #2 Seed: order missing parts, #3 Seed: ship repaired device, Ready: (empty), Work in progress : #4 fwkb16-n2 Bench Task, Done: (empty), ref=fwkb16-n2, task_title=fwkb16-n2 Bench Task.",
+      "values": {
+        "column_after_move": "Work in progress ",
+        "column_cells_text": "Backlog: #1 Seed: triage inbox, #2 Seed: order missing parts, #3 Seed: ship repaired device, Ready: (empty), Work in progress : #4 fwkb16-n2 Bench Task, Done: (empty)",
+        "ref": "fwkb16-n2",
+        "task_title": "fwkb16-n2 Bench Task"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_535a78; observed comment_text_on_page=Comment for run fwkb16-n2, ref=fwkb16-n2, task_title=fwkb16-n2 Bench Task, visibility=Standard users.",
+      "values": {
+        "comment_text_on_page": "Comment for run fwkb16-n2",
+        "ref": "fwkb16-n2",
+        "task_title": "fwkb16-n2 Bench Task",
+        "visibility": "Standard users"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-set",
+      "status": "success",
+      "summary": "Replayed stored procedure s_a3bc3f; observed value_entered=12/31/2026, ref=fwkb16-n2, task_title=fwkb16-n2 Bench Task, due_date_displayed=Due date: 12/31/2026 13:45, column=Work in progress, edit_link_text=Edit.",
+      "values": {
+        "value_entered": "12/31/2026",
+        "ref": "fwkb16-n2",
+        "task_title": "fwkb16-n2 Bench Task",
+        "due_date_displayed": "Due date: 12/31/2026 13:45",
+        "column": "Work in progress",
+        "edit_link_text": "Edit"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "edit_task_link_text"
+      ]
+    },
+    {
+      "id": "06-report",
+      "status": "success",
+      "summary": "Replayed stored procedure s_efe2a2; observed work_in_progress_contents=#4 fwkb16-n2 Bench Task (due 12/31/2026 13:43), task_description_text=Bench task for run fwkb16-n2, comments_text=Comment for run fwkb16-n2, ref=fwkb16-n2, task_page_title=KB Bench Board, card_id_displayed=#4 , task_title=fwkb16-n2 Bench Task.",
+      "values": {
+        "work_in_progress_contents": "#4 fwkb16-n2 Bench Task (due 12/31/2026 13:43)",
+        "task_description_text": "Bench task for run fwkb16-n2",
+        "comments_text": "Comment for run fwkb16-n2",
+        "ref": "fwkb16-n2",
+        "task_page_title": "KB Bench Board",
+        "card_id_displayed": "#4 ",
+        "task_title": "fwkb16-n2 Bench Task"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "4/4",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 6,
+  "total": 6,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwkb16",
+      "step": "05-set",
+      "skill": "s_a3bc3f",
+      "atStep": "5",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.locator('li', { hasText: '12/31/2026 13:43' })",
+      "fallbackUsed": "page.locator('#task-summary > div > div > div:nth-of-type(4) > ul > li:nth-of-type(1)')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8085/?action=show&controller=TaskViewController&task_id=:id",
+      "pageUrl": "http://127.0.0.1:8085/?controller=TaskViewController&action=show&task_id=4"
+    }
+  ],
+  "wallMs": 17991,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

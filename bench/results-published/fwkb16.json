@@ -1,0 +1,461 @@
+{
+  "name": "fwkb16",
+  "origin": "http://127.0.0.1:8085",
+  "startUrl": "http://127.0.0.1:8085/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-open",
+      "instruction": "Open http://127.0.0.1:8085/ and sign in with username admin and password admin. Then navigate to the project named 'Bench Board' and view its board. Report the names of the board's columns in their left-to-right order, exactly as displayed on the board page.",
+      "skill": "s_b49059",
+      "params": {
+        "v1": "http://127.0.0.1:8085/"
+      },
+      "outputs": [
+        "project",
+        "column_2_name",
+        "column_3_name",
+        "column_4_name"
+      ],
+      "recorded": {
+        "project": "Bench Board",
+        "columns_left_to_right": "Backlog, Ready, Work in progress, Done",
+        "column_headers_with_task_counts": "Backlog  \nTask count\n3  (\nTotal number of tasks in this column across all swimlanes\n3), Ready , Work in progress , Done ",
+        "column_2_name": "Ready",
+        "column_3_name": "Work in progress",
+        "column_4_name": "Done",
+        "url": "http://127.0.0.1:8085/?controller=BoardViewController&action=show&project_id=1"
+      },
+      "route": "http://127.0.0.1:8085/",
+      "outputEvidence": {
+        "project": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "columns_left_to_right": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "column_headers_with_task_counts": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "column_2_name": {
+          "same": 1,
+          "differed": 0
+        },
+        "column_3_name": {
+          "same": 1,
+          "differed": 0
+        },
+        "column_4_name": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "On the project 'Bench Board' board, create a new task with title exactly '{{runid}} Bench Task' and a description that includes the text '{{runid}}' (e.g. 'Bench task for run {{runid}}'). Fill any other required fields sensibly (leave it in the default first column). Submit the form and verify the task was created by opening its task page. Report the task's numeric ID as displayed (Kanboard shows it as #<number> on the task page), the task title, and the description text shown on the task page.",
+      "skill": "s_55eea7",
+      "params": {
+        "v1": "Bench Board",
+        "v3": "{{runid}} Bench Task",
+        "v2": "{{runid}}",
+        "v4": "Bench task for run {{runid}}"
+      },
+      "outputs": [
+        "task_number_displayed",
+        "task_title",
+        "task_description_on_page",
+        "project",
+        "task_page_title",
+        "ref"
+      ],
+      "recorded": {
+        "task_id": "4",
+        "task_number_displayed": "#4",
+        "task_title": "fwkb16-n1 Bench Task",
+        "task_description_on_page": "Bench task for run fwkb16-n1",
+        "project": "Bench Board (project_id=1)",
+        "column": "Backlog (default first column)",
+        "task_page_title": "KB",
+        "ref": "fwkb16-n1",
+        "url": "http://127.0.0.1:8085/?controller=TaskViewController&action=show&task_id=4"
+      },
+      "route": "http://127.0.0.1:8085/",
+      "outputEvidence": {
+        "task_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "task_number_displayed": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "task_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "task_description_on_page": {
+          "same": 0,
+          "differed": 1
+        },
+        "project": {
+          "same": 1,
+          "differed": 0
+        },
+        "column": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "task_page_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "03-verify",
+      "instruction": "Move the task titled '{{runid}} Bench Task' (task {{02-create.task_number_displayed}}) in the project 'Bench Board' so that it sits in the '{{01-open.column_3_name}}' column of the board. You can do this by dragging the card on the board from its current column to the '{{01-open.column_3_name}}' column, or by using the task page's move option (e.g. 'Move to another column' / 'Move position' in the task sidebar) — whichever works. Do NOT modify or move any tasks whose titles start with 'Seed:'. Afterwards verify by viewing the board that the card '{{runid}} Bench Task' is now inside the '{{01-open.column_3_name}}' column, and report which column the card is in.",
+      "skill": "s_22521b",
+      "params": {
+        "v1": "{{runid}} Bench Task",
+        "v3": "Bench Board",
+        "v4": "{{01-open.column_3_name}}",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "task_title",
+        "column_after_move",
+        "column_cells_text",
+        "ref"
+      ],
+      "recorded": {
+        "task_id": "4",
+        "task_title": "fwkb16-n1 Bench Task",
+        "column_after_move": "Work in progress",
+        "work_in_progress_task_count": "1",
+        "column_cells_text": "Backlog: #1 Seed: triage inbox, #2 Seed: order missing parts, #3 Seed: ship repaired device, Ready: (empty), Work in progress: #4 fwkb16-n1 Bench Task, Done: (empty)",
+        "seed_tasks_untouched": "Yes — #1, #2, #3 still in Backlog",
+        "ref": "fwkb16-n1"
+      },
+      "route": "http://127.0.0.1:8085/",
+      "outputEvidence": {
+        "task_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "task_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "column_after_move": {
+          "same": 1,
+          "differed": 0
+        },
+        "work_in_progress_task_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "column_cells_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "seed_tasks_untouched": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "04-open",
+      "instruction": "Open the task page for task {{02-create.task_number_displayed}} titled '{{runid}} Bench Task' in the 'Bench Board' project, and add a comment whose text includes '{{runid}}' (e.g. 'Comment for run {{runid}}'). Submit the comment form and verify the comment appears on the task page. Report the exact comment text shown on the task page after saving.",
+      "skill": "s_535a78",
+      "params": {
+        "v1": "{{runid}} Bench Task",
+        "v3": "Bench Board",
+        "v2": "{{runid}}",
+        "v4": "Comment for run {{runid}}"
+      },
+      "outputs": [
+        "task_title",
+        "comment_text_on_page",
+        "visibility",
+        "ref"
+      ],
+      "recorded": {
+        "task_id": "4",
+        "task_title": "fwkb16-n1 Bench Task",
+        "comment_text_on_page": "Comment for run fwkb16-n1",
+        "visibility": "Standard users",
+        "author": "admin",
+        "created_at": "09/16/2026 13:43",
+        "ref": "fwkb16-n1"
+      },
+      "route": "http://127.0.0.1:8085/",
+      "outputEvidence": {
+        "task_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "task_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_text_on_page": {
+          "same": 0,
+          "differed": 1
+        },
+        "visibility": {
+          "same": 1,
+          "differed": 0
+        },
+        "author": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "created_at": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "05-set",
+      "instruction": "On the task page for task {{02-create.task_number_displayed}} titled '{{runid}} Bench Task' in the 'Bench Board' project, set the task's due date to 2026-12-31. Use the task page's edit/details option (e.g. 'Edit description' or the task's Edit form / 'Due date' field in the sidebar) — find the due date field and set it to December 31, 2026 (format 2026-12-31 or MM/DD/YYYY as the form requires). Save the change and verify the due date shown on the task page reads 2026-12-31 (or 12/31/2026). Report the exact due date value displayed on the task page afterwards.",
+      "skill": "s_a3bc3f",
+      "params": {
+        "v1": "{{runid}} Bench Task",
+        "v3": "Bench Board",
+        "v4": "12/31/2026",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "task_title",
+        "value_entered",
+        "due_date_displayed",
+        "column",
+        "edit_task_link_text",
+        "edit_link_text",
+        "ref"
+      ],
+      "recorded": {
+        "task_id": "4",
+        "task_title": "fwkb16-n1 Bench Task",
+        "due_date_field_format": "MM/DD/YYYY (placeholder 09/16/2026 13:43)",
+        "value_entered": "12/31/2026",
+        "due_date_displayed": "Due date: 12/31/2026 13:43",
+        "column": "Work in progress",
+        "edit_task_link_text": "Edit the task",
+        "edit_link_text": "Edit",
+        "ref": "fwkb16-n1"
+      },
+      "route": "http://127.0.0.1:8085/",
+      "outputEvidence": {
+        "task_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "task_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "due_date_field_format": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "value_entered": {
+          "same": 1,
+          "differed": 0
+        },
+        "due_date_displayed": {
+          "same": 0,
+          "differed": 1
+        },
+        "column": {
+          "same": 1,
+          "differed": 0
+        },
+        "edit_task_link_text": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "edit_link_text": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "06-report",
+      "instruction": "Final verification on the Kanboard app: 1) View the board of the project 'Bench Board' and report the column names left-to-right, and confirm which column contains the card titled '{{runid}} Bench Task' (report the card's displayed ID like {{02-create.task_number_displayed}}). 2) Open that task's page and report: the task's numeric ID as displayed (#<number>), the task title, the description text, the due date shown, and the text of any comments on the task. Also confirm the three 'Seed:' tasks are still in their original column and unmodified. Report all these values exactly as displayed.",
+      "skill": "s_efe2a2",
+      "params": {
+        "v1": "Bench Board",
+        "v2": "{{runid}} Bench Task",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "backlog_contents",
+        "work_in_progress_contents",
+        "card_id_displayed",
+        "task_title",
+        "task_description_text",
+        "comments_text",
+        "seed_tasks_state",
+        "task_page_title",
+        "ref"
+      ],
+      "recorded": {
+        "columns_left_to_right": "Backlog, Ready, Work in progress, Done",
+        "backlog_contents": "#1 Seed: triage inbox, #2 Seed: order missing parts, #3 Seed: ship repaired device",
+        "ready_contents": "empty (Task count absent/0)",
+        "work_in_progress_contents": "#4 fwkb16-n1 Bench Task (due 12/31/2026 13:43)",
+        "work_in_progress_task_count": "1",
+        "done_contents": "empty",
+        "card_id_displayed": "#4",
+        "task_page_id_displayed": "#4",
+        "task_title": "fwkb16-n1 Bench Task",
+        "task_description_text": "Bench task for run fwkb16-n1",
+        "due_date_displayed": "Due date: 12/31/2026 13:43",
+        "comments_text": "Comment for run fwkb16-n1",
+        "task_status": "Status: open",
+        "seed_tasks_state": "All three 'Seed:' tasks (#1, #2, #3) still listed in the Backlog column with unchanged titles, priority P0, no due date shown",
+        "task_page_title": "KB Bench Board",
+        "ref": "fwkb16-n1"
+      },
+      "route": "http://127.0.0.1:8085/",
+      "outputEvidence": {
+        "columns_left_to_right": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "backlog_contents": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ready_contents": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "work_in_progress_contents": {
+          "same": 0,
+          "differed": 1
+        },
+        "work_in_progress_task_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "done_contents": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "card_id_displayed": {
+          "same": 1,
+          "differed": 0
+        },
+        "task_page_id_displayed": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "task_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "task_description_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "due_date_displayed": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "comments_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "task_status": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "seed_tasks_state": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "task_page_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwkb16-n1",
+    "created": "2026-09-16T13:44:55.007Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "warnings": [
+    "noop-step: 06-report changed nothing: its instruction asks to confirm, the recording made no state-changing action, and the page already showed 'fwkb16-n1 Bench Task' before it ran. The step may be redundant."
+  ],
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  }
+}
