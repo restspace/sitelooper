@@ -1,0 +1,49 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-open
+[sitelooper step] 02-create
+[sitelooper recipe] filled via recipe monaco/set-value (r_f2510e); value verified on the component
+[sitelooper step] 03-open
+[sitelooper step] 04-open
+[sitelooper recipe] filled via recipe monaco/set-value (r_f2510e); value verified on the component
+[sitelooper step] 05-open
+  ✘  1 fwgr45.spec.ts:9:1 › fwgr45 (1.4m)
+
+
+  1) fwgr45.spec.ts:9:1 › fwgr45 › 06-open: In Grafana, do a final verification of the dashboard '{{runid}} {{01-open.dashboard_folder}} Dashboard'. Navigate to it fresh (e.g. open http://127.0.0.1:3000/d/{{02-create.url.p1}}/ and let the page fully load, or find it via Dashboards search). Then report, reading from the live page: (1) the exact URL shown in the {{04-open.json_model_timezone}} address bar, (2) the dashboard title shown, (3) the exact titles of every panel on the dashboard and their visualization types, (4) the time range shown in the top bar, (5) the auto-refresh interval shown in the top bar, (6) the tags listed in dashboard Settings -> General, and (7) from Settings -> JSON Model, the values of the 'refresh', 'time.from', 'time.to' and 'tags' fields. Do not change or save anything. 
+
+    Error: after 06-open s_9ea255/7 expected url http://127.0.0.1:3000/d/:var/fwgr45-spec-bench-dashboard?from=:id&refresh=:id&timezone=&to=now but browser is at http://127.0.0.1:3000/d/afyfcev2973swb/fwgr45-spec-bench-dashboard?from=now-6h&refresh=1m&timezone=browser&to=now
+
+       at fwgr45.flow.ts:12670
+
+      12668 |   // (navigationTarget), whether or not the step goes on to stop.
+      12669 |   if (verdict.diffs) volatile.push(...verdict.diffs);
+    > 12670 |   if (verdict.stop) throw new Error(verdict.stop);
+            |                           ^
+      12671 | }
+      12672 |
+      12673 | /**
+        at urlEffect (/home/user/sitelooper/bench/results/fwgr45-spec-spec-tmp/fwgr45.flow.ts:12670:27)
+        at Object.verify (/home/user/sitelooper/bench/results/fwgr45-spec-spec-tmp/fwgr45.flow.ts:18511:9)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwgr45-spec-spec-tmp/fwgr45.flow.ts:10643:24)
+        at Object.06-open (/home/user/sitelooper/bench/results/fwgr45-spec-spec-tmp/fwgr45.flow.ts:18465:5)
+        at /home/user/sitelooper/bench/results/fwgr45-spec-spec-tmp/fwgr45.flow.ts:20598:7
+        at runFlow (/home/user/sitelooper/bench/results/fwgr45-spec-spec-tmp/fwgr45.flow.ts:20597:5)
+        at /home/user/sitelooper/bench/results/fwgr45-spec-spec-tmp/fwgr45.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../test-results/fwgr45-fwgr45/error-context.md
+
+  1 failed
+    fwgr45.spec.ts:9:1 › fwgr45 ────────────────────────────────────────────────────────────────────
+[sitelooper warn] 02-create s_c3dadd/7: read 'panel_title' returned a value the skill itself set/selected ('fwgr45-spec Availability') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 03-open s_86b343/9: read 'panel_text_content' returned a value the skill itself set/selected ('Notes for run fwgr45-spec - bench dashboard created via auto…') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 03-open s_86b343/10: read 'panel_title' returned a value the skill itself set/selected ('fwgr45-spec Notes') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 03-open s_86b343/15: read 'panel_title' returned a value the skill itself set/selected ('fwgr45-spec Notes') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 03-open s_86b343/16: read 'panel_text_content' returned a value the skill itself set/selected ('Notes for run fwgr45-spec - bench dashboard created via auto…') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 04-open s_1210e8/21: read 'top_bar_time_range' returned a value the skill itself set/selected ('Time range selected: Last 6 hours') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 05-open s_04d1c5/15: read 'json_model_refresh_line' returned a value the skill itself set/selected ('refresh') — confirms the control, not persistence; dropped from the report's confident values

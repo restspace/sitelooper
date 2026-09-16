@@ -1,0 +1,11 @@
+[spec-replay] resetting grafana
+[reset] grafana: deleted leftover dashboard "fwgr45-n3 Bench Dashboard" (200)
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile bench/results/flows/fwgr45.json --out /home/user/sitelooper/bench/results/fwgr45-spec-spec-tmp --overwrite-spec
+flow: /home/user/sitelooper/bench/results/fwgr45-spec-spec-tmp/fwgr45.flow.ts
+spec: /home/user/sitelooper/bench/results/fwgr45-spec-spec-tmp/fwgr45.spec.ts
+warning 06-open: 06-open read a value that contradicts what the previous step reported
+  why: 06-open read json_model_tags_line ""tags": [" right after 05-open reported ""bench""; 05-open's change may not have landed and a later step may be retrying it. Re-record 05-open.
+  fix: sitelooper rerecord bench/results/flows/fwgr45.json 05-open
+[spec-replay] running: npx playwright test --config /home/user/sitelooper/bench/results/fwgr45-spec-spec-tmp/playwright.config.mjs
+[spec-replay] fwgr45-spec: 0/1 passed, exit=1, 85s, 0 drift line(s) — result written
