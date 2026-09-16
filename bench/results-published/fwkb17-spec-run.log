@@ -1,0 +1,13 @@
+[spec-replay] resetting kanboard
+[reset] kanboard: deleted 1 leftover bench task(s)
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile bench/results/flows/fwkb17.json --out /home/user/sitelooper/bench/results/fwkb17-spec-spec-tmp --overwrite-spec
+flow: /home/user/sitelooper/bench/results/fwkb17-spec-spec-tmp/fwkb17.flow.ts
+spec: /home/user/sitelooper/bench/results/fwkb17-spec-spec-tmp/fwkb17.spec.ts
+warning 06-open: 06-open read a value that contradicts what the previous step reported
+  why: 06-open read run_reference "fwkb17-n1" right after 05-set reported "322-char"; 05-set's change may not have landed and a later step may be retrying it. Re-record 05-set.
+  fix: sitelooper rerecord bench/results/flows/fwkb17.json 05-set
+
+  warning: 03-change: step 5 (read now_in_column) has no locator left — it publishes nothing, as replay skips it
+  warning: 06-open: step 4 (read card_fwkb17_n1_in_column) has no locator left — it publishes nothing, as replay skips it
+[spec-replay] running: npx playwright test --config /home/user/sitelooper/bench/results/fwkb17-spec-spec-tmp/playwright.config.mjs
+[spec-replay] fwkb17-spec: 1/1 passed, exit=0, 20s, 0 drift line(s) — result written

@@ -1,0 +1,175 @@
+{
+  "flow": "fwkb17",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_5ff0a1; observed board_url=http://127.0.0.1:8085/?controller=BoardViewController&action=show&project_id=1.",
+      "values": {
+        "board_url": "http://127.0.0.1:8085/?controller=BoardViewController&action=show&project_id=1"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "project_name"
+      ]
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Created a new task in the Kanboard project 'Bench Board' (board page) via the Backlog column's \"Add a new task\" form: title 'fwkb17-n3 Bench Task', description 'Bench task for run fwkb17-n3'. After saving, the board showed 4 tasks in Backlog and the new task's page confirms the details. Task page header reads \"Bench Board, #4 - fwkb17-n3 Bench Task\", so the app's numeric ID is #4. The description field on the task page reads exactly \"Bench task for run fwkb17-n3\" (contains 'fwkb17-n3'). No pre-existing tasks were touched — only task #4 was created; tasks titled 'Seed: …' were left alone.",
+      "values": {
+        "task_title": "fwkb17-n3 Bench Task",
+        "task_description_saved": "Bench task for run fwkb17-n3",
+        "page_title": "Bench Board, #4 - fwkb17-n3 Bench Task",
+        "run_reference": "fwkb17-n3",
+        "column": "Backlog",
+        "swimlane": "Default swimlane"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "task_id_displayed"
+      ]
+    },
+    {
+      "id": "03-change",
+      "status": "success",
+      "summary": "Replayed stored procedure s_9d3c13; observed run_reference=fwkb17-n3, task_title=fwkb17-n3 Bench Task.",
+      "values": {
+        "run_reference": "fwkb17-n3",
+        "task_title": "fwkb17-n3 Bench Task"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "now_in_column"
+      ]
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_f00020; observed comment_text_exact=Comment for run fwkb17-n3, run_reference=fwkb17-n3, task_title=fwkb17-n3 Bench Task, comment_visibility=Standard users.",
+      "values": {
+        "comment_text_exact": "Comment for run fwkb17-n3",
+        "run_reference": "fwkb17-n3",
+        "task_title": "fwkb17-n3 Bench Task",
+        "comment_visibility": "Standard users"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-set",
+      "status": "success",
+      "summary": "Replayed stored procedure s_abd6eb; observed other_task_fields_unchanged=title 'fwkb17-n3 Bench Task', description 'Bench task for run fwkb17-n3', column Work in progress, comment 'Comment for run fwkb17-n3', task_title=fwkb17-n3 Bench Task, due_date_as_displayed_on_task_page=12/31/2026 15:19.",
+      "values": {
+        "other_task_fields_unchanged": "title 'fwkb17-n3 Bench Task', description 'Bench task for run fwkb17-n3', column Work in progress, comment 'Comment for run fwkb17-n3'",
+        "task_title": "fwkb17-n3 Bench Task",
+        "due_date_as_displayed_on_task_page": "12/31/2026 15:19"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "due_date_label_text"
+      ]
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_499747; observed task_page_title_tag=Bench Board, #4 - fwkb17-n3 Bench Task, task_description=Bench task for run fwkb17-n3, task_comments=Comment for run fwkb17-n3, run_reference=fwkb17-n3, task_id_displayed=#4 , task_title=fwkb17-n3 Bench Task.",
+      "values": {
+        "task_page_title_tag": "Bench Board, #4 - fwkb17-n3 Bench Task",
+        "task_description": "Bench task for run fwkb17-n3",
+        "task_comments": "Comment for run fwkb17-n3",
+        "run_reference": "fwkb17-n3",
+        "task_id_displayed": "#4 ",
+        "task_title": "fwkb17-n3 Bench Task"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "4/4",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "card_fwkb17_n1_in_column"
+      ]
+    }
+  ],
+  "passed": 6,
+  "total": 6,
+  "repinned": 0,
+  "drift": 3,
+  "driftTickets": [
+    {
+      "flow": "fwkb17",
+      "step": "03-change",
+      "skill": "s_9d3c13",
+      "atStep": "5",
+      "key": "target",
+      "similarity": 1.002,
+      "missedLocator": "page.getByRole('link', { name: 'Work in progress', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8085/?action=show&controller=BoardViewController&project_id=:id",
+      "pageUrl": "http://127.0.0.1:8085/?controller=BoardViewController&action=show&project_id=1"
+    },
+    {
+      "flow": "fwkb17",
+      "step": "05-set",
+      "skill": "s_abd6eb",
+      "atStep": "8",
+      "key": "target",
+      "similarity": 0.609,
+      "missedLocator": "page.locator('li', { hasText: '12/31/2026 15:16' }).locator('strong')",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8085/?action=show&controller=TaskViewController&task_id=:id",
+      "pageUrl": "http://127.0.0.1:8085/?controller=TaskViewController&action=show&task_id=4"
+    },
+    {
+      "flow": "fwkb17",
+      "step": "06-open",
+      "skill": "s_499747",
+      "atStep": "4",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByRole('link', { name: 'Work in progress', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8085/?action=show&controller=BoardViewController&project_id=:id",
+      "pageUrl": "http://127.0.0.1:8085/?controller=BoardViewController&action=show&project_id=1"
+    }
+  ],
+  "wallMs": 23918,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

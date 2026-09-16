@@ -1,0 +1,94 @@
+
+[sweep] run 1/3: fwkb17-n1 (store: /home/user/sitelooper/bench/results/fwkb17-skills)
+[harness] kanboard: defaulting APP_URL
+[harness] kanboard: defaulting APP_EMAIL
+[harness] kanboard: defaulting APP_PASSWORD
+[reset] kanboard: no leftover bench tasks
+[harness] kanboard responded 302 at http://127.0.0.1:8085/
+stopped: fwkb17-n1
+  flow "fwkb17" saved: 6 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwkb17.json
+  warning: note: 01-open no longer publishes columns_left_to_right, column_header_raw — no replay reads them from the page and the recording showed no line to read
+  warning: note: 02-create no longer publishes task_numeric_id, creator, created, board_url — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-change no longer publishes task_id, column_id, backlog_visible_task_count_after_reload, work_in_progress_task_count_after_reload, board_columns_left_to_right — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-open no longer publishes task_id, comment_author, comment_created — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-set no longer publishes task_id, saved_as, seed_tasks_touched, run_reference — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-open no longer publishes board_columns_left_to_right, task_page_heading, task_due_date_as_displayed, task_comment_author_and_visibility, task_status_column_priority — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-change: added a read for now_in_column to s_9d3c13 (page.getByRole('link', { name: 'Work in progress', exact: true }); seen on the next instruction's start page)
+  warning: note: 06-open: added a read for card_fwkb17_n1_in_column to s_499747 (page.getByRole('link', { name: 'Work in progress', exact: true }); seen on the instruction's own page)
+  warning: warning: contradicted-step: 06-open read run_reference "fwkb17-n1" right after 05-set reported "322-char"; 05-set's change may not have landed and a later step may be retrying it. Re-record 05-set.
+  warning: warning: instruction "On the task page for task #4 'fwkb17-n1 Bench Task' in Kanboard projec…" ran 6 state-changing step(s) but reported failure — its work is NOT in the flow
+  warning: warning: 1 value(s) KNOWN to be this run's survived unslotted — a replay will act on or wait for the recording's value (non-fatal outside locators):
+  flow.warnings[0]: "fwkb17-n1" (var) in "contradicted-step: 06-open read run_reference \"fwkb17-n1\" right after 05-set reported \"322-char\"; 05-set's change may not have landed and a later step may be re"
+  warning: warning: 116 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "Bench Board" (output) in "Open http://127.0.0.1:8085/ and sign in with username admin and password admin. Then navigate to the project named 'Bench Board' and open its board. Report the "
+  flow.steps[0].instruction: "admin" (output) in "Open http://127.0.0.1:8085/ and sign in with username admin and password admin. Then navigate to the project named 'Bench Board' and open its board. Report the "
+  flow.steps[1].instruction: "Bench Board" (output) in "In the Kanboard project 'Bench Board', create a new task with title exactly '{{runid}} Bench Task' and a description that includes the text '{{runid}}' (e.g. 'B"
+  flow.steps[1].params.v1: "Bench Board" (output) in "Bench Board"
+  flow.steps[2].instruction: "Work in progress" (output) in "On the Kanboard board for project 'Bench Board', move the task titled '{{runid}} Bench Task' (task {{02-create.task_id_displayed}}) so that it sits in the 'Work"
+  warning: {{02-create.task_id_displayed}} (used by 03-change) can only be re-observed by model recovery — consider re-recording so the value is read from the page.
+  warning: 02-create reports task_id_displayed, but s_589652 re-reads none of it from the page — a replay without the model will succeed without that value; re-record so it is read.
+arm=sitelooper model=z-ai/glm-5.3 runid=fwkb17-n1 stop=completed
+turns=8 wall=589.8s
+commands=7 cmdTime=491.5s cmdBytes=10197 timeouts=0
+orchestrator in=5895 cw=0 cr=28032 out=3484
+inner prompt=2292520 cached=2122496 completion=37293
+spend=$0.0851 maxUsd=3
+learn: A_n=0 replayed=0/7 full=0 repaired=0 compiled=6 variants=0
+-> /home/user/sitelooper/bench/results/fwkb17-n1-sitelooper-result.json
+
+fwkb17-n1: objectives passed 6/6
+  obj 1: PASS — all 4 column names reported (Backlog | Ready | Work in progress | Done)
+  obj 2: PASS — description includes runid=true
+  obj 3: PASS — column=Work in progress
+  obj 4: PASS — 1 comment(s), 1 carrying the runid
+  obj 5: PASS — date_due=2026-12-31, want 2026-12-31
+  obj 6: PASS — task id 4 reported
+
+[sweep] run 2/3: fwkb17-n2 (replay flow fwkb17, no orchestrator)
+[reset] kanboard: deleted 1 leftover bench task(s)
+[sweep] fwkb17-n2: 3 drift ticket(s) → fwkb17-n2-drift.json
+
+fwkb17-n2: objectives passed 5/6
+  obj 1: FAIL — column(s) not in report: Ready, Done
+  obj 2: PASS — description includes runid=true
+  obj 3: PASS — column=Work in progress
+  obj 4: PASS — 1 comment(s), 1 carrying the runid
+  obj 5: PASS — date_due=2026-12-31, want 2026-12-31
+  obj 6: PASS — task id 4 reported
+
+[sweep] run 3/3: fwkb17-n3 (replay flow fwkb17, no orchestrator)
+[reset] kanboard: deleted 1 leftover bench task(s)
+[sweep] fwkb17-n3: 3 drift ticket(s) → fwkb17-n3-drift.json
+
+fwkb17-n3: objectives passed 5/6
+  obj 1: FAIL — column(s) not in report: Ready, Done
+  obj 2: PASS — description includes runid=true
+  obj 3: PASS — column=Work in progress
+  obj 4: PASS — 1 comment(s), 1 carrying the runid
+  obj 5: PASS — date_due=2026-12-31, want 2026-12-31
+  obj 6: PASS — task id 4 reported
+
+Learning sweep fwkb17 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwkb17-n1' │ '6/6'    │ 'completed' │ 8     │ 7    │ 0.0851    │ 0   │ '0/7'        │ 590    │
+│ 1       │ 2 │ 'fwkb17-n2' │ '5/6'    │ 'success'   │ 0     │ 6    │ 0         │ 1   │ '6/6 (flow)' │ 24     │
+│ 2       │ 3 │ 'fwkb17-n3' │ '5/6'    │ 'success'   │ 0     │ 6    │ 0         │ 1   │ '6/6 (flow)' │ 24     │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8085
+  s_499747  validated    4 steps  3/3 (100%)
+           Final verification, read-only. In Kanboard project '{{v1}}': (1) open the board and report the column names le…
+  s_589652  validated    9 steps  3/3 (100%)
+           In the Kanboard project '{{v1}}', create a new task with title exactly '{{v3}}' and a description that include…
+  s_5ff0a1  validated    8 steps  3/3 (100%)
+           Open {{v1}} and sign in with username admin and password admin. Then navigate to the project named 'Bench Boar…
+  s_9d3c13  validated    5 steps  3/3 (100%)
+           On the Kanboard board for project '{{v1}}', move the task titled '{{v2}}' (task #4) so that it sits in the 'Wo…
+  s_abd6eb  validated    8 steps  3/3 (100%)
+           Goal: set the due date of Kanboard task #4 '{{v1}}' (project '{{v3}}') to 2026-12-31 and verify it saved. Do a…
+  s_f00020  validated    7 steps  3/3 (100%)
+           Open the task page for task #4 titled '{{v1}}' in the Kanboard project '{{v3}}' and add a comment whose text i…
+store: /home/user/sitelooper/bench/results/fwkb17-skills
+
+summary: /home/user/sitelooper/bench/results/fwkb17-sweep.json
