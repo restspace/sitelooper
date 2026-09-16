@@ -1,0 +1,192 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwrd60-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwrd60-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwrd60-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwrd60-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwrd60.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwrd60-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwrd60.spec.ts",
+      "file": "fwrd60.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwrd60",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 2400000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 23656,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-add\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-add\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-edit\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-set\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-delete\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 07-verify\n"
+                    }
+                  ],
+                  "stderr": [
+                    {
+                      "text": "[sitelooper skip] 01-open s_296ece/6 target: no locator recorded — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-add s_b2e153/10: read 'part_name' returned a value the skill itself set/selected ('fwrd60-spec RD Part A') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 03-add s_b2e153/10 target: primary locator('section > div > table > tbody > tr > td:nth-of-type(1)') missed; used #2 locator('[data-testid=\"part-row-p18\"] td').first() (#1 ambiguous)\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 06-delete s_d0386a/4: read 'ticket_ref_prefix' returned a value the skill itself set/selected ('fwrd60-spec') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    }
+                  ],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:4180/ and sign in with email bench@example.com and password bench-pass-1234. Then create a new ticket titled '{{runid}} RD Bench Ticket', filling in any required fields the form demands (discover them). After saving, wait for the list/detail view to refresh and confirm the ticket exists by reporting its title, status, and any other fields shown on its detail page.",
+                      "duration": 5303
+                    },
+                    {
+                      "title": "02-add: On the ticket detail page for ticket '{{runid}} RD Bench Ticket' (ref {{01-open.ticket_reference}}), add a part named '{{runid}} RD Part A' with cost 100 and markup 25. Fill in any required fields the part form demands. After saving, wait for the parts table to refresh (it may take a moment) and report the full row shown for this part, especially the price the app computes for it.",
+                      "duration": 3283
+                    },
+                    {
+                      "title": "03-add: On the ticket detail page for ticket '{{runid}} RD Bench Ticket' (ref {{01-open.ticket_reference}}), add a second part named '{{runid}} RD Part B' with cost 200 and markup 25. Fill in any required fields the part form demands. After saving, wait for the parts table to refresh (it may take a moment) and report the full row shown for this new part, especially the price the app computes for it. Also confirm the first part '{{runid}} RD Part A' is still listed.",
+                      "duration": 3279
+                    },
+                    {
+                      "title": "04-edit: On the ticket detail page for ticket '{{runid}} RD Bench Ticket' (ref {{01-open.ticket_reference}}), edit the part named '{{runid}} RD Part A' and change its cost from 100 to 150, leaving its markup at 25. Save the change, wait for the parts table to refresh (it may take a moment), and report the full updated row for '{{runid}} RD Part A' — especially the price the app now computes for it — plus the table's total.",
+                      "duration": 1419
+                    },
+                    {
+                      "title": "05-set: On the ticket detail page for ticket '{{runid}} RD Bench Ticket' (ref {{01-open.ticket_reference}}), attempt to set the ticket's status to 'Ready' (there is a 'Mark Ready' action). The app enforces preconditions before it will accept that status — if it refuses, read the error/validation message it shows, discover exactly what the preconditions are, satisfy them (e.g. fill in whatever missing fields or take whatever steps it demands), and retry until the ticket's status is 'Ready'. Report exactly what preconditions were required, what you did to satisfy them, and the final status text shown on the page.",
+                      "duration": 3651
+                    },
+                    {
+                      "title": "06-delete: On the ticket detail page for ticket '{{runid}} RD Bench Ticket' (ref {{01-open.ticket_reference}}), delete both parts: '{{runid}} RD Part A' and '{{runid}} RD Part B'. Wait for the parts table to refresh after each delete (it may take a moment) and confirm the parts table is empty. Then archive the ticket using the 'Archive ticket' action — if the app refuses or enforces preconditions, discover what they are and satisfy them. Report the confirmation text shown, the final status of the ticket, and whether the ticket still appears in the active tickets list (it should be gone from active/archived into the archive).",
+                      "duration": 4435
+                    },
+                    {
+                      "title": "07-verify: Verify the final state of the app: on the tickets list, confirm that no ticket matching '{{runid}}' appears in the active (non-archived) list. Then open the archived ticket '{{runid}} RD Bench Ticket' (ref {{01-open.ticket_reference}}) and confirm its parts table is empty (no parts) and its status shows Ready/Archived. Report exactly what you see.",
+                      "duration": 2078
+                    }
+                  ],
+                  "startTime": "2026-09-16T11:41:05.718Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": "W3NpdGVsb29wZXIgZHJpZnRdIDAzLWFkZCBzX2IyZTE1My8xMCB0YXJnZXQ6IHByaW1hcnkgbG9jYXRvcignc2VjdGlvbiA+IGRpdiA+IHRhYmxlID4gdGJvZHkgPiB0ciA+IHRkOm50aC1vZi10eXBlKDEpJykgbWlzc2VkOyB1c2VkICMyIGxvY2F0b3IoJ1tkYXRhLXRlc3RpZD0icGFydC1yb3ctcDE4Il0gdGQnKS5maXJzdCgpICgjMSBhbWJpZ3VvdXMp"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "14732b39ce428dabc73d-13b7b88a00631ef35bf3",
+          "file": "fwrd60.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-16T11:41:04.300Z",
+    "duration": 25221.056999999997,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

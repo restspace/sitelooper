@@ -1,0 +1,365 @@
+{
+  "name": "fwrd60",
+  "origin": "http://127.0.0.1:4180",
+  "startUrl": "http://127.0.0.1:4180/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-open",
+      "instruction": "Open http://127.0.0.1:4180/ and sign in with email bench@example.com and password bench-pass-1234. Then create a new ticket titled '{{runid}} RD Bench Ticket', filling in any required fields the form demands (discover them). After saving, wait for the list/detail view to refresh and confirm the ticket exists by reporting its title, status, and any other fields shown on its detail page.",
+      "skill": "s_6223d0",
+      "params": {
+        "v2": "http://127.0.0.1:4180/",
+        "v3": "bench@example.com",
+        "v4": "bench-pass-1234",
+        "v5": "{{runid}} RD Bench Ticket",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "ticket_reference",
+        "title",
+        "status",
+        "customer",
+        "raised",
+        "detail_url",
+        "parts",
+        "ticket_ref_prefix"
+      ],
+      "recorded": {
+        "ticket_reference": "RD-1015",
+        "title": "fwrd60-n1 RD Bench Ticket",
+        "status": "Draft",
+        "customer": "Not recorded",
+        "raised": "2026-09-16",
+        "detail_url": "http://127.0.0.1:4180/#/tickets/t15",
+        "parts": "No parts on this ticket yet.",
+        "ticket_ref_prefix": "fwrd60-n1",
+        "url": "http://127.0.0.1:4180/#/tickets/t15",
+        "url.h1": "t15"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets/:id",
+      "outputEvidence": {
+        "ticket_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "title": {
+          "same": 0,
+          "differed": 1
+        },
+        "status": {
+          "same": 1,
+          "differed": 0
+        },
+        "customer": {
+          "same": 1,
+          "differed": 0
+        },
+        "raised": {
+          "same": 0,
+          "differed": 1
+        },
+        "detail_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "parts": {
+          "same": 1,
+          "differed": 0
+        },
+        "ticket_ref_prefix": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.h1": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-add",
+      "instruction": "On the ticket detail page for ticket '{{runid}} RD Bench Ticket' (ref {{01-open.ticket_reference}}), add a part named '{{runid}} RD Part A' with cost 100 and markup 25. Fill in any required fields the part form demands. After saving, wait for the parts table to refresh (it may take a moment) and report the full row shown for this part, especially the price the app computes for it.",
+      "skill": "s_b2e153",
+      "params": {
+        "v1": "{{runid}} RD Bench Ticket",
+        "v3": "{{01-open.ticket_reference}}",
+        "v4": "{{runid}} RD Part A",
+        "v5": "100",
+        "v6": "25",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "part_name",
+        "part_cost",
+        "part_markup",
+        "part_supplier",
+        "part_price",
+        "ref",
+        "ticket_ref_prefix"
+      ],
+      "recorded": {
+        "part_name": "fwrd60-n1 RD Part A",
+        "part_cost": "$100.00",
+        "part_markup": "25%",
+        "part_supplier": "No supplier",
+        "part_price": "$125.00",
+        "ref": "RD-1015",
+        "ticket_ref_prefix": "fwrd60-n1"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets/:id",
+      "outputEvidence": {
+        "part_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "part_cost": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_markup": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_supplier": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_price": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "ticket_ref_prefix": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "03-add",
+      "instruction": "On the ticket detail page for ticket '{{runid}} RD Bench Ticket' (ref {{01-open.ticket_reference}}), add a second part named '{{runid}} RD Part B' with cost 200 and markup 25. Fill in any required fields the part form demands. After saving, wait for the parts table to refresh (it may take a moment) and report the full row shown for this new part, especially the price the app computes for it. Also confirm the first part '{{runid}} RD Part A' is still listed.",
+      "skill": "s_b2e153",
+      "params": {
+        "v1": "{{runid}} RD Bench Ticket",
+        "v2": "{{runid}}",
+        "v3": "{{01-open.ticket_reference}}",
+        "v4": "{{runid}} RD Part B",
+        "v5": "200",
+        "v6": "25"
+      },
+      "outputs": [
+        "part_name",
+        "part_cost",
+        "part_markup",
+        "part_supplier",
+        "part_price",
+        "ref",
+        "ticket_ref_prefix"
+      ],
+      "recorded": {
+        "part_name": "fwrd60-n1 RD Part B",
+        "part_cost": "$200.00",
+        "part_markup": "25%",
+        "part_supplier": "No supplier",
+        "part_price": "$250.00",
+        "ref": "RD-1015",
+        "ticket_ref_prefix": "fwrd60-n1"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets/:id",
+      "outputEvidence": {
+        "part_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "part_cost": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_markup": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_supplier": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_price": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "ticket_ref_prefix": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "04-edit",
+      "instruction": "On the ticket detail page for ticket '{{runid}} RD Bench Ticket' (ref {{01-open.ticket_reference}}), edit the part named '{{runid}} RD Part A' and change its cost from 100 to 150, leaving its markup at 25. Save the change, wait for the parts table to refresh (it may take a moment), and report the full updated row for '{{runid}} RD Part A' — especially the price the app now computes for it — plus the table's total.",
+      "skill": "s_ac065e",
+      "params": {
+        "v1": "{{runid}} RD Bench Ticket",
+        "v3": "{{01-open.ticket_reference}}",
+        "v4": "{{runid}} RD Part A",
+        "v5": "150",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "ticket_ref_prefix",
+        "ticket_reference"
+      ],
+      "recorded": {
+        "ticket_ref_prefix": "fwrd60-n1",
+        "ticket_reference": "RD-1015"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets/:id",
+      "outputEvidence": {
+        "ticket_ref_prefix": {
+          "same": 0,
+          "differed": 1
+        },
+        "ticket_reference": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "05-set",
+      "instruction": "On the ticket detail page for ticket '{{runid}} RD Bench Ticket' (ref {{01-open.ticket_reference}}), attempt to set the ticket's status to 'Ready' (there is a 'Mark Ready' action). The app enforces preconditions before it will accept that status — if it refuses, read the error/validation message it shows, discover exactly what the preconditions are, satisfy them (e.g. fill in whatever missing fields or take whatever steps it demands), and retry until the ticket's status is 'Ready'. Report exactly what preconditions were required, what you did to satisfy them, and the final status text shown on the page.",
+      "skill": "s_4e4858",
+      "params": {
+        "v1": "{{runid}} RD Bench Ticket",
+        "v3": "{{01-open.ticket_reference}}",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "final_status",
+        "ref",
+        "ticket_ref_prefix"
+      ],
+      "recorded": {
+        "final_status": "Status\nReady",
+        "ref": "RD-1015",
+        "ticket_ref_prefix": "fwrd60-n1"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets/:id",
+      "outputEvidence": {
+        "final_status": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "ticket_ref_prefix": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "06-delete",
+      "instruction": "On the ticket detail page for ticket '{{runid}} RD Bench Ticket' (ref {{01-open.ticket_reference}}), delete both parts: '{{runid}} RD Part A' and '{{runid}} RD Part B'. Wait for the parts table to refresh after each delete (it may take a moment) and confirm the parts table is empty. Then archive the ticket using the 'Archive ticket' action — if the app refuses or enforces preconditions, discover what they are and satisfy them. Report the confirmation text shown, the final status of the ticket, and whether the ticket still appears in the active tickets list (it should be gone from active/archived into the archive).",
+      "skill": "s_57ab57",
+      "params": {
+        "v1": "{{runid}} RD Bench Ticket",
+        "v3": "{{01-open.ticket_reference}}",
+        "v4": "{{runid}} RD Part A",
+        "v5": "{{runid}} RD Part B",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "final_status",
+        "tickets_url",
+        "ref",
+        "ticket_ref_prefix"
+      ],
+      "recorded": {
+        "final_status": "Status\nReady\nArchived",
+        "tickets_url": "http://127.0.0.1:4180/#/tickets/t15",
+        "ref": "RD-1015",
+        "ticket_ref_prefix": "fwrd60-n1",
+        "url": "http://127.0.0.1:4180/#/tickets"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets",
+      "outputEvidence": {
+        "final_status": {
+          "same": 1,
+          "differed": 0
+        },
+        "tickets_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "ticket_ref_prefix": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "07-verify",
+      "instruction": "Verify the final state of the app: on the tickets list, confirm that no ticket matching '{{runid}}' appears in the active (non-archived) list. Then open the archived ticket '{{runid}} RD Bench Ticket' (ref {{01-open.ticket_reference}}) and confirm its parts table is empty (no parts) and its status shows Ready/Archived. Report exactly what you see.",
+      "skill": "s_7b1c17",
+      "params": {
+        "v1": "{{runid}}",
+        "v2": "{{runid}} RD Bench Ticket",
+        "v3": "{{01-open.ticket_reference}}"
+      },
+      "outputs": [
+        "ticket_ref_prefix",
+        "ticket_reference"
+      ],
+      "recorded": {
+        "ticket_ref_prefix": "fwrd60-n1",
+        "ticket_reference": "RD-1015"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets/:id",
+      "outputEvidence": {
+        "ticket_ref_prefix": {
+          "same": 0,
+          "differed": 1
+        },
+        "ticket_reference": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwrd60-n1",
+    "created": "2026-09-16T11:39:10.740Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  }
+}

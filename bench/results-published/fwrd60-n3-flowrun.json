@@ -1,0 +1,201 @@
+{
+  "flow": "fwrd60",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_296ece; observed detail_url=http://127.0.0.1:4180/#/tickets/t15, ticket_reference=RD-1017, title=fwrd60-n3 RD Bench Ticket, status=Draft, customer=Not recorded, parts=No parts on this ticket yet., ticket_ref_prefix=fwrd60-n3 RD Bench Ticket.",
+      "values": {
+        "detail_url": "http://127.0.0.1:4180/#/tickets/t15",
+        "ticket_reference": "RD-1017",
+        "title": "fwrd60-n3 RD Bench Ticket",
+        "status": "Draft",
+        "customer": "Not recorded",
+        "parts": "No parts on this ticket yet.",
+        "ticket_ref_prefix": "fwrd60-n3 RD Bench Ticket"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "raised"
+      ]
+    },
+    {
+      "id": "02-add",
+      "status": "success",
+      "summary": "On the RD-1017 ticket detail page I opened the \"Add part\" dialog and filled the required fields (Part name, Cost 100, Markup % 25; Quantity defaulted to 1, Supplier left optional/blank). After saving, the parts table refreshed and now shows the full row: Name \"fwrd60-n3 RD Part A\", Cost $100.00, Markup 25%, Qty 1, Supplier \"No supplier\", Price $125.00 (the app's computed sale price = cost + 25% markup), with Edit/Delete actions.",
+      "values": {
+        "part_name": "fwrd60-n3 RD Part A",
+        "ticket_ref_prefix": "fwrd60-n3",
+        "ref": "RD-1017",
+        "part_cost": "$100.00",
+        "part_markup": "25%",
+        "part_supplier": "No supplier",
+        "part_price": "$125.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-add",
+      "status": "success",
+      "summary": "On the RD-1017 ticket detail page I opened the \"Add part\" dialog and filled the required fields (Part name, Cost 200, Markup % 25; Quantity defaulted to 1, Supplier left optional/blank). After saving, the parts table refreshed and now shows the full row: Name \"fwrd60-n3 RD Part A\", Cost $200.00, Markup 25%, Qty 1, Supplier \"No supplier\", Price $250.00 (the app's computed sale price = cost + 25% markup), with Edit/Delete actions.",
+      "values": {
+        "ticket_ref_prefix": "fwrd60-n3",
+        "part_name": "fwrd60-n3 RD Part A",
+        "ref": "RD-1017",
+        "part_cost": "$200.00",
+        "part_markup": "25%",
+        "part_supplier": "No supplier",
+        "part_price": "$250.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-edit",
+      "status": "success",
+      "summary": "Opened the Edit dialog for 'fwrd60-n3 RD Part A' on RD-1017, changed Cost from 100 to 150 and left Markup at 25, then saved. The parts table refreshed: Part A now reads \"$150.00 | 25% | 1 | No supplier | $187.50\", i.e. the app recomputed its Price to $187.50 (cost + 25% markup). The table Total updated from $375.00 to $437.50, and Part B is unchanged at $200.00 / 25% / $250.00.",
+      "values": {
+        "ticket_ref_prefix": "fwrd60-n3",
+        "ticket_reference": "RD-1017"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-set",
+      "status": "success",
+      "summary": "First click of 'Mark Ready' on RD-1017 was refused with the alert: 'Ticket is not ready — Part \"fwrd60-n3 RD Part A\" has no supplier; Part \"fwrd60-n3 RD Part B\" has no supplier.' The enforced precondition is that every part on the ticket must have a supplier recorded. I opened Edit on each part and set the previously-empty optional Supplier field to 'Bench Supplier Co' (costs/markup unchanged: Part A $150.00/25% → $187.50, Part B $200.00/25% → $250.00; table total $437.50). Retrying 'Mark Ready' then succeeded: the Status line now reads 'Ready' and the actions flipped from 'Mark Ready' to 'Mark Draft' / 'Mark Closed'.",
+      "values": {
+        "ticket_ref_prefix": "fwrd60-n3",
+        "final_status": "Status\nReady",
+        "ref": "RD-1017"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "06-delete",
+      "status": "success",
+      "summary": "Deleted both parts on RD-1017 by clicking Delete on each row and confirming the in-page \"Confirm\" dialog via its \"Delete part\" button (not a native confirm; no message text beyond that). The parts table refreshed to \"No parts on this ticket yet.\" after each delete. I then clicked \"Archive ticket\": it applied immediately — no refusal, no precondition error and no confirmation text — the button flipped to \"Unarchive ticket\" and the status area now reads \"Ready / Archived\" (status stayed Ready with an Archived flag). On the tickets list, searching \"fwrd60-n3\" with \"Show archived\" unchecked returns no rows (gone from active); with \"Show archived\" checked it shows as \"RD-1017 | fwrd60-n3 RD Bench Ticket Archived | Not recorded | Ready | 0 | 2026-09-16\".",
+      "values": {
+        "ticket_ref_prefix": "fwrd60-n3",
+        "final_status": "Status\nReady\nArchived",
+        "tickets_url": "http://127.0.0.1:4180/#/tickets/t15",
+        "ref": "RD-1017"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "07-verify",
+      "status": "success",
+      "summary": "On the tickets list with search \"fwrd60-n3 RD Bench Ticket\" and \"Show archived\" unchecked, the only row shown is \"No tickets match the current filters.\" — zero ticket rows, so the ticket is absent from the active list. Re-checking \"Show archived\" brings back the row \"RD-1017 | fwrd60-n3 RD Bench Ticket RD Bench Ticket Archived | Not recorded | Ready | 0 | 2026-09-16\", and clicking the RD-1017 link opens the detail page where the status block shows \"Status: Ready\" plus an \"Archived\" tag, the heading shows \"fwrd60-n3 RD Bench Ticket RD Bench Ticket\", and the Parts table's only row is \"No parts on this ticket yet.\" Available actions are Mark Draft, Mark Closed and Unarchive ticket (Add part still present).",
+      "values": {
+        "ticket_reference": "RD-1017",
+        "ticket_ref_prefix": "fwrd60-n3 RD Bench Ticket"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 7,
+  "total": 7,
+  "repinned": 0,
+  "drift": 4,
+  "driftTickets": [
+    {
+      "flow": "fwrd60",
+      "step": "01-open",
+      "skill": "s_296ece",
+      "atStep": "6",
+      "key": "target",
+      "similarity": 1.004,
+      "missedLocator": "(none recorded)",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    },
+    {
+      "flow": "fwrd60",
+      "step": "02-add",
+      "skill": "s_b2e153",
+      "atStep": "7",
+      "key": "target",
+      "similarity": 1.004,
+      "missedLocator": "page.locator('table tbody tr:has-text(\"fwrd60-n3 RD Part A\")')",
+      "fallbackUsed": "page.locator('[data-testid=\"parts-table\"] tr')",
+      "fallbackIndex": 3,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    },
+    {
+      "flow": "fwrd60",
+      "step": "03-add",
+      "skill": "s_b2e153",
+      "atStep": "7",
+      "key": "target",
+      "similarity": 0.856,
+      "missedLocator": "page.locator('table tbody tr:has-text(\"fwrd60-n3 RD Part B\")')",
+      "fallbackUsed": "page.locator('[data-testid=\"parts-table\"] tr')",
+      "fallbackIndex": 3,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    },
+    {
+      "flow": "fwrd60",
+      "step": "03-add",
+      "skill": "s_b2e153",
+      "atStep": "10",
+      "key": "target",
+      "similarity": 0.856,
+      "missedLocator": "page.locator('section > div > table > tbody > tr > td:nth-of-type(1)')",
+      "fallbackUsed": "page.locator('[data-testid=\"part-row-p18\"] td').nth(0)",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    }
+  ],
+  "wallMs": 25923,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
