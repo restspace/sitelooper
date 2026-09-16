@@ -15,7 +15,7 @@
  * daemon, "<stepId> <segmentId>/<n>" in the artifact).
  */
 import { clip } from './text.js';
-import { boundQueryKeys, CREDENTIAL_KEY, fillParams, mintedShape, oneSidedQueryKeys, serializeShape, softUrlMatch, urlDiff, urlMatches, urlShapeOf, type UrlSegDiff } from './url.js';
+import { boundQueryKeys, CREDENTIAL_KEY, fillParams, mintedShape, oneSidedQueryKeys, serializeShape, softUrlMatch, urlDiff, urlMatches, urlShapeOf, type UrlSegDiff, type UrlShape } from './url.js';
 
 /**
  * How a LIVE url reads in a verdict's message. The message travels: into a
@@ -96,6 +96,135 @@ function describeDiffs(diffs: UrlSegDiff[]): string {
   return diffs.map((d) => `${d.expected}→${d.actual}`).join(', ');
 }
 
+/** How a url position reads in a message, in the spelling urlRecordParts uses. */
+function positionLabel(d: UrlSegDiff): string {
+  return d.where === 'path' ? `path[${d.index}]` : d.where === 'hashPath' ? `#[${d.index}]` : d.where === 'hashState' ? `#${d.key}` : `${d.key}`;
+}
+
+function samePosition(a: UrlSegDiff, b: UrlSegDiff): boolean {
+  return a.where === b.where && a.index === b.index && a.key === b.key;
+}
+
+/** What a url holds at the position a diff names, or undefined when it has none there. */
+function partAt(shape: UrlShape, d: UrlSegDiff): string | undefined {
+  if (d.where === 'path') return shape.path[d.index!];
+  if (d.where === 'hashPath') return shape.hashPath[d.index!];
+  if (d.where === 'query') return shape.query.get(d.key!);
+  return shape.hashState.get(d.key!);
+}
+
+/**
+ * Rewrite the named positions of a url, leaving every other byte of it as it
+ * was. Not serializeShape: that sorts the query, drops noise keys and decodes
+ * values, and a navigation must ask for the url the recording asked for, with
+ * only these positions changed. Null when a position is not in the url.
+ */
+function withUrlParts(url: string, edits: readonly { at: UrlSegDiff; value: string }[]): string | null {
+  let u: URL;
+  try {
+    u = new URL(url);
+  } catch {
+    return null;
+  }
+  // The fragment is edited as text: `#` may carry a route, state pairs, and a
+  // `?…` remainder urlShapeOf ignores but the app may not.
+  const cut = u.hash.indexOf('?');
+  let body = u.hash.length > 1 ? (cut < 0 ? u.hash.slice(1) : u.hash.slice(1, cut)) : '';
+  const rest = cut < 0 ? '' : u.hash.slice(cut);
+  const nthNonEmpty = (parts: string[], n: number): number => parts.reduce<number[]>((keep, part, i) => (part === '' ? keep : [...keep, i]), [])[n] ?? -1;
+  for (const { at, value } of edits) {
+    if (at.where === 'path') {
+      const segs = u.pathname.split('/');
+      const i = nthNonEmpty(segs, at.index!);
+      if (i < 0) return null;
+      segs[i] = encodeURIComponent(value);
+      u.pathname = segs.join('/');
+    } else if (at.where === 'query') {
+      if (!u.searchParams.has(at.key!)) return null;
+      u.searchParams.set(at.key!, value);
+    } else if (at.where === 'hashPath') {
+      const segs = body.split('/');
+      const i = nthNonEmpty(segs, at.index!);
+      if (i < 0) return null;
+      segs[i] = encodeURIComponent(value);
+      body = segs.join('/');
+    } else {
+      const pairs = body.split('&');
+      const i = pairs.findIndex((p) => p.split('=')[0] === at.key);
+      if (i < 0) return null;
+      pairs[i] = `${at.key}=${encodeURIComponent(value)}`;
+      body = pairs.join('&');
+    }
+  }
+  u.hash = body || rest ? `#${body}${rest}` : '';
+  return u.toString();
+}
+
+/** Where a navigation should actually go, and what is stale about where it was told to go. */
+export interface NavigationTarget {
+  /** The url to navigate to: the recorded target, or it with volatile positions taken from the live url. */
+  url: string;
+  /** What was retargeted, for the run's warnings; absent when the recorded target stands. */
+  warning?: string;
+  /**
+   * The target still spells a value at a position this run has shown volatile
+   * — the recording's record, not this run's. Handed to the alert gate as the
+   * CAUSE of an unrecorded alert on the landing (alertVerdict.navigatedToStale).
+   */
+  stale?: string;
+}
+
+/**
+ * Where a goto should send the browser. A recorded target is a literal from
+ * the RECORDING's run, and one of its positions may be an identifier the
+ * environment mints afresh — the case the soft url match already treats as
+ * volatile. When this run has DEMONSTRATED that a position varies (the
+ * `diffs` a urlEffectVerdict or a precondition soft match handed back) and the
+ * target still spells the stale value there, the recorded literal names a page
+ * of the recording's run, not of this one: navigate to the value the browser
+ * is already showing at that position instead.
+ *
+ * Evidence only, never a shape guess: the position must have been observed to
+ * vary in THIS run, the target must still carry exactly the value that
+ * observation found stale, the live url must be the target's own page shape
+ * (urlDiff), and every position where the two disagree must be one of those
+ * observed — a disagreement anywhere else is a different page, and the
+ * recorded target stands. Both sides must look minted, as softUrlMatch
+ * requires, so `/orders/success` is never retargeted to `/orders/failure`.
+ *
+ * fwgr41-n3 06-find: step 6 warned "url segment(s) differ from recorded
+ * (afyd7g0300dfkc→cfyd8hqymgfeoe) — treated as volatile", and step 7 then went
+ * to the recorded `/d/afyd7g0300dfkc/…` — a dashboard this environment never
+ * minted — where Grafana answered "Dashboard not found".
+ */
+export function retargetNavigation(target: string, liveUrl: string, volatile: readonly UrlSegDiff[], where = 'this navigation'): NavigationTarget {
+  // An unfilled marker is not a concrete destination; whatever this would
+  // compare, it is not the url the step will ask for.
+  if (!volatile.length || /\{\{/.test(target)) return { url: target };
+  const shape = urlShapeOf(target);
+  if (!shape) return { url: target };
+  const carried = volatile.filter((v) => v.expected !== v.actual && partAt(shape, v) === v.expected);
+  if (!carried.length) return { url: target };
+  const stale = `its url still names the recorded ${carried.map((v) => `${positionLabel(v)}=${clip(v.expected, 40)}`).join(', ')}, which this run has already shown varies (${carried.map((v) => clip(v.actual, 40)).join(', ')})`;
+  const diffs = urlDiff(target, liveUrl);
+  // The browser is already where the target points (or on a url that is not
+  // its page at all, where nothing here can be read off it).
+  if (diffs && !diffs.length) return { url: target };
+  if (!diffs) return { url: target, stale };
+  const edits: { at: UrlSegDiff; value: string }[] = [];
+  for (const d of diffs) {
+    if (!carried.some((v) => samePosition(v, d) && v.expected === d.expected)) return { url: target, stale };
+    if (!mintedShape(d.expected) || !mintedShape(d.actual)) return { url: target, stale };
+    edits.push({ at: d, value: d.actual });
+  }
+  const url = withUrlParts(target, edits);
+  if (!url) return { url: target, stale };
+  return {
+    url,
+    warning: `${where}: the recorded target names ${diffs.map((d) => `${positionLabel(d)}=${clip(d.expected, 40)}`).join(', ')}, a position this run has already shown volatile — navigating to the live ${diffs.map((d) => `${positionLabel(d)}=${clip(d.actual, 40)}`).join(', ')} instead`,
+  };
+}
+
 export interface AlertVerdict {
   stop?: string;
   warnings: string[];
@@ -139,7 +268,7 @@ export interface AlertVerdict {
 export function alertVerdict(
   before: string[],
   after: string[] | null,
-  ctx: { where: string; isRead: boolean; expectedContains?: string; params: Record<string, string>; effectConfirmed?: boolean },
+  ctx: { where: string; isRead: boolean; expectedContains?: string; params: Record<string, string>; effectConfirmed?: boolean; navigatedToStale?: string },
   afterComplete = true,
 ): AlertVerdict {
   const warnings: string[] = [];
@@ -161,7 +290,17 @@ export function alertVerdict(
   }
   const raised = after.filter((a) => !before.includes(a));
   if (raised.length && !ctx.isRead && want === undefined) {
-    const seen = `${ctx.where} raised an alert the recording never saw: ${clip(raised.join(' | '), 200)}`;
+    // The step NAVIGATED to a url still spelling a value this run has shown
+    // volatile (retargetNavigation.stale): the page that url names belongs to
+    // the recording's run and does not exist here, which is the cause of
+    // whatever the app then said. The alert's own text decides nothing — the
+    // navigation does — and the stop is the same stop; only what it names is
+    // different, so recovery and the drift ticket act on the cause instead of
+    // "an alert the recording never saw" (fwgr41-n3 06-find step 7, where
+    // Grafana answered the recording's dead dashboard uid).
+    const seen = ctx.navigatedToStale
+      ? `${ctx.where} navigated to a page that does not exist: ${ctx.navigatedToStale} — the app answered with an alert the recording never saw: ${clip(raised.join(' | '), 200)}`
+      : `${ctx.where} raised an alert the recording never saw: ${clip(raised.join(' | '), 200)}`;
     if (!ctx.effectConfirmed) return { warnings, stop: seen };
     warnings.push(`${seen} — reported, not stopped: the step's recorded page changes appeared`);
     return { warnings };

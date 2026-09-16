@@ -33,6 +33,48 @@ export const DIALOG_LINE = /^-\s*dialog\s+"([^"]*)"/;
 /** A popup container, whose opening is itself the effect whether or not it carries a name (replay's OPENER_LINE roles). */
 const POPUP_ROLE = /^(dialog|alertdialog|menu|menubar|listbox|tooltip)$/;
 
+/**
+ * A popup's ITEMS: the entries a listbox or menu lists while it is open. The
+ * container's appearance is the event (POPUP_ROLE above, which stays exempt
+ * from identifiesNothing); what it happens to be listing at that instant is
+ * not. An item list is the application answering the keystrokes so far — odoo's
+ * product autocomplete re-queries on every character and returns whatever the
+ * catalogue holds now — so an item is momentary evidence about the ENVIRONMENT,
+ * never proof that the step acted on the right element. fwod49-n2's 02-open
+ * recorded `- option "{{v4}}"` as its type step's hard effect and stopped every
+ * replay whose catalogue answered differently.
+ */
+const POPUP_ITEM_ROLE = /^(option|menuitem|menuitemcheckbox|menuitemradio)$/;
+
+/** Whether a recorded line describes an item inside an open popup (see POPUP_ITEM_ROLE). */
+export function popupItem(line: string): boolean {
+  const m = LINE_PARTS.exec(line.trim());
+  return m ? POPUP_ITEM_ROLE.test(m[1]) : false;
+}
+
+/** Any `{{…}}` marker that is not the wildcard — a slot no one filled. */
+const UNFILLED_MARKER = /\{\{(?!\*\}\})[^{}]*\}\}/;
+
+/**
+ * A recorded line that this run could not fill: after params are substituted
+ * it still carries a `{{…}}` marker — a `{{vN}}` the caller never bound, or a
+ * param whose own value is an unresolved reference to another step's output
+ * (`{{02-open.product_name}}`). The `{{*}}` wildcard is not one: that marker is
+ * deliberate, and lineShows matches it against anything.
+ *
+ * Such a line says nothing about THIS run, exactly as identifiesNothing's do,
+ * so it is dropped with a warning rather than searched for: no page has ever
+ * shown the literal text of a marker, so looking for it can only stop the run.
+ * fwod49-n2: an unresolved `{{02-open.product_name}}` reached the gate as a
+ * param value, every replay of s_78eaaf and s_32409f stopped on "the page did
+ * not show `- option \"{{02-open.product_name}}\"`", and the skills were
+ * demoted for it. Judged at CHECK time in both runners, so a store compiled
+ * before this rule existed is fixed without re-recording.
+ */
+export function unfilledSlot(line: string): boolean {
+  return UNFILLED_MARKER.test(line);
+}
+
 /** `- role "name" [state]…: value` — the name may be cut short by the 120-char stored-line cap, so its closing quote is optional. */
 const LINE_PARTS = /^-?\s*([A-Za-z][\w-]*)(?:\s+"((?:[^"\\]|\\.)*)"?)?((?:\s+\[[^\]]*\])*)(?::\s*(.*))?$/;
 
@@ -87,6 +129,51 @@ export function maskMinted(line: string): string {
   return line.replace(/^(-?\s*\S+(?:\s+"(?:[^"\\]|\\.)*")?(?:\s+\[[^\]]*\])*)(:\s*)(\S.*?)\s*$/, (whole, head: string, sep: string, value: string) =>
     value.includes('{{') ? whole : `${head}${sep}${WILDCARD}`,
   );
+}
+
+/** The roles whose displayed value a PROCEDURE can put there by typing or choosing. */
+const EDITABLE_ROLE = /^(textbox|searchbox|spinbutton|combobox)$/;
+
+/**
+ * The second half of maskMinted's provenance rule, for values that ARE slots.
+ *
+ * maskMinted wildcards a control's value when it is a literal, because the
+ * procedure only ever puts a value on the page through its own fills and
+ * choices, and a literal is therefore the app's. A slot is not automatically
+ * the procedure's either: a skill's params carry values from ANOTHER step's
+ * output (`output:i2:product_name`), and a step that merely double-clicks a
+ * row is not what put that product's name in the row's combobox — the app
+ * did, and on the next run it may hold whatever record the run actually
+ * opened. fwod49-n2's 04-open recorded its dblclick's effect as
+ * `- combobox "Type to find a product...": {{v4}}` / `- textbox "": {{v4}}`
+ * and could only ever pass on the recording's own quotation.
+ *
+ * So a value is firm evidence only when it is one of `own` — the values this
+ * step itself put on the page (its own fill/type/select args). Everything
+ * else at an editable role becomes the wildcard. Provenance, not shape: no
+ * attempt is made to tell an id from a title. Role, name and state are
+ * untouched and still have to match, and the wildcard already in a value
+ * (`{{*}}`) is left alone.
+ */
+export function maskForeignValue(line: string, own: readonly string[]): string {
+  return line.replace(
+    /^(-?\s*(\S+)(?:\s+"(?:[^"\\]|\\.)*")?(?:\s+\[[^\]]*\])*)(:\s*)(\S.*?)\s*$/,
+    (whole, head: string, role: string, sep: string, value: string) => {
+      if (!EDITABLE_ROLE.test(role) || value === WILDCARD) return whole;
+      return own.some((v) => v.trim() === value.trim()) ? whole : `${head}${sep}${WILDCARD}`;
+    },
+  );
+}
+
+/**
+ * A popup item is never PARAMETERISED: the slots in an open menu's or
+ * listbox's entry become the wildcard, which leaves `- option "{{v4}}"` as
+ * `- option "{{*}}"` — a line identifying nothing, dropped by the same rule
+ * that drops `- cell ""`. The popup's own container line survives to carry the
+ * evidence that it opened. See POPUP_ITEM_ROLE for why (fwod49-n2 02-open).
+ */
+export function maskPopupItem(line: string): string {
+  return popupItem(line) ? line.replace(/\{\{[vd]\d+\}\}/g, WILDCARD) : line;
 }
 
 /**
@@ -233,8 +320,13 @@ export async function expectedChangesVerdict(
     return { shown: false, complete: live.complete, why: live.complete ? '' : live.coverage ? describeCoverage(live.coverage) || 'coverage unknown' : 'coverage unknown' };
   };
   // A line carrying a {{vN}} slot is HARD (below). A {{dN}} derived marker
-  // is filled like any other param but stays soft — the app minted it.
-  const isParam = (l: string) => SLOT_LINE.test(l);
+  // is filled like any other param but stays soft — the app minted it. An item
+  // inside an open popup is never HARD whatever it carries: the list is the
+  // environment's answer to the keystrokes so far, not proof this step acted
+  // on the right element (POPUP_ITEM_ROLE; fwod49-n2 02-open stopped on
+  // `- option "{{v4}}"`). A store compiled before maskPopupItem existed is
+  // fixed here, without re-recording.
+  const isParam = (l: string) => SLOT_LINE.test(l) && !popupItem(l);
   // Transient lines (spinners, progress bars) are dropped here too, so a
   // store compiled before TRANSIENT_LINE existed stops failing on them.
   const lines = recorded.filter((l) => !TRANSIENT_LINE.test(l));
@@ -243,9 +335,28 @@ export async function expectedChangesVerdict(
   // looked for — filled first, so a store minted before compile dropped such
   // lines (fwod47-n3 04-open's `- textbox "": {{v5}}`) is fixed without
   // re-recording. All of them gone means the step has no expectation.
-  let parameterised = liveLines(lines.filter(isParam), params).filter((l) => !identifiesNothing(l));
-  const plain = liveLines(lines.filter((l) => !isParam(l)), params).filter((l) => !identifiesNothing(l));
-  if (!parameterised.length && !plain.length) return { warnings: [] };
+  // ...and a line this run could not fill (unfilledSlot) is dropped the same
+  // way, with a warning: an unbound `{{vN}}`, or a param whose value is itself
+  // an unresolved reference, would otherwise be searched for as literal text
+  // and stop a step that did exactly what it was recorded doing (fwod49-n2).
+  const unfilled: string[] = [];
+  const usable = (group: string[]): string[] =>
+    group.filter((l) => {
+      if (identifiesNothing(l)) return false;
+      if (unfilledSlot(l)) {
+        unfilled.push(l);
+        return false;
+      }
+      return true;
+    });
+  let parameterised = usable(liveLines(lines.filter(isParam), params));
+  const plain = usable(liveLines(lines.filter((l) => !isParam(l)), params));
+  if (unfilled.length) {
+    warnings.push(
+      `step ${tag}: ${unfilled.length} recorded page change(s) carry a value this run could not fill (e.g. ${JSON.stringify(unfilled[0])}) — not checked`,
+    );
+  }
+  if (!parameterised.length && !plain.length) return { warnings };
   // A positionally-resolved fill must prove itself with a CONSEQUENTIAL
   // change: its own echo in a same-role element is what the wrong element
   // produces too (see consequentialExpectations). When the echo is all the
@@ -365,7 +476,14 @@ export function effectExpectation(
   params: Record<string, string>,
   d: LineDialect = 1,
 ): { holds(): Promise<boolean | null> } | undefined {
-  const hard = liveLines((recorded ?? []).filter((l) => SLOT_LINE.test(l) && !TRANSIENT_LINE.test(l)), params).filter((l) => !identifiesNothing(l));
+  // The same three exclusions the effect gate makes, for the same reasons: a
+  // popup item is never the hard half, and a line identifying nothing or one
+  // this run could not fill is not something to wait for (fwod49-n2 — the
+  // observation would have polled for the literal "{{02-open.product_name}}"
+  // for the whole action window before the gate stopped on it).
+  const hard = liveLines((recorded ?? []).filter((l) => SLOT_LINE.test(l) && !TRANSIENT_LINE.test(l) && !popupItem(l)), params).filter(
+    (l) => !identifiesNothing(l) && !unfilledSlot(l),
+  );
   if (!hard.length) return undefined;
   return {
     holds: async () => {

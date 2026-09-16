@@ -3,7 +3,7 @@ import type { LocatorCandidate, RecordedEntry, RecordedInstruction, RecordedStep
 import type { Report } from '../agent/report.js';
 import { contractFor, newSkillId, originOf, type Skill, type SkillParam, type SkillStep, type StepExpectation } from './store.js';
 import { MIN_ID_LEN, digitDominant, looksLikeId, skeleton, tokenPattern } from './shape.js';
-import { idPositionPart, occursAsToken } from './ledger.js';
+import { occursAsToken } from './ledger.js';
 import { escapeRe, identityRe, maskVolatile } from '../shared/text.js';
 import { CREDENTIAL_KEY, fillParamsDeep, queryPairs, safeDecode, urlParts } from '../execution/url.js';
 import { contextsEqual, framesEqual } from '../execution/context.js';
@@ -127,14 +127,14 @@ export function compileSkills(input: CompileInput): Skill[] {
 
   const slots = discoverSlots(input.instruction, steps, input.knownValues);
   const sub = (s: string) => substitute(s, slots);
-  /** Slots whose value the ledger banked from a `q.id` url position — the only
-   *  slots substituteUrlId may write into a navigation arg's `id=`. */
-  const idOriginValues = new Set(
-    Object.entries(input.knownValues ?? {})
-      .filter(([k]) => /:q\.id$/.test(k))
-      .map(([, v]) => String(v ?? '').trim()),
-  );
-  const urlIdSlots = new Map([...slots].filter(([, v]) => idOriginValues.has(v)));
+  /** Slots whose value the ledger banked from a url POSITION under an earlier
+   *  instruction, each carrying the label it was banked at — the only slots
+   *  substituteUrlId may write into a navigation arg's url, and only there. */
+  const urlIdSlots = urlIdSlotPositions(slots, input.knownValues);
+  const urlIdNames = new Set(urlIdSlots.map((s) => s.name));
+  /** Every slot EXCEPT those, for a navigation url: a url-origin slot is
+   *  written by position, never by matching its characters (see below). */
+  const nonUrlIdSlots = new Map([...slots].filter(([n]) => !urlIdNames.has(n)));
   /** The caller's values for THIS run — a runid, a record it vouched for. */
   const runValues = Object.values(input.knownValues ?? {})
     .map((v) => String(v ?? '').trim())
@@ -238,12 +238,21 @@ export function compileSkills(input: CompileInput): Skill[] {
       const mintedBefore = mintedMap((m) => m.keptIndex < g);
       const mintedHere = mintedMap((m) => m.keptIndex <= g);
       const args = substituteDeep(substituteDeep(step.args, slots), mintedBefore) as Record<string, unknown>;
-      // substitute() deliberately refuses to rewrite a number after `=` (the
-      // nth=25 guard), which is exactly where a navigation url carries its
-      // record id. Rewrite `id=<value>` structurally, and only for slots whose
-      // value the ledger banked from a q.id url position — a cost of "21"
-      // coinciding with a record id must not bind the url to the cost.
-      if (typeof args.url === 'string' && urlIdSlots.size) args.url = substituteUrlId(args.url, urlIdSlots);
+      // A navigation url is rebuilt from the RECORDED string, because a
+      // url-origin slot may only be written at the position the ledger banked
+      // it at. substitute() is textual and position-blind: it refuses a number
+      // after `=` (the nth=25 guard), which is exactly where odoo carries its
+      // record id — and it happily rewrites grafana's uid anywhere in the url,
+      // slug included, which is the free-text rewrite this rule must not be.
+      // So the positional writer gets the url, and every OTHER slot keeps the
+      // textual pass (a url-origin value typed into a search box is still a
+      // slot there, through `slots` above).
+      if (typeof step.args.url === 'string' && urlIdSlots.length) {
+        args.url = substituteUrlId(
+          substituteDeep(substituteDeep(step.args.url, nonUrlIdSlots), mintedBefore) as string,
+          urlIdSlots,
+        );
+      }
       // The same `=` guard hides a MINTED value in a navigation url: fwod32's
       // sign-in recorded `goto #action=135&menu_id=120` right after the step
       // that minted action=135 and menu_id=120, so every replay navigated to
@@ -878,25 +887,34 @@ export function discoverSlots(
     .map((v) => ({ v, at: instruction.indexOf(v) }))
     .sort((a, b) => a.at - b.at || b.v.length - a.v.length)
     .slice(0, Math.max(0, MAX_SLOT_VALUES - knownVals.length - varOnly.length));
-  // Third slot source, exempt from instruction anchoring: a navigation arg's
-  // `id=` value that the ledger already banked from an EARLIER instruction's
-  // url. The armdoc rightly forbids instructions naming database ids, so this
-  // value can never anchor in prose — but its ORIGIN is known (a `url:iN:q.id`
-  // binding), and slots bind by origin when the template cannot supply them.
-  // fwod29 is the cost of the gap: three downstream skills carried
-  // `...&id=21` literally, every replay navigated to the recording run's
-  // deleted order, saw an empty page, and paid ~20 recovery turns.
+  // Third slot source, exempt from instruction anchoring: a part of a
+  // NAVIGATION arg's url that the ledger already banked as an identifier from
+  // a url position under an EARLIER instruction. The armdoc rightly forbids
+  // instructions naming database ids, so this value can never anchor in prose
+  // — but its ORIGIN is known (a `from: 'url'` binding, spelled
+  // `url:<step>:<label>` by bindingKey), and slots bind by origin when the
+  // template cannot supply them. fwod29 is the cost of the gap: three
+  // downstream skills carried `...&id=21` literally, every replay navigated to
+  // the recording run's deleted order, saw an empty page, and paid ~20
+  // recovery turns.
+  //
+  // The rule keys on PROVENANCE and POSITION, never on the characters: the
+  // value must have been banked at the SAME labelled position it now sits in.
+  // It used to additionally require `idPositionPart` — a numeric `q.id` — and
+  // that shape clause was the whole bug (fwgr41-n1 06-find): grafana's
+  // dashboard uid lives in an unnamed PATH segment (`p1`), where there is no
+  // name to read and the characters say nothing, so it stayed literal and
+  // s_e013d1 step 7 navigated every later run to run 1's dead dashboard
+  // (s_0e342c step 7 the same, one uid later). Position cannot grow by reading
+  // more names (PLAN-evidence-over-shape.md); it grows by trusting what the
+  // ledger banked, whatever the label.
   const urlIdVals: string[] = [];
-  const knownIdOrigins = new Set(
-    Object.entries(known)
-      .filter(([k]) => /:q\.id$/.test(k))
-      .map(([, v]) => String(v ?? '').trim()),
-  );
+  const knownOrigins = urlOriginPositions(known);
   for (const step of steps) {
-    if (typeof step.args.url !== 'string') continue;
+    if (!NAVIGATION_TOOLS.has(step.tool) || typeof step.args.url !== 'string') continue;
     for (const part of urlParts(step.args.url)) {
-      if (!idPositionPart(part)) continue;
-      if (!knownIdOrigins.has(part.value) || urlIdVals.includes(part.value)) continue;
+      if (!knownOrigins.some((o) => o.label === part.label && o.value === part.value)) continue;
+      if (urlIdVals.includes(part.value)) continue;
       if (knownVals.includes(part.value) || varOnly.includes(part.value) || values.has(part.value)) continue;
       urlIdVals.push(part.value);
     }
@@ -908,28 +926,131 @@ export function discoverSlots(
   return slots;
 }
 
-/** Rewrite `id=<value>` url params to slot markers — see the call site. */
+/** A slot value and the url position (a `urlParts` label) it may be written at. */
+export interface UrlPositionSlot {
+  name: string;
+  value: string;
+  at: string;
+}
+
 /**
  * Rewrite minted url parts inside a navigation url at the position each was
  * minted from: a value minted at `q.action` replaces `action=<value>` (query
  * or hash state) with `action={{dN}}`, and nothing else — a "135" elsewhere
  * in the url is left alone.
  */
-export function substituteUrlParts(url: string, minted: { name: string; value: string; at: string }[]): string {
+export function substituteUrlParts(url: string, minted: UrlPositionSlot[]): string {
   let out = url;
   for (const m of minted) {
-    if (!m.value || !m.at.startsWith('q.')) continue;
-    const key = m.at.slice(2);
-    out = out.replace(new RegExp(`([?&#]${escapeRe(key)}=)${escapeRe(m.value)}(?=[&#]|$)`, 'g'), `$1{{${m.name}}}`);
+    if (!m.at.startsWith('q.')) continue;
+    out = replaceAtUrlPart(out, m.at, m.value, `{{${m.name}}}`);
   }
   return out;
 }
 
-export function substituteUrlId(url: string, slots: Map<string, string>): string {
+/**
+ * Rewrite a navigation url's record identifiers to slot markers, each at the
+ * one labelled position the ledger banked it at — `q.id` for odoo's
+ * `#…&id=21`, `p1` for grafana's `/d/<uid>/<slug>`. Positional, never textual:
+ * the same characters standing somewhere else in the url (the slug, another
+ * key) are a different thing and stay literal.
+ */
+export function substituteUrlId(url: string, slots: UrlPositionSlot[]): string {
   let out = url;
+  for (const s of slots) out = replaceAtUrlPart(out, s.at, s.value, `{{${s.name}}}`);
+  return out;
+}
+
+/**
+ * Replace `value` with `marker` at exactly one labelled url position, leaving
+ * the url otherwise byte-identical (no re-serialisation: `urlShapeOf` sorts
+ * hash state and drops noise keys, which would rewrite a url the recording
+ * navigated to successfully). A no-op unless that position really holds that
+ * value, so a caller passing a stale pair can never damage the url.
+ */
+function replaceAtUrlPart(url: string, at: string, value: string, marker: string): string {
+  if (!value || !at) return url;
+  if (at.startsWith('q.')) {
+    const key = at.slice(2);
+    return url.replace(new RegExp(`([?&#]${escapeRe(key)}=)${escapeRe(value)}(?=[&#]|$)`, 'g'), `$1${marker}`);
+  }
+  const m = /^(p|h)(\d+)$/.exec(at);
+  if (!m) return url;
+  const span = m[1] === 'p' ? pathSpan(url) : hashPathSpan(url);
+  if (!span) return url;
+  const segments = url.slice(span.start, span.end).split('/');
+  // urlParts indexes the NON-EMPTY segments, so count them the same way.
+  let index = -1;
+  for (let i = 0; i < segments.length; i++) {
+    if (!segments[i]) continue;
+    index += 1;
+    if (index !== Number(m[2])) continue;
+    if (safeDecode(segments[i]) !== value) return url;
+    segments[i] = marker;
+    return url.slice(0, span.start) + segments.join('/') + url.slice(span.end);
+  }
+  return url;
+}
+
+/** The path portion of a raw url string: after the authority, before `?` or `#`. */
+function pathSpan(url: string): { start: number; end: number } | null {
+  const scheme = url.indexOf('://');
+  if (scheme < 0) return null;
+  let start = scheme + 3;
+  while (start < url.length && url[start] !== '/' && url[start] !== '?' && url[start] !== '#') start += 1;
+  let end = start;
+  while (end < url.length && url[end] !== '?' && url[end] !== '#') end += 1;
+  return { start, end };
+}
+
+/** The route portion of a fragment: after `#`, before the fragment's own `?` (urlShapeOf). */
+function hashPathSpan(url: string): { start: number; end: number } | null {
+  const hash = url.indexOf('#');
+  if (hash < 0) return null;
+  let end = hash + 1;
+  while (end < url.length && url[end] !== '?') end += 1;
+  return { start: hash + 1, end };
+}
+
+/**
+ * The url positions the caller's known values were banked at — every key the
+ * ledger wrote for a `from: 'url'` binding, which `bindingKey` spells
+ * `url:<step>:<label>`. The label is the position (`p1`, `h0`, `q.id`), and it
+ * is the whole point: a value banked at `p1` may only be written back at `p1`.
+ *
+ * Only the ledger's own spelling is admitted. The flow runner's url outputs
+ * reach a recovery compile as `<stepId>.url.<label>` (server.ts
+ * provenanceValues), and a param bound to THAT key could not be resolved at
+ * bind time — the daemon binds from the ledger (`knownValues()`), so bindSkill
+ * would find no value, and a param that cannot bind refuses the whole skill.
+ * An unslotted literal costs a recovery; an unbindable param costs the skill.
+ */
+export function urlOriginPositions(known: Record<string, string> = {}): { label: string; value: string }[] {
+  const out: { label: string; value: string }[] = [];
+  for (const [key, raw] of Object.entries(known)) {
+    const m = /^url:[^:]+:(.+)$/.exec(key);
+    const value = String(raw ?? '').trim();
+    if (!m || !value || !urlPartLabel(m[1])) continue;
+    out.push({ label: m[1], value });
+  }
+  return out;
+}
+
+/** A `urlParts` position label: a path segment, a hash-route segment, a hash-state key. */
+function urlPartLabel(label: string): boolean {
+  return /^(p|h)\d+$/.test(label) || label.startsWith('q.');
+}
+
+/**
+ * Which slots may be written into a navigation url, and at which position.
+ * A value banked at two positions yields two entries: both name the same
+ * record, and `replaceAtUrlPart` checks each position before writing.
+ */
+function urlIdSlotPositions(slots: Map<string, string>, known: Record<string, string> = {}): UrlPositionSlot[] {
+  const positions = urlOriginPositions(known);
+  const out: UrlPositionSlot[] = [];
   for (const [name, value] of slots) {
-    if (!idPositionPart({ label: 'q.id', value })) continue;
-    out = out.replace(new RegExp(`([?&#]id=)${escapeRe(value)}(?=[&#]|$)`, 'g'), `$1{{${name}}}`);
+    for (const o of positions) if (o.value === value) out.push({ name, value, at: o.label });
   }
   return out;
 }
@@ -1210,7 +1331,24 @@ export function urlPattern(url: string, slots: Map<string, string> = new Map(), 
  * call site has to know which of the two owns the source.
  */
 export { TRANSIENT_LINE, maskMinted } from '../execution/expect.js';
-import { TRANSIENT_LINE, identifiesNothing, maskMinted } from '../execution/expect.js';
+import { TRANSIENT_LINE, identifiesNothing, maskForeignValue, maskMinted, maskPopupItem } from '../execution/expect.js';
+
+/**
+ * Args that name WHERE the step acted, not WHAT it put on the page: a
+ * selector, a handle, a url, the thing a read asks for. Everything else a step
+ * carries as a string — a fill's `value`, a type's `text`, a select's `option`,
+ * a press's `key` — is a value the procedure itself typed or chose, and is the
+ * evidence maskForeignValue judges a control's displayed value against.
+ */
+const ELEMENT_ARG = /^(target|source|url|what|selector|frame|delay_ms)$/;
+
+/** The values this step put on the page, slotted as the expectation lines are (see maskForeignValue). */
+function typedValues(step: RecordedStep, slots: Map<string, string>): string[] {
+  return Object.entries(step.args ?? {})
+    .filter(([key, value]) => !ELEMENT_ARG.test(key) && typeof value === 'string')
+    .map(([, value]) => substitute(String(value), slots).trim())
+    .filter((v) => v.length > 0);
+}
 
 function expectationFor(step: RecordedStep, slots: Map<string, string>): StepExpectation | undefined {
   // A navigation's diff is its LANDING — the next segment's start url,
@@ -1230,9 +1368,15 @@ function expectationFor(step: RecordedStep, slots: Map<string, string>): StepExp
     // nothing about the step (fwod47-n3 04-open stopped on an unnamed inline-
     // editor textbox). Judged after masking, so the budget goes to lines that
     // can tell right from wrong.
+    // A control's displayed value is this step's evidence only when this step
+    // put it there (maskForeignValue), and an open popup's items are never
+    // the procedure's evidence at all (maskPopupItem) — both provenance
+    // rules, decided here where the step's own args are still in hand, and
+    // both leaving the wildcard that identifiesNothing then sweeps up.
+    const typed = typedValues(step, slots);
     const lasting = step.diff.added
       .filter((l) => !TRANSIENT_LINE.test(l))
-      .map((l) => maskMinted(maskVolatile(substitute(l, slots))))
+      .map((l) => maskPopupItem(maskForeignValue(maskMinted(maskVolatile(substitute(l, slots))), typed)))
       .filter((l) => !identifiesNothing(l));
     if (lasting.length) out.addedContains = lasting.slice(0, MAX_ADDED_LINES).map((l) => l.slice(0, 120));
   }

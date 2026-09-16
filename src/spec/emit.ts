@@ -263,11 +263,33 @@ const HELPERS: { token: string; source: string[] }[] = [
       ' * a strict match is given URL_WAIT_MS on the navigation itself before the',
       ' * verdict is asked once, of wherever the browser then is.',
       ' */',
-      'async function urlEffect(page: Page, pattern: string, p: Record<string, string>, where: string): Promise<void> {',
+      'async function urlEffect(page: Page, pattern: string, p: Record<string, string>, where: string, volatile: UrlSegDiff[]): Promise<void> {',
       '  await page.waitForURL((url) => urlMatches(pattern, url.toString(), p), { timeout: URL_WAIT_MS }).catch(() => {});',
       '  const verdict = urlEffectVerdict(pattern, page.url(), p, where);',
       '  for (const line of verdict.warnings) logWarning(line);',
+      '  // What this step watched vary is the segment\'s evidence from here on',
+      '  // (navigationTarget), whether or not the step goes on to stop.',
+      '  if (verdict.diffs) volatile.push(...verdict.diffs);',
       '  if (verdict.stop) throw new Error(verdict.stop);',
+      '}',
+    ],
+  },
+  {
+    token: 'navigationTarget(',
+    source: [
+      '/**',
+      ' * Where a goto actually sends the browser — the shared retargetNavigation',
+      ' * (src/execution/gates.ts): a recorded target whose only disagreement with',
+      ' * the live url sits at a position THIS segment has already watched vary is a',
+      " * literal from the recording's run, and the live value is navigated to",
+      ' * instead. `volatile` is the segment ledger urlEffect fills, as replay keeps',
+      ' * one per replayed skill. The returned `stale` is handed to this step\'s',
+      ' * alert gate, so an unrecorded alert on the landing names the cause.',
+      ' */',
+      'function navigationTarget(target: string, page: Page, volatile: UrlSegDiff[], where: string): NavigationTarget {',
+      '  const verdict = retargetNavigation(target, page.url(), volatile, where);',
+      '  if (verdict.warning) logWarning(verdict.warning);',
+      '  return verdict;',
       '}',
     ],
   },
@@ -303,7 +325,7 @@ const HELPERS: { token: string; source: string[] }[] = [
       ' * during a 5s url wait must not be missed) — and a page that could not be',
       ' * read is handed over as unobserved, never as "no alert".',
       ' */',
-      'function alertGate(before: string[], after: ObservedAlerts | null, ctx: { where: string; isRead: boolean; expectedContains?: string; params: Record<string, string>; effectConfirmed?: boolean }): void {',
+      'function alertGate(before: string[], after: ObservedAlerts | null, ctx: { where: string; isRead: boolean; expectedContains?: string; params: Record<string, string>; effectConfirmed?: boolean; navigatedToStale?: string }): void {',
       '  const verdict = alertVerdict(before, after ? after.alerts : null, ctx, after ? after.complete : true);',
       '  for (const line of verdict.warnings) logWarning(line);',
       '  if (verdict.stop) throw new Error(verdict.stop);',
@@ -832,6 +854,27 @@ const HELPERS: { token: string; source: string[] }[] = [
     ],
   },
   {
+    token: 'shownOr(page, outputs, ',
+    source: [
+      '/**',
+      ' * `needShown` for a slot nothing resolves by: the recorded value when the',
+      ' * live page shows it, else the empty string this artifact has always',
+      " * carried for an unpublished reference. Never throws — an unused slot's",
+      ' * blank costs nothing, while a stop on it would refuse a step that can run.',
+      ' */',
+      'async function shownOr(page: Page, outputs: Outputs, ref: string, by: string, recorded: string, runValues: string[]): Promise<string> {',
+      "  const published = outputs[ref as keyof Outputs];",
+      "  if (published !== undefined && published !== '') return published;",
+      '  if (await recordedValueShown(page, recorded, runValues)) {',
+      '    (outputs as Record<string, string>)[ref] = recorded;',
+      '    console.log(`[sitelooper resolved] ${by}: {{${ref}}} to its recorded value ${JSON.stringify(recorded)}, shown on the page`);',
+      '    return recorded;',
+      '  }',
+      "  return '';",
+      '}',
+    ],
+  },
+  {
     token: 'needShown(page, outputs, ',
     source: [
       '/**',
@@ -1180,6 +1223,16 @@ interface Ctx {
    */
   echoes?: string;
   echoUsed?: boolean;
+  /**
+   * The current segment's record of url positions this run has watched vary
+   * (urlEffect's diffs), which a later navigation of the same segment
+   * retargets by — replay keeps exactly this list per replayed skill.
+   * `volatileUsed` says a line named it.
+   */
+  volatile?: string;
+  volatileUsed?: boolean;
+  /** The step-scoped variable holding this goto's navigation target (retargetNavigation). */
+  navTarget?: string;
   /** Segments emitted so far in this body, so each ledger names its own local. */
   segments?: number;
   /** Frame roots emitted so far, so each resolution in a frame names its own local. */
@@ -1316,7 +1369,8 @@ function effectLines(step: SkillStep, ctx: Ctx, out: string[]): void {
   const pattern = step.expect?.urlPattern;
   if (!pattern) return;
   noteSlots(pattern, ctx);
-  out.push(`await urlEffect(page, ${q(pattern)}, p, ${q(`${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`)});`);
+  ctx.volatileUsed = true;
+  out.push(`await urlEffect(page, ${q(pattern)}, p, ${q(`${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`)}, ${ctx.volatile});`);
 }
 
 /**
@@ -1589,6 +1643,11 @@ function emitSkillStep(step: SkillStep, segment: SpecSegment, index: number, ctx
   const landing = effect && effect.kind !== 'navigate' ? `landing${ctx.urls}` : undefined;
   const moved = landing ? `moved${ctx.urls}` : undefined;
   ctx.landing = landing;
+  // A goto resolves its target against what this segment has learned is
+  // volatile (the shared retargetNavigation), and keeps the verdict for its
+  // landing check and its alert gate.
+  const nav = step.tool === 'goto' && typeof step.args?.url === 'string' ? `nav${ctx.urls}` : undefined;
+  ctx.navTarget = nav;
   // A state-changing action is observed from just before it dispatches to the
   // end of its settle (the shared beginAction), as tools.ts runStep observes
   // every state-changing tool replay executes.
@@ -1597,6 +1656,7 @@ function emitSkillStep(step: SkillStep, segment: SpecSegment, index: number, ctx
   const action = emitSkillAction(step, segment, index, ctx, first);
   ctx.landing = undefined;
   ctx.obs = undefined;
+  ctx.navTarget = undefined;
   const observed = obs && action.some((line) => line.includes(`${obs} = beginAction(`)) ? obs : undefined;
   if (landing && moved) {
     action.push(
@@ -1631,7 +1691,11 @@ function emitSkillStep(step: SkillStep, segment: SpecSegment, index: number, ctx
   // Replay's gotoLanding gate, second in its order: a goto that landed on another view of what it asked for.
   if (step.tool === 'goto' && typeof step.args.url === 'string') {
     noteSlots(step.args.url, ctx);
-    checks.push(`{ const landing = gotoLandingVerdict(${src(step.args.url)}, page.url(), ${q(where)}); if (landing) throw new Error(landing); }`);
+    // Judged against where the goto was actually SENT — the retargeted url
+    // when this segment's volatility evidence redirected it, as replay judges
+    // its own (mutated) `args.url`.
+    const sent = nav ? `${nav}.url` : src(step.args.url);
+    checks.push(`{ const landing = gotoLandingVerdict(${sent}, page.url(), ${q(where)}); if (landing) throw new Error(landing); }`);
   }
   effectLines(step, ctx, checks);
   // A read raises no alert of its own (replay exempts it), unless the
@@ -1647,7 +1711,12 @@ function emitSkillStep(step: SkillStep, segment: SpecSegment, index: number, ctx
     if (step.expect?.alertContains) noteSlots(step.expect.alertContains, ctx);
     const expected = step.expect?.alertContains ? `, expectedContains: ${q(step.expect.alertContains)}` : '';
     const confirmed = changes ? `, effectConfirmed: ${changes}.confirmed === true` : '';
-    checks.push(`alertGate(${alerts}, ${alertsAfter}, { where: ${q(where)}, isRead: ${isRead}${expected}, params: p${confirmed} });`);
+    // A goto that was sent to a url still spelling a value this segment has
+    // shown volatile tells the alert gate so: an unrecorded alert on the
+    // landing is then reported as the page not existing, not as an alert out
+    // of nowhere (replay passes the same `navigatedToStale`).
+    const stale = nav ? `, navigatedToStale: ${nav}.stale` : '';
+    checks.push(`alertGate(${alerts}, ${alertsAfter}, { where: ${q(where)}, isRead: ${isRead}${expected}, params: p${confirmed}${stale} });`);
   }
   const positional = ctx.positional;
   ctx.positional = undefined;
@@ -1657,6 +1726,7 @@ function emitSkillStep(step: SkillStep, segment: SpecSegment, index: number, ctx
     `let ${urlBefore} = '';`,
     ...(alerts ? [`let ${alerts}: string[] = [];`, `let ${alertsAfter}: ObservedAlerts | null = null;`] : []),
     ...(linesBefore ? [`let ${linesBefore}: string[] | null = null;`] : []),
+    ...(nav ? [`let ${nav}: NavigationTarget = { url: '' };`] : []),
     ...(positional ? [`let ${positional} = false;`] : []),
     ...(landing ? [`let ${landing}: Awaited<ReturnType<typeof armPageEffect>> | null = null;`, `let ${moved}: Page | null = null;`] : []),
     ...(observed ? [`let ${observed}: ActionObservation | null = null;`] : []),
@@ -1784,7 +1854,19 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
   // Steps that act on the page itself, before any locator is needed.
   switch (step.tool) {
     case 'goto':
-      out.push(`await page.goto(${src(str('url'))});`);
+      // Not `page.goto(<recorded url>)`: the recorded target may name a record
+      // of the RECORDING's run at a position this segment has already watched
+      // vary, and the shared verdict sends the browser to the live value there
+      // instead (fwgr41-n3 06-find step 7 went to a dashboard uid this
+      // environment never minted). `nav` also carries what is stale about the
+      // target, which this step's alert gate reports as the cause.
+      if (ctx.navTarget) {
+        ctx.volatileUsed = true;
+        out.push(`${ctx.navTarget} = navigationTarget(${src(str('url'))}, page, ${ctx.volatile}, ${q(`${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`)});`);
+        out.push(`await page.goto(${ctx.navTarget}.url);`);
+      } else {
+        out.push(`await page.goto(${src(str('url'))});`);
+      }
       return out;
     case 'back':
       out.push('await page.goBack();');
@@ -2437,6 +2519,11 @@ function emitSegment(segment: SpecSegment, ctx: Ctx): string[] {
   ctx.segments = (ctx.segments ?? 0) + 1;
   ctx.echoes = `typed${ctx.segments}`;
   ctx.echoUsed = false;
+  // One volatility ledger per segment, as replay keeps one per replayed skill:
+  // a navigation is retargeted by what THIS procedure has watched vary, never
+  // by another skill's observation (see navigationTarget).
+  ctx.volatile = `volatile${ctx.segments}`;
+  ctx.volatileUsed = false;
   out.push(`// ${segment.id}: ${commentSafe(segment.template)}`);
   out.push(`// recorded on a page matching ${commentSafe(segment.preconditions.urlPattern)}`);
   // The gate goes immediately before the first page-dependent step — replay
@@ -2449,11 +2536,16 @@ function emitSegment(segment: SpecSegment, ctx: Ctx): string[] {
     const lines = step.tool === 'loop' ? emitLoop(step, segment, i + 1, ctx) : emitSkillStep(step, segment, i + 1, ctx);
     out.push(...lines);
   }
+  if (ctx.volatileUsed) {
+    out.splice(2, 0, `// Url positions this segment has watched vary, for a later navigation (see navigationTarget).`, `const ${ctx.volatile}: UrlSegDiff[] = [];`);
+  }
   if (ctx.echoUsed) {
     out.splice(2, 0, `// What this segment types, selects or names: a read that returns only that is an echo (see echoRead).`, `const ${ctx.echoes} = new Set<string>();`);
   }
   ctx.echoes = undefined;
   ctx.echoUsed = false;
+  ctx.volatile = undefined;
+  ctx.volatileUsed = false;
   return out;
 }
 
@@ -2604,9 +2696,16 @@ function callArgs(step: SpecStep, slots: string[], vars: Set<string>, warnings: 
       // resolved from the page when this run did not publish it — fwrd54's
       // 07-edit clicking `{{06-change.mark_ready_button}}`.
       const exact = /^\s*\{\{([\w-]+\.[\w.-]+)\}\}\s*$/.exec(bound)?.[1];
-      const standIn = used && exact ? recordedStandIn(exact, step.params, step.segments) : undefined;
+      const standIn = exact ? recordedStandIn(exact, step.params, step.segments) : undefined;
       if (exact && standIn !== undefined) {
-        return `${slot}: await needShown(page, outputs, ${q(exact)}, ${q(step.id)}, ${q(standIn)}, Object.values(vars))`;
+        // An UNUSED slot may not throw — nothing resolves by it, and this
+        // artifact has always carried such a slot as a blank. It may still be
+        // filled: the daemon's runFlow now runs the same page stand-in over
+        // every unresolved reference (fwod49's product name sat in an
+        // expectation only, and was on the page all along), so `shownOr` is
+        // `needShown` without the throw, and the two runners fill alike.
+        const helper = used ? 'needShown' : 'shownOr';
+        return `${slot}: await ${helper}(page, outputs, ${q(exact)}, ${q(step.id)}, ${q(standIn)}, Object.values(vars))`;
       }
       return `${slot}: ${paramExpr(bound, vars, used ? step.id : undefined)}`;
     }

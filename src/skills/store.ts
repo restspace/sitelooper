@@ -160,6 +160,18 @@ export interface Skill {
  * 07-report). Stored procedures of contracts 1–3 still load and run: this
  * build places their gate by the same rule, and judges a navigation inside
  * one by `landedOnRecordedPage`.
+ *
+ * NOT bumped for the fwod49 expectation rules (execution/expect.ts
+ * unfilledSlot, maskForeignValue, maskPopupItem). A bump is for a procedure
+ * that carries something an older build would read DIFFERENTLY, and these
+ * write nothing new into one: the compile-side rules only put the `{{*}}`
+ * wildcard where a value used to be — a marker every contract since 1 already
+ * matches — or drop a line, and the check-side rules are applied by whichever
+ * build is running, to whatever a stored procedure carries. So a stale
+ * procedure whose expectation still carries a popup item or a slot this run
+ * cannot fill is judged correctly here without re-recording, and an older
+ * build handed a newly compiled one sees only a looser expectation, never a
+ * field it would misread.
  */
 export const SKILL_CONTRACT = 4;
 
@@ -377,6 +389,23 @@ export interface SkillStats {
    */
   unobserved?: number;
   /**
+   * Stops (partial replays) the instruction around them still recovered from
+   * — the model finished the step's work after the procedure stopped. Counted
+   * separately from `partial` because it is what a demoted pin's diagnostic
+   * has to say out loud: "these replays stopped, and every one of them was
+   * recovered" is a different fact from "these replays stopped and the flow
+   * failed". fwod49: s_32409f was demoted by two stops the flow recovered
+   * from on both runs, and the compile then refused a flow that had passed.
+   */
+  recoveredStops?: number;
+  /**
+   * Stops the step's own outcome proved harmless: the instruction succeeded
+   * and NOTHING changed the page after the procedure stopped, so the stopped
+   * gesture never had to be redone. Neither a success nor a strike — see
+   * `recordOutcome`.
+   */
+  harmlessStops?: number;
+  /**
    * The contract `successes` were counted under. Absent means 1. Read by
    * `isVerified`, which is what decides whether a validated status is
    * evidence about THIS engine or a record of an older one's.
@@ -400,6 +429,15 @@ export interface ReplayOutcome {
    * that promotion is supposed to be counting.
    */
   unobserved?: number;
+  /**
+   * The step's own outcome proved this stop harmless: the instruction
+   * succeeded AND nothing changed the page after the procedure stopped, so
+   * the recovery never had to redo the gesture the stop interrupted. Only the
+   * caller that watched the recovery can know this (the flow runner: its
+   * recording entries past the replay's resume point), so it is passed in
+   * rather than inferred here.
+   */
+  harmlessStop?: boolean;
 }
 
 /** Where skills live: `$SITELOOPER_SKILLS_DIR` or `<home>/skills`. */
@@ -1025,6 +1063,18 @@ export class SkillStore {
    * capture has not been seen to do anything. It counts as a use, and stops
    * there: `successes` does not move, so the second clean replay that
    * promotes has to be a genuinely observed one.
+   *
+   * A HARMLESS stop is the mirror of that (fwod49): the procedure stopped
+   * part-way, and the step's own outcome then proved the stop cost nothing —
+   * the instruction succeeded and the recovery changed nothing on the page, so
+   * the gesture the stop interrupted was never redone. The stop is a fact
+   * about this run's gate, not evidence the procedure is broken, so it lands
+   * in the same middle branch as an unobserved run: counted as a use, counted
+   * as a stop (`partial`, `failedAtStep`, `harmlessStops`), but not a strike
+   * and not a success. The strike streak (`lastFailedAt`) is left exactly as
+   * it was — a harmless stop is no evidence of health either, so it neither
+   * demotes nor forgives an earlier strike, and a genuinely broken step still
+   * demotes on its second real strike at the same step.
    */
   recordOutcome(id: string, outcome: ReplayOutcome, now = new Date().toISOString()): Skill | null {
     return this.update(id, (skill) => {
@@ -1051,8 +1101,16 @@ export class SkillStore {
         st.partial += 1;
         const at = outcome.failedAt ?? 0;
         st.failedAtStep[String(at)] = (st.failedAtStep[String(at)] ?? 0) + 1;
-        if (st.lastFailedAt === at) skill.status = 'demoted';
-        st.lastFailedAt = at;
+        // Recorded whether or not this stop strikes: a demoted pin's
+        // diagnostic has to be able to say how many of the demoting stops the
+        // flow recovered from.
+        if (outcome.instructionSucceeded) st.recoveredStops = (st.recoveredStops ?? 0) + 1;
+        if (outcome.harmlessStop && outcome.instructionSucceeded) {
+          st.harmlessStops = (st.harmlessStops ?? 0) + 1;
+        } else {
+          if (st.lastFailedAt === at) skill.status = 'demoted';
+          st.lastFailedAt = at;
+        }
       }
       return skill;
     });

@@ -39,6 +39,15 @@ export function learnFromInstruction(
     now?: string;
     /** Run-scoped values (flow vars, url provenance) to slot by policy at compile. */
     vars?: Record<string, string>;
+    /**
+     * The caller watched the recovery and saw the stop cost nothing: the
+     * instruction succeeded and nothing changed the page after the replay
+     * stopped, so the interrupted gesture was never redone. Passed straight to
+     * `recordOutcome`, which treats such a stop as inconclusive rather than a
+     * strike (fwod49). Only a caller with the run's recording past the
+     * replay's resume point can establish it — see the flow runner.
+     */
+    harmlessStop?: boolean;
   },
 ): LearnedRecord | null {
   const out: LearnedRecord = {};
@@ -55,6 +64,7 @@ export function learnFromInstruction(
         fallthroughs: sk.fallthroughs,
         instructionSucceeded: succeeded,
         unobserved: sk.unobserved?.length ?? 0,
+        ...(input.harmlessStop ? { harmlessStop: true } : {}),
       },
       input.now,
     );

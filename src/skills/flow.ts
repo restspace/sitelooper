@@ -97,6 +97,21 @@ export interface FlowStep {
    * page is not a slower verdict, it is a wrong one.
    */
   route?: string;
+  /**
+   * Values a run watched a url position hold that the recording did not, while
+   * replaying this step — the volatile segment diffs a url gate reported
+   * (ledger.ts `urlVarianceValues`), both sides of each.
+   *
+   * SEPARATE from `outputEvidence` on purpose: that is a per-output tally of a
+   * step that SUCCEEDED, and this is an observation about the environment,
+   * which is true whether or not the step went on to complete. fwgr41-n2 saw
+   * `afyd7g0300dfkc→bfyd7wj0ceolcf` at 06-find's step 6 and stopped at step 7
+   * (the recorded uid had been deleted); the observation was discarded with the
+   * stop, and n3 went back to guessing the uid's shape. `varyingValues` reads
+   * both, so a value that lands here banks with basis 'variance' from the next
+   * run on and every `evidenced()` guard starts working with no new case.
+   */
+  urlVariance?: string[];
 }
 
 /**
@@ -162,6 +177,11 @@ export function varyingValues(flow: Flow): Set<string> {
     for (const [name, ev] of Object.entries(step.outputEvidence ?? {})) {
       if (ev.differed < 1) continue;
       const value = step.recorded?.[name];
+      if (typeof value === 'string' && value.trim()) out.add(value.trim());
+    }
+    // A url position a run watched change, banked whether or not that run then
+    // stopped — see FlowStep.urlVariance (fwgr41-n2).
+    for (const value of step.urlVariance ?? []) {
       if (typeof value === 'string' && value.trim()) out.add(value.trim());
     }
   }

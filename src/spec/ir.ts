@@ -227,12 +227,31 @@ function chainOf(skill: Skill, store: SkillStore): Skill[] {
  * it are the honest answer to "why should I re-record this?", and printing
  * them is what turns "compiles a demoted skill" into something a caller can
  * act on without opening the store.
+ *
+ * How many of those stops the FLOW recovered from belongs in the same
+ * sentence (`SkillStats.recoveredStops`). fwod49 is why: s_32409f was demoted
+ * by two stops, and on both runs the step around them reported success — the
+ * diagnostic said "its last replays failed at the same step" over a flow that
+ * had passed twice, which reads as a broken procedure and is not one. A stop
+ * every run recovered from is a re-recording worth doing, not an emergency,
+ * and the caller can only tell the two apart if the number is printed.
  */
 function demotionWhy(skill: Skill): string {
   const st = skill.stats;
   const parts = [`${skill.id} is demoted: ${st.successes} of ${st.uses} replays succeeded`];
   const worst = Object.entries(st.failedAtStep ?? {}).sort((a, b) => b[1] - a[1])[0];
   if (worst) parts.push(`replay failed at step ${worst[0]} on ${worst[1]} of them`);
+  // Absent is not zero: a store written before the counter existed does not
+  // know how its stops ended, and saying "none were recovered" there would be
+  // a claim about runs nobody watched.
+  const recovered = st.recoveredStops;
+  if (st.partial > 0 && recovered !== undefined) {
+    parts.push(
+      recovered === 0
+        ? `none of the ${st.partial} stop(s) were recovered — the instruction failed around each`
+        : `${recovered} of the ${st.partial} stop(s) were recovered (the step still finished)`,
+    );
+  }
   if (st.lastFailedAt !== undefined) parts.push(`the demotion was two consecutive failures at step ${st.lastFailedAt}`);
   if (st.lastUsed) parts.push(`last used ${st.lastUsed}`);
   return `${parts.join('; ')}.`;

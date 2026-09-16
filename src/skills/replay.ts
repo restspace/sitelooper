@@ -1,7 +1,8 @@
 import { changedCreation, isMutatingAction, isReadAction, runStepLifecycle, type StepActionResult } from '../execution/lifecycle.js';
 import { outcomeLabel, outcomeOfError, type ActionOutcome } from '../execution/browser.js';
 import type { ActionExpectation } from '../execution/action.js';
-import { SOFT_MATCH_MIN_SIMILARITY, alertVerdict, errorPageVerdict, gotoLandingVerdict, identityMarkerVerdict, isErrorPageUrl, landedOnRecordedPage, markersBound, preconditionVerdict, segmentGate, urlEffectVerdict } from '../execution/gates.js';
+import { SOFT_MATCH_MIN_SIMILARITY, alertVerdict, errorPageVerdict, gotoLandingVerdict, identityMarkerVerdict, isErrorPageUrl, landedOnRecordedPage, markersBound, preconditionVerdict, retargetNavigation, segmentGate, urlEffectVerdict } from '../execution/gates.js';
+import type { UrlSegDiff } from '../execution/url.js';
 import { LOOP_SHRINK_WAIT_MS, pageReadable, runFoldedLoop, type LoopPass } from '../execution/loop.js';
 import type { Locator, Page } from 'playwright-core';
 import { clip, identityRe, identitySource } from '../shared/text.js';
@@ -188,6 +189,19 @@ export interface ReplayResult {
    * has then demonstrated volatility.
    */
   generalisations: { kind: 'precondition' | 'expect'; step?: number; pattern: string }[];
+  /**
+   * The url segment diffs those same expectations treated as volatile, raw.
+   *
+   * A generalisation is a promise about the SKILL and is only kept once the run
+   * walked past the segment; a diff is an observation about the ENVIRONMENT and
+   * is true either way, so this list survives a stop where `generalisations`
+   * does. The flow runner turns it into variance evidence for the ledger and
+   * for the next run (ledger.ts `urlVarianceValues`, flow.ts
+   * `FlowStep.urlVariance`): fwgr41-n2 watched the dashboard uid change one
+   * step before it stopped on the recorded uid being gone, and n3 had nothing
+   * but the characters to go on again.
+   */
+  urlDiffs: UrlSegDiff[];
   /** Cosine similarity between the stored start-page fingerprint and the live page, if both exist. */
   similarity: number | null;
   url: string;
@@ -235,6 +249,7 @@ export async function replaySkill(
     misses: [],
     derivedValues: {},
     generalisations: [],
+    urlDiffs: [],
     candidateEvidence: [],
     created: [],
     acted: false,
@@ -257,6 +272,18 @@ export async function replaySkill(
   // Copy the caller's bindings: derived ({{dN}}) values minted mid-replay are
   // bound into this map as steps execute, so later steps see them.
   params = { ...params };
+
+  // Url positions THIS replay has watched vary: the diffs a step's url
+  // expectation found (urlEffectVerdict), which it treated as volatile. A
+  // later navigation whose recorded target still spells the stale value there
+  // is retargeted to the live one by the shared retargetNavigation — the
+  // artifact keeps the same list per segment, which is this same scope (one
+  // segment, one replayed skill).
+  //
+  // It IS `res.urlDiffs` — what this replay acts on and what it reports to the
+  // flow runner as variance evidence are one observation, and a stop must not
+  // lose it (fwgr41-n2 made this observation one step before it stopped).
+  const volatileUrl: UrlSegDiff[] = res.urlDiffs;
 
   // Belt and braces. SkillStore excludes a procedure this build cannot run at
   // the read, which covers every selection path — but a skill can also arrive
@@ -414,6 +441,19 @@ export async function replaySkill(
     ambiguousNth?: number,
   ): Promise<'ran' | 'skipped' | 'stop'> => {
     const args = fillParamsDeep(step.args, params) as Record<string, unknown>;
+    // A recorded goto target is a literal from the RECORDING's run. Where this
+    // replay has already watched one of its positions vary, the shared verdict
+    // sends the browser to the live value instead — and says so when it cannot,
+    // which is the cause the alert gate reports if the landing then talks back
+    // (fwgr41-n3 06-find: step 6 saw the dashboard uid vary, step 7 went to the
+    // recorded one and Grafana said "Dashboard not found").
+    let navigatedToStale: string | undefined;
+    if (step.tool === 'goto' && typeof args.url === 'string') {
+      const retarget = retargetNavigation(args.url, page.url(), volatileUrl, `step ${tag}`);
+      if (retarget.warning) res.warnings.push(retarget.warning);
+      navigatedToStale = retarget.stale;
+      args.url = retarget.url;
+    }
     const head = `${tag}. ${step.tool} ${describeArgs(step.tool, args)}`;
 
     // The agent's observation turns were implicit waits; a replay has none,
@@ -793,9 +833,12 @@ export async function replaySkill(
         let stop: StepVerdict | null = null;
         let effectConfirmed = false;
         for (const gate of STEP_GATES) {
-          const verdict = await gate({ page, step, tag, failIndex, args, params, outcome, isRead, positionalResolution, effectConfirmed, navAlerts });
+          const verdict = await gate({ page, step, tag, failIndex, args, params, outcome, isRead, positionalResolution, effectConfirmed, navAlerts, navigatedToStale });
           if (!verdict) continue;
           if (verdict.confirmed) effectConfirmed = true;
+          // What this step watched vary is this replay's evidence from here on
+          // (retargetNavigation), whether or not the step went on to stop.
+          if (verdict.volatile) volatileUrl.push(...verdict.volatile);
           if (verdict.warnings) warnings.push(...verdict.warnings);
           if (verdict.generalise) res.generalisations.push(verdict.generalise);
           if (verdict.absentDialog !== undefined) absentDialog = verdict.absentDialog;
@@ -987,6 +1030,8 @@ interface StepGateInput {
   effectConfirmed?: boolean;
   /** A navigation step's own alert looks (goto/back carry no executor diff); `after` null when the page could not be read. */
   navAlerts?: { before: string[]; after: ObservedAlerts | null };
+  /** This goto's target still named a value at a position this replay has shown volatile (retargetNavigation). */
+  navigatedToStale?: string;
 }
 
 /** Steps whose alerts replay observes itself, because the executor does not diff them. */
@@ -1013,6 +1058,8 @@ interface StepVerdict {
   unobserved?: true;
   /** The recorded page changes appeared in the step's diff (expect.ts ChangeVerdict.confirmed). */
   confirmed?: true;
+  /** Url positions this step watched vary, which a later navigation of this replay may retarget by. */
+  volatile?: readonly UrlSegDiff[];
 }
 
 type StepGate = (g: StepGateInput) => Promise<StepVerdict | null> | StepVerdict | null;
@@ -1052,6 +1099,7 @@ const expectedUrl: StepGate = async ({ step, page, params, tag, failIndex }) => 
   return {
     warnings: verdict.warnings,
     generalise: verdict.generalised ? { kind: 'expect', step: failIndex, pattern: verdict.generalised } : undefined,
+    volatile: verdict.diffs,
   };
 };
 
@@ -1066,7 +1114,7 @@ const expectedUrl: StepGate = async ({ step, page, params, tag, failIndex }) => 
  * and the replay goes on — while a recorded-but-missing alert stays soft
  * (expectedAlert — toasts are volatile).
  */
-const alerts: StepGate = ({ outcome, isRead, step, params, tag, effectConfirmed, navAlerts }) => {
+const alerts: StepGate = ({ outcome, isRead, step, params, tag, effectConfirmed, navAlerts, navigatedToStale }) => {
   // The shared verdict (src/execution/gates.ts, alertVerdict) decides; the
   // diff already holds the alerts the action RAISED (the surplus over the
   // pre-action capture), so `before` is empty here. Only a capture that FAILED
@@ -1081,7 +1129,7 @@ const alerts: StepGate = ({ outcome, isRead, step, params, tag, effectConfirmed,
   // the before/after alerts are rendered in the step's dialect instead — the
   // same surplus the recorder takes — so a dialect-1 step is not stopped by a
   // shadow-root toast its recording could never have seen.
-  const ctx = { where: `step ${tag}`, isRead, expectedContains: step.expect?.alertContains, params, effectConfirmed };
+  const ctx = { where: `step ${tag}`, isRead, expectedContains: step.expect?.alertContains, params, effectConfirmed, navigatedToStale };
   const d = dialectOf(step);
   const obs = outcome.captureFailed ? undefined : outcome.observations;
   // A navigation's own looks decide for it, ahead of any diff: the executor

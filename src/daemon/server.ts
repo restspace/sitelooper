@@ -12,7 +12,7 @@ import { buildFlow, consumedReportedOutputs, consumedUrlOutputs, ignorableRefs, 
 import { applyRelabelToEntries, applyRelabelToSkills, relabelCases, requestRelabelPlan } from '../skills/relabel.js';
 import { goalSatisfied, renderReplay } from '../skills/replay.js';
 import { drainDrift, llmProposer, recordCandidateEvidence } from '../skills/repair.js';
-import { RunLedger, bindingKey, describeLeaks, evidenced, fatal, navigationLeaks, scanForLeaks, slotKnownRunValues, type Leak } from '../skills/ledger.js';
+import { RunLedger, bindingKey, describeLeaks, evidenced, fatal, navigationLeaks, scanForLeaks, slotKnownRunValues, urlVarianceValues, type Leak } from '../skills/ledger.js';
 import { quarantineLeakedSteps } from '../spec/rerecord.js';
 import { rerecordFix } from '../spec/diagnostics.js';
 import { originOf, type Skill } from '../skills/store.js';
@@ -24,6 +24,7 @@ import { encodeFrame, LineDecoder, type CommandName, type FlowStepResult, type F
 import { aliasLegacyEnv, ensureSessionDir, socketPath, validateSessionName } from '../shared/paths.js';
 import { BrowserSession } from './browser.js';
 import { DEFAULT_BROWSER_PROFILE } from '../execution/browser.js';
+import { isMutatingAction } from '../execution/lifecycle.js';
 import { recordedValueShown } from '../execution/snapshot.js';
 import { recordedStandIn } from '../skills/flow.js';
 import { SessionState } from './state.js';
@@ -1049,6 +1050,8 @@ ${describeLeaks(certain.slice(0, 30))}${certain.length > 30 ? `\n  … and ${cer
     const graduated = new Set<string>();
     /** Steps whose output evidence this run changed, for the write-back below. */
     let evidenceChanged = 0;
+    /** Url values this run watched vary, newly banked on a step (see FlowStep.urlVariance). */
+    let varianceNoted = 0;
 
     // Set by a step that recovered on the model: a recovery can end
     // "successfully" yet leave a blocking dialog open (rpod1-r2: an earlier
@@ -1090,12 +1093,22 @@ ${describeLeaks(certain.slice(0, 30))}${certain.length > 30 ? `\n  … and ${cer
       // and n3 for it. Banked in `outputs`, so later steps see it too. Before
       // the step runs, as the artifact's `needShown` asks it: a value that only
       // appears on the page the step itself navigates to is not looked for.
+      //
+      // EVERY unresolved reference is offered the rescue, including the ones
+      // `ignorableRefs` would skip: "ignorable" answers one narrow question —
+      // can this blank change what the pinned procedure DOES? — and a no there
+      // is not a claim that the value is worthless. It is still the step's
+      // wording, still banked for later steps, and still what a recovery would
+      // otherwise have to go and find. (fwod49: the recorded product name was
+      // standing on the page and would have filled the slot, but the ref was
+      // skipped as ignorable and the value was never looked for.) What keeps
+      // this safe is unchanged: recordedStandIn refuses anything but a value
+      // the procedure uses as page vocabulary, and the page must be showing it.
       if (pinned) {
         const before = [...resolveInstruction(step, varsIn, outputs).missing, ...(resolveStepParams(step, varsIn, outputs)?.missing ?? [])];
-        const skippable = ignorableRefs(before, step, pinned);
         const chain = pinned.seq && this.browser.learn ? this.browser.learn.list(pinned.origin).filter((s) => s.seq?.chain === pinned.seq!.chain) : [pinned];
         const runValues = Object.values(varsIn);
-        for (const ref of new Set(before.filter((r) => !skippable.includes(r)))) {
+        for (const ref of new Set(before)) {
           const sid = ref.slice(0, ref.indexOf('.'));
           const out = ref.slice(ref.indexOf('.') + 1);
           const producer = flow.steps.find((s) => s.id === sid);
@@ -1214,6 +1227,30 @@ ${describeLeaks(certain.slice(0, 30))}${certain.length > 30 ? `\n  … and ${cer
             why: `replay threw before completing: ${(err instanceof Error ? err.message : String(err)).slice(0, 200)}`,
           }))
         : {};
+      // A url position this replay watched hold a value the recording did not.
+      // Banked NOW, before anything judges whether the step succeeded: variance
+      // is an observation about the environment, not about the step, and the
+      // run that makes it is often the run that then stops on it (fwgr41-n2 saw
+      // the dashboard uid change at 06-find's step 6 and stopped at step 7,
+      // where the recorded uid no longer existed — and n3 was left guessing the
+      // uid's shape all over again). Seeded into this run's ledger so what it
+      // banks from here on is kinded by evidence, and written onto the step so
+      // the NEXT run starts with it (flow.ts FlowStep.urlVariance).
+      if (direct.urlVariance?.length) {
+        this.ledger.seedVariance(direct.urlVariance);
+        const fresh = direct.urlVariance.filter((v) => !(step.urlVariance ?? []).includes(v));
+        if (fresh.length) {
+          step.urlVariance = [...(step.urlVariance ?? []), ...fresh];
+          varianceNoted += fresh.length;
+          opts.progress(`[flow ${flow.name}] ${step.id}: url position(s) varied from the recording — ${fresh.join(', ')} banked as run-specific`);
+        }
+      }
+      // The recovery's resume point: everything recorded past this mark is
+      // what the model had to do AFTER the pinned procedure stopped. Compared
+      // with `mark` (taken before the replay) it separates the replay's own
+      // gestures from the repair's — which is what says whether the stop cost
+      // this step anything. See `harmlessStop` below.
+      const replayMark = this.browser.script?.mark() ?? mark;
       let result: InstructionResult;
       let recovered = false;
       // Why this step could not run without the model, in the step result and
@@ -1326,6 +1363,26 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
         const recoveryEntries = this.browser.script?.entriesSince(mark) ?? [];
         // What this step minted, banked BEFORE the re-pin guard asks.
         this.noteMintedIds(recoveryEntries, ledgerStep);
+        // Did the stop cost this step anything? A pinned procedure that
+        // stopped part-way is a strike in the store — two at the same step
+        // demote it, and a demoted pin refuses the compile. But the step's own
+        // outcome can prove the stop harmless: the instruction reported
+        // success and NOTHING changed the page after the replay stopped (no
+        // state-changing gesture past the resume point, the model's own or one
+        // it replayed), so the gesture the stop interrupted was never redone —
+        // the page was already where the procedure was trying to take it, and
+        // the stop was about this run's gate, not about the procedure.
+        // fwod49 is the cost of not knowing: two stops at step 1 of a skill
+        // whose flow passed both times demoted it and refused the compile.
+        const harmlessStop =
+          recovered &&
+          result.report.status === 'success' &&
+          !(this.browser.script?.entriesSince(replayMark) ?? []).some((e) => e.k === 'step' && isMutatingAction(e.tool));
+        if (harmlessStop && result.skill?.invoked && !result.skill.refused && result.skill.stepsReplayed < result.skill.stepsTotal) {
+          opts.progress(
+            `[flow ${flow.name}] ${step.id}: ${result.skill.invoked} stopped at step ${result.skill.stepsReplayed + 1}, but the step finished with nothing further changed — recorded as inconclusive, not a strike`,
+          );
+        }
         const learned = learnFromInstruction(this.browser.learn, {
           result,
           // Never hand compile an instruction with unresolved {{ref}} markers:
@@ -1336,6 +1393,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
           entries: recoveryEntries,
           session: this.opts.session,
           model: opts.provider.model,
+          harmlessStop,
           // Slot-by-policy inputs: this run's declared vars plus every url
           // provenance value minted so far, so a skill compiled from a repair
           // is generic across runs instead of baking in this run's ids.
@@ -1343,6 +1401,12 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
           // slot's `binding` is this key, and compile recognises a var — the
           // one origin supplied on every run — by that spelling.
           vars: {
+            // The LEDGER's own spelling too (`url:<step>:<label>`): compile
+            // slots a record id sitting in a later navigation's url by that
+            // key, and a skill compiled here saw only the flow's spelling —
+            // so fwgr41-n2's recovery welded its own dashboard uid into a
+            // goto and n3 replayed onto a deleted dashboard.
+            ...this.knownValues(),
             ...Object.fromEntries(Object.entries(varsIn).map(([k, v]) => [`var:${k}`, v])),
             ...provenanceValues(outputs),
             ...referencedValues(step, outputs),
@@ -1609,7 +1673,10 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
     }
     // Evidence is written back even when nothing was re-pinned: it is the
     // whole point of this run for a flow whose references cannot resolve yet.
-    if (updated || evidenceChanged) saveFlow(flow, flowFile);
+    // ...and even when the run HALTED: a url position this run watched vary is
+    // evidence the next run must start with, whether or not the step that saw
+    // it completed (fwgr41-n2).
+    if (updated || evidenceChanged || varianceNoted) saveFlow(flow, flowFile);
 
     const passed = stepResults.filter((r) => r.status === 'success').length;
     return {
@@ -1663,7 +1730,18 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
      * matched, a precondition refused, or the replay stopped part-way. Three
      * different bugs, one signature.
      */
-  ): Promise<{ done?: InstructionResult; prelude?: string; partial?: Partial<SkillRecord>; wrongRecord?: string; why?: string }> {
+  ): Promise<{ done?: InstructionResult; prelude?: string; partial?: Partial<SkillRecord>; wrongRecord?: string; why?: string; urlVariance?: string[] }> {
+    // What the replays below WATCHED a url position hold that the recording did
+    // not (ledger.ts urlVarianceValues). Carried out of here on every exit,
+    // success or stop: variance is an observation about the environment, and
+    // fwgr41-n2 made this exact observation one step before it stopped and lost
+    // it. The caller seeds the ledger with it and banks it on the flow.
+    const urlVariance: string[] = [];
+    const varianceSeen = (diffs: readonly import('../execution/url.js').UrlSegDiff[] | undefined): void => {
+      for (const v of urlVarianceValues(diffs ?? [])) if (!urlVariance.includes(v)) urlVariance.push(v);
+    };
+    const withVariance = <T extends object>(out: T): T & { urlVariance?: string[] } =>
+      urlVariance.length ? { ...out, urlVariance: [...urlVariance] } : out;
     const store = this.browser.learn;
     if (!store || !this.browser.isOpen) return { why: 'no skill store, or the browser is closed' };
     let url: string;
@@ -1698,6 +1776,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       const execution = await executeTool(this.browser, 'run_skill', { id: cand.skill.id, params: cand.params }, screenshotDir, signal);
       const r = execution.replay;
       if (!r) return { why: `run_skill returned nothing for ${cand.skill.id}` };
+      varianceSeen(r.urlDiffs);
       if (r.refused) {
         // Right template, wrong record: no other skill can fix that, so keep
         // the reason and let the caller re-establish the page (see below).
@@ -1731,7 +1810,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
     }
     if (!match || !replay) {
       const why = refusals.length ? `every candidate refused — ${refusals.join('; ')}` : 'no candidate ran';
-      return wrongRecord ? { wrongRecord, why } : { why };
+      return withVariance(wrongRecord ? { wrongRecord, why } : { why });
     }
 
     // Walk the segment chain: a multi-segment skill replays segment by
@@ -1772,7 +1851,8 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       progress(`[skill] chain ${current.seq.chain}: segment ${next.seq!.index + 1}/${next.seq!.of} → ${next.id}`);
       const nextExec = await executeTool(this.browser, 'run_skill', { id: next.id, params: { ...match.params, ...derived } }, screenshotDir, signal);
       const r = nextExec.replay;
-      if (!r) return {};
+      if (!r) return withVariance({});
+      varianceSeen(r.urlDiffs);
       Object.assign(derived, r.derivedValues ?? {});
       // A chain's earlier segment may have created the record the later one
       // stops on; recovery needs the whole chain's creations, not the last
@@ -1838,11 +1918,11 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       const ranNote = agg.segmentsDone
         ? `[replay] ${agg.segmentsDone} earlier segment(s) of this procedure chain replayed cleanly and HAVE changed the page. Then a stored segment stopped part-way. Its output:\n`
         : `[replay] A stored procedure was replayed before you started and stopped part-way. Its output:\n`;
-      return {
+      return withVariance({
         prelude: ranNote + renderReplay(last, replay),
         partial: record,
         why: `${last.id} stopped at step ${replay.failedAt ?? '?'} — ${replay.reason ?? 'no reason recorded'}`,
-      };
+      });
     }
     // Drop echo reads from the report's confident values: a value the skill
     // only re-read from a control it set itself is not proof the app persisted
@@ -1878,7 +1958,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       ...(Object.keys(match.params).length ? { skillParams: match.params } : {}),
       tier: 'A',
     });
-    return {
+    return withVariance({
       done: {
         report,
         turns: 0,
@@ -1886,7 +1966,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
         screenshots: [],
         skill: { listed: [match.skill.id], repaired: false, ...record } as SkillRecord,
       },
-    };
+    });
   }
 
   private async shutdown(): Promise<void> {

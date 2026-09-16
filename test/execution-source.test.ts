@@ -63,6 +63,10 @@ describe('standalone execution source', () => {
               contexts: { target: { frame: [{ selectors: ['iframe[title="Payment"]', 'iframe >> nth=0'], title: 'Payment', urlPattern: 'http://app.test/pay' }] } },
               page: 0, effect: { kind: 'popup', urlPattern: 'http://app.test/popup' },
             },
+            // A navigation, whose target the shared retargetNavigation resolves
+            // against what this segment has watched vary (last, so the locals
+            // every assertion above names keep their numbers).
+            { tool: 'goto', args: { url: 'http://app.test/record/7' }, locators: {} },
           ],
         }, {
           // A second segment that does not navigate itself, with a recorded page
@@ -100,9 +104,13 @@ describe('standalone execution source', () => {
     expect(source).toContain("changedCreation(urlPart(urlBefore2, 'p1'), await urlPartWhen(page, 'p1', urlBefore2))");
     expect(source).toContain('=> urlMatches(');
     // ...and the gate verdicts with the observation they are asked over.
-    expect(source).toContain("await urlEffect(page, 'http://app.test/record/{{d1}}', p, '01-actions s_runtime/2');");
+    expect(source).toContain("await urlEffect(page, 'http://app.test/record/{{d1}}', p, '01-actions s_runtime/2', volatile1);");
     expect(source).toContain("alertGate(alertsBefore2, alertsAfter2, { where: '01-actions s_runtime/2', isRead: false, expectedContains: 'Saved {{v1}}', params: p, effectConfirmed: changes2.confirmed === true });");
     expect(source).toContain('alertsAfter2 = await settledAlerts(page);');
+    // ...a navigation resolved through the shared retargetNavigation, whose
+    // verdict this step's alert gate reads the cause of a dead page off.
+    expect(source).toMatch(/nav\d+ = navigationTarget\('http:\/\/app\.test\/record\/7', page, volatile1, '01-actions s_runtime\/\d+'\);/);
+    expect(source).toMatch(/alertGate\(alertsBefore\d+, alertsAfter\d+, \{ where: '01-actions s_runtime\/\d+', isRead: false, params: p, navigatedToStale: nav\d+\.stale \}\);/);
     expect(source).toContain("errorPageGate(page, '01-actions s_runtime/1');");
     expect(source).toContain('const verdict = alertVerdict(before, after ? after.alerts : null, ctx, after ? after.complete : true);');
     // ...the content expectation, in the same snapshot dialect on both sides.

@@ -10,7 +10,7 @@ import { digitDominant } from '../src/skills/shape.js';
 import { volatileMatcher } from '../src/shared/text.js';
 import { recordCandidateEvidence, retired } from '../src/skills/repair.js';
 import { SkillStore } from '../src/skills/store.js';
-import { type TransformNote, coalesceControls, compileSkill, dropDeadReadLocators, dropDismissedDialogs, dropSupersededNavigation, compileSkills, discoverSlots, fillParams, fillParamsDeep, foldLoops, sameProcedure, softUrlMatch, stableFirst, substitute, substituteUrlParts, urlDiff, urlMatches, urlParts, urlPattern } from '../src/skills/compile.js';
+import { type TransformNote, coalesceControls, compileSkill, dropDeadReadLocators, dropDismissedDialogs, dropSupersededNavigation, compileSkills, discoverSlots, fillParams, fillParamsDeep, foldLoops, sameProcedure, softUrlMatch, stableFirst, substitute, substituteUrlId, substituteUrlParts, urlDiff, urlMatches, urlOriginPositions, urlParts, urlPattern } from '../src/skills/compile.js';
 import { mintedShape } from '../src/execution/url.js';
 import type { LocatorCandidate } from '../src/daemon/recorder.js';
 import type { SkillStep } from '../src/skills/store.js';
@@ -92,6 +92,136 @@ describe('cross-instruction url record-id slotting (fwod29)', () => {
     expect(skill).toBeTruthy();
     const gotoStep = skill.steps.find((st) => st.tool === 'goto')!;
     expect(String(gotoStep.args.url)).toContain('id=21');
+  });
+
+  // fwgr41-n1 06-find (s_e013d1 step 7) and its n2 variant (s_0e342c step 7):
+  // grafana's dashboard uid sits in an UNNAMED path segment, so the old
+  // `q.id`-only rule left it literal and both skills navigated every later run
+  // to the recording run's dead dashboard (both stored `failedAtStep: {"7": 1}`).
+  // The flow had the value all along — steps 03/04/05 address the dashboard as
+  // `{{02-create.url.p1}}` — it was banked at `p1` and nothing read that label.
+  const GRAFANA_UID = 'afyd7g0300dfkc';
+  const GRAFANA_INSTR = "Navigate to the dashboard 'x7 Bench Dashboard' in Grafana and report the page URL.";
+  const grafanaEntries = (uidValue = GRAFANA_UID): RecordedEntry[] => {
+    const url = `http://127.0.0.1:3000/d/${uidValue}/x7-bench-dashboard?from=now-6h&to=now&refresh=1m`;
+    return [
+      { k: 'instruction', text: GRAFANA_INSTR, url: 'http://127.0.0.1:3000/dashboards', fingerprint: [1, 0, 0] } as RecordedEntry,
+      step('goto', { url }, [], { diff: { url, alerts: [], added: ['- heading "x7 Bench Dashboard"'] } }),
+      step('read', { target: '@e1', what: 'url', label: 'current_dashboard_url' }, [{ kind: 'css', selector: 'body' }]),
+    ];
+  };
+
+  it('slots a uid in an unnamed PATH segment the ledger banked at that position (fwgr41-n1 06-find)', () => {
+    const [skill] = compileSkills({
+      entries: grafanaEntries(),
+      instruction: GRAFANA_INSTR,
+      report: { status: 'success', summary: 'opened' },
+      session: 's',
+      knownValues: { 'var:runid': 'x7', 'url:i2:p1': GRAFANA_UID },
+    });
+    expect(skill).toBeTruthy();
+    const gotoStep = skill.steps.find((st) => st.tool === 'goto')!;
+    const slot = Object.entries(skill.params).find(([, p]) => p.binding === 'url:i2:p1');
+    expect(slot, 'the uid binds by origin, so a later run resolves its own').toBeTruthy();
+    expect(slot![1].example).toBe(GRAFANA_UID); // the recorded value is kept as the example
+    expect(String(gotoStep.args.url)).toContain(`/d/{{${slot![0]}}}/`);
+    expect(String(gotoStep.args.url)).not.toContain(GRAFANA_UID);
+    // The slug beside it is the runid's slot, untouched by the positional write.
+    expect(String(gotoStep.args.url)).toMatch(/\/\{\{v\d+\}\}-bench-dashboard/);
+    // ...and a later run resolves its OWN uid from the same origin, which is
+    // the whole point: the skill binds without the instruction naming the uid.
+    const bound = bindSkill(skill, GRAFANA_INSTR.replaceAll('x7', 'k9'), { 'var:runid': 'k9', 'url:i2:p1': 'bfyd7wj0ceolcf' });
+    expect(bound).toBeTruthy();
+    expect(bound![slot![0]]).toBe('bfyd7wj0ceolcf');
+    expect(fillParams(String(gotoStep.args.url), bound!)).toBe('http://127.0.0.1:3000/d/bfyd7wj0ceolcf/k9-bench-dashboard?from=now-6h&to=now&refresh=1m');
+  });
+
+  it('writes a banked identifier ONLY at the position it was banked at', () => {
+    // The same characters in another segment are another thing. A free-text
+    // rewrite would blank both; the rule replaces p1 and leaves p3 alone.
+    const url = `http://127.0.0.1:3000/d/${GRAFANA_UID}/x7-bench-dashboard/${GRAFANA_UID}`;
+    expect(substituteUrlId(url, [{ name: 'v9', value: GRAFANA_UID, at: 'p1' }])).toBe(
+      `http://127.0.0.1:3000/d/{{v9}}/x7-bench-dashboard/${GRAFANA_UID}`,
+    );
+    // A position that does not hold the value is a no-op, never a corruption.
+    expect(substituteUrlId(url, [{ name: 'v9', value: GRAFANA_UID, at: 'p2' }])).toBe(url);
+    expect(substituteUrlId(url, [{ name: 'v9', value: GRAFANA_UID, at: 'p9' }])).toBe(url);
+    // Hash routes and hash state are addressed the same way.
+    expect(substituteUrlId('http://h:1/#/tickets/t15/edit', [{ name: 'v1', value: 't15', at: 'h1' }])).toBe('http://h:1/#/tickets/{{v1}}/edit');
+    expect(substituteUrlId('http://h:1/web#model=sale.order&id=21', [{ name: 'v1', value: '21', at: 'q.id' }])).toBe(
+      'http://h:1/web#model=sale.order&id={{v1}}',
+    );
+  });
+
+  it('reads a url origin off the ledger spelling only, and by label', () => {
+    expect(urlOriginPositions({ 'url:i2:p1': 'abc', 'url:03-open:q.id': '21' })).toEqual([
+      { label: 'p1', value: 'abc' },
+      { label: 'q.id', value: '21' },
+    ]);
+    // Not a url binding (a var, an output), and not a position label.
+    expect(urlOriginPositions({ 'var:runid': 'x7', 'output:i1:ref': 'RD-1015', 'url:i2:ref': 'RD-1015' })).toEqual([]);
+    // The flow runner's own url-output spelling is deliberately NOT admitted:
+    // a param bound to it could not resolve at bind time, and an unbindable
+    // param refuses the whole skill.
+    expect(urlOriginPositions({ '02-create.url.p1': 'abc' })).toEqual([]);
+  });
+
+  it('leaves no earlier-instruction ledger identifier literal inside any args.url', () => {
+    // The invariant, stated over the whole compile rather than one assertion
+    // per app: whatever the label, a value the ledger banked from a url
+    // position under an earlier instruction is a reference by the time it
+    // reaches a navigation url.
+    const known: Record<string, string> = {
+      'var:runid': 'x7',
+      'url:i2:p1': GRAFANA_UID,
+      'url:i2:q.id': '21',
+      'url:i3:h1': 't15',
+    };
+    const cases: { entries: RecordedEntry[]; instruction: string }[] = [
+      { entries: grafanaEntries(), instruction: GRAFANA_INSTR },
+      {
+        instruction: 'Open the sales order and report its state.',
+        entries: [
+          { k: 'instruction', text: 'Open the sales order and report its state.', url: `${ORIGIN}/web` } as RecordedEntry,
+          step('goto', { url: `${ORIGIN}/web#menu_id=181&action=315&model=sale.order&id=21` }, [], {
+            diff: { url: `${ORIGIN}/web#menu_id=181&action=315&model=sale.order&id=21`, alerts: [], added: ['- heading "S00021"'] },
+          }),
+        ],
+      },
+      {
+        instruction: 'Open the ticket and read its status.',
+        entries: [
+          { k: 'instruction', text: 'Open the ticket and read its status.', url: `${ORIGIN}/#/tickets` } as RecordedEntry,
+          step('goto', { url: `${ORIGIN}/#/tickets/t15` }, [], {
+            diff: { url: `${ORIGIN}/#/tickets/t15`, alerts: [], added: ['- heading "Ticket"'] },
+          }),
+        ],
+      },
+    ];
+    const bankedIds = Object.entries(known).filter(([k]) => k.startsWith('url:')).map(([, v]) => v);
+    for (const c of cases) {
+      const skills = compileSkills({ entries: c.entries, instruction: c.instruction, report: { status: 'success', summary: 'ok' }, session: 's', knownValues: known });
+      expect(skills.length, c.instruction).toBeGreaterThan(0);
+      const urls = skills.flatMap((s) => s.steps.map((st) => st.args.url)).filter((u): u is string => typeof u === 'string');
+      expect(urls.length, c.instruction).toBeGreaterThan(0);
+      for (const url of urls) for (const id of bankedIds) expect(url, `${c.instruction} → ${url}`).not.toContain(id);
+    }
+  });
+
+  it('leaves an app constant the ledger never banked exactly as recorded (fwod19/fwod29)', () => {
+    // The counter-example the position rule exists to protect: odoo's
+    // `menu_id`/`action` are routing vocabulary every run shares. The ledger
+    // refuses to bank them, so no label can claim them.
+    const instr = 'Open the sales order list.';
+    const url = `${ORIGIN}/web#menu_id=181&action=315&model=sale.order&view_type=list`;
+    const [skill] = compileSkills({
+      entries: [{ k: 'instruction', text: instr, url: `${ORIGIN}/web` } as RecordedEntry, step('goto', { url }, [], { diff: { url, alerts: [], added: ['- heading "Sales Orders"'] } })],
+      instruction: instr,
+      report: { status: 'success', summary: 'ok' },
+      session: 's',
+      knownValues: { 'var:runid': 'x7', 'url:i2:p1': GRAFANA_UID },
+    });
+    expect(String(skill.steps.find((st) => st.tool === 'goto')!.args.url)).toBe(url);
   });
 });
 
@@ -1165,6 +1295,63 @@ describe('SkillStore', () => {
     expect(store.get(d.id)?.stats.failedAtStep).toEqual({ '3': 1, '2': 2 });
   });
 
+  /**
+   * fwod49. A stop the step's own outcome proved harmless — the instruction
+   * succeeded and nothing changed the page after the procedure stopped, so the
+   * interrupted gesture was never redone — says nothing about the procedure.
+   * s_32409f was demoted by two such stops over a flow that passed both runs,
+   * and the demoted pin then refused the compile.
+   */
+  it('a stop the step proved harmless is inconclusive, not a strike', () => {
+    const store = new SkillStore(path.join(tmp, 'harmless'));
+    const h = mk('harmless stops');
+    store.put(h);
+    store.recordOutcome(h.id, { ok: false, failedAt: 1, instructionSucceeded: true, harmlessStop: true });
+    store.recordOutcome(h.id, { ok: false, failedAt: 1, instructionSucceeded: true, harmlessStop: true });
+    const after = store.get(h.id)!;
+    expect(after.status).toBe('provisional'); // two of them: still not demoted
+    // …and the write path stays honest: the stops happened and are counted.
+    expect(after.stats.partial).toBe(2);
+    expect(after.stats.failedAtStep).toEqual({ '1': 2 });
+    expect(after.stats.harmlessStops).toBe(2);
+    expect(after.stats.recoveredStops).toBe(2);
+    expect(after.stats.successes).toBe(1); // unchanged by them (one from the recording)
+    expect(after.stats.lastFailedAt).toBeUndefined();
+
+    // A genuinely broken step still demotes on its second real strike.
+    store.recordOutcome(h.id, { ok: false, failedAt: 1, instructionSucceeded: false });
+    expect(store.get(h.id)?.status).toBe('provisional');
+    store.recordOutcome(h.id, { ok: false, failedAt: 1, instructionSucceeded: false });
+    expect(store.get(h.id)?.status).toBe('demoted');
+  });
+
+  it('a harmless stop neither demotes nor forgives an earlier strike', () => {
+    const store = new SkillStore(path.join(tmp, 'harmless-streak'));
+    const h = mk('streak');
+    store.put(h);
+    store.recordOutcome(h.id, { ok: false, failedAt: 2, instructionSucceeded: false });
+    store.recordOutcome(h.id, { ok: false, failedAt: 2, instructionSucceeded: true, harmlessStop: true });
+    expect(store.get(h.id)?.status).toBe('provisional');
+    expect(store.get(h.id)?.stats.lastFailedAt).toBe(2); // the real strike still stands
+    store.recordOutcome(h.id, { ok: false, failedAt: 2, instructionSucceeded: false });
+    expect(store.get(h.id)?.status).toBe('demoted');
+    // Only the strikes the instruction survived count as recovered.
+    expect(store.get(h.id)?.stats.recoveredStops).toBe(1);
+    expect(store.get(h.id)?.stats.harmlessStops).toBe(1);
+  });
+
+  it('counts a recovered stop even when it strikes, so the demoted-pin diagnostic can say so', () => {
+    const store = new SkillStore(path.join(tmp, 'recovered'));
+    const r = mk('recovered stops');
+    store.put(r);
+    store.recordOutcome(r.id, { ok: false, failedAt: 1, instructionSucceeded: true });
+    store.recordOutcome(r.id, { ok: false, failedAt: 1, instructionSucceeded: true });
+    const after = store.get(r.id)!;
+    expect(after.status).toBe('demoted'); // the work WAS redone: a real strike, twice
+    expect(after.stats.recoveredStops).toBe(2);
+    expect(after.stats.harmlessStops).toBeUndefined();
+  });
+
   it('lists candidates for a page: validated first, demoted never, wrong page never', () => {
     const v = mk('validated one', { status: 'validated', stats: { uses: 4, successes: 4, partial: 0, created: 't', failedAtStep: {}, fallthroughs: 0 } });
     const p = mk('provisional one');
@@ -1245,6 +1432,56 @@ describe('learnFromInstruction', () => {
     expect(promoted?.superseded).toBe(base.id);
     expect(store.get(base.id)?.status).toBe('demoted');
     expect(store.get(variant.id)?.status).toBe('validated');
+  });
+
+  /**
+   * fwod49: only the caller that watched the recovery can know a stop was
+   * harmless, so it passes the fact in and learning hands it to the store
+   * unchanged — the same repair that would otherwise have struck the skill
+   * twice leaves it provisional, and the stop is still recorded.
+   */
+  it('passes a harmless stop through to the store, so it is not a strike', () => {
+    const store = new SkillStore(path.join(tmp, 'harmless-learn'));
+    const base = compileSkill({ entries: recording(), instruction: INSTRUCTION, report, session: 's', now: '2026-01-01T00:00:00Z' })!;
+    store.put(base);
+    const stopped = { ...noSkill, invoked: base.id, stepsReplayed: 0, stepsTotal: 7, repaired: true, deterministicActions: 0, totalActions: 7 };
+    for (const now of ['2026-01-02T00:00:00Z', '2026-01-03T00:00:00Z']) {
+      learnFromInstruction(store, { result: result('success', stopped), instruction: INSTRUCTION, entries: recording(), session: 's', now, harmlessStop: true });
+    }
+    expect(store.get(base.id)?.status).toBe('provisional');
+    expect(store.get(base.id)?.stats.harmlessStops).toBe(2);
+    expect(store.get(base.id)?.stats.failedAtStep).toEqual({ '1': 2 });
+
+    // Without the flag the same two stops demote, as before.
+    const other = { ...base, id: 's_other' };
+    store.put(other);
+    for (const now of ['2026-01-04T00:00:00Z', '2026-01-05T00:00:00Z']) {
+      learnFromInstruction(store, { result: result('success', { ...stopped, invoked: other.id }), instruction: INSTRUCTION, entries: recording(), session: 's', now });
+    }
+    expect(store.get(other.id)?.status).toBe('demoted');
+  });
+});
+
+/**
+ * The flow runner is the only place that can establish a harmless stop: it
+ * holds the replay's resume point and the recording of everything the repair
+ * did afterwards. Source level, because runFlow needs a live browser.
+ */
+describe('runFlow decides a harmless stop from the recovery it watched (fwod49)', () => {
+  const source = fs.readFileSync(path.resolve(__dirname, '../src/daemon/server.ts'), 'utf8');
+
+  it('marks the resume point before recovery and asks what changed after it', () => {
+    expect(source).toMatch(/const replayMark = this\.browser\.script\?\.mark\(\) \?\? mark;/);
+    const region = source.slice(source.indexOf('const harmlessStop ='), source.indexOf('const learned = learnFromInstruction'));
+    expect(region).toMatch(/result\.report\.status === 'success'/);
+    expect(region).toMatch(/entriesSince\(replayMark\)/);
+    expect(region).toMatch(/isMutatingAction\(e\.tool\)/);
+    expect(region).toMatch(/^\s*!\(/m); // …and it is the ABSENCE of such a gesture
+  });
+
+  it('hands the fact to learning, which is what records the outcome', () => {
+    const call = source.slice(source.indexOf('const learned = learnFromInstruction'), source.indexOf('const outcome = learned?.outcome;'));
+    expect(call).toMatch(/\bharmlessStop,/);
   });
 });
 
@@ -1826,5 +2063,71 @@ describe('maskMinted', () => {
     // a colon inside the name is not a value colon
     expect(maskMinted('- heading "Panel: Title"')).toBe('- heading "Panel: Title"');
     expect(maskMinted('- link "Support"')).toBe('- link "Support"');
+  });
+});
+
+/**
+ * Provenance at compile time: what a step's own args put on the page, and what
+ * the application merely happened to be showing. fwod49-n2 compiled both
+ * halves wrong — 04-open's dblclick, which types nothing, stored
+ * `- combobox "Type to find a product...": {{v4}}` (v4 is another
+ * instruction's output), and 02-open's one-character `type` stored the
+ * autocomplete's whole option list, `- option "{{v4}}"` among it. Both were
+ * HARD, so every replay stopped and both skills were demoted.
+ */
+describe("a step's expectation is only what the step itself put there (fwod49)", () => {
+  const compileOne = (recorded: RecordedStep[], instruction: string) =>
+    compileSkills({
+      entries: [{ k: 'instruction', text: instruction, url: `${ORIGIN}/orders/1` } as RecordedEntry, ...recorded],
+      instruction,
+      report: { status: 'success', summary: 'ok' },
+      session: 's',
+    })[0];
+
+  it("wildcards a control's value the step did not type, and keeps the one it did", () => {
+    const instruction = "On order 1, open the 'Acoustic Bloc Screens' line and set its note to 'Rush delivery'.";
+    const skill = compileOne(
+      [
+        step('dblclick', { target: 'td.qty' }, [{ kind: 'css', selector: 'td.qty' }], {
+          diff: {
+            url: `${ORIGIN}/orders/1`,
+            alerts: [],
+            added: ['- combobox "Type to find a product...": Acoustic Bloc Screens', '- textbox "": Acoustic Bloc Screens', '- link "Delete"'],
+          },
+        }),
+        step('fill', { target: 'td.note input', value: 'Rush delivery' }, [{ kind: 'css', selector: 'td.note input' }], {
+          diff: { url: `${ORIGIN}/orders/1`, alerts: [], added: ['- textbox "Note": Rush delivery', '- row "Untaxed Amount 1,475.00"'] },
+        }),
+      ],
+      instruction,
+    );
+    // the dblclick typed nothing: the product name in the row is the app's,
+    // whoever's run made that row — the line survives on role and name alone,
+    // and the unnamed one identifies nothing at all once the value is gone
+    expect(skill.steps[0].expect?.addedContains).toEqual(['- combobox "Type to find a product...": {{*}}', '- link "Delete"']);
+    // the fill's own value — a slot, because the instruction names it — is
+    // evidence: it is what the fill put there
+    expect(skill.steps[1].expect?.addedContains?.[0]).toMatch(/^- textbox "Note": \{\{v\d+\}\}$/);
+  });
+
+  it("never parameterises an item inside an open popup, and keeps the popup's own line", () => {
+    const instruction = "On order 1, add a line for 'Cabinet with Doors'.";
+    const skill = compileOne(
+      [
+        step('type', { target: 'td.product input', text: 'a' }, [{ kind: 'css', selector: 'td.product input' }], {
+          diff: {
+            url: `${ORIGIN}/orders/1`,
+            alerts: [],
+            added: ['- menu ""', '- option "Cabinet with Doors"', '- option "Chair floor protection"'],
+          },
+        }),
+      ],
+      instruction,
+    );
+    const added = skill.steps[0].expect?.addedContains ?? [];
+    // the option the instruction names would have been slotted; it is not
+    expect(added.some((l) => /^- option .*\{\{v\d+\}\}/.test(l))).toBe(false);
+    // the popup's opening is still the evidence
+    expect(added).toContain('- menu ""');
   });
 });

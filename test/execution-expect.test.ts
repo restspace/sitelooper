@@ -13,8 +13,12 @@ import {
   identifiesNothing,
   isEchoLine,
   liveLines,
+  maskForeignValue,
   maskMinted,
+  maskPopupItem,
   namesDialogControl,
+  popupItem,
+  unfilledSlot,
   type ChangeObservation,
 } from '../src/execution/expect.js';
 import { addedLines, isInteractiveLine, lineShows } from '../src/execution/snapshot.js';
@@ -79,14 +83,56 @@ describe('expectedChangesVerdict', () => {
     expect(nowhere.absentDialog).toBeUndefined();
   });
 
-  it('a {{dN}} derived marker is filled but stays plain; an unbound slot is looked for as recorded', async () => {
+  it('a {{dN}} derived marker is filled but stays plain', async () => {
     const derived = await expectedChangesVerdict(['- heading "Order {{d1}}"'], { d1: '42' }, ctx(), seen([], ['- heading "Order 43"']));
     // plain group, nowhere: a stop with the plain wording, not the hard one
     expect(derived.stop).toContain('none of the 1 recorded page change(s) appeared (e.g. "- heading \\"Order 42\\"")');
     expect((await expectedChangesVerdict(['- heading "Order {{d1}}"'], { d1: '42' }, ctx(), seen(['- heading "Order 42"'], []))).stop).toBeUndefined();
-    // a hard line whose slot this run never bound is compared as the literal marker, which no page shows
-    expect((await expectedChangesVerdict(['- heading "{{v9}}"'], {}, ctx(), seen(['- heading "{{v9}}"'], []))).stop).toBeUndefined();
-    expect((await expectedChangesVerdict(['- heading "{{v9}}"'], {}, ctx(), seen(['- heading "anything"'], ['- heading "anything"']))).stop).toMatch(/did not show "- heading \\"\{\{v9\}\}\\""/);
+  });
+
+  /**
+   * fwod49-n2: the flow could not resolve `02-open.product_name`, the step ran
+   * with that marker as the param's value, and the gate searched the page for
+   * the literal text "{{02-open.product_name}}" — which no page has ever shown.
+   * Every replay of s_78eaaf and s_32409f stopped there and both were demoted
+   * for a step that had done exactly what it was recorded doing.
+   */
+  it('drops a line this run could not fill, with a warning, and never stops on one', async () => {
+    // an unresolved reference arriving AS the param's value
+    const unresolved = await expectedChangesVerdict(['- option "{{v4}}"'], { v4: '{{02-open.product_name}}' }, ctx(), seen(['- option "Acoustic Bloc Screens"'], ['- option "Acoustic Bloc Screens"']));
+    expect(unresolved.stop).toBeUndefined();
+    expect(unresolved.warnings).toEqual(['step 3: 1 recorded page change(s) carry a value this run could not fill (e.g. "- option \\"{{02-open.product_name}}\\"") — not checked']);
+    // a slot the caller never bound at all
+    const unbound = await expectedChangesVerdict(['- heading "{{v9}}"'], {}, ctx(), seen(['- heading "anything"'], ['- heading "anything"']));
+    expect(unbound.stop).toBeUndefined();
+    expect(unbound.warnings[0]).toContain('could not fill');
+    // the {{*}} wildcard is not an unfilled slot: it is still matched, and still judged
+    const wildcard = await expectedChangesVerdict(['- combobox "Project": {{*}}'], {}, ctx(), seen([], ['- combobox "Other": x']));
+    expect(wildcard.stop).toMatch(/none of the 1 recorded page change\(s\) appeared/);
+    // the fillable lines of the same step are still judged
+    const mixed = await expectedChangesVerdict(['- heading "{{v1}}"', '- option "{{v4}}"'], { v1: 'Widget A', v4: '{{02-open.product_name}}' }, ctx(), seen([], ['- heading "Widget B"']));
+    expect(mixed.stop).toMatch(/did not show "- heading \\"Widget A\\""/);
+    expect(mixed.warnings[0]).toContain('could not fill');
+  });
+
+  /**
+   * fwod49-n2 02-open: a `type` of one character recorded the autocomplete's
+   * whole option list as its effect, `- option "{{v4}}"` among it. The list is
+   * whatever the catalogue answers with now; only the popup's OPENING is the
+   * step's doing.
+   */
+  it('never treats an item inside an open popup as hard evidence', async () => {
+    const recorded = ['- menu ""', '- option "{{v1}}"'];
+    const p = { v1: 'Cabinet with Doors' };
+    // the option is absent and the menu opened: the plain group holds, no stop
+    const opened = await expectedChangesVerdict(recorded, p, ctx({ tool: 'type' }), seen(['- menu ""'], []));
+    expect(opened.stop).toBeUndefined();
+    // neither line anywhere: the plain wording, never "acted on the wrong element"
+    const nothing = await expectedChangesVerdict(recorded, p, ctx({ tool: 'type' }), seen([], ['- button "Save"']));
+    expect(nothing.stop).toMatch(/none of the 2 recorded page change\(s\) appeared/);
+    // the container itself is unaffected — a named dialog is still hard
+    const dialog = await expectedChangesVerdict(['- dialog "Edit {{v1}}"'], p, ctx(), seen([], ['- dialog "Edit Other"']));
+    expect(dialog.stop).toMatch(/did not show "- dialog \\"Edit Cabinet with Doors\\""/);
   });
 
   it('masks the recording\'s clock tokens and minted values at run time, so an older store still matches', async () => {
@@ -242,6 +288,50 @@ describe('the rules the verdict is built from', () => {
     for (const line of ['- textbox "Name": {{*}}', '- textbox "": 147.00', '- textbox "": {{v5}}', '- row "20% £ 294.00"', '- cell "2.00', '- text: Saved', '- dialog ""', '- listbox', '- menu ""', 'not a line at all!']) {
       expect(identifiesNothing(line), line).toBe(false);
     }
+  });
+
+  it('unfilledSlot: any {{…}} left after the params are in, except the wildcard', () => {
+    for (const line of ['- heading "{{v9}}"', '- option "{{02-open.product_name}}"', '- cell "{{d3}}"', '- textbox "Name": {{v1}}']) {
+      expect(unfilledSlot(line), line).toBe(true);
+    }
+    for (const line of ['- heading "Widget A"', '- textbox "{{*}} {{*}}": 147.00', '- combobox "Project": {{*}}', '- cell "{ {v1} }"']) {
+      expect(unfilledSlot(line), line).toBe(false);
+    }
+  });
+
+  it('popupItem: the entries of an open menu or listbox, never its container', () => {
+    for (const line of ['- option "Cabinet"', 'option "Cabinet"', '- menuitem "Delete"', '- menuitemcheckbox "Wrap" [checked]', '- menuitemradio "Left"']) {
+      expect(popupItem(line), line).toBe(true);
+    }
+    for (const line of ['- menu ""', '- listbox "Products"', '- dialog "Discard changes?"', '- cell "Cabinet"', '- optional "x"']) {
+      expect(popupItem(line), line).toBe(false);
+    }
+  });
+
+  /**
+   * The provenance half maskMinted leaves open: a value that IS a slot, but a
+   * slot bound to another step's output. fwod49-n2 04-open recorded a dblclick
+   * — which types nothing — as `- combobox "…": {{v4}}`, the product the
+   * recording's own quotation happened to hold.
+   */
+  it('maskForeignValue wildcards an editable control\'s value unless this step put it there', () => {
+    expect(maskForeignValue('- combobox "Type to find a product...": {{v4}}', [])).toBe('- combobox "Type to find a product...": {{*}}');
+    expect(maskForeignValue('- combobox "Type to find a product...": {{v4}}', ['{{v4}}'])).toBe('- combobox "Type to find a product...": {{v4}}');
+    expect(maskForeignValue('- textbox "Name" [required]: {{v1}}', ['{{v2}}'])).toBe('- textbox "Name" [required]: {{*}}');
+    expect(maskForeignValue('- spinbutton "Qty": 5', ['5'])).toBe('- spinbutton "Qty": 5');
+    // role, name and state are never touched, and a non-editable role is left alone
+    expect(maskForeignValue('- cell "{{v4}}"', [])).toBe('- cell "{{v4}}"');
+    expect(maskForeignValue('- row "20% £ 885.00": {{v4}}', [])).toBe('- row "20% £ 885.00": {{v4}}');
+    // the wildcard is already the answer
+    expect(maskForeignValue('- combobox "Project": {{*}}', [])).toBe('- combobox "Project": {{*}}');
+  });
+
+  it('maskPopupItem leaves a popup entry identifying nothing, and a container untouched', () => {
+    expect(maskPopupItem('- option "{{v4}}"')).toBe('- option "{{*}}"');
+    expect(identifiesNothing(maskPopupItem('- option "{{v4}}"'))).toBe(true);
+    expect(maskPopupItem('- menuitem "Delete {{v1}}"')).toBe('- menuitem "Delete {{*}}"');
+    expect(maskPopupItem('- option "[E-COM11] Cabinet with Doors"')).toBe('- option "[E-COM11] Cabinet with Doors"');
+    expect(maskPopupItem('- menu "{{v1}}"')).toBe('- menu "{{v1}}"');
   });
 
   it('liveLines masks, then fills, as both runners do at run time', () => {

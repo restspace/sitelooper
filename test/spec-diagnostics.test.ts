@@ -118,6 +118,31 @@ describe('flowToSpec: diagnostics over the published fwod34 flow', () => {
     );
   });
 
+  /**
+   * fwod49: a stop every run recovered from is a re-recording worth doing, not
+   * a broken procedure — and "its last replays failed at the same step" over a
+   * flow that passed twice reads as the second. The count comes from the
+   * store's own stats; a store written before the counter existed says nothing
+   * rather than claiming none were recovered.
+   */
+  it('says how many of the demoting stops the flow recovered from', () => {
+    const whyWith = (recoveredStops?: number): string => {
+      const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sl-recovered-'));
+      fs.cpSync(FWOD34_SKILLS, dir, { recursive: true });
+      const s = new SkillStore(dir);
+      const skill = s.get(DEMOTED_SKILL)!;
+      s.put({ ...skill, stats: { ...skill.stats, partial: 3, ...(recoveredStops === undefined ? {} : { recoveredStops }) } });
+      const out = flowToSpec(flow, new SkillStore(dir), { flowFile: FWOD34 }).diagnostics.find((x) => x.code === 'demoted-pin')!.why;
+      fs.rmSync(dir, { recursive: true, force: true });
+      return out;
+    };
+    expect(whyWith(3)).toContain('3 of the 3 stop(s) were recovered (the step still finished)');
+    expect(whyWith(0)).toContain('none of the 3 stop(s) were recovered — the instruction failed around each');
+    // Old stats: unknown, so unsaid.
+    expect(whyWith(undefined)).not.toContain('stop(s) were recovered');
+    expect(whyWith(undefined)).toContain('failed at step 1 on 3 of them');
+  });
+
   it('has nothing to say about the steps that are fine', () => {
     expect(diagnostics.filter((d) => d.code === 'demoted-pin' || d.code === 'no-procedure' || d.code === 'missing-skill').map((d) => d.step)).toEqual([
       DEMOTED_STEP,

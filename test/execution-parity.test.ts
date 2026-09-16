@@ -783,6 +783,71 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
   }, 120_000);
 
   /**
+   * A LATER goto whose recorded target names the record the RECORDING ran on,
+   * at a position this run has already watched vary. Step 1 goes to this run's
+   * record and its recorded url expectation sees `rec-42→rec-77` — the segment
+   * that is "treated as volatile". Step 2 is the recorded literal
+   * `/record/rec-42`, and the shared retargetNavigation sends it to
+   * `/record/rec-77` instead, on BOTH runners: the daemon rewrites the step's
+   * own `args.url`, the artifact calls `navigationTarget` ahead of its
+   * `page.goto`, and a rule only one of them applied would leave the other
+   * marking the recording's record.
+   *
+   * fwgr41-n3 06-find is this exactly: step 6 warned "url segment(s) differ
+   * from recorded (afyd7g0300dfkc→cfyd8hqymgfeoe) — treated as volatile", and
+   * step 7's goto to the recorded uid landed on a dashboard Grafana had never
+   * minted.
+   */
+  it('both runners send a later goto to the live value at a position this run has shown volatile', async () => {
+    const steps: SkillStep[] = [
+      { tool: 'goto', args: { url: `${origin}/record/{{v1}}` }, locators: {}, expect: { urlPattern: `${origin}/record/${RECORDED}` } },
+      { tool: 'goto', args: { url: `${origin}/record/${RECORDED}` }, locators: {} },
+      MARK,
+    ];
+    const skill: Skill = {
+      ...skillOf(steps),
+      id: 's_volatile',
+      template: 'mark record {{v1}}',
+      params: { v1: { example: RECORDED, usedIn: [1], known: true } },
+      preconditions: { urlPattern: `${origin}/record/:id`, requireText: ['Record {{v1}}'] },
+    };
+    const spec: SpecFlow = {
+      version: 1,
+      name: 'parity-volatile',
+      origin,
+      startUrl: `${origin}/`,
+      vars: [],
+      steps: [
+        {
+          id: '01-mark',
+          instruction: 'mark record {{v1}}',
+          params: { v1: RECORDED },
+          outputs: [],
+          segments: [
+            {
+              id: 's_volatile',
+              template: 'mark record {{v1}}',
+              params: { v1: { example: RECORDED, usedIn: [1], known: true } },
+              preconditions: { urlPattern: `${origin}/record/:id`, requireText: ['Record {{v1}}'] },
+              steps,
+            },
+          ],
+        },
+      ],
+    };
+    const { replay, emitted, replayLog, emittedLog } = await bothOf(skill, spec, { v1: 'rec-77' });
+
+    expect(replay.ok, replay.reason ?? '').toBe(true);
+    expect(emitted.ok, emitted.reason ?? '').toBe(true);
+    // The server is the oracle: neither runner ever asked for the recording's
+    // record, and the work happened once, on this run's.
+    expect(replayLog).toEqual(['visit:rec-77', 'visit:rec-77', 'mark:rec-77']);
+    expect(emittedLog).toEqual(['visit:rec-77', 'visit:rec-77', 'mark:rec-77']);
+    expect(replay.warnings?.some((w) => /already shown volatile/.test(w)), 'replay says why it retargeted').toBe(true);
+    expect(emitted.warnings?.some((w) => /already shown volatile/.test(w)), 'the artifact says why it retargeted').toBe(true);
+  }, 120_000);
+
+  /**
    * The same self-navigating procedure, recorded from a blank tab: it looks at
    * the page (a wait for `body`) before its goto, as fwrd51's s_b1a0cd did.
    * It still navigates itself — the start url is not asked (the browser is on
@@ -1650,6 +1715,91 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(emittedLog.filter((l) => l.startsWith('save:'))).toEqual(['save:Beta']);
       expect(replay.ok, replay.reason ?? '').toBe(true);
       expect(emitted.ok, emitted.reason ?? '').toBe(true);
+    }, 120_000);
+
+    /**
+     * (a bis) A slot this run could not fill at all — and the one place the two
+     * runners silently disagreed about it.
+     *
+     * fwod49-n2: 02-open never published `product_name`, so the reference
+     * reached the consuming step AS the param's value. No step uses that slot
+     * (SkillParam.usedIn is empty), so neither the daemon's ignorableRefs nor
+     * the artifact's usedSlot blocks the step — and from there the two parted:
+     * the daemon keeps the marker (resolveRefs 'keep'), so its gate searched
+     * the live page for the literal text "{{02-open.product_name}}", stopped
+     * every replay of s_78eaaf and s_32409f, and demoted both; the artifact
+     * resolves the same reference to '' (callArgs → `outputs[…] ?? ''`), which
+     * leaves `- heading ""`, a line identifying nothing, and passed in silence.
+     *
+     * One verdict now: a line still carrying a `{{…}}` marker after the params
+     * are in (unfilledSlot) is dropped with a warning on both sides, the
+     * fillable line beside it is still judged, and both save this run's value.
+     */
+    const unfillableParams = (): Record<string, SkillParam> => ({
+      v1: { example: 'Gamma', usedIn: [2], known: true },
+      // named only by the expectation and the template: no step types or
+      // locates by it, which is why neither runner's consumption gate stops
+      v2: { example: 'Order 41', usedIn: [], known: true },
+    });
+
+    it('neither runner judges a step on a slot this run could not fill', async () => {
+      const steps = projectSteps('open');
+      steps[1] = { ...steps[1], expect: { addedContains: ['- combobox "Project": {{v1}}', '- heading "{{v2}}"'] } };
+      const consumer: Skill = {
+        ...skillOf(steps),
+        id: 's_project',
+        template: 'pick project {{v1}} on {{v2}}',
+        params: unfillableParams(),
+        preconditions: { urlPattern: `${origin}/project/:id` },
+      };
+      const pick: FlowStep = {
+        id: '02-pick',
+        instruction: 'pick project Beta on {{01-read.x}}',
+        skill: 's_project',
+        params: { v1: 'Beta', v2: '{{01-read.x}}' },
+        outputs: [],
+        recorded: {},
+      };
+      const spec: SpecFlow = {
+        version: 1,
+        name: 'parity-unfillable',
+        origin,
+        startUrl: `${origin}/`,
+        vars: [],
+        steps: [
+          {
+            id: '01-read',
+            instruction: 'read the target',
+            params: {},
+            outputs: ['x'],
+            segments: [{ id: 's_read', template: 'read the target', params: {}, preconditions: { urlPattern: `${origin}/` }, steps: [readStep('#nope')] }],
+          },
+          {
+            id: '02-pick',
+            instruction: 'pick project Beta on {{01-read.x}}',
+            params: { v1: 'Beta', v2: '{{01-read.x}}' },
+            outputs: [],
+            segments: [{ id: 's_project', template: 'pick project {{v1}} on {{v2}}', params: unfillableParams(), preconditions: { urlPattern: `${origin}/project/:id` }, steps }],
+          },
+        ],
+      };
+
+      reset(0);
+      const { outcome: replay, blocking } = await replayFlowOf(readSkill('#nope'), consumer, pick);
+      const replayLog = [...fx.log];
+      reset(0);
+      const emitted = await emittedFlowOf(spec);
+      const emittedLog = [...fx.log];
+
+      // the reference is not blocking on either side: no step uses the slot
+      expect(blocking).toEqual([]);
+      // the oracle: both ran the procedure and saved THIS run's value
+      expect(replayLog.filter((l) => l.startsWith('save:')), 'replay stopped on a line it could not fill').toEqual(['save:Beta']);
+      expect(emittedLog.filter((l) => l.startsWith('save:')), 'the artifact stopped on a line it could not fill').toEqual(['save:Beta']);
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      // ...and the daemon says the line went unchecked rather than staying silent
+      expect((replay.warnings ?? []).join(' ')).toContain('could not fill');
     }, 120_000);
 
     /**

@@ -7,7 +7,8 @@
  * the finding.
  */
 import { describe, expect, it } from 'vitest';
-import { RunLedger, evidenced, fatal, inLocator, navigationLeaks, occursAsToken, scanForLeaks, slotKnownRunValues } from '../src/skills/ledger.js';
+import { RunLedger, evidenced, fatal, inLocator, navigationLeaks, occursAsToken, scanForLeaks, slotKnownRunValues, urlVarianceValues } from '../src/skills/ledger.js';
+import { varyingValues, type Flow } from '../src/skills/flow.js';
 import type { Skill } from '../src/skills/store.js';
 import { looksLikeId } from '../src/skills/shape.js';
 import { primaryFor } from '../src/daemon/recorder.js';
@@ -121,13 +122,85 @@ describe('navigationLeaks: a recovery skill that would navigate to a record this
     expect(navigationLeaks(leaks, 'i4')).toEqual(['22']);
   });
 
-  it('still refuses a shape-only id THIS step minted, and still lets an earlier shape-only one through', () => {
+  it('refuses a uid an EARLIER instruction banked from a path position, whatever the basis (fwgr41)', () => {
+    // fwgr41-n2's recovery welded its own dashboard uid into `goto /d/<uid>/…`.
+    // The uid was banked on SHAPE under an earlier instruction (the run had
+    // landed on the dashboard at 02-create), so the basis test filtered the
+    // leak out, n3 pinned the skill, and it navigated to a dashboard that no
+    // longer existed. A url POSITION identifier is the record whoever minted it.
     const l = new RunLedger();
     l.addUrlIds('http://app/d/afwfbbc2of6rkf', 'i2', [{ label: 'p1', value: 'afwfbbc2of6rkf' }]);
+    expect(l.all().map((e) => e.basis)).toEqual(['shape']);
     const leaks = scanForLeaks(skillWithGoto('http://app/d/afwfbbc2of6rkf'), l, 's_x');
-    // fwod19's lesson: an earlier instruction's shape-only "id" may be app furniture.
-    expect(navigationLeaks(leaks, 'i4')).toEqual([]);
+    expect(navigationLeaks(leaks, 'i4')).toEqual(['afwfbbc2of6rkf']);
     expect(navigationLeaks(leaks, 'i2')).toEqual(['afwfbbc2of6rkf']);
+  });
+
+  it('leaves odoo’s menu/action constants alone — they never reach a leak at all (fwod19)', () => {
+    // The counter-example the basis test used to buy: `#action=123&menu_id=81`
+    // is odoo's Discuss menu, identical on every run, and demoting a skill over
+    // it refused a clean 6/6 recording. It stays out upstream now — addUrlIds
+    // does not bank a digit run at a query/state key the app does not call
+    // `id` — so navigationLeaks never sees it and needs no exemption.
+    const url = 'http://127.0.0.1:8069/web#action=123&cids=1&menu_id=81';
+    const l = new RunLedger();
+    l.addUrlIds(url, 'i1', [
+      { label: 'q.action', value: '123' },
+      { label: 'q.cids', value: '1' },
+      { label: 'q.menu_id', value: '81' },
+    ]);
+    expect(l.all()).toEqual([]);
+    expect(navigationLeaks(scanForLeaks(skillWithGoto(url), l, 's_y'), 'i4')).toEqual([]);
+  });
+});
+
+describe('urlVarianceValues: what a run WATCHED a url position hold (fwgr41)', () => {
+  it('banks both sides of a path segment the run saw differ', () => {
+    // fwgr41-n2, one step before it stopped on the recorded uid being gone.
+    expect(
+      urlVarianceValues([{ where: 'path', index: 1, expected: 'afyd7g0300dfkc', actual: 'bfyd7wj0ceolcf' }]),
+    ).toEqual(['afyd7g0300dfkc', 'bfyd7wj0ceolcf']);
+  });
+
+  it('banks a hash-path segment and an `id=` position, which the url itself calls the record', () => {
+    expect(urlVarianceValues([{ where: 'hashPath', index: 1, expected: 't15', actual: 't19' }])).toEqual(['t15', 't19']);
+    expect(urlVarianceValues([{ where: 'hashState', key: 'id', expected: '22', actual: '23' }])).toEqual(['22', '23']);
+    expect(urlVarianceValues([{ where: 'query', key: 'id', expected: '22', actual: '23' }])).toEqual(['22', '23']);
+  });
+
+  it('ignores a view/state key: those two runs were looking at different pages (fwod20, rpod1)', () => {
+    // rpod1 printed exactly this pair as a volatile-segment warning. Banking
+    // `form` as an identifier would make every locator naming it a fatal leak,
+    // and fwod20 showed that this is what "21 parts varied" was made of.
+    expect(
+      urlVarianceValues([
+        { where: 'hashState', key: 'model', expected: 'res.partner', actual: 'sale.order' },
+        { where: 'hashState', key: 'view_type', expected: 'form', actual: 'list' },
+        { where: 'hashState', key: 'menu_id', expected: '194', actual: '181' },
+      ]),
+    ).toEqual([]);
+  });
+
+  it('feeds the ledger, so the value banks by evidence instead of by its characters', () => {
+    // The point of the whole path: "abcd" is not an id to any regex, and a run
+    // that watched it change is not guessing.
+    const l = new RunLedger();
+    l.seedVariance(urlVarianceValues([{ where: 'path', index: 2, expected: 'abcd', actual: 'efgh' }]));
+    l.addUrlIds('http://app/x/y/efgh', 'i7', [{ label: 'p2', value: 'efgh' }]);
+    expect(l.all().map((e) => [e.value, e.kind, e.basis])).toEqual([['efgh', 'identifier', 'variance']]);
+  });
+
+  it('survives a stopped run: the flow banks it and the next run seeds from it', () => {
+    // FlowStep.urlVariance is written whether or not the step completed, which
+    // is what `varyingValues` — the next run's seed — reads.
+    const flow: Flow = {
+      name: 'fwgr41', origin: 'http://app', startUrl: 'http://app/', vars: [],
+      provenance: { session: 's', created: '' },
+      steps: [
+        { id: '06-find', instruction: 'open the dashboard', outputs: [], recorded: {}, urlVariance: ['afyd7g0300dfkc', 'bfyd7wj0ceolcf'] },
+      ],
+    };
+    expect([...varyingValues(flow)]).toEqual(['afyd7g0300dfkc', 'bfyd7wj0ceolcf']);
   });
 });
 

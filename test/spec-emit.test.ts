@@ -45,6 +45,13 @@ function syntaxErrors(source: string, fileName = 'flow.ts'): string[] {
  */
 const trimmedLines = (source: string): string[] => source.split('\n').map((l) => l.trim());
 
+/**
+ * Just the emitted step bodies, without the shared execution modules the
+ * artifact embeds ahead of them: an assertion about what a STEP emits must not
+ * be answered by a branch inside src/execution/*.ts.
+ */
+const stepBodies = (source: string): string => source.slice(source.indexOf('export const steps = {'));
+
 /** The index at which `lines` appear consecutively in `source`, or -1. */
 function sequenceAt(source: string, lines: string[]): number {
   const all = trimmedLines(source);
@@ -272,7 +279,11 @@ describe('step bodies', () => {
     );
     expect(one({ tool: 'check', args: { target: '@e1', checked: true }, locators: loc })).toContain('await hit1.locator.check().catch(actionFailed);');
     expect(one({ tool: 'check', args: { target: '@e1', checked: false }, locators: loc })).toContain('await hit1.locator.uncheck().catch(actionFailed);');
-    expect(one({ tool: 'goto', args: { url: 'http://app.test/x' }, locators: {} })).toContain("await page.goto('http://app.test/x');");
+    // A goto resolves its target first: the shared retargetNavigation sends it
+    // to the live value at a position this segment has shown volatile (fwgr41).
+    const goto = one({ tool: 'goto', args: { url: 'http://app.test/x' }, locators: {} });
+    expect(goto).toContain("nav1 = navigationTarget('http://app.test/x', page, volatile1, '01-do s_test1/1');");
+    expect(goto).toContain('await page.goto(nav1.url);');
   });
 
   it('presses a key on the page when the recording had no target', () => {
@@ -656,14 +667,14 @@ describe('expectations', () => {
    */
   it('checks a recorded url through the shared urlEffect verdict, whatever the pattern shape', () => {
     const path = withExpect({ urlPattern: 'http://app.test/items/:id' });
-    expect(path).toContain("await urlEffect(page, 'http://app.test/items/:id', p, '01-do s_test1/1');");
+    expect(path).toContain("await urlEffect(page, 'http://app.test/items/:id', p, '01-do s_test1/1', volatile1);");
     expect(path).not.toContain('toHaveURL(');
     expect(path).not.toContain('new RegExp(`^http');
     expect(path).toContain('// Shared execution source: gates.ts. Regenerate to update.');
     expect(path).toContain('function urlEffectVerdict(');
     // the slot stays a marker in the emitted call; `p` fills it at run time, as replay does
     const slotted = withExpect({ urlPattern: 'http://app.test/items/{{v1}}' });
-    expect(slotted).toContain("await urlEffect(page, 'http://app.test/items/{{v1}}', p, '01-do s_test1/1');");
+    expect(slotted).toContain("await urlEffect(page, 'http://app.test/items/{{v1}}', p, '01-do s_test1/1', volatile1);");
     expect(slotted).toMatch(/async '01-do'\(page: Page, p: \{[^}]*\bv1: string/);
     // the adapter: a strict match is waited for on the navigation itself, then
     // the verdict is asked ONCE of wherever the browser is; a warning is logged,
@@ -700,7 +711,7 @@ describe('expectations', () => {
     const out = withExpect({ urlPattern: 'http://app.test/web#action=:id&cids=1&menu_id={{v1}}' });
     // The artifact calls the daemon's own urlMatches on the recorded pattern,
     // markers intact, and fills the slots from `p` exactly as replay fills them.
-    expect(out).toContain("await urlEffect(page, 'http://app.test/web#action=:id&cids=1&menu_id={{v1}}', p, '01-do s_test1/1');");
+    expect(out).toContain("await urlEffect(page, 'http://app.test/web#action=:id&cids=1&menu_id={{v1}}', p, '01-do s_test1/1', volatile1);");
     expect(out).toContain('// Shared execution source: url.ts. Regenerate to update.');
     expect(out).toContain('function urlMatches(pattern: string, url: string, params: Record<string, string> = {}): boolean {');
     // the slot the pattern names is one the step's `p` carries
@@ -710,7 +721,7 @@ describe('expectations', () => {
     expect(out).not.toContain('hashState(');
     // a hash ROUTE takes the very same form — there is no regex to fall back to
     const route = withExpect({ urlPattern: 'http://app.test/a#/detail/:id' });
-    expect(route).toContain("await urlEffect(page, 'http://app.test/a#/detail/:id', p, '01-do s_test1/1');");
+    expect(route).toContain("await urlEffect(page, 'http://app.test/a#/detail/:id', p, '01-do s_test1/1', volatile1);");
     expect(route).not.toContain('toHaveURL(');
     expect(syntaxErrors(out)).toEqual([]);
   });
@@ -2176,14 +2187,16 @@ describe('a click that opens a popup is a toggle', () => {
     const out = emit(specOf([dbl]));
     expect(out).toContain('await click(hit1.locator, { dbl: true, obs: obs1 }).catch(actionFailed);');
     expect(out).not.toContain('already in effect');
-    expect(out).not.toContain('} else {');
+    // The step BODIES only: a shared execution module the artifact embeds has
+    // branches of its own, and they are not this step's guard.
+    expect(stepBodies(out)).not.toContain('} else {');
   });
 
   it('leaves a click with no popup effect alone', () => {
     const plain: SkillStep = { ...opener, expect: { addedContains: ['- text: Saved', '- button "Save"'] } };
     const out = emit(specOf([plain]));
     expect(out).not.toContain('already in effect');
-    expect(out).not.toContain('} else {');
+    expect(stepBodies(out)).not.toContain('} else {');
   });
 
   it("ignores a popup line only this run's own value produced", () => {
@@ -2580,7 +2593,7 @@ describe('every step settles first', () => {
     const goto: SkillStep = { tool: 'goto', args: { url: 'http://app.test/x' }, locators: {}, expect: { addedContains: ['- heading "Items"'] } };
     const out = emit(specOf([goto]));
     const lines = trimmedLines(out);
-    const nav = lines.indexOf("await page.goto('http://app.test/x');");
+    const nav = lines.indexOf('await page.goto(nav1.url);');
     // The re-settle is the lifecycle's settle phase, which runs after the
     // action and before verify — and it fires here because a goto changes the
     // url. The assertion it gates must come after it.

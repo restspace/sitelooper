@@ -22,6 +22,7 @@ import {
   landedOnRecordedPage,
   markersBound,
   preconditionVerdict,
+  retargetNavigation,
   segmentGate,
   urlEffectVerdict,
   urlRecordParts,
@@ -301,6 +302,104 @@ describe('gotoLandingVerdict', () => {
     expect(gotoLandingVerdict('http://odoo/web#action=&model=&view_type=list&cids=1&menu_id=', 'http://odoo/web#action=123&model=res.partner&view_type=list&cids=1&menu_id=81', 'step 1')).toBeNull();
     // another origin is the error-page and origin gates' business
     expect(gotoLandingVerdict('http://app/x?view=a', 'http://other/x?view=b', 'step 1')).toBeNull();
+  });
+});
+
+describe('retargetNavigation (fwgr41-n3 06-find: the goto to the recording\'s dashboard uid)', () => {
+  // Exactly what the run showed: step 6's url expectation warned "url
+  // segment(s) differ from recorded (afyd7g0300dfkc→cfyd8hqymgfeoe) — treated
+  // as volatile", and step 7 then navigated to the recorded uid.
+  const uid = { where: 'path', index: 1, expected: 'afyd7g0300dfkc', actual: 'cfyd8hqymgfeoe' } as const;
+  const target = 'http://127.0.0.1:3000/d/afyd7g0300dfkc/fwgr41-spec-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m';
+  const live = 'http://127.0.0.1:3000/d/cfyd8hqymgfeoe/fwgr41-spec-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m';
+
+  it('navigates to the live value at a position this run has shown volatile', () => {
+    const verdict = retargetNavigation(target, live, [uid], 'step 7');
+    expect(verdict.url).toBe('http://127.0.0.1:3000/d/cfyd8hqymgfeoe/fwgr41-spec-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m');
+    expect(verdict.warning).toBe(
+      'step 7: the recorded target names path[1]=afyd7g0300dfkc, a position this run has already shown volatile — navigating to the live path[1]=cfyd8hqymgfeoe instead',
+    );
+    expect(verdict.stale).toBeUndefined();
+  });
+
+  it('keeps every other byte of the recorded target: order, keys, the values it asked for', () => {
+    const verdict = retargetNavigation('http://graf/d/abc123/dash?to=now&from=now-6h&utm_source=x#/panel/7', 'http://graf/d/zzz999/dash?from=now-6h#/panel/7', [
+      { where: 'path', index: 1, expected: 'abc123', actual: 'zzz999' },
+    ]);
+    // `to` keeps its place and its value (a key only the target carries, which
+    // urlDiff never judged), the noise key rides along, the route survives.
+    expect(verdict.url).toBe('http://graf/d/zzz999/dash?to=now&from=now-6h&utm_source=x#/panel/7');
+  });
+
+  it('retargets a query, a hash route and a hash-state position the same way', () => {
+    expect(retargetNavigation('http://app/x?id=123', 'http://app/x?id=456', [{ where: 'query', key: 'id', expected: '123', actual: '456' }]).url).toBe('http://app/x?id=456');
+    expect(retargetNavigation('http://app/#/order/123', 'http://app/#/order/456', [{ where: 'hashPath', index: 1, expected: '123', actual: '456' }]).url).toBe('http://app/#/order/456');
+    expect(retargetNavigation('http://odoo/web#id=22&view_type=form', 'http://odoo/web#id=41&view_type=form', [{ where: 'hashState', key: 'id', expected: '22', actual: '41' }]).url).toBe(
+      'http://odoo/web#id=41&view_type=form',
+    );
+  });
+
+  it('leaves the recorded target alone with no evidence, and says nothing is stale', () => {
+    const verdict = retargetNavigation(target, live, []);
+    expect(verdict).toEqual({ url: target });
+    // An observation about ANOTHER position, or another value at this one, is
+    // not evidence about this target.
+    expect(retargetNavigation(target, live, [{ where: 'query', key: 'refresh', expected: '5m', actual: '10m' }])).toEqual({ url: target });
+    expect(retargetNavigation(target, live, [{ ...uid, expected: 'somethingelse' }])).toEqual({ url: target });
+  });
+
+  it('refuses a disagreement anywhere the run has not shown volatile', () => {
+    // Same page shape, but the view — not a volatile id — differs too: the
+    // recorded target stands, and it is reported stale.
+    const verdict = retargetNavigation(`${target}&view=json`, `${live}&view=table`, [uid], 'step 7');
+    expect(verdict.url).toBe(`${target}&view=json`);
+    expect(verdict.stale).toBe('its url still names the recorded path[1]=afyd7g0300dfkc, which this run has already shown varies (cfyd8hqymgfeoe)');
+  });
+
+  it('never rewrites a word to a word, whatever was observed', () => {
+    const verdict = retargetNavigation('http://app/orders/success', 'http://app/orders/failure', [{ where: 'path', index: 1, expected: 'success', actual: 'failure' }]);
+    expect(verdict.url).toBe('http://app/orders/success');
+    expect(verdict.stale).toBe('its url still names the recorded path[1]=success, which this run has already shown varies (failure)');
+  });
+
+  it('reports a stale target the live url cannot correct (another page shape, an unfilled marker)', () => {
+    expect(retargetNavigation(target, 'http://127.0.0.1:3000/dashboards', [uid]).stale).toContain('path[1]=afyd7g0300dfkc');
+    // Nothing concrete to compare: the step's markers were never filled.
+    expect(retargetNavigation('http://graf/d/afyd7g0300dfkc/{{v2}}-bench', live, [uid])).toEqual({ url: 'http://graf/d/afyd7g0300dfkc/{{v2}}-bench' });
+  });
+
+  it('is silent when the browser is already on the target', () => {
+    expect(retargetNavigation(target, target, [uid])).toEqual({ url: target });
+  });
+});
+
+describe('alertVerdict names a stale navigation as the cause (fwgr41-n3 06-find step 7)', () => {
+  const ctx = { where: '06-find s_e013d1/7', isRead: false, params: {} };
+  const raised = ['Dashboard not found', 'Invalid dashboard UID in annotation request'];
+
+  it('reports the page it navigated to rather than the generic unrecorded alert', () => {
+    const stale = 'its url still names the recorded path[1]=afyd7g0300dfkc, which this run has already shown varies (cfyd8hqymgfeoe)';
+    const verdict = alertVerdict([], raised, { ...ctx, navigatedToStale: stale });
+    expect(verdict.stop).toBe(
+      `06-find s_e013d1/7 navigated to a page that does not exist: ${stale} — the app answered with an alert the recording never saw: Dashboard not found | Invalid dashboard UID in annotation request`,
+    );
+  });
+
+  it('keeps the generic wording when no navigation of this run was stale', () => {
+    expect(alertVerdict([], raised, ctx).stop).toBe('06-find s_e013d1/7 raised an alert the recording never saw: Dashboard not found | Invalid dashboard UID in annotation request');
+  });
+
+  it('changes what the stop is CALLED, never whether there is one', () => {
+    const stale = 'its url still names the recorded path[1]=x, which this run has already shown varies (y)';
+    // The step's recorded changes appeared: reported, not stopped — cause and all.
+    const soft = alertVerdict([], raised, { ...ctx, navigatedToStale: stale, effectConfirmed: true });
+    expect(soft.stop).toBeUndefined();
+    expect(soft.warnings[0]).toContain('navigated to a page that does not exist');
+    expect(soft.warnings[0]).toContain("reported, not stopped: the step's recorded page changes appeared");
+    // A read raises no alert of its own, and an alert the recording DID expect
+    // is the step's own business: neither is a dead page.
+    expect(alertVerdict([], raised, { ...ctx, isRead: true, navigatedToStale: stale }).stop).toBeUndefined();
+    expect(alertVerdict([], raised, { ...ctx, navigatedToStale: stale, expectedContains: 'Dashboard not found' }).stop).toBeUndefined();
   });
 });
 

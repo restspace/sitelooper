@@ -19,6 +19,7 @@
  */
 
 /** How a later run obtains its own value for a slot. */
+import type { UrlSegDiff } from '../execution/url.js';
 import { MIN_ID_LEN, looksLikeId, tokenPattern } from './shape.js';
 import type { Skill } from './store.js';
 
@@ -95,6 +96,50 @@ export interface LedgerEntry {
  */
 export function idPositionPart(part: { label: string; value: string }): boolean {
   return part.label === 'q.id' && /^\d{1,10}$/.test(part.value);
+}
+
+/**
+ * The values a run WATCHED CHANGE at a url position, from the segment diffs a
+ * url gate treated as volatile (gates.ts urlEffectVerdict, "url segment(s)
+ * differ from recorded (X→Y)"). Both sides: the recording's value and this
+ * run's, because they are the same position seen twice, and a later run may
+ * meet either one.
+ *
+ * Variance is an observation about the ENVIRONMENT, so it is collected whether
+ * or not the step that saw it went on to succeed — which is the whole point of
+ * routing it here (fwgr41-n2 printed `afyd7g0300dfkc→bfyd7wj0ceolcf` one step
+ * before it navigated to the recording's now-deleted dashboard and stopped, and
+ * the observation died with the stop; n3 then shape-guessed the same uid again).
+ *
+ * Only positions that ADDRESS the record count: a path or hash-path segment
+ * (the url saying which record this is — the same reasoning addUrlIds states
+ * for a digit run in a path position), or a query/state key the url's own
+ * vocabulary names `id` (idPositionPart). A disagreeing query/state value
+ * elsewhere says the two runs are looking at different VIEWS, not that the app
+ * minted a different value: fwod20 measured 21 "varying" parts across three
+ * runs and the ones that mattered were `q.model = sale.order vs res.partner`
+ * and `q.view_type = form vs list`, both of which varied because a recovery
+ * turn navigated somewhere else (see flow.ts FlowStep.route, which discards
+ * exactly these), and rpod1 prints that same pair as a volatile-segment
+ * warning. Banking `form` as an identifier would make every locator naming it
+ * a fatal leak.
+ */
+export function urlVarianceValues(diffs: readonly UrlSegDiff[]): string[] {
+  const out: string[] = [];
+  for (const d of diffs) {
+    const label = d.key === undefined ? '' : `q.${d.key}`;
+    const addresses =
+      d.where === 'path' ||
+      d.where === 'hashPath' ||
+      idPositionPart({ label, value: d.actual }) ||
+      idPositionPart({ label, value: d.expected });
+    if (!addresses) continue;
+    for (const side of [d.expected, d.actual]) {
+      const v = String(side ?? '').trim();
+      if (v && !out.includes(v)) out.push(v);
+    }
+  }
+  return out;
 }
 
 const MAX_VALUE_LEN = 200;
@@ -431,22 +476,36 @@ export function evidenced(leak: Leak): boolean {
 
 /**
  * The identifiers a skill learned in a flow run's recovery would navigate to
- * that make it unfit to pin: run values in a navigation target (`args.url`)
- * that this step minted (`step`), or that an earlier step minted where
- * evidence rather than shape says it is a record (an `id=` position, observed
- * variance). fwod45-n2's recovery navigated to `&id=22`, the order its own
- * 02-create had made; the old rule asked only about THIS step's mints and
- * pinned it. A shape-only id from an earlier step stays exempt: fwod19's odoo
- * menu id looked minted and was an app constant.
+ * that make it unfit to pin: an identifier this run read off a URL POSITION —
+ * under this step's own instruction (`step`) or any earlier one — standing in
+ * a navigation target (`args.url`). fwod45-n2's recovery navigated to `&id=22`,
+ * the order its own 02-create had made; the old rule asked only about THIS
+ * step's mints and pinned it.
+ *
+ * The basis no longer narrows it. It used to: an earlier instruction's
+ * SHAPE-banked id was let through, because fwod19's odoo menu id
+ * (`#action=123&menu_id=81`) looked minted and was a permanent app constant,
+ * and demoting a skill over it costs a whole recording. That exemption is
+ * bought and paid for upstream now — addUrlIds does not bank a digit run at a
+ * query/state key the app does not call `id` at all, so fwod19's menu id never
+ * reaches a leak — while the exemption's own cost went unpaid: fwgr41-n2's
+ * recovery welded ITS OWN dashboard uid (a path segment, banked on shape under
+ * an earlier instruction) into `goto /d/bfyd7wj0ceolcf/…`, the leak was
+ * filtered out as shape-only, n3 pinned the skill, and it navigated to a
+ * dashboard that no longer exists.
+ *
+ * What survives banking from a url position is a path/hash-path segment, an
+ * `id=` position, or a value a run watched change — every one of them the app
+ * saying "this is the record". A navigation to one of those is the recording's
+ * record, whatever the ledger's confidence in the characters, so the skill is
+ * demoted rather than pinned and the step re-learns a generic route.
  */
-export function navigationLeaks(leaks: Leak[], step: string): string[] {
-  return [
-    ...new Set(
-      leaks
-        .filter((l) => /args\.url/.test(l.where) && l.binding.from === 'url' && (l.binding.step === step || evidenced(l)))
-        .map((l) => l.value),
-    ),
-  ];
+export function navigationLeaks(leaks: Leak[], step?: string): string[] {
+  // `step` no longer narrows anything — this step's mints and an earlier
+  // instruction's are both the recording's record — and is kept so callers
+  // that name the minting instruction for diagnostics still typecheck.
+  void step;
+  return [...new Set(leaks.filter((l) => /args\.url/.test(l.where) && l.binding.from === 'url').map((l) => l.value))];
 }
 
 /**

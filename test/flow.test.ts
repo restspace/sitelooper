@@ -1685,3 +1685,51 @@ describe('recordedStandIn (fwrd54 07-edit)', async () => {
     expect(await recordedValueShown(page, '   ', [])).toBe(false);
   });
 });
+
+/**
+ * fwod49: the stand-in rescue used to run only over the references
+ * `ignorableRefs` had NOT skipped, and the product name — recorded, standing
+ * on the page, and used by a later segment of the pinned chain — was skipped
+ * and never looked for. "Ignorable" answers one narrow question (can this
+ * blank change what the pinned procedure DOES?) and a no there is not a claim
+ * that the value is worthless: it is still the step's wording and still banked
+ * for later steps. So runFlow offers the rescue to EVERY unresolved reference
+ * and lets recordedStandIn (which refuses anything but page vocabulary) and
+ * the live page decide.
+ */
+describe('the recorded stand-in reaches every unresolved reference (fwod49)', async () => {
+  const { recordedStandIn: standIn } = await import('../src/skills/flow.js');
+  type Seg = Parameters<typeof standIn>[2][number];
+  const REF = '02-open.product_name';
+  const stepParams = { v5: `{{${REF}}}` };
+  // The pinned HEAD of the chain does not use the slot: it opens the list.
+  const head = {
+    params: { v5: { example: 'Ergonomic Chair', usedIn: [], known: true } },
+    preconditions: { urlPattern: 'http://x/' },
+    steps: [{ tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'role', role: 'button', name: 'New' }] } }],
+  } as unknown as Seg & Skill;
+  // The chain's next segment picks the product BY NAME — the evidence that the
+  // recorded value is page vocabulary.
+  const tail = {
+    params: { v5: { example: 'Ergonomic Chair', usedIn: [1], known: true } },
+    preconditions: { urlPattern: 'http://x/' },
+    steps: [{ tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'role', role: 'option', name: '{{v5}}' }] } }],
+  } as unknown as Seg;
+  const step = { id: '03-open', instruction: 'add {{02-open.product_name}}', skill: 's_head', params: stepParams } as unknown as FlowStep;
+
+  it('a reference the pinned head cannot act on is ignorable, and still has a stand-in', () => {
+    // Ignorable — the head's own slot is used by no step of the head.
+    expect(ignorableRefs([REF], step, head as unknown as Skill)).toEqual([REF]);
+    // …and the chain nevertheless knows exactly what the page should be showing.
+    expect(standIn(REF, stepParams, [head, tail], { recorded: 'Ergonomic Chair' })).toBe('Ergonomic Chair');
+  });
+
+  it('runFlow runs the rescue over every unresolved reference, not only the non-ignorable ones', () => {
+    const source = fs.readFileSync(path.resolve(__dirname, '../src/daemon/server.ts'), 'utf8');
+    const start = source.indexOf('const before = [...resolveInstruction(step, varsIn, outputs).missing');
+    expect(start).toBeGreaterThan(0);
+    const region = source.slice(start, source.indexOf('const { text, missing } = resolveInstruction(step, varsIn, outputs);', start));
+    expect(region).toMatch(/for \(const ref of new Set\(before\)\)/);
+    expect(region).not.toMatch(/ignorableRefs/); // the rescue no longer filters by it
+  });
+});

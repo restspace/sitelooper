@@ -489,7 +489,7 @@ describe('emitted step lifecycle', () => {
     expect(bind.body).toContain('if (!run.created.includes(minted1)) run.created.push(minted1);');
     // The effect gates in replay's STEP_GATES order: error page, url, page changes, alerts.
     expect(verify.body).toContain("errorPageGate(page, '01-step s_emit/1');");
-    expect(verify.body).toContain(`await urlEffect(page, '${ORIGIN}/orders/{{d1}}', p, '01-step s_emit/1');`);
+    expect(verify.body).toContain(`await urlEffect(page, '${ORIGIN}/orders/{{d1}}', p, '01-step s_emit/1', volatile1);`);
     expect(verify.body).toContain("alertGate(alertsBefore1, alertsAfter1, { where: '01-step s_emit/1', isRead: false, params: p, effectConfirmed: changes1.confirmed === true });");
     expect(verify.body.indexOf('errorPageGate(')).toBeLessThan(verify.body.indexOf('await urlEffect('));
     expect(verify.body.indexOf('await urlEffect(')).toBeLessThan(verify.body.indexOf('alertGate('));
@@ -535,7 +535,7 @@ describe('emitted step lifecycle', () => {
     }
     const verifies = blocks.filter((b) => b.name === 'verify');
     // The daemon's expectedUrl gate does not exempt reads; neither does the spec.
-    expect(verifies[0].body).toContain(`await urlEffect(page, '${ORIGIN}/orders', p, '01-step s_emit/1');`);
+    expect(verifies[0].body).toContain(`await urlEffect(page, '${ORIGIN}/orders', p, '01-step s_emit/1', volatile1);`);
     // Its page-change expectation stays excluded for a read, and so is the
     // unrecorded-alert gate (replay's unrecordedAlert exempts reads).
     expect(verifies[0].body).not.toMatch(/heading/);
