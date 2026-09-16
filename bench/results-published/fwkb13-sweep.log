@@ -1,0 +1,86 @@
+
+[sweep] run 1/3: fwkb13-n1 (store: /home/user/sitelooper/bench/results/fwkb13-skills)
+[harness] kanboard: defaulting APP_URL
+[harness] kanboard: defaulting APP_EMAIL
+[harness] kanboard: defaulting APP_PASSWORD
+[reset] kanboard: no leftover bench tasks
+[harness] kanboard responded 302 at http://127.0.0.1:8085/
+stopped: fwkb13-n1
+  flow "fwkb13" saved: 6 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwkb13.json
+  warning: note: 01-open no longer publishes project_id, columns_left_to_right, page_title — no replay reads them from the page and the recording showed no line to read
+  warning: note: 02-create no longer publishes task_id_numeric, project_id — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-change no longer publishes task_id, task4_data_column_id, backlog_count_after, work_in_progress_count_after — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-add no longer publishes task_id, comment_author, comment_created_at — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-set no longer publishes task_id, stored_due_date, due_date_field — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-open no longer publishes board_columns_left_to_right, ready_cards, done_cards, task4_data_column_id, column_task_counts — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 124 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "Bench Board" (output) in "Open http://127.0.0.1:8085/ and sign in with username admin and password admin. Then navigate to the board of the project named 'Bench Board' and report the nam"
+  flow.steps[0].instruction: "admin" (output) in "Open http://127.0.0.1:8085/ and sign in with username admin and password admin. Then navigate to the board of the project named 'Bench Board' and report the nam"
+  flow.steps[1].instruction: "Bench Board" (output) in "On the 'Bench Board' project board, create a new task titled exactly '{{runid}} Bench Task' with a description that includes the text '{{runid}}' (e.g. 'Bench t"
+  flow.steps[1].instruction: "Backlog" (output) in "On the 'Bench Board' project board, create a new task titled exactly '{{runid}} Bench Task' with a description that includes the text '{{runid}}' (e.g. 'Bench t"
+  flow.steps[1].params.v1: "Bench Board" (output) in "Bench Board"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwkb13-n1 stop=completed
+turns=7 wall=321.8s
+commands=6 cmdTime=300.9s cmdBytes=8703 timeouts=0
+orchestrator in=9479 cw=0 cr=19520 out=2150
+inner prompt=1577696 cached=1444480 completion=21495
+spend=$0.065 maxUsd=3
+learn: A_n=0 replayed=0/6 full=0 repaired=0 compiled=6 variants=0
+-> /home/user/sitelooper/bench/results/fwkb13-n1-sitelooper-result.json
+
+fwkb13-n1: objectives passed 6/6
+  obj 1: PASS — all 4 column names reported (Backlog | Ready | Work in progress | Done)
+  obj 2: PASS — description includes runid=true
+  obj 3: PASS — column=Work in progress
+  obj 4: PASS — 1 comment(s), 1 carrying the runid
+  obj 5: PASS — date_due=2026-12-31, want 2026-12-31
+  obj 6: PASS — task id 4 reported
+
+[sweep] run 2/3: fwkb13-n2 (replay flow fwkb13, no orchestrator)
+[reset] kanboard: deleted 1 leftover bench task(s)
+[sweep] fwkb13-n2: 1 drift ticket(s) → fwkb13-n2-drift.json
+
+fwkb13-n2: objectives passed 6/6
+  obj 1: PASS — all 4 column names reported (Backlog | Ready | Work in progress | Done)
+  obj 2: PASS — description includes runid=true
+  obj 3: PASS — column=Work in progress
+  obj 4: PASS — 1 comment(s), 1 carrying the runid
+  obj 5: PASS — date_due=2026-12-31, want 2026-12-31
+  obj 6: PASS — task id 4 reported
+
+[sweep] run 3/3: fwkb13-n3 (replay flow fwkb13, no orchestrator)
+[reset] kanboard: deleted 1 leftover bench task(s)
+[sweep] fwkb13-n3: 1 drift ticket(s) → fwkb13-n3-drift.json
+
+fwkb13-n3: objectives passed 6/6
+  obj 1: PASS — all 4 column names reported (Backlog | Ready | Work in progress | Done)
+  obj 2: PASS — description includes runid=true
+  obj 3: PASS — column=Work in progress
+  obj 4: PASS — 1 comment(s), 1 carrying the runid
+  obj 5: PASS — date_due=2026-12-31, want 2026-12-31
+  obj 6: PASS — task id 4 reported
+
+Learning sweep fwkb13 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwkb13-n1' │ '6/6'    │ 'completed' │ 7     │ 6    │ 0.065     │ 0   │ '0/6'        │ 322    │
+│ 1       │ 2 │ 'fwkb13-n2' │ '6/6'    │ 'success'   │ 0     │ 6    │ 0         │ 1   │ '6/6 (flow)' │ 22     │
+│ 2       │ 3 │ 'fwkb13-n3' │ '6/6'    │ 'success'   │ 0     │ 6    │ 0         │ 1   │ '6/6 (flow)' │ 22     │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8085
+  s_1a0fcf  validated    7 steps  3/3 (100%)
+           Open the task page for task #4 in the '{{v1}}' project (URL pattern ?controller=TaskViewController&action=show…
+  s_291223  validated    6 steps  3/3 (100%)
+           On the '{{v1}}' project board, move the task titled '{{v2}}' (task #4) from the {{v4}} column into the '{{v5}}…
+  s_62eb8e  validated   14 steps  3/3 (100%)
+           Open {{v1}} and sign in with username admin and password admin. Then navigate to the board of the project name…
+  s_723676  validated   11 steps  3/3 (100%)
+           On the task page for task #4 ('{{v1}}') in the '{{v3}}' project, set the task's due date to 2026-12-31 (Decemb…
+  s_9a73b2  validated   11 steps  3/3 (100%)
+           On the '{{v1}}' project board, create a new task titled exactly '{{v3}}' with a description that includes the …
+  s_b74c08  validated    6 steps  3/3 (100%)
+           On the task page for task #4 ('{{v1}}') in the '{{v3}}' project, add a comment whose text includes '{{v2}}' (e…
+store: /home/user/sitelooper/bench/results/fwkb13-skills
+
+summary: /home/user/sitelooper/bench/results/fwkb13-sweep.json

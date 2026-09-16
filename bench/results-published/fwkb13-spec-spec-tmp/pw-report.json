@@ -1,0 +1,191 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwkb13-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwkb13-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwkb13-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwkb13-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwkb13.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwkb13-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwkb13.spec.ts",
+      "file": "fwkb13.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwkb13",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 1650000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 21677,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-change\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-add\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-set\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-open\n"
+                    }
+                  ],
+                  "stderr": [
+                    {
+                      "text": "[sitelooper warn] 01-open s_62eb8e/11: read 'project_name' returned a value the skill itself set/selected ('Bench Board') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_9a73b2/7: read 'task_title' returned a value the skill itself set/selected ('fwkb13-spec Bench Task') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_9a73b2/9: read 'task_description' returned a value the skill itself set/selected ('Bench task for run fwkb13-spec') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 04-add s_b74c08/4: read 'comment_text' returned a value the skill itself set/selected ('Progress note for run fwkb13-spec') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 05-set s_723676/7 target: primary locator('li').filter({ hasText: '12/31/2026 07:21' }).locator('strong') missed; used #2 locator('div > div > div:nth-of-type(4) > ul > li:nth-of-type(1) > strong') (#1 absent)\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 05-set s_723676/7: read 'due_date_field_label' returned a value the skill itself set/selected ('Due date:') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    }
+                  ],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:8085/ and sign in with username admin and password admin. Then navigate to the board of the project named 'Bench Board' and report the names of the board's columns in their left-to-right order, exactly as shown on the board page.",
+                      "duration": 7628
+                    },
+                    {
+                      "title": "02-create: On the 'Bench Board' project board, create a new task titled exactly '{{runid}} Bench Task' with a description that includes the text '{{runid}}' (e.g. 'Bench task for run {{runid}}'). Create it in the Backlog column (the default first column). Do not modify or move any tasks whose titles start with 'Seed:'. After creating it, open the task's page and verify the title and description are as specified, and report the task's numeric ID exactly as the app displays it (shown as #<number>).",
+                      "duration": 2846
+                    },
+                    {
+                      "title": "03-change: On the 'Bench Board' project board, move the task titled '{{runid}} Bench Task' (task #4) from the Backlog column into the '{{01-open.third_column_header}}' column. The board supports dragging cards between columns; if drag-and-drop fails, use the task's card menu or the task page's move action to change its column to '{{01-open.third_column_header}}'. Do not move or modify any tasks whose titles start with 'Seed:'. Afterwards, verify on the board (and/or the task page) that the task now sits in the '{{01-open.third_column_header}}' column, and report the column name you observe it in.",
+                      "duration": 2115
+                    },
+                    {
+                      "title": "04-add: On the task page for task #4 ('{{runid}} Bench Task') in the 'Bench Board' project, add a comment whose text includes '{{runid}}' (e.g. 'Progress note for run {{runid}}'). Use the task page's comment form or the Comments section. Afterwards, verify the comment appears on the task page and report the exact comment text you observe.",
+                      "duration": 1820
+                    },
+                    {
+                      "title": "05-set: On the task page for task #4 ('{{runid}} Bench Task') in the 'Bench Board' project, set the task's due date to 2026-12-31 (December 31, 2026). Use the task page's edit/details form or the due-date field; the date picker may expect the format MM/DD/YYYY (i.e. 12/31/2026) — enter whatever the form requires so the stored due date is 2026-12-31. Afterwards, verify on the task page that the due date is displayed as 2026-12-31 (or 12/31/2026) and report exactly what the page shows for the due date.",
+                      "duration": 6208
+                    },
+                    {
+                      "title": "06-open: Open the task page for task #4 in the 'Bench Board' project (URL pattern ?controller=TaskViewController&action=show&task_id=4) and verify all of the following, reporting each one: (a) the task title, (b) the task's numeric ID as displayed (e.g. '#4'), (c) the description text, (d) the column the task is in, (e) the text of any comments on the task, (f) the due date shown. Then go back to the 'Bench Board' board and confirm which column the task card '{{runid}} Bench Task' sits in, and confirm the three 'Seed:' tasks are still in their original columns. Report all observed values.",
+                      "duration": 772
+                    }
+                  ],
+                  "startTime": "2026-09-16T07:25:04.480Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": "W3NpdGVsb29wZXIgZHJpZnRdIDA1LXNldCBzXzcyMzY3Ni83IHRhcmdldDogcHJpbWFyeSBsb2NhdG9yKCdsaScpLmZpbHRlcih7IGhhc1RleHQ6ICcxMi8zMS8yMDI2IDA3OjIxJyB9KS5sb2NhdG9yKCdzdHJvbmcnKSBtaXNzZWQ7IHVzZWQgIzIgbG9jYXRvcignZGl2ID4gZGl2ID4gZGl2Om50aC1vZi10eXBlKDQpID4gdWwgPiBsaTpudGgtb2YtdHlwZSgxKSA+IHN0cm9uZycpICgjMSBhYnNlbnQp"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bcb31a6dcec1e7c0d489-fdf2df85048e337a4985",
+          "file": "fwkb13.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-16T07:25:03.022Z",
+    "duration": 23294.456000000002,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
