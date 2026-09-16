@@ -1,0 +1,441 @@
+{
+  "name": "fwod51",
+  "origin": "http://127.0.0.1:8069",
+  "startUrl": "http://127.0.0.1:8069/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-open",
+      "instruction": "Open http://127.0.0.1:8069/ and sign in with username admin and password admin. Then create a new customer contact named '{{runid}} Bench Customer' with the City field set to 'Benchville'. Save it and report the name and city shown on the saved record.",
+      "skill": "s_22743b",
+      "params": {
+        "v2": "http://127.0.0.1:8069/",
+        "v3": "{{runid}} Bench Customer",
+        "v4": "Benchville",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "contact_name",
+        "contact_city",
+        "record_url",
+        "ref"
+      ],
+      "recorded": {
+        "contact_name": "fwod51-n1 Bench Customer",
+        "contact_city": "Benchville",
+        "contact_record_id": "44",
+        "model": "res.partner",
+        "record_url": "http://127.0.0.1:8069/web#cids=1&menu_id=109&action=156&model=res.partner&view_type=form&id=44",
+        "ref": "fwod51-n1",
+        "url": "http://127.0.0.1:8069/web#cids=1&menu_id=109&action=156&model=res.partner&view_type=form&id=44",
+        "url.q.menu_id": "109",
+        "url.q.action": "156",
+        "url.q.id": "44"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=res.partner&view_type=form",
+      "outputEvidence": {
+        "contact_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "contact_city": {
+          "same": 1,
+          "differed": 0
+        },
+        "record_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.q.menu_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.q.action": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.q.id": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "In the Odoo Sales app, create a new quotation for the customer '{{runid}} Bench Customer' (choose the customer from the autocomplete dropdown so it is properly set). Add exactly ONE order line: pick any product from the product catalogue using the product autocomplete dropdown, and set its quantity to 3. Let Odoo fill in the unit price automatically. Save the quotation. Report: the product name you chose, the unit price Odoo filled in for that line, and the Untaxed Amount total the quotation shows.",
+      "skill": "s_d75dfc",
+      "params": {
+        "v1": "{{runid}} Bench Customer",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "quotation_number",
+        "customer",
+        "product",
+        "quantity",
+        "first_line_unit_price_raw",
+        "untaxed_amount_footer",
+        "total_footer",
+        "first_line_tax_rate",
+        "ref"
+      ],
+      "recorded": {
+        "quotation_number": "S00021",
+        "sale_order_id": "21",
+        "customer": "fwod51-n1 Bench Customer",
+        "product": "[FURN_6666] Acoustic Bloc Screens",
+        "quantity": "3.00",
+        "unit_price": "£295.00",
+        "line_tax_excl": "£885.00",
+        "untaxed_amount": "£885.00",
+        "taxes": "20% = £177.00",
+        "total": "£1,062.00",
+        "first_line_unit_price_raw": "295.00",
+        "untaxed_amount_footer": "Untaxed Amount\t£ 885.00",
+        "total_footer": "Total\t£ 1,062.00",
+        "first_line_tax_rate": "20%",
+        "first_line_tax_excl_amount": "£ 885.00",
+        "ref": "fwod51-n1",
+        "first_product_ref": "FURN_6666",
+        "url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=21",
+        "url.q.menu_id": "194",
+        "url.q.action": "316",
+        "url.q.id": "21"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "quotation_number": {
+          "same": 0,
+          "differed": 1
+        },
+        "customer": {
+          "same": 0,
+          "differed": 1
+        },
+        "product": {
+          "same": 0,
+          "differed": 1
+        },
+        "quantity": {
+          "same": 1,
+          "differed": 0
+        },
+        "first_line_unit_price_raw": {
+          "same": 1,
+          "differed": 0
+        },
+        "untaxed_amount_footer": {
+          "same": 0,
+          "differed": 1
+        },
+        "first_line_tax_rate": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.q.menu_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.q.action": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.q.id": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "03-open",
+      "instruction": "Open the existing quotation {{02-create.quotation_number}} (for customer '{{runid}} Bench Customer') in the Odoo Sales app. Add a SECOND order line to it: pick a DIFFERENT product from the product catalogue using the product autocomplete dropdown (not Acoustic Bloc Screens), and set its quantity to 2. Let Odoo fill in the unit price automatically. Save the quotation. Report: the second product's name, its unit price, and the new Untaxed Amount total the quotation shows after saving.",
+      "skill": "s_31147b",
+      "params": {
+        "v1": "{{02-create.quotation_number}}",
+        "v2": "{{runid}} Bench Customer",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "quotation_number",
+        "second_product_quantity",
+        "ref"
+      ],
+      "recorded": {
+        "quotation_number": "S00021",
+        "second_product": "[E-COM11] Cabinet with Doors",
+        "second_product_quantity": "2.00",
+        "second_product_unit_price": "£140.00",
+        "second_line_subtotal": "£280.00",
+        "first_product": "[FURN_6666] Acoustic Bloc Screens",
+        "first_line_subtotal": "£885.00",
+        "new_untaxed_amount": "£1,165.00",
+        "taxes": "20% = £233.00",
+        "total": "£1,398.00",
+        "ref": "fwod51-n1"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "quotation_number": {
+          "same": 0,
+          "differed": 1
+        },
+        "second_product_quantity": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "04-open",
+      "instruction": "Open the existing quotation {{02-create.quotation_number}} (for customer '{{runid}} Bench Customer') in the Odoo Sales app. Change the quantity of the FIRST order line (the product Acoustic Bloc Screens) from 3 to 5. Save the quotation. Report the new Untaxed Amount total the quotation shows after saving, plus the quantity shown on that first line.",
+      "skill": "s_7a25f5",
+      "params": {
+        "v1": "{{02-create.quotation_number}}",
+        "v2": "{{runid}} Bench Customer",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "quotation_number",
+        "first_line_product",
+        "first_line_quantity",
+        "second_line_summary",
+        "first_line_unit_price_raw",
+        "ref"
+      ],
+      "recorded": {
+        "quotation_number": "S00021",
+        "first_line_product": "[FURN_6666] Acoustic Bloc Screens",
+        "first_line_quantity": "5.00",
+        "first_line_unit_price": "£295.00",
+        "first_line_subtotal": "£1,475.00",
+        "second_line_summary": "Cabinet with Doors 2.00 × £140.00 = £280.00",
+        "new_untaxed_amount": "£1,755.00",
+        "taxes": "20% = £351.00",
+        "total": "£2,106.00",
+        "first_line_unit_price_raw": "295.00",
+        "ref": "fwod51-n1",
+        "first_product_ref": "FURN_6666"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "quotation_number": {
+          "same": 0,
+          "differed": 1
+        },
+        "first_line_product": {
+          "same": 0,
+          "differed": 1
+        },
+        "first_line_quantity": {
+          "same": 1,
+          "differed": 0
+        },
+        "first_line_unit_price_raw": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "05-open",
+      "instruction": "In the Odoo Sales app, open the existing quotation {{02-create.quotation_number}} (for customer '{{runid}} Bench Customer') and confirm it so it becomes a sales order (use the Confirm button / Confirm Order action). Report the order reference (its name, e.g. {{02-create.quotation_number}}) and the exact status the app now shows on the record after confirmation.",
+      "skill": "s_766e5d",
+      "params": {
+        "v1": "{{02-create.quotation_number}}",
+        "v2": "{{runid}} Bench Customer",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "order_reference",
+        "status_after_confirm",
+        "statusbar_stages_after_confirm",
+        "customer",
+        "statusbar_text_after_confirm",
+        "order_url",
+        "ref"
+      ],
+      "recorded": {
+        "order_reference": "S00021",
+        "sale_order_id": "21",
+        "status_after_confirm": "Sales Order",
+        "statusbar_stages_after_confirm": "Sales Order / Quotation Sent / Quotation",
+        "customer": "fwod51-n1 Bench Customer",
+        "statusbar_text_after_confirm": "Sales Order\nQuotation Sent\nQuotation",
+        "order_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=21",
+        "ref": "fwod51-n1"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "order_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "status_after_confirm": {
+          "same": 1,
+          "differed": 0
+        },
+        "customer": {
+          "same": 0,
+          "differed": 1
+        },
+        "statusbar_text_after_confirm": {
+          "same": 1,
+          "differed": 0
+        },
+        "order_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "06-open",
+      "instruction": "In the Odoo Sales app, open the sales order {{02-create.quotation_number}} (for customer '{{runid}} Bench Customer') and cancel it using the Cancel action/button (confirm any dialog that appears, e.g. a 'Cancel' or 'OK' confirmation). Report the exact status the app shows on the record after cancelling, and confirm the order is no longer in the {{05-open.status_after_confirm}} state.",
+      "skill": "s_ed8e63",
+      "params": {
+        "v1": "{{02-create.quotation_number}}",
+        "v2": "{{runid}} Bench Customer",
+        "v4": "{{05-open.status_after_confirm}}",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "order_reference",
+        "status_after_cancel",
+        "statusbar_stages_after_cancel",
+        "customer",
+        "statusbar_options_after_cancel",
+        "order_url",
+        "statusbar_button_sales_order",
+        "statusbar_button_quotation_sent",
+        "ref"
+      ],
+      "recorded": {
+        "order_reference": "S00021",
+        "sale_order_id": "21",
+        "status_after_cancel": "Cancelled",
+        "statusbar_stages_after_cancel": "Cancelled (current) / Sales Order / Quotation Sent / Quotation",
+        "still_sales_order": "no",
+        "customer": "fwod51-n1 Bench Customer",
+        "statusbar_options_after_cancel": "Cancelled\nSales Order\nQuotation Sent\nQuotation",
+        "order_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=21",
+        "statusbar_button_sales_order": "Sales Order",
+        "statusbar_button_quotation_sent": "Quotation Sent",
+        "statusbar_button_quotation": "Quotation",
+        "ref": "fwod51-n1"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "order_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "status_after_cancel": {
+          "same": 1,
+          "differed": 0
+        },
+        "statusbar_stages_after_cancel": {
+          "same": 1,
+          "differed": 0
+        },
+        "customer": {
+          "same": 0,
+          "differed": 1
+        },
+        "statusbar_options_after_cancel": {
+          "same": 1,
+          "differed": 0
+        },
+        "order_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "statusbar_button_sales_order": {
+          "same": 0,
+          "differed": 1
+        },
+        "statusbar_button_quotation_sent": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "07-verify",
+      "instruction": "Verify two things in Odoo and report them: (1) open the contact named '{{runid}} Bench Customer' in the Contacts app and report the Name and City shown on the saved record; (2) open the sales order {{02-create.quotation_number}} in the Sales app and report the status shown on the record. Do not change anything.",
+      "skill": "s_b36ef1",
+      "params": {
+        "v1": "{{runid}} Bench Customer",
+        "v3": "{{02-create.quotation_number}}",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "contact_name",
+        "contact_city",
+        "contact_url",
+        "s00021_status",
+        "s00021_name",
+        "s00021_url",
+        "s00021_breadcrumb",
+        "ref"
+      ],
+      "recorded": {
+        "contact_name": "fwod51-n1 Bench Customer",
+        "contact_city": "Benchville",
+        "contact_id": "44",
+        "contact_url": "http://127.0.0.1:8069/web#id=44&cids=1&menu_id=109&action=156&model=res.partner&view_type=form",
+        "s00021_status": "Cancelled",
+        "s00021_name": "S00021",
+        "s00021_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=21",
+        "s00021_breadcrumb": "Quotations\nS00021",
+        "ref": "fwod51-n1",
+        "url": "http://127.0.0.1:8069/web#id=44&cids=1&menu_id=109&action=156&model=res.partner&view_type=form"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=res.partner&view_type=form"
+    }
+  ],
+  "provenance": {
+    "session": "fwod51-n1",
+    "created": "2026-09-16T07:28:36.102Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  }
+}
