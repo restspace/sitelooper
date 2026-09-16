@@ -1,0 +1,19 @@
+[spec-replay] resetting odoo
+[reset] odoo: no leftover bench customers
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile bench/results/flows/fwod58.json --out /home/user/sitelooper/bench/results/fwod58-spec-spec-tmp --overwrite-spec
+flow: /home/user/sitelooper/bench/results/fwod58-spec-spec-tmp/fwod58.flow.ts
+spec: /home/user/sitelooper/bench/results/fwod58-spec-spec-tmp/fwod58.spec.ts
+warning 05-open: 05-open read a value that contradicts what the previous step reported
+  why: 05-open read untaxed_amount "£ 990.00" right after 04-open reported "£ 850.00"; 04-open's change may not have landed and a later step may be retrying it. Re-record 04-open.
+  fix: sitelooper rerecord bench/results/flows/fwod58.json 04-open
+warning 08-open: 08-open read a value that contradicts what the previous step reported
+  why: 08-open read order_s00021_statusbar "Preview" right after 07-open reported "Cancelled"; 07-open's change may not have landed and a later step may be retrying it. Re-record 07-open.
+  fix: sitelooper rerecord bench/results/flows/fwod58.json 07-open
+
+  warning: 02-create: step 3 (wait_for hidden) acts on one element through a single unindexed candidate, page.locator('.modal') — never proved to identify one element on the page that produced it, so this run acts on whatever it matches first; re-record the step (sitelooper rerecord) to derive a full chain for it
+  warning: 03-create: step 15 (read untaxed_amount_row) has no locator left — it publishes nothing, as replay skips it
+  warning: 04-open: step 20 (read total_row) has no locator left — it publishes nothing, as replay skips it
+  warning: 06-open: step 22 (read total_row) has no locator left — it publishes nothing, as replay skips it
+  warning: 07-open: step 19 (read total_row) has no locator left — it publishes nothing, as replay skips it
+[spec-replay] running: npx playwright test --config /home/user/sitelooper/bench/results/fwod58-spec-spec-tmp/playwright.config.mjs
+[spec-replay] fwod58-spec: 0/0 passed, exit=null, 600s, 0 drift line(s) — result written
