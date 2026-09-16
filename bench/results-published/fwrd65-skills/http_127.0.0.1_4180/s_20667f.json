@@ -1,0 +1,131 @@
+{
+ "id": "s_20667f",
+ "origin": "http://127.0.0.1:4180",
+ "template": "Final verification on http://127.0.0.1:4180/: open the tickets list and report the full current state of every ticket whose title or reference relates to this run — specifically '{{v1}}' ({{v3}}) and the probe ticket {{v4}} '{{v5}}'. For each, report its status, whether it shows as {{v6}}, and its parts count. Also confirm whether any ticket created during this run still appears as active (not archived) in the list. Do not change anything.",
+ "params": {
+  "v1": {
+   "example": "fwrd65-n3 RD Bench Ticket",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i1:title"
+  },
+  "v2": {
+   "example": "fwrd65-n3",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "RD-1019",
+   "usedIn": [],
+   "known": true,
+   "binding": "01-signin.ticket_reference"
+  },
+  "v4": {
+   "example": "RD-1016",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i7:ref_2"
+  },
+  "v5": {
+   "example": "zz-probe preconditions (delete me)",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i7:probe_ticket_title"
+  },
+  "v6": {
+   "example": "Archived",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i6:archived_badge_text"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:4180/#/tickets/:id"
+ },
+ "steps": [
+  {
+   "tool": "check",
+   "args": {
+    "checked": true,
+    "target": "@e925"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "show-archived"
+     },
+     {
+      "kind": "role",
+      "role": "checkbox",
+      "name": "Show archived"
+     },
+     {
+      "kind": "label",
+      "label": "Show archived"
+     },
+     {
+      "kind": "id",
+      "selector": "#show-archived"
+     },
+     {
+      "kind": "css",
+      "selector": "#show-archived"
+     },
+     {
+      "kind": "point",
+      "x": 1054,
+      "y": 216,
+      "w": 16,
+      "h": 16,
+      "role": "checkbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "addedContains": [
+     "- checkbox \"Show archived\" [checked]",
+     "- row \"RD-1020 {{v5}} {{v6}} Probe Co Draft 0 {{*}}\"",
+     "- cell \"RD-1020\"",
+     "- link \"RD-1020\"",
+     "- cell \"{{v5}} {{v6}}\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_ca1263",
+    "step": 1
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-16T22:37:59.856Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_d49562",
+  "index": 0,
+  "of": 2
+ },
+ "variantOf": "s_ca1263",
+ "provenance": {
+  "session": "fwrd65-n3",
+  "instruction": "Final verification on http://127.0.0.1:4180/: open the tickets list and report the full current state of every ticket whose title or reference relates to this run — specifically 'fwrd65-n3 RD Bench Ticket' (RD-1019) and the probe ticket RD-1016 'zz-probe preconditions (delete me)'. For each, report its status, whether it shows as Archived, and its parts count. Also confirm whether any ticket created during this run still appears as active (not archived) in the list. Do not change anything.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-16T22:37:59.856Z"
+ },
+ "revision": 1
+}

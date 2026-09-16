@@ -1,0 +1,162 @@
+{
+ "id": "s_625b1e",
+ "origin": "http://127.0.0.1:4180",
+ "template": "Sign in at http://127.0.0.1:4180/ with email {{v3}} and password {{v4}}. Then create a new ticket titled '{{v1}}', filling in any required fields the form demands (pick sensible values for anything else). After saving, wait for the list/detail view to refresh and confirm the ticket exists by reporting its title, its current status, and what sections/controls its detail page shows (especially anything about parts).",
+ "params": {
+  "v1": {
+   "example": "fwrd65-n2 RD Bench Ticket",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i1:ticket_title"
+  },
+  "v2": {
+   "example": "fwrd65-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "bench@example.com",
+   "usedIn": []
+  },
+  "v4": {
+   "example": "bench-pass-1234",
+   "usedIn": [
+    1
+   ]
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:4180/#/login"
+ },
+ "steps": [
+  {
+   "tool": "fill",
+   "args": {
+    "target": "role=textbox[name=\"Password\"]",
+    "value": "{{v4}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=textbox[name=\"Password\"]"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "login-password"
+     },
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Password"
+     },
+     {
+      "kind": "label",
+      "label": "Password"
+     },
+     {
+      "kind": "id",
+      "selector": "#login-password"
+     },
+     {
+      "kind": "css",
+      "selector": "#login-password"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 320,
+      "w": 398,
+      "h": 39,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/login",
+    "addedContains": [
+     "- textbox \"Password\": {{v4}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Sign in\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=button[name=\"Sign in\"]"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "login-submit"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Sign in"
+     },
+     {
+      "kind": "css",
+      "selector": "#login-form > div:nth-of-type(3) > button"
+     },
+     {
+      "kind": "point",
+      "x": 477,
+      "y": 379,
+      "w": 72.8,
+      "h": 39,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "addedContains": [
+     "- link \"RD Repair Desk\"",
+     "- link \"Tickets\"",
+     "- button \"Sign out\"",
+     "- heading \"Repair tickets\"",
+     "- button \"New ticket\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-16T22:35:14.858Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_1c077f",
+  "index": 1,
+  "of": 4
+ },
+ "provenance": {
+  "session": "fwrd65-n2",
+  "instruction": "Sign in at http://127.0.0.1:4180/ with email bench@example.com and password bench-pass-1234. Then create a new ticket titled 'fwrd65-n2 RD Bench Ticket', filling in any required fields the form demands (pick sensible values for anything else). After saving, wait for the list/detail view to refresh and confirm the ticket exists by reporting its title, its current status, and what sections/controls its detail page shows (especially anything about parts).",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-16T22:35:14.858Z"
+ },
+ "revision": 1
+}

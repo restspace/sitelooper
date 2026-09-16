@@ -1,0 +1,287 @@
+{
+  "flow": "fwrd65",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Signed in at http://127.0.0.1:4180/ with bench@example.com, opened the \"New ticket\" dialog, filled Title \"fwrd65-n3 RD Bench Ticket\" (Customer \"Bench Co\" as a sensible value; the form only required Title), and clicked \"Create ticket\". The list refreshed and the detail page (http://127.0.0.1:4180/#/tickets/t15) confirms the ticket: heading \"fwrd65-n3 RD Bench Ticket\", reference RD-1019, Customer \"Bench Co\", Raised 2026-09-16, Status \"Draft\". Sections/controls shown: a breadcrumb (Tickets / RD-1019), status block with \"Mark Ready\" and \"Archive ticket\" buttons, and a \"Parts\" region containing an \"Add part\" button and a parts table (Name, Cost, Markup, Qty, Supplier, Price, Actions) currently showing \"No parts on this ticket yet.\" — so no parts are attached yet.",
+      "values": {
+        "ticket_reference": "RD-1019",
+        "title": "fwrd65-n3 RD Bench Ticket",
+        "status": "Draft",
+        "customer": "Bench Co",
+        "raised": "2026-09-16",
+        "parts_section": "Add part button + table (Name, Cost, Markup, Qty, Supplier, Price, Actions) — 'No parts on this ticket yet.'",
+        "detail_controls": "Mark Ready, Archive ticket, Add part, breadcrumb Tickets / RD-1019",
+        "ref": "fwrd65-n3"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "every candidate refused — s_054ef2: not on the page this procedure starts from (expects http://127.0.0.1:4180/#/tickets, browser is at http://127.0.0.1:4180/#/login) — nothing was run; s_615743: not on the page this procedure starts from (expects http://127.0.0.1:4180/, browser is at http://127.0.0.1:4180/#/login) — nothing was run",
+      "replayed": null,
+      "repaired": false,
+      "turns": 11,
+      "unreported": [
+        "raised_date",
+        "start_url",
+        "ticket_list_url",
+        "ticket_title",
+        "ticket_url"
+      ]
+    },
+    {
+      "id": "02-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_5a6af9; observed part_name=fwrd65-n3 RD Part A, ref=fwrd65-n3, part_row_name=fwrd65-n3 RD Part A, computed_price=$125.00, part_cost=$100.00, part_markup=25%, part_qty=1, part_row_actions=Edit Delete, ticket_reference=RD-1019, ticket_title=fwrd65-n3 RD Bench Ticket, part_row_cost=$100.00, part_row_markup=25%, part_row_qty=1, part_row_price=$125.00, part_row_text_7=Edit Delete.",
+      "values": {
+        "part_name": "fwrd65-n3 RD Part A",
+        "ref": "fwrd65-n3",
+        "part_row_name": "fwrd65-n3 RD Part A",
+        "computed_price": "$125.00",
+        "part_cost": "$100.00",
+        "part_markup": "25%",
+        "part_qty": "1",
+        "part_row_actions": "Edit Delete",
+        "ticket_reference": "RD-1019",
+        "ticket_title": "fwrd65-n3 RD Bench Ticket",
+        "part_row_cost": "$100.00",
+        "part_row_markup": "25%",
+        "part_row_qty": "1",
+        "part_row_price": "$125.00",
+        "part_row_text_7": "Edit Delete"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "23/23",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "part_supplier",
+        "part_row_supplier"
+      ]
+    },
+    {
+      "id": "03-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_b6f1a4; observed part_b_row_text=fwrd65-n3 RD Part B\t$200.00\t25%\t1\tNorthwind Supplies\t$250.00\tEdit Delete, part_a_row_text=fwrd65-n3 RD Part A\t$100.00\t25%\t1\tNorthwind Supplies\t$125.00\tEdit Delete, ref=fwrd65-n3, part_b_name=fwrd65-n3 RD Part A, part_b_cost=$200.00, part_b_qty=1, part_b_computed_price=$250.00, part_a_price=$125.00, ticket_reference=RD-1019, ticket_title=fwrd65-n3 RD Bench Ticket, parts_total_label=Total (price × quantity), parts_total_amount=$375.00.",
+      "values": {
+        "part_b_row_text": "fwrd65-n3 RD Part B\t$200.00\t25%\t1\tNorthwind Supplies\t$250.00\tEdit Delete",
+        "part_a_row_text": "fwrd65-n3 RD Part A\t$100.00\t25%\t1\tNorthwind Supplies\t$125.00\tEdit Delete",
+        "ref": "fwrd65-n3",
+        "part_b_name": "fwrd65-n3 RD Part A",
+        "part_b_cost": "$200.00",
+        "part_b_qty": "1",
+        "part_b_computed_price": "$250.00",
+        "part_a_price": "$125.00",
+        "ticket_reference": "RD-1019",
+        "ticket_title": "fwrd65-n3 RD Bench Ticket",
+        "parts_total_label": "Total (price × quantity)",
+        "parts_total_amount": "$375.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "part_b_supplier"
+      ]
+    },
+    {
+      "id": "04-edit",
+      "status": "success",
+      "summary": "Replayed stored procedure s_d68036; observed ref=fwrd65-n3, part_a_name=fwrd65-n3 RD Part A, part_a_new_cost=$150.00, part_a_markup=25%, part_a_qty=1, part_a_supplier=Northwind Supplies, part_a_computed_price=$187.50, new_total=$437.50, ticket_reference=RD-1019, ticket_title=fwrd65-n3 RD Bench Ticket, part_b_cost=$200.00, part_b_price=$250.00, part_a_row_name=fwrd65-n3 RD Part A, part_a_row_cost=$150.00, part_a_row_markup=25%, part_a_row_qty=1, part_a_row_supplier=Northwind Supplies, part_a_row_price=$187.50, part_a_row_actions=Edit Delete, part_b_row_name=fwrd65-n3 RD Part B, part_b_row_cost=$200.00, part_b_row_markup=25%, part_b_row_qty=1, part_b_row_supplier=Northwind Supplies, part_b_row_price=$250.00, part_b_row_actions=Edit Delete.",
+      "values": {
+        "ref": "fwrd65-n3",
+        "part_a_name": "fwrd65-n3 RD Part A",
+        "part_a_new_cost": "$150.00",
+        "part_a_markup": "25%",
+        "part_a_qty": "1",
+        "part_a_supplier": "Northwind Supplies",
+        "part_a_computed_price": "$187.50",
+        "new_total": "$437.50",
+        "ticket_reference": "RD-1019",
+        "ticket_title": "fwrd65-n3 RD Bench Ticket",
+        "part_b_cost": "$200.00",
+        "part_b_price": "$250.00",
+        "part_a_row_name": "fwrd65-n3 RD Part A",
+        "part_a_row_cost": "$150.00",
+        "part_a_row_markup": "25%",
+        "part_a_row_qty": "1",
+        "part_a_row_supplier": "Northwind Supplies",
+        "part_a_row_price": "$187.50",
+        "part_a_row_actions": "Edit Delete",
+        "part_b_row_name": "fwrd65-n3 RD Part B",
+        "part_b_row_cost": "$200.00",
+        "part_b_row_markup": "25%",
+        "part_b_row_qty": "1",
+        "part_b_row_supplier": "Northwind Supplies",
+        "part_b_row_price": "$250.00",
+        "part_b_row_actions": "Edit Delete"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "28/28",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-delete",
+      "status": "success",
+      "summary": "Replayed stored procedure s_ece3a5; observed rd1015_parts_after=fwrd65-n3 RD Part A $150.00 25% 1 Northwind Supplies $187.50 Edit Delete | fwrd65-n3 RD Part B $200.00 25% 1 Northwind Supplies $250.00 Edit Delete | Total (price × quantity) $437.50, mark_ready_error_text=Ticket is not ready\n\nA ticket needs at least one part before it can be marked Ready, probe_ticket_final_status=Status\nDraft\nArchived, final_status_rd1015=Ready, ticket_reference=RD-1019, ticket_title=fwrd65-n3 RD Bench Ticket.",
+      "values": {
+        "rd1015_parts_after": "fwrd65-n3 RD Part A $150.00 25% 1 Northwind Supplies $187.50 Edit Delete | fwrd65-n3 RD Part B $200.00 25% 1 Northwind Supplies $250.00 Edit Delete | Total (price × quantity) $437.50",
+        "mark_ready_error_text": "Ticket is not ready\n\nA ticket needs at least one part before it can be marked Ready",
+        "probe_ticket_final_status": "Status\nDraft\nArchived",
+        "final_status_rd1015": "Ready",
+        "ticket_reference": "RD-1019",
+        "ticket_title": "fwrd65-n3 RD Bench Ticket"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "18/18",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "06-delete",
+      "status": "success",
+      "summary": "Deleted both parts from RD-1019. Each Delete opened an in-page \"Confirm\" dialog whose text was 'Delete the part \"<name>\" from this ticket? This cannot be undone.' with buttons Cancel / Delete part; after confirming both, the parts table refreshed to the empty state exactly \"No parts on this ticket yet.\" (headers only, no data rows, no total row) and I verified neither 'fwrd65-n3 RD Bench Ticket RD Part A' nor 'fwrd65-n3 RD Bench Ticket RD Part B' remained. I then clicked 'Archive ticket' — no dialog appeared, the change applied immediately, and the Status row now shows \"Ready\" plus a small \"Archived\" badge (live DOM data-testid=\"ticket-archived\"), with the button relabelled \"Unarchive ticket\".",
+      "values": {
+        "part_b_deleted": "yes (row 'fwrd65-n3 RD Part B $200.00 25% 1 Northwind Supplies $250.00 Edit Delete' removed and replaced by the empty-state row)",
+        "delete_confirm_dialog": "heading \"Confirm\"; body 'Delete the part \"fwrd65-n3 RD Part A\" from this ticket? This cannot be undone.'; buttons \"Cancel\" and \"Delete part\"",
+        "parts_table_state_after_deletes": "NAME\tCOST\tMARKUP\tQTY\tSUPPLIER\tPRICE\tACTIONS\nfwrd65-n3 RD Part B\t$200.00\t25%\t1\tNorthwind Supplies\t$250.00\tEdit Delete\nTotal (price × quantity)\t$250.00\t",
+        "status_after_deletes": "Status\nReady",
+        "status_after_archive": "Status\nReady\nArchived",
+        "archived_badge_text": "Archived",
+        "ticket_reference": "RD-1019",
+        "ticket_title": "fwrd65-n3 RD Bench Ticket",
+        "ref": "fwrd65-n3 RD Bench Ticket"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "07-open",
+      "status": "success",
+      "summary": "Opened the tickets list (Show archived checked, Status = All statuses; I only changed view filters, no records were modified). 'fwrd65-n3 RD Bench Ticket' (RD-1019) shows Status \"Ready\", an \"Archived\" chip inside its title cell, Customer \"Bench Co\", Parts 0, Created 2026-09-16. The probe ticket is NOT RD-1016 — searching the reference \"RD-1016\" returned \"No tickets match the current filters.\"; the only zz-probe ticket present is RD-1020 'zz-probe preconditions (delete me)', which shows Draft, an \"Archived\" chip, Customer \"Probe Co\", Parts 0, Created 2026-09-16. Both tickets created by this run appear as archived, and no ticket from this run appears as active; the rest of the list (page 2 included) is pre-existing 2026-01 work.",
+      "values": {
+        "ticket_reference": "RD-1019",
+        "ticket_title": "fwrd65-n3 RD Bench Ticket",
+        "ticket_status": "Ready",
+        "ticket_archived": "yes — 'Archived' chip rendered inside the title cell (generic data-testid ticket-archived)",
+        "ticket_customer": "Bench Co",
+        "ticket_parts_count": "0",
+        "ticket_created": "2026-09-16",
+        "rd1019_row": "RD-1019\\tfwrd65-n3 RD Bench Ticket Archived\\tBench Co\\tReady\\t0\\t2026-09-16",
+        "probe_ticket_reference": "RD-1020",
+        "probe_ticket_title": "zz-probe preconditions (delete me)",
+        "probe_ticket_status": "Draft",
+        "probe_ticket_archived": "yes — 'Archived' chip rendered inside the title cell",
+        "probe_ticket_customer": "Probe Co",
+        "probe_ticket_parts_count": "0",
+        "probe_ticket_created": "2026-09-16",
+        "probe_ticket_row": "RD-1020\\tzz-probe preconditions (delete me) Archived\\tProbe Co\\tDraft\\t0\\t2026-09-16",
+        "rd1016_search_result": "'No tickets match the current filters.' — RD-1016 does not exist in the list",
+        "list_footer": "Showing 1–10 of 16 (Show archived checked, Status = All statuses); newest-first, page 2 contains only 2026-01 tickets",
+        "active_tickets_from_this_run": "none — both RD-1019 and RD-1020 show the Archived chip",
+        "probe_ticket_found_row": "RD-1020 | zz-probe preconditions (delete me) | Archived badge | Probe Co | Draft | Parts 0 | 2026-09-16",
+        "ref": "fwrd65-n3",
+        "ref_2": "RD-1016",
+        "ref_3": "2026-01"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_ca1263 stopped at step 3 — after step 3 none of the 2 recorded page change(s) appeared (e.g. \"- cell \\\"RD-1016\\\"\") — the step ran but did not have its recorded effect",
+      "replayed": "2/8",
+      "repaired": false,
+      "turns": 11,
+      "unreported": [
+        "rd1015_row",
+        "rd1016_row",
+        "search_fwrd65_result",
+        "dates_of_first_10_rows",
+        "other_archived_ticket_visible",
+        "list_row_created_date",
+        "list_row_reference_rd1016",
+        "list_row_reference_rd1015"
+      ]
+    }
+  ],
+  "passed": 7,
+  "total": 7,
+  "repinned": 0,
+  "drift": 3,
+  "driftTickets": [
+    {
+      "flow": "fwrd65",
+      "step": "03-add",
+      "skill": "s_b6f1a4",
+      "atStep": "8",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.locator('section > div > table > tbody > tr:nth-of-type(2) > td:nth-of-type(1)')",
+      "fallbackUsed": "elementAt(215, 450) /* td */",
+      "fallbackIndex": 2,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    },
+    {
+      "flow": "fwrd65",
+      "step": "06-delete",
+      "skill": "s_87e0d7",
+      "atStep": "7",
+      "key": "target",
+      "similarity": 0.997,
+      "missedLocator": "page.locator('table:has-text(\"No parts on this ticket yet.\")')",
+      "fallbackUsed": "page.getByTestId('parts-table')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    },
+    {
+      "flow": "fwrd65",
+      "step": "07-open",
+      "skill": "s_ca1263",
+      "similarity": 1.001,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_ca1263 stopped at step 3 — after step 3 none of the 2 recorded page change(s) appeared (e.g. \"- cell \\\"RD-1016\\\"\") — the step ran but did not have its recorded effect",
+      "reason": "after step 3 none of the 2 recorded page change(s) appeared (e.g. \"- cell \\\"RD-1016\\\"\") — the step ran but did not have its recorded effect",
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets"
+    }
+  ],
+  "wallMs": 98040,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 288195,
+    "completionTokens": 7907,
+    "cachedTokens": 245376
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 288195,
+      "completionTokens": 7907,
+      "cachedTokens": 245376
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

@@ -1,0 +1,98 @@
+{
+ "id": "s_615743",
+ "origin": "http://127.0.0.1:4180",
+ "template": "Sign in at {{v2}} with email {{v3}} and password {{v4}}. Then create a new ticket titled '{{v5}}', filling in any required fields the form demands (pick sensible values for anything else). After saving, wait for the list/detail view to refresh and confirm the ticket exists by reporting its title, its current status, and what sections/controls its detail page shows (especially anything about parts).",
+ "params": {
+  "v1": {
+   "example": "fwrd65-n1",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "http://127.0.0.1:4180/",
+   "usedIn": [
+    2
+   ]
+  },
+  "v3": {
+   "example": "bench@example.com",
+   "usedIn": []
+  },
+  "v4": {
+   "example": "bench-pass-1234",
+   "usedIn": []
+  },
+  "v5": {
+   "example": "fwrd65-n1 RD Bench Ticket",
+   "usedIn": [],
+   "known": true
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:4180/"
+ },
+ "steps": [
+  {
+   "tool": "wait_for",
+   "args": {
+    "target": "body",
+    "state": "visible",
+    "timeout_ms": 10000
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "body"
+     },
+     {
+      "kind": "css",
+      "selector": "html > body"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 450,
+      "w": 1264,
+      "h": 884,
+      "role": null,
+      "tag": "body",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   }
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v2}}"
+   },
+   "locators": {}
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-16T22:28:33.755Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_7810ec",
+  "index": 0,
+  "of": 4
+ },
+ "provenance": {
+  "session": "fwrd65-n1",
+  "instruction": "Sign in at http://127.0.0.1:4180/ with email bench@example.com and password bench-pass-1234. Then create a new ticket titled 'fwrd65-n1 RD Bench Ticket', filling in any required fields the form demands (pick sensible values for anything else). After saving, wait for the list/detail view to refresh and confirm the ticket exists by reporting its title, its current status, and what sections/controls its detail page shows (especially anything about parts).",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-16T22:28:33.755Z"
+ },
+ "revision": 1
+}

@@ -1,0 +1,153 @@
+
+[sweep] run 1/3: fwrd65-n1 (store: /home/user/sitelooper/bench/results/fwrd65-skills)
+[harness] repairdesk: defaulting APP_URL
+[harness] repairdesk: defaulting APP_EMAIL
+[harness] repairdesk: defaulting APP_PASSWORD
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+[harness] repairdesk responded 200 at http://127.0.0.1:4180/
+stopped: fwrd65-n1
+  flow "fwrd65" saved: 7 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwrd65.json
+  warning: note: dropped 7 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: note: 01-signin no longer publishes detail_controls, parts_sections — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-add no longer publishes part_b_markup, part_a_still_present — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-edit no longer publishes previous_part_a_price, previous_total — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-delete no longer publishes error_title, live_statuses — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-delete no longer publishes ticket_status_after_archive, archived_indicator, archive_button_after — no replay reads them from the page and the recording showed no line to read
+  warning: note: 07-open no longer publishes search_zz-probe_result — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 411 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.startUrl: "http://127.0.0.1:4180/" (output) in "http://127.0.0.1:4180/"
+  flow.steps[0].instruction: "http://127.0.0.1:4180/" (output) in "Sign in at http://127.0.0.1:4180/ with email bench@example.com and password bench-pass-1234. Then create a new ticket titled '{{runid}} RD Bench Ticket', fillin"
+  flow.steps[0].params.v2: "http://127.0.0.1:4180/" (output) in "http://127.0.0.1:4180/"
+  flow.steps[0].route: "http://127.0.0.1:4180/#/tickets" (output) in "http://127.0.0.1:4180/#/tickets/:id"
+  flow.steps[0].route: "http://127.0.0.1:4180/" (output) in "http://127.0.0.1:4180/#/tickets/:id"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwrd65-n1 stop=completed
+turns=8 wall=451.0s
+commands=7 cmdTime=412.5s cmdBytes=10831 timeouts=0
+orchestrator in=27169 cw=0 cr=9920 out=2789
+inner prompt=1866161 cached=1724288 completion=26031
+spend=$0.095 maxUsd=3
+learn: A_n=0 replayed=0/7 full=0 repaired=0 compiled=7 variants=0
+-> /home/user/sitelooper/bench/results/fwrd65-n1-sitelooper-result.json
+
+=== fwrd65-n1 === (run self-reported: completed)
+  obj 1  PASS  seq 1: ticket t15 (RD-1015) "fwrd65-n1 RD Bench Ticket"
+  obj 2  PASS  seq 2 p18 cost=100 markup=25 price=125.00
+  obj 3  PASS  seq 3 p19 cost=200 markup=25 price=250.00
+  obj 4  PASS  seq 4: cost 100 -> 150, price 125.00 -> 187.50 (want 187.50), after the create at seq 2
+  obj 5  PASS  seq 5: status Draft -> Ready
+  obj 6  PASS  part A deleted, part B deleted, archive entry at seq 10; state: 0 part(s) surviving, ticket t15 archived=true
+  claim 2  ok — run reported 125.00, app recorded 125.00
+  claim 3  ok — run reported 250.00, app recorded 250.00
+  claim 4  ok — run reported 187.50, app recorded 187.50
+  summary: 6/6 objectives PASS, 0 price claim mismatch(es), 0 duplicate ticket(s)
+
+App state: 16 tickets total, 1 left by benchmark runs (0 still active), 17 parts total, 10 mutation log entries.
+
+[sweep] run 2/3: fwrd65-n2 (replay flow fwrd65, no orchestrator)
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+[sweep] fwrd65-n2: 3 drift ticket(s) → fwrd65-n2-drift.json
+
+=== fwrd65-n2 === (run self-reported: no result file)
+  note: no result file in /home/user/sitelooper/bench/results — objectives are still scored from the log,
+        but the run's claimed prices cannot be cross-checked.
+  obj 1  PASS  seq 1: ticket t15 (RD-1017) "fwrd65-n2 RD Bench Ticket"
+  obj 2  PASS  seq 2 p18 cost=100 markup=25 price=125.00
+  obj 3  PASS  seq 3 p19 cost=200 markup=25 price=250.00
+  obj 4  PASS  seq 4: cost 100 -> 150, price 125.00 -> 187.50 (want 187.50), after the create at seq 2
+  obj 5  PASS  seq 5: status Draft -> Ready
+  obj 6  PASS  part A deleted, part B deleted, archive entry at seq 10; state: 0 part(s) surviving, ticket t15 archived=true
+  claim 2  no claim parsed from the run's final report
+  claim 3  no claim parsed from the run's final report
+  claim 4  no claim parsed from the run's final report
+  summary: 6/6 objectives PASS, 0 price claim mismatch(es), 0 duplicate ticket(s)
+
+App state: 16 tickets total, 1 left by benchmark runs (0 still active), 17 parts total, 10 mutation log entries.
+
+[sweep] run 3/3: fwrd65-n3 (replay flow fwrd65, no orchestrator)
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+[sweep] fwrd65-n3: 3 drift ticket(s) → fwrd65-n3-drift.json
+
+=== fwrd65-n3 === (run self-reported: no result file)
+  note: no result file in /home/user/sitelooper/bench/results — objectives are still scored from the log,
+        but the run's claimed prices cannot be cross-checked.
+  obj 1  PASS  seq 1: ticket t15 (RD-1019) "fwrd65-n3 RD Bench Ticket"
+  obj 2  PASS  seq 2 p18 cost=100 markup=25 price=125.00
+  obj 3  PASS  seq 3 p19 cost=200 markup=25 price=250.00
+  obj 4  PASS  seq 4: cost 100 -> 150, price 125.00 -> 187.50 (want 187.50), after the create at seq 2
+  obj 5  PASS  seq 5: status Draft -> Ready
+  obj 6  PASS  part A deleted, part B deleted, archive entry at seq 10; state: 0 part(s) surviving, ticket t15 archived=true
+  claim 2  no claim parsed from the run's final report
+  claim 3  no claim parsed from the run's final report
+  claim 4  no claim parsed from the run's final report
+  summary: 6/6 objectives PASS, 0 price claim mismatch(es), 0 duplicate ticket(s)
+
+App state: 16 tickets total, 1 left by benchmark runs (0 still active), 17 parts total, 10 mutation log entries.
+
+Learning sweep fwrd65 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwrd65-n1' │ '6/6'    │ 'completed' │ 8     │ 7    │ 0.095     │ 0    │ '0/7'        │ 451    │
+│ 1       │ 2 │ 'fwrd65-n2' │ '6/6'    │ 'success'   │ 20    │ 7    │ 0.0103    │ 0.71 │ '7/7 (flow)' │ 85     │
+│ 2       │ 3 │ 'fwrd65-n3' │ '6/6'    │ 'success'   │ 22    │ 7    │ 0.0119    │ 0.71 │ '7/7 (flow)' │ 98     │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:4180
+  s_074317  validated    3 steps  3/3 (100%)
+           On the ticket detail page for '{{v1}}' (reference {{v3}}, url {{v4}}), the goal is to get this ticket into sta…
+  s_2ac061  validated    3 steps  3/3 (100%)
+           On the ticket detail page for '{{v1}}' (reference {{v3}}, url {{v4}}), the goal is to get this ticket into sta…
+  s_48b0f9  validated    1 steps  3/3 (100%)
+           On the ticket detail page for '{{v1}}' (reference {{v3}}, url {{v4}}), the goal is to get this ticket into sta…
+  s_551666  validated    1 steps  3/3 (100%)
+           Final verification on {{v1}}: open the tickets list and report the full current state of every ticket whose ti…
+  s_5a6af9  validated   23 steps  3/3 (100%)
+           On the ticket detail page for '{{v1}}' (reference {{v3}}, url {{v4}}), click 'Add part' and create a part name…
+  s_7c27fc  validated    5 steps  3/3 (100%)
+           On the ticket detail page for '{{v1}}' (reference {{v3}}, url {{v4}}), the goal is to get this ticket into sta…
+  s_87e0d7  validated   15 steps  3/3 (100%)
+           On the ticket detail page for '{{v1}}' (reference {{v3}}, url {{v4}}), delete BOTH parts: '{{v8}}' and '{{v9}}…
+  s_b6f1a4  validated   17 steps  3/3 (100%)
+           On the ticket detail page for '{{v1}}' (reference {{v3}}, url {{v4}}), click 'Add part' and create a second pa…
+  s_ca1263  demoted      8 steps  1/3 (33%)
+           Final verification on {{v1}}: open the tickets list and report the full current state of every ticket whose ti…
+  s_d68036  validated   28 steps  3/3 (100%)
+           On the ticket detail page for '{{v1}}' (reference {{v3}}, url {{v4}}), edit the part named '{{v8}}' so its cos…
+  s_de08b8  validated    3 steps  3/3 (100%)
+           On the ticket detail page for '{{v1}}' (reference {{v3}}, url {{v4}}), the goal is to get this ticket into sta…
+  s_ece3a5  validated    3 steps  3/3 (100%)
+           On the ticket detail page for '{{v1}}' (reference {{v3}}, url {{v4}}), the goal is to get this ticket into sta…
+  s_020f67  provisional  7 steps  1/1 (100%)
+           Sign in at {{v2}} with email {{v3}} and password {{v4}}. Then create a new ticket titled '{{v5}}', filling in …
+  s_054ef2  provisional  1 steps  1/1 (100%)
+           Sign in at http://127.0.0.1:4180/ with email {{v3}} and password {{v4}}. Then create a new ticket titled '{{v1…
+  s_20667f  provisional  1 steps  1/1 (100%)  variant of s_ca1263
+           Final verification on http://127.0.0.1:4180/: open the tickets list and report the full current state of every…
+  s_459ed2  provisional  1 steps  1/1 (100%)  variant of s_ca1263
+           Final verification on http://127.0.0.1:4180/: open the tickets list and report the full current state of every…
+  s_615743  provisional  2 steps  1/1 (100%)
+           Sign in at {{v2}} with email {{v3}} and password {{v4}}. Then create a new ticket titled '{{v5}}', filling in …
+  s_625b1e  provisional  2 steps  1/1 (100%)
+           Sign in at http://127.0.0.1:4180/ with email {{v3}} and password {{v4}}. Then create a new ticket titled '{{v1…
+  s_7de374  provisional 17 steps  1/1 (100%)  variant of s_ca1263
+           Final verification on http://127.0.0.1:4180/: open the tickets list and report the full current state of every…
+  s_7f7edb  provisional  6 steps  1/1 (100%)
+           Sign in at http://127.0.0.1:4180/ with email {{v3}} and password {{v4}}. Then create a new ticket titled '{{v1…
+  s_815e72  provisional  3 steps  1/1 (100%)
+           Sign in at http://127.0.0.1:4180/ with email {{v3}} and password {{v4}}. Then create a new ticket titled '{{v1…
+  s_9b4904  provisional  2 steps  1/1 (100%)
+           Sign in at http://127.0.0.1:4180/ with email {{v3}} and password {{v4}}. Then create a new ticket titled '{{v1…
+  s_a39af3  provisional  6 steps  1/1 (100%)
+           Sign in at {{v2}} with email {{v3}} and password {{v4}}. Then create a new ticket titled '{{v5}}', filling in …
+  s_a6954f  provisional  1 steps  1/1 (100%)
+           Sign in at http://127.0.0.1:4180/ with email {{v3}} and password {{v4}}. Then create a new ticket titled '{{v1…
+  s_d1e926  provisional  5 steps  1/1 (100%)
+           Sign in at http://127.0.0.1:4180/ with email {{v3}} and password {{v4}}. Then create a new ticket titled '{{v1…
+  s_da39bf  provisional  5 steps  1/1 (100%)
+           Sign in at http://127.0.0.1:4180/ with email {{v3}} and password {{v4}}. Then create a new ticket titled '{{v1…
+  s_f66b70  provisional 22 steps  1/1 (100%)  variant of s_ca1263
+           Final verification on http://127.0.0.1:4180/: open the tickets list and report the full current state of every…
+  s_fce649  provisional  3 steps  1/1 (100%)
+           Sign in at {{v2}} with email {{v3}} and password {{v4}}. Then create a new ticket titled '{{v5}}', filling in …
+store: /home/user/sitelooper/bench/results/fwrd65-skills
+
+summary: /home/user/sitelooper/bench/results/fwrd65-sweep.json

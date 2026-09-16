@@ -1,0 +1,898 @@
+{
+ "id": "s_7de374",
+ "origin": "http://127.0.0.1:4180",
+ "template": "Final verification on http://127.0.0.1:4180/: open the tickets list and report the full current state of every ticket whose title or reference relates to this run — specifically '{{v1}}' ({{v3}}) and the probe ticket {{v4}} '{{v5}}'. For each, report its status, whether it shows as {{v6}}, and its parts count. Also confirm whether any ticket created during this run still appears as active (not archived) in the list. Do not change anything.",
+ "params": {
+  "v1": {
+   "example": "fwrd65-n3 RD Bench Ticket",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i1:title"
+  },
+  "v2": {
+   "example": "fwrd65-n3",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "RD-1019",
+   "usedIn": [
+    6,
+    12
+   ],
+   "known": true,
+   "binding": "01-signin.ticket_reference"
+  },
+  "v4": {
+   "example": "RD-1016",
+   "usedIn": [
+    7
+   ],
+   "known": true,
+   "binding": "output:i7:ref_2"
+  },
+  "v5": {
+   "example": "zz-probe preconditions (delete me)",
+   "usedIn": [
+    13,
+    14,
+    15,
+    17
+   ],
+   "known": true,
+   "binding": "output:i7:probe_ticket_title"
+  },
+  "v6": {
+   "example": "Archived",
+   "usedIn": [
+    13,
+    14,
+    15,
+    17
+   ],
+   "known": true,
+   "binding": "output:i6:archived_badge_text"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:4180/#/tickets",
+  "requireText": [
+   "{{v1}}",
+   "{{v2}}"
+  ]
+ },
+ "steps": [
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e922",
+    "value": "fwrd65"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "search"
+     },
+     {
+      "kind": "role",
+      "role": "searchbox",
+      "name": "Search"
+     },
+     {
+      "kind": "label",
+      "label": "Search"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Reference, title or customer"
+     },
+     {
+      "kind": "id",
+      "selector": "#search"
+     },
+     {
+      "kind": "css",
+      "selector": "#search"
+     },
+     {
+      "kind": "point",
+      "x": 670,
+      "y": 224,
+      "w": 710.7,
+      "h": 39,
+      "role": "searchbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "addedContains": [
+     "- searchbox \"Reference, title or customer\": fwrd65",
+     "- button \"Next\" [disabled]"
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_ca1263",
+    "step": 2
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e922",
+    "value": "zz-probe"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "search"
+     },
+     {
+      "kind": "role",
+      "role": "searchbox",
+      "name": "Search"
+     },
+     {
+      "kind": "label",
+      "label": "Search"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Reference, title or customer"
+     },
+     {
+      "kind": "id",
+      "selector": "#search"
+     },
+     {
+      "kind": "css",
+      "selector": "#search"
+     },
+     {
+      "kind": "point",
+      "x": 670,
+      "y": 224,
+      "w": 710.7,
+      "h": 39,
+      "role": "searchbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "addedContains": [
+     "- searchbox \"Reference, title or customer\": zz-probe",
+     "- row \"RD-1020 {{v5}} {{v6}} Probe Co Draft 0 {{*}}\"",
+     "- cell \"RD-1020\"",
+     "- link \"RD-1020\"",
+     "- cell \"{{v5}} {{v6}}\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_ca1263",
+    "step": 3
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e692",
+    "value": "fwrd65"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "search"
+     },
+     {
+      "kind": "role",
+      "role": "searchbox",
+      "name": "Search"
+     },
+     {
+      "kind": "label",
+      "label": "Search"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Reference, title or customer"
+     },
+     {
+      "kind": "id",
+      "selector": "#search"
+     },
+     {
+      "kind": "css",
+      "selector": "#search"
+     },
+     {
+      "kind": "point",
+      "x": 670,
+      "y": 224,
+      "w": 710.7,
+      "h": 39,
+      "role": "searchbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "addedContains": [
+     "- searchbox \"Reference, title or customer\": fwrd65",
+     "- row \"{{v3}} {{v1}} {{v6}} Bench Co Ready 0 {{*}}\"",
+     "- cell \"{{v3}}\"",
+     "- link \"{{v3}}\"",
+     "- cell \"{{v1}} {{v6}}\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e692",
+    "value": "zz-probe"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "search"
+     },
+     {
+      "kind": "role",
+      "role": "searchbox",
+      "name": "Search"
+     },
+     {
+      "kind": "label",
+      "label": "Search"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Reference, title or customer"
+     },
+     {
+      "kind": "id",
+      "selector": "#search"
+     },
+     {
+      "kind": "css",
+      "selector": "#search"
+     },
+     {
+      "kind": "point",
+      "x": 670,
+      "y": 224,
+      "w": 710.7,
+      "h": 39,
+      "role": "searchbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "addedContains": [
+     "- searchbox \"Reference, title or customer\": zz-probe",
+     "- row \"RD-1020 {{v5}} {{v6}} Probe Co Draft 0 {{*}}\"",
+     "- cell \"RD-1020\"",
+     "- link \"RD-1020\"",
+     "- cell \"{{v5}} {{v6}}\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e692",
+    "value": "fwrd65"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "search"
+     },
+     {
+      "kind": "role",
+      "role": "searchbox",
+      "name": "Search"
+     },
+     {
+      "kind": "label",
+      "label": "Search"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Reference, title or customer"
+     },
+     {
+      "kind": "id",
+      "selector": "#search"
+     },
+     {
+      "kind": "css",
+      "selector": "#search"
+     },
+     {
+      "kind": "point",
+      "x": 670,
+      "y": 224,
+      "w": 710.7,
+      "h": 39,
+      "role": "searchbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "addedContains": [
+     "- searchbox \"Reference, title or customer\": fwrd65",
+     "- row \"{{v3}} {{v1}} {{v6}} Bench Co Ready 0 {{*}}\"",
+     "- cell \"{{v3}}\"",
+     "- link \"{{v3}}\"",
+     "- cell \"{{v1}} {{v6}}\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "wait_for",
+   "args": {
+    "state": "text_contains",
+    "target": "table",
+    "text": "{{v3}}",
+    "timeout_ms": 8000
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "table"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "ticket-table"
+     },
+     {
+      "kind": "css",
+      "selector": "#view > section:nth-of-type(2) > div:nth-of-type(1) > table"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 403,
+      "w": 1070,
+      "h": 84.2,
+      "role": null,
+      "tag": "table",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e692",
+    "value": "{{v4}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "search"
+     },
+     {
+      "kind": "role",
+      "role": "searchbox",
+      "name": "Search"
+     },
+     {
+      "kind": "label",
+      "label": "Search"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Reference, title or customer"
+     },
+     {
+      "kind": "id",
+      "selector": "#search"
+     },
+     {
+      "kind": "css",
+      "selector": "#search"
+     },
+     {
+      "kind": "point",
+      "x": 670,
+      "y": 224,
+      "w": 710.7,
+      "h": 39,
+      "role": "searchbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "addedContains": [
+     "- searchbox \"Reference, title or customer\": {{v4}}",
+     "- row \"No tickets match the current filters.\"",
+     "- cell \"No tickets match the current filters.\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e692",
+    "value": ""
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "search"
+     },
+     {
+      "kind": "role",
+      "role": "searchbox",
+      "name": "Search"
+     },
+     {
+      "kind": "label",
+      "label": "Search"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Reference, title or customer"
+     },
+     {
+      "kind": "id",
+      "selector": "#search"
+     },
+     {
+      "kind": "css",
+      "selector": "#search"
+     },
+     {
+      "kind": "point",
+      "x": 670,
+      "y": 224,
+      "w": 710.7,
+      "h": 39,
+      "role": "searchbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "addedContains": [
+     "- searchbox \"Reference, title or customer\"",
+     "- row \"RD-1020 {{v5}} {{v6}} Probe Co Draft 0 {{*}}\"",
+     "- cell \"RD-1020\"",
+     "- link \"RD-1020\"",
+     "- cell \"{{v5}} {{v6}}\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e805"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "page-next"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Next"
+     },
+     {
+      "kind": "id",
+      "selector": "#page-next"
+     },
+     {
+      "kind": "css",
+      "selector": "#page-next"
+     },
+     {
+      "kind": "point",
+      "x": 1126,
+      "y": 895,
+      "w": 58.8,
+      "h": 39,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "addedContains": [
+     "- row \"RD-1006 Walk-in fridge alarm keeps sounding Pinehurst Grocers Draft 1 {{*}}\"",
+     "- cell \"RD-1006\"",
+     "- link \"RD-1006\"",
+     "- cell \"Walk-in fridge alarm keeps sounding\"",
+     "- row \"RD-1005 Till printer jams on receipts Blue Fox Cafe Draft 2 {{*}}\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e803"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "page-prev"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Previous"
+     },
+     {
+      "kind": "id",
+      "selector": "#page-prev"
+     },
+     {
+      "kind": "css",
+      "selector": "#page-prev"
+     },
+     {
+      "kind": "point",
+      "x": 959,
+      "y": 711,
+      "w": 84.5,
+      "h": 39,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "addedContains": [
+     "- row \"RD-1020 {{v5}} {{v6}} Probe Co Draft 0 {{*}}\"",
+     "- cell \"RD-1020\"",
+     "- link \"RD-1020\"",
+     "- cell \"{{v5}} {{v6}}\"",
+     "- cell \"Probe Co\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#ticket-rows > tr:nth-of-type(2) > td:nth-of-type(1) > a"
+     },
+     {
+      "kind": "point",
+      "x": 152,
+      "y": 470,
+      "w": 54.6,
+      "h": 15,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "ticket_reference"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "#ticket-rows tr",
+      "hasText": "{{v3}}",
+      "selector": "td:nth-of-type(3)"
+     },
+     {
+      "kind": "css",
+      "selector": "#ticket-rows > tr:nth-of-type(2) > td:nth-of-type(3)"
+     },
+     {
+      "kind": "point",
+      "x": 721,
+      "y": 469,
+      "w": 187.3,
+      "h": 46.2,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "ticket_customer"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "#ticket-rows tr",
+      "hasText": "{{v5}} {{v6}}",
+      "selector": "td:nth-of-type(5)"
+     },
+     {
+      "kind": "css",
+      "selector": "#ticket-rows > tr:nth-of-type(1) > td:nth-of-type(5)"
+     },
+     {
+      "kind": "point",
+      "x": 988,
+      "y": 423,
+      "w": 100.8,
+      "h": 46.2,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "ticket_parts_count"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "#ticket-rows tr",
+      "hasText": "{{v5}} {{v6}}",
+      "selector": "td:nth-of-type(6)"
+     },
+     {
+      "kind": "css",
+      "selector": "#ticket-rows > tr:nth-of-type(1) > td:nth-of-type(6)"
+     },
+     {
+      "kind": "point",
+      "x": 1107,
+      "y": 423,
+      "w": 136.9,
+      "h": 46.2,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "ticket_created"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "#ticket-rows tr",
+      "hasText": "{{v5}} {{v6}}",
+      "selector": "td:nth-of-type(1) > a"
+     },
+     {
+      "kind": "css",
+      "selector": "#ticket-rows > tr:nth-of-type(1) > td:nth-of-type(1) > a"
+     },
+     {
+      "kind": "point",
+      "x": 152,
+      "y": 423,
+      "w": 54.6,
+      "h": 15,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "probe_ticket_reference"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "value"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "field-title"
+     },
+     {
+      "kind": "label",
+      "label": "Title *"
+     },
+     {
+      "kind": "id",
+      "selector": "#f-title"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"form-dialog\"] input",
+      "nth": 0
+     },
+     {
+      "kind": "css",
+      "selector": "#f-title"
+     }
+    ]
+   },
+   "label": "probe_ticket_title"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "#ticket-rows tr",
+      "hasText": "{{v5}} {{v6}}",
+      "selector": "td:nth-of-type(3)"
+     },
+     {
+      "kind": "css",
+      "selector": "#ticket-rows > tr:nth-of-type(1) > td:nth-of-type(3)"
+     },
+     {
+      "kind": "point",
+      "x": 721,
+      "y": 423,
+      "w": 187.3,
+      "h": 46.2,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "probe_ticket_customer"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Opened the tickets list (Show archived checked, Status = All statuses; I only changed view filters, no records were modified). '{{v1}}' ({{v3}}) shows Status \"Ready\", an \"{{v6}}\" chip inside its title cell, Customer \"Bench Co\", Parts 0, Created 2026-09-16. The probe ticket is NOT {{v4}} — searching the reference \"{{v4}}\" returned \"No tickets match the current filters.\"; the only {{v8}} ticket present is RD-1020 '{{v5}}', which shows Draft, an \"{{v6}}\" chip, Customer \"Probe Co\", Parts 0, Created 2026-09-16. Both tickets created by this run appear as archived, and no ticket from this run appears as active; the rest of the list (page 2 included) is pre-existing 2026-01 work.",
+  "values": {
+   "ticket_reference": "{{v3}}",
+   "ticket_title": "{{v1}}",
+   "ticket_status": "Ready",
+   "ticket_archived": "yes — '{{v6}}' chip rendered inside the title cell (generic data-testid ticket-archived)",
+   "ticket_customer": "Bench Co",
+   "ticket_parts_count": "0",
+   "ticket_created": "2026-09-16",
+   "rd1019_row": "{{v3}}\\tfwrd65-n3 RD Bench Ticket {{v6}}\\tBench Co\\tReady\\t0\\t2026-09-16",
+   "probe_ticket_reference": "RD-1020",
+   "probe_ticket_title": "{{v5}}",
+   "probe_ticket_status": "Draft",
+   "probe_ticket_archived": "yes — '{{v6}}' chip rendered inside the title cell",
+   "probe_ticket_customer": "Probe Co",
+   "probe_ticket_parts_count": "0",
+   "probe_ticket_created": "2026-09-16",
+   "probe_ticket_row": "RD-1020\\tzz-probe preconditions (delete me) {{v6}}\\tProbe Co\\tDraft\\t0\\t2026-09-16",
+   "rd1016_search_result": "'No tickets match the current filters.' — {{v4}} does not exist in the list",
+   "list_footer": "Showing 1–10 of 16 (Show archived checked, Status = All statuses); newest-first, page 2 contains only 2026-01 tickets",
+   "active_tickets_from_this_run": "none — both {{v3}} and RD-1020 show the {{v6}} chip",
+   "probe_ticket_found_row": "RD-1020 | {{v5}} | {{v6}} badge | Probe Co | Draft | Parts 0 | 2026-09-16",
+   "ref": "{{v2}}",
+   "ref_2": "{{v4}}",
+   "ref_3": "2026-01"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-16T22:37:59.856Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_d49562",
+  "index": 1,
+  "of": 2
+ },
+ "variantOf": "s_ca1263",
+ "provenance": {
+  "session": "fwrd65-n3",
+  "instruction": "Final verification on http://127.0.0.1:4180/: open the tickets list and report the full current state of every ticket whose title or reference relates to this run — specifically 'fwrd65-n3 RD Bench Ticket' (RD-1019) and the probe ticket RD-1016 'zz-probe preconditions (delete me)'. For each, report its status, whether it shows as Archived, and its parts count. Also confirm whether any ticket created during this run still appears as active (not archived) in the list. Do not change anything.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-16T22:37:59.856Z"
+ },
+ "revision": 1
+}
