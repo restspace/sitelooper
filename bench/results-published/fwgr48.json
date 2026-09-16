@@ -1,0 +1,425 @@
+{
+  "name": "fwgr48",
+  "origin": "http://127.0.0.1:3000",
+  "startUrl": "http://127.0.0.1:3000/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to Grafana with username admin and password admin. If a 'Change password' / 'Update password' prompt appears, skip it (e.g. click Skip). Report the page you land on.",
+      "skill": "s_9f0128",
+      "params": {},
+      "outputs": [
+        "final_url",
+        "landing_page_heading",
+        "password_prompt"
+      ],
+      "recorded": {
+        "final_url": "http://127.0.0.1:3000/?from=now-6h&to=now&timezone=browser",
+        "landing_page_heading": "Welcome to Grafana",
+        "password_prompt": "Update your password (skipped via Skip button)",
+        "url": "http://127.0.0.1:3000/?from=now-6h&to=now&timezone=browser"
+      },
+      "route": "http://127.0.0.1:3000/",
+      "outputEvidence": {
+        "final_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "landing_page_heading": {
+          "same": 1,
+          "differed": 0
+        },
+        "password_prompt": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-open",
+      "instruction": "Open the provisioned dashboard named 'Service health' (use search/dashboards to find it, e.g. via the Dashboards browse page or the search bar). Once it is displayed, report the exact titles of every panel on that dashboard, exactly as shown on screen, in order. Also report the dashboard's URL.",
+      "skill": "s_d1d278",
+      "params": {},
+      "outputs": [
+        "dashboard_url",
+        "dashboard_name_breadcrumb",
+        "folder",
+        "panel_title_request_rate",
+        "panel_title_error_count",
+        "panel_title_latency_by_endpoint",
+        "panel_titles_in_order_1",
+        "panel_titles_in_order_2",
+        "panel_titles_in_order_3"
+      ],
+      "recorded": {
+        "dashboard_url": "http://127.0.0.1:3000/d/bench-service-health/service-health?from=now-6h&to=now&timezone=browser",
+        "panel_count": "3",
+        "dashboard_name_breadcrumb": "Service Health",
+        "folder": "bench",
+        "panel_title_request_rate": "Request rate",
+        "panel_title_error_count": "Error count",
+        "panel_title_latency_by_endpoint": "Latency by endpoint",
+        "panel_titles_in_order_1": "Request rate",
+        "panel_titles_in_order_2": "Error count",
+        "panel_titles_in_order_3": "Latency by endpoint",
+        "url": "http://127.0.0.1:3000/d/bench-service-health/service-health?from=now-6h&to=now&timezone=browser"
+      },
+      "route": "http://127.0.0.1:3000/d/bench-service-health/service-health",
+      "outputEvidence": {
+        "dashboard_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "panel_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "dashboard_name_breadcrumb": {
+          "same": 1,
+          "differed": 0
+        },
+        "folder": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "panel_title_request_rate": {
+          "same": 1,
+          "differed": 0
+        },
+        "panel_title_error_count": {
+          "same": 1,
+          "differed": 0
+        },
+        "panel_title_latency_by_endpoint": {
+          "same": 1,
+          "differed": 0
+        },
+        "panel_titles_in_order_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "panel_titles_in_order_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "panel_titles_in_order_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "03-create",
+      "instruction": "Create a NEW Grafana dashboard. Steps: from the Dashboards browse page click 'New' then 'New dashboard', choose 'Add visualization', and select the 'TestData DB' data source (a TestData data source). In the panel editor, change the panel type to 'Stat' (use the visualization type switcher at top-left of the editor). Set the panel's title to exactly: {{runid}} Availability. Make sure the query uses the TestData data source (e.g. scenario 'Random Walk' or the default). Click Apply. Then save the dashboard with the save button, and in the save dialog set the dashboard title to exactly: {{runid}} Bench Dashboard, then click Save. Verify the dashboard is saved (no unsaved-changes indicator, title shown in the top bar). Report the dashboard title, the panel title shown on the dashboard, and the page URL.",
+      "skill": "s_2e5b1c",
+      "params": {
+        "v2": "Stat",
+        "v3": "{{runid}} Availability",
+        "v4": "{{runid}} Bench Dashboard",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "dashboard_title",
+        "panel_title",
+        "panel_type",
+        "data_source",
+        "dashboard_url",
+        "saved_confirmation",
+        "stat_panel_sample_value",
+        "run_id"
+      ],
+      "recorded": {
+        "dashboard_title": "fwgr48-n1 Bench Dashboard",
+        "panel_title": "fwgr48-n1 Availability",
+        "panel_type": "Stat",
+        "data_source": "TestData (TestData DB), scenario Random Walk",
+        "dashboard_url": "http://127.0.0.1:3000/d/afyg8lxjmafpca/fwgr48-n1-bench-dashboard?from=now-6h&to=now&timezone=browser",
+        "saved_confirmation": "Dashboard saved (status alert in live DOM)",
+        "stat_panel_sample_value": "88.0",
+        "run_id": "fwgr48-n1",
+        "grafana_version": "v11.3.0",
+        "url": "http://127.0.0.1:3000/d/afyg8lxjmafpca/fwgr48-n1-bench-dashboard?from=now-6h&to=now&timezone=browser",
+        "url.p1": "afyg8lxjmafpca",
+        "url.p2": "fwgr48-n1-bench-dashboard"
+      },
+      "route": "http://127.0.0.1:3000/d/afyg8lxjmafpca/:id"
+    },
+    {
+      "id": "04-open",
+      "instruction": "On the currently open dashboard '{{runid}} Bench Dashboard', add a NEW Text panel. Steps: click the 'Add' button in the top toolbar and choose 'Visualization' (or use the dashboard menu > Add > Visualization), then in the panel editor switch the panel type to 'Text'. Set the panel title to exactly: {{runid}} Notes. In the text panel's content editor, enter markdown content that includes the runid, e.g.: Bench run {{runid}} — created for the dashboard build flow test. Then apply the panel (this build uses 'Back to dashboard' to apply) and SAVE the dashboard (click Save dashboard, confirm Save in the save dialog). Verify the save succeeded (a 'Dashboard saved' confirmation appears and there is no unsaved-changes indicator). Report the panel title shown on the dashboard, the text content visible in the panel, and whether the save confirmation appeared.",
+      "skill": "s_8581ae",
+      "params": {
+        "v1": "{{runid}} Bench Dashboard",
+        "v3": "{{runid}} Notes",
+        "v4": "Bench run {{runid}} — created for the dashboard build flow test.",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "dashboard_title",
+        "new_panel_title",
+        "text_panel_content",
+        "save_confirmation",
+        "unsaved_changes_indicator",
+        "text_panel_toolbar_path",
+        "final_url",
+        "save_button_label",
+        "run_id"
+      ],
+      "recorded": {
+        "dashboard_title": "fwgr48-n1 Bench Dashboard",
+        "new_panel_title": "fwgr48-n1 Notes",
+        "text_panel_content": "Bench run fwgr48-n1 — created for the dashboard build flow test.",
+        "panel_type": "Text",
+        "save_confirmation": "Dashboard saved (status alert shown in live DOM immediately after clicking Save)",
+        "unsaved_changes_indicator": "none found (no dirty-state element on the Save dashboard button)",
+        "text_panel_toolbar_path": "Edit (dashboard edit mode) > Add > Visualization",
+        "final_url": "http://127.0.0.1:3000/d/afyg8lxjmafpca/fwgr48-n1-bench-dashboard?from=now-6h&to=now&timezone=browser",
+        "save_button_label": "Save dashboard",
+        "run_id": "fwgr48-n1"
+      },
+      "route": "http://127.0.0.1:3000/d/afyg8lxjmafpca/:id",
+      "urlVariance": [
+        "afyg8lxjmafpca",
+        "efyg9m4qwpla8f"
+      ]
+    },
+    {
+      "id": "05-open",
+      "instruction": "On the currently open dashboard '{{runid}} Bench Dashboard', do two things and make sure they are PERSISTED: (1) Add the tag '{{02-open.folder}}' to the dashboard: open dashboard settings via the gear/cog icon in the top bar, find the Tags field, add the tag '{{02-open.folder}}', and save the settings. (2) Set the dashboard time range to the last 6 hours AND persist it into the saved dashboard: open the time picker in the top bar, choose 'Last 6 hours' (or set from = now-6h, to = now), then click the Save dashboard button; in the save dialog TICK the checkbox 'Update default time range' before clicking Save. Verify a 'Dashboard saved' confirmation appears. Report: the tags now shown in dashboard settings (or on the dashboard), the time range shown in the top bar, whether the 'Update default time range' checkbox was ticked, and the save confirmation.",
+      "skill": "s_758820",
+      "params": {
+        "v1": "{{runid}} Bench Dashboard",
+        "v3": "{{02-open.folder}}",
+        "v4": "Save dashboard",
+        "v2": "{{runid}}",
+        "v5": "{{03-create.url.p1}}"
+      },
+      "outputs": [
+        "dashboard_title",
+        "save_confirmation",
+        "tag_remove_control_seen",
+        "tags_in_settings",
+        "time_range_topbar",
+        "update_default_time_range_checkbox",
+        "verified_persisted",
+        "final_url",
+        "dashboard_slug",
+        "run_id",
+        "panel_titles_in_order_1",
+        "panel_titles_in_order_2"
+      ],
+      "recorded": {
+        "dashboard_title": "fwgr48-n1 Bench Dashboard",
+        "save_confirmation": "Dashboard saved (status alert shown in live DOM after clicking Save in the dialog)",
+        "tag_remove_control_seen": "Remove \"bench\" tag",
+        "tags_in_settings": "bench",
+        "time_range_topbar": "Last 6 hours",
+        "update_default_time_range_checkbox": "ticked (label: Update default time range — Will make current time range the new default)",
+        "verified_persisted": "Full page reload of /d/afyg8lxjmafpca/fwgr48-n1-bench-dashboard with no time params: top bar reads 'Last 6 hours' and settings General tab lists the 'bench' tag",
+        "final_url": "http://127.0.0.1:3000/d/afyg8lxjmafpca/fwgr48-n1-bench-dashboard?from=now-6h&to=now&timezone=browser&editview=settings",
+        "dashboard_slug": "fwgr48-n1-bench-dashboard",
+        "ref_2": "6-hour",
+        "run_id": "fwgr48-n1",
+        "panel_titles_in_order_1": "fwgr48-n1 Notes",
+        "panel_titles_in_order_2": "fwgr48-n1 Availability"
+      },
+      "route": "http://127.0.0.1:3000/d/afyg8lxjmafpca/:id"
+    },
+    {
+      "id": "06-open",
+      "instruction": "On the currently open dashboard '{{runid}} Bench Dashboard', set the auto-refresh interval to 1 minute and PERSIST it. Steps: open the time picker in the top bar, find the 'Refresh interval' / 'Auto refresh' section, select '1m' (1 minute) as the refresh interval, and close the picker. Then click 'Save dashboard' and confirm Save in the dialog (tick 'Update default time range' if it is offered, to be safe). Verify a 'Dashboard saved' confirmation appears. Then do a full page reload of the dashboard URL WITHOUT time parameters (http://127.0.0.1:3000/d/{{03-create.url.p1}}/{{runid}}-bench-dashboard) and report what the top-bar time picker shows for the refresh interval after the reload (it should show '1m' or 'refreshing every 1m'), plus the time range shown. Report the refresh interval before and after the reload.",
+      "skill": "s_dc6356",
+      "params": {
+        "v1": "{{runid}} Bench Dashboard",
+        "v3": "Save dashboard",
+        "v6": "http://127.0.0.1:3000/d/{{03-create.url.p1}}/{{runid}}-bench-dashboard",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "dashboard_title",
+        "refresh_interval_before",
+        "refresh_interval_after_reload",
+        "time_range_after_reload",
+        "save_confirmation",
+        "persisted_checkbox_offered",
+        "edit_mode_required",
+        "verified_by_reload",
+        "refresh_interval_before_2",
+        "dashboard_slug"
+      ],
+      "recorded": {
+        "dashboard_title": "fwgr48-n1 Bench Dashboard",
+        "refresh_interval_before": "Off (button aria-label: 'Auto refresh turned off. Choose refresh time interval')",
+        "refresh_interval_after_reload": "1m (button aria-label: 'Choose refresh time interval with current interval 1 minute selected')",
+        "time_range_after_reload": "Last 6 hours",
+        "save_confirmation": "Dashboard saved (status alert shown in live DOM after clicking Save)",
+        "persisted_checkbox_offered": "Dialog offered 'Update default refresh value — Will make the current refresh the new default' (ticked); no 'Update default time range' checkbox was offered since only the refresh value differed",
+        "edit_mode_required": "true — view mode shows no Save dashboard button; it appears after clicking Edit",
+        "verified_by_reload": "goto /d/afyg8lxjmafpca/fwgr48-n1-bench-dashboard (no time params) — top bar renders 'Last 6 hours' and refresh '1m'; panels 'fwgr48-n1 Notes' and 'fwgr48-n1 Availability' present",
+        "refresh_interval_before_2": "Auto refresh turned off. Choose refresh time interval",
+        "dashboard_slug": "fwgr48-n1-bench-dashboard",
+        "url": "http://127.0.0.1:3000/d/afyg8lxjmafpca/fwgr48-n1-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m"
+      },
+      "route": "http://127.0.0.1:3000/d/afyg8lxjmafpca/:id",
+      "urlVariance": [
+        "afyg8lxjmafpca",
+        "efyg9m4qwpla8f",
+        "fwgr48-n1-bench-dashboard",
+        "fwgr48-n2-bench-dashboard"
+      ]
+    },
+    {
+      "id": "07-report",
+      "instruction": "Final verification of the dashboard '{{runid}} Bench Dashboard'. Load it fresh by navigating to http://127.0.0.1:3000/d/{{03-create.url.p1}}/{{runid}}-bench-dashboard (no query params). Then report, reading from the live page: (a) the exact URL currently shown in the browser address bar / page URL; (b) the dashboard title in the top bar; (c) the exact titles of all panels on the dashboard in order; (d) the text content visible in the '{{runid}} Notes' panel; (e) the time range shown in the top-bar time picker; (f) the auto-refresh interval shown in the top bar; (g) open dashboard settings (gear icon) > General and report the tags listed there, then close settings. Do not change anything.",
+      "skill": "s_a6417a",
+      "params": {
+        "v1": "{{runid}} Bench Dashboard",
+        "v6": "http://127.0.0.1:3000/d/{{03-create.url.p1}}/{{runid}}-bench-dashboard",
+        "v5": "{{runid}} Notes",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "a_page_url",
+        "b_dashboard_title_topbar",
+        "d_notes_panel_text",
+        "e_time_range_topbar",
+        "f_auto_refresh_interval_topbar",
+        "g_tags_in_settings_general",
+        "availability_panel_sample_value",
+        "no_changes_made",
+        "final_url",
+        "settings_time_options_heading",
+        "dashboard_slug",
+        "run_id",
+        "c_panel_titles_in_order_1",
+        "c_panel_titles_in_order_2"
+      ],
+      "recorded": {
+        "a_page_url": "http://127.0.0.1:3000/d/afyg8lxjmafpca/fwgr48-n1-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m (address bar after loading the bare URL; Grafana rewrites in the persisted default range + refresh)",
+        "b_dashboard_title_topbar": "fwgr48-n1 Bench Dashboard (breadcrumb: Home / Dashboards / fwgr48-n1 Bench Dashboard)",
+        "d_notes_panel_text": "Bench run fwgr48-n1 — created for the dashboard build flow test.",
+        "e_time_range_topbar": "Last 6 hours",
+        "f_auto_refresh_interval_topbar": "1m (button aria-label 'Choose refresh time interval with current interval 1 minute selected')",
+        "g_tags_in_settings_general": "bench",
+        "availability_panel_sample_value": "49.4",
+        "no_changes_made": "true — settings opened and closed via 'Back to dashboard'; nothing edited or saved",
+        "final_url": "http://127.0.0.1:3000/d/afyg8lxjmafpca/fwgr48-n1-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m",
+        "settings_time_options_heading": "Time options",
+        "dashboard_slug": "fwgr48-n1-bench-dashboard",
+        "time_from_param": "now-6h",
+        "run_id": "fwgr48-n1",
+        "c_panel_titles_in_order_1": "fwgr48-n1 Notes",
+        "c_panel_titles_in_order_2": "fwgr48-n1 Availability"
+      },
+      "route": "http://127.0.0.1:3000/d/afyg8lxjmafpca/:id",
+      "urlVariance": [
+        "afyg8lxjmafpca",
+        "efyg9m4qwpla8f",
+        "fwgr48-n1-bench-dashboard",
+        "fwgr48-n2-bench-dashboard"
+      ]
+    },
+    {
+      "id": "08-edit",
+      "instruction": "On the dashboard '{{runid}} Bench Dashboard', click the '{{runid}} Availability' panel's title/menu and choose Edit to open the panel editor. From the panel editor, report: (a) the panel type currently selected (shown in the visualization type picker at the top-left of the editor, e.g. 'Stat'); (b) the data source selected for the panel's query (shown in the query tab's data source picker, e.g. 'TestData DB'); (c) the panel title field value. Then click 'Back to dashboard' without changing anything, and do NOT save.",
+      "skill": "s_7b78f6",
+      "params": {
+        "v1": "{{runid}} Bench Dashboard",
+        "v3": "{{runid}} Availability",
+        "v4": "Stat",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "a_panel_type_selected",
+        "c_panel_title_field_value",
+        "no_changes_saved",
+        "viz_type_selected",
+        "final_url",
+        "run_id",
+        "panels_in_order_after_1",
+        "panels_in_order_after_2"
+      ],
+      "recorded": {
+        "a_panel_type_selected": "Stat (visualization type picker at top-left of the panel editor)",
+        "b_panel_data_source": "TestData — picker renders the 'TestData logo' (no name text); picker dropdown lists 'TestData / default / TestData'; query row loads the TestData editor with Scenario: Random Walk, plus Alias, Labels, Series count, Start value, Min, Max, Spread, Noise, Drop (%)",
+        "c_panel_title_field_value": "fwgr48-n1 Availability",
+        "no_changes_saved": "true — nothing edited; left the editor via 'Back to dashboard' then 'Exit edit'; no save performed and no dialog appeared",
+        "post_state": "dashboard in view mode; time picker 'Last 6 hours'; refresh '1m'",
+        "viz_type_selected": "Stat",
+        "final_url": "http://127.0.0.1:3000/d/afyg8lxjmafpca/fwgr48-n1-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m",
+        "run_id": "fwgr48-n1",
+        "panels_in_order_after_1": "fwgr48-n1 Notes",
+        "panels_in_order_after_2": "fwgr48-n1 Availability"
+      },
+      "route": "http://127.0.0.1:3000/d/afyg8lxjmafpca/:id",
+      "urlVariance": [
+        "afyg8lxjmafpca",
+        "efyg9m4qwpla8f"
+      ]
+    }
+  ],
+  "provenance": {
+    "session": "fwgr48-n1",
+    "created": "2026-09-16T18:13:13.819Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "02-open",
+      "outputs": [
+        "panel_count"
+      ]
+    },
+    {
+      "stepId": "03-create",
+      "outputs": [
+        "grafana_version"
+      ]
+    },
+    {
+      "stepId": "04-open",
+      "outputs": [
+        "panel_type"
+      ]
+    },
+    {
+      "stepId": "05-open",
+      "outputs": [
+        "ref_2"
+      ]
+    },
+    {
+      "stepId": "07-report",
+      "outputs": [
+        "time_from_param"
+      ]
+    },
+    {
+      "stepId": "08-edit",
+      "outputs": [
+        "b_panel_data_source",
+        "post_state"
+      ]
+    }
+  ]
+}

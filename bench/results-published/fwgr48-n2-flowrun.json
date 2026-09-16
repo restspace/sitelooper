@@ -1,0 +1,224 @@
+{
+  "flow": "fwgr48",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Signed in to Grafana with admin/admin; the \"Update your password\" prompt appeared after login and was skipped via its \"Skip\" button. The app then landed on the Grafana home page (URL http://127.0.0.1:3000/?from=now-6h&to=now&timezone=browser), which shows the \"Welcome to Grafana\" heading, Dashboards region, and help/blog panels — with an unrelated \"Error loading RSS feed\" alert from the News panel.",
+      "values": {
+        "final_url": "http://127.0.0.1:3000/?from=now-6h&to=now&timezone=browser",
+        "landing_page_heading": "Welcome to Grafana"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_efb0c8; observed dashboard_url=http://127.0.0.1:3000/d/bench-service-health/service-health?from=now-6h&to=now&timezone=browser, dashboard_name_breadcrumb=Service Health, panel_title_request_rate=Request rate, panel_title_error_count=Error count, panel_title_latency_by_endpoint=Latency by endpoint, panel_titles_in_order_1=Request rate, panel_titles_in_order_2=Error count, panel_titles_in_order_3=Latency by endpoint.",
+      "values": {
+        "dashboard_url": "http://127.0.0.1:3000/d/bench-service-health/service-health?from=now-6h&to=now&timezone=browser",
+        "dashboard_name_breadcrumb": "Service Health",
+        "panel_title_request_rate": "Request rate",
+        "panel_title_error_count": "Error count",
+        "panel_title_latency_by_endpoint": "Latency by endpoint",
+        "panel_titles_in_order_1": "Request rate",
+        "panel_titles_in_order_2": "Error count",
+        "panel_titles_in_order_3": "Latency by endpoint"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "folder"
+      ]
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Created a new dashboard in Grafana: New → New dashboard → Add visualization with the TestData data source (scenario Random Walk, default), switched the panel type to Stat, set the panel title to \"fwgr48-n2 Availability\", and returned to the dashboard. Note: this Grafana build's panel editor has NO \"Apply\" button (the slot between \"Back to dashboard\" and \"Discard panel\" renders empty), so I used the equivalent \"Back to dashboard\" action to apply the panel. Saved via \"Save dashboard\", setting the dashboard title to \"fwgr48-n2 Bench Dashboard\"; the app confirmed \"Dashboard saved\", the top bar/breadcrumb now shows that title, and the dashboard renders the panel region \"fwgr48-n2 Availability\" with a live TestData value (15.5).",
+      "values": {
+        "panel_type": "Stat",
+        "run_id": "fwgr48-n2",
+        "dashboard_title": "fwgr48-n2 Bench Dashboard",
+        "dashboard_url": "http://127.0.0.1:3000/d/efyg9m4qwpla8f/fwgr48-n2-bench-dashboard?from=now-6h&to=now&timezone=browser",
+        "panel_title": "fwgr48-n2 Availability",
+        "stat_panel_sample_value": "15.5"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_8581ae; observed new_panel_title=fwgr48-n2 Notes, text_panel_content=Bench run fwgr48-n2 — created for the dashboard build flow test., run_id=fwgr48-n2, dashboard_title=fwgr48-n2 Bench Dashboard, final_url=http://127.0.0.1:3000/d/efyg9m4qwpla8f/fwgr48-n2-bench-dashboard?from=now-6h&to=now&timezone=browser.",
+      "values": {
+        "new_panel_title": "fwgr48-n2 Notes",
+        "text_panel_content": "Bench run fwgr48-n2 — created for the dashboard build flow test.",
+        "run_id": "fwgr48-n2",
+        "dashboard_title": "fwgr48-n2 Bench Dashboard",
+        "final_url": "http://127.0.0.1:3000/d/efyg9m4qwpla8f/fwgr48-n2-bench-dashboard?from=now-6h&to=now&timezone=browser"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "18/18",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "save_button_label"
+      ]
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Replayed the matching stored procedure s_758820 (16/16 steps ok, supplying this run's real dashboard uid efyg9m4qwpla8f for v5 in place of the recorded one) to add the tag \"bench\" in dashboard settings and save, and to set the time range to Last 6 hours with the save dialog's \"Update default time range\" checkbox ticked (step result: check checked=true) before saving. Both changes are persisted, confirmed independently: re-opening dashboard settings still shows the tag chip 'Remove \"bench\" tag' (the value read off the page), and loading the bare dashboard URL with no query parameters renders the top-bar picker as \"Last 6 hours\" with live panel values, proving the 6-hour default was written into the saved dashboard. A save alert toast appeared and dismissed during the save; the literal \"Dashboard saved\" string was not captured after the fact, so persistence across a clean reload was used as verification. Final page: dashboard 'fwgr48-n2 Bench Dashboard' at http://127.0.0.1:3000/d/efyg9m4qwpla8f/fwgr48-n2-bench-dashboard, panels 'fwgr48-n2 Notes' and 'fwgr48-n2 Availability'.",
+      "values": {
+        "dashboard_title": "fwgr48-n2 Bench Dashboard",
+        "dashboard_uid": "efyg9m4qwpla8f",
+        "tag_added": "bench",
+        "settings_tag_chip_label": "Remove \"bench\" tag",
+        "settings_tags_verified": "chip 'Remove \"bench\" tag' present in Settings > General after save",
+        "update_default_time_range_checkbox_ticked": "true",
+        "time_range_topbar": "Last 6 hours",
+        "time_range_persisted_on_clean_reload": "Last 6 hours (bare URL with no from/to params)",
+        "panel_titles_in_order_1": "fwgr48-n2 Notes",
+        "panel_titles_in_order_2": "fwgr48-n2 Availability",
+        "panel_1_visible_text": "Bench run fwgr48-n2 — created for the dashboard build flow test.",
+        "save_confirmation": "save alert toast appeared then dismissed (literal 'Dashboard saved' text not captured); persistence verified instead",
+        "final_url": "http://127.0.0.1:3000/d/efyg9m4qwpla8f/fwgr48-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&editview=settings",
+        "ref": "s_758820",
+        "ref_2": "6-hour",
+        "ref_3": "fwgr48-n2"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 02-open.folder, 02-open.folder, 02-open.folder",
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 19,
+      "unreported": [
+        "tag_remove_control_seen",
+        "tags_in_settings",
+        "dashboard_slug",
+        "run_id"
+      ]
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "Set auto-refresh to 1 minute via the top-bar refresh picker (1m) and persisted it. Because this build shows no Save dashboard button in view mode, I clicked 'Edit' to enter edit mode, then Save dashboard; the dialog reported 'No changes to save' until I ticked the offered 'Update default refresh value — Will make the current refresh the new default' checkbox (no 'Update default time range' checkbox was offered, as only the refresh value differed), which enabled Save; after clicking Save the 'Dashboard saved' status alert appeared. Verified with a full reload of /d/{{v4}}/{{v5}} with no time parameters: the refresh interval button now reads '1m' (aria-label '...current interval 1 minute selected') and the time picker reads 'Last 6 hours'. Refresh interval before: Off (\"Auto refresh turned off\"); after reload: 1m.",
+      "values": {
+        "edit_mode_required": "true — view mode shows no Save dashboard button; it appears after clicking Edit",
+        "refresh_interval_before_2": "Auto refresh turned off. Choose refresh time interval",
+        "dashboard_title": "fwgr48-n2 Bench Dashboard",
+        "time_range_after_reload": "Last 6 hours"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "verified_by_reload",
+        "dashboard_slug"
+      ]
+    },
+    {
+      "id": "07-report",
+      "status": "success",
+      "summary": "Replayed stored procedure s_a6417a; observed a_page_url=http://127.0.0.1:3000/d/efyg9m4qwpla8f/fwgr48-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m (address bar after loading the bare URL; Grafana rewrites in the persisted default range + refresh), b_dashboard_title_topbar=fwgr48-n2 Bench Dashboard (breadcrumb: Home / Dashboards / fwgr48-n2 Bench Dashboard), run_id=fwgr48-n2, final_url=http://127.0.0.1:3000/d/efyg9m4qwpla8f/fwgr48-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m, g_tags_in_settings_general=bench, settings_time_options_heading=Time options, d_notes_panel_text=Bench run fwgr48-n2 — created for the dashboard build flow test., e_time_range_topbar=Last 6 hours, availability_panel_sample_value=93.0, c_panel_titles_in_order_1=fwgr48-n2 Notes, c_panel_titles_in_order_2=fwgr48-n2 Availability.",
+      "values": {
+        "a_page_url": "http://127.0.0.1:3000/d/efyg9m4qwpla8f/fwgr48-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m (address bar after loading the bare URL; Grafana rewrites in the persisted default range + refresh)",
+        "b_dashboard_title_topbar": "fwgr48-n2 Bench Dashboard (breadcrumb: Home / Dashboards / fwgr48-n2 Bench Dashboard)",
+        "run_id": "fwgr48-n2",
+        "final_url": "http://127.0.0.1:3000/d/efyg9m4qwpla8f/fwgr48-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m",
+        "g_tags_in_settings_general": "bench",
+        "settings_time_options_heading": "Time options",
+        "d_notes_panel_text": "Bench run fwgr48-n2 — created for the dashboard build flow test.",
+        "e_time_range_topbar": "Last 6 hours",
+        "availability_panel_sample_value": "93.0",
+        "c_panel_titles_in_order_1": "fwgr48-n2 Notes",
+        "c_panel_titles_in_order_2": "fwgr48-n2 Availability"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "dashboard_slug"
+      ]
+    },
+    {
+      "id": "08-edit",
+      "status": "success",
+      "summary": "Opened the 'fwgr48-n2 Availability' panel editor via the panel menu (hover → 'Menu for panel with title fwgr48-n2 Availability' → Edit) and read from the live editor: (a) the visualization type picker shows 'Stat'; (b) the query's data source picker renders the 'TestData logo' and its dropdown lists 'TestData / default / TestData', with the query row loading the TestData query editor (Scenario 'Random Walk', Alias, Labels, Series count, Start value, Min, Max, Spread, Noise, Drop %), so the panel query uses the TestData (TestData DB) data source; (c) the Title field contains exactly 'fwgr48-n2 Availability'. Then I clicked 'Back to dashboard' and 'Exit edit' to leave edit mode, changing nothing and performing no save — no confirmation dialog appeared and the dashboard is back in view mode showing both panels under 'fwgr48-n2 Bench Dashboard' (time range 'Last 6 hours', refresh '1m').",
+      "values": {
+        "a_panel_type_selected": "Stat (visualization type picker at top-left of the panel editor)",
+        "run_id": "fwgr48-n2",
+        "viz_type_selected": "Stat",
+        "c_panel_title_field_value": "fwgr48-n2 Availability",
+        "final_url": "http://127.0.0.1:3000/d/efyg9m4qwpla8f/fwgr48-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m",
+        "panels_in_order_after_1": "fwgr48-n2 Notes",
+        "panels_in_order_after_2": "fwgr48-n2 Availability"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 8,
+  "total": 8,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwgr48",
+      "step": "05-open",
+      "skill": "s_758820",
+      "similarity": 1,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 02-open.folder, 02-open.folder, 02-open.folder",
+      "pageUrlPattern": "http://127.0.0.1:3000/d/efyg9m4qwpla8f/:id?from=:id&timezone=browser&to=now",
+      "pageUrl": "http://127.0.0.1:3000/d/efyg9m4qwpla8f/fwgr48-n2-bench-dashboard?from=now-6h&to=now&timezone=browser"
+    }
+  ],
+  "wallMs": 254693,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 292897,
+    "completionTokens": 7063,
+    "cachedTokens": 266752
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 292897,
+      "completionTokens": 7063,
+      "cachedTokens": 266752
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
