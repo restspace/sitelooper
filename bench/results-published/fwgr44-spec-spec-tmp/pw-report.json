@@ -1,0 +1,204 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwgr44-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwgr44-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwgr44-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwgr44-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwgr44.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwgr44-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwgr44.spec.ts",
+      "file": "fwgr44.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwgr44",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 3570000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 77027,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe monaco/set-value (r_f2510e); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-add\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-add\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-set\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-report\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 07-open\n"
+                    }
+                  ],
+                  "stderr": [
+                    {
+                      "text": "[sitelooper warn] 02-create s_38a7a8/7: read 'panel_title' returned a value the skill itself set/selected ('fwgr44-spec Availability') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-add s_064569/7: read 'panel_notes_title' returned a value the skill itself set/selected ('fwgr44-spec Notes') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-add s_064569/15: read 'panel_notes_title' returned a value the skill itself set/selected ('fwgr44-spec Notes') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-add s_064569/16: read 'panel_notes_content' returned a value the skill itself set/selected ('Bench notes for run fwgr44-spec') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 04-add s_84d544/15: read 'tags_in_settings' returned a value the skill itself set/selected ('bench') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 06-report s_d20250/4 target: primary locator('[data-testid=\"data-testid TimePicker Open Button\"] span') missed; used #2 locator('div:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(1) > div > span > span:nth-of-type(1)') (#1 ambiguous)\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 06-report s_d20250/13 target: primary locator('[data-testid=\"data-testid TimePicker Open Button\"] span') missed; used #2 locator('div:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(1) > div > span > span:nth-of-type(1)') (#1 ambiguous)\n"
+                    }
+                  ],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in to Grafana with username admin and password admin (skip/change password prompt if it appears, keeping the default password). Then open the provisioned dashboard named 'Service health' (search for it via the dashboards search). Report the titles of all panels on that dashboard exactly as shown on screen, one per line.",
+                      "duration": 7205
+                    },
+                    {
+                      "title": "02-create: Create a NEW dashboard in Grafana. Add a visualization panel, set its type to 'Stat', set the panel title to exactly '{{runid}} Availability', and set its data source to 'TestData' (the TestData DB data source) with a query (e.g. the default scenario). Set the dashboard title to exactly '{{runid}} {{01-signin.dashboard_folder}} Dashboard'. Save the dashboard (choose a folder if prompted, e.g. General or {{01-signin.dashboard_folder}}). Verify the save succeeded and report the panel title, panel type, data source name, and dashboard title as shown on screen.",
+                      "duration": 22024
+                    },
+                    {
+                      "title": "03-add: On the existing Grafana dashboard titled '{{runid}} {{01-signin.dashboard_folder}} Dashboard' (UID {{02-create.url.p1}}), add a NEW Text panel. Set the panel title to exactly '{{runid}} Notes' and set the text content to include the runid, e.g. '{{01-signin.dashboard_folder}} notes for run {{runid}}'. Then SAVE the dashboard (explicitly save; if a save dialog appears, confirm/save changes). Verify the save succeeded and report the panel title and the text content as shown on the dashboard after saving.",
+                      "duration": 9760
+                    },
+                    {
+                      "title": "04-add: On the Grafana dashboard '{{runid}} {{01-signin.dashboard_folder}} Dashboard' (UID {{02-create.url.p1}}): (1) In the dashboard settings, add the tag 'bench' to the dashboard's tags. (2) Set the dashboard time range to 'Last 6 hours' using the top time picker. (3) Save the dashboard, and in the save dialog TICK the 'Update default time range' checkbox so the 6-hour range is persisted into the saved dashboard, then confirm the save. Verify the save succeeded (e.g. 'Dashboard saved' alert) and report the tags shown in dashboard settings and the time range shown in the top bar.",
+                      "duration": 14051
+                    },
+                    {
+                      "title": "05-set: On the Grafana dashboard '{{runid}} {{01-signin.dashboard_folder}} Dashboard' (UID {{02-create.url.p1}}): set the dashboard's auto-refresh interval to '1m' using the refresh interval selector in the top time picker (the dropdown next to the time range that says something like 'Auto refresh: Off' or a refresh interval value). Then SAVE the dashboard explicitly so the refresh interval is persisted (confirm the save, e.g. 'Dashboard saved' alert). After saving, reload the dashboard page and verify the refresh interval still shows 1m, and report the exact value shown in the refresh selector.",
+                      "duration": 7195
+                    },
+                    {
+                      "title": "06-report: Navigate to the Grafana dashboard '{{runid}} {{01-signin.dashboard_folder}} Dashboard' (UID {{02-create.url.p1}}) with a clean URL (no query params), let it load, and then report: (a) the exact current page URL as shown in the browser address bar, (b) the dashboard title shown in the breadcrumb, (c) the titles of all panels on the dashboard, (d) the time range shown in the top time picker, (e) the refresh interval shown in the refresh selector, and (f) the dashboard tags (visible in dashboard settings > General if needed). Do not change anything.",
+                      "duration": 11516
+                    },
+                    {
+                      "title": "07-open: On the Grafana dashboard '{{runid}} {{01-signin.dashboard_folder}} Dashboard' (UID {{02-create.url.p1}}), open the panel editor for the panel titled '{{runid}} Availability' (Edit panel). In the editor, report: (a) the currently selected visualization type (shown in the visualization picker at the top right of the editor), (b) the data source name shown in the query editor for query A, and (c) the panel title field value. Do not change anything — just read and then exit the editor without saving.",
+                      "duration": 4270
+                    }
+                  ],
+                  "startTime": "2026-09-16T10:25:59.367Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": "W3NpdGVsb29wZXIgZHJpZnRdIDA2LXJlcG9ydCBzX2QyMDI1MC80IHRhcmdldDogcHJpbWFyeSBsb2NhdG9yKCdbZGF0YS10ZXN0aWQ9ImRhdGEtdGVzdGlkIFRpbWVQaWNrZXIgT3BlbiBCdXR0b24iXSBzcGFuJykgbWlzc2VkOyB1c2VkICMyIGxvY2F0b3IoJ2RpdjpudGgtb2YtdHlwZSgyKSA+IGRpdjpudGgtb2YtdHlwZSgxKSA+IGJ1dHRvbjpudGgtb2YtdHlwZSgxKSA+IGRpdiA+IHNwYW4gPiBzcGFuOm50aC1vZi10eXBlKDEpJykgKCMxIGFtYmlndW91cykKW3NpdGVsb29wZXIgZHJpZnRdIDA2LXJlcG9ydCBzX2QyMDI1MC8xMyB0YXJnZXQ6IHByaW1hcnkgbG9jYXRvcignW2RhdGEtdGVzdGlkPSJkYXRhLXRlc3RpZCBUaW1lUGlja2VyIE9wZW4gQnV0dG9uIl0gc3BhbicpIG1pc3NlZDsgdXNlZCAjMiBsb2NhdG9yKCdkaXY6bnRoLW9mLXR5cGUoMikgPiBkaXY6bnRoLW9mLXR5cGUoMSkgPiBidXR0b246bnRoLW9mLXR5cGUoMSkgPiBkaXYgPiBzcGFuID4gc3BhbjpudGgtb2YtdHlwZSgxKScpICgjMSBhbWJpZ3VvdXMp"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f4a9bed30ae9d17de6b3-8a40e8f82e478c6199a3",
+          "file": "fwgr44.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-16T10:25:57.542Z",
+    "duration": 79018.473,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
