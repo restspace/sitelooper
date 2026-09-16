@@ -1,0 +1,9 @@
+flow: /home/user/sitelooper/bench/results/fwrd63-spec-spec-tmp/fwrd63.flow.ts
+spec: /home/user/sitelooper/bench/results/fwrd63-spec-spec-tmp/fwrd63.spec.ts
+warning 07-find: 07-find read a value that contradicts what the previous step reported
+  why: 07-find read status_after_attempt "Draft" right after 06-set reported "Paragraph 'Status' + generic 'Ready'; buttons 'Mark Draft', 'Mark Closed', 'Archive ticket'; parts note: 'Price is calculated from cost and markup when the part is saved.'"; 06-set's change may not have landed and a later step may be retrying it. Re-record 06-set.
+  fix: sitelooper rerecord bench/results/flows/fwrd63.json 06-set
+
+  warning: 02-create: step 5 (read raised_date) has no locator left — it publishes nothing, as replay skips it
+  warning: 03-add: step 9 (read ticket_total_label) has no locator left — it publishes nothing, as replay skips it
+  warning: 04-add: step 9 (read ticket_total_label) has no locator left — it publishes nothing, as replay skips it

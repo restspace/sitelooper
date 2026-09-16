@@ -1,0 +1,206 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwrd63-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwrd63-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwrd63-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwrd63-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwrd63.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwrd63-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwrd63.spec.ts",
+      "file": "fwrd63.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwrd63",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 2820000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 36502,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-add\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-add\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-edit\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-set\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 07-find\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 08-delete\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 09-create\n"
+                    }
+                  ],
+                  "stderr": [
+                    {
+                      "text": "[sitelooper skip] 02-create s_3dac23/5 target: no locator recorded — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 03-add s_9aca0b/9 target: no locator recorded — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 03-add s_9aca0b/10 target: read target not found — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 04-add s_9aca0b/9 target: no locator recorded — value left empty\n"
+                    }
+                  ],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:4180/ and sign in with email bench@example.com and password bench-pass-1234. After signing in, report briefly what the app's main screens or navigation are (e.g. tickets list, parts, etc.) and confirm you are signed in.",
+                      "duration": 3788
+                    },
+                    {
+                      "title": "02-create: From the tickets list, create a new ticket titled exactly '{{runid}} RD Bench Ticket'. Fill in any required fields with sensible values (e.g. a customer name) and submit. Wait for the list/detail view to refresh and confirm the new ticket appears. Report the ticket's reference/ID, its title as shown, its initial status, and the customer you entered.",
+                      "duration": 4530
+                    },
+                    {
+                      "title": "03-add: On the ticket detail page for ticket {{02-create.ticket_reference}} (titled '{{runid}} RD Bench Ticket'), add a part named exactly '{{runid}} RD Part A' with cost 100 and markup 25. Fill any other fields with sensible defaults (e.g. quantity 1, a supplier if offered). Save it, wait for the parts table to refresh, and report the full row as shown: name, cost, markup, quantity, supplier, and the computed Price value the app displays, plus the ticket Total.",
+                      "duration": 6557
+                    },
+                    {
+                      "title": "04-add: On the ticket detail page for ticket {{02-create.ticket_reference}} (titled '{{runid}} RD Bench Ticket'), add a second part named exactly '{{runid}} RD Part B' with cost 200 and markup 25. Fill any other fields with sensible defaults (e.g. quantity 1, a supplier if offered). Save it, wait for the parts table to refresh, and report the full row as shown: name, cost, markup, quantity, supplier, and the computed Price value the app displays, plus the ticket Total.",
+                      "duration": 3459
+                    },
+                    {
+                      "title": "05-edit: On the ticket detail page for ticket {{02-create.ticket_reference}}, edit the part named '{{runid}} RD Part A' to change its cost from 100 to 150, keeping markup at 25. Save the edit, wait for the parts table to refresh, and report the full updated row as shown (name, cost, markup, quantity, supplier, computed Price) plus the ticket Total.",
+                      "duration": 1538
+                    },
+                    {
+                      "title": "06-set: On the ticket detail page for ticket {{02-create.ticket_reference}} (titled '{{runid}} RD Bench Ticket'), attempt to set the ticket status to 'Ready' (there is a 'Mark Ready' action). The app enforces preconditions before accepting that status — if it refuses, read the exact error/validation message it shows and report it verbatim. Do NOT change or delete any parts and do NOT archive the ticket. Report: the exact message shown (if any), the ticket's current status after the attempt, and what the app appears to require.",
+                      "duration": 4339
+                    },
+                    {
+                      "title": "07-find: In the tickets list, find an EXISTING ticket (NOT {{02-create.ticket_reference}}, and not any ticket titled '{{runid}} RD Bench Ticket') that is in {{01-open.ticket_status}} status and has 0 parts. Open its detail page and click its 'Mark Ready' action. Report verbatim any error, validation, or refusal message the app shows, and the ticket's status after the attempt. If the app instead accepted the change (status became Ready), click '{{06-set.status_actions_available_now_1}}' to revert it back to {{01-open.ticket_status}} and confirm it is {{01-open.ticket_status}} again. Do not add, edit, or delete any parts on that ticket and do not archive it. Report: the ticket reference used, its parts count, the exact message shown (verbatim), and its final status.",
+                      "duration": 2837
+                    },
+                    {
+                      "title": "08-delete: On the ticket detail page for ticket {{02-create.ticket_reference}} (titled '{{runid}} RD Bench Ticket'), delete BOTH parts: '{{runid}} RD Part A' and '{{runid}} RD Part B'. Confirm any confirmation dialogs. Wait for the parts table to refresh after each delete and verify both rows are gone (the table should show no parts). Then archive the ticket using the '{{06-set.status_actions_available_now_3}}' action, confirming any confirmation dialog. Report: the parts table state after both deletions, the exact confirmation text shown for the archive, and the ticket's final status/state as shown on the page and in the tickets list.",
+                      "duration": 6049
+                    },
+                    {
+                      "title": "09-create: Final verification, read-only — do not create, edit, or delete anything. Go to the tickets list WITHOUT 'Show archived' ticked and confirm that no ticket titled '{{runid}} RD Bench Ticket' appears in the active list. Then tick 'Show archived' and confirm the ticket {{02-create.ticket_reference}} appears with an Archived marker, status Ready, and 0 parts. Report exactly what you see in both cases.",
+                      "duration": 3165
+                    }
+                  ],
+                  "startTime": "2026-09-16T18:10:04.398Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "7102054fa4a8164fde91-782847e5539b1031c6d8",
+          "file": "fwrd63.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-16T18:10:02.618Z",
+    "duration": 38440.880000000005,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

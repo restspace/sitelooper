@@ -1,0 +1,223 @@
+{
+  "flow": "fwrd63",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Signed in to Repair Desk at http://127.0.0.1:4180/ with bench@example.com / bench-pass-1234 and confirmed a signed-in session — the header shows the account name \"Bench User\" alongside a \"Sign out\" button, and the app routed from the sign-in page to the tickets list at /#/tickets. The app's navigation is a single top-level \"Main\" nav with one link, Tickets (linked to a brand/home logo \"Repair Desk\"). Main screens: (1) a sign-in screen (email + password), (2) a Tickets list (#/tickets) showing tickets such as RD-1014 with Title, Customer, and Status columns, and (3) a Ticket detail screen (#/tickets/t14) reached by clicking a row, which shows a breadcrumb back to Tickets, the ticket reference and heading, customer/raised date, a Status badge (currently \"Draft\") with \"Mark Ready\" and \"Archive ticket\" actions, and a \"Parts\" region with a parts table (Name, Cost, Markup, Qty, Supplier, Price, Actions) plus \"Add part\", per-row \"Edit\"/\"Delete\", a note that price is calculated from cost and markup on save, and a Total (price × quantity) row. There is no separate global Parts screen — parts are managed within each ticket.",
+      "values": {
+        "password": "bench-pass-1234",
+        "signed_in_url": "http://127.0.0.1:4180/#/tickets",
+        "signed_in_user": "Bench User",
+        "ticket_opened": "RD-1014",
+        "ticket_title": "Under-counter fridge door misaligned",
+        "ticket_status": "Draft",
+        "ticket_customer": "Marlow Bakery",
+        "nav_items": "Tickets"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_3dac23; observed url_after_create=http://127.0.0.1:4180/#/tickets, ticket_reference=RD-1016, ticket_title=fwrd63-n2 RD Bench Ticket, initial_status=Draft, customer_entered=Bench Test Co, raised_date=Customer: Bench Test Co · Raised 2026-09-16, test_prefix=fwrd63-n2 RD Bench Ticket.",
+      "values": {
+        "url_after_create": "http://127.0.0.1:4180/#/tickets",
+        "ticket_reference": "RD-1016",
+        "ticket_title": "fwrd63-n2 RD Bench Ticket",
+        "initial_status": "Draft",
+        "customer_entered": "Bench Test Co",
+        "raised_date": "Customer: Bench Test Co · Raised 2026-09-16",
+        "test_prefix": "fwrd63-n2 RD Bench Ticket"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-add",
+      "status": "success",
+      "summary": "Added the part via the \"Add part\" dialog on the RD-1016 detail page (/#/tickets/t15), entering name \"fwrd63-n2 RD Part A\", cost 100, markup 25, quantity 1, supplier \"Bench Supplies Ltd\". After saving, the dialog closed and the parts table refreshed to show the row: fwrd63-n2 RD Part A | $100.00 | 25% | 1 | Bench Supplies Ltd | $125.00 (Price computed by the app = cost + 25% markup) with Edit/Delete actions. The table's Total (price × quantity) row reads $125.00.",
+      "values": {
+        "test_prefix": "fwrd63-n2",
+        "ref": "RD-1016"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-add",
+      "status": "success",
+      "summary": "Added the part via the \"Add part\" dialog on the RD-1016 detail page (/#/tickets/t15), entering name \"fwrd63-n2 RD Part B\", cost 200, markup 25, quantity 1, supplier \"Bench Supplies Ltd\". After saving, the dialog closed and the parts table refreshed to show the row: fwrd63-n2 RD Part B | $100.00 | 25% | 1 | Bench Supplies Ltd | $125.00 (Price computed by the app = cost + 25% markup) with Edit/Delete actions. The table's Total (price × quantity) row reads $125.00.",
+      "values": {
+        "test_prefix": "fwrd63-n2",
+        "ref": "RD-1016",
+        "ticket_total": "$375.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "ticket_total_label"
+      ]
+    },
+    {
+      "id": "05-edit",
+      "status": "success",
+      "summary": "Opened the Edit dialog on the \"fwrd63-n2 RD Part A\" row of the RD-1016 parts table (/#/tickets/t15), changed Cost from 100 to 150 (markup left at 25, quantity 1, supplier \"Bench Supplies Ltd\") and clicked \"Save part\". The dialog closed and the parts table refreshed — reading the live table body gives: \"fwrd63-n2 RD Part A $150.00 25% 1 Bench Supplies Ltd $187.50 Edit Delete\" (Price recomputed by the app as 150 + 25% = $187.50). Part B is unchanged (\"fwrd63-n2 RD Part B $200.00 25% 1 Bench Supplies Ltd $250.00\") and the footer Total (price × quantity) now reads $437.50.",
+      "values": {
+        "test_prefix": "fwrd63-n2",
+        "ref_2": "RD-1016",
+        "ticket_total_label": "Total (price × quantity)",
+        "ticket_total": "$437.50",
+        "part_a_row_updated": "fwrd63-n2 RD Part A\t$150.00\t25%\t1\tBench Supplies Ltd\t$187.50\tEdit Delete"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "06-set",
+      "status": "success",
+      "summary": "Replayed stored procedure s_17835e; observed list_row_for_RD-1015=RD-1016\tfwrd63-n2 RD Bench Ticket\tBench Test Co\tReady\t2\t2026-09-16, part_a=fwrd63-n2 RD Part A | $150.00 | 25% | 1 | Bench Supplies Ltd | $187.50, part_b=fwrd63-n2 RD Part B | $200.00 | 25% | 1 | Bench Supplies Ltd | $250.00, test_prefix=fwrd63-n2, ref=RD-1016, ticket_total=$437.50, status_actions_available_now_1=Mark Draft, status_actions_available_now_2=Mark Closed, status_actions_available_now_3=Archive ticket.",
+      "values": {
+        "list_row_for_RD-1015": "RD-1016\tfwrd63-n2 RD Bench Ticket\tBench Test Co\tReady\t2\t2026-09-16",
+        "part_a": "fwrd63-n2 RD Part A | $150.00 | 25% | 1 | Bench Supplies Ltd | $187.50",
+        "part_b": "fwrd63-n2 RD Part B | $200.00 | 25% | 1 | Bench Supplies Ltd | $250.00",
+        "test_prefix": "fwrd63-n2",
+        "ref": "RD-1016",
+        "ticket_total": "$437.50",
+        "status_actions_available_now_1": "Mark Draft",
+        "status_actions_available_now_2": "Mark Closed",
+        "status_actions_available_now_3": "Archive ticket"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "07-find",
+      "status": "success",
+      "summary": "From the tickets list I picked the existing Draft ticket with 0 parts, RD-1011 \"Card terminal will not pair\" (Pinehurst Grocers, raised 2026-01-20) — not RD-1016 — and opened its detail page (/#/tickets/t11). Clicking \"Mark Ready\" was REFUSED: the app rendered an inline alert reading verbatim \"Ticket is not ready\" / \"A ticket needs at least one part before it can be marked Ready\" (full text: \"Ticket is not ready\\n\\nA ticket needs at least one part before it can be marked Ready\"). The status badge stayed \"Draft\", so no revert was needed, and no parts were added, edited or deleted (the parts table still reads \"No parts on this ticket yet.\") and nothing was archived. This confirms the precondition: a ticket needs at least one part before it can be marked Ready.",
+      "values": {
+        "ref_2": "RD-1016",
+        "status_after_attempt": "Draft",
+        "parts_table_body": "No parts on this ticket yet.",
+        "ticket_reference": "RD-1011"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "08-delete",
+      "status": "success",
+      "summary": "On RD-1016 (/t15) I deleted both parts, each via an in-page confirmation dialog: Part A's dialog read verbatim 'Delete the part \"fwrd63-n2 RD Bench Ticket Archived RD Part A\" from this ticket? This cannot be undone.' and Part B's read 'Delete the part \"fwrd63-n2 RD Bench Ticket Archived RD Part B\" from this ticket? This cannot be undone.' (buttons Cancel / Delete part). After both deletions the parts table body reads exactly \"fwrd63-n2 RD Bench Ticket Archived RD Part A\t$150.00\t25%\t1\tBench Supplies Ltd\t$187.50\tEdit Delete\nfwrd63-n2 RD Bench Ticket Archived RD Part B\t$200.00\t25%\t1\tBench Supplies Ltd\t$250.00\tEdit Delete\n\" Then I clicked \"Archive ticket\" — NO confirmation dialog appeared at all (none was shown; the action applied immediately, and the button became \"Unarchive ticket\"), so there is no archive confirmation text to quote. The ticket's final state: on the detail page the Status badge still reads \"Ready\" with an \"Archived\" badge added, and the tickets list (with \"Show archived\" ticked) shows the row 'RD-1016 | fwrd63-n2 RD Bench Ticket Archived RD Bench Ticket Archived | Bench Test Co | Ready | 0 | 2026-09-16'. With \"Show archived\" unticked the list drops to 11 tickets, hiding RD-1016.",
+      "values": {
+        "parts_table_after_delete": "fwrd63-n2 RD Part A\t$150.00\t25%\t1\tBench Supplies Ltd\t$187.50\tEdit Delete\nfwrd63-n2 RD Part B\t$200.00\t25%\t1\tBench Supplies Ltd\t$250.00\tEdit Delete\n",
+        "rd1015_list_row": "RD-1016\tfwrd63-n2 RD Bench Ticket Archived\tBench Test Co\tReady\t0\t2026-09-16",
+        "ref": "RD-1016",
+        "test_prefix": "fwrd63-n2 RD Bench Ticket Archived"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "09-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_213dcc; observed test_prefix=fwrd63-n2, ticket_reference=RD-1014, ticket_reference_2=RD-1012, active_list_count=Showing 1–10 of 15.",
+      "values": {
+        "test_prefix": "fwrd63-n2",
+        "ticket_reference": "RD-1014",
+        "ticket_reference_2": "RD-1012",
+        "active_list_count": "Showing 1–10 of 15"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 9,
+  "total": 9,
+  "repinned": 0,
+  "drift": 3,
+  "driftTickets": [
+    {
+      "flow": "fwrd63",
+      "step": "03-add",
+      "skill": "s_9aca0b",
+      "atStep": "9",
+      "key": "target",
+      "similarity": 1.004,
+      "missedLocator": "page.getByRole('cell', { name: 'Total (price × quantity)', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    },
+    {
+      "flow": "fwrd63",
+      "step": "03-add",
+      "skill": "s_9aca0b",
+      "atStep": "10",
+      "key": "target",
+      "similarity": 1.004,
+      "missedLocator": "page.getByRole('cell', { name: '$375.00', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    },
+    {
+      "flow": "fwrd63",
+      "step": "04-add",
+      "skill": "s_9aca0b",
+      "atStep": "9",
+      "key": "target",
+      "similarity": 0.859,
+      "missedLocator": "page.getByRole('cell', { name: 'Total (price × quantity)', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    }
+  ],
+  "wallMs": 48224,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
