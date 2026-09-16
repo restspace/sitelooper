@@ -1,0 +1,191 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwgr46-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwgr46-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwgr46-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwgr46-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwgr46.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwgr46-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwgr46.spec.ts",
+      "file": "fwgr46.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwgr46",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 3420000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 77240,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe monaco/set-value (r_f2510e); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-open\n"
+                    }
+                  ],
+                  "stderr": [
+                    {
+                      "text": "[sitelooper warn] 02-create s_73fcc4/3: expected alert containing \"Dashboard saved\"\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-open s_bf5eb2/12: read 'new_panel_title' returned a value the skill itself set/selected ('fwgr46-spec Notes') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-open s_bf5eb2/13: read 'new_panel_rendered_text' returned a value the skill itself set/selected ('Bench notes for run fwgr46-spec') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-open s_bf5eb2/18: expected alert containing \"Dashboard saved\"\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 06-open s_579304/18: read 'stat_panel_title_in_editor' returned a value the skill itself set/selected ('fwgr46-spec Availability') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    }
+                  ],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:3000 in the browser. If a login page appears, sign in with username 'admin' and password 'admin'; if Grafana prompts to change the admin password, skip it. Then find and open the provisioned dashboard named 'Service health' (use the search/Dashboards page). Report the exact titles of all panels on that dashboard, exactly as displayed, one per line.",
+                      "duration": 7079
+                    },
+                    {
+                      "title": "02-create: In Grafana at http://127.0.0.1:3000, create a NEW dashboard. Add a visualization panel of type 'Stat' (not the default time series). Set the panel title to exactly '{{runid}} Availability'. Set the panel's data source to the 'TestData' data source (choose it in the query data source picker; leave the default scenario). Then save the dashboard with the title exactly '{{runid}} Bench Dashboard' (use Save dashboard from the save icon, enter the name, confirm). Verify afterwards that the dashboard is saved (no unsaved-changes indicator) and that the Stat panel titled '{{runid}} Availability' is visible with the TestData data source. Report the dashboard's URL from the browser address bar and the panel title as shown.",
+                      "duration": 16980
+                    },
+                    {
+                      "title": "03-open: In Grafana at http://127.0.0.1:3000, open the dashboard at http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard. Enter edit mode (Edit dashboard). Add a new panel of type 'Text' (add a new visualization and choose the Text panel type). Set its title to exactly '{{runid}} Notes' and set its text content to include the runid '{{runid}}' (e.g. 'Bench notes for run {{runid}}'). Then save the dashboard (Save dashboard, confirm). Verify afterwards that the dashboard is saved (no unsaved-changes indicator) and that a Text panel titled '{{runid}} Notes' is visible on the dashboard showing the runid in its rendered content. Report the panel title and the rendered text content as shown on the page.",
+                      "duration": 11736
+                    },
+                    {
+                      "title": "04-open: In Grafana at http://127.0.0.1:3000, open the dashboard at http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard. Do two things and save them together: (1) Add the tag 'bench' to the dashboard (via Dashboard settings > General > Tags, add 'bench'). (2) Set the dashboard's time range to the last 6 hours (open the time picker in the top bar and choose 'Last 6 hours'). Then save the dashboard via the save icon, and in the save dialog TICK the 'Update default time range' checkbox so the 6-hour range is persisted into the saved dashboard, then confirm the save. Verify afterwards: reload the dashboard page fresh and confirm the tag 'bench' appears (e.g. in the dashboard breadcrumb/search or settings) and the time picker shows 'Last 6 hours' after reload. Report the tag and the time range shown after a fresh reload.",
+                      "duration": 23435
+                    },
+                    {
+                      "title": "05-open: In Grafana at http://127.0.0.1:3000, open the dashboard at http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard. Set the dashboard's auto-refresh interval to '1m': open the time picker (top-right, the refresh interval selector next to the time range) and choose '1m' from the auto-refresh interval options. Then persist it: if the dashboard now shows unsaved changes, save the dashboard (Save dashboard, confirm; tick 'Update default time range' only if offered and relevant). Then reload the dashboard page fresh (plain URL http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard) and verify the auto-refresh interval still shows '1m' in the top bar (the refresh button/label). Report the auto-refresh interval value shown after the fresh reload, and whether a save was needed/performed.",
+                      "duration": 9660
+                    },
+                    {
+                      "title": "06-open: In Grafana at http://127.0.0.1:3000, open the dashboard at http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard in a fresh load (view mode, not edit). Verify and report: (1) the exact URL shown in the browser address bar; (2) the dashboard title shown; (3) the titles of all panels visible; (4) the time range shown in the top bar; (5) the auto-refresh interval shown in the top bar; (6) open Dashboard settings > General and report the tags listed for this dashboard (confirm whether 'bench' is present); (7) confirm the Stat panel '{{runid}} Availability' uses the TestData data source (open its panel editor if needed). Report each of these as concrete values read from the page.",
+                      "duration": 7331
+                    }
+                  ],
+                  "startTime": "2026-09-16T13:58:46.320Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d78bfd98980b2dd6287a-792cd093bbbe077e2f84",
+          "file": "fwgr46.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-16T13:58:44.469Z",
+    "duration": 79275.22899999999,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
