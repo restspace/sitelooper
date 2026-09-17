@@ -1,0 +1,172 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwod64-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwod64-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwod64-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwod64-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwod64-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwod64.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwod64-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwod64.spec.ts",
+      "file": "fwod64.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwod64",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 46418,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-open\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:8069/ in the browser and sign in with login 'admin' and password 'admin' (if a login page appears). Then open the Contacts app and create a new contact named exactly '{{runid}} Bench Customer' with the City field set to 'Benchville' (make sure it is marked as a customer; company or individual is fine). Save the contact and report the exact name and city displayed on the saved record. Note: the app long-polls so never wait for network idle; wait for concrete page state instead.",
+                      "duration": 10408
+                    },
+                    {
+                      "title": "02-open: In the Odoo app at http://127.0.0.1:8069/ (already signed in as admin), open the Sales app and create a new Quotation. In the Customer field, type '{{runid}} Bench Customer' and select the matching option from the autocomplete dropdown (typing alone does not count — an option must be chosen). Add exactly ONE order line: in the product field of the first order line, open the autocomplete and pick any product from the catalogue (an actual option must be chosen from the dropdown), and set the Quantity to 3. Let the app fill in the unit price automatically. Save the quotation. Then report: (a) the exact product name you chose, (b) the unit price the app filled in for that line, (c) the Untaxed Amount shown in the totals, and (d) the quotation reference/name (e.g. S00042) if one is shown. Do not confirm the quotation. Note: the app long-polls so never wait for network idle; wait for concrete page state instead.",
+                      "duration": 9816
+                    },
+                    {
+                      "title": "03-open: In the Odoo app at http://127.0.0.1:8069/ (already signed in as admin), open the Sales app and find the existing quotation with reference {{02-open.quotation_reference}} for customer '{{runid}} Bench Customer' (it currently has one order line: product '{{02-open.product_name}}', quantity 3). Edit it and add a SECOND order line: in the product field of the new line, open the autocomplete dropdown and pick a DIFFERENT product from the catalogue (not Acoustic Bloc Screens — an actual option must be chosen from the dropdown), and set its Quantity to 2. Let the app fill the unit price automatically. Save the quotation. Then report: (a) the exact product name of the new second line, (b) the unit price the app filled in for it, and (c) the new Untaxed Amount shown in the totals. Do not confirm the quotation. Note: the app long-polls so never wait for network idle; wait for concrete page state instead.",
+                      "duration": 4689
+                    },
+                    {
+                      "title": "04-open: In the Odoo app at http://127.0.0.1:8069/ (already signed in as admin), open the Sales app and find the existing quotation with reference {{02-open.quotation_reference}} for customer '{{runid}} Bench Customer'. It currently has two order lines: line 1 = product '{{02-open.product_name}}' quantity 3, line 2 = product '{{03-open.new_line_product}}' quantity 2. Edit it and change ONLY the first line's Quantity from 3 to 5 (leave the second line untouched). Save the quotation. Then report: (a) the quantity now shown on the first line, (b) the quantity now shown on the second line, and (c) the new Untaxed Amount shown in the totals. Do not confirm the quotation. Note: the app long-polls so never wait for network idle; wait for concrete page state instead.",
+                      "duration": 6448
+                    },
+                    {
+                      "title": "05-open: In the Odoo app at http://127.0.0.1:8069/ (already signed in as admin), open the Sales app and find the existing quotation with reference {{02-open.quotation_reference}} for customer '{{runid}} Bench Customer' (two order lines: {{02-open.product_name}} qty 5, {{03-open.new_line_product}} qty 2; Untaxed Amount £1,615.00). Confirm the quotation so it becomes a sales order (use the Confirm button / Confirm Sale action; if a confirmation dialog appears, accept it). Then report: (a) the order reference/name shown (e.g. {{02-open.quotation_reference}}), (b) the status the app now shows in the status bar (e.g. 'Sales Order'), and (c) the Untaxed Amount after confirmation. Note: the app long-polls so never wait for network idle; wait for concrete page state instead.",
+                      "duration": 1830
+                    },
+                    {
+                      "title": "06-open: In the Odoo app at http://127.0.0.1:8069/ (already signed in as admin), open the Sales app and find the confirmed sales order with reference {{02-open.quotation_reference}} for customer '{{runid}} Bench Customer' (status 'Sales Order'). {{05-open.button_cancel}} this sales order using the {{05-open.button_cancel}} button (if a confirmation dialog appears, accept/confirm the cancellation). Then report: (a) the order reference shown, (b) the status the app now shows in the status bar after cancelling (e.g. 'Cancelled'), and (c) confirm the order no longer appears as an active/open sales order (e.g. it is gone from the default Orders list or shows as cancelled). Note: the app long-polls so never wait for network idle; wait for concrete page state instead.",
+                      "duration": 12795
+                    }
+                  ],
+                  "startTime": "2026-09-17T18:17:11.021Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ddaf79eb1b312074f3e3-95cf17be0ae03b042b79",
+          "file": "fwod64.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-17T18:17:09.269Z",
+    "duration": 48351.145,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

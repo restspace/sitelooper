@@ -1,0 +1,13 @@
+[spec-replay] resetting odoo
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile bench/results/flows/fwod64.json --out /home/user/sitelooper/bench/results/fwod64-spec-spec-tmp --overwrite-spec
+flow: /home/user/sitelooper/bench/results/fwod64-spec-spec-tmp/fwod64.flow.ts
+spec: /home/user/sitelooper/bench/results/fwod64-spec-spec-tmp/fwod64.spec.ts
+warning 03-open: 03-open read a value that contradicts what the previous step reported
+  why: 03-open read untaxed_amount "£ 1,025.00" right after 02-open reported "£ 885.00"; 02-open's change may not have landed and a later step may be retrying it. Re-record 02-open.
+  fix: sitelooper rerecord bench/results/flows/fwod64.json 02-open
+
+  warning: 06-open: step 5 (wait_for hidden) acts on one element through a single unindexed candidate, page.locator('.modal:has(.modal-title:text-is("Edit: {{v2}}"))') — never proved to identify one element on the page that produced it, so this run acts on whatever it matches first; re-record the step (sitelooper rerecord) to derive a full chain for it
+[spec-replay] running: npx playwright test --config /home/user/sitelooper/bench/results/fwod64-spec-spec-tmp/playwright.config.mjs
+[spec-replay] fwod64-spec: 1/1 passed, exit=0, 50s, 0 drift line(s) — result written
