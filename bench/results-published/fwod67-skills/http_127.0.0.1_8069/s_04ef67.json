@@ -1,0 +1,73 @@
+{
+ "id": "s_04ef67",
+ "origin": "http://127.0.0.1:8069",
+ "template": "Open {{v2}} and sign in with login 'admin' and password 'admin'. Then in Odoo 17, create a new customer contact named exactly '{{v3}}' with the City field set to '{{v4}}' (leave other fields as defaults; make sure it is saved as a customer/company type Individual if asked). Verify the record is saved by reopening it and report the Name and City values you see on the saved contact form. Note: the app long-polls so never wait for network idle — wait for concrete page state instead.",
+ "params": {
+  "v1": {
+   "example": "fwod67-n1",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "http://127.0.0.1:8069/",
+   "usedIn": [
+    2
+   ]
+  },
+  "v3": {
+   "example": "fwod67-n1 Bench Customer",
+   "usedIn": [],
+   "known": true
+  },
+  "v4": {
+   "example": "Benchville",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8069/"
+ },
+ "steps": [
+  {
+   "tool": "read",
+   "args": {
+    "what": "url",
+    "label": "start_url"
+   },
+   "locators": {},
+   "label": "start_url"
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v2}}"
+   },
+   "locators": {}
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-17T21:59:15.073Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4,
+  "lastUsed": "2026-09-17T22:14:52.800Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_8419ae",
+  "index": 0,
+  "of": 8
+ },
+ "provenance": {
+  "session": "fwod67-n1",
+  "instruction": "Open http://127.0.0.1:8069/ and sign in with login 'admin' and password 'admin'. Then in Odoo 17, create a new customer contact named exactly 'fwod67-n1 Bench Customer' with the City field set to 'Benchville' (leave other fields as defaults; make sure it is saved as a customer/company type Individual if asked). Verify the record is saved by reopening it and report the Name and City values you see on the saved contact form. Note: the app long-polls so never wait for network idle — wait for concrete page state instead.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-17T21:59:15.073Z"
+ },
+ "revision": 3
+}

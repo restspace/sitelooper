@@ -1,0 +1,34 @@
+{
+  "arm": "spec",
+  "runid": "fwod67-spec",
+  "target": "odoo",
+  "flow": "fwod67.json",
+  "flowName": "fwod67",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwod67-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwod67-spec-spec-tmp/fwod67.flow.ts",
+  "specFile": "bench/results/fwod67-spec-spec-tmp/fwod67.spec.ts",
+  "wallMs": 38583,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwod67",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 35579,
+      "error": "Error: 04-open s_0c30de/1: the recorded page change did not appear\n\n04-open s_0c30de/1: the recorded page change did not appear\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeNull\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"after step 04-open s_0c30de/1 the page did not show \\\"- row \\\\\\\"20% £ \\\\\\\"\\\" as it did when recorded — the step ran but probably acted on the wrong element\"\u001b[39m\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "logTail": "\nRunning 1 test using 1 worker\n\n[sitelooper step] 01-open\n[sitelooper step] 02-create\n[sitelooper step] 03-open\n  ✘  1 fwod67.spec.ts:9:1 › fwod67 (35.6s)\n\n\n  1) fwod67.spec.ts:9:1 › fwod67 › 04-open: In Odoo 17 (already signed in as admin), open the existing draft quotation {{02-create.order_reference}} for customer '{{runid}} Bench Customer' (Sales app, find quotation {{02-create.order_reference}} and open it). It has two order lines: line 1 is {{02-create.product_name}} with quantity {{03-open.line1_quantity}} (unit price {{02-create.unit_price_cell}}, subtotal {{02-create.untaxed_amount}}), line 2 is {{03-open.line2_product}} with quantity {{03-open.line2_quantity}} (unit price {{03-open.line2_unit_price}}, subtotal {{03-open.line2_subtotal}}), and the Untaxed Amount is {{03-open.untaxed_amount}}. Change ONLY the first line's quantity from 3 to 5 (leave line 2 and all prices unchanged). Let Odoo recompute the totals. Do NOT confirm the quotation — leave it as a draft. Save and report: (a) the new Untaxed Amount the app computes for the whole quotation, (b) line 1's new subtotal, and (c) the quotation reference. Note: the app long-polls so never wait for network idle — wait for concrete page state instead. \n\n    Error: 04-open s_0c30de/1: the recorded page change did not appear\n\n    04-open s_0c30de/1: the recorded page change did not appear\n\n    expect(received).toBeNull()\n\n    Received: \"after step 04-open s_0c30de/1 the page did not show \\\"- row \\\\\\\"20% £ \\\\\\\"\\\" as it did when recorded — the step ran but probably acted on the wrong element\"\n\n    Call Log:\n    - Timeout 5000ms exceeded while waiting on the predicate\n\n       at fwod67.flow.ts:12249\n\n      12247 |       { timeout: EXPECT_WAIT_MS, message: `${ctx.tag}: the recorded page change did not appear` },\n      12248 |     )\n    > 12249 |     .toBeNull();\n            |      ^\n      12250 |   for (const warning of last.warnings) console.log(`[sitelooper warn] ${warning}`);\n      12251 |   if (last.unobserved) console.log(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);\n      12252 |   return last;\n        at expectChanges (/home/user/sitelooper/bench/results/fwod67-spec-spec-tmp/fwod67.flow.ts:12249:6)\n        at Object.verify (/home/user/sitelooper/bench/results/fwod67-spec-spec-tmp/fwod67.flow.ts:14767:32)\n        at runStepLifecycle (/home/user/sitelooper/bench/results/fwod67-spec-spec-tmp/fwod67.flow.ts:9646:24)\n        at Object.04-open (/home/user/sitelooper/bench/results/fwod67-spec-spec-tmp/fwod67.flow.ts:14734:5)\n        at /home/user/sitelooper/bench/results/fwod67-spec-spec-tmp/fwod67.flow.ts:18097:7\n        at runFlow (/home/user/sitelooper/bench/results/fwod67-spec-spec-tmp/fwod67.flow.ts:18096:5)\n        at /home/user/sitelooper/bench/results/fwod67-spec-spec-tmp/fwod67.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/fwod67-fwod67/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/fwod67-fwod67/error-context.md\n\n  1 failed\n    fwod67.spec.ts:9:1 › fwod67 ────────────────────────────────────────────────────────────────────\n"
+}

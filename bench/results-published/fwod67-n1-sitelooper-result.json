@@ -1,0 +1,103 @@
+{
+  "arm": "sitelooper",
+  "target": "odoo",
+  "machine": {
+    "platform": "linux",
+    "arch": "x64",
+    "node": "v22.22.2",
+    "cpus": 4,
+    "memGB": 17,
+    "tool": "sitelooper ? author browser tests with an agent; run compiled tests with Playwri",
+    "commit": "5e0ee09"
+  },
+  "mutationLogPath": null,
+  "provider": "openrouter",
+  "model": "z-ai/glm-5.3",
+  "runid": "fwod67-n1",
+  "task": "bench/tasks/odoo-sale-flow.md",
+  "briefed": false,
+  "reset": true,
+  "stopReason": "completed",
+  "turns": 9,
+  "wallMs": 789333,
+  "orchestrator": {
+    "input": 25516,
+    "cacheWrite": 0,
+    "cacheRead": 19328,
+    "output": 23382
+  },
+  "inner": {
+    "promptTokens": 4187603,
+    "cachedTokens": 3945984,
+    "completionTokens": 43311,
+    "instructions": 7,
+    "byModel": {
+      "deepseek/deepseek-v4.1-flash": {
+        "promptTokens": 4187603,
+        "completionTokens": 43311,
+        "cachedTokens": 3945984,
+        "instructions": 7
+      }
+    },
+    "servedByModel": {
+      "deepseek/deepseek-v4.1-flash": [
+        "DeepSeek"
+      ]
+    },
+    "skills": {
+      "instructions": 7,
+      "offered": 3,
+      "invoked": 0,
+      "fullReplays": 0,
+      "repaired": 0,
+      "refused": 0,
+      "tierA": 0,
+      "stepsReplayed": 0,
+      "deterministicActions": 0,
+      "totalActions": 146,
+      "compiled": 7,
+      "merged": 0,
+      "variants": 0
+    },
+    "model": "deepseek/deepseek-v4.1-flash",
+    "fallbackModel": "z-ai/glm-5.3",
+    "provider": "openrouter"
+  },
+  "commandCount": 9,
+  "subcommands": {
+    "config": 1,
+    "note": 1,
+    "do": 7
+  },
+  "invocationCount": 9,
+  "commandMs": 552561,
+  "commandBytes": 10901,
+  "timeouts": 0,
+  "contextTruncations": 0,
+  "coarse": true,
+  "learn": {
+    "dir": "/home/user/sitelooper/bench/results/fwod67-skills",
+    "instructions": 7,
+    "offered": 3,
+    "invoked": 0,
+    "fullReplays": 0,
+    "repaired": 0,
+    "refused": 0,
+    "tierA": 0,
+    "stepsReplayed": 0,
+    "deterministicActions": 0,
+    "totalActions": 146,
+    "compiled": 7,
+    "merged": 0,
+    "variants": 0,
+    "deterministicFraction": 0
+  },
+  "orBackends": [
+    "Modal"
+  ],
+  "orReportedCostUsd": 0.1436,
+  "maxUsd": 3,
+  "spendUsd": 0.2177,
+  "finalText": "All six objectives are complete and verified. Final report:\n\n**1. DONE** — Customer `fwod67-n1 Bench Customer` created with City = `Benchville`. Verified by reopening the saved contact form: Name field reads \"fwod67-n1 Bench Customer\", City field reads \"Benchville\" (Company Type: Individual).\n\n**2. DONE** — Quotation `S00021` created for that customer with one order line:\n- Product chosen: **[FURN_6666] Acoustic Bloc Screens**\n- Unit price auto-filled by the app: **295.00**\n- Untaxed amount computed: **£ 885.00** (TAX 20% £ 177.00, Total £ 1,062.00)\n\n**3. DONE** — Second order line added to the same quotation:\n- Product: **[E-COM11] Cabinet with Doors**, quantity 2, unit price auto-filled 140.00 (subtotal £ 280.00)\n- New untaxed amount: **£ 1,165.00** (885.00 + 280.00; TAX 20% £ 233.00, Total £ 1,398.00)\n\n**4. DONE** — First line's quantity changed from 3 to 5 (unit price unchanged at 295.00):\n- Line 1 subtotal: £ 1,475.00\n- Untaxed amount afterwards: **£ 1,755.00** (TAX 20% £ 351.00, Total £ 2,106.00)\n\n**5. DONE** — Quotation confirmed:\n- Order reference: **S00021**\n- Status shown: **\"Sales Order\"** (Confirm button replaced by Create Invoice; Delivered/Invoiced columns appeared; untaxed amount unchanged at £ 1,755.00)\n\n**6. DONE** — Sales order cancelled:\n- Status shown after cancelling: **\"Cancelled\"** (status bar current state; other listed states: Sales Order, Quotation Sent, Quotation)\n- Verified the order no longer appears among active orders: the Sales > Orders list returns 0 rows for S00021, and a \"Status = Cancelled\" filter on that list also returns 0 rows (that list action excludes cancelled orders entirely). The cancelled order's form still reads Untaxed Amount £ 1,755.00.\n\nNotes on how it was done: the customer and both product fields were set by actually selecting options from the autocomplete dropdowns (not merely typing); cancellation went through Odoo's \"Cancel Sales Order\" wizard using the plain \"Cancel\" button (not \"Send and cancel\"), so no cancellation e-mail was sent. Nothing created by this run remains active.",
+  "transcriptPath": "/home/user/sitelooper/bench/results/fwod67-n1-sitelooper-transcript.jsonl"
+}

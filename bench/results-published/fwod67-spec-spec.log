@@ -1,0 +1,51 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-open
+[sitelooper step] 02-create
+[sitelooper step] 03-open
+  ✘  1 fwod67.spec.ts:9:1 › fwod67 (35.6s)
+
+
+  1) fwod67.spec.ts:9:1 › fwod67 › 04-open: In Odoo 17 (already signed in as admin), open the existing draft quotation {{02-create.order_reference}} for customer '{{runid}} Bench Customer' (Sales app, find quotation {{02-create.order_reference}} and open it). It has two order lines: line 1 is {{02-create.product_name}} with quantity {{03-open.line1_quantity}} (unit price {{02-create.unit_price_cell}}, subtotal {{02-create.untaxed_amount}}), line 2 is {{03-open.line2_product}} with quantity {{03-open.line2_quantity}} (unit price {{03-open.line2_unit_price}}, subtotal {{03-open.line2_subtotal}}), and the Untaxed Amount is {{03-open.untaxed_amount}}. Change ONLY the first line's quantity from 3 to 5 (leave line 2 and all prices unchanged). Let Odoo recompute the totals. Do NOT confirm the quotation — leave it as a draft. Save and report: (a) the new Untaxed Amount the app computes for the whole quotation, (b) line 1's new subtotal, and (c) the quotation reference. Note: the app long-polls so never wait for network idle — wait for concrete page state instead. 
+
+    Error: 04-open s_0c30de/1: the recorded page change did not appear
+
+    04-open s_0c30de/1: the recorded page change did not appear
+
+    expect(received).toBeNull()
+
+    Received: "after step 04-open s_0c30de/1 the page did not show \"- row \\\"20% £ \\\"\" as it did when recorded — the step ran but probably acted on the wrong element"
+
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+
+       at fwod67.flow.ts:12249
+
+      12247 |       { timeout: EXPECT_WAIT_MS, message: `${ctx.tag}: the recorded page change did not appear` },
+      12248 |     )
+    > 12249 |     .toBeNull();
+            |      ^
+      12250 |   for (const warning of last.warnings) console.log(`[sitelooper warn] ${warning}`);
+      12251 |   if (last.unobserved) console.log(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);
+      12252 |   return last;
+        at expectChanges (/home/user/sitelooper/bench/results/fwod67-spec-spec-tmp/fwod67.flow.ts:12249:6)
+        at Object.verify (/home/user/sitelooper/bench/results/fwod67-spec-spec-tmp/fwod67.flow.ts:14767:32)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwod67-spec-spec-tmp/fwod67.flow.ts:9646:24)
+        at Object.04-open (/home/user/sitelooper/bench/results/fwod67-spec-spec-tmp/fwod67.flow.ts:14734:5)
+        at /home/user/sitelooper/bench/results/fwod67-spec-spec-tmp/fwod67.flow.ts:18097:7
+        at runFlow (/home/user/sitelooper/bench/results/fwod67-spec-spec-tmp/fwod67.flow.ts:18096:5)
+        at /home/user/sitelooper/bench/results/fwod67-spec-spec-tmp/fwod67.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwod67-fwod67/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwod67-fwod67/error-context.md
+
+  1 failed
+    fwod67.spec.ts:9:1 › fwod67 ────────────────────────────────────────────────────────────────────

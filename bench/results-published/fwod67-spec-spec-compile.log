@@ -1,0 +1,9 @@
+flow: /home/user/sitelooper/bench/results/fwod67-spec-spec-tmp/fwod67.flow.ts
+spec: /home/user/sitelooper/bench/results/fwod67-spec-spec-tmp/fwod67.spec.ts
+warning 03-open: 03-open read a value that contradicts what the previous step reported
+  why: 03-open read total "£ 1,398.00" right after 02-create reported "£ 1,062.00"; 02-create's change may not have landed and a later step may be retrying it. Re-record 02-create.
+  fix: sitelooper rerecord bench/results/flows/fwod67.json 02-create
+warning 07-report: 07-report read a value that contradicts what the previous step reported
+  why: 07-report read nocontent_helper_when_filtered_status_cancelled "Create a new quotation, the first step of a new sale!" right after 06-open reported "Cancelled"; 06-open's change may not have landed and a later step may be retrying it. Re-record 06-open.
+  fix: sitelooper rerecord bench/results/flows/fwod67.json 06-open
+
