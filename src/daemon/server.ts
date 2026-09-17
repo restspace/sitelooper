@@ -1262,7 +1262,7 @@ ${describeLeaks(certain.slice(0, 30))}${certain.length > 30 ? `\n  … and ${cer
       if (pinned && tail?.goal?.requireText?.length && bound && !bound.missing.length) {
         let done: { satisfied: boolean; shown: string[] } = { satisfied: false, shown: [] };
         try {
-          done = await goalSatisfied(await this.browser.getPage(), { preconditions: pinned.preconditions, goal: tail.goal }, bound.params);
+          done = await goalSatisfied(await this.browser.getPage(), { preconditions: pinned.preconditions, goal: tail.goal, params: pinned.params }, bound.params);
         } catch {
           /* browser gone or capture failed — fall through to the normal path */
         }

@@ -256,6 +256,54 @@ describe('beginAction / settle', () => {
     expect(late.sim.now()).toBe(250); // the grace, and not a moment of waiting for what came after it
   });
 
+  // fwrd69: the bench app confirms a delete, announces "Refreshing…" in its
+  // polite region, and refetches 600ms later — past the start grace. Both
+  // replays clicked the next row's Delete on the stale table and the confirm
+  // deleted the first part again ("No such part: p18"). A live region the
+  // action lit is the page's own word that it is busy.
+  it('holds the settle while an announcement the action raised is still showing, then takes the request it promised', async () => {
+    const sim = simulation();
+    const fx = fakePage();
+    pageTraffic(fx.page, { clock: sim.clock });
+    const dom = fakeDom(sim, [0]) as DomPort & { looks: number };
+    // announced after the dispatch (the baseline look is at 0) until the repaint lands at 650
+    dom.announced = async () => (sim.now() > 0 && sim.now() < 650 ? ['Refreshing…'] : []);
+    const obs = beginAction(fx.asPage, { deadlineMs: 30_000, clock: sim.clock, dom });
+    obs.dispatched('actionable');
+    const refetch = fx.request('/api/tickets/t15', 'fetch');
+    sim.at(600, () => fx.start(refetch));
+    sim.at(640, () => {
+      fx.respond(refetch);
+      fx.finish(refetch);
+    });
+    const verdict = await sim.drive(obs.settle());
+    // the refetch at 600 was waited for (it landed at 640), then the grace after it
+    expect(sim.now()).toBeGreaterThanOrEqual(640 + 250);
+    expect(verdict.deadlineHit).toBe(false);
+  });
+
+  it('bounds the wait on an announcement that stays, and ignores one that was showing before the action', async () => {
+    const stays = simulation();
+    const fx1 = fakePage();
+    pageTraffic(fx1.page, { clock: stays.clock });
+    const dom1 = fakeDom(stays, [0]) as DomPort & { looks: number };
+    dom1.announced = async () => ['Saved.']; // never withdrawn
+    const obs1 = beginAction(fx1.asPage, { deadlineMs: 30_000, clock: stays.clock, dom: dom1 });
+    obs1.dispatched('actionable');
+    await stays.drive(obs1.settle());
+    expect(stays.now()).toBeLessThanOrEqual(250 + 2_000 + 100); // the grace, then at most the announcement budget
+
+    const before = simulation();
+    const fx2 = fakePage();
+    pageTraffic(fx2.page, { clock: before.clock });
+    const dom2 = fakeDom(before, [0]) as DomPort & { looks: number };
+    dom2.announced = async () => ['3 tickets']; // the region's standing text, present at the baseline
+    const obs2 = beginAction(fx2.asPage, { deadlineMs: 30_000, clock: before.clock, dom: dom2 });
+    obs2.dispatched('actionable');
+    await before.drive(obs2.settle());
+    expect(before.now()).toBe(250); // nothing new was announced: the grace alone
+  });
+
   it('an input gives a debounced save its grace from the dispatch, with no mutation to announce it', async () => {
     for (const graceFromDispatch of [true, false]) {
       const { sim, fx, obs } = setup({ graceFromDispatch });

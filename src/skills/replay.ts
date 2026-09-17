@@ -1527,19 +1527,33 @@ export function openerLines(step: SkillStep, params: Record<string, string>): st
  * satisfied, and an unbound marker (one that still reads `{{v1}}`) proves
  * nothing so it fails the check rather than passing it. Being wrong the other
  * way costs one replay; being wrong this way skips work that never happened.
+ *
+ * THE RECORD THE STEP NAMES IS EVERY VALUE IT NAMES, not only the markers the
+ * recorder put in the precondition. The precondition identifies the page the
+ * procedure starts on (fwrd69: the ticket); a step that CREATES something on
+ * that page names the thing it creates in its own params (the part's name,
+ * `known`), and its goal is a claim about THAT. fwrd69's "add a part" skill
+ * was pinned by 02-add and 03-add alike; its goal was `Bench Supplier` and
+ * `Edit Delete` — what any part row shows — so once Part A existed, 03-add
+ * was "already satisfied" on the ticket page, Part B was never created, and
+ * 07-delete then deleted Part A twice. So every bound `known` param joins the
+ * identity half: the page must show this run's Part B, whole, in the same
+ * record scope as the goal, before the step is skipped. Same rule in the
+ * artifact (spec/emit.ts satisfiedGuard).
  */
 export async function goalSatisfied(
   page: Page,
-  skill: Pick<Skill, 'preconditions' | 'goal'>,
+  skill: Pick<Skill, 'preconditions' | 'goal'> & { params?: Skill['params'] },
   params: Record<string, string>,
 ): Promise<{ satisfied: boolean; shown: string[] }> {
   const fill = (markers: string[] | undefined) => (markers ?? []).map((m) => fillParams(m, params));
-  const identity = fill(skill.preconditions.requireText);
+  const identityMarkers = recordMarkers(skill);
+  const identity = fill(identityMarkers);
   const goal = fill(skill.goal?.requireText);
-  if (!identity.length || !goal.length) return { satisfied: false, shown: [] };
+  if (!(skill.preconditions.requireText ?? []).length || !goal.length) return { satisfied: false, shown: [] };
   // The shared rule (src/execution/gates.ts): a marker still reading `{{v1}}`,
   // or one whose slot is bound to '', proves nothing. The artifact asks the same.
-  if (!markersBound([...(skill.preconditions.requireText ?? []), ...(skill.goal?.requireText ?? [])], params)) return { satisfied: false, shown: [] };
+  if (!markersBound([...identityMarkers, ...(skill.goal?.requireText ?? [])], params)) return { satisfied: false, shown: [] };
   // The goal was read on the page template the procedure ends on (single
   // segment, so also where it starts): on any other template the same words
   // mean nothing — a list row can show "Cancelled" for a different order.
@@ -1568,6 +1582,22 @@ export async function goalSatisfied(
   // two must be proven together, inside the record's own container.
   if (!(await sharesRecordScope(page, identity, goal))) return { satisfied: false, shown: [] };
   return { satisfied: true, shown: goal };
+}
+
+/**
+ * The markers that name the record a step's goal is about: the precondition's
+ * identity markers, then a `{{vN}}` for every `known` param the precondition
+ * does not already carry. Shared with the emitter, which asks the same of a
+ * segment (SpecSegment.params is the skill's).
+ */
+export function recordMarkers(skill: { preconditions: { requireText?: string[] }; params?: Skill['params'] }): string[] {
+  const out = [...(skill.preconditions.requireText ?? [])];
+  for (const [name, p] of Object.entries(skill.params ?? {})) {
+    if (!p?.known) continue;
+    const marker = `{{${name}}}`;
+    if (!out.some((m) => m.includes(marker))) out.push(marker);
+  }
+  return out;
 }
 
 /**

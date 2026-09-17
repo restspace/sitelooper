@@ -28,7 +28,7 @@ import { DIALOG_LINE, SLOT_LINE, TRANSIENT_LINE } from '../execution/expect.js';
 import { identityFields } from '../execution/resolve.js';
 import { originOf } from '../execution/url.js';
 import { describeFramePath, stepEffect } from '../execution/context.js';
-import { OPENER_LINE, waitsForAbsence } from '../skills/replay.js';
+import { OPENER_LINE, recordMarkers, waitsForAbsence } from '../skills/replay.js';
 import { seedRecipes, snapshotRecipes } from '../skills/components.js';
 import type { SkillStep } from '../skills/store.js';
 import { recordedStandIn } from '../skills/flow.js';
@@ -2692,8 +2692,14 @@ function satisfiedGuard(step: SpecStep, ctx: Ctx): string[] {
   const last = step.segments[step.segments.length - 1];
   const goal = last?.goal?.requireText ?? [];
   if (!head || !goal.length) return [];
-  const identity = (head.preconditions.requireText ?? []).filter((m) => markerBound(m, head));
-  if (!identity.length) return [];
+  if (!(head.preconditions.requireText ?? []).some((m) => markerBound(m, head))) return [];
+  // The record the goal is about is every value the step names (replay's
+  // recordMarkers): the precondition's markers and a marker for each `known`
+  // param — fwrd69's second "add a part" was skipped on the first part's row
+  // until the part's own name was asked for. A named value the flow leaves
+  // unbound proves nothing, so no guard is emitted at all.
+  const identity = recordMarkers(head);
+  if (!identity.every((m) => markerBound(m, head))) return [];
   if (!goal.every((g) => markerBound(g, last))) return [];
   noteSlots([...identity, ...goal], ctx);
   const shown = goal.map((g) => `"${g}"`).join(', ');

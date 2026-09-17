@@ -48,6 +48,29 @@ describe('goalSatisfied', () => {
     expect(await goalSatisfied(fakePage(other), skill(['Cancelled']), PARAMS)).toEqual({ satisfied: false, shown: [] });
   });
 
+  // fwrd69: one "add a part" skill pinned by 02-add and 03-add; its goal was
+  // what any part row shows, so 03-add was "already satisfied" on Part A's row
+  // and Part B was never created. The record the step names is every value it
+  // names — the part's own name (`known`) has to be on the page too.
+  it('is not satisfied until the record the step itself names is on the page', async () => {
+    const adding: Pick<Skill, 'preconditions' | 'goal'> & { params: Skill['params'] } = {
+      preconditions: { urlPattern: 'http://127.0.0.1:8069/odoo/sales/:id', requireText: ['{{v1}}'] },
+      goal: { requireText: ['Edit Delete'] },
+      params: {
+        v1: { example: 'S00021', usedIn: [1], known: true },
+        v4: { example: 'k7 RD Part A', usedIn: [3], known: true }, // the thing this step creates
+        v5: { example: '100', usedIn: [4] }, // a plain input: not identity
+      },
+    };
+    const partA = ['- heading "S00021"', '- row "k7 RD Part A $100.00 Edit Delete"'];
+    // Part A exists; the step is asked for Part B: not done
+    expect(await goalSatisfied(fakePage(partA), adding, { v1: 'S00021', v4: 'k7 RD Part B', v5: '200' })).toEqual({ satisfied: false, shown: [] });
+    // asked for Part A again: done
+    expect(await goalSatisfied(fakePage(partA), adding, { v1: 'S00021', v4: 'k7 RD Part A', v5: '100' })).toEqual({ satisfied: true, shown: ['Edit Delete'] });
+    // the named value unbound proves nothing
+    expect(await goalSatisfied(fakePage(partA), adding, { v1: 'S00021', v5: '100' })).toEqual({ satisfied: false, shown: [] });
+  });
+
   it('needs EVERY goal text, not any', async () => {
     expect(await goalSatisfied(fakePage(CANCELLED), skill(['Cancelled', 'Refunded']), PARAMS)).toEqual({ satisfied: false, shown: [] });
   });

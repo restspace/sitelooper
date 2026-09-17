@@ -87,6 +87,12 @@ export interface PageEventsPort {
 /** The DOM as an action's observation asks it: go quiet within `maxMs`, and say when it last changed. */
 export interface DomPort {
   quiet(quietMs: number, maxMs: number): Promise<{ mutated: boolean; lastMutationAt?: number }>;
+  /**
+   * What the page's live regions are announcing right now: the visible text of
+   * every `aria-live` region and `status`/`alert` role. Optional — a port that
+   * cannot say announces nothing, and the observation waits on nothing.
+   */
+  announced?(): Promise<string[]>;
 }
 
 /** An action's expected effect: true when it holds, false when it does not, null when it could not be observed. */
@@ -341,6 +347,29 @@ export const ACTION_EFFECT_WAIT_MS = 3_000;
 export const ACTION_EFFECT_POLL_MS = 100;
 /** Settle rounds (DOM, network, grace) before the observation stops looking for more. */
 const MAX_SETTLE_ROUNDS = 8;
+/**
+ * The most an action waits, in total, on an announcement it raised.
+ *
+ * A LIVE REGION THE ACTION LIT IS THE PAGE'S OWN WORD THAT IT IS BUSY. The
+ * bench app confirms a delete, closes the dialog, announces "Refreshing…" in
+ * its polite region and repaints the table 600ms later; the recording model
+ * read the announcement and waited, the replay did not. Its DOM went quiet
+ * at once, no request was open, the 250ms start grace passed with nothing,
+ * and the next step's Delete click landed on the row the first delete had
+ * just removed — the confirm then deleted that part again and the app
+ * answered "No such part: p18" (fwrd69, both replays, the pin demoted).
+ *
+ * So an announcement that appeared after the dispatch and is still showing
+ * holds the settle: when it is withdrawn or replaced the page has moved, and
+ * the round starts over — the repaint's request and mutations are then the
+ * action's, as they always were. Bounded, because an announcement can be a
+ * message that stays ("Saved."): the wait costs at most this once, and the
+ * text is never read for what it says. Evidence, not a sleep, and not a
+ * string rule: the region's role is what makes it a promise.
+ */
+export const ACTION_ANNOUNCE_WAIT_MS = 2_000;
+/** How often a standing announcement is looked at again. */
+const ACTION_ANNOUNCE_POLL_MS = 100;
 
 /** The page's own DOM, through the shared settle: the load event first, then quiet. */
 function pageDom(page: Page, clock: ActionClock): DomPort {
@@ -354,6 +383,23 @@ function pageDom(page: Page, clock: ActionClock): DomPort {
       if (left <= 0) return { mutated: false };
       const seen = await domQuiet(page, { quietMs, maxMs: left });
       return seen && seen.mutated ? { mutated: true, lastMutationAt: clock.now() - seen.sinceMs } : { mutated: false };
+    },
+    announced: async () => {
+      try {
+        return await page.evaluate(() => {
+          const out: string[] = [];
+          const regions = document.querySelectorAll('[aria-live="polite"], [aria-live="assertive"], [role="status"], [role="alert"]');
+          for (const el of Array.from(regions)) {
+            const h = el as HTMLElement;
+            if (!h.getClientRects().length) continue; // not rendered: nothing announced to a reader either
+            const text = (h.textContent ?? '').replace(/\s+/g, ' ').trim();
+            if (text) out.push(text);
+          }
+          return out;
+        });
+      } catch {
+        return []; // navigating / detached — the round's other evidence decides
+      }
     },
   };
 }
@@ -384,6 +430,13 @@ export function beginAction(page: Page, opts: ActionOptions): ActionObservation 
     }
   };
   const urlBefore = readUrl();
+  // What the live regions already said before the action: only NEW text is
+  // the action's announcement. Taken now, ahead of the dispatch; a port that
+  // cannot say leaves the set empty and the announcement wait inert.
+  const baselineAnnounced: Set<string> = new Set();
+  const baselineTaken = dom.announced
+    ? dom.announced().then((texts) => { for (const t of texts) baselineAnnounced.add(t); }, () => {})
+    : Promise.resolve();
   let via: DispatchVia | undefined;
   let dispatchedAt: number | undefined;
   let failedOutcome: 'not-dispatched' | 'unknown' | undefined;
@@ -410,6 +463,7 @@ export function beginAction(page: Page, opts: ActionOptions): ActionObservation 
     });
 
   const run = async (): Promise<SettleVerdict> => {
+    await baselineTaken;
     const waited = { domMs: 0, networkMs: 0, urlMs: 0, effectMs: 0 };
     const ignored = new Map<RequestRecord, LongLivedWhy>();
     let deadlineHit = false;
@@ -504,6 +558,30 @@ export function beginAction(page: Page, opts: ActionOptions): ActionObservation 
       return startedOne;
     };
 
+    // An announcement the action raised (see ACTION_ANNOUNCE_WAIT_MS): a live
+    // region showing text it did not show at the baseline. Held until it is
+    // withdrawn or replaced, at most the budget once for the whole settle.
+    let announceSpent = 0;
+    const holdAnnouncement = async (): Promise<boolean> => {
+      if (!dom.announced) return false;
+      const started = clock.now();
+      let moved = false;
+      for (;;) {
+        if (cancelled) break;
+        const now = clock.now();
+        const raised = (await dom.announced().catch(() => [] as string[])).filter((t) => !baselineAnnounced.has(t));
+        if (!raised.length) break;
+        const left = Math.min(ACTION_ANNOUNCE_WAIT_MS - announceSpent - (now - started), remaining());
+        if (left <= 0) break;
+        await clock.sleep(Math.min(ACTION_ANNOUNCE_POLL_MS, left));
+        moved = true;
+      }
+      const took = clock.now() - started;
+      announceSpent += took;
+      waited.domMs += took;
+      return moved;
+    };
+
     for (let round = 0; round < MAX_SETTLE_ROUNDS && !cancelled && remaining() > 0; round++) {
       await quietDom();
       const network = await waitNetwork();
@@ -511,6 +589,8 @@ export function beginAction(page: Page, opts: ActionOptions): ActionObservation 
       // An answer landed: let the DOM take it, then look again.
       if (network === 'waited') continue;
       if (await graceStart()) continue;
+      // The page said it was busy and has since moved on: look again.
+      if (await holdAnnouncement()) continue;
       break;
     }
 
