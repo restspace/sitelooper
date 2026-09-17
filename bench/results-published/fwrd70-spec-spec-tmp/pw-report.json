@@ -1,0 +1,187 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwrd70-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwrd70-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwrd70-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwrd70-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwrd70-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwrd70.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwrd70-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwrd70.spec.ts",
+      "file": "fwrd70.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwrd70",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 24993,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper skip] 01-open s_91fbf6/6 target: no locator recorded — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-add s_a0f51c/13: read 'part_name' returned a value the skill itself set/selected ('fwrd70-spec RD Part A') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-add s_a0f51c/17: read 'part_supplier' returned a value the skill itself set/selected ('Bench Supplies') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-add\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 03-add s_a0f51c/13 target: primary locator('section > div > table > tbody > tr > td:nth-of-type(1)') missed; used #2 locator('[data-testid=\"part-row-p18\"] td').first() (#1 ambiguous)\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-add s_a0f51c/17: read 'part_supplier' returned a value the skill itself set/selected ('Bench Supplies') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-add\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-edit\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-set\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-delete\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:4180/ and sign in with email bench@example.com and password bench-pass-1234. Then create a new repair ticket titled exactly '{{runid}} RD Bench Ticket', filling in any required fields with sensible values. After saving, wait for the list or detail view to refresh (it refreshes a short beat after the mutation, not instantly) and confirm the ticket exists. Report the ticket's title, its status, and any reference/id shown on screen.",
+                      "duration": 6328
+                    },
+                    {
+                      "title": "02-add: You are on the repair-desk app, signed in. Go to ticket '{{runid}} RD Bench Ticket' (reference {{01-open.ticket_reference}}) and add a part to it: name exactly '{{runid}} RD Part A', cost 100, markup 25. Fill any other required fields sensibly, save, and wait for the detail view to refresh (it refreshes a short beat after the mutation). Then read the part row and report the price the app computes for this part, plus any other numbers shown (cost, markup, price).",
+                      "duration": 4455
+                    },
+                    {
+                      "title": "03-add: On ticket {{01-open.ticket_reference}} ('{{runid}} RD Bench Ticket') in the repair-desk app, add a second part: name exactly '{{runid}} RD Part B', cost 200, markup 25. Fill any other fields as needed, save, and wait for the parts list to refresh (it settles a short beat after the mutation). Report both part rows and their computed prices, and the parts total.",
+                      "duration": 4495
+                    },
+                    {
+                      "title": "04-edit: On ticket {{01-open.ticket_reference}} ('{{runid}} RD Bench Ticket') in the repair-desk app, edit the part '{{runid}} RD Part A' to change its cost from 100 to 150, keeping markup 25. Save the edit and wait for the parts list to refresh (it settles a short beat after the mutation). Report the updated part row with its new computed price, and the new parts total for the ticket.",
+                      "duration": 2793
+                    },
+                    {
+                      "title": "05-set: On ticket {{01-open.ticket_reference}} ('{{runid}} RD Bench Ticket') in the repair-desk app, I need the ticket's status changed to 'Ready'. Try to set the status to Ready through whatever control the app provides. The app enforces preconditions before it will accept that status — if it refuses, read any error/confirmation message shown, discover exactly what is required (this may involve fields, other statuses, notes, or other workflow steps), satisfy each requirement, and retry until the ticket status actually shows 'Ready' on screen. Wait for the view to refresh after each mutation before judging. Report: the exact precondition(s) you discovered, exactly what you did to satisfy each, and the final on-screen status text.",
+                      "duration": 1227
+                    },
+                    {
+                      "title": "06-delete: On ticket {{01-open.ticket_reference}} ('{{runid}} RD Bench Ticket') in the repair-desk app, which is currently in status Ready: delete both of its parts — '{{runid}} RD Part A' and '{{runid}} RD Part B' — using the Delete button on each part row (confirm any dialog if one appears). Wait for the parts table to refresh after each deletion (it settles a short beat after the mutation, and don't assume the first render is final). If deleting a part on a Ready ticket is refused, read the message, discover what's required, and handle it. Then archive the ticket using its Archive control (again satisfying any requirement the app enforces for archiving, such as status). When done, verify: the ticket shows no parts (empty parts state) and it no longer appears in the active tickets list (check the archive/archived section if there is one). Report what the parts table and ticket list showed at the end, any confirmations or refusals encountered along the way, and the ticket's final state.",
+                      "duration": 5411
+                    }
+                  ],
+                  "startTime": "2026-09-17T16:50:20.719Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": "W3NpdGVsb29wZXIgZHJpZnRdIDAzLWFkZCBzX2EwZjUxYy8xMyB0YXJnZXQ6IHByaW1hcnkgbG9jYXRvcignc2VjdGlvbiA+IGRpdiA+IHRhYmxlID4gdGJvZHkgPiB0ciA+IHRkOm50aC1vZi10eXBlKDEpJykgbWlzc2VkOyB1c2VkICMyIGxvY2F0b3IoJ1tkYXRhLXRlc3RpZD0icGFydC1yb3ctcDE4Il0gdGQnKS5maXJzdCgpICgjMSBhbWJpZ3VvdXMp"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "814e534f0f1723465117-9750d70751e71fa722d6",
+          "file": "fwrd70.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-17T16:50:18.974Z",
+    "duration": 26906.426,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

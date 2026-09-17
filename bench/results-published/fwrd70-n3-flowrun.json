@@ -1,0 +1,198 @@
+{
+  "flow": "fwrd70",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_91fbf6; observed detail_url=http://127.0.0.1:4180/#/tickets/t15, ticket_reference=RD-1017, ticket_title=fwrd70-n3 RD Bench Ticket, ticket_status=Draft, customer=Bench Test Co, customer_field=Customer, test_run_id=fwrd70-n3 RD Bench Ticket.",
+      "values": {
+        "detail_url": "http://127.0.0.1:4180/#/tickets/t15",
+        "ticket_reference": "RD-1017",
+        "ticket_title": "fwrd70-n3 RD Bench Ticket",
+        "ticket_status": "Draft",
+        "customer": "Bench Test Co",
+        "customer_field": "Customer",
+        "test_run_id": "fwrd70-n3 RD Bench Ticket"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "raised_date"
+      ]
+    },
+    {
+      "id": "02-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_a0f51c; observed part_name=fwrd70-n3 RD Part A, test_run_id=fwrd70-n3, part_b_full_row=fwrd70-n3 RD Part A\t$100.00\t25%\t1\tBench Supplies\t$125.00\tEdit Delete, part_price=$125.00, ticket_reference=RD-1017, ticket_title=fwrd70-n3 RD Bench Ticket, ticket_status=Draft, part_cost=$100.00, part_markup=25%, part_qty=1.",
+      "values": {
+        "part_name": "fwrd70-n3 RD Part A",
+        "test_run_id": "fwrd70-n3",
+        "part_b_full_row": "fwrd70-n3 RD Part A\t$100.00\t25%\t1\tBench Supplies\t$125.00\tEdit Delete",
+        "part_price": "$125.00",
+        "ticket_reference": "RD-1017",
+        "ticket_title": "fwrd70-n3 RD Bench Ticket",
+        "ticket_status": "Draft",
+        "part_cost": "$100.00",
+        "part_markup": "25%",
+        "part_qty": "1"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "part_supplier"
+      ]
+    },
+    {
+      "id": "03-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_a0f51c; observed test_run_id=fwrd70-n3, part_b_full_row=fwrd70-n3 RD Part B\t$200.00\t25%\t1\tBench Supplies\t$250.00\tEdit Delete, part_price=$375.00, ticket_reference=RD-1017, ticket_title=fwrd70-n3 RD Bench Ticket, ticket_status=Draft, part_name=fwrd70-n3 RD Part A, part_cost=$200.00, part_markup=25%, part_qty=1.",
+      "values": {
+        "test_run_id": "fwrd70-n3",
+        "part_b_full_row": "fwrd70-n3 RD Part B\t$200.00\t25%\t1\tBench Supplies\t$250.00\tEdit Delete",
+        "part_price": "$375.00",
+        "ticket_reference": "RD-1017",
+        "ticket_title": "fwrd70-n3 RD Bench Ticket",
+        "ticket_status": "Draft",
+        "part_name": "fwrd70-n3 RD Part A",
+        "part_cost": "$200.00",
+        "part_markup": "25%",
+        "part_qty": "1"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-edit",
+      "status": "success",
+      "summary": "On ticket RD-1017 I clicked Edit on the 'fwrd70-n3 RD Part A' row, changed Cost from 100 to 150 (Markup % left at 25, Qty 1, Supplier \"Bench Supplies\") and saved via \"Save part\". The Edit dialog closed and the parts table refreshed; the live DOM now reads \"fwrd70-n3 RD Part A | $150.00 | 25% | 1 | Bench Supplies | $187.50\" and \"fwrd70-n3 RD Part B | $200.00 | 25% | 1 | Bench Supplies | $250.00\", with the total row \"Total (price × quantity) $437.50\". So Part A's recomputed price is $187.50 (150 + 25%) and the ticket's new parts total is $437.50 ($187.50 + $250.00).",
+      "values": {
+        "test_run_id": "fwrd70-n3",
+        "ticket_reference": "RD-1017",
+        "ticket_title": "fwrd70-n3 RD Bench Ticket",
+        "ticket_status": "Draft",
+        "part_a_cost": "$150.00",
+        "part_a_markup": "25%",
+        "part_a_price": "$187.50",
+        "part_b_price": "$250.00",
+        "parts_total": "$437.50",
+        "part_a_row_name": "fwrd70-n3 RD Part A",
+        "part_a_row_cost": "$150.00",
+        "part_a_row_markup": "25%",
+        "part_a_row_qty": "1",
+        "part_a_row_supplier": "Bench Supplies",
+        "part_a_row_price": "$187.50",
+        "part_b_row_name": "fwrd70-n3 RD Part B",
+        "part_b_row_cost": "$200.00",
+        "part_b_row_markup": "25%",
+        "part_b_row_qty": "1",
+        "part_b_row_supplier": "Bench Supplies",
+        "part_b_row_price": "$250.00",
+        "parts_total_label": "Total (price × quantity)",
+        "parts_total_value": "$437.50"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "25/25",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-set",
+      "status": "success",
+      "summary": "Replayed stored procedure s_53bcb7; observed verification=status read as Ready via wait_for (text_equals, 3s) and again via a full page navigation to /#/tickets/t15, final_on_screen_status=Ready, ticket_reference=RD-1017, ticket_title=fwrd70-n3 RD Bench Ticket, parts_total=$437.50, mark_draft_button=Mark Draft, mark_closed_button=Mark Closed, archive_ticket_button=Archive ticket.",
+      "values": {
+        "verification": "status read as Ready via wait_for (text_equals, 3s) and again via a full page navigation to /#/tickets/t15",
+        "final_on_screen_status": "Ready",
+        "ticket_reference": "RD-1017",
+        "ticket_title": "fwrd70-n3 RD Bench Ticket",
+        "parts_total": "$437.50",
+        "mark_draft_button": "Mark Draft",
+        "mark_closed_button": "Mark Closed",
+        "archive_ticket_button": "Archive ticket"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "06-delete",
+      "status": "success",
+      "summary": "Replayed stored procedure s_83b6e3; observed parts_deleted=fwrd70-n3 RD Part A, fwrd70-n3 RD Part B, ticket_reference=RD-1017, parts_count_in_list=0, list_with_archived_shown=Showing 1–10 of 15, ticket_title=fwrd70-n3 RD Bench Ticket Archived, final_status_on_screen=Ready, archived_row=RD-1017\tfwrd70-n3 RD Bench Ticket Archived\tBench Test Co\tReady\t0\t2026-09-17, test_run_id=fwrd70-n3 RD Bench Ticket Archived.",
+      "values": {
+        "parts_deleted": "fwrd70-n3 RD Part A, fwrd70-n3 RD Part B",
+        "ticket_reference": "RD-1017",
+        "parts_count_in_list": "0",
+        "list_with_archived_shown": "Showing 1–10 of 15",
+        "ticket_title": "fwrd70-n3 RD Bench Ticket Archived",
+        "final_status_on_screen": "Ready",
+        "archived_row": "RD-1017\tfwrd70-n3 RD Bench Ticket Archived\tBench Test Co\tReady\t0\t2026-09-17",
+        "test_run_id": "fwrd70-n3 RD Bench Ticket Archived"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 6,
+  "total": 6,
+  "repinned": 0,
+  "drift": 2,
+  "driftTickets": [
+    {
+      "flow": "fwrd70",
+      "step": "01-open",
+      "skill": "s_91fbf6",
+      "atStep": "6",
+      "key": "target",
+      "similarity": 1.004,
+      "missedLocator": "(none recorded)",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    },
+    {
+      "flow": "fwrd70",
+      "step": "03-add",
+      "skill": "s_a0f51c",
+      "atStep": "13",
+      "key": "target",
+      "similarity": 0.859,
+      "missedLocator": "page.locator('section > div > table > tbody > tr > td:nth-of-type(1)')",
+      "fallbackUsed": "page.locator('[data-testid=\"part-row-p18\"] td').nth(0)",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    }
+  ],
+  "wallMs": 27725,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
