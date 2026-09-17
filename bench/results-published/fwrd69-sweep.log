@@ -1,0 +1,155 @@
+
+[sweep] run 1/3: fwrd69-n1 (store: /home/user/sitelooper/bench/results/fwrd69-skills)
+[harness] repairdesk: defaulting APP_URL
+[harness] repairdesk: defaulting APP_EMAIL
+[harness] repairdesk: defaulting APP_PASSWORD
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+[harness] repairdesk responded 200 at http://127.0.0.1:4180/
+stopped: fwrd69-n1
+  flow "fwrd69" saved: 8 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwrd69.json
+  warning: note: dropped 8 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: note: 02-add no longer publishes part_a_name_cell, part_a_cost_cell, part_a_markup_cell, part_a_quantity_cell, part_a_supplier_cell, part_a_price_cell, part_a_actions_cell — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-add no longer publishes part_a_row, part_b_name, part_b_cost_displayed, part_b_markup_displayed, part_b_quantity, part_b_supplier, part_b_computed_price, part_b_row, parts_total_label, parts_total_value — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-change no longer publishes status_before_attempt, status_after_full_reload, status_in_ticket_list — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-create no longer publishes probe_part_count, probe_status_after_attempt, app_action, app_refused — no replay reads them from the page and the recording showed no line to read
+  warning: note: 07-delete no longer publishes parts_total_after_deletes, archive_button_after, ticket_status_now, archived_list_url — no replay reads them from the page and the recording showed no line to read
+  warning: note: 08-delete no longer publishes probe_status_now — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 262 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].route: "http://127.0.0.1:4180/#/tickets" (output) in "http://127.0.0.1:4180/#/tickets/:id"
+  flow.steps[1].route: "http://127.0.0.1:4180/#/tickets" (output) in "http://127.0.0.1:4180/#/tickets/:id"
+  flow.steps[2].route: "http://127.0.0.1:4180/#/tickets" (output) in "http://127.0.0.1:4180/#/tickets/:id"
+  flow.steps[3].route: "http://127.0.0.1:4180/#/tickets" (output) in "http://127.0.0.1:4180/#/tickets/:id"
+  flow.steps[4].instruction: "Ready" (output) in "On the detail page of ticket '{{runid}} RD Bench Ticket' ({{01-open.ticket_reference}}), attempt to change the ticket's status to 'Ready'. The app enforces prec"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwrd69-n1 stop=completed
+turns=9 wall=526.7s
+commands=8 cmdTime=422.2s cmdBytes=12832 timeouts=0
+orchestrator in=7722 cw=0 cr=35456 out=5348
+inner prompt=1858979 cached=1714816 completion=29083
+spend=$0.0878 maxUsd=3
+learn: A_n=0.184 replayed=1/8 full=1 repaired=0 compiled=7 variants=0
+-> /home/user/sitelooper/bench/results/fwrd69-n1-sitelooper-result.json
+
+=== fwrd69-n1 === (run self-reported: completed)
+  obj 1  PASS  seq 1: ticket t15 (RD-1015) "fwrd69-n1 RD Bench Ticket"
+  obj 2  PASS  seq 2 p18 cost=100 markup=25 price=125.00
+  obj 3  PASS  seq 3 p19 cost=200 markup=25 price=250.00
+  obj 4  PASS  seq 4: cost 100 -> 150, price 125.00 -> 187.50 (want 187.50), after the create at seq 2
+  obj 5  PASS  seq 5: status Draft -> Ready
+  obj 6  PASS  part A deleted, part B deleted, archive entry at seq 9; state: 0 part(s) surviving, ticket t15 archived=true
+  claim 2  ok — run reported 125.00, app recorded 125.00
+  claim 3  ok — run reported 250.00, app recorded 250.00
+  claim 4  ok — run reported 187.50, app recorded 187.50
+  summary: 6/6 objectives PASS, 0 price claim mismatch(es), 0 duplicate ticket(s)
+
+App state: 16 tickets total, 1 left by benchmark runs (0 still active), 17 parts total, 10 mutation log entries.
+
+[sweep] run 2/3: fwrd69-n2 (replay flow fwrd69, no orchestrator)
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+[sweep] fwrd69-n2: 4 drift ticket(s) → fwrd69-n2-drift.json
+
+=== fwrd69-n2 === (run self-reported: no result file)
+  note: no result file in /home/user/sitelooper/bench/results — objectives are still scored from the log,
+        but the run's claimed prices cannot be cross-checked.
+  obj 1  PASS  seq 1: ticket t15 (RD-1017) "fwrd69-n2 RD Bench Ticket"
+  obj 2  PASS  seq 2 p18 cost=100 markup=25 price=125.00
+  obj 3  FAIL  no create entry for "fwrd69-n2 RD Part B"
+  obj 4  PASS  seq 3: cost 100 -> 150, price 125.00 -> 187.50 (want 187.50), after the create at seq 2
+  obj 5  PASS  seq 4: status Draft -> Ready
+  obj 6  FAIL  part A deleted, part B NOT deleted, archive entry at seq 7; state: 0 part(s) surviving, ticket t15 archived=true
+  claim 2  no claim parsed from the run's final report
+  claim 3  no claim parsed from the run's final report
+  claim 4  no claim parsed from the run's final report
+  summary: 4/6 objectives PASS, 0 price claim mismatch(es), 0 duplicate ticket(s) — RUN NOT CLEAN
+
+App state: 16 tickets total, 1 left by benchmark runs (0 still active), 17 parts total, 8 mutation log entries.
+
+[sweep] run 3/3: fwrd69-n3 (replay flow fwrd69, no orchestrator)
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+[sweep] fwrd69-n3: 5 drift ticket(s) → fwrd69-n3-drift.json
+
+=== fwrd69-n3 === (run self-reported: no result file)
+  note: no result file in /home/user/sitelooper/bench/results — objectives are still scored from the log,
+        but the run's claimed prices cannot be cross-checked.
+  obj 1  PASS  seq 1: ticket t15 (RD-1019) "fwrd69-n3 RD Bench Ticket"
+  obj 2  PASS  seq 2 p18 cost=100 markup=25 price=125.00
+  obj 3  FAIL  no create entry for "fwrd69-n3 RD Part B"
+  obj 4  PASS  seq 3: cost 100 -> 150, price 125.00 -> 187.50 (want 187.50), after the create at seq 2
+  obj 5  PASS  seq 4: status Draft -> Ready
+  obj 6  FAIL  part A deleted, part B NOT deleted, archive entry at seq 7; state: 0 part(s) surviving, ticket t15 archived=true
+  claim 2  no claim parsed from the run's final report
+  claim 3  no claim parsed from the run's final report
+  claim 4  no claim parsed from the run's final report
+  summary: 4/6 objectives PASS, 0 price claim mismatch(es), 0 duplicate ticket(s) — RUN NOT CLEAN
+
+App state: 16 tickets total, 1 left by benchmark runs (0 still active), 17 parts total, 8 mutation log entries.
+
+Learning sweep fwrd69 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬───────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n   │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼───────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwrd69-n1' │ '6/6'    │ 'completed' │ 9     │ 8    │ 0.0878    │ 0.184 │ '1/8'        │ 527    │
+│ 1       │ 2 │ 'fwrd69-n2' │ '4/6'    │ 'success'   │ 11    │ 8    │ 0.0055    │ 0.88  │ '8/8 (flow)' │ 76     │
+│ 2       │ 3 │ 'fwrd69-n3' │ '4/6'    │ 'success'   │ 15    │ 8    │ 0.012     │ 0.88  │ '8/8 (flow)' │ 125    │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴───────┴──────────────┴────────┘
+http://127.0.0.1:4180
+  s_adfe3e  validated   21 steps  4/4 (100%)
+           On the detail page of ticket '{{v1}}' ({{v3}}), add a part named '{{v4}}' with cost {{v5}} and markup {{v6}}. …
+  s_054e4e  validated    6 steps  3/3 (100%)
+           Open {{v2}} and sign in with email {{v3}} and password {{v4}}. Then create a new ticket titled '{{v5}}' (fill …
+  s_1bee19  validated    5 steps  3/3 (100%)
+           Open {{v2}} and sign in with email {{v3}} and password {{v4}}. Then create a new ticket titled '{{v5}}' (fill …
+  s_1f885f  validated   10 steps  3/3 (100%)
+           Clean up the scratch ticket '{{v1}}' ({{v3}}) created earlier this run: on its detail page, if the app offers …
+  s_257a6c  validated    1 steps  3/3 (100%)
+           On the detail page of ticket '{{v1}}' ({{v3}}), attempt to change the ticket's status to 'Ready'. The app enfo…
+  s_4eb9e5  validated   26 steps  3/3 (100%)
+           On the detail page of ticket '{{v1}}' ({{v3}}), edit the part named '{{v4}}' to change its cost from 100 to {{…
+  s_52fb03  validated    1 steps  3/3 (100%)
+           Open {{v2}} and sign in with email {{v3}} and password {{v4}}. Then create a new ticket titled '{{v5}}' (fill …
+  s_5cb21c  validated    7 steps  3/3 (100%)
+           On the detail page of ticket '{{v1}}' ({{v3}}), attempt to change the ticket's status to 'Ready'. The app enfo…
+  s_5d8ea4  demoted     11 steps  1/3 (33%)
+           On the detail page of ticket '{{v1}}' ({{v3}}), delete both parts: '{{v4}}' and '{{v5}}' (use each row's Delet…
+  s_6ad0cb  validated    3 steps  3/3 (100%)
+           On the detail page of ticket '{{v1}}' ({{v3}}), attempt to change the ticket's status to 'Ready'. The app enfo…
+  s_971974  validated    9 steps  3/3 (100%)
+           Create a new scratch ticket titled '{{v4}}' (fill only the required fields, customer {{v2}}, and do NOT add an…
+  s_97af56  validated    3 steps  3/3 (100%)
+           Open {{v2}} and sign in with email {{v3}} and password {{v4}}. Then create a new ticket titled '{{v5}}' (fill …
+  s_a3839d  validated    1 steps  3/3 (100%)
+           Create a new scratch ticket titled '{{v4}}' (fill only the required fields, customer {{v2}}, and do NOT add an…
+  s_ae118f  validated    1 steps  3/3 (100%)
+           Clean up the scratch ticket '{{v1}}' ({{v3}}) created earlier this run: on its detail page, if the app offers …
+  s_afb5c4  validated    6 steps  3/3 (100%)
+           Create a new scratch ticket titled '{{v4}}' (fill only the required fields, customer {{v2}}, and do NOT add an…
+  s_cd0eb5  validated    1 steps  3/3 (100%)
+           On the detail page of ticket '{{v1}}' ({{v3}}), delete both parts: '{{v4}}' and '{{v5}}' (use each row's Delet…
+  s_d1c2e6  validated    4 steps  3/3 (100%)
+           Clean up the scratch ticket '{{v1}}' ({{v3}}) created earlier this run: on its detail page, if the app offers …
+  s_dfc6c3  validated    1 steps  3/3 (100%)
+           On the detail page of ticket '{{v1}}' ({{v3}}), attempt to change the ticket's status to 'Ready'. The app enfo…
+  s_fd3b90  validated    1 steps  3/3 (100%)
+           On the detail page of ticket '{{v1}}' ({{v3}}), attempt to change the ticket's status to 'Ready'. The app enfo…
+  s_0d8432  provisional  8 steps  1/1 (100%)
+           On the detail page of ticket '{{v1}}' ({{v3}}), delete both parts: '{{v4}}' and '{{v5}}' (use each row's Delet…
+  s_17b12f  provisional  1 steps  1/1 (100%)  variant of s_5d8ea4
+           On the detail page of ticket '{{v1}}' ({{v3}}), delete both parts: '{{v4}}' and '{{v5}}' (use each row's Delet…
+  s_280623  provisional  2 steps  1/1 (100%)  variant of s_5d8ea4
+           On the detail page of ticket '{{v1}}' ({{v3}}), delete both parts: '{{v4}}' and '{{v5}}' (use each row's Delet…
+  s_3ca832  provisional  8 steps  1/1 (100%)  variant of s_5d8ea4
+           On the detail page of ticket '{{v1}}' ({{v3}}), delete both parts: '{{v4}}' and '{{v5}}' (use each row's Delet…
+  s_460538  provisional  9 steps  1/1 (100%)  variant of s_5d8ea4
+           On the detail page of ticket '{{v1}}' ({{v3}}), delete both parts: '{{v4}}' and '{{v5}}' (use each row's Delet…
+  s_66a19a  provisional  2 steps  1/1 (100%)  variant of s_5d8ea4
+           On the detail page of ticket '{{v1}}' ({{v3}}), delete both parts: '{{v4}}' and '{{v5}}' (use each row's Delet…
+  s_b8c61b  provisional  2 steps  1/1 (100%)  variant of s_5d8ea4
+           On the detail page of ticket '{{v1}}' ({{v3}}), delete both parts: '{{v4}}' and '{{v5}}' (use each row's Delet…
+  s_bc3bfe  provisional  2 steps  1/1 (100%)  variant of s_5d8ea4
+           On the detail page of ticket '{{v1}}' ({{v3}}), delete both parts: '{{v4}}' and '{{v5}}' (use each row's Delet…
+  s_e8ae34  provisional 15 steps  1/1 (100%)  variant of s_5d8ea4
+           On the detail page of ticket '{{v1}}' ({{v3}}), delete both parts: '{{v4}}' and '{{v5}}' (use each row's Delet…
+  s_f6d64d  provisional  1 steps  1/1 (100%)  variant of s_5d8ea4
+           On the detail page of ticket '{{v1}}' ({{v3}}), delete both parts: '{{v4}}' and '{{v5}}' (use each row's Delet…
+store: /home/user/sitelooper/bench/results/fwrd69-skills
+
+summary: /home/user/sitelooper/bench/results/fwrd69-sweep.json

@@ -1,0 +1,8 @@
+error 07-delete: it is pinned to the demoted skill s_5d8ea4 — the compiled spec inherits a procedure whose last replays failed at the same step
+  why: s_5d8ea4 is demoted: 1 of 3 replays succeeded; replay failed at step 7 on 2 of them; 2 of the 2 stop(s) were recovered (the step still finished); the demotion was two consecutive failures at step 7; last used 2026-09-17T06:07:57.689Z.
+  fix: sitelooper rerecord bench/results/flows/fwrd69.json 07-delete
+
+nothing written: the error(s) above are about the RECORDING, not the app — a compiled spec would fail at a locator and read as drift.
+re-record the step(s) with the fix command above, or pass --allow-demoted to compile the demoted pin anyway.
+  warning: 01-open: step 5 (read raised_date) has no locator left — it publishes nothing, as replay skips it
+sitelooper: refused: a step is pinned to a demoted skill — see the diagnostics above (--allow-demoted compiles it anyway)

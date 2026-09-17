@@ -1,0 +1,401 @@
+{
+ "id": "s_460538",
+ "origin": "http://127.0.0.1:4180",
+ "template": "On the detail page of ticket '{{v1}}' ({{v3}}), delete both parts: '{{v4}}' and '{{v5}}' (use each row's Delete action, confirming any confirmation dialog). Wait for the view to refresh after each delete and confirm both parts are gone from the parts table (the table should show no rows / zero parts, and the total should be /bin/sh.00). Then archive the ticket using the '{{v6}}' action (confirm any confirmation dialog). Wait for the refresh and confirm the ticket is archived — report the exact confirmation text shown and where the ticket now appears (e.g. an archived list/filter) and its status. Report the parts table state after both deletions.",
+ "params": {
+  "v1": {
+   "example": "fwrd69-n3 RD Bench Ticket",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i1:ticket_title"
+  },
+  "v2": {
+   "example": "fwrd69-n3",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "RD-1019",
+   "usedIn": [],
+   "known": true,
+   "binding": "01-open.ticket_reference"
+  },
+  "v4": {
+   "example": "fwrd69-n3 RD Part A",
+   "usedIn": [
+    3
+   ],
+   "known": true,
+   "binding": "output:i2:parts_row_text_1"
+  },
+  "v5": {
+   "example": "fwrd69-n3 RD Part B",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i3:part_b_name_cell"
+  },
+  "v6": {
+   "example": "Archive ticket",
+   "usedIn": [
+    7
+   ],
+   "known": true,
+   "binding": "05-change.archive_ticket_button"
+  },
+  "v7": {
+   "example": "t15",
+   "usedIn": [],
+   "known": true,
+   "binding": "05-change.url.h1"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:4180/#/tickets/{{v7}}"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1147"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "confirm-yes"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Delete part"
+     },
+     {
+      "kind": "id",
+      "selector": "#confirm-yes"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"confirm-dialog\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "#confirm-yes"
+     },
+     {
+      "kind": "point",
+      "x": 780,
+      "y": 500,
+      "w": 98.5,
+      "h": 39,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets/{{v7}}",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_5d8ea4",
+    "step": 3
+   }
+  },
+  {
+   "tool": "dialog_expect",
+   "args": {
+    "action": "accept",
+    "count": 1
+   },
+   "locators": {},
+   "via": {
+    "skill": "s_5d8ea4",
+    "step": 4
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Delete\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "tr",
+      "hasText": "{{v4}}",
+      "selector": "td:nth-of-type(7) > button:nth-of-type(2)"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Delete"
+     },
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr > td:nth-of-type(7) > button:nth-of-type(2)"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"part-row-p18\"] button"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "part-delete-p18"
+     },
+     {
+      "kind": "point",
+      "x": 1074,
+      "y": 446,
+      "w": 59.6,
+      "h": 29.5,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets/{{v7}}",
+    "addedContains": [
+     "- dialog \"Confirm\"",
+     "- heading \"Confirm\"",
+     "- button \"Cancel\"",
+     "- button \"Delete part\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_5d8ea4",
+    "step": 5
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Delete part\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "confirm-yes"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Delete part"
+     },
+     {
+      "kind": "id",
+      "selector": "#confirm-yes"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"confirm-dialog\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "#confirm-yes"
+     },
+     {
+      "kind": "point",
+      "x": 780,
+      "y": 500,
+      "w": 98.5,
+      "h": 39,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets/{{v7}}",
+    "alertContains": "No such part: p18",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_5d8ea4",
+    "step": 7
+   }
+  },
+  {
+   "tool": "read_all",
+   "args": {
+    "target": "main table tbody tr",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "main table tbody tr"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "no-parts"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"parts-table\"] tr"
+     },
+     {
+      "kind": "css",
+      "selector": "#view > section > div > table > tbody > tr"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 467,
+      "w": 1070,
+      "h": 41.5,
+      "role": null,
+      "tag": "tr",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "parts_table_message"
+  },
+  {
+   "tool": "dialog_expect",
+   "args": {
+    "action": "accept",
+    "count": 1
+   },
+   "locators": {}
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e771"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "archive"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "{{v6}}"
+     },
+     {
+      "kind": "css",
+      "selector": "#view > div > div:nth-of-type(2) > button:nth-of-type(3)"
+     },
+     {
+      "kind": "point",
+      "x": 1119,
+      "y": 218,
+      "w": 113.3,
+      "h": 39,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets/{{v7}}",
+    "addedContains": [
+     "- button \"Unarchive ticket\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "what": "url",
+    "label": "url_after_archive"
+   },
+   "locators": {},
+   "label": "url_after_archive"
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e793"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "back-to-list"
+     },
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "Tickets"
+     },
+     {
+      "kind": "css",
+      "selector": "#view > nav > a"
+     },
+     {
+      "kind": "point",
+      "x": 124,
+      "y": 96,
+      "w": 40.7,
+      "h": 19.5,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "addedContains": [
+     "- heading \"Repair tickets\"",
+     "- button \"New ticket\"",
+     "- heading \"Filter tickets\"",
+     "- combobox \"Status\": {{*}}",
+     "- searchbox \"Reference, title or customer\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-17T06:07:57.706Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_bc5e01",
+  "index": 1,
+  "of": 5
+ },
+ "variantOf": "s_5d8ea4",
+ "provenance": {
+  "session": "fwrd69-n3",
+  "instruction": "On the detail page of ticket 'fwrd69-n3 RD Bench Ticket' (RD-1019), delete both parts: 'fwrd69-n3 RD Part A' and 'fwrd69-n3 RD Part B' (use each row's Delete action, confirming any confirmation dialog). Wait for the view to refresh after each delete and confirm both parts are gone from the parts table (the table should show no rows / zero parts, and the total should be /bin/sh.00). Then archive the ticket using the 'Archive ticket' action (confirm any confirmation dialog). Wait for the refresh and confirm the ticket is archived — report the exact confirmation text shown and where the ticket now appears (e.g. an archived list/filter) and its status. Report the parts table state after both deletions.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-17T06:07:57.706Z"
+ },
+ "revision": 1
+}
