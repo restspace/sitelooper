@@ -35,66 +35,10 @@ export async function snapshot(page: Page, opts: SnapshotOptions = {}): Promise<
   return truncate(text, opts.maxChars ?? 8000);
 }
 
-/**
- * Wait until the page exposes something to act on, or the deadline passes.
- *
- * `load` fires before a client-rendered app has painted, so snapshotting a
- * heavy SPA the instant navigation "finishes" returns an EMPTY tree —
- * NocoDB's dashboard did exactly that, with an empty title to match. Waiting
- * on the content itself is the app-agnostic way: network idleness is unusable
- * (Odoo long-polls forever) and a fixed sleep is either too short or wasted.
- *
- * The wait is a MutationObserver inside the page, not a poll: the check is
- * made once up front (a ready page returns in one round-trip) and then again
- * only when the DOM actually changes, so the app paints and we return in the
- * same tick instead of up to a poll interval later.
- *
- * Best-effort and bounded: a page that really has nothing costs the deadline
- * and no more, and a navigation mid-wait (evaluate throws) is retried until
- * the deadline rather than reported.
- */
-export async function waitForContent(page: Page, timeoutMs = 5000): Promise<void> {
-  const deadline = Date.now() + timeoutMs;
-  for (;;) {
-    const remaining = deadline - Date.now();
-    if (remaining <= 0) return;
-    const ready = await page
-      .evaluate(
-        (budget) =>
-          new Promise<boolean>((resolve) => {
-            const has = () => {
-              const b = document.body;
-              if (!b) return false;
-              if (b.querySelector('a,button,input,select,textarea,[role],h1,h2')) return true;
-              return (b.innerText ?? '').trim().length > 0;
-            };
-            if (has()) return resolve(true);
-            const stop = setTimeout(() => {
-              observer.disconnect();
-              resolve(false);
-            }, budget);
-            const observer = new MutationObserver(() => {
-              if (!has()) return;
-              observer.disconnect();
-              clearTimeout(stop);
-              resolve(true);
-            });
-            // document, not document.body: on a page whose body has not been
-            // parsed yet there is nothing else to observe, and the body's
-            // arrival is itself the mutation we are waiting for.
-            observer.observe(document, { childList: true, subtree: true, characterData: true });
-          }),
-        remaining,
-      )
-      .catch(() => null); // navigating / detached: re-evaluate against the new document
-    if (ready === true || ready === false) return;
-    if (Date.now() >= deadline) return;
-    // The document went out from under the evaluate. Back off a beat on a
-    // plain timer (a detached page's own clock throws) before looking at the
-    // new one, so a page navigating in a loop cannot spin this hot.
-    await new Promise((r) => setTimeout(r, 50));
-  }
-}
+// waitForContent lives with the shared execution sources (src/execution/
+// browser.ts) since the compiled artifact makes the same start navigation
+// the daemon does and judges the first segment right after it (fwrd75).
+export { waitForContent } from '../execution/browser.js';
 
 /**
  * Rewrite Playwright's `[ref=e12]` markers to the compact `[@e12]` form the

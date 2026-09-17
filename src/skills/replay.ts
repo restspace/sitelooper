@@ -208,6 +208,15 @@ export interface ReplayResult {
   /** The replay never started (wrong page / bad params) — nothing was touched. */
   refused?: boolean;
   /**
+   * The refusal was that the page is PAST this procedure's start: the url
+   * already carries the record the procedure creates (gates.ts
+   * PreconditionVerdict.past). The step's mutation has already happened, so
+   * the flow runner lets a read-only sibling that carried the step take the
+   * pin (fwod68 03-open: the rescue of a save that a graduated earlier step
+   * now performs).
+   */
+  pastStart?: boolean;
+  /**
    * The refusal was an IDENTITY mismatch: right template, wrong record. The
    * caller cannot fix this by trying another skill — every skill for this
    * procedure will refuse the same page — so the flow runner returns the
@@ -431,6 +440,7 @@ export async function replaySkill(
       const verdict = preconditionVerdict(pattern, url, params, res.similarity, mints);
       if (verdict.refuse) {
         res.refused = true;
+        if (verdict.past) res.pastStart = true;
         res.reason = `${verdict.refuse} — nothing was run`;
         passed = false;
       } else {

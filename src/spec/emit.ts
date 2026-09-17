@@ -3453,6 +3453,13 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
   // before the first `[sitelooper step]` line is printed — which is exactly
   // how it reads in a log when it happens.
   out.push(`    await page.goto(options.startUrl ?? ${q(spec.startUrl)}, { waitUntil: 'load', timeout: GOTO_TIMEOUT_MS });`);
+  // `load` fires before a client-rendered app has painted, and the first
+  // segment's start page (url, fingerprint) is judged right after — the
+  // daemon's runFlow waits for the page to show content here (the shared
+  // waitForContent), and a hash-routed app sends a signed-out visitor to its
+  // login route only once it has rendered: fwrd75's artifact read `#/tickets`
+  // and refused the sign-in segment the daemon had passed three times.
+  out.push('    await waitForContent(page).catch(() => {});');
   for (const [i, b] of bodies.entries()) {
     out.push(`    await test.step(${q(`${b.step.id}: ${b.step.instruction}`)}, async () => {`);
     // The arguments are built INSIDE test.step and before `steps[id]` is

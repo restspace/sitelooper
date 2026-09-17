@@ -354,6 +354,14 @@ export const SOFT_MATCH_MIN_SIMILARITY = 0.8;
 
 export interface PreconditionVerdict {
   refuse?: string;
+  /**
+   * The refusal is that the page is PAST this procedure's start: the live url
+   * already carries a record the procedure creates (mintedAhead). Structured,
+   * so a caller can tell it from a wrong page: the step's mutation has already
+   * happened here, and a read-only sibling that reports from the record is the
+   * right procedure for this page (daemon runFlow, fwod68 03-open).
+   */
+  past?: { key: string; value: string; step: number };
   /** The url is the same page shape with 1–2 disagreeing segments, and the run proceeds on it. */
   soft?: { diffs: UrlSegDiff[]; generalised: string };
   warnings: string[];
@@ -625,6 +633,7 @@ export function preconditionVerdict(
   if (ahead) {
     return {
       warnings: [],
+      past: ahead,
       refuse:
         `not on the page this procedure starts from (expects ${shown}, browser is at ${describeUrl(url, shown)}; ` +
         `the url already carries ${ahead.key}=${ahead.value}, the record this procedure creates at its step ${ahead.step} — the page is past where the procedure starts)`,

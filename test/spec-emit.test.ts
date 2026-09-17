@@ -214,6 +214,14 @@ describe('emitFlowFile layout', () => {
     expect(source).toContain("  async '01-do'(page: Page, p: { v1: string }, outputs: Outputs, run: FlowRun = createFlowRun()): Promise<void> {");
     expect(source).toContain('export async function runFlow(page: Page, vars: Vars, options: RunOptions = {}): Promise<Outputs> {');
     expect(source).toContain("await page.goto(options.startUrl ?? 'http://app.test/', { waitUntil: 'load', timeout: GOTO_TIMEOUT_MS });");
+    // …and waits for the page to show content before the first segment judges
+    // its start page, as the daemon's runFlow does (fwrd75: a hash-routed app
+    // had not yet sent the visitor to #/login when the artifact read the url).
+    const start = source.indexOf("await page.goto(options.startUrl ?? 'http://app.test/'");
+    const wait = source.indexOf('    await waitForContent(page).catch(() => {});');
+    expect(wait).toBeGreaterThan(start);
+    expect(wait).toBeLessThan(source.indexOf("await test.step('01-do"));
+    expect(source).toContain('async function waitForContent(page: Page, timeoutMs = 5000): Promise<void> {');
     // The recorded browser travels (a flow saved before profiles were stored
     // gets the default it was recorded at), and runFlow judges the page it is
     // handed against it before navigating — warning, never resizing.

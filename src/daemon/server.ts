@@ -1553,8 +1553,19 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
         // The pin is a procedure, so its health is its chain's: a demoted
         // segment anywhere in it is what the compile will refuse (pinStatus).
         const incumbentSkill = step.skill ? this.browser.learn.get(step.skill) : null;
-        const incumbent = incumbentSkill ? pinStatus(this.browser.learn.list(incumbentSkill.origin), incumbentSkill) : 'missing';
-        const adoptable = Boolean(candidateId && canAdoptPin(this.browser.learn, owned, step.id, step.skill, candidateId, mutatingIntent(step.instruction) ? 'mutating' : 'read-only'));
+        // ...and a pin refused because the page is PAST its start — the record
+        // it creates already exists (replayDirect pinPast) — is nothing to
+        // keep: it will refuse the same page on every run the flow reaches it
+        // on, and the compiled artifact, which runs the pin and nothing else,
+        // fails there while the daemon quietly runs a sibling. fwod68's
+        // 03-open was recorded as the rescue of a save that its graduated
+        // 02-create now performs; the pin refused on n2 and n3, a read-only
+        // sibling carried the step both times, and the artifact refused. The
+        // step's mutating intent is spent on that page for the same reason,
+        // so the read-only sibling may take the pin.
+        const incumbent = direct.pinPast ? 'missing' : incumbentSkill ? pinStatus(this.browser.learn.list(incumbentSkill.origin), incumbentSkill) : 'missing';
+        const intent = mutatingIntent(step.instruction) && !direct.pinPast ? 'mutating' : 'read-only';
+        const adoptable = Boolean(candidateId && canAdoptPin(this.browser.learn, owned, step.id, step.skill, candidateId, intent));
         // A candidate whose navigation targets carry an identifier this run
         // made would replay onto this run's record: one THIS step's recovery
         // minted (a url part first banked under this instruction), or one an
@@ -1877,7 +1888,21 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
      * matched, a precondition refused, or the replay stopped part-way. Three
      * different bugs, one signature.
      */
-  ): Promise<{ done?: InstructionResult; prelude?: string; partial?: Partial<SkillRecord>; wrongRecord?: string; why?: string; urlVariance?: string[] }> {
+  ): Promise<{
+    done?: InstructionResult;
+    prelude?: string;
+    partial?: Partial<SkillRecord>;
+    wrongRecord?: string;
+    why?: string;
+    urlVariance?: string[];
+    /**
+     * The PINNED skill refused because the page is past its start — the record
+     * it creates already exists (ReplayResult.pastStart). Its work here is
+     * done by an earlier step, so the flow runner may hand the pin to whatever
+     * carried the step instead, a read-only sibling included (fwod68 03-open).
+     */
+    pinPast?: boolean;
+  }> {
     // What the replays below WATCHED a url position hold that the recording did
     // not (ledger.ts urlVarianceValues). Carried out of here on every exit,
     // success or stop: variance is an observation about the environment, and
@@ -1916,6 +1941,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
     let replay: NonNullable<Awaited<ReturnType<typeof executeTool>>['replay']> | null = null;
     let attempts = 0;
     let wrongRecord: string | undefined;
+    let pinPast = false;
     const refusals: string[] = [];
     for (const cand of candidates) {
       if (attempts >= MAX_CANDIDATE_ATTEMPTS) break;
@@ -1928,6 +1954,9 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
         // Right template, wrong record: no other skill can fix that, so keep
         // the reason and let the caller re-establish the page (see below).
         if (r.wrongRecord) wrongRecord = r.wrongRecord;
+        // The pin refused because the record it creates already exists: its
+        // work is done here, and the caller may move the pin (see pinPast).
+        if (r.pastStart && chosen && cand.skill.id === chosen.id) pinPast = true;
         refusals.push(`${cand.skill.id}: ${r.reason ?? 'refused'}`);
         continue; // wrong page / bad params: nothing ran, free to try the next
       }
@@ -1957,7 +1986,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
     }
     if (!match || !replay) {
       const why = refusals.length ? `every candidate refused — ${refusals.join('; ')}` : 'no candidate ran';
-      return withVariance(wrongRecord ? { wrongRecord, why } : { why });
+      return withVariance({ ...(wrongRecord ? { wrongRecord } : {}), ...(pinPast ? { pinPast } : {}), why });
     }
 
     // Walk the segment chain: a multi-segment skill replays segment by
@@ -2117,6 +2146,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
         skill: { listed: [match.skill.id], repaired: false, ...record } as SkillRecord,
         published: { ...agg.values },
       },
+      ...(pinPast ? { pinPast } : {}),
     });
   }
 

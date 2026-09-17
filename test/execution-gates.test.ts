@@ -210,7 +210,11 @@ describe('a verdict shows what it actually compared (fwod51)', () => {
     const saved = 'http://app.test/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22';
     const unsaved = 'http://app.test/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form';
     const mints = [{ at: 'q.id', step: 8 }];
-    const refused = preconditionVerdict(pattern, saved, {}, 1, mints).refuse!;
+    const verdict = preconditionVerdict(pattern, saved, {}, 1, mints);
+    // structured, so a runner can tell "past its start" from a wrong page
+    expect(verdict.past).toEqual({ key: 'id', value: '22', step: 8 });
+    expect(preconditionVerdict(pattern, unsaved, {}, 1, mints).past).toBeUndefined();
+    const refused = verdict.refuse!;
     expect(refused).toBe(
       'not on the page this procedure starts from (expects http://app.test/web#action=:id&cids=:id&menu_id=:id&model=sale.order&view_type=form, ' +
         'browser is at http://app.test/web#action=316&cids=1&id=22&menu_id=194&model=sale.order&view_type=form; ' +
