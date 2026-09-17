@@ -576,14 +576,60 @@ export function landedOnRecordedPage(pattern: string, url: string): boolean {
  */
 const PRECONDITION_SOFT_DIFFS = 3;
 
+/** A url position a procedure's step mints (compile.ts `mints`): the label urlParts gives it, and the 1-based step. */
+export interface MintedPosition {
+  at: string;
+  step: number;
+}
+
+/**
+ * The record a procedure CREATES is one its start page does not have. A
+ * state-shaped url accumulates (urlDiff: a live key the pattern does not name
+ * is allowed, Odoo grows `cids`/`menu_id` between segments), and that rule
+ * let a procedure recorded on an UNSAVED form — no `id` in the url, its save
+ * step mints `q.id` — start on the SAVED form of the same model: fwod66's
+ * 04-verify was recorded as the rescue of a save that had not taken, replayed
+ * on a quotation the fixed 03-create had already saved, and its first click
+ * ("Cancel", the modal's at record time) cancelled the order. So a key the
+ * procedure itself mints later, absent from its start pattern but present on
+ * the live url, is the procedure's own evidence that the page is PAST its
+ * start: the record it would create exists. Only that key: a key the pattern
+ * names (`id=:id`, a procedure that starts on one record and creates another)
+ * is judged as before.
+ */
+function mintedAhead(pattern: string, url: string, params: Record<string, string>, mints: MintedPosition[]): { key: string; value: string; step: number } | null {
+  if (!mints.length) return null;
+  const p = urlShapeOf(fillParams(pattern, params));
+  const l = urlShapeOf(url);
+  if (!p || !l) return null;
+  for (const m of mints) {
+    if (!m.at.startsWith('q.')) continue;
+    const key = m.at.slice(2);
+    if (p.hashState.has(key) || p.query.has(key)) continue;
+    const value = l.hashState.get(key) ?? l.query.get(key);
+    if (value) return { key, value, step: m.step };
+  }
+  return null;
+}
+
 export function preconditionVerdict(
   pattern: string,
   url: string,
   params: Record<string, string>,
   similarity: FingerprintSimilarity,
+  mints: MintedPosition[] = [],
 ): PreconditionVerdict {
   // What this verdict actually compared, for every message below (fwod51).
   const shown = shownPattern(pattern, params);
+  const ahead = mintedAhead(pattern, url, params, mints);
+  if (ahead) {
+    return {
+      warnings: [],
+      refuse:
+        `not on the page this procedure starts from (expects ${shown}, browser is at ${describeUrl(url, shown)}; ` +
+        `the url already carries ${ahead.key}=${ahead.value}, the record this procedure creates at its step ${ahead.step} — the page is past where the procedure starts)`,
+    };
+  }
   if (urlMatches(pattern, url, params)) {
     // A strict match that let a one-sided query key pass took that key on
     // trust. When the caller measured the page, that trust is checked like a

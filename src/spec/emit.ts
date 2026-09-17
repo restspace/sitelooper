@@ -377,8 +377,8 @@ const HELPERS: { token: string; source: string[] }[] = [
       ' * must await it: a gate that could be left un-awaited is one that can',
       ' * silently become a no-op.',
       ' */',
-      "async function preconditionGate(pattern: string, url: string, p: Record<string, string>, where: string, similarity: number | null | 'unmeasured'): Promise<void> {",
-      '  const verdict = preconditionVerdict(pattern, url, p, similarity);',
+      "async function preconditionGate(pattern: string, url: string, p: Record<string, string>, where: string, similarity: number | null | 'unmeasured', mints: { at: string; step: number }[] = []): Promise<void> {",
+      '  const verdict = preconditionVerdict(pattern, url, p, similarity, mints);',
       '  for (const line of verdict.warnings) logWarning(`${where}: ${line}`);',
       '  if (verdict.refuse) throw new Error(`${where}: ${verdict.refuse} — nothing of this segment has run`);',
       '}',
@@ -2887,7 +2887,11 @@ function segmentGateLines(segment: SpecSegment, ctx: Ctx, afterNavigation: boole
   }
   // page.url() is an argument AHEAD of the measurement, so it is read first —
   // replay's order (the url, then fingerprintPage).
-  out.push(`await preconditionGate(${q(segment.preconditions.urlPattern)}, page.url(), p, ${q(where)}, ${similarity});`);
+  // The positions this segment mints ride with the gate, as replay hands them
+  // to the same verdict: a page already carrying the record the segment would
+  // create is past its start (gates.ts mintedAhead, fwod66 04-verify).
+  const mints = segment.steps.flatMap((s, i) => (s.mints ? [{ at: s.mints.at, step: i + 1 }] : []));
+  out.push(`await preconditionGate(${q(segment.preconditions.urlPattern)}, page.url(), p, ${q(where)}, ${similarity}${mints.length ? `, ${JSON.stringify(mints)}` : ''});`);
   out.push(...identity);
   return out;
 }

@@ -7,7 +7,7 @@ import { executeTool } from '../agent/tools.js';
 import { urlPattern as compiledUrlPattern, dropAbsentReadLocators, dropDeadReadLocators, fillParams, markReadsProven, stranded, urlParts } from '../skills/compile.js';
 import type { DriftTicket } from '../skills/repair.js';
 import type { Page } from 'playwright-core';
-import { agentGesturesOutsideReplay, bindSkill, canAdoptPin, decideRepin, learnFromInstruction, matchTemplate, publishedOutputs, selectCandidates, synthesizeReport } from '../skills/learn.js';
+import { agentGesturesOutsideReplay, bindSkill, canAdoptPin, decideRepin, learnFromInstruction, matchTemplate, pinStatus, publishedOutputs, selectCandidates, synthesizeReport } from '../skills/learn.js';
 import { buildFlow, consumedReportedOutputs, consumedUrlOutputs, ignorableRefs, jsonLeaves, lintFlowRefs, lintUnpublishedOutputs, listFlows, liveReadsFor, loadFlow, loadFlowFile, lookupOutput, mutatingIntent, noteOutputEvidence, pruneUnsourcedOutputs, recoveryRoute, remapParams, resolveInstruction, resolveStepParams, softResolveInstruction, saveFlow, staleInstructionIds, unbankedMutations, unreportedOutputs, urlOutputs, varyingValues, type RunSpecific } from '../skills/flow.js';
 import { applyRelabelToEntries, applyRelabelToSkills, relabelCases, requestRelabelPlan } from '../skills/relabel.js';
 import { goalSatisfied, renderReplay } from '../skills/replay.js';
@@ -1550,8 +1550,10 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
         const compiledSkill = compiledId ? this.browser.learn.get(compiledId) : null;
         const compiled = compiledSkill ? { skill: compiledSkill.id, status: compiledSkill.status } : undefined;
         const candidateId = outcome?.ok ? outcome.skill : compiled?.skill;
+        // The pin is a procedure, so its health is its chain's: a demoted
+        // segment anywhere in it is what the compile will refuse (pinStatus).
         const incumbentSkill = step.skill ? this.browser.learn.get(step.skill) : null;
-        const incumbent = incumbentSkill ? incumbentSkill.status : 'missing';
+        const incumbent = incumbentSkill ? pinStatus(this.browser.learn.list(incumbentSkill.origin), incumbentSkill) : 'missing';
         const adoptable = Boolean(candidateId && canAdoptPin(this.browser.learn, owned, step.id, step.skill, candidateId, mutatingIntent(step.instruction) ? 'mutating' : 'read-only'));
         // A candidate whose navigation targets carry an identifier this run
         // made would replay onto this run's record: one THIS step's recovery

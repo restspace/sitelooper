@@ -425,7 +425,10 @@ export async function replaySkill(
       // Strict, then soft-with-fingerprint, else refuse: the shared verdict
       // (src/execution/gates.ts, preconditionVerdict) decides; this runner only
       // supplies the fingerprint similarity it measured and books the result.
-      const verdict = preconditionVerdict(pattern, url, params, res.similarity);
+      // …and the positions this procedure mints, so a page already carrying
+      // the record it would create is refused as past its start (fwod66).
+      const mints = skill.steps.flatMap((s, i) => (s.mints ? [{ at: s.mints.at, step: i + 1 }] : []));
+      const verdict = preconditionVerdict(pattern, url, params, res.similarity, mints);
       if (verdict.refuse) {
         res.refused = true;
         res.reason = `${verdict.refuse} — nothing was run`;

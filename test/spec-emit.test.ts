@@ -1248,11 +1248,11 @@ describe('preconditions, minting and loops', () => {
     // un-awaited is one that can silently become a no-op the day it grows a wait.
     expect(out).toContain("await preconditionGate('http://app.test/items', page.url(), p, '01-do s_test1', null);");
     expect(out).not.toMatch(/^\s*preconditionGate\(/m);
-    expect(out).toContain("async function preconditionGate(pattern: string, url: string, p: Record<string, string>, where: string, similarity: number | null | 'unmeasured'): Promise<void> {");
+    expect(out).toContain("async function preconditionGate(pattern: string, url: string, p: Record<string, string>, where: string, similarity: number | null | 'unmeasured', mints: { at: string; step: number }[] = []): Promise<void> {");
     expect(out.indexOf("await preconditionGate('http://app.test/items', page.url()")).toBeLessThan(out.indexOf('// @step 01-do s_test1/1'));
     expect(out).toContain('function preconditionVerdict(');
     // the adapter passes what it knows about the fingerprint: null here (none recorded)
-    expect(out).toContain('const verdict = preconditionVerdict(pattern, url, p, similarity);');
+    expect(out).toContain('const verdict = preconditionVerdict(pattern, url, p, similarity, mints);');
     expect(out).toContain('if (verdict.refuse) throw new Error(`${where}: ${verdict.refuse} — nothing of this segment has run`);');
     expect(syntaxErrors(out)).toEqual([]);
     // the verdict, run from the artifact
@@ -1271,6 +1271,16 @@ describe('preconditions, minting and loops', () => {
       /x: not on the page this procedure starts from .*cannot measure the live page against it.* — nothing of this segment has run/,
     );
     await expect(preconditionGate('http://app.test/items/7', 'http://app.test/items/7', {}, 'x', 'unmeasured')).resolves.toBeUndefined();
+    // the positions the segment mints ride with the gate (fwod66 04-verify: a
+    // procedure recorded on an unsaved form must not start on the saved one)
+    await expect(
+      preconditionGate('http://app.test/web#model=sale.order&view_type=form', 'http://app.test/web#model=sale.order&view_type=form&id=22', {}, 'x', null, [{ at: 'q.id', step: 8 }]),
+    ).rejects.toThrow(/x: not on the page this procedure starts from .*already carries id=22, the record this procedure creates at its step 8.* — nothing of this segment has run/);
+    await expect(preconditionGate('http://app.test/web#model=sale.order&view_type=form', 'http://app.test/web#model=sale.order&view_type=form&id=22', {}, 'x', null)).resolves.toBeUndefined();
+    const minting: SkillStep = { tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'id', selector: '#save' }] }, mints: { at: 'q.id' } };
+    const minted = emit(specOf([step, minting]));
+    expect(minted).toContain(`await preconditionGate('http://app.test/items', page.url(), p, '01-do s_test1', null, [{"at":"q.id","step":2}]);`);
+    expect(syntaxErrors(minted)).toEqual([]);
 
     // a segment whose first step is a goto puts the browser on the recorded page itself
     const goto: SkillStep = { tool: 'goto', args: { url: 'http://app.test/items' }, locators: {} };

@@ -329,6 +329,23 @@ export function sameChainProcedure(a: Skill, b: Skill, skills: Skill[]): boolean
   return true;
 }
 
+/**
+ * A pin's health as a PROCEDURE. A pinned step replays its skill's whole
+ * chain, and the compile refuses the flow when ANY segment of that chain is
+ * demoted (spec/ir.ts `demoted-pin`) — so a chain is as demoted as its worst
+ * segment, and the step's incumbent is judged the same way. fwod66-n3's
+ * 09-open kept its pin on a validated head whose third segment had just been
+ * demoted at the same step twice: decideRepin saw a healthy incumbent, left
+ * the recovery's procedure unpinned, and the compile refused the whole flow.
+ * `'missing'` when the step has no pin or the store no longer holds it.
+ */
+export function pinStatus(skills: Skill[], pinned: Skill | null | undefined): Skill['status'] | 'missing' {
+  if (!pinned) return 'missing';
+  if (!pinned.seq) return pinned.status;
+  const chain = skills.filter((s) => s.seq?.chain === pinned.seq!.chain);
+  return chain.some((s) => s.status === 'demoted') ? 'demoted' : pinned.status;
+}
+
 export function selectCandidates(
   skills: Skill[],
   hintId: string | undefined,

@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { admitsIncompletion } from '../src/agent/report.js';
 import { parseRefLines } from '../src/daemon/refs.js';
 import type { RecordedEntry } from '../src/daemon/recorder.js';
-import { agentGesturesOutsideReplay, decideRepin } from '../src/skills/learn.js';
+import type { Skill } from '../src/skills/store.js';
+import { agentGesturesOutsideReplay, decideRepin, pinStatus } from '../src/skills/learn.js';
 
 // Three gates from the set-20 grafana post-mortem: a success report that
 // admits it did not finish, a re-pin onto a skill the model finished by hand,
@@ -120,6 +121,24 @@ describe('decideRepin', () => {
     expect(decideRepin({ ...open, adoptable: false })).toBeNull();
     expect(decideRepin({ ...open, compiled: { skill: 's_rec', status: 'demoted' } })).toBeNull();
     expect(decideRepin({ ...open, step: { id: '03-add', skill: 's_rec' } })).toBeNull();
+  });
+});
+
+describe('pinStatus', () => {
+  const sk = (id: string, status: Skill['status'], seq?: { chain: string; index: number; of: number }): Skill =>
+    ({ id, origin: 'http://app.test', status, ...(seq ? { seq } : {}) }) as unknown as Skill;
+
+  it('is the chain\'s worst segment: a demoted third segment demotes the pinned head (fwod66-n3 09-open, s_591607)', () => {
+    const head = sk('s_f5f7ed', 'validated', { chain: 's_0af29d', index: 0, of: 5 });
+    const store = [head, sk('s_x', 'validated', { chain: 's_0af29d', index: 1, of: 5 }), sk('s_591607', 'demoted', { chain: 's_0af29d', index: 2, of: 5 }), sk('s_other', 'demoted', { chain: 's_zzz', index: 0, of: 1 })];
+    expect(pinStatus(store, head)).toBe('demoted');
+    expect(pinStatus(store.filter((s) => s.id !== 's_591607'), head)).toBe('validated');
+  });
+
+  it('reads an unchained pin as itself, and no pin as missing', () => {
+    expect(pinStatus([sk('s_d', 'demoted')], sk('s_p', 'provisional'))).toBe('provisional');
+    expect(pinStatus([], null)).toBe('missing');
+    expect(pinStatus([], undefined)).toBe('missing');
   });
 });
 

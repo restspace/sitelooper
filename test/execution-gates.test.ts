@@ -201,6 +201,30 @@ describe('a verdict shows what it actually compared (fwod51)', () => {
     expect(urlEffectVerdict(pattern, 'http://app.test/web#action=330&cids=1&id=45&menu_id=109&model=sale.order&view_type=list', {}, 'step 3').stop).toBeDefined();
   });
 
+  // fwod66 04-verify: recorded as the rescue of a save that had not taken
+  // (an unsaved form, no `id`; its save step mints `q.id`), it replayed on the
+  // quotation the fixed 03-create had already saved — the accumulating-state
+  // rule let `id=22` through — and its first click cancelled the order.
+  it('refuses a page that already carries the record the procedure itself mints', () => {
+    const pattern = 'http://app.test/web#action=:id&cids=:id&menu_id=:id&model=sale.order&view_type=form';
+    const saved = 'http://app.test/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22';
+    const unsaved = 'http://app.test/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form';
+    const mints = [{ at: 'q.id', step: 8 }];
+    const refused = preconditionVerdict(pattern, saved, {}, 1, mints).refuse!;
+    expect(refused).toBe(
+      'not on the page this procedure starts from (expects http://app.test/web#action=:id&cids=:id&menu_id=:id&model=sale.order&view_type=form, ' +
+        'browser is at http://app.test/web#action=316&cids=1&id=22&menu_id=194&model=sale.order&view_type=form; ' +
+        'the url already carries id=22, the record this procedure creates at its step 8 — the page is past where the procedure starts)',
+    );
+    // the page the procedure starts from, and the same page judged without its mints: as before
+    expect(preconditionVerdict(pattern, unsaved, {}, 1, mints).refuse).toBeUndefined();
+    expect(preconditionVerdict(pattern, saved, {}, 1).refuse).toBeUndefined();
+    // a pattern that NAMES the key starts on one record and creates another: judged as before
+    expect(preconditionVerdict('http://app.test/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form', saved, {}, 1, mints).refuse).toBeUndefined();
+    // only hash-state/query positions can be absent from a pattern; a path position is judged by shape
+    expect(preconditionVerdict('http://app.test/items/:id', 'http://app.test/items/7', {}, null, [{ at: 'p1', step: 2 }]).refuse).toBeUndefined();
+  });
+
   // fwgr45: a slot that filled to '' asked for emptiness and stopped the
   // compiled arm on the RIGHT dashboard, while both replays ran 7/7 at 0
   // turns. '' in the artifact is `outputs[ref] ?? ''` — never published —
