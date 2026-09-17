@@ -504,6 +504,14 @@ describe('volatile expectations and whitespace identity (fwkb3, fwod31)', () => 
     // a sentence-final number still substitutes
     expect(substitute('qty 1.', slots)).toBe('qty {{d1}}.');
   });
+  it('a number inside a clock time, a date or a thousands group is never a slot (fwod67 order id 21 in "21:05")', () => {
+    const slots = new Map([['v4', '21']]);
+    expect(substitute('- cell "09/17/2026 21:05"', slots)).toBe('- cell "09/17/2026 21:05"');
+    expect(substitute('- cell "21/09/2026 10:21"', slots)).toBe('- cell "21/09/2026 10:21"');
+    expect(substitute('total £ 1,21 and 21,000', slots)).toBe('total £ 1,21 and 21,000');
+    // the same number standing on its own still substitutes, a comma after it included
+    expect(substitute('order 21, cell "21" and S00021', slots)).toBe('order {{v4}}, cell "{{v4}}" and S00021');
+  });
 });
 
 describe('url patterns', () => {

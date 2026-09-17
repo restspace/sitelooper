@@ -1288,12 +1288,16 @@ export function substitute(text: string, slots: Map<string, string>): string {
     // touch the 25 in `:nth-of-type(25)` or `nth=25` — nor a number inside a
     // dotted run of numbers (127.0.0.1, 1.2.3), which is part of that address
     // or version: fwod31 compiled the odoo start url as
-    // `http://127.0.0.{{d1}}:8069/...` after `cids=1` minted d1 = "1". Both
-    // guards only narrow the shared boundary, which already lets '-' and '_'
-    // split around a number.
+    // `http://127.0.0.{{d1}}:8069/...` after `cids=1` minted d1 = "1". Nor a
+    // number inside a run of numbers joined by ':' , '/' or ',' — a clock time,
+    // a date, a thousands group: fwod67's order id 21 rewrote the "21" of
+    // `- cell "09/17/2026 21:05"` in a list expectation to `{{v4}}`, and the
+    // next run's order 22 then waited for a cell reading "22:…" that no clock
+    // showed. All guards only narrow the shared boundary, which already lets
+    // '-' and '_' split around a number.
     const numeric = /^\d+$/.test(value);
     const re = numeric
-      ? new RegExp(`(?<![A-Za-z0-9(=]|\\d\\.)${escapeRe(value)}(?![A-Za-z0-9)]|\\.\\d)`, 'g')
+      ? new RegExp(`(?<![A-Za-z0-9(=]|\\d[.:/,])${escapeRe(value)}(?![A-Za-z0-9)]|[.:/,]\\d)`, 'g')
       : tokenPattern(value, 'g');
     out = out.replace(re, `{{${name}}}`);
   }

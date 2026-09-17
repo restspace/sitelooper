@@ -75,6 +75,20 @@ export function unfilledSlot(line: string): boolean {
   return UNFILLED_MARKER.test(line);
 }
 
+/**
+ * A recorded line whose slot this run bound to NOTHING. The compiled artifact
+ * spells an unpublished reference as '' (`outputs[ref] ?? ''`, emit.ts), where
+ * the daemon leaves the param absent — and url.ts's `unfilled`, gates.ts's
+ * markersBound and urlRecordParts all read '' as "no value". This gate did not:
+ * fwod67's 04-open expectation `- row "20% £ {{v9}}"` filled to
+ * `- row "20% £ "` in the artifact and was searched for as literal text, while
+ * the daemon (v9 absent, so unfilledSlot) dropped the line and passed. Judged
+ * on the RECORDED line, before filling erases the marker.
+ */
+export function boundToNothing(line: string, params: Record<string, string>): boolean {
+  return [...line.matchAll(/\{\{([vd]\d+)\}\}/g)].some((m) => m[1] in params && params[m[1]] === '');
+}
+
 /** `- role "name" [state]…: value` — the name may be cut short by the 120-char stored-line cap, so its closing quote is optional. */
 const LINE_PARTS = /^-?\s*([A-Za-z][\w-]*)(?:\s+"((?:[^"\\]|\\.)*)"?)?((?:\s+\[[^\]]*\])*)(?::\s*(.*))?$/;
 
@@ -349,8 +363,18 @@ export async function expectedChangesVerdict(
       }
       return true;
     });
-  let parameterised = usable(liveLines(lines.filter(isParam), params));
-  const plain = usable(liveLines(lines.filter((l) => !isParam(l)), params));
+  // A slot bound to '' is unfilled too (boundToNothing) — judged on the
+  // recorded line, since filling would erase the marker it is judged by.
+  // A line that would identify nothing once filled is dropped silently, as
+  // identifiesNothing drops it (`- textbox "": {{v5}}` with v5 = '').
+  const fillable = (group: string[]): string[] =>
+    group.filter((l) => {
+      if (!boundToNothing(l, params)) return true;
+      if (!identifiesNothing(liveLines([l], params)[0])) unfilled.push(l);
+      return false;
+    });
+  let parameterised = usable(liveLines(fillable(lines.filter(isParam)), params));
+  const plain = usable(liveLines(fillable(lines.filter((l) => !isParam(l))), params));
   if (unfilled.length) {
     warnings.push(
       `step ${tag}: ${unfilled.length} recorded page change(s) carry a value this run could not fill (e.g. ${JSON.stringify(unfilled[0])}) — not checked`,

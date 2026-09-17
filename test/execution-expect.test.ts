@@ -106,6 +106,15 @@ describe('expectedChangesVerdict', () => {
     const unbound = await expectedChangesVerdict(['- heading "{{v9}}"'], {}, ctx(), seen(['- heading "anything"'], ['- heading "anything"']));
     expect(unbound.stop).toBeUndefined();
     expect(unbound.warnings[0]).toContain('could not fill');
+    // a slot bound to '' — the artifact's spelling of an unpublished reference
+    // (fwod67 04-open: `- row "20% £ {{v9}}"` filled to `- row "20% £ "` and was
+    // searched for; the daemon, with v9 absent, had dropped it)
+    const nothing = await expectedChangesVerdict(['- row "20% £ {{v9}}"'], { v9: '' }, ctx(), seen(['- row "20% £ 885.00"'], ['- row "20% £ 885.00"']));
+    expect(nothing.stop).toBeUndefined();
+    expect(nothing.warnings).toEqual(['step 3: 1 recorded page change(s) carry a value this run could not fill (e.g. "- row \\"20% £ {{v9}}\\"") — not checked']);
+    // a derived marker bound to '' the same; a bound one is still judged
+    expect((await expectedChangesVerdict(['- heading "Order {{d1}}"'], { d1: '' }, ctx(), seen([], ['- heading "Order 43"']))).stop).toBeUndefined();
+    expect((await expectedChangesVerdict(['- heading "Order {{d1}}"'], { d1: '42' }, ctx(), seen([], ['- heading "Order 43"']))).stop).toBeDefined();
     // the {{*}} wildcard is not an unfilled slot: it is still matched, and still judged
     const wildcard = await expectedChangesVerdict(['- combobox "Project": {{*}}'], {}, ctx(), seen([], ['- combobox "Other": x']));
     expect(wildcard.stop).toMatch(/none of the 1 recorded page change\(s\) appeared/);
