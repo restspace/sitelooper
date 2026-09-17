@@ -1,0 +1,473 @@
+{
+ "id": "s_efdd23",
+ "origin": "http://127.0.0.1:8069",
+ "template": "In Odoo Sales, the previous attempt to create a quotation failed because a leftover 'Configure your product' modal (class 'modal d-block o_technical_modal') is still in the DOM overlaying the {{v1}} quotation form. Fix this: dismiss that leftover modal (click its X/close button, or if no close button, remove it via JavaScript e.g. document.querySelector('.modal.d-block.o_technical_modal').remove() plus clearing any .modal-backdrop), then save the existing filled quotation (customer '{{v2}}', one line: {{v4}}, qty {{v5}}). Verify the save took effect: the breadcrumb/heading must show a quotation reference like S000xx instead of '{{v1}}'. Report the quotation reference, the product, unit price, and untaxed amount from the totals section.",
+ "params": {
+  "v1": {
+   "example": "New",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:record_heading"
+  },
+  "v2": {
+   "example": "fwod60-n2 Bench Customer",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i1:customer_name"
+  },
+  "v3": {
+   "example": "fwod60-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v4": {
+   "example": "Office Chair",
+   "usedIn": [],
+   "known": true,
+   "binding": "02-create.product_name"
+  },
+  "v5": {
+   "example": "3.00",
+   "usedIn": [],
+   "known": true,
+   "binding": "02-create.quantity"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1474"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Save manually"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 163,
+      "y": 79,
+      "w": 26,
+      "h": 17.5,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > h1 > div > span"
+     },
+     {
+      "kind": "point",
+      "x": 89,
+      "y": 195,
+      "w": 96.5,
+      "h": 31,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "heading_after_save"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 691,
+      "y": 442,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "quantity"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(2) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1203,
+      "y": 642,
+      "w": 70.8,
+      "h": 21,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "tax_20_amount"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(3) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1203,
+      "y": 667,
+      "w": 70.8,
+      "h": 21,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "total"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(5)"
+     },
+     {
+      "kind": "point",
+      "x": 783,
+      "y": 442,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "unit_price"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "tr:nth-of-type(1) > td:nth-of-type(6) > div > div > span > div"
+     },
+     {
+      "kind": "point",
+      "x": 858,
+      "y": 440,
+      "w": 26,
+      "h": 13,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "o_data_row_td"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(2) > td:nth-of-type(1) > label"
+     },
+     {
+      "kind": "point",
+      "x": 1124,
+      "y": 642,
+      "w": 82,
+      "h": 21,
+      "role": null,
+      "tag": "label",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "oe_subtotal_footer_tr_2_1"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(2) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1203,
+      "y": 642,
+      "w": 70.8,
+      "h": 21,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "oe_subtotal_footer_tr_2_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(3) > td:nth-of-type(1) > label"
+     },
+     {
+      "kind": "point",
+      "x": 1138,
+      "y": 668,
+      "w": 53.5,
+      "h": 21,
+      "role": null,
+      "tag": "label",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "oe_subtotal_footer_tr_3_1"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(3) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1203,
+      "y": 667,
+      "w": 70.8,
+      "h": 21,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "oe_subtotal_footer_tr_3_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(7)"
+     },
+     {
+      "kind": "point",
+      "x": 1179,
+      "y": 442,
+      "w": 104,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line_tax_excl"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div > table > tbody > tr:nth-of-type(1) > td:nth-of-type(2)",
+      "nth": 1
+     },
+     {
+      "kind": "point",
+      "x": 1203,
+      "y": 619,
+      "w": 72.8,
+      "h": 23,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line_tax_excl"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div > div > table > tbody > tr:nth-of-type(1)",
+      "nth": 1
+     },
+     {
+      "kind": "point",
+      "x": 1138,
+      "y": 619,
+      "w": 202.2,
+      "h": 23,
+      "role": null,
+      "tag": "tr",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   }
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Done and verified. On the sale order form (id=22) there was no leftover modal to remove: document.querySelector('.modal.d-block.o_technical_modal') returned null, '.modal' matched 0 elements and '.modal-backdrop' 0. The filled quotation (customer \"{{v2}}\"/Benchville, one line [FURN_7777] {{v4}} qty {{v5}}) was already loaded, and I clicked the Save button in the breadcrumb; the form then showed no dirty state, no modals, and the title/breadcrumb/heading read \"S00022\" instead of \"{{v1}}\". Read back from the saved page: product [FURN_7777] {{v4}}, quantity {{v5}}, unit price 70.00, tax excl. £210.00; totals Untaxed Amount £210.00, TAX 20% £42.00, Total £252.00. Screenshot: /root/.sitelooper/sessions/{{v3}}/screenshots/s00022-saved-no-modal.png",
+  "values": {
+   "form_dirty_after_save": "false",
+   "heading_after_save": "S00022",
+   "leftover_modal_present": "no (0 elements matching .modal/.o_technical_modal, 0 .modal-backdrop)",
+   "line_tax_excl": "£ 210.00",
+   "product_display": "[FURN_7777] {{v4}}",
+   "product_name": "{{v4}}",
+   "quantity": "{{v5}}",
+   "quotation_reference": "S00022",
+   "tax_20_amount": "£ 42.00",
+   "total": "£ 252.00",
+   "unit_price": "70.00",
+   "untaxed_amount_label": "Untaxed Amount: £ 210.00",
+   "o_data_row_td": "20%",
+   "o_data_row_td_2": "£ 210.00",
+   "oe_subtotal_footer_tr": "Untaxed Amount\t£ 210.00",
+   "ref": "{{v3}}",
+   "ref_2": "FURN_7777",
+   "ref_3": "s00022-saved-no-modal.png",
+   "oe_subtotal_footer_tr_2_1": "TAX 20%",
+   "oe_subtotal_footer_tr_2_2": "£ 42.00",
+   "oe_subtotal_footer_tr_3_1": "Total",
+   "oe_subtotal_footer_tr_3_2": "£ 252.00"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-17T03:08:37.035Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "provenance": {
+  "session": "fwod60-n2",
+  "instruction": "In Odoo Sales, the previous attempt to create a quotation failed because a leftover 'Configure your product' modal (class 'modal d-block o_technical_modal') is still in the DOM overlaying the New quotation form. Fix this: dismiss that leftover modal (click its X/close button, or if no close button, remove it via JavaScript e.g. document.querySelector('.modal.d-block.o_technical_modal').remove() plus clearing any .modal-backdrop), then save the existing filled quotation (customer 'fwod60-n2 Bench Customer', one line: Office Chair, qty 3.00). Verify the save took effect: the breadcrumb/heading must show a quotation reference like S000xx instead of 'New'. Report the quotation reference, the product, unit price, and untaxed amount from the totals section.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-17T03:08:37.035Z"
+ },
+ "revision": 1
+}

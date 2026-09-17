@@ -1,0 +1,785 @@
+{
+ "id": "s_5a5d0d",
+ "origin": "http://127.0.0.1:8069",
+ "template": "In Odoo Sales, open the existing quotation {{v1}} (customer {{v3}}, one line: {{v5}} qty {{v6}}). Add a SECOND order line with a DIFFERENT product (any other product from the catalogue, chosen via the autocomplete dropdown - type and click an actual dropdown option; if a 'Configure your product' modal opens after selecting the product, dismiss/Cancel it and pick a product that does not trigger the modal, or accept it and make sure no modal remains in the DOM afterwards). Set the second line's quantity to 2. Save the quotation and verify: no leftover modal remains in the DOM, the save persists (no '{{v7}}' heading, record id stays 22). Report the exact product name of the second line, its unit price, its quantity, and the new {{v8}} in the totals section.",
+ "params": {
+  "v1": {
+   "example": "S00022",
+   "usedIn": [],
+   "known": true,
+   "binding": "03-create.quotation_reference"
+  },
+  "v3": {
+   "example": "fwod60-n2 Bench Customer",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i1:customer_name"
+  },
+  "v4": {
+   "example": "fwod60-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v5": {
+   "example": "Office Chair",
+   "usedIn": [],
+   "known": true,
+   "binding": "02-create.product_name"
+  },
+  "v6": {
+   "example": "3.00",
+   "usedIn": [],
+   "known": true,
+   "binding": "02-create.quantity"
+  },
+  "v7": {
+   "example": "New",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:record_heading"
+  },
+  "v8": {
+   "example": "Untaxed Amount: £ 210.00",
+   "usedIn": [],
+   "known": true,
+   "binding": "03-create.untaxed_amount_label"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1583"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Add a product"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > table > tbody > tr:nth-of-type(2) > td:nth-of-type(2) > a:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 98,
+      "y": 481,
+      "w": 87.2,
+      "h": 16,
+      "role": "button",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=22&menu_id=:id&model=sale.order&view_type=form",
+    "addedContains": [
+     "- row \"£ 0.00\"",
+     "- combobox \"Type to find a product...\"",
+     "- cell \"£ 0.00\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_292da2",
+    "step": 1
+   }
+  },
+  {
+   "tool": "type",
+   "args": {
+    "target": "table.o_list_table tr.o_selected_row input >> nth=0",
+    "text": "Chair"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "combobox",
+      "name": "Type to find a product..."
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Type to find a product..."
+     },
+     {
+      "kind": "css",
+      "selector": "td:nth-of-type(2) > div > div:nth-of-type(1) > div > div > input"
+     },
+     {
+      "kind": "point",
+      "x": 199,
+      "y": 481,
+      "w": 288.1,
+      "h": 21,
+      "role": "combobox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=22&menu_id=:id&model=sale.order&view_type=form",
+    "addedContains": [
+     "- combobox \"Type to find a product...\": Chair",
+     "- menu \"\"",
+     "- option \"{{*}} floor protection\"",
+     "- option \"Conference {{*}}\"",
+     "- option \"[FURN_7777] {{*}}\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_292da2",
+    "step": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=option[name=\"Chair floor protection\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "option",
+      "name": "Chair floor protection"
+     },
+     {
+      "kind": "css",
+      "selector": "#autocomplete_0_0"
+     },
+     {
+      "kind": "id",
+      "selector": "#autocomplete_0_0"
+     },
+     {
+      "kind": "point",
+      "x": 176,
+      "y": 514,
+      "w": 241.3,
+      "h": 27,
+      "role": "option",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=22&menu_id=:id&model=sale.order&view_type=form",
+    "addedContains": [
+     "- row \"20% £ 12.00\"",
+     "- combobox \"Type to find a product...\": {{*}}",
+     "- link \"Delete\"",
+     "- cell \"£ 12.00\"",
+     "- row \"Untaxed Amount £ 222.00\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_292da2",
+    "step": 3
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e1949",
+    "value": "2"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "table > tbody > tr:nth-of-type(2) > td:nth-of-type(4) > div > input"
+     },
+     {
+      "kind": "point",
+      "x": 691,
+      "y": 481,
+      "w": 82.4,
+      "h": 21,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=22&menu_id=:id&model=sale.order&view_type=form",
+    "addedContains": [
+     "- row \"20% £ 24.00\"",
+     "- cell \"£ 24.00\"",
+     "- row \"Untaxed Amount £ 234.00\"",
+     "- cell \"£ 234.00\"",
+     "- row \"TAX 20% £ 46.80\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1474"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Save manually"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 163,
+      "y": 79,
+      "w": 26,
+      "h": 17.5,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=22&menu_id=:id&model=sale.order&view_type=form",
+    "addedContains": [
+     "- cell \"Chair floor protection\"",
+     "- cell \"Chair floor protection Office chairs can harm your floor: protect it.\"",
+     "- cell \"2.00\"",
+     "- cell \"12.00\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > h1 > div > span"
+     },
+     {
+      "kind": "point",
+      "x": 89,
+      "y": 195,
+      "w": 96.5,
+      "h": 31,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "heading_after_save"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "tbody > tr:nth-of-type(2) > td:nth-of-type(2) > div > span > span"
+     },
+     {
+      "kind": "point",
+      "x": 120,
+      "y": 480,
+      "w": 130,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "second_line_product_name"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(2) > td:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 691,
+      "y": 491,
+      "w": 92,
+      "h": 59,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "second_line_quantity"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(2) > td:nth-of-type(5)"
+     },
+     {
+      "kind": "point",
+      "x": 783,
+      "y": 491,
+      "w": 92,
+      "h": 59,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "second_line_unit_price"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(2) > td:nth-of-type(7)"
+     },
+     {
+      "kind": "point",
+      "x": 1179,
+      "y": 491,
+      "w": 104,
+      "h": 59,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "second_line_tax_excl"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(2) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1203,
+      "y": 663,
+      "w": 70.8,
+      "h": 21,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "tax_20_amount"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(3) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1203,
+      "y": 688,
+      "w": 70.8,
+      "h": 21,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "total"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 691,
+      "y": 442,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "o_data_row_td_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(5)"
+     },
+     {
+      "kind": "point",
+      "x": 783,
+      "y": 442,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "o_data_row_td_3"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(7)"
+     },
+     {
+      "kind": "point",
+      "x": 1179,
+      "y": 442,
+      "w": 104,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "o_data_row_td_4"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(2) > td:nth-of-type(7)"
+     },
+     {
+      "kind": "point",
+      "x": 1179,
+      "y": 491,
+      "w": 104,
+      "h": 59,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "o_data_row_td_5"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(1) > td:nth-of-type(1) > label"
+     },
+     {
+      "kind": "point",
+      "x": 1102,
+      "y": 640,
+      "w": 127.4,
+      "h": 21,
+      "role": null,
+      "tag": "label",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "oe_subtotal_footer_tr_1"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(1) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1211,
+      "y": 639,
+      "w": 54.5,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "oe_subtotal_footer_tr_2_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(2) > td:nth-of-type(1) > label"
+     },
+     {
+      "kind": "point",
+      "x": 1124,
+      "y": 663,
+      "w": 82,
+      "h": 21,
+      "role": null,
+      "tag": "label",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "oe_subtotal_footer_tr_2_1"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(2) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1203,
+      "y": 663,
+      "w": 70.8,
+      "h": 21,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "oe_subtotal_footer_tr_2_2_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(3) > td:nth-of-type(1) > label"
+     },
+     {
+      "kind": "point",
+      "x": 1138,
+      "y": 689,
+      "w": 53.5,
+      "h": 21,
+      "role": null,
+      "tag": "label",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "oe_subtotal_footer_tr_3_1"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(3) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1203,
+      "y": 688,
+      "w": 70.8,
+      "h": 21,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "oe_subtotal_footer_tr_3_2"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Continued from the partial replay (its \"Add a product\" + typing \"{{v11}}\" had already put a second line in progress on {{v1}}). The second line had picked the dropdown option \"{{v11}} floor protection\" (a different product from the existing {{v5}}), so I set its Quantity to 2 and clicked Save. Verified on the saved page: heading/breadcrumb is still \"{{v1}}\" (not \"{{v7}}\"), url keeps id=22, form is not dirty, and 0 elements match .modal / .o_technical_modal / .modal-backdrop (no leftover 'Configure your product' modal). Read back from the page: line 1 = [FURN_7777] {{v5}}, qty {{v6}}, unit price 70.00, tax excl. £210.00; line 2 = \"{{v11}} floor protection\", qty 2.00, unit price 12.00, tax 20%, tax excl. £24.00. Totals section now shows {{v9}} £234.00, TAX 20% £46.80, Total £280.80 (the app's own computation — note it is £234.00, not the £210.00 mentioned in the instruction, because both lines are counted). Screenshot: /root/.sitelooper/sessions/{{v4}}/screenshots/s00022-second-line-saved.png",
+  "values": {
+   "heading_after_save": "{{v1}}",
+   "record_id": "{{v2}}",
+   "form_dirty": "false",
+   "modal_count": "0 (.modal, .o_technical_modal, .modal-backdrop all 0)",
+   "second_line_product_name": "{{v11}} floor protection",
+   "second_line_quantity": "2.00",
+   "second_line_unit_price": "12.00",
+   "second_line_tax": "20%",
+   "second_line_tax_excl": "£ 24.00",
+   "first_line": "[FURN_7777] {{v5}} qty {{v6}} @ 70.00 = {{v10}}",
+   "untaxed_amount_label": "{{v9}}: £ 234.00",
+   "tax_20_amount": "£ 46.80",
+   "total": "£ 280.80",
+   "quotation_reference": "{{v1}}",
+   "screenshot": "/root/.sitelooper/sessions/{{v4}}/screenshots/s00022-second-line-saved.png",
+   "o_data_row_td": "[FURN_7777] {{v5}}",
+   "o_data_row_td_2": "{{v6}}",
+   "o_data_row_td_3": "70.00",
+   "o_data_row_td_4": "£ 210.00",
+   "o_data_row_td_5": "£ 24.00",
+   "ref": "FURN_7777",
+   "ref_2": "{{v4}}",
+   "ref_3": "s00022-second-line-saved.png",
+   "oe_subtotal_footer_tr_1": "{{v9}}",
+   "oe_subtotal_footer_tr_2_2": "£ 234.00",
+   "oe_subtotal_footer_tr_2_1": "TAX 20%",
+   "oe_subtotal_footer_tr_2_2_2": "£ 46.80",
+   "oe_subtotal_footer_tr_3_1": "Total",
+   "oe_subtotal_footer_tr_3_2": "£ 280.80"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-17T03:09:22.228Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "variantOf": "s_292da2",
+ "provenance": {
+  "session": "fwod60-n2",
+  "instruction": "In Odoo Sales, open the existing quotation S00022 (customer fwod60-n2 Bench Customer, one line: Office Chair qty 3.00). Add a SECOND order line with a DIFFERENT product (any other product from the catalogue, chosen via the autocomplete dropdown - type and click an actual dropdown option; if a 'Configure your product' modal opens after selecting the product, dismiss/Cancel it and pick a product that does not trigger the modal, or accept it and make sure no modal remains in the DOM afterwards). Set the second line's quantity to 2. Save the quotation and verify: no leftover modal remains in the DOM, the save persists (no 'New' heading, record id stays 22). Report the exact product name of the second line, its unit price, its quantity, and the new Untaxed Amount: £ 210.00 in the totals section.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-17T03:09:22.228Z"
+ },
+ "revision": 1
+}

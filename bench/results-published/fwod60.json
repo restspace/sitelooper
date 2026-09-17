@@ -1,0 +1,832 @@
+{
+  "name": "fwod60",
+  "origin": "http://127.0.0.1:8069",
+  "startUrl": "http://127.0.0.1:8069/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-login",
+      "instruction": "Log in to Odoo at http://127.0.0.1:8069/ with username admin and password admin (use the login form fields, then submit). Then create a new customer (contact) named '{{runid}} Bench Customer' with City set to 'Benchville' (Sales app or Contacts app, New contact; save). Verify the customer record shows the name and City Benchville, and report what you observed.",
+      "skill": "s_ce61bb",
+      "params": {
+        "v2": "{{runid}} Bench Customer",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "customer_name",
+        "customer_city",
+        "record_url",
+        "ref"
+      ],
+      "recorded": {
+        "customer_name": "fwod60-n1 Bench Customer",
+        "customer_city": "Benchville",
+        "odoo_record_id": "44",
+        "model": "res.partner",
+        "contact_type": "Company (default)",
+        "record_url": "http://127.0.0.1:8069/web#cids=1&menu_id=109&action=156&model=res.partner&view_type=form&id=44",
+        "ref": "fwod60-n1",
+        "url": "http://127.0.0.1:8069/web#cids=1&menu_id=109&action=156&model=res.partner&view_type=form&id=44",
+        "url.q.menu_id": "109",
+        "url.q.action": "156",
+        "url.q.id": "44"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=res.partner&view_type=form",
+      "outputEvidence": {
+        "customer_name": {
+          "same": 0,
+          "differed": 2
+        },
+        "customer_city": {
+          "same": 2,
+          "differed": 0
+        },
+        "odoo_record_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "model": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "contact_type": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "record_url": {
+          "same": 0,
+          "differed": 2
+        },
+        "ref": {
+          "same": 0,
+          "differed": 2
+        },
+        "url": {
+          "same": 0,
+          "differed": 2
+        },
+        "url.q.menu_id": {
+          "same": 2,
+          "differed": 0
+        },
+        "url.q.action": {
+          "same": 2,
+          "differed": 0
+        },
+        "url.q.id": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "In Odoo (already logged in as admin), go to the Sales app and create a new quotation for the customer '{{runid}} Bench Customer' (the customer field is an autocomplete dropdown - type the name and click the matching option from the dropdown). Add exactly ONE order line: pick any product from the product catalogue (the product field is an autocomplete dropdown - type a few letters and click an actual option from the dropdown), set the quantity to 3. Save the quotation. Then report: (a) the exact product name you chose, (b) the unit price the app filled in for that line, (c) the untaxed amount the app computes in the totals section, and (d) the quotation reference/name (e.g. S00042). Read these values back from the saved page to verify.",
+      "outputs": [
+        "product_name",
+        "quantity",
+        "unit_price",
+        "tax",
+        "line_tax_excl_total",
+        "customer",
+        "customer_city",
+        "quotation_reference",
+        "save_blocked_by"
+      ],
+      "recorded": {
+        "product_name": "[FURN_1118] Corner Desk Left Sit",
+        "quantity": "3.00",
+        "unit_price": "85.00",
+        "tax": "20%",
+        "line_tax_excl_total": "£ 255.00",
+        "customer": "fwod60-n1 Bench Customer",
+        "customer_city": "Benchville",
+        "quotation_reference": "NOT ASSIGNED - record unsaved, heading still 'New'",
+        "save_blocked_by": "lingering modal 'Configure your product' (class 'modal d-block o_technical_modal') overlaying the form and intercepting clicks on Save",
+        "url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form",
+        "url.q.menu_id": "194",
+        "url.q.action": "316"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&menu_id=:id&model=sale.order&view_type=form",
+      "skill": "s_c99052",
+      "params": {
+        "v1": "{{runid}} Bench Customer",
+        "v2": "{{runid}}"
+      }
+    },
+    {
+      "id": "03-create",
+      "instruction": "In Odoo Sales, the previous attempt to create a quotation failed because a leftover 'Configure your product' modal (class 'modal d-block o_technical_modal') is still in the DOM overlaying the New quotation form. Fix this: dismiss that leftover modal (click its X/close button, or if no close button, remove it via JavaScript e.g. document.querySelector('.modal.d-block.o_technical_modal').remove() plus clearing any .modal-backdrop), then save the existing filled quotation (customer '{{runid}} Bench Customer', one line: {{02-create.product_name}}, qty {{02-create.quantity}}). Verify the save took effect: the breadcrumb/heading must show a quotation reference like S000xx instead of 'New'. Report the quotation reference, the product, unit price, and untaxed amount from the totals section.",
+      "skill": "s_a10f3a",
+      "params": {
+        "v1": "{{runid}} Bench Customer",
+        "v3": "{{02-create.product_name}}",
+        "v4": "{{02-create.quantity}}",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "system_notification",
+        "quotation_reference",
+        "saved_record_url",
+        "first_line_product_name",
+        "first_line_quantity",
+        "heading",
+        "first_line_unit_price",
+        "first_line_tax",
+        "first_line_line_total",
+        "customer_reference",
+        "untaxed_amount_label",
+        "untaxed_amount",
+        "tax_label",
+        "tax_amount"
+      ],
+      "recorded": {
+        "system_notification": "Mitchell Admin\n- 3 minutes ago\nCreating a new record...",
+        "quotation_reference": "S00021",
+        "saved_record_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=21",
+        "first_line_product_name": "[FURN_1118] Corner Desk Left Sit",
+        "first_line_quantity": "3.00",
+        "heading": "New",
+        "first_line_unit_price": "85.00",
+        "first_line_tax": "20%",
+        "first_line_line_total": "£ 255.00",
+        "product_reference": "FURN_1118",
+        "customer_reference": "fwod60-n1",
+        "untaxed_amount_label": "Untaxed Amount",
+        "untaxed_amount": "£ 255.00",
+        "tax_label": "TAX 20%",
+        "tax_amount": "£ 51.00",
+        "url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=21",
+        "url.q.id": "21"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "system_notification": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "quotation_reference": {
+          "same": 0,
+          "differed": 2
+        },
+        "saved_record_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "first_line_product_name": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "first_line_quantity": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "heading": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "first_line_unit_price": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "first_line_tax": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "first_line_line_total": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "product_reference": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "customer_reference": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "untaxed_amount_label": {
+          "same": 0,
+          "differed": 2
+        },
+        "untaxed_amount": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "tax_label": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "tax_amount": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "url": {
+          "same": 0,
+          "differed": 2
+        },
+        "url.q.id": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "04-open",
+      "instruction": "In Odoo Sales, open the existing quotation {{03-create.quotation_reference}} (customer {{runid}} Bench Customer, one line: {{02-create.product_name}} qty {{02-create.quantity}}). Add a SECOND order line with a DIFFERENT product (any other product from the catalogue, chosen via the autocomplete dropdown - type and click an actual dropdown option; if a 'Configure your product' modal opens after selecting the product, dismiss/Cancel it and pick a product that does not trigger the modal, or accept it and make sure no modal remains in the DOM afterwards). Set the second line's quantity to 2. Save the quotation and verify: no leftover modal remains in the DOM, the save persists (no 'New' heading, record id stays {{03-create.url.q.id}}). Report the exact product name of the second line, its unit price, its quantity, and the new {{03-create.untaxed_amount_label}} in the totals section.",
+      "skill": "s_292da2",
+      "params": {
+        "v1": "{{03-create.quotation_reference}}",
+        "v3": "{{runid}} Bench Customer",
+        "v5": "{{02-create.product_name}}",
+        "v7": "{{02-create.quantity}}",
+        "v8": "New",
+        "v9": "{{03-create.untaxed_amount_label}}",
+        "v4": "{{runid}}"
+      },
+      "outputs": [
+        "quotation_reference",
+        "odoo_record_id",
+        "second_line_product_name",
+        "second_line_quantity",
+        "second_line_unit_price",
+        "second_line_tax_excl",
+        "first_line",
+        "untaxed_amount",
+        "tax_20_amount",
+        "total",
+        "customer",
+        "heading",
+        "screenshot",
+        "saved_url",
+        "customer_reference",
+        "product_reference",
+        "untaxed_amount_label",
+        "oe_subtotal_footer_tr_2_2",
+        "tax_label",
+        "tax_amount",
+        "total_label",
+        "oe_subtotal_footer_tr_3_2"
+      ],
+      "recorded": {
+        "quotation_reference": "S00021",
+        "odoo_record_id": "21",
+        "second_line_product_name": "Chair floor protection",
+        "second_line_quantity": "2.00",
+        "second_line_unit_price": "12.00",
+        "second_line_tax": "20%",
+        "second_line_tax_excl": "£ 24.00",
+        "first_line": "[FURN_1118] Corner Desk Left Sit | qty 3.00 | 85.00 | £ 255.00",
+        "untaxed_amount": "£ 279.00",
+        "tax_20_amount": "£ 55.80",
+        "total": "£ 334.80",
+        "modals_remaining": "0 (no .modal, no .modal.d-block.o_technical_modal, no .modal-backdrop)",
+        "customer": "fwod60-n1 Bench Customer",
+        "heading": "S00021",
+        "screenshot": "/tmp/sitelooper_fwod60_S00021_two_lines.png",
+        "saved_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=21",
+        "customer_reference": "fwod60-n1",
+        "product_reference": "FURN_1118",
+        "untaxed_amount_label": "Untaxed Amount",
+        "oe_subtotal_footer_tr_2_2": "£ 279.00",
+        "tax_label": "TAX 20%",
+        "tax_amount": "£ 55.80",
+        "total_label": "Total",
+        "oe_subtotal_footer_tr_3_2": "£ 334.80"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "urlVariance": [
+        "21",
+        "22",
+        "23"
+      ],
+      "outputEvidence": {
+        "quotation_reference": {
+          "same": 0,
+          "differed": 1,
+          "absent": 1
+        },
+        "odoo_record_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "second_line_product_name": {
+          "same": 2,
+          "differed": 0
+        },
+        "second_line_quantity": {
+          "same": 2,
+          "differed": 0
+        },
+        "second_line_unit_price": {
+          "same": 2,
+          "differed": 0
+        },
+        "second_line_tax": {
+          "same": 1,
+          "differed": 0,
+          "absent": 1
+        },
+        "second_line_tax_excl": {
+          "same": 2,
+          "differed": 0
+        },
+        "first_line": {
+          "same": 0,
+          "differed": 1,
+          "absent": 1
+        },
+        "untaxed_amount": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "tax_20_amount": {
+          "same": 0,
+          "differed": 2
+        },
+        "total": {
+          "same": 0,
+          "differed": 2
+        },
+        "modals_remaining": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "customer": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "heading": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "screenshot": {
+          "same": 0,
+          "differed": 1,
+          "absent": 1
+        },
+        "saved_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "customer_reference": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "product_reference": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "untaxed_amount_label": {
+          "same": 0,
+          "differed": 2
+        },
+        "oe_subtotal_footer_tr_2_2": {
+          "same": 0,
+          "differed": 2
+        },
+        "tax_label": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "tax_amount": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "total_label": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "oe_subtotal_footer_tr_3_2": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "05-open",
+      "instruction": "In Odoo Sales, open quotation {{03-create.quotation_reference}} (id={{03-create.url.q.id}}) and edit the FIRST order line's quantity: change it from {{02-create.quantity}} to 5 (the first line is {{02-create.product_name}}, unit price {{02-create.unit_price}}; the second line '{{04-open.second_line_product_name}}' qty {{04-open.second_line_quantity}} must stay unchanged). Save and verify the save persists (no 'New' heading, no leftover modal in the DOM). Report the first line's new quantity, its line tax-excl amount, and the new {{03-create.untaxed_amount_label}} in the totals section.",
+      "skill": "s_7e3698",
+      "params": {
+        "v1": "{{03-create.quotation_reference}}",
+        "v3": "{{02-create.quantity}}",
+        "v4": "{{02-create.product_name}}",
+        "v6": "{{02-create.unit_price}}",
+        "v7": "{{04-open.second_line_product_name}}",
+        "v8": "{{04-open.second_line_quantity}}",
+        "v9": "New",
+        "v10": "{{03-create.untaxed_amount_label}}"
+      },
+      "outputs": [
+        "heading",
+        "saved_url",
+        "untaxed_amount_label",
+        "untaxed_amount",
+        "tax_label",
+        "tax_amount",
+        "total_label",
+        "total"
+      ],
+      "recorded": {
+        "heading": "S00021",
+        "saved_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=21",
+        "untaxed_amount_label": "Untaxed Amount",
+        "untaxed_amount": "£ 449.00",
+        "tax_label": "TAX 20%",
+        "tax_amount": "£ 89.80",
+        "total_label": "Total",
+        "total": "£ 538.80"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "urlVariance": [
+        "21",
+        "22"
+      ],
+      "outputEvidence": {
+        "heading": {
+          "same": 0,
+          "differed": 2
+        },
+        "saved_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "untaxed_amount_label": {
+          "same": 0,
+          "differed": 2
+        },
+        "untaxed_amount": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "tax_label": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "tax_amount": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "total_label": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "total": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "06-open",
+      "instruction": "In Odoo Sales, open quotation {{03-create.quotation_reference}} (id={{03-create.url.q.id}}, customer {{runid}} Bench Customer, first line {{02-create.product_name}} qty 5.00, second line {{04-open.second_line_product_name}} qty {{04-open.second_line_quantity}}, {{03-create.untaxed_amount_label}} £449.00) and CONFIRM it: click the Confirm button (may appear as 'Confirm' or in a Confirm Sales dropdown) so the quotation becomes a sales order. Wait for the status to change - the breadcrumb/name should stay {{03-create.quotation_reference}} and the status bar (in the header area near the name) should show the Sales Orders stage as selected (e.g. 'Quotation Sent'/'Sales' stage highlighted, status field showing something like 'Sales Order'). Verify the confirmation succeeded (do not wait for network idle). Report the order reference (name, e.g. {{03-create.quotation_reference}}) and the exact status text the app now shows (both the stage in the status bar and any status field label).",
+      "skill": "s_93edaf",
+      "params": {
+        "v1": "{{03-create.quotation_reference}}",
+        "v3": "{{runid}} Bench Customer",
+        "v5": "{{02-create.product_name}}",
+        "v7": "{{04-open.second_line_product_name}}",
+        "v8": "{{04-open.second_line_quantity}}",
+        "v9": "{{03-create.untaxed_amount_label}}",
+        "v4": "{{runid}}"
+      },
+      "outputs": [
+        "order_reference",
+        "odoo_record_id",
+        "current_stage_highlighted",
+        "date_order",
+        "untaxed_amount",
+        "total",
+        "screenshot",
+        "order_status_field",
+        "saved_url",
+        "statusbar_stage_quotation_sent",
+        "statusbar_stage_quotation",
+        "buttons_visible_after_confirm_1",
+        "buttons_visible_after_confirm_2",
+        "buttons_visible_after_confirm_3",
+        "customer_name",
+        "customer_city"
+      ],
+      "recorded": {
+        "order_reference": "S00021",
+        "odoo_record_id": "21",
+        "statusbar_stages": "Sales Order, Quotation Sent, Quotation",
+        "current_stage_highlighted": "Sales Order",
+        "state_field_value": "Sales Order",
+        "modals_remaining": "0 (no .modal, no .modal.d-block.o_technical_modal, no .modal-backdrop)",
+        "date_order": "09/17/2026 03:01:33",
+        "untaxed_amount": "£ 449.00",
+        "total": "£ 538.80",
+        "screenshot": "/tmp/sitelooper_fwod60_S00021_confirmed.png",
+        "order_status_field": "Sales Order\nQuotation Sent\nQuotation",
+        "saved_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=21",
+        "statusbar_stage_quotation_sent": "Quotation Sent",
+        "statusbar_stage_quotation": "Quotation",
+        "buttons_visible_after_confirm_1": "Create Invoice",
+        "buttons_visible_after_confirm_2": "Send by Email",
+        "buttons_visible_after_confirm_3": "Cancel",
+        "customer_name": "fwod60-n1 Bench Customer",
+        "customer_city": "Benchville"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "urlVariance": [
+        "21",
+        "22"
+      ],
+      "outputEvidence": {
+        "order_reference": {
+          "same": 0,
+          "differed": 2
+        },
+        "odoo_record_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "statusbar_stages": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "current_stage_highlighted": {
+          "same": 2,
+          "differed": 0
+        },
+        "state_field_value": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "modals_remaining": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "date_order": {
+          "same": 0,
+          "differed": 2
+        },
+        "untaxed_amount": {
+          "same": 0,
+          "differed": 2
+        },
+        "total": {
+          "same": 0,
+          "differed": 2
+        },
+        "screenshot": {
+          "same": 0,
+          "differed": 2
+        },
+        "order_status_field": {
+          "same": 2,
+          "differed": 0
+        },
+        "saved_url": {
+          "same": 0,
+          "differed": 2
+        },
+        "statusbar_stage_quotation_sent": {
+          "same": 2,
+          "differed": 0
+        },
+        "statusbar_stage_quotation": {
+          "same": 2,
+          "differed": 0
+        },
+        "buttons_visible_after_confirm_1": {
+          "same": 2,
+          "differed": 0
+        },
+        "buttons_visible_after_confirm_2": {
+          "same": 2,
+          "differed": 0
+        },
+        "buttons_visible_after_confirm_3": {
+          "same": 2,
+          "differed": 0
+        },
+        "customer_name": {
+          "same": 0,
+          "differed": 2
+        },
+        "customer_city": {
+          "same": 2,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "07-open",
+      "instruction": "In Odoo Sales, open the confirmed sales order {{03-create.quotation_reference}} (id={{03-create.url.q.id}}, status Sales Order) and CANCEL it: click the '{{06-open.buttons_visible_after_confirm_3}}' button, and if a confirmation dialog appears, accept it. Wait for the status to change (do not wait for network idle). Verify the cancellation succeeded: the state field / statusbar should show 'Cancelled'. Report the exact status text the app shows after cancelling.",
+      "skill": "s_24e37d",
+      "params": {
+        "v1": "{{03-create.quotation_reference}}",
+        "v3": "Sales Order",
+        "v4": "{{06-open.buttons_visible_after_confirm_3}}",
+        "v5": "{{runid}}"
+      },
+      "outputs": [
+        "order_reference",
+        "odoo_record_id",
+        "statusbar_all_stages",
+        "confirm_dialog_text",
+        "confirm_dialog_title",
+        "confirm_dialog_buttons",
+        "button_clicked_to_confirm",
+        "stray_modal_discarded",
+        "button_visible_after_cancel",
+        "screenshot",
+        "state_field_text",
+        "saved_url",
+        "ref"
+      ],
+      "recorded": {
+        "order_reference": "S00021",
+        "odoo_record_id": "21",
+        "status_after_cancel": "Cancelled",
+        "statusbar_checked_stage": "Cancelled",
+        "statusbar_all_stages": "Cancelled, Sales Order, Quotation Sent, Quotation",
+        "status_field_text": "Cancelled\\nSales Order\\nQuotation Sent\\nQuotation",
+        "confirm_dialog_text": "Are you sure you want to cancel this order?",
+        "confirm_dialog_title": "Cancel Sales Order",
+        "confirm_dialog_buttons": "Send and cancel (action_send_mail_and_cancel), Cancel (action_cancel), Discard",
+        "button_clicked_to_confirm": "Cancel - name=\"action_cancel\"",
+        "stray_modal_discarded": "Edit: fwod60-n1 Bench Customer (was overlaying the wizard, discarded)",
+        "button_visible_after_cancel": "Set to Quotation",
+        "modals_remaining": "0 (no .modal, no .modal.d-block.o_technical_modal, no .modal-backdrop)",
+        "screenshot": "/tmp/sitelooper_fwod60_S00021_cancelled.png",
+        "state_field_text": "Cancelled\nSales Order\nQuotation Sent\nQuotation",
+        "saved_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=21",
+        "ref": "fwod60-n1"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "urlVariance": [
+        "21",
+        "22"
+      ],
+      "outputEvidence": {
+        "order_reference": {
+          "same": 0,
+          "differed": 2
+        },
+        "odoo_record_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "status_after_cancel": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "statusbar_checked_stage": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "statusbar_all_stages": {
+          "same": 2,
+          "differed": 0
+        },
+        "status_field_text": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "confirm_dialog_text": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "confirm_dialog_title": {
+          "same": 2,
+          "differed": 0
+        },
+        "confirm_dialog_buttons": {
+          "same": 2,
+          "differed": 0
+        },
+        "button_clicked_to_confirm": {
+          "same": 2,
+          "differed": 0
+        },
+        "stray_modal_discarded": {
+          "same": 0,
+          "differed": 2
+        },
+        "button_visible_after_cancel": {
+          "same": 2,
+          "differed": 0
+        },
+        "modals_remaining": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "screenshot": {
+          "same": 0,
+          "differed": 2
+        },
+        "state_field_text": {
+          "same": 2,
+          "differed": 0
+        },
+        "saved_url": {
+          "same": 0,
+          "differed": 2
+        },
+        "ref": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwod60-n1",
+    "created": "2026-09-17T03:03:16.481Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-login",
+      "outputs": [
+        "odoo_record_id",
+        "model",
+        "contact_type"
+      ]
+    },
+    {
+      "stepId": "03-create",
+      "outputs": [
+        "product_reference"
+      ]
+    },
+    {
+      "stepId": "04-open",
+      "outputs": [
+        "second_line_tax",
+        "modals_remaining"
+      ]
+    },
+    {
+      "stepId": "06-open",
+      "outputs": [
+        "statusbar_stages",
+        "state_field_value",
+        "modals_remaining"
+      ]
+    },
+    {
+      "stepId": "07-open",
+      "outputs": [
+        "status_after_cancel",
+        "statusbar_checked_stage",
+        "status_field_text",
+        "modals_remaining"
+      ]
+    }
+  ]
+}
