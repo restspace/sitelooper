@@ -1,0 +1,316 @@
+{
+  "flow": "fwod66",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_f2bd54; observed landing_url=http://127.0.0.1:8069/web#action=123&cids=1&menu_id=81.",
+      "values": {
+        "landing_url": "http://127.0.0.1:8069/web#action=123&cids=1&menu_id=81"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "4/4",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_5940a2 (3 steps).",
+      "values": {
+        "ref": "fwod66-n2",
+        "contact_name": "fwod66-n2 Bench Customer",
+        "city": "Benchville",
+        "record_url": "http://127.0.0.1:8069/web#id=45&cids=1&menu_id=109&action=156&model=res.partner&view_type=form"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Created and saved a new quotation in Odoo Sales for customer 'fwod66-n2 Bench Customer' (autocomplete option actually selected). Added exactly one order line by picking '[E-COM11] Cabinet with Doors' from the product autocomplete dropdown and setting quantity to 3; Odoo auto-filled the unit price (140.00). Saved via the Save button — the URL changed from the no-id form URL to include id=22 and the breadcrumb showed S00022, confirming persistence. Verified on the saved record: product name '[E-COM11] Cabinet with Doors', quantity 3.00, unit price 140.00, Untaxed Amount £ 420.00, reference S00022.",
+      "values": {
+        "quotation_reference": "S00022",
+        "saved_record_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22",
+        "pre_save_form_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form",
+        "customer_name": "fwod66-n2 Bench Customer",
+        "product_name": "[E-COM11] Cabinet with Doors",
+        "quantity": "3.00",
+        "unit_price": "140.00",
+        "tax_rate": "20%",
+        "line_subtotal": "£ 420.00",
+        "untaxed_amount": "£ 420.00",
+        "untaxed_amount_2": "£ 420.00",
+        "ref": "fwod66-n2"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "the flow step has no pinned skill",
+      "replayed": null,
+      "repaired": false,
+      "turns": 57,
+      "repinned": "s_1fa420",
+      "repinParams": {
+        "v1": "{{02-create.contact_name}}",
+        "v2": "{{runid}}"
+      },
+      "unreported": [
+        "line_tax_excl",
+        "taxes",
+        "customer",
+        "customer_city_shown",
+        "final_url"
+      ]
+    },
+    {
+      "id": "04-verify",
+      "status": "success",
+      "summary": "The record is committed: the sale.order form now shows breadcrumb/title S00022, the URL carries id=22 (/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22), document.querySelector('.o_form_dirty') is false, and there is no open modal and no error notification — the earlier save had in fact already landed, which is why the replayed Save click produced no page change. There were no missing required fields (customer and Expiration were populated), so nothing needed filling. Reported values, all read from the live form: reference S00022, Untaxed Amount £ 420.00 (TAX 20% £ 84.00, Total £ 504.00), product [E-COM11] Cabinet with Doors, unit price 140.00, quantity 3.00. One observation the caller should know: the status bar's current state is 'Cancelled' (chatter shows \"Quotation → Cancelled (Status)\" by Mitchell Admin at \"now\"), so the saved record is a cancelled quotation rather than a live one.",
+      "values": {
+        "quotation_reference": "S00022",
+        "product": "[E-COM11] Cabinet with Doors",
+        "unit_price": "140.00",
+        "quantity": "3.00",
+        "untaxed_amount": "£ 420.00",
+        "tax_20": "£ 84.00",
+        "total": "£ 504.00",
+        "dirty_state": "false",
+        "form_statusbar_current_state": "Cancelled",
+        "untaxed_amount_2": "£ 420.00"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_7ba754 stopped at step 1 — after step 1 none of the 2 recorded page change(s) appeared (e.g. \"- row \\\"Total £ 0.00\\\"\") — the step ran but did not have its recorded effect",
+      "replayed": "0/8",
+      "repaired": false,
+      "turns": 13,
+      "unreported": [
+        "customer",
+        "customer_city",
+        "chatter_last_message",
+        "totals_section",
+        "order_line_row",
+        "ref"
+      ]
+    },
+    {
+      "id": "05-add",
+      "status": "success",
+      "summary": "Added a second order line to quotation S00022 and saved it. Because the record arrived in state 'Cancelled' with a read-only form, I first clicked 'Set to Quotation' (the only way to make the form editable) and then used 'Add a product'. Second line: [FURN_7777] Office Chair, selected from the product autocomplete dropdown (no configurator modal); it appeared with quantity 1.00, which I changed to 2, and Odoo auto-filled the unit price at 70.00. Clicked Save; the form lost its dirty state (.o_form_dirty absent → false), no error notification and no modal appeared, the URL still carries id=22 and the breadcrumb/title reads S00022. Verified on the saved record: line 1 [E-COM11] Cabinet with Doors qty 3.00 @ 140.00 = £420.00, line 2 [FURN_7777] Office Chair qty 2.00 @ 70.00 = £140.00, Untaxed Amount £ 560.00, TAX 20% £ 112.00, Total £ 672.00. Status bar now shows 'Quotation' (draft).",
+      "values": {
+        "second_product": "[FURN_7777] Office Chair",
+        "second_product_unit_price": "70.00",
+        "second_product_quantity": "2.00",
+        "second_product_subtotal": "£ 140.00",
+        "first_line_product": "[E-COM11] Cabinet with Doors",
+        "first_line_quantity": "3.00",
+        "first_line_unit_price": "140.00",
+        "first_line_subtotal": "£ 420.00",
+        "untaxed_amount": "£ 560.00",
+        "tax_20": "£ 112.00",
+        "total": "£ 672.00",
+        "quotation_reference": "S00022",
+        "dirty_state": "false",
+        "notifications": "none",
+        "statusbar_current_state": "Quotation",
+        "o_field_x2many_list_tbod": "1.00",
+        "o_field_x2many_list_tbod_2": "20%",
+        "o_field_x2many_list_tbod_3": "£ 420.00",
+        "o_field_x2many_list_tbod_4": "£ 140.00",
+        "ref": "FURN_7777"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "every candidate refused — s_e7dd3f: failed at step 1 before touching the page — no element matched any known locator for target (tried 4: page.locator('role=button[name=\"Add a product\"]'), page.getByRole('button', { name: 'Add a product', exact: true }), page.locator('div:nth-of-type(2) > table > tbody > tr:nth-of-type(2) > td:nth-of-type(2) > a:nth-of-type(1)'), …)",
+      "replayed": null,
+      "repaired": false,
+      "turns": 21,
+      "unreported": [
+        "second_line_subtotal",
+        "first_product",
+        "first_product_unit_price",
+        "first_product_quantity",
+        "customer",
+        "page_title"
+      ]
+    },
+    {
+      "id": "06-change",
+      "status": "success",
+      "summary": "Replayed stored procedure s_49d167 (15 steps).",
+      "values": {
+        "line1_product": "[E-COM11] Cabinet with Doors",
+        "line2_product": "[FURN_7777] Office Chair",
+        "page_title": "Odoo - S00022",
+        "line1_quantity": "5.00",
+        "quotation_reference": "S00022",
+        "line1_unit_price": "140.00",
+        "line1_subtotal": "£ 700.00",
+        "line2_quantity": "2.00",
+        "line2_unit_price": "70.00",
+        "line2_subtotal": "£ 140.00",
+        "untaxed_amount": "£ 840.00",
+        "tax_20": "£ 168.00",
+        "total": "£ 1,008.00",
+        "notifications": "None"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "ref"
+      ]
+    },
+    {
+      "id": "07-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_90c54f (6 steps).",
+      "values": {
+        "page_title": "Odoo - S00022",
+        "statusbar_steps_text": "Sales Order\nQuotation Sent\nQuotation",
+        "order_reference": "S00022",
+        "untaxed_amount": "£ 840.00",
+        "total": "£ 1,008.00",
+        "notifications": "None"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "08-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_b43016 (10 steps).",
+      "values": {
+        "statusbar_all_steps": "Cancelled (checked/current) | Sales Order (disabled) | Quotation Sent (disabled) | Quotation (disabled)",
+        "page_title": "Odoo - S00022",
+        "ref": "fwod66-n2",
+        "statusbar_steps_text": "Cancelled\nSales Order\nQuotation Sent\nQuotation",
+        "order_reference": "S00022",
+        "error_notifications": "None"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "cancel_dialog_confirm_button"
+      ]
+    },
+    {
+      "id": "09-open",
+      "status": "success",
+      "summary": "(1) Opened Contacts, searched 'fwod66-n2 Bench Customer' — the search returned exactly one record; opened it and the saved form shows Name = 'fwod66-n2 Bench Customer' and City = 'Benchville' (url /web#id=45&...model=res.partner&view_type=form). (2) Opened Sales > Orders > Quotations, searched 'S00022' — one row returned with reference S00022 and customer 'fwod66-n2 Bench Customer'; opened it and the form heading reads S00022, the Customer field shows fwod66-n2 Bench Customer (Benchville), and the status bar's checked/current state is 'Cancelled' (steps listed: Cancelled | Sales Order | Quotation Sent | Quotation). Note the quotation chain was deliberately cancelled by the preceding instruction, so 'Cancelled' rather than 'Sales Order' is the expected/consistent end state.",
+      "values": {
+        "contact_name": "fwod66-n2 Bench Customer",
+        "contact_city": "Benchville",
+        "contact_url": "http://127.0.0.1:8069/web#id=45&cids=1&menu_id=109&action=156&model=res.partner&view_type=form",
+        "contact_search_results": "1 record",
+        "so_reference": "S00022",
+        "so_customer": "fwod66-n2 Bench Customer",
+        "so_status_current": "Cancelled",
+        "so_status_all_steps": "Cancelled | Sales Order | Quotation Sent | Quotation",
+        "so_url": "http://127.0.0.1:8069/web#id=22&cids=1&menu_id=194&action=316&model=sale.order&view_type=form",
+        "so_customer_final": "fwod66-n2 Bench Customer\nBenchville",
+        "so_status_final": "Cancelled\nSales Order\nQuotation Sent\nQuotation",
+        "ref": "fwod66-n2"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_591607 stopped at step 3 — after step 3 expected url http://127.0.0.1:8069/web#action=156&cids=:id&id=:id&menu_id=109&model=res.partner&view_type=form but browser is at http://127.0.0.1:8069/web#action=330&active_id=45&cids=1&menu_id=109&model=sale.order&view_type=list",
+      "replayed": "2/3",
+      "repaired": false,
+      "turns": 18,
+      "unreported": [
+        "order_reference",
+        "customer_name",
+        "sales_order_status",
+        "quotation_list_total",
+        "sales_order_url",
+        "so_statusbar_text",
+        "customer_name_and_city"
+      ]
+    }
+  ],
+  "passed": 9,
+  "total": 9,
+  "repinned": 1,
+  "drift": 3,
+  "driftTickets": [
+    {
+      "flow": "fwod66",
+      "step": "04-verify",
+      "skill": "s_7ba754",
+      "similarity": 0.98,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_7ba754 stopped at step 1 — after step 1 none of the 2 recorded page change(s) appeared (e.g. \"- row \\\"Total £ 0.00\\\"\") — the step ran but did not have its recorded effect",
+      "reason": "after step 1 none of the 2 recorded page change(s) appeared (e.g. \"- row \\\"Total £ 0.00\\\"\") — the step ran but did not have its recorded effect",
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22"
+    },
+    {
+      "flow": "fwod66",
+      "step": "08-open",
+      "skill": "s_b43016",
+      "atStep": "10",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByRole('button', { name: 'Send and cancel', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22"
+    },
+    {
+      "flow": "fwod66",
+      "step": "09-open",
+      "skill": "s_591607",
+      "similarity": 1,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_591607 stopped at step 3 — after step 3 expected url http://127.0.0.1:8069/web#action=156&cids=:id&id=:id&menu_id=109&model=res.partner&view_type=form but browser is at http://127.0.0.1:8069/web#action=330&active_id=45&cids=1&menu_id=109&model=sale.order&view_type=list",
+      "reason": "after step 3 expected url http://127.0.0.1:8069/web#action=156&cids=:id&id=:id&menu_id=109&model=res.partner&view_type=form but browser is at http://127.0.0.1:8069/web#action=330&active_id=45&cids=1&menu_id=109&model=sale.order&view_type=list",
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&active_id=:id&cids=:id&menu_id=:id&model=sale.order&view_type=list",
+      "pageUrl": "http://127.0.0.1:8069/web#action=330&active_id=45&model=sale.order&view_type=list&cids=1&menu_id=109"
+    }
+  ],
+  "wallMs": 426534,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 2399559,
+    "completionTokens": 31543,
+    "cachedTokens": 2233984
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 2399559,
+      "completionTokens": 31543,
+      "cachedTokens": 2233984
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

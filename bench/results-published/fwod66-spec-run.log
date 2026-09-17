@@ -1,0 +1,14 @@
+[spec-replay] resetting odoo
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile bench/results/flows/fwod66.json --out /home/user/sitelooper/bench/results/fwod66-spec-spec-tmp --overwrite-spec
+error 09-open: it is pinned to the demoted skill s_591607 — the compiled spec inherits a procedure whose last replays failed at the same step
+  why: s_591607 is demoted: 1 of 3 replays succeeded; replay failed at step 3 on 2 of them; 2 of the 2 stop(s) were recovered (the step still finished); the demotion was two consecutive failures at step 3; last used 2026-09-17T21:26:46.066Z.
+  fix: sitelooper rerecord bench/results/flows/fwod66.json 09-open
+
+nothing written: the error(s) above are about the RECORDING, not the app — a compiled spec would fail at a locator and read as drift.
+re-record the step(s) with the fix command above, or pass --allow-demoted to compile the demoted pin anyway.
+  warning: 05-add: step 9 (wait_for hidden) acts on one element through a single unindexed candidate, page.locator('.o_form_dirty') — never proved to identify one element on the page that produced it, so this run acts on whatever it matches first; re-record the step (sitelooper rerecord) to derive a full chain for it
+  warning: 08-open: step 10 (read cancel_dialog_confirm_button) has no locator left — it publishes nothing, as replay skips it
+sitelooper: refused: a step is pinned to a demoted skill — see the diagnostics above (--allow-demoted compiles it anyway)
+[spec-replay] fwod66-spec: not compilable — result written (exit 2)

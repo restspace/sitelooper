@@ -1,0 +1,183 @@
+
+[sweep] run 1/3: fwod66-n1 (store: /home/user/sitelooper/bench/results/fwod66-skills)
+[harness] odoo: defaulting APP_URL
+[harness] odoo: defaulting APP_EMAIL
+[harness] odoo: defaulting APP_PASSWORD
+[reset] odoo: no leftover bench customers
+[harness] odoo responded 303 at http://127.0.0.1:8069/
+stopped: fwod66-n1
+  flow "fwod66" saved: 9 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwod66.json
+  warning: note: dropped 5 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: note: 18 goal/report value(s) carrying a value this run made were slotted or dropped:
+  s_49d167.reportTemplate.summary dropped (narrates a value this run made)
+  s_4febe2.reportTemplate.values.record_id dropped (recorded literal of a value this run made)
+  s_4febe2.reportTemplate.summary dropped (narrates a value this run made)
+  s_51438c.reportTemplate.values.contact_record_id dropped (recorded literal of a value this run made)
+  s_51438c.reportTemplate.values.contact_url dropped (recorded literal of a value this run made)
+  s_51438c.reportTemplate.values.quotation_list_row dropped (recorded literal of a value this run made)
+  s_51438c.reportTemplate.values.sales_order_record_id dropped (recorded literal of a value this run made)
+  s_51438c.reportTemplate.values.sales_order_url dropped (recorded literal of a value this run made)
+  s_51438c.reportTemplate.values.final_url dropped (recorded literal of a value this run made)
+  s_51438c.reportTemplate.summary dropped (narrates a value this run made)
+  s_5940a2.reportTemplate.values.record_id dropped (recorded literal of a value this run made)
+  s_5940a2.reportTemplate.values.record_url dropped (recorded literal of a value this run made)
+  s_5940a2.reportTemplate.summary dropped (narrates a value this run made)
+  s_90c54f.reportTemplate.values.record_id dropped (recorded literal of a value this run made)
+  s_90c54f.reportTemplate.summary dropped (narrates a value this run made)
+  s_b43016.reportTemplate.values.record_id dropped (recorded literal of a value this run made)
+  s_b43016.reportTemplate.summary dropped (narrates a value this run made)
+  s_e7dd3f.reportTemplate.summary dropped (narrates a value this run made)
+  warning: note: 01-signin no longer publishes page_title, logged_in_user — no replay reads them from the page and the recording showed no line to read
+  warning: note: 02-create no longer publishes record_id, model — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-verify no longer publishes record_id, tax, page_title — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-add no longer publishes taxes, dirty_state, ref — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-change no longer publishes dirty_state — no replay reads it from the page and the recording showed no line to read
+  warning: note: 07-verify no longer publishes statusbar_text, record_id — no replay reads them from the page and the recording showed no line to read
+  warning: note: 08-open no longer publishes statusbar_text, record_id, dialog_buttons, cancel_dialog_cancel_button — no replay reads them from the page and the recording showed no line to read
+  warning: note: 09-open no longer publishes contact_record_id, customer_city_shown_with_customer, sales_order_statusbar_steps, quotation_list_row, quotation_list_status, sales_order_record_id, final_url — no replay reads them from the page and the recording showed no line to read
+  warning: note: 08-open: added a read for cancel_dialog_confirm_button to s_b43016 (page.getByRole('button', { name: 'Send and cancel', exact: true }); seen on the instruction's own page)
+  warning: note: 1 step(s) adopted from non-success instruction(s) whose work the session continued from (03-create) — they replay model-first with doubled budget, and a non-success there does not halt the flow
+  warning: warning: 187 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "admin" (output) in "Sign in to Odoo with login 'admin' and password 'admin' and wait until the Odoo home/apps page is fully loaded. Do not wait for network idle. Report what page y"
+  flow.steps[1].instruction: "Benchville" (output) in "In Odoo, create a new contact/customer named exactly '{{runid}} Bench Customer' with the City field set to 'Benchville'. Navigate via the Contacts app (or Sales"
+  flow.steps[1].params.v3: "Benchville" (output) in "Benchville"
+  flow.steps[1].route: "res.partner" (output) in "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=res.partner&view_type=form"
+  flow.steps[6].instruction: "Sales Order" (output) in "You are on the saved Odoo 17 quotation {{04-verify.quotation_reference}} (sale.order form, status 'Quotation') with two lines: {{04-verify.product}} qty 5 @ {{0"
+  warning: {{03-create.product_name}} (used by 04-verify) can only be re-observed by model recovery — consider re-recording so the value is read from the page.
+  warning: {{03-create.quantity}} (used by 06-change) can only be re-observed by model recovery, and 06-change's procedure types or locates by it — so `sitelooper spec` will REFUSE to compile this flow (unsourced-ref) until 03-create reads quantity from an element. Re-record 03-create now, while this session is still open.
+  warning: {{05-add.second_product}} (used by 06-change) can only be re-observed by model recovery — consider re-recording so the value is read from the page.
+  warning: 05-add reports second_product, but no segment of the procedure it pins (s_e7dd3f, with any later segment of its chain) re-reads it from the page — a replay without the model will succeed without that value; re-record so a read for it lands in that procedure's last segment.
+arm=sitelooper model=z-ai/glm-5.3 runid=fwod66-n1 stop=completed
+turns=11 wall=709.4s
+commands=10 cmdTime=612.3s cmdBytes=15583 timeouts=0
+orchestrator in=23454 cw=0 cr=32576 out=5897
+inner prompt=4094402 cached=3862272 completion=32194
+spend=$0.133 maxUsd=3
+learn: A_n=0 replayed=0/9 full=0 repaired=0 compiled=8 variants=0
+-> /home/user/sitelooper/bench/results/fwod66-n1-sitelooper-result.json
+
+fwod66-n1: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00021
+
+[sweep] run 2/3: fwod66-n2 (replay flow fwod66, no orchestrator)
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+[sweep] fwod66-n2: 3 drift ticket(s) → fwod66-n2-drift.json
+
+fwod66-n2: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00022
+[sweep] fwod66-n2: 03-create has no pinned skill — 57 model turn(s), on every replay
+
+[sweep] run 3/3: fwod66-n3 (replay flow fwod66, no orchestrator)
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+[sweep] fwod66-n3: 3 drift ticket(s) → fwod66-n3-drift.json
+
+fwod66-n3: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00023
+
+Learning sweep fwod66 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwod66-n1' │ '6/6'    │ 'completed' │ 11    │ 10   │ 0.133     │ 0    │ '0/9'        │ 709    │
+│ 1       │ 2 │ 'fwod66-n2' │ '6/6'    │ 'success'   │ 109   │ 9    │ 0.0505    │ 0.56 │ '9/9 (flow)' │ 427    │
+│ 2       │ 3 │ 'fwod66-n3' │ '6/6'    │ 'success'   │ 15    │ 9    │ 0.0063    │ 0.89 │ '9/9 (flow)' │ 157    │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8069
+  s_49d167  validated   15 steps  3/3 (100%)
+           You are on the saved Odoo 17 quotation {{v1}} (sale.order form) with two order lines: line 1 = {{v2}}, quantit…
+  s_4e5a12  validated    1 steps  3/3 (100%)
+           In Odoo, create a new contact/customer named exactly '{{v2}}' with the City field set to '{{v3}}'. Navigate vi…
+  s_591607  demoted      3 steps  1/3 (33%)
+           Final verification in Odoo: (1) Open the Contacts app, search for '{{v1}}', open the record and report its Nam…
+  s_5940a2  validated    3 steps  3/3 (100%)
+           In Odoo, create a new contact/customer named exactly '{{v2}}' with the City field set to '{{v3}}'. Navigate vi…
+  s_631786  validated    4 steps  3/3 (100%)
+           In Odoo, create a new contact/customer named exactly '{{v2}}' with the City field set to '{{v3}}'. Navigate vi…
+  s_90c54f  validated    6 steps  3/3 (100%)
+           You are on the saved Odoo 17 quotation {{v1}} (sale.order form, status 'Quotation') with two lines: {{v2}} qty…
+  s_a4939f  validated    1 steps  3/3 (100%)
+           In Odoo, create a new contact/customer named exactly '{{v2}}' with the City field set to '{{v3}}'. Navigate vi…
+  s_b43016  validated   10 steps  3/3 (100%)
+           You are on the confirmed Odoo 17 sales order {{v1}} (sale.order form, status '{{v2}}'). Cancel this sales orde…
+  s_c93ef6  validated    2 steps  3/3 (100%)
+           In Odoo, create a new contact/customer named exactly '{{v2}}' with the City field set to '{{v3}}'. Navigate vi…
+  s_e2c300  validated    3 steps  3/3 (100%)
+           In Odoo, create a new contact/customer named exactly '{{v2}}' with the City field set to '{{v3}}'. Navigate vi…
+  s_f2bd54  validated    1 steps  3/3 (100%)
+           Sign in to Odoo with login 'admin' and password 'admin' and wait until the Odoo home/apps page is fully loaded…
+  s_f5f7ed  validated    2 steps  3/3 (100%)
+           Final verification in Odoo: (1) Open the Contacts app, search for '{{v1}}', open the record and report its Nam…
+  s_fe2b30  validated    3 steps  3/3 (100%)
+           Sign in to Odoo with login 'admin' and password 'admin' and wait until the Odoo home/apps page is fully loaded…
+  s_1fa420  validated    2 steps  2/2 (100%)
+           In Odoo, go to the Sales app and create a new quotation (Sales > Orders > Quotations > New). Set the Customer …
+  s_2981ac  validated    1 steps  2/2 (100%)
+           In Odoo, go to the Sales app and create a new quotation (Sales > Orders > Quotations > New). Set the Customer …
+  s_619705  validated    9 steps  2/2 (100%)
+           In Odoo, go to the Sales app and create a new quotation (Sales > Orders > Quotations > New). Set the Customer …
+  s_7ba754  provisional  8 steps  1/2 (50%)
+           You are on an Odoo 17 sale.order form (still dirty, unsaved, at a /web#...action=316 URL) with customer '{{v1}…
+  s_b13ca6  validated    8 steps  2/2 (100%)  variant of s_7ba754
+           You are on an Odoo 17 sale.order form (still dirty, unsaved, at a /web#...action=316 URL) with customer '{{v2}…
+  s_b6abee  validated   22 steps  2/2 (100%)
+           You are on the saved Odoo 17 quotation {{v1}} (sale.order form) with customer '{{v2}}' and one order line: {{v…
+  s_bd3343  validated   24 steps  2/2 (100%)
+           In Odoo, go to the Sales app and create a new quotation (Sales > Orders > Quotations > New). Set the Customer …
+  s_e7dd3f  provisional 15 steps  1/2 (50%)
+           You are on the saved Odoo 17 quotation {{v1}} (sale.order form) with customer '{{v2}}' and one order line: {{v…
+  s_240d9c  provisional  5 steps  1/1 (100%)
+           Final verification in Odoo: (1) Open the Contacts app, search for '{{v1}}', open the record and report its Nam…
+  s_32e7f5  provisional  4 steps  1/1 (100%)  variant of s_591607
+           Final verification in Odoo: (1) Open the Contacts app, search for '{{v1}}', open the record and report its Nam…
+  s_3924af  provisional  7 steps  1/1 (100%)  variant of s_591607
+           Final verification in Odoo: (1) Open the Contacts app, search for '{{v1}}', open the record and report its Nam…
+  s_3d079f  provisional  3 steps  1/1 (100%)
+           Final verification in Odoo: (1) Open the Contacts app, search for '{{v1}}', open the record and report its Nam…
+  s_4f184b  provisional  4 steps  1/1 (100%)  variant of s_591607
+           Final verification in Odoo: (1) Open the Contacts app, search for '{{v1}}', open the record and report its Nam…
+  s_4febe2  provisional  9 steps  1/1 (100%)
+           You are on an Odoo 17 sale.order form (still dirty, unsaved, at a /web#...action=316 URL) with customer '{{v1}…
+  s_51438c  provisional  6 steps  1/1 (100%)
+           Final verification in Odoo: (1) Open the Contacts app, search for '{{v1}}', open the record and report its Nam…
+  s_524118  provisional  1 steps  1/1 (100%)  variant of s_591607
+           Final verification in Odoo: (1) Open the Contacts app, search for '{{v1}}', open the record and report its Nam…
+  s_824056  provisional  1 steps  1/1 (100%)  variant of s_591607
+           Final verification in Odoo: (1) Open the Contacts app, search for '{{v1}}', open the record and report its Nam…
+  s_88bf7f  provisional  3 steps  1/1 (100%)  variant of s_591607
+           Final verification in Odoo: (1) Open the Contacts app, search for '{{v1}}', open the record and report its Nam…
+  s_bb2a16  provisional  1 steps  1/1 (100%)  variant of s_591607
+           Final verification in Odoo: (1) Open the Contacts app, search for '{{v1}}', open the record and report its Nam…
+  s_bfdbd2  provisional  6 steps  1/1 (100%)  variant of s_591607
+           Final verification in Odoo: (1) Open the Contacts app, search for '{{v1}}', open the record and report its Nam…
+  s_c77df4  provisional  2 steps  1/1 (100%)  variant of s_591607
+           Final verification in Odoo: (1) Open the Contacts app, search for '{{v1}}', open the record and report its Nam…
+  s_ce930e  provisional  5 steps  1/1 (100%)  variant of s_591607
+           Final verification in Odoo: (1) Open the Contacts app, search for '{{v1}}', open the record and report its Nam…
+  s_daab43  provisional  1 steps  1/1 (100%)  variant of s_591607
+           Final verification in Odoo: (1) Open the Contacts app, search for '{{v1}}', open the record and report its Nam…
+  s_de1d7c  provisional  1 steps  1/1 (100%)  variant of s_591607
+           Final verification in Odoo: (1) Open the Contacts app, search for '{{v1}}', open the record and report its Nam…
+  s_f371e1  provisional  4 steps  1/1 (100%)  variant of s_591607
+           Final verification in Odoo: (1) Open the Contacts app, search for '{{v1}}', open the record and report its Nam…
+  s_fe8ee0  provisional  2 steps  1/1 (100%)  variant of s_591607
+           Final verification in Odoo: (1) Open the Contacts app, search for '{{v1}}', open the record and report its Nam…
+store: /home/user/sitelooper/bench/results/fwod66-skills
+
+summary: /home/user/sitelooper/bench/results/fwod66-sweep.json

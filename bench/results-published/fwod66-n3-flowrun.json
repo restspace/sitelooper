@@ -1,0 +1,317 @@
+{
+  "flow": "fwod66",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_f2bd54; observed landing_url=http://127.0.0.1:8069/web#action=123&cids=1&menu_id=81.",
+      "values": {
+        "landing_url": "http://127.0.0.1:8069/web#action=123&cids=1&menu_id=81"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "4/4",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_5940a2 (3 steps).",
+      "values": {
+        "ref": "fwod66-n3",
+        "contact_name": "fwod66-n3 Bench Customer",
+        "city": "Benchville",
+        "record_url": "http://127.0.0.1:8069/web#id=46&cids=1&menu_id=109&action=156&model=res.partner&view_type=form"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_619705; observed ref=fwod66-n3, quantity=3.00, unit_price=140.00, pre_save_form_url=http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form, saved_record_url=http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=23, untaxed_amount_2=£ 420.00, quotation_reference=S00023, customer_name=fwod66-n3 Bench Customer, tax_rate=20%, line_subtotal=£ 420.00.",
+      "values": {
+        "ref": "fwod66-n3",
+        "quantity": "3.00",
+        "unit_price": "140.00",
+        "pre_save_form_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form",
+        "saved_record_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=23",
+        "untaxed_amount_2": "£ 420.00",
+        "quotation_reference": "S00023",
+        "customer_name": "fwod66-n3 Bench Customer",
+        "tax_rate": "20%",
+        "line_subtotal": "£ 420.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "36/36",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "product_name",
+        "line_tax_excl",
+        "taxes",
+        "customer",
+        "customer_city_shown",
+        "final_url"
+      ]
+    },
+    {
+      "id": "04-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_b13ca6; observed product=[E-COM11] Cabinet with Doors, unit_price=140.00, quantity=3.00, untaxed_amount_2=£ 420.00, quotation_reference=S00023, tax_20=£ 84.00, total=£ 504.00.",
+      "values": {
+        "product": "[E-COM11] Cabinet with Doors",
+        "unit_price": "140.00",
+        "quantity": "3.00",
+        "untaxed_amount_2": "£ 420.00",
+        "quotation_reference": "S00023",
+        "tax_20": "£ 84.00",
+        "total": "£ 504.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0,
+      "repinned": "s_b13ca6",
+      "repinParams": {
+        "v2": "{{02-create.contact_name}}",
+        "v3": "{{runid}}",
+        "v4": "{{03-create.product_name}}"
+      },
+      "unreported": [
+        "untaxed_amount",
+        "customer",
+        "customer_city",
+        "chatter_last_message",
+        "totals_section",
+        "order_line_row",
+        "ref"
+      ]
+    },
+    {
+      "id": "05-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_b6abee; observed first_line_product=[E-COM11] Cabinet with Doors, o_field_x2many_list_tbod=1.00, second_product_unit_price=70.00, second_product_quantity=2.00, second_product_subtotal=£ 140.00, first_line_quantity=3.00, first_line_unit_price=140.00, first_line_subtotal=£ 420.00, untaxed_amount=£ 560.00, tax_20=£ 112.00, total=£ 672.00, quotation_reference=S00023, notifications=None, o_field_x2many_list_tbod_3=£ 420.00, o_field_x2many_list_tbod_4=£ 140.00.",
+      "values": {
+        "first_line_product": "[E-COM11] Cabinet with Doors",
+        "o_field_x2many_list_tbod": "1.00",
+        "second_product_unit_price": "70.00",
+        "second_product_quantity": "2.00",
+        "second_product_subtotal": "£ 140.00",
+        "first_line_quantity": "3.00",
+        "first_line_unit_price": "140.00",
+        "first_line_subtotal": "£ 420.00",
+        "untaxed_amount": "£ 560.00",
+        "tax_20": "£ 112.00",
+        "total": "£ 672.00",
+        "quotation_reference": "S00023",
+        "notifications": "None",
+        "o_field_x2many_list_tbod_3": "£ 420.00",
+        "o_field_x2many_list_tbod_4": "£ 140.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "22/22",
+      "repaired": false,
+      "turns": 0,
+      "repinned": "s_b6abee",
+      "repinParams": {
+        "v1": "{{04-verify.quotation_reference}}",
+        "v2": "{{02-create.contact_name}}",
+        "v3": "{{runid}}",
+        "v4": "{{04-verify.product}}"
+      },
+      "unreported": [
+        "second_product",
+        "second_line_subtotal",
+        "first_product",
+        "first_product_unit_price",
+        "first_product_quantity",
+        "customer",
+        "page_title"
+      ]
+    },
+    {
+      "id": "06-change",
+      "status": "success",
+      "summary": "Replayed stored procedure s_49d167 (15 steps).",
+      "values": {
+        "line1_product": "[E-COM11] Cabinet with Doors",
+        "page_title": "Odoo - S00023",
+        "line1_quantity": "5.00",
+        "quotation_reference": "S00023",
+        "line1_unit_price": "140.00",
+        "line1_subtotal": "£ 700.00",
+        "line2_quantity": "2.00",
+        "line2_unit_price": "70.00",
+        "line2_subtotal": "£ 140.00",
+        "untaxed_amount": "£ 840.00",
+        "tax_20": "£ 168.00",
+        "total": "£ 1,008.00",
+        "notifications": "None"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "line2_product",
+        "ref"
+      ]
+    },
+    {
+      "id": "07-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_90c54f (6 steps).",
+      "values": {
+        "page_title": "Odoo - S00023",
+        "statusbar_steps_text": "Sales Order\nQuotation Sent\nQuotation",
+        "order_reference": "S00023",
+        "untaxed_amount": "£ 840.00",
+        "total": "£ 1,008.00",
+        "notifications": "None"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "08-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_b43016 (10 steps).",
+      "values": {
+        "statusbar_all_steps": "Cancelled (checked/current) | Sales Order (disabled) | Quotation Sent (disabled) | Quotation (disabled)",
+        "page_title": "Odoo - S00023",
+        "ref": "fwod66-n3",
+        "statusbar_steps_text": "Cancelled\nSales Order\nQuotation Sent\nQuotation",
+        "order_reference": "S00023",
+        "error_notifications": "None"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "cancel_dialog_confirm_button"
+      ]
+    },
+    {
+      "id": "09-open",
+      "status": "success",
+      "summary": "Verified both records live in Odoo 17. (1) Contacts: opened the 'fwod66-n3 Bench Customer' record (via the Contacts app/breadcrumb) — the saved form shows Name = 'fwod66-n3 Bench Customer' and City = 'Benchville'. (2) Sales: opened Quotations, searched S00023 and opened it — the form shows reference S00023, Customer 'fwod66-n3 Bench Customer' (Benchville), and the status bar's current step is 'Cancelled' (aria-checked=true, with Sales Order / Quotation Sent / Quotation disabled).",
+      "values": {
+        "contact_name": "fwod66-n3 Bench Customer",
+        "contact_city": "Benchville",
+        "contact_record_url": "http://127.0.0.1:8069/web#id=46&cids=1&menu_id=109&action=156&model=res.partner&view_type=form",
+        "order_reference": "S00023",
+        "order_customer": "fwod66-n3 Bench Customer",
+        "order_status": "Cancelled",
+        "order_statusbar_all_steps": "Cancelled (checked/current) | Sales Order (disabled) | Quotation Sent (disabled) | Quotation (disabled)",
+        "order_record_url": "http://127.0.0.1:8069/web#id=23&cids=1&menu_id=194&action=316&model=sale.order&view_type=form",
+        "o_statusbar_status_butto": "Sales Order",
+        "o_statusbar_status_butto_2": "Quotation Sent",
+        "o_statusbar_status_butto_3": "Quotation",
+        "o_statusbar_status_butto_4": "true",
+        "ref": "fwod66-n3"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_591607 stopped at step 3 — after step 3 expected url http://127.0.0.1:8069/web#action=156&cids=:id&id=:id&menu_id=109&model=res.partner&view_type=form but browser is at http://127.0.0.1:8069/web#action=330&active_id=46&cids=1&menu_id=109&model=sale.order&view_type=list",
+      "replayed": "2/3",
+      "repaired": false,
+      "turns": 15,
+      "unreported": [
+        "contact_url",
+        "customer_name",
+        "sales_order_status",
+        "quotation_list_total",
+        "sales_order_url",
+        "so_customer",
+        "so_statusbar_text",
+        "customer_name_and_city"
+      ]
+    }
+  ],
+  "passed": 9,
+  "total": 9,
+  "repinned": 2,
+  "drift": 3,
+  "driftTickets": [
+    {
+      "flow": "fwod66",
+      "step": "03-create",
+      "skill": "s_619705",
+      "atStep": "6",
+      "key": "target",
+      "similarity": 1.002,
+      "missedLocator": "page.getByRole('heading', { name: 'S00022', exact: true })",
+      "fallbackUsed": "page.locator('div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > h1')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=23"
+    },
+    {
+      "flow": "fwod66",
+      "step": "08-open",
+      "skill": "s_b43016",
+      "atStep": "10",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByRole('button', { name: 'Send and cancel', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=23"
+    },
+    {
+      "flow": "fwod66",
+      "step": "09-open",
+      "skill": "s_591607",
+      "similarity": 1,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_591607 stopped at step 3 — after step 3 expected url http://127.0.0.1:8069/web#action=156&cids=:id&id=:id&menu_id=109&model=res.partner&view_type=form but browser is at http://127.0.0.1:8069/web#action=330&active_id=46&cids=1&menu_id=109&model=sale.order&view_type=list",
+      "reason": "after step 3 expected url http://127.0.0.1:8069/web#action=156&cids=:id&id=:id&menu_id=109&model=res.partner&view_type=form but browser is at http://127.0.0.1:8069/web#action=330&active_id=46&cids=1&menu_id=109&model=sale.order&view_type=list",
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&active_id=:id&cids=:id&menu_id=:id&model=sale.order&view_type=list",
+      "pageUrl": "http://127.0.0.1:8069/web#action=330&active_id=46&model=sale.order&view_type=list&cids=1&menu_id=109"
+    }
+  ],
+  "wallMs": 156809,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 206414,
+    "completionTokens": 3750,
+    "cachedTokens": 183296
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 206414,
+      "completionTokens": 3750,
+      "cachedTokens": 183296
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
