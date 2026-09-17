@@ -3,8 +3,8 @@ import type { LocatorCandidate, RecordedEntry, RecordedInstruction, RecordedStep
 import type { Report } from '../agent/report.js';
 import { contractFor, newSkillId, originOf, type Skill, type SkillParam, type SkillStep, type StepExpectation } from './store.js';
 import { MIN_ID_LEN, digitDominant, looksLikeId, skeleton, tokenPattern } from './shape.js';
-import { occursAsToken } from './ledger.js';
-import { escapeRe, identityRe, maskVolatile } from '../shared/text.js';
+import { occursAsToken, replaceAsToken } from './ledger.js';
+import { WILDCARD, escapeRe, identityRe, maskVolatile } from '../shared/text.js';
 import { CREDENTIAL_KEY, fillParamsDeep, queryPairs, safeDecode, urlParts } from '../execution/url.js';
 import { contextsEqual, framesEqual } from '../execution/context.js';
 
@@ -352,6 +352,14 @@ export function compileSkills(input: CompileInput): Skill[] {
     );
     return { sg, segParams, mintedForStart, folded, notes };
   });
+
+  // A recorded expectation must not freeze a value only THIS run could
+  // produce. Decided here, over the whole recording, because both the
+  // evidence and the damage are cross-step: what the procedure's reads
+  // published (any step may hold the read) and which names the recording
+  // watched change (two steps, by definition). See unfreezeExpectations.
+  const published = publishedReadValues(kept, reportValues);
+  for (const b of built) unfreezeExpectations(b.folded, published, b.notes);
 
   // Derived-param metadata lands on the MINTING segment: which post-fold step
   // to bind from, and which url part to read there. Replay binds the value
@@ -1447,6 +1455,207 @@ function expectationFor(step: RecordedStep, slots: Map<string, string>): StepExp
   // render the live page the way these lines were written.
   if (step.diff.dialect === 2) out.lineDialect = 2;
   return out;
+}
+
+/**
+ * `- role "name" [state]: value`, split so a rule can judge what a line SAYS
+ * without touching the role that says which element said it. The closing
+ * quote is optional because the 120-char stored-line cap can cut a name
+ * short (src/execution/expect.ts LINE_PARTS makes the same allowance).
+ */
+const EXPECT_LINE = /^(-?\s*[A-Za-z][\w-]*)(?:(\s+")((?:[^"\\]|\\.)*)("?))?((?:\s+\[[^\]]*\])*)(?::\s*(.*?))?\s*$/;
+
+/** A `{{vN}}`/`{{dN}}` marker: this run's own value, already substituted in. Never `{{*}}`. */
+const NAME_SLOT = /\{\{[vd]\d+\}\}/g;
+
+/** One expectation line, taken apart and put back together around its name and its value. */
+interface SplitLine {
+  role: string;
+  name: string;
+  value: string;
+  rebuild(name: string, value: string): string;
+}
+
+function splitExpectLine(line: string): SplitLine | null {
+  const m = EXPECT_LINE.exec(line);
+  if (!m) return null;
+  const [, head, openQ, name, closeQ, states, value] = m;
+  return {
+    role: head.replace(/^-?\s*/, ''),
+    name: name ?? '',
+    value: value ?? '',
+    rebuild: (n, v) =>
+      `${head}${openQ === undefined ? '' : `${openQ}${n}${closeQ}`}${states ?? ''}${value === undefined ? '' : `: ${v}`}`,
+  };
+}
+
+/**
+ * THE VALUES A PROCEDURE PUBLISHES ARE NOT EVIDENCE THAT IT RAN.
+ *
+ * A read step exists because the recording did NOT know the answer: it asked
+ * the page, and the instruction's report carries what came back. A value the
+ * run obtained that way is, by construction, this run's result — the second
+ * line's tax, the untaxed total, the reference of the record the run just
+ * made. Frozen into `addedContains` it asserts that a later run's arithmetic,
+ * or a later run's record, equals the recording's, and the step stops for
+ * ever (fwod60 s_292da2, fwrd65 s_ca1263 — both demoted to 1/3 with two
+ * consecutive stops, and `demoted-pin` then refused the compile).
+ *
+ * Provenance, not shape: the recording's own reads say which strings these
+ * are, so nothing here looks at whether a value is spelled like money or like
+ * a ticket ref. A value the caller supplied, or one the procedure typed, is a
+ * slot by the time this runs (substitute() went first) and is left alone —
+ * only the wildcard lands, and only over what a read published.
+ *
+ * Applied to the NAME and the VALUE of a line, never to its role: a read that
+ * published the word "row" must not turn `- row "…"` into `- {{*}} "…"`.
+ */
+function maskPublishedValues(line: string, published: readonly string[]): string {
+  const split = splitExpectLine(line);
+  if (!split) return line;
+  let { name, value } = split;
+  for (const v of published) {
+    if (name && occursAsToken(name, v)) name = replaceAsToken(name, v, WILDCARD);
+    if (value && occursAsToken(value, v)) value = replaceAsToken(value, v, WILDCARD);
+  }
+  return name === split.name && value === split.value ? line : split.rebuild(name, value);
+}
+
+/** The values this recording's own reads published — see maskPublishedValues. */
+function publishedReadValues(steps: readonly RecordedStep[], reportValues: Record<string, unknown>): string[] {
+  const out = new Set<string>();
+  for (const step of steps) {
+    if (step.tool !== 'read' && step.tool !== 'read_all') continue;
+    if (step.args.target !== '(read-back)' && !readLabel(step, reportValues)) continue;
+    if (step.result === undefined) continue;
+    let observed: unknown;
+    try {
+      observed = JSON.parse(step.result);
+    } catch {
+      observed = step.result;
+    }
+    for (const v of Array.isArray(observed) ? observed : [observed]) {
+      const s = String(v ?? '').trim();
+      // A marker is already parameterised, and a multi-line read is prose the
+      // page never shows as one snapshot line.
+      if (s && !s.includes('{{') && !s.includes('\n')) out.add(s);
+    }
+  }
+  // Longest first, so a read that published "£ 279.00" masks it before one
+  // that published "279.00" can take half of it.
+  return [...out].sort((a, b) => b.length - a.length);
+}
+
+/**
+ * A NAME THE RECORDING ITSELF WATCHED CHANGE IS NOT A LANDMARK.
+ *
+ * maskPublishedValues reaches a value the procedure reported. It does not
+ * reach one the recording merely passed THROUGH: fwod60 s_292da2 added a
+ * £12 line to a £255 quotation and recorded `- row "{{v9}} £ 267.00"`, then
+ * set the quantity to 2 and recorded `- row "{{v9}} £ 279.00"`. 267 was never
+ * read and never reported — it is one keystroke of arithmetic — and as the
+ * step's only slotted line it was the whole HARD half of the expectation.
+ * Every replay stopped there ("the page did not show `- row \"Untaxed
+ * Amount: £ 210.00 £ 267.00\"`"), twice, and the skill demoted.
+ *
+ * The evidence is the recording's own two looks: the SAME element — same
+ * role, same run-scoped slots in the same order, which is what pins identity
+ * across two snapshots — carried two different names. A name the procedure
+ * changed is a field it moves, not a landmark it can be checked against, so
+ * the parts that differ become the wildcard in every occurrence. This is the
+ * ledger's `basis: 'variance'` argument (shape.ts, "cross-run variance")
+ * applied inside one recording: one demonstration of difference decides, and
+ * agreement decides nothing — a name seen once is left exactly as recorded.
+ *
+ * Two looks at DIFFERENT steps, never two lines of one diff: one snapshot
+ * showing `- row "{{v1}} A"` and `- row "{{v1}} B"` is two rows, not one row
+ * twice.
+ */
+function unfreezeWatchedNames(steps: readonly SkillStep[]): number {
+  interface Occurrence {
+    step: number;
+    line: number;
+    parts: string[];
+    markers: string[];
+  }
+  const byKey = new Map<string, Occurrence[]>();
+  steps.forEach((step, si) => {
+    (step.expect?.addedContains ?? []).forEach((line, li) => {
+      const split = splitExpectLine(line);
+      if (!split?.name) return;
+      const markers = split.name.match(NAME_SLOT);
+      if (!markers) return;
+      const key = `${split.role}|${markers.join('')}`;
+      const parts = split.name.split(NAME_SLOT);
+      (byKey.get(key) ?? byKey.set(key, []).get(key)!).push({ step: si, line: li, parts, markers });
+    });
+  });
+  let changed = 0;
+  for (const group of byKey.values()) {
+    if (new Set(group.map((o) => o.step)).size < 2) continue;
+    const width = group[0].parts.length;
+    const variable = Array.from({ length: width }, (_, i) => new Set(group.map((o) => o.parts[i] ?? '')).size > 1);
+    if (!variable.some(Boolean)) continue;
+    for (const o of group) {
+      // A part that only ever held whitespace between two markers is the
+      // snapshot's own spacing, not a value: blanking it would say nothing
+      // and would read as a second wildcard.
+      const name = o.parts
+        .map((p, i) => (variable[i] && p.trim() ? `${/^\s/.test(p) ? ' ' : ''}${WILDCARD}` : p))
+        .reduce((acc, p, i) => acc + p + (o.markers[i] ?? ''), '');
+      const line = steps[o.step].expect!.addedContains![o.line];
+      const split = splitExpectLine(line)!;
+      const next = split.rebuild(name, split.value);
+      if (next === line) continue;
+      steps[o.step].expect!.addedContains![o.line] = next;
+      changed += 1;
+    }
+  }
+  return changed;
+}
+
+/**
+ * Both provenance rules above, over a whole segment's expectations, plus the
+ * sweep that follows them: a line the wildcard has emptied identifies no
+ * element and is dropped by the rule that already drops `- cell ""`
+ * (identifiesNothing), and two lines that collapse onto each other are one.
+ *
+ * A step left with nothing keeps its url expectation and loses its content
+ * one — which is the honest outcome, not a weakening: every line it held was
+ * a value only the recording run could produce, so the gate had nothing to
+ * check before this ran either, and stopping on it was the bug.
+ */
+function unfreezeExpectations(steps: SkillStep[], published: readonly string[], notes: TransformNote[]): void {
+  const watched = unfreezeWatchedNames(steps);
+  steps.forEach((step, si) => {
+    const lines = step.expect?.addedContains;
+    if (!lines) return;
+    const before = lines.join('\n');
+    const kept: string[] = [];
+    for (const line of lines) {
+      const masked = published.length ? maskPublishedValues(line, published) : line;
+      if (identifiesNothing(masked) || kept.includes(masked)) continue;
+      kept.push(masked);
+    }
+    if (kept.join('\n') === before) return;
+    if (kept.length) step.expect!.addedContains = kept;
+    else {
+      delete step.expect!.addedContains;
+      // lineDialect describes addedContains and alertContains; with neither
+      // left it describes nothing, and an expectation of nothing but a dialect
+      // is no expectation.
+      if (!step.expect!.alertContains) delete step.expect!.lineDialect;
+      if (!Object.keys(step.expect!).length) delete step.expect;
+    }
+    notes.push({
+      name: 'unfreezeExpectations',
+      at: si + 1,
+      reason: `recorded page change(s) only the recording run could produce: ${JSON.stringify(before.split('\n'))} → ${JSON.stringify(kept)}`,
+    });
+  });
+  if (watched && !notes.some((n) => n.name === 'unfreezeExpectations')) {
+    notes.push({ name: 'unfreezeExpectations', at: 1, reason: `${watched} expectation line(s) carried a name this recording watched change` });
+  }
 }
 
 /**

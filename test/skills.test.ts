@@ -1050,7 +1050,13 @@ describe('compileSkill', () => {
     expect(s.steps[1].args.value).toBe('{{v1}}');
     expect(s.steps[6].locators.target[0]).toEqual({ kind: 'css', selector: 'tr:has-text("{{v1}}") td.price' });
     expect(s.steps[4].expect?.alertContains).toBe('Part {{v1}} added');
-    expect(s.steps[4].expect?.addedContains).toEqual(['- row "{{v1}} {{v2}} {{v3}}% 125.00"']);
+    // ...and the price does NOT survive as a literal. 125.00 is the app's own
+    // cost x markup, which step 6 reads and the report publishes as partPrice
+    // — this recording's arithmetic, not a landmark. The suite says so itself
+    // further down: the same skill run with v2=300/v3=40 publishes 375.00.
+    // Frozen here it would assert the next run's total equals this one's (see
+    // unfreezeExpectations / maskPublishedValues).
+    expect(s.steps[4].expect?.addedContains).toEqual(['- row "{{v1}} {{v2}} {{v3}}% {{*}}"']);
     // a step that did not change the url still records where it left the browser
     expect(s.steps[0].expect?.urlPattern).toBe(`${ORIGIN}/#/tickets/:id`);
     // the read that supplied a report value is labelled with that key
@@ -2501,6 +2507,196 @@ describe("a step's expectation is only what the step itself put there (fwod49)",
     expect(added.some((l) => /^- option .*\{\{v\d+\}\}/.test(l))).toBe(false);
     // the popup's opening is still the evidence
     expect(added).toContain('- menu ""');
+  });
+});
+
+describe('a recorded expectation may not freeze a value only that run could produce (fwod60, fwrd65)', () => {
+  const compileOne = (
+    entries: RecordedStep[],
+    instruction: string,
+    report: Parameters<typeof compileSkills>[0]['report'],
+    url = `${ORIGIN}/orders/1`,
+    knownValues: Record<string, string> = {},
+  ) =>
+    compileSkills({
+      entries: [{ k: 'instruction', text: instruction, url, fingerprint: [1, 0, 0] }, ...entries],
+      instruction,
+      report,
+      session: 's',
+      knownValues,
+    })[0];
+
+  it("unfreezes a total the recording watched change at the same slotted row (fwod60 s_292da2 steps[2])", () => {
+    // VERBATIM from origin/results/fwod60-c29wza,
+    // bench/results-published/fwod60-skills/http_127.0.0.1_8069/s_292da2.json.
+    // £267.00 is 255 + 12, computed by odoo from the product the recording
+    // happened to pick. n2 picked a £70 product, so the total was £222 and
+    // never £267 — and as the step's only slotted line, `- row "{{v9}} £
+    // 267.00"` was the whole HARD half of the expectation. n2 and n3 both
+    // stopped there ("after step 3 the page did not show `- row \"Untaxed
+    // Amount: £ 210.00 £ 267.00\"`"), s_292da2 demoted to 1/3 and
+    // demoted-pin refused the compile.
+    //
+    // 267.00 is not in the report and no read published it, so nothing but
+    // the recording's own two looks can see it: the same role carrying the
+    // same run-scoped slot showed two different names one step apart.
+    const instruction =
+      'On quotation S00021 (line one: Corner Desk qty 3.00) add a second line for any other product, set its quantity to 2, and report the new Untaxed Amount.';
+    const report = {
+      status: 'success' as const,
+      summary: 'Added a second line.',
+      // Deliberately does NOT mention 267.00: it is a value the procedure
+      // passed through, never one it published.
+      evidence: { values: { untaxed_amount_label: 'Untaxed Amount', untaxed_amount: '£ 279.00' } },
+    };
+    const skill = compileOne(
+      [
+        step('click', { target: 'role=option[name="Chair floor protection"]' }, [{ kind: 'role', role: 'option', name: 'Chair floor protection' }], {
+          diff: { url: `${ORIGIN}/orders/1`, alerts: [], added: ['- row "20% £ 12.00"', '- link "Delete"', '- cell "£ 12.00"', '- row "Untaxed Amount £ 267.00"'] },
+        }),
+        step('fill', { target: 'tr.o_selected_row input >> nth=1', value: '2' }, [{ kind: 'css', selector: 'tr.o_selected_row input >> nth=1' }], {
+          diff: { url: `${ORIGIN}/orders/1`, alerts: [], added: ['- row "20% £ 24.00"', '- row "Untaxed Amount £ 279.00"'] },
+        }),
+        step('read', { target: '(read-back)', what: 'text' }, [{ kind: 'css', selector: 'td.label' }], { result: '"Untaxed Amount"', label: 'untaxed_amount_label' }),
+        step('read', { target: '(read-back)', what: 'text' }, [{ kind: 'css', selector: 'td.amount' }], { result: '"£ 279.00"', label: 'untaxed_amount' }),
+      ],
+      instruction,
+      report,
+      `${ORIGIN}/orders/1`,
+      // v9's own provenance, as the sweep recorded it: the label came from an
+      // earlier instruction's report, so it is a slot and the amount beside it
+      // is not.
+      { 'output:i3:untaxed_amount_label': 'Untaxed Amount' },
+    );
+    const slot = Object.entries(skill.params).find(([, p]) => p.example === 'Untaxed Amount')![0];
+    const added = skill.steps[0].expect!.addedContains!;
+    // the row is still evidence — the label the run bound, and that a row
+    // appeared beside it — but the arithmetic is gone
+    expect(added).toContain(`- row "{{${slot}}} {{*}}"`);
+    expect(added.join('\n')).not.toContain('267');
+    // ...and the run's own slot is untouched, so the line is still HARD
+    expect(skill.steps[1].expect!.addedContains).toContain(`- row "{{${slot}}} {{*}}"`);
+    // the landmark beside it is not collateral: `- link "Delete"` never changed
+    expect(added).toContain('- link "Delete"');
+  });
+
+  it('unfreezes the amounts the recording read back and published (fwod60 s_292da2 steps[3])', () => {
+    // The step AFTER the one above recorded five lines and every one of them
+    // was an amount — `- row "20% £ 24.00"`, `- cell "£ 24.00"`, `- row
+    // "{{v9}} £ 279.00"`, `- cell "£ 279.00"`, `- row "TAX 20% £ 55.80"` —
+    // so there was no stable line in the plain group to carry it. Fixing
+    // only the slotted line above would have moved the stop one step, not
+    // removed it. These the reads name: the procedure asked the page for
+    // them and the report publishes them as this run's answer.
+    const instruction = "Set the second line's quantity to 2 and report the totals.";
+    const report = {
+      status: 'success' as const,
+      summary: 'Set the quantity.',
+      evidence: { values: { second_line_tax_excl: '£ 24.00', untaxed_amount: '£ 279.00', tax_20_amount: '£ 55.80' } },
+    };
+    const skill = compileOne(
+      [
+        step('fill', { target: 'tr.o_selected_row input >> nth=1', value: '2' }, [{ kind: 'css', selector: 'tr.o_selected_row input >> nth=1' }], {
+          diff: {
+            url: `${ORIGIN}/orders/1`,
+            alerts: [],
+            added: ['- row "20% £ 24.00"', '- cell "£ 24.00"', '- cell "£ 279.00"', '- row "TAX 20% £ 55.80"'],
+          },
+        }),
+        step('read', { target: '(read-back)', what: 'text' }, [{ kind: 'css', selector: 'td.sub' }], { result: '"£ 24.00"', label: 'second_line_tax_excl' }),
+        step('read', { target: '(read-back)', what: 'text' }, [{ kind: 'css', selector: 'td.untaxed' }], { result: '"£ 279.00"', label: 'untaxed_amount' }),
+        step('read', { target: '(read-back)', what: 'text' }, [{ kind: 'css', selector: 'td.tax' }], { result: '"£ 55.80"', label: 'tax_20_amount' }),
+      ],
+      instruction,
+      report,
+    );
+    const added = skill.steps[0].expect!.addedContains!;
+    // what the step DID is still asserted: a 20% tax line and a TAX 20% row
+    // appeared. What that run's arithmetic made of them is not.
+    expect(added).toEqual(['- row "20% {{*}}"', '- row "TAX 20% {{*}}"']);
+    // the two lines whose whole name was an amount identify nothing once it
+    // is gone, and are dropped by the rule that drops `- cell ""`
+    expect(added.join('\n')).not.toContain('279');
+  });
+
+  it('unfreezes a record reference the run minted, in a cell with no slot near it (fwrd65 s_ca1263, observation B)', () => {
+    // The other half of the class, different app and different value kind:
+    // RD-1016 is the reference repair-desk minted for the probe ticket THIS
+    // run created. `- cell "RD-1016"` and `- link "RD-1016"` are the whole
+    // plain group of step 3, both frozen, so the group could not be
+    // satisfied and the step stopped — twice, demoting s_ca1263 to 1/3.
+    // No slot sits anywhere near those two lines, so the watched-name rule
+    // cannot reach them; the recording's own read of that reference can.
+    const instruction = 'Open the tickets list, search for the probe ticket and report its reference.';
+    const report = {
+      status: 'success' as const,
+      summary: 'Read the probe ticket back.',
+      evidence: { values: { list_row_reference_rd1016: 'RD-1016' } },
+    };
+    const skill = compileOne(
+      [
+        step('fill', { target: '@e922', value: 'zz-probe' }, [{ kind: 'css', selector: '#search' }], {
+          diff: {
+            url: `${ORIGIN}/#/tickets`,
+            alerts: [],
+            added: ['- searchbox "Reference, title or customer": zz-probe', '- cell "RD-1016"', '- link "RD-1016"', '- cell "Probe Co"'],
+          },
+        }),
+        step('read', { target: '(read-back)', what: 'text' }, [{ kind: 'css', selector: 'td.ref' }], { result: '"RD-1016"', label: 'list_row_reference_rd1016' }),
+      ],
+      instruction,
+      report,
+      `${ORIGIN}/#/tickets`,
+    );
+    const added = skill.steps[0].expect!.addedContains!;
+    expect(added.join('\n')).not.toContain('RD-1016');
+    // the search the fill itself performed, and a landmark the run did not
+    // mint, still carry the step
+    expect(added).toContain('- cell "Probe Co"');
+    expect(added.some((l) => l.startsWith('- searchbox "Reference, title or customer"'))).toBe(true);
+  });
+
+  it('leaves a name the recording only ever saw once exactly as recorded', () => {
+    // The counter-example the watched-name rule exists to stay inside: one
+    // look is not variance, so a row that merely CONTAINS a slot keeps every
+    // literal beside it. fwrd65 s_ca1263's `- row "{{v4}} {{v2}} {{v5}}
+    // Marlow Bakery Ready 0"` is the shape at risk — blanking a slotted
+    // name's residue on sight would throw away the ticket's status.
+    const instruction = "Clear the search box on the tickets list for ticket 'x7 Bench Ticket'.";
+    const report = { status: 'success' as const, summary: 'Cleared it.', evidence: { values: {} } };
+    const skill = compileOne(
+      [
+        step('fill', { target: '@e922', value: '' }, [{ kind: 'css', selector: '#search' }], {
+          diff: { url: `${ORIGIN}/#/tickets`, alerts: [], added: ['- row "x7 Bench Ticket Marlow Bakery Ready 0"'] },
+        }),
+      ],
+      instruction,
+      report,
+      `${ORIGIN}/#/tickets`,
+      { 'output:i1:title': 'x7 Bench Ticket' },
+    );
+    const slot = Object.entries(skill.params).find(([, p]) => p.example === 'x7 Bench Ticket')![0];
+    expect(skill.steps[0].expect!.addedContains).toEqual([`- row "{{${slot}}} Marlow Bakery Ready 0"`]);
+  });
+
+  it('never masks the role a read happened to publish', () => {
+    // A read whose value is "row" or "Delete" must narrow what a line SAYS,
+    // never rewrite what said it.
+    const instruction = 'Click Save on order 1 and report the control that appeared.';
+    const report = { status: 'success' as const, summary: 'Saved.', evidence: { values: { appeared: 'row' } } };
+    const skill = compileOne(
+      [
+        step('click', { target: '@e1' }, [{ kind: 'role', role: 'button', name: 'Save' }], {
+          diff: { url: `${ORIGIN}/orders/1`, alerts: [], added: ['- row "Widget 1"', '- link "Delete"'] },
+        }),
+        step('read', { target: '(read-back)', what: 'text' }, [{ kind: 'css', selector: 'td.k' }], { result: '"row"', label: 'appeared' }),
+      ],
+      instruction,
+      report,
+    );
+    const added = skill.steps[0].expect!.addedContains!;
+    expect(added.every((l) => l.startsWith('- row "') || l.startsWith('- link "'))).toBe(true);
+    expect(added).toContain('- link "Delete"');
   });
 });
 
