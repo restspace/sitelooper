@@ -1265,6 +1265,69 @@ describe('remapParams', () => {
       unbound: [],
     });
   });
+
+  // fwgr50: n2's recovery compiled s_6486ef with `bench` bound to
+  // `output:i3:tag_chip_text` — an incidental read by the step that ran as
+  // i3 — and n3 replayed it 19/19, validated it, superseded the parent pin,
+  // and then refused to move the pin because `i3` names no flow step. The
+  // flow shipped pinned to a demoted skill and the compile refused it. The
+  // caller knows which step ran as i3 and what the step's instruction says.
+  it('places a ledger index through the run\'s own index map when that step publishes the output', async () => {
+    const { remapParams } = await import('../src/skills/flow.js');
+    const ids = ['01-open', '02-create', '03-open', '04-open'];
+    const ledgerSteps = new Map([
+      ['i2', { id: '02-create', outputs: ['dashboard_title', 'dashboard_uid'] }],
+      ['i3', { id: '03-open', outputs: ['folder'] }],
+    ]);
+    const skill = {
+      params: {
+        v1: { example: 'fwgr50-n2 Bench Dashboard', usedIn: [18], known: true, binding: 'output:i2:dashboard_title' },
+        v2: { example: 'fwgr50-n2', usedIn: [15], known: true, binding: 'var:runid' },
+        v3: { example: 'ffygxomw86w3kd', usedIn: [15], known: true, binding: 'url:i2:p1' },
+        v5: { example: 'bench', usedIn: [4, 5, 7], known: true, binding: 'output:i3:tag_chip_text' },
+      },
+    } as never;
+    // Without the map or the instruction, i2 and i3 name nothing: v1 and v3
+    // are unbound (v1 only templates on the runid), v5 is unbound.
+    expect(remapParams(skill, {}, ids).unbound).toEqual(['v3', 'v5']);
+    // With the map: i2 is 02-create, which publishes dashboard_title and (as
+    // any step does, on demand) its url parts; i3 is 03-open, which does NOT
+    // publish tag_chip_text — that origin stays unnamed.
+    const placed = remapParams(skill, {}, ids, { ledgerSteps });
+    expect(placed.params).toEqual({
+      v1: '{{02-create.dashboard_title}}',
+      v2: '{{runid}}',
+      v3: '{{02-create.url.p1}}',
+      v5: 'bench',
+    });
+    expect(placed.unbound).toEqual(['v5']);
+    // With the instruction too: "add the tag 'bench'" states the value in
+    // plain words, so the literal is the binding and nothing is unbound.
+    const instruction = "Open the dashboard '{{runid}} Bench Dashboard' at http://127.0.0.1:3000/d/{{02-create.url.p1}}/ and add the tag 'bench' to it.";
+    expect(remapParams(skill, {}, ids, { ledgerSteps, instruction })).toEqual({
+      params: { v1: '{{02-create.dashboard_title}}', v2: '{{runid}}', v3: '{{02-create.url.p1}}', v5: 'bench' },
+      unbound: [],
+    });
+  });
+
+  it('does not take a run-scoped literal for one the instruction states plainly', async () => {
+    const { remapParams } = await import('../src/skills/flow.js');
+    const ids = ['01-open', '04-open'];
+    // The title carries the runid, which is bound: it is this run's value
+    // even though the instruction spells it out, so an origin is still
+    // required (and here there is none the flow can name).
+    const skill = {
+      params: {
+        v1: { example: 'k9 Bench Dashboard', usedIn: [2], known: true, binding: 'output:i9:title' },
+        v2: { example: 'k9', usedIn: [1], known: true, binding: 'var:runid' },
+      },
+    } as never;
+    const instruction = "Open the dashboard 'k9 Bench Dashboard' and check its title.";
+    expect(remapParams(skill, {}, ids, { instruction })).toEqual({ params: { v1: '{{runid}} Bench Dashboard', v2: '{{runid}}' }, unbound: [] });
+    // …and a bare known literal the instruction never mentions is still unbound.
+    const bare = { params: { v1: { example: 'S00022', usedIn: [2], known: true, binding: 'output:i9:ref' } } } as never;
+    expect(remapParams(bare, {}, ids, { instruction: 'Open the quotation and confirm it.' })).toEqual({ params: { v1: 'S00022' }, unbound: ['v1'] });
+  });
 });
 
 /**

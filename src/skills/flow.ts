@@ -8,6 +8,7 @@ import { rootDir } from '../shared/paths.js';
 import { urlParts, urlPattern } from './compile.js';
 import { idPositionPart } from './ledger.js';
 import { MIN_ID_LEN, looksLikeId, tokenPattern } from './shape.js';
+import { statedPlainly } from '../spec/rethread.js';
 
 /**
  * A flow is the resolved path a session took: the instructions the caller
@@ -1728,11 +1729,32 @@ export function ignorableRefs(
  * that already pins this skill stores, used for slots with no origin.
  * `stepIds` are the step ids THIS flow can resolve; omitted means "trust
  * every origin", which is what the pre-fwgr47 callers did.
+ *
+ * Two more things the caller knows and the store does not (`opts`):
+ *
+ *  - `ledgerSteps`: which flow step ran under which ledger index in the run
+ *    doing the re-pin. A skill compiled from a recovery binds by ledger
+ *    origin — `output:i3:tag_chip_text` — because that is the spelling the
+ *    ledger banks under; the flow spells the same fact `{{03-open.…}}`. With
+ *    the map, an index origin whose step PUBLISHES the output (declares it in
+ *    `outputs`) is a named origin like any other. One whose step does not is
+ *    still no origin: the reference would resolve on no run.
+ *  - `instruction`: the step's own instruction. A literal the instruction
+ *    states in plain words is the instruction's to supply — the value is a
+ *    constant of the flow, not a fact of the recording run — so it is not an
+ *    unbound record identity even when `known`. fwgr50's 04-open said "add
+ *    the tag 'bench'"; the recovery's compile banked `bench` under an earlier
+ *    step's incidental read, the flow could not name that read, the re-pin
+ *    was refused, and the flow stayed on a pin the store had already
+ *    superseded. Same rule as the compile side's `statedPlainly`
+ *    (spec/rethread.ts): a value carrying a run-scoped bound value (the
+ *    runid) is never "stated plainly".
  */
 export function remapParams(
   skill: Skill,
   inherited: Record<string, string> = {},
   stepIds?: Iterable<string>,
+  opts: { instruction?: string; ledgerSteps?: ReadonlyMap<string, { id: string; outputs: readonly string[] }> } = {},
 ): { params: Record<string, string>; unbound: string[] } {
   // A binding key names where a value comes from: "runid" / "var:runid" (a
   // declared var), "…:landed_page" / "output:…:landed_page" (an output), or
@@ -1749,17 +1771,33 @@ export function remapParams(
   // through to `inherited`, then the literal example, then `unbound`.
   const known = stepIds ? new Set(stepIds) : null;
   const resolvable = (step: string): boolean => !known || known.has(step);
+  // A ledger index the caller can place: the step that ran as `i3`, if it
+  // publishes what the origin names. Url parts are published on demand (the
+  // runner captures whatever the flow's references ask for), so a placed
+  // index names one outright; an output must be declared.
+  const placed = (step: string, output?: string): string | null => {
+    const at = opts.ledgerSteps?.get(step);
+    if (!at) return null;
+    if (output !== undefined && !at.outputs.includes(output)) return null;
+    return at.id;
+  };
   const templateOf = (key: string): string | null => {
     const m = /^(var|url|output|input)(?::(.*))?$/.exec(key);
     if (!m) return `{{${key}}}`;
     if (m[1] === 'var') return `{{${m[2]}}}`;
     if (m[1] === 'url') {
       const [step, label] = String(m[2]).split(':');
-      return step && label && resolvable(step) ? `{{${step}.url.${label}}}` : null;
+      if (!step || !label) return null;
+      if (resolvable(step)) return `{{${step}.url.${label}}}`;
+      const id = placed(step);
+      return id ? `{{${id}.url.${label}}}` : null;
     }
     if (m[1] === 'output') {
       const [step, name] = String(m[2]).split(':');
-      return step && name && resolvable(step) ? `{{${step}.${name}}}` : null;
+      if (!step || !name) return null;
+      if (resolvable(step)) return `{{${step}.${name}}}`;
+      const id = placed(step, name);
+      return id ? `{{${id}.${name}}}` : null;
     }
     return null; // 'input': the run typed it — the example is the value
   };
@@ -1795,7 +1833,9 @@ export function remapParams(
     params[name] = text;
     // A value that identifies the record (known) and could not be templated
     // would replay as the LEARNING run's literal — the re-pin is not safe.
-    if (p.known && text === ex) unbound.push(name);
+    // Unless the instruction itself states it: then the literal IS the
+    // binding, on every run, and the recording's origin for it was incidental.
+    if (p.known && text === ex && !(opts.instruction && ex && statedPlainly(opts.instruction, ex, bound.map((b) => b.value)))) unbound.push(name);
   }
   return { params, unbound };
 }

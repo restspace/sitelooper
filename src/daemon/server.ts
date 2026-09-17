@@ -1128,6 +1128,16 @@ ${describeLeaks(certain.slice(0, 30))}${certain.length > 30 ? `\n  … and ${cer
     let evidenceChanged = 0;
     /** Url values this run watched vary, newly banked on a step (see FlowStep.urlVariance). */
     let varianceNoted = 0;
+    /**
+     * Which flow step ran under which ledger index THIS run (`i3` → 03-open).
+     * A skill compiled from a recovery binds its slots by ledger origin
+     * (`output:i3:tag_chip_text`), a spelling no flow reference can name; the
+     * re-pin gate (remapParams) turns it into `{{03-open.tag_chip_text}}`
+     * through this map, when 03-open publishes that output. Recorded as the
+     * steps run rather than computed from position: an already-satisfied step
+     * consumes no index.
+     */
+    const ledgerSteps = new Map<string, { id: string; outputs: readonly string[] }>();
 
     // Set by a step that recovered on the model: a recovery can end
     // "successfully" yet leave a blocking dialog open (rpod1-r2: an earlier
@@ -1297,6 +1307,7 @@ ${describeLeaks(certain.slice(0, 30))}${certain.length > 30 ? `\n  … and ${cer
       this.instructionIndex += 1;
       this.ledger.beginInstruction(this.instructionIndex);
       const ledgerStep = `i${this.instructionIndex}`;
+      ledgerSteps.set(ledgerStep, { id: step.id, outputs: step.outputs });
       // Zero-model first: replay the step's pinned skill directly, binding its
       // params from the flow's stored bindings (robust to reworded steps)
       // rather than re-deriving them from the instruction text.
@@ -1588,11 +1599,18 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
           const sibling = flow.steps.find((st) => st.id !== step.id && st.skill === candidate.id && st.params);
           // An origin is only an origin if this flow can name it: a slot bound
           // to `output:i2:…` records a ledger instruction index, not a step of
-          // this flow, and nothing publishes `i2.*` (fwgr47).
+          // this flow, and nothing publishes `i2.*` (fwgr47). `ledgerSteps`
+          // says which step ran as `i2` this run, so an index whose step
+          // publishes the output is named after all; and a literal the step's
+          // instruction states in plain words is the instruction's to supply,
+          // whatever origin the recording happened to bank it under (fwgr50:
+          // `bench` read at i3, stated by 04-open; the refused re-pin left the
+          // flow on a superseded pin and the compile refused).
           const remap = remapParams(
             candidate,
             sibling?.params ?? {},
             flow.steps.map((st) => st.id),
+            { instruction: step.instruction, ledgerSteps },
           );
           if (remap.unbound.length) {
             opts.progress(`[flow ${flow.name}] ${step.id}: not re-pinning ${candidate.id} — slot(s) ${remap.unbound.join(', ')} identify the record but carry no origin to rebind from`);
