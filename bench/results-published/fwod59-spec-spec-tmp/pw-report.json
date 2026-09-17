@@ -1,0 +1,184 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwod59-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwod59-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwod59-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwod59-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwod59.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwod59-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwod59.spec.ts",
+      "file": "fwod59.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwod59",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 40004,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper recipe] filled via recipe aria-combobox/set-value (r_e64c79); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe aria-combobox/set-value (r_e64c79); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-open\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe aria-combobox/set-value (r_e64c79); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe aria-combobox/set-value (r_e64c79); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-change\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-report\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-report\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:8069/ and sign in with login 'admin' and password 'admin'. Then open the Contacts app and create a new contact named '{{runid}} Bench Customer' with the City field set to 'Benchville' (in the address section). Save the record and report the exact name and city shown on the saved contact. Note: Odoo long-polls, so never wait for network idle; wait for concrete page elements instead.",
+                      "duration": 10263
+                    },
+                    {
+                      "title": "02-open: In Odoo (already signed in as admin), open the Sales app and create a new quotation for customer '{{runid}} Bench Customer' (use the autocomplete dropdown — select the option that appears when typing). Add ONE order line: pick any product from the product catalogue via the autocomplete dropdown, with quantity 3. Then save and report: the product you chose, the unit price the app filled in for that line, and the Untaxed Amount the quotation shows (with currency). Note: never wait for network idle; wait for concrete elements.",
+                      "duration": 9493
+                    },
+                    {
+                      "title": "03-open: In Odoo Sales, open the existing quotation {{02-open.quotation_reference}} for customer '{{runid}} Bench Customer' (find it via the Sales orders list or breadcrumb back). Add a SECOND order line: a different product than 'Acoustic Bloc Screens', picked via the product autocomplete dropdown, with quantity 2. Save, then report: the product chosen for the second line, its quantity and unit price, and the new Untaxed Amount the quotation shows (with currency). Never wait for network idle.",
+                      "duration": 7026
+                    },
+                    {
+                      "title": "04-change: In Odoo Sales, on the quotation {{02-open.quotation_reference}} (currently two lines: Acoustic Bloc Screens qty 3 @ {{02-open.unit_price}}, Cabinet with Doors qty 2 @ {{03-open.unit_price}}), change the FIRST line's quantity from 3 to 5. Save, then report the new quantities on both lines and the new Untaxed Amount the quotation shows (with currency). Never wait for network idle.",
+                      "duration": 3919
+                    },
+                    {
+                      "title": "05-report: In Odoo Sales, on quotation {{02-open.quotation_reference}}, click Confirm to confirm the quotation so it becomes a sales order. Report the order reference (name) shown and the exact status the app now displays (e.g. in the status bar / breadcrumb, like 'Sales Order' or 'Confirmed'). Never wait for network idle.",
+                      "duration": 956
+                    },
+                    {
+                      "title": "06-report: In Odoo Sales, on the confirmed sales order {{02-open.quotation_reference}}, cancel the order (use the Cancel button and confirm any dialog that appears). Report the exact status the app shows after cancelling (e.g. the statusbar or 'Cancelled' tag on the record). Never wait for network idle.",
+                      "duration": 7856
+                    }
+                  ],
+                  "startTime": "2026-09-17T01:17:37.492Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2b8b373c2f9f1041cf4f-28f2ea010c69cfa68af9",
+          "file": "fwod59.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-17T01:17:35.383Z",
+    "duration": 42320.26,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
