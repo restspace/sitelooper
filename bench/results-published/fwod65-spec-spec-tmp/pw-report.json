@@ -1,0 +1,172 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwod65-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwod65-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwod65-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwod65-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwod65-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwod65.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwod65-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwod65.spec.ts",
+      "file": "fwod65.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwod65",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 34260,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-open\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Go to http://127.0.0.1:8069/ and sign in with login admin and password admin. Then create a new customer contact named '{{runid}} Bench Customer' with the City field set to 'Benchville' (City is part of the address block on the contact form). Save the record and report the exact name and city shown on the saved contact. Important: do not wait for network idle (the app long-polls); wait for concrete page state instead.",
+                      "duration": 9694
+                    },
+                    {
+                      "title": "02-create: In Odoo, go to the Sales app and create a new quotation. Set the Customer field to '{{runid}} Bench Customer' — it is an autocomplete dropdown, so type the name and actually select the option from the dropdown list that appears (do not just type it). Then in the Order Lines table, add exactly ONE order line: pick any product from the product catalogue (again via the autocomplete dropdown, selecting an actual option), and set its Quantity to 3. Let the app auto-fill the unit price. Do NOT confirm the quotation — leave it as a draft quotation. Save the quotation. Then report: (a) the exact product name you chose, (b) the unit price the app filled in for that line, (c) the Untaxed Amount the app computes, and (d) the quotation's reference/name shown in the breadcrumb or form header. Do not wait for network idle (the app long-polls); wait for concrete page state instead.",
+                      "duration": 9091
+                    },
+                    {
+                      "title": "03-open: In Odoo, open the existing draft quotation {{02-create.quotation_reference}} (customer '{{runid}} Bench Customer', currently one order line: '{{02-create.product_name}}' quantity 3). Add a SECOND order line to the Order Lines table: choose a DIFFERENT product from the product catalogue via the autocomplete dropdown (select an actual option from the dropdown, do not just type), and set its Quantity to 2. Let the app auto-fill the unit price. Keep the quotation as a draft — do NOT confirm it. Save. Then report: (a) the exact product name of the new second line, (b) its unit price, (c) the new Untaxed Amount the app computes for the whole quotation, and (d) confirm the quotation is still in draft 'Quotation' state. Do not wait for network idle (the app long-polls); wait for concrete page state instead.",
+                      "duration": 5019
+                    },
+                    {
+                      "title": "04-open: In Odoo, open the existing draft quotation {{02-create.quotation_reference}} (customer '{{runid}} Bench Customer'). It has two order lines: line 1 is '{{02-create.product_name}}' with Quantity {{02-create.quantity}}, line 2 is '{{03-open.second_product_name}}' with Quantity {{03-open.second_line_quantity}}. Change ONLY the first line's Quantity from 3 to 5 (leave the second line at quantity 2). Let the app recompute. Keep the quotation as a draft — do NOT confirm it. Save. Then report: (a) the quantity now shown on line 1, (b) the quantity shown on line 2 (should still be 2), and (c) the new Untaxed Amount the app computes for the whole quotation. Do not wait for network idle (the app long-polls); wait for concrete page state instead.",
+                      "duration": 3151
+                    },
+                    {
+                      "title": "05-open: In Odoo, open the existing draft quotation {{02-create.quotation_reference}} (customer '{{runid}} Bench Customer', two order lines: '{{02-create.product_name}}' qty 5 and '{{03-open.second_product_name}}' qty 2). Confirm the quotation so it becomes a sales order — use the Confirm button (or Confirm Sales / similar confirmation action) in the form header. If a confirmation dialog appears, accept it. After confirming, report: (a) the order reference/name shown (e.g. {{02-create.quotation_reference}} or similar), (b) the status the app now shows in the status bar (e.g. 'Sales Order'), and (c) whether the record is now a confirmed sales order rather than a draft quotation. Do not wait for network idle (the app long-polls); wait for concrete page state instead.",
+                      "duration": 1862
+                    },
+                    {
+                      "title": "06-open: In Odoo, open the confirmed sales order {{02-create.quotation_reference}} (customer '{{runid}} Bench Customer', status 'Sales Order'). {{05-open.header_buttons_after_confirm_4}} this sales order using the {{05-open.header_buttons_after_confirm_4}} button in the form header. If a confirmation dialog or wizard appears asking to confirm the cancellation, accept/proceed with it. After cancelling, report: (a) the status the app now shows in the status bar for this order, (b) the order reference still shown, and (c) confirm the order is no longer an active/confirmed sales order. Do not wait for network idle (the app long-polls); wait for concrete page state instead.",
+                      "duration": 5022
+                    }
+                  ],
+                  "startTime": "2026-09-17T19:19:07.940Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2b94184562707fff65c2-e56c1aa378ac890aca0d",
+          "file": "fwod65.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-17T19:19:06.233Z",
+    "duration": 36128.161,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

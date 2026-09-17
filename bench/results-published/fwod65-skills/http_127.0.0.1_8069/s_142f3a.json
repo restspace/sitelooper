@@ -1,0 +1,64 @@
+{
+ "id": "s_142f3a",
+ "origin": "http://127.0.0.1:8069",
+ "template": "Go to {{v2}} and sign in with login admin and password admin. Then create a new customer contact named '{{v3}}' with the City field set to '{{v4}}' (City is part of the address block on the contact form). Save the record and report the exact name and city shown on the saved contact. Important: do not wait for network idle (the app long-polls); wait for concrete page state instead.",
+ "params": {
+  "v1": {
+   "example": "fwod65-n1",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "http://127.0.0.1:8069/",
+   "usedIn": [
+    1
+   ]
+  },
+  "v3": {
+   "example": "fwod65-n1 Bench Customer",
+   "usedIn": [],
+   "known": true
+  },
+  "v4": {
+   "example": "Benchville",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8069/"
+ },
+ "steps": [
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v2}}"
+   },
+   "locators": {}
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-17T19:10:52.282Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4,
+  "lastUsed": "2026-09-17T19:17:40.329Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_2e57a7",
+  "index": 0,
+  "of": 6
+ },
+ "provenance": {
+  "session": "fwod65-n1",
+  "instruction": "Go to http://127.0.0.1:8069/ and sign in with login admin and password admin. Then create a new customer contact named 'fwod65-n1 Bench Customer' with the City field set to 'Benchville' (City is part of the address block on the contact form). Save the record and report the exact name and city shown on the saved contact. Important: do not wait for network idle (the app long-polls); wait for concrete page state instead.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-17T19:10:52.282Z"
+ },
+ "revision": 3
+}
