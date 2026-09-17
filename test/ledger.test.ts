@@ -6,9 +6,13 @@
  * sweep. If a case here does not fire, the ledger is incomplete, and that is
  * the finding.
  */
+import fs from 'node:fs';
+import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { RunLedger, evidenced, fatal, inLocator, navigationLeaks, occursAsToken, scanForLeaks, slotKnownRunValues, urlVarianceValues } from '../src/skills/ledger.js';
-import { varyingValues, type Flow } from '../src/skills/flow.js';
+import { RunLedger, bindingKey, evidenced, fatal, inLocator, navigationLeaks, occursAsToken, scanForLeaks, slotKnownRunValues, urlVarianceValues, withoutOwnOutputs } from '../src/skills/ledger.js';
+import { remapParams, varyingValues, type Flow } from '../src/skills/flow.js';
+import { compileSkill } from '../src/skills/compile.js';
+import type { RecordedEntry } from '../src/daemon/recorder.js';
 import type { Skill } from '../src/skills/store.js';
 import { looksLikeId } from '../src/skills/shape.js';
 import { primaryFor } from '../src/daemon/recorder.js';
@@ -567,5 +571,99 @@ describe('slotKnownRunValues (fwod47 goal/report leaks)', () => {
     plain.goal = { requireText: ['S00021'] };
     plain.reportTemplate = undefined;
     expect(slotKnownRunValues(plain, shapeOnly)).toBeNull();
+  });
+});
+
+/**
+ * fwod60's 02-create and fwod61's 03-create: an adopted step whose recovery
+ * ran clean, whose `decideRepin` said graduate, and whose pin was refused
+ * anyway — every run, forever — because compile had bound one of its slots to
+ * a LEDGER instruction index.
+ *
+ * The daemon banks a recovery's reported values under `i${instructionIndex}`
+ * (noteMintedIds) BEFORE it compiles that same instruction, and then hands the
+ * whole ledger to compile as `knownValues`. A value the instruction itself
+ * reported therefore comes back as an origin — `output:i2:record_heading` —
+ * that no flow step id can ever name, so remapParams falls through to the
+ * recorded literal and refuses the re-pin for identifying the record.
+ * fwod60's refused slot was `v1`, example `"New"`: the heading of the
+ * not-yet-saved quotation, `usedIn: []`, identifying nothing.
+ */
+describe('a value the compiling instruction itself reported is an output, not an input (fwod60 02-create)', () => {
+  const ORIGIN = 'http://127.0.0.1:8069';
+  const TEXT =
+    "Dismiss the leftover modal, then save the existing quotation for customer 'fwod60-n2 Bench Customer'. " +
+    "The heading must show a reference like S000xx instead of 'New'. Report the quotation reference.";
+  const entries: RecordedEntry[] = [
+    { k: 'instruction', text: TEXT, url: `${ORIGIN}/odoo/sales/new` } as RecordedEntry,
+    {
+      k: 'step',
+      tool: 'click',
+      args: { target: '@e9' },
+      locators: { target: { expr: 'x', verified: true, raw: '@e9', chain: [{ kind: 'role', role: 'button', name: 'Save manually' }] } },
+      diff: { url: `${ORIGIN}/odoo/sales/12`, alerts: [], added: ['- heading "S00042"'] },
+    } as unknown as RecordedEntry,
+  ];
+  const report = {
+    status: 'success' as const,
+    summary: 'saved the quotation',
+    evidence: { values: { record_heading: 'New', reference: 'S00042' } },
+  };
+  const compile = (knownValues: Record<string, string>): Skill =>
+    compileSkill({ entries, instruction: TEXT, report, session: 's', model: 'm', now: '2026-09-17T00:00:00Z', knownValues })!;
+  const stepIds = ['01-signin', '02-create'];
+
+  /** The ledger as the daemon holds it while it compiles 02-create: the run's
+   * declared var, 01-signin's output, and what THIS instruction just reported. */
+  const ledgerValues = (): Record<string, string> => {
+    const ledger = new RunLedger();
+    ledger.add('fwod60-n2', { from: 'var', name: 'runid' }, { vouched: true });
+    ledger.beginInstruction(1);
+    ledger.add('fwod60-n2 Bench Customer', { from: 'output', step: 'i1', name: 'customer_name' });
+    ledger.beginInstruction(2);
+    ledger.add('New', { from: 'output', step: 'i2', name: 'record_heading' });
+    const out: Record<string, string> = {};
+    for (const e of ledger.all()) out[bindingKey(e.binding)] = e.value;
+    return out;
+  };
+
+  it('is what refuses the re-pin: its origin is an instruction index, not a step of the flow', () => {
+    const known = ledgerValues();
+    expect(known['output:i2:record_heading']).toBe('New');
+    const skill = compile(known);
+    const slot = Object.entries(skill.params).find(([, p]) => p.binding === 'output:i2:record_heading');
+    expect(slot, 'compile slots it and records the ledger origin').toBeTruthy();
+    expect(slot![1].known).toBe(true);
+    expect(slot![1].usedIn).toEqual([]); // it identifies no record and no step uses it
+    expect(remapParams(skill, {}, stepIds).unbound).toContain(slot![0]);
+  });
+
+  it('never reaches compile, so the recovery graduates the step it earned', () => {
+    const skill = compile(withoutOwnOutputs(ledgerValues(), 'i2'));
+    expect(Object.values(skill.params).map((p) => p.binding)).not.toContain('output:i2:record_heading');
+    expect(remapParams(skill, {}, stepIds).unbound).toEqual([]);
+  });
+
+  it("keeps an EARLIER instruction's output, and the guard that comes with it", () => {
+    const known = withoutOwnOutputs(ledgerValues(), 'i2');
+    // 01-signin's customer name is an INPUT to 02-create: still known, still
+    // bound to its origin. It is not refused only because the runid inside it
+    // templates it (`{{runid}} Bench Customer`) — the guard itself is untouched.
+    expect(known['output:i1:customer_name']).toBe('fwod60-n2 Bench Customer');
+    const skill = compile(known);
+    const slot = Object.entries(skill.params).find(([, p]) => p.binding === 'output:i1:customer_name');
+    expect(slot, "an earlier instruction's output still gets its origin").toBeTruthy();
+    expect(remapParams(skill, {}, stepIds).params[slot![0]]).toBe('{{runid}} Bench Customer');
+    // And with nothing to template it, that same earlier output still refuses.
+    const bare = compile({ 'output:i1:customer_name': 'Northwind Trading' });
+    const bareSlot = Object.entries(bare.params).find(([, p]) => p.binding === 'output:i1:customer_name');
+    if (bareSlot) expect(remapParams(bare, {}, stepIds).unbound).toContain(bareSlot[0]);
+  });
+
+  /** The daemon is the only place that knows which ledger step it is compiling. */
+  it('is applied where the daemon hands the ledger to learning', () => {
+    const source = fs.readFileSync(path.resolve(__dirname, '../src/daemon/server.ts'), 'utf8');
+    const call = source.slice(source.indexOf('const learned = learnFromInstruction'), source.indexOf('const outcome = learned?.outcome;'));
+    expect(call).toMatch(/withoutOwnOutputs\(this\.knownValues\(\), ledgerStep\)/);
   });
 });

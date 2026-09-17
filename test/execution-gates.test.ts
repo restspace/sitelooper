@@ -486,6 +486,20 @@ describe('dependsOnPage', () => {
     // a page load, as the raw selector or as every recorded candidate
     expect(dependsOnPage({ tool: 'wait_for', args: { target: '@e0', state: 'visible' }, locators: css('body') })).toBe(false);
     expect(dependsOnPage({ tool: 'wait_for', args: { target: 'html' } })).toBe(false);
+    // the root under its other spellings: one element, several selectors
+    for (const selector of ['html > body', 'html>body', 'html body', ' BODY ']) {
+      expect(dependsOnPage({ tool: 'wait_for', args: { target: '@e0' }, locators: css(selector) }), selector).toBe(false);
+    }
+    // fwrd68 s_bfc33c: an enriched chain — the root twice over, then the
+    // coordinate, which cannot speak to identity and so is dropped, not
+    // counted as a no.
+    expect(
+      dependsOnPage({
+        tool: 'wait_for',
+        args: { target: 'body', state: 'visible' },
+        locators: { target: [{ kind: 'css', selector: 'body' }, { kind: 'css', selector: 'html > body' }, { kind: 'point', x: 640, y: 450, w: 1264, h: 884, role: null, tag: 'body', vw: 1280, vh: 900 }] },
+      }),
+    ).toBe(false);
   });
   it('is true for a step that resolves or reads something in the page', () => {
     for (const tool of ['click', 'dblclick', 'modifier_click', 'right_click', 'fill', 'type', 'select', 'check', 'hover', 'scroll_into_view', 'drag', 'upload', 'download', 'eval']) {
@@ -498,8 +512,17 @@ describe('dependsOnPage', () => {
     expect(dependsOnPage({ tool: 'wait_for', args: { ...target, state: 'visible' }, locators: css('#banner') })).toBe(true);
     // a condition on the body's TEXT is about the content
     expect(dependsOnPage({ tool: 'wait_for', args: { target: 'body', state: 'text_contains', text: 'Saved' } })).toBe(true);
-    // body among other candidates is not the document alone
+    // A rung that NAMES a page element speaks, and says "not the root": body
+    // beside it is not the document alone. Only a rung that cannot answer at
+    // all (a point — a coordinate) is dropped from the question.
     expect(dependsOnPage({ tool: 'wait_for', args: target, locators: { target: [{ kind: 'css', selector: 'body' }, { kind: 'role', role: 'main' }] } })).toBe(true);
+    expect(dependsOnPage({ tool: 'wait_for', args: target, locators: { target: [{ kind: 'css', selector: 'body' }, { kind: 'css', selector: 'body > div' }] } })).toBe(true);
+    // the widened root spelling must not reach past html/body
+    expect(dependsOnPage({ tool: 'wait_for', args: { target: 'body > div' } })).toBe(true);
+    expect(dependsOnPage({ tool: 'wait_for', args: { target: 'body.app' } })).toBe(true);
+    // a chain of nothing but coordinates says nothing about the root, and the
+    // gate is kept rather than skipped on no evidence
+    expect(dependsOnPage({ tool: 'wait_for', args: { target: 'body' }, locators: { target: [{ kind: 'point', x: 1, y: 1, w: 2, h: 2, role: null, tag: 'body', vw: 8, vh: 8 }] } })).toBe(true);
     expect(dependsOnPage({ tool: 'something_new', args: {} })).toBe(true);
   });
 });
@@ -517,6 +540,21 @@ describe('segmentGate', () => {
   });
   it('is never asked of a segment with no page-dependent step', () => {
     expect(segmentGate(steps('wait_for', 'goto'))).toEqual({ at: 0, afterNavigation: false });
+    // fwrd68 s_bfc33c, verbatim: the whole procedure looks at no page, and the
+    // goto at step 3 is what CHOOSES the page. Gated at step 1 it asked the
+    // root url of a browser sitting on the hash router's redirect target and
+    // refused the flow.
+    expect(
+      segmentGate([
+        {
+          tool: 'wait_for',
+          args: { target: 'body', state: 'visible' },
+          locators: { target: [{ kind: 'css', selector: 'body' }, { kind: 'css', selector: 'html > body' }, { kind: 'point', x: 640, y: 450, w: 1264, h: 884, role: null, tag: 'body', vw: 1280, vh: 900 }] },
+        },
+        { tool: 'read', args: { what: 'url' }, locators: {} },
+        { tool: 'goto', args: { url: 'http://127.0.0.1:4180/' }, locators: {} },
+      ]),
+    ).toEqual({ at: 0, afterNavigation: false });
     expect(segmentGate([])).toEqual({ at: 0, afterNavigation: false });
   });
 });

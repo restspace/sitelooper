@@ -987,6 +987,49 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
   }, 120_000);
 
   /**
+   * The same procedure again, with the look recorded as the recorder actually
+   * enriches it: the root under two spellings and the coordinate it was at —
+   * `[css body, css "html > body", point]`, fwrd68 s_bfc33c verbatim.
+   *
+   * The rungs are alternative ways to reach ONE element, so the chain still
+   * says "the document root" and the step still looks at no page. Judged as a
+   * conjunction it did not: `html > body` is not the `body` regex and a point
+   * is not a css rung, so the gate moved ahead of the goto and asked the start
+   * url of a browser the app's router had already moved — "not on the page
+   * this procedure starts from", nothing of the segment run.
+   *
+   * Here because `segmentGate` is embedded verbatim in the artifact and called
+   * by both runners: replays survived it in the sweeps by re-selecting around
+   * the bad head once the store had grown, and the artifact could not, because
+   * it compiles the pinned flow. The two legs must agree, and must both run.
+   */
+  it('both runners run a procedure whose look-before-the-goto names the root through an enriched chain', async () => {
+    const slotted = `${origin}/record/{{v1}}`;
+    const look: SkillStep = {
+      tool: 'wait_for',
+      args: { target: 'body', state: 'visible' },
+      locators: {
+        target: [
+          { kind: 'css', selector: 'body' },
+          { kind: 'css', selector: 'html > body' },
+          { kind: 'point', x: 640, y: 450, w: 1264, h: 884, role: null, tag: 'body', vw: 1280, vh: 900 },
+        ],
+      },
+    };
+    const skill = recordSkill(slotted);
+    skill.steps = [look, ...skill.steps];
+    const spec = recordFlow(slotted);
+    spec.steps[0].segments[0].steps = [look, ...spec.steps[0].segments[0].steps];
+    const { replay, emitted, replayLog, emittedLog } = await bothOf(skill, spec, { v1: 'rec-77' });
+
+    expect(replay.ok, replay.reason ?? '').toBe(true);
+    expect(emitted.ok, emitted.reason ?? '').toBe(true);
+    // The server is the oracle: the goto ran, and the work happened once.
+    expect(replayLog).toEqual(['visit:rec-77', 'mark:rec-77']);
+    expect(emittedLog).toEqual(['visit:rec-77', 'mark:rec-77']);
+  }, 120_000);
+
+  /**
    * Navigation seams (segmentGate). A segment's gate runs immediately before
    * its first page-dependent step, and a navigation is a seam.
    *

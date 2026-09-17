@@ -975,8 +975,29 @@ export function recoveryRoute(
  * report values); null when the skill is not in the store. Advisory only:
  * replay behaviour is unchanged — an unthreaded ref already routes to cheap
  * recovery — this surfaces the debt at build time instead of replay time.
+ *
+ * `actsOn` splits that one voice in two, and the split is the whole point.
+ * A dead reference the consuming step merely QUOTES costs a recovery turn.
+ * A dead reference the consuming step's PROCEDURE types or locates by is
+ * fatal: `spec` refuses the whole artifact for it (emit.ts `unsourced-ref`).
+ * Both were warned about in identical words, so on every one of the five
+ * published branches that hit this the fatal one sat unremarked among the
+ * harmless ones — fwod60's export warned about `{{02-create.product_name}}`,
+ * `{{02-create.quantity}}` and `{{02-create.unit_price}}` in one breath, and
+ * only the first two refused the compile. The export is the last moment the
+ * session is live and re-recording is cheap; a warning that does not say
+ * "this one costs you the artifact" is not information anyone can act on.
+ *
+ * The question is `ignorableRefs`', asked the other way round, and the caller
+ * answers it — this file must not reach into the skill store. Omitted, every
+ * dead reference keeps the advisory wording, which is what every caller did
+ * before and what a caller with no store (bench/rebuild-flow.mjs) still does.
  */
-export function lintFlowRefs(flow: Flow, publishes: (skillId: string) => string[] | null): string[] {
+export function lintFlowRefs(
+  flow: Flow,
+  publishes: (skillId: string) => string[] | null,
+  actsOn?: (step: FlowStep, ref: string) => boolean,
+): string[] {
   const byId = new Map(flow.steps.map((s) => [s.id, s]));
   const warnings: string[] = [];
   const seen = new Set<string>();
@@ -994,8 +1015,13 @@ export function lintFlowRefs(flow: Flow, publishes: (skillId: string) => string[
         // that publishes `body`; the path itself is applied after the fact.
         if (pubs === null || pubs.includes(out.split('#')[0])) continue;
         warnings.push(
-          `{{${sid}.${out}}} (used by ${step.id}) can only be re-observed by model recovery — ` +
-            `consider re-recording so the value is read from the page.`,
+          actsOn?.(step, `${sid}.${out}`)
+            ? `{{${sid}.${out}}} (used by ${step.id}) can only be re-observed by model recovery, ` +
+              `and ${step.id}'s procedure types or locates by it — so \`sitelooper spec\` will REFUSE ` +
+              `to compile this flow (unsourced-ref) until ${sid} reads ${out} from an element. ` +
+              `Re-record ${sid} now, while this session is still open.`
+            : `{{${sid}.${out}}} (used by ${step.id}) can only be re-observed by model recovery — ` +
+              `consider re-recording so the value is read from the page.`,
         );
       }
     }

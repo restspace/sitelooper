@@ -12,7 +12,7 @@ import { buildFlow, consumedReportedOutputs, consumedUrlOutputs, ignorableRefs, 
 import { applyRelabelToEntries, applyRelabelToSkills, relabelCases, requestRelabelPlan } from '../skills/relabel.js';
 import { goalSatisfied, renderReplay } from '../skills/replay.js';
 import { drainDrift, llmProposer, recordCandidateEvidence } from '../skills/repair.js';
-import { RunLedger, bindingKey, describeLeaks, evidenced, fatal, navigationLeaks, scanForLeaks, slotKnownRunValues, urlVarianceValues, type Leak } from '../skills/ledger.js';
+import { RunLedger, bindingKey, describeLeaks, evidenced, fatal, navigationLeaks, scanForLeaks, slotKnownRunValues, urlVarianceValues, withoutOwnOutputs, type Leak } from '../skills/ledger.js';
 import { quarantineLeakedSteps } from '../spec/rerecord.js';
 import { rerecordFix } from '../spec/diagnostics.js';
 import { originOf, type Skill } from '../skills/store.js';
@@ -967,7 +967,21 @@ ${describeLeaks(leaks.slice(0, 6))}`);
       if (!sk?.seq) return null;
       return store.list(sk.origin).filter((s) => s.seq?.chain === sk.seq!.chain).sort((a, b) => a.seq!.index - b.seq!.index).pop()?.id ?? null;
     };
-    const warnings = [...lintFlowRefs(flow, publishedOutputsOf), ...lintUnpublishedOutputs(flow, publishedOutputsOf, chainTailOf)];
+    // …and the same walk says which of those dead references will REFUSE the
+    // compile rather than cost a recovery turn: the ones the step's procedure
+    // types or locates by. `ignorableRefs` is the daemon half of that rule
+    // (its compile-time twin is emit.ts `usedSlot`); this is a third reader of
+    // it, not a fourth copy — see ignorableRefs' own note about the two halves
+    // staying tied. An unpinned step acts on nothing, and a pin whose chain is
+    // not in the store cannot be asked, so both answer "no".
+    const actsOnRef = (step: import('../skills/flow.js').FlowStep, ref: string): boolean => {
+      const head = step.skill ? store.get(step.skill) : null;
+      if (!head) return false;
+      const refChain = head.seq ? store.list(head.origin).filter((s) => s.seq?.chain === head.seq!.chain) : [head];
+      if (!refChain.length) return false;
+      return !ignorableRefs([ref], step, refChain).includes(ref);
+    };
+    const warnings = [...lintFlowRefs(flow, publishedOutputsOf, actsOnRef), ...lintUnpublishedOutputs(flow, publishedOutputsOf, chainTailOf)];
     // Phase 2 of PLAN-provenance: report anything of this run's that survived
     // into the flow. WARN for now — the ledger's coverage is what is being
     // measured, and a false alarm must not block an export.
@@ -1490,7 +1504,14 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
             // key, and a skill compiled here saw only the flow's spelling —
             // so fwgr41-n2's recovery welded its own dashboard uid into a
             // goto and n3 replayed onto a deleted dashboard.
-            ...this.knownValues(),
+            // …minus what THIS instruction reported. Those values were read by
+            // the procedure being compiled, from the page it was already on:
+            // outputs, not inputs. Slotting one binds a param to
+            // `output:${ledgerStep}:…`, an origin no flow step id can name, so
+            // remapParams below refuses the re-pin every run and an adopted
+            // step can never graduate (fwod60 02-create, fwod61 03-create).
+            // See withoutOwnOutputs for why url ids minted here are NOT dropped.
+            ...withoutOwnOutputs(this.knownValues(), ledgerStep),
             ...Object.fromEntries(Object.entries(varsIn).map(([k, v]) => [`var:${k}`, v])),
             ...provenanceValues(outputs),
             ...referencedValues(step, outputs),

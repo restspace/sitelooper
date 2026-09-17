@@ -439,9 +439,18 @@ export interface GateStep {
   locators?: Record<string, readonly unknown[] | undefined>;
 }
 
-/** A selector that names the document itself, not anything the page renders. */
+/**
+ * A selector that names the document itself, not anything the page renders.
+ *
+ * The root has more than one spelling. A recorder that enriches a raw `body`
+ * writes `html > body` beside it (fwrd68 s_bfc33c), and `html body` is the
+ * same element again: a path built from NOTHING but `html`/`body` and
+ * descendant/child combinators can only land on the document. Anything else in
+ * the path is page content and is not the root — `body > div` must stay out,
+ * which is why this reads the whole selector and not a prefix of it.
+ */
 function documentRoot(selector: unknown): boolean {
-  return typeof selector === 'string' && /^\s*(?:body|html)\s*$/i.test(selector);
+  return typeof selector === 'string' && /^\s*(?:html|body)(?:(?:\s*>\s*|\s+)(?:html|body))*\s*$/i.test(selector);
 }
 
 /**
@@ -458,9 +467,9 @@ function documentRoot(selector: unknown): boolean {
  *  - a `read` of `what: 'url'`: the address bar, which is no page's content.
  *  - a `press` with no target: keyboard input to whatever has focus.
  *  - a `wait_for` whose target is the document itself (`body`/`html`, as the
- *    raw selector or as every recorded candidate) waiting only for it to be
- *    there: a page load, not a page. A text or count condition on `body` IS
- *    about the content, and stays page-dependent.
+ *    raw selector or as every recorded candidate that can say) waiting only
+ *    for it to be there: a page load, not a page. A text or count condition on
+ *    `body` IS about the content, and stays page-dependent.
  * Page-dependent: everything else — every step that resolves a target in the
  * page (click, dblclick, modifier/right click, fill, type, select, check,
  * hover, scroll_into_view, drag, upload, download, press with a target, read
@@ -480,7 +489,28 @@ export function dependsOnPage(step: GateStep): boolean {
     if (state !== 'visible' && state !== 'attached') return true;
     const chain = step.locators?.target ?? [];
     const candidates = chain.filter((c): c is { kind: string; selector?: unknown } => Boolean(c) && typeof c === 'object');
-    const onRoot = candidates.length ? candidates.every((c) => c.kind === 'css' && documentRoot(c.selector)) : documentRoot(args.target);
+    // WHY THE EXEMPTION EXISTS: a `wait_for body` looks at no page, so gating
+    // it asks the page the procedure is LEAVING — fwrd53 07-report asked a
+    // list for a detail page's markers (replay.ts's note at its segmentGate
+    // call). Here that same mistake put the gate ahead of the `goto` that
+    // CHOOSES the page, and the goto never ran.
+    //
+    // A CHAIN IS A PREFERENCE ORDER, NOT A CONJUNCTION — the same reading
+    // `fillableChain` takes of an unfilled rung. Its rungs are alternative
+    // ways to reach ONE element, so a rung that cannot answer "is this the
+    // document root?" is DROPPED, not counted as a no; only the rungs that can
+    // speak decide. A `point` is the rung that cannot: it is a coordinate, and
+    // resolve.ts reads it as "what is HERE", never as identity. Every other
+    // kind does name an element, and a `role`/`text`/`id`/`scoped` rung names
+    // one the page renders — an answer, and the answer is no, so a chain
+    // offering a page element alongside the root stays page-dependent.
+    //
+    // fwrd68 s_bfc33c: step 1's chain is [css `body`, css `html > body`,
+    // point] — one element under two spellings plus a coordinate — and
+    // `every` over it refused the whole flow (0/6 objectives) for a step that
+    // waits for the document to exist.
+    const speaking = candidates.filter((c) => c.kind !== 'point');
+    const onRoot = candidates.length ? speaking.length > 0 && speaking.every((c) => c.kind === 'css' && documentRoot(c.selector)) : documentRoot(args.target);
     return !onRoot;
   }
   return true;

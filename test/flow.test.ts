@@ -466,6 +466,40 @@ describe('lintFlowRefs', () => {
     expect(warnings).toHaveLength(1);
   });
 
+  it('says which dead reference REFUSES the compile rather than costing a recovery turn (fwgr53, fwgr48, fwod56, fwod60, fwkb20)', () => {
+    // Five published branches lost their whole artifact to `unsourced-ref`,
+    // and on every one the export had already named the exact reference —
+    // in the same breath, and the same words, as references that cost
+    // nothing. fwod60's export warned about product_name, quantity and
+    // unit_price together; only the first two refused the compile. The
+    // discrimination is emit.ts `usedSlot`'s: a reference the procedure types
+    // or locates by is fatal, one merely quoted in the wording is not.
+    const flow = flowWithRef('s_create');
+    const quoted = lintFlowRefs(flow, () => [], () => false);
+    expect(quoted).toHaveLength(1);
+    expect(quoted[0]).toContain('consider re-recording');
+    expect(quoted[0]).not.toContain('REFUSE');
+
+    const acted: [string, string][] = [];
+    const fatal = lintFlowRefs(flow, () => [], (step, ref) => {
+      acted.push([step.id, ref]);
+      return true;
+    });
+    expect(acted).toEqual([['02-open', '01-create.dashboard_uid']]);
+    expect(fatal).toHaveLength(1);
+    expect(fatal[0]).toContain('{{01-create.dashboard_uid}}');
+    expect(fatal[0]).toContain('REFUSE');
+    expect(fatal[0]).toContain('unsourced-ref');
+    // It must name the step to re-record, not just the one that trips over it.
+    expect(fatal[0]).toContain('Re-record 01-create');
+  });
+
+  it('keeps the advisory wording when no caller can answer the question (bench/rebuild-flow.mjs)', () => {
+    const warnings = lintFlowRefs(flowWithRef('s_create'), () => []);
+    expect(warnings[0]).toContain('consider re-recording');
+    expect(warnings[0]).not.toContain('REFUSE');
+  });
+
   it('exempts url.* provenance refs and skips skills missing from the store', () => {
     const flow = flowWithRef('s_create');
     flow.steps[1].instruction = 'Open {{01-create.url.p1}} and check {{01-create.dashboard_uid}}.';

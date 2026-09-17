@@ -164,6 +164,39 @@ export function bindingKey(b: Binding): string {
   }
 }
 
+/**
+ * The run values a given instruction may be compiled AGAINST: everything the
+ * ledger holds except what that same instruction REPORTED.
+ *
+ * A value first banked under the instruction being compiled was read BY that
+ * instruction, from the page it was already on — an OUTPUT of the procedure,
+ * never an input to it. Slotting it mints a parameter whose origin is
+ * `output:i<N>:<name>`: a LEDGER instruction index, which no flow step id can
+ * ever name (see flow.ts remapParams), so the slot falls through to its
+ * recorded literal and the re-pin is refused for identifying the record —
+ * every run, forever. fwod60's 02-create is the shape of it: `v1`, example
+ * `"New"` (the heading of the not-yet-saved quotation), `usedIn: []`, bound to
+ * `output:i2:record_heading` where `i2` IS 02-create. fwod61's 03-create is
+ * the same with `output:i3:oe_subtotal_footer_tr_1`. Both refused the pin the
+ * recovery had earned, so the adopted step never graduated.
+ *
+ * This is provenance, not shape, and it relaxes nothing: a value banked by an
+ * EARLIER instruction still reaches compile, still gets its origin, and is
+ * still held to remapParams' record-identifier guard. First appearance wins in
+ * the ledger (see `add`), so a threaded value an earlier step minted is never
+ * re-banked here and never dropped by this filter.
+ *
+ * Outputs only. A url id this instruction minted (`url:i<N>:…`) may legitimately
+ * appear in a navigation the same procedure makes, and slotting it is what keeps
+ * the recording run's id out of the STORE — fwgr41's n2 welded its own dashboard
+ * uid into a goto and n3 replayed onto a deleted dashboard. That slot is refused
+ * a pin by the same rule, but the refusal is the cheaper failure.
+ */
+export function withoutOwnOutputs(values: Record<string, string>, instructionStep: string): Record<string, string> {
+  const own = `output:${instructionStep}:`;
+  return Object.fromEntries(Object.entries(values).filter(([key]) => !key.startsWith(own)));
+}
+
 export class RunLedger {
   private entries: LedgerEntry[] = [];
   /** Values already banked, so first appearance wins. */
