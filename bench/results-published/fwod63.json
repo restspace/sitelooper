@@ -1,0 +1,269 @@
+{
+  "name": "fwod63",
+  "origin": "http://127.0.0.1:8069",
+  "startUrl": "http://127.0.0.1:8069/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-login",
+      "instruction": "In Odoo 17 at http://127.0.0.1:8069/, log in with admin/admin. Create a customer named '{{runid}} Bench Customer' with City set to 'Benchville', then create a sales quotation for that customer with one order line: pick any product from the catalogue with quantity 3. Confirm the quotation is saved (draft state) and report: the product chosen, the unit price the app filled in, and the Untaxed Amount the app computes.",
+      "skill": "s_101049",
+      "params": {
+        "v2": "http://127.0.0.1:8069/",
+        "v3": "{{runid}} Bench Customer",
+        "v4": "Benchville",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "customer_name",
+        "customer_city",
+        "quotation_reference",
+        "quantity",
+        "unit_price",
+        "tax_20_percent",
+        "total",
+        "bench_name_prefix"
+      ],
+      "recorded": {
+        "customer_name": "fwod63-n1 Bench Customer",
+        "customer_city": "Benchville",
+        "customer_id": "44",
+        "quotation_reference": "S00021",
+        "quotation_id": "21",
+        "quotation_state": "Quotation (draft)",
+        "product_chosen": "[FURN_6666] Acoustic Bloc Screens",
+        "quantity": "3.00",
+        "unit_price": "295.00",
+        "line_tax_excl": "£ 885.00",
+        "untaxed_amount": "£ 885.00",
+        "tax_20_percent": "£ 177.00",
+        "total": "£ 1,062.00",
+        "bench_name_prefix": "fwod63-n1",
+        "product_code": "FURN_6666",
+        "url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=21",
+        "url.q.menu_id": "194",
+        "url.q.action": "316",
+        "url.q.id": "21"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "customer_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "customer_city": {
+          "same": 1,
+          "differed": 0
+        },
+        "customer_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "quotation_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "quotation_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "quotation_state": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "product_chosen": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "quantity": {
+          "same": 1,
+          "differed": 0
+        },
+        "unit_price": {
+          "same": 1,
+          "differed": 0
+        },
+        "line_tax_excl": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "untaxed_amount": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "tax_20_percent": {
+          "same": 0,
+          "differed": 1
+        },
+        "total": {
+          "same": 0,
+          "differed": 1
+        },
+        "bench_name_prefix": {
+          "same": 0,
+          "differed": 1
+        },
+        "product_code": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.q.menu_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.q.action": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.q.id": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "02-open",
+      "instruction": "Open the existing draft quotation {{01-login.quotation_reference}} (for {{runid}} Bench Customer) and add a SECOND order line with a different product than Acoustic Bloc Screens, quantity 2. Save and report the product added and the new Untaxed Amount the app computes.",
+      "skill": "s_a3ecc8",
+      "params": {
+        "v1": "{{01-login.quotation_reference}}",
+        "v2": "{{runid}} Bench Customer",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "quotation_reference",
+        "customer_ref"
+      ],
+      "recorded": {
+        "quotation_reference": "S00021",
+        "customer_ref": "fwod63-n1"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "quotation_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "customer_ref": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "03-change",
+      "instruction": "In quotation {{01-login.quotation_reference}}, change the FIRST line's quantity (Acoustic Bloc Screens) from 3 to 5, keep the second line (Cabinet with Doors, qty 2) unchanged, save, and report the new Untaxed Amount the app computes.",
+      "skill": "s_ff5c36",
+      "params": {
+        "v1": "{{01-login.quotation_reference}}"
+      },
+      "outputs": [
+        "quotation_reference"
+      ],
+      "recorded": {
+        "quotation_reference": "S00021",
+        "product_code": "FURN_6666"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "quotation_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "product_code": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        }
+      }
+    },
+    {
+      "id": "04-report",
+      "instruction": "Confirm quotation {{01-login.quotation_reference}} so it becomes a sales order. Report the order reference/name shown and the status the app now displays (e.g. Sales Order stage).",
+      "skill": "s_d4dcc0",
+      "params": {
+        "v1": "{{01-login.quotation_reference}}",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "quotation_reference"
+      ],
+      "recorded": {
+        "quotation_reference": "S00021"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "quotation_reference": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "05-report",
+      "instruction": "Cancel the sales order {{01-login.quotation_reference}} (acknowledge any confirmation dialog if one appears) and report the status the app shows after cancelling.",
+      "skill": "s_3cb86e",
+      "params": {
+        "v1": "{{01-login.quotation_reference}}",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "order_reference"
+      ],
+      "recorded": {
+        "order_reference": "S00021"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "order_reference": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwod63-n1",
+    "created": "2026-09-17T16:54:42.220Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-login",
+      "outputs": [
+        "customer_id",
+        "quotation_id",
+        "quotation_state",
+        "product_chosen",
+        "line_tax_excl",
+        "untaxed_amount",
+        "product_code"
+      ]
+    },
+    {
+      "stepId": "03-change",
+      "outputs": [
+        "product_code"
+      ]
+    }
+  ]
+}

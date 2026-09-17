@@ -1,0 +1,98 @@
+{
+  "flow": "fwod63",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-login",
+      "status": "success",
+      "summary": "Replayed stored procedure s_17c878 (7 steps).",
+      "values": {
+        "bench_name_prefix": "fwod63-n3",
+        "customer_name": "fwod63-n3 Bench Customer",
+        "customer_city": "Benchville",
+        "quotation_reference": "S00023",
+        "quantity": "3.00",
+        "unit_price": "295.00",
+        "tax_20_percent": "£ 177.00",
+        "total": "£ 1,062.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "30/30",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-open",
+      "status": "success",
+      "summary": "Opened draft quotation S00023 (customer fwod63-n3 Bench Customer, City Benchville) and added a second order line: product [E-COM11] Cabinet with Doors, quantity 2.00, for which the app filled in a unit price of 140.00 and a 20% tax (line total £280.00). The record saved successfully and the statusbar shows the Quotation (draft) state as current. The quotation now has two lines (Acoustic Bloc Screens 3 × 295.00 = £885.00 and Cabinet with Doors 2 × 140.00 = £280.00) and the app computes an Untaxed Amount of £1,165.00 (TAX 20% £233.00, Total £1,398.00).",
+      "values": {
+        "customer_ref": "fwod63-n3",
+        "quotation_reference": "S00023"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "21/21",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-change",
+      "status": "success",
+      "summary": "Replayed stored procedure s_ff5c36; observed quotation_reference=S00023.",
+      "values": {
+        "quotation_reference": "S00023"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-report",
+      "status": "success",
+      "summary": "Clicked Confirm on quotation S00023 and it became a sales order. The page now displays the order reference/name S00023 (unchanged, in the breadcrumb and heading) and the status bar's current stage is \"Sales Order\" (highlighted/checked; the \"Quotation\" and \"Quotation Sent\" stages are now inactive). Totals are unchanged from before confirmation: Untaxed Amount £1,755.00, TAX 20% £351.00, Total £2,106.00. The action buttons changed to \"Create Invoice\" / \"Send by Email\" / \"Preview\", consistent with a confirmed order.",
+      "values": {
+        "quotation_reference": "S00023"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "2/2",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-report",
+      "status": "success",
+      "summary": "Cancelled sales order S00023. Clicking Cancel opened a confirmation wizard (\"Are you sure you want to cancel this order?\"), which I acknowledged by pressing its \"Cancel\" button (action_cancel — cancels the order without emailing the customer; the alternative was \"Send and cancel\"). The form now displays reference S00023 with the Statusbar radio \"Cancelled\" checked (current), and the order-line/action buttons changed (\"Set to Quotation\" now offered instead of Confirm). Totals remain Untaxed £1,755.00, TAX 20% £351.00, Total £2,106.00.",
+      "values": {
+        "order_reference": "S00023"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "repinned": 0,
+  "drift": 0,
+  "wallMs": 115122,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

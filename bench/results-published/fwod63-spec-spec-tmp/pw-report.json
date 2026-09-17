@@ -1,0 +1,165 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwod63-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwod63-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwod63-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwod63-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwod63-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwod63.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwod63-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwod63.spec.ts",
+      "file": "fwod63.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwod63",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 81927,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-login\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-change\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-report\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-report\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-login: In Odoo 17 at http://127.0.0.1:8069/, log in with admin/admin. Create a customer named '{{runid}} Bench Customer' with City set to 'Benchville', then create a sales quotation for that customer with one order line: pick any product from the catalogue with quantity 3. Confirm the quotation is saved (draft state) and report: the product chosen, the unit price the app filled in, and the Untaxed Amount the app computes.",
+                      "duration": 19897
+                    },
+                    {
+                      "title": "02-open: Open the existing draft quotation {{01-login.quotation_reference}} (for {{runid}} Bench Customer) and add a SECOND order line with a different product than Acoustic Bloc Screens, quantity 2. Save and report the product added and the new Untaxed Amount the app computes.",
+                      "duration": 43169
+                    },
+                    {
+                      "title": "03-change: In quotation {{01-login.quotation_reference}}, change the FIRST line's quantity (Acoustic Bloc Screens) from 3 to 5, keep the second line (Cabinet with Doors, qty 2) unchanged, save, and report the new Untaxed Amount the app computes.",
+                      "duration": 2286
+                    },
+                    {
+                      "title": "04-report: Confirm quotation {{01-login.quotation_reference}} so it becomes a sales order. Report the order reference/name shown and the status the app now displays (e.g. Sales Order stage).",
+                      "duration": 798
+                    },
+                    {
+                      "title": "05-report: Cancel the sales order {{01-login.quotation_reference}} (acknowledge any confirmation dialog if one appears) and report the status the app shows after cancelling.",
+                      "duration": 15379
+                    }
+                  ],
+                  "startTime": "2026-09-17T16:59:43.246Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "861f715d892a64f8266c-bd68553f3454e5befacd",
+          "file": "fwod63.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-17T16:59:41.912Z",
+    "duration": 83417.26,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
