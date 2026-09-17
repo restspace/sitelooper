@@ -1,0 +1,103 @@
+{
+  "arm": "sitelooper",
+  "target": "odoo",
+  "machine": {
+    "platform": "linux",
+    "arch": "x64",
+    "node": "v22.22.2",
+    "cpus": 4,
+    "memGB": 17,
+    "tool": "sitelooper ? author browser tests with an agent; run compiled tests with Playwri",
+    "commit": "eb33bed"
+  },
+  "mutationLogPath": null,
+  "provider": "openrouter",
+  "model": "z-ai/glm-5.3",
+  "runid": "fwod62-n1",
+  "task": "bench/tasks/odoo-sale-flow.md",
+  "briefed": true,
+  "reset": true,
+  "stopReason": "completed",
+  "turns": 11,
+  "wallMs": 657918,
+  "orchestrator": {
+    "input": 19388,
+    "cacheWrite": 0,
+    "cacheRead": 40832,
+    "output": 5378
+  },
+  "inner": {
+    "promptTokens": 3918062,
+    "cachedTokens": 3669120,
+    "completionTokens": 40037,
+    "instructions": 9,
+    "byModel": {
+      "deepseek/deepseek-v4.1-flash": {
+        "promptTokens": 3918062,
+        "completionTokens": 40037,
+        "cachedTokens": 3669120,
+        "instructions": 9
+      }
+    },
+    "servedByModel": {
+      "deepseek/deepseek-v4.1-flash": [
+        "DeepSeek"
+      ]
+    },
+    "skills": {
+      "instructions": 9,
+      "offered": 5,
+      "invoked": 0,
+      "fullReplays": 0,
+      "repaired": 0,
+      "refused": 0,
+      "tierA": 0,
+      "stepsReplayed": 0,
+      "deterministicActions": 0,
+      "totalActions": 120,
+      "compiled": 8,
+      "merged": 0,
+      "variants": 0
+    },
+    "model": "deepseek/deepseek-v4.1-flash",
+    "fallbackModel": "z-ai/glm-5.3",
+    "provider": "openrouter"
+  },
+  "commandCount": 10,
+  "subcommands": {
+    "open": 1,
+    "do": 9
+  },
+  "invocationCount": 10,
+  "commandMs": 540071,
+  "commandBytes": 14985,
+  "timeouts": 0,
+  "contextTruncations": 0,
+  "coarse": true,
+  "learn": {
+    "dir": "/home/user/sitelooper/bench/results/fwod62-skills",
+    "instructions": 9,
+    "offered": 5,
+    "invoked": 0,
+    "fullReplays": 0,
+    "repaired": 0,
+    "refused": 0,
+    "tierA": 0,
+    "stepsReplayed": 0,
+    "deterministicActions": 0,
+    "totalActions": 120,
+    "compiled": 8,
+    "merged": 0,
+    "variants": 0,
+    "deterministicFraction": 0
+  },
+  "orBackends": [
+    "Morph",
+    "Decart"
+  ],
+  "orReportedCostUsd": 0.049,
+  "maxUsd": 3,
+  "spendUsd": 0.1338,
+  "finalText": "All six objectives are complete and verified. Final report:\n\n**Objective 1 — DONE**: Customer `fwod62-n1 Bench Customer` created (res.partner id 44) with City `Benchville`. Verified on the saved record: Name \"fwod62-n1 Bench Customer\", City \"Benchville\".\n\n**Objective 2 — DONE**: Quotation S00021 created for that customer with one order line. Product chosen: `[FURN_7777] Office Chair`, selected from the autocomplete dropdown. Unit price the app filled in: `70.00`. Untaxed Amount: `£ 210.00` (3 × 70.00; TAX 20% £42.00, Total £252.00).\n\n**Objective 3 — DONE**: Second order line added. Product: `[E-COM06] Corner Desk Right Sit` (chosen from dropdown), unit price `147.00`, quantity `2.00` (line subtotal £294.00). New Untaxed Amount: `£ 504.00` (TAX 20% £100.80, Total £604.80).\n\n**Objective 4 — DONE**: First line's quantity changed from 3 to `5.00` (Office Chair line total £350.00; Corner Desk line unchanged at qty 2.00, £294.00). Untaxed Amount afterwards: `£ 644.00` (TAX 20% £128.80, Total £772.80).\n\n**Objective 5 — DONE**: Quotation confirmed. Order reference: `S00021`. Status shown: `Sales Order` (the \"Quotation\" and \"Quotation Sent\" stages greyed out; Confirm button replaced by Create Invoice / Send by Email / Preview / Cancel).\n\n**Objective 6 — DONE**: Sales order cancelled via the Cancel button and the \"Cancel Sales Order\" wizard (\"Send and cancel\"). Status shown after cancelling: `Cancelled` (checked/current stage in the statusbar; only Preview and \"Set to Quotation\" remain available). Nothing created by this run stays active.\n\nNotes on the run: the first attempt at objective 2 left the quotation unsaved (the Save click didn't take effect and the form stayed dirty); a follow-up instruction re-read the form, confirmed the customer/product/qty-3 values, and saved successfully, yielding reference S00021. During cancellation a stale partner-edit dialog was overlaying the cancel wizard and had to be discarded before the wizard would accept input. All figures above were read back from the live page after each save, and the end state was re-verified read-only at the finish.",
+  "transcriptPath": "/home/user/sitelooper/bench/results/fwod62-n1-sitelooper-transcript.jsonl"
+}

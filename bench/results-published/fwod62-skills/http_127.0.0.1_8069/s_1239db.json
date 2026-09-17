@@ -1,0 +1,406 @@
+{
+ "id": "s_1239db",
+ "origin": "http://127.0.0.1:8069",
+ "template": "There should be an open, unsaved Odoo quotation form in the browser (breadcrumb 'Quotations / New', customer '{{v1}}', one order line for product '{{v3}}'). First re-read the form: confirm the Customer field is set to '{{v1}}' (if not, set it via the autocomplete dropdown), confirm the order line's product is '{{v3}}' chosen from the dropdown, and set the line's Quantity to exactly 3 (re-enter it if needed). Then SAVE the quotation so it gets a real record (a quotation reference like S000xx appears in the breadcrumb and the URL gains an id= parameter). If the save is blocked, look for any red/invalid required field or validation error and fix it, then save again. Do not wait for network idle. After saving, report: (a) the quotation reference/name shown in the breadcrumb, (b) the product name on the order line, (c) the Unit Price shown on that line, (d) the Quantity shown on that line, and (e) the {{v4}} shown in the totals section of the saved quotation.",
+ "params": {
+  "v1": {
+   "example": "fwod62-n2 Bench Customer",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:saved_contact_name"
+  },
+  "v2": {
+   "example": "fwod62-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "Customizable Desk",
+   "usedIn": [],
+   "known": true,
+   "binding": "03-create.product_name_selected"
+  },
+  "v4": {
+   "example": "Untaxed Amount",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i3:oe_subtotal_footer_tr_td"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e2374"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 163,
+      "y": 79,
+      "w": 26,
+      "h": 17.5,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_512d43",
+    "step": 1
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "quotation_reference",
+    "target": "@e2391",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > h1 > div"
+     },
+     {
+      "kind": "point",
+      "x": 490,
+      "y": 196,
+      "w": 898.5,
+      "h": 33.6,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "quotation_reference"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "quantity",
+    "target": "@e2784",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 691,
+      "y": 461,
+      "w": 92,
+      "h": 80,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "quantity"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "unit_price_line",
+    "target": "@e2785",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(5)"
+     },
+     {
+      "kind": "point",
+      "x": 783,
+      "y": 461,
+      "w": 92,
+      "h": 80,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "unit_price_on_line"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "untaxed_total",
+    "target": "@e2796",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div > table > tbody > tr:nth-of-type(1) > td:nth-of-type(2)",
+      "nth": 1
+     },
+     {
+      "kind": "point",
+      "x": 1195,
+      "y": 658,
+      "w": 88,
+      "h": 23,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "untaxed_total"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "product_name_on_line",
+    "target": "@e2781",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "table > tbody > tr:nth-of-type(1) > td:nth-of-type(2) > div > span"
+     },
+     {
+      "kind": "point",
+      "x": 115,
+      "y": 440,
+      "w": 120.6,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "product_name_on_line"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "customer_field",
+    "target": "@e2402",
+    "what": "value"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "combobox",
+      "name": "Type to find a customer..."
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Type to find a customer..."
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(1) > div > div > input"
+     },
+     {
+      "kind": "point",
+      "x": 383,
+      "y": 247,
+      "w": 409.8,
+      "h": 26,
+      "role": "combobox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "customer_field_value"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "current_url",
+    "what": "url"
+   },
+   "locators": {},
+   "label": "current_url"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(2) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1195,
+      "y": 681,
+      "w": 86,
+      "h": 21,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "tax_20pct"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(3) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1195,
+      "y": 706,
+      "w": 86,
+      "h": 21,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "total"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div:nth-of-type(2) > ol > li > a"
+     },
+     {
+      "kind": "point",
+      "x": 101,
+      "y": 62,
+      "w": 62.9,
+      "h": 16.3,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "breadcrumb_1"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > h1 > div > span"
+     },
+     {
+      "kind": "point",
+      "x": 89,
+      "y": 195,
+      "w": 96.5,
+      "h": 31,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "breadcrumb_2"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Re-read the quotation form and confirmed all fields in the live DOM: Customer = '{{v1}}', one order line whose product is '{{v3}}' ([FURN_0096] {{v3}} (Steel, White)), Quantity = 3.00, Unit Price = 750.00, {{v4}} = £ 2,250.00. The quotation already carried a persisted record — the breadcrumb reads 'Quotations / S00022' and the URL contains id=22 — so no re-save or field correction was needed; the replayed step 1 had made no visible change to the page and there were no validation errors or unsaved-change indicators.",
+  "values": {
+   "quotation_reference": "S00022",
+   "quantity": "3.00",
+   "product_name_on_line": "{{v3}}",
+   "product_full_name": "[FURN_0096] {{v3}} (Steel, White)",
+   "unit_price_on_line": "750.00",
+   "untaxed_amount": "£ 2,250.00",
+   "tax_20pct": "£ 450.00",
+   "total": "£ 2,700.00",
+   "customer_field_value": "{{v1}}",
+   "statusbar": "Quotation",
+   "untaxed_total": "£ 2,250.00",
+   "current_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22",
+   "ref": "{{v2}}",
+   "ref_2": "FURN_0096",
+   "ref_3": "s_512d43",
+   "breadcrumb_1": "Quotations",
+   "breadcrumb_2": "S00022"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 2,
+  "successes": 2,
+  "partial": 0,
+  "created": "2026-09-17T13:31:39.144Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-17T13:33:07.728Z"
+ },
+ "status": "validated",
+ "variantOf": "s_512d43",
+ "provenance": {
+  "session": "fwod62-n2",
+  "instruction": "There should be an open, unsaved Odoo quotation form in the browser (breadcrumb 'Quotations / New', customer 'fwod62-n2 Bench Customer', one order line for product 'Customizable Desk'). First re-read the form: confirm the Customer field is set to 'fwod62-n2 Bench Customer' (if not, set it via the autocomplete dropdown), confirm the order line's product is 'Customizable Desk' chosen from the dropdown, and set the line's Quantity to exactly 3 (re-enter it if needed). Then SAVE the quotation so it gets a real record (a quotation reference like S000xx appears in the breadcrumb and the URL gains an id= parameter). If the save is blocked, look for any red/invalid required field or validation error and fix it, then save again. Do not wait for network idle. After saving, report: (a) the quotation reference/name shown in the breadcrumb, (b) the product name on the order line, (c) the Unit Price shown on that line, (d) the Quantity shown on that line, and (e) the Untaxed Amount shown in the totals section of the saved quotation.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-17T13:31:39.144Z"
+ },
+ "revision": 2
+}

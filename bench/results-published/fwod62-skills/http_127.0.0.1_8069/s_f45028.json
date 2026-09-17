@@ -1,0 +1,969 @@
+{
+ "id": "s_f45028",
+ "origin": "http://127.0.0.1:8069",
+ "template": "On the saved Odoo quotation {{v1}} (customer '{{v2}}', two order lines: Office Chair qty 5 @ {{v4}}, Corner Desk Right Sit qty 2 @ {{v5}}, Untaxed Amount £644.00), CONFIRM the quotation so it becomes a sales order: click the 'Confirm' button (or 'Confirm Sale' / 'Confirm Order' — whatever the confirm action is called on this form). If a confirmation dialog or wizard appears, accept/confirm it. Do not wait for network idle. After confirming, report: (a) the order reference/name shown in the breadcrumb or title (e.g. {{v1}}), (b) the status the app now shows in the statusbar (e.g. 'Sales Order' / 'Sales'), and (c) whether the Confirm button is gone or the form is now read-only as a sales order.",
+ "params": {
+  "v1": {
+   "example": "S00021",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i4:quotation_reference"
+  },
+  "v2": {
+   "example": "fwod62-n1 Bench Customer",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:saved_contact_name"
+  },
+  "v3": {
+   "example": "fwod62-n1",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v4": {
+   "example": "70.00",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i3:unit_price_observed"
+  },
+  "v5": {
+   "example": "147.00",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i5:new_line_unit_price"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+  "fingerprint": [
+   0.009,
+   0.012,
+   0.003,
+   0,
+   0.006,
+   0.089,
+   0.003,
+   0.006,
+   0.009,
+   0.012,
+   0.012,
+   0,
+   0.009,
+   0.045,
+   0.03,
+   0.006,
+   0.021,
+   0.003,
+   0.024,
+   0.015,
+   0,
+   0.024,
+   0.03,
+   0.018,
+   0.006,
+   0.006,
+   0,
+   0.021,
+   0.006,
+   0.048,
+   0.012,
+   0.048,
+   0.089,
+   0.03,
+   0.006,
+   0,
+   0.015,
+   0,
+   0,
+   0.003,
+   0.012,
+   0.018,
+   0.042,
+   0.039,
+   0.012,
+   0.033,
+   0.012,
+   0.065,
+   0.042,
+   0.024,
+   0.021,
+   0.003,
+   0,
+   0.089,
+   0.006,
+   0.006,
+   0.003,
+   0.036,
+   0.021,
+   0.003,
+   0,
+   0,
+   0.012,
+   0.19,
+   0,
+   0.012,
+   0.006,
+   0.03,
+   0.018,
+   0.006,
+   0,
+   0,
+   0.012,
+   0.012,
+   0.065,
+   0.012,
+   0.015,
+   0.012,
+   0.015,
+   0,
+   0.009,
+   0.036,
+   0.065,
+   0,
+   0.027,
+   0,
+   0.024,
+   0.101,
+   0.036,
+   0.012,
+   0.048,
+   0,
+   0.009,
+   0,
+   0.071,
+   0.012,
+   0.006,
+   0.042,
+   0.009,
+   0,
+   0.039,
+   0.027,
+   0.009,
+   0.027,
+   0.036,
+   0,
+   0.033,
+   0.012,
+   0.006,
+   0.012,
+   0.003,
+   0.018,
+   0,
+   0.012,
+   0.048,
+   0.009,
+   0,
+   0,
+   0,
+   0.098,
+   0,
+   0.006,
+   0.006,
+   0.009,
+   0.021,
+   0.009,
+   0.012,
+   0.006,
+   0.006,
+   0.006,
+   0.009,
+   0.006,
+   0.045,
+   0.009,
+   0.018,
+   0.003,
+   0.003,
+   0.003,
+   0,
+   0.015,
+   0.006,
+   0.053,
+   0.024,
+   0.021,
+   0.006,
+   0.003,
+   0.006,
+   0.006,
+   0.03,
+   0.059,
+   0.048,
+   0,
+   0.059,
+   0.012,
+   0.003,
+   0.012,
+   0.012,
+   0.015,
+   0.027,
+   0.003,
+   0.012,
+   0.03,
+   0.015,
+   0.012,
+   0.012,
+   0.012,
+   0,
+   0,
+   0.012,
+   0,
+   0.006,
+   0.015,
+   0.033,
+   0.006,
+   0.003,
+   0.065,
+   0,
+   0,
+   0.006,
+   0.122,
+   0,
+   0.036,
+   0.039,
+   0.009,
+   0.006,
+   0.009,
+   0.021,
+   0.006,
+   0.018,
+   0.033,
+   0.006,
+   0.006,
+   0.009,
+   0.006,
+   0,
+   0.006,
+   0.095,
+   0.009,
+   0.024,
+   0.018,
+   0,
+   0.03,
+   0,
+   0.042,
+   0,
+   0,
+   0.003,
+   0.009,
+   0.024,
+   0,
+   0.006,
+   0.015,
+   0,
+   0.006,
+   0,
+   0,
+   0.003,
+   0.003,
+   0.006,
+   0.03,
+   0,
+   0.003,
+   0.018,
+   0.012,
+   0,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0.003,
+   0,
+   0.006,
+   0.006,
+   0.006,
+   0.018,
+   0.006,
+   0.006,
+   0.018,
+   0.015,
+   0.018,
+   0,
+   0.068,
+   0.006,
+   0.018,
+   0.009,
+   0,
+   0.006,
+   0.003,
+   0.012,
+   0.012,
+   0.006,
+   0,
+   0.175,
+   0.137,
+   0.056,
+   0.006,
+   0,
+   0.015,
+   0.033,
+   0.006,
+   0.009,
+   0.003,
+   0.003,
+   0.006,
+   0.143,
+   0.03,
+   0.08,
+   0.009,
+   0.012,
+   0.009,
+   0.009,
+   0.003,
+   0,
+   0.036,
+   0.012,
+   0.018,
+   0.006,
+   0.006,
+   0.009,
+   0.006,
+   0.024,
+   0.003,
+   0.059,
+   0.012,
+   0.006,
+   0.009,
+   0.015,
+   0.015,
+   0.015,
+   0,
+   0,
+   0.006,
+   0.006,
+   0.006,
+   0.009,
+   0,
+   0.012,
+   0.003,
+   0.059,
+   0.033,
+   0.003,
+   0,
+   0.021,
+   0.006,
+   0,
+   0.021,
+   0.006,
+   0.018,
+   0.015,
+   0.012,
+   0.012,
+   0.089,
+   0,
+   0.009,
+   0.003,
+   0,
+   0.021,
+   0.074,
+   0,
+   0.018,
+   0.009,
+   0.039,
+   0.05,
+   0,
+   0.015,
+   0,
+   0.006,
+   0.015,
+   0,
+   0.003,
+   0,
+   0.009,
+   0.012,
+   0,
+   0.021,
+   0.018,
+   0,
+   0.027,
+   0.059,
+   0,
+   0.012,
+   0,
+   0,
+   0.012,
+   0.012,
+   0.024,
+   0,
+   0.006,
+   0.012,
+   0.03,
+   0.039,
+   0.062,
+   0.003,
+   0.006,
+   0,
+   0.033,
+   0,
+   0.009,
+   0.03,
+   0.045,
+   0.045,
+   0.003,
+   0.006,
+   0.021,
+   0.053,
+   0.012,
+   0,
+   0.012,
+   0,
+   0.015,
+   0.003,
+   0.012,
+   0.006,
+   0,
+   0.006,
+   0,
+   0.003,
+   0.006,
+   0.036,
+   0.012,
+   0.006,
+   0.012,
+   0,
+   0.027,
+   0.012,
+   0.003,
+   0.048,
+   0.012,
+   0.006,
+   0.021,
+   0.03,
+   0.009,
+   0.021,
+   0.015,
+   0.009,
+   0.089,
+   0.003,
+   0.006,
+   0,
+   0.006,
+   0.003,
+   0.012,
+   0.012,
+   0.006,
+   0.009,
+   0.006,
+   0.015,
+   0,
+   0.018,
+   0.056,
+   0.015,
+   0.018,
+   0.006,
+   0,
+   0.059,
+   0.03,
+   0.036,
+   0.006,
+   0.006,
+   0.024,
+   0.012,
+   0,
+   0,
+   0.012,
+   0.045,
+   0.003,
+   0.015,
+   0.006,
+   0.003,
+   0.009,
+   0.006,
+   0.006,
+   0.003,
+   0.006,
+   0,
+   0.012,
+   0.003,
+   0.027,
+   0.003,
+   0.012,
+   0.045,
+   0,
+   0.006,
+   0.006,
+   0,
+   0.009,
+   0.039,
+   0.009,
+   0.003,
+   0,
+   0.027,
+   0.042,
+   0.098,
+   0.006,
+   0.003,
+   0.012,
+   0.012,
+   0,
+   0.003,
+   0.086,
+   0.018,
+   0,
+   0,
+   0.018,
+   0.009,
+   0,
+   0.116,
+   0.018,
+   0.665,
+   0.036,
+   0,
+   0.036,
+   0.015,
+   0.045,
+   0.003,
+   0,
+   0,
+   0.006,
+   0.006,
+   0.042,
+   0.003,
+   0,
+   0.012,
+   0.006,
+   0.033,
+   0.006,
+   0.006,
+   0.009,
+   0.033,
+   0.006,
+   0.006,
+   0.092,
+   0,
+   0,
+   0.009,
+   0.018,
+   0.068,
+   0.003,
+   0.015,
+   0.012,
+   0.015,
+   0.027,
+   0.006,
+   0.345,
+   0,
+   0.018,
+   0.018,
+   0.021,
+   0.006,
+   0.015,
+   0
+  ],
+  "requireText": [
+   "{{v1}}",
+   "{{v2}}"
+  ]
+ },
+ "goal": {
+  "requireText": [
+   "Sales Order (active) / Quotation Sent (disabled) / Quotation (disabled)",
+   "Create Invoice"
+  ]
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Confirm\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=button[name=\"Confirm\"]"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Confirm"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 168,
+      "y": 129,
+      "w": 71,
+      "h": 33,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+    "addedContains": [
+     "- link \"{{v2}} Benchville\"",
+     "- row \"Product Description Quantity Delivered Invoiced Unit Price Taxes Tax excl.\"",
+     "- cell \"Delivered\"",
+     "- cell \"Invoiced\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > h1 > div > span"
+     },
+     {
+      "kind": "point",
+      "x": 89,
+      "y": 195,
+      "w": 96.5,
+      "h": 31,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "order_reference"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(1) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1211,
+      "y": 657,
+      "w": 54.5,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "untaxed_amount"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(2) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1203,
+      "y": 680,
+      "w": 70.8,
+      "h": 21,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "tax_20pct"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(3) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1203,
+      "y": 705,
+      "w": 70.8,
+      "h": 21,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "total"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div > a > span:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 265,
+      "y": 245,
+      "w": 173.5,
+      "h": 23,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "customer"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div:nth-of-type(2) > ol > li > a"
+     },
+     {
+      "kind": "point",
+      "x": 101,
+      "y": 62,
+      "w": 62.9,
+      "h": 16.3,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "breadcrumb_1"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > h1 > div > span"
+     },
+     {
+      "kind": "point",
+      "x": 89,
+      "y": 195,
+      "w": 96.5,
+      "h": 31,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "breadcrumb_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#create_invoice_percentage > span"
+     },
+     {
+      "kind": "point",
+      "x": 72,
+      "y": 129,
+      "w": 90.3,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "post_confirm_buttons_1"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#send_by_email > span"
+     },
+     {
+      "kind": "point",
+      "x": 188,
+      "y": 129,
+      "w": 90.3,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "post_confirm_buttons_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(3) > span"
+     },
+     {
+      "kind": "point",
+      "x": 285,
+      "y": 129,
+      "w": 49.8,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "post_confirm_buttons_3"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(4) > span"
+     },
+     {
+      "kind": "point",
+      "x": 357,
+      "y": 129,
+      "w": 43.6,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "post_confirm_buttons_4"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "html > head > title"
+     }
+    ]
+   },
+   "label": "page_title"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "",
+  "values": {
+   "order_reference": "{{v1}}",
+   "page_title": "Odoo - {{v1}}",
+   "statusbar": "Sales Order (active) / Quotation Sent (disabled) / Quotation (disabled)",
+   "confirm_button_present": "false",
+   "untaxed_amount": "£ 644.00",
+   "tax_20pct": "£ 128.80",
+   "total": "£ 772.80",
+   "customer": "{{v2}}",
+   "screenshot": "/home/user/sitelooper/{{v1}}_confirmed_sales_order.png",
+   "breadcrumb_1": "Quotations",
+   "breadcrumb_2": "{{v1}}",
+   "post_confirm_buttons_1": "Create Invoice",
+   "post_confirm_buttons_2": "Send by Email",
+   "post_confirm_buttons_3": "Preview",
+   "post_confirm_buttons_4": "Cancel"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-17T13:25:47.785Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-17T13:33:16.690Z"
+ },
+ "status": "validated",
+ "provenance": {
+  "session": "fwod62-n1",
+  "instruction": "On the saved Odoo quotation S00021 (customer 'fwod62-n1 Bench Customer', two order lines: Office Chair qty 5 @ 70.00, Corner Desk Right Sit qty 2 @ 147.00, Untaxed Amount £644.00), CONFIRM the quotation so it becomes a sales order: click the 'Confirm' button (or 'Confirm Sale' / 'Confirm Order' — whatever the confirm action is called on this form). If a confirmation dialog or wizard appears, accept/confirm it. Do not wait for network idle. After confirming, report: (a) the order reference/name shown in the breadcrumb or title (e.g. S00021), (b) the status the app now shows in the statusbar (e.g. 'Sales Order' / 'Sales'), and (c) whether the Confirm button is gone or the form is now read-only as a sales order.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-17T13:25:47.785Z",
+  "transforms": [
+   {
+    "name": "unfreezeExpectations",
+    "at": 1,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- button \\\"Create Invoice\\\"\",\"- link \\\"{{v2}} Benchville\\\"\",\"- row \\\"Product Description Quantity Delivered Invoiced Unit Price Taxes Tax excl.\\\"\",\"- cell \\\"Delivered\\\"\",\"- cell \\\"Invoiced\\\"\"] → [\"- link \\\"{{v2}} Benchville\\\"\",\"- row \\\"Product Description Quantity Delivered Invoiced Unit Price Taxes Tax excl.\\\"\",\"- cell \\\"Delivered\\\"\",\"- cell \\\"Invoiced\\\"\"]"
+   }
+  ]
+ },
+ "revision": 4
+}

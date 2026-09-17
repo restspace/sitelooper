@@ -1,0 +1,294 @@
+{
+  "flow": "fwod62",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_a0faf4; observed post_login_page_title=Odoo - Discuss, post_login_url=http://127.0.0.1:8069/web#action=123&cids=1&menu_id=81, apps_page_title=Odoo - Apps, apps_page_url=http://127.0.0.1:8069/web#action=38&model=ir.module.module&view_type=kanban&cids=1&menu_id=15, apps_count_indicator=1-55.",
+      "values": {
+        "post_login_page_title": "Odoo - Discuss",
+        "post_login_url": "http://127.0.0.1:8069/web#action=123&cids=1&menu_id=81",
+        "apps_page_title": "Odoo - Apps",
+        "apps_page_url": "http://127.0.0.1:8069/web#action=38&model=ir.module.module&view_type=kanban&cids=1&menu_id=15",
+        "apps_count_indicator": "1-55"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_329b27 (3 steps).",
+      "values": {
+        "contact_ref": "fwod62-n2",
+        "saved_contact_name": "fwod62-n2 Bench Customer",
+        "saved_contact_city": "Benchville",
+        "saved_contact_url": "http://127.0.0.1:8069/web#cids=1&menu_id=109&action=156&model=res.partner&view_type=form&id=45"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Created a new quotation in Sales (Quotations list → New), selected the existing customer \"fwod62-n2 Bench Customer\" from the autocomplete dropdown (city Benchville auto-filled, confirming the record), and added exactly one order line by typing \"Desk\" into the product autocomplete and choosing \"Customizable Desk\" from the dropdown; a \"Configure your product\" variant dialog appeared and I confirmed it with its defaults, so the line saved as the variant [FURN_0096] Customizable Desk (Steel, White). I set Quantity to 3 and saved; the record saved as quotation S00022 (id=22). The live order-lines row shows quantity 3.00, unit price 750.00, 20% tax, line total £2,250.00, and the totals footer shows Untaxed Amount £2,250.00 (Tax 20% £450.00, Total £2,700.00).",
+      "values": {
+        "product_name_selected": "Customizable Desk",
+        "unit_price_observed": "750.00",
+        "untaxed_amount": "£ 2,250.00",
+        "order_line_product_full": "[FURN_0096] Customizable Desk (Steel, White)",
+        "order_line_quantity": "3.00",
+        "quotation_reference": "S00022",
+        "quotation_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22",
+        "customer": "fwod62-n2 Bench Customer",
+        "customer_city": "Benchville",
+        "total": "£ 2,700.00",
+        "order_line_row": "Customizable Desk\t\n[FURN_0096] Customizable Desk (Steel, White)\n160x80cm, with large legs.\n\t3.00\t750.00\t\n20%\n\t£ 2,250.00",
+        "untaxed_amount_2": "£ 2,250.00",
+        "oe_subtotal_footer_tr_td": "Untaxed Amount",
+        "oe_subtotal_footer_tr_td_2": "£ 450.00",
+        "oe_subtotal_footer_tr_td_3": "Total",
+        "oe_subtotal_footer_tr_td_4": "£ 2,700.00",
+        "ref": "fwod62-n2",
+        "ref_2": "FURN_0096",
+        "ref_3": "160x80cm"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "the flow step has no pinned skill",
+      "replayed": null,
+      "repaired": false,
+      "turns": 28,
+      "repinned": "s_5ccec4",
+      "repinParams": {
+        "v1": "{{02-create.saved_contact_name}}",
+        "v2": "{{runid}}"
+      },
+      "unreported": [
+        "quantity_set",
+        "row_subtotal_before_qty_edit",
+        "saved"
+      ]
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Re-read the quotation form and confirmed all fields in the live DOM: Customer = 'fwod62-n2 Bench Customer', one order line whose product is 'Customizable Desk' ([FURN_0096] Customizable Desk (Steel, White)), Quantity = 3.00, Unit Price = 750.00, Untaxed Amount = £ 2,250.00. The quotation already carried a persisted record — the breadcrumb reads 'Quotations / S00022' and the URL contains id=22 — so no re-save or field correction was needed; the replayed step 1 had made no visible change to the page and there were no validation errors or unsaved-change indicators.",
+      "values": {
+        "quotation_reference": "S00022",
+        "quantity": "3.00",
+        "product_name_on_line": "Customizable Desk",
+        "product_full_name": "[FURN_0096] Customizable Desk (Steel, White)",
+        "unit_price_on_line": "750.00",
+        "untaxed_amount": "£ 2,250.00",
+        "tax_20pct": "£ 450.00",
+        "total": "£ 2,700.00",
+        "customer_field_value": "fwod62-n2 Bench Customer",
+        "statusbar": "Quotation",
+        "untaxed_total": "£ 2,250.00",
+        "current_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22",
+        "ref": "fwod62-n2",
+        "ref_2": "FURN_0096",
+        "ref_3": "s_512d43",
+        "breadcrumb_1": "Quotations",
+        "breadcrumb_2": "S00022"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_512d43 stopped at step 1 — after step 1 the page did not show \"- row \\\"Customizable Desk Customizable Desk {{*}} {{*}} 20% £ 210.00\\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "replayed": "0/1",
+      "repaired": false,
+      "turns": 4,
+      "unreported": [
+        "customer",
+        "product_name",
+        "unit_price",
+        "contact_ref"
+      ]
+    },
+    {
+      "id": "05-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_d605ad (15 steps).",
+      "values": {
+        "existing_line": "Customizable Desk qty 3.00 @ 750.00 = £210.00",
+        "screenshot": "/home/user/sitelooper/quotation_S00022_second_line.png",
+        "quotation_reference": "S00022",
+        "new_line_unit_price": "147.00",
+        "new_line_quantity": "2.00",
+        "new_line_subtotal_excl_tax": "£ 294.00",
+        "new_untaxed_amount": "£ 2,544.00",
+        "tax_20pct": "£ 508.80",
+        "total": "£ 3,052.80",
+        "order_line_count": "2.00",
+        "product_reference": "Customizable Desk"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "new_line_product"
+      ]
+    },
+    {
+      "id": "06-change",
+      "status": "success",
+      "summary": "Replayed stored procedure s_282ddd (16 steps).",
+      "values": {
+        "line1_product": "Customizable Desk",
+        "screenshot": "/home/user/sitelooper/quotation_S00022_qty5.png",
+        "totals_section_text": "Untaxed Amount\t£ 4,044.00\nTAX 20%\t\n£ 808.80\n\nTotal\t£ 4,852.80",
+        "quotation_reference": "S00022",
+        "line1_quantity": "5.00",
+        "line1_unit_price": "750.00",
+        "line1_subtotal_excl_tax": "£ 3,750.00",
+        "line2_quantity": "2.00",
+        "line2_unit_price": "147.00",
+        "line2_subtotal_excl_tax": "£ 294.00",
+        "untaxed_amount": "£ 4,044.00",
+        "tax_20pct": "£ 808.80",
+        "total": "£ 4,852.80",
+        "line1_subtotal_cell": "£ 3,750.00",
+        "line2_subtotal_cell": "£ 294.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "line2_product",
+        "product_reference"
+      ]
+    },
+    {
+      "id": "07-report",
+      "status": "success",
+      "summary": "Replayed stored procedure s_f45028 (13 steps).",
+      "values": {
+        "screenshot": "/home/user/sitelooper/S00022_confirmed_sales_order.png",
+        "order_reference": "S00022",
+        "untaxed_amount": "£ 4,044.00",
+        "tax_20pct": "£ 808.80",
+        "total": "£ 4,852.80",
+        "customer": "fwod62-n2 Bench Customer",
+        "breadcrumb_1": "Quotations",
+        "breadcrumb_2": "S00022",
+        "post_confirm_buttons_1": "Create Invoice",
+        "post_confirm_buttons_2": "Send by Email",
+        "post_confirm_buttons_3": "Preview",
+        "post_confirm_buttons_4": "Cancel",
+        "page_title": "Odoo - S00022"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "08-report",
+      "status": "success",
+      "summary": "Replayed stored procedure s_69266c; observed page_title=Odoo - S00022, control_panel_buttons=Preview, Set to Quotation (Cancel/Confirm/Create Invoice no longer offered), blocking_dialog_encountered=Edit: fwod62-n2 Bench Customer (stale partner modal above the cancel wizard; closed via Discard before the wizard would accept input), screenshot=/home/user/sitelooper/S00022_cancelled.png, contact_ref=fwod62-n2, statusbar_state_lines=Cancelled\nSales Order\nQuotation Sent\nQuotation, active_status=Cancelled, breadcrumb_2=Quotations\nS00022, cancelled_url=http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22, order_reference=S00022, breadcrumb_1=Quotations, breadcrumb_order_name=S00022.",
+      "values": {
+        "page_title": "Odoo - S00022",
+        "control_panel_buttons": "Preview, Set to Quotation (Cancel/Confirm/Create Invoice no longer offered)",
+        "blocking_dialog_encountered": "Edit: fwod62-n2 Bench Customer (stale partner modal above the cancel wizard; closed via Discard before the wizard would accept input)",
+        "screenshot": "/home/user/sitelooper/S00022_cancelled.png",
+        "contact_ref": "fwod62-n2",
+        "statusbar_state_lines": "Cancelled\nSales Order\nQuotation Sent\nQuotation",
+        "active_status": "Cancelled",
+        "breadcrumb_2": "Quotations\nS00022",
+        "cancelled_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22",
+        "order_reference": "S00022",
+        "breadcrumb_1": "Quotations",
+        "breadcrumb_order_name": "S00022"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "09-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_1eded2 (9 steps).",
+      "values": {
+        "contact_page_title": "Odoo - fwod62-n2 Bench Customer",
+        "contacts_list_search_result": "1 record: fwod62-n2 Bench Customer, City Benchville",
+        "order_heading": "S00022",
+        "screenshots": "/home/user/sitelooper/contact_verify.png, /home/user/sitelooper/contacts_search_result.png, /home/user/sitelooper/S00022_final_readonly.png",
+        "contact_ref": "fwod62-n2",
+        "contact_city": "Benchville",
+        "contact_name": "fwod62-n2 Bench Customer",
+        "order_reference": "S00022",
+        "order_untaxed_amount": "£ 4,044.00",
+        "order_total": "£ 4,852.80",
+        "order_breadcrumb_1": "Quotations",
+        "order_breadcrumb_2": "S00022",
+        "order_customer_1": "fwod62-n2 Bench Customer",
+        "order_customer_city": "Benchville"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 9,
+  "total": 9,
+  "repinned": 1,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwod62",
+      "step": "04-open",
+      "skill": "s_512d43",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.997,
+      "missedLocator": "page.getByRole('button', { name: 'Save manually', exact: true })",
+      "fallbackUsed": "page.locator('div:nth-of-type(1) > div > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(1)')",
+      "fallbackIndex": 1,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22"
+    }
+  ],
+  "wallMs": 203872,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 438806,
+    "completionTokens": 10444,
+    "cachedTokens": 372224
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 438806,
+      "completionTokens": 10444,
+      "cachedTokens": 372224
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

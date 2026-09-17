@@ -1,0 +1,196 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwod62-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwod62-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwod62-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwod62-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwod62.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwod62-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwod62.spec.ts",
+      "file": "fwod62.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwod62",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 68438,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-open\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 05-add s_d605ad/13: read 'new_line_product' returned a value the skill itself set/selected ('[E-COM06] Corner Desk Right Sit') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-add\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-change\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 07-report\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 08-report\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 09-create\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in to Odoo with login 'admin' and password 'admin' (email field = admin, password field = admin), submit the login form, and verify you reach the main Odoo apps home page. Report what page/title you see after login.",
+                      "duration": 5653
+                    },
+                    {
+                      "title": "02-create: Create a new customer contact in Odoo: go to the Contacts app, click Create, and fill in the Name field with exactly '{{runid}} Bench Customer' and the City field with exactly 'Benchville' (City is under the address section; if the address fields are collapsed, expand the address block to reach City). Leave other fields at their defaults, then save the contact. Verify the contact record page now shows Name '{{runid}} Bench Customer' and City 'Benchville', and report those two values as shown on the saved record.",
+                      "duration": 5930
+                    },
+                    {
+                      "title": "03-create: In the Odoo Sales app, create a new quotation: click Sales > Quotations (Orders), click New/Create, and in the Customer field type '{{runid}} Bench Customer' and select the matching option from the autocomplete dropdown (the value only counts if chosen from the dropdown). Then in the Order Lines section add ONE order line: click to add a product, type any product name from the catalogue (e.g. a real product that exists) and select it from the autocomplete dropdown, and set its Quantity to 3. Do not add any second line. Save the quotation. Then report: (a) the product name you chose, (b) the Unit Price the app filled in for that line, and (c) the Untaxed Amount shown in the quotation's totals. Do not wait for network idle; wait for concrete page state.",
+                      "duration": 11962
+                    },
+                    {
+                      "title": "04-open: There should be an open, unsaved Odoo quotation form in the browser (breadcrumb 'Quotations / New', customer '{{runid}} Bench Customer', one order line for product '{{03-create.product_name_selected}}'). First re-read the form: confirm the Customer field is set to '{{runid}} Bench Customer' (if not, set it via the autocomplete dropdown), confirm the order line's product is '{{03-create.product_name_selected}}' chosen from the dropdown, and set the line's Quantity to exactly 3 (re-enter it if needed). Then SAVE the quotation so it gets a real record (a quotation reference like S000xx appears in the breadcrumb and the URL gains an id= parameter). If the save is blocked, look for any red/invalid required field or validation error and fix it, then save again. Do not wait for network idle. After saving, report: (a) the quotation reference/name shown in the breadcrumb, (b) the product name on the order line, (c) the Unit Price shown on that line, (d) the Quantity shown on that line, and (e) the Untaxed Amount shown in the totals section of the saved quotation.",
+                      "duration": 6463
+                    },
+                    {
+                      "title": "05-add: On the saved Odoo quotation {{04-open.quotation_reference}} (customer '{{runid}} Bench Customer', currently one order line: '{{03-create.product_name_selected}}', qty 3, unit price {{03-create.unit_price_observed}}, Untaxed Amount £210.00), add a SECOND order line: click to add a new line in the Order Lines section, type a DIFFERENT product name (not Office Chair — pick another real product from the catalogue, e.g. a desk or other furniture item) and select it from the autocomplete dropdown, and set that new line's Quantity to exactly 2. Then save the quotation. Do not wait for network idle. After saving, report: (a) the product name of the new second line, (b) its unit price, (c) its quantity, and (d) the new Untaxed Amount shown in the quotation's totals section (it should now reflect both lines).",
+                      "duration": 4231
+                    },
+                    {
+                      "title": "06-change: On the saved Odoo quotation {{04-open.quotation_reference}} (customer '{{runid}} Bench Customer'), which currently has two order lines — line 1: '{{03-create.product_name_selected}}' qty {{04-open.quantity}} @ {{03-create.unit_price_observed}} (£210.00), line 2: '{{05-add.new_line_product}}' qty {{05-add.new_line_quantity}} @ {{05-add.new_line_unit_price}} (£294.00), Untaxed Amount £504.00 — change the FIRST line's Quantity (the Office Chair line) from 3 to exactly 5. Then save the quotation. Do not wait for network idle. After saving, report: (a) the quantity now shown on the Office Chair line, (b) the quantity shown on the Corner Desk line (should be unchanged at 2), and (c) the Untaxed Amount now shown in the quotation's totals section.",
+                      "duration": 2742
+                    },
+                    {
+                      "title": "07-report: On the saved Odoo quotation {{04-open.quotation_reference}} (customer '{{runid}} Bench Customer', two order lines: Office Chair qty 5 @ {{03-create.unit_price_observed}}, Corner Desk Right Sit qty 2 @ {{05-add.new_line_unit_price}}, Untaxed Amount £644.00), CONFIRM the quotation so it becomes a sales order: click the 'Confirm' button (or 'Confirm Sale' / 'Confirm Order' — whatever the confirm action is called on this form). If a confirmation dialog or wizard appears, accept/confirm it. Do not wait for network idle. After confirming, report: (a) the order reference/name shown in the breadcrumb or title (e.g. {{04-open.quotation_reference}}), (b) the status the app now shows in the statusbar (e.g. 'Sales Order' / 'Sales'), and (c) whether the Confirm button is gone or the form is now read-only as a sales order.",
+                      "duration": 1788
+                    },
+                    {
+                      "title": "08-report: On the confirmed Odoo sales order {{04-open.quotation_reference}} (customer '{{runid}} Bench Customer', status 'Sales Order', Untaxed Amount £644.00), CANCEL the order: click the '{{07-report.post_confirm_buttons_4}}' button in the control panel. If a confirmation dialog appears asking to confirm the cancellation, accept it. Do not wait for network idle. After cancelling, report: (a) the status the app now shows in the statusbar for this order, (b) the order reference still shown in the breadcrumb/title, and (c) whether the order is now shown as cancelled (e.g. a 'Cancelled' stage/badge or a red/grey indicator).",
+                      "duration": 19065
+                    },
+                    {
+                      "title": "09-create: Final verification, read-only (do not create or edit anything): (1) Open the contact record for '{{runid}} Bench Customer' (search for it in Contacts) and report its Name and City as shown on the saved record. (2) Open the sales order {{04-open.quotation_reference}} (Sales > Orders, or via its form) and report its reference/name, the status shown in the statusbar, the customer, and the Untaxed Amount in the totals. Report exactly what the page shows for each.",
+                      "duration": 10190
+                    }
+                  ],
+                  "startTime": "2026-09-17T13:35:46.595Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "21573231cfbe42ae4212-922378c49bed7a9366d2",
+          "file": "fwod62.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-17T13:35:44.610Z",
+    "duration": 70580.182,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
