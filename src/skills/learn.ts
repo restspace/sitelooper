@@ -23,6 +23,43 @@ export interface LearnedRecord {
 }
 
 /**
+ * Does a validated variant REPLACE the skill it was born repairing, or does it
+ * merely stand beside it?
+ *
+ * `supersede` DEMOTES the parent, and a demoted skill is skipped by
+ * `selectCandidates`, fails `isVerified`, and refuses to compile when a flow
+ * step still pins it. So retiring the parent is only right where the variant
+ * answers the parent's OWN instruction — which is the case the repair path was
+ * built for: the replay of this instruction's procedure stopped, the model
+ * finished this instruction, and what it recorded is a better way to do the
+ * same thing.
+ *
+ * It is NOT the case a repair is limited to. A flow step's pin is a HINT, so
+ * one step's instruction can select and repair another step's procedure, and
+ * the variant it compiles then answers a DIFFERENT instruction. kanboard
+ * fwkb21 is the witness: `02-open` ("Navigate to the project named 'Bench
+ * Board' and open its board…") selected `01-open`'s eleven-step sign-in chain,
+ * stopped at its second step because the browser was already signed in, and
+ * compiled a seven-step board-reading variant of it. That variant does real
+ * work, and it does not do `01-open`'s work — letting it retire the sign-in
+ * chain would leave `01-open` with no procedure at all and refuse the compile
+ * of the whole flow.
+ *
+ * The question is asked of the two recordings' own instructions, through the
+ * templates compiled from them: same instruction, same work, and the variant
+ * inherits. Nothing here reads what a template LOOKS like — only whether the
+ * two are the same text. A parent the store no longer holds is not retired by
+ * inference either. It fails toward COST: a genuine replacement whose template
+ * re-slotted differently leaves both in the store, ranked against each other
+ * by their records, instead of silently retiring a procedure another step
+ * still depends on.
+ */
+function replacesParent(store: SkillStore, variant: Skill): boolean {
+  const parent = variant.variantOf ? store.get(variant.variantOf) : null;
+  return Boolean(parent && parent.template === variant.template);
+}
+
+/**
  * Everything learning mode does once an instruction has finished: fold the
  * replay outcome into the replayed skill, then — only on a successful report —
  * compile the recording into a new skill, a variant, or a stat bump on one
@@ -70,7 +107,7 @@ export function learnFromInstruction(
     );
     if (updated) {
       out.outcome = { skill: updated.id, status: updated.status, ok };
-      if (updated.status === 'validated' && updated.variantOf) {
+      if (updated.status === 'validated' && updated.variantOf && replacesParent(store, updated)) {
         store.supersede(updated.variantOf);
         out.superseded = updated.variantOf;
       }
@@ -107,35 +144,53 @@ export function learnFromInstruction(
   if (!skills.length) return Object.keys(out).length ? out : null;
 
   const existing = store.list(skills[0].origin);
-  if (!variantOf) {
-    // A twin is an existing skill with this recording's shape at the same
-    // chain position. Merge only when EVERY segment has a twin and the twins
-    // all belong to one chain — otherwise the store would end up with
-    // half-shared chains that replay cannot compose.
-    const twins = skills.map((sk) =>
-      existing.find(
-        (s) =>
-          s.status !== 'demoted' &&
-          (s.seq?.index ?? 0) === (sk.seq?.index ?? 0) &&
-          (s.seq?.of ?? 1) === (sk.seq?.of ?? 1) &&
-          (s.template === sk.template || sameProcedure(s, sk)) &&
-          samePageContexts(s, sk),
-      ),
-    );
-    if (twins.every(Boolean) && new Set(twins.map((t) => t!.seq?.chain ?? t!.id)).size === 1) {
-      for (const twin of twins as Skill[]) {
-        twin.stats.uses += 1;
-        twin.stats.successes += 1;
-        twin.stats.lastUsed = skills[0].provenance.created;
-        if (twin.status === 'provisional' && twin.stats.successes >= 2) {
-          twin.status = 'validated';
-          twin.stats.verifiedContract = contractOf(twin);
-        }
-        store.put(twin);
+  // A twin is an existing skill with this recording's shape at the same
+  // chain position. Merge only when EVERY segment has a twin and the twins
+  // all belong to one chain — otherwise the store would end up with
+  // half-shared chains that replay cannot compose.
+  //
+  // A VARIANT IS ASKED THE SAME QUESTION, INSIDE ITS OWN FAMILY (fwkb21).
+  // This search used to be skipped entirely for a repair-born recording, on
+  // the implicit rule "a recording produced under a repair is new by
+  // construction, so it is stored without asking whether the store already
+  // holds it". Nothing makes that true: a repair can arrive at a procedure an
+  // earlier repair already found, and a store that never asks can never
+  // notice. The cost is not a duplicate row — it is that `uses`/`successes`
+  // stay at 1 forever, and the `successes >= 2` promotion below (and
+  // store.ts's) is the ONLY route a repair-born skill has to validated, the
+  // replay route being shut by the ranking in `selectCandidates`. kanboard's
+  // three correct board-reading procedures each sat at 1/1 across three runs
+  // for exactly this reason.
+  //
+  // Scoped to one family and no wider: a variant of one parent is not a twin
+  // of a variant of another, however alike their steps read — they were born
+  // repairing different procedures, which is a fact about their provenance
+  // and not a guess about their shape. A non-variant recording keeps its
+  // existing reach unchanged (it may still twin anything non-demoted).
+  const twins = skills.map((sk) =>
+    existing.find(
+      (s) =>
+        s.status !== 'demoted' &&
+        (!variantOf || s.variantOf === variantOf) &&
+        (s.seq?.index ?? 0) === (sk.seq?.index ?? 0) &&
+        (s.seq?.of ?? 1) === (sk.seq?.of ?? 1) &&
+        (s.template === sk.template || sameProcedure(s, sk)) &&
+        samePageContexts(s, sk),
+    ),
+  );
+  if (twins.every(Boolean) && new Set(twins.map((t) => t!.seq?.chain ?? t!.id)).size === 1) {
+    for (const twin of twins as Skill[]) {
+      twin.stats.uses += 1;
+      twin.stats.successes += 1;
+      twin.stats.lastUsed = skills[0].provenance.created;
+      if (twin.status === 'provisional' && twin.stats.successes >= 2) {
+        twin.status = 'validated';
+        twin.stats.verifiedContract = contractOf(twin);
       }
-      out.merged = twins[0]!.id;
-      return out;
+      store.put(twin);
     }
+    out.merged = twins[0]!.id;
+    return out;
   }
   for (const sk of skills) store.put(sk);
   out.compiled = skills[0].id;
@@ -181,6 +236,10 @@ export function matchTemplate(
  * rate, then by experience. Selection by record is what stops one bad pin —
  * e.g. a fragile provisional from a single model recovery — from dominating
  * the step run after run.
+ *
+ * The validated-first tier is itself withheld from a candidate that is in the
+ * running only on the pin's say-so, when another candidate was recorded
+ * answering this very instruction — see the comment on the sort.
  */
 /**
  * The pinned skill's values, re-offered to a sibling by what each slot MEANS.
@@ -279,16 +338,21 @@ export function selectCandidates(
 ): { skill: Skill; params: Record<string, string> }[] {
   const hint = hintId ? skills.find((s) => s.id === hintId) : undefined;
   const pinned = hintParams && Object.keys(hintParams).length ? hintParams : undefined;
-  const out: { skill: Skill; params: Record<string, string> }[] = [];
+  const out: { skill: Skill; params: Record<string, string>; bound: boolean }[] = [];
   for (const s of skills) {
     if (s.status === 'demoted') continue;
     if (s.seq && s.seq.index > 0) continue; // chains start at their head
+    // Does this candidate's OWN recorded instruction read over the instruction
+    // being served? Asked of every candidate, the PIN included — the pin used
+    // to skip the question, because its params were already in hand and the
+    // answer changed nothing. It changes the ranking now (see below), so it is
+    // asked and kept. The flow's stored bindings stay authoritative for the
+    // pinned skill either way; only the boolean is taken from the bind.
+    const own = bindSkill(s, instruction, known);
     // The flow's stored bindings are authoritative for the pinned skill; a
     // sibling binds from the instruction text, or inherits the pinned
     // bindings when it shares the hint's procedure and its slots all resolve.
-    let params: Record<string, string> | null = null;
-    if (s.id === hintId && pinned) params = pinned;
-    else params = bindSkill(s, instruction, known);
+    let params: Record<string, string> | null = s.id === hintId && pinned ? pinned : own;
     // A sibling may stand in for the hint only if it does the hint's WHOLE
     // work: `sameChainProcedure` compares chain against chain, because the
     // daemon replays the head's whole chain and not just the head (fwod56).
@@ -298,17 +362,66 @@ export function selectCandidates(
       params = inheritByBinding(s, hint, pinned, known);
     }
     if (!params) continue;
-    out.push({ skill: s, params });
+    out.push({ skill: s, params, bound: own !== null });
   }
-  return out.sort((a, b) => {
-    const rank = (s: Skill) => (isVerified(s) ? 1 : 0);
-    return (
-      rank(b.skill) - rank(a.skill) ||
-      successRate(b.skill) - successRate(a.skill) ||
-      b.skill.stats.uses - a.skill.stats.uses ||
-      (b.skill.stats.lastUsed ?? '').localeCompare(a.skill.stats.lastUsed ?? '')
-    );
-  });
+  // A PIN IS A HINT, NOT AN ENTITLEMENT — and `validated` is the entitlement
+  // (kanboard fwkb21 02-open).
+  //
+  // One stored procedure can serve two flow steps, and its stats are one
+  // number for both. s_06c07b is kanboard's eleven-step sign-in-then-read
+  // chain. `01-open` pins it and it replays 11/11 every time. `02-open` pins
+  // it too — the same pin, carried over with the same `v1` (the site's base
+  // url, a value 02-open's instruction never mentions) — and there it stops at
+  // step 2 every time, because the browser is already signed in and the
+  // recorded Username field cannot appear. Three of each: pooled, that reads
+  // `validated, 3/6`, which the `isVerified`-first tier put ahead of three
+  // provisional 1/1 procedures that were RECORDED answering 02-open's own
+  // instruction. (The pooling hides the failure twice over: 01-open's success
+  // clears `lastFailedAt` between 02-open's stops, so the repeat strike at
+  // step 2 never demotes either.)
+  //
+  // So the tier is withheld from the PIN, when the pin's own recording does
+  // not read over this instruction and some other candidate's does. Not
+  // excluded, not demoted, not re-ordered by wording: it keeps its place in
+  // the list and competes on the one thing that is evidence about this step —
+  // its record. s_06c07b at 0.5 then loses to a variant at 1.0, and would
+  // still win at a rate the variants could not beat.
+  //
+  // `bound` is provenance, not shape: it is the candidate's own recorded
+  // instruction, slotted, read over this one. Nothing here looks at what a
+  // string is made of.
+  //
+  // TWO GUARDS, and both are load-bearing.
+  //
+  // `someoneBound` keeps this off every green app. A pin whose wording has
+  // drifted away from its step's instruction is the normal case — odoo fwod59
+  // (6 steps of 6), repairdesk fwrd66 (5 of 5), grafana fwgr51 (1 of 3) and
+  // kanboard's own `05-edit` all run one that way, every step green. In each
+  // the pin is the ONLY candidate, so there is nobody to hand the tier to and
+  // nothing changes. Demoting pin-only candidates as a class would have hit
+  // all four apps; with the guard the rule reaches exactly one step in the
+  // four published stores, and it is the failing one.
+  //
+  // `id === hintId` keeps it off SIBLINGS. A sibling that inherits the pin's
+  // values (`inheritByBinding`) also fails to bind, but it is not the thing
+  // the flow author vouched for — it is a candidate the store offered on the
+  // strength of a shared procedure and agreeing slot bindings, and fwod56 and
+  // fwrd48 are both about how hard that is to earn. Stripping ITS tier would
+  // put a fragile pin back in front of the proven sibling those rounds paid
+  // for. The entitlement being withheld is the pin's, so only the pin loses it.
+  const someoneBound = out.some((c) => c.bound);
+  return out
+    .sort((a, b) => {
+      const rank = (c: (typeof out)[number]) =>
+        isVerified(c.skill) && !(someoneBound && !c.bound && c.skill.id === hintId) ? 1 : 0;
+      return (
+        rank(b) - rank(a) ||
+        successRate(b.skill) - successRate(a.skill) ||
+        b.skill.stats.uses - a.skill.stats.uses ||
+        (b.skill.stats.lastUsed ?? '').localeCompare(a.skill.stats.lastUsed ?? '')
+      );
+    })
+    .map(({ skill, params }) => ({ skill, params }));
 }
 
 /**

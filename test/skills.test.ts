@@ -1486,6 +1486,105 @@ describe('learnFromInstruction', () => {
     }
     expect(store.get(other.id)?.status).toBe('demoted');
   });
+
+  /**
+   * fwkb21. A repair-born skill used to be stored WITHOUT asking whether the
+   * store already held it, so its `uses`/`successes` stayed at 1 whatever it
+   * did — and `successes >= 2` is the only promotion route open to it, the
+   * replay route being shut by selectCandidates ranking validated first.
+   * kanboard's three correct board-reading procedures each sat at 1/1 across
+   * three runs for exactly that reason.
+   */
+  it('a second repair that re-finds an earlier variant of the same parent merges into it and promotes it (fwkb21)', () => {
+    const store = new SkillStore(path.join(tmp, 'variant-twin'));
+    const base = compileSkill({ entries: recording(), instruction: INSTRUCTION, report, session: 's', now: '2026-01-01T00:00:00Z' })!;
+    store.put(base);
+    const stopped = { ...noSkill, invoked: base.id, stepsReplayed: 4, stepsTotal: 7, repaired: true, deterministicActions: 4, totalActions: 7 };
+    const repair = (now: string) =>
+      learnFromInstruction(store, { result: result('success', stopped), instruction: INSTRUCTION, entries: recording(), session: 's', now });
+
+    const first = repair('2026-01-02T00:00:00Z');
+    const variant = first!.compiled!;
+    expect(store.get(variant)?.variantOf).toBe(base.id);
+    expect(store.get(variant)?.status).toBe('provisional');
+
+    // The same repair again: recognised, not re-minted.
+    const second = repair('2026-01-03T00:00:00Z');
+    expect(second?.compiled).toBeUndefined();
+    expect(second?.merged).toBe(variant);
+    expect(store.all().filter((s) => s.variantOf === base.id)).toHaveLength(1);
+    // The second observation is what it was missing: it can now be trusted.
+    expect(store.get(variant)?.stats.uses).toBe(2);
+    expect(store.get(variant)?.stats.successes).toBe(2);
+    expect(store.get(variant)?.status).toBe('validated');
+  });
+
+  /**
+   * The scope of the search above, pinned: two repairs of DIFFERENT parents
+   * are two different procedures' repairs however alike their steps read.
+   * Their provenance says so and their shape does not get a vote.
+   */
+  it('a variant is never a twin of a variant of another parent', () => {
+    const store = new SkillStore(path.join(tmp, 'variant-family'));
+    const one = compileSkill({ entries: recording(), instruction: INSTRUCTION, report, session: 's', now: '2026-01-01T00:00:00Z' })!;
+    const two = { ...JSON.parse(JSON.stringify(one)) as Skill, id: 's_parent2' };
+    store.put(one);
+    store.put(two);
+    const stopAt = (id: string) => ({ ...noSkill, invoked: id, stepsReplayed: 4, stepsTotal: 7, repaired: true, deterministicActions: 4, totalActions: 7 });
+
+    const a = learnFromInstruction(store, { result: result('success', stopAt(one.id)), instruction: INSTRUCTION, entries: recording(), session: 's', now: '2026-01-02T00:00:00Z' });
+    const b = learnFromInstruction(store, { result: result('success', stopAt(two.id)), instruction: INSTRUCTION, entries: recording(), session: 's', now: '2026-01-03T00:00:00Z' });
+    expect(a?.compiled).toBeTruthy();
+    expect(b?.merged).toBeUndefined();
+    expect(b?.compiled).toBeTruthy();
+    expect(b!.compiled).not.toBe(a!.compiled);
+    expect(store.get(a!.compiled!)?.variantOf).toBe(one.id);
+    expect(store.get(b!.compiled!)?.variantOf).toBe(two.id);
+  });
+
+  /**
+   * fwkb21's latent hazard, which only bites once variants can reach
+   * validated: a flow step's pin is a HINT, so one step's instruction can
+   * select and repair ANOTHER step's procedure. kanboard's `02-open` stopped
+   * `01-open`'s eleven-step sign-in chain at its second step (already signed
+   * in) and compiled a board-reading variant of it. That variant retiring the
+   * sign-in chain would leave `01-open` with no procedure and refuse the
+   * whole flow's compile.
+   */
+  it('a validated variant answering a different instruction does not retire the parent it repaired (fwkb21)', () => {
+    const store = new SkillStore(path.join(tmp, 'supersede-guard'));
+    const base = compileSkill({ entries: recording(), instruction: INSTRUCTION, report, session: 's', now: '2026-01-01T00:00:00Z' })!;
+    store.put(base);
+    const variantOf = (id: string, template: string): Skill => ({
+      ...(JSON.parse(JSON.stringify(base)) as Skill),
+      id,
+      template,
+      status: 'provisional',
+      variantOf: base.id,
+    });
+    // Born repairing `base` under ANOTHER step's instruction.
+    const elsewhere = variantOf('s_elsewhere', "Open the board of the project named 'Bench Board' and report its columns.");
+    store.put(elsewhere);
+    const clean = (id: string) =>
+      learnFromInstruction(store, {
+        result: result('success', { ...noSkill, invoked: id, stepsReplayed: 7, stepsTotal: 7, deterministicActions: 7, totalActions: 7 }),
+        instruction: INSTRUCTION,
+        entries: recording(),
+        session: 's',
+        now: '2026-01-04T00:00:00Z',
+      });
+
+    const promoted = clean(elsewhere.id);
+    expect(promoted?.outcome).toEqual({ skill: elsewhere.id, status: 'validated', ok: true });
+    expect(promoted?.superseded).toBeUndefined();
+    expect(store.get(base.id)?.status).toBe('provisional'); // still selectable, still compilable
+
+    // The case supersede exists for is untouched: same instruction, same work.
+    const replacement = variantOf('s_replacement', base.template);
+    store.put(replacement);
+    expect(clean(replacement.id)?.superseded).toBe(base.id);
+    expect(store.get(base.id)?.status).toBe('demoted');
+  });
 });
 
 /**
@@ -1675,6 +1774,64 @@ describe('selectCandidates (lifecycle-gated adoption)', () => {
     const solid = make('validated', { uses: 4, successes: 4 });
     const out = selectCandidates([shaky, solid], undefined, same);
     expect(out[0].skill.id).toBe(solid.id);
+  });
+
+  // kanboard fwkb21. One stored procedure served two flow steps and its stats
+  // were one number for both: s_06c07b replayed 11/11 for `01-open` and
+  // stopped at step 2 for `02-open` on every one of three runs (the browser is
+  // already signed in, so the recorded Username field cannot appear). Pooled
+  // that is `validated, 3/6`, and the validated-first tier put it ahead of
+  // three provisional 1/1 procedures RECORDED answering 02-open's own
+  // instruction — so 02-open re-picked a 0/3 procedure every round.
+  //
+  // The tier is an entitlement the pin cannot claim over a candidate whose own
+  // recording reads over this instruction. The pin stays in the list; it just
+  // competes on its record, which is the only evidence about this step.
+  const verified = (s: Skill): Skill => {
+    s.status = 'validated';
+    s.stats.verifiedContract = contractOf(s);
+    return s;
+  };
+  const pinOnly = (id: string, stats: Partial<Skill['stats']>): Skill => {
+    // Recorded for a DIFFERENT instruction, so nothing of its own reads over
+    // `same` — it is a candidate purely because the flow step pins it.
+    const s = compileSkill({ entries: recording(), instruction: 'totally different words x7 RD Part A 100 25', report, session: 's' })!;
+    Object.assign(s.stats, stats);
+    return { ...verified(s), id };
+  };
+  const pinnedParams = { v1: 'z9 RD Part B', v2: '300', v3: '40' };
+
+  it('a validated pin the instruction does not read over loses the tier to a candidate recorded for this instruction', () => {
+    const pin = pinOnly('s_pooled', { uses: 6, successes: 3, partial: 3, failedAtStep: { '2': 3 }, lastFailedAt: 2, recoveredStops: 3 });
+    const recorded = make('provisional', { uses: 1, successes: 1 });
+    expect(isVerified(pin)).toBe(true);
+    expect(bindSkill(pin, same, {})).toBeNull(); // the pin's own wording says nothing about this step
+    expect(bindSkill(recorded, same, {})).not.toBeNull();
+    const out = selectCandidates([pin, recorded], pin.id, same, pinnedParams);
+    expect(out.map((c) => c.skill.id)).toEqual([recorded.id, pin.id]);
+    // The pin is not excluded, and it still carries the flow's own bindings.
+    expect(out[1].params).toEqual(pinnedParams);
+  });
+
+  it('still ranks the pin first on its record when it beats every candidate recorded for this instruction', () => {
+    const pin = pinOnly('s_strong', { uses: 6, successes: 6 });
+    const weak = make('provisional', { uses: 4, successes: 1 });
+    expect(selectCandidates([pin, weak], pin.id, same, pinnedParams).map((c) => c.skill.id)).toEqual([pin.id, weak.id]);
+  });
+
+  // THE GUARD. A pin whose wording has drifted away from its step's
+  // instruction is the ordinary case, not a fault: odoo fwod59 runs one on 6
+  // steps of 6, repairdesk fwrd66 on 5 of 5, grafana fwgr51 on 1 of 3, and
+  // kanboard's own `05-edit` on 1 of 5 — every one of them green. In all of
+  // them the pin is the ONLY candidate, so there is nobody to hand the tier to
+  // and the rule above must not fire. Demoting pin-only candidates as a class
+  // would have regressed all four apps.
+  it('leaves a lone pin the instruction does not read over exactly where it was', () => {
+    const pin = pinOnly('s_lone', { uses: 3, successes: 3 });
+    const unrelated = make('provisional', { uses: 9, successes: 9 });
+    unrelated.template = 'nothing like this instruction {{v1}}';
+    const out = selectCandidates([pin, unrelated], pin.id, same, pinnedParams);
+    expect(out.map((c) => c.skill.id)).toEqual([pin.id]);
   });
 
   it('a sibling with the SAME wording inherits the pinned params', () => {
