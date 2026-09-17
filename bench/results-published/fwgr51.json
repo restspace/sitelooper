@@ -1,0 +1,200 @@
+{
+  "name": "fwgr51",
+  "origin": "http://127.0.0.1:3000",
+  "startUrl": "http://127.0.0.1:3000/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-open",
+      "instruction": "Open http://127.0.0.1:3000/ and sign in with username admin and password admin (if prompted to change the password, skip it). Then open the provisioned dashboard named 'Service health' (use search if needed) and report the exact titles of all panels shown on that dashboard, exactly as displayed on screen.",
+      "skill": "s_4c5d9e",
+      "params": {
+        "v1": "http://127.0.0.1:3000/"
+      },
+      "outputs": [
+        "dashboard_name",
+        "panel_title_1",
+        "panel_title_2",
+        "panel_title_3",
+        "panel_titles_1",
+        "panel_titles_2",
+        "panel_titles_3"
+      ],
+      "recorded": {
+        "dashboard_name": "Service Health",
+        "panel_count": "3",
+        "panel_title_1": "Request rate",
+        "panel_title_2": "Error count",
+        "panel_title_3": "Latency by endpoint",
+        "panel_titles_1": "Request rate",
+        "panel_titles_2": "Error count",
+        "panel_titles_3": "Latency by endpoint",
+        "url": "http://127.0.0.1:3000/d/bench-service-health/service-health?from=now-6h&to=now&timezone=browser"
+      },
+      "route": "http://127.0.0.1:3000/d/bench-service-health/service-health",
+      "outputEvidence": {
+        "dashboard_name": {
+          "same": 1,
+          "differed": 0
+        },
+        "panel_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "panel_title_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "panel_title_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "panel_title_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "panel_titles_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "panel_titles_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "panel_titles_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "Create a new dashboard. Add a Stat panel titled '{{runid}} Availability' whose query uses the TestData data source (pick a datasource, e.g. 'TestData DB' / 'grafana-testdata-datasource'). Add a Text panel titled '{{runid}} Notes' whose text content includes the string {{runid}}. Save the dashboard with the title '{{runid}} Bench Dashboard'. Verify after saving that the dashboard is saved with both panels visible, and report what you did.",
+      "skill": "s_da10de",
+      "params": {
+        "v2": "{{runid}} Availability",
+        "v3": "{{runid}} Notes",
+        "v1": "{{runid}}",
+        "v4": "{{runid}} Bench Dashboard"
+      },
+      "outputs": [
+        "dashboard_title",
+        "stat_panel_title",
+        "stat_datasource",
+        "text_panel_title",
+        "text_panel_content",
+        "dashboard_url",
+        "bench_ref",
+        "panels_visible_after_reload_1",
+        "panels_visible_after_reload_2"
+      ],
+      "recorded": {
+        "dashboard_title": "fwgr51-n1 Bench Dashboard",
+        "dashboard_uid": "efyhar2z3az9ca",
+        "stat_panel_title": "fwgr51-n1 Availability",
+        "stat_datasource": "TestData (grafana-testdata-datasource) — shown as \"A (TestData)\" in the query editor row",
+        "stat_rendered_value": "15.7 (after reload)",
+        "text_panel_title": "fwgr51-n1 Notes",
+        "text_panel_content": "fwgr51-n1 availability notes",
+        "dashboard_url": "http://127.0.0.1:3000/d/efyhar2z3az9ca/fwgr51-n1-bench-dashboard?from=2026-09-16T19:05:02.706Z&to=2026-09-17T01:05:02.706Z&timezone=browser",
+        "bench_ref": "fwgr51-n1",
+        "panels_visible_after_reload_1": "fwgr51-n1 Notes",
+        "panels_visible_after_reload_2": "fwgr51-n1 Availability",
+        "url": "http://127.0.0.1:3000/d/efyhar2z3az9ca/fwgr51-n1-bench-dashboard?from=now-6h&to=now&timezone=browser",
+        "url.p1": "efyhar2z3az9ca",
+        "url.p2": "fwgr51-n1-bench-dashboard"
+      },
+      "route": "http://127.0.0.1:3000/d/efyhar2z3az9ca/:id"
+    },
+    {
+      "id": "03-add",
+      "instruction": "On the dashboard '{{runid}} Bench Dashboard' (url http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard): 1) Add the tag 'bench' to the dashboard settings (Dashboard settings → General → Tags). 2) Set the dashboard's default time range to 'Last 6 hours' in settings (Dashboard settings → General → Time range section), or if not available there, set the time picker to Last 6 hours and when saving tick the 'Update default time range' checkbox in the save dialog. 3) Set the dashboard's auto-refresh interval to '1m' (dashboard settings → Auto refresh, or via the time picker's refresh interval selector, ensuring it's saved as the dashboard default). Save everything and verify by reloading the page that the tag 'bench', the default time range 'Last 6 hours', and the auto-refresh '1m' are all persisted (after reload, the time picker should show 'Last 6 hours' and the refresh selector should show 1m without URL parameters). Report exactly what you observed after the reload.",
+      "skill": "s_56bbbb",
+      "params": {
+        "v1": "{{runid}} Bench Dashboard",
+        "v5": "http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "dashboard_title",
+        "dashboard_uid",
+        "dashboard_version",
+        "timepicker_after_reload",
+        "refreshpicker_after_reload",
+        "save_dialog_checkboxes_ticked",
+        "panels_after_reload",
+        "refresh_button_label",
+        "verified_url",
+        "bench_ref"
+      ],
+      "recorded": {
+        "dashboard_title": "fwgr51-n1 Bench Dashboard",
+        "dashboard_uid": "efyhar2z3az9ca",
+        "dashboard_version": "2",
+        "tag_added": "bench",
+        "saved_default_time_from": "now-6h (Last 6 hours)",
+        "saved_default_time_to": "now",
+        "saved_default_refresh": "1m",
+        "timepicker_after_reload": "Time range selected: Last 6 hours",
+        "refreshpicker_after_reload": "1m (Choose refresh time interval with current interval 1 minute selected)",
+        "save_dialog_checkboxes_ticked": "Update default time range, Update default refresh value",
+        "panels_after_reload": "fwgr51-n1 Notes (text), fwgr51-n1 Availability (stat, value rendered)",
+        "refresh_button_label": "Choose refresh time interval with current interval 1 minute selected",
+        "verified_url": "http://127.0.0.1:3000/d/efyhar2z3az9ca/fwgr51-n1-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m",
+        "bench_ref": "fwgr51-n1",
+        "default_time_from": "now-6h",
+        "url": "http://127.0.0.1:3000/d/efyhar2z3az9ca/fwgr51-n1-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m&editview=json-model"
+      },
+      "route": "http://127.0.0.1:3000/d/efyhar2z3az9ca/:id",
+      "urlVariance": [
+        "efyhar2z3az9ca",
+        "cfyhbehj8bke8c",
+        "fwgr51-n1-bench-dashboard",
+        "fwgr51-n2-bench-dashboard"
+      ]
+    }
+  ],
+  "provenance": {
+    "session": "fwgr51-n1",
+    "created": "2026-09-17T01:15:13.260Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-open",
+      "outputs": [
+        "panel_count"
+      ]
+    },
+    {
+      "stepId": "02-create",
+      "outputs": [
+        "dashboard_uid",
+        "stat_rendered_value"
+      ]
+    },
+    {
+      "stepId": "03-add",
+      "outputs": [
+        "tag_added",
+        "saved_default_time_from",
+        "saved_default_time_to",
+        "saved_default_refresh",
+        "default_time_from"
+      ]
+    }
+  ]
+}

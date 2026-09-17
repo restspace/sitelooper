@@ -1,0 +1,157 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwgr51-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwgr51-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwgr51-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwgr51-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwgr51.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwgr51-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwgr51.spec.ts",
+      "file": "fwgr51.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwgr51",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 66941,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_0f3997/3: read 'stat_panel_title' returned a value the skill itself set/selected ('fwgr51-spec Availability') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe monaco/set-value (r_f2510e); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-add\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:3000/ and sign in with username admin and password admin (if prompted to change the password, skip it). Then open the provisioned dashboard named 'Service health' (use search if needed) and report the exact titles of all panels shown on that dashboard, exactly as displayed on screen.",
+                      "duration": 7323
+                    },
+                    {
+                      "title": "02-create: Create a new dashboard. Add a Stat panel titled '{{runid}} Availability' whose query uses the TestData data source (pick a datasource, e.g. 'TestData DB' / 'grafana-testdata-datasource'). Add a Text panel titled '{{runid}} Notes' whose text content includes the string {{runid}}. Save the dashboard with the title '{{runid}} Bench Dashboard'. Verify after saving that the dashboard is saved with both panels visible, and report what you did.",
+                      "duration": 44891
+                    },
+                    {
+                      "title": "03-add: On the dashboard '{{runid}} Bench Dashboard' (url http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard): 1) Add the tag 'bench' to the dashboard settings (Dashboard settings → General → Tags). 2) Set the dashboard's default time range to 'Last 6 hours' in settings (Dashboard settings → General → Time range section), or if not available there, set the time picker to Last 6 hours and when saving tick the 'Update default time range' checkbox in the save dialog. 3) Set the dashboard's auto-refresh interval to '1m' (dashboard settings → Auto refresh, or via the time picker's refresh interval selector, ensuring it's saved as the dashboard default). Save everything and verify by reloading the page that the tag 'bench', the default time range 'Last 6 hours', and the auto-refresh '1m' are all persisted (after reload, the time picker should show 'Last 6 hours' and the refresh selector should show 1m without URL parameters). Report exactly what you observed after the reload.",
+                      "duration": 13521
+                    }
+                  ],
+                  "startTime": "2026-09-17T01:20:43.576Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f3d6d56bb4d26d4d894e-083608e0b07e1b2538fa",
+          "file": "fwgr51.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-17T01:20:41.437Z",
+    "duration": 69307.473,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
