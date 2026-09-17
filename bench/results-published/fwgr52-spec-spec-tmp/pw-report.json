@@ -1,0 +1,183 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwgr52-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwgr52-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwgr52-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwgr52-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwgr52.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwgr52-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwgr52.spec.ts",
+      "file": "fwgr52.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwgr52",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 59648,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe monaco/set-value (r_f2510e); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-add s_abb5dc/14: expected alert containing \"Dashboard saved\"\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-add s_abb5dc/19: read 'text_panel_title' returned a value the skill itself set/selected ('fwgr52-spec Notes') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-add s_abb5dc/20: read 'text_panel_rendered_heading' returned a value the skill itself set/selected ('fwgr52-spec') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-add s_abb5dc/23: read 'panel_titles_1' returned a value the skill itself set/selected ('fwgr52-spec Notes') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 03-add s_abb5dc/25 target: read target not found — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-add\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-set\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-open\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:3000/ and sign in with username admin and password admin (skip any password-change prompt if it appears). Then open the dashboard named 'Service health' (use search if needed) and report the titles of all its panels exactly as shown.",
+                      "duration": 7708
+                    },
+                    {
+                      "title": "02-create: Create a NEW dashboard in Grafana titled '{{runid}} Bench Dashboard' (use New dashboard from the Dashboards page, then edit its settings to set the name, and add the tag 'bench'). On the dashboard add a Stat visualization panel titled '{{runid}} Availability' whose data source is 'TestData' (TestData DB). Save the dashboard (confirm Save with default save options). Report the dashboard title and panel title as shown on the page.",
+                      "duration": 25230
+                    },
+                    {
+                      "title": "03-add: On the dashboard '{{runid}} Bench Dashboard' (URL http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard), add a Text panel whose title is '{{runid}} Notes' and whose text content includes the string '{{runid}}'. Then Save the dashboard (confirm via the Save dialog default options and 'Dashboard saved' alert). Verify both panels appear: '{{runid}} Availability' and '{{runid}} Notes'.",
+                      "duration": 13938
+                    },
+                    {
+                      "title": "04-set: On the dashboard at http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard, set the dashboard's default time range to the last 6 hours AND set the auto-refresh interval to 1 minute: open the time picker in the top bar, choose 'Last 6 hours' from the range presets, and set the refresh interval dropdown to '1m' (1 minute). Then open the Save dashboard dialog, TICK the 'Update default time range' checkbox (this persists the time range into the saved dashboard), and Save, confirming the 'Dashboard saved' alert. Verify afterwards that the dashboard settings JSON (Dashboard settings > General) or a reload shows the saved time range is Last 6 hours and refresh 1m; report what you observe.",
+                      "duration": 10236
+                    },
+                    {
+                      "title": "05-open: Open http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard and report the exact full page URL currently shown in the browser address bar.",
+                      "duration": 1328
+                    }
+                  ],
+                  "startTime": "2026-09-17T03:11:21.452Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f0d7a684e6fb08f8ae54-e149b2e34470aef5ca69",
+          "file": "fwgr52.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-17T03:11:19.209Z",
+    "duration": 62119.418000000005,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
