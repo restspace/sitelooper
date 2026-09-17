@@ -1,0 +1,256 @@
+{
+  "name": "fwkb25",
+  "origin": "http://127.0.0.1:8085",
+  "startUrl": "http://127.0.0.1:8085/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to Kanboard at http://127.0.0.1:8085/ as admin/admin. Then open the project 'Bench Board' board and report the names of the board's columns in left-to-right order, exactly as shown. Do not modify any tasks.",
+      "skill": "s_4e8053",
+      "params": {
+        "v1": "http://127.0.0.1:8085/"
+      },
+      "outputs": [
+        "initial_page_url",
+        "project",
+        "board_url",
+        "ready_column_header",
+        "work_in_progress_column_header",
+        "done_column_header"
+      ],
+      "recorded": {
+        "initial_page_url": "about:blank",
+        "project": "Bench Board",
+        "columns_left_to_right": "Backlog, Ready, Work in progress, Done",
+        "board_url": "http://127.0.0.1:8085/?controller=BoardViewController&action=show&project_id=1",
+        "ready_column_header": "Ready",
+        "work_in_progress_column_header": "Work in progress",
+        "done_column_header": "Done",
+        "url": "http://127.0.0.1:8085/?controller=BoardViewController&action=show&project_id=1"
+      },
+      "route": "http://127.0.0.1:8085/",
+      "outputEvidence": {
+        "initial_page_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "project": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "columns_left_to_right": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "board_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "ready_column_header": {
+          "same": 1,
+          "differed": 0
+        },
+        "work_in_progress_column_header": {
+          "same": 1,
+          "differed": 0
+        },
+        "done_column_header": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "On the Bench Board project (project_id=1), create a new task titled '{{runid}} Bench Task' with a description containing the text '{{runid}}' and a due date of 2026-12-31, created directly in the '{{01-signin.work_in_progress_column_header}}' column if possible. Then report the task's numeric ID as shown (#<number>) and verify the description and due date on the task page. If you can't set everything at creation, edit the task afterwards so description includes '{{runid}}' and due date is 2026-12-31, and move it to the '{{01-signin.work_in_progress_column_header}}' column.",
+      "skill": "s_4c4805",
+      "params": {
+        "v1": "Bench Board",
+        "v4": "{{runid}} Bench Task",
+        "v2": "{{runid}}",
+        "v3": "{{01-signin.work_in_progress_column_header}}"
+      },
+      "outputs": [
+        "column",
+        "description",
+        "due_date_displayed",
+        "due_date_input_value",
+        "position",
+        "project",
+        "task_id",
+        "task_reference",
+        "task_title"
+      ],
+      "recorded": {
+        "column": "Work in progress",
+        "description": "fwkb25-n1",
+        "due_date_displayed": "12/31/2026 16:45",
+        "due_date_input_value": "2026-12-31",
+        "position": "1",
+        "project": "Bench Board",
+        "project_id": "1",
+        "task_id": "4",
+        "task_reference": "#4",
+        "task_title": "fwkb25-n1 Bench Task",
+        "task_url": "http://127.0.0.1:8085/?controller=TaskViewController&action=show&task_id=4",
+        "url": "http://127.0.0.1:8085/?controller=TaskViewController&action=show&task_id=4"
+      },
+      "route": "http://127.0.0.1:8085/",
+      "outputEvidence": {
+        "column": {
+          "same": 1,
+          "differed": 0
+        },
+        "description": {
+          "same": 0,
+          "differed": 1
+        },
+        "due_date_displayed": {
+          "same": 0,
+          "differed": 1
+        },
+        "due_date_input_value": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "position": {
+          "same": 1,
+          "differed": 0
+        },
+        "project": {
+          "same": 1,
+          "differed": 0
+        },
+        "project_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "task_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "task_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "task_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "task_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "03-open",
+      "instruction": "Open task {{02-create.task_reference}} ('{{runid}} Bench Task') in the Bench Board project and add a comment whose text includes '{{runid}}' (e.g. 'Progress note for {{runid}}'). Verify the comment appears on the task page and report its text. Do not change anything else.",
+      "skill": "s_84cb09",
+      "params": {
+        "v1": "{{runid}} Bench Task",
+        "v3": "Bench Board",
+        "v2": "{{runid}}",
+        "v4": "Progress note for {{runid}}"
+      },
+      "outputs": [
+        "task_id",
+        "task_title",
+        "comment_text",
+        "comment_visibility",
+        "comment_matched_keyword"
+      ],
+      "recorded": {
+        "task_id": "4",
+        "task_title": "fwkb25-n1 Bench Task",
+        "comment_text": "Progress note for fwkb25-n1",
+        "comment_author": "admin",
+        "comment_visibility": "Standard users",
+        "comment_created": "09/17/2026 16:45",
+        "comment_matched_keyword": "fwkb25-n1"
+      },
+      "route": "http://127.0.0.1:8085/",
+      "outputEvidence": {
+        "task_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "task_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_author": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "comment_visibility": {
+          "same": 1,
+          "differed": 0
+        },
+        "comment_created": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "comment_matched_keyword": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwkb25-n1",
+    "created": "2026-09-17T16:46:35.331Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "columns_left_to_right"
+      ]
+    },
+    {
+      "stepId": "02-create",
+      "outputs": [
+        "project_id",
+        "task_url"
+      ]
+    },
+    {
+      "stepId": "03-open",
+      "outputs": [
+        "comment_author",
+        "comment_created"
+      ]
+    }
+  ]
+}
