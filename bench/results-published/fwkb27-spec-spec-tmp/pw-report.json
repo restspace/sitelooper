@@ -1,0 +1,189 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwkb27-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwkb27-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwkb27-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwkb27-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwkb27-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwkb27.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwkb27-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwkb27.spec.ts",
+      "file": "fwkb27.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwkb27",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 18328,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper warn] 01-open s_51336e/7: read 'project' returned a value the skill itself set/selected ('Bench Board') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_d26dda/7: read 'title' returned a value the skill itself set/selected ('fwkb27-spec Bench Task') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_d26dda/8: read 'description' returned a value the skill itself set/selected ('Bench task for run fwkb27-spec') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 02-create s_d26dda/12 target: no locator recorded — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_d26dda/13: read 'ref' returned a value the skill itself set/selected ('fwkb27-spec Bench Task') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-verify\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 04-open s_28c0b3/12: read 'comment_added' returned a value the skill itself set/selected ('Comment for run fwkb27-spec') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 04-open s_28c0b3/17: read 'sidebar_menu_edit_the_task' returned a value the skill itself set/selected ('Edit the task') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 04-open s_28c0b3/19 target: no locator recorded — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-open\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:8085/ and sign in with username admin and password admin. Then navigate to the project named 'Bench Board' and open its board view. Report the names of the board's columns in their left-to-right order, exactly as shown on the board page.",
+                      "duration": 4635
+                    },
+                    {
+                      "title": "02-create: In the Kanboard project 'Bench Board', create a new task with title exactly '{{runid}} Bench Task' and a description that includes the text '{{runid}}' (e.g. 'Bench task for run {{runid}}'). Leave it in the default first column ({{01-open.first_column_header}}) for now. After saving, report the task's numeric ID as displayed (Kanboard shows it as #<number> on the task page) and confirm the title and description as saved.",
+                      "duration": 3802
+                    },
+                    {
+                      "title": "03-verify: In the Kanboard project 'Bench Board', move the task titled '{{runid}} Bench Task' (task {{02-create.task_id}}) so that it sits in the '{{01-open.third_column_header}}' column of the board. The board supports dragging cards between columns, or you can use the task's 'Move to another project/column' action from the task page or card dropdown menu. Do NOT move any task whose title starts with 'Seed:'. After moving, verify on the board that the card '{{runid}} Bench Task' appears under the '{{01-open.third_column_header}}' column header, and report which column the card is now in.",
+                      "duration": 1749
+                    },
+                    {
+                      "title": "04-open: Open the task page for task {{02-create.task_id}} titled '{{runid}} Bench Task' in the Kanboard project 'Bench Board'. On that task page: (1) add a comment whose text includes '{{runid}}' (e.g. 'Comment for run {{runid}}'), and (2) set the task's due date to 2026-12-31 (use the task's edit/details form; the due date field may be a date picker or text field in the form). After saving both, verify on the task page that the comment appears with its text and that the due date shown is 2026-12-31, and report both values as displayed.",
+                      "duration": 6263
+                    },
+                    {
+                      "title": "05-open: Verification only, no changes: In the Kanboard project 'Bench Board', {{02-create.status}} the task page for task {{02-create.task_id}} '{{runid}} Bench Task'. Then {{02-create.status}} its '{{04-open.sidebar_menu_edit_the_task}}' form and report the exact value currently shown in the Due date field (name={{04-open.due_date_field_name}}). Also report: the task title, the task numeric ID as displayed, the description text, the column the task is in, and the full text of any comments on the task. Do not save any changes.",
+                      "duration": 1558
+                    }
+                  ],
+                  "startTime": "2026-09-17T19:15:41.799Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ea1537b05de8f7ed4da0-a7b288255529c91bf85c",
+          "file": "fwkb27.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-17T19:15:40.588Z",
+    "duration": 19690.381,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

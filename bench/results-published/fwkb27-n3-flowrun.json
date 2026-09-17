@@ -1,0 +1,186 @@
+{
+  "flow": "fwkb27",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_51336e; observed first_column_header=Backlog , third_column_header=Work in progress , second_column_header=Ready , fourth_column_header=Done .",
+      "values": {
+        "first_column_header": "Backlog ",
+        "third_column_header": "Work in progress ",
+        "second_column_header": "Ready ",
+        "fourth_column_header": "Done "
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "project"
+      ]
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_d26dda; observed title=fwkb27-n3 Bench Task, description=Bench task for run fwkb27-n3, project=Bench Board (project_id=1), ref=fwkb27-n3, task_numeric_id=4, column=Backlog, status=open, task_id=Task #4.",
+      "values": {
+        "title": "fwkb27-n3 Bench Task",
+        "description": "Bench task for run fwkb27-n3",
+        "project": "Bench Board (project_id=1)",
+        "ref": "fwkb27-n3",
+        "task_numeric_id": "4",
+        "column": "Backlog",
+        "status": "open",
+        "task_id": "Task #4"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "creator"
+      ]
+    },
+    {
+      "id": "03-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_8853e1; observed task_moved=#4 fwkb27-n3 Bench Task, card_now_in_column=Work in progress , board_columns=Backlog, Ready, Work in progress , Done, work_in_progress_contents=#4 fwkb27-n3 Bench Task, ref=fwkb27-n3, column_counts_after_work_in_progress=1.",
+      "values": {
+        "task_moved": "#4 fwkb27-n3 Bench Task",
+        "card_now_in_column": "Work in progress ",
+        "board_columns": "Backlog, Ready, Work in progress , Done",
+        "work_in_progress_contents": "#4 fwkb27-n3 Bench Task",
+        "ref": "fwkb27-n3",
+        "column_counts_after_work_in_progress": "1"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_28c0b3; observed task=#4 fwkb27-n3 Bench Task, comment_added=Comment for run fwkb27-n3, ref=fwkb27-n3, due_date_as_displayed_on_task_page=Due date: 12/31/2026 19:14, column=Work in progress, status=open, sidebar_menu_board=Board, sidebar_menu_edit=Edit.",
+      "values": {
+        "task": "#4 fwkb27-n3 Bench Task",
+        "comment_added": "Comment for run fwkb27-n3",
+        "ref": "fwkb27-n3",
+        "due_date_as_displayed_on_task_page": "Due date: 12/31/2026 19:14",
+        "column": "Work in progress",
+        "status": "open",
+        "sidebar_menu_board": "Board",
+        "sidebar_menu_edit": "Edit"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "19/19",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "due_date_field_name",
+        "sidebar_menu_edit_the_task",
+        "sidebar_menu_add_a_comment"
+      ]
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Verification-only completed for task 'fwkb27-n3 Bench Task' (Bench Board). Opened the task page, then the 'Edit the task' form and read the Due date field directly: it shows exactly \"12/31/2026 19:14\" (input name=date_due). The task is Task #4, title \"fwkb27-n3 Bench Task\", description \"Bench task for run fwkb27-n3\", currently in the \"Work in progress\" column, status open. The single comment on the task reads \"Comment for run fwkb27-n3\". No changes were saved (the task's modified timestamp remains 09/17/2026 19:14).",
+      "values": {
+        "due_date_field_value_exact": "12/31/2026 19:14",
+        "task_title": "fwkb27-n3 Bench Task",
+        "task_numeric_id_as_displayed": "Task #4",
+        "description_text": "Bench task for run fwkb27-n3",
+        "column": "Work in progress",
+        "status": "open",
+        "comment_body": "Comment for run fwkb27-n3",
+        "modified_timestamp_unchanged": "09/17/2026 19:14",
+        "ref": "fwkb27-n3"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 04-open.sidebar_menu_edit_the_task, 04-open.due_date_field_name, 04-open.sidebar_menu_edit_the_task, 04-open.due_date_field_name",
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 9,
+      "unreported": [
+        "due_date_field_name",
+        "comment_full_text"
+      ]
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "repinned": 0,
+  "drift": 3,
+  "driftTickets": [
+    {
+      "flow": "fwkb27",
+      "step": "02-create",
+      "skill": "s_d26dda",
+      "atStep": "12",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "(none recorded)",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8085/?action=show&controller=TaskViewController&task_id=:id",
+      "pageUrl": "http://127.0.0.1:8085/?controller=TaskViewController&action=show&task_id=4"
+    },
+    {
+      "flow": "fwkb27",
+      "step": "04-open",
+      "skill": "s_28c0b3",
+      "atStep": "19",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.getByRole('heading', { name: 'Add a comment', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8085/?action=show&controller=TaskViewController&task_id=:id",
+      "pageUrl": "http://127.0.0.1:8085/?controller=TaskViewController&action=show&task_id=4"
+    },
+    {
+      "flow": "fwkb27",
+      "step": "05-open",
+      "skill": "s_a02f65",
+      "similarity": 1,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 04-open.sidebar_menu_edit_the_task, 04-open.due_date_field_name, 04-open.sidebar_menu_edit_the_task, 04-open.due_date_field_name",
+      "pageUrlPattern": "http://127.0.0.1:8085/?action=show&controller=TaskViewController&task_id=:id",
+      "pageUrl": "http://127.0.0.1:8085/?controller=TaskViewController&action=show&task_id=4"
+    }
+  ],
+  "wallMs": 54741,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 118500,
+    "completionTokens": 4568,
+    "cachedTokens": 102656
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 118500,
+      "completionTokens": 4568,
+      "cachedTokens": 102656
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

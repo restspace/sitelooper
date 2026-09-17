@@ -1,0 +1,172 @@
+{
+  "flow": "fwkb27",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_51336e; observed first_column_header=Backlog , third_column_header=Work in progress , second_column_header=Ready , fourth_column_header=Done .",
+      "values": {
+        "first_column_header": "Backlog ",
+        "third_column_header": "Work in progress ",
+        "second_column_header": "Ready ",
+        "fourth_column_header": "Done "
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "project"
+      ]
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_d26dda; observed title=fwkb27-n2 Bench Task, description=Bench task for run fwkb27-n2, project=Bench Board (project_id=1), ref=fwkb27-n2, task_numeric_id=4, column=Backlog, status=open, task_id=Task #4, creator=Creator: admin.",
+      "values": {
+        "title": "fwkb27-n2 Bench Task",
+        "description": "Bench task for run fwkb27-n2",
+        "project": "Bench Board (project_id=1)",
+        "ref": "fwkb27-n2",
+        "task_numeric_id": "4",
+        "column": "Backlog",
+        "status": "open",
+        "task_id": "Task #4",
+        "creator": "Creator: admin"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_8853e1; observed task_moved=#4 fwkb27-n2 Bench Task, card_now_in_column=Work in progress , board_columns=Backlog, Ready, Work in progress , Done, work_in_progress_contents=#4 fwkb27-n2 Bench Task, ref=fwkb27-n2, column_counts_after_work_in_progress=1.",
+      "values": {
+        "task_moved": "#4 fwkb27-n2 Bench Task",
+        "card_now_in_column": "Work in progress ",
+        "board_columns": "Backlog, Ready, Work in progress , Done",
+        "work_in_progress_contents": "#4 fwkb27-n2 Bench Task",
+        "ref": "fwkb27-n2",
+        "column_counts_after_work_in_progress": "1"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_28c0b3; observed task=#4 fwkb27-n2 Bench Task, comment_added=Comment for run fwkb27-n2, ref=fwkb27-n2, due_date_as_displayed_on_task_page=Due date: 12/31/2026 19:13, column=Work in progress, status=open, sidebar_menu_board=Board, sidebar_menu_edit=Edit.",
+      "values": {
+        "task": "#4 fwkb27-n2 Bench Task",
+        "comment_added": "Comment for run fwkb27-n2",
+        "ref": "fwkb27-n2",
+        "due_date_as_displayed_on_task_page": "Due date: 12/31/2026 19:13",
+        "column": "Work in progress",
+        "status": "open",
+        "sidebar_menu_board": "Board",
+        "sidebar_menu_edit": "Edit"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "19/19",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "due_date_field_name",
+        "sidebar_menu_edit_the_task",
+        "sidebar_menu_add_a_comment"
+      ]
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Verification-only run on task #4 in Kanboard project 'Bench Board' (replayed stored procedure s_a02f65, 11/11 steps ok, no changes saved). The Due date field currently shows exactly \"12/31/2026 19:13\"; task title is \"fwkb27-n2 Bench Task\", numeric ID displayed as \"Task #4\", description \"Bench task for run fwkb27-n2\", in column \"Work in progress\" (status open), and the single comment reads \"Comment for run fwkb27-n2\". Modified timestamp remained \"09/17/2026 19:13\" and the page reported no visible change, confirming nothing was saved.",
+      "values": {
+        "due_date_field_value_exact": "12/31/2026 19:13",
+        "task_title": "fwkb27-n2 Bench Task",
+        "task_numeric_id_as_displayed": "Task #4",
+        "description_text": "Bench task for run fwkb27-n2",
+        "column": "Work in progress",
+        "status": "open",
+        "comment_body": "Comment for run fwkb27-n2",
+        "modified_timestamp_unchanged": "09/17/2026 19:13",
+        "ref": "s_a02f65",
+        "ref_2": "fwkb27-n2"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 04-open.sidebar_menu_edit_the_task, 04-open.due_date_field_name, 04-open.sidebar_menu_edit_the_task, 04-open.due_date_field_name",
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 2,
+      "unreported": [
+        "due_date_field_name",
+        "comment_full_text"
+      ]
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "repinned": 0,
+  "drift": 2,
+  "driftTickets": [
+    {
+      "flow": "fwkb27",
+      "step": "04-open",
+      "skill": "s_28c0b3",
+      "atStep": "19",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.getByRole('heading', { name: 'Add a comment', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8085/?action=show&controller=TaskViewController&task_id=:id",
+      "pageUrl": "http://127.0.0.1:8085/?controller=TaskViewController&action=show&task_id=4"
+    },
+    {
+      "flow": "fwkb27",
+      "step": "05-open",
+      "skill": "s_a02f65",
+      "similarity": 1,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 04-open.sidebar_menu_edit_the_task, 04-open.due_date_field_name, 04-open.sidebar_menu_edit_the_task, 04-open.due_date_field_name",
+      "pageUrlPattern": "http://127.0.0.1:8085/?action=show&controller=TaskViewController&task_id=:id",
+      "pageUrl": "http://127.0.0.1:8085/?controller=TaskViewController&action=show&task_id=4"
+    }
+  ],
+  "wallMs": 28602,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 25095,
+    "completionTokens": 1236,
+    "cachedTokens": 18816
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 25095,
+      "completionTokens": 1236,
+      "cachedTokens": 18816
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
