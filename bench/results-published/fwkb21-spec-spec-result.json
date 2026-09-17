@@ -1,0 +1,38 @@
+{
+  "arm": "spec",
+  "runid": "fwkb21-spec",
+  "target": "kanboard",
+  "flow": "fwkb21.json",
+  "flowName": "fwkb21",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwkb21-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwkb21-spec-spec-tmp/fwkb21.flow.ts",
+  "specFile": "bench/results/fwkb21-spec-spec-tmp/fwkb21.spec.ts",
+  "wallMs": 18359,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwkb21",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 14798,
+      "error": "Error: 02-open s_06c07b/2: the recorded page change did not appear\n\n02-open s_06c07b/2: the recorded page change did not appear\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeNull\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"after step 02-open s_06c07b/2 none of the 1 recorded page change(s) appeared (e.g. \\\"- textbox \\\\\\\"Username\\\\\\\": {{*}}\\\") — the step ran but did not have its recorded effect\"\u001b[39m\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate",
+      "drift": [
+        "[sitelooper drift] 02-open s_06c07b/2 target: primary getByRole('textbox', { name: 'Username', exact: true }) missed; used #5 locator('[data-sitelooper-point=\"619,96\"]') (#1 absent, #2 absent, #3 absent, #4 absent)"
+      ]
+    }
+  ],
+  "drift": [
+    "[sitelooper drift] 02-open s_06c07b/2 target: primary getByRole('textbox', { name: 'Username', exact: true }) missed; used #5 locator('[data-sitelooper-point=\"619,96\"]') (#1 absent, #2 absent, #3 absent, #4 absent)"
+  ],
+  "driftCount": 1,
+  "logTail": "\nRunning 1 test using 1 worker\n\n[sitelooper warn] 01-open s_06c07b/7: read 'project_name' returned a value the skill itself set/selected ('Bench Board') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper step] 01-open\n[sitelooper drift] 02-open s_06c07b/2 target: primary getByRole('textbox', { name: 'Username', exact: true }) missed; used #5 locator('[data-sitelooper-point=\"619,96\"]') (#1 absent, #2 absent, #3 absent, #4 absent)\n  ✘  1 fwkb21.spec.ts:9:1 › fwkb21 (14.8s)\n\n\n  1) fwkb21.spec.ts:9:1 › fwkb21 › 02-open: Navigate to the project named 'Bench Board' and open its board. Report the names of the board's columns in their left-to-right order, exactly as shown on the board page. Do not modify or move any tasks. \n\n    Error: 02-open s_06c07b/2: the recorded page change did not appear\n\n    02-open s_06c07b/2: the recorded page change did not appear\n\n    expect(received).toBeNull()\n\n    Received: \"after step 02-open s_06c07b/2 none of the 1 recorded page change(s) appeared (e.g. \\\"- textbox \\\\\\\"Username\\\\\\\": {{*}}\\\") — the step ran but did not have its recorded effect\"\n\n    Call Log:\n    - Timeout 5000ms exceeded while waiting on the predicate\n\n       at fwkb21.flow.ts:8593\n\n      8591 |       { timeout: EXPECT_WAIT_MS, message: `${ctx.tag}: the recorded page change did not appear` },\n      8592 |     )\n    > 8593 |     .toBeNull();\n           |      ^\n      8594 |   for (const warning of last.warnings) console.log(`[sitelooper warn] ${warning}`);\n      8595 |   if (last.unobserved) console.log(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);\n      8596 |   return last;\n        at expectChanges (/home/user/sitelooper/bench/results/fwkb21-spec-spec-tmp/fwkb21.flow.ts:8593:6)\n        at Object.verify (/home/user/sitelooper/bench/results/fwkb21-spec-spec-tmp/fwkb21.flow.ts:9090:32)\n        at runStepLifecycle (/home/user/sitelooper/bench/results/fwkb21-spec-spec-tmp/fwkb21.flow.ts:6069:24)\n        at Object.02-open (/home/user/sitelooper/bench/results/fwkb21-spec-spec-tmp/fwkb21.flow.ts:9056:5)\n        at /home/user/sitelooper/bench/results/fwkb21-spec-spec-tmp/fwkb21.flow.ts:10722:7\n        at runFlow (/home/user/sitelooper/bench/results/fwkb21-spec-spec-tmp/fwkb21.flow.ts:10721:5)\n        at /home/user/sitelooper/bench/results/fwkb21-spec-spec-tmp/fwkb21.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    [sitelooper drift] 02-open s_06c07b/2 target: primary getByRole('textbox', { name: 'Username', exact: true }) missed; used #5 locator('[data-sitelooper-point=\"619,96\"]') (#1 absent, #2 absent, #3 absent, #4 absent)\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: ../../../test-results/fwkb21-fwkb21/error-context.md\n\n  1 failed\n    fwkb21.spec.ts:9:1 › fwkb21 ────────────────────────────────────────────────────────────────────\n"
+}

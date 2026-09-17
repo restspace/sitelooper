@@ -1,0 +1,91 @@
+
+[sweep] run 1/3: fwkb21-n1 (store: /home/user/sitelooper/bench/results/fwkb21-skills)
+[harness] kanboard: defaulting APP_URL
+[harness] kanboard: defaulting APP_EMAIL
+[harness] kanboard: defaulting APP_PASSWORD
+[reset] kanboard: no leftover bench tasks
+[harness] kanboard responded 302 at http://127.0.0.1:8085/
+stopped: fwkb21-n1
+  flow "fwkb21" saved: 5 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwkb21.json
+  warning: note: 01-open no longer publishes board_columns_left_to_right — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-open no longer publishes columns_left_to_right — no replay reads it from the page and the recording showed no line to read
+  warning: note: 03-create no longer publishes column, board_url — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-add no longer publishes comment_author, comment_created_at, comment_updated_at — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-edit no longer publishes task_id, column_task_counts_backlog, column_task_counts_ready, column_task_counts_done — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 85 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "Bench Board" (output) in "Open http://127.0.0.1:8085/ and sign in with username admin and password admin. Then navigate to the board of the project named 'Bench Board' and report the nam"
+  flow.steps[0].instruction: "admin" (output) in "Open http://127.0.0.1:8085/ and sign in with username admin and password admin. Then navigate to the board of the project named 'Bench Board' and report the nam"
+  flow.steps[1].instruction: "Bench Board" (output) in "Navigate to the project named 'Bench Board' and open its board. Report the names of the board's columns in their left-to-right order, exactly as shown on the bo"
+  flow.steps[2].instruction: "Bench Board" (output) in "On the Bench Board project board, create a new task with title exactly '{{runid}} Bench Task' and a description that includes the text '{{runid}}' (e.g. 'Bench "
+  flow.steps[2].instruction: "2026-12-31" (output) in "On the Bench Board project board, create a new task with title exactly '{{runid}} Bench Task' and a description that includes the text '{{runid}}' (e.g. 'Bench "
+arm=sitelooper model=z-ai/glm-5.3 runid=fwkb21-n1 stop=completed
+turns=6 wall=370.5s
+commands=5 cmdTime=337.7s cmdBytes=4346 timeouts=0
+orchestrator in=4945 cw=0 cr=14848 out=1161
+inner prompt=1162259 cached=1059072 completion=12717
+spend=$0.0422 maxUsd=3
+learn: A_n=0.018 replayed=1/5 full=0 repaired=1 compiled=5 variants=1
+-> /home/user/sitelooper/bench/results/fwkb21-n1-sitelooper-result.json
+
+fwkb21-n1: objectives passed 6/6
+  obj 1: PASS — all 4 column names reported (Backlog | Ready | Work in progress | Done)
+  obj 2: PASS — description includes runid=true
+  obj 3: PASS — column=Work in progress
+  obj 4: PASS — 1 comment(s), 1 carrying the runid
+  obj 5: PASS — date_due=2026-12-31, want 2026-12-31
+  obj 6: PASS — task id 4 reported
+
+[sweep] run 2/3: fwkb21-n2 (replay flow fwkb21, no orchestrator)
+[reset] kanboard: deleted 1 leftover bench task(s)
+[sweep] fwkb21-n2: 1 drift ticket(s) → fwkb21-n2-drift.json
+
+fwkb21-n2: objectives passed 6/6
+  obj 1: PASS — all 4 column names reported (Backlog | Ready | Work in progress | Done)
+  obj 2: PASS — description includes runid=true
+  obj 3: PASS — column=Work in progress
+  obj 4: PASS — 1 comment(s), 1 carrying the runid
+  obj 5: PASS — date_due=2026-12-31, want 2026-12-31
+  obj 6: PASS — task id 4 reported
+
+[sweep] run 3/3: fwkb21-n3 (replay flow fwkb21, no orchestrator)
+[reset] kanboard: deleted 1 leftover bench task(s)
+[sweep] fwkb21-n3: 1 drift ticket(s) → fwkb21-n3-drift.json
+
+fwkb21-n3: objectives passed 6/6
+  obj 1: PASS — all 4 column names reported (Backlog | Ready | Work in progress | Done)
+  obj 2: PASS — description includes runid=true
+  obj 3: PASS — column=Work in progress
+  obj 4: PASS — 1 comment(s), 1 carrying the runid
+  obj 5: PASS — date_due=2026-12-31, want 2026-12-31
+  obj 6: PASS — task id 4 reported
+
+Learning sweep fwkb21 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬───────┬───────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n   │ replayed      │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼───────┼───────────────┼────────┤
+│ 0       │ 1 │ 'fwkb21-n1' │ '6/6'    │ 'completed' │ 6     │ 5    │ 0.0422    │ 0.018 │ '1/5 (1 rep)' │ 371    │
+│ 1       │ 2 │ 'fwkb21-n2' │ '6/6'    │ 'success'   │ 5     │ 5    │ 0.0022    │ 0.8   │ '5/5 (flow)'  │ 36     │
+│ 2       │ 3 │ 'fwkb21-n3' │ '6/6'    │ 'success'   │ 9     │ 5    │ 0.0031    │ 0.8   │ '5/5 (flow)'  │ 59     │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴───────┴───────────────┴────────┘
+http://127.0.0.1:8085
+  s_06c07b  validated   11 steps  3/6 (50%)
+           Open {{v1}} and sign in with username admin and password admin. Then navigate to the board of the project name…
+  s_3042b4  validated    5 steps  3/3 (100%)
+           On the task detail page for task #4 (titled '{{v1}}') in the {{v3}} project, add a comment whose text includes…
+  s_4d3e08  validated    6 steps  3/3 (100%)
+           On the task detail page for task #4 (titled '{{v1}}') in the {{v3}} project, add a comment whose text includes…
+  s_5f429c  validated    3 steps  3/3 (100%)
+           Move the task '{{v1}}' (#4) in the {{v3}} project so it sits in the '{{v4}}' column of the board. You can drag…
+  s_be4e83  validated   17 steps  3/3 (100%)
+           On the {{v1}} project board, create a new task with title exactly '{{v3}}' and a description that includes the…
+  s_e9cc73  validated    3 steps  3/3 (100%)
+           Move the task '{{v1}}' (#4) in the {{v3}} project so it sits in the '{{v4}}' column of the board. You can drag…
+  s_63677f  provisional  7 steps  1/1 (100%)  variant of s_06c07b
+           Navigate to the project named '{{v1}}' and open its board. Report the names of the board's columns in their le…
+  s_83c7dc  provisional  9 steps  1/1 (100%)  variant of s_06c07b
+           Navigate to the project named '{{v1}}' and open its board. Report the names of the board's columns in their le…
+  s_96830b  provisional  7 steps  1/1 (100%)  variant of s_06c07b
+           Navigate to the project named '{{v1}}' and open its board. Report the names of the board's columns in their le…
+store: /home/user/sitelooper/bench/results/fwkb21-skills
+
+summary: /home/user/sitelooper/bench/results/fwkb21-sweep.json

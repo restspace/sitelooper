@@ -1,0 +1,258 @@
+{
+ "id": "s_63677f",
+ "origin": "http://127.0.0.1:8085",
+ "template": "Navigate to the project named '{{v1}}' and open its board. Report the names of the board's columns in their left-to-right order, exactly as shown on the board page. Do not modify or move any tasks.",
+ "params": {
+  "v1": {
+   "example": "Bench Board",
+   "usedIn": [
+    3
+   ],
+   "known": true,
+   "binding": "output:i2:project_name"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8085/?action=show&controller=BoardViewController&project_id=:id"
+ },
+ "steps": [
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:8085/"
+   },
+   "locators": {},
+   "via": {
+    "skill": "s_06c07b",
+    "step": 1
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e5",
+    "value": "admin"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Search"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Search"
+     },
+     {
+      "kind": "id",
+      "selector": "#form-search"
+     },
+     {
+      "kind": "css",
+      "selector": "#form-search"
+     },
+     {
+      "kind": "point",
+      "x": 730,
+      "y": 101,
+      "w": 959.3,
+      "h": 28,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8085/",
+    "addedContains": [
+     "- textbox \"Search\": {{*}}"
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_06c07b",
+    "step": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "what": "text",
+    "target": "h1",
+    "label": "board_heading"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "heading",
+      "name": "KB {{v1}}"
+     },
+     {
+      "kind": "css",
+      "selector": "h1"
+     },
+     {
+      "kind": "css",
+      "selector": "html > body > header > div:nth-of-type(1) > h1"
+     },
+     {
+      "kind": "point",
+      "x": 420,
+      "y": 19,
+      "w": 820,
+      "h": 28,
+      "role": "heading",
+      "tag": "h1",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "board_heading"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#board > tbody > tr:nth-of-type(1) > th:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 168,
+      "y": 101,
+      "w": 314.8,
+      "h": 40,
+      "role": null,
+      "tag": "th",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "column_1"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#board > tbody > tr:nth-of-type(1) > th:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 483,
+      "y": 101,
+      "w": 314.8,
+      "h": 40,
+      "role": null,
+      "tag": "th",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "column_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#board > tbody > tr:nth-of-type(1) > th:nth-of-type(3)"
+     },
+     {
+      "kind": "point",
+      "x": 797,
+      "y": 101,
+      "w": 314.8,
+      "h": 40,
+      "role": null,
+      "tag": "th",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "column_3"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#board > tbody > tr:nth-of-type(1) > th:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 1112,
+      "y": 101,
+      "w": 314.8,
+      "h": 40,
+      "role": null,
+      "tag": "th",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "column_4"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Signed in as admin and opened the board for the project '{{v1}}' (#1), which now shows the URL ?controller=BoardViewController&action=show&project_id=1. Reading the board's column headers from the live DOM gives, left to right: \"Backlog\", \"Ready\", \"Work in progress\", \"Done\". Nothing was modified or moved.",
+  "values": {
+   "project_name": "{{v1}}",
+   "project_id": "1",
+   "board_heading": "KB {{v1}}",
+   "column_1": "Backlog",
+   "column_2": "Ready",
+   "column_3": "Work in progress",
+   "column_4": "Done",
+   "ref": "s_83c7dc"
+  }
+ },
+ "contract": 4,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-17T01:10:25.219Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4
+ },
+ "status": "provisional",
+ "variantOf": "s_06c07b",
+ "provenance": {
+  "session": "fwkb21-n2",
+  "instruction": "Navigate to the project named 'Bench Board' and open its board. Report the names of the board's columns in their left-to-right order, exactly as shown on the board page. Do not modify or move any tasks.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-17T01:10:25.219Z"
+ },
+ "revision": 1
+}

@@ -1,0 +1,158 @@
+{
+  "flow": "fwkb21",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_06c07b; observed project_id=1, column_2_ready=Ready , column_3_work_in_progress=Work in progress , column_4_done=Done .",
+      "values": {
+        "project_id": "1",
+        "column_2_ready": "Ready ",
+        "column_3_work_in_progress": "Work in progress ",
+        "column_4_done": "Done "
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "project_name"
+      ]
+    },
+    {
+      "id": "02-open",
+      "status": "success",
+      "summary": "Signed in to the \"Bench Board\" project's board (BoardViewController, project_id=1) as admin and read the column headers directly from the board table. The four columns, left to right, are: Backlog, Ready, Work in progress, Done. Nothing on the board was modified or moved.",
+      "values": {
+        "project_name": "Bench Board",
+        "project_id": "1",
+        "column_1": "Backlog",
+        "column_2": "Ready",
+        "column_3": "Work in progress",
+        "column_4": "Done",
+        "raw_header_cells_1": "Backlog",
+        "raw_header_cells_2": "Ready",
+        "raw_header_cells_3": "Work in progress",
+        "raw_header_cells_4": "Done"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_06c07b stopped at step 2 — after step 2 none of the 1 recorded page change(s) appeared (e.g. \"- textbox \\\"Username\\\": {{*}}\") — the step ran but did not have its recorded effect",
+      "replayed": "1/11",
+      "repaired": false,
+      "turns": 9,
+      "unreported": [
+        "column_2_ready",
+        "column_3_work_in_progress",
+        "column_4_done"
+      ]
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "On the Bench Board board (project_id=1) I clicked the \"+\" in the first column header, filled the New-task form with title 'fwkb21-n3 Bench Task', description 'Bench task for run fwkb21-n3' and Due Date 2026-12-31, left the Column select on its default (Backlog) and saved; the app confirmed \"Task created successfully\" and the Backlog column went from 3 to 4 cards. Opening the new card's detail page (task_id=4) shows heading \"Task #4\", title 'fwkb21-n3 Bench Task', description text 'Bench task for run fwkb21-n3' and Due date displayed as \"12/31/2026 01:04\". Nothing else was modified or moved.",
+      "values": {
+        "task_title": "fwkb21-n3 Bench Task",
+        "description_text": "Bench task for run fwkb21-n3",
+        "due_date_entered": "2026-12-31",
+        "run_reference": "fwkb21-n3",
+        "task_detail_href": "/?controller=TaskViewController&action=show&task_id=4",
+        "due_date_display": "Due date: 12/31/2026 01:11",
+        "task_detail_url": "http://127.0.0.1:8085/?controller=TaskViewController&action=show&task_id=4",
+        "project_name": "KB Bench Board",
+        "task_id": "4",
+        "task_id_display": "Task #4"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_3042b4; observed run_reference=fwkb21-n3, attachments_section_label=Attachments, due_date_displayed=Due date: 12/31/2026 01:11, task_id=4, task_title=fwkb21-n3 Bench Task, comment_text_displayed=Comment for run fwkb21-n3, comment_visibility=Standard users, confirmation_message=Comment added successfully..",
+      "values": {
+        "run_reference": "fwkb21-n3",
+        "attachments_section_label": "Attachments",
+        "due_date_displayed": "Due date: 12/31/2026 01:11",
+        "task_id": "4",
+        "task_title": "fwkb21-n3 Bench Task",
+        "comment_text_displayed": "Comment for run fwkb21-n3",
+        "comment_visibility": "Standard users",
+        "confirmation_message": "Comment added successfully."
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-edit",
+      "status": "success",
+      "summary": "Replayed stored procedure s_5f429c; observed moved_to_column=Work in progress , column_header_order=Backlog, Ready, Work in progress , Done, work_in_progress_cell_text=#4 fwkb21-n3 Bench Task 12/31/2026 01:04 1 Task age in days <15m Days in this column <15m Task priority P0, run_reference=fwkb21-n3, task_title=fwkb21-n3 Bench Task, column_task_counts_work_in_progress=1.",
+      "values": {
+        "moved_to_column": "Work in progress ",
+        "column_header_order": "Backlog, Ready, Work in progress , Done",
+        "work_in_progress_cell_text": "#4 fwkb21-n3 Bench Task 12/31/2026 01:04 1 Task age in days <15m Days in this column <15m Task priority P0",
+        "run_reference": "fwkb21-n3",
+        "task_title": "fwkb21-n3 Bench Task",
+        "column_task_counts_work_in_progress": "1"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwkb21",
+      "step": "02-open",
+      "skill": "s_06c07b",
+      "atStep": "2",
+      "key": "target",
+      "similarity": null,
+      "missedLocator": "page.getByRole('textbox', { name: 'Username', exact: true })",
+      "fallbackUsed": "elementAt(619, 96) /* textbox */",
+      "fallbackIndex": 4,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8085/",
+      "pageUrl": "http://127.0.0.1:8085/"
+    }
+  ],
+  "wallMs": 59163,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 101931,
+    "completionTokens": 1646,
+    "cachedTokens": 89600
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 101931,
+      "completionTokens": 1646,
+      "cachedTokens": 89600
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
