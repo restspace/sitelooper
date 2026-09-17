@@ -1,0 +1,87 @@
+
+[sweep] run 1/3: fwkb22-n1 (store: /home/user/sitelooper/bench/results/fwkb22-skills)
+[harness] kanboard: defaulting APP_URL
+[harness] kanboard: defaulting APP_EMAIL
+[harness] kanboard: defaulting APP_PASSWORD
+[reset] kanboard: no leftover bench tasks
+[harness] kanboard responded 302 at http://127.0.0.1:8085/
+stopped: fwkb22-n1
+  flow "fwkb22" saved: 5 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwkb22.json
+  warning: note: 01-open no longer publishes columns_left_to_right — no replay reads it from the page and the recording showed no line to read
+  warning: note: 03-verify no longer publishes task_id, work_in_progress_column_cell — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-add no longer publishes due_date_displayed, due_date_entered — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-open no longer publishes description_contains_fwkb22-n1, comment_present_with_marker — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-add: added a read for add_comment_heading to s_69ba16 (page.getByRole('heading', { name: 'Add a comment', exact: true }), page.getByRole('link', { name: 'Add a comment', exact: true }); seen on the instruction's own page)
+  warning: warning: 1 value(s) KNOWN to be this run's survived unslotted — a replay will act on or wait for the recording's value (non-fatal outside locators):
+  flow.pruned[3].outputs[0]: "fwkb22-n1" (var) in "description_contains_fwkb22-n1"
+  warning: warning: 80 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "Bench Board" (output) in "Open http://127.0.0.1:8085/ and sign in with username admin and password admin. Then navigate to the project named 'Bench Board' and open its board. Report the "
+  flow.steps[0].instruction: "open" (output) in "Open http://127.0.0.1:8085/ and sign in with username admin and password admin. Then navigate to the project named 'Bench Board' and open its board. Report the "
+  flow.steps[1].instruction: "Bench Board" (output) in "On the Kanboard board for the project 'Bench Board' (already signed in as admin), create a new task with title exactly '{{runid}} Bench Task' and a description "
+  flow.steps[1].params.v1: "Bench Board" (output) in "Bench Board"
+  flow.steps[2].instruction: "Bench Board" (output) in "On the Kanboard board for project 'Bench Board' (signed in as admin), move the task titled '{{runid}} Bench Task' (task {{02-create.task_number_display}}) so th"
+  warning: {{02-create.task_number_display}} (used by 03-verify) can only be re-observed by model recovery — consider re-recording so the value is read from the page.
+  warning: 02-create reports task_number_display, but no segment of the procedure it pins (s_069d17, with any later segment of its chain) re-reads it from the page — a replay without the model will succeed without that value; re-record so a read for it lands in that procedure's last segment.
+arm=sitelooper model=z-ai/glm-5.3 runid=fwkb22-n1 stop=completed
+turns=6 wall=276.8s
+commands=5 cmdTime=231.3s cmdBytes=4443 timeouts=0
+orchestrator in=7509 cw=0 cr=13184 out=1611
+inner prompt=1441271 cached=1326848 completion=19615
+spend=$0.0539 maxUsd=3
+learn: A_n=0 replayed=0/5 full=0 repaired=0 compiled=5 variants=0
+-> /home/user/sitelooper/bench/results/fwkb22-n1-sitelooper-result.json
+
+fwkb22-n1: objectives passed 6/6
+  obj 1: PASS — all 4 column names reported (Backlog | Ready | Work in progress | Done)
+  obj 2: PASS — description includes runid=true
+  obj 3: PASS — column=Work in progress
+  obj 4: PASS — 1 comment(s), 1 carrying the runid
+  obj 5: PASS — date_due=2026-12-31, want 2026-12-31
+  obj 6: PASS — task id 4 reported
+
+[sweep] run 2/3: fwkb22-n2 (replay flow fwkb22, no orchestrator)
+[reset] kanboard: deleted 1 leftover bench task(s)
+[sweep] fwkb22-n2: 2 drift ticket(s) → fwkb22-n2-drift.json
+
+fwkb22-n2: objectives passed 6/6
+  obj 1: PASS — all 4 column names reported (Backlog | Ready | Work in progress | Done)
+  obj 2: PASS — description includes runid=true
+  obj 3: PASS — column=Work in progress
+  obj 4: PASS — 1 comment(s), 1 carrying the runid
+  obj 5: PASS — date_due=2026-12-31, want 2026-12-31
+  obj 6: PASS — task id 4 reported
+
+[sweep] run 3/3: fwkb22-n3 (replay flow fwkb22, no orchestrator)
+[reset] kanboard: deleted 1 leftover bench task(s)
+[sweep] fwkb22-n3: 2 drift ticket(s) → fwkb22-n3-drift.json
+
+fwkb22-n3: objectives passed 6/6
+  obj 1: PASS — all 4 column names reported (Backlog | Ready | Work in progress | Done)
+  obj 2: PASS — description includes runid=true
+  obj 3: PASS — column=Work in progress
+  obj 4: PASS — 1 comment(s), 1 carrying the runid
+  obj 5: PASS — date_due=2026-12-31, want 2026-12-31
+  obj 6: PASS — task id 4 reported
+
+Learning sweep fwkb22 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwkb22-n1' │ '6/6'    │ 'completed' │ 6     │ 5    │ 0.0539    │ 0   │ '0/5'        │ 277    │
+│ 1       │ 2 │ 'fwkb22-n2' │ '6/6'    │ 'success'   │ 0     │ 5    │ 0         │ 1   │ '5/5 (flow)' │ 20     │
+│ 2       │ 3 │ 'fwkb22-n3' │ '6/6'    │ 'success'   │ 0     │ 5    │ 0         │ 1   │ '5/5 (flow)' │ 19     │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8085
+  s_069d17  validated    9 steps  3/3 (100%)
+           On the Kanboard board for the project '{{v1}}' (already signed in as admin), create a new task with title exac…
+  s_3727b7  validated    9 steps  3/3 (100%)
+           Verification only, no changes: On Kanboard (signed in as admin), open the board for project '{{v1}}' and confi…
+  s_3b5269  validated   10 steps  3/3 (100%)
+           Open {{v1}} and sign in with username admin and password admin. Then navigate to the project named 'Bench Boar…
+  s_69ba16  validated   16 steps  3/3 (100%)
+           On the Kanboard task page for task #4 '{{v1}}' in project '{{v3}}' (signed in as admin), do two things: (1) ad…
+  s_ebbf6c  validated    8 steps  3/3 (100%)
+           On the Kanboard board for project '{{v1}}' (signed in as admin), move the task titled '{{v2}}' (task #4) so th…
+store: /home/user/sitelooper/bench/results/fwkb22-skills
+
+summary: /home/user/sitelooper/bench/results/fwkb22-sweep.json

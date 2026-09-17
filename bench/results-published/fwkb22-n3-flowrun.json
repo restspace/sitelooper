@@ -1,0 +1,155 @@
+{
+  "flow": "fwkb22",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_3b5269; observed column_ready=Ready , column_work_in_progress=Work in progress , column_done=Done .",
+      "values": {
+        "column_ready": "Ready ",
+        "column_work_in_progress": "Work in progress ",
+        "column_done": "Done "
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "project"
+      ]
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Created the task from the Bench Board's Backlog column via the \"Add a new task\" form (Title \"fwkb22-n3 Bench Task\", Description \"Bench task for run fwkb22-n3\"); it saved successfully. The board card and the task detail page show the task as #4, and the detail page (http://127.0.0.1:8085/?controller=TaskViewController&action=show&task_id=4) confirms the title heading \"fwkb22-n3 Bench Task\" and the description paragraph \"Bench task for run fwkb22-n3\", both read from the live DOM.",
+      "values": {
+        "task_title": "fwkb22-n3 Bench Task",
+        "task_description": "Bench task for run fwkb22-n3",
+        "project": "Bench Board (project_id=1)",
+        "page_title": "Bench Board, #4 - fwkb22-n3 Bench Task",
+        "run_marker": "fwkb22-n3",
+        "task_id": "4"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "task_number_display"
+      ]
+    },
+    {
+      "id": "03-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_ebbf6c; observed final_column=Work in progress , column_order=Backlog, Ready, Work in progress , Done, work_in_progress_column_tasks=fwkb22-n3 Bench Task, run_marker=fwkb22-n3, task_title=fwkb22-n3 Bench Task, backlog_column_tasks_1=Seed: triage inbox, backlog_column_tasks_2=Seed: order missing parts, backlog_column_tasks_3=Seed: ship repaired device.",
+      "values": {
+        "final_column": "Work in progress ",
+        "column_order": "Backlog, Ready, Work in progress , Done",
+        "work_in_progress_column_tasks": "fwkb22-n3 Bench Task",
+        "run_marker": "fwkb22-n3",
+        "task_title": "fwkb22-n3 Bench Task",
+        "backlog_column_tasks_1": "Seed: triage inbox",
+        "backlog_column_tasks_2": "Seed: order missing parts",
+        "backlog_column_tasks_3": "Seed: ship repaired device"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_69ba16; observed comment_displayed=Comment for run fwkb22-n3, run_marker=fwkb22-n3, task_id=4, task_title=fwkb22-n3 Bench Task, save_confirmation=Task updated successfully..",
+      "values": {
+        "comment_displayed": "Comment for run fwkb22-n3",
+        "run_marker": "fwkb22-n3",
+        "task_id": "4",
+        "task_title": "fwkb22-n3 Bench Task",
+        "save_confirmation": "Task updated successfully."
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "edit_task_heading",
+        "add_comment_heading"
+      ]
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Verification only — nothing edited. On the Bench Board (project_id=1), the card \"fwkb22-n3 Bench Task\" sits in the \"Work in progress\" column (3rd column; Backlog holds the three seed tasks, Ready and Done empty). On its detail page (task_id=4, page title \"Bench Board, #4 - fwkb22-n3 Bench Task\"): (a) task ID shown as \"Task #4\"; (b) title \"fwkb22-n3 Bench Task\"; (c) description is \"Bench task for run fwkb22-n3\", which does contain \"fwkb22-n3\"; (d) due date displayed as \"Due date: 12/31/2026 02:54\"; (e) there is one comment containing \"fwkb22-n3\", text \"Comment for run fwkb22-n3\". All values read from the live DOM.",
+      "values": {
+        "ref": "fwkb22-n3",
+        "task_title": "fwkb22-n3 Bench Task",
+        "board_card_column": "Work in progress",
+        "column_summary_line": "Column: Work in progress",
+        "task_id_displayed": "Task #4",
+        "description": "Bench task for run fwkb22-n3",
+        "due_date_displayed": "Due date: 12/31/2026 02:54",
+        "comment_text": "Comment for run fwkb22-n3",
+        "status": "open"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "repinned": 0,
+  "drift": 2,
+  "driftTickets": [
+    {
+      "flow": "fwkb22",
+      "step": "04-add",
+      "skill": "s_69ba16",
+      "atStep": "16",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.getByRole('heading', { name: 'Add a comment', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8085/?action=show&controller=TaskViewController&task_id=:id",
+      "pageUrl": "http://127.0.0.1:8085/?controller=TaskViewController&action=show&task_id=4"
+    },
+    {
+      "flow": "fwkb22",
+      "step": "05-open",
+      "skill": "s_3727b7",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.locator('aria-ref=e122')",
+      "fallbackUsed": "page.getByRole('heading', { name: 'fwkb22-n3 Bench Task', exact: true })",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8085/?action=show&controller=TaskViewController&task_id=:id",
+      "pageUrl": "http://127.0.0.1:8085/?controller=TaskViewController&action=show&task_id=4"
+    }
+  ],
+  "wallMs": 19387,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
