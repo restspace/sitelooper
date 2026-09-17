@@ -1030,6 +1030,27 @@ export function lintFlowRefs(
   return warnings;
 }
 
+/**
+ * What a step banks for later steps' `{{step.output}}` references: its
+ * confident values, then every other value its zero-model replay read live —
+ * echoes included. A read of what the procedure itself typed or clicked
+ * proves the control, not persistence, so the REPORT leaves it out; but it is
+ * the page's own word for that control, which is exactly what a later step
+ * that clicks it by name needs, and the compiled artifact resolves the same
+ * reference from it (emit.ts echoRead). fwkb27 05-open fell back on both
+ * replays with `unresolved reference(s): 04-open.sidebar_menu_edit_the_task`
+ * — a link 04-open had clicked and then read, standing on the page — because
+ * the daemon banked only the confident set. A value still carrying a marker
+ * is not a value (see the caller's rule for confident values) and stays out.
+ */
+export function referencableOutputs(confident: Record<string, string>, published?: Record<string, string>): Record<string, string> {
+  const out: Record<string, string> = { ...confident };
+  for (const [k, v] of Object.entries(published ?? {})) {
+    if (!(k in out) && typeof v === 'string' && !/\{\{/.test(v)) out[k] = v;
+  }
+  return out;
+}
+
 /** A read the export adds so a zero-model replay republishes an output a later step references. */
 export interface LiveRead {
   /** The flow step whose output this read republishes. */

@@ -134,6 +134,20 @@ export interface InstructionResult {
    * instruction's browser actions ran deterministically.
    */
   skill?: SkillRecord;
+  /**
+   * Present for a zero-model replay: every value its reads observed, ECHOES
+   * INCLUDED — what a later step's `{{step.output}}` may resolve to, as the
+   * compiled artifact's `outputs` carries them. The report's confident values
+   * (`report.evidence.values`) still exclude an echo: a read of what the
+   * procedure itself typed or clicked proves the control, not persistence.
+   * The two are different questions — "did the app keep it?" and "what is this
+   * page's word for it?" — and fwkb27 05-open paid two model recoveries for
+   * conflating them: its pinned procedure clicked the link 04-open had read as
+   * `sidebar_menu_edit_the_task` ("Edit the task"), the daemon dropped that
+   * read as an echo of 04-open's own click and banked nothing, and the
+   * reference went unresolved on a page that was showing the link.
+   */
+  published?: Record<string, string>;
 }
 
 export interface SkillRecord {

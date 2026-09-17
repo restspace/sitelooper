@@ -26,7 +26,7 @@ import { BrowserSession } from './browser.js';
 import { DEFAULT_BROWSER_PROFILE } from '../execution/browser.js';
 import { observedChange } from '../execution/lifecycle.js';
 import { recordedValueShown } from '../execution/snapshot.js';
-import { recordedStandIn } from '../skills/flow.js';
+import { recordedStandIn, referencableOutputs } from '../skills/flow.js';
 import { SessionState } from './state.js';
 
 interface DaemonOptions {
@@ -1659,7 +1659,12 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       // minted here (a dashboard uid in the post-create url) binds to THIS
       // run's value. Kept out of the step's reported values in the flow
       // result — they are addresses, not findings.
-      const stepOutputs: Record<string, string> = { ...values };
+      // What a later step may reference is wider than what this step vouches
+      // for: a zero-model replay's echoed reads (InstructionResult.published)
+      // are the page's own words for its controls, and the compiled artifact
+      // resolves the same references from them. Banked for references only —
+      // `values`, the step's reported findings, keeps the confident set.
+      const stepOutputs: Record<string, string> = referencableOutputs(values, result.published);
       try {
         // A model-driven end state has no reason to carry the recorded url
         // shape, so a recovered step does not wait for the consumed parts.
@@ -2066,10 +2071,13 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
     }
     // Drop echo reads from the report's confident values: a value the skill
     // only re-read from a control it set itself is not proof the app persisted
-    // it (grafana's time picker — see ReplayResult.echoedValues). A later step
-    // that genuinely needs the value still routes to recovery rather than
-    // trusting an echo, and the flow stops reporting a persist it cannot vouch
-    // for. A value re-observed by a NON-echo read in another segment survives.
+    // it (grafana's time picker — see ReplayResult.echoedValues), so the flow
+    // stops reporting a persist it cannot vouch for. Dropped from the REPORT
+    // only: every live read, echoes included, still goes out as `published`
+    // (InstructionResult.published) for a later step's reference to resolve
+    // to, which is what the compiled artifact does with the same read
+    // (emit.ts echoRead: "the value is still published"). A value re-observed
+    // by a NON-echo read in another segment survives here too.
     const confidentValues = { ...agg.values };
     for (const key of agg.echoed) {
       if (!Object.keys(agg.values).includes(key)) continue;
@@ -2105,6 +2113,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
         usage: { promptTokens: 0, completionTokens: 0, cachedTokens: 0 },
         screenshots: [],
         skill: { listed: [match.skill.id], repaired: false, ...record } as SkillRecord,
+        published: { ...agg.values },
       },
     });
   }

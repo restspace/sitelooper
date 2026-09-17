@@ -7,7 +7,7 @@ import {
   ignorableRefs,
   leadingValue,
   pruneUnsourcedOutputs,
-  consumedReportedOutputs, consumedUrlOutputs, buildFlow, foldValue, lintFlowRefs, lintUnpublishedOutputs, liveReadsFor, looksLikeReportedData, mutatingIntent, noteOutputEvidence, recoveryRoute, resolveInstruction, resolveStepParams, sameValue, softResolveInstruction, unbankedMutations, unreportedOutputs, urlOutputs, valueLineCandidates, varyingValues, type Flow, type FlowStep } from '../src/skills/flow.js';
+  consumedReportedOutputs, consumedUrlOutputs, buildFlow, foldValue, lintFlowRefs, lintUnpublishedOutputs, liveReadsFor, looksLikeReportedData, mutatingIntent, noteOutputEvidence, recoveryRoute, referencableOutputs, resolveInstruction, resolveStepParams, sameValue, softResolveInstruction, unbankedMutations, unreportedOutputs, urlOutputs, valueLineCandidates, varyingValues, type Flow, type FlowStep } from '../src/skills/flow.js';
 import { bindSkill, publishedOutputs, synthesizeReport } from '../src/skills/learn.js';
 import { SkillStore, type Skill, type SkillStep } from '../src/skills/store.js';
 import { compileSkill, dropAbsentReadLocators, dropDeadReadLocators, markReadsProven } from '../src/skills/compile.js';
@@ -176,6 +176,20 @@ describe('synthesizeReport honesty', () => {
   it('a live read-back overrides and is reported verbatim', () => {
     const r = synthesizeReport(skill, { v1: 'q9 RD Part B' }, { price: '375.00', ticket: 'RD-1099' });
     expect(r.evidence!.values).toMatchObject({ part: 'q9 RD Part B', price: '375.00', ticket: 'RD-1099' });
+  });
+
+  // fwkb27 05-open: its procedure clicked the link 04-open had read as
+  // `sidebar_menu_edit_the_task`; the read was an echo of 04-open's own click,
+  // so the report left it out — and the daemon banked only the report, while
+  // the compiled artifact resolved the same reference from the read.
+  it('what later steps may reference is the confident set plus every other live read, echoes included', () => {
+    const confident = { comment_added: 'Comment for run x' };
+    const published = { comment_added: 'Comment for run x', sidebar_menu_edit_the_task: 'Edit the task', unresolved: '{{02-create.task_id}}' };
+    expect(referencableOutputs(confident, published)).toEqual({ comment_added: 'Comment for run x', sidebar_menu_edit_the_task: 'Edit the task' });
+    // a recovered step has no published set: the confident values stand alone
+    expect(referencableOutputs(confident, undefined)).toEqual(confident);
+    // the confident value wins where both name a key
+    expect(referencableOutputs({ a: '1' }, { a: '2' })).toEqual({ a: '1' });
   });
 
   it('compares loosely, so punctuation cannot smuggle a stale literal through', () => {
