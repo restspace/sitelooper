@@ -1,0 +1,189 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwkb24-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwkb24-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwkb24-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwkb24-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwkb24.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwkb24-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwkb24.spec.ts",
+      "file": "fwkb24.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwkb24",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 13386,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper warn] 01-signin s_2e7b8b/6: read 'project_name' returned a value the skill itself set/selected ('Bench Board') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 01-signin s_2e7b8b/7 target: no locator recorded — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 01-signin s_2e7b8b/8 target: no locator recorded — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 01-signin s_2e7b8b/9 target: no locator recorded — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_7ac8f1/7: read 'task_title' returned a value the skill itself set/selected ('fwkb24-spec Bench Task') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_7ac8f1/8: read 'description_saved' returned a value the skill itself set/selected ('Bench task for run fwkb24-spec') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-verify\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 04-open s_fc7aa0/8: read 'comment_saved_text' returned a value the skill itself set/selected ('Comment for run fwkb24-spec') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-open\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 05-set s_45b5fc/3: read 'due_date_input_submitted' returned a value the skill itself set/selected ('2026-12-31') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-set\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in to Kanboard with username 'admin' and password 'admin'. Then navigate to the project named 'Bench Board' and open its board. Report the names of the board's columns in their left-to-right order, exactly as shown on the board page. Do not modify anything.",
+                      "duration": 4361
+                    },
+                    {
+                      "title": "02-create: On the 'Bench Board' project board, create a new task with title exactly '{{runid}} Bench Task' and a description that includes the text '{{runid}}' (e.g. 'Bench task for run {{runid}}'). Leave it in the default/first column for now. Submit the form and then report the task's numeric ID as displayed by the app (shown as #<number> on the task card and task page), and confirm the description text that was saved. Do not modify any tasks whose titles start with 'Seed:'.",
+                      "duration": 2742
+                    },
+                    {
+                      "title": "03-verify: Move the task titled '{{runid}} Bench Task' (task {{02-create.task_reference}}) into the '{{01-signin.column_header_work_in_progress}}' column of the 'Bench Board' board. Use the board's drag-and-drop or the task's move dialog — whichever works. Then verify on the board that the task card now sits in the '{{01-signin.column_header_work_in_progress}}' column and report which column it is in. Do not touch any tasks whose titles start with 'Seed:'.",
+                      "duration": 1293
+                    },
+                    {
+                      "title": "04-open: Open task {{02-create.task_reference}} ('{{runid}} Bench Task') in the 'Bench Board' project and add a comment whose text includes '{{runid}}' (e.g. 'Comment for run {{runid}}'). Then verify the comment appears on the task page and report the exact comment text that was saved.",
+                      "duration": 2173
+                    },
+                    {
+                      "title": "05-set: Set the due date of task {{02-create.task_reference}} ('{{runid}} Bench Task') to 2026-12-31. Edit it from the task page (or via the task's edit/details form). After saving, verify the due date shown on the task page reads 2026-12-31 and report exactly what the page displays for the due date.",
+                      "duration": 2522
+                    }
+                  ],
+                  "startTime": "2026-09-17T13:17:49.541Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "120b2710470c100a92e7-17a3a75883e746642c61",
+          "file": "fwkb24.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-17T13:17:48.073Z",
+    "duration": 15003.188,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

@@ -1,0 +1,163 @@
+{
+  "flow": "fwkb24",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_2e7b8b.",
+      "values": {},
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "project_name",
+        "column_header_ready",
+        "column_header_work_in_progress",
+        "column_header_done"
+      ]
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Created the task on the 'Bench Board' project board (project_id=1) via the Backlog column's \"Add a new task\" form with title exactly 'fwkb24-n2 Bench Task' and description 'Bench task for run fwkb24-n2'; it stayed in the default first column. The app assigned and displays numeric ID #4 (task_id=4) on both the card and the task page; the task page confirms Title 'fwkb24-n2 Bench Task', Description 'Bench task for run fwkb24-n2', and Column 'Backlog'. No seed tasks ('Seed:' titles) were touched and nothing else was modified.",
+      "values": {
+        "task_title": "fwkb24-n2 Bench Task",
+        "description_saved": "Bench task for run fwkb24-n2",
+        "run_reference": "fwkb24-n2",
+        "task_id": "4",
+        "column": "Backlog"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "task_reference"
+      ]
+    },
+    {
+      "id": "03-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_908821; observed wip_card_text=#4 \n \nfwkb24-n2 Bench Task \nTask age in days <15m \nDays in this column <15m \nTask priority P0, run_reference=fwkb24-n2, wip_card=#4 \n \nfwkb24-n2 Bench Task\n \nTask age in days\n<15m \nDays in this column\n<15m \nTask priority\nP0, task_title=fwkb24-n2 Bench Task, column_header_counts_after_move_work_in_progress=1.",
+      "values": {
+        "wip_card_text": "#4 \n \nfwkb24-n2 Bench Task \nTask age in days <15m \nDays in this column <15m \nTask priority P0",
+        "run_reference": "fwkb24-n2",
+        "wip_card": "#4 \n \nfwkb24-n2 Bench Task\n \nTask age in days\n<15m \nDays in this column\n<15m \nTask priority\nP0",
+        "task_title": "fwkb24-n2 Bench Task",
+        "column_header_counts_after_move_work_in_progress": "1"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "final_column"
+      ]
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_fc7aa0; observed comment_saved_text=Comment for run fwkb24-n2, run_reference=fwkb24-n2, comment_block_raw_text=A\nadmin Created at: 09/17/2026 13:16 Updated at: 09/17/2026 13:16 Visibility: Standard users\n\nComment for run fwkb24-n2, task_id=4, task_title=fwkb24-n2 Bench Task, comment_visibility=Standard users.",
+      "values": {
+        "comment_saved_text": "Comment for run fwkb24-n2",
+        "run_reference": "fwkb24-n2",
+        "comment_block_raw_text": "A\nadmin Created at: 09/17/2026 13:16 Updated at: 09/17/2026 13:16 Visibility: Standard users\n\nComment for run fwkb24-n2",
+        "task_id": "4",
+        "task_title": "fwkb24-n2 Bench Task",
+        "comment_visibility": "Standard users"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-set",
+      "status": "success",
+      "summary": "Replayed stored procedure s_45b5fc; observed task_id=4, task_title=fwkb24-n2 Bench Task, due_date_displayed_on_task_page=12/31/2026 13:16, due_date_sidebar_line=Due date: 12/31/2026 13:16, save_confirmation_message=Task updated successfully., last_modified_at=09/17/2026 13:16, column=Work in progress.",
+      "values": {
+        "task_id": "4",
+        "task_title": "fwkb24-n2 Bench Task",
+        "due_date_displayed_on_task_page": "12/31/2026 13:16",
+        "due_date_sidebar_line": "Due date: 12/31/2026 13:16",
+        "save_confirmation_message": "Task updated successfully.",
+        "last_modified_at": "09/17/2026 13:16",
+        "column": "Work in progress"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "due_date_input_submitted"
+      ]
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "repinned": 0,
+  "drift": 3,
+  "driftTickets": [
+    {
+      "flow": "fwkb24",
+      "step": "01-signin",
+      "skill": "s_2e7b8b",
+      "atStep": "7",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByRole('link', { name: 'Work in progress', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8085/?action=show&controller=BoardViewController&project_id=:id",
+      "pageUrl": "http://127.0.0.1:8085/?controller=BoardViewController&action=show&project_id=1"
+    },
+    {
+      "flow": "fwkb24",
+      "step": "01-signin",
+      "skill": "s_2e7b8b",
+      "atStep": "8",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByRole('link', { name: 'Ready', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8085/?action=show&controller=BoardViewController&project_id=:id",
+      "pageUrl": "http://127.0.0.1:8085/?controller=BoardViewController&action=show&project_id=1"
+    },
+    {
+      "flow": "fwkb24",
+      "step": "01-signin",
+      "skill": "s_2e7b8b",
+      "atStep": "9",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByRole('link', { name: 'Done', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8085/?action=show&controller=BoardViewController&project_id=:id",
+      "pageUrl": "http://127.0.0.1:8085/?controller=BoardViewController&action=show&project_id=1"
+    }
+  ],
+  "wallMs": 23373,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
