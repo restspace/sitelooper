@@ -1,0 +1,12 @@
+[spec-replay] resetting repairdesk
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile bench/results/flows/fwrd76.json --out /home/user/sitelooper/bench/results/fwrd76-spec-spec-tmp --overwrite-spec
+flow: /home/user/sitelooper/bench/results/fwrd76-spec-spec-tmp/fwrd76.flow.ts
+spec: /home/user/sitelooper/bench/results/fwrd76-spec-spec-tmp/fwrd76.spec.ts
+warning 09-report: 09-report read a value that contradicts what the previous step reported
+  why: 09-report read ref "fwrd76-n1" right after 08-open reported "RD-1016"; 08-open's change may not have landed and a later step may be retrying it. Re-record 08-open.
+  fix: sitelooper rerecord bench/results/flows/fwrd76.json 08-open
+
+  warning: 06-create: step 5 (wait_for hidden) acts on one element through a single unindexed candidate, page.locator('role=dialog[name="New ticket"]') — never proved to identify one element on the page that produced it, so this run acts on whatever it matches first; re-record the step (sitelooper rerecord) to derive a full chain for it
+[spec-replay] running: npx playwright test --config /home/user/sitelooper/bench/results/fwrd76-spec-spec-tmp/playwright.config.mjs
+[spec-replay] fwrd76-spec: 1/1 passed, exit=0, 39s, 0 drift line(s) — result written

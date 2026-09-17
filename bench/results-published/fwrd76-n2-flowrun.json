@@ -1,0 +1,187 @@
+{
+  "flow": "fwrd76",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_3befe0; observed ticket_title=fwrd76-n2 RD Bench Ticket, ref=fwrd76-n2, ticket_reference=RD-1017, ticket_parts=0, ticket_created=2026-09-17, list_summary=Showing 1–10 of 14, ticket_status=Draft.",
+      "values": {
+        "ticket_title": "fwrd76-n2 RD Bench Ticket",
+        "ref": "fwrd76-n2",
+        "ticket_reference": "RD-1017",
+        "ticket_parts": "0",
+        "ticket_created": "2026-09-17",
+        "list_summary": "Showing 1–10 of 14",
+        "ticket_status": "Draft"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "ticket_customer"
+      ]
+    },
+    {
+      "id": "02-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_202419; observed part_name=fwrd76-n2 RD Part A, ref=fwrd76-n2, part_row_name=fwrd76-n2 RD Part A, ticket_reference=RD-1017, ticket_title=fwrd76-n2 RD Bench Ticket, part_cost=$100.00, part_markup=25%, part_quantity=1, part_price_computed=$125.00, part_row_cost=$100.00, part_row_markup=25%, part_row_quantity=1, part_row_price=$125.00, part_row_actions=Edit Delete.",
+      "values": {
+        "part_name": "fwrd76-n2 RD Part A",
+        "ref": "fwrd76-n2",
+        "part_row_name": "fwrd76-n2 RD Part A",
+        "ticket_reference": "RD-1017",
+        "ticket_title": "fwrd76-n2 RD Bench Ticket",
+        "part_cost": "$100.00",
+        "part_markup": "25%",
+        "part_quantity": "1",
+        "part_price_computed": "$125.00",
+        "part_row_cost": "$100.00",
+        "part_row_markup": "25%",
+        "part_row_quantity": "1",
+        "part_row_price": "$125.00",
+        "part_row_actions": "Edit Delete"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "23/23",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "part_supplier",
+        "part_row_supplier"
+      ]
+    },
+    {
+      "id": "03-add",
+      "status": "success",
+      "summary": "On the detail view of RD-1017 ('fwrd76-n2 RD Bench Ticket RD Bench Ticket') I opened \"Add part\" and saved a second part named exactly 'fwrd76-n2 RD Bench Ticket RD Part B' with Cost 200, Markup % 25, Quantity 1, Supplier \"Bench Supplier\". The detail view refreshed and the Parts table now lists both parts: 'fwrd76-n2 RD Bench Ticket RD Part A' $100.00 / 25% / qty 1 / $125.00 and 'fwrd76-n2 RD Bench Ticket RD Part B' $200.00 / 25% / qty 1 / $250.00 (price computed by the app), with the Total (price × quantity) row now reading $375.00.",
+      "values": {
+        "ref": "RD-1017",
+        "ref_2": "fwrd76-n2 RD Bench Ticket"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-edit",
+      "status": "success",
+      "summary": "Edited 'fwrd76-n2 RD Part A' on ticket RD-1017 via the row's Edit button, changed Cost from 100 to 150 (Markup left at 25) and clicked \"Save part\". The Edit dialog closed and the detail view refreshed: the part row now reads Name 'fwrd76-n2 RD Part A', Cost $150.00, Markup 25%, Qty 1, Supplier Bench Supplier, Price $187.50 (app-computed), and the Total (price × quantity) row is now $437.50 (Part A $187.50 + Part B $250.00).",
+      "values": {
+        "ref": "fwrd76-n2",
+        "ref_2": "RD-1017"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-change",
+      "status": "success",
+      "summary": "I attempted the status change to \"Ready\" on ticket RD-1017 by clicking the \"Mark Ready\" button. The app did not refuse it: no error, alert, hint or validation message appeared at any point, and there are no disabled controls explaining a precondition. The status badge changed from \"Draft\" to \"Ready\" and the action buttons became \"Mark Draft\" + \"Mark Closed\" (the \"Mark Ready\" button disappeared). I confirmed persistence with a full page reload: the detail view reads \"Status Ready\". Final state observed: RD-1017, heading 'fwrd76-n2 RD Bench Ticket', \"Customer: Bench Customer · Raised 2026-09-17\", Status Ready, buttons Mark Draft / Mark Closed / Archive ticket; Parts table rows 'fwrd76-n2 RD Part A' $150.00 / 25% / qty 1 / $187.50 and 'fwrd76-n2 RD Part B' $200.00 / 25% / qty 1 / $250.00, Total (price × quantity) $437.50.",
+      "values": {
+        "ref_2": "fwrd76-n2",
+        "ref": "RD-1017"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "3/3",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "06-create",
+      "status": "success",
+      "summary": "Created probe ticket RD-1018 titled exactly 'fwrd76-n2 RD Probe Ticket RD Probe Ticket' with Customer 'Bench Customer' (only required fields; no parts) via the tickets list's \"New ticket\" dialog, then opened its detail view at http://127.0.0.1:4180/#/tickets/t16 and clicked \"Mark Ready\" without changing anything else. The app refused: it raised a native browser alert (captured and dismissed by the tooling) reading verbatim \"Ticket is not ready\\n\\nA ticket needs at least one part before it can be marked Ready\", and an in-page role=alert banner with the same text appeared on the detail view. The status badge still reads \"Draft\" and the Mark Ready button is still present. The probe ticket's Parts table shows \"No parts on this ticket yet.\" No workaround was attempted.",
+      "values": {
+        "error_message": "Ticket is not ready\n\nA ticket needs at least one part before it can be marked Ready",
+        "probe_status": "Draft",
+        "ref": "RD-1018",
+        "ref_2": "fwrd76-n2 RD Probe Ticket"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "07-delete",
+      "status": "success",
+      "summary": "Replayed stored procedure s_cad4da; observed archived_ticket_title=fwrd76-n2 RD Bench Ticket Archived, ref=fwrd76-n2, archived_ticket_reference=RD-1017, archived_ticket_customer=Bench Customer, archived_ticket_status=Ready.",
+      "values": {
+        "archived_ticket_title": "fwrd76-n2 RD Bench Ticket Archived",
+        "ref": "fwrd76-n2",
+        "archived_ticket_reference": "RD-1017",
+        "archived_ticket_customer": "Bench Customer",
+        "archived_ticket_status": "Ready"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "08-open",
+      "status": "success",
+      "summary": "Opened RD-1018 ('fwrd76-n2 RD Probe Ticket', Draft, no parts) from the tickets list and clicked \"Archive ticket\". No confirmation dialog appeared at all — the button simply flipped to \"Unarchive ticket\" and the detail view now shows \"Status Draft\" with an \"Archived\" badge, Parts still \"No parts on this ticket yet.\" Verification from the list page: with \"Show archived\" unchecked and the search set to \"fwrd76-n2\", the Tickets region shows the message \"No tickets\" and the table reads \"No tickets match the current filters.\" (0 matches, page 1 of 1) — so no ticket titled 'fwrd76-n2 RD Probe Ticket' appears in the active list.",
+      "values": {
+        "ref": "RD-1018",
+        "ref_2": "fwrd76-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "09-report",
+      "status": "success",
+      "summary": "Replayed stored procedure s_60e04a; observed ref=fwrd76-n2, active_search_no_results=Tickets\n\nNo tickets\n\nREF\tTITLE\tCUSTOMER\tSTATUS\tPARTS\tCREATED\nNo tickets match the current filters.\nPrevious\nPage 1 of 1\nNext, archived_search_results=Tickets\n\nShowing 1–2 of 2\n\nREF\tTITLE\tCUSTOMER\tSTATUS\tPARTS\tCREATED\nRD-1018\tfwrd76-n2 RD Probe Ticket Archived\tBench Customer\tDraft\t0\t2026-09-17\nRD-1017\tfwrd76-n2 RD Bench Ticket Archived\tBench Customer\tReady\t0\t2026-09-17\nPrevious\nPage 1 of 1\nNext, archived_row_1_reference=RD-1018, archived_row_1_title=fwrd76-n2 RD Probe Ticket Archived, archived_row_1_customer=Bench Customer, archived_row_1_created=2026-09-17, archived_row_2_reference=RD-1017, archived_row_2_title=fwrd76-n2 RD Bench Ticket Archived.",
+      "values": {
+        "ref": "fwrd76-n2",
+        "active_search_no_results": "Tickets\n\nNo tickets\n\nREF\tTITLE\tCUSTOMER\tSTATUS\tPARTS\tCREATED\nNo tickets match the current filters.\nPrevious\nPage 1 of 1\nNext",
+        "archived_search_results": "Tickets\n\nShowing 1–2 of 2\n\nREF\tTITLE\tCUSTOMER\tSTATUS\tPARTS\tCREATED\nRD-1018\tfwrd76-n2 RD Probe Ticket Archived\tBench Customer\tDraft\t0\t2026-09-17\nRD-1017\tfwrd76-n2 RD Bench Ticket Archived\tBench Customer\tReady\t0\t2026-09-17\nPrevious\nPage 1 of 1\nNext",
+        "archived_row_1_reference": "RD-1018",
+        "archived_row_1_title": "fwrd76-n2 RD Probe Ticket Archived",
+        "archived_row_1_customer": "Bench Customer",
+        "archived_row_1_created": "2026-09-17",
+        "archived_row_2_reference": "RD-1017",
+        "archived_row_2_title": "fwrd76-n2 RD Bench Ticket Archived"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 9,
+  "total": 9,
+  "repinned": 0,
+  "drift": 0,
+  "wallMs": 34649,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
