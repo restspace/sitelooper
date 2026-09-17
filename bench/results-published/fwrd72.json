@@ -1,0 +1,506 @@
+{
+  "name": "fwrd72",
+  "origin": "http://127.0.0.1:4180",
+  "startUrl": "http://127.0.0.1:4180/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-open",
+      "instruction": "Open http://127.0.0.1:4180/ and sign in with email bench@example.com and password bench-pass-1234. Then report: did sign-in succeed, what page you land on, and what the main navigation/sections of this repair-desk app are (just the top-level areas, not an exhaustive inventory).",
+      "skill": "s_2b357a",
+      "params": {
+        "v1": "http://127.0.0.1:4180/",
+        "v2": "bench@example.com",
+        "v3": "bench-pass-1234"
+      },
+      "outputs": [
+        "landing_page",
+        "signed_in_user",
+        "ticket_detail_route_example",
+        "nav_tickets_button",
+        "sign_in_password"
+      ],
+      "recorded": {
+        "sign_in": "succeeded",
+        "landing_page": "http://127.0.0.1:4180/#/tickets",
+        "signed_in_user": "Bench User",
+        "top_level_nav": "Main nav -> Tickets only",
+        "ticket_detail_route_example": "http://127.0.0.1:4180/#/tickets/t14",
+        "ticket_detail_sections": "ticket header (status, Mark Ready, Archive ticket) + Parts section (parts table with add/edit/delete, total)",
+        "nav_tickets_button": "Tickets",
+        "tickets_link_href": "#/tickets",
+        "ticket_detail_link_href": "#/tickets/t14",
+        "sign_in_password": "bench-pass-1234",
+        "url": "http://127.0.0.1:4180/#/tickets/t14",
+        "url.h1": "t14"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets/:id",
+      "outputEvidence": {
+        "sign_in": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "landing_page": {
+          "same": 1,
+          "differed": 0
+        },
+        "signed_in_user": {
+          "same": 1,
+          "differed": 0
+        },
+        "top_level_nav": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ticket_detail_route_example": {
+          "same": 1,
+          "differed": 0
+        },
+        "ticket_detail_sections": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "nav_tickets_button": {
+          "same": 1,
+          "differed": 0
+        },
+        "tickets_link_href": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ticket_detail_link_href": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "sign_in_password": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.h1": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "Create a new ticket titled exactly '{{runid}} RD Bench Ticket'. Discover the ticket-creation form (from the {{01-open.nav_tickets_button}} list page), fill in any required fields with sensible values, and submit. Wait for the list/detail view to refresh after the create (it refreshes a short beat after the mutation, not instantly) and verify the ticket appears. Report: the exact title shown, the ticket's status, and any other fields you had to fill in.",
+      "skill": "s_a7b176",
+      "params": {
+        "v3": "{{runid}} RD Bench Ticket",
+        "v2": "{{01-open.nav_tickets_button}}",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "new_ticket_row",
+        "tickets_count_line",
+        "ticket_detail_url",
+        "ticket_title_exact",
+        "first_ticket_id_in_list",
+        "ref"
+      ],
+      "recorded": {
+        "new_ticket_row": "RD-1015\tfwrd72-n1 RD Bench Ticket\tBench Customer\tDraft\t0\t2026-09-17",
+        "tickets_count_line": "Showing 1–10 of 14",
+        "ticket_detail_url": "http://127.0.0.1:4180/#/tickets/t15",
+        "ticket_title_exact": "fwrd72-n1 RD Bench Ticket",
+        "first_ticket_id_in_list": "RD-1015",
+        "ref": "fwrd72-n1",
+        "url": "http://127.0.0.1:4180/#/tickets/t15",
+        "url.h1": "t15"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets/:id",
+      "outputEvidence": {
+        "new_ticket_row": {
+          "same": 0,
+          "differed": 1
+        },
+        "tickets_count_line": {
+          "same": 1,
+          "differed": 0
+        },
+        "ticket_detail_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "ticket_title_exact": {
+          "same": 0,
+          "differed": 1
+        },
+        "first_ticket_id_in_list": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.h1": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "03-add",
+      "instruction": "On the ticket detail page for ticket '{{runid}} RD Bench Ticket' ({{02-create.first_ticket_id_in_list}}, at {{02-create.url}}), add a part named exactly '{{runid}} RD Part A' with cost 100 and markup 25 (fill any other fields with sensible values). Submit the add-part form, wait for the parts table to refresh after the mutation (it refreshes a short beat after, not instantly), and verify the row appears. Report: the exact part name, cost, markup, qty, and the Price value the app computes for this part, plus the parts total shown.",
+      "skill": "s_5cd914",
+      "params": {
+        "v1": "{{runid}} RD Bench Ticket",
+        "v3": "{{02-create.first_ticket_id_in_list}}",
+        "v4": "{{02-create.url}}",
+        "v8": "{{runid}} RD Part A",
+        "v9": "100",
+        "v10": "25",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "parts_total",
+        "ref",
+        "ref_2"
+      ],
+      "recorded": {
+        "parts_total": "$125.00",
+        "ref": "RD-1015",
+        "ref_2": "fwrd72-n1"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets/:id",
+      "outputEvidence": {
+        "parts_total": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref_2": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "04-add",
+      "instruction": "On the same ticket detail page ({{02-create.first_ticket_id_in_list}}, {{02-create.url}}), add a second part named exactly '{{runid}} RD Part B' with cost 200 and markup 25 (fill any other fields with sensible values). Submit, wait for the parts table to refresh after the mutation (it refreshes a short beat after, not instantly), and verify the row appears alongside the existing '{{runid}} RD Part A' row. Report: the exact part name, cost, markup, qty, the Price value the app computes for Part B, and the parts total shown for the ticket.",
+      "skill": "s_5cd914",
+      "params": {
+        "v1": "{{runid}} RD Bench Ticket",
+        "v2": "{{runid}}",
+        "v3": "{{02-create.first_ticket_id_in_list}}",
+        "v4": "{{02-create.url}}",
+        "v8": "{{runid}} RD Part B",
+        "v9": "200",
+        "v10": "25"
+      },
+      "outputs": [
+        "parts_total",
+        "ref"
+      ],
+      "recorded": {
+        "parts_total": "$375.00",
+        "ref": "fwrd72-n1"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets/:id",
+      "outputEvidence": {
+        "parts_total": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "05-edit",
+      "instruction": "On the same ticket detail page ({{02-create.first_ticket_id_in_list}}, {{02-create.url}}), edit the part named '{{runid}} RD Part A' to change its cost from 100 to 150, leaving its markup at 25 and everything else unchanged. Submit the edit, wait for the parts table to refresh after the mutation (it refreshes a short beat after, not instantly), and verify the change is reflected. Report: Part A's cost, markup, and the Price value the app computes for Part A afterwards, plus the parts total for the ticket.",
+      "skill": "s_0ea4d7",
+      "params": {
+        "v1": "{{02-create.first_ticket_id_in_list}}",
+        "v2": "{{02-create.url}}",
+        "v7": "{{runid}} RD Part A",
+        "v8": "150",
+        "v6": "{{runid}}"
+      },
+      "outputs": [
+        "parts_total",
+        "ref"
+      ],
+      "recorded": {
+        "parts_total": "$437.50",
+        "ref": "fwrd72-n1"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets/:id",
+      "outputEvidence": {
+        "parts_total": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "06-set",
+      "instruction": "On the same ticket detail page ({{02-create.first_ticket_id_in_list}}, {{02-create.url}}), attempt to set the ticket's status to 'Ready' (there is a 'Mark Ready' action). The app enforces preconditions before it will accept that status — if it refuses, discover exactly what the preconditions are (read any error/validation message shown, and look for hints in the page), and report exactly what the refusal message says and what the app appears to require. Do NOT try to work around it by deleting or altering the parts. Report the exact status shown on the ticket afterwards and the exact text of any error or validation message you saw.",
+      "skill": "s_e55395",
+      "params": {
+        "v1": "{{02-create.first_ticket_id_in_list}}",
+        "v2": "{{02-create.url}}",
+        "v5": "{{02-create.url.h1}}",
+        "v6": "{{runid}}"
+      },
+      "outputs": [
+        "list_row_rd1015",
+        "ref",
+        "ref_2"
+      ],
+      "recorded": {
+        "list_row_rd1015": "RD-1015\tfwrd72-n1 RD Bench Ticket\tBench Customer\tReady\t2\t2026-09-17",
+        "ref": "RD-1015",
+        "ref_2": "fwrd72-n1"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets/:id",
+      "outputEvidence": {
+        "list_row_rd1015": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref_2": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "07-create",
+      "instruction": "I need to discover exactly what preconditions this repair-desk app enforces before a ticket can be marked Ready. Use a throwaway scratch ticket to probe this: create a new ticket titled '{{runid}} RD Scratch Probe' (customer 'Probe'), then click Mark Ready on it with NO parts and read the exact refusal/error message the app shows (it may list unmet requirements). Then, step by step, add/adjust the minimum needed (e.g. add a part, fill fields) retrying Mark Ready after each change until it is accepted, noting exactly which change made it pass. You may also inspect the app's client code (app.js) for the Ready-precondition rules to confirm. When done, remove the scratch ticket completely (delete it if the app allows, otherwise archive it) so nothing from the probe is left active. Report: the exact refusal message text, the exact list of unmet requirements it named, and exactly which change(s) were required to make Mark Ready succeed.",
+      "skill": "s_e1c8eb",
+      "params": {
+        "v2": "{{runid}} RD Scratch Probe",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "refusal_message",
+        "refusal_after_part_zero",
+        "detail_status_after_arch",
+        "scratch_row_with_archive",
+        "ref",
+        "ref_2"
+      ],
+      "recorded": {
+        "refusal_message": "Ticket is not ready\n\nA ticket needs at least one part before it can be marked Ready",
+        "refusal_after_part_zero": "Ticket is not ready\n\nPart \"Probe part\" has no supplier",
+        "detail_status_after_arch": "Ready",
+        "scratch_row_with_archive": "RD-1016\tfwrd72-n1 RD Scratch Probe Archived\tProbe\tReady\t1\t2026-09-17",
+        "ref": "RD-1016",
+        "ref_2": "fwrd72-n1"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets",
+      "outputEvidence": {
+        "refusal_message": {
+          "same": 1,
+          "differed": 0
+        },
+        "refusal_after_part_zero": {
+          "same": 1,
+          "differed": 0
+        },
+        "detail_status_after_arch": {
+          "same": 1,
+          "differed": 0
+        },
+        "scratch_row_with_archive": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref_2": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "08-delete",
+      "instruction": "On ticket {{02-create.first_ticket_id_in_list}} '{{runid}} RD Bench Ticket' ({{02-create.url}}, currently status Ready), delete BOTH parts ('{{runid}} RD Part A' and '{{runid}} RD Part B') using each row's delete action, confirming any confirmation dialog. Note: after each delete the parts table refreshes a short beat after the mutation, not instantly — wait for concrete page state (the row disappearing) rather than assuming the first render is final. If the app refuses to delete parts while the ticket is in Ready status, discover what it requires (e.g. set status back to Draft first) and satisfy that, then delete both parts. Then archive the ticket (there is an 'Archive ticket' action; if it has preconditions, satisfy them). Finally verify: the parts table is empty (0 parts, total /bin/sh.00), and the ticket no longer appears in the default {{01-open.nav_tickets_button}} list but does appear when 'Show archived' is ticked. Report: the exact final state of the ticket (status, archived flag, parts count), any confirmation text shown, and exactly what was required to allow part deletion and archiving.",
+      "skill": "s_941098",
+      "params": {
+        "v1": "{{02-create.first_ticket_id_in_list}}",
+        "v2": "{{runid}} RD Bench Ticket",
+        "v4": "{{02-create.url}}",
+        "v8": "Ready",
+        "v10": "{{runid}} RD Part A",
+        "v11": "{{runid}} RD Part B",
+        "v9": "{{01-open.nav_tickets_button}}",
+        "v3": "{{runid}}",
+        "v7": "{{02-create.url.h1}}"
+      },
+      "outputs": [
+        "confirm_dialog_text",
+        "confirm_dialog_text_part",
+        "rd1015_row_archived_view",
+        "first_ticket_id_in_list",
+        "ref",
+        "ref_2"
+      ],
+      "recorded": {
+        "confirm_dialog_text": "Confirm\n\nDelete the part \"fwrd72-n1 RD Part A\" from this ticket? This cannot be undone.\n\nCancel\nDelete part",
+        "confirm_dialog_text_part": "Confirm\n\nDelete the part \"fwrd72-n1 RD Part B\" from this ticket? This cannot be undone.\n\nCancel\nDelete part",
+        "rd1015_row_archived_view": "RD-1015\tfwrd72-n1 RD Bench Ticket Archived\tBench Customer\tReady\t0\t2026-09-17",
+        "first_ticket_id_in_list": "RD-1014",
+        "second_ticket_id_in_list": "RD-1004",
+        "ref": "RD-1015",
+        "ref_2": "fwrd72-n1"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets",
+      "outputEvidence": {
+        "confirm_dialog_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "confirm_dialog_text_part": {
+          "same": 0,
+          "differed": 1
+        },
+        "rd1015_row_archived_view": {
+          "same": 0,
+          "differed": 1
+        },
+        "first_ticket_id_in_list": {
+          "same": 1,
+          "differed": 0
+        },
+        "second_ticket_id_in_list": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref_2": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "09-report",
+      "instruction": "Final verification on the {{01-open.nav_tickets_button}} list at {{01-open.landing_page}}: with 'Show archived' UNCHECKED, confirm that no ticket whose title contains '{{runid}}' appears anywhere in the list (check all pages of the list if it is paginated). Then tick 'Show archived' and report the full rows for any tickets whose title contains '{{runid}}' (there should be two: {{02-create.first_ticket_id_in_list}} and {{07-create.ref}}), including their status, parts count, and archived marker. Report exactly what you see in both cases.",
+      "skill": "s_e96211",
+      "params": {
+        "v1": "{{01-open.nav_tickets_button}}",
+        "v2": "{{01-open.landing_page}}",
+        "v4": "{{runid}}",
+        "v5": "{{02-create.first_ticket_id_in_list}}",
+        "v6": "{{07-create.ref}}"
+      },
+      "outputs": [
+        "archived_view_count_line",
+        "unarchived_search_fwrd72",
+        "unarchived_search_fwrd72_2",
+        "archived_badge_text_rd10",
+        "ref",
+        "ref_2",
+        "ref_3"
+      ],
+      "recorded": {
+        "archived_view_count_line": "Showing 1–10 of 16",
+        "unarchived_search_fwrd72": "No tickets",
+        "unarchived_search_fwrd72_2": "No tickets match the current filters.",
+        "archived_badge_text_rd10": "Archived",
+        "ref": "RD-1014",
+        "ref_2": "fwrd72-n1",
+        "ref_3": "RD-1016"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets",
+      "outputEvidence": {
+        "archived_view_count_line": {
+          "same": 1,
+          "differed": 0
+        },
+        "unarchived_search_fwrd72": {
+          "same": 1,
+          "differed": 0
+        },
+        "unarchived_search_fwrd72_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "archived_badge_text_rd10": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref_2": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref_3": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwrd72-n1",
+    "created": "2026-09-17T19:19:31.177Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-open",
+      "outputs": [
+        "sign_in",
+        "top_level_nav",
+        "ticket_detail_sections",
+        "tickets_link_href",
+        "ticket_detail_link_href"
+      ]
+    },
+    {
+      "stepId": "08-delete",
+      "outputs": [
+        "second_ticket_id_in_list"
+      ]
+    }
+  ]
+}

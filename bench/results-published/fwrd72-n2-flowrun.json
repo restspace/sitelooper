@@ -1,0 +1,174 @@
+{
+  "flow": "fwrd72",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_e8ce7f; observed landing_page=http://127.0.0.1:4180/#/tickets, ticket_detail_route_example=http://127.0.0.1:4180/#/tickets/t14, sign_in_password=bench-pass-1234, nav_tickets_button=Tickets, signed_in_user=Bench User.",
+      "values": {
+        "landing_page": "http://127.0.0.1:4180/#/tickets",
+        "ticket_detail_route_example": "http://127.0.0.1:4180/#/tickets/t14",
+        "sign_in_password": "bench-pass-1234",
+        "nav_tickets_button": "Tickets",
+        "signed_in_user": "Bench User"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Ticket created. From the Tickets list I used the \"New ticket\" button, which opens a modal dialog with fields \"Title *\" (required) and \"Customer\" (optional); I filled Title with exactly \"fwrd72-n2 RD Bench Ticket RD Bench Ticket\" and Customer with \"Bench Customer\", then clicked \"Create ticket\". The app navigated to the list and the ticket appeared at the top of the refreshed table as row RD-1017 (fwrd72-n2 RD Bench Ticket RD Bench Ticket · Bench Customer · Draft · 0 parts · 2026-09-17); I then opened it and its detail page (http://127.0.0.1:4180/#/tickets/t15) shows heading \"fwrd72-n2 RD Bench Ticket RD Bench Ticket\", \"Customer: Bench Customer · Raised 2026-09-17\", Status Draft, with Mark Ready / Archive ticket actions and an empty Parts section. Only two fields existed; no other fields were required.",
+      "values": {
+        "new_ticket_row": "RD-1017\tfwrd72-n2 RD Bench Ticket\tBench Customer\tDraft\t0\t2026-09-17",
+        "tickets_count_line": "Showing 1–10 of 14",
+        "ticket_detail_url": "http://127.0.0.1:4180/#/tickets/t15",
+        "ticket_title_exact": "fwrd72-n2 RD Bench Ticket",
+        "first_ticket_id_in_list": "RD-1017",
+        "ref": "fwrd72-n2 RD Bench Ticket"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-add",
+      "status": "success",
+      "summary": "Added the part from the \"Add part\" dialog on the ticket detail page (RD-1017, http://127.0.0.1:4180/#/tickets/t15) with Part name \"fwrd72-n2 RD Part A\", Cost 100, Markup % 25, Quantity 1 (default) and Supplier \"Bench Supplier\", then submitted. After the post-mutation refresh the Parts table shows one row: fwrd72-n2 RD Part A · $100.00 · 25% · qty 1 · Bench Supplier · Price $125.00, and the parts total row reads \"$125.00\".",
+      "values": {
+        "ref_2": "fwrd72-n2",
+        "parts_total": "$125.00",
+        "ref": "RD-1017"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-add",
+      "status": "success",
+      "summary": "Added the part from the \"Add part\" dialog on the ticket detail page (RD-1017, http://127.0.0.1:4180/#/tickets/t15) with Part name \"fwrd72-n2 RD Part B\", Cost 200, Markup % 25, Quantity 1 (default) and Supplier \"Bench Supplier\", then submitted. After the post-mutation refresh the Parts table shows one row: fwrd72-n2 RD Part B · $100.00 · 25% · qty 1 · Bench Supplier · Price $375.00, and the parts total row reads \"$375.00\".",
+      "values": {
+        "ref_2": "fwrd72-n2",
+        "parts_total": "$375.00",
+        "ref": "RD-1017"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-edit",
+      "status": "success",
+      "summary": "Edited Part A on http://127.0.0.1:4180/#/tickets/t15: clicked Edit on the \"fwrd72-n2 RD Part A\" row, which opened an \"Edit part\" dialog pre-filled with the existing values (name fwrd72-n2 RD Part A, cost 100, markup 25, qty 1, supplier Bench Supplier); I changed only Cost to 150 and clicked \"Save part\". After the refresh the live table shows \"fwrd72-n2 RD Part A $150.00 25% 1 Bench Supplier $187.50\" (price recomputed to $187.50), Part B unchanged at $250.00, and the ticket parts total is now \"$437.50\" (was $375.00).",
+      "values": {
+        "ref": "fwrd72-n2",
+        "parts_total": "$437.50"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "4/4",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "06-set",
+      "status": "success",
+      "summary": "The instruction's conditional was answered: the app did NOT refuse. Clicking \"Mark Ready\" on http://127.0.0.1:4180/#/tickets/t15 (RD-1017) was accepted — status went Draft → Ready — and no error or validation message appeared anywhere (the shared error region #error-region read back empty, and no dialog/toast fired; the click's state diff only swapped the buttons to \"Mark Draft\" and \"Mark Closed\"). I verified persistence: the list row after a fresh fetch reads \"RD-1017 | fwrd72-n2 RD Bench Ticket | Bench Customer | Ready | 2 | 2026-09-17\". The ticket therefore met whatever preconditions the app enforces (it has 2 parts, both cost>0 with markup 25% and a supplier); the exact precondition rules never surfaced in the UI. Related note, flagged as inference from the app's client bundle rather than from the UI: /app.js contains a renderer and comment for a server 409 \"Ready precondition\" carrying { error, unmet: [...] }, which is how the business rule would be shown if it were unmet — it never fired in this session.",
+      "values": {
+        "ref_2": "fwrd72-n2",
+        "list_row_rd1015": "RD-1017\tfwrd72-n2 RD Bench Ticket\tBench Customer\tReady\t2\t2026-09-17",
+        "ref": "RD-1017"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "07-create",
+      "status": "success",
+      "summary": "Probed with scratch ticket RD-1018 \"fwrd72-n2 RD Scratch Probe Archived RD Scratch Probe\" (customer Probe). Mark Ready with no parts was REFUSED with error text \"Ticket is not ready\" and unmet list: [\"A ticket needs at least one part before it can be marked Ready\"]; after adding one part (name \"Probe part\", cost 0, markup 0, no supplier) it was REFUSED again with \"Ticket is not ready\" + [\"Part \\\"Probe part\\\" has no supplier\"]; setting that part's Supplier to \"Probe supplier\" was the change that made Mark Ready succeed (status → Ready, no error shown, buttons became Mark Draft/Mark Closed). So the app requires (1) ≥1 part and (2) a supplier on every part — cost 0 / markup 0 did not matter. Note the part form's own hint calls Supplier \"Optional. Leave blank if the part has not been sourced yet\", which contradicts the precondition. The app exposes no ticket-delete control (only Archive/Unarchive; the sole DELETE in app.js is for parts), so I archived the scratch ticket: it is now absent from the default Tickets list and appears as \"RD-1018 | fwrd72-n2 RD Scratch Probe Archived RD Scratch Probe Archived | Probe | Ready | 1 | 2026-09-17\" only with \"Show archived\" ticked.",
+      "values": {
+        "refusal_message": "Ticket is not ready\n\nA ticket needs at least one part before it can be marked Ready",
+        "refusal_after_part_zero": "Ticket is not ready\n\nPart \"Probe part\" has no supplier",
+        "detail_status_after_arch": "Ready",
+        "scratch_row_with_archive": "RD-1018\tfwrd72-n2 RD Scratch Probe Archived\tProbe\tReady\t1\t2026-09-17",
+        "ref": "RD-1018",
+        "ref_2": "fwrd72-n2 RD Scratch Probe Archived"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "38/38",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "08-delete",
+      "status": "success",
+      "summary": "Replayed stored procedure s_3a23ae; observed ref_2=fwrd72-n2, confirm_dialog_text=Confirm\n\nDelete the part \"fwrd72-n2 RD Part A\" from this ticket? This cannot be undone.\n\nCancel\nDelete part, confirm_dialog_text_part=Confirm\n\nDelete the part \"fwrd72-n2 RD Part B\" from this ticket? This cannot be undone.\n\nCancel\nDelete part, rd1015_row_archived_view=RD-1017\tfwrd72-n2 RD Bench Ticket Archived\tBench Customer\tReady\t0\t2026-09-17, ref=RD-1017, first_ticket_id_in_list=RD-1014.",
+      "values": {
+        "ref_2": "fwrd72-n2",
+        "confirm_dialog_text": "Confirm\n\nDelete the part \"fwrd72-n2 RD Part A\" from this ticket? This cannot be undone.\n\nCancel\nDelete part",
+        "confirm_dialog_text_part": "Confirm\n\nDelete the part \"fwrd72-n2 RD Part B\" from this ticket? This cannot be undone.\n\nCancel\nDelete part",
+        "rd1015_row_archived_view": "RD-1017\tfwrd72-n2 RD Bench Ticket Archived\tBench Customer\tReady\t0\t2026-09-17",
+        "ref": "RD-1017",
+        "first_ticket_id_in_list": "RD-1014"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "19/19",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "09-report",
+      "status": "success",
+      "summary": "With 'Show archived' UNCHECKED the list is 13 tickets across 2 pages (Showing 1–10 of 13, then 11–13) and I read every row: RD-1014, 1012, 1011, 1010, 1009, 1008, 1007, 1006, 1005, 1004, 1003, 1002, 1001 — no title contains 'fwrd72-n2'. Cross-checked with the Search box (\"fwrd72\", archived hidden): result was the message \"No tickets match the current filters.\" With 'Show archived' TICKED the list is 16 (Showing 1–10 of 16) and exactly two 'fwrd72-n2' rows appear, both with an \"Archived\" badge in the Title cell: \"RD-1018 | fwrd72-n2 RD Scratch Probe Archived | Probe | Ready | 1 | 2026-09-17\" and \"RD-1017 | fwrd72-n2 RD Bench Ticket Archived | Bench Customer | Ready | 0 | 2026-09-17\".",
+      "values": {
+        "ref_2": "fwrd72-n2",
+        "archived_view_count_line": "Showing 1–10 of 16",
+        "unarchived_search_fwrd72": "No tickets",
+        "unarchived_search_fwrd72_2": "No tickets match the current filters.",
+        "archived_badge_text_rd10": "Archived",
+        "ref": "RD-1014",
+        "ref_3": "RD-1018"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "24/24",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 9,
+  "total": 9,
+  "repinned": 0,
+  "drift": 0,
+  "wallMs": 51669,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

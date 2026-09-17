@@ -1,0 +1,943 @@
+{
+ "id": "s_3a23ae",
+ "origin": "http://127.0.0.1:4180",
+ "template": "On ticket {{v1}} '{{v2}}' ({{v4}}, currently status {{v8}}), delete BOTH parts ('{{v10}}' and '{{v11}}') using each row's delete action, confirming any confirmation dialog. Note: after each delete the parts table refreshes a short beat after the mutation, not instantly — wait for concrete page state (the row disappearing) rather than assuming the first render is final. If the app refuses to delete parts while the ticket is in {{v8}} status, discover what it requires (e.g. set status back to Draft first) and satisfy that, then delete both parts. Then archive the ticket (there is an 'Archive ticket' action; if it has preconditions, satisfy them). Finally verify: the parts table is empty (0 parts, total /bin/sh.00), and the ticket no longer appears in the default {{v9}} list but does appear when 'Show archived' is ticked. Report: the exact final state of the ticket (status, archived flag, parts count), any confirmation text shown, and exactly what was required to allow part deletion and archiving.",
+ "params": {
+  "v1": {
+   "example": "RD-1015",
+   "usedIn": [
+    4,
+    5
+   ],
+   "known": true,
+   "binding": "output:i2:first_ticket_id_in_list"
+  },
+  "v2": {
+   "example": "fwrd72-n1 RD Bench Ticket",
+   "usedIn": [
+    4,
+    5,
+    6
+   ],
+   "known": true,
+   "binding": "output:i2:ticket_title_exact"
+  },
+  "v3": {
+   "example": "fwrd72-n1",
+   "usedIn": [
+    1
+   ],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v4": {
+   "example": "http://127.0.0.1:4180/#/tickets/t15",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:ticket_detail_url"
+  },
+  "v7": {
+   "example": "t15",
+   "usedIn": [
+    4,
+    5,
+    6
+   ],
+   "known": true,
+   "binding": "url:i2:h1"
+  },
+  "v8": {
+   "example": "Ready",
+   "usedIn": [
+    4,
+    5
+   ],
+   "known": true,
+   "binding": "output:i7:detail_status_after_arch"
+  },
+  "v9": {
+   "example": "Tickets",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i1:nav_tickets_button"
+  },
+  "v10": {
+   "example": "fwrd72-n1 RD Part A",
+   "usedIn": [],
+   "known": true
+  },
+  "v11": {
+   "example": "fwrd72-n1 RD Part B",
+   "usedIn": [],
+   "known": true
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:4180/#/tickets",
+  "fingerprint": [
+   0,
+   0.018,
+   0.009,
+   0.018,
+   0,
+   0,
+   0.028,
+   0,
+   0,
+   0.009,
+   0,
+   0,
+   0.018,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0.092,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0.046,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.028,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0.018,
+   0.028,
+   0,
+   0,
+   0,
+   0,
+   0.184,
+   0,
+   0.037,
+   0,
+   0.009,
+   0,
+   0,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.055,
+   0,
+   0.018,
+   0,
+   0.055,
+   0,
+   0,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.009,
+   0.009,
+   0,
+   0,
+   0,
+   0.018,
+   0.055,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0.037,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.028,
+   0.028,
+   0,
+   0,
+   0,
+   0.018,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.009,
+   0.009,
+   0,
+   0,
+   0.009,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0.009,
+   0,
+   0.018,
+   0.202,
+   0.028,
+   0,
+   0.018,
+   0.018,
+   0.009,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.009,
+   0,
+   0.735,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0.018,
+   0,
+   0.028,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.092,
+   0,
+   0,
+   0,
+   0.009,
+   0,
+   0.092,
+   0.009,
+   0.028,
+   0.018,
+   0,
+   0,
+   0,
+   0.092,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.092,
+   0.037,
+   0,
+   0.018,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0.018,
+   0,
+   0.009,
+   0,
+   0,
+   0,
+   0.037,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.009,
+   0,
+   0.037,
+   0,
+   0,
+   0,
+   0.018,
+   0.018,
+   0,
+   0.055,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.184,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0.018,
+   0.028,
+   0,
+   0,
+   0,
+   0,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0.028,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.028,
+   0,
+   0.074,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.028,
+   0,
+   0,
+   0,
+   0.009,
+   0,
+   0,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0.009,
+   0.184,
+   0,
+   0.037,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0.074,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.009,
+   0.009,
+   0,
+   0.092,
+   0.009,
+   0,
+   0.018,
+   0.018,
+   0,
+   0,
+   0,
+   0.046,
+   0.055,
+   0,
+   0,
+   0,
+   0.009,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0.046,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.028,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0.009,
+   0,
+   0,
+   0,
+   0.092,
+   0,
+   0,
+   0.055,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0.386,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.101,
+   0.018,
+   0,
+   0.018,
+   0,
+   0.037,
+   0,
+   0,
+   0.11,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0.018,
+   0.028,
+   0,
+   0,
+   0.101,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0.018,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "requireText": [
+   "{{v3}}",
+   "{{v8}}"
+  ]
+ },
+ "steps": [
+  {
+   "tool": "wait_for",
+   "args": {
+    "state": "visible",
+    "target": "role=cell[name=\"RD-1016\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "#ticket-rows tr",
+      "hasText": "{{v3}} RD Scratch Probe Archived",
+      "selector": "td:nth-of-type(1)"
+     },
+     {
+      "kind": "css",
+      "selector": "#ticket-rows > tr:nth-of-type(1) > td:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 165,
+      "y": 423,
+      "w": 120.5,
+      "h": 46.2,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   }
+  },
+  {
+   "tool": "check",
+   "args": {
+    "target": "@e1627",
+    "checked": false
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "show-archived"
+     },
+     {
+      "kind": "role",
+      "role": "checkbox",
+      "name": "Show archived"
+     },
+     {
+      "kind": "label",
+      "label": "Show archived"
+     },
+     {
+      "kind": "id",
+      "selector": "#show-archived"
+     },
+     {
+      "kind": "css",
+      "selector": "#show-archived"
+     },
+     {
+      "kind": "point",
+      "x": 1054,
+      "y": 216,
+      "w": 16,
+      "h": 16,
+      "role": "checkbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "addedContains": [
+     "- checkbox \"Show archived\"",
+     "- row \"RD-1006 Walk-in fridge alarm keeps sounding Pinehurst Grocers Draft 1 {{*}}\"",
+     "- cell \"RD-1006\"",
+     "- link \"RD-1006\"",
+     "- cell \"Walk-in fridge alarm keeps sounding\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "check",
+   "args": {
+    "checked": true,
+    "target": "@e1627"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "show-archived"
+     },
+     {
+      "kind": "role",
+      "role": "checkbox",
+      "name": "Show archived"
+     },
+     {
+      "kind": "label",
+      "label": "Show archived"
+     },
+     {
+      "kind": "id",
+      "selector": "#show-archived"
+     },
+     {
+      "kind": "css",
+      "selector": "#show-archived"
+     },
+     {
+      "kind": "point",
+      "x": 1054,
+      "y": 216,
+      "w": 16,
+      "h": 16,
+      "role": "checkbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "addedContains": [
+     "- checkbox \"Show archived\" [checked]",
+     "- row \"RD-1016 {{v3}} RD Scratch Probe Archived Probe {{v8}} 1 {{*}}\"",
+     "- cell \"RD-1016\"",
+     "- link \"RD-1016\"",
+     "- cell \"{{v3}} RD Scratch Probe Archived\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "wait_for",
+   "args": {
+    "state": "visible",
+    "target": "table tbody tr:has-text('{{v1}}')"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "table tbody tr:has-text('{{v1}}')"
+     },
+     {
+      "kind": "scoped",
+      "container": "#ticket-rows tr",
+      "hasText": "{{v2}} Archived"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "ticket-row-{{v7}}"
+     },
+     {
+      "kind": "text",
+      "text": "{{v1}} {{v2}} Archived Bench Customer {{v8}} 0 2026-09-17"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"ticket-table\"] tr"
+     },
+     {
+      "kind": "css",
+      "selector": "#ticket-rows > tr:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 469,
+      "w": 1070,
+      "h": 46.2,
+      "role": null,
+      "tag": "tr",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "rd1015_row_archived_view",
+    "target": "table tbody tr:has-text('{{v1}}')",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "table tbody tr:has-text('{{v1}}')"
+     },
+     {
+      "kind": "scoped",
+      "container": "#ticket-rows tr",
+      "hasText": "{{v2}} Archived"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "ticket-row-{{v7}}"
+     },
+     {
+      "kind": "text",
+      "text": "{{v1}} {{v2}} Archived Bench Customer {{v8}} 0 2026-09-17"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"ticket-table\"] tr"
+     },
+     {
+      "kind": "css",
+      "selector": "#ticket-rows > tr:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 469,
+      "w": 1070,
+      "h": 46.2,
+      "role": null,
+      "tag": "tr",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "rd1015_row_archived_view"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "#ticket-rows tr",
+      "hasText": "{{v2}} Archived",
+      "selector": "td:nth-of-type(1) > a"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "ticket-link-{{v7}}"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"ticket-row-{{v7}}\"] a"
+     },
+     {
+      "kind": "css",
+      "selector": "#ticket-rows > tr:nth-of-type(2) > td:nth-of-type(1) > a"
+     },
+     {
+      "kind": "point",
+      "x": 152,
+      "y": 470,
+      "w": 54.6,
+      "h": 15,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "ref"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#ticket-rows > tr:nth-of-type(3) > td:nth-of-type(1) > a"
+     },
+     {
+      "kind": "point",
+      "x": 152,
+      "y": 516,
+      "w": 54.6,
+      "h": 15,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "first_ticket_id_in_list"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Both parts were deleted from {{v1}} while it was still {{v8}} — the app imposed no status precondition; each row's Delete opened an in-app confirm dialog (\"Delete the part \\\"{{v10}}\\\" ... This cannot be undone.\" / same for Part B) and I clicked \"Delete part\". The parts table then read \"No parts on this ticket yet.\" (0 parts, Parts column now 0); note the app renders no total row at all with zero parts, so there is no \"$0.00\" figure on screen. \"Archive ticket\" then succeeded with no dialog and no precondition — it just flipped to \"Unarchive ticket\" with an \"Archived\" badge —; final ticket state: status {{v8}}, archived = true, 0 parts. Verified on the {{v9}} list: with \"Show archived\" unchecked {{v1}} is absent (visible refs are RD-1014 … RD-1004), and with it ticked the row reads \"{{v1}} | {{v2}} Archived | Bench Customer | {{v8}} | 0 | 2026-09-17\". So nothing extra was required for deletion or archiving; the only precondition in this app is on Mark {{v8}} (≥1 part, each with a supplier), not on delete/archive.",
+  "values": {
+   "confirm_dialog_text": "Confirm\n\nDelete the part \"{{v10}}\" from this ticket? This cannot be undone.\n\nCancel\nDelete part",
+   "confirm_dialog_text_part": "Confirm\n\nDelete the part \"{{v11}}\" from this ticket? This cannot be undone.\n\nCancel\nDelete part",
+   "rd1015_row_archived_view": "{{v1}}\t{{v2}} Archived\tBench Customer\t{{v8}}\t0\t2026-09-17",
+   "first_ticket_id_in_list": "RD-1014",
+   "second_ticket_id_in_list": "RD-1004",
+   "ref": "{{v1}}",
+   "ref_2": "{{v3}}"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-17T19:17:43.893Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-17T19:21:13.308Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_c36091",
+  "index": 2,
+  "of": 3
+ },
+ "provenance": {
+  "session": "fwrd72-n1",
+  "instruction": "On ticket RD-1015 'fwrd72-n1 RD Bench Ticket' (http://127.0.0.1:4180/#/tickets/t15, currently status Ready), delete BOTH parts ('fwrd72-n1 RD Part A' and 'fwrd72-n1 RD Part B') using each row's delete action, confirming any confirmation dialog. Note: after each delete the parts table refreshes a short beat after the mutation, not instantly — wait for concrete page state (the row disappearing) rather than assuming the first render is final. If the app refuses to delete parts while the ticket is in Ready status, discover what it requires (e.g. set status back to Draft first) and satisfy that, then delete both parts. Then archive the ticket (there is an 'Archive ticket' action; if it has preconditions, satisfy them). Finally verify: the parts table is empty (0 parts, total /bin/sh.00), and the ticket no longer appears in the default Tickets list but does appear when 'Show archived' is ticked. Report: the exact final state of the ticket (status, archived flag, parts count), any confirmation text shown, and exactly what was required to allow part deletion and archiving.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-17T19:17:43.893Z"
+ },
+ "revision": 4
+}
