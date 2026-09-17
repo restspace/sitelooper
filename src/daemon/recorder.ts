@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { ElementHandle, Frame, Locator, Page } from 'playwright-core';
 import { ensureSessionDir } from '../shared/paths.js';
-import { escapeRe, volatileMatcher } from '../shared/text.js';
+import { escapeRe, roleName, volatileMatcher } from '../shared/text.js';
 import { pointLocator } from '../execution/point.js';
 import { dispatchesFirstMatch } from '../execution/lifecycle.js';
 import { rootFor, type FramePath, type PageEffect, type Root } from '../execution/context.js';
@@ -86,7 +86,10 @@ export function makeLocator(page: Root, c: LocatorCandidate): Locator {
       // A name carrying a clock or calendar token ("Due date: 12/31/2026
       // 07:40") is matched with that token wildcarded — see volatileMatcher —
       // so a recording's minute does not push the step onto a positional path.
-      loc = page.getByRole(c.role as Parameters<Page['getByRole']>[0], { name: volatileMatcher(c.name), exact: true });
+      // And the accessible name may carry what the recorded name cannot — an
+      // icon font's glyph, a stray space — see roleName. The RegExp keeps the
+      // whole-string rule `exact: true` stood for.
+      loc = page.getByRole(c.role as Parameters<Page['getByRole']>[0], { name: roleName(c.name), exact: true });
       break;
     case 'label':
       loc = page.getByLabel(volatileMatcher(c.label));

@@ -102,3 +102,45 @@ export function volatileMatcher(text: string): string | RegExp {
   if (masked === text) return text;
   return new RegExp(`^${masked.split(WILDCARD).map(escapeRe).join(VOLATILE_TOKEN_SHAPE)}$`);
 }
+
+/**
+ * What an ACCESSIBLE NAME may carry that a recorded name never does.
+ *
+ * A recorded role name comes from this project's own DOM walk (execution/
+ * snapshot.ts), which names an element by its text and collapses whitespace.
+ * The browser's accessible name, which a role query compares against, is
+ * computed from the rendered tree — including CSS-generated content. Kanboard's
+ * column header is `<a>Ready <i class="fa fa-caret-down"></i></a>`: the walk
+ * says `link "Ready"`, Chromium says "Ready " (the icon font's glyph,
+ * a private-use code point), and `exact: true` on 'Ready' finds nothing. Every
+ * synthesized column read of fwkb24 missed that way, on both replays, on the
+ * very page the recording had seen them on.
+ *
+ * So the edges of a name may carry whitespace, private-use glyphs (icon
+ * fonts), other symbols (a check mark, an emoji — \p{So}; not a math or
+ * currency sign, which can be the name's own) and format characters, and every
+ * run of whitespace inside it matches any run. Nothing else: a letter, a digit
+ * or punctuation beside the name is a different name ("Ready?" is not
+ * "Ready"), and two elements the tolerance makes indistinguishable are
+ * refused by the resolver's own uniqueness rule, never picked. Exported as
+ * SOURCE for the same reason VOLATILE_TOKEN_SHAPE is: the artifact rebuilds
+ * the matcher from it.
+ */
+export const NAME_NOISE_SHAPE = '[\\s\\p{Co}\\p{So}\\p{Cf}]*';
+
+/**
+ * The matcher for a recorded ROLE name: volatileMatcher's wildcards for clock
+ * and calendar tokens, with the accessible-name tolerance above at both edges
+ * and across whitespace. Always a RegExp, so `exact: true` is moot — the
+ * anchors carry the whole-string rule and the case stays as recorded.
+ * One function for both runners: makeLocator (daemon/recorder.ts) calls it
+ * and the compiled artifact calls the embedded copy (spec/locators.ts).
+ */
+export function roleName(text: string): RegExp {
+  const masked = maskVolatile(text.replace(/\s+/g, ' ').trim());
+  const body = masked
+    .split(WILDCARD)
+    .map((part) => escapeRe(part).replace(/ /g, '\\s+'))
+    .join(VOLATILE_TOKEN_SHAPE);
+  return new RegExp(`^${NAME_NOISE_SHAPE}${body}${NAME_NOISE_SHAPE}$`, 'u');
+}

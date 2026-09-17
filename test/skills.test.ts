@@ -7,7 +7,7 @@ import type { RecordedEntry, RecordedStep } from '../src/daemon/recorder.js';
 import { lineShows, specOf } from '../src/skills/replay.js';
 import { maskVolatile, stranded } from '../src/skills/compile.js';
 import { digitDominant } from '../src/skills/shape.js';
-import { volatileMatcher } from '../src/shared/text.js';
+import { roleName, volatileMatcher } from '../src/shared/text.js';
 import { recordCandidateEvidence, retired } from '../src/skills/repair.js';
 import { SkillStore } from '../src/skills/store.js';
 import { type TransformNote, coalesceControls, compileSkill, dropDeadReadLocators, dropDismissedDialogs, dropSupersededNavigation, compileSkills, discoverSlots, fillParams, fillParamsDeep, foldLoops, sameProcedure, softUrlMatch, stableFirst, substitute, substituteUrlId, substituteUrlParts, urlDiff, urlMatches, urlOriginPositions, urlParts, urlPattern } from '../src/skills/compile.js';
@@ -267,6 +267,28 @@ describe('volatile expectations and whitespace identity (fwkb3, fwod31)', () => 
     expect((m as RegExp).test('Due date: 01/02/2027 18:00')).toBe(true);
     expect((m as RegExp).test('Start date: 12/31/2026 07:40')).toBe(false);
     expect((m as RegExp).test('Due date: 12/31/2026 07:40 (overdue)')).toBe(false);
+  });
+  // fwkb24: the accessible name Chromium computes for kanboard's column header
+  // is "Ready " (an icon font's glyph via CSS content); the DOM walk had
+  // recorded `link "Ready"`, and `exact: true` on that found nothing.
+  it('roleName tolerates whitespace and icon glyphs around a recorded name, and nothing else', () => {
+    const m = roleName('Ready');
+    expect(m.test('Ready')).toBe(true);
+    expect(m.test('Ready ')).toBe(true); // private-use glyph, icon font
+    expect(m.test(' Ready')).toBe(true); // leading icon
+    expect(m.test('  Ready\n ')).toBe(true);
+    expect(m.test('Ready ✓')).toBe(true); // a check mark or an emoji is decoration, not a word
+    expect(m.test('Ready?')).toBe(false); // punctuation is part of the name
+    expect(m.test('Ready £')).toBe(false); // a currency or math sign can be the name's own
+    expect(m.test('Ready 2')).toBe(false);
+    expect(m.test('Not Ready')).toBe(false);
+    expect(m.test('ready')).toBe(false); // case as recorded
+    // whitespace runs inside a name match any run, as the snapshot collapsed them
+    expect(roleName('Work in progress').test('Work  in progress ')).toBe(true);
+    // the clock/calendar wildcard survives, so a date-named control matches another day's
+    const dated = roleName('Due date: 12/31/2026 07:40');
+    expect(dated.test('Due date: 01/02/2027 18:00 ')).toBe(true);
+    expect(dated.test('Start date: 12/31/2026 07:40')).toBe(false);
   });
   it('lineShows matches a wildcard line and ignores whitespace on both sides', () => {
     const live = ['- textbox "09/03/2026 07:31": 2026-12-31', '- link "Backlog"  ', '- heading "Bench   Board"'];

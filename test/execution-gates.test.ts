@@ -1132,7 +1132,7 @@ describe('a step that acts on a slot the artifact can never fill', () => {
     // Not in the executed chain — the embedded FLOW json still carries the
     // recording verbatim, as it must; what is gone is the rung that would run.
     expect(ok.source).not.toContain("page.locator('#name_");
-    expect(ok.source).toContain("page.getByRole('button', { name: 'Open', exact: true })");
+    expect(ok.source).toContain("page.getByRole('button', { name: roleName('Open'), exact: true })");
     // Every rung dead: the step has no way left to name what it acts on.
     const none = emitFlowFile(clickWith([dead, { kind: 'css', selector: 'div#name_{{v2}} > a' }]), { tier: 'plain' });
     const said = none.diagnostics.filter((d) => d.code === 'unfilled-slot');

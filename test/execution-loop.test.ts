@@ -389,7 +389,7 @@ describe('the emitted loop', () => {
     expect(guard).toContain('], { allowMultiple: true });');
     expect(guard).toContain('return guard1 ? guard1.locator : null;');
     const primary = guard.indexOf("{ locator: page.locator('.row[data-id=\"7\"] .del'), index: 0,");
-    const fallback = guard.indexOf("{ locator: page.getByRole('button', { name: 'Remove', exact: true }), index: 1,");
+    const fallback = guard.indexOf("{ locator: page.getByRole('button', { name: roleName('Remove'), exact: true }), index: 1,");
     expect(primary).toBeGreaterThan(-1);
     expect(fallback).toBeGreaterThan(-1);
     expect(primary).toBeLessThan(fallback);
@@ -468,10 +468,10 @@ describe('the emitted loop', () => {
 
     // an ambiguous candidate (the generic fallback matched every row) is
     // narrowed to the cursor by the policy, and the signature carries it
-    const generic = () => [obs(0, 0, 'gone'), obs(1, 3, "getByRole('button', { name: 'Remove', exact: true })")];
+    const generic = () => [obs(0, 0, 'gone'), obs(1, 3, "getByRole('button', { name: roleName('Remove'), exact: true })")];
     const ambiguous = await sign(2, generic());
-    expect(ambiguous).toEqual(["target=getByRole('button', { name: 'Remove', exact: true }).nth(2)"]);
-    expect(await sign(1, generic())).toEqual(["target=getByRole('button', { name: 'Remove', exact: true }).nth(1)"]);
+    expect(ambiguous).toEqual(["target=getByRole('button', { name: roleName('Remove'), exact: true }).nth(2)"]);
+    expect(await sign(1, generic())).toEqual(["target=getByRole('button', { name: roleName('Remove'), exact: true }).nth(1)"]);
     expect(await sign(1, generic())).not.toEqual(ambiguous);
 
     // outside a loop nothing is recorded

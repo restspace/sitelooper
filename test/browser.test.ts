@@ -416,6 +416,36 @@ d('script recording (fixture page)', () => {
     await page.evaluate(() => document.getElementById('exit-edit')?.remove());
   }, 60_000);
 
+  // fwkb24: kanboard's column header is `<a>Ready <i class="fa fa-caret-down"></i></a>`.
+  // The DOM walk records `link "Ready"`; Chromium's accessible name is
+  // "Ready " — the icon font's glyph, a private-use code point, arrives
+  // through CSS-generated content — and `exact: true` on 'Ready' found nothing,
+  // so every synthesized column read missed on both replays. The name matcher
+  // tolerates whitespace and glyphs at the edges, and nothing else.
+  it('a role candidate still matches a name the browser decorates with an icon glyph or a stray space', async () => {
+    const page = await session.getPage();
+    await page.evaluate(() => {
+      const style = document.createElement('style');
+      style.id = 'glyph-style';
+      style.textContent = '.caret::before { content: "\\f0d7"; }';
+      document.head.append(style);
+      document.body.insertAdjacentHTML(
+        'beforeend',
+        '<div id="glyph-fixture"><a id="col-ready" href="#">Ready <i class="caret"></i></a><a id="col-ready-q" href="#">Ready?</a><a id="col-done" href="#">  Done\n </a></div>',
+      );
+    });
+    // the glyph and the trailing space are in the accessible name; the recorded name has neither
+    expect(await makeLocator(page, { kind: 'role', role: 'link', name: 'Ready' }).count()).toBe(1);
+    expect(await makeLocator(page, { kind: 'role', role: 'link', name: 'Done' }).count()).toBe(1);
+    // ...but a letter, a digit or punctuation beside the name is a different name
+    expect(await makeLocator(page, { kind: 'role', role: 'link', name: 'Ready?' }).count()).toBe(1);
+    expect(await page.getByRole('link', { name: 'Ready', exact: true }).count()).toBe(0); // what exact:true alone sees
+    await page.evaluate(() => {
+      document.getElementById('glyph-fixture')?.remove();
+      document.getElementById('glyph-style')?.remove();
+    });
+  }, 60_000);
+
   it('describes a ref whose element vanished from the snapshot that minted it, instead of recording nothing', async () => {
     const page = await session.getPage();
     await page.evaluate(() => document.body.insertAdjacentHTML('beforeend', '<button id="ephemeral" type="button">Pick TestData</button>'));

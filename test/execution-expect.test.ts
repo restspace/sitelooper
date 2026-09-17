@@ -491,7 +491,7 @@ describe('the emitted adapter', () => {
     expect(stepOf(source, 1)).not.toContain('absentDialogSkip');
     for (const n of [2, 3]) {
       const step = stepOf(source, n);
-      expect(step).toContain(`await absentDialogSkip([page.getByRole('button', { name: '${n === 2 ? 'Discard' : 'Mark'}', exact: true })], {"target":[{"kind":"role","name":"${n === 2 ? 'Discard' : 'Mark'}"}]}, absentDialog, p, '01-step s_emit/${n}')`);
+      expect(step).toContain(`await absentDialogSkip([page.getByRole('button', { name: roleName('${n === 2 ? 'Discard' : 'Mark'}'), exact: true })], {"target":[{"kind":"role","name":"${n === 2 ? 'Discard' : 'Mark'}"}]}, absentDialog, p, '01-step s_emit/${n}')`);
       expect(step).toContain("return { status: 'skipped' };");
       expect(step).toContain('absentDialog = null;');
       expect(step.indexOf('absentDialog = null;')).toBeLessThan(step.indexOf('await click('));

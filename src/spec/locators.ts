@@ -206,7 +206,14 @@ export function candidateSource(c: LocatorCandidate, o: SourceOptions = {}): str
           : `${page}.locator(${stringSource(`[${c.attr}=${JSON.stringify(c.value)}]`, o)})`;
       break;
     case 'role':
-      src = `${page}.getByRole(${quote(c.role)}, { name: ${matcherSource(c.name, o)}, exact: true })`;
+      // The same function makeLocator calls, embedded in the artifact (the
+      // shared execution/text.ts): a role name is matched with roleName's
+      // tolerance for what an accessible name carries and a recorded one
+      // cannot — see it. Rendered as a call rather than a regex literal so
+      // the artifact and the daemon cannot build two different matchers.
+      // A bound slot is filled at run time, as replay fills it, so a clock or
+      // calendar token arriving through a parameter is wildcarded in both.
+      src = `${page}.getByRole(${quote(c.role)}, { name: roleName(${stringSource(c.name, o)}), exact: true })`;
       break;
     case 'label':
       src = `${page}.getByLabel(${matcherSource(c.label, o)})`;

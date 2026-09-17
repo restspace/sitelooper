@@ -916,7 +916,7 @@ describe('expectations', () => {
     const indexed = emit(
       specOf([{ tool: 'fill', args: { target: '@e1', value: '{{v1}}' }, locators: { target: [{ kind: 'role', role: 'textbox', name: 'Title', nth: 1 }] }, expect: { addedContains: ['- heading "{{v1}}"'] } }]),
     );
-    expect(indexed).toContain(`{ locator: page.getByRole('textbox', { name: 'Title', exact: true }).nth(1), index: 0, structural: true, kind: 'role', carries: JSON.stringify({ kind: 'role', role: 'textbox', name: 'Title', nth: 1 }), nth: 1 },`);
+    expect(indexed).toContain(`{ locator: page.getByRole('textbox', { name: roleName('Title'), exact: true }).nth(1), index: 0, structural: true, kind: 'role', carries: JSON.stringify({ kind: 'role', role: 'textbox', name: 'Title', nth: 1 }), nth: 1 },`);
     expect(indexed).toContain('positional1 = positional1 || hit1.structural || hit1.nth !== undefined;');
     // a step with recorded changes but NO locator still answers the gate
     const noTarget = emit(specOf([{ tool: 'goto', args: { url: 'http://app.test/x' }, locators: {}, expect: { addedContains: ['- heading "Items"'] } }]));
@@ -976,7 +976,7 @@ describe('expectations', () => {
     const step2 = source.slice(source.indexOf('// @step 01-do s_test1/2'), source.indexOf('// @step 01-do s_test1/3'));
     expect(
       sequenceAt(step2, [
-        "if (absentDialog !== null && (await absentDialogSkip([page.getByRole('button', { name: 'Discard', exact: true })], {\"target\":[{\"kind\":\"role\",\"name\":\"Discard\"}]}, absentDialog, p, '01-do s_test1/2'))) {",
+        "if (absentDialog !== null && (await absentDialogSkip([page.getByRole('button', { name: roleName('Discard'), exact: true })], {\"target\":[{\"kind\":\"role\",\"name\":\"Discard\"}]}, absentDialog, p, '01-do s_test1/2'))) {",
         "return { status: 'skipped' };",
         '}',
         'absentDialog = null;',
@@ -1481,7 +1481,7 @@ describe('preconditions, minting and loops', () => {
       sequenceAt(source, [
         'guard: async () => {',
         'const guard1 = await resolveCandidates(page, [',
-        `{ locator: page.getByRole('button', { name: 'Remove', exact: true }), index: 0, structural: false, kind: 'role', carries: JSON.stringify({ kind: 'role', role: 'button', name: 'Remove' }) },`,
+        `{ locator: page.getByRole('button', { name: roleName('Remove'), exact: true }), index: 0, structural: false, kind: 'role', carries: JSON.stringify({ kind: 'role', role: 'button', name: 'Remove' }) },`,
         '], { allowMultiple: true });',
         'return guard1 ? guard1.locator : null;',
       ]),

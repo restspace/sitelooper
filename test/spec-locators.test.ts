@@ -14,7 +14,7 @@ import { BrowserSession } from '../src/daemon/browser.js';
 import { pointLocator } from '../src/execution/point.js';
 import { resolveCandidates, type CandidateObservation } from '../src/execution/resolve.js';
 import { makeLocator, type LocatorCandidate } from '../src/daemon/recorder.js';
-import { volatileMatcher } from '../src/shared/text.js';
+import { roleName, volatileMatcher } from '../src/shared/text.js';
 import { candidateSource, chainSource, matcherSource, observationSource, observationSources, stringSource } from '../src/spec/locators.js';
 
 /** What the generated file inlines; the regex tests need it in scope. */
@@ -102,7 +102,7 @@ describe('candidateSource', () => {
   const cases: Array<[string, LocatorCandidate, string | null]> = [
     ['testid', { kind: 'testid', attr: 'data-testid', value: 'del-1' }, "page.getByTestId('del-1')"],
     ['testid (other attr, quoted value)', { kind: 'testid', attr: 'data-qa', value: 'a"b' }, 'page.locator(\'[data-qa="a\\\\"b"]\')'],
-    ['role', { kind: 'role', role: 'button', name: 'Edit' }, "page.getByRole('button', { name: 'Edit', exact: true })"],
+    ['role', { kind: 'role', role: 'button', name: 'Edit' }, "page.getByRole('button', { name: roleName('Edit'), exact: true })"],
     ['label', { kind: 'label', label: 'Name' }, "page.getByLabel('Name')"],
     ['placeholder', { kind: 'placeholder', placeholder: 'Search' }, "page.getByPlaceholder('Search')"],
     ['text', { kind: 'text', text: 'Row Alpha' }, "page.getByText('Row Alpha', { exact: true })"],
@@ -128,7 +128,7 @@ describe('candidateSource', () => {
 
   it('appends the recorded match index, as makeLocator does', () => {
     expect(candidateSource({ kind: 'role', role: 'button', name: 'Edit', nth: 1 })).toBe(
-      "page.getByRole('button', { name: 'Edit', exact: true }).nth(1)",
+      "page.getByRole('button', { name: roleName('Edit'), exact: true }).nth(1)",
     );
   });
 
@@ -154,7 +154,7 @@ describe('chainSource', () => {
     const { source, dropped } = chainSource([positional, role, identity, point]);
     expect(source).toBe(
       "page.locator('#editlist > div:nth-of-type(1) > button')\n" +
-        "  .or(page.getByRole('button', { name: 'Edit', exact: true }))\n" +
+        "  .or(page.getByRole('button', { name: roleName('Edit'), exact: true }))\n" +
         "  .or(page.locator('#editlist .erow', { hasText: 'Item One' }).locator('button'))",
     );
     expect(dropped).toEqual([point]);
@@ -186,8 +186,8 @@ describe('chainSource', () => {
   it('keeps duplicates: a union is stored order, not a set', () => {
     const { source } = chainSource([role, role]);
     expect(source).toBe(
-      "page.getByRole('button', { name: 'Edit', exact: true })\n" +
-        "  .or(page.getByRole('button', { name: 'Edit', exact: true }))",
+      "page.getByRole('button', { name: roleName('Edit'), exact: true })\n" +
+        "  .or(page.getByRole('button', { name: roleName('Edit'), exact: true }))",
     );
   });
 });
@@ -206,7 +206,7 @@ describe('observationSource / observationSources', () => {
 
   it('renders the live locator, the stored index, the shared structural verdict, the kind and what it carries', () => {
     expect(observationSource(role, 0)).toBe(
-      "{ locator: page.getByRole('button', { name: 'Edit', exact: true }), index: 0, structural: false, kind: 'role', " +
+      "{ locator: page.getByRole('button', { name: roleName('Edit'), exact: true }), index: 0, structural: false, kind: 'role', " +
         "carries: JSON.stringify({ kind: 'role', role: 'button', name: 'Edit' }) }",
     );
     // structuralCandidate's own rule, not a restatement of it: a css path.
@@ -253,7 +253,8 @@ describe('observationSource / observationSources', () => {
       return self as unknown as Locator;
     };
     const pageWith = (text: string) => ({ url: () => 'http://x.test/', getByRole: () => locatorOf(text), evaluate: async () => ({ x: 0, y: 0 }) });
-    const observe = (page: unknown) => new Function('page', 'p', `return ${src}`)(page, { v1: value }) as CandidateObservation;
+    // roleName is in scope in the artifact (the embedded shared text module); here it is passed in.
+    const observe = (page: unknown) => new Function('page', 'p', 'roleName', `return ${src}`)(page, { v1: value }, roleName) as CandidateObservation;
 
     // the same text the daemon builds: JSON of the filled candidate
     expect(observe(pageWith('')).carries).toBe(JSON.stringify({ kind: 'role', role: 'button', name: `Open ${value}` }));
@@ -349,7 +350,8 @@ d('emitted source resolves what makeLocator resolves (fixture page)', () => {
     it(`matches makeLocator for ${name}`, async () => {
       const page = await session.getPage();
       const src = candidateSource(c)!;
-      await same(makeLocator(page, c), new Function('page', 'p', `return ${src}`)(page, {}) as Locator);
+      // roleName is in scope in the artifact (the embedded shared text module); here it is passed in.
+      await same(makeLocator(page, c), new Function('page', 'p', 'roleName', `return ${src}`)(page, {}, roleName) as Locator);
     }, 30_000);
   }
 
@@ -366,7 +368,7 @@ d('emitted source resolves what makeLocator resolves (fixture page)', () => {
     // baked into the expression. Row 1's Edit button is a perfect match for
     // both of the earlier candidates and has none of "Item Two" about it.
     const observations = observationSources(chain).map(
-      (src) => new Function('page', 'p', 'pointLocator', `return ${src}`)(page, {}, pointLocator) as CandidateObservation,
+      (src) => new Function('page', 'p', 'pointLocator', 'roleName', `return ${src}`)(page, {}, pointLocator, roleName) as CandidateObservation,
     );
     const hit = await resolveCandidates(page, observations, { requireIdentity: ['Item Two'], waitMs: 0 });
     expect(hit).not.toBeNull();

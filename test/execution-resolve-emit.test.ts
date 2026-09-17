@@ -118,9 +118,9 @@ describe('the observations the artifact renders per candidate', () => {
     const body = bodyOf(source);
     // the structural path stays FIRST, as recorded: the policy orders it behind the names itself
     expect(body).toContain("{ locator: page.locator('#list > li:nth-of-type(1) > button'), index: 0, structural: true, kind: 'css', carries: JSON.stringify({ kind: 'css', selector: '#list > li:nth-of-type(1) > button' }) },");
-    expect(body).toContain("{ locator: page.getByRole('button', { name: 'Edit', exact: true }), index: 1, structural: false, kind: 'role', carries: JSON.stringify({ kind: 'role', role: 'button', name: 'Edit' }) },");
+    expect(body).toContain("{ locator: page.getByRole('button', { name: roleName('Edit'), exact: true }), index: 1, structural: false, kind: 'role', carries: JSON.stringify({ kind: 'role', role: 'button', name: 'Edit' }) },");
     expect(body).toContain("{ locator: page.locator('li', { hasText: `${p.v1}` }).locator('button'), index: 2, structural: false, kind: 'scoped', carries: JSON.stringify({ kind: 'scoped', container: 'li', hasText: `${p.v1}`, selector: 'button' }) },");
-    expect(body).toContain("{ locator: page.getByRole('button', { name: 'Edit', exact: true }), index: 3, structural: false, kind: 'role', carries: JSON.stringify({ kind: 'role', role: 'button', name: 'Edit' }) },");
+    expect(body).toContain("{ locator: page.getByRole('button', { name: roleName('Edit'), exact: true }), index: 3, structural: false, kind: 'role', carries: JSON.stringify({ kind: 'role', role: 'button', name: 'Edit' }) },");
     expect(body).not.toContain('.filter({ hasText');
     expect(body).not.toContain('.first()');
     expect(body).not.toContain('.or(');
@@ -319,7 +319,7 @@ describe('the emitted adapter over the shared policy', () => {
   it('narrows to the cursor only when the candidate was ambiguous, and signs the sink accordingly', async () => {
     const { pick } = helpersOf(source);
     const unique = fakeLocator({ counts: [1] }, "locator('.row[data-id=\"7\"] .del')");
-    const generic = fakeLocator({ counts: [3] }, "getByRole('button', { name: 'Remove', exact: true })");
+    const generic = fakeLocator({ counts: [3] }, "getByRole('button', { name: roleName('Remove'), exact: true })");
     const page = fakePage();
 
     const sink1: string[] = [];
@@ -331,9 +331,9 @@ describe('the emitted adapter over the shared policy', () => {
     const sink2: string[] = [];
     const gone = fakeLocator({ counts: [0] }, 'gone');
     const hit2 = await pick(page, [obs(gone, 0), obs(generic, 1)], 'w', { ambiguousNth: 2, waitMs: 0 }, { drift: [], resolved: { into: sink2, key: 'target' } });
-    expect(String(hit2.locator)).toBe("getByRole('button', { name: 'Remove', exact: true }).nth(2)");
+    expect(String(hit2.locator)).toBe("getByRole('button', { name: roleName('Remove'), exact: true }).nth(2)");
     expect(hit2.nth).toBe(2);
-    expect(sink2).toEqual(["target=getByRole('button', { name: 'Remove', exact: true }).nth(2)"]);
+    expect(sink2).toEqual(["target=getByRole('button', { name: roleName('Remove'), exact: true }).nth(2)"]);
   });
 
   it('reports drift in the shared MissReason words, into the run it was given', async () => {
@@ -397,11 +397,11 @@ describe('frame and page context in the emitted body', () => {
   it('resolves an in-frame chain against the recorded frame, and a plain one against the page', () => {
     const framed = bodyOf(emit(flowOf([{ ...click(save), contexts: { target: { frame } } }], {})).source);
     expect(framed).toContain(`const root1 = await frameRoot(page, ${JSON.stringify(frame)}, '01-do s_1/1 target');`);
-    expect(framed).toContain("{ locator: root1.getByRole('button', { name: 'Save', exact: true }), index: 0");
+    expect(framed).toContain("{ locator: root1.getByRole('button', { name: roleName('Save'), exact: true }), index: 0");
     expect(framed).not.toContain("locator: page.getByRole('button', { name: 'Save'");
     const plain = bodyOf(emit(flowOf([click(save)], {})).source);
     expect(plain).not.toContain('frameRoot(');
-    expect(plain).toContain("{ locator: page.getByRole('button', { name: 'Save', exact: true }), index: 0");
+    expect(plain).toContain("{ locator: page.getByRole('button', { name: roleName('Save'), exact: true }), index: 0");
     expect(plain).not.toContain('armPageEffect(');
     expect(plain).not.toContain('run.page');
   });
