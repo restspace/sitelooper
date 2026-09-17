@@ -89,7 +89,9 @@ function helpersOf(source: string, warn: (line: string) => void = () => {}): Rec
   const names = [...block[1].matchAll(/^(?:async )?function (\w+)/gm)].map((m) => m[1]);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const build = new Function('DRIFT', 'console', `${js}\nreturn { ${names.join(', ')} };`) as (d: string[], c: unknown) => Record<string, any>;
-  return build([], { warn, log: () => {} });
+  // The artifact logs its `[sitelooper …]` lines on STDOUT (see logWarning in
+  // src/spec/emit.ts), so `warn` here is what console.log delivers.
+  return build([], { warn: () => {}, log: warn });
 }
 
 const obs = (locator: Locator, index: number, over: Partial<{ structural: boolean; kind: string; carries: string; nth: number }> = {}) => ({

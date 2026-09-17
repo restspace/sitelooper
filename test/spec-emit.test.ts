@@ -213,7 +213,7 @@ describe('emitFlowFile layout', () => {
     expect(source).toContain('export type Outputs = Partial<Record<OutputKey, string>>;');
     expect(source).toContain("  async '01-do'(page: Page, p: { v1: string }, outputs: Outputs, run: FlowRun = createFlowRun()): Promise<void> {");
     expect(source).toContain('export async function runFlow(page: Page, vars: Vars, options: RunOptions = {}): Promise<Outputs> {');
-    expect(source).toContain("await page.goto(options.startUrl ?? 'http://app.test/');");
+    expect(source).toContain("await page.goto(options.startUrl ?? 'http://app.test/', { waitUntil: 'load', timeout: GOTO_TIMEOUT_MS });");
     // The recorded browser travels (a flow saved before profiles were stored
     // gets the default it was recorded at), and runFlow judges the page it is
     // handed against it before navigating — warning, never resizing.
@@ -283,7 +283,7 @@ describe('step bodies', () => {
     // to the live value at a position this segment has shown volatile (fwgr41).
     const goto = one({ tool: 'goto', args: { url: 'http://app.test/x' }, locators: {} });
     expect(goto).toContain("nav1 = navigationTarget('http://app.test/x', page, volatile1, '01-do s_test1/1');");
-    expect(goto).toContain('await page.goto(nav1.url);');
+    expect(goto).toContain("await page.goto(nav1.url, { waitUntil: 'load', timeout: GOTO_TIMEOUT_MS });");
   });
 
   it('presses a key on the page when the recording had no target', () => {
@@ -369,7 +369,7 @@ describe('step bodies', () => {
     expect(out).toContain('export function isDrift(hit: { index: number; missed: readonly unknown[] }): boolean {'.replace('export ', ''));
     expect(out).toContain("const missed = hit.missed.map((m) => `#${m.index + 1} ${m.reason}`).join(', ');");
     expect(out).toContain('const line = `[sitelooper drift] ${where}: ${head} #${hit.index + 1} ${String(hit.locator)} (${missed})`;');
-    expect(out).toContain('console.warn(line);');
+    expect(out).toContain('console.log(line);');
     expect(out).toContain('(opts.drift ?? DRIFT).push(line);');
     expect(syntaxErrors(out)).toEqual([]);
   });
@@ -1180,7 +1180,7 @@ describe('preconditions, minting and loops', () => {
     const source = emit(specOf([goto, click], { segments: [segment([goto, click], { preconditions: pre })] }));
     const poll = source.indexOf(pollText);
     expect(poll).toBeGreaterThan(-1);
-    expect(poll).toBeGreaterThan(source.indexOf("await page.goto('http://app.test/items/42');"));
+    expect(poll).toBeGreaterThan(source.indexOf("await page.goto('http://app.test/items/42', { waitUntil: 'load', timeout: GOTO_TIMEOUT_MS });"));
     expect(poll).toBeLessThan(source.indexOf("locator('#b')"));
     expect(source).toContain("if (landedOnRecordedPage('http://app.test/items/:id', page.url())) {");
     expect(source).toContain('function landedOnRecordedPage(');
@@ -1206,7 +1206,7 @@ describe('preconditions, minting and loops', () => {
     const looked = emit(specOf([wait, goto, click], { segments: [segment([wait, goto, click], { preconditions: pre })] }));
     const lookedPoll = looked.indexOf(pollText);
     expect(looked).not.toContain('await preconditionGate(');
-    expect(lookedPoll).toBeGreaterThan(looked.indexOf("await page.goto('http://app.test/items/42');"));
+    expect(lookedPoll).toBeGreaterThan(looked.indexOf("await page.goto('http://app.test/items/42', { waitUntil: 'load', timeout: GOTO_TIMEOUT_MS });"));
     expect(lookedPoll).toBeLessThan(looked.indexOf("locator('#b')"));
     expect(syntaxErrors(looked)).toEqual([]);
 
@@ -1304,7 +1304,7 @@ describe('preconditions, minting and loops', () => {
       expect(names).toEqual(expect.arrayContaining(['preconditionGate', 'recordedFingerprint', 'fingerprintPage', 'cosine']));
       const call = trimmedLines(source).find((l) => l.startsWith('await preconditionGate('))!;
       const run = new Function('DRIFT', 'console', 'FLOW', 'page', 'p', `${js}\nreturn (async () => { ${call} })();`);
-      return run([], { warn: () => {} }, liftFlowFile(source).spec, page, {}) as Promise<void>;
+      return run([], { warn: () => {}, log: () => {} }, liftFlowFile(source).spec, page, {}) as Promise<void>;
     }
     const pageAt = (url: string, counts: number[] | 'throws') => ({
       url: () => url,
@@ -1773,6 +1773,39 @@ describe('emitSpecFile', () => {
     expect(budgetMs(many)).toBe(270_000);
     expect(emitFlowFile(many, { tier: 'plain' }).source).toContain('export const BUDGET_MS = 270000;');
   });
+
+  /**
+   * A budget that outlives what kills the run is not a budget. odoo's 159
+   * recorded steps summed to 79.5 minutes against a 600s harness kill, so the
+   * test's own timeout could never fire: the hang came back as
+   * `exit=null, 0/0 passed, 600s` with no failing step and no stack.
+   */
+  it('caps the budget below what an outside watchdog allows, so the test times out as a test', () => {
+    const huge = specOf(Array.from({ length: 159 }, () => ({ tool: 'back' as const, args: {}, locators: {} })));
+    expect(159 * 30_000).toBe(4_770_000);
+    expect(budgetMs(huge)).toBe(300_000);
+    expect(emitFlowFile(huge, { tier: 'plain' }).source).toContain('export const BUDGET_MS = 300000;');
+  });
+
+  /**
+   * Under `@playwright/test` `navigationTimeout` defaults to 0 — the 30s
+   * default is playwright-core's, not the runner's — so a bare
+   * `page.goto(url)` in an emitted artifact has no bound at all, while every
+   * daemon-side goto passes `{ waitUntil: 'load', timeout: 30_000 }`. odoo's
+   * artifact sat on one for the full 600s harness cap and was SIGKILLed.
+   */
+  it('bounds every emitted navigation with the same pair the daemon uses', () => {
+    const src = emitFlowFile(specOf([{ tool: 'goto', args: { url: 'http://app.test/x' }, locators: {} }]), { tier: 'plain' }).source;
+    expect(src).toContain('const GOTO_TIMEOUT_MS = 30_000;');
+    for (const line of trimmedLines(src).filter((l) => l.startsWith('await page.goto('))) {
+      expect(line).toContain("{ waitUntil: 'load', timeout: GOTO_TIMEOUT_MS }");
+    }
+    // The constant travels even when no STEP navigates: runFlow's own start-url
+    // goto passes it, and it is written after the helper scan.
+    const still = emitFlowFile(specOf([{ tool: 'back', args: {}, locators: {} }]), { tier: 'plain' }).source;
+    expect(still).toContain('const GOTO_TIMEOUT_MS = 30_000;');
+    expect(still).toContain("timeout: GOTO_TIMEOUT_MS });");
+  });
 });
 
 describe('the fwat2 store, every skill as a one-step flow', () => {
@@ -1944,7 +1977,7 @@ describe('wait_for on an absent target', () => {
  * reads as a pass (see PARITY_GAPS.md).
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function runnableHelpers(source: string, con: unknown = { warn: () => {} }): Record<string, any> {
+function runnableHelpers(source: string, con: unknown = { warn: () => {}, log: () => {} }): Record<string, any> {
   const block = /export const DRIFT: string\[\] = \[\];\n([\s\S]*?)\nexport const steps = \{/.exec(source);
   if (!block) throw new Error('helper block not found in the emitted source');
   const js = ts.transpileModule(block[1], {
@@ -2512,7 +2545,7 @@ describe('a read never fails the flow', () => {
 
   it('leaves the value empty and says so when no candidate resolves', async () => {
     const warned: string[] = [];
-    const { readOptional } = runnableHelpers(source, { warn: (line: string) => warned.push(line) });
+    const { readOptional } = runnableHelpers(source, { warn: () => {}, log: (line: string) => warned.push(line) });
     const value = await readOptional(
       pageStub(),
       [obs({ locator: fakeLocator({ counts: [0] }), index: 0 }), obs({ locator: fakeLocator({ counts: [0] }), index: 1 })],
@@ -2526,7 +2559,7 @@ describe('a read never fails the flow', () => {
 
   it('swallows a failing read too, as replay does when the read itself errors', async () => {
     const warned: string[] = [];
-    const { readOptional } = runnableHelpers(source, { warn: (line: string) => warned.push(line) });
+    const { readOptional } = runnableHelpers(source, { warn: () => {}, log: (line: string) => warned.push(line) });
     const value = await readOptional(pageStub(), [obs({ locator: fakeLocator({ counts: [1] }), index: 0 })], 'x y/1 target', NO_WAIT, async () => {
       throw new Error('element is not an <input>');
     });
@@ -2601,7 +2634,7 @@ describe('every step settles first', () => {
     const goto: SkillStep = { tool: 'goto', args: { url: 'http://app.test/x' }, locators: {}, expect: { addedContains: ['- heading "Items"'] } };
     const out = emit(specOf([goto]));
     const lines = trimmedLines(out);
-    const nav = lines.indexOf('await page.goto(nav1.url);');
+    const nav = lines.indexOf("await page.goto(nav1.url, { waitUntil: 'load', timeout: GOTO_TIMEOUT_MS });");
     // The re-settle is the lifecycle's settle phase, which runs after the
     // action and before verify — and it fires here because a goto changes the
     // url. The assertion it gates must come after it.

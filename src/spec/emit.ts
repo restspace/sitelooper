@@ -211,11 +211,38 @@ const HELPERS: { token: string; source: string[] }[] = [
     source: [`const URL_WAIT_MS = ${URL_WAIT_MS};`],
   },
   {
+    // Every navigation the artifact makes, bounded exactly as tools.ts's
+    // `goto` bounds the daemon's.
+    token: 'GOTO_TIMEOUT_MS',
+    source: [
+      '/**',
+      " * tools.ts's `goto`: the load event, within 30s — and it has to be said out",
+      ' * loud, because under `@playwright/test` `navigationTimeout` defaults to 0.',
+      ' * The familiar 30s default belongs to playwright-core, NOT to the test',
+      ' * runner, so a bare `page.goto(url)` in a spec file is unbounded IN FACT:',
+      ' * an app that never finishes loading hangs the test until the runner (or,',
+      ' * under a harness, a kill signal) stops it, with nothing logged about where',
+      ' * it was. Every goto this file emits passes this, so the artifact fails the',
+      ' * same way, at the same moment, as the daemon replaying the same step.',
+      ' */',
+      'const GOTO_TIMEOUT_MS = 30_000;',
+    ],
+  },
+  {
     token: 'logWarning(',
     source: [
-      '/** A soft finding, in the one grep-able shape replay reports its own warnings in. */',
+      '/**',
+      ' * A soft finding, in the one grep-able shape replay reports its own warnings in.',
+      ' *',
+      ' * stdout, not stderr, like every `[sitelooper …]` line this file logs: the',
+      " * list reporter forwards a worker's stdout live and batches its stderr to the",
+      ' * END of the run, so a run that is killed (a harness watchdog, a CI timeout)',
+      ' * loses everything written to stderr. On stdout these interleave with the',
+      ' * `[sitelooper step]` lines and survive the kill, which is the only record of',
+      ' * where the run had got to.',
+      ' */',
       'function logWarning(line: string): void {',
-      '  console.warn(`[sitelooper warn] ${line}`);',
+      '  console.log(`[sitelooper warn] ${line}`);',
       '}',
     ],
   },
@@ -632,7 +659,7 @@ const HELPERS: { token: string; source: string[] }[] = [
       "    const missed = hit.missed.map((m) => `#${m.index + 1} ${m.reason}`).join(', ');",
       '    const head = hit.missed.some((m) => m.index === 0) ? `primary ${String(primary.locator)} missed; used` : \'used\';',
       '    const line = `[sitelooper drift] ${where}: ${head} #${hit.index + 1} ${String(hit.locator)} (${missed})`;',
-      '    console.warn(line);',
+      '    console.log(line);',
       '    (opts.drift ?? DRIFT).push(line);',
       '  }',
       '  if (opts.resolved) {',
@@ -724,15 +751,13 @@ const HELPERS: { token: string; source: string[] }[] = [
       "    if (arrived && 'unknown' in arrived) throw new Error(`${where}: none of ${candidates.length} recorded locators resolved; ${arrived.note}`);",
       '    if (arrived) {',
       '      const line = `[sitelooper drift] ${where}: none of ${candidates.length} recorded locators resolved; ${arrived.note}`;',
-      '      console.warn(line);',
+      '      console.log(line);',
       '      (opts.drift ?? DRIFT).push(line);',
       '      return null;',
       '    }',
       '  }',
       '  throw pickMiss(page, candidates, where, note);',
       '}',
-      "/** tools.ts's `goto`: the load event, within 30s. */",
-      'const GOTO_TIMEOUT_MS = 30_000;',
     ],
   },
   {
@@ -750,7 +775,7 @@ const HELPERS: { token: string; source: string[] }[] = [
       '  if (!held) throw err;',
       "  const message = (err instanceof Error ? err.message : String(err)).split('\\n')[0];",
       '  const line = `[sitelooper drift] ${where}: ${message}; the text was already showing in fallback #${held.index + 1} ${String(held.locator)}`;',
-      '  console.warn(line);',
+      '  console.log(line);',
       '  drift.push(line);',
       '}',
     ],
@@ -812,13 +837,13 @@ const HELPERS: { token: string; source: string[] }[] = [
       '  const hit = await resolveForRead(page, (again) => resolveTarget(page, candidates, where, again ? { ...policy, waitMs: 0 } : policy, opts));',
       '  if (!hit) {',
       '    skippedReads.push(where);',
-      '    console.warn(`[sitelooper skip] ${where}: read target not found — value left empty`);',
+      '    console.log(`[sitelooper skip] ${where}: read target not found — value left empty`);',
       "    return '';",
       '  }',
       '  const taken = await takeRead(() => read(hit.locator));',
       '  if (taken.ok) return taken.value;',
       '  skippedReads.push(where);',
-      '  console.warn(`[sitelooper skip] ${where}: read errored (${taken.message}) — value left empty`);',
+      '  console.log(`[sitelooper skip] ${where}: read errored (${taken.message}) — value left empty`);',
       "  return '';",
       '}',
     ],
@@ -1039,8 +1064,8 @@ const HELPERS: { token: string; source: string[] }[] = [
       '      { timeout: EXPECT_WAIT_MS, message: `${ctx.tag}: the recorded page change did not appear` },',
       '    )',
       '    .toBeNull();',
-      '  for (const warning of last.warnings) console.warn(`[sitelooper warn] ${warning}`);',
-      '  if (last.unobserved) console.warn(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);',
+      '  for (const warning of last.warnings) console.log(`[sitelooper warn] ${warning}`);',
+      '  if (last.unobserved) console.log(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);',
       '  return last;',
       '}',
     ],
@@ -2080,12 +2105,16 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
       // instead (fwgr41-n3 06-find step 7 went to a dashboard uid this
       // environment never minted). `nav` also carries what is stale about the
       // target, which this step's alert gate reports as the cause.
+      //
+      // Bounded, because `@playwright/test` bounds nothing: its
+      // `navigationTimeout` default is 0, so a bare goto here waits forever
+      // (see GOTO_TIMEOUT_MS). The daemon's own goto passes exactly this pair.
       if (ctx.navTarget) {
         ctx.volatileUsed = true;
         out.push(`${ctx.navTarget} = navigationTarget(${src(str('url'))}, page, ${ctx.volatile}, ${q(`${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`)});`);
-        out.push(`await page.goto(${ctx.navTarget}.url);`);
+        out.push(`await page.goto(${ctx.navTarget}.url, { waitUntil: 'load', timeout: GOTO_TIMEOUT_MS });`);
       } else {
-        out.push(`await page.goto(${src(str('url'))});`);
+        out.push(`await page.goto(${src(str('url'))}, { waitUntil: 'load', timeout: GOTO_TIMEOUT_MS });`);
       }
       return out;
     case 'back':
@@ -2500,7 +2529,7 @@ function readLines(step: SkillStep, ctx: Ctx): string[] {
     // So the artifact skips it the same way: one skip line, the value empty.
     ctx.warnings.push(`${ctx.stepId}: step ${ctx.stepIndex} (${step.tool} ${step.label ?? ''}) has no locator left — it publishes nothing, as replay skips it`);
     return [
-      `console.warn(${q(`[sitelooper skip] ${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex} target: no locator recorded — value left empty`)});`,
+      `console.log(${q(`[sitelooper skip] ${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex} target: no locator recorded — value left empty`)});`,
       `${out} = '';`,
     ];
   }
@@ -2513,7 +2542,7 @@ function readLines(step: SkillStep, ctx: Ctx): string[] {
     const r = resolutionLines(chain, step, 'target', ctx, { allowMultiple: spansEveryMatch(step.tool, step.args ?? {}), waitMs: 'RESOLVE_WAIT_MS' }, `${framed}.root`);
     return [
       `const ${framed} = await rootFor(page, ${JSON.stringify(frame)}, RESOLVE_WAIT_MS);`,
-      `if ('error' in ${framed}) console.warn(${q(`[sitelooper skip] ${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex} target: `)} + ${framed}.error + ' — value left empty');`,
+      `if ('error' in ${framed}) console.log(${q(`[sitelooper skip] ${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex} target: `)} + ${framed}.error + ' — value left empty');`,
       `${out} = 'root' in ${framed} ? await readOptional(page, [`,
       ...r.open,
       `], ${r.where}, ${r.policy}, ${read}, ${r.opts}) : '';`,
@@ -2610,7 +2639,7 @@ function emitLoop(step: SkillStep, segment: SpecSegment, index: number, ctx: Ctx
     `if (!${result}.ok) throw new Error(\`${templateSafe(where)}: \${${result}.reason}\`);`,
     // A partial loop is not a failure and not a finished collection either:
     // replay says `loop ×N (partial: …)` and so does this, on stdout.
-    `if (${result}.state === 'partial') console.warn(\`[sitelooper partial] ${templateSafe(where)}: \${${result}.reason}\`);`,
+    `if (${result}.state === 'partial') console.log(\`[sitelooper partial] ${templateSafe(where)}: \${${result}.reason}\`);`,
   );
   return out;
 }
@@ -3258,7 +3287,10 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
   // A flow with an observed action records its page's traffic from the start
   // url on (runFlow, below), so the first action's baseline includes the load.
   const observesActions = body.includes('beginAction(');
-  const helpers = neededHelpers([body, 'profileMismatch(', 'readLiveBrowser(', ...(observesActions ? ['pageTraffic('] : [])].join('\n'), [recipesHelper(spec)]);
+  // GOTO_TIMEOUT_MS is named unconditionally: runFlow's own start-url goto
+  // passes it, and runFlow is written after this scan, so a flow whose steps
+  // never navigate would otherwise reference a constant the file does not carry.
+  const helpers = neededHelpers([body, 'profileMismatch(', 'readLiveBrowser(', 'GOTO_TIMEOUT_MS', ...(observesActions ? ['pageTraffic('] : [])].join('\n'), [recipesHelper(spec)]);
 
   const out: string[] = [
     '// @sitelooper-flow v1',
@@ -3329,6 +3361,13 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
     " * its 06-open before that default cut a click's retry short of the force",
     ' * tier that replay reaches. The generated `.spec.ts` applies it with',
     ' * `test.setTimeout(BUDGET_MS)`; your own spec can do the same or override it.',
+    ' *',
+    ' * Capped, because a per-step sum is not a wall-clock anyone waits out: a',
+    ' * 159-step flow summed to 79.5 minutes, longer than the bench harness\'s 600s',
+    ' * kill (bench/spec-replay.mjs), so the budget could never fire first and the',
+    ' * hang was collected as a SIGKILL with no reason, no stack and no stderr.',
+    ' * The cap has to stay well under whatever kills the run from outside, so the',
+    ' * test times out as a TEST — naming the step it was in — rather than dying.',
     ' */',
     `export const BUDGET_MS = ${budgetMs(spec)};`,
     '/**',
@@ -3396,10 +3435,14 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
   out.push('    const browserMismatch = profileMismatch(RECORDED_BROWSER, await readLiveBrowser(page));');
   out.push('    if (browserMismatch) {');
   out.push('      run.warnings.push(browserMismatch);');
-  out.push("      console.warn(`[sitelooper warn] ${browserMismatch}`);");
+  out.push("      console.log(`[sitelooper warn] ${browserMismatch}`);");
   out.push('    }');
   if (observesActions) out.push("    // Traffic is recorded from the start url on, as the daemon records it from adopting the page.", '    pageTraffic(page);');
-  out.push(`    await page.goto(options.startUrl ?? ${q(spec.startUrl)});`);
+  // Bounded like every other goto this file emits: the start url is the one
+  // navigation a flow ALWAYS makes, and an unbounded one here hangs the run
+  // before the first `[sitelooper step]` line is printed — which is exactly
+  // how it reads in a log when it happens.
+  out.push(`    await page.goto(options.startUrl ?? ${q(spec.startUrl)}, { waitUntil: 'load', timeout: GOTO_TIMEOUT_MS });`);
   for (const [i, b] of bodies.entries()) {
     out.push(`    await test.step(${q(`${b.step.id}: ${b.step.instruction}`)}, async () => {`);
     // The arguments are built INSIDE test.step and before `steps[id]` is
@@ -3431,11 +3474,25 @@ function envName(name: string): string {
 /** Per-step budget: settle (≤2s) + pick + three 5s click tiers + a 5s expectation, with headroom. */
 const STEP_BUDGET_MS = 30_000;
 const MIN_BUDGET_MS = 120_000;
+/**
+ * The ceiling on the per-step sum, and the one number here that is about the
+ * WORLD rather than the flow. A budget is only worth having if it can fire:
+ * the bench harness kills a spec run at 600s (bench/spec-replay.mjs), CI
+ * runners and humans are less patient still, and a SIGKILL reports nothing —
+ * no failing step, no stack, not even the batched stderr. odoo's 159 recorded
+ * steps summed to 4,770,000 ms (79.5 minutes), so its hang was collected as
+ * `exit=null, 0/0 passed, 600s` and cost a round to diagnose. Half the
+ * harness's kill leaves the test's own timeout room to fire, report the step
+ * it was in, and let Playwright write its report. Raising this past what the
+ * outermost watchdog allows re-creates that silence, so the two must be
+ * changed together.
+ */
+const MAX_BUDGET_MS = 300_000;
 
 /** The test budget for one run of the whole flow, from its recorded step count. */
 export function budgetMs(spec: SpecFlow): number {
   const steps = spec.steps.reduce((n, st) => n + st.segments.reduce((m, seg) => m + seg.steps.length, 0), 0);
-  return Math.max(MIN_BUDGET_MS, steps * STEP_BUDGET_MS);
+  return Math.min(MAX_BUDGET_MS, Math.max(MIN_BUDGET_MS, steps * STEP_BUDGET_MS));
 }
 
 export function emitSpecFile(spec: SpecFlow): string {

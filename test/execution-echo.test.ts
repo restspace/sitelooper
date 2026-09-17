@@ -110,7 +110,7 @@ describe('the emitted ledger', () => {
     const js = ts.transpileModule(block[1], { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
     const names = [...block[1].matchAll(/^(?:async )?function (\w+)/gm)].map((m) => m[1]);
     const log: string[] = [];
-    const helpers = new Function('DRIFT', 'console', `${js}\nreturn { ${names.join(', ')} };`)([], { warn: (l: string) => log.push(l), log: () => {} }) as Record<string, (...a: unknown[]) => unknown>;
+    const helpers = new Function('DRIFT', 'console', `${js}\nreturn { ${names.join(', ')} };`)([], { warn: () => {}, log: (l: string) => log.push(l) }) as Record<string, (...a: unknown[]) => unknown>;
 
     const ledger = new Set<string>();
     helpers.noteInteraction(ledger, ['Echoville']);

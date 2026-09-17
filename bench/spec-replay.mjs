@@ -301,9 +301,11 @@ function chunkText(c) {
   return '';
 }
 
-/** Every `[sitelooper drift] ...` line pick() (see src/spec/emit.ts) warned
- * into stdout/stderr for one test result — console.warn lands on stderr, but
- * this reads both so it survives a reporter that merges them. */
+/** Every `[sitelooper drift] ...` line pick() (see src/spec/emit.ts) logged
+ * into stdout/stderr for one test result — the artifact logs them on stdout
+ * (stderr is batched to the end of a run and lost if the run is killed), but
+ * this reads both so it survives a reporter that merges them, and an older
+ * artifact that still wrote them to stderr. */
 function driftLines(result) {
   const text = [...(result?.stdout ?? []), ...(result?.stderr ?? [])].map(chunkText).join('');
   return text.split(/\r?\n/).filter((l) => l.startsWith('[sitelooper drift]'));

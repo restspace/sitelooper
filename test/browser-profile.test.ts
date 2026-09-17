@@ -117,7 +117,7 @@ describe('the compiled artifact carries the recorded browser', () => {
   it('judges the page before navigating, and never resizes it', () => {
     const at = flowSource.indexOf('const browserMismatch = profileMismatch(RECORDED_BROWSER, await readLiveBrowser(page));');
     expect(at).toBeGreaterThan(0);
-    expect(at).toBeLessThan(flowSource.indexOf("await page.goto(options.startUrl ?? 'http://app.test/');"));
+    expect(at).toBeLessThan(flowSource.indexOf("await page.goto(options.startUrl ?? 'http://app.test/', { waitUntil: 'load', timeout: GOTO_TIMEOUT_MS });"));
     expect(flowSource).not.toContain('setViewportSize(RECORDED');
     expect(flowSource).toContain('run.warnings.push(browserMismatch);');
   });

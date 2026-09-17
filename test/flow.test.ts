@@ -1576,12 +1576,36 @@ describe('recovery text for an unpublished reference (fwkb8)', () => {
 
 describe('valueLineCandidates', () => {
   it('names each line whose accessible name IS the value, display roles first, never a longer name', () => {
-    const lines = ['- link "Backlog"', '- cell "Backlog ( Total number of tasks 3)"', '- link "Work in progress"', '- cell "Work in progress"', '- button "Mark Work in progress"'];
+    const lines = ['- link "Backlog"', '- columnheader "Backlog ( Total number of tasks 3)"', '- link "Work in progress"', '- columnheader "Work in progress"', '- button "Mark Work in progress"'];
     expect(valueLineCandidates(lines, 'Work in progress')).toEqual([
-      { kind: 'role', role: 'cell', name: 'Work in progress' },
+      { kind: 'role', role: 'columnheader', name: 'Work in progress' },
       { kind: 'role', role: 'link', name: 'Work in progress' },
     ]);
     expect(valueLineCandidates(lines, 'Backlog')).toEqual([{ kind: 'role', role: 'link', name: 'Backlog' }]);
+  });
+
+  // A dialect-2 line's role token is this project's own tag->role map
+  // (execution/snapshot.ts roleOf), not an ARIA role, and it disagrees with
+  // the browser on exactly two tokens: `<td>` AND `<th>` both render as
+  // `cell`, every `<tr>` as `row`. Measured in Chromium: a `<th>` in a
+  // `<thead><tr>` is `columnheader`, so getByRole('cell', {name}) matches it
+  // never (kanboard fwkb20's three column headers); a `role="presentation"`
+  // table's `<td>`/`<tr>` have no role at all, so both tokens match nothing
+  // (odoo fwod58's four `row "Total £ 1,188.00"` totals). All seven round-17
+  // misses are those two tokens, every one `fallbackUsed: null`.
+  it('refuses a role the line dialect cannot round-trip to getByRole (cell, row)', () => {
+    expect(valueLineCandidates(['- cell "Work in progress"'], 'Work in progress')).toEqual([]);
+    expect(valueLineCandidates(['- row "Untaxed Amount £ 210.00"'], 'Untaxed Amount £ 210.00')).toEqual([]);
+    // the same page's link still answers — only the table tokens are refused
+    expect(valueLineCandidates(['- cell "Work in progress"', '- link "Work in progress"'], 'Work in progress')).toEqual([
+      { kind: 'role', role: 'link', name: 'Work in progress' },
+    ]);
+    // …and a refused role still COUNTS towards ambiguity: it is a second
+    // element of that name on the page whatever getByRole calls it.
+    expect(valueLineCandidates(['- link "Ready"', '- link "Ready"', '- cell "Ready"'], 'Ready')).toEqual([]);
+    // columnheader/rowheader/status can only come from an explicit role=
+    // attribute, which the walk and getByRole both read verbatim.
+    expect(valueLineCandidates(['- columnheader "Ready"'], 'Ready')).toEqual([{ kind: 'role', role: 'columnheader', name: 'Ready' }]);
   });
 
   it('skips a role+name shown more than once, and controls whose name is a label', () => {
@@ -1649,6 +1673,21 @@ describe('liveReadsFor', () => {
     ]);
   });
 
+  // valueLineCandidates only keeps a role+name that occurs ONCE in the lines,
+  // and that is an absence claim: no second element on the page carries it. A
+  // startText cut at its budget, or taken by a look that could not cover the
+  // page, has not shown that — the same rule deriveGoal already applies to the
+  // same field (compile.ts). Getting it wrong costs a read that never
+  // resolves: an ambiguous candidate with no `nth` misses exactly like an
+  // absent one (execution/resolve.ts).
+  it('sources no candidate from a startText the recording marked incomplete', () => {
+    const f = flow();
+    const cut = entries().map((e) => (e.k === 'instruction' && e.startText ? { ...e, startTextComplete: false } : e));
+    expect(liveReadsFor(cut, f, (id) => (id === 's_open' ? ['column_1_name'] : []))).toEqual([]);
+    // absent = complete: an older recording with no such field is unaffected
+    expect(liveReadsFor(entries(), f, (id) => (id === 's_open' ? ['column_1_name'] : [])).map((r) => r.output)).toEqual(['column_3_name']);
+  });
+
   it("falls back to the producing instruction's own diffs on its final page, and gives no verdict for a skill not in the store", () => {
     const f = flow();
     f.steps[2].instruction = 'Open {{01-open.board_title}}.';
@@ -1685,7 +1724,7 @@ describe('liveReadsFor', () => {
       e.k === 'report' && e.skill === 's_open'
         ? { ...e, values: { ...e.values, untaxed_amount: '£ 885.00', how: 'clicked the board link then read every column header left to right' } }
         : e.k === 'instruction' && e.startText
-          ? { ...e, startText: `${e.startText}\n- cell "£ 885.00"\n- cell "clicked the board link then read every column header left to right"` }
+          ? { ...e, startText: `${e.startText}\n- heading "£ 885.00"\n- heading "clicked the board link then read every column header left to right"` }
           : e,
     );
     const f = buildFlow(withTotal, { name: 'kb', origin: ORIGIN, startUrl: `${ORIGIN}/`, vars: {}, session: 'kb-n1' })!;

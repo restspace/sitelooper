@@ -429,7 +429,7 @@ describe('the emitted loop', () => {
     const block = /export const DRIFT: string\[\] = \[\];\n([\s\S]*?)\nexport const steps = \{/.exec(source);
     expect(block).not.toBeNull();
     const js = ts.transpileModule(block![1], { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
-    const pick = new Function('DRIFT', 'console', `${js}\nreturn pick;`)([], { warn: () => {} }) as (
+    const pick = new Function('DRIFT', 'console', `${js}\nreturn pick;`)([], { warn: () => {}, log: () => {} }) as (
       page: unknown,
       candidates: unknown[],
       where: string,

@@ -1027,6 +1027,44 @@ const LABELLED_ROLES = new Set(['textbox', 'searchbox', 'combobox', 'spinbutton'
 /** Roles tried first when several lines name the value: they SHOW it rather than act on it. */
 const DISPLAY_ROLES = ['heading', 'columnheader', 'rowheader', 'cell', 'status'];
 
+/**
+ * Roles a snapshot line names that `page.getByRole` does NOT resolve to the
+ * same elements — so a candidate naming one can never be the read it claims.
+ *
+ * A dialect-2 line's role token is NOT an ARIA role. The lines come from this
+ * project's own DOM walk (`observeDocumentInPage`, execution/snapshot.ts), whose
+ * `roleOf` is a small tag→role map, while `getByRole` asks the browser for the
+ * element's computed role. The map agrees with the browser everywhere except
+ * `src/execution/snapshot.ts:166`, which returns `cell` for BOTH `<td>` and
+ * `<th>`, and `:167`, which returns `row` for every `<tr>`:
+ *  - a `<th>` in a `<thead><tr>` computes as `columnheader` (`rowheader` with
+ *    `scope="row"`), so `getByRole('cell', …)` matches it never. Measured in
+ *    Chromium on kanboard's board markup: `getByRole('cell', { name: 'Work in
+ *    progress', exact: true })` → 0 elements, and Playwright's own aria
+ *    snapshot of the same `<thead>` reads `columnheader "0 Work in progress"`.
+ *  - inside a `role="presentation"` table — odoo's totals block, and most
+ *    layout tables — a `<td>`/`<tr>` has no role at all, so both tokens match
+ *    nothing. Measured: 0 for `cell`/`Total` and `row`/`Total`.
+ * Those two tokens are exactly the five misses round 17 filed: kanboard's three
+ * `getByRole('cell', …)` column headers (fwkb20 n2/n3 drift) and odoo's four
+ * `getByRole('row', { name: 'Total £ 1,188.00' … })` totals (fwod58 n2 drift),
+ * every one of them `fallbackUsed: null`.
+ *
+ * Every OTHER token a line can carry is safe on the role axis: an explicit
+ * `role=` attribute is passed through verbatim by the walk and read verbatim by
+ * `getByRole` (this is the only way `columnheader`/`rowheader`/`status` can
+ * appear in a line at all), and the remaining derived roles — `link` (`a[href]`),
+ * `button`, `heading`, `dialog` — map 1:1. The rest of the map produces
+ * LABELLED_ROLES, which are refused above for a different reason.
+ *
+ * The name axis has no such guarantee and cannot get one here: the walk names a
+ * node `aria-label || aria-labelledby || alt || title || innerText` while ARIA
+ * computes `aria-labelledby > aria-label > contents > title`, and nothing at
+ * export time can run the browser's algorithm. That is stated, not fixed — see
+ * liveReadsFor.
+ */
+const UNROUNDTRIPPED_ROLES = new Set(['cell', 'row']);
+
 /** Most candidates one synthesized read carries. */
 const MAX_LIVE_READ_CANDIDATES = 3;
 
@@ -1065,11 +1103,27 @@ export function sameValue(a: string, b: string): boolean {
  * — the same bounded rule as identityRe.
  *
  * A role+name that occurs more than once in the lines is left out: a candidate
- * without `nth` must resolve to one element at replay, and an index guessed
- * from line order is a position, which is what a read must not publish by.
- * Occurrences are counted on the FOLDED name, so two lines differing only in
- * case are ambiguous and both are refused — folding may only ever make a
- * candidate set smaller, never let it silently take the first of two.
+ * without `nth` must resolve to one element at replay (an ambiguous one with no
+ * `nth` is a hard miss — execution/resolve.ts:349 — indistinguishable at the
+ * drift ticket from an absent one), and an index guessed from line order is a
+ * position, which is what a read must not publish by.
+ *
+ * The SAME fold is applied on both sides, and it cuts both ways — the comment
+ * here used to claim folding "may only ever make a candidate set smaller",
+ * which is true of the counting arm and false of the filter arm:
+ *  - the filter (`foldValue(c.name) === want`) WIDENS the match, deliberately:
+ *    a page rendering "Bench" answers for a run that reported "bench" (fwgr48),
+ *    where an exact comparison matched nothing at all;
+ *  - the count keys on the folded name, which NARROWS what survives: two lines
+ *    differing only in case collapse to one key with count 2 and both are
+ *    refused.
+ * One fold on both sides is what makes that safe: a candidate that matches can
+ * never be one of two the fold made indistinguishable. Behaviour is unchanged
+ * by this correction.
+ *
+ * What the lines CANNOT establish is uniqueness on the page — they are a capped
+ * look, and the count here is an absence claim over them. liveReadsFor gates on
+ * that; see there.
  *
  * The candidate carries the PAGE's spelling of the name: the locator has to
  * find what the page renders, not what the run happened to report.
@@ -1097,7 +1151,7 @@ export function valueLineCandidates(lines: string[], value: string): LocatorCand
     return i < 0 ? DISPLAY_ROLES.length : i;
   };
   return [...seen.values()]
-    .filter((c) => foldValue(c.name) === want && c.count === 1 && !LABELLED_ROLES.has(c.role))
+    .filter((c) => foldValue(c.name) === want && c.count === 1 && !LABELLED_ROLES.has(c.role) && !UNROUNDTRIPPED_ROLES.has(c.role))
     .sort((a, b) => rank(a.role) - rank(b.role) || a.order - b.order)
     .slice(0, MAX_LIVE_READ_CANDIDATES)
     .map((c) => ({ kind: 'role' as const, role: c.role, name: c.name }));
@@ -1185,8 +1239,20 @@ export function liveReadsFor(
     // captureReadBack's bounds: too short to be distinctive, or prose.
     if (value.length < 2 || value.length > 80 || runValue?.(value)) continue;
     const next = groups[groups.indexOf(g) + 1];
+    // Only a COMPLETE look at the start page may source a candidate. The
+    // candidate's worth rests on valueLineCandidates' uniqueness test, and
+    // uniqueness is an absence claim — "no second element carries this
+    // role+name" — which a startText cut at its budget (loop.ts
+    // START_TEXT_BUDGET, 8000 chars) or taken by a look that could not cover
+    // the page has not shown. Same rule, same reason, as deriveGoal
+    // (compile.ts: `startTextComplete === false` derives no goal), and the cost
+    // of getting it wrong is the same either way: an ambiguous locator with no
+    // `nth` misses exactly like an absent one (execution/resolve.ts:349), the
+    // read publishes nothing, and two replays spend themselves retiring it.
     const startLines =
-      next?.instruction.startText && !(g.endUrl && next.instruction.url && !samePage(g.endUrl, next.instruction.url))
+      next?.instruction.startText &&
+      next.instruction.startTextComplete !== false &&
+      !(g.endUrl && next.instruction.url && !samePage(g.endUrl, next.instruction.url))
         ? next.instruction.startText.split('\n')
         : [];
     let source: LiveRead['source'] = 'start';
@@ -1194,6 +1260,14 @@ export function liveReadsFor(
     if (!candidates.length) {
       // Only diffs taken on the page the instruction ended on: the read is
       // appended there, and a line an earlier page showed is not on it.
+      //
+      // KNOWN WEAKER THAN THE START ARM, and left alone deliberately: `added`
+      // lines are what CHANGED, so uniqueness within them cannot see a second
+      // element that was on the page all along, and there is no
+      // `startTextComplete` equivalent to gate on. No round-17 miss came from
+      // this arm, so it is reported rather than narrowed on a guess — narrowing
+      // it would remove the only source for a value that never appears on a
+      // later instruction's start page.
       const finalUrl = g.diffs.length ? g.diffs[g.diffs.length - 1].url : undefined;
       const added = g.diffs.filter((d) => d.url === finalUrl).flatMap((d) => d.added ?? []);
       candidates = valueLineCandidates(added, value);

@@ -230,11 +230,21 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     ],
   });
 
+  /**
+   * A hook on the page a leg is about to run on, before anything navigates —
+   * for the one class of case the fixture server cannot express (a request the
+   * network never answers) and for scaling a runner's own timeout down to
+   * something a suite can wait for. Used by both legs, so whatever it does is
+   * done to both.
+   */
+  type PageHook = (page: Awaited<ReturnType<BrowserSession['getPage']>>) => Promise<void>;
+
   /** Run a whole procedure through daemon replay, in its own browser session. */
-  async function replayOf(skill: Skill, params: Record<string, string> = {}): Promise<Outcome> {
+  async function replayOf(skill: Skill, params: Record<string, string> = {}, onPage?: PageHook): Promise<Outcome> {
     const session = new BrowserSession({ session: `parity-replay-${Date.now()}`, persist: false, learn: true });
     try {
       const page = await session.getPage();
+      if (onPage) await onPage(page);
       await page.goto(`${origin}/`);
       session.learn!.put(skill);
       const out = await executeTool(session, 'run_skill', { id: skill.id, params }, os.tmpdir());
@@ -274,20 +284,22 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     return (await import(`file://${file.split(path.sep).join('/')}`)) as FlowModule;
   }
 
-  async function emittedOf(spec: SpecFlow, params: Record<string, string> = {}): Promise<Outcome> {
+  async function emittedOf(spec: SpecFlow, params: Record<string, string> = {}, onPage?: PageHook): Promise<Outcome> {
     const mod = await moduleOf(spec);
 
     const session = new BrowserSession({ session: `parity-spec-${Date.now()}`, persist: false });
-    // The artifact's warnings go to the console; keep them for the outcome.
+    // The artifact's warnings go to the console — on STDOUT, so a killed run
+    // still carries them (src/spec/emit.ts logWarning); keep them for the outcome.
     const warnings: string[] = [];
-    const warn = console.warn;
-    console.warn = (...args: unknown[]) => {
+    const log = console.log;
+    console.log = (...args: unknown[]) => {
       const line = args.map(String).join(' ');
       if (line.startsWith('[sitelooper warn] ')) warnings.push(line.slice('[sitelooper warn] '.length));
-      warn(...args);
+      log(...args);
     };
     try {
       const page = await session.getPage();
+      if (onPage) await onPage(page);
       await page.goto(mod.FLOW.startUrl);
       const run = mod.createFlowRun();
       for (const id of mod.flowStepIds) {
@@ -297,7 +309,7 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     } catch (err) {
       return { ok: false, reason: err instanceof Error ? err.message : String(err), outputs: {}, echoed: [], warnings };
     } finally {
-      console.warn = warn;
+      console.log = log;
       await session.close();
     }
   }
@@ -829,6 +841,63 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     expect(replayLog).toEqual(['visit:rec-77', 'mark:rec-77']);
     expect(emittedLog).toEqual(['visit:rec-77', 'mark:rec-77']);
   }, 120_000);
+
+  /**
+   * A navigation that never completes. Both runners must give it up and say
+   * so; neither may sit on it.
+   *
+   * The daemon has always bounded its own goto (`{ waitUntil: 'load',
+   * timeout: 30_000 }`, src/agent/tools.ts). The artifact emitted a bare
+   * `page.goto(url)` — and under `@playwright/test` that is not the familiar
+   * 30s, it is nothing at all: `navigationTimeout` defaults to 0 there, the
+   * 30s belongs to playwright-core. odoo's artifact sat on one for the full
+   * 600s the bench harness allows and was SIGKILLed, its log holding nothing
+   * but `Running 1 test using 1 worker`.
+   *
+   * TWO injections, both applied to BOTH legs so neither is flattered:
+   *  - the navigation is made to hang by routing it into a handler that never
+   *    answers, rather than by a slow server — nothing then depends on how
+   *    long the suite is willing to wait for a response that is not coming;
+   *  - each runner's own bound is scaled down to NAV_BOUND_MS. The injector
+   *    only ever SHRINKS a bound that was passed; a goto called with no
+   *    timeout (or with Playwright's 0, which means "no timeout") is left
+   *    exactly as unbounded as it was. So it cannot manufacture the property
+   *    under test: before the fix this case does not fail fast, it hangs
+   *    until the case's own timeout — which is what the defect does in the
+   *    field, only smaller.
+   */
+  const NAV_BOUND_MS = 1_500;
+  const hangNavigation: PageHook = async (page) => {
+    // Never fulfilled, never aborted: the request is simply never answered,
+    // so the server never sees it and its log stays the witness that it didn't.
+    await page.route('**/record/**', () => {});
+    const real = page.goto.bind(page);
+    page.goto = ((url: string, opts?: { timeout?: number }) =>
+      real(url, opts?.timeout ? { ...opts, timeout: Math.min(opts.timeout, NAV_BOUND_MS) } : opts)) as typeof page.goto;
+  };
+
+  it('both runners bound a navigation that never completes, and report it', async () => {
+    const slotted = `${origin}/record/{{v1}}`;
+    reset(0);
+    const replay = await replayOf(recordSkill(slotted), { v1: 'rec-77' }, hangNavigation);
+    const replayLog = [...fx.log];
+    reset(0);
+    const emitted = await emittedOf(recordFlow(slotted), { v1: 'rec-77' }, hangNavigation);
+    const emittedLog = [...fx.log];
+
+    // Neither reached the server, and neither went on to do the work: a runner
+    // that read the dead navigation as an arrival would have marked something.
+    expect(replayLog).toEqual([]);
+    expect(emittedLog).toEqual([]);
+
+    expect(replay.ok).toBe(false);
+    expect(emitted.ok).toBe(false);
+    expect(replay.reason).toMatch(/timeout/i);
+    // The bound is the one the artifact itself passes — the injector only
+    // shrank it. `Timeout 0ms`, or no timeout at all, would mean the emitted
+    // goto is still being left to the test runner's zero default.
+    expect(emitted.reason).toMatch(new RegExp(`Timeout ${NAV_BOUND_MS}ms exceeded`, 'i'));
+  }, 90_000);
 
   /**
    * A LATER goto whose recorded target names the record the RECORDING ran on,
@@ -1520,11 +1589,11 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
   async function emittedAt(spec: SpecFlow, startAt: string): Promise<Outcome & { warnings: string[] }> {
     const mod = await moduleOf(spec);
     const warnings: string[] = [];
-    const warn = console.warn;
-    console.warn = (...args: unknown[]) => {
+    const log = console.log;
+    console.log = (...args: unknown[]) => {
       const line = args.map(String).join(' ');
       if (line.startsWith('[sitelooper warn]')) warnings.push(line);
-      else warn(...args);
+      else log(...args);
     };
     const session = new BrowserSession({ session: `parity-gate-spec-${Date.now()}`, persist: false });
     try {
@@ -1538,7 +1607,7 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     } catch (err) {
       return { ok: false, reason: err instanceof Error ? err.message : String(err), outputs: {}, warnings };
     } finally {
-      console.warn = warn;
+      console.log = log;
       await session.close();
     }
   }
