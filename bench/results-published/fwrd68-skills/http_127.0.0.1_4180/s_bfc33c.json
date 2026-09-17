@@ -1,0 +1,109 @@
+{
+ "id": "s_bfc33c",
+ "origin": "http://127.0.0.1:4180",
+ "template": "Open {{v2}} and sign in with email {{v3}} and password {{v4}}. Then create a new ticket titled exactly '{{v5}}', filling in any other required fields the form demands (use sensible placeholder values like customer '{{v6}}' if needed). Submit the form and wait until the ticket appears in the list or detail view (the list may refresh a beat after creating). Report the ticket's title and any other fields shown, plus any confirmation text.",
+ "params": {
+  "v1": {
+   "example": "fwrd68-n1",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "http://127.0.0.1:4180/",
+   "usedIn": [
+    3
+   ]
+  },
+  "v3": {
+   "example": "bench@example.com",
+   "usedIn": []
+  },
+  "v4": {
+   "example": "bench-pass-1234",
+   "usedIn": []
+  },
+  "v5": {
+   "example": "fwrd68-n1 RD Bench Ticket",
+   "usedIn": [],
+   "known": true
+  },
+  "v6": {
+   "example": "Bench Customer",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:4180/"
+ },
+ "steps": [
+  {
+   "tool": "wait_for",
+   "args": {
+    "target": "body",
+    "state": "visible"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "body"
+     },
+     {
+      "kind": "css",
+      "selector": "html > body"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 450,
+      "w": 1264,
+      "h": 884,
+      "role": null,
+      "tag": "body",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "what": "url"
+   },
+   "locators": {},
+   "label": "initial_browser_url"
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v2}}"
+   },
+   "locators": {}
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-17T04:18:09.104Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_1ba4f8",
+  "index": 0,
+  "of": 4
+ },
+ "provenance": {
+  "session": "fwrd68-n1",
+  "instruction": "Open http://127.0.0.1:4180/ and sign in with email bench@example.com and password bench-pass-1234. Then create a new ticket titled exactly 'fwrd68-n1 RD Bench Ticket', filling in any other required fields the form demands (use sensible placeholder values like customer 'Bench Customer' if needed). Submit the form and wait until the ticket appears in the list or detail view (the list may refresh a beat after creating). Report the ticket's title and any other fields shown, plus any confirmation text.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-17T04:18:09.104Z"
+ },
+ "revision": 1
+}

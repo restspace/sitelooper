@@ -1,0 +1,131 @@
+{
+ "id": "s_6a680e",
+ "origin": "http://127.0.0.1:4180",
+ "template": "On the ticket detail page for ticket {{v1}} (titled '{{v2}}'), add a part named exactly '{{v4}}' with cost {{v6}} and markup 25, then add a second part named exactly '{{v5}}' with cost {{v7}} and markup 25. Use the ticket's parts/add-part form for each. After each add, wait for the parts table to refresh (it may take a beat) and confirm the row appears. Report the exact price value the app computes and displays for each part (Part A and Part B), plus any total shown on the ticket.",
+ "params": {
+  "v1": {
+   "example": "RD-1016",
+   "usedIn": [
+    1
+   ],
+   "known": true,
+   "binding": "01-open.ticket_reference"
+  },
+  "v2": {
+   "example": "fwrd68-n2 RD Bench Ticket",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i1:title_in_list"
+  },
+  "v3": {
+   "example": "fwrd68-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v4": {
+   "example": "fwrd68-n2 RD Part A",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:part_a_name"
+  },
+  "v5": {
+   "example": "fwrd68-n2 RD Part B",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:part_b_name"
+  },
+  "v6": {
+   "example": "100",
+   "usedIn": []
+  },
+  "v7": {
+   "example": "200",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:4180/#/tickets"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=link[name=\"{{v1}}\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=link[name=\"{{v1}}\"]"
+     },
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "{{v1}}"
+     },
+     {
+      "kind": "css",
+      "selector": "#ticket-rows > tr:nth-of-type(1) > td:nth-of-type(1) > a"
+     },
+     {
+      "kind": "point",
+      "x": 152,
+      "y": 423,
+      "w": 54.6,
+      "h": 15,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "mints": {
+    "at": "h1"
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets/{{d1}}",
+    "addedContains": [
+     "- heading \"{{v2}}\"",
+     "- button \"Mark Ready\"",
+     "- button \"Archive ticket\"",
+     "- heading \"Parts\"",
+     "- button \"Add part\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "derived": {
+  "d1": {
+   "step": 1,
+   "at": "h1",
+   "example": "t15"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 2,
+  "successes": 2,
+  "partial": 0,
+  "created": "2026-09-17T04:27:54.870Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-17T04:29:38.267Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_ec24ab",
+  "index": 0,
+  "of": 2
+ },
+ "provenance": {
+  "session": "fwrd68-n2",
+  "instruction": "On the ticket detail page for ticket RD-1016 (titled 'fwrd68-n2 RD Bench Ticket'), add a part named exactly 'fwrd68-n2 RD Part A' with cost 100 and markup 25, then add a second part named exactly 'fwrd68-n2 RD Part B' with cost 200 and markup 25. Use the ticket's parts/add-part form for each. After each add, wait for the parts table to refresh (it may take a beat) and confirm the row appears. Report the exact price value the app computes and displays for each part (Part A and Part B), plus any total shown on the ticket.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-17T04:27:54.870Z"
+ },
+ "revision": 2
+}

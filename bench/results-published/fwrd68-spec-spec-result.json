@@ -1,0 +1,34 @@
+{
+  "arm": "spec",
+  "runid": "fwrd68-spec",
+  "target": "repairdesk",
+  "flow": "fwrd68.json",
+  "flowName": "fwrd68",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwrd68-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwrd68-spec-spec-tmp/fwrd68.flow.ts",
+  "specFile": "bench/results/fwrd68-spec-spec-tmp/fwrd68.spec.ts",
+  "wallMs": 2380,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwrd68",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 366,
+      "error": "Error: 01-open s_bfc33c: not on the page this procedure starts from (expects http://127.0.0.1:4180/, browser is at http://127.0.0.1:4180/#/tickets) — nothing of this segment has run",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "logTail": "\nRunning 1 test using 1 worker\n\n  ✘  1 fwrd68.spec.ts:9:1 › fwrd68 (366ms)\n\n\n  1) fwrd68.spec.ts:9:1 › fwrd68 › 01-open: Open http://127.0.0.1:4180/ and sign in with email bench@example.com and password bench-pass-1234. Then create a new ticket titled exactly '{{runid}} RD Bench Ticket', filling in any other required fields the form demands (use sensible placeholder values like customer 'Bench Customer' if needed). Submit the form and wait until the ticket appears in the list or detail view (the list may refresh a beat after creating). Report the ticket's title and any other fields shown, plus any confirmation text. \n\n    Error: 01-open s_bfc33c: not on the page this procedure starts from (expects http://127.0.0.1:4180/, browser is at http://127.0.0.1:4180/#/tickets) — nothing of this segment has run\n\n       at fwrd68.flow.ts:11606\n\n      11604 |   const verdict = preconditionVerdict(pattern, url, p, similarity);\n      11605 |   for (const line of verdict.warnings) logWarning(`${where}: ${line}`);\n    > 11606 |   if (verdict.refuse) throw new Error(`${where}: ${verdict.refuse} — nothing of this segment has run`);\n            |                             ^\n      11607 | }\n      11608 |\n      11609 | /**\n        at preconditionGate (/home/user/sitelooper/bench/results/fwrd68-spec-spec-tmp/fwrd68.flow.ts:11606:29)\n        at Object.01-open (/home/user/sitelooper/bench/results/fwrd68-spec-spec-tmp/fwrd68.flow.ts:12138:11)\n        at /home/user/sitelooper/bench/results/fwrd68-spec-spec-tmp/fwrd68.flow.ts:16900:29\n        at runFlow (/home/user/sitelooper/bench/results/fwrd68-spec-spec-tmp/fwrd68.flow.ts:16899:5)\n        at /home/user/sitelooper/bench/results/fwrd68-spec-spec-tmp/fwrd68.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: ../../../test-results/fwrd68-fwrd68/error-context.md\n\n  1 failed\n    fwrd68.spec.ts:9:1 › fwrd68 ────────────────────────────────────────────────────────────────────\n"
+}

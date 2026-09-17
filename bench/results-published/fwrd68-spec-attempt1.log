@@ -1,0 +1,33 @@
+
+Running 1 test using 1 worker
+
+  ✘  1 fwrd68.spec.ts:9:1 › fwrd68 (451ms)
+
+
+  1) fwrd68.spec.ts:9:1 › fwrd68 › 01-open: Open http://127.0.0.1:4180/ and sign in with email bench@example.com and password bench-pass-1234. Then create a new ticket titled exactly '{{runid}} RD Bench Ticket', filling in any other required fields the form demands (use sensible placeholder values like customer 'Bench Customer' if needed). Submit the form and wait until the ticket appears in the list or detail view (the list may refresh a beat after creating). Report the ticket's title and any other fields shown, plus any confirmation text. 
+
+    Error: 01-open s_bfc33c: not on the page this procedure starts from (expects http://127.0.0.1:4180/, browser is at http://127.0.0.1:4180/#/tickets) — nothing of this segment has run
+
+       at fwrd68.flow.ts:11606
+
+      11604 |   const verdict = preconditionVerdict(pattern, url, p, similarity);
+      11605 |   for (const line of verdict.warnings) logWarning(`${where}: ${line}`);
+    > 11606 |   if (verdict.refuse) throw new Error(`${where}: ${verdict.refuse} — nothing of this segment has run`);
+            |                             ^
+      11607 | }
+      11608 |
+      11609 | /**
+        at preconditionGate (/home/user/sitelooper/bench/results/fwrd68-spec-spec-tmp/fwrd68.flow.ts:11606:29)
+        at Object.01-open (/home/user/sitelooper/bench/results/fwrd68-spec-spec-tmp/fwrd68.flow.ts:12138:11)
+        at /home/user/sitelooper/bench/results/fwrd68-spec-spec-tmp/fwrd68.flow.ts:16900:29
+        at runFlow (/home/user/sitelooper/bench/results/fwrd68-spec-spec-tmp/fwrd68.flow.ts:16899:5)
+        at /home/user/sitelooper/bench/results/fwrd68-spec-spec-tmp/fwrd68.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../test-results/fwrd68-fwrd68/error-context.md
+
+  1 failed
+    fwrd68.spec.ts:9:1 › fwrd68 ────────────────────────────────────────────────────────────────────
