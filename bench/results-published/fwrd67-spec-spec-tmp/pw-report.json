@@ -1,0 +1,189 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwrd67-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwrd67-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwrd67-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwrd67-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwrd67.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwrd67-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwrd67.spec.ts",
+      "file": "fwrd67.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwrd67",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 20672,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-add\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-add\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-edit\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-change\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-edit\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 07-delete\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 08-report s_59bd5b/5: read 'bench_prefix' returned a value the skill itself set/selected ('fwrd67-spec') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 08-report\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:4180/ and sign in with email bench@example.com and password bench-pass-1234. Then create a new ticket titled exactly '{{runid}} RD Bench Ticket' (fill any other required fields with sensible values, and note what fields existed). Verify the ticket appears in the app and report its title, any ticket reference/id shown on screen, and its initial status.",
+                      "duration": 6060
+                    },
+                    {
+                      "title": "02-add: On the ticket detail page for ticket {{01-open.ticket_reference}} (titled '{{runid}} RD Bench Ticket'), add a part named exactly '{{runid}} RD Part A' with cost 100 and markup 25. Fill any other required fields sensibly. After saving, wait for the page to settle and report the price the app computes/displays for this part (the computed price shown on screen), plus the part's name, cost and markup as displayed.",
+                      "duration": 2290
+                    },
+                    {
+                      "title": "03-add: On the ticket detail page for ticket {{01-open.ticket_reference}} (titled '{{runid}} RD Bench Ticket'), add a second part named exactly '{{runid}} RD Part B' with cost 200 and markup 25. Fill any other required fields sensibly. After saving, wait for the page to settle and report the price the app computes/displays for this part, plus the part's name, cost and markup as displayed, and confirm both parts (Part A and Part B) are listed.",
+                      "duration": 2480
+                    },
+                    {
+                      "title": "04-edit: On the ticket detail page for ticket {{01-open.ticket_reference}} (titled '{{runid}} RD Bench Ticket'), edit the part named '{{runid}} RD Part A' to change its cost from 100 to 150, keeping markup at 25. After saving, wait for the page to settle and report the price the app computes/displays for Part A afterwards, plus its cost and markup as displayed, and the ticket total.",
+                      "duration": 1509
+                    },
+                    {
+                      "title": "05-change: On the ticket detail page for ticket {{01-open.ticket_reference}} (titled '{{runid}} RD Bench Ticket'), attempt to change the ticket's status to 'Ready'. The app enforces preconditions before it will accept that status — if it refuses, read the exact error/validation message shown on screen and report it verbatim, along with what the current status is and what status options are available. Do NOT try to work around the precondition yet; just attempt the change and report exactly what the app says is required.",
+                      "duration": 593
+                    },
+                    {
+                      "title": "06-edit: On the ticket detail page for ticket {{01-open.ticket_reference}} (titled '{{runid}} RD Bench Ticket'), satisfy the precondition for marking the ticket Ready: edit the part '{{runid}} RD Part A' to give it a supplier (e.g. 'Acme Supply'), and edit the part '{{runid}} RD Part B' to give it a supplier (e.g. 'Acme Supply'), keeping all other values unchanged (Part A cost 150 markup 25, Part B cost 200 markup 25). Then click 'Mark Ready'. If it still refuses, read the exact error verbatim and report it. If it succeeds, report the ticket's status as displayed on the page and any confirmation text shown.",
+                      "duration": 3151
+                    },
+                    {
+                      "title": "07-delete: On the ticket detail page for ticket {{01-open.ticket_reference}} (titled '{{runid}} RD Bench Ticket', currently status Ready), delete both parts: delete '{{runid}} RD Part A' and delete '{{runid}} RD Part B' using their Delete buttons (confirm any confirmation dialog that appears). Wait for the page to settle after each delete and verify the Parts table is empty (both rows gone). Then archive the ticket using the 'Archive ticket' button (confirm any confirmation dialog). If archiving is refused, report the exact error verbatim. Report the final state: whether the parts table is empty, the ticket's final status, and any confirmation text shown.",
+                      "duration": 2578
+                    },
+                    {
+                      "title": "08-report: Go to the Tickets list view of the app at http://127.0.0.1:4180/. Report whether the ticket '{{runid}} RD Bench Ticket' ({{01-open.ticket_reference}}) appears in the list, and what its status/badges are there. Also report whether any other ticket in the list contains the text '{{runid}}' in its title, and whether the list shows any filter for archived tickets (e.g. an 'Archived' tab or toggle) — if so, check it and report whether {{01-open.ticket_reference}} appears there. Do not change anything.",
+                      "duration": 1686
+                    }
+                  ],
+                  "startTime": "2026-09-17T03:00:22.156Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e73332bc6b4214a73e60-bf429dff1dd1b89de231",
+          "file": "fwrd67.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-17T03:00:20.517Z",
+    "duration": 22514.607,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
