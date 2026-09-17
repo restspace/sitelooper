@@ -1,0 +1,34 @@
+{
+  "arm": "spec",
+  "runid": "fwgr54-spec",
+  "target": "grafana",
+  "flow": "fwgr54.json",
+  "flowName": "fwgr54",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwgr54-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwgr54-spec-spec-tmp/fwgr54.flow.ts",
+  "specFile": "bench/results/fwgr54-spec-spec-tmp/fwgr54.spec.ts",
+  "wallMs": 41267,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwgr54",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 37210,
+      "error": "Error: 02-create s_ae4493/5: the recorded page change did not appear\n\n02-create s_ae4493/5: the recorded page change did not appear\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeNull\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"after step 02-create s_ae4493/5 none of the 4 recorded page change(s) appeared (e.g. \\\"- textbox \\\\\\\"Search for...\\\\\\\"\\\") — the step ran but did not have its recorded effect\"\u001b[39m\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "logTail": "\nRunning 1 test using 1 worker\n\n[sitelooper step] 01-signin\n  ✘  1 fwgr54.spec.ts:9:1 › fwgr54 (37.2s)\n\n\n  1) fwgr54.spec.ts:9:1 › fwgr54 › 02-create: Create a NEW dashboard in Grafana. Set the dashboard title to exactly '{{runid}} Bench Dashboard'. Add a visualization panel: when prompted to choose a data source, pick the TestData data source (it may be named 'grafana-testdata' or 'TestData DB'). Change the panel's visualization type to 'Stat'. Set the panel title to exactly '{{runid}} Availability'. Leave the query as the default testdata query. Click Apply/Back to exit the panel editor, then explicitly SAVE the dashboard (Ctrl+S or the Save button) and confirm the save dialog so it persists. Report the panel title shown on the dashboard, the data source used by the panel, and whether the save succeeded. \n\n    Error: 02-create s_ae4493/5: the recorded page change did not appear\n\n    02-create s_ae4493/5: the recorded page change did not appear\n\n    expect(received).toBeNull()\n\n    Received: \"after step 02-create s_ae4493/5 none of the 4 recorded page change(s) appeared (e.g. \\\"- textbox \\\\\\\"Search for...\\\\\\\"\\\") — the step ran but did not have its recorded effect\"\n\n    Call Log:\n    - Timeout 5000ms exceeded while waiting on the predicate\n\n       at fwgr54.flow.ts:11278\n\n      11276 |       { timeout: EXPECT_WAIT_MS, message: `${ctx.tag}: the recorded page change did not appear` },\n      11277 |     )\n    > 11278 |     .toBeNull();\n            |      ^\n      11279 |   for (const warning of last.warnings) console.log(`[sitelooper warn] ${warning}`);\n      11280 |   if (last.unobserved) console.log(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);\n      11281 |   return last;\n        at expectChanges (/home/user/sitelooper/bench/results/fwgr54-spec-spec-tmp/fwgr54.flow.ts:11278:6)\n        at Object.verify (/home/user/sitelooper/bench/results/fwgr54-spec-spec-tmp/fwgr54.flow.ts:12265:32)\n        at runStepLifecycle (/home/user/sitelooper/bench/results/fwgr54-spec-spec-tmp/fwgr54.flow.ts:8682:24)\n        at Object.02-create (/home/user/sitelooper/bench/results/fwgr54-spec-spec-tmp/fwgr54.flow.ts:12228:5)\n        at /home/user/sitelooper/bench/results/fwgr54-spec-spec-tmp/fwgr54.flow.ts:16318:7\n        at runFlow (/home/user/sitelooper/bench/results/fwgr54-spec-spec-tmp/fwgr54.flow.ts:16317:5)\n        at /home/user/sitelooper/bench/results/fwgr54-spec-spec-tmp/fwgr54.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: ../../../test-results/fwgr54-fwgr54/error-context.md\n\n  1 failed\n    fwgr54.spec.ts:9:1 › fwgr54 ────────────────────────────────────────────────────────────────────\n"
+}

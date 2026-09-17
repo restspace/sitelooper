@@ -1,0 +1,45 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-signin
+  ✘  1 fwgr54.spec.ts:9:1 › fwgr54 (37.2s)
+
+
+  1) fwgr54.spec.ts:9:1 › fwgr54 › 02-create: Create a NEW dashboard in Grafana. Set the dashboard title to exactly '{{runid}} Bench Dashboard'. Add a visualization panel: when prompted to choose a data source, pick the TestData data source (it may be named 'grafana-testdata' or 'TestData DB'). Change the panel's visualization type to 'Stat'. Set the panel title to exactly '{{runid}} Availability'. Leave the query as the default testdata query. Click Apply/Back to exit the panel editor, then explicitly SAVE the dashboard (Ctrl+S or the Save button) and confirm the save dialog so it persists. Report the panel title shown on the dashboard, the data source used by the panel, and whether the save succeeded. 
+
+    Error: 02-create s_ae4493/5: the recorded page change did not appear
+
+    02-create s_ae4493/5: the recorded page change did not appear
+
+    expect(received).toBeNull()
+
+    Received: "after step 02-create s_ae4493/5 none of the 4 recorded page change(s) appeared (e.g. \"- textbox \\\"Search for...\\\"\") — the step ran but did not have its recorded effect"
+
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+
+       at fwgr54.flow.ts:11278
+
+      11276 |       { timeout: EXPECT_WAIT_MS, message: `${ctx.tag}: the recorded page change did not appear` },
+      11277 |     )
+    > 11278 |     .toBeNull();
+            |      ^
+      11279 |   for (const warning of last.warnings) console.log(`[sitelooper warn] ${warning}`);
+      11280 |   if (last.unobserved) console.log(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);
+      11281 |   return last;
+        at expectChanges (/home/user/sitelooper/bench/results/fwgr54-spec-spec-tmp/fwgr54.flow.ts:11278:6)
+        at Object.verify (/home/user/sitelooper/bench/results/fwgr54-spec-spec-tmp/fwgr54.flow.ts:12265:32)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwgr54-spec-spec-tmp/fwgr54.flow.ts:8682:24)
+        at Object.02-create (/home/user/sitelooper/bench/results/fwgr54-spec-spec-tmp/fwgr54.flow.ts:12228:5)
+        at /home/user/sitelooper/bench/results/fwgr54-spec-spec-tmp/fwgr54.flow.ts:16318:7
+        at runFlow (/home/user/sitelooper/bench/results/fwgr54-spec-spec-tmp/fwgr54.flow.ts:16317:5)
+        at /home/user/sitelooper/bench/results/fwgr54-spec-spec-tmp/fwgr54.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../test-results/fwgr54-fwgr54/error-context.md
+
+  1 failed
+    fwgr54.spec.ts:9:1 › fwgr54 ────────────────────────────────────────────────────────────────────

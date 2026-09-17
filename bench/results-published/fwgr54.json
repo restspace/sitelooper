@@ -1,0 +1,390 @@
+{
+  "name": "fwgr54",
+  "origin": "http://127.0.0.1:3000",
+  "startUrl": "http://127.0.0.1:3000/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to Grafana at http://127.0.0.1:3000 with username admin and password admin. If a 'change password' prompt appears, skip it. Then find the provisioned dashboard named 'Service health' (use search / dashboards), open it, and report the titles of all panels on it exactly as shown.",
+      "skill": "s_173b34",
+      "params": {},
+      "outputs": [
+        "dashboard_search_result_name",
+        "dashboard_url",
+        "error_count_value_shown",
+        "panel_title_request_rate",
+        "panel_title_error_count",
+        "panel_title_latency_by_endpoint",
+        "panel_titles_1",
+        "panel_titles_2",
+        "panel_titles_3"
+      ],
+      "recorded": {
+        "panel_count": "3",
+        "dashboard_search_result_name": "Service Health",
+        "dashboard_url": "http://127.0.0.1:3000/d/bench-service-health/service-health?from=now-6h&to=now&timezone=browser",
+        "error_count_value_shown": "62.4",
+        "role_option": "Recent dashboards",
+        "role_option_2": "admin",
+        "panel_title_request_rate": "Request rate",
+        "panel_title_error_count": "Error count",
+        "panel_title_latency_by_endpoint": "Latency by endpoint",
+        "panel_titles_1": "Request rate",
+        "panel_titles_2": "Error count",
+        "panel_titles_3": "Latency by endpoint",
+        "url": "http://127.0.0.1:3000/d/bench-service-health/service-health?from=now-6h&to=now&timezone=browser"
+      },
+      "route": "http://127.0.0.1:3000/d/bench-service-health/service-health",
+      "outputEvidence": {
+        "panel_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "dashboard_search_result_name": {
+          "same": 1,
+          "differed": 0
+        },
+        "dashboard_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "error_count_value_shown": {
+          "same": 0,
+          "differed": 1
+        },
+        "role_option": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "role_option_2": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "panel_title_request_rate": {
+          "same": 1,
+          "differed": 0
+        },
+        "panel_title_error_count": {
+          "same": 1,
+          "differed": 0
+        },
+        "panel_title_latency_by_endpoint": {
+          "same": 1,
+          "differed": 0
+        },
+        "panel_titles_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "panel_titles_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "panel_titles_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "Create a NEW dashboard in Grafana. Set the dashboard title to exactly '{{runid}} Bench Dashboard'. Add a visualization panel: when prompted to choose a data source, pick the TestData data source (it may be named 'grafana-testdata' or 'TestData DB'). Change the panel's visualization type to 'Stat'. Set the panel title to exactly '{{runid}} Availability'. Leave the query as the default testdata query. Click Apply/Back to exit the panel editor, then explicitly SAVE the dashboard (Ctrl+S or the Save button) and confirm the save dialog so it persists. Report the panel title shown on the dashboard, the data source used by the panel, and whether the save succeeded.",
+      "skill": "s_477a99",
+      "params": {
+        "v2": "{{runid}} Bench Dashboard",
+        "v3": "{{runid}} Availability",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "dashboard_title",
+        "panel_title_on_dashboard",
+        "query",
+        "save_result",
+        "change_viz_button_aria",
+        "query_row_title",
+        "ref",
+        "ref_2"
+      ],
+      "recorded": {
+        "dashboard_title": "fwgr54-n1 Bench Dashboard",
+        "dashboard_uid": "dfyj3tph53400a",
+        "panel_title_on_dashboard": "fwgr54-n1 Availability",
+        "panel_visualization_type": "Stat",
+        "panel_data_source": "TestData (name \"TestData\", tag \"default\"; plugin grafana-testdata)",
+        "query": "default TestData Random Walk query (query row A)",
+        "save_result": "alert \"Dashboard saved\" shown; URL /d/dfyj3tph53400a/fwgr54-n1-bench-dashboard; panel title still present after reload",
+        "change_viz_button_aria": "Change Visualization",
+        "query_row_title": "A",
+        "main_input": "TestData",
+        "ref": "fwgr54-n1",
+        "ref_2": "fwgr54-n1-bench-dashboard",
+        "url": "http://127.0.0.1:3000/d/dfyj3tph53400a/fwgr54-n1-bench-dashboard?from=now-6h&to=now&timezone=browser",
+        "url.p1": "dfyj3tph53400a",
+        "url.p2": "fwgr54-n1-bench-dashboard"
+      },
+      "route": "http://127.0.0.1:3000/d/dfyj3tph53400a/:id"
+    },
+    {
+      "id": "03-add",
+      "instruction": "On the Grafana dashboard at http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard (titled '{{runid}} Bench Dashboard'), add a NEW Text panel. Set the Text panel's title to exactly '{{runid}} Notes' and its content/body to include the text '{{runid}}' (e.g. markdown like 'Notes for run {{runid}}'). Click Apply/Back to exit the panel editor, then explicitly SAVE the dashboard (Ctrl+S or Save button) and confirm so it persists. After saving, reload the page and report the Text panel's title as shown on the dashboard and a snippet of its rendered content, plus whether the save succeeded.",
+      "skill": "s_1fd6af",
+      "params": {
+        "v5": "http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard",
+        "v4": "{{runid}} Bench Dashboard",
+        "v6": "{{runid}} Notes",
+        "v3": "{{runid}}",
+        "v7": "Notes for run {{runid}}"
+      },
+      "outputs": [
+        "dashboard_title",
+        "text_panel_title",
+        "text_panel_rendered_content",
+        "save_result",
+        "other_panels_after_reload",
+        "ref"
+      ],
+      "recorded": {
+        "dashboard_title": "fwgr54-n1 Bench Dashboard",
+        "text_panel_title": "fwgr54-n1 Notes",
+        "text_panel_rendered_content": "Notes for run fwgr54-n1",
+        "text_panel_visualization_type": "Text",
+        "save_result": "Save dashboard dialog confirmed; after reload the panel is still present",
+        "other_panels_after_reload": "fwgr54-n1 Availability (Stat, value 72.5)",
+        "ref": "fwgr54-n1"
+      },
+      "route": "http://127.0.0.1:3000/d/dfyj3tph53400a/:id",
+      "urlVariance": [
+        "dfyj3tph53400a",
+        "afyj4r7k8mio0d",
+        "fwgr54-n1-bench-dashboard",
+        "fwgr54-n2-bench-dashboard"
+      ]
+    },
+    {
+      "id": "04-open",
+      "instruction": "On the Grafana dashboard at http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard (titled '{{runid}} Bench Dashboard'), open the dashboard settings (gear icon) and add the tag 'bench' to the dashboard's Tags field (General settings page). Save the dashboard from the settings page and confirm. Then verify by reopening the dashboard settings (or the save dialog) that the tag 'bench' is present, and report what you saw.",
+      "skill": "s_c9ed89",
+      "params": {
+        "v1": "{{02-create.url.p1}}",
+        "v2": "{{runid}}-bench-dashboard",
+        "v4": "{{runid}} Bench Dashboard",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "dashboard_title",
+        "tags_after_reload",
+        "tag_remove_button_label",
+        "save_dialog_result",
+        "settings_url",
+        "ref",
+        "ref_2"
+      ],
+      "recorded": {
+        "dashboard_title": "fwgr54-n1 Bench Dashboard",
+        "tags_after_reload": "bench",
+        "tag_remove_button_label": "Remove \"bench\" tag",
+        "save_dialog_result": "Save dashboard button in dialog confirmed; alert \"Dashboard saved\" shown; dialog title field was \"fwgr54-n1 Bench Dashboard\" and dialog Tags field contained \"bench\"",
+        "settings_url": "http://127.0.0.1:3000/d/dfyj3tph53400a/fwgr54-n1-bench-dashboard?from=now-6h&to=now&timezone=browser&editview=settings",
+        "ref": "fwgr54-n1-bench-dashboard",
+        "ref_2": "fwgr54-n1",
+        "url": "http://127.0.0.1:3000/d/dfyj3tph53400a/fwgr54-n1-bench-dashboard?from=now-6h&to=now&timezone=browser&editview=settings"
+      },
+      "route": "http://127.0.0.1:3000/d/dfyj3tph53400a/:id"
+    },
+    {
+      "id": "05-set",
+      "instruction": "On the Grafana dashboard at http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard (titled '{{runid}} Bench Dashboard'), set the dashboard's time range to 'Last 6 hours' using the time picker in the top bar. Then open the save dialog (Ctrl+S or Save button) and TICK the checkbox 'Update default time range' (it may be labeled 'Update default time range' or similar) so the time range is persisted into the saved dashboard, then confirm the save. After saving, reload the page and verify the time picker shows 'Last 6 hours' (or from=now-6h&to=now in the URL). Report exactly what the checkbox was labeled, whether it was ticked, and the time range shown after reload.",
+      "skill": "s_5b89c6",
+      "params": {
+        "v5": "http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard",
+        "v4": "{{runid}} Bench Dashboard",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "dashboard_title",
+        "save_dialog_checkbox_label_read_from_aria",
+        "save_dialog_checkbox_visible_text",
+        "time_range_after_reload",
+        "url_after_reload_without_params",
+        "panels_after_reload",
+        "url_after_save",
+        "ref",
+        "ref_3"
+      ],
+      "recorded": {
+        "dashboard_title": "fwgr54-n1 Bench Dashboard",
+        "time_picker_before_save": "Last 6 hours (from=now-6h&to=now&timezone=browser)",
+        "save_dialog_checkbox_label_read_from_aria": "Update default time range Will make current time range the new default",
+        "save_dialog_checkbox_visible_text": "Update default time range / Will make current time range the new default",
+        "checkbox_ticked": "true",
+        "save_dialog_result": "after ticking, dialog showed tab \"Changes 1\", Save became enabled; clicked Save, dialog closed and edit mode exited",
+        "time_range_after_reload": "Last 6 hours",
+        "url_after_reload_without_params": "http://127.0.0.1:3000/d/dfyj3tph53400a/fwgr54-n1-bench-dashboard (loaded, then resolved to ?from=now-6h&to=now&timezone=browser)",
+        "panels_after_reload": "fwgr54-n1 Notes (Text: \"Notes for run fwgr54-n1\"), fwgr54-n1 Availability (Stat, 65.3)",
+        "url_after_save": "http://127.0.0.1:3000/d/dfyj3tph53400a/fwgr54-n1-bench-dashboard?from=now-6h&to=now&timezone=browser",
+        "ref": "fwgr54-n1",
+        "ref_2": "now-6h",
+        "ref_3": "fwgr54-n1-bench-dashboard"
+      },
+      "route": "http://127.0.0.1:3000/d/dfyj3tph53400a/:id",
+      "urlVariance": [
+        "dfyj3tph53400a",
+        "afyj4r7k8mio0d",
+        "fwgr54-n1-bench-dashboard",
+        "fwgr54-n2-bench-dashboard"
+      ]
+    },
+    {
+      "id": "06-set",
+      "instruction": "On the Grafana dashboard at http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard (titled '{{runid}} Bench Dashboard'), set the dashboard's auto-refresh interval to '1m'. This is done via the time picker dropdown in the top bar: open the time picker, find the 'Refresh every' (auto refresh) select/dropdown, and choose '1m' (1 minute). Then explicitly SAVE the dashboard (enter edit mode if needed to reach the Save dashboard button, open the save dialog, and click Save) so the refresh interval persists. After saving, reload the page and verify the auto-refresh indicator in the top bar shows '1m' (e.g. a refresh icon with '1m' next to it). Report the value you set, whether the save succeeded, and what the refresh indicator shows after reload.",
+      "skill": "s_c9dbb4",
+      "params": {
+        "v5": "http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard",
+        "v4": "{{runid}} Bench Dashboard",
+        "v6": "1 minute",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "auto_refresh_set",
+        "save_dialog_checkbox_label",
+        "save_result",
+        "refresh_indicator_after_reload",
+        "time_range_after_reload",
+        "panels_after_reload",
+        "ref",
+        "ref_2"
+      ],
+      "recorded": {
+        "auto_refresh_set": "1m",
+        "refresh_menu_options_seen": "Off, Auto, 5s, 10s, 30s, 1m, 5m, 15m, 30m, 1h, 2h, 1d",
+        "save_dialog_checkbox_label": "Update default refresh value — sub-text \"Will make the current refresh the new default\"",
+        "save_dialog_checkbox_ticked": "true",
+        "save_result": "alert \"Dashboard saved\" shown; edit mode exited",
+        "refresh_indicator_after_reload": "button aria-label \"Choose refresh time interval with current interval 1 minute selected\", visible label \"1m\"",
+        "time_range_after_reload": "Last 6 hours",
+        "panels_after_reload": "fwgr54-n1 Notes (Text: \"Notes for run fwgr54-n1\"), fwgr54-n1 Availability (Stat: 21.1)",
+        "ref": "fwgr54-n1",
+        "ref_2": "fwgr54-n1-bench-dashboard",
+        "url": "http://127.0.0.1:3000/d/dfyj3tph53400a/fwgr54-n1-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m"
+      },
+      "route": "http://127.0.0.1:3000/d/dfyj3tph53400a/:id",
+      "urlVariance": [
+        "dfyj3tph53400a",
+        "afyj4r7k8mio0d",
+        "fwgr54-n1-bench-dashboard",
+        "fwgr54-n2-bench-dashboard"
+      ]
+    },
+    {
+      "id": "07-open",
+      "instruction": "Open the Grafana dashboard at http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard in the browser (fresh load), and report: (1) the exact current page URL as shown in the browser address bar, (2) the dashboard title shown in the breadcrumb, (3) the titles of all panels on the dashboard, (4) the time range shown in the top-bar time picker, (5) the auto-refresh interval shown in the top bar, and (6) the dashboard's tags (open the save dialog or settings briefly to read the Tags field, then close it without changing anything). Do not modify or save anything.",
+      "skill": "s_ccf36d",
+      "params": {
+        "v4": "http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "current_url",
+        "breadcrumb_title",
+        "panel_details",
+        "time_range_shown",
+        "auto_refresh_shown",
+        "dashboard_tags",
+        "save_dialog_fields_seen",
+        "ref",
+        "ref_2",
+        "panel_titles_1",
+        "panel_titles_2"
+      ],
+      "recorded": {
+        "current_url": "http://127.0.0.1:3000/d/dfyj3tph53400a/fwgr54-n1-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m",
+        "breadcrumb_title": "fwgr54-n1 Bench Dashboard (breadcrumbs: Home / Dashboards / fwgr54-n1 Bench Dashboard)",
+        "panel_details": "fwgr54-n1 Notes = Text panel with paragraph 'Notes for run fwgr54-n1'; fwgr54-n1 Availability = Stat panel showing 94.8",
+        "time_range_shown": "Last 6 hours (button aria-label 'Time range selected: Last 6 hours')",
+        "auto_refresh_shown": "1m (button aria-label 'Choose refresh time interval with current interval 1 minute selected')",
+        "dashboard_tags": "bench",
+        "save_dialog_fields_seen": "Details tab with Message textarea (aria-label 'message'), Cancel and Save; Save disabled reading 'No changes to save'",
+        "nothing_modified": "true",
+        "ref": "fwgr54-n1-bench-dashboard",
+        "ref_2": "fwgr54-n1",
+        "panel_titles_1": "fwgr54-n1 Notes",
+        "panel_titles_2": "fwgr54-n1 Availability"
+      },
+      "route": "http://127.0.0.1:3000/d/dfyj3tph53400a/:id",
+      "urlVariance": [
+        "dfyj3tph53400a",
+        "afyj4r7k8mio0d",
+        "fwgr54-n1-bench-dashboard",
+        "fwgr54-n2-bench-dashboard"
+      ]
+    }
+  ],
+  "provenance": {
+    "session": "fwgr54-n1",
+    "created": "2026-09-17T13:29:16.205Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "panel_count",
+        "role_option",
+        "role_option_2"
+      ]
+    },
+    {
+      "stepId": "02-create",
+      "outputs": [
+        "dashboard_uid",
+        "panel_visualization_type",
+        "panel_data_source",
+        "main_input"
+      ]
+    },
+    {
+      "stepId": "03-add",
+      "outputs": [
+        "text_panel_visualization_type"
+      ]
+    },
+    {
+      "stepId": "05-set",
+      "outputs": [
+        "time_picker_before_save",
+        "checkbox_ticked",
+        "save_dialog_result",
+        "ref_2"
+      ]
+    },
+    {
+      "stepId": "06-set",
+      "outputs": [
+        "refresh_menu_options_seen",
+        "save_dialog_checkbox_ticked"
+      ]
+    },
+    {
+      "stepId": "07-open",
+      "outputs": [
+        "nothing_modified"
+      ]
+    }
+  ]
+}
