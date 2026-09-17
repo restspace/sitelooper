@@ -1,0 +1,115 @@
+
+[sweep] run 1/3: fwrd75-n1 (store: /home/user/sitelooper/bench/results/fwrd75-skills)
+[harness] repairdesk: defaulting APP_URL
+[harness] repairdesk: defaulting APP_EMAIL
+[harness] repairdesk: defaulting APP_PASSWORD
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+[harness] repairdesk responded 200 at http://127.0.0.1:4180/
+stopped: fwrd75-n1
+  flow "fwrd75" saved: 7 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwrd75.json
+  warning: note: dropped 3 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: note: 01-signin no longer publishes landing_page — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-create no longer publishes detail_url — no replay reads it from the page and the recording showed no line to read
+  warning: note: 04-add no longer publishes parts_total — no replay reads it from the page and the recording showed no line to read
+  warning: note: 05-edit no longer publishes previous_total — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 201 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "bench-pass-1234" (output) in "Sign in with email bench@example.com and password bench-pass-1234, then report whether you are signed in and what page you land on."
+  flow.steps[0].params.v2: "bench-pass-1234" (output) in "bench-pass-1234"
+  flow.steps[0].route: "http://127.0.0.1:4180/#/tickets" (output) in "http://127.0.0.1:4180/#/tickets"
+  flow.steps[1].route: "http://127.0.0.1:4180/#/tickets" (output) in "http://127.0.0.1:4180/#/tickets/:id"
+  flow.steps[2].route: "http://127.0.0.1:4180/#/tickets" (output) in "http://127.0.0.1:4180/#/tickets/:id"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwrd75-n1 stop=completed
+turns=9 wall=516.0s
+commands=8 cmdTime=466.5s cmdBytes=8680 timeouts=0
+orchestrator in=16209 cw=0 cr=19200 out=2234
+inner prompt=1418921 cached=1313280 completion=12691
+spend=$0.0649 maxUsd=3
+learn: A_n=0 replayed=0/7 full=0 repaired=0 compiled=7 variants=0
+-> /home/user/sitelooper/bench/results/fwrd75-n1-sitelooper-result.json
+
+=== fwrd75-n1 === (run self-reported: completed)
+  obj 1  PASS  seq 1: ticket t15 (RD-1015) "fwrd75-n1 RD Bench Ticket"
+  obj 2  PASS  seq 2 p18 cost=100 markup=25 price=125.00
+  obj 3  PASS  seq 3 p19 cost=200 markup=25 price=250.00
+  obj 4  PASS  seq 4: cost 100 -> 150, price 125.00 -> 187.50 (want 187.50), after the create at seq 2
+  obj 5  PASS  seq 7: status Draft -> Ready
+  obj 6  PASS  part A deleted, part B deleted, archive entry at seq 10; state: 0 part(s) surviving, ticket t15 archived=true
+  claim 2  ok — run reported 125.00, app recorded 125.00
+  claim 3  ok — run reported 250.00, app recorded 250.00
+  claim 4  *** MISMATCH *** run reported 437.50, app recorded 187.50 — the run reported a price the app never computed
+  summary: 6/6 objectives PASS, 1 price claim mismatch(es), 0 duplicate ticket(s) — RUN NOT CLEAN
+
+App state: 15 tickets total, 1 left by benchmark runs (0 still active), 17 parts total, 10 mutation log entries.
+
+[sweep] run 2/3: fwrd75-n2 (replay flow fwrd75, no orchestrator)
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+
+=== fwrd75-n2 === (run self-reported: no result file)
+  note: no result file in /home/user/sitelooper/bench/results — objectives are still scored from the log,
+        but the run's claimed prices cannot be cross-checked.
+  obj 1  PASS  seq 1: ticket t15 (RD-1016) "fwrd75-n2 RD Bench Ticket"
+  obj 2  PASS  seq 2 p18 cost=100 markup=25 price=125.00
+  obj 3  PASS  seq 3 p19 cost=200 markup=25 price=250.00
+  obj 4  PASS  seq 4: cost 100 -> 150, price 125.00 -> 187.50 (want 187.50), after the create at seq 2
+  obj 5  PASS  seq 7: status Draft -> Ready
+  obj 6  PASS  part A deleted, part B deleted, archive entry at seq 10; state: 0 part(s) surviving, ticket t15 archived=true
+  claim 2  no claim parsed from the run's final report
+  claim 3  no claim parsed from the run's final report
+  claim 4  no claim parsed from the run's final report
+  summary: 6/6 objectives PASS, 0 price claim mismatch(es), 0 duplicate ticket(s)
+
+App state: 15 tickets total, 1 left by benchmark runs (0 still active), 17 parts total, 10 mutation log entries.
+
+[sweep] run 3/3: fwrd75-n3 (replay flow fwrd75, no orchestrator)
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+[sweep] fwrd75-n3: 1 drift ticket(s) → fwrd75-n3-drift.json
+
+=== fwrd75-n3 === (run self-reported: no result file)
+  note: no result file in /home/user/sitelooper/bench/results — objectives are still scored from the log,
+        but the run's claimed prices cannot be cross-checked.
+  obj 1  PASS  seq 1: ticket t15 (RD-1017) "fwrd75-n3 RD Bench Ticket"
+  obj 2  PASS  seq 2 p18 cost=100 markup=25 price=125.00
+  obj 3  PASS  seq 3 p19 cost=200 markup=25 price=250.00
+  obj 4  PASS  seq 4: cost 100 -> 150, price 125.00 -> 187.50 (want 187.50), after the create at seq 2
+  obj 5  PASS  seq 7: status Draft -> Ready
+  obj 6  PASS  part A deleted, part B deleted, archive entry at seq 10; state: 0 part(s) surviving, ticket t15 archived=true
+  claim 2  no claim parsed from the run's final report
+  claim 3  no claim parsed from the run's final report
+  claim 4  no claim parsed from the run's final report
+  summary: 6/6 objectives PASS, 0 price claim mismatch(es), 0 duplicate ticket(s)
+
+App state: 15 tickets total, 1 left by benchmark runs (0 still active), 17 parts total, 10 mutation log entries.
+
+Learning sweep fwrd75 (K=3)
+┌─────────┬───┬─────────────┬─────────────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified        │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼─────────────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwrd75-n1' │ '6/6 +MISMATCH' │ 'completed' │ 9     │ 8    │ 0.0649    │ 0   │ '0/7'        │ 516    │
+│ 1       │ 2 │ 'fwrd75-n2' │ '6/6'           │ 'success'   │ 0     │ 7    │ 0         │ 1   │ '7/7 (flow)' │ 28     │
+│ 2       │ 3 │ 'fwrd75-n3' │ '6/6'           │ 'success'   │ 0     │ 7    │ 0         │ 1   │ '7/7 (flow)' │ 31     │
+└─────────┴───┴─────────────┴─────────────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:4180
+  s_1ef68e  validated    4 steps  3/3 (100%)
+           Sign in with email {{v1}} and password {{v2}}, then report whether you are signed in and what page you land on…
+  s_2794d1  validated    6 steps  3/3 (100%)
+           Create a new repair ticket with the title '{{v1}} RD Bench Ticket'. Fill in any required fields with sensible …
+  s_35d62b  validated    6 steps  3/3 (100%)
+           On the detail page of ticket {{v1}} (titled '{{v2}}', currently status {{v4}}), delete both parts: '{{v5}}' an…
+  s_582a12  validated   16 steps  3/3 (100%)
+           On the detail page of ticket {{v1}} (titled '{{v2}}'), add a second part named '{{v4}}' with cost {{v5}} and m…
+  s_5f6996  validated   17 steps  3/3 (100%)
+           On the detail page of ticket {{v1}} (titled '{{v2}}'), set the ticket status to 'Ready'. The app enforces prec…
+  s_62d07f  validated    8 steps  3/3 (100%)
+           On the detail page of ticket {{v1}} (titled '{{v2}}', currently status {{v4}}), delete both parts: '{{v5}}' an…
+  s_81d3a5  validated    5 steps  3/3 (100%)
+           Create a new repair ticket with the title '{{v1}} RD Bench Ticket'. Fill in any required fields with sensible …
+  s_af073c  validated   20 steps  3/3 (100%)
+           On the detail page of ticket {{v1}} (titled '{{v2}}'), add a part named '{{v4}}' with cost {{v5}} and markup {…
+  s_cf51ea  validated    3 steps  3/3 (100%)
+           Sign in with email {{v1}} and password {{v2}}, then report whether you are signed in and what page you land on…
+  s_eaa3ba  validated   11 steps  3/3 (100%)
+           On the detail page of ticket {{v1}}, edit the part named '{{v2}}' to change its cost from 100 to {{v4}} (keep …
+store: /home/user/sitelooper/bench/results/fwrd75-skills
+
+summary: /home/user/sitelooper/bench/results/fwrd75-sweep.json
+SWEEP_EXIT:0

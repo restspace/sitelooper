@@ -1,0 +1,37 @@
+
+Running 1 test using 1 worker
+
+  ✘  1 fwrd75.spec.ts:9:1 › fwrd75 (387ms)
+
+
+  1) fwrd75.spec.ts:9:1 › fwrd75 › 01-signin: Sign in with email bench@example.com and password bench-pass-1234, then report whether you are signed in and what page you land on. 
+
+    Error: 01-signin s_cf51ea: not on the page this procedure starts from (expects http://127.0.0.1:4180/#/login, browser is at http://127.0.0.1:4180/#/tickets) — nothing of this segment has run
+
+       at fwrd75.flow.ts:10864
+
+      10862 |   const verdict = preconditionVerdict(pattern, url, p, similarity, mints);
+      10863 |   for (const line of verdict.warnings) logWarning(`${where}: ${line}`);
+    > 10864 |   if (verdict.refuse) throw new Error(`${where}: ${verdict.refuse} — nothing of this segment has run`);
+            |                             ^
+      10865 | }
+      10866 |
+      10867 | /**
+        at preconditionGate (/home/user/sitelooper/bench/results/fwrd75-spec-spec-tmp/fwrd75.flow.ts:10864:29)
+        at Object.01-signin (/home/user/sitelooper/bench/results/fwrd75-spec-spec-tmp/fwrd75.flow.ts:11395:11)
+        at /home/user/sitelooper/bench/results/fwrd75-spec-spec-tmp/fwrd75.flow.ts:15516:7
+        at runFlow (/home/user/sitelooper/bench/results/fwrd75-spec-spec-tmp/fwrd75.flow.ts:15515:5)
+        at /home/user/sitelooper/bench/results/fwrd75-spec-spec-tmp/fwrd75.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwrd75-fwrd75/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwrd75-fwrd75/error-context.md
+
+  1 failed
+    fwrd75.spec.ts:9:1 › fwrd75 ────────────────────────────────────────────────────────────────────
