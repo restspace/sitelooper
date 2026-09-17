@@ -1,0 +1,145 @@
+{
+  "flow": "fwrd66",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Signed in to the Repair Desk app at http://127.0.0.1:4180/ as bench@example.com, then created a ticket titled 'fwrd66-n2 RD Bench Ticket' via the \"New ticket\" dialog. The new ticket appears at the top of the tickets table as RD-1016 (Status: Draft, Customer: Not recorded, 0 parts, created 2026-09-17), confirming creation.",
+      "values": {
+        "ticket_title": "fwrd66-n2 RD Bench Ticket",
+        "run_prefix": "fwrd66-n2",
+        "initial_page_url": "http://127.0.0.1:4180/#/login",
+        "ticket_reference": "RD-1016",
+        "signed_in_user": "Bench User",
+        "ticket_status": "Draft"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-add",
+      "status": "success",
+      "summary": "On ticket RD-1016 I added two parts via the \"Add part\" dialog. After the parts table refreshed, Part A ('fwrd66-n2 RD Part A', cost $100.00, markup 25%) shows a computed price of $125.00, and Part B ('fwrd66-n2 RD Part B', cost $200.00, markup 25%) shows a computed price of $250.00; the table's \"Total (price × quantity)\" row reads $375.00, consistent with the two rows.",
+      "values": {
+        "part_a_name": "fwrd66-n2 RD Part A",
+        "part_b_name": "fwrd66-n2 RD Part B",
+        "ref_2": "fwrd66-n2",
+        "run_prefix": "RD-1016",
+        "part_a_cost": "$100.00",
+        "part_a_markup": "25%",
+        "part_a_price": "$125.00",
+        "part_b_cost": "$200.00",
+        "part_b_price": "$250.00",
+        "parts_total": "$375.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "20/20",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-change",
+      "status": "success",
+      "summary": "On ticket RD-1016 I opened the Edit dialog for part 'fwrd66-n2 RD Part A', changed Cost from 100 to 150 (markup left at 25%), and saved. The parts table refreshed in place: the row now reads $150.00 cost, 25% markup, $187.50 price, and the total row updated to $437.50.",
+      "values": {
+        "ref_2": "fwrd66-n2",
+        "run_prefix": "RD-1016",
+        "part_a_name": "fwrd66-n2 RD Part A",
+        "part_a_cost": "$150.00",
+        "part_a_markup": "25%",
+        "part_a_price": "$187.50",
+        "part_b_price": "$250.00",
+        "parts_total": "$437.50"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-set",
+      "status": "success",
+      "summary": "Replayed stored procedure s_7fc5b3; observed refusal_message=Ticket is not ready Part \"fwrd66-n2 RD Part A\" has no supplier Part \"fwrd66-n2 RD Part B\" has no supplier, supplier_value=fwrd66-n2 Supplier, ticket_reference=RD-1016, final_ticket_status=Ready, part_a_price=$187.50, part_b_price=$250.00, parts_total=$437.50, supplier_set_on_1=fwrd66-n2 RD Part A, supplier_set_on_2=fwrd66-n2 RD Part B, run_prefix=fwrd66-n2 RD Part A.",
+      "values": {
+        "refusal_message": "Ticket is not ready Part \"fwrd66-n2 RD Part A\" has no supplier Part \"fwrd66-n2 RD Part B\" has no supplier",
+        "supplier_value": "fwrd66-n2 Supplier",
+        "ticket_reference": "RD-1016",
+        "final_ticket_status": "Ready",
+        "part_a_price": "$187.50",
+        "part_b_price": "$250.00",
+        "parts_total": "$437.50",
+        "supplier_set_on_1": "fwrd66-n2 RD Part A",
+        "supplier_set_on_2": "fwrd66-n2 RD Part B",
+        "run_prefix": "fwrd66-n2 RD Part A"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-remove",
+      "status": "success",
+      "summary": "Replayed stored procedure s_d4853b; observed part_b_row_before_delete=fwrd66-n2 RD Part B $200.00 25% qty 1 supplier fwrd66-n2 Supplier price $250.00, active_list_after=13 tickets, RD-1016 absent from page 1 (newest-first), with_show_archived_checked=Showing 1–10 of 15; RD-1016 row title cell = 'fwrd66-n2 RD Bench Ticket Archived', Status Ready, Parts 0, Created 2026-09-17, run_prefix=fwrd66-n2, parts_table_text=fwrd66-n2 RD Part B\t$200.00\t25%\t1\tfwrd66-n2 Supplier\t$250.00\tEdit Delete, ticket_reference=RD-1016, part_b_qty=1, part_b_supplier=fwrd66-n2 Supplier, parts_remaining=0, archived_badge=Archived.",
+      "values": {
+        "part_b_row_before_delete": "fwrd66-n2 RD Part B $200.00 25% qty 1 supplier fwrd66-n2 Supplier price $250.00",
+        "active_list_after": "13 tickets, RD-1016 absent from page 1 (newest-first)",
+        "with_show_archived_checked": "Showing 1–10 of 15; RD-1016 row title cell = 'fwrd66-n2 RD Bench Ticket Archived', Status Ready, Parts 0, Created 2026-09-17",
+        "run_prefix": "fwrd66-n2",
+        "parts_table_text": "fwrd66-n2 RD Part B\t$200.00\t25%\t1\tfwrd66-n2 Supplier\t$250.00\tEdit Delete",
+        "ticket_reference": "RD-1016",
+        "part_b_qty": "1",
+        "part_b_supplier": "fwrd66-n2 Supplier",
+        "parts_remaining": "0",
+        "archived_badge": "Archived"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwrd66",
+      "step": "05-remove",
+      "skill": "s_e2dc16",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByRole('button', { name: 'Delete', exact: true })",
+      "fallbackUsed": "page.getByTestId('part-delete-p18')",
+      "fallbackIndex": 3,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets"
+    }
+  ],
+  "wallMs": 19822,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

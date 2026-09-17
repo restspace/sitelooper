@@ -1,0 +1,183 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwrd66-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwrd66-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwrd66-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwrd66-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwrd66.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwrd66-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwrd66.spec.ts",
+      "file": "fwrd66.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwrd66",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 21153,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper warn] 01-signin s_4cf222/5: read 'ticket_title' returned a value the skill itself set/selected ('fwrd66-spec RD Bench Ticket') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 01-signin s_4cf222/8: read 'run_prefix' returned a value the skill itself set/selected ('fwrd66-spec RD Bench Ticket') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-add s_5cf74e/12: read 'part_a_name' returned a value the skill itself set/selected ('fwrd66-spec RD Part A') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-add s_5cf74e/16: read 'part_b_name' returned a value the skill itself set/selected ('fwrd66-spec RD Part B') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-add\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-change\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 04-set s_7fc5b3/11: read 'supplier_value' returned a value the skill itself set/selected ('fwrd66-spec Supplier') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-set\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 05-remove s_e2dc16/2 target: primary getByRole('button', { name: 'Delete', exact: true }) missed; used #4 getByTestId('part-delete-p18') (#1 ambiguous, #3 ambiguous)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-remove\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in at http://127.0.0.1:4180/ with email bench@example.com and password bench-pass-1234, then create a ticket titled '{{runid}} RD Bench Ticket' and verify it appears.",
+                      "duration": 4407
+                    },
+                    {
+                      "title": "02-add: On ticket {{01-signin.ticket_reference}} ('{{runid}} RD Bench Ticket'), add a part named '{{runid}} RD Part A' with cost 100 and markup 25, and a second part named '{{runid}} RD Part B' with cost 200 and markup 25. Wait for the list to refresh and report the price the app computes for each part.",
+                      "duration": 6563
+                    },
+                    {
+                      "title": "03-change: On ticket {{01-signin.ticket_reference}}, change the cost of part '{{runid}} RD Part A' from 100 to 150 (keep markup 25) and wait for the refresh; report the price the app now shows for Part A.",
+                      "duration": 1751
+                    },
+                    {
+                      "title": "04-set: On ticket {{01-signin.ticket_reference}}, try to set the ticket status to 'Ready'. The app enforces preconditions before accepting that status — if it refuses, discover exactly what the error/validation message says, satisfy whatever preconditions are required (fill fields, other statuses, etc.), and end with the ticket actually in status Ready. Report exactly what was required and the final status shown.",
+                      "duration": 4004
+                    },
+                    {
+                      "title": "05-remove: On ticket {{01-signin.ticket_reference}}, remove both parts ('{{runid}} RD Part A' and '{{runid}} RD Part B'), then archive the ticket so it no longer appears in the active tickets list. Wait for refreshes after each mutation and verify: parts count 0, and the ticket '{{runid}} RD Bench Ticket' no longer shows in the active list (report where it went, e.g. archived list/filter). Confirm nothing from this run remains active.",
+                      "duration": 4216
+                    }
+                  ],
+                  "startTime": "2026-09-17T01:13:29.301Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": "W3NpdGVsb29wZXIgZHJpZnRdIDA1LXJlbW92ZSBzX2UyZGMxNi8yIHRhcmdldDogcHJpbWFyeSBnZXRCeVJvbGUoJ2J1dHRvbicsIHsgbmFtZTogJ0RlbGV0ZScsIGV4YWN0OiB0cnVlIH0pIG1pc3NlZDsgdXNlZCAjNCBnZXRCeVRlc3RJZCgncGFydC1kZWxldGUtcDE4JykgKCMxIGFtYmlndW91cywgIzMgYW1iaWd1b3VzKQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b2c3986dccd1d669f7f8-cd1cab6452526274095d",
+          "file": "fwrd66.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-17T01:13:27.581Z",
+    "duration": 23041.542999999998,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
