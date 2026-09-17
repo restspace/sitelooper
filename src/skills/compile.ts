@@ -1625,7 +1625,7 @@ function unfreezeWatchedNames(steps: readonly SkillStep[]): number {
  * a value only the recording run could produce, so the gate had nothing to
  * check before this ran either, and stopping on it was the bug.
  */
-function unfreezeExpectations(steps: SkillStep[], published: readonly string[], notes: TransformNote[]): void {
+export function unfreezeExpectations(steps: SkillStep[], published: readonly string[], notes: TransformNote[]): void {
   const watched = unfreezeWatchedNames(steps);
   steps.forEach((step, si) => {
     const lines = step.expect?.addedContains;
