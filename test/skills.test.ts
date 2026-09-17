@@ -1762,6 +1762,21 @@ describe('zero-model template match', () => {
     const live = synthesizeReport(skill, { v1: '{{03-create.product_name}}', v2: '300', v3: '40' }, { partPrice: '375.00' });
     expect(live.evidence?.values).toEqual({ partPrice: '375.00' });
   });
+  // fwgr56 07-report: every live value was the dashboard's whole JSON body,
+  // which held every other recorded value; swapping them one after another
+  // compounded the prose past the engine's string limit.
+  it('rewrites the summary in one pass: a live value is never itself rewritten', () => {
+    const base = compileSkill({ entries: recording(), instruction: INSTRUCTION, report, session: 's' })!;
+    const skill = { ...base, reportTemplate: { summary: 'time now, tag bench, count 3', values: { t: 'now', g: 'bench', n: '3' } } };
+    const r = synthesizeReport(skill, { v1: 'z9 RD Part B', v2: '300', v3: '40' }, { t: 'from now to bench', g: 'a bench of 3', n: '3 now' });
+    expect(r.summary).toBe('time from now to bench, tag a bench of 3, count 3 now');
+
+    const body = `{"time":{"from":"now","to":"now"},"tags":["bench"],"id":3,${'"pad":"x",'.repeat(200)}"n":3}`;
+    const values = Object.fromEntries(Array.from({ length: 17 }, (_, i) => [`k${i}`, i % 3 === 0 ? 'now' : i % 3 === 1 ? 'bench' : '3']));
+    const live = Object.fromEntries(Object.keys(values).map((k) => [k, body]));
+    const wide = synthesizeReport({ ...base, reportTemplate: { summary: 'time now, tag bench, count 3', values } }, {}, live);
+    expect(wide.summary.length).toBeLessThan(4 * body.length);
+  });
 
   it('sameProcedure compares tools and primary locators', () => {
     const a = compileSkill({ entries: recording(), instruction: INSTRUCTION, report, session: 's' })!;

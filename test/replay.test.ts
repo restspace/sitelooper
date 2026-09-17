@@ -896,6 +896,19 @@ d('read-back synthesis (fixture page)', () => {
       expect(await captureReadBackAt(page, 'bench', '#other')).toBeNull();
       // And an empty value has nothing to find.
       expect(await captureReadBackAt(page, '  ', '#folder-name')).toBeNull();
+
+      // Containment is a wrapper's worth, not a document's. fwgr56 07-report
+      // opened grafana's dashboard JSON — one <pre>, one line — and the model
+      // pointed seventeen values at it; each "contained" read then published
+      // the whole body. A line that runs a document's length past the value
+      // is not showing it. A cell carrying a label beside the value still is.
+      const body = `{"title":"x Bench Dashboard","tags":["bench"],${'"pad":"filler text",'.repeat(120)}"version":5}`;
+      await page.setContent(`<pre id="json">${body}</pre><table><tr><td id="cell">Total: £ 279.00</td></tr></table>`);
+      expect(await captureReadBackAt(page, 'bench', '#json')).toBeNull();
+      expect(await captureReadBackAt(page, '5', '#json')).toBeNull();
+      const cell = await captureReadBackAt(page, '£ 279.00', '#cell');
+      expect(cell).toBeTruthy();
+      expect(JSON.parse(cell!.result!)).toBe('£ 279.00');
     } finally {
       await session.close();
     }

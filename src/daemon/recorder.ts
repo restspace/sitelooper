@@ -1047,10 +1047,40 @@ export async function captureReadBackAt(page: Page, value: string, selector: str
     // to yield an identity of its own.
     const got = foldValue(raw);
     if (got !== want && !got.includes(want)) return null; // the model pointed at the wrong element
+    // Containment is a wrapper's worth, not a document's. fwgr56 07-report
+    // opened grafana's dashboard JSON — one <pre>, one line, 2,236 characters
+    // — and the model pointed every one of seventeen values at it. Each was
+    // "contained", so each became a read of the whole body: the replay
+    // published the document seventeen times over, and the report's summary,
+    // swapping each recorded value for the body it now "showed", grew past
+    // the engine's string limit and the step fell back to the model on both
+    // replays. A wrapper carries a label or a sibling around the value on the
+    // value's own rendered LINE; a line that goes on for a document's worth
+    // past the value is not showing the value, it is containing it.
+    if (got !== want && !onOwnLine(raw, want)) return null;
     return await readBackFromHandle(page, handle, v);
   } finally {
     await handle.dispose().catch(() => {});
   }
+}
+
+/**
+ * How much more than the value one rendered line may carry and still be that
+ * value's line: a label ("Folder: Bench"), a unit, a sibling cell. The same
+ * figure captureReadBack uses as its prose ceiling — a value longer than this
+ * is prose, and so is a line that runs this far past its value.
+ */
+const READ_BACK_LINE_ALLOWANCE = 80;
+
+/**
+ * Whether `want` (folded) sits on a line of `raw` (an element's innerText)
+ * that is at most READ_BACK_LINE_ALLOWANCE folded characters longer than it.
+ */
+function onOwnLine(raw: string, want: string): boolean {
+  return raw.split(/\r?\n/).some((line) => {
+    const folded = foldValue(line);
+    return folded.includes(want) && folded.length <= want.length + READ_BACK_LINE_ALLOWANCE;
+  });
 }
 
 /** Derive a durable, non-circular read step for `value` from a live element. */

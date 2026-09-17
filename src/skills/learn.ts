@@ -629,10 +629,24 @@ export function synthesizeReport(skill: Skill, params: Record<string, string>, l
   for (const [k, live] of Object.entries(liveValues)) values[k] = live;
 
   let summary = fillParams(template.summary, params);
+  // ONE pass over the prose, every recorded value swapped for its live one at
+  // once, longest first. Swapping them one after another re-scanned the text
+  // each live value had just put there: fwgr56 07-report's live values were
+  // each the dashboard's whole JSON body (a read-back pinned to the page's
+  // one <pre>), the body held every other recorded value ("now", "bench",
+  // "3"), and seventeen sequential swaps compounded it until the engine
+  // refused the string ("Invalid string length") — the step fell back to the
+  // model on both replays. A live value is never itself rewritten.
+  const swaps: [string, string][] = [];
   for (const [k, live] of Object.entries(liveValues)) {
     const recorded = template.values[k];
     const old = recorded ? fillParams(recorded, params) : undefined;
-    if (old && old !== live) summary = summary.split(old).join(live);
+    if (old && old !== live) swaps.push([old, live]);
+  }
+  if (swaps.length) {
+    swaps.sort((a, b) => b[0].length - a[0].length);
+    const re = new RegExp(swaps.map(([old]) => escapeRe(old)).join('|'), 'g');
+    summary = summary.replace(re, (hit) => swaps.find(([old]) => old === hit)?.[1] ?? hit);
   }
   // Strip stale recorded literals from the prose so the summary cannot state a
   // value this run did not observe.
