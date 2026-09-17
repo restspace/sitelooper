@@ -1,0 +1,165 @@
+{
+  "flow": "fwgr58",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Signed in to Grafana at http://127.0.0.1:3000/ with username admin / password admin. The login triggered an \"Update your password\" prompt (with an alert: \"Continuing to use the default password exposes you to security risks.\"), which I skipped via the \"Skip\" button as instructed. I am now signed in and landed on the Grafana Home page (\"Welcome to Grafana\") at http://127.0.0.1:3000/?from=now-6h&to=now&timezone=browser, showing the top nav bar (Search, New, Help, Profile avatar) plus the onboarding panels \"Dashboards\", \"Basic\" tutorial steps and \"Latest from the blog\" (that last panel shows an RSS feed error alert, which is unrelated to sign-in).",
+      "values": {
+        "current_page_url": "http://127.0.0.1:3000/?from=now-6h&to=now&timezone=browser"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-find",
+      "status": "success",
+      "summary": "Opened the provisioned dashboard \"Service Health\" in Grafana via the top-nav \"Search or jump to…\" dialog (it appeared under Recent dashboards) and confirmed it is loaded in read-only view mode (no edits made). The dashboard contains exactly 3 panels, in this order: 1) \"Request rate\", 2) \"Error count\" (showing 40.0 errors), 3) \"Latency by endpoint\" (a table with columns Time, A, Min, Max, Info, State). This was verified both by the panel-header elements (data-testid \"Panel header Request rate\" / \"Error count\" / \"Latency by endpoint\") and by a full accessibility snapshot of the dashboard main area, which shows only those three region/heading pairs — no collapsed rows or additional panels.",
+      "values": {
+        "dashboard_name_as_listed": "Service Health",
+        "panel_title_1": "Request rate",
+        "panel_title_2": "Error count",
+        "panel_title_3": "Latency by endpoint",
+        "panel_titles_in_order_1": "Request rate",
+        "panel_titles_in_order_2": "Error count",
+        "panel_titles_in_order_3": "Latency by endpoint"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_698131; observed dashboard_url=http://127.0.0.1:3000/d/dfyk9k8j0d3pcf/fwgr58-n3-bench-dashboard, run_id=fwgr58-n3, dashboard_slug=fwgr58-n3-bench-dashboard, dashboard_title_after_save=fwgr58-n3 Bench Dashboard, panel_title_shown=fwgr58-n3 Availability, stat_value=30.5, saved_dashboard_url=http://127.0.0.1:3000/d/bfykassmayxhcd/fwgr58-n3-bench-dashboard?from=now-6h&to=now&timezone=browser, saved_folder=Dashboards.",
+      "values": {
+        "dashboard_url": "http://127.0.0.1:3000/d/dfyk9k8j0d3pcf/fwgr58-n3-bench-dashboard",
+        "run_id": "fwgr58-n3",
+        "dashboard_slug": "fwgr58-n3-bench-dashboard",
+        "dashboard_title_after_save": "fwgr58-n3 Bench Dashboard",
+        "panel_title_shown": "fwgr58-n3 Availability",
+        "stat_value": "30.5",
+        "saved_dashboard_url": "http://127.0.0.1:3000/d/bfykassmayxhcd/fwgr58-n3-bench-dashboard?from=now-6h&to=now&timezone=browser",
+        "saved_folder": "Dashboards"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Entered edit mode on the \"fwgr58-n3 Bench Dashboard\" dashboard (Edit → Add → Visualization), switched the new panel's visualization type to Text, set its title to exactly \"fwgr58-n3 Notes\", and typed the content \"Notes for run fwgr58-n3 - benchmark dashboard.\" into the Text panel content editor (replacing the default markdown template). Committed the panel via \"Back to dashboard\", then saved with the Save dashboard button — Grafana showed the \"Dashboard saved\" confirmation toast and the breadcrumb still reads \"fwgr58-n3 Bench Dashboard\". After saving I exited edit mode; the dashboard renders the new text panel titled \"fwgr58-n3 Notes\" with paragraph \"Notes for run fwgr58-n3 - benchmark dashboard.\" alongside the existing Stat panel \"fwgr58-n3 Availability\" (value 40.8).",
+      "values": {
+        "text_panel_title_shown": "fwgr58-n3 Notes",
+        "text_panel_rendered_content": "Notes for run fwgr58-n3 - benchmark dashboard.",
+        "dashboard_uid": "bfykassmayxhcd",
+        "panels_on_dashboard_after_save": "fwgr58-n3 Notes (Text panel), fwgr58-n3 Availability (Stat, showing 40.8)",
+        "run_id": "fwgr58-n3",
+        "dashboard_url": "http://127.0.0.1:3000/d/bfykassmayxhcd/fwgr58-n3-bench-dashboard?from=now-6h&to=now&timezone=browser",
+        "dashboard_title_shown_in_breadcrumb": "fwgr58-n3 Bench Dashboard"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Completed. I set the dashboard time range to 'Last 6 hours' with the top-bar picker (open picker → Apply time range), then — because view mode in this Grafana 11.3 build exposes no Save button — entered edit mode and clicked 'Save dashboard'. In the save drawer the 'Update default time range' checkbox was unticked; I ticked it, which enabled the Save button and registered a 'Changes 1' entry, then clicked Save and received the 'Dashboard saved' confirmation. Verified afterwards: the top bar reads 'Last 6 hours', and reloading the dashboard URL from scratch (no from/to query params) still shows 'Last 6 hours', confirming the default time range persisted. Both panels remain present: the 'Home\nDashboards\nfwgr58-n3 Bench Dashboard Notes' text panel and the 'Home\nDashboards\nfwgr58-n3 Bench Dashboard Availability' stat panel.",
+      "values": {
+        "panels_still_present": "fwgr58-n3 Notes (text: 'Notes for run fwgr58-n3 - benchmark dashboard.'), fwgr58-n3 Availability (stat, 44.8)",
+        "time_range_shown_in_top_bar_after_save": "Last 6 hours",
+        "dashboard_title": "fwgr58-n3 Bench Dashboard",
+        "run_id": "Home\nDashboards\nfwgr58-n3 Bench Dashboard"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "dashboard_url",
+        "time_range_persistence_verified"
+      ]
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "Opened the dashboard settings (entered edit mode to reach the gear/'Settings' → 'Dashboard settings' control, since view mode has no gear in this build), typed \"bench\" into the Tags field of General settings and pressed Enter, which produced a remove-able \"bench\" tag chip. Clicked \"Save dashboard\", and Grafana confirmed the save with its \"Dashboard saved\" alert. I then reloaded the settings page (?editview=settings), where the Tags field contained exactly one tag, \"bench\", so the change persisted. Edit mode was exited afterwards, leaving the dashboard in normal read view with both panels intact.",
+      "values": {
+        "page_state_after": "returned to the read-only dashboard view (exited edit mode); panels 'fwgr58-n3 Notes' and 'fwgr58-n3 Availability' visible, time range 'Last 6 hours'",
+        "persistence_verified": "yes — reloaded the dashboard settings page directly (?editview=settings) and the Tags field showed the 'bench' chip",
+        "tag_chip_element": "button 'Remove \"bench\" tag' → the chip rendered as 'bench ✕'",
+        "tags_shown_in_settings_after_saving": "bench",
+        "dashboard_title": "fwgr58-n3 Bench Dashboard"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "07-set",
+      "status": "success",
+      "summary": "Replayed stored procedure s_06ec27; observed refresh_picker_aria_label=Choose refresh time interval with current interval 1 minute selected, dashboard_title=fwgr58-n3 Bench Dashboard.",
+      "values": {
+        "refresh_picker_aria_label": "Choose refresh time interval with current interval 1 minute selected",
+        "dashboard_title": "fwgr58-n3 Bench Dashboard"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "08-report",
+      "status": "success",
+      "summary": "Verified the saved dashboard by UID bfykassmayxhcd, navigating to the param-free /d/bfykassmayxhcd/ (Grafana itself then rewrote the address bar). (1) Address-bar URL after settling: http://127.0.0.1:3000/d/bfykassmayxhcd/fwgr58-n3 Bench Dashboard-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m. (2) Breadcrumb: \"fwgr58-n3 Bench Dashboard Bench Dashboard\". (3) Two panels, in order: \"fwgr58-n3 Bench Dashboard Notes\" (visualization type text — confirmed by opening the panel's Inspect > Panel JSON, which shows \"type\": \"text\") and \"fwgr58-n3 Bench Dashboard Availability\" (type stat — Panel JSON shows \"type\": \"stat\"). (4) The text panel renders exactly: \"Notes for run fwgr58-n3 Bench Dashboard - benchmark dashboard.\" (5) Time range picker: \"Last 6 hours\". (6) Refresh picker: \"1m\". (7) Tags: a single tag \"bench\". Nothing was modified — settings were opened only to read the Tags/Auto-refresh fields and closed via \"Back to dashboard\" without saving.",
+      "values": {
+        "url_note": "I navigated to the param-free URL http://127.0.0.1:3000/d/bfykassmayxhcd/ (page settled at that exact URL first); Grafana then rewrote the address bar itself to the canonical slug URL above. The from/to/timezone/refresh params are injected by Grafana from the dashboard's SAVED defaults, not typed b…",
+        "url_address_bar_after_settling": "http://127.0.0.1:3000/d/bfykassmayxhcd/fwgr58-n3-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m",
+        "tags_in_settings": "bench",
+        "breadcrumb_dashboard_title": "fwgr58-n3 Bench Dashboard",
+        "text_panel_content": "Notes for run fwgr58-n3 - benchmark dashboard.",
+        "run_id": "fwgr58-n3 Bench Dashboard"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "19/19",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 8,
+  "total": 8,
+  "repinned": 0,
+  "drift": 0,
+  "wallMs": 100402,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
