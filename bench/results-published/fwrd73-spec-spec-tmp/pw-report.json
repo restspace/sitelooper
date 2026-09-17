@@ -1,0 +1,197 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwrd73-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwrd73-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwrd73-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwrd73-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwrd73-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwrd73.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwrd73-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwrd73.spec.ts",
+      "file": "fwrd73.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwrd73",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 28672,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper skip] 01-open s_f31b36/5 target: no locator recorded — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-add s_0c4af4/10: read 'part_name' returned a value the skill itself set/selected ('fwrd73-spec RD Part A') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-add s_0c4af4/16: read 'part_a_row_name' returned a value the skill itself set/selected ('fwrd73-spec RD Part A') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-add\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-add s_db6caa/10: read 'part_b_name' returned a value the skill itself set/selected ('fwrd73-spec RD Part B') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-add\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-edit\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 05-change s_cb4578/4: read 'mark_ready_button_text' returned a value the skill itself set/selected ('Mark Ready') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-change\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 06-edit s_08dd36/12: read 'supplier_shown_part_a' returned a value the skill itself set/selected ('Bench Supplier') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-edit\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 07-delete\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:4180/ and sign in with email bench@example.com and password bench-pass-1234. Then create a new ticket titled exactly '{{runid}} RD Bench Ticket', filling any other required fields with sensible values. Submit and wait for the ticket to appear (the list/detail view refreshes a short beat after a create, so wait for the ticket to actually show on the page). Report the ticket's title and any status shown, plus what fields the create form had.",
+                      "duration": 6575
+                    },
+                    {
+                      "title": "02-add: On the ticket detail page for ticket {{01-open.ticket_reference}} (titled '{{runid}} RD Bench Ticket'), add a part named exactly '{{runid}} RD Part A' with cost 100 and markup 25. Find the parts/add-part section of the ticket detail, fill in the part name, cost 100, and markup 25, and submit/save it. Wait for the part to actually appear in the ticket's parts list (the view refreshes a short beat after a create, so wait for the part row to show). Report the exact price value the app computes and displays for this part, plus the exact field labels and any other fields the add-part form had.",
+                      "duration": 4002
+                    },
+                    {
+                      "title": "03-add: On the ticket detail page for ticket {{01-open.ticket_reference}} (titled '{{runid}} RD Bench Ticket'), add a second part named exactly '{{runid}} RD Part B' with cost 200 and markup 25. Use the 'Add part' dialog, fill Part name = '{{runid}} RD Part B', Cost = 200, Markup % = 25, leave Quantity 1 and Supplier blank, and submit. Wait for the part row to actually appear in the Parts table (the view refreshes a short beat after a create). Report the exact computed price shown for this part, and the full parts table contents including the total.",
+                      "duration": 3548
+                    },
+                    {
+                      "title": "04-edit: On the ticket detail page for ticket {{01-open.ticket_reference}} (titled '{{runid}} RD Bench Ticket'), edit the part named '{{runid}} RD Part A' (currently cost 00.00, markup {{02-add.part_markup}}, price 25.00) and change its Cost from 100 to 150, keeping markup at 25. Use the part row's Edit action, change the Cost field to 150, and save/submit. Wait for the parts table to refresh and show the updated values. Report the exact new computed price shown for '{{runid}} RD Part A' after the change, its new cost, and the new parts table total.",
+                      "duration": 2542
+                    },
+                    {
+                      "title": "05-change: On the ticket detail page for ticket {{01-open.ticket_reference}} (titled '{{runid}} RD Bench Ticket', currently status {{01-open.ticket_status}}), attempt to change the ticket's status to 'Ready'. Find the status control (dropdown, select, or status buttons) and try to set it to Ready. The app enforces preconditions before it will accept that status — if it refuses, read and report the EXACT error/validation message text shown (do not guess), and report what the app says is required. Do NOT try to work around or satisfy the preconditions yet — just attempt the change and report exactly what the app tells you, including any error text, disabled options, tooltips, or hints visible on the page. Also report what statuses are available in the status control.",
+                      "duration": 3102
+                    },
+                    {
+                      "title": "06-edit: On the ticket detail page for ticket {{01-open.ticket_reference}} (titled '{{runid}} RD Bench Ticket', status {{01-open.ticket_status}}), satisfy the app's precondition for marking the ticket Ready: every part must have a supplier. Edit the part '{{runid}} RD Part A' and set its Supplier field to 'Bench Supplier' (keep cost 150, markup 25, qty 1), save. Then edit the part '{{runid}} RD Part B' and set its Supplier field to 'Bench Supplier' (keep cost 200, markup 25, qty 1), save. Wait for the parts table to refresh and confirm both rows now show a supplier instead of '{{02-add.part_supplier}}'. Then click the '{{05-change.mark_ready_button_text}}' button and wait for the status to change. Report the final ticket status shown on the page, the exact supplier shown on each part row, and any confirmation message text. If the app still refuses with an error, report the exact error text.",
+                      "duration": 3514
+                    },
+                    {
+                      "title": "07-delete: On the ticket detail page for ticket {{01-open.ticket_reference}} (titled '{{runid}} RD Bench Ticket', status Ready), delete both parts: use the Delete action on the part row '{{runid}} RD Part A' and confirm any confirmation dialog, then use the Delete action on the part row '{{runid}} RD Part B' and confirm. The view refreshes a short beat after a delete, so wait after each deletion for the row to actually disappear from the Parts table before doing the next one. Then archive the ticket using the '{{06-edit.archive_ticket_button}}' button (confirm any confirmation dialog). Wait for the archive to take effect. Report: whether the Parts table is now empty (and its exact contents or empty-state text), whether the ticket is archived (exact text/indicator shown, e.g. an Archived badge or it disappearing from the active tickets list), and any confirmation messages shown.",
+                      "duration": 5017
+                    }
+                  ],
+                  "startTime": "2026-09-17T21:09:58.354Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ba73125a6c09ddc197f7-4e5061742c4a971e573c",
+          "file": "fwrd73.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-17T21:09:56.477Z",
+    "duration": 30774.468,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

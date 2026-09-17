@@ -1,0 +1,846 @@
+{
+  "name": "fwrd73",
+  "origin": "http://127.0.0.1:4180",
+  "startUrl": "http://127.0.0.1:4180/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-open",
+      "instruction": "Open http://127.0.0.1:4180/ and sign in with email bench@example.com and password bench-pass-1234. Then create a new ticket titled exactly '{{runid}} RD Bench Ticket', filling any other required fields with sensible values. Submit and wait for the ticket to appear (the list/detail view refreshes a short beat after a create, so wait for the ticket to actually show on the page). Report the ticket's title and any status shown, plus what fields the create form had.",
+      "skill": "s_705d19",
+      "params": {
+        "v2": "http://127.0.0.1:4180/",
+        "v3": "bench@example.com",
+        "v4": "bench-pass-1234",
+        "v5": "{{runid}} RD Bench Ticket",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "ticket_reference",
+        "ticket_title",
+        "ticket_status",
+        "customer",
+        "raised",
+        "detail_url",
+        "ref"
+      ],
+      "recorded": {
+        "ticket_reference": "RD-1015",
+        "ticket_title": "fwrd73-n1 RD Bench Ticket",
+        "ticket_status": "Draft",
+        "customer": "Bench Customer",
+        "raised": "2026-09-17",
+        "detail_url": "http://127.0.0.1:4180/#/tickets/t15",
+        "create_form_fields": "Title * (required), Customer (optional); buttons: Cancel, Create ticket",
+        "ref": "fwrd73-n1",
+        "url": "http://127.0.0.1:4180/#/tickets/t15",
+        "url.h1": "t15"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets/:id",
+      "outputEvidence": {
+        "ticket_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "ticket_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "ticket_status": {
+          "same": 1,
+          "differed": 0
+        },
+        "customer": {
+          "same": 1,
+          "differed": 0
+        },
+        "raised": {
+          "same": 0,
+          "differed": 1
+        },
+        "detail_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "create_form_fields": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.h1": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-add",
+      "instruction": "On the ticket detail page for ticket {{01-open.ticket_reference}} (titled '{{runid}} RD Bench Ticket'), add a part named exactly '{{runid}} RD Part A' with cost 100 and markup 25. Find the parts/add-part section of the ticket detail, fill in the part name, cost 100, and markup 25, and submit/save it. Wait for the part to actually appear in the ticket's parts list (the view refreshes a short beat after a create, so wait for the part row to show). Report the exact price value the app computes and displays for this part, plus the exact field labels and any other fields the add-part form had.",
+      "skill": "s_0c4af4",
+      "params": {
+        "v1": "{{01-open.ticket_reference}}",
+        "v2": "{{runid}} RD Bench Ticket",
+        "v4": "{{runid}} RD Part A",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "ticket_reference",
+        "ticket_title",
+        "ticket_status",
+        "part_name",
+        "part_cost",
+        "part_markup",
+        "part_quantity",
+        "part_supplier",
+        "part_price_computed",
+        "parts_table_text",
+        "add_part_form_fields",
+        "ref",
+        "part_a_row_name",
+        "part_a_row_cost",
+        "part_a_row_markup",
+        "part_a_row_qty",
+        "part_a_row_supplier",
+        "part_a_row_price",
+        "part_a_row_actions"
+      ],
+      "recorded": {
+        "ticket_reference": "RD-1015",
+        "ticket_title": "fwrd73-n1 RD Bench Ticket",
+        "ticket_status": "Draft",
+        "part_name": "fwrd73-n1 RD Part A",
+        "part_cost": "$100.00",
+        "part_markup": "25%",
+        "part_quantity": "1",
+        "part_supplier": "No supplier",
+        "part_price_computed": "$125.00",
+        "parts_total": "$125.00",
+        "parts_table_text": "NAME\tCOST\tMARKUP\tQTY\tSUPPLIER\tPRICE\tACTIONS\nfwrd73-n1 RD Part A\t$100.00\t25%\t1\tNo supplier\t$125.00\tEdit Delete\nTotal (price × quantity)\t$125.00",
+        "parts_table_columns": "Name, Cost, Markup, Qty, Supplier, Price, Actions",
+        "add_part_form_fields": "Part name * (textbox, required, help: 'As it should appear on the customer invoice.'), Cost * (spinbutton, required, help: 'What the workshop pays the supplier, before markup.'), Markup % * (spinbutton, required, help: 'Percentage added to the cost to reach the sale price.'), Quantity (spinbutton, default 1, help: 'Whole units.'), Supplier (textbox, optional, help: 'Optional. Leave blank if the part has not been sourced yet.'); buttons Cancel and Add part",
+        "ref": "fwrd73-n1",
+        "part_a_row_name": "fwrd73-n1 RD Part A",
+        "part_a_row_cost": "$100.00",
+        "part_a_row_markup": "25%",
+        "part_a_row_qty": "1",
+        "part_a_row_supplier": "No supplier",
+        "part_a_row_price": "$125.00",
+        "part_a_row_actions": "Edit Delete"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets/:id",
+      "outputEvidence": {
+        "ticket_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "ticket_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "ticket_status": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "part_cost": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_markup": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_quantity": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_supplier": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_price_computed": {
+          "same": 1,
+          "differed": 0
+        },
+        "parts_total": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "parts_table_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "parts_table_columns": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "add_part_form_fields": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "part_a_row_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "part_a_row_cost": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_a_row_markup": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_a_row_qty": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_a_row_supplier": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_a_row_price": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_a_row_actions": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "03-add",
+      "instruction": "On the ticket detail page for ticket {{01-open.ticket_reference}} (titled '{{runid}} RD Bench Ticket'), add a second part named exactly '{{runid}} RD Part B' with cost 200 and markup 25. Use the 'Add part' dialog, fill Part name = '{{runid}} RD Part B', Cost = 200, Markup % = 25, leave Quantity 1 and Supplier blank, and submit. Wait for the part row to actually appear in the Parts table (the view refreshes a short beat after a create). Report the exact computed price shown for this part, and the full parts table contents including the total.",
+      "skill": "s_db6caa",
+      "params": {
+        "v1": "{{01-open.ticket_reference}}",
+        "v2": "{{runid}} RD Bench Ticket",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "ticket_reference",
+        "ticket_title",
+        "ticket_status",
+        "part_b_name",
+        "part_b_cost",
+        "part_b_markup",
+        "part_b_quantity",
+        "part_b_supplier",
+        "part_b_price_computed",
+        "parts_table_text",
+        "parts_total",
+        "parts_table_full_text",
+        "ref"
+      ],
+      "recorded": {
+        "ticket_reference": "RD-1015",
+        "ticket_title": "fwrd73-n1 RD Bench Ticket",
+        "ticket_status": "Draft",
+        "part_b_name": "fwrd73-n1 RD Part B",
+        "part_b_cost": "$200.00",
+        "part_b_markup": "25%",
+        "part_b_quantity": "1",
+        "part_b_supplier": "No supplier",
+        "part_b_price_computed": "$250.00",
+        "parts_table_text": "NAME\tCOST\tMARKUP\tQTY\tSUPPLIER\tPRICE\tACTIONS | fwrd73-n1 RD Part A\t$100.00\t25%\t1\tNo supplier\t$125.00\tEdit Delete | fwrd73-n1 RD Part B\t$200.00\t25%\t1\tNo supplier\t$250.00\tEdit Delete | Total (price × quantity)\t$375.00",
+        "parts_total": "$375.00",
+        "add_part_form_fields": "Part name * (textbox, required, 'As it should appear on the customer invoice.'), Cost * (spinbutton, required, 'What the workshop pays the supplier, before markup.'), Markup % * (spinbutton, required, 'Percentage added to the cost to reach the sale price.'), Quantity (spinbutton, default 1, 'Whole units.'), Supplier (textbox, optional); buttons Cancel, Add part",
+        "parts_table_full_text": "NAME\tCOST\tMARKUP\tQTY\tSUPPLIER\tPRICE\tACTIONS\nfwrd73-n1 RD Part A\t$100.00\t25%\t1\tNo supplier\t$125.00\tEdit Delete\nfwrd73-n1 RD Part B\t$200.00\t25%\t1\tNo supplier\t$250.00\tEdit Delete\nTotal (price × quantity)\t$375.00",
+        "ref": "fwrd73-n1"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets/:id",
+      "outputEvidence": {
+        "ticket_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "ticket_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "ticket_status": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_b_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "part_b_cost": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_b_markup": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_b_quantity": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_b_supplier": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_b_price_computed": {
+          "same": 1,
+          "differed": 0
+        },
+        "parts_table_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "parts_total": {
+          "same": 1,
+          "differed": 0
+        },
+        "add_part_form_fields": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "parts_table_full_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "04-edit",
+      "instruction": "On the ticket detail page for ticket {{01-open.ticket_reference}} (titled '{{runid}} RD Bench Ticket'), edit the part named '{{runid}} RD Part A' (currently cost 00.00, markup {{02-add.part_markup}}, price 25.00) and change its Cost from 100 to 150, keeping markup at 25. Use the part row's Edit action, change the Cost field to 150, and save/submit. Wait for the parts table to refresh and show the updated values. Report the exact new computed price shown for '{{runid}} RD Part A' after the change, its new cost, and the new parts table total.",
+      "skill": "s_ad0bb3",
+      "params": {
+        "v1": "{{01-open.ticket_reference}}",
+        "v2": "{{runid}} RD Bench Ticket",
+        "v4": "{{runid}} RD Part A",
+        "v5": "{{02-add.part_markup}}",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "ticket_reference",
+        "ticket_title",
+        "ticket_status",
+        "part_a_name",
+        "part_a_new_cost",
+        "part_a_markup",
+        "part_a_quantity",
+        "part_a_supplier",
+        "part_a_new_price_computed",
+        "parts_total_new",
+        "parts_table_text",
+        "edit_part_form_fields",
+        "parts_table_full_text",
+        "ref",
+        "part_b_row_name",
+        "part_b_row_cost",
+        "part_b_row_markup",
+        "part_b_row_qty",
+        "part_b_row_supplier",
+        "part_b_row_price",
+        "parts_total_label",
+        "parts_total_value"
+      ],
+      "recorded": {
+        "ticket_reference": "RD-1015",
+        "ticket_title": "fwrd73-n1 RD Bench Ticket",
+        "ticket_status": "Draft",
+        "part_a_name": "fwrd73-n1 RD Part A",
+        "part_a_new_cost": "$150.00",
+        "part_a_markup": "25%",
+        "part_a_quantity": "1",
+        "part_a_supplier": "No supplier",
+        "part_a_new_price_computed": "$187.50",
+        "parts_total_new": "$437.50",
+        "parts_total_before_edit": "$375.00",
+        "parts_table_text": "NAME\tCOST\tMARKUP\tQTY\tSUPPLIER\tPRICE\tACTIONS | fwrd73-n1 RD Part A\t$150.00\t25%\t1\tNo supplier\t$187.50\tEdit Delete | fwrd73-n1 RD Part B\t$200.00\t25%\t1\tNo supplier\t$250.00\tEdit Delete | Total (price × quantity)\t$437.50",
+        "edit_part_form_fields": "Part name * (textbox, prefilled), Cost * (spinbutton, prefilled 100), Markup % * (spinbutton, prefilled 25), Quantity (spinbutton, prefilled 1), Supplier (textbox, blank); buttons Cancel, Save part; heading 'Edit part', subtext 'Update fwrd73-n1 RD Part A.'",
+        "parts_table_full_text": "NAME\tCOST\tMARKUP\tQTY\tSUPPLIER\tPRICE\tACTIONS\nfwrd73-n1 RD Part A\t$150.00\t25%\t1\tNo supplier\t$187.50\tEdit Delete\nfwrd73-n1 RD Part B\t$200.00\t25%\t1\tNo supplier\t$250.00\tEdit Delete\nTotal (price × quantity)\t$437.50",
+        "ref": "fwrd73-n1",
+        "part_b_row_name": "fwrd73-n1 RD Part B",
+        "part_b_row_cost": "$200.00",
+        "part_b_row_markup": "25%",
+        "part_b_row_qty": "1",
+        "part_b_row_supplier": "No supplier",
+        "part_b_row_price": "$250.00",
+        "parts_total_label": "Total (price × quantity)",
+        "parts_total_value": "$437.50"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets/:id",
+      "outputEvidence": {
+        "ticket_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "ticket_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "ticket_status": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_a_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "part_a_new_cost": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_a_markup": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_a_quantity": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_a_supplier": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_a_new_price_computed": {
+          "same": 1,
+          "differed": 0
+        },
+        "parts_total_new": {
+          "same": 1,
+          "differed": 0
+        },
+        "parts_total_before_edit": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "parts_table_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "edit_part_form_fields": {
+          "same": 0,
+          "differed": 1
+        },
+        "parts_table_full_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "part_b_row_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "part_b_row_cost": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_b_row_markup": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_b_row_qty": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_b_row_supplier": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_b_row_price": {
+          "same": 1,
+          "differed": 0
+        },
+        "parts_total_label": {
+          "same": 1,
+          "differed": 0
+        },
+        "parts_total_value": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "05-change",
+      "instruction": "On the ticket detail page for ticket {{01-open.ticket_reference}} (titled '{{runid}} RD Bench Ticket', currently status {{01-open.ticket_status}}), attempt to change the ticket's status to 'Ready'. Find the status control (dropdown, select, or status buttons) and try to set it to Ready. The app enforces preconditions before it will accept that status — if it refuses, read and report the EXACT error/validation message text shown (do not guess), and report what the app says is required. Do NOT try to work around or satisfy the preconditions yet — just attempt the change and report exactly what the app tells you, including any error text, disabled options, tooltips, or hints visible on the page. Also report what statuses are available in the status control.",
+      "skill": "s_cb4578",
+      "params": {
+        "v1": "{{01-open.ticket_reference}}",
+        "v2": "{{runid}} RD Bench Ticket",
+        "v4": "{{01-open.ticket_status}}",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "ticket_reference",
+        "ticket_title",
+        "status_before_attempt",
+        "status_after_attempt",
+        "status_control_type",
+        "error_message_exact",
+        "error_heading_exact",
+        "what_app_says_is_required",
+        "available_statuses_in_control",
+        "disabled_state",
+        "parts_at_time_of_attempt",
+        "mark_ready_button_text",
+        "ref",
+        "error_list_part_a",
+        "error_list_part_b"
+      ],
+      "recorded": {
+        "ticket_reference": "RD-1015",
+        "ticket_title": "fwrd73-n1 RD Bench Ticket",
+        "status_before_attempt": "Draft",
+        "status_after_attempt": "Draft",
+        "status_control_type": "No dropdown/select and no radio group exists. The only status control is the button 'Mark Ready' (plus a separate 'Archive ticket' button). Status is displayed as read-only text: label 'Status' -> 'Draft'.",
+        "error_message_exact": "Ticket is not ready\n\nPart \"fwrd73-n1 RD Part A\" has no supplier\nPart \"fwrd73-n1 RD Part B\" has no supplier",
+        "error_heading_exact": "Ticket is not ready",
+        "what_app_says_is_required": "Every part on the ticket must have a supplier; both parts currently show 'No supplier'. Supplier is therefore required on each part before the ticket can be marked Ready.",
+        "available_statuses_in_control": "Only 'Ready' is offered by the Mark Ready button; there is no select/dropdown with a list of statuses. A separate 'Archive ticket' button exists (not clicked).",
+        "disabled_state": "Mark Ready button was NOT disabled (no disabled attribute) and had no title/tooltip attribute — the app accepted the click and rejected it with the alert instead.",
+        "parts_at_time_of_attempt": "fwrd73-n1 RD Part A / $150.00 / 25% / 1 / No supplier / $187.50; fwrd73-n1 RD Part B / $200.00 / 25% / 1 / No supplier / $250.00; Total $437.50",
+        "mark_ready_button_text": "Mark Ready",
+        "ref": "fwrd73-n1",
+        "error_list_part_a": "Part \"fwrd73-n1 RD Part A\" has no supplier",
+        "error_list_part_b": "Part \"fwrd73-n1 RD Part B\" has no supplier"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets/:id",
+      "outputEvidence": {
+        "ticket_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "ticket_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "status_before_attempt": {
+          "same": 1,
+          "differed": 0
+        },
+        "status_after_attempt": {
+          "same": 1,
+          "differed": 0
+        },
+        "status_control_type": {
+          "same": 1,
+          "differed": 0
+        },
+        "error_message_exact": {
+          "same": 0,
+          "differed": 1
+        },
+        "error_heading_exact": {
+          "same": 1,
+          "differed": 0
+        },
+        "what_app_says_is_required": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "available_statuses_in_control": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "disabled_state": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "parts_at_time_of_attempt": {
+          "same": 0,
+          "differed": 1
+        },
+        "mark_ready_button_text": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "error_list_part_a": {
+          "same": 0,
+          "differed": 1
+        },
+        "error_list_part_b": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "06-edit",
+      "instruction": "On the ticket detail page for ticket {{01-open.ticket_reference}} (titled '{{runid}} RD Bench Ticket', status {{01-open.ticket_status}}), satisfy the app's precondition for marking the ticket Ready: every part must have a supplier. Edit the part '{{runid}} RD Part A' and set its Supplier field to 'Bench Supplier' (keep cost 150, markup 25, qty 1), save. Then edit the part '{{runid}} RD Part B' and set its Supplier field to 'Bench Supplier' (keep cost 200, markup 25, qty 1), save. Wait for the parts table to refresh and confirm both rows now show a supplier instead of '{{02-add.part_supplier}}'. Then click the '{{05-change.mark_ready_button_text}}' button and wait for the status to change. Report the final ticket status shown on the page, the exact supplier shown on each part row, and any confirmation message text. If the app still refuses with an error, report the exact error text.",
+      "skill": "s_08dd36",
+      "params": {
+        "v1": "{{01-open.ticket_reference}}",
+        "v2": "{{runid}} RD Bench Ticket",
+        "v4": "{{01-open.ticket_status}}",
+        "v5": "{{runid}} RD Part A",
+        "v6": "{{runid}} RD Part B",
+        "v7": "{{02-add.part_supplier}}",
+        "v8": "{{05-change.mark_ready_button_text}}",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "ticket_reference",
+        "ticket_title",
+        "final_status",
+        "status_before",
+        "part_a_row_after",
+        "part_b_row_after",
+        "parts_total_after",
+        "supplier_shown_part_a",
+        "confirmation_message_text",
+        "ref",
+        "mark_draft_button",
+        "mark_closed_button",
+        "archive_ticket_button"
+      ],
+      "recorded": {
+        "ticket_reference": "RD-1015",
+        "ticket_title": "fwrd73-n1 RD Bench Ticket",
+        "final_status": "Ready",
+        "status_before": "Draft",
+        "part_a_row_after": "fwrd73-n1 RD Part A | $150.00 | 25% | 1 | Bench Supplier | $187.50",
+        "part_b_row_after": "fwrd73-n1 RD Part B | $200.00 | 25% | 1 | Bench Supplier | $250.00",
+        "parts_total_after": "$437.50",
+        "supplier_shown_part_a": "Bench Supplier",
+        "supplier_shown_part_b": "Bench Supplier",
+        "confirmation_message_text": "None observed — no alert/toast text appeared; the change was confirmed only by the status line and the control set changing (Mark Ready disappeared and was replaced by Mark Draft + Mark Closed).",
+        "ref": "fwrd73-n1",
+        "mark_draft_button": "Mark Draft",
+        "mark_closed_button": "Mark Closed",
+        "archive_ticket_button": "Archive ticket"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets/:id",
+      "outputEvidence": {
+        "ticket_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "ticket_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "final_status": {
+          "same": 1,
+          "differed": 0
+        },
+        "status_before": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_a_row_after": {
+          "same": 0,
+          "differed": 1
+        },
+        "part_b_row_after": {
+          "same": 0,
+          "differed": 1
+        },
+        "parts_total_after": {
+          "same": 1,
+          "differed": 0
+        },
+        "supplier_shown_part_a": {
+          "same": 1,
+          "differed": 0
+        },
+        "supplier_shown_part_b": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "confirmation_message_text": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "mark_draft_button": {
+          "same": 1,
+          "differed": 0
+        },
+        "mark_closed_button": {
+          "same": 1,
+          "differed": 0
+        },
+        "archive_ticket_button": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "07-delete",
+      "instruction": "On the ticket detail page for ticket {{01-open.ticket_reference}} (titled '{{runid}} RD Bench Ticket', status Ready), delete both parts: use the Delete action on the part row '{{runid}} RD Part A' and confirm any confirmation dialog, then use the Delete action on the part row '{{runid}} RD Part B' and confirm. The view refreshes a short beat after a delete, so wait after each deletion for the row to actually disappear from the Parts table before doing the next one. Then archive the ticket using the '{{06-edit.archive_ticket_button}}' button (confirm any confirmation dialog). Wait for the archive to take effect. Report: whether the Parts table is now empty (and its exact contents or empty-state text), whether the ticket is archived (exact text/indicator shown, e.g. an Archived badge or it disappearing from the active tickets list), and any confirmation messages shown.",
+      "skill": "s_b4c113",
+      "params": {
+        "v1": "{{01-open.ticket_reference}}",
+        "v2": "{{runid}} RD Bench Ticket",
+        "v4": "Ready",
+        "v5": "{{runid}} RD Part A",
+        "v6": "{{runid}} RD Part B",
+        "v7": "{{06-edit.archive_ticket_button}}",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "ticket_reference",
+        "ticket_title",
+        "parts_table_state",
+        "archived_indicator_detail_page",
+        "archived_indicator_list_page",
+        "final_status",
+        "confirmation_messages",
+        "ref"
+      ],
+      "recorded": {
+        "ticket_reference": "RD-1015",
+        "ticket_title": "fwrd73-n1 RD Bench Ticket",
+        "parts_table_state": "EMPTY — no rows, no total row; exact empty-state text: 'No parts on this ticket yet.' (Parts heading followed by 'Add part' button)",
+        "parts_after_delete": "Part A deleted first (row disappeared, Part B remained), then Part B deleted; 0 parts",
+        "archived_indicator_detail_page": "Badge 'Archived' shown next to the title; status line reads 'Ready'; action button changed from 'Archive ticket' to 'Unarchive ticket'",
+        "archived_indicator_list_page": "With 'Show archived' unchecked RD-1015 was absent from the Tickets table; with 'Show archived' checked the row appeared: 'RD-1015 | fwrd73-n1 RD Bench Ticket Archived | Bench Customer | Ready | 0 | 2026-09-17' (Archived badge in the title cell, Parts count 0)",
+        "final_status": "Ready (archived)",
+        "confirmation_messages": "Delete actions opened an in-page confirm modal headed 'Confirm' with buttons 'Cancel' and 'Delete part' (no additional message text). Archiving showed NO confirmation dialog — the change was immediate.",
+        "list_counts": "Showing 1–10 of 13 with archived hidden; Showing 1–10 of 15 with archived shown",
+        "ref": "fwrd73-n1",
+        "url": "http://127.0.0.1:4180/#/tickets"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets",
+      "outputEvidence": {
+        "ticket_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "ticket_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "parts_table_state": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "parts_after_delete": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "archived_indicator_detail_page": {
+          "same": 1,
+          "differed": 0
+        },
+        "archived_indicator_list_page": {
+          "same": 0,
+          "differed": 1
+        },
+        "final_status": {
+          "same": 1,
+          "differed": 0
+        },
+        "confirmation_messages": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "list_counts": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwrd73-n1",
+    "created": "2026-09-17T21:08:29.421Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-open",
+      "outputs": [
+        "create_form_fields"
+      ]
+    },
+    {
+      "stepId": "02-add",
+      "outputs": [
+        "parts_total",
+        "parts_table_columns"
+      ]
+    },
+    {
+      "stepId": "03-add",
+      "outputs": [
+        "add_part_form_fields"
+      ]
+    },
+    {
+      "stepId": "04-edit",
+      "outputs": [
+        "parts_total_before_edit"
+      ]
+    },
+    {
+      "stepId": "06-edit",
+      "outputs": [
+        "supplier_shown_part_b"
+      ]
+    },
+    {
+      "stepId": "07-delete",
+      "outputs": [
+        "parts_after_delete",
+        "list_counts"
+      ]
+    }
+  ]
+}
