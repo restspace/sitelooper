@@ -135,10 +135,17 @@ export default {
   retries: 0,
   workers: 1,
   reporter: [['json', { outputFile: ${JSON.stringify(pwReportFile)} }], ['list']],
-  // --trace keeps a Playwright trace (DOM snapshots, network, console) for a
-  // failing test under ${tag}-spec-tmp/test-results, so an intermittent
-  // compiled-run failure can be read after the fact instead of re-guessed.
-  use: { headless: true${args.trace ? ", trace: 'retain-on-failure', screenshot: 'only-on-failure'" : ''} },
+  // Everything Playwright writes for a failing test — its error-context.md
+  // (the page's accessibility snapshot at the failure), the artifact's own
+  // \`sitelooper-drift\` attachment, a screenshot — lands HERE, inside the
+  // per-tag tmp dir the publish step copies, not in Playwright's default
+  // <repo>/test-results, which no results branch ever carried. fwgr54's
+  // compiled arm failed a click the daemon had replayed clean twice, and the
+  // only two files that could say why were left behind on the cloud box.
+  outputDir: ${JSON.stringify(path.join(tmpDir, 'test-results'))},
+  // --trace additionally keeps a full Playwright trace (DOM snapshots,
+  // network, console) for a failing test; it is megabytes, so opt-in.
+  use: { headless: true, screenshot: 'only-on-failure'${args.trace ? ", trace: 'retain-on-failure'" : ''} },
 };
 `;
 
