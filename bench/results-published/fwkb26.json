@@ -1,0 +1,540 @@
+{
+  "name": "fwkb26",
+  "origin": "http://127.0.0.1:8085",
+  "startUrl": "http://127.0.0.1:8085/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-open",
+      "instruction": "Open http://127.0.0.1:8085/ and sign in with username admin and password admin. Then navigate to the project named 'Bench Board' and view its board. Report the names of the board's columns in their left-to-right order, exactly as displayed on the board page.",
+      "skill": "s_9415b8",
+      "params": {
+        "v1": "http://127.0.0.1:8085/"
+      },
+      "outputs": [
+        "project_name",
+        "project_id",
+        "column_ready",
+        "column_work_in_progress",
+        "column_done"
+      ],
+      "recorded": {
+        "project_name": "Bench Board",
+        "project_id": "1",
+        "columns_left_to_right": "Backlog, Ready, Work in progress, Done",
+        "column_ready": "Ready",
+        "column_work_in_progress": "Work in progress",
+        "column_done": "Done",
+        "url": "http://127.0.0.1:8085/?controller=BoardViewController&action=show&project_id=1"
+      },
+      "route": "http://127.0.0.1:8085/",
+      "outputEvidence": {
+        "project_name": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "project_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "columns_left_to_right": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "column_ready": {
+          "same": 1,
+          "differed": 0
+        },
+        "column_work_in_progress": {
+          "same": 1,
+          "differed": 0
+        },
+        "column_done": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "On the 'Bench Board' project board, create a new task with title exactly '{{runid}} Bench Task' and a description that includes the text '{{runid}}' (e.g. 'Bench task for run {{runid}}'). Do not modify or move any tasks whose titles start with 'Seed:'. Submit the task creation form and verify the task was created (e.g. its task page opens or it appears on the board). Report the task's numeric ID as displayed (Kanboard shows it as #<number>).",
+      "skill": "s_1f36fd",
+      "params": {
+        "v1": "Bench Board",
+        "v3": "{{runid}} Bench Task",
+        "v2": "{{runid}}",
+        "v4": "Bench task for run {{runid}}"
+      },
+      "outputs": [
+        "task_id",
+        "task_display_id",
+        "task_title",
+        "task_description",
+        "project",
+        "seed_tasks_untouched",
+        "column_selected_id",
+        "ref"
+      ],
+      "recorded": {
+        "task_id": "4",
+        "task_display_id": "#4",
+        "task_title": "fwkb26-n1 Bench Task",
+        "task_description": "Bench task for run fwkb26-n1",
+        "project": "Bench Board (project_id=1)",
+        "column_selected_backlog": "1 (Backlog)",
+        "seed_tasks_untouched": "#1 Seed: triage inbox, #2 Seed: order missing parts, #3 Seed: ship repaired device",
+        "column_selected_id": "1",
+        "ref": "fwkb26-n1",
+        "url": "http://127.0.0.1:8085/?controller=TaskViewController&action=show&task_id=4"
+      },
+      "route": "http://127.0.0.1:8085/",
+      "outputEvidence": {
+        "task_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "task_display_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "task_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "task_description": {
+          "same": 0,
+          "differed": 1
+        },
+        "project": {
+          "same": 1,
+          "differed": 0
+        },
+        "column_selected_backlog": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "seed_tasks_untouched": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "column_selected_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "03-verify",
+      "instruction": "On the 'Bench Board' project board, move the task titled '{{runid}} Bench Task' (task {{02-create.task_display_id}}) so that it sits in the '{{01-open.column_work_in_progress}}' column. The board supports dragging cards between columns, or you can use the task's menu / task page move action — use whichever works. Do not move or modify any tasks whose titles start with 'Seed:'. Verify afterwards that the card '{{runid}} Bench Task' is displayed inside the '{{01-open.column_work_in_progress}}' column and report what you observed.",
+      "skill": "s_62ebce",
+      "params": {
+        "v1": "Bench Board",
+        "v2": "{{runid}} Bench Task",
+        "v4": "{{01-open.column_work_in_progress}}",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "task_title",
+        "target_column",
+        "task_page_sidebar_column",
+        "wip_column_cards",
+        "board_column_counts_backlog",
+        "board_column_counts_work_in_progress",
+        "ref",
+        "backlog_card_1",
+        "backlog_card_2",
+        "backlog_card_3"
+      ],
+      "recorded": {
+        "task_id": "4",
+        "task_title": "fwkb26-n1 Bench Task",
+        "target_column": "Work in progress (column id 3)",
+        "task_page_sidebar_column": "Column: Work in progress",
+        "wip_column_cards": "fwkb26-n1 Bench Task",
+        "board_column_counts_backlog": "3",
+        "board_column_counts_ready": "0",
+        "board_column_counts_work_in_progress": "1",
+        "board_column_counts_done": "0",
+        "ref": "fwkb26-n1",
+        "backlog_card_1": "Seed: triage inbox",
+        "backlog_card_2": "Seed: order missing parts",
+        "backlog_card_3": "Seed: ship repaired device"
+      },
+      "route": "http://127.0.0.1:8085/",
+      "outputEvidence": {
+        "task_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "task_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "target_column": {
+          "same": 0,
+          "differed": 1
+        },
+        "task_page_sidebar_column": {
+          "same": 1,
+          "differed": 0
+        },
+        "wip_column_cards": {
+          "same": 0,
+          "differed": 1
+        },
+        "board_column_counts_backlog": {
+          "same": 1,
+          "differed": 0
+        },
+        "board_column_counts_ready": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "board_column_counts_work_in_progress": {
+          "same": 1,
+          "differed": 0
+        },
+        "board_column_counts_done": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "backlog_card_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "backlog_card_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "backlog_card_3": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "04-add",
+      "instruction": "On the task page for task {{02-create.task_display_id}} titled '{{runid}} Bench Task' in the 'Bench Board' project, add a comment whose text includes '{{runid}}' (e.g. 'Progress note for run {{runid}}'). Submit the comment form and verify the comment appears on the task page. Report the comment text you observed after saving.",
+      "skill": "s_36dd77",
+      "params": {
+        "v1": "{{runid}} Bench Task",
+        "v3": "Bench Board",
+        "v2": "{{runid}}",
+        "v4": "Progress note for run {{runid}}"
+      },
+      "outputs": [
+        "task_id",
+        "task_title",
+        "comment_text",
+        "comment_visibility",
+        "occurrences_on_page",
+        "ref"
+      ],
+      "recorded": {
+        "task_id": "4",
+        "task_title": "fwkb26-n1 Bench Task",
+        "comment_text": "Progress note for run fwkb26-n1",
+        "comment_author": "admin",
+        "comment_visibility": "Standard users",
+        "occurrences_on_page": "1",
+        "ref": "fwkb26-n1"
+      },
+      "route": "http://127.0.0.1:8085/",
+      "outputEvidence": {
+        "task_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "task_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_author": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "comment_visibility": {
+          "same": 1,
+          "differed": 0
+        },
+        "occurrences_on_page": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "05-set",
+      "instruction": "On the task page for task {{02-create.task_display_id}} titled '{{runid}} Bench Task' in the 'Bench Board' project, set the task's due date to 2026-12-31 (December 31, 2026). Use the task page's edit/details form or the due-date action — whichever the app offers. Save the change and verify the task page now displays the due date as 2026-12-31 (or 12/31/2026). Report exactly what the page shows for the due date.",
+      "skill": "s_fbe2ab",
+      "params": {
+        "v1": "{{runid}} Bench Task",
+        "v3": "Bench Board",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "task_id",
+        "task_title",
+        "due_date_displayed_exactly",
+        "field_entered",
+        "note",
+        "due_date_field_value"
+      ],
+      "recorded": {
+        "task_id": "4",
+        "task_title": "fwkb26-n1 Bench Task",
+        "due_date_displayed_exactly": "Due date: 12/31/2026 18:07",
+        "date_portion": "12/31/2026",
+        "field_entered": "2026-12-31",
+        "note": "time suffix 18:07 is added by Kanboard; a 00:00 value did not clear it",
+        "due_date_field_value": "2026-12-31 00:00"
+      },
+      "route": "http://127.0.0.1:8085/",
+      "outputEvidence": {
+        "task_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "task_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "due_date_displayed_exactly": {
+          "same": 0,
+          "differed": 1
+        },
+        "date_portion": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "field_entered": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "note": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "due_date_field_value": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        }
+      }
+    },
+    {
+      "id": "06-open",
+      "instruction": "Final verification on the 'Bench Board' project (Kanboard at http://127.0.0.1:8085/): open the board and the task page for the task titled '{{runid}} Bench Task'. Report these facts exactly as displayed: (1) the board's column names left-to-right; (2) the task's numeric ID shown as #<number>; (3) the task's title; (4) whether the description contains the text '{{runid}}' and the description text; (5) which column the task card sits in on the board; (6) whether there is a comment containing '{{runid}}' and its text; (7) the due date shown on the task page. Do not change anything — read only.",
+      "skill": "s_ad22fa",
+      "params": {
+        "v1": "Bench Board",
+        "v2": "{{runid}} Bench Task",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "task_id_displayed",
+        "task_title",
+        "description_text",
+        "task_card_column",
+        "wip_column_task_count",
+        "comment_text",
+        "ref",
+        "backlog_card_1",
+        "backlog_card_2",
+        "backlog_card_3"
+      ],
+      "recorded": {
+        "board_columns_left_to_right": "Backlog, Ready, Work in progress, Done",
+        "task_id_displayed": "#4",
+        "task_title": "fwkb26-n1 Bench Task",
+        "description_contains_fwkb26-n1": "yes",
+        "description_text": "Bench task for run fwkb26-n1",
+        "task_card_column": "Work in progress",
+        "wip_column_task_count": "1",
+        "backlog_column_task_count": "3",
+        "comment_contains_fwkb26-n1": "yes",
+        "comment_text": "Progress note for run fwkb26-n1",
+        "comment_count": "1",
+        "due_date_displayed": "Due date: 12/31/2026 18:07",
+        "task_page_url": "http://127.0.0.1:8085/?controller=TaskViewController&action=show&task_id=4",
+        "ref": "fwkb26-n1",
+        "backlog_card_1": "Seed: triage inbox",
+        "backlog_card_2": "Seed: order missing parts",
+        "backlog_card_3": "Seed: ship repaired device"
+      },
+      "route": "http://127.0.0.1:8085/",
+      "outputEvidence": {
+        "board_columns_left_to_right": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "task_id_displayed": {
+          "same": 1,
+          "differed": 0
+        },
+        "task_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "description_contains_fwkb26-n1": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "description_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "task_card_column": {
+          "same": 1,
+          "differed": 0
+        },
+        "wip_column_task_count": {
+          "same": 1,
+          "differed": 0
+        },
+        "backlog_column_task_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "comment_contains_fwkb26-n1": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "comment_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "due_date_displayed": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "task_page_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "backlog_card_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "backlog_card_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "backlog_card_3": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwkb26-n1",
+    "created": "2026-09-17T18:08:59.964Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-open",
+      "outputs": [
+        "columns_left_to_right"
+      ]
+    },
+    {
+      "stepId": "02-create",
+      "outputs": [
+        "column_selected_backlog"
+      ]
+    },
+    {
+      "stepId": "03-verify",
+      "outputs": [
+        "task_id",
+        "board_column_counts_ready",
+        "board_column_counts_done"
+      ]
+    },
+    {
+      "stepId": "04-add",
+      "outputs": [
+        "comment_author"
+      ]
+    },
+    {
+      "stepId": "05-set",
+      "outputs": [
+        "date_portion"
+      ]
+    },
+    {
+      "stepId": "06-open",
+      "outputs": [
+        "board_columns_left_to_right",
+        "description_contains_fwkb26-n1",
+        "backlog_column_task_count",
+        "comment_contains_fwkb26-n1",
+        "comment_count",
+        "due_date_displayed",
+        "task_page_url"
+      ]
+    }
+  ]
+}
