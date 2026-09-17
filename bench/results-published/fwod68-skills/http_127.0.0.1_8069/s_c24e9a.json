@@ -1,0 +1,402 @@
+{
+ "id": "s_c24e9a",
+ "origin": "http://127.0.0.1:8069",
+ "template": "In Odoo Sales (already signed in as admin), there is an unsaved new quotation form for customer '{{v1}}' with an open 'Configure your product' modal blocking it. Resolve this so the quotation ends up SAVED with exactly ONE order line: quantity 3 of a product chosen from the product autocomplete dropdown, with Odoo's auto-filled unit price. If clicking Cancel on the modal drops the line or the product keeps re-opening the configurator, pick a different product that does not trigger the configurator modal. Then click Save and verify the record is persisted (statusbar no longer 'New', a record id appears in the URL). Report: (a) the product name on the line, (b) the unit price, (c) the Untaxed Amount shown, and (d) confirmation the quotation is saved (e.g. its reference/name if shown). Do not wait for network idle; wait for concrete page state.",
+ "params": {
+  "v1": {
+   "example": "fwod68-n2 Bench Customer",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i1:contact_name"
+  },
+  "v2": {
+   "example": "fwod68-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form"
+ },
+ "steps": [
+  {
+   "tool": "tabs",
+   "args": {},
+   "locators": {}
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "@e1915",
+    "what": "text",
+    "label": "quotation_reference"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > h1"
+     },
+     {
+      "kind": "point",
+      "x": 490,
+      "y": 206,
+      "w": 898.5,
+      "h": 55,
+      "role": "heading",
+      "tag": "h1",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "quotation_reference"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": ".o_statusbar_status",
+    "what": "text",
+    "label": "statusbar_text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_statusbar_status"
+     },
+     {
+      "kind": "role",
+      "role": "radiogroup",
+      "name": "Statusbar"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div"
+     },
+     {
+      "kind": "point",
+      "x": 1100,
+      "y": 129,
+      "w": 328.8,
+      "h": 33,
+      "role": "radiogroup",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "statusbar_text_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "@e1659",
+    "what": "text",
+    "label": "customer_city"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div > div:nth-of-type(2)",
+      "nth": 0
+     },
+     {
+      "kind": "point",
+      "x": 401,
+      "y": 270,
+      "w": 445.8,
+      "h": 21,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "customer_city"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "what": "url",
+    "label": "record_url"
+   },
+   "locators": {},
+   "label": "record_url"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "value"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "combobox",
+      "name": "Type to find a customer..."
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Type to find a customer..."
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(1) > div > div > input",
+      "nth": 0
+     },
+     {
+      "kind": "point",
+      "x": 383,
+      "y": 247,
+      "w": 409.8,
+      "h": 26,
+      "role": "combobox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "customer"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 691,
+      "y": 442,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "quantity"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(5)"
+     },
+     {
+      "kind": "point",
+      "x": 783,
+      "y": 442,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "unit_price"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "tr:nth-of-type(1) > td:nth-of-type(6) > div > div > span > div"
+     },
+     {
+      "kind": "point",
+      "x": 858,
+      "y": 440,
+      "w": 26,
+      "h": 13,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "table_o_list_table_tbody"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(2) > td:nth-of-type(1) > label"
+     },
+     {
+      "kind": "point",
+      "x": 1124,
+      "y": 642,
+      "w": 82,
+      "h": 21,
+      "role": null,
+      "tag": "label",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "oe_subtotal_footer_tr_2_1"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(2) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1203,
+      "y": 642,
+      "w": 70.8,
+      "h": 21,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "oe_subtotal_footer_tr_2_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(3) > td:nth-of-type(1) > label"
+     },
+     {
+      "kind": "point",
+      "x": 1138,
+      "y": 668,
+      "w": 53.5,
+      "h": 21,
+      "role": null,
+      "tag": "label",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "oe_subtotal_footer_tr_3_1"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(3) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1203,
+      "y": 667,
+      "w": 70.8,
+      "h": 21,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "oe_subtotal_footer_tr_3_2"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "No blocking state remained to resolve: the only open tab already showed the SAVED quotation S00022 (url .../model=sale.order&view_type=form&id=22) in read mode, with no 'Configure your product' modal and no unsaved 'New' form anywhere (tabs list = 1 tab, S00022). Re-read from the live page: exactly ONE order line — '[E-COM11] Cabinet with Doors', quantity 3.00, unit price 140.00 (Odoo auto-filled), line tax-excl £420.00; footer shows Untaxed Amount £420.00, TAX 20% £84.00, Total £504.00; customer {{v1}} (Benchville) is on the form and the statusbar shows 'Quotation' (not 'New'), with a record id=22 in the URL and a chatter entry 'Sales Order created'. I therefore made no changes (nothing was saved/deleted/cancelled in this run) — the earlier configurator-modal blockage had already been cleared by removing that configurable-product line and re-adding a plain product, and the record is persisted.",
+  "values": {
+   "quotation_reference": "S00022",
+   "customer": "{{v1}}",
+   "customer_city": "Benchville",
+   "product_name": "[E-COM11] Cabinet with Doors",
+   "quantity": "3.00",
+   "unit_price": "140.00",
+   "line_subtotal": "£ 420.00",
+   "untaxed_amount": "£ 420.00",
+   "order_line_count": "1",
+   "statusbar_text": "Sales Order / Quotation Sent / Quotation (Quotation checked)",
+   "record_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22",
+   "statusbar_text_2": "Sales Order\nQuotation Sent\nQuotation",
+   "oe_subtotal_footer_tr": "Untaxed Amount\t£ 420.00",
+   "table_o_list_table_tbody": "20%",
+   "table_o_list_table_tbody_2": "£ 420.00",
+   "ref": "{{v2}}",
+   "oe_subtotal_footer_tr_2_1": "TAX 20%",
+   "oe_subtotal_footer_tr_2_2": "£ 84.00",
+   "oe_subtotal_footer_tr_3_1": "Total",
+   "oe_subtotal_footer_tr_3_2": "£ 504.00"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 2,
+  "successes": 2,
+  "partial": 0,
+  "created": "2026-09-17T22:58:45.975Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-17T23:00:08.450Z"
+ },
+ "status": "validated",
+ "provenance": {
+  "session": "fwod68-n2",
+  "instruction": "In Odoo Sales (already signed in as admin), there is an unsaved new quotation form for customer 'fwod68-n2 Bench Customer' with an open 'Configure your product' modal blocking it. Resolve this so the quotation ends up SAVED with exactly ONE order line: quantity 3 of a product chosen from the product autocomplete dropdown, with Odoo's auto-filled unit price. If clicking Cancel on the modal drops the line or the product keeps re-opening the configurator, pick a different product that does not trigger the configurator modal. Then click Save and verify the record is persisted (statusbar no longer 'New', a record id appears in the URL). Report: (a) the product name on the line, (b) the unit price, (c) the Untaxed Amount shown, and (d) confirmation the quotation is saved (e.g. its reference/name if shown). Do not wait for network idle; wait for concrete page state.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-17T22:58:45.975Z"
+ },
+ "revision": 2
+}

@@ -1,0 +1,39 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-signin
+[sitelooper step] 02-create
+  ✘  1 fwod68.spec.ts:9:1 › fwod68 (46.5s)
+
+
+  1) fwod68.spec.ts:9:1 › fwod68 › 03-open: In Odoo Sales (already signed in as admin), there is an unsaved new quotation form for customer '{{runid}} Bench Customer' with an open 'Configure your product' modal blocking it. Resolve this so the quotation ends up SAVED with exactly ONE order line: quantity 3 of a product chosen from the product autocomplete dropdown, with Odoo's auto-filled unit price. If clicking Cancel on the modal drops the line or the product keeps re-opening the configurator, pick a different product that does not trigger the configurator modal. Then click Save and verify the record is persisted (statusbar no longer 'New', a record id appears in the URL). Report: (a) the product name on the line, (b) the unit price, (c) the Untaxed Amount shown, and (d) confirmation the quotation is saved (e.g. its reference/name if shown). Do not wait for network idle; wait for concrete page state. 
+
+    Error: 03-open s_53e05b: not on the page this procedure starts from (expects http://127.0.0.1:8069/web#action=:id&cids=:id&menu_id=:id&model=sale.order&view_type=form, browser is at http://127.0.0.1:8069/web#action=316&cids=1&id=24&menu_id=194&model=sale.order&view_type=form; the url already carries id=24, the record this procedure creates at its step 8 — the page is past where the procedure starts) — nothing of this segment has run
+
+       at fwod68.flow.ts:11126
+
+      11124 |   const verdict = preconditionVerdict(pattern, url, p, similarity, mints);
+      11125 |   for (const line of verdict.warnings) logWarning(`${where}: ${line}`);
+    > 11126 |   if (verdict.refuse) throw new Error(`${where}: ${verdict.refuse} — nothing of this segment has run`);
+            |                             ^
+      11127 | }
+      11128 |
+      11129 | /**
+        at preconditionGate (/home/user/sitelooper/bench/results/fwod68-spec-spec-tmp/fwod68.flow.ts:11126:29)
+        at Object.03-open (/home/user/sitelooper/bench/results/fwod68-spec-spec-tmp/fwod68.flow.ts:13792:11)
+        at /home/user/sitelooper/bench/results/fwod68-spec-spec-tmp/fwod68.flow.ts:16539:7
+        at runFlow (/home/user/sitelooper/bench/results/fwod68-spec-spec-tmp/fwod68.flow.ts:16538:5)
+        at /home/user/sitelooper/bench/results/fwod68-spec-spec-tmp/fwod68.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwod68-fwod68/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwod68-fwod68/error-context.md
+
+  1 failed
+    fwod68.spec.ts:9:1 › fwod68 ────────────────────────────────────────────────────────────────────
