@@ -1,0 +1,249 @@
+{
+  "flow": "fwod61",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Signed in at /web/login with login 'admin' / password 'admin' and submitted the form. Login succeeded and the app loaded — I landed on the Odoo Discuss app (URL http://127.0.0.1:8069/web#action=123&cids=1&menu_id=81, page title \"Odoo - Discuss\"), not the generic apps dashboard. Verified from the live DOM: the login form fields are gone and the Discuss UI is rendered (top menu \"Discuss\", threads/channels sidebar, and the \"Congratulations, your inbox is empty\" heading).",
+      "values": {
+        "landing_url": "http://127.0.0.1:8069/web#action=123&cids=1&menu_id=81",
+        "page_title": "Odoo - Discuss",
+        "user_company": "YourCompany"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_7481d2 (6 steps).",
+      "values": {
+        "customer_name_prefix": "fwod61-n2",
+        "record_url": "http://127.0.0.1:8069/web#cids=1&menu_id=109&action=156&model=res.partner&view_type=form&id=45",
+        "contact_name": "fwod61-n2 Bench Customer",
+        "city": "Benchville",
+        "page_title_after_reload": "Odoo - fwod61-n2 Bench Customer",
+        "button": "New"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Created and saved a new quotation in Sales > Orders > Quotations: Customer set to 'fwod61-n2 Bench Customer' by actually selecting the option from the autocomplete dropdown (list closed, \"Internal link\" appeared), one order line added from the product catalogue, Quantity set to 3, then saved — the form went from \"New\" to saved record S00022 (URL .../model=sale.order&view_type=form&id=22, title \"Odoo - S00022\", statusbar \"Quotation\"). Note: the first product I picked (Customizable Desk) opened a product-configurator modal (\"Configure your product\") which blocked the save (the form stayed dirty at \"New\"); I cancelled that modal and re-added the line with a plain product, after which the save succeeded. Observed on the saved record: line \"[FURN_7777] Office Chair\", Qty 3.00, Unit Price £ 70.00, Taxes 20%, line Tax excl. £ 210.00, Untaxed Amount £ 210.00, Total £ 252.00.",
+      "values": {
+        "customer": "fwod61-n2 Bench Customer",
+        "customer_city": "Benchville",
+        "line_tax_excl": "£ 210.00",
+        "order_reference": "S00022",
+        "order_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22",
+        "product_name": "[FURN_7777] Office Chair",
+        "quantity": "3.00",
+        "quotation_status": "Quotation",
+        "save_blocked_by_modal": "true",
+        "taxes": "20%",
+        "total_after_modal_cancel": "Total\t£ 0.00",
+        "total": "£ 252.00",
+        "unit_price": "£ 70.00",
+        "untaxed_amount": "£ 210.00",
+        "unit_price_2": "0.00",
+        "quotation_name": "New",
+        "table_o_list_table_o_dat": "£ 210.00",
+        "table_o_list_table_o_dat_2": "70.00",
+        "ref": "fwod61-n2",
+        "ref_2": "FURN_7777",
+        "oe_subtotal_footer_tr_1": "Untaxed Amount",
+        "oe_subtotal_footer_tr_2_2": "£ 210.00",
+        "oe_subtotal_footer_tr_2_1": "Total",
+        "oe_subtotal_footer_tr_2_2_2": "£ 252.00"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "the flow step has no pinned skill",
+      "replayed": null,
+      "repaired": false,
+      "turns": 40,
+      "unreported": [
+        "customer_city_shown_on_form",
+        "product_chosen_dropdown_option",
+        "quantity_set",
+        "unit_price_observed_presave",
+        "untaxed_amount_observed_presave",
+        "tax_20_observed",
+        "total_observed_presave",
+        "post_save_line_state",
+        "verified_source"
+      ]
+    },
+    {
+      "id": "04-set",
+      "status": "success",
+      "summary": "The browser was actually on the previously saved quotation S00022 (customer set, but with an Office Chair line, not an empty line), so I clicked New to get a fresh quotation form, set Customer by selecting 'fwod61-n2 Bench Customer' from the autocomplete dropdown (list closed, \"Internal link\" appeared), added ONE order line by typing \"floor\" in the product autocomplete and selecting the option \"Chair floor protection\" (a plain non-configurable product — no configurator modal appeared at any point), set Quantity to 3, and saved: the form went from \"New\" to saved record S00023 (statusbar \"Quotation\"). Verified on the saved read-only record: line \"Chair floor protection\" (description \"Office chairs can harm your floor: protect it.\"), Qty 3.00, Unit Price 12.00, Taxes 20%, Tax excl. £36.00; Untaxed Amount £36.00; TAX 20% £7.20; Total £43.20.",
+      "values": {
+        "order_reference": "S00023",
+        "product_name": "Chair floor protection",
+        "customer": "fwod61-n2 Bench Customer",
+        "customer_city": "Benchville",
+        "quantity": "3.00",
+        "unit_price": "12.00",
+        "taxes": "20%",
+        "line_tax_excl": "£ 36.00",
+        "untaxed_amount": "£ 36.00",
+        "tax_20": "£ 7.20",
+        "total": "£ 43.20",
+        "order_status": "Quotation",
+        "save_blocked_by_modal": "false",
+        "order_url": "http://127.0.0.1:8069/web#id=23&cids=1&menu_id=194&action=316&model=sale.order&view_type=form",
+        "tr_o_data_row_td": "£ 36.00",
+        "ref": "S00022",
+        "ref_2": "fwod61-n2",
+        "oe_subtotal_footer_tr_1": "Untaxed Amount",
+        "oe_subtotal_footer_tr_2_2": "£ 36.00",
+        "oe_subtotal_footer_tr_2_1": "TAX 20%",
+        "oe_subtotal_footer_tr_2_2_2": "£ 7.20",
+        "oe_subtotal_footer_tr_3_1": "Total",
+        "oe_subtotal_footer_tr_3_2": "£ 43.20"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "every candidate refused — s_3f9e3e: failed at step 1 before touching the page — no element matched any known locator for target (tried 4: page.getByRole('combobox', { name: 'Type to find a product...', exact: true }), page.getByPlaceholder('Type to find a product...'), page.locator('td:nth-of-type(2) > div > div:nth-of-type(1) > div > div > input'), …)",
+      "replayed": null,
+      "repaired": false,
+      "turns": 23,
+      "unreported": [
+        "customer_name_prefix"
+      ]
+    },
+    {
+      "id": "05-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_ee5614; observed screenshot=/root/.sitelooper/sessions/fwod61-n2/screenshots/shot-1789619089029.jpg, order_reference=S00023, customer=fwod61-n2 Bench Customer, new_line_product=[FURN_7800] Desk Combination, new_line_quantity=2.00, new_line_unit_price=450.00, new_line_subtotal=£ 900.00, first_line_product=Chair floor protection, first_line_quantity=3.00, first_line_unit_price=12.00, first_line_subtotal=£ 36.00, untaxed_amount_after_save=£ 936.00, tax_20_after_save=£ 187.20, total_after_save=£ 1,123.20.",
+      "values": {
+        "screenshot": "/root/.sitelooper/sessions/fwod61-n2/screenshots/shot-1789619089029.jpg",
+        "order_reference": "S00023",
+        "customer": "fwod61-n2 Bench Customer",
+        "new_line_product": "[FURN_7800] Desk Combination",
+        "new_line_quantity": "2.00",
+        "new_line_unit_price": "450.00",
+        "new_line_subtotal": "£ 900.00",
+        "first_line_product": "Chair floor protection",
+        "first_line_quantity": "3.00",
+        "first_line_unit_price": "12.00",
+        "first_line_subtotal": "£ 36.00",
+        "untaxed_amount_after_save": "£ 936.00",
+        "tax_20_after_save": "£ 187.20",
+        "total_after_save": "£ 1,123.20"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "18/18",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "06-change",
+      "status": "success",
+      "summary": "Replayed stored procedure s_602a6f (14 steps).",
+      "values": {
+        "order_reference": "S00023",
+        "first_line_product": "Chair floor protection",
+        "first_line_quantity_after_save": "5.00",
+        "first_line_unit_price": "12.00",
+        "first_line_subtotal": "£ 60.00",
+        "second_line_product": "[FURN_7800] Desk Combination",
+        "second_line_quantity": "2.00",
+        "second_line_subtotal": "£ 900.00",
+        "untaxed_amount_after_save": "£ 960.00",
+        "tax_20_after_save": "£ 192.00",
+        "total_after_save": "£ 1,152.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "07-report",
+      "status": "success",
+      "summary": "Replayed stored procedure s_c07390 (11 steps).",
+      "values": {
+        "screenshot": "/root/.sitelooper/sessions/fwod61-n2/screenshots/shot-1789619136467.jpg",
+        "order_reference": "S00023",
+        "untaxed_amount": "£ 960.00",
+        "tax_20": "£ 192.00",
+        "total": "£ 1,152.00",
+        "header_buttons_after_confirm_1": "Create Invoice",
+        "header_buttons_after_confirm_2": "Send by Email",
+        "header_buttons_after_confirm_3": "Preview",
+        "header_buttons_after_confirm_4": "Cancel",
+        "customer": "fwod61-n2 Bench Customer\nBenchville",
+        "product_default_code": "[FURN_7800] Desk Combination"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "08-report",
+      "status": "success",
+      "summary": "I clicked the header \"Cancel\" button on sales order S00023, which opened Odoo 17's \"Cancel Sales Order\" wizard (\"Are you sure you want to cancel this order?\"); I confirmed it with its \"Send and cancel\" button (a leftover Edit: fwod61-n2 Bench Customer dialog was covering the wizard, so I discarded that first). Afterwards the live DOM shows the Statusbar arrow on \"Cancelled\" (o_arrow_button_current = Cancelled; Sales Order / Quotation Sent / Quotation now disabled) and the header offers \"Set to Quotation\" — i.e. the order is Cancelled. The heading/reference is still S00023 and the amount is unchanged: Untaxed Amount £ 960.00, TAX 20% £ 192.00, Total £ 1,152.00 (the app also added chatter system notifications about the cancellation email).",
+      "values": {
+        "sale_order_id": "23",
+        "cancel_wizard": "Cancel Sales Order — confirmed via its 'Send and cancel' button",
+        "screenshot": "/root/.sitelooper/sessions/fwod61-n2/screenshots/shot-1789619276460.jpg",
+        "customer_name_prefix": "fwod61-n2",
+        "record_url": "http://127.0.0.1:8069/web#id=23&cids=1&menu_id=194&action=316&model=sale.order&view_type=form",
+        "order_reference": "S00023",
+        "untaxed_amount": "£ 960.00",
+        "tax_20": "£ 192.00",
+        "total": "£ 1,152.00",
+        "customer_name": "fwod61-n2 Bench Customer"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 8,
+  "total": 8,
+  "repinned": 0,
+  "drift": 0,
+  "wallMs": 402997,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 1109372,
+    "completionTokens": 20312,
+    "cachedTokens": 1016320
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 1109372,
+      "completionTokens": 20312,
+      "cachedTokens": 1016320
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
