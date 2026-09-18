@@ -1,0 +1,190 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwkb33-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwkb33-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwkb33-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwkb33-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwkb33-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwkb33.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwkb33-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwkb33.spec.ts",
+      "file": "fwkb33.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwkb33",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 22885,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper warn] 01-open s_5355e7/7: read 'project_name' returned a value the skill itself set/selected ('Bench Board') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_771969/7: read 'task_title' returned a value the skill itself set/selected ('fwkb33-spec Bench Task') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_771969/9: read 'task_description' returned a value the skill itself set/selected ('Bench task for run fwkb33-spec') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-verify\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 04-open s_f483c3/10: read 'comment_text_shown' returned a value the skill itself set/selected ('Comment for run fwkb33-spec') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-open\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 05-open s_60b303/4: read 'date_entered_in_form' returned a value the skill itself set/selected ('12/31/2026') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 05-open s_60b303/5: read 'date_entered_in_form' returned a value the skill itself set/selected ('12/31/2026') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-open\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:8085/ and sign in with username admin and password admin. Then navigate to the project named 'Bench Board' and open its board. Report the names of the board's columns in their left-to-right order, exactly as shown on the page.",
+                      "duration": 4671
+                    },
+                    {
+                      "title": "02-create: In the Kanboard app (already signed in as admin, on the Bench Board project board), create a new task in the 'Bench Board' project with title exactly '{{runid}} Bench Task' and a description that includes the text '{{runid}}' (e.g. 'Bench task for run {{runid}}'). Place it initially in the 'Backlog' column. Do not modify any tasks whose titles start with 'Seed:'. After creating it, report the task's numeric ID as displayed by the app (shown as #<number> on the task card and task page) and confirm the title and description as shown on the task page.",
+                      "duration": 3110
+                    },
+                    {
+                      "title": "03-verify: In the Kanboard app (signed in as admin), move the task titled '{{runid}} Bench Task' (task {{02-create.task_card_label}}) from the 'Backlog' column to the '{{01-open.column_work_in_progress}}' column on the Bench Board board. Dragging the card is preferred; if drag-and-drop does not work, use the task's 'Move to another project/column' or 'Move column position' action from its card menu or task page to get it into the '{{01-open.column_work_in_progress}}' column. Do not touch any tasks whose titles start with 'Seed:'. Afterwards verify on the board and/or the task page that the task now sits in the '{{01-open.column_work_in_progress}}' column and report the column shown.",
+                      "duration": 2293
+                    },
+                    {
+                      "title": "04-open: In the Kanboard app (signed in as admin), {{02-create.status}} the task page for task {{02-create.task_card_label}} titled '{{runid}} Bench Task' in the Bench Board project and add a comment whose text includes '{{runid}}' (e.g. 'Comment for run {{runid}}'). After saving, verify the comment appears in the task's comments section and report the exact comment text shown.",
+                      "duration": 8891
+                    },
+                    {
+                      "title": "05-open: In the Kanboard app (signed in as admin), {{02-create.status}} the task page for task {{02-create.task_card_label}} titled '{{runid}} Bench Task' in the Bench Board project and set its due date to 2026-12-31 (December 31, 2026). Use the task's edit/details form or the 'Due date' action; the app may expect the date in MM/DD/YYYY or DD/MM/YYYY format — check the form's expected format and enter it so it saves as 2026-12-31. Do not change the task's title, description, or column. After saving, verify the due date shown on the task page and report the exact due date value displayed.",
+                      "duration": 2702
+                    },
+                    {
+                      "title": "06-open: In the Kanboard app (signed in as admin), do a final read-only verification of task {{02-create.task_card_label}} '{{runid}} Bench Task' in the Bench Board project. Open its task page and report: (a) the task's numeric ID as displayed (the #<number> shown), (b) the exact title, (c) the description text, (d) the column it is in, (e) the text of any comments on the task, (f) the due date shown. Then {{02-create.status}} the Bench Board board and confirm which column the task card sits in and that the three 'Seed:' tasks are still in the Backlog column. Do not modify anything.",
+                      "duration": 893
+                    }
+                  ],
+                  "startTime": "2026-09-18T08:27:03.160Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "01eb86736aa8767445d0-7f98c27581b3345034b2",
+          "file": "fwkb33.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-18T08:27:01.705Z",
+    "duration": 24497.997,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
