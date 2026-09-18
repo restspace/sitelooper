@@ -1,0 +1,126 @@
+{
+  "flow": "jvod1-c54",
+  "status": "halted",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Successfully signed into Odoo with admin/admin, navigated to Contacts, created a new contact named 'jvod1-c54 Bench Customer' with City 'Benchville', saved it. Verified the saved record: the Name field shows \"jvod1-c54 Bench Customer\" and the City field shows \"Benchville\".",
+      "values": {
+        "customer_name": "jvod1-c54 Bench Customer",
+        "city": "Benchville"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "20/20",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_c925b1; observed product_name=Chair floor protection, unit_price=12.00, line_total_2=£ 36.00, quotation_ref=S00069.",
+      "values": {
+        "product_name": "Chair floor protection",
+        "unit_price": "12.00",
+        "line_total_2": "£ 36.00",
+        "quotation_ref": "S00069"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "21/21",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "line_total",
+        "untaxed_amount"
+      ]
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_dc0408; observed second_unit_price=295.00, new_untaxed_amount_2=£ 626.00, new_untaxed_amount=£ 626.00, order_reference=S00069.",
+      "values": {
+        "second_unit_price": "295.00",
+        "new_untaxed_amount_2": "£ 626.00",
+        "new_untaxed_amount": "£ 626.00",
+        "order_reference": "S00069"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "second_product_name",
+        "ref"
+      ]
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_059a1e; observed first_line_qty=5.00, untaxed_amount_2=£ 650.00, ref=S00069.",
+      "values": {
+        "first_line_qty": "5.00",
+        "untaxed_amount_2": "£ 650.00",
+        "ref": "S00069"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "untaxed_amount"
+      ]
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_f1434f; observed order_reference=S00069, statusbar_text=Sales Order\nQuotation Sent\nQuotation.",
+      "values": {
+        "order_reference": "S00069",
+        "statusbar_text": "Sales Order\nQuotation Sent\nQuotation"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "4/4",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "order_status"
+      ]
+    },
+    {
+      "id": "06-open",
+      "status": "blocked",
+      "summary": "recovery failed before completing: no API key for provider \"zhipu\": set GLM_API_KEY or ZHIPU_API_KEY or SITELOOPER_API_KEY (or `sitelooper config set apiKey <key>`)",
+      "values": {},
+      "tier": null,
+      "replayed": null,
+      "repaired": false,
+      "turns": 0,
+      "recovered": true,
+      "fellBack": "every candidate refused — s_e7d322: the page at http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form does not show \"S00022\" — it matches this procedure's page template but is a different record — nothing was run"
+    }
+  ],
+  "passed": 5,
+  "total": 9,
+  "repinned": 0,
+  "drift": 0,
+  "wallMs": 36630,
+  "model": "glm-5.2",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "glm-5.2",
+  "provider": "zhipu",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "halted",
+  "nextActions": []
+}
