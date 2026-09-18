@@ -130,6 +130,32 @@ export class SessionState {
   }
 
   /**
+   * Where the session's instruction time went, per model: deciding (modelMs)
+   * versus driving the browser (toolMs). See loop.ts InstructionTiming. The
+   * remainder of totalMs is the loop's own work — snapshots folded into tool
+   * results are tool time; read-back capture and recording are not.
+   */
+  timing: Record<string, { totalMs: number; modelMs: number; toolMs: number; modelCalls: number; instructions: number }> = {};
+
+  recordTiming(model: string, t: { totalMs: number; modelMs: number; toolMs: number; modelCalls: number; turns?: unknown[] }): void {
+    // The per-turn rows go to disk, not into `config`: they are what weights a
+    // turn TYPE by the model time it costs (PLAN-jev.md 4c), and nothing reads
+    // them at run time. Best-effort, like the decision log.
+    try {
+      fs.appendFileSync(path.join(ensureSessionDir(this.session), 'timing.jsonl'), JSON.stringify({ ts: new Date().toISOString(), model, ...t }) + '
+');
+    } catch {
+      /* best-effort */
+    }
+    const b = (this.timing[model] ??= { totalMs: 0, modelMs: 0, toolMs: 0, modelCalls: 0, instructions: 0 });
+    b.totalMs += t.totalMs;
+    b.modelMs += t.modelMs;
+    b.toolMs += t.toolMs;
+    b.modelCalls += t.modelCalls;
+    b.instructions += 1;
+  }
+
+  /**
    * The System One tier's usage, per served model (see agent/system-one.ts).
    *
    * Deliberately NOT folded into `usageByModel`: everything in that map is

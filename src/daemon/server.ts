@@ -657,6 +657,7 @@ ${describeLeaks(leaks.slice(0, 6))}`);
           usage: this.state.usage,
           usageByModel: this.state.usageByModel,
           servedByModel: this.state.servedByModel,
+          timing: this.state.timing,
           systemOne: {
             enabled: jev.enabled,
             mode: jev.mode,
@@ -2226,6 +2227,8 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
         report,
         turns: 0,
         usage: { promptTokens: 0, completionTokens: 0, cachedTokens: 0 },
+        // A zero-model replay: no model time, and its browser time is the replay's own figure.
+        timing: { totalMs: 0, modelMs: 0, toolMs: 0, modelCalls: 0, turns: [] },
         screenshots: [],
         skill: { listed: [match.skill.id], repaired: false, ...record } as SkillRecord,
         published: { ...agg.values },

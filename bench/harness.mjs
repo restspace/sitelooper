@@ -894,6 +894,8 @@ async function collectInnerUsage() {
       }
     }
     if (cfg.systemOne?.usage && Object.keys(cfg.systemOne.usage).length) inner.systemOne = cfg.systemOne.usage;
+    // Model ms vs tool ms inside the inner loop: the split every speed claim needs.
+    if (cfg.timing && Object.keys(cfg.timing).length) inner.timing = cfg.timing;
     if (cfg.skills) inner.skills = cfg.skills;
     inner.model = cfg.model ?? inner.model ?? null;
     inner.fallbackModel = cfg.fallbackModel ?? inner.fallbackModel ?? null;

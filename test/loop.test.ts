@@ -525,6 +525,33 @@ describe('escalate-on-blocked', () => {
     expect(sum).toBe(state.usage.promptTokens);
   });
 
+  it('splits instruction time into model and tool time, per turn and per model', async () => {
+    const state = new SessionState('t-esc-timing');
+    const slow = (p: Provider): Provider => ({
+      model: p.model,
+      complete: async (...args) => {
+        await new Promise((r) => setTimeout(r, 15));
+        return p.complete(...args);
+      },
+    });
+    const result = await runEscalatingInstruction(
+      slow(named('cheap', blocks())),
+      slow(named('smart', succeeds())),
+      browserStub,
+      state,
+      'do it',
+      loopOpts,
+    );
+    // Both attempts count, as with tokens: escalation cannot hide its time either.
+    expect(result.timing.modelCalls).toBe(result.turns);
+    expect(result.timing.turns).toHaveLength(result.turns);
+    expect(result.timing.modelMs).toBeGreaterThanOrEqual(15 * result.turns - 5);
+    expect(result.timing.modelMs).toBe(result.timing.turns.reduce((n, t) => n + t.modelMs, 0));
+    expect(result.timing.totalMs).toBeGreaterThanOrEqual(result.timing.modelMs + result.timing.toolMs);
+    expect(Object.keys(state.timing).sort()).toEqual(['cheap', 'smart']);
+    expect(state.timing.cheap.instructions).toBe(1);
+  });
+
   it('bills BOTH attempts so escalation cannot hide its cost', async () => {
     const state = new SessionState('t-esc-usage');
     const result = await runEscalatingInstruction(

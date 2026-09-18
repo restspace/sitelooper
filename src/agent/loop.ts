@@ -89,10 +89,28 @@ export interface ActionRecord {
   ok: boolean;
 }
 
+/**
+ * Where an instruction's wall-clock went: waiting on the model, or driving the
+ * browser. Exists because every claim about speeding the loop up needs the
+ * split — the record-vs-replay ratio (fwrd42: 1,212s vs 24s) says the model
+ * dominates but is a proxy, and "how much would a faster decision layer save"
+ * is exactly `modelMs / totalMs`, per kind of turn. Aborted model calls count:
+ * a watchdog abort is time the model spent.
+ */
+export interface InstructionTiming {
+  totalMs: number;
+  modelMs: number;
+  toolMs: number;
+  modelCalls: number;
+  /** One row per turn: what the model took to decide, what its tool calls took to run, and what they were. */
+  turns: Array<{ modelMs: number; toolMs: number; tools: string[] }>;
+}
+
 export interface InstructionResult {
   report: Report;
   turns: number;
   usage: { promptTokens: number; completionTokens: number; cachedTokens: number };
+  timing: InstructionTiming;
   /** Last few transcript lines, included when the loop had to bail out. */
   transcriptTail?: string[];
   /**
@@ -240,8 +258,10 @@ export async function runInstruction(
   instruction: string,
   opts: LoopOptions,
 ): Promise<InstructionResult> {
-  const deadline = Date.now() + opts.timeoutMs;
+  const startedAt = Date.now();
+  const deadline = startedAt + opts.timeoutMs;
   const usage = { promptTokens: 0, completionTokens: 0, cachedTokens: 0 };
+  const timing: InstructionTiming = { totalMs: 0, modelMs: 0, toolMs: 0, modelCalls: 0, turns: [] };
   const transcript: string[] = [];
   const actions: ActionRecord[] = [];
   const screenshots: string[] = [];
@@ -487,7 +507,7 @@ export async function runInstruction(
           // Never past the instruction deadline: this is one more model
           // call, and the caller believes the budget bounds the whole thing.
           if (stragglers.length && Date.now() < deadline) {
-            const sourced = await sourceStragglers(provider, page, system, state, stragglers, opts, usage);
+            const sourced = await sourceStragglers(provider, page, system, state, stragglers, opts, usage, timing);
             for (const step of sourced) browser.script.addStep(step);
           }
         } catch {
@@ -504,6 +524,8 @@ export async function runInstruction(
       });
     }
     state.recordUsage(provider.model, usage);
+    timing.totalMs = Date.now() - startedAt;
+    state.recordTiming(provider.model, timing);
     // Any blocked outcome carries its evidence, not just loop-enforced bail-outs:
     // an agent that declares itself stuck is exactly when a caller — or the
     // escalation model — needs to know what already ran. Clean successes stay lean.
@@ -519,6 +541,7 @@ export async function runInstruction(
       report,
       turns,
       usage,
+      timing,
       screenshots,
       ...(includeTail ? { transcriptTail: transcript.slice(-12), actions: actions.slice(-40) } : {}),
       ...(finalState ? { finalState } : {}),
@@ -638,11 +661,21 @@ export async function runInstruction(
     opts.signal?.addEventListener('abort', abortTurn, { once: true });
 
     let completion;
+    const turnTiming = { modelMs: 0, toolMs: 0, tools: [] as string[] };
+    timing.turns.push(turnTiming);
+    const askedAt = Date.now();
+    const modelDone = () => {
+      turnTiming.modelMs = Date.now() - askedAt;
+      timing.modelMs += turnTiming.modelMs;
+      timing.modelCalls += 1;
+    };
     try {
       completion = await provider.complete([system, ...state.messages], toolDefs, {
         signal: watchdog.signal,
       });
+      modelDone();
     } catch (err) {
+      modelDone();
       if (!watchdog.signal.aborted) throw err;
       // Aborted: the assistant message never arrived, so history stays consistent.
       if (opts.signal?.aborted) continue; // stop requested — reported at the top of the next pass
@@ -767,7 +800,11 @@ export async function runInstruction(
 
       const summary = summarizeArgs(call.args);
       opts.onProgress?.(`[turn ${turn}/${opts.maxTurns}] ${call.name} ${summary}`);
+      const toolAt = Date.now();
       const execution = await runTool(call.name, call.args);
+      turnTiming.toolMs += Date.now() - toolAt;
+      timing.toolMs += Date.now() - toolAt;
+      turnTiming.tools.push(call.name);
       actions.push({ tool: call.name, args: summary, ok: !execution.isError });
       state.messages.push({ role: 'tool', tool_call_id: call.id, content: execution.result });
       accountActions(skill, call.name, call.args, execution);
@@ -911,6 +948,13 @@ export async function runEscalatingInstruction(
       completionTokens: first.usage.completionTokens + second.usage.completionTokens,
       cachedTokens: first.usage.cachedTokens + second.usage.cachedTokens,
     },
+    timing: {
+      totalMs: first.timing.totalMs + second.timing.totalMs,
+      modelMs: first.timing.modelMs + second.timing.modelMs,
+      toolMs: first.timing.toolMs + second.timing.toolMs,
+      modelCalls: first.timing.modelCalls + second.timing.modelCalls,
+      turns: [...first.timing.turns, ...second.timing.turns],
+    },
     screenshots: [...first.screenshots, ...second.screenshots],
     escalation: {
       from: primary.model,
@@ -958,6 +1002,7 @@ async function sourceStragglers(
   values: string[],
   opts: LoopOptions,
   usage: { promptTokens: number; completionTokens: number; cachedTokens: number },
+  timing: InstructionTiming,
 ): Promise<import('../daemon/recorder.js').RecordedStep[]> {
   const ask: ChatMessage = {
     role: 'user',
@@ -967,11 +1012,20 @@ async function sourceStragglers(
       values.map((v) => `- ${JSON.stringify(v)}`).join('\n'),
   };
   let completion;
+  const askedAt = Date.now();
+  const modelDone = () => {
+    const ms = Date.now() - askedAt;
+    timing.modelMs += ms;
+    timing.modelCalls += 1;
+    timing.turns.push({ modelMs: ms, toolMs: 0, tools: ['locate'] });
+  };
   try {
     // One structured answer from a page the model has already seen: low
     // reasoning effort, or a reasoning model spends a 16k budget on it.
     completion = await provider.complete([system, ...state.messages, ask], [LOCATE_TOOL], { signal: opts.signal, effort: 'low' });
+    modelDone();
   } catch {
+    modelDone();
     return [];
   }
   usage.promptTokens += completion.usage.promptTokens;
