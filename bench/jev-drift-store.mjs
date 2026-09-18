@@ -443,11 +443,13 @@ function runCase(c) {
   fs.cpSync(srcStore, caseStore, { recursive: true });
   fs.mkdirSync(caseFlows, { recursive: true });
 
-  const store = new SkillStore(caseStore);
-  const skill = store.get(c.skill);
-  const step = skill.steps[Number(c.tag) - 1];
-  step.locators[c.key] = c.drifted;
-  store.put(skill, { overwrite: true });
+  if (!c.baseline) {
+    const store = new SkillStore(caseStore);
+    const skill = store.get(c.skill);
+    const step = skill.steps[Number(c.tag) - 1];
+    step.locators[c.key] = c.drifted;
+    store.put(skill, { overwrite: true });
+  }
 
   const flow = { ...srcFlow, name: c.id };
   if (flow.startUrl) {
@@ -669,8 +671,34 @@ console.error(
 );
 console.error(`[drift-store] home=${home}  store=${srcStore}  app=${opts.appUrl}`);
 
+/**
+ * Which flow steps can a replay REACH with no model behind it?
+ *
+ * One undrifted replay first. A drifted step is only a test of the healer if
+ * the flow gets to it — and with model recovery off, the first step that needs
+ * the model halts everything after it. jvgr1 (2026-09-18) is what that costs
+ * unasked: fwgr25's sign-in needs a recovery on today's code, so 65 of 69 cases
+ * halted at step one, never touched their drifted chain, and were reported as
+ * "no-ballot" — a finding about the healer that was really a finding about the
+ * recording. Cases on an unreachable step are now not run at all, and say so.
+ */
+let reachable = null;
+if (!opts.rescore && !opts.dryRun && opts.noModel) {
+  console.error('[drift-store] baseline: one undrifted replay to see which steps a no-model replay reaches');
+  const base = runCase({ id: `${opts.tag}-base`, baseline: true });
+  const steps = base?.flowrun?.steps ?? [];
+  reachable = new Set(steps.filter((st) => st.status === 'success' && !st.recovered).map((st) => st.id));
+  console.error(`[drift-store] baseline: ${base?.flowrun?.passed ?? 0}/${base?.flowrun?.total ?? '?'} steps pass; reachable without a model: ${[...reachable].join(', ') || '(none)'}`);
+  for (const st of steps.filter((x) => !reachable.has(x.id))) console.error(`[drift-store]   unreachable ${st.id}: ${String(st.fellBack ?? st.summary ?? '').slice(0, 200)}`);
+  if (!reachable.size) die('the undrifted flow reaches NO step without a model — this store cannot calibrate anything under --no-model (pass --model to allow recovery, or pick a recording that replays clean)');
+}
+
 const scored = [];
 for (const [i, c] of selected.entries()) {
+  if (reachable && !reachable.has(c.flowStep)) {
+    scored.push({ ...c, asked: false, deadChain: false, outcome: 'not-reachable', verdict: 'undecidable', verdictWhy: `the undrifted flow does not reach ${c.flowStep} without a model`, wallMs: 0 });
+    continue;
+  }
   if (!opts.rescore) console.error(`[drift-store] ${c.id} (${i + 1}/${selected.length}) ${c.flowStep} step ${c.tag} ${c.key} ${c.tool} — ${c.transform}/${c.mode}`);
   const row = scoreCase(c, opts.rescore ? replayCase(c) : runCase(c));
   scored.push(row);
@@ -720,6 +748,7 @@ console.log(
   `  chains the perturbation did not kill ${scored.filter((c) => c.outcome === 'chain-not-dead').length};` +
     ` empty ballots ${scored.filter((c) => c.outcome === 'no-ballot').length};` +
     ` unattributable ${scored.filter((c) => c.outcome === 'ambiguous-attribution' || c.outcome === 'ask-not-attributable').length}`,
+    ` not-reachable ${scored.filter((c) => c.outcome === 'not-reachable').length}`,
 );
 console.log(`  model turns spent across every case: ${scored.reduce((n, c) => n + (c.turns ?? 0), 0)}${opts.noModel ? ' (recovery disabled)' : ''}`);
 
