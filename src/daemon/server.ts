@@ -18,6 +18,8 @@ import { expectationDecisions, recordedTexts, recordedValues, threadingDecisions
 import { triageSession } from '../skills/triage-jev.js';
 import { inlineHealer } from '../skills/heal-jev.js';
 import { actorShadow, type ActorShadow } from '../agent/actor-jev.js';
+import { readBackDecider } from '../agent/readback-jev.js';
+import type { ReadBackDecider } from '../agent/readback.js';
 import { setInlineHealer } from '../skills/replay.js';
 import { RunLedger, bindingKey, describeLeaks, evidenced, fatal, navigationLeaks, scanForLeaks, slotKnownRunValues, urlVarianceValues, withoutOwnOutputs, type Leak } from '../skills/ledger.js';
 import { quarantineLeakedSteps } from '../spec/rerecord.js';
@@ -385,6 +387,22 @@ ${describeLeaks(leaks.slice(0, 6))}`);
     return this.actor ?? undefined;
   }
 
+  /**
+   * Site C's ballot (PLAN-jev.md): which element a reported value is read back
+   * from when the page shows it in several places. Code settles the rest
+   * before this is asked (exactly one displayer, or provably none); resolved
+   * per ask, so `config set jev off` applies to the next instruction, and with
+   * no key loop.ts's cascade ends where it always did, at the model.
+   */
+  private locateReadBack(): ReadBackDecider | undefined {
+    if (!this.systemOne()) return undefined;
+    return async (ask, ctx) => {
+      const s1 = this.systemOne();
+      const decide = s1 ? readBackDecider(s1, (d) => this.state.recordSystemOneDecision(d)) : null;
+      return decide ? decide(ask, ctx) : null;
+    };
+  }
+
   /** Advisory System One passes still in flight; `stop` gives them a bounded moment to log. */
   private advisory: Promise<unknown>[] = [];
 
@@ -568,6 +586,7 @@ ${describeLeaks(leaks.slice(0, 6))}`);
           signal: controller.signal,
           onProgress: progress,
           ...(this.actorShadow() ? { shadow: this.actorShadow() } : {}),
+          ...(this.locateReadBack() ? { locateReadBack: this.locateReadBack()! } : {}),
         };
         // Where this instruction's recording starts, so learning can read back
         // exactly what it did (and nothing from earlier instructions).

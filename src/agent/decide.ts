@@ -73,6 +73,13 @@ export const GATES: Record<string, number> = {
   // clicks are never healed). n=4, all correct: recalibrate from
   // replay.heal.verdict rows as they accumulate.
   'replay.heal': 0.6,
+  // Site C. bench/readback-offline.mjs --probe (8 labelled shapes x 3 from the
+  // repairdesk recordings): correct picks 0.38-0.93 (median 0.75), every wrong
+  // pick tops out at 0.31 — a TOTAL read back off a part row, a customer off a
+  // list row, both with the orders agreeing, so the number has to catch them.
+  // Deferring costs what the site cost before (the model's locate turn).
+  // n=24, one app: recalibrate from system-one.jsonl.
+  'readback.locate': 0.6,
   // Sites I and J, advisory. From bench/jev-zoo.mjs: occurrence readings are
   // 100% right in every confidence bucket over 0.2 and contradict the rules
   // on 1.1% of ordinary corpus pairs at 0.6; expectation readings are 100%

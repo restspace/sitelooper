@@ -967,3 +967,149 @@ const browserEnabled = process.env.BP_BROWSER_TESTS === '1';
     expect(rec.steps).toEqual([]);
   });
 });
+
+/**
+ * The read-back cascade (PLAN-jev.md site C). The model's `locate` turn ran on
+ * 9 of 9 instructions in fwrdj3-n1 and 9 of 9 in fwrdj4-n1, at 2.0-7.4s of
+ * full-history prompt each. These are the three claims that make it stop: code
+ * settles what it can, the model is asked only about the rest, and with no
+ * decider nothing about the model path changes.
+ */
+describe('read-back stragglers', () => {
+  /**
+   * A page that pins nothing deterministically — every reported value falls
+   * through to the cascade — and whose sweep is scripted per value.
+   */
+  const pageShowing = (byValue: Record<string, Array<{ path: string; text: string }>>) => ({
+    url: () => 'http://127.0.0.1:4180/#/tickets/t15',
+    // captureReadBack's two deterministic paths, both refusing.
+    getByText: () => ({ count: async () => 0 }),
+    locator: () => ({
+      evaluateAll: async () => {
+        throw new Error('no controls');
+      },
+    }),
+    frames() {
+      return [this.mainFrame()];
+    },
+    mainFrame() {
+      if (!this.frame) {
+        this.frame = {
+          evaluate: async (_fn: unknown, payload: { wants: string[] }) =>
+            payload.wants.map((want) => ({ want, items: (byValue[want] ?? []).map((e) => ({ ...e, tag: 'td' })), extra: 0 })),
+        };
+      }
+      return this.frame;
+    },
+    frame: null as unknown,
+  });
+
+  const recorder = (byValue: Record<string, Array<{ path: string; text: string }>> = {}) => {
+    const steps: Array<{ label?: string }> = [];
+    const page = pageShowing(byValue);
+    return {
+      steps,
+      page,
+      browser: {
+        dialogs: { drain: () => [] },
+        isOpen: true,
+        getPage: async () => page,
+        script: {
+          beginInstruction: () => {},
+          endInstruction: () => {},
+          readsThisInstruction: () => [],
+          readResultsThisInstruction: () => new Set<string>(),
+          addStep: (s: { label?: string }) => steps.push(s),
+          mark: () => 0,
+          entriesSince: () => [],
+        },
+      } as unknown as BrowserSession,
+    };
+  };
+
+  /** A provider that reports once and records every later ask. */
+  const reporting = (values: Record<string, string>) => {
+    const asks: string[] = [];
+    let calls = 0;
+    const provider: Provider = {
+      model: 'stub',
+      async complete(messages) {
+        calls += 1;
+        if (calls > 1) asks.push(String(messages[messages.length - 1].content));
+        return {
+          text: null,
+          toolCalls: calls === 1 ? [reportCall({ status: 'success', summary: 'done', evidence: { values } })] : [],
+          assistantMessage: { role: 'assistant', content: null },
+          usage: { promptTokens: 10, completionTokens: 1, cachedTokens: 0 },
+          served: null,
+        } as unknown as Completion;
+      },
+    };
+    return { provider, asks, count: () => calls };
+  };
+
+  it('does not ask the model at all when code has settled every straggler', async () => {
+    // A screenshot filename and a sentence of narration: one is nowhere on the
+    // page, the other is past the read-back ceiling. Whatever selector the
+    // model returned, captureReadBackAt would refuse it.
+    const rec = recorder();
+    const model = reporting({
+      screenshot: 'ticket-RD-1021-detail.png',
+      confirmation_message: 'none observed — no toast or alert appeared; the change showed only as the status value changing from Draft to Ready',
+    });
+    const progress: string[] = [];
+    const result = await runInstruction(model.provider, rec.browser, new SessionState('t-rb-none'), 'open the ticket', {
+      ...loopOpts,
+      onProgress: (m) => progress.push(m),
+    });
+    expect(result.report.status).toBe('success');
+    expect(model.count()).toBe(1);
+    expect(result.timing.turns.filter((t) => t.tools.includes('locate'))).toEqual([]);
+    expect(progress.some((p) => p.startsWith('[read-back]') && p.includes('not shown anywhere on the page'))).toBe(true);
+  });
+
+  it('asks the model only about what is left', async () => {
+    const rec = recorder({
+      '$250.00': [
+        { path: 'html > tr:nth-child(3) > td:nth-child(6)', text: '$250.00' },
+        { path: 'html > tr:nth-child(4) > td:nth-child(2)', text: '$250.00' },
+      ],
+    });
+    const model = reporting({ new_part_price: '$250.00', screenshot: 'two-parts.png' });
+    await runInstruction(model.provider, rec.browser, new SessionState('t-rb-some'), 'add part B', loopOpts);
+    expect(model.count()).toBe(2);
+    expect(model.asks[0]).toContain('"$250.00"');
+    // The value code proved unsourceable never reaches the prompt.
+    expect(model.asks[0]).not.toContain('two-parts.png');
+    // And the model turn is still timed as a `locate` turn.
+    expect(rec.steps).toEqual([]);
+  });
+
+  it('with no decider, an ambiguous value goes to the model exactly as before', async () => {
+    const rec = recorder({ 'RD-1021': [{ path: 'a', text: 'RD-1021' }, { path: 'b', text: 'RD-1021' }] });
+    const model = reporting({ ticket_reference: 'RD-1021' });
+    const result = await runInstruction(model.provider, rec.browser, new SessionState('t-rb-nodecider'), 'open it', loopOpts);
+    expect(model.count()).toBe(2);
+    expect(model.asks[0]).toContain('"RD-1021"');
+    const locate = result.timing.turns.filter((t) => t.tools.includes('locate'));
+    expect(locate).toHaveLength(1);
+    expect(locate[0].modelMs).toBeGreaterThanOrEqual(0);
+  });
+
+  it('gives the decider the instruction and the ambiguous values, and still falls to the model when it declines', async () => {
+    const rec = recorder({ 'RD-1021': [{ path: 'a', text: 'RD-1021' }, { path: 'b', text: 'RD-1021' }] });
+    const model = reporting({ ticket_reference: 'RD-1021' });
+    const seen: Array<{ instruction: string; items: Array<{ name: string }> }> = [];
+    await runInstruction(model.provider, rec.browser, new SessionState('t-rb-decider'), 'open ticket RD-1021', {
+      ...loopOpts,
+      locateReadBack: async (askInput) => {
+        seen.push(askInput as never);
+        return null;
+      },
+    });
+    expect(seen).toHaveLength(1);
+    expect(seen[0].instruction).toBe('open ticket RD-1021');
+    expect(seen[0].items.map((i) => i.name)).toEqual(['ticket_reference']);
+    expect(model.count()).toBe(2);
+  });
+});

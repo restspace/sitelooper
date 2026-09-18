@@ -12,6 +12,7 @@ import { buildSystemPrompt } from './prompt.js';
 import { admitsIncompletion, backfillReadValues, flattenComposedValues, flattenProvenComposite, mergeReportValues, namingAskMessage, promoteLabelledReads, publishProseIdentifiers, unnamedReadValues, validateReport, type Report } from './report.js';
 import { executeTool, toolDefsFor, type ToolExecution } from './tools.js';
 import { captureReadBack, captureReadBackAt, setIdentityHints } from '../daemon/recorder.js';
+import { describeOutcome, sourceReadBacks, type ReadBackDecider, type ReadBackTarget } from './readback.js';
 
 /** Tools that change the page URL, staleing every existing snapshot's refs. */
 const NAVIGATION_TOOLS = new Set(['goto', 'back', 'tabs']);
@@ -121,6 +122,15 @@ export interface LoopOptions {
    * composition root, never here.
    */
   shadow?: LoopShadow;
+  /**
+   * Who decides WHICH element a reported value is read back from, when the
+   * page shows it in several places (PLAN-jev.md site C). Optional, and a
+   * plain function type: the cascade behind it — Jev, or nothing — is composed
+   * at the composition root, and this module never asks whether a System One
+   * tier exists. With no decider the ambiguous values go to the model exactly
+   * as they always did.
+   */
+  locateReadBack?: ReadBackDecider;
 }
 
 /** One tool call the instruction made, for the resume-safety actions log. */
@@ -497,7 +507,12 @@ export async function runInstruction(
         try {
           const page = await browser.getPage();
           const alreadyRead = browser.script.readResultsThisInstruction();
-          const stragglers: string[] = [];
+          // Keyed from here on: the read-back cascade (site C) needs the
+          // evidence KEY as well as the value — Jev is shown the name the
+          // report published it under, and a step code or Jev sources is
+          // filed with that label rather than left for compile to recover by
+          // matching the read's result against every reported value.
+          const stragglers: ReadBackTarget[] = [];
           const seenValue = new Set<string>();
           // Keyed, not just valued. The evidence KEY is the output name a later
           // flow step references, and compile used to recover it by matching
@@ -528,7 +543,7 @@ export async function runInstruction(
               captureReadBack(page, part, partName),
             );
             if (!names.length) {
-              stragglers.push(value); // not pinnable, whole or in parts — try the model next
+              stragglers.push({ name, value }); // not pinnable, whole or in parts — try the cascade next
               continue;
             }
             for (const step of pinned) browser.script.addStep(step);
@@ -540,16 +555,41 @@ export async function runInstruction(
             for (const k of Object.keys(values)) delete values[k];
             for (const [k, v] of Object.entries(report.evidence?.values ?? {})) values[k] = String(v);
           }
-          // Verified model fallback: for values the deterministic search could
-          // not pin (typically because they are not unique on the page), ask
-          // the model — which knows where it read them — for a selector, then
-          // trust it only after it resolves to exactly that value. One extra
-          // turn, and only when a straggler exists.
+          // The read-back cascade (PLAN-jev.md site C): code, then the
+          // optional System One tier, then the model — which until this
+          // existed ran on EVERY instruction (9 of 9 in fwrdj3-n1, 9 of 9 in
+          // fwrdj4-n1, 2.0-7.4s each, 33s and 36s of those recordings) to
+          // return a handful of selectors that a search of the page finds,
+          // and that code then verified anyway.
+          //
+          // The model keeps the last word and its prompt is unchanged; it is
+          // simply asked about less, and about nothing at all when code has
+          // sourced everything it could and PROVED the rest unsourceable
+          // (see readback.ts: refused on length, or nowhere on the page).
           // Never past the instruction deadline: this is one more model
           // call, and the caller believes the budget bounds the whole thing.
           if (stragglers.length && Date.now() < deadline) {
-            const sourced = await sourceStragglers(provider, page, system, state, stragglers, opts, usage, timing);
-            for (const step of sourced) browser.script.addStep(step);
+            const sourced = await sourceReadBacks(stragglers, page, {
+              instruction: opts.recordAs?.text ?? instruction,
+              url: page.url(),
+              ...(opts.locateReadBack ? { decider: opts.locateReadBack } : {}),
+              // The same verifier the model's answer goes through: nothing
+              // here is trusted for being deterministic.
+              pin: (value, selector) => captureReadBackAt(page, value, selector),
+              ...(opts.signal ? { signal: opts.signal } : {}),
+            });
+            for (const step of sourced.steps) browser.script.addStep(step);
+            const line = describeOutcome(sourced);
+            if (line) opts.onProgress?.(line);
+            // A turn row for each tier that answered, modelMs 0: a saving is
+            // only measurable in timing.jsonl if the model turns that did NOT
+            // happen leave a trace beside the ones that did.
+            if (sourced.byCode.length) timing.turns.push({ modelMs: 0, toolMs: sourced.ms.code, tools: ['locate(code)'] });
+            if (sourced.byDecider.length) timing.turns.push({ modelMs: 0, toolMs: sourced.ms.decider, tools: ['locate(jev)'] });
+            if (sourced.remaining.length && Date.now() < deadline) {
+              const byModel = await sourceStragglers(provider, page, system, state, sourced.remaining.map((t) => t.value), opts, usage, timing);
+              for (const step of byModel) browser.script.addStep(step);
+            }
           }
         } catch {
           // a wedged/navigating page must never turn a good report into no report
@@ -1058,6 +1098,11 @@ function escalationPrompt(instruction: string, first: InstructionResult): string
  * un-pinnable reported value lives on the current page, then trust the answer
  * only after it resolves to exactly that value. Ephemeral — does not touch the
  * running history — and bounded to one completion.
+ *
+ * Unchanged, and still the last word — but now the last TIER: `sourceReadBacks`
+ * runs first and hands on only the values it could neither source nor prove
+ * unsourceable, so this is asked about less and, when nothing is left, not at
+ * all. Its prompt, its tool and its verification are what they were.
  */
 async function sourceStragglers(
   provider: Provider,

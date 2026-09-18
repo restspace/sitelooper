@@ -1076,7 +1076,7 @@ const READ_BACK_LINE_ALLOWANCE = 80;
  * Whether `want` (folded) sits on a line of `raw` (an element's innerText)
  * that is at most READ_BACK_LINE_ALLOWANCE folded characters longer than it.
  */
-function onOwnLine(raw: string, want: string): boolean {
+export function onOwnLine(raw: string, want: string): boolean {
   return raw.split(/\r?\n/).some((line) => {
     const folded = foldValue(line);
     return folded.includes(want) && folded.length <= want.length + READ_BACK_LINE_ALLOWANCE;
