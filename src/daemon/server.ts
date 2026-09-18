@@ -8,7 +8,7 @@ import { urlPattern as compiledUrlPattern, dropAbsentReadLocators, dropDeadReadL
 import type { DriftTicket } from '../skills/repair.js';
 import type { Page } from 'playwright-core';
 import { agentGesturesOutsideReplay, bindSkill, canAdoptPin, decideRepin, learnFromInstruction, matchTemplate, pinStatus, publishedOutputs, selectCandidates, synthesizeReport } from '../skills/learn.js';
-import { buildFlow, consumedReportedOutputs, consumedUrlOutputs, ignorableRefs, jsonLeaves, lintFlowRefs, lintUnpublishedOutputs, listFlows, liveReadsFor, loadFlow, loadFlowFile, lookupOutput, mutatingIntent, noteOutputEvidence, pruneUnsourcedOutputs, recoveryRoute, remapParams, resolveInstruction, resolveStepParams, softResolveInstruction, saveFlow, staleInstructionIds, unbankedMutations, unreportedOutputs, urlOutputs, varyingValues, type RunSpecific } from '../skills/flow.js';
+import { buildFlow, consumedReportedOutputs, consumedUrlOutputs, ignorableRefs, jsonLeaves, lintFlowRefs, lintUnpublishedOutputs, listFlows, liveReadsFor, liveReadsForRecovery, loadFlow, loadFlowFile, lookupOutput, mutatingIntent, noteOutputEvidence, pruneUnsourcedOutputs, recoveryRoute, remapParams, resolveInstruction, resolveStepParams, softResolveInstruction, saveFlow, staleInstructionIds, unbankedMutations, unreportedOutputs, urlOutputs, varyingValues, type RunSpecific } from '../skills/flow.js';
 import { applyRelabelToEntries, applyRelabelToSkills, relabelCases, requestRelabelPlan } from '../skills/relabel.js';
 import { goalSatisfied, renderReplay } from '../skills/replay.js';
 import { drainDrift, llmProposer, recordCandidateEvidence } from '../skills/repair.js';
@@ -25,7 +25,8 @@ import { aliasLegacyEnv, ensureSessionDir, socketPath, validateSessionName } fro
 import { BrowserSession } from './browser.js';
 import { DEFAULT_BROWSER_PROFILE } from '../execution/browser.js';
 import { observedChange } from '../execution/lifecycle.js';
-import { recordedValueShown } from '../execution/snapshot.js';
+import { coverageComplete, recordedValueShown } from '../execution/snapshot.js';
+import { captureSignature } from './diff.js';
 import { recordedStandIn, referencableOutputs } from '../skills/flow.js';
 import { SessionState } from './state.js';
 
@@ -176,6 +177,60 @@ ${describeLeaks(leaks.slice(0, 6))}`);
       if (touched) store.put(skill);
     }
     return removed;
+  }
+
+  /**
+   * Give a skill a recovery compiled — and a flow step has just pinned — a
+   * read for every output a later step references that the chain does not
+   * publish (flow.ts liveReadsForRecovery), located by the value the recovery
+   * reported on the page it ended on. The read lands on the chain's LAST
+   * segment, exactly where the export appends (liveReadsFor), and only on a
+   * skill this session compiled. The page is looked at now, after the step:
+   * it is the page the next step starts on, which is where the export's
+   * start-page arm looks — and only a complete look may source a candidate,
+   * for the reason liveReadsFor gives (uniqueness is an absence claim).
+   */
+  private async readsForRepinned(
+    flow: import('../skills/flow.js').Flow,
+    step: import('../skills/flow.js').FlowStep,
+    skillId: string,
+    reported: Record<string, unknown>,
+    progress: (line: string) => void,
+  ): Promise<void> {
+    const store = this.browser.learn;
+    if (!store || !this.browser.isOpen) return;
+    let lines: string[];
+    try {
+      const sig = await captureSignature(await this.browser.getPage());
+      if (!sig || (sig.observation && !coverageComplete(sig.observation.coverage))) return;
+      lines = sig.lines;
+    } catch {
+      return;
+    }
+    const values: Record<string, string> = {};
+    for (const [k, v] of Object.entries(reported)) if (typeof v === 'string' && !/\{\{/.test(v)) values[k] = v;
+    const publishes = (id: string): string[] | null => {
+      const sk = store.get(id);
+      if (!sk) return null;
+      const chain = sk.seq ? store.list(sk.origin).filter((s) => s.seq?.chain === sk.seq!.chain) : [sk];
+      return chain.flatMap(publishedOutputs);
+    };
+    const runIds = this.ledger.all().filter((e) => e.kind === 'identifier').map((e) => e.value);
+    const runValue = (value: string): boolean => this.runSpecific(value) || stranded({ kind: 'text', text: value }, runIds);
+    for (const live of liveReadsForRecovery(flow, step.id, skillId, values, lines, publishes, runValue)) {
+      const head = store.get(live.skill);
+      if (!head) continue;
+      const tail = head.seq
+        ? (store.list(head.origin).filter((s) => s.seq?.chain === head.seq!.chain).sort((a, b) => a.seq!.index - b.seq!.index).pop() ?? head)
+        : head;
+      if (tail.provenance?.session !== this.opts.session) continue;
+      const updated = store.update(tail.id, (sk) => {
+        if (sk.status === 'demoted' || publishedOutputs(sk).includes(live.output)) return null;
+        return { ...sk, steps: [...sk.steps, live.read] };
+      });
+      if (!updated) continue;
+      progress(`[flow ${flow.name}] ${step.id}: added a read for ${live.output} to ${tail.id} (${live.read.locators.target.map(candidateExpr).join(', ')}; seen on the page the step ended on) — a later step references it and the skill this recovery compiled never read it`);
+    }
   }
 
   /**
@@ -1651,6 +1706,11 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
             repinned = decision.skill;
             repinParams = remap.params;
             pendingPins.set(step.id, decision.skill);
+            // The pin now names a skill a recovery compiled, which carries
+            // only the reads the model issued: every value a LATER step
+            // references gets a synthesized read on the chain's tail, as the
+            // export gives a recording's skill (flow.ts liveReadsForRecovery).
+            await this.readsForRepinned(flow, step, decision.skill, result.report.evidence?.values ?? {}, opts.progress);
             if (decision.graduated) {
               graduated.add(step.id);
               opts.progress(`[flow ${flow.name}] ${step.id}: adopted step graduated — pinned ${decision.skill} (${candidate.status}), shedding model-first replay`);

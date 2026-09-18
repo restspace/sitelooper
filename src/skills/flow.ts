@@ -1340,6 +1340,73 @@ export function liveReadsFor(
 }
 
 /**
+ * liveReadsFor's counterpart for a skill a RECOVERY compiled and a flow step
+ * now pins (the flow runner's re-pin, not the export).
+ *
+ * A recovery's model reports its values the way a recording's does — from a
+ * snapshot as often as from a read — and the skill compiled from it carries
+ * only the reads the model actually issued. fwod71-n2's 03-create recovery
+ * chose '[FURN_6666] Acoustic Bloc Screens' from the product dropdown,
+ * reported `product_name` from the page, never read it, and graduated into
+ * the pin; n3 replayed all 21 steps at tier A, published no product_name,
+ * and 04-open and 06-open went to recovery on an unresolved reference while
+ * the compiled artifact refused the flow (unsourced-ref). The export would
+ * have given the recording's skill a synthesized read for exactly this case;
+ * a graduated recovery met no such rule.
+ *
+ * The inputs are this run's, not the recording's: `reported` is what the
+ * recovery reported (the value a later step will reference on THIS run), and
+ * `pageLines` is the page the recovery ended on — the page the next step
+ * starts on, taken by the caller after the step. Same bounds and the same
+ * uniqueness test as liveReadsFor (valueLineCandidates), the same `unproven`
+ * mark, and the same refusal of a value the run is known to have made.
+ * Outputs a LATER step references only: a step's own instruction referencing
+ * its own output is a recording artefact, not a dependency. Pure.
+ */
+export function liveReadsForRecovery(
+  flow: Flow,
+  stepId: string,
+  skillId: string,
+  reported: Record<string, string>,
+  pageLines: string[],
+  publishes: (skillId: string) => string[] | null,
+  runValue?: (value: string) => boolean,
+): LiveRead[] {
+  const index = flow.steps.findIndex((s) => s.id === stepId);
+  if (index < 0) return [];
+  const pubs = publishes(skillId);
+  if (pubs === null) return [];
+  const referenced: string[] = [];
+  for (const later of flow.steps.slice(index + 1)) {
+    for (const text of [later.instruction, ...Object.values(later.params ?? {})]) {
+      for (const m of text.matchAll(/\{\{([\w-]+)\.([\w.#-]+)\}\}/g)) {
+        if (m[1] === stepId && !referenced.includes(m[2])) referenced.push(m[2]);
+      }
+    }
+  }
+  const out: LiveRead[] = [];
+  for (const output of referenced) {
+    if (output === 'url' || output.startsWith('url.') || output.includes('#')) continue;
+    if (pubs.includes(output)) continue;
+    const raw = reported[output];
+    if (typeof raw !== 'string' || raw.includes('\n')) continue;
+    const value = raw.replace(/\s+/g, ' ').trim();
+    if (value.length < 2 || value.length > 80 || runValue?.(value)) continue;
+    const candidates = valueLineCandidates(pageLines, value);
+    if (!candidates.length) continue;
+    out.push({
+      stepId,
+      skill: skillId,
+      output,
+      value,
+      source: 'start',
+      read: { tool: 'read', args: { target: '@synth', what: 'text' }, locators: { target: candidates }, label: output, unproven: true },
+    });
+  }
+  return out;
+}
+
+/**
  * Drop, from each pinned step's declared outputs, the DATA outputs (heldOutput)
  * its skill chain still does not publish once the export's synthesized reads
  * are in — so a flow never advertises a value its zero-model replay cannot
