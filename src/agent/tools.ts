@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import type { Locator, Page } from 'playwright-core';
-import { NAVIGATING_ACTIONS, outcomeLabel, outcomeOfError, robustClick, type ActionOutcome } from '../execution/browser.js';
+import { actionFailure, NAVIGATING_ACTIONS, outcomeLabel, outcomeOfError, robustClick, type ActionOutcome } from '../execution/browser.js';
 import { beginAction, type ActionExpectation, type ActionObservation, type SettleVerdict } from '../execution/action.js';
 import { CURRENT_DIALECT, addedLines, type PageObservation } from '../execution/snapshot.js';
 import { POPUP_WAIT_MS, type PageEffect } from '../execution/context.js';
@@ -14,7 +14,7 @@ import { html5DragDrop, selectedOption, syntheticHover } from '../daemon/inputs.
 import { describeRecipeAttempt, fillWithRecipe, selectWithRecipe, typeWithRecipe } from '../execution/recipes.js';
 import { ComponentStore, storeBook } from '../skills/components.js';
 import { resolveSecretsDeep, scrubSecrets, scrubSecretsDeep } from '../shared/secrets.js';
-import { refHint, resolveTarget, snapshot, truncate } from '../daemon/refs.js';
+import { isRefTarget, refHint, resolveTarget, snapshot, truncate } from '../daemon/refs.js';
 import { controlFromTarget, siteModel } from '../skills/sitemap.js';
 import { settleDom, settlePage } from '../daemon/settle.js';
 import { fingerprintPage } from '../daemon/fingerprint.js';
@@ -1098,6 +1098,23 @@ async function landingSnapshot(session: BrowserSession): Promise<string> {
   }
 }
 
+/**
+ * How long an agent-written target may take to EXIST before the step is
+ * refused. A selector gets the replay resolver's own patience (RESOLVE_WAIT_MS
+ * is 3s: long enough for a dialog or a fetched list to mount after the click
+ * before it); an @ref gets less, because a ref names a node of a snapshot
+ * already taken — it is either still in the DOM or it never will be again.
+ */
+const TARGET_ATTACH_WAIT_MS = 3_000;
+const REF_ATTACH_WAIT_MS = 1_000;
+
+/**
+ * Tools whose `target` is allowed to match nothing: waiting for it is wait_for's
+ * purpose, and "none" is an ANSWER for snapshot, read_all and a count (so
+ * `what: 'count'` is exempt wherever it appears — 0 is how absence is proven).
+ */
+const UNGUARDED_TARGET_TOOLS = new Set(['wait_for', 'snapshot', 'read_all']);
+
 async function dispatch(
   session: BrowserSession,
   name: string,
@@ -1113,6 +1130,30 @@ async function dispatch(
   const page = await session.getPage();
   const t = (key = 'target') => resolved?.[key] ?? resolveTarget(page, String(args[key]));
   const timeout = 10_000;
+
+  // A target that names NOTHING must fail now, not after the action's own
+  // actionability timeout. Those timeouts exist for an element that is there
+  // and not yet ready (hidden, disabled, moving); an element that does not
+  // exist at all is a different fact, and waiting 10s cannot change it.
+  // fwrdj5-n1 (the first run with per-step batch timing) spent 12.5s in each of
+  // three failed steps — a `fill` or `read` opening a batch on a stale @ref or
+  // a guessed selector — 38s of a 199s recording, the largest tool cost left
+  // after the scoped-snapshot fix. Only for a target the AGENT wrote: replay's
+  // pre-resolved locators have their own resolution and wait. wait_for is the
+  // tool for waiting, snapshot and read_all have their own answers for "nothing".
+  if (!resolved?.target && typeof args.target === 'string' && args.target.trim() && !UNGUARDED_TARGET_TOOLS.has(name) && args.what !== 'count') {
+    const stale = isRefTarget(args.target);
+    const attached = await t().first().waitFor({ state: 'attached', timeout: stale ? REF_ATTACH_WAIT_MS : TARGET_ATTACH_WAIT_MS }).then(() => true, () => false);
+    if (!attached && !signal?.aborted) {
+      throw actionFailure(
+        'not-dispatched',
+        'never-attached',
+        stale
+          ? `no element has ref ${args.target} on the page now — refs die when the page re-renders or navigates. Take a fresh snapshot and use the new ref. Nothing was done.`
+          : `nothing on the page matches ${JSON.stringify(args.target)} (waited ${TARGET_ATTACH_WAIT_MS / 1000}s for it to appear). Snapshot to see what is here; if it appears only after something loads, wait_for it first. Nothing was done.`,
+      );
+    }
+  }
 
   switch (name) {
     case 'snapshot':

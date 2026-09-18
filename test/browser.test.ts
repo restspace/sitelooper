@@ -311,6 +311,27 @@ d('fetch_source (server response vs live DOM)', () => {
     expect(source.result).toContain('Simulate a submission'); // but the server DID send it
   });
 
+  // fwrdj5-n1: three steps on a target that named nothing cost 12.5s each — the
+  // action's own 10s actionability timeout, waited out for an element that was
+  // never going to exist. Absence is answered in the attach grace instead, and
+  // says the action was NOT dispatched, so nothing downstream repeats it blind.
+  it('a target that names nothing fails in the attach grace, not the action timeout', async () => {
+    const started = Date.now();
+    const fill = await run('fill', { target: '#no-such-field', value: 'x' });
+    expect(fill.isError).toBe(true);
+    expect(fill.result).toMatch(/nothing on the page matches "#no-such-field"/);
+    expect(Date.now() - started).toBeLessThan(6_000);
+
+    const refAt = Date.now();
+    const click = await run('click', { target: '@e999' });
+    expect(click.isError).toBe(true);
+    expect(click.result).toMatch(/no element has ref @e999/);
+    expect(Date.now() - refAt).toBeLessThan(3_000);
+
+    // Absence is still an ANSWER where it is one.
+    expect((await run('read', { target: '#no-such-field', what: 'count' })).result).toBe('0');
+  });
+
   it('contains: narrows a large document to the matching lines', async () => {
     const out = await run('fetch_source', { url: '/', contains: 'Simulate a submission' });
     expect(out.isError).toBe(false);
