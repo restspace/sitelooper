@@ -932,7 +932,7 @@ function stepId(text: string, i: number): string {
  * `o_form_view_group` (fwod5). A numeric value splits on '-' and '_', because
  * a runid prefix in `x7-bench-dashboard` IS worth threading.
  */
-function replaceToken(text: string, value: string, marker: string): string {
+export function replaceToken(text: string, value: string, marker: string): string {
   if (!value) return text;
   const re = tokenPattern(value, 'g');
   // Never substitute INSIDE a reference already placed by an earlier pass: a

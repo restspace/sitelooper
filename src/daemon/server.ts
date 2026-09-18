@@ -14,6 +14,8 @@ import { applyRelabelToEntries, applyRelabelToSkills, relabelCases, requestRelab
 import { goalSatisfied, renderReplay } from '../skills/replay.js';
 import { drainDrift, llmProposer, recordCandidateEvidence } from '../skills/repair.js';
 import { cascadeProposer } from '../skills/repair-jev.js';
+import { expectationDecisions, recordedTexts, recordedValues, threadingDecisions } from '../skills/triage.js';
+import { triageSession } from '../skills/triage-jev.js';
 import { RunLedger, bindingKey, describeLeaks, evidenced, fatal, navigationLeaks, scanForLeaks, slotKnownRunValues, urlVarianceValues, withoutOwnOutputs, type Leak } from '../skills/ledger.js';
 import { quarantineLeakedSteps } from '../spec/rerecord.js';
 import { rerecordFix } from '../spec/diagnostics.js';
@@ -50,6 +52,9 @@ const UNQUEUED_COMMANDS = new Set<CommandName>(['ping', 'config', 'screenshot', 
 
 /** How long `stop` lets an aborted instruction unwind before tearing down. */
 const STOP_DRAIN_MS = 3_000;
+
+/** How long `stop` waits for an advisory System One pass to finish logging. Its own fan-out deadline is 5s. */
+const ADVISORY_DRAIN_MS = 6_000;
 
 /**
  * How many stored candidates a flow step may actually replay (attempts that
@@ -357,6 +362,44 @@ ${describeLeaks(leaks.slice(0, 6))}`);
    */
   private systemOne(overrides: { off?: boolean } = {}): SystemOne | null {
     return buildSystemOne(resolveSystemOneConfig(overrides), (model, usage) => this.state.recordSystemOneUsage(model, usage));
+  }
+
+  /** Advisory System One passes still in flight; `stop` gives them a bounded moment to log. */
+  private advisory: Promise<unknown>[] = [];
+
+  /**
+   * Sites I and J, ADVISORY (PLAN-jev.md step 2): log where the shape rules
+   * and Jev disagree about a threaded value or a recorded expectation line.
+   * It changes nothing — the flow, the skills and the artifact are byte for
+   * byte what they were, and compile never reads what this writes — and a
+   * failure is indistinguishable from Jev being absent. The rows land in
+   * system-one.jsonl with `agrees`; the disagreements are the dataset that
+   * decides whether either site ever gets a say.
+   */
+  private shadowTriage(entries: ReturnType<NonNullable<typeof this.browser.script>['entriesThisTake']>): void {
+    const s1 = this.systemOne();
+    if (!s1) return;
+    try {
+      const lastReport = [...entries].reverse().find((e) => e.k === 'report' && e.status === 'success');
+      const input = {
+        occurrences: threadingDecisions(recordedValues(entries, this.state.vars), recordedTexts(entries)),
+        expectations: expectationDecisions({
+          entries,
+          slots: new Map(Object.entries(this.knownValues())),
+          reportValues: lastReport && lastReport.k === 'report' ? (lastReport.values ?? {}) : {},
+        }),
+      };
+      this.advisory.push(
+        triageSession(s1, input, (d) => this.state.recordSystemOneDecision(d)).then((s) => {
+          console.error(`[triage] jev disagreed with the rules on ${s.occurrences.disagreed}/${s.occurrences.asked} value occurrence(s) and ${s.expectations.disagreed}/${s.expectations.asked} expectation line(s) in ${s.ms}ms`);
+          for (const why of s.deferred) console.error(`[triage] ${why}`);
+        }),
+      );
+    } catch (err) {
+      // Enumeration is pure, but it walks a whole recording: whatever it
+      // trips on must not cost the export this runs beside.
+      console.error(`[triage] skipped: ${err instanceof Error ? err.message : String(err)}`);
+    }
   }
 
   async listen(): Promise<void> {
@@ -741,6 +784,10 @@ ${describeLeaks(leaks.slice(0, 6))}`);
           }
         }
         const videos = await this.browser.close();
+        // The daemon exits after this frame, and an advisory pass that dies
+        // with it logged nothing. Bounded: it has usually finished while the
+        // export and the video write-out ran.
+        await Promise.race([Promise.allSettled(this.advisory), delay(ADVISORY_DRAIN_MS)]);
         return { stopping: true, preempted, videos, ...(savedFlow ? { flow: savedFlow } : {}) };
       }
 
@@ -762,6 +809,9 @@ ${describeLeaks(leaks.slice(0, 6))}`);
     // THIS take only — a session dir that survived a crash or a container
     // restart must not blend the killed take into the exported flow.
     const entries = this.browser.script.entriesThisTake();
+    // Started first so it overlaps the export and the browser close rather
+    // than following them; `stop` drains it (see ADVISORY_DRAIN_MS).
+    this.shadowTriage(entries);
     const prior = this.browser.script.priorEntries;
     const firstGoto = entries.find((e) => e.k === 'step' && e.tool === 'goto');
     const startUrl =

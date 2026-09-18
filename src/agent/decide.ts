@@ -56,6 +56,13 @@ export const GATES: Record<string, number> = {
   // Deferring costs exactly what the tool cost before, so err high first and
   // revisit once system-one.jsonl has volume.
   'repair.propose': 0.85,
+  // Sites I and J, advisory. From bench/jev-zoo.mjs: occurrence readings are
+  // 100% right in every confidence bucket over 0.2 and contradict the rules
+  // on 1.1% of ordinary corpus pairs at 0.6; expectation readings are 100%
+  // right over 0.6. While advisory the gate only labels log rows acted /
+  // deferred — it is here so promotion starts from a measured number.
+  'triage.occurrence': 0.6,
+  'triage.expectation': 0.6,
 };
 
 /** A site's gate; an unlisted site gets a strict default rather than none. */

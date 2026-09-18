@@ -53,7 +53,7 @@ export interface TransformNote {
 const VALUE_ARGS = new Set(['value', 'text', 'option', 'url', 'prompt_text']);
 
 /** Steps whose recorded diff is a landing, not an effect (see expectationFor). */
-const NAVIGATION_TOOLS = new Set(['goto', 'back']);
+export const NAVIGATION_TOOLS = new Set(['goto', 'back']);
 
 const MAX_ADDED_LINES = 5;
 const MAX_SLOT_VALUES = 12;
@@ -1417,7 +1417,7 @@ import { TRANSIENT_LINE, identifiesNothing, maskForeignValue, maskMinted, maskPo
 const ELEMENT_ARG = /^(target|source|url|what|selector|frame|delay_ms)$/;
 
 /** The values this step put on the page, slotted as the expectation lines are (see maskForeignValue). */
-function typedValues(step: RecordedStep, slots: Map<string, string>): string[] {
+export function typedValues(step: RecordedStep, slots: Map<string, string>): string[] {
   return Object.entries(step.args ?? {})
     .filter(([key, value]) => !ELEMENT_ARG.test(key) && typeof value === 'string')
     .map(([, value]) => substitute(String(value), slots).trim())
@@ -1514,7 +1514,7 @@ function splitExpectLine(line: string): SplitLine | null {
  * Applied to the NAME and the VALUE of a line, never to its role: a read that
  * published the word "row" must not turn `- row "…"` into `- {{*}} "…"`.
  */
-function maskPublishedValues(line: string, published: readonly string[]): string {
+export function maskPublishedValues(line: string, published: readonly string[]): string {
   const split = splitExpectLine(line);
   if (!split) return line;
   let { name, value } = split;
@@ -1526,7 +1526,7 @@ function maskPublishedValues(line: string, published: readonly string[]): string
 }
 
 /** The values this recording's own reads published — see maskPublishedValues. */
-function publishedReadValues(steps: readonly RecordedStep[], reportValues: Record<string, unknown>): string[] {
+export function publishedReadValues(steps: readonly RecordedStep[], reportValues: Record<string, unknown>): string[] {
   const out = new Set<string>();
   for (const step of steps) {
     if (step.tool !== 'read' && step.tool !== 'read_all') continue;

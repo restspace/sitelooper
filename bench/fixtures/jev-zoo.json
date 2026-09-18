@@ -1,0 +1,1132 @@
+{
+  "about": [
+    "The regression zoo for PLAN-jev.md sites I and J (step 2).",
+    "",
+    "`truth` is what the EVENTUAL FIX decided, not what any rule said at the time and",
+    "not an opinion formed here: every `source` names the commit, round or published run",
+    "the case came from, and the strings are the ones that appear in the source comment,",
+    "the test that pins the fix, or the recording in bench/fixtures/recordings.",
+    "",
+    "Ordinary cases sit beside the named ones on purpose. A zoo of nothing but the",
+    "incidents measures recall and cannot see a false alarm, and a triage that flags a",
+    "quarter of an ordinary session is not advisory, it is noise.",
+    "",
+    "occurrence input: { value, label, from, obtained?, kind, text, via?, nth? }",
+    "  from  - ValueProvenance: read | typed | url | var | reported",
+    "  kind  - url | arg | locator | expectation",
+    "  nth   - which occurrence of `value` in `text` (0-based, default 0)",
+    "  truth - same | coincidence",
+    "expectation input: { line, procedure, tool }",
+    "  truth - every-run | this-run"
+  ],
+  "occurrence": [
+    {
+      "id": "fwgr8-tag-in-slug",
+      "source": "fwgr8 / flow.ts replaceToken + shape.ts tokenPattern",
+      "note": "THE named hard case. The step-0 probe answered 0.72 that this IS the tag, with only {value,url} in state: literally true, because the slug does contain the word. Four later steps had their url rewritten to {{runid}}-{{04-open.tags}}-dashboard and lost the zero-model path.",
+      "input": {
+        "value": "bench",
+        "label": "tags",
+        "from": "typed",
+        "obtained": "the procedure typed it into the dashboard's Tags field at step 14",
+        "kind": "url",
+        "text": "http://127.0.0.1:3000/d/afw6yy5xx9/fwgr8-n1-bench-dashboard?from=now-6h&to=now"
+      },
+      "truth": "coincidence"
+    },
+    {
+      "id": "fwgr8-tag-in-instruction",
+      "source": "fwgr8 / bench/fixtures/recordings/fwgr14-n1-script.jsonl",
+      "note": "The same coincidence in the instruction wording, which is where replaceToken rather than substitute rules on it.",
+      "input": {
+        "value": "bench",
+        "label": "tags",
+        "from": "typed",
+        "obtained": "the procedure typed it into the dashboard's Tags field",
+        "kind": "arg",
+        "via": "replaceToken",
+        "text": "Open the dashboard at http://127.0.0.1:3000/d/ffwqqxueqwgzkb/fwgr14-n1-bench-dashboard (titled 'fwgr14-n1 Bench Dashboard') and report its tags."
+      },
+      "truth": "coincidence"
+    },
+    {
+      "id": "fwgr8-runid-in-slug",
+      "source": "fwgr8 / shape.ts tokenPattern doc",
+      "note": "The other half of the same slug, and the reason the boundary splits for an identifier: the runid IS the dashboard's record and must thread.",
+      "input": {
+        "value": "fwgr8-n1",
+        "label": "runid",
+        "from": "var",
+        "obtained": "declared as a run variable before the session started",
+        "kind": "url",
+        "text": "http://127.0.0.1:3000/d/afw6yy5xx9/fwgr8-n1-bench-dashboard?from=now-6h&to=now"
+      },
+      "truth": "same"
+    },
+    {
+      "id": "fwgr8-uid-in-url",
+      "source": "fwgr8 / fwgr41 (execution-gates.test.ts)",
+      "note": "A grafana dashboard uid: mostly letters, no separators — the case looksLikeId's generatedToken arm exists for.",
+      "input": {
+        "value": "afw6yy5xx9",
+        "label": "dashboard_uid",
+        "from": "url",
+        "obtained": "it first appeared in the address bar after the dashboard was saved",
+        "kind": "url",
+        "text": "http://127.0.0.1:3000/d/afw6yy5xx9/fwgr8-n1-bench-dashboard?from=now-6h&to=now"
+      },
+      "truth": "same"
+    },
+    {
+      "id": "fwod5-form-in-class",
+      "source": "fwod5 / flow.ts replaceToken doc",
+      "note": "`form` inside `o_form_view_group`. fwod5 shipped a var substituted into the middle of an odoo class name and the reference could never resolve.",
+      "input": {
+        "value": "form",
+        "label": "view_type",
+        "from": "url",
+        "obtained": "it first appeared in the address bar as #view_type=form",
+        "kind": "locator",
+        "text": "div.o_form_view_group > table > tbody > tr:nth-of-type(2) > td"
+      },
+      "truth": "coincidence"
+    },
+    {
+      "id": "fwod5-form-in-hash",
+      "source": "fwod5",
+      "note": "The same value at the url position it was actually minted from. Threading here is the point of minting it.",
+      "input": {
+        "value": "form",
+        "label": "view_type",
+        "from": "url",
+        "obtained": "it first appeared in the address bar as #view_type=form",
+        "kind": "url",
+        "text": "http://127.0.0.1:8069/odoo/action-135#id=44&view_type=form&menu_id=120"
+      },
+      "truth": "same"
+    },
+    {
+      "id": "fwod67-order-in-clock",
+      "source": "round 26 / e8ab87a / compile.ts substitute numeric guard",
+      "note": "Order id 21 rewrote the 21 of a clock time, and the next run's order 22 waited for a cell reading \"22:…\" that no clock showed.",
+      "input": {
+        "value": "21",
+        "label": "order_id",
+        "from": "url",
+        "obtained": "it first appeared in the address bar after the order was saved (#id=21)",
+        "kind": "expectation",
+        "text": "- cell \"09/17/2026 21:05\""
+      },
+      "truth": "coincidence"
+    },
+    {
+      "id": "fwod67-order-in-url",
+      "source": "round 26 / e8ab87a",
+      "note": "The same order id where it really is the record. A triage that refuses the clock time must not also refuse this.",
+      "input": {
+        "value": "21",
+        "label": "order_id",
+        "from": "url",
+        "obtained": "it first appeared in the address bar after the order was saved (#id=21)",
+        "kind": "url",
+        "text": "http://127.0.0.1:8069/odoo/sales/21"
+      },
+      "truth": "same"
+    },
+    {
+      "id": "fwod67-order-in-heading",
+      "source": "round 26",
+      "note": "Not the id but the reference the same record carries. A heading naming this run's order is this run's.",
+      "input": {
+        "value": "S00021",
+        "label": "order_reference",
+        "from": "read",
+        "obtained": "read back from the breadcrumb after the order was saved",
+        "kind": "expectation",
+        "text": "- heading \"S00021\""
+      },
+      "truth": "same"
+    },
+    {
+      "id": "fwod31-cids-in-loopback",
+      "source": "fwod31 / compile.ts substitute numeric guard",
+      "note": "`cids=1` minted d1 = \"1\" and the compiled start url became http://127.0.0.{{d1}}:8069/... — a one-character value inside an IP address.",
+      "input": {
+        "value": "1",
+        "label": "url.q.cids",
+        "from": "url",
+        "obtained": "it first appeared in the address bar as cids=1",
+        "kind": "url",
+        "nth": 1,
+        "text": "http://127.0.0.1:8069/odoo/sales?cids=1"
+      },
+      "truth": "coincidence"
+    },
+    {
+      "id": "nth-index-25",
+      "source": "compile.ts substitute numeric guard (nth=25)",
+      "note": "A small number in a selector says WHICH ONE, not WHOSE — the one place an index is not a record.",
+      "input": {
+        "value": "25",
+        "label": "unit_price",
+        "from": "typed",
+        "obtained": "the procedure typed it into the Unit Price field",
+        "kind": "locator",
+        "text": "tbody > tr:nth-of-type(25) > td:nth-of-type(3)"
+      },
+      "truth": "coincidence"
+    },
+    {
+      "id": "fwod28-price-in-price",
+      "source": "fwod28 / fwrd39 / shape.ts isDecimal",
+      "note": "\"5.00\" condemned text(\"£ 425.00\") in two published stores. Present in every odoo recording in bench/fixtures/recordings.",
+      "input": {
+        "value": "5.00",
+        "label": "first_line_quantity",
+        "from": "read",
+        "obtained": "read back from the order line's quantity cell",
+        "kind": "expectation",
+        "text": "- row \"20% £ 425.00\""
+      },
+      "truth": "coincidence"
+    },
+    {
+      "id": "fwod24-product-in-products",
+      "source": "bench/fixtures/recordings/fwod24-n1-script.jsonl",
+      "note": "Ordinary. The typed product word inside the Products menu button — an English plural, not a record.",
+      "input": {
+        "value": "Product",
+        "label": "text",
+        "from": "typed",
+        "obtained": "the procedure typed it into the product autocomplete",
+        "kind": "expectation",
+        "text": "- button \"Products\""
+      },
+      "truth": "coincidence"
+    },
+    {
+      "id": "fwod24-ellipsis-in-placeholder",
+      "source": "bench/fixtures/recordings/fwod24-n1-script.jsonl",
+      "note": "Ordinary, and absurd: a read published \"...\" and it occurs in every odoo placeholder. The boundary refuses it; a triage must too.",
+      "input": {
+        "value": "...",
+        "label": "read",
+        "from": "read",
+        "obtained": "read back from a truncated cell",
+        "kind": "expectation",
+        "text": "- combobox \"Type to find a product...\""
+      },
+      "truth": "coincidence"
+    },
+    {
+      "id": "fwod24-cancel-in-cancelled",
+      "source": "bench/fixtures/recordings/fwod24-n1-script.jsonl",
+      "note": "Ordinary. The button the procedure pressed inside the status word it produced. Two different things that share a stem.",
+      "input": {
+        "value": "Cancel",
+        "label": "read",
+        "from": "read",
+        "obtained": "read back as the button's label",
+        "kind": "arg",
+        "via": "replaceToken",
+        "text": "Report the status the app shows after cancelling (e.g. 'Cancelled'), and the order reference."
+      },
+      "truth": "coincidence"
+    },
+    {
+      "id": "fwgr14-auto-in-auto-refresh",
+      "source": "bench/fixtures/recordings/fwgr14-n1-script.jsonl",
+      "note": "Ordinary. A read published \"auto\" and the instruction says \"auto-refresh\".",
+      "input": {
+        "value": "auto",
+        "label": "refresh_interval",
+        "from": "read",
+        "obtained": "read back from the refresh picker",
+        "kind": "arg",
+        "via": "replaceToken",
+        "text": "report the time range shown in the top-right picker, and the auto-refresh interval shown next to it"
+      },
+      "truth": "coincidence"
+    },
+    {
+      "id": "rd-ticket-in-testid",
+      "source": "compile.ts `bookmarked` / fwrd19l, fwrd20l, fwrd21l",
+      "note": "`ticket-link-t15` — a test hook with a minted record welded into it. Three published stores shipped one. Threading it is the fix.",
+      "input": {
+        "value": "t15",
+        "label": "ticket_id",
+        "from": "url",
+        "obtained": "it first appeared in the address bar after the ticket was created (/tickets/t15)",
+        "kind": "locator",
+        "text": "ticket-link-t15"
+      },
+      "truth": "same"
+    },
+    {
+      "id": "rd-ref-in-row",
+      "source": "fwrd35 fixture / execution-expect.test.ts",
+      "note": "The ticket reference the run's own create step minted, in the row that shows it.",
+      "input": {
+        "value": "RD-1015",
+        "label": "ticket_ref",
+        "from": "read",
+        "obtained": "read back from the ticket's header after it was created",
+        "kind": "expectation",
+        "text": "- row \"RD-1015 fwrd35-n1 RD Bench Ticket 09/17/2026 Open\""
+      },
+      "truth": "same"
+    },
+    {
+      "id": "rd-ref-prefix-not-longer-ref",
+      "source": "shape-gate.test.ts (tokenPattern('RD-1015') vs 'RD-10159')",
+      "note": "A reference is not a prefix of the next one. The pinned boundary case.",
+      "input": {
+        "value": "RD-1015",
+        "label": "ticket_ref",
+        "from": "read",
+        "obtained": "read back from the ticket's header",
+        "kind": "expectation",
+        "text": "- row \"RD-10159 Another ticket\""
+      },
+      "truth": "coincidence"
+    },
+    {
+      "id": "rd-date-year-in-date",
+      "source": "round 27 / a creation date in a row-text locator",
+      "note": "The year of the recording's creation date inside the whole date. A run value, but not THIS one.",
+      "input": {
+        "value": "2026",
+        "label": "created_at",
+        "from": "read",
+        "obtained": "read back from the ticket list's Created column",
+        "kind": "locator",
+        "text": "RD-1015 fwrd35-n1 RD Bench Ticket 09/17/2026 Open"
+      },
+      "truth": "coincidence"
+    },
+    {
+      "id": "rd-creation-date-in-row-locator",
+      "source": "round 27 / a creation date welded into a row-text locator",
+      "note": "The whole date. It IS the recording's moment — but the locator names the row by it, so the date is not the record and the run must not keep it. Truth: the date threads (it is this run's value) so the locator parameterises instead of freezing.",
+      "input": {
+        "value": "09/17/2026",
+        "label": "created_at",
+        "from": "read",
+        "obtained": "read back from the ticket list's Created column",
+        "kind": "locator",
+        "text": "RD-1015 fwrd35-n1 RD Bench Ticket 09/17/2026 Open"
+      },
+      "truth": "same"
+    },
+    {
+      "id": "fwrd12l-runid-in-anchor",
+      "source": "fwrd12l 04-add / compile.ts `stranded`",
+      "note": "An identity anchor still carrying the recording's runid can never match again. It must thread.",
+      "input": {
+        "value": "fwrd12l-n1",
+        "label": "runid",
+        "from": "var",
+        "obtained": "declared as a run variable before the session started",
+        "kind": "locator",
+        "text": "fwrd12l-n1 RD Bench Ticket"
+      },
+      "truth": "same"
+    },
+    {
+      "id": "atelyr-project-id-in-combobox",
+      "source": "atelyr / execution-expect.test.ts maskMinted",
+      "note": "The recording's own project id in a picker's displayed value. Every replay's project had another.",
+      "input": {
+        "value": "13f9pv52yozr",
+        "label": "project_id",
+        "from": "read",
+        "obtained": "read back from the project picker after the project was created",
+        "kind": "expectation",
+        "text": "- combobox \"Project\": 13f9pv52yozr"
+      },
+      "truth": "same"
+    },
+    {
+      "id": "kb-task-id-single-digit",
+      "source": "kanboard / server.ts \"Kanboard's task ids are one digit\"",
+      "note": "A one-character record id in the url it was minted from. Like od-action-id-in-hash, the textual rule refuses it at `=` and substituteUrlId does the threading positionally. (occurrence 1: the `7` in task_id=7, not the one in 127.0.0.1)",
+      "input": {
+        "value": "7",
+        "label": "task_id",
+        "from": "url",
+        "obtained": "it first appeared in the address bar after the task was created (/task/7)",
+        "kind": "url",
+        "text": "http://127.0.0.1:8080/?controller=TaskViewController&action=show&task_id=7&project_id=1",
+        "nth": 1
+      },
+      "truth": "same"
+    },
+    {
+      "id": "kb-task-id-in-project-id",
+      "source": "kanboard",
+      "note": "The same digit where it is the PROJECT, not the task. The occurrence question at its sharpest: one character, two meanings, one page.",
+      "input": {
+        "value": "7",
+        "label": "task_id",
+        "from": "url",
+        "obtained": "it first appeared in the address bar after the task was created (/task/7)",
+        "kind": "expectation",
+        "text": "- link \"Project 7 board\""
+      },
+      "truth": "coincidence"
+    },
+    {
+      "id": "kb-datetime-in-cell",
+      "source": "kanboard / shape.ts isDateOrTime (\"09/03/2026 07:22\")",
+      "note": "A whole date-time. Never a record, whatever its digits.",
+      "input": {
+        "value": "09/03/2026 07:22",
+        "label": "due_date",
+        "from": "read",
+        "obtained": "read back from the task's Due date field",
+        "kind": "expectation",
+        "text": "- textbox \"Due date\": 09/03/2026 07:22"
+      },
+      "truth": "same"
+    },
+    {
+      "id": "kb-hour-in-datetime",
+      "source": "kanboard / round 26 restated",
+      "note": "The task id 7 inside the 07 of a clock time.",
+      "input": {
+        "value": "07",
+        "label": "task_id",
+        "from": "url",
+        "obtained": "it first appeared in the address bar after the task was created",
+        "kind": "expectation",
+        "text": "- cell \"09/03/2026 07:22\""
+      },
+      "truth": "coincidence"
+    },
+    {
+      "id": "gr-tag-in-panel-title",
+      "source": "fwgr14 / bench/fixtures/recordings",
+      "note": "Ordinary positive. A panel the run created, named after what the run typed.",
+      "input": {
+        "value": "fwgr14-n1 Bench Dashboard",
+        "label": "dashboard_title",
+        "from": "typed",
+        "obtained": "the procedure typed it into the dashboard Title field",
+        "kind": "expectation",
+        "text": "- heading \"fwgr14-n1 Bench Dashboard\""
+      },
+      "truth": "same"
+    },
+    {
+      "id": "gr-service-health-slug",
+      "source": "shape.ts tokenPattern doc (\"bench-service-health\" is words all the way through)",
+      "note": "A provisioned dashboard's slug. The run typed \"health\" somewhere; the slug had it already.",
+      "input": {
+        "value": "health",
+        "label": "search_text",
+        "from": "typed",
+        "obtained": "the procedure typed it into the dashboard search box",
+        "kind": "url",
+        "text": "http://127.0.0.1:3000/d/cfwcsdxqdjabkf/bench-service-health"
+      },
+      "truth": "coincidence"
+    },
+    {
+      "id": "gr-uid-in-api-body",
+      "source": "fwgr5 / flow.ts jsonLeaves",
+      "note": "An app that saves over its own API answers with JSON and the uid exists only in the body. Publishing the leaf is the fix.",
+      "input": {
+        "value": "bfyd7wj0ceolcf",
+        "label": "save_response#dashboard.uid",
+        "from": "read",
+        "obtained": "read back out of the save endpoint's JSON response",
+        "kind": "url",
+        "text": "http://127.0.0.1:3000/d/bfyd7wj0ceolcf/fwgr5-n1-bench-dashboard"
+      },
+      "truth": "same"
+    },
+    {
+      "id": "od-action-id-in-hash",
+      "source": "fwod32 / compile.ts substituteUrlParts",
+      "note": "Odoo hands out a fresh action id per session; the recording's sign-in goto carried the one it had just minted. The TEXTUAL rule refuses it (substitute's `=` guard) and a POSITIONAL writer — substituteUrlParts — does the threading instead; this case therefore scores the textual rule as wrong where production is not. Kept, because Jev is being asked the semantic question, not the textual one.",
+      "input": {
+        "value": "135",
+        "label": "url.q.action",
+        "from": "url",
+        "obtained": "it first appeared in the address bar as #action=135",
+        "kind": "url",
+        "text": "http://127.0.0.1:8069/odoo/sales#action=135&menu_id=120"
+      },
+      "truth": "same"
+    },
+    {
+      "id": "od-menu-id-not-action-id",
+      "source": "fwod32",
+      "note": "The action id's digits do not occur in the menu id; the menu id's do not occur in the action. A plain negative that must not be flagged.",
+      "input": {
+        "value": "120",
+        "label": "url.q.menu_id",
+        "from": "url",
+        "obtained": "it first appeared in the address bar as menu_id=120",
+        "kind": "expectation",
+        "text": "- cell \"1200.00\""
+      },
+      "truth": "coincidence"
+    },
+    {
+      "id": "od-customer-name-in-heading",
+      "source": "bench/fixtures/recordings/fwod24-n1-script.jsonl",
+      "note": "Ordinary positive. The customer the run created, in the heading that names it.",
+      "input": {
+        "value": "fwod24-n1 Bench Customer",
+        "label": "customer_name",
+        "from": "typed",
+        "obtained": "the procedure typed it into the Customer field",
+        "kind": "expectation",
+        "text": "- heading \"fwod24-n1 Bench Customer\""
+      },
+      "truth": "same"
+    },
+    {
+      "id": "od-custom-in-customer",
+      "source": "bench/fixtures/recordings/fwod24-n1-script.jsonl",
+      "note": "Ordinary. A read published \"Custom\" and the instruction says \"Customer\".",
+      "input": {
+        "value": "Custom",
+        "label": "read",
+        "from": "read",
+        "obtained": "read back from a field label",
+        "kind": "arg",
+        "via": "replaceToken",
+        "text": "Create a contact named exactly 'fwod24-n1 Bench Customer' with the City field set to Bristol."
+      },
+      "truth": "coincidence"
+    },
+    {
+      "id": "od-product-a-glued",
+      "source": "bench/fixtures/recordings/fwod24-n1-script.jsonl",
+      "note": "The autocomplete's echo glues the typed text to the chosen product: \"Product AProduct\". The typed value IS at the front of it.",
+      "input": {
+        "value": "Product A",
+        "label": "text",
+        "from": "typed",
+        "obtained": "the procedure typed it into the product autocomplete",
+        "kind": "expectation",
+        "text": "- combobox \"Type to find a product...\": Product AProduct A"
+      },
+      "truth": "same"
+    },
+    {
+      "id": "od-office-in-glued-echo",
+      "source": "bench/fixtures/recordings/fwod26-n1-script.jsonl",
+      "note": "\"Office\" inside \"ChairOffice\" — the seam of an autocomplete echo, where no word boundary exists at all.",
+      "input": {
+        "value": "Office",
+        "label": "value",
+        "from": "typed",
+        "obtained": "the procedure typed it into the product autocomplete",
+        "kind": "expectation",
+        "text": "- combobox \"Type to find a product...\": ChairOffice Chair Black"
+      },
+      "truth": "coincidence"
+    },
+    {
+      "id": "react-generated-id",
+      "source": "recorder.ts React useId `_r8b_`",
+      "note": "A framework id re-minted on every load. The occurrence is real; the value is worthless as a reference either way, and the rule only demotes it.",
+      "input": {
+        "value": "_r8b_3",
+        "label": "element_id",
+        "from": "read",
+        "obtained": "read off the element's id attribute",
+        "kind": "locator",
+        "text": "#_r8b_3 > div > input"
+      },
+      "truth": "same"
+    },
+    {
+      "id": "od-untaxed-amount-word",
+      "source": "bench/fixtures/recordings/fwod26-n1-script.jsonl",
+      "note": "Ordinary. A read published the words \"Untaxed Amount\" and they are the app's own column heading everywhere.",
+      "input": {
+        "value": "Untaxed Amount",
+        "label": "totals_label",
+        "from": "read",
+        "obtained": "read back from the order totals block",
+        "kind": "expectation",
+        "text": "- row \"Untaxed Amount £ 395.00\""
+      },
+      "truth": "coincidence"
+    },
+    {
+      "id": "od-quantity-in-total",
+      "source": "bench/fixtures/recordings/fwod26-n1-script.jsonl",
+      "note": "\"2.00\" (a quantity a read published) inside \"102.00\" (a total the app computed).",
+      "input": {
+        "value": "2.00",
+        "label": "second_line_quantity",
+        "from": "read",
+        "obtained": "read back from the second order line's quantity cell",
+        "kind": "expectation",
+        "text": "- row \"Total £ 102.00\""
+      },
+      "truth": "coincidence"
+    },
+    {
+      "id": "od-quantity-in-its-own-cell",
+      "source": "bench/fixtures/recordings/fwod26-n1-script.jsonl",
+      "note": "The same quantity where it really is the quantity. The positive twin of the case above.",
+      "input": {
+        "value": "3.00",
+        "label": "quantity",
+        "from": "typed",
+        "obtained": "the procedure typed it into the order line's Quantity field",
+        "kind": "expectation",
+        "text": "- textbox \"Quantity\": 3.00"
+      },
+      "truth": "same"
+    },
+    {
+      "id": "gr-port-in-origin",
+      "source": "grafana recordings",
+      "note": "3000 is the port, not a record. Every grafana url carries it, so a false yes would thread half the store.",
+      "input": {
+        "value": "3000",
+        "label": "panel_id",
+        "from": "url",
+        "obtained": "it first appeared in the address bar as viewPanel=3000",
+        "kind": "url",
+        "text": "http://127.0.0.1:3000/d/afw6yy5xx9/fwgr8-n1-bench-dashboard"
+      },
+      "truth": "coincidence"
+    },
+    {
+      "id": "gr-time-range-value",
+      "source": "fwgr49 (execution-gates.test.ts)",
+      "note": "A grafana `from=` timestamp: the recording's moment, in the url. Threading it is what keeps the precondition matchable.",
+      "input": {
+        "value": "2026-09-16T14:56:44.986Z",
+        "label": "url.q.from",
+        "from": "url",
+        "obtained": "it first appeared in the address bar as from=2026-09-16T14:56:44.986Z",
+        "kind": "url",
+        "text": "http://app.test/d/afygoex55iarka/fwgr49-spec-bench-dashboard?from=2026-09-16T14:56:44.986Z&to=2026-09-16T20:56:44.986Z"
+      },
+      "truth": "same"
+    },
+    {
+      "id": "od-status-word-sales-order",
+      "source": "compile-goal.test.ts",
+      "note": "Ordinary. \"Sales Order\" is the status the recording found, and it is also the app's name for the whole section.",
+      "input": {
+        "value": "Sales Order",
+        "label": "current_status",
+        "from": "read",
+        "obtained": "read back from the order's status bar",
+        "kind": "expectation",
+        "text": "- button \"Sales Orders\""
+      },
+      "truth": "coincidence"
+    },
+    {
+      "id": "rd-title-in-instruction",
+      "source": "fwrd35 fixture",
+      "note": "Ordinary positive through replaceToken: the title the caller vouched for, in the instruction that asked for it.",
+      "input": {
+        "value": "fwrd35-n1 RD Bench Ticket",
+        "label": "ticket_title",
+        "from": "var",
+        "obtained": "declared as a run variable before the session started",
+        "kind": "arg",
+        "via": "replaceToken",
+        "text": "Create a ticket titled 'fwrd35-n1 RD Bench Ticket' for customer Acme and report its reference."
+      },
+      "truth": "same"
+    },
+    {
+      "id": "od-street-placeholder",
+      "source": "bench/fixtures/recordings/fwod24-n1-script.jsonl",
+      "note": "Ordinary. \"2...\" inside \"Street 2...\" — the enclosing token is a placeholder the app ships.",
+      "input": {
+        "value": "2...",
+        "label": "read",
+        "from": "read",
+        "obtained": "read back from a truncated field",
+        "kind": "expectation",
+        "text": "- textbox \"Street 2...\""
+      },
+      "truth": "coincidence"
+    },
+    {
+      "id": "gr-version-in-footer",
+      "source": "grafana recordings",
+      "note": "A version string is neither a record nor this run's. Nothing should thread into it.",
+      "input": {
+        "value": "11",
+        "label": "panel_count",
+        "from": "read",
+        "obtained": "read back as the number of panels on the dashboard",
+        "kind": "expectation",
+        "text": "- generic \"Grafana v11.2.0\""
+      },
+      "truth": "coincidence"
+    },
+    {
+      "id": "od-city-bristol",
+      "source": "bench/fixtures/recordings/fwod24-n1-script.jsonl",
+      "note": "Ordinary positive. A typed city in the field that shows it.",
+      "input": {
+        "value": "Bristol",
+        "label": "city",
+        "from": "typed",
+        "obtained": "the procedure typed it into the City field",
+        "kind": "expectation",
+        "text": "- textbox \"City\": Bristol"
+      },
+      "truth": "same"
+    },
+    {
+      "id": "rd-status-open-word",
+      "source": "repairdesk recordings",
+      "note": "Ordinary. A status word read back, occurring in an unrelated button. The app's vocabulary, twice.",
+      "input": {
+        "value": "Open",
+        "label": "ticket_status",
+        "from": "read",
+        "obtained": "read back from the ticket's Status column",
+        "kind": "expectation",
+        "text": "- button \"Open in new tab\""
+      },
+      "truth": "coincidence"
+    }
+  ],
+  "expectation": [
+    {
+      "id": "fwgr25-loading-status",
+      "source": "fwgr25 sign-in / expect.ts TRANSIENT_LINE",
+      "note": "The sign-in click's only recorded page change. Every replay caught the page after the spinner and recovered for 24 turns.",
+      "input": {
+        "line": "- status \"Loading\"",
+        "tool": "click",
+        "procedure": "Sign in to Grafana as admin and open the provisioned dashboard."
+      },
+      "truth": "this-run"
+    },
+    {
+      "id": "fwgr25-rss-alert",
+      "source": "fwgr25 / expect.ts TRANSIENT_LINE doc",
+      "note": "An alert that happened to be on screen, and nothing the step did.",
+      "input": {
+        "line": "- alert \"Error loading RSS feed\"",
+        "tool": "click",
+        "procedure": "Sign in to Grafana as admin and open the provisioned dashboard."
+      },
+      "truth": "this-run"
+    },
+    {
+      "id": "gr-logged-in-toast",
+      "source": "bench/fixtures/recordings/fwgr14-n1-script.jsonl",
+      "input": {
+        "line": "- status \"Logged in\"",
+        "tool": "click",
+        "procedure": "Sign in to Grafana as admin."
+      },
+      "truth": "this-run"
+    },
+    {
+      "id": "gr-progressbar",
+      "source": "expect.ts TRANSIENT_LINE",
+      "input": {
+        "line": "- progressbar \"Loading dashboard\"",
+        "tool": "click",
+        "procedure": "Open the provisioned dashboard named 'Service health'."
+      },
+      "truth": "this-run"
+    },
+    {
+      "id": "fwod60-arithmetic-row",
+      "source": "fwod60 s_292da2 / compile.ts unfreezeWatchedNames",
+      "note": "267 was never read and never reported — one keystroke of arithmetic — and as the step's only slotted line it was the whole hard half of the expectation.",
+      "input": {
+        "line": "- row \"Untaxed Amount: £ 210.00 £ 267.00\"",
+        "tool": "fill",
+        "procedure": "Add a product line for £12 to the quotation and report the untaxed amount."
+      },
+      "truth": "this-run"
+    },
+    {
+      "id": "atelyr-project-id-combobox",
+      "source": "atelyr / expect.ts maskMinted",
+      "note": "The recording's own project id as a picker's displayed value. Both add-item steps stopped at \"did not show … as it did when recorded\".",
+      "input": {
+        "line": "- combobox \"Project\": 13f9pv52yozr",
+        "tool": "click",
+        "procedure": "Add an item to the project and report what it says."
+      },
+      "truth": "this-run"
+    },
+    {
+      "id": "round29-quotation-heading",
+      "source": "round 29 / a minted quotation number welded into a heading locator",
+      "note": "The heading names the order this recording made. The rules keep it whenever the reference is not a slot on that step, and that is the disagreement worth having.",
+      "input": {
+        "line": "- heading \"S00021\"",
+        "tool": "click",
+        "procedure": "Confirm the quotation and report its reference."
+      },
+      "truth": "this-run"
+    },
+    {
+      "id": "kb-due-date-textbox",
+      "source": "execution-expect.test.ts (kanboard \"09/03/2026 07:22\")",
+      "input": {
+        "line": "- textbox \"09/03/2026 07:22\": {{v3}}",
+        "tool": "fill",
+        "procedure": "Set the task's due date and report it."
+      },
+      "truth": "this-run"
+    },
+    {
+      "id": "od-created-cell",
+      "source": "round 26 / fwod67",
+      "input": {
+        "line": "- cell \"09/17/2026 21:05\"",
+        "tool": "click",
+        "procedure": "Open the order list and report the newest order."
+      },
+      "truth": "this-run"
+    },
+    {
+      "id": "fwod49-popup-option",
+      "source": "fwod49-n2 02-open / expect.ts POPUP_ITEM_ROLE",
+      "note": "odoo's product autocomplete re-queries on every character and returns whatever the catalogue holds now.",
+      "input": {
+        "line": "- option \"Product A\"",
+        "tool": "type",
+        "procedure": "Add a product line for Product A to the quotation."
+      },
+      "truth": "this-run"
+    },
+    {
+      "id": "fwod49-popup-container",
+      "source": "fwod49-n2 / expect.ts POPUP_ROLE",
+      "note": "The container's appearance IS the event, and it happens on every run.",
+      "input": {
+        "line": "- listbox \"\"",
+        "tool": "type",
+        "procedure": "Add a product line for Product A to the quotation."
+      },
+      "truth": "every-run"
+    },
+    {
+      "id": "rd-ticket-row",
+      "source": "fwrd35 fixture",
+      "input": {
+        "line": "- row \"RD-1015 fwrd35-n1 RD Bench Ticket 09/17/2026 Open\"",
+        "tool": "click",
+        "procedure": "Create a ticket and report its reference."
+      },
+      "truth": "this-run"
+    },
+    {
+      "id": "relative-time-generic",
+      "source": "shared/text.ts maskVolatile",
+      "input": {
+        "line": "- generic \"2 minutes ago\"",
+        "tool": "click",
+        "procedure": "Open the ticket and report when it was created."
+      },
+      "truth": "this-run"
+    },
+    {
+      "id": "saved-toast",
+      "source": "grafana recordings",
+      "input": {
+        "line": "- status \"Dashboard saved\"",
+        "tool": "click",
+        "procedure": "Save the dashboard."
+      },
+      "truth": "this-run"
+    },
+    {
+      "id": "od-order-count-badge",
+      "source": "odoo recordings",
+      "note": "A count of the records that existed when the recording ran.",
+      "input": {
+        "line": "- generic \"1-21 / 21\"",
+        "tool": "click",
+        "procedure": "Open the Sales Orders list."
+      },
+      "truth": "this-run"
+    },
+    {
+      "id": "confirm-button",
+      "source": "bench/jev-probe.mjs ELEMENTS / odoo recordings",
+      "input": {
+        "line": "- button \"Confirm\"",
+        "tool": "click",
+        "procedure": "Open the quotation so it can be confirmed."
+      },
+      "truth": "every-run"
+    },
+    {
+      "id": "save-record-button",
+      "source": "odoo recordings",
+      "input": {
+        "line": "- button \"Save record\"",
+        "tool": "fill",
+        "procedure": "Set the customer on the quotation."
+      },
+      "truth": "every-run"
+    },
+    {
+      "id": "od-cancelled-status",
+      "source": "compile-goal.test.ts",
+      "note": "The status the procedure PRODUCES. The whole point of the step, and the same on every run.",
+      "input": {
+        "line": "- button \"Cancelled\"",
+        "tool": "click",
+        "procedure": "Cancel the sales order and verify the status bar shows Cancelled."
+      },
+      "truth": "every-run"
+    },
+    {
+      "id": "gr-password-heading",
+      "source": "bench/fixtures/recordings/fwgr14-n1-script.jsonl",
+      "note": "Grafana prompts every fresh login. It looks like a one-off and is not.",
+      "input": {
+        "line": "- heading \"Update your password\"",
+        "tool": "click",
+        "procedure": "Sign in to Grafana as admin and skip the password prompt."
+      },
+      "truth": "every-run"
+    },
+    {
+      "id": "gr-skip-button",
+      "source": "bench/fixtures/recordings/fwgr14-n1-script.jsonl",
+      "input": {
+        "line": "- button \"Skip\"",
+        "tool": "click",
+        "procedure": "Sign in to Grafana as admin and skip the password prompt."
+      },
+      "truth": "every-run"
+    },
+    {
+      "id": "gr-dashboards-link",
+      "source": "bench/fixtures/recordings/fwgr14-n1-script.jsonl",
+      "input": {
+        "line": "- link \"Dashboards\"",
+        "tool": "click",
+        "procedure": "Navigate to the provisioned dashboard named 'Service health'."
+      },
+      "truth": "every-run"
+    },
+    {
+      "id": "od-untaxed-label-row",
+      "source": "odoo recordings",
+      "note": "The label alone, with no figure — the app's own column heading.",
+      "input": {
+        "line": "- cell \"Untaxed Amount\"",
+        "tool": "click",
+        "procedure": "Open the quotation and report its totals."
+      },
+      "truth": "every-run"
+    },
+    {
+      "id": "od-customer-textbox-empty",
+      "source": "odoo recordings",
+      "input": {
+        "line": "- textbox \"Customer\"",
+        "tool": "click",
+        "procedure": "Create a new quotation."
+      },
+      "truth": "every-run"
+    },
+    {
+      "id": "od-payment-terms-default",
+      "source": "odoo recordings",
+      "note": "A default the app fills in. maskMinted wildcards any literal value at a control, so the rules call this run-specific; a default is not.",
+      "input": {
+        "line": "- combobox \"Payment terms\": Immediate Payment",
+        "tool": "click",
+        "procedure": "Create a new quotation for the customer."
+      },
+      "truth": "every-run"
+    },
+    {
+      "id": "od-sales-menuitem",
+      "source": "odoo recordings",
+      "input": {
+        "line": "- menuitem \"Sales\"",
+        "tool": "click",
+        "procedure": "Open the Sales app."
+      },
+      "truth": "every-run"
+    },
+    {
+      "id": "gr-panels-tab",
+      "source": "grafana recordings",
+      "input": {
+        "line": "- tab \"Panels\"",
+        "tool": "click",
+        "procedure": "Edit the dashboard's panels."
+      },
+      "truth": "every-run"
+    },
+    {
+      "id": "kb-board-heading",
+      "source": "kanboard recordings",
+      "input": {
+        "line": "- heading \"Board\"",
+        "tool": "click",
+        "procedure": "Open the project board."
+      },
+      "truth": "every-run"
+    },
+    {
+      "id": "kb-ready-column",
+      "source": "fwkb1 / fwkb17",
+      "note": "A column the project ships with. Kanboard recordings move a task into it on every run.",
+      "input": {
+        "line": "- columnheader \"Ready\"",
+        "tool": "drag",
+        "procedure": "Move the task to the Ready column."
+      },
+      "truth": "every-run"
+    },
+    {
+      "id": "rd-open-status-cell",
+      "source": "repairdesk recordings",
+      "note": "The status a newly created ticket always has.",
+      "input": {
+        "line": "- cell \"Open\"",
+        "tool": "click",
+        "procedure": "Create a ticket and open it."
+      },
+      "truth": "every-run"
+    },
+    {
+      "id": "rd-save-button",
+      "source": "repairdesk recordings",
+      "input": {
+        "line": "- button \"Save\"",
+        "tool": "fill",
+        "procedure": "Create a ticket for customer Acme."
+      },
+      "truth": "every-run"
+    },
+    {
+      "id": "od-discard-button",
+      "source": "odoo recordings",
+      "input": {
+        "line": "- button \"Discard\"",
+        "tool": "fill",
+        "procedure": "Set the quantity on the order line."
+      },
+      "truth": "every-run"
+    },
+    {
+      "id": "fwgr17-echo-textbox",
+      "source": "fwgr17-n3 03-open / expect.ts isEchoLine",
+      "note": "An echo of the fill in an UNNAMED textbox: the wrong textbox produces it too. Not run-specific — worthless. Carries the slot map, so the line reaches the site as `- textbox \"\": {{v1}}`.",
+      "input": {
+        "line": "- textbox \"\": fwgr17-n3 Bench Dashboard",
+        "tool": "fill",
+        "procedure": "Create a dashboard titled 'fwgr17-n3 Bench Dashboard'.",
+        "slots": {
+          "v1": "fwgr17-n3 Bench Dashboard"
+        }
+      },
+      "truth": "every-run"
+    },
+    {
+      "id": "fwod47-unnamed-textbox-null",
+      "source": "fwod47-n3 04-open / expect.ts identifiesNothing",
+      "note": "Scored as uninformative, not as an answer to J's question — see triage.ts ruleAnswer. Kept in the zoo so the script can show it is reported and not counted.",
+      "input": {
+        "line": "- textbox \"\": null",
+        "tool": "click",
+        "procedure": "Open the order line for editing."
+      },
+      "truth": "every-run"
+    },
+    {
+      "id": "empty-cell",
+      "source": "expect.ts identifiesNothing",
+      "note": "As above: reported, never scored.",
+      "input": {
+        "line": "- cell \"\"",
+        "tool": "click",
+        "procedure": "Open the order list."
+      },
+      "truth": "every-run"
+    },
+    {
+      "id": "od-quotation-heading-template",
+      "source": "odoo recordings",
+      "note": "The word the app puts above every new quotation, before it is confirmed.",
+      "input": {
+        "line": "- heading \"New\"",
+        "tool": "click",
+        "procedure": "Create a new quotation."
+      },
+      "truth": "every-run"
+    },
+    {
+      "id": "gr-time-picker-value",
+      "source": "grafana recordings",
+      "note": "The default range every dashboard opens on.",
+      "input": {
+        "line": "- button \"Last 6 hours\"",
+        "tool": "click",
+        "procedure": "Open the dashboard and report its time range."
+      },
+      "truth": "every-run"
+    },
+    {
+      "id": "gr-absolute-time-value",
+      "source": "fwgr49 (execution-gates.test.ts)",
+      "note": "The same picker once an absolute range is pinned to the recording's clock.",
+      "input": {
+        "line": "- button \"2026-09-16 14:56:44 to 2026-09-16 20:56:44\"",
+        "tool": "click",
+        "procedure": "Open the dashboard and report its time range."
+      },
+      "truth": "this-run"
+    },
+    {
+      "id": "od-order-ref-cell",
+      "source": "odoo recordings",
+      "input": {
+        "line": "- cell \"S00021\"",
+        "tool": "click",
+        "procedure": "Open the Sales Orders list and find the order that was just created."
+      },
+      "truth": "this-run"
+    },
+    {
+      "id": "kb-task-id-link",
+      "source": "kanboard recordings",
+      "input": {
+        "line": "- link \"#7 fwkb17-n1 Bench Task\"",
+        "tool": "click",
+        "procedure": "Create a task and open it."
+      },
+      "truth": "this-run"
+    },
+    {
+      "id": "rd-customer-name-typed",
+      "source": "repairdesk recordings",
+      "note": "A value the caller vouched for, so the procedure types it on every run — it is a slot, not the recording's. Carries the slot map, as the daemon's caller does: the line reaches the site as `- textbox \"Customer\": {{v1}}`.",
+      "input": {
+        "line": "- textbox \"Customer\": Acme",
+        "tool": "fill",
+        "procedure": "Create a ticket for customer Acme.",
+        "slots": {
+          "v1": "Acme"
+        }
+      },
+      "truth": "every-run"
+    }
+  ]
+}

@@ -199,6 +199,62 @@ Learned, and binding on later sites:
   the page's element list. Cheap fix worth doing before B: store `interactiveRows`
   output on the ticket when patch-segment runs, so every repair becomes a labelled case.
 
+### Step 2 status — DONE 2026-09-18 (advisory; changes no behaviour)
+
+`src/skills/triage.ts` (pure enumerators: every (value, occurrence) pair and every
+expectation line the rules ruled on, with `ruleSaid` obtained by CALLING
+`substitute`/`replaceToken`/the mask chain), `src/skills/triage-jev.ts` (sites
+`triage.occurrence`, `triage.expectation`, `triageSession`), `bench/jev-zoo.mjs` +
+`bench/fixtures/jev-zoo.json` (48 + 40 labelled cases). Wired as
+`SessionServer.shadowTriage`, started at the top of `exportFlow` and drained (≤6s) by
+`stop` after the browser closes — the daemon exits after `stop`, so a fire-and-forget
+pass would have logged nothing. Rows land in `system-one.jsonl` with `agrees`.
+Compile, replay, corpus-check and artifacts never read them.
+
+Zoo, live, four runs (real run-to-run variance — set gates from repeated runs):
+
+| site | Jev | shape rules | Jev right / rule wrong | rule right / Jev wrong |
+|---|---|---|---|---|
+| occurrence | 89.6–93.8% | 85.4% | 4–5 | 1–2 |
+| expectation | 92.3–94.9% | 71.8% | 11 | 2–3 |
+
+Jev sides with the eventual fix on every NAMED case (fwgr8 `bench`, fwod5 `form`, the
+round-26 clock time, `127.0.0.1`, `425.00`, round-29's minted heading, fwod60's
+arithmetic row, fwod49's popup option, fwgr25's spinner). Every miss is under 0.3
+confidence; ≥0.4 was 100% on every run. Gates set to 0.6 for both.
+**Caveat:** the zoo's truth labels and the questions were written by the same hand and
+the questions were tuned against it — it is a regression set, not a held-out one. The
+corpus numbers below are the unbiased half.
+
+Corpus noise (8 published recordings, 1,237 pairs / 2,144 lines, ~$0.06), disagreement
+with the rules at confidence ≥0.6: **occurrence 1.1%** — passes "quiet on the corpus".
+**expectation 18.8%**, grafana ~1.5% but odoo 18–28%, almost all *computed money
+figures and counts the rules keep as hard expectations* (`row "Total £ 2,784.00"`,
+`button "0 Meetings"`). That is the fwod60 class at scale and probably a real finding
+about the rules, not noise. Next move for J is to hand-adjudicate that class and decide
+between promoting J (drop-only) and a deterministic fix — extending
+`unfreezeWatchedNames` to any figure the recording watched change — which would be free.
+
+**Question shape dominates state size** — binding on G, H, L, D:
+- **Jev cannot do counterfactuals.** "Would a later run show this line?" scored 19/40,
+  barely above answering one way every time. Restated as composition — "ignoring any
+  {{vN}} marker, is every remaining word part of the app's fixed vocabulary?" + literal
+  vetoes (a moment? a toast? a minted reference?) — 36–37/40. Every "would X happen"
+  in this plan (G's "did the action take effect", L's "is the page past this
+  procedure") must be restated as "what is in front of you" before it is benchmarked.
+- Identity questions fail; **derivation + structure combined in code** works: `derived`
+  ("did this get here BECAUSE of the value?") and `piece` ("is it only part of a longer
+  number/date/word?"), with a fragment needing `derived ≥ 0.8`. Step 0's framing: 32/48.
+- An instruction that matters must be in the QUESTION, not only in state ("ignore the
+  markers" in a state note did nothing; in the question it cut corpus noise 23→19%).
+- A disjunction reduces by **max**, a conjunction by **min**.
+- Shard by what shares state (one request per VALUE, 10 lines per procedure): 1,237
+  pairs cost ~180 requests.
+
+Open: `triageSession` builds its own decision rows because `jevDecider` is one ask per
+decision; a batch-shaped `JevBatchSite` + `shadowAll` in decide.ts would absorb it. Do
+it when a second batch site (K) arrives, not before.
+
 ## 4. Sites, in order of value ÷ risk
 
 ### A. Locator repair proposer — `src/skills/repair.ts:576` (`llmProposer`)
