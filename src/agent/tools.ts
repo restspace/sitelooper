@@ -426,6 +426,12 @@ export const TOOL_DEFS: ToolDef[] = [
 export interface ToolExecution {
   result: string;
   isError: boolean;
+  /**
+   * For `batch`: what each step cost, plus the closing page diff. A batch is up
+   * to ten actions behind one number, and fwrdj3/fwrdj4 each had three batches
+   * of almost exactly 13s whose turn row could not say which step stalled.
+   */
+  stepMs?: Array<{ tool: string; ms: number; ok: boolean }>;
   /** Present for run_skill: what the replay did, for the loop's accounting. */
   replay?: ReplayResult;
   /**
@@ -916,6 +922,7 @@ async function executeBatch(
   let failedAt = -1;
   // Whether the last step that ran left the page settled by its own action observation.
   let lastSettled = false;
+  const stepMs: Array<{ tool: string; ms: number; ok: boolean }> = [];
 
   for (const [i, step] of steps.entries()) {
     if (signal?.aborted) {
@@ -923,12 +930,15 @@ async function executeBatch(
       break;
     }
     const head = `${i + 1}. ${step.tool} ${summarize(step.args)} → `;
+    const stepAt = Date.now();
     try {
       const { result, settled } = await runStep(session, step.tool, step.args, screenshotDir, signal);
+      stepMs.push({ tool: step.tool, ms: Date.now() - stepAt, ok: true });
       lastSettled = Boolean(settled);
       lines.push(head + clip(result, BATCH_STEP_CHARS) + dialogNote(session).replace(/^\n/, ' '));
       ran++;
     } catch (err) {
+      stepMs.push({ tool: step.tool, ms: Date.now() - stepAt, ok: false });
       lastSettled = false;
       const outcome = STATE_CHANGING.has(step.tool) ? ` ${outcomeLabel(outcomeOfError(err))}` : '';
       lines.push(
@@ -942,14 +952,17 @@ async function executeBatch(
     }
   }
 
+  const diffAt = Date.now();
   const observed = page && before && (ran || failedAt >= 0) ? await stateDiff(page, before, BATCH_LINE_BUDGET, lastSettled) : EMPTY_OBSERVATION;
-  const body = [...lines, ...notes].join('\n') + scrubSecrets(observed.note);
+  stepMs.push({ tool: '(page diff)', ms: Date.now() - diffAt, ok: true });
+  const body =[...lines, ...notes].join('\n') + scrubSecrets(observed.note);
   // Nothing ran at all — either the first step failed or the budget expired
   // before it started; that IS an error result.
-  if (!ran) return { result: truncate(body || 'ERROR: batch ran no steps.', TOOL_RESULT_BUDGET + 8200), isError: true };
+  if (!ran) return { result: truncate(body || 'ERROR: batch ran no steps.', TOOL_RESULT_BUDGET + 8200), isError: true, stepMs };
   return {
     result: truncate(body, TOOL_RESULT_BUDGET + 8200),
     isError: false,
+    stepMs,
     snapshotIncluded: observed.snapshotIncluded,
   };
 }

@@ -144,7 +144,7 @@ export interface InstructionTiming {
   toolMs: number;
   modelCalls: number;
   /** One row per turn: what the model took to decide, what its tool calls took to run, and what they were. */
-  turns: Array<{ modelMs: number; toolMs: number; tools: string[] }>;
+  turns: Array<{ modelMs: number; toolMs: number; tools: string[]; steps?: Array<{ tool: string; ms: number; ok: boolean }> }>;
 }
 
 export interface InstructionResult {
@@ -716,7 +716,7 @@ export async function runInstruction(
     opts.signal?.addEventListener('abort', abortTurn, { once: true });
 
     let completion;
-    const turnTiming = { modelMs: 0, toolMs: 0, tools: [] as string[] };
+    const turnTiming: InstructionTiming['turns'][number] = { modelMs: 0, toolMs: 0, tools: [] };
     timing.turns.push(turnTiming);
     const shadowCtx: ShadowTurn = { turn, instruction, browser };
     // Said before the model is asked, so the observation it may take rides
@@ -865,6 +865,7 @@ export async function runInstruction(
       turnTiming.toolMs += Date.now() - toolAt;
       timing.toolMs += Date.now() - toolAt;
       turnTiming.tools.push(call.name);
+      if (execution.stepMs) (turnTiming.steps ??= []).push(...execution.stepMs);
       actions.push({ tool: call.name, args: summary, ok: !execution.isError });
       // After the recorder has filed this step: its locator chain is the exact
       // identity of the element the agent acted on, which is what an observer
