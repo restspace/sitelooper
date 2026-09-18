@@ -1,0 +1,198 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwod70-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwod70-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwod70-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwod70-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwod70-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwod70.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwod70-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwod70.spec.ts",
+      "file": "fwod70.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwod70",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 94214,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-create s_2f0ccf/9: read 'product_name_2' returned a value the skill itself set/selected ('[FURN_1118] Corner Desk Left Sit') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 03-create s_a3270b/2 target: primary getByRole('heading', { name: /^[\\s\\p{Co}\\p{So}\\p{Cf}]*S00022[\\s\\p{Co}\\p{So}\\p{Cf}]*$/u }) missed; used #2 locator('div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > h1') (#1 absent)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-create\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 04-find s_241e21/2 target: primary getByRole('button', { name: /^[\\s\\p{Co}\\p{So}\\p{Cf}]*Save\\s+manually[\\s\\p{Co}\\p{So}\\p{Cf}]*$/u }) missed; used #2 locator('div:nth-of-type(1) > div > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(1)') (#1 absent)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-find\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] step 05-open s_b5548a/3: none of the 3 expected page change(s) appeared in the step diff (found on the page instead)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 07-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 08-open\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:8069/ in the browser and log in with username 'admin' and password 'admin'. After logging in, report which page/app you land on. Note: the app long-polls so it is never network-idle — wait for concrete page elements instead of network idle.",
+                      "duration": 4746
+                    },
+                    {
+                      "title": "02-create: Navigate to the Contacts app in Odoo. Create a new contact (individual/company) with the Name exactly '{{runid}} Bench Customer' and the City field set to 'Benchville'. Fill in any other required fields if needed. Save the contact. Then verify by reopening/finding the contact '{{runid}} Bench Customer' and report the Name and City values shown on the saved record. Do not wait for network idle — the app long-polls; wait for concrete page elements.",
+                      "duration": 9485
+                    },
+                    {
+                      "title": "03-create: In Odoo, go to the Sales app and create a new Quotation. Set the Customer to '{{runid}} Bench Customer' — this is an autocomplete dropdown field, so you must select the option from the dropdown that appears, not merely type the name. Add exactly ONE order line: pick any product from the product catalogue (again via the autocomplete dropdown, choosing an actual option), and set the Quantity to 3. Do not add any other lines. Save the quotation (do NOT confirm it yet). Then report: (a) the product name you chose, (b) the Unit Price the app automatically filled in for that line, (c) the Untaxed amount the app computes for the quotation, and (d) the quotation's reference/name if shown. Do not wait for network idle — the app long-polls; wait for concrete page elements.",
+                      "duration": 37207
+                    },
+                    {
+                      "title": "04-find: In Odoo's Sales app, find the quotation for customer '{{runid}} Bench Customer' (reference {{03-create.quotation_reference}} if it exists). Check its current state: if the quotation exists but is unsaved/dirty or lacks its order line, fix it so that it is SAVED with Customer '{{runid}} Bench Customer' and exactly ONE order line: product '{{03-create.product_name}}' with Quantity 3. If the quotation was lost entirely, recreate it from scratch with those same values. Use the Catalogue/Add-product dialog to pick the product if the plain autocomplete is unreliable. Click Save if the form is dirty. Finally report: the quotation's reference/name, the product on the line, the Unit Price shown on the line, and the Untaxed Amount computed. Do NOT confirm the quotation. Do not wait for network idle.",
+                      "duration": 11209
+                    },
+                    {
+                      "title": "05-open: In Odoo's Sales app, open the saved quotation {{03-create.quotation_reference}} (customer '{{runid}} Bench Customer'). Edit it and add a SECOND order line (keeping the existing first line '{{03-create.product_name}}' quantity 3 unchanged): choose a DIFFERENT product from the catalogue (use the Catalogue/Add-product dialog if the plain autocomplete is unreliable — the product field is an autocomplete dropdown and a value only counts when an option has actually been chosen), with Quantity 2. Save the quotation (do NOT confirm it). Then report: (a) the name of the product you added, (b) the quantity, and (c) the new Untaxed Amount the app computes with both lines. Do not wait for network idle.",
+                      "duration": 7117
+                    },
+                    {
+                      "title": "06-open: In Odoo's Sales app, open the saved quotation {{03-create.quotation_reference}} (customer '{{runid}} Bench Customer'). Edit it and change the Quantity of the FIRST order line ('{{03-create.product_name}}') from 3 to 5, leaving the second line ('{{05-open.added_product_name}}', quantity 2) unchanged. Save the quotation (do NOT confirm it). Then report: (a) the quantity shown on the first line after saving, and (b) the new Untaxed Amount the app computes. Verify persistence by reloading the record. Do not wait for network idle.",
+                      "duration": 4131
+                    },
+                    {
+                      "title": "07-open: In Odoo's Sales app, open the saved quotation {{03-create.quotation_reference}} (customer '{{runid}} Bench Customer'). Confirm it so it becomes a Sales Order (e.g. click the Confirm button, and handle any confirmation wizard/modal that appears, such as choosing to confirm anyway — the goal is that it ends up confirmed, not in draft). Then report: (a) the order reference/name shown (e.g. {{03-create.quotation_reference}}), (b) the status the app now shows (e.g. 'Sales Order' in the status bar), and (c) that the untaxed amount is unchanged at £719.00. Do not wait for network idle.",
+                      "duration": 2264
+                    },
+                    {
+                      "title": "08-open: In Odoo's Sales app, open the confirmed sales order {{03-create.quotation_reference}} (customer '{{runid}} Bench Customer', status 'Sales Order'). Cancel it: use the Action menu's Cancel option, and if a confirmation dialog/wizard appears asking for a reason or to confirm, accept it so the order ends up cancelled. Then report the status the app now shows for the order (e.g. 'Cancelled' in the status bar or the status label). Verify the cancelled state persists after reloading the record. Do not wait for network idle.",
+                      "duration": 17394
+                    }
+                  ],
+                  "startTime": "2026-09-18T07:04:51.118Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": "W3NpdGVsb29wZXIgZHJpZnRdIDAzLWNyZWF0ZSBzX2EzMjcwYi8yIHRhcmdldDogcHJpbWFyeSBnZXRCeVJvbGUoJ2hlYWRpbmcnLCB7IG5hbWU6IC9eW1xzXHB7Q299XHB7U299XHB7Q2Z9XSpTMDAwMjJbXHNccHtDb31ccHtTb31ccHtDZn1dKiQvdSB9KSBtaXNzZWQ7IHVzZWQgIzIgbG9jYXRvcignZGl2Om50aC1vZi10eXBlKDIpID4gZGl2ID4gZGl2Om50aC1vZi10eXBlKDEpID4gZGl2Om50aC1vZi10eXBlKDIpID4gZGl2Om50aC1vZi10eXBlKDEpID4gaDEnKSAoIzEgYWJzZW50KQpbc2l0ZWxvb3BlciBkcmlmdF0gMDQtZmluZCBzXzI0MWUyMS8yIHRhcmdldDogcHJpbWFyeSBnZXRCeVJvbGUoJ2J1dHRvbicsIHsgbmFtZTogL15bXHNccHtDb31ccHtTb31ccHtDZn1dKlNhdmVccyttYW51YWxseVtcc1xwe0NvfVxwe1NvfVxwe0NmfV0qJC91IH0pIG1pc3NlZDsgdXNlZCAjMiBsb2NhdG9yKCdkaXY6bnRoLW9mLXR5cGUoMSkgPiBkaXYgPiBkaXY6bnRoLW9mLXR5cGUoMSkgPiBkaXY6bnRoLW9mLXR5cGUoMykgPiBkaXYgPiBidXR0b246bnRoLW9mLXR5cGUoMSknKSAoIzEgYWJzZW50KQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c6bda6de0f78f655e66e-fa8025dc7309b469e436",
+          "file": "fwod70.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-18T07:04:48.603Z",
+    "duration": 96954.14199999999,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
