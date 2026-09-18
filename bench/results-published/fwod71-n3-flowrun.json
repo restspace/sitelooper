@@ -1,0 +1,307 @@
+{
+  "flow": "fwod71",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_7edf27; observed company=YourCompany.",
+      "values": {
+        "company": "YourCompany"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "landed_app"
+      ]
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_3c592f (4 steps).",
+      "values": {
+        "ref": "fwod71-n3",
+        "contact_name": "fwod71-n3 Bench Customer",
+        "city": "Benchville",
+        "type": "Company",
+        "app": "Contacts"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_8177de; observed ref=fwod71-n3, untaxed_amount_line=£ 885.00, unit_price=295.00, order_reference=S00023, quantity=3, taxes=20%, tax_amount=£ 177.00, total_amount=£ 1,062.00, customer_name=fwod71-n3 Bench Customer, customer_city=Benchville.",
+      "values": {
+        "ref": "fwod71-n3",
+        "untaxed_amount_line": "£ 885.00",
+        "unit_price": "295.00",
+        "order_reference": "S00023",
+        "quantity": "3",
+        "taxes": "20%",
+        "tax_amount": "£ 177.00",
+        "total_amount": "£ 1,062.00",
+        "customer_name": "fwod71-n3 Bench Customer",
+        "customer_city": "Benchville"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "21/21",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "customer",
+        "product_name",
+        "line_subtotal",
+        "untaxed_amount",
+        "tax",
+        "total",
+        "quotation_reference",
+        "save_confirmed"
+      ]
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "The quotation on screen was in fact already saved: the breadcrumb read \"Quotations / S00023\", the heading was S00023, the URL contained id=23, and the statusbar showed \"Quotation\" (draft) as the current state — not \"Quotations / New\" as the instruction assumed. I checked for blocking overlays/modals (no non-empty .modal/.o_dialog/.o_blockUI was present) and clicked the breadcrumb Save button anyway; it produced no visible change and no new record (URL still id=23), i.e. the record was already persisted. Only one order line exists on the saved record. Not confirmed — still a draft quotation.",
+      "values": {
+        "order_reference": "S00023",
+        "breadcrumb": "Quotations S00023",
+        "product_name": "[FURN_6666] Acoustic Bloc Screens",
+        "quantity": "3.00",
+        "unit_price": "295.00",
+        "untaxed_amount": "£ 885.00",
+        "tax_20pct": "£ 177.00",
+        "total": "£ 1,062.00",
+        "statusbar_current_state": "Quotation",
+        "customer": "fwod71-n3 Bench Customer",
+        "customer_city": "Benchville",
+        "record_url_id": "23",
+        "final_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=23",
+        "untaxed_amount_line": "£ 885.00",
+        "untaxed_amount_row": "Untaxed Amount\t£ 885.00"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 03-create.product_name, 03-create.product_name",
+      "replayed": null,
+      "repaired": false,
+      "turns": 11,
+      "unreported": [
+        "customer_name",
+        "breadcrumb_app",
+        "order_lines_text",
+        "tax_label",
+        "tax_amount"
+      ]
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_ad27fc (16 steps).",
+      "values": {
+        "screenshot": "quotation_S00023_two_lines.png",
+        "final_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=23",
+        "quotation_reference": "S00023",
+        "second_line_product": "[FURN_7800] Desk Combination",
+        "second_line_unit_price": "450.00",
+        "second_line_quantity": "2.00",
+        "second_line_tax_excl": "£ 900.00",
+        "untaxed_amount": "£ 1,785.00",
+        "tax_20pct": "£ 357.00",
+        "total": "£ 2,142.00",
+        "tax_label": "TAX 20%",
+        "tax_amount": "£ 357.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "first_line_product_reference"
+      ]
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "On the open quotation S00023 I clicked the Quantity cell of line 1 ([FURN_6666] Acoustic Bloc Screens), set it to 5 and clicked the breadcrumb Save button. The form re-rendered in saved (non-dirty) state with the record still at id=23 and the statusbar still showing \"Quotation\" as the current state (draft, not confirmed). Line 1 now reads 5.00 @ 295.00 = £1,475.00, line 2 is untouched ([FURN_7800] Desk Combination 2.00 @ 450.00 = £900.00), and the app-computed totals are Untaxed Amount £2,375.00, TAX 20% £475.00, Total £2,850.00.",
+      "values": {
+        "order_reference": "S00023",
+        "line1_product": "[FURN_6666] Acoustic Bloc Screens",
+        "line1_quantity": "5.00",
+        "line1_unit_price": "295.00",
+        "line1_amount": "£ 1,475.00",
+        "line2_product": "[FURN_7800] Desk Combination",
+        "line2_quantity": "2.00",
+        "line2_unit_price": "450.00",
+        "line2_amount": "£ 900.00",
+        "untaxed_amount": "£ 2,375.00",
+        "tax_20pct": "£ 475.00",
+        "total": "£ 2,850.00",
+        "statusbar_current_state": "Quotation",
+        "customer": "fwod71-n3 Bench Customer",
+        "record_url_id": "23",
+        "screenshot": "/home/user/sitelooper/quotation_S00023_qty5.png",
+        "final_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=23",
+        "ref": "FURN_6666",
+        "ref_2": "FURN_7800",
+        "ref_3": "line-1"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 03-create.product_name, 03-create.product_name",
+      "replayed": null,
+      "repaired": false,
+      "turns": 11,
+      "unreported": [
+        "quotation_reference",
+        "line1_product_reference",
+        "line2_product_reference",
+        "tax_label",
+        "tax_amount"
+      ]
+    },
+    {
+      "id": "07-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_4bd7f7 (12 steps).",
+      "values": {
+        "customer": "fwod71-n3 Bench Customer (Benchville)",
+        "line1": "[FURN_6666] Acoustic Bloc Screens 5.00 @ 295.00 = £ 1,475.00",
+        "line2": "[FURN_7800] Desk Combination 2.00 @ 450.00 = £ 900.00",
+        "screenshot": "sales_order_S00023_confirmed.png",
+        "statusbar_states_text": "Sales Order\nQuotation Sent\nQuotation",
+        "order_reference": "S00023",
+        "untaxed_amount": "£ 2,375.00",
+        "tax_20pct": "£ 475.00",
+        "total": "£ 2,850.00",
+        "button_create_invoice": "Create Invoice",
+        "button_send_by_email": "Send by Email",
+        "button_preview": "Preview",
+        "button_cancel": "Cancel",
+        "tax_label": "TAX 20%",
+        "tax_amount": "£ 475.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "08-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_078c43; observed status=Cancelled, screenshot=S00023_cancelled.png, ref=fwod71-n3, breadcrumb_app=Quotations, order_reference=S00023, totals=Untaxed Amount\t£ 2,375.00\nTAX 20%\t\n£ 475.00\n\nTotal\t£ 2,850.00, statusbar_states_text=Cancelled\nSales Order\nQuotation Sent\nQuotation, final_url=http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=23, untaxed_amount=£ 2,375.00, tax_20pct=£ 475.00, total=£ 2,850.00, customer_name=fwod71-n3 Bench Customer.",
+      "values": {
+        "status": "Cancelled",
+        "screenshot": "S00023_cancelled.png",
+        "ref": "fwod71-n3",
+        "breadcrumb_app": "Quotations",
+        "order_reference": "S00023",
+        "totals": "Untaxed Amount\t£ 2,375.00\nTAX 20%\t\n£ 475.00\n\nTotal\t£ 2,850.00",
+        "statusbar_states_text": "Cancelled\nSales Order\nQuotation Sent\nQuotation",
+        "final_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=23",
+        "untaxed_amount": "£ 2,375.00",
+        "tax_20pct": "£ 475.00",
+        "total": "£ 2,850.00",
+        "customer_name": "fwod71-n3 Bench Customer"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0,
+      "repinned": "s_078c43",
+      "repinParams": {
+        "v1": "{{04-open.order_reference}}",
+        "v2": "{{02-create.contact_name}}",
+        "v3": "{{runid}}",
+        "v4": "{{07-open.button_cancel}}",
+        "v5": "{{07-open.button_cancel}}led"
+      },
+      "unreported": [
+        "cancel_wizard_button",
+        "breadcrumb_text",
+        "breadcrumb_order_reference",
+        "tax_label",
+        "tax_amount"
+      ]
+    },
+    {
+      "id": "09-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_d93268; observed contact_record_id=46, sales_order_reference=S00023, sales_order_customer=fwod71-n3 Bench Customer (Benchville), screenshots=contact_readonly_final.png, sales_order_S00023_cancelled.png, contact_reference=fwod71-n3, statusbar_states_text=Cancelled\nSales Order\nQuotation Sent\nQuotation, untaxed_amount_row_text=Untaxed Amount\t£ 2,375.00, customer_name_and_city_text=fwod71-n3 Bench Customer\nBenchville, contact_city=Benchville, contact_url=http://127.0.0.1:8069/web#cids=1&menu_id=109&action=156&model=res.partner&view_type=form&id=46, contact_name=fwod71-n3 Bench Customer, contact_type=Company.",
+      "values": {
+        "contact_record_id": "46",
+        "sales_order_reference": "S00023",
+        "sales_order_customer": "fwod71-n3 Bench Customer (Benchville)",
+        "screenshots": "contact_readonly_final.png, sales_order_S00023_cancelled.png",
+        "contact_reference": "fwod71-n3",
+        "statusbar_states_text": "Cancelled\nSales Order\nQuotation Sent\nQuotation",
+        "untaxed_amount_row_text": "Untaxed Amount\t£ 2,375.00",
+        "customer_name_and_city_text": "fwod71-n3 Bench Customer\nBenchville",
+        "contact_city": "Benchville",
+        "contact_url": "http://127.0.0.1:8069/web#cids=1&menu_id=109&action=156&model=res.partner&view_type=form&id=46",
+        "contact_name": "fwod71-n3 Bench Customer",
+        "contact_type": "Company"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 9,
+  "total": 9,
+  "repinned": 1,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwod71",
+      "step": "01-signin",
+      "skill": "s_7edf27",
+      "atStep": "3",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.getByRole('menuitem', { name: 'Discuss', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&menu_id=:id",
+      "pageUrl": "http://127.0.0.1:8069/web#action=123&cids=1&menu_id=81"
+    }
+  ],
+  "wallMs": 136362,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 363196,
+    "completionTokens": 8871,
+    "cachedTokens": 322432
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 363196,
+      "completionTokens": 8871,
+      "cachedTokens": 322432
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

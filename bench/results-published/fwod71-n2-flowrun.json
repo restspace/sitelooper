@@ -1,0 +1,356 @@
+{
+  "flow": "fwod71",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_7edf27; observed company=YourCompany.",
+      "values": {
+        "company": "YourCompany"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "landed_app"
+      ]
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_3c592f (4 steps).",
+      "values": {
+        "ref": "fwod71-n2",
+        "contact_name": "fwod71-n2 Bench Customer",
+        "city": "Benchville",
+        "type": "Company",
+        "app": "Contacts"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Created a new draft quotation in the Sales app from the open contact record: opened Sales > Orders, clicked New, selected the customer 'fwod71-n2 Bench Customer' from the autocomplete dropdown, added exactly one order line by picking '[FURN_6666] Acoustic Bloc Screens' from the product dropdown (unit price auto-filled to 295.00), set the quantity to 3, and saved. The record saved as S00022 with the statusbar on \"Quotation\" (draft, not confirmed).",
+      "values": {
+        "order_reference": "S00022",
+        "product_name": "[FURN_6666] Acoustic Bloc Screens",
+        "unit_price": "295.00",
+        "quantity": "3",
+        "untaxed_amount": "£ 885.00",
+        "taxes": "20%",
+        "tax_amount": "£ 177.00",
+        "total_amount": "£ 1,062.00",
+        "customer_name": "fwod71-n2 Bench Customer",
+        "customer_city": "Benchville",
+        "status": "Quotation (draft)",
+        "untaxed_amount_line": "£ 885.00",
+        "ref": "fwod71-n2",
+        "ref_2": "FURN_6666"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "the flow step has no pinned skill",
+      "replayed": null,
+      "repaired": false,
+      "turns": 25,
+      "repinned": "s_a5e57c",
+      "repinParams": {
+        "v1": "{{02-create.contact_name}}",
+        "v2": "{{runid}}"
+      },
+      "unreported": [
+        "customer",
+        "line_subtotal",
+        "tax",
+        "total",
+        "quotation_reference",
+        "save_confirmed"
+      ]
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "The quotation was already saved by the replayed Ctrl+S step: no blocking overlay or modal was present (eval of the live DOM found no .modal.show/.o_blockUI/.o_loading), and the form is now on a persisted record — the URL contains id=22 and the page title is \"Odoo - S00022\". The breadcrumb reads \"Quotations / S00022\", so the save succeeded (status still Quotation/draft, not confirmed). The single order line reads \"[FURN_6666] Acoustic Bloc Screens\", quantity 3.00, unit price 295.00, line subtotal £885.00; the totals block shows Untaxed Amount £885.00, TAX 20% £177.00, Total £1,062.00.",
+      "values": {
+        "order_reference": "S00022",
+        "page_title": "Odoo - S00022",
+        "modals_present": "none",
+        "product_name": "[FURN_6666] Acoustic Bloc Screens",
+        "unit_price": "295.00",
+        "quantity": "3.00",
+        "line_subtotal": "£ 885.00",
+        "untaxed_amount": "£ 885.00",
+        "taxes": "20%",
+        "tax_amount": "£ 177.00",
+        "total": "£ 1,062.00",
+        "customer_name": "fwod71-n2 Bench Customer",
+        "status": "Quotation (draft, not confirmed)",
+        "breadcrumb_last": "Quotations",
+        "ref": "FURN_6666",
+        "breadcrumb_1": "Quotations",
+        "breadcrumb_2": "S00022"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_da87e1 stopped at step 2 — not on the page this procedure starts from (expects http://127.0.0.1:8069/web#action=:id&cids=:id&menu_id=:id&model=sale.order&view_type=form, browser is at http://127.0.0.1:8069/web#action=316&cids=1&id=22&menu_id=194&model=sale.order&view_type=form; the url already carries id=22, the record this procedure creates at its step 2 — the page is past where the procedure starts) — stopped before step 2",
+      "replayed": "1/2",
+      "repaired": false,
+      "turns": 6,
+      "unreported": [
+        "customer_city",
+        "tax_20pct",
+        "breadcrumb_app",
+        "final_url",
+        "order_lines_text",
+        "tax_label"
+      ]
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_ad27fc (16 steps).",
+      "values": {
+        "first_line_unchanged": "[FURN_6666] Acoustic Bloc Screens qty 3.00 @ 295.00 = £ 885.00",
+        "screenshot": "quotation_S00022_two_lines.png",
+        "final_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22",
+        "quotation_reference": "S00022",
+        "second_line_product": "[FURN_7800] Desk Combination",
+        "second_line_unit_price": "450.00",
+        "second_line_quantity": "2.00",
+        "second_line_tax_excl": "£ 900.00",
+        "untaxed_amount": "£ 1,785.00",
+        "tax_20pct": "£ 357.00",
+        "total": "£ 2,142.00",
+        "tax_label": "TAX 20%",
+        "tax_amount": "£ 357.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "first_line_product_reference"
+      ]
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "Edited the first order line's Quantity cell on the Acoustic Bloc Screens row from 3.00 to 5.00 (typed 5 into the cell) and saved the record with the \"Save manually\" button; the row left edit mode and the record persisted at URL ...model=sale.order&view_type=form&id=22 with breadcrumb \"Quotations / S00022\". The page now shows line 1 \"[FURN_6666] Acoustic Bloc Screens\" qty 5.00 @ 295.00 = £1,475.00, line 2 unchanged at \"[FURN_7800] Desk Combination\" qty 2.00 @ 450.00 = £900.00, Untaxed Amount £2,375.00, TAX 20% £475.00, Total £2,850.00. Status remains Quotation (draft) — the order was not confirmed.",
+      "values": {
+        "order_reference": "S00022",
+        "line1_product": "[FURN_6666] Acoustic Bloc Screens",
+        "line1_quantity": "5.00",
+        "line1_unit_price": "295.00",
+        "line1_amount": "£ 1,475.00",
+        "line2_product": "[FURN_7800] Desk Combination",
+        "line2_quantity": "2.00",
+        "line2_unit_price": "450.00",
+        "line2_amount": "£ 900.00",
+        "untaxed_amount": "£ 2,375.00",
+        "tax_20pct": "£ 475.00",
+        "total": "£ 2,850.00",
+        "status": "Quotation (draft, not confirmed)",
+        "untaxed_after_edit": "Untaxed Amount\t£ 2,375.00\nTAX 20%\t\n£ 475.00\n\nTotal\t£ 2,850.00",
+        "breadcrumb_after_save": "Quotations",
+        "breadcrumb_full": "Quotations\nS00022",
+        "url_after_save": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22",
+        "ref": "FURN_6666",
+        "ref_2": "FURN_7800",
+        "breadcrumb_1": "Quotations",
+        "breadcrumb_2": "S00022"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_ef9942 stopped at step 1 — after step 1 none of the 3 recorded page change(s) appeared (e.g. \"- row \\\"20% £ 885.00\\\"\") — the step ran but did not have its recorded effect",
+      "replayed": "0/13",
+      "repaired": false,
+      "turns": 8,
+      "unreported": [
+        "quotation_reference",
+        "final_url",
+        "line1_product_reference",
+        "line2_product_reference",
+        "tax_label",
+        "tax_amount"
+      ]
+    },
+    {
+      "id": "07-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_4bd7f7 (12 steps).",
+      "values": {
+        "customer": "fwod71-n2 Bench Customer (Benchville)",
+        "line1": "[FURN_6666] Acoustic Bloc Screens 5.00 @ 295.00 = £ 1,475.00",
+        "line2": "[FURN_7800] Desk Combination 2.00 @ 450.00 = £ 900.00",
+        "screenshot": "sales_order_S00022_confirmed.png",
+        "statusbar_states_text": "Sales Order\nQuotation Sent\nQuotation",
+        "order_reference": "S00022",
+        "untaxed_amount": "£ 2,375.00",
+        "tax_20pct": "£ 475.00",
+        "total": "£ 2,850.00",
+        "button_create_invoice": "Create Invoice",
+        "button_send_by_email": "Send by Email",
+        "button_preview": "Preview",
+        "button_cancel": "Cancel",
+        "tax_label": "TAX 20%",
+        "tax_amount": "£ 475.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "08-open",
+      "status": "success",
+      "summary": "The replay had left the \"Cancel Sales Order\" modal inactive, so its recorded click matched nothing; I dismissed a stray \"Edit: fwod71-n2 Bench Customer\" dialog sitting on top, then clicked the wizard's \"Cancel\" button (not \"Send and cancel\"), and the cancellation completed — the statusbar reports \"Cancelled\" as the current (checked) state, with Sales Order / Quotation Sent / Quotation as the other states, and a \"Set to Quotation\" button now in the control panel. The record remains on the same page (breadcrumb Quotations / S00022, url id=22). After cancelling, the order shows Untaxed Amount £2,375.00, TAX 20% £475.00, Total £2,850.00, with line 1 [FURN_6666] Acoustic Bloc Screens qty 5.00 @ 295.00 = £1,475.00 and line 2 [FURN_7800] Desk Combination qty 2.00 @ 450.00 = £900.00.",
+      "values": {
+        "order_reference": "S00022",
+        "status": "Cancelled",
+        "statusbar_states_text": "Cancelled\nSales Order\nQuotation Sent\nQuotation",
+        "breadcrumb_app": "Quotations",
+        "untaxed_amount": "£ 2,375.00",
+        "tax_20pct": "£ 475.00",
+        "total": "£ 2,850.00",
+        "order_lines": "[FURN_6666] Acoustic Bloc Screens qty 5.00 @ 295.00 = £ 1,475.00; [FURN_7800] Desk Combination qty 2.00 @ 450.00 = £ 900.00",
+        "customer_name": "fwod71-n2 Bench Customer",
+        "screenshot": "S00022_cancelled.png",
+        "totals": "Untaxed Amount\t£ 2,375.00\nTAX 20%\t\n£ 475.00\n\nTotal\t£ 2,850.00",
+        "final_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22",
+        "ref": "fwod71-n2",
+        "ref_2": "FURN_6666",
+        "ref_3": "FURN_7800"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_570595 stopped at step 2 — no element matched any known locator for target (tried 4: page.locator('.modal:not(.o_inactive_modal) button[name=\"action_cancel\"]'), page.getByRole('button', { name: 'Cancel', exact: true }).nth(1), page.locator('div > div > div > footer > footer > button:nth-of-type(2)'), …)",
+      "replayed": "1/12",
+      "repaired": false,
+      "turns": 12,
+      "unreported": [
+        "cancel_wizard_button",
+        "breadcrumb_text",
+        "breadcrumb_order_reference",
+        "tax_label",
+        "tax_amount"
+      ]
+    },
+    {
+      "id": "09-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_d93268; observed contact_record_id=45, sales_order_reference=S00022, sales_order_customer=fwod71-n2 Bench Customer (Benchville), screenshots=contact_readonly_final.png, sales_order_S00022_cancelled.png, contact_reference=fwod71-n2, statusbar_states_text=Cancelled\nSales Order\nQuotation Sent\nQuotation, untaxed_amount_row_text=Untaxed Amount\t£ 2,375.00, customer_name_and_city_text=fwod71-n2 Bench Customer\nBenchville, contact_city=Benchville, contact_url=http://127.0.0.1:8069/web#cids=1&menu_id=109&action=156&model=res.partner&view_type=form&id=45, contact_name=fwod71-n2 Bench Customer, contact_type=Company.",
+      "values": {
+        "contact_record_id": "45",
+        "sales_order_reference": "S00022",
+        "sales_order_customer": "fwod71-n2 Bench Customer (Benchville)",
+        "screenshots": "contact_readonly_final.png, sales_order_S00022_cancelled.png",
+        "contact_reference": "fwod71-n2",
+        "statusbar_states_text": "Cancelled\nSales Order\nQuotation Sent\nQuotation",
+        "untaxed_amount_row_text": "Untaxed Amount\t£ 2,375.00",
+        "customer_name_and_city_text": "fwod71-n2 Bench Customer\nBenchville",
+        "contact_city": "Benchville",
+        "contact_url": "http://127.0.0.1:8069/web#cids=1&menu_id=109&action=156&model=res.partner&view_type=form&id=45",
+        "contact_name": "fwod71-n2 Bench Customer",
+        "contact_type": "Company"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 9,
+  "total": 9,
+  "repinned": 1,
+  "drift": 4,
+  "driftTickets": [
+    {
+      "flow": "fwod71",
+      "step": "01-signin",
+      "skill": "s_7edf27",
+      "atStep": "3",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.getByRole('menuitem', { name: 'Discuss', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&menu_id=:id",
+      "pageUrl": "http://127.0.0.1:8069/web#action=123&cids=1&menu_id=81"
+    },
+    {
+      "flow": "fwod71",
+      "step": "04-open",
+      "skill": "s_da87e1",
+      "similarity": 0.997,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_da87e1 stopped at step 2 — not on the page this procedure starts from (expects http://127.0.0.1:8069/web#action=:id&cids=:id&menu_id=:id&model=sale.order&view_type=form, browser is at http://127.0.0.1:8069/web#action=316&cids=1&id=22&menu_id=194&model=sale.order&view_type=form; the url already carries id=22, the record this procedure creates at its step 2 — the page is past where the procedure starts) — stopped before step 2",
+      "reason": "not on the page this procedure starts from (expects http://127.0.0.1:8069/web#action=:id&cids=:id&menu_id=:id&model=sale.order&view_type=form, browser is at http://127.0.0.1:8069/web#action=316&cids=1&id=22&menu_id=194&model=sale.order&view_type=form; the url already carries id=22, the record this procedure creates at its step 2 — the page is past where the procedure starts) — stopped before step 2",
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22"
+    },
+    {
+      "flow": "fwod71",
+      "step": "06-open",
+      "skill": "s_ef9942",
+      "similarity": 1.001,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_ef9942 stopped at step 1 — after step 1 none of the 3 recorded page change(s) appeared (e.g. \"- row \\\"20% £ 885.00\\\"\") — the step ran but did not have its recorded effect",
+      "reason": "after step 1 none of the 3 recorded page change(s) appeared (e.g. \"- row \\\"20% £ 885.00\\\"\") — the step ran but did not have its recorded effect",
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22"
+    },
+    {
+      "flow": "fwod71",
+      "step": "08-open",
+      "skill": "s_570595",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 0.988,
+      "missedLocator": "page.locator('.modal:not(.o_inactive_modal) button[name=\"action_cancel\"]')",
+      "fallbackUsed": null,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22"
+    }
+  ],
+  "wallMs": 209735,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 880259,
+    "completionTokens": 12773,
+    "cachedTokens": 783744
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 880259,
+      "completionTokens": 12773,
+      "cachedTokens": 783744
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

@@ -1,0 +1,387 @@
+{
+ "id": "s_7fd471",
+ "origin": "http://127.0.0.1:8069",
+ "template": "The Odoo quotation form is currently open in the browser, filled with customer '{{v1}}' and one order line for product '{{v3}}' quantity 3, but it has NOT been saved yet (breadcrumb still reads 'Quotations / New'). Your job: get this quotation SAVED. First check for and dismiss any blocking overlay or modal (e.g. a 'Configure your product' modal or a loading overlay) that prevents clicking. Then save the record (try the Save button in the breadcrumb bar, or keyboard shortcut Ctrl+S, or clicking away from the form to trigger autosave). Verify the save succeeded: the breadcrumb should show the quotation's reference name (e.g. 'Quotations / S00042') and the URL should contain a record id. Report the quotation reference name, the product on the line, the unit price, and the untaxed amount as shown after saving.",
+ "params": {
+  "v1": {
+   "example": "fwod71-n2 Bench Customer",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:contact_name"
+  },
+  "v2": {
+   "example": "fwod71-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "[FURN_6666] Acoustic Bloc Screens",
+   "usedIn": [],
+   "known": true,
+   "binding": "03-create.product_name"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form"
+ },
+ "steps": [
+  {
+   "tool": "press",
+   "args": {
+    "key": "Control+s"
+   },
+   "locators": {},
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_da87e1",
+    "step": 1
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": ".breadcrumb-item:last-child",
+    "what": "text",
+    "label": "breadcrumb_last"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".breadcrumb-item:last-child"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div:nth-of-type(1) > div:nth-of-type(2) > ol > li"
+     },
+     {
+      "kind": "point",
+      "x": 101,
+      "y": 62,
+      "w": 62.9,
+      "h": 16.3,
+      "role": null,
+      "tag": "li",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "breadcrumb_last"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > h1 > div > span"
+     },
+     {
+      "kind": "point",
+      "x": 89,
+      "y": 195,
+      "w": 96.5,
+      "h": 31,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "order_reference"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#image-padding > ul > li:nth-of-type(1) > a"
+     }
+    ]
+   },
+   "label": "modals_present"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(5)"
+     },
+     {
+      "kind": "point",
+      "x": 783,
+      "y": 442,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "unit_price"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 691,
+      "y": 442,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "quantity"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "tr:nth-of-type(1) > td:nth-of-type(6) > div > div > span > div"
+     },
+     {
+      "kind": "point",
+      "x": 858,
+      "y": 440,
+      "w": 26,
+      "h": 13,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "taxes"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(2) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1195,
+      "y": 642,
+      "w": 86,
+      "h": 21,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "tax_amount"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(3) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1195,
+      "y": 667,
+      "w": 86,
+      "h": 21,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "total"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "value"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "combobox",
+      "name": "Type to find a customer..."
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Type to find a customer..."
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(1) > div > div > input",
+      "nth": 0
+     },
+     {
+      "kind": "point",
+      "x": 383,
+      "y": 247,
+      "w": 409.8,
+      "h": 26,
+      "role": "combobox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "customer_name"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div:nth-of-type(2) > ol > li > a"
+     },
+     {
+      "kind": "point",
+      "x": 101,
+      "y": 62,
+      "w": 62.9,
+      "h": 16.3,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "breadcrumb_1"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > h1 > div > span"
+     },
+     {
+      "kind": "point",
+      "x": 89,
+      "y": 195,
+      "w": 96.5,
+      "h": 31,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "breadcrumb_2"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "The quotation was already saved by the replayed Ctrl+S step: no blocking overlay or modal was present (eval of the live DOM found no .modal.show/.o_blockUI/.o_loading), and the form is now on a persisted record — the URL contains id=22 and the page title is \"Odoo - S00022\". The breadcrumb reads \"Quotations / S00022\", so the save succeeded (status still Quotation/draft, not confirmed). The single order line reads \"{{v3}}\", quantity 3.00, unit price 295.00, line subtotal £885.00; the totals block shows Untaxed Amount £885.00, TAX 20% £177.00, Total £1,062.00.",
+  "values": {
+   "order_reference": "S00022",
+   "page_title": "Odoo - S00022",
+   "modals_present": "none",
+   "product_name": "{{v3}}",
+   "unit_price": "295.00",
+   "quantity": "3.00",
+   "line_subtotal": "£ 885.00",
+   "untaxed_amount": "£ 885.00",
+   "taxes": "20%",
+   "tax_amount": "£ 177.00",
+   "total": "£ 1,062.00",
+   "customer_name": "{{v1}}",
+   "status": "Quotation (draft, not confirmed)",
+   "breadcrumb_last": "Quotations",
+   "ref": "{{v4}}",
+   "breadcrumb_1": "Quotations",
+   "breadcrumb_2": "S00022"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-18T08:33:44.831Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "variantOf": "s_da87e1",
+ "provenance": {
+  "session": "fwod71-n2",
+  "instruction": "The Odoo quotation form is currently open in the browser, filled with customer 'fwod71-n2 Bench Customer' and one order line for product '[FURN_6666] Acoustic Bloc Screens' quantity 3, but it has NOT been saved yet (breadcrumb still reads 'Quotations / New'). Your job: get this quotation SAVED. First check for and dismiss any blocking overlay or modal (e.g. a 'Configure your product' modal or a loading overlay) that prevents clicking. Then save the record (try the Save button in the breadcrumb bar, or keyboard shortcut Ctrl+S, or clicking away from the form to trigger autosave). Verify the save succeeded: the breadcrumb should show the quotation's reference name (e.g. 'Quotations / S00042') and the URL should contain a record id. Report the quotation reference name, the product on the line, the unit price, and the untaxed amount as shown after saving.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-18T08:33:44.831Z"
+ },
+ "revision": 1
+}

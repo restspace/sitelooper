@@ -1,0 +1,529 @@
+{
+ "id": "s_078c43",
+ "origin": "http://127.0.0.1:8069",
+ "template": "The Odoo sales order {{v1}} is open in the browser, currently in confirmed 'Sales Order' state (customer '{{v2}}', untaxed £2,375.00, total £2,850.00). Your job: CANCEL this sales order so nothing stays active. Click the '{{v4}}' button (a '{{v4}}' button appeared in the control panel after confirmation). If a confirmation modal appears asking to confirm the cancellation, accept it. Verify the cancellation succeeded: the statusbar should now show '{{v5}}' as the current state. Report: (a) the order reference, (b) the status the app shows after cancelling, and (c) the untaxed amount and total as shown after cancelling.",
+ "params": {
+  "v1": {
+   "example": "S00022",
+   "usedIn": [
+    8
+   ],
+   "known": true,
+   "binding": "04-open.order_reference"
+  },
+  "v2": {
+   "example": "fwod71-n2 Bench Customer",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:contact_name"
+  },
+  "v3": {
+   "example": "fwod71-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v4": {
+   "example": "Cancel",
+   "usedIn": [
+    3,
+    5
+   ],
+   "known": true,
+   "binding": "07-open.button_cancel"
+  },
+  "v5": {
+   "example": "Cancelled",
+   "usedIn": [
+    6
+   ]
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form"
+ },
+ "steps": [
+  {
+   "tool": "dialog_expect",
+   "args": {
+    "action": "accept"
+   },
+   "locators": {},
+   "via": {
+    "skill": "s_570595",
+    "step": 1
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "button[name=\"action_cancel\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "button[name=\"action_cancel\"]"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "{{v4}}"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 357,
+      "y": 129,
+      "w": 65.6,
+      "h": 33,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+    "alertContains": "Are you sure you want to cancel this order?",
+    "addedContains": [
+     "- dialog \"\"",
+     "- heading \"{{v4}} Sales Order\"",
+     "- button \"Close\"",
+     "- button \"Send and cancel\"",
+     "- button \"Discard\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": ".modal:not(.o_inactive_modal) button:has-text(\"Discard\")"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".modal:not(.o_inactive_modal) button:has-text(\"Discard\")"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Discard",
+      "nth": 1
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > footer > div > div > button:nth-of-type(3)"
+     },
+     {
+      "kind": "point",
+      "x": 416,
+      "y": 590,
+      "w": 69.5,
+      "h": 33,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": ".modal:not(.o_inactive_modal) button[name=\"action_cancel\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".modal:not(.o_inactive_modal) button[name=\"action_cancel\"]"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "{{v4}}",
+      "nth": 1
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div > footer > footer > button:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 334,
+      "y": 661,
+      "w": 65.6,
+      "h": 33,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+    "addedContains": [
+     "- button \"Set to Quotation\"",
+     "- radio \"{{v5}}\" [disabled]",
+     "- row \"Product Description Quantity Unit Price Taxes Tax excl.\"",
+     "- link \"[FURN_6666] Acoustic Bloc Screens\"",
+     "- link \"[FURN_7800] Desk Combination\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "wait_for",
+   "args": {
+    "state": "text_contains",
+    "target": ".o_statusbar_status",
+    "text": "{{v5}}",
+    "timeout_ms": 15000
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_statusbar_status"
+     },
+     {
+      "kind": "role",
+      "role": "radiogroup",
+      "name": "Statusbar"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div"
+     },
+     {
+      "kind": "point",
+      "x": 1052,
+      "y": 129,
+      "w": 424.1,
+      "h": 33,
+      "role": "radiogroup",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "breadcrumb_app",
+    "target": ".o_breadcrumb .breadcrumb-item:first-child",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_breadcrumb .breadcrumb-item:first-child"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div:nth-of-type(1) > div:nth-of-type(2) > ol > li"
+     },
+     {
+      "kind": "point",
+      "x": 101,
+      "y": 62,
+      "w": 62.9,
+      "h": 16.3,
+      "role": null,
+      "tag": "li",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "breadcrumb_app"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "order_reference",
+    "target": "h1 .o_last_breadcrumb_item, h1 span",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "text",
+      "text": "{{v1}}",
+      "nth": 1
+     },
+     {
+      "kind": "css",
+      "selector": "h1 .o_last_breadcrumb_item, h1 span"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > h1 > div > span"
+     },
+     {
+      "kind": "point",
+      "x": 89,
+      "y": 195,
+      "w": 96.5,
+      "h": 31,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "order_reference"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "totals",
+    "target": "div[name=\"tax_totals\"]",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div[name=\"tax_totals\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(3) > div:nth-of-type(2) > div > div > div",
+      "nth": 4
+     },
+     {
+      "kind": "point",
+      "x": 1130,
+      "y": 690,
+      "w": 217.4,
+      "h": 75.3,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "totals"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "statusbar_states_text",
+    "target": ".o_statusbar_status",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_statusbar_status"
+     },
+     {
+      "kind": "role",
+      "role": "radiogroup",
+      "name": "Statusbar"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div"
+     },
+     {
+      "kind": "point",
+      "x": 1052,
+      "y": 129,
+      "w": 424.1,
+      "h": 33,
+      "role": "radiogroup",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "statusbar_states_text"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "what": "url",
+    "label": "final_url"
+   },
+   "locators": {},
+   "label": "final_url"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(1) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1205,
+      "y": 664,
+      "w": 66.2,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "untaxed_amount"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(2) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1195,
+      "y": 687,
+      "w": 86,
+      "h": 21,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "tax_20pct"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(3) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1195,
+      "y": 712,
+      "w": 86,
+      "h": 21,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "total"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div > a > span:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 265,
+      "y": 245,
+      "w": 173.5,
+      "h": 23,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "customer_name"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "The replay had left the \"{{v4}} Sales Order\" modal inactive, so its recorded click matched nothing; I dismissed a stray \"Edit: {{v2}}\" dialog sitting on top, then clicked the wizard's \"{{v4}}\" button (not \"Send and cancel\"), and the cancellation completed — the statusbar reports \"{{v5}}\" as the current (checked) state, with Sales Order / Quotation Sent / Quotation as the other states, and a \"Set to Quotation\" button now in the control panel. The record remains on the same page (breadcrumb Quotations / {{v1}}, url id=22). After cancelling, the order shows Untaxed Amount £2,375.00, TAX 20% £475.00, Total £2,850.00, with line 1 [FURN_6666] Acoustic Bloc Screens qty 5.00 @ 295.00 = £1,475.00 and line 2 [FURN_7800] Desk Combination qty 2.00 @ 450.00 = £900.00.",
+  "values": {
+   "order_reference": "{{v1}}",
+   "status": "{{v5}}",
+   "statusbar_states_text": "{{v5}}\nSales Order\nQuotation Sent\nQuotation",
+   "breadcrumb_app": "Quotations",
+   "untaxed_amount": "£ 2,375.00",
+   "tax_20pct": "£ 475.00",
+   "total": "£ 2,850.00",
+   "order_lines": "[FURN_6666] Acoustic Bloc Screens qty 5.00 @ 295.00 = £ 1,475.00; [FURN_7800] Desk Combination qty 2.00 @ 450.00 = £ 900.00",
+   "customer_name": "{{v2}}",
+   "screenshot": "{{v1}}_cancelled.png",
+   "totals": "Untaxed Amount\t£ 2,375.00\nTAX 20%\t\n£ 475.00\n\nTotal\t£ 2,850.00",
+   "final_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22",
+   "ref": "{{v3}}",
+   "ref_2": "FURN_6666",
+   "ref_3": "FURN_7800"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 2,
+  "successes": 2,
+  "partial": 0,
+  "created": "2026-09-18T08:35:08.352Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-18T08:37:27.851Z"
+ },
+ "status": "validated",
+ "variantOf": "s_570595",
+ "provenance": {
+  "session": "fwod71-n2",
+  "instruction": "The Odoo sales order S00022 is open in the browser, currently in confirmed 'Sales Order' state (customer 'fwod71-n2 Bench Customer', untaxed £2,375.00, total £2,850.00). Your job: CANCEL this sales order so nothing stays active. Click the 'Cancel' button (a 'Cancel' button appeared in the control panel after confirmation). If a confirmation modal appears asking to confirm the cancellation, accept it. Verify the cancellation succeeded: the statusbar should now show 'Cancelled' as the current state. Report: (a) the order reference, (b) the status the app shows after cancelling, and (c) the untaxed amount and total as shown after cancelling.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-18T08:35:08.352Z",
+  "transforms": [
+   {
+    "name": "coalesceControls",
+    "at": 2,
+    "reason": "repeat of the previous dialog_expect with identical args and no target of its own"
+   }
+  ]
+ },
+ "revision": 2
+}
