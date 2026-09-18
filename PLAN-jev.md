@@ -172,6 +172,33 @@ Judgement smoke test, 4/5 — small, but two results worth carrying forward:
   shard by *region with neighbours*, not by single element, and keep tournament
   finals as one `choice` over the shortlisted set.
 
+### Step 1 status — DONE 2026-09-18
+
+`src/agent/decide.ts` (`cascade` / `jevDecider` / `shadow`, the `GATES` table, and a
+test that only the daemon and the CLI may ask whether System One exists), then site A:
+`src/skills/repair-jev.ts`, wired as `cascadeProposer(systemOne, llmProposer)` in
+`server.ts` (`patch`) and `cli.ts` (`skills repair --drift`). With no key it returns
+the `llmProposer` object itself. Gate `repair.propose` = 0.85.
+
+Learned, and binding on later sites:
+- **min-confidence cannot span primitives.** Folding the `gone` noul into the min made
+  the site dead code (a correct 0.95/0.83 pick sat beside a noul of 0.47 → 0.06). A
+  noul beside a choice is a **veto with its own threshold** (`GONE_VETO` 0.8), never a
+  term in the min. Applies to D and K, which both said "min over all answers".
+- Synthetic probe (15 cases × 3, dead chains from published sidecars, ~$0.002):
+  39/45; correct picks 0.78–0.99 (median 0.99); the only misses are **N identically
+  named rows** (picks the first, ≤0.77) — which `patchSegment`'s resolves-to-one check
+  already refuses. 52-row tournament: correct at 0.99 in ~0.9s.
+- Locators are built in the recorder's real order (testid → role+name → label →
+  placeholder → id → text), not the order §4A lists.
+- **M is dropped**: `triage()` is fully determined by ticket evidence, its one threshold
+  is a float (not Jev's job), and there is no page at triage time. The
+  renamed/moved/gone question is only well-posed on the live page, where A's `gone`
+  noul already asks it.
+- **No offline corpus exists for A** (§5.1 assumed one): drift sidecars don't persist
+  the page's element list. Cheap fix worth doing before B: store `interactiveRows`
+  output on the ticket when patch-segment runs, so every repair becomes a labelled case.
+
 ## 4. Sites, in order of value ÷ risk
 
 ### A. Locator repair proposer — `src/skills/repair.ts:576` (`llmProposer`)

@@ -47,7 +47,16 @@ export function cascade<I, O>(...deciders: Array<Decider<I, O> | null | undefine
  * because the cost of a wrong answer differs: a proposal a verifier checks can
  * be gated lower than a click nothing checks.
  */
-export const GATES: Record<string, number> = {};
+export const GATES: Record<string, number> = {
+  // Site A. Calibrated on bench/jev-repair-probe.mjs (15 synthetic cases x 3,
+  // dead chains copied from the published drift sidecars): correct picks sit
+  // at 0.78-0.99 (median 0.99); the only wrong answers — N identically named
+  // rows, which patchSegment's resolves-to-one check refuses anyway — top out
+  // at 0.77. 0.85 clears every wrong answer and keeps 9 of 11 pick cases.
+  // Deferring costs exactly what the tool cost before, so err high first and
+  // revisit once system-one.jsonl has volume.
+  'repair.propose': 0.85,
+};
 
 /** A site's gate; an unlisted site gets a strict default rather than none. */
 export function gateFor(site: string): number {

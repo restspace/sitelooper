@@ -13,6 +13,7 @@ import { buildFlow, consumedReportedOutputs, consumedUrlOutputs, ignorableRefs, 
 import { applyRelabelToEntries, applyRelabelToSkills, relabelCases, requestRelabelPlan } from '../skills/relabel.js';
 import { goalSatisfied, renderReplay } from '../skills/replay.js';
 import { drainDrift, llmProposer, recordCandidateEvidence } from '../skills/repair.js';
+import { cascadeProposer } from '../skills/repair-jev.js';
 import { RunLedger, bindingKey, describeLeaks, evidenced, fatal, navigationLeaks, scanForLeaks, slotKnownRunValues, urlVarianceValues, withoutOwnOutputs, type Leak } from '../skills/ledger.js';
 import { quarantineLeakedSteps } from '../spec/rerecord.js';
 import { rerecordFix } from '../spec/diagnostics.js';
@@ -354,8 +355,7 @@ ${describeLeaks(leaks.slice(0, 6))}`);
    * answer — all three are the same "Jev had nothing to say". Resolved per
    * call, like the providers, so `config set jev off` applies to the next ask.
    */
-  // No call site yet: PLAN-jev.md step 0 lands the tier, steps 1+ consume it.
-  protected systemOne(overrides: { off?: boolean } = {}): SystemOne | null {
+  private systemOne(overrides: { off?: boolean } = {}): SystemOne | null {
     return buildSystemOne(resolveSystemOneConfig(overrides), (model, usage) => this.state.recordSystemOneUsage(model, usage));
   }
 
@@ -697,7 +697,9 @@ ${describeLeaks(leaks.slice(0, 6))}`);
         const summary = await drainDrift(store, tickets, {
           dryRun,
           model: provider.model,
-          propose: llmProposer(provider),
+          // Jev picks first when it is configured and sure; the model proposer is
+          // the last element either way, so with no key this IS llmProposer.
+          propose: cascadeProposer(this.systemOne(), llmProposer(provider), (d) => this.state.recordSystemOneDecision(d)),
           openPage: async (url: string) => {
             const page = await this.browser.getPage();
             if (page.url() !== url) {

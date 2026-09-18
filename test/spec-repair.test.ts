@@ -602,7 +602,7 @@ describe('in-session drain wiring', () => {
     const body = serverSource.slice(serverSource.indexOf("case 'patch': {"), serverSource.indexOf("case 'stop': {"));
     expect(body).toMatch(/const store = this\.browser\.learn;/);
     expect(body).toMatch(/const page = await this\.browser\.getPage\(\);/);
-    expect(body).toMatch(/propose: llmProposer\(provider\)/);
+    expect(body).toMatch(/propose: cascadeProposer\(this\.systemOne\(\), llmProposer\(provider\)/);
     expect(body).toMatch(/this\.recoveryProvider\(model\)/); // --model M reaches the proposer
   });
 

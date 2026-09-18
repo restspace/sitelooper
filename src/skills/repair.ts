@@ -1,5 +1,6 @@
 import { candidateExpr, makeLocator, positionalExpr, type LocatorCandidate } from '../daemon/recorder.js';
 import type { Page } from 'playwright-core';
+import type { Decider } from '../agent/decide.js';
 import type { Provider } from '../agent/llm.js';
 import { fillParams } from './compile.js';
 import { newSkillId, type Skill, type SkillStore } from './store.js';
@@ -184,6 +185,13 @@ export interface ProposeContext {
   /** A textual snapshot of the live page's interactive elements. */
   snapshot: string;
   /**
+   * The SAME snapshot, structured (see SnapshotRow) — `snapshot` is rendered
+   * from it. A proposer that picks a row rather than writing a selector needs
+   * the fields, not the line. Optional so a caller that only has the old
+   * string is still a legal caller; such a proposer simply has no opinion.
+   */
+  rows?: SnapshotRow[];
+  /**
    * What KIND of control the recording named - the point candidate's role (or
    * its tag when it had none), else a role candidate's role, else what the
    * step's tool implies. Undefined when nothing in the step says. Given to the
@@ -191,6 +199,15 @@ export interface ProposeContext {
    * patchSegment.
    */
   recordedKind?: string;
+  /**
+   * The live roles that count as the SAME kind as the recording's (see
+   * RecordedKind.families). `recordedKind` is a word for a model to read;
+   * this is the machine-checkable form, so a proposer that filters candidates
+   * in code filters by exactly what `patchSegment` will reject it by
+   * afterwards — the two disagreeing is how a proposer spends a request per
+   * ticket producing answers that are then thrown away.
+   */
+  recordedFamilies?: string[];
   /** The drifted step's tool ("click", "fill", ...), for the same reason. */
   tool?: string;
 }
@@ -344,8 +361,16 @@ export function notAControlWhy(skill: Skill | null | undefined, ticket: DriftTic
   return `step ${ticket.atStep ?? '?'} ${verb} the text ${what}, which the page no longer shows: a failed expectation for a human to look at, not a control that drifted - there is no control to propose`;
 }
 
-/** Re-derives a locator for a moved control; null when it cannot. */
-export type ProposeLocator = (context: ProposeContext) => Promise<LocatorCandidate | null>;
+/**
+ * Re-derives a locator for a moved control; null when it cannot.
+ *
+ * Spelled as a `Decider` so proposers compose with `cascade` (a System One
+ * proposer in front of the model one, see repair-jev.ts) without a second
+ * combinator that means the same thing. Behaviourally unchanged: the second
+ * parameter is optional and every existing caller passes one argument, every
+ * existing implementation takes one.
+ */
+export type ProposeLocator = Decider<ProposeContext, LocatorCandidate>;
 
 export interface PatchResult {
   ticket: DriftTicket;
@@ -396,8 +421,12 @@ export async function patchSegment(
   }
 
   const recorded = recordedKindOf(step, chain);
-  const snapshot = await interactiveSnapshot(page);
-  const proposed = await propose({ skill, ticket, chain, snapshot, recordedKind: recorded?.label, tool: step.tool });
+  const rows = await interactiveRows(page);
+  const snapshot = renderSnapshot(rows);
+  const proposed = await propose({
+    skill, ticket, chain, snapshot, rows,
+    recordedKind: recorded?.label, recordedFamilies: recorded?.families, tool: step.tool,
+  });
   if (!proposed) return { ticket, outcome: 'no-proposal' };
 
   // Verify against the live page before adopting anything.
@@ -455,38 +484,94 @@ export async function patchSegment(
 }
 
 /**
- * The interactive elements of the live page, one per line, in the shapes a
- * proposer can turn straight into a LocatorCandidate: role+name, label,
- * placeholder, testid, id.
+ * One interactive element of the live page, in the shapes a proposer can turn
+ * straight into a LocatorCandidate: role+name, label, placeholder, testid, id.
+ *
+ * The STRUCTURED form is the source of truth and the string snapshot below is
+ * rendered from it, so the two readings of the page cannot drift apart. They
+ * did not have to: one walk, two consumers (a model that reads lines, Jev that
+ * picks a row), and a second walk would have been two chances to disagree
+ * about what is on the page while the repair blamed the proposer.
+ *
+ * A field is present only when the element actually has it — absent and empty
+ * were never distinguished by the line form and must not start being.
  */
-export async function interactiveSnapshot(page: Page, limit = 120): Promise<string> {
+export interface SnapshotRow {
+  tag: string;
+  role?: string;
+  id?: string;
+  testid?: string;
+  label?: string;
+  placeholder?: string;
+  /** Only when it differs from `label`, exactly as the line form decided. */
+  text?: string;
+  /**
+   * An `<input>`'s type. NOT rendered into the line (the line form never had
+   * it): it is carried for kind matching only, because `input` alone cannot
+   * tell a checkbox from a textbox and a kind pre-filter that gets that wrong
+   * drops the very control it was asked to find.
+   */
+  type?: string;
+}
+
+/** The interactive elements of the live page, structured. See SnapshotRow. */
+export async function interactiveRows(page: Page, limit = 120): Promise<SnapshotRow[]> {
   const rows = await page
     .evaluate((max) => {
-      const out: string[] = [];
+      const out: Record<string, string>[] = [];
       const els = document.querySelectorAll('a, button, input, select, textarea, [role], [tabindex], label');
       for (const el of Array.from(els).slice(0, max * 2)) {
         if (out.length >= max) break;
         const h = el as HTMLElement;
         if (h.offsetParent === null && h.tagName !== 'OPTION') continue;
-        const bits: string[] = [h.tagName.toLowerCase()];
+        const row: Record<string, string> = { tag: h.tagName.toLowerCase() };
         const role = h.getAttribute('role');
-        if (role) bits.push(`role=${role}`);
+        if (role) row.role = role;
         const id = h.id;
-        if (id) bits.push(`id=${id}`);
+        if (id) row.id = id;
         const testid = h.getAttribute('data-testid');
-        if (testid) bits.push(`testid=${testid}`);
+        if (testid) row.testid = testid;
         const label = (h.closest('label')?.textContent ?? h.getAttribute('aria-label') ?? '').trim().replace(/\s+/g, ' ').slice(0, 60);
-        if (label) bits.push(`label=${JSON.stringify(label)}`);
+        if (label) row.label = label;
         const placeholder = h.getAttribute('placeholder');
-        if (placeholder) bits.push(`placeholder=${JSON.stringify(placeholder)}`);
+        if (placeholder) row.placeholder = placeholder;
         const text = (h.textContent ?? '').trim().replace(/\s+/g, ' ').slice(0, 60);
-        if (text && text !== label) bits.push(`text=${JSON.stringify(text)}`);
-        out.push(bits.join(' '));
+        if (text && text !== label) row.text = text;
+        const type = h.getAttribute('type');
+        if (type) row.type = type.toLowerCase();
+        out.push(row);
       }
       return out;
     }, limit)
-    .catch(() => [] as string[]);
-  return rows.join('\n');
+    .catch(() => [] as Record<string, string>[]);
+  // The page-side walk builds a plain bag of strings (only serialisable
+  // values cross the evaluate boundary); `tag` is always set there.
+  return rows as unknown as SnapshotRow[];
+}
+
+/**
+ * One row as the line the repair model has always been shown. Byte-identical
+ * to what the in-page walk used to emit — field order included — because the
+ * prompt around it is calibrated on that shape.
+ */
+export function renderSnapshotRow(r: SnapshotRow): string {
+  const bits: string[] = [r.tag];
+  if (r.role) bits.push(`role=${r.role}`);
+  if (r.id) bits.push(`id=${r.id}`);
+  if (r.testid) bits.push(`testid=${r.testid}`);
+  if (r.label) bits.push(`label=${JSON.stringify(r.label)}`);
+  if (r.placeholder) bits.push(`placeholder=${JSON.stringify(r.placeholder)}`);
+  if (r.text) bits.push(`text=${JSON.stringify(r.text)}`);
+  return bits.join(' ');
+}
+
+/** The interactive elements of the live page, one per line. Rendered from `interactiveRows`. */
+export async function interactiveSnapshot(page: Page, limit = 120): Promise<string> {
+  return renderSnapshot(await interactiveRows(page, limit));
+}
+
+export function renderSnapshot(rows: readonly SnapshotRow[]): string {
+  return rows.map(renderSnapshotRow).join('\n');
 }
 
 /**

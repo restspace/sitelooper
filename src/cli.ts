@@ -13,6 +13,8 @@ import { fillParams } from './skills/compile.js';
 import { SkillStore, skillsDir, successRate, type Skill } from './skills/store.js';
 import { listFlows, loadFlow, loadFlowFile, saveFlow, type Flow } from './skills/flow.js';
 import { drainDrift, llmProposer, triage, type DrainSummary, type DriftTicket } from './skills/repair.js';
+import { cascadeProposer } from './skills/repair-jev.js';
+import { buildSystemOne, resolveSystemOneConfig } from './agent/system-one.js';
 import { compileFlow } from './spec/index.js';
 import { foldTicketEvidence, mintVars, notConverged, reorderByEvidence } from './spec/repair.js';
 import { emitFlowFile } from './spec/emit.js';
@@ -1254,7 +1256,7 @@ async function repairCommand(positional: string[], flags: Map<string, string | b
       const config = resolveProviderConfig({ model });
       const resolved = model ?? (config.fallbackModel && config.fallbackModel !== 'none' ? config.fallbackModel : config.model);
       const provider: Provider = config.provider === 'anthropic' ? new AnthropicProvider({ ...config, model: resolved }) : new OpenAICompatProvider({ ...config, model: resolved });
-      propose = llmProposer(provider);
+      propose = cascadeProposer(buildSystemOne(resolveSystemOneConfig()), llmProposer(provider));
       const { BrowserSession } = await import('./daemon/browser.js');
       browser = new BrowserSession({ session: 'repair', persist: false });
       openPage = async (url: string) => {
