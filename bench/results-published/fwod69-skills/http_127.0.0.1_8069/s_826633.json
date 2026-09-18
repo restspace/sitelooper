@@ -1,0 +1,391 @@
+{
+ "id": "s_826633",
+ "origin": "http://127.0.0.1:8069",
+ "template": "On the currently open Odoo quotation form (unsaved, title 'New', customer '{{v1}}'), there is a blocking 'Configure your product' dialog/modal open over the form. Dismiss that dialog (click its Cancel/Close/Discard button, or if it has a Confirm/OK button that just closes it, use that — the goal is to get rid of the modal without adding extra order lines). After the modal is gone, make sure the order lines table contains EXACTLY ONE line: product '{{v3}}' with Quantity {{v5}} and Unit Price {{v6}} — if the configurable product line ('Customizable Desk' or similar) is still present as a second line, delete that line. Then click Save and verify the record gets a real quotation number (the title changes from 'New' to something like S00001) and the status shows 'Quotation'. Report: the quotation number assigned, the product name on the single line, the unit price, and the Untaxed Amount shown in the totals.",
+ "params": {
+  "v1": {
+   "example": "fwod69-n2 Bench Customer",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i1:name"
+  },
+  "v2": {
+   "example": "fwod69-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "[FURN_7777] Office Chair",
+   "usedIn": [],
+   "known": true,
+   "binding": "02-create.product_name"
+  },
+  "v5": {
+   "example": "3.00",
+   "usedIn": [
+    3
+   ],
+   "known": true,
+   "binding": "02-create.quantity"
+  },
+  "v6": {
+   "example": "70.00",
+   "usedIn": [
+    4
+   ],
+   "known": true,
+   "binding": "02-create.unit_price"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form"
+ },
+ "steps": [
+  {
+   "tool": "read",
+   "args": {
+    "label": "quotation_number",
+    "target": ".o_breadcrumb",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_breadcrumb"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div:nth-of-type(1) > div > div:nth-of-type(1) > div:nth-of-type(2)",
+      "nth": 1
+     },
+     {
+      "kind": "point",
+      "x": 108,
+      "y": 71,
+      "w": 76.3,
+      "h": 33.8,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "quotation_number_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "product_name",
+    "target": "@e2933",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 199,
+      "y": 442,
+      "w": 297.7,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "product_name"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "quantity",
+    "target": "@e2938",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "text",
+      "text": "{{v5}}"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 691,
+      "y": 442,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "quantity"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "unit_price",
+    "target": "@e2939",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "text",
+      "text": "{{v6}}"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(5)"
+     },
+     {
+      "kind": "point",
+      "x": 783,
+      "y": 442,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "unit_price"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "untaxed_amount",
+    "target": "@e2922",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div > table > tbody > tr:nth-of-type(1) > td:nth-of-type(2)",
+      "nth": 1
+     },
+     {
+      "kind": "point",
+      "x": 1203,
+      "y": 619,
+      "w": 72.8,
+      "h": 23,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "untaxed_amount_2"
+  },
+  {
+   "tool": "read_all",
+   "args": {
+    "label": "line_row_count",
+    "target": "tr.o_data_row",
+    "what": "count"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "tr.o_data_row"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 442,
+      "w": 1246,
+      "h": 40.6,
+      "role": null,
+      "tag": "tr",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "order_line_count"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "statusbar",
+    "target": ".o_statusbar_status",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_statusbar_status"
+     },
+     {
+      "kind": "role",
+      "role": "radiogroup",
+      "name": "Statusbar"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div"
+     },
+     {
+      "kind": "point",
+      "x": 1100,
+      "y": 129,
+      "w": 328.8,
+      "h": 33,
+      "role": "radiogroup",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "statusbar"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > h1 > div > span"
+     },
+     {
+      "kind": "point",
+      "x": 89,
+      "y": 195,
+      "w": 96.5,
+      "h": 31,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "quotation_number"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "tr:nth-of-type(1) > td:nth-of-type(6) > div > div > span > div"
+     },
+     {
+      "kind": "point",
+      "x": 858,
+      "y": 440,
+      "w": 26,
+      "h": 13,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line_tax"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(3) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1203,
+      "y": 667,
+      "w": 70.8,
+      "h": 21,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "total"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "On arrival the quotation form was NOT in the described unsaved/'New' state with a blocking 'Configure your product' modal — the live page was the already-saved record, title \"Odoo - S00022\", no modal present (verified: no .modal.show, dirty=false), statusbar showing 'Quotation' as the current stage, and the Order Lines table already containing exactly ONE line. So there was no modal to dismiss and no configurable 'Customizable Desk' line to delete, and no state-changing action was re-issued (per the rule against repeating an action blind). Read live from the page: quotation number S00022, single line product '{{v3}}', Quantity {{v5}}, Unit Price {{v6}} (tax 20%, line subtotal £210.00), totals section Untaxed Amount £210.00 (TAX 20% £42.00, Total £252.00).",
+  "values": {
+   "quotation_number": "S00022",
+   "quotation_status": "Quotation",
+   "product_name": "{{v3}}",
+   "quantity": "{{v5}}",
+   "unit_price": "{{v6}}",
+   "untaxed_amount": "£ 210.00",
+   "line_tax": "20%",
+   "line_subtotal": "£ 210.00",
+   "total": "£ 252.00",
+   "order_line_count": "1",
+   "modal_present": "false",
+   "form_dirty": "false",
+   "quotation_number_2": "Quotations\nS00022",
+   "untaxed_amount_2": "£ 210.00",
+   "statusbar": "Sales Order\nQuotation Sent\nQuotation",
+   "ref": "{{v4}}",
+   "ref_2": "s00023_saved_quotation.png"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 2,
+  "successes": 2,
+  "partial": 0,
+  "created": "2026-09-18T00:05:01.188Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-18T00:06:53.560Z"
+ },
+ "status": "validated",
+ "provenance": {
+  "session": "fwod69-n2",
+  "instruction": "On the currently open Odoo quotation form (unsaved, title 'New', customer 'fwod69-n2 Bench Customer'), there is a blocking 'Configure your product' dialog/modal open over the form. Dismiss that dialog (click its Cancel/Close/Discard button, or if it has a Confirm/OK button that just closes it, use that — the goal is to get rid of the modal without adding extra order lines). After the modal is gone, make sure the order lines table contains EXACTLY ONE line: product '[FURN_7777] Office Chair' with Quantity 3.00 and Unit Price 70.00 — if the configurable product line ('Customizable Desk' or similar) is still present as a second line, delete that line. Then click Save and verify the record gets a real quotation number (the title changes from 'New' to something like S00001) and the status shows 'Quotation'. Report: the quotation number assigned, the product name on the single line, the unit price, and the Untaxed Amount shown in the totals.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-18T00:05:01.188Z"
+ },
+ "revision": 2
+}

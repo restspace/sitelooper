@@ -1,0 +1,40 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-signin
+[sitelooper warn] 02-create s_2caa4f/8: read 'product_name' returned a value the skill itself set/selected ('[FURN_7777] Office Chair') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper step] 02-create
+  ✘  1 fwod69.spec.ts:9:1 › fwod69 (51.8s)
+
+
+  1) fwod69.spec.ts:9:1 › fwod69 › 03-open: On the currently open Odoo quotation form (unsaved, title 'New', customer '{{runid}} Bench Customer'), there is a blocking 'Configure your product' dialog/modal open over the form. Dismiss that dialog (click its Cancel/Close/Discard button, or if it has a Confirm/OK button that just closes it, use that — the goal is to get rid of the modal without adding extra order lines). After the modal is gone, make sure the order lines table contains EXACTLY ONE line: product '{{02-create.product_name}}' with Quantity {{02-create.quantity}} and Unit Price {{02-create.unit_price}} — if the configurable product line ('Customizable Desk' or similar) is still present as a second line, delete that line. Then click Save and verify the record gets a real quotation number (the title changes from 'New' to something like S00001) and the status shows 'Quotation'. Report: the quotation number assigned, the product name on the single line, the unit price, and the Untaxed Amount shown in the totals. 
+
+    Error: 03-open s_9b8881: not on the page this procedure starts from (expects http://127.0.0.1:8069/web#action=:id&cids=:id&menu_id=:id&model=sale.order&view_type=form, browser is at http://127.0.0.1:8069/web#action=316&cids=1&id=24&menu_id=194&model=sale.order&view_type=form; the url already carries id=24, the record this procedure creates at its step 6 — the page is past where the procedure starts) — nothing of this segment has run
+
+       at fwod69.flow.ts:12563
+
+      12561 |   const verdict = preconditionVerdict(pattern, url, p, similarity, mints);
+      12562 |   for (const line of verdict.warnings) logWarning(`${where}: ${line}`);
+    > 12563 |   if (verdict.refuse) throw new Error(`${where}: ${verdict.refuse} — nothing of this segment has run`);
+            |                             ^
+      12564 | }
+      12565 |
+      12566 | /**
+        at preconditionGate (/home/user/sitelooper/bench/results/fwod69-spec-spec-tmp/fwod69.flow.ts:12563:29)
+        at Object.03-open (/home/user/sitelooper/bench/results/fwod69-spec-spec-tmp/fwod69.flow.ts:15539:11)
+        at /home/user/sitelooper/bench/results/fwod69-spec-spec-tmp/fwod69.flow.ts:19122:7
+        at runFlow (/home/user/sitelooper/bench/results/fwod69-spec-spec-tmp/fwod69.flow.ts:19121:5)
+        at /home/user/sitelooper/bench/results/fwod69-spec-spec-tmp/fwod69.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwod69-fwod69/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwod69-fwod69/error-context.md
+
+  1 failed
+    fwod69.spec.ts:9:1 › fwod69 ────────────────────────────────────────────────────────────────────

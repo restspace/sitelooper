@@ -1,0 +1,103 @@
+{
+  "arm": "sitelooper",
+  "target": "odoo",
+  "machine": {
+    "platform": "linux",
+    "arch": "x64",
+    "node": "v22.22.2",
+    "cpus": 4,
+    "memGB": 17,
+    "tool": "sitelooper ? author browser tests with an agent; run compiled tests with Playwri",
+    "commit": "728f30c"
+  },
+  "mutationLogPath": null,
+  "provider": "openrouter",
+  "model": "z-ai/glm-5.3",
+  "runid": "fwod69-n1",
+  "task": "bench/tasks/odoo-sale-flow.md",
+  "briefed": false,
+  "reset": true,
+  "stopReason": "completed",
+  "turns": 10,
+  "wallMs": 1005605,
+  "orchestrator": {
+    "input": 22363,
+    "cacheWrite": 0,
+    "cacheRead": 28864,
+    "output": 8717
+  },
+  "inner": {
+    "promptTokens": 5069775,
+    "cachedTokens": 4785920,
+    "completionTokens": 48274,
+    "instructions": 8,
+    "byModel": {
+      "deepseek/deepseek-v4.1-flash": {
+        "promptTokens": 5069775,
+        "completionTokens": 48274,
+        "cachedTokens": 4785920,
+        "instructions": 8
+      }
+    },
+    "servedByModel": {
+      "deepseek/deepseek-v4.1-flash": [
+        "DeepSeek"
+      ]
+    },
+    "skills": {
+      "instructions": 8,
+      "offered": 5,
+      "invoked": 0,
+      "fullReplays": 0,
+      "repaired": 0,
+      "refused": 0,
+      "tierA": 0,
+      "stepsReplayed": 0,
+      "deterministicActions": 0,
+      "totalActions": 168,
+      "compiled": 7,
+      "merged": 0,
+      "variants": 0
+    },
+    "model": "deepseek/deepseek-v4.1-flash",
+    "fallbackModel": "z-ai/glm-5.3",
+    "provider": "openrouter"
+  },
+  "commandCount": 10,
+  "subcommands": {
+    "note": 1,
+    "open": 1,
+    "do": 8
+  },
+  "invocationCount": 10,
+  "commandMs": 900402,
+  "commandBytes": 13461,
+  "timeouts": 0,
+  "contextTruncations": 0,
+  "coarse": true,
+  "learn": {
+    "dir": "/home/user/sitelooper/bench/results/fwod69-skills",
+    "instructions": 8,
+    "offered": 5,
+    "invoked": 0,
+    "fullReplays": 0,
+    "repaired": 0,
+    "refused": 0,
+    "tierA": 0,
+    "stepsReplayed": 0,
+    "deterministicActions": 0,
+    "totalActions": 168,
+    "compiled": 7,
+    "merged": 0,
+    "variants": 0,
+    "deterministicFraction": 0
+  },
+  "orBackends": [
+    "Modal"
+  ],
+  "orReportedCostUsd": 0.0772,
+  "maxUsd": 3,
+  "spendUsd": 0.1631,
+  "finalText": "All six objectives are complete and verified. Here is the final report:\n\n**Objective 1 — DONE:** Customer `fwod69-n1 Bench Customer` created (contact id 44, Company type). Verified by reopening the record: Name = `fwod69-n1 Bench Customer`, City = `Benchville`.\n\n**Objective 2 — DONE:** Quotation `S00021` created for that customer with one order line. Product chosen: `[E-COM11] Cabinet with Doors`. Unit price auto-filled by the app: `140.00`. Untaxed Amount computed: `£ 420.00` (TAX 20% £ 84.00, Total £ 504.00). Note: the first save attempt was blocked by a \"Configure your product\" modal triggered by a configurable product I initially tried; I dismissed it, re-added the single Cabinet line, and saved successfully.\n\n**Objective 3 — DONE:** Second line added: `[FURN_7777] Office Chair`, quantity 2, unit price auto-filled `70.00` (line subtotal £ 140.00). New Untaxed Amount: `£ 560.00` (TAX 20% £ 112.00, Total £ 672.00). Verified after a full page reload.\n\n**Objective 4 — DONE:** First line's quantity changed from 3 to 5 (now 5.00 × 140.00 = £ 700.00; second line unchanged at 2.00 × 70.00 = £ 140.00). Untaxed Amount afterwards: `£ 840.00` (TAX 20% £ 168.00, Total £ 1,008.00). Verified by navigating away to the Quotations list and reopening the record.\n\n**Objective 5 — DONE:** Quotation confirmed via the Confirm button. Order reference: `S00021`. Status shown: `Sales Order` (statusbar current stage \"Sales Order\"; \"Quotation Sent\" and \"Quotation\" behind it, Confirm button replaced by \"Create Invoice\"). Untaxed Amount unchanged at £ 840.00.\n\n**Objective 6 — DONE:** Sales order cancelled via the statusbar Cancel action → \"Cancel Sales Order\" wizard → its Cancel button (no email sent to the customer). Status shown after cancelling: `Cancelled` (statusbar shows \"Cancelled\" as the current/checked stage; a \"Set to Quotation\" button is offered). The record was not deleted — verified by navigating away to the Quotations list (S00021 shown as Cancelled, £ 1,008.00) and back into the form, with both lines and totals intact.\n\nA final read-only verification confirmed the customer's City is still `Benchville` and the order `S00021` is in `Cancelled` status with Untaxed Amount `£ 840.00`. Nothing created by this run remains active.",
+  "transcriptPath": "/home/user/sitelooper/bench/results/fwod69-n1-sitelooper-transcript.jsonl"
+}

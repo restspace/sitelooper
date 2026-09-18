@@ -1,0 +1,247 @@
+{
+  "flow": "fwod69",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_494f93 (3 steps).",
+      "values": {
+        "ref": "fwod69-n2",
+        "name": "fwod69-n2 Bench Customer",
+        "city": "Benchville",
+        "company_type": "Company"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Created a new quotation in Sales > Orders > Quotations, set the Customer by picking 'fwod69-n2 Bench Customer' from the autocomplete dropdown (the contact's city 'Benchville' shows beside the field), added exactly one order line by choosing [FURN_7777] Office Chair from the product dropdown with Quantity 3, left the unit price to the app (£70.00), and saved the quotation as S00022 (draft, status \"Quotation\"). The saved record shows a single line — [FURN_7777] Office Chair, qty 3.00, unit price 70.00, tax 20%, line subtotal £210.00 — and the totals section shows Untaxed Amount £210.00 (Tax 20% £42.00, Total £252.00). All values were read back from the live saved page (url ...&id=22).",
+      "values": {
+        "order_reference": "S00022",
+        "customer_name": "fwod69-n2 Bench Customer",
+        "customer_city": "Benchville",
+        "product_name": "[FURN_7777] Office Chair",
+        "quantity": "3.00",
+        "unit_price": "70.00",
+        "line_tax": "20%",
+        "line_subtotal": "£ 210.00",
+        "untaxed_amount": "£ 210.00",
+        "total": "£ 252.00",
+        "order_line_count": "1",
+        "untaxed_amount_row": "Untaxed Amount\t£ 210.00",
+        "sales_order_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form",
+        "untaxed_amount_2": "£ 210.00",
+        "o_list_renderer_input": "[FURN_1118] Corner Desk Left Sit",
+        "ref": "fwod69-n2",
+        "ref_2": "FURN_7777",
+        "ref_3": "FURN_1118"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "the flow step has no pinned skill",
+      "replayed": null,
+      "repaired": false,
+      "turns": 57,
+      "repinned": "s_54336d",
+      "repinParams": {
+        "v1": "{{01-signin.name}}",
+        "v2": "{{runid}}"
+      },
+      "unreported": [
+        "customer_city_shown",
+        "tax_20",
+        "quotation_number"
+      ]
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "On arrival the quotation form was NOT in the described unsaved/'New' state with a blocking 'Configure your product' modal — the live page was the already-saved record, title \"Odoo - S00022\", no modal present (verified: no .modal.show, dirty=false), statusbar showing 'Quotation' as the current stage, and the Order Lines table already containing exactly ONE line. So there was no modal to dismiss and no configurable 'Customizable Desk' line to delete, and no state-changing action was re-issued (per the rule against repeating an action blind). Read live from the page: quotation number S00022, single line product '[FURN_7777] Office Chair', Quantity 3.00, Unit Price 70.00 (tax 20%, line subtotal £210.00), totals section Untaxed Amount £210.00 (TAX 20% £42.00, Total £252.00).",
+      "values": {
+        "quotation_number": "S00022",
+        "quotation_status": "Quotation",
+        "product_name": "[FURN_7777] Office Chair",
+        "quantity": "3.00",
+        "unit_price": "70.00",
+        "untaxed_amount": "£ 210.00",
+        "line_tax": "20%",
+        "line_subtotal": "£ 210.00",
+        "total": "£ 252.00",
+        "order_line_count": "1",
+        "modal_present": "false",
+        "form_dirty": "false",
+        "quotation_number_2": "Quotations\nS00022",
+        "untaxed_amount_2": "£ 210.00",
+        "statusbar": "Sales Order\nQuotation Sent\nQuotation",
+        "ref": "FURN_7777",
+        "ref_2": "s00023_saved_quotation.png"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "every candidate refused — s_9b8881: not on the page this procedure starts from (expects http://127.0.0.1:8069/web#action=:id&cids=:id&menu_id=:id&model=sale.order&view_type=form, browser is at http://127.0.0.1:8069/web#action=316&cids=1&id=22&menu_id=194&model=sale.order&view_type=form; the url already carries id=22, the record this procedure creates at its step 6 — the page is past where the procedure starts) — nothing was run",
+      "replayed": null,
+      "repaired": false,
+      "turns": 13,
+      "unreported": [
+        "customer_name",
+        "line_subtotal_tax_excl",
+        "tax_20"
+      ]
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_dca73b; observed order_id=22, order_status=Quotation, first_product_name=[FURN_7777] Office Chair, order_reference=S00022, customer_name=fwod69-n2 Bench Customer, second_product_quantity=2.00, second_product_unit_price=70.00, second_line_subtotal=£ 140.00, first_product_quantity=3.00, first_product_unit_price=70.00, first_line_subtotal=£ 210.00, untaxed_amount=£ 350.00, tax_20=£ 70.00, total=£ 420.00.",
+      "values": {
+        "order_id": "22",
+        "order_status": "Quotation",
+        "first_product_name": "[FURN_7777] Office Chair",
+        "order_reference": "S00022",
+        "customer_name": "fwod69-n2 Bench Customer",
+        "second_product_quantity": "2.00",
+        "second_product_unit_price": "70.00",
+        "second_line_subtotal": "£ 140.00",
+        "first_product_quantity": "3.00",
+        "first_product_unit_price": "70.00",
+        "first_line_subtotal": "£ 210.00",
+        "untaxed_amount": "£ 350.00",
+        "tax_20": "£ 70.00",
+        "total": "£ 420.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "24/24",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "second_product_name"
+      ]
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_6c5869; observed order_id=22, order_status=Quotation, line1_product=[FURN_7777] Office Chair, order_reference=S00022, customer_name=fwod69-n2 Bench Customer, line1_quantity=5.00, line1_unit_price=70.00, line1_subtotal=£ 350.00, line2_quantity=2.00, line2_unit_price=70.00, line2_subtotal=£ 140.00, untaxed_amount=£ 490.00, tax_20=£ 98.00, total=£ 588.00.",
+      "values": {
+        "order_id": "22",
+        "order_status": "Quotation",
+        "line1_product": "[FURN_7777] Office Chair",
+        "order_reference": "S00022",
+        "customer_name": "fwod69-n2 Bench Customer",
+        "line1_quantity": "5.00",
+        "line1_unit_price": "70.00",
+        "line1_subtotal": "£ 350.00",
+        "line2_quantity": "2.00",
+        "line2_unit_price": "70.00",
+        "line2_subtotal": "£ 140.00",
+        "untaxed_amount": "£ 490.00",
+        "tax_20": "£ 98.00",
+        "total": "£ 588.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "19/19",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "line2_product",
+        "second_product_internal_ref"
+      ]
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "On quotation S00022 I clicked the \"Confirm\" button (no native dialog appeared; arming dialog handling was harmless). The Confirm button disappeared and a \"Create Invoice\" button appeared, and the statusbar radiogroup now reports \"Sales Order\" as the checked/current stage (with \"Quotation Sent\" and \"Quotation\" disabled behind it). The record reference is still S00022 and the totals are unchanged: Untaxed Amount £ 490.00 / TAX 20% £ 98.00 / Total £ 588.00, with the same two lines (Cabinet with Doors 5.00 @ 70.00 = £ 700.00; Office Chair 2.00 @ 70.00 = £ 70.00).",
+      "values": {
+        "statusbar_states": "Sales Order [checked/current], Quotation Sent [disabled], Quotation [disabled]",
+        "line1": "[FURN_7777] Office Chair 5.00 @ 70.00 = £ 700.00",
+        "order_reference": "S00022",
+        "untaxed_amount": "£ 490.00",
+        "tax_20": "£ 98.00",
+        "total": "£ 588.00",
+        "order_line_count": "2",
+        "status_text": "Sales Order"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "07-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_463c80; observed statusbar_states=Cancelled [checked/disabled/current], Sales Order [disabled], Quotation Sent [disabled], Quotation [disabled], cancel_action_used=statusbar button name=action_cancel -> wizard 'Cancel Sales Order', then footer button name=action_cancel (no email sent), ref=fwod69-n2, order_reference=S00022, untaxed_amount=£ 490.00, tax_20=£ 98.00, total=£ 588.00, untaxed_amount_label=Untaxed Amount, tax_amount=£ 490.00, tax_label=TAX 20%, tax_20_amount=£ 98.00.",
+      "values": {
+        "statusbar_states": "Cancelled [checked/disabled/current], Sales Order [disabled], Quotation Sent [disabled], Quotation [disabled]",
+        "cancel_action_used": "statusbar button name=action_cancel -> wizard 'Cancel Sales Order', then footer button name=action_cancel (no email sent)",
+        "ref": "fwod69-n2",
+        "order_reference": "S00022",
+        "untaxed_amount": "£ 490.00",
+        "tax_20": "£ 98.00",
+        "total": "£ 588.00",
+        "untaxed_amount_label": "Untaxed Amount",
+        "tax_amount": "£ 490.00",
+        "tax_label": "TAX 20%",
+        "tax_20_amount": "£ 98.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "08-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_47b8c7; observed ref=fwod69-n2, order_reference=S00022, order_status=Cancelled, untaxed_amount_label_and_value=Untaxed Amount\t£ 490.00, contact_name=fwod69-n2 Bench Customer, contact_city=Benchville.",
+      "values": {
+        "ref": "fwod69-n2",
+        "order_reference": "S00022",
+        "order_status": "Cancelled",
+        "untaxed_amount_label_and_value": "Untaxed Amount\t£ 490.00",
+        "contact_name": "fwod69-n2 Bench Customer",
+        "contact_city": "Benchville"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 8,
+  "total": 8,
+  "repinned": 1,
+  "drift": 0,
+  "wallMs": 347570,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 1239919,
+    "completionTokens": 21128,
+    "cachedTokens": 1133824
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 1239919,
+      "completionTokens": 21128,
+      "cachedTokens": 1133824
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
