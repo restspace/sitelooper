@@ -16,6 +16,9 @@ import { drainDrift, llmProposer, recordCandidateEvidence } from '../skills/repa
 import { cascadeProposer } from '../skills/repair-jev.js';
 import { expectationDecisions, recordedTexts, recordedValues, threadingDecisions } from '../skills/triage.js';
 import { triageSession } from '../skills/triage-jev.js';
+import { inlineHealer } from '../skills/heal-jev.js';
+import { actorShadow, type ActorShadow } from '../agent/actor-jev.js';
+import { setInlineHealer } from '../skills/replay.js';
 import { RunLedger, bindingKey, describeLeaks, evidenced, fatal, navigationLeaks, scanForLeaks, slotKnownRunValues, urlVarianceValues, withoutOwnOutputs, type Leak } from '../skills/ledger.js';
 import { quarantineLeakedSteps } from '../spec/rerecord.js';
 import { rerecordFix } from '../spec/diagnostics.js';
@@ -364,6 +367,24 @@ ${describeLeaks(leaks.slice(0, 6))}`);
     return buildSystemOne(resolveSystemOneConfig(overrides), (model, usage) => this.state.recordSystemOneUsage(model, usage));
   }
 
+  /**
+   * PLAN-jev.md step 5, the shadow actor: MEASUREMENT ONLY. Beside every real
+   * model turn it builds the candidate actions, asks Jev, and logs whether the
+   * model's actual action was offered and whether Jev picked it — which,
+   * weighted by that turn's model time, is the share of model time a Jev actor
+   * could take. Off unless SITELOOPER_JEV_SHADOW=actor: it costs one extra
+   * read-only page observation per turn, taken while the model is thinking.
+   * One per daemon, so its history is continuous across instructions.
+   */
+  private actor: ActorShadow | null | undefined;
+  private actorShadow(): ActorShadow | undefined {
+    if (this.actor === undefined) {
+      const s1 = process.env.SITELOOPER_JEV_SHADOW === 'actor' ? this.systemOne() : null;
+      this.actor = s1 ? actorShadow(s1, { sink: (d) => this.state.recordSystemOneDecision(d) }) : null;
+    }
+    return this.actor ?? undefined;
+  }
+
   /** Advisory System One passes still in flight; `stop` gives them a bounded moment to log. */
   private advisory: Promise<unknown>[] = [];
 
@@ -403,6 +424,16 @@ ${describeLeaks(leaks.slice(0, 6))}`);
   }
 
   async listen(): Promise<void> {
+    // Site B (PLAN-jev.md): a replayed step whose whole locator chain misses is
+    // offered a live-page proposal before it costs a model recovery. Registered
+    // rather than passed, because the tool layer that builds ReplayOptions is
+    // neutral about deciders; resolved per ask, so `config set jev off` applies
+    // to the next step, and with no key this returns null — a dead chain is
+    // then exactly what it was before.
+    setInlineHealer(async (req) => {
+      const s1 = this.systemOne();
+      return s1 ? inlineHealer(s1, (d) => this.state.recordSystemOneDecision(d))(req) : null;
+    });
     const sock = socketPath(this.opts.session);
     if (process.platform !== 'win32' && fs.existsSync(sock)) fs.unlinkSync(sock);
     this.server = net.createServer((conn) => this.handleConnection(conn));
@@ -536,6 +567,7 @@ ${describeLeaks(leaks.slice(0, 6))}`);
           screenshotDir,
           signal: controller.signal,
           onProgress: progress,
+          ...(this.actorShadow() ? { shadow: this.actorShadow() } : {}),
         };
         // Where this instruction's recording starts, so learning can read back
         // exactly what it did (and nothing from earlier instructions).
@@ -788,7 +820,7 @@ ${describeLeaks(leaks.slice(0, 6))}`);
         // The daemon exits after this frame, and an advisory pass that dies
         // with it logged nothing. Bounded: it has usually finished while the
         // export and the video write-out ran.
-        await Promise.race([Promise.allSettled(this.advisory), delay(ADVISORY_DRAIN_MS)]);
+        await Promise.race([Promise.allSettled([...this.advisory, this.actor?.drain(ADVISORY_DRAIN_MS)]), delay(ADVISORY_DRAIN_MS)]);
         return { stopping: true, preempted, videos, ...(savedFlow ? { flow: savedFlow } : {}) };
       }
 
@@ -1792,6 +1824,13 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
           driftTickets.push({
             flow: flow.name, step: step.id, skill: m.skill ?? sk.invoked, atStep: m.step, key: m.key,
             similarity: sk.similarity, missedLocator: m.primary, fallbackUsed: m.used, ...(m.usedIndex !== undefined ? { fallbackIndex: m.usedIndex } : {}), recovered,
+            // Site B: an inline heal travels as EVIDENCE — the proposal the step
+            // ran on and the page rows it was picked from — so the ordinary drain
+            // can patch the chain without a model, and so every repair becomes a
+            // labelled case (bench/jev-repair-probe.mjs --tickets).
+            ...(m.healed ? { healed: m.healed } : {}),
+            ...(m.proposal ? { proposal: m.proposal } : {}),
+            ...(m.rows?.length ? { rows: m.rows } : {}),
             ...(pageUrlPattern ? { pageUrlPattern } : {}),
             ...(pageUrl ? { pageUrl } : {}),
           });

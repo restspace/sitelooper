@@ -1,6 +1,6 @@
 import type { BrowserSession } from '../daemon/browser.js';
 import type { SessionState } from '../daemon/state.js';
-import type { ChatMessage, Provider, ToolDef } from './llm.js';
+import type { ChatMessage, Provider, ToolCall, ToolDef } from './llm.js';
 import { captureSignature } from '../daemon/diff.js';
 import { CURRENT_DIALECT, coverageComplete } from '../execution/snapshot.js';
 import { fingerprintPage } from '../daemon/fingerprint.js';
@@ -62,6 +62,41 @@ const ESCALATION_BUDGET_MULTIPLIER = 1.5;
 /** Cap on the evidence values carried into the durable one-line report entry. */
 const REPORT_FACTS_CHARS = 600;
 
+/**
+ * What a turn looks like to an observer standing beside the loop.
+ *
+ * A PLAIN interface, named here and implemented elsewhere (src/agent/
+ * actor-jev.ts), so this file keeps no knowledge of what is watching: no
+ * import, no branch on whether a watcher exists, no second code path. Absent,
+ * the loop is byte for byte the loop that existed before — test/actor-jev.test
+ * .ts asserts the InstructionResult and the turn count are identical with and
+ * without one.
+ *
+ * Every method returns void and is called inside a swallow: a shadow that
+ * throws, or that is slow inside its own async work, may not change what the
+ * agent does, how long it takes, what it says, what it records, or the page.
+ * Nothing here is awaited.
+ */
+export interface ShadowTurn {
+  /** 1-based turn number within this instruction. */
+  turn: number;
+  instruction: string;
+  browser: BrowserSession;
+}
+
+export interface LoopShadow {
+  /**
+   * The model has just been asked and is thinking. The page is idle for the
+   * whole of that wait, which is why an observation taken here costs no
+   * wall-clock — it is the one moment in the turn when looking is free.
+   */
+  onTurnStart(ctx: ShadowTurn): void;
+  /** The model answered: these are the calls it chose, and this turn's timing so far (modelMs is final). */
+  onTurnDecided(ctx: ShadowTurn, calls: readonly ToolCall[], timing: { modelMs: number; toolMs: number; tools: string[] }): void;
+  /** One call ran. Index is its position in the turn; the recording now holds whatever step it filed. */
+  onToolExecuted?(ctx: ShadowTurn, call: ToolCall, outcome: { ok: boolean; index: number }): void;
+}
+
 export interface LoopOptions {
   maxTurns: number;
   timeoutMs: number;
@@ -80,6 +115,12 @@ export interface LoopOptions {
    * only what the recorder files changes.
    */
   recordAs?: { text: string; resume: true };
+  /**
+   * An observer beside the real turn (PLAN-jev.md step 5). Optional and
+   * advisory: it is told what happened and can say nothing back. Built at the
+   * composition root, never here.
+   */
+  shadow?: LoopShadow;
 }
 
 /** One tool call the instruction made, for the resume-safety actions log. */
@@ -622,6 +663,20 @@ export async function runInstruction(
     }
   };
 
+  /**
+   * Tell the shadow, and forget about it. A shadow's exception is ITS failure,
+   * never the instruction's — the whole contract of the tier is that a watcher
+   * absent, slow or broken are the same thing to the agent.
+   */
+  const tellShadow = (say: (shadow: LoopShadow) => void): void => {
+    if (!opts.shadow) return;
+    try {
+      say(opts.shadow);
+    } catch {
+      /* an observer may not break the thing it observes */
+    }
+  };
+
   for (let turn = 1; turn <= opts.maxTurns; turn++) {
     if (opts.signal?.aborted) {
       return finish(
@@ -663,6 +718,10 @@ export async function runInstruction(
     let completion;
     const turnTiming = { modelMs: 0, toolMs: 0, tools: [] as string[] };
     timing.turns.push(turnTiming);
+    const shadowCtx: ShadowTurn = { turn, instruction, browser };
+    // Said before the model is asked, so the observation it may take rides
+    // inside the model's own thinking time rather than beside it.
+    tellShadow((s) => s.onTurnStart(shadowCtx));
     const askedAt = Date.now();
     const modelDone = () => {
       turnTiming.modelMs = Date.now() - askedAt;
@@ -714,6 +773,7 @@ export async function runInstruction(
       continue;
     }
     unproductiveTurns = 0;
+    tellShadow((s) => s.onTurnDecided(shadowCtx, completion!.toolCalls, turnTiming));
 
     // Every tool call on an assistant message must get a tool result, or the
     // history is malformed for every later request in the session (both
@@ -806,6 +866,10 @@ export async function runInstruction(
       timing.toolMs += Date.now() - toolAt;
       turnTiming.tools.push(call.name);
       actions.push({ tool: call.name, args: summary, ok: !execution.isError });
+      // After the recorder has filed this step: its locator chain is the exact
+      // identity of the element the agent acted on, which is what an observer
+      // needs to tell whether that element was ever on its ballot.
+      tellShadow((s) => s.onToolExecuted?.(shadowCtx, call, { ok: !execution.isError, index: ci }));
       state.messages.push({ role: 'tool', tool_call_id: call.id, content: execution.result });
       accountActions(skill, call.name, call.args, execution);
 
