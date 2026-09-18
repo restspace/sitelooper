@@ -193,7 +193,12 @@ export function resolveTarget(page: Page, target: string): Locator {
   const refMatch = REF_RE.exec(trimmed);
   if (refMatch) return page.locator(`aria-ref=${refMatch[1]}`);
   const primary = page.locator(trimmed);
-  const field = FIELD_BY_NAME_RE.exec(trimmed);
+  // The field may be the last link of a scoped chain (`dialog >> role=…`):
+  // fwrdj13-n1 wrote it that way twice, and the scope changes nothing about
+  // which name the field answers to.
+  const cut = trimmed.lastIndexOf(' >> ');
+  const scope = cut < 0 ? page : page.locator(trimmed.slice(0, cut));
+  const field = FIELD_BY_NAME_RE.exec(cut < 0 ? trimmed : trimmed.slice(cut + 4).trim());
   if (!field || !LABELLED_ROLES.has(field[1])) return primary;
   // A name WE gave the agent must be a target we accept. The [state: …] diff
   // names a field by its <label>'s text (execution/snapshot.ts, dialect 2),
@@ -206,7 +211,7 @@ export function resolveTarget(page: Page, target: string): Locator {
   // role, so the two can only disagree by naming two different fields, which
   // is a strict-mode error rather than a wrong fill.
   const name = field[2].replace(/\\(.)/g, '$1');
-  return primary.or(page.getByRole(field[1] as Parameters<Page['getByRole']>[0]).and(page.getByLabel(name, { exact: true })));
+  return primary.or(scope.getByRole(field[1] as Parameters<Page['getByRole']>[0]).and(scope.getByLabel(name, { exact: true })));
 }
 
 /** `role=textbox[name="Part name *"]` — the one shape rule 4b teaches. */

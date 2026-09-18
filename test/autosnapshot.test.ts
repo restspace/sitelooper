@@ -13,7 +13,7 @@ import { resolveTarget } from '../src/daemon/refs.js';
  */
 describe('resolveTarget passes role= selectors through', () => {
   // A locator here is the string that made it, so what reached the engine can be read back.
-  const loc = (s: string) => ({ s, or: (o: { s: string }) => loc(`${s} OR ${o.s}`), and: (o: { s: string }) => loc(`${s} AND ${o.s}`), toString: () => s });
+  const loc = (s: string): Record<string, unknown> & { s: string } => ({ s, locator: (t: string) => loc(`${s} >> ${t}`), getByRole: (r: string) => loc(`${s} role:${r}`), getByLabel: (n: string) => loc(`${s} label:${n}`), or: (o: { s: string }) => loc(`${s} OR ${o.s}`), and: (o: { s: string }) => loc(`${s} AND ${o.s}`), toString: () => s });
   const page = {
     locator: (s: string) => loc(s),
     getByRole: (r: string) => loc(`role:${r}`),
@@ -27,6 +27,7 @@ describe('resolveTarget passes role= selectors through', () => {
 
   it('also finds a FIELD by its label text, which is the name the diff gave it', () => {
     expect(made(' role=textbox[name="Part name *"] ')).toBe('role=textbox[name="Part name *"] OR role:textbox AND label:Part name *');
+    expect(made('dialog >> role=spinbutton[name="Cost *"]')).toBe('dialog >> role=spinbutton[name="Cost *"] OR dialog role:spinbutton AND dialog label:Cost *');
   });
 
   it('still routes an @ref through the aria-ref engine', () => {
