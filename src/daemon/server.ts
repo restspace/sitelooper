@@ -1565,7 +1565,15 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
         // so the read-only sibling may take the pin.
         const incumbent = direct.pinPast ? 'missing' : incumbentSkill ? pinStatus(this.browser.learn.list(incumbentSkill.origin), incumbentSkill) : 'missing';
         const intent = mutatingIntent(step.instruction) && !direct.pinPast ? 'mutating' : 'read-only';
-        const adoptable = Boolean(candidateId && canAdoptPin(this.browser.learn, owned, step.id, step.skill, candidateId, intent));
+        // ...and canAdoptPin is told the same: handed the refused pin as the
+        // step's current procedure, its rule that a read-only skill never
+        // replaces a mutating one compared fwod69's read-only sibling against
+        // the very pin the page was past, and refused it (n2 recorded the
+        // sibling, n3 replayed it at tier A, the pin never moved, the
+        // artifact ran the pin and refused). A pin the page is past is not
+        // the step's current procedure for that comparison either.
+        const current = direct.pinPast ? undefined : step.skill;
+        const adoptable = Boolean(candidateId && canAdoptPin(this.browser.learn, owned, step.id, current, candidateId, intent));
         // A candidate whose navigation targets carry an identifier this run
         // made would replay onto this run's record: one THIS step's recovery
         // minted (a url part first banked under this instruction), or one an

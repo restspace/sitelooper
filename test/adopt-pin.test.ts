@@ -30,6 +30,17 @@ describe('canAdoptPin', () => {
     expect(canAdoptPin(store, steps, '09-change', 's_write', 's_read', null)).toBe(false);
   });
 
+  // fwod69's 03-open: the pin (a save the graduated 02-create now performs)
+  // refused because the page was past its start, a read-only sibling carried
+  // the step, and the flow runner asked whether the sibling may take the pin
+  // while still naming the refused pin as the step's current procedure — so
+  // rule 2 compared a read against the very save the page was past, and
+  // refused. The runner now names no current procedure for such a pin.
+  it('a pin the page is past is no current procedure: a read-only sibling may take it', () => {
+    expect(canAdoptPin(store, steps, '09-change', 's_write', 's_read', 'read-only')).toBe(false);
+    expect(canAdoptPin(store, steps, '09-change', undefined, 's_read', 'read-only')).toBe(true);
+  });
+
   it('is unchanged for a plain re-pin onto an unowned mutating skill', () => {
     expect(canAdoptPin(store, steps, '08-open', undefined, 's_new', null)).toBe(true);
   });
