@@ -1,0 +1,172 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwod72-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwod72-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwod72-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwod72-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwod72-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwod72.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwod72-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwod72.spec.ts",
+      "file": "fwod72.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwod72",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 37837,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-open\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:8069/ and log in with username 'admin' and password 'admin'. Then go to the Contacts app and create a new contact named '{{runid}} Bench Customer' (an individual person, not a company) with the City field set to 'Benchville'. Save the contact and report the exact Name and City values shown on the saved record. Note: this Odoo app long-polls and is never network-idle, so wait for concrete page state rather than waiting for network idle.",
+                      "duration": 9840
+                    },
+                    {
+                      "title": "02-create: In Odoo, go to the Sales app and create a new quotation for the customer '{{runid}} Bench Customer' (select the customer via the autocomplete dropdown so the value is actually chosen, not just typed). Add exactly ONE order line: pick any product from the product catalogue using the product autocomplete dropdown (the value must be chosen from the dropdown options), with quantity 3. Let Odoo fill in the unit price automatically. Save the quotation and report: (a) the product name you chose, (b) the unit price Odoo filled in, (c) the untaxed amount the quotation computes, and (d) the quotation reference/name (e.g. S00042). Note: this Odoo app long-polls and is never network-idle, so wait for concrete page state rather than waiting for network idle.",
+                      "duration": 9496
+                    },
+                    {
+                      "title": "03-open: In Odoo, open the existing quotation {{02-create.order_reference}} (for customer '{{runid}} Bench Customer') in the Sales app and add a SECOND order line: a different product than 'Acoustic Bloc Screens', chosen from the product autocomplete dropdown (the value must be actually selected from the dropdown options, not just typed), with quantity 2. Let Odoo fill the unit price automatically. Save the quotation and report: (a) the product name of the new second line, (b) its unit price, and (c) the new Untaxed Amount the quotation now computes (shown in the totals footer). Note: this Odoo app long-polls and is never network-idle, so wait for concrete page state rather than waiting for network idle.",
+                      "duration": 4209
+                    },
+                    {
+                      "title": "04-open: In Odoo, open the existing quotation {{02-create.order_reference}} (for customer '{{runid}} Bench Customer') in the Sales app. It has two order lines: line 1 is 'Acoustic Bloc Screens' with quantity 3, line 2 is 'Office Chair' with quantity 2. Change ONLY the first line's quantity from 3 to 5 (leave the second line untouched). Save the quotation and report the new Untaxed Amount shown in the totals footer, plus the quantity shown on the first line after saving. Note: this Odoo app long-polls and is never network-idle, so wait for concrete page state rather than waiting for network idle.",
+                      "duration": 2565
+                    },
+                    {
+                      "title": "05-open: In Odoo, open the existing quotation {{02-create.order_reference}} (for customer '{{runid}} Bench Customer') in the Sales app and confirm it so it becomes a sales order (use the Confirm button, and accept/confirm any dialog that appears, e.g. a customer address or confirmation prompt). Then report: (a) the order reference/name shown on the record (e.g. {{02-create.order_reference}}), and (b) the status the app now shows for the order (the status bar value, e.g. 'Sales Order'). Note: this Odoo app long-polls and is never network-idle, so wait for concrete page state rather than waiting for network idle.",
+                      "duration": 1132
+                    },
+                    {
+                      "title": "06-open: In Odoo, open the sales order {{02-create.order_reference}} (for customer '{{runid}} Bench Customer') in the Sales app — it is currently confirmed with status 'Sales Order'. Cancel it so nothing stays active: use the action menu (the gear/cog dropdown, often under 'Action' or the ⚙️ menu) to find a Cancel option, or use any Cancel button available, and confirm any confirmation dialog that appears. Then report the status the app now shows for the order (the status bar value, e.g. 'Cancelled'). Note: this Odoo app long-polls and is never network-idle, so wait for concrete page state rather than waiting for network idle.",
+                      "duration": 10171
+                    }
+                  ],
+                  "startTime": "2026-09-18T12:41:07.826Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "5808fcbd5aaf2a209065-db60bc00b5f505ec1d83",
+          "file": "fwod72.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-18T12:41:06.207Z",
+    "duration": 39626.573000000004,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

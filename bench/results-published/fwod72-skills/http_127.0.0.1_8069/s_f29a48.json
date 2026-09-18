@@ -1,0 +1,72 @@
+{
+ "id": "s_f29a48",
+ "origin": "http://127.0.0.1:8069",
+ "template": "Open {{v2}} and log in with username 'admin' and password 'admin'. Then go to the Contacts app and create a new contact named '{{v3}}' (an individual person, not a company) with the City field set to '{{v4}}'. Save the contact and report the exact Name and City values shown on the saved record. Note: this Odoo app long-polls and is never network-idle, so wait for concrete page state rather than waiting for network idle.",
+ "params": {
+  "v1": {
+   "example": "fwod72-n1",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "http://127.0.0.1:8069/",
+   "usedIn": [
+    2
+   ]
+  },
+  "v3": {
+   "example": "fwod72-n1 Bench Customer",
+   "usedIn": [],
+   "known": true
+  },
+  "v4": {
+   "example": "Benchville",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8069/"
+ },
+ "steps": [
+  {
+   "tool": "read",
+   "args": {
+    "what": "url"
+   },
+   "locators": {},
+   "label": "starting_page_url"
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v2}}"
+   },
+   "locators": {}
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-18T12:31:03.205Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4,
+  "lastUsed": "2026-09-18T12:39:17.387Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_8097aa",
+  "index": 0,
+  "of": 6
+ },
+ "provenance": {
+  "session": "fwod72-n1",
+  "instruction": "Open http://127.0.0.1:8069/ and log in with username 'admin' and password 'admin'. Then go to the Contacts app and create a new contact named 'fwod72-n1 Bench Customer' (an individual person, not a company) with the City field set to 'Benchville'. Save the contact and report the exact Name and City values shown on the saved record. Note: this Odoo app long-polls and is never network-idle, so wait for concrete page state rather than waiting for network idle.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-18T12:31:03.205Z"
+ },
+ "revision": 3
+}
