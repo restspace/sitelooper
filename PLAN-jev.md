@@ -283,6 +283,36 @@ expectation lines.
   pass's duration is only on the daemon's stderr, which goes nowhere. Both want a
   summary row in `system-one.jsonl` (requests, tokens, ms).
 
+### Step 3 result — measured p, repairdesk `fwrdj3-n1`, 2026-09-18 (local box, deepseek-v4.1-flash)
+
+6/6 verified, $0.079, 425s wall; 381s inside 9 instructions, 98 model calls:
+**model 182s (48%), tools 195s (51%)**. So locally **p ~ 0.48, not 0.9+** — the
+record-vs-replay proxy overstated it, because recording does far more browser work
+than replay. Mean model turn 1.4-1.9s => r ~ 5x against a 0.3s Jev request.
+With p=0.48, r=5: even q=1 gives **1.6x**; q=0.7 gives 1.4x. The 5-8x figure needs
+the cloud baseline's p to be much higher — **measure p on a cloud run before
+believing it** (the instrumentation now ships in every result as `inner.timing`).
+
+Where the time actually went:
+| first tool of turn | turns | model s | tool s | note |
+|---|---|---|---|---|
+| batch | 25 | 43 | 55 | three batches of exactly 13.1s = a step timing out inside |
+| locate (read-back stragglers) | 9 | 33 | 0 | 3.7s each, full-history prompt — **site C is worth ~9% of recording** |
+| (no tool call) | 12 | 31 | 0 | prose-only / unproductive turns: 8% of the run |
+| snapshot | 17 | 24 | **120** | four snapshots of exactly 30.0s |
+| click | 15 | 21 | 9 | |
+| screenshot | 11 | 16 | 1 | verification looks — what G targets |
+
+**The biggest single cost was a bug, not the model:** a scoped `snapshot` whose
+selector matches nothing fails fast in `mode:'ai'` (31ms) and then the catch retried
+with the plain aria snapshot, which waits Playwright's full 30s default. 120s of a
+381s recording. Fixed in `src/daemon/refs.ts` (2s grace, then an explicit "nothing
+matches"). Timeouts overall (4x30s + 3x13s + 1x10s) were ~169s = 44% of the run.
+**Lesson for this plan: instrument before optimising — the cheapest 1.4x here was
+free and had nothing to do with Jev.** Re-measure p after the fix: removing 120s of
+tool time raises p to ~0.70, which is what makes the actor worth more (q=0.8, r=5 =>
+~1.8x on top).
+
 ## 4. Sites, in order of value ÷ risk
 
 ### A. Locator repair proposer — `src/skills/repair.ts:576` (`llmProposer`)
