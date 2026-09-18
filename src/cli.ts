@@ -473,9 +473,9 @@ async function main(): Promise<void> {
   }
   if (command === 'config' && positional[0] === 'set') {
     const [, key, value] = positional;
-    if (!key || value === undefined) fail('usage: config set <provider|model|fallbackModel|baseUrl|apiKey> <value>', 2);
+    if (!key || value === undefined) fail('usage: config set <provider|model|fallbackModel|baseUrl|apiKey|jev|jevApiKey|jevModel> <value>', 2);
     const merged = writeGlobalConfig({ [key]: value });
-    const shown = { ...merged, ...(merged.apiKey ? { apiKey: '***' } : {}) };
+    const shown = { ...merged, ...(merged.apiKey ? { apiKey: '***' } : {}), ...(merged.jevApiKey ? { jevApiKey: '***' } : {}) };
     console.log(`${globalConfigPath()}: ${JSON.stringify(shown)}`);
     console.log('applies to the next instruction — running daemons re-read this file per call');
     return;

@@ -189,9 +189,13 @@ export interface GlobalConfig {
   fallbackModel?: string;
   baseUrl?: string;
   apiKey?: string;
+  /** The optional System One tier (see system-one.ts): `auto` (on iff a key resolves) or `off`. */
+  jev?: string;
+  jevApiKey?: string;
+  jevModel?: string;
 }
 
-const CONFIG_KEYS: (keyof GlobalConfig)[] = ['provider', 'model', 'fallbackModel', 'baseUrl', 'apiKey'];
+const CONFIG_KEYS: (keyof GlobalConfig)[] = ['provider', 'model', 'fallbackModel', 'baseUrl', 'apiKey', 'jev', 'jevApiKey', 'jevModel'];
 
 export function globalConfigPath(): string {
   return path.join(rootDir(), 'config.json');

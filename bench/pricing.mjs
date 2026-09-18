@@ -82,6 +82,17 @@ export function priceRun(rates, { provider, model, orchestrator, inner }) {
     innerBasis = innerUsd === null ? `unknown rate for ${u.model}` : 'single-rate ESTIMATE (no per-model split)';
   }
 
+  // The optional System One tier (Jev) bills on its own host, so it is priced
+  // from its own table and kept out of byModel — an unknown model THERE nulls
+  // the whole run. `jev-latest` is an alias, and the served id (jev-1.13.0, …)
+  // is what usage is keyed by, so an unlisted version takes the alias's rate.
+  let systemOneUsd = 0;
+  for (const [m, t] of Object.entries(u.systemOne ?? {})) {
+    const rate = rateFor(rates, 'typesafe', m) ?? rateFor(rates, 'typesafe', 'jev-latest');
+    systemOneUsd += cost(rate, { input: t.inputTokens ?? 0, output: t.outputTokens ?? 0 }) ?? 0;
+  }
+  if (innerUsd !== null) innerUsd += systemOneUsd;
+
   const totalUsd = orchUsd === null || innerUsd === null ? null : orchUsd + innerUsd;
-  return { orchUsd, innerUsd, totalUsd, innerBasis };
+  return { orchUsd, innerUsd, totalUsd, innerBasis, systemOneUsd };
 }

@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import net from 'node:net';
 import path from 'node:path';
 import { AnthropicProvider, OpenAICompatProvider, resolveProviderConfig, type Provider } from '../agent/llm.js';
+import { buildSystemOne, resolveSystemOneConfig, type SystemOne } from '../agent/system-one.js';
 import { runEscalatingInstruction, type InstructionResult, type SkillRecord } from '../agent/loop.js';
 import { executeTool } from '../agent/tools.js';
 import { urlPattern as compiledUrlPattern, dropAbsentReadLocators, dropDeadReadLocators, fillParams, markReadsProven, stranded, urlParts } from '../skills/compile.js';
@@ -345,6 +346,19 @@ ${describeLeaks(leaks.slice(0, 6))}`);
     return build({ ...config, model, ...(model !== config.model ? { extraBody: config.fallbackExtraBody } : {}) });
   }
 
+  /**
+   * The optional System One tier (Jev), or null when no TypeSafe key is
+   * configured or it is switched off. It sits BELOW the routine model: it can
+   * only pick among options code enumerated, so every site that uses it keeps
+   * its existing model path for a null here, a thrown ask, or a low-confidence
+   * answer — all three are the same "Jev had nothing to say". Resolved per
+   * call, like the providers, so `config set jev off` applies to the next ask.
+   */
+  // No call site yet: PLAN-jev.md step 0 lands the tier, steps 1+ consume it.
+  protected systemOne(overrides: { off?: boolean } = {}): SystemOne | null {
+    return buildSystemOne(resolveSystemOneConfig(overrides), (model, usage) => this.state.recordSystemOneUsage(model, usage));
+  }
+
   async listen(): Promise<void> {
     const sock = socketPath(this.opts.session);
     if (process.platform !== 'win32' && fs.existsSync(sock)) fs.unlinkSync(sock);
@@ -577,6 +591,7 @@ ${describeLeaks(leaks.slice(0, 6))}`);
 
       case 'config': {
         const cfg = resolveProviderConfig();
+        const jev = resolveSystemOneConfig();
         return {
           session: this.opts.session,
           pid: process.pid,
@@ -599,6 +614,15 @@ ${describeLeaks(leaks.slice(0, 6))}`);
           usage: this.state.usage,
           usageByModel: this.state.usageByModel,
           servedByModel: this.state.servedByModel,
+          systemOne: {
+            enabled: jev.enabled,
+            mode: jev.mode,
+            model: jev.model,
+            apiKeySet: Boolean(jev.apiKey),
+            apiKeyEnvVars: jev.keyEnvVars,
+            usage: this.state.systemOne,
+            ...this.state.systemOneDecisions,
+          },
           historyMessages: this.state.messages.length,
         };
       }

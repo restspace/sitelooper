@@ -12,6 +12,24 @@ const SNAPSHOT_STUB =
 /** Every placeholder a tool result may already hold, so passes don't restub each other. */
 const STUBS = new Set([ELIDED, FAILED_ATTEMPT_STUB, SNAPSHOT_STUB]);
 
+/** One System One decision, as logged for calibration (see recordSystemOneDecision). */
+export interface SystemOneDecision {
+  /** Which call site asked, e.g. 'repair.propose'. Thresholds are per site. */
+  site: string;
+  /** The served model version — `jev-latest` moves, so a calibration shift must be attributable. */
+  model: string;
+  /** How many options/shards the question ranged over. */
+  options: number;
+  chosen: string | null;
+  confidence: number;
+  /** What the site did with the answer: cleared its gate, or left it to the model path (and why). */
+  outcome: 'acted' | 'deferred';
+  why?: string;
+  /** Whether the deterministic verifier later agreed — the label calibration needs. */
+  verified?: boolean;
+  ms?: number;
+}
+
 /**
  * Per-session agent memory: one running message history (instruction N+1 sees
  * 1..N), the app briefing, and notes. Briefing and notes are persisted to the
@@ -124,6 +142,48 @@ export class SessionState {
     bucket.completionTokens += usage.completionTokens;
     bucket.cachedTokens += usage.cachedTokens;
     bucket.instructions += 1;
+  }
+
+  /**
+   * The System One tier's usage, per served model (see agent/system-one.ts).
+   *
+   * Deliberately NOT folded into `usageByModel`: everything in that map is
+   * priced under the inner provider's rate table, and a model it cannot find
+   * there prices the whole run at null — which silently disables the bench's
+   * spend ceiling. Jev bills on its own host at its own rate, so it gets its
+   * own bucket. `decisions` counts asks that reached a site's gate; `acted`
+   * the ones that cleared it.
+   */
+  systemOne: Record<string, { inputTokens: number; outputTokens: number; requests: number }> = {};
+  systemOneDecisions = { decisions: 0, acted: 0 };
+
+  recordSystemOneUsage(model: string, usage: { inputTokens: number; outputTokens: number }): void {
+    const bucket = (this.systemOne[model || 'jev'] ??= { inputTokens: 0, outputTokens: 0, requests: 0 });
+    bucket.inputTokens += usage.inputTokens;
+    bucket.outputTokens += usage.outputTokens;
+    bucket.requests += 1;
+  }
+
+  /**
+   * Append one System One decision to `system-one.jsonl` in the session dir.
+   *
+   * This file is the calibration dataset: every confidence threshold in
+   * PLAN-jev.md is meant to be read off it (what was asked, what came back,
+   * whether the site acted, and — filled in by the site once known — whether
+   * the deterministic verifier agreed), not taken from the docs' generic
+   * figures. Best-effort: a log that cannot be written must not fail a step.
+   */
+  recordSystemOneDecision(entry: SystemOneDecision): void {
+    this.systemOneDecisions.decisions += 1;
+    if (entry.outcome === 'acted') this.systemOneDecisions.acted += 1;
+    try {
+      fs.appendFileSync(
+        path.join(ensureSessionDir(this.session), 'system-one.jsonl'),
+        JSON.stringify({ ts: new Date().toISOString(), ...entry }) + '\n',
+      );
+    } catch {
+      /* best-effort */
+    }
   }
 
   constructor(readonly session: string) {

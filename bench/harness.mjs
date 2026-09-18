@@ -893,6 +893,7 @@ async function collectInnerUsage() {
         log({ k: 'inner-usage-stale', seen: prompt, kept: inner.promptTokens });
       }
     }
+    if (cfg.systemOne?.usage && Object.keys(cfg.systemOne.usage).length) inner.systemOne = cfg.systemOne.usage;
     if (cfg.skills) inner.skills = cfg.skills;
     inner.model = cfg.model ?? inner.model ?? null;
     inner.fallbackModel = cfg.fallbackModel ?? inner.fallbackModel ?? null;
