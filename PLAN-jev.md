@@ -725,3 +725,19 @@ still verified 6/6. But the 78 serial asks cost 18s, which ate most of the 26s o
 time saved. One run per arm and the orchestrator split the task differently, so the
 7% is inside the noise. **Next: ask Jev concurrently with the model and cancel the model
 when Jev clears the gate — a deferral then costs nothing.** `bench/jev-act-report.mjs`.
+
+### Second A/B — the actor asked beside the model (5a10cfe)
+
+| arm | verified | instructions | instruction time | model calls | model s | tool s | Jev acts | cost | wall |
+|---|---|---|---|---|---|---|---|---|---|
+| fwrdj9 model only | 6/6 | 5 | 188.2s | 74 | 128.5 | 54.4 | - | $0.041 | 216s |
+| fwrdj10 Jev beside | 6/6 | 4 | 120.8s | 51 | 81.4 | 34.8 | 3 of 51 asks, all ok | $0.038 | 156s |
+
+The deferral cost is gone (the 15.8s of Jev time now overlaps model time). But 3 actions
+cannot explain 67s: the orchestrator again split the task differently (4 vs 5 instructions)
+and that, not Jev, is most of the gap. Across both A/Bs: 10 actions, 10 succeeded, 12/12
+objectives verified, no harm — and Jev acts on only 4-9% of turns. Of fwrdj8's 52
+below-gate asks, 30 were observe/read/wait (correct deferrals); element actions are about
+a third of all asks. Ceiling on this task is therefore <10% of model calls.
+=> Safe, cheap, small. The larger lever is the model's look turns (44 of 87 in fwrdj4),
+which is a code change (return the page diff with every action), not a Jev one.
