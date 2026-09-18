@@ -142,8 +142,7 @@ export class SessionState {
     // turn TYPE by the model time it costs (PLAN-jev.md 4c), and nothing reads
     // them at run time. Best-effort, like the decision log.
     try {
-      fs.appendFileSync(path.join(ensureSessionDir(this.session), 'timing.jsonl'), JSON.stringify({ ts: new Date().toISOString(), model, ...t }) + '
-');
+      fs.appendFileSync(path.join(ensureSessionDir(this.session), 'timing.jsonl'), JSON.stringify({ ts: new Date().toISOString(), model, ...t }) + '\n');
     } catch {
       /* best-effort */
     }
