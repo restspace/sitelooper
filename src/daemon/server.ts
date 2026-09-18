@@ -2062,6 +2062,14 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
         replay = null;
         continue;
       }
+      // A partial stop because the page is PAST the procedure's start — the
+      // record it creates already exists — with nothing created by what ran:
+      // the steps before the gate were the way to the page, and the work the
+      // pin would have done there is done. fwod71-n2's 04-open ran its first
+      // step and stopped before the save its second step gates, on the
+      // quotation the graduated 03-create had already saved; the pin stayed,
+      // and n3 met the same gate. The pin is nothing to keep (see pinPast).
+      if (r.pastStart && chosen && cand.skill.id === chosen.id && !r.created.length) pinPast = true;
       break; // partial: the page has changed — hand what ran to recovery, never restart another candidate
     }
     if (!match || !replay) {
@@ -2117,6 +2125,11 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       const createdSoFar = replay.created;
       replay = r;
       replay.created = [...createdSoFar, ...r.created];
+      // A later segment refused as past ITS start, the chain having created
+      // nothing so far: the record this chain would create is already on the
+      // page, so the pin is past its start as a whole (same rule as the head
+      // case above).
+      if (r.pastStart && chosen && match.skill.id === chosen.id && !replay.created.length) pinPast = true;
       last = next;
       current = next;
       agg.stepsRun += r.stepsRun;
@@ -2178,6 +2191,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
         prelude: ranNote + renderReplay(last, replay),
         partial: record,
         why: `${last.id} stopped at step ${replay.failedAt ?? '?'} — ${replay.reason ?? 'no reason recorded'}`,
+        ...(pinPast ? { pinPast } : {}),
       });
     }
     // Drop echo reads from the report's confident values: a value the skill

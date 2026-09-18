@@ -981,6 +981,56 @@ describe('work the recording did that the flow does not contain', () => {
     expect(flow.steps.map((s) => Boolean(s.adopted))).toEqual([true, false]);
   });
 
+  // fwod69/70/71: the create blocked on a configurator modal with the form
+  // unsaved; the next instruction, issued on that very page, dismissed the
+  // modal and saved (the url gained id=21). Two steps split one piece of
+  // work: a model-first create and a rescue pin that every clean replay
+  // refuses as past its start once the create saves for itself. One step.
+  it('merges a continuation that landed the record an adopted create left unsaved into the adopted step', () => {
+    const form = `${ORIGIN}/web#action=316&cids=1&menu_id=194&model=sale.order&view_type=form`;
+    const entries: RecordedEntry[] = [
+      { k: 'instruction', text: 'Create a quotation with one line and save it.', url: `${ORIGIN}/web#action=123&cids=1&menu_id=81` },
+      { k: 'step', tool: 'click', args: { target: '@e1' }, locators: {}, diff: { url: form } },
+      { k: 'step', tool: 'fill', args: { target: '@e2', value: 'x' }, locators: {} },
+      { k: 'report', status: 'failure', summary: 'a configurator modal blocks the save', values: { product_name: 'Customizable Desk', quotation_number: 'NOT ASSIGNED' }, skill: 's_failed' },
+      { k: 'instruction', text: "On the unsaved quotation form there is a blocking 'Configure your product' modal. Dismiss it, keep one line, save.", url: form },
+      { k: 'step', tool: 'click', args: { target: '@e3' }, locators: {}, diff: { url: `${form}&id=21` } },
+      { k: 'report', status: 'success', summary: 'saved', values: { quotation_number: 'S00021', product_name: '[E-COM11] Cabinet with Doors' }, skill: 's_rescue', skillParams: { v1: 'x' } },
+      { k: 'instruction', text: 'Open quotation S00021 and confirm it.', url: `${form}&id=21` },
+      { k: 'step', tool: 'click', args: { target: '@e4' }, locators: {} },
+      { k: 'report', status: 'success', summary: 'confirmed', values: {}, skill: 's_confirm' },
+    ];
+    const flow = buildFlow(entries, { name: 'f', origin: ORIGIN, startUrl: `${ORIGIN}/`, vars: {}, session: 's' })!;
+    expect(flow.steps.map((s) => [s.id, Boolean(s.adopted), s.skill])).toEqual([
+      ['01-create', true, undefined],
+      ['02-open', false, 's_confirm'],
+    ]);
+    // The merged step owns the continuation's outcome: its values (the
+    // continuation's on conflict), its end url, and the reference targets.
+    expect(flow.steps[0].recorded.quotation_number).toBe('S00021');
+    expect(flow.steps[0].recorded.product_name).toBe('[E-COM11] Cabinet with Doors');
+    expect(flow.steps[0].outputs).toEqual(expect.arrayContaining(['quotation_number', 'product_name']));
+    expect(flow.steps[1].instruction).toContain('{{01-create.quotation_number}}');
+    expect(unbankedMutations(entries)).toEqual([]);
+  });
+
+  it('keeps a continuation that reached no record as the next step it is', () => {
+    const board = `${ORIGIN}/board/3`;
+    const entries: RecordedEntry[] = [
+      { k: 'instruction', text: 'Create a task.', url: `${ORIGIN}/` },
+      { k: 'step', tool: 'click', args: { target: '@e1' }, locators: {}, diff: { url: board } },
+      { k: 'report', status: 'blocked', summary: 'turn cap', values: {} },
+      { k: 'instruction', text: 'Move the task to Done.', url: board },
+      { k: 'step', tool: 'click', args: { target: '@e2' }, locators: {}, diff: { url: board } },
+      { k: 'report', status: 'success', summary: 'moved', values: {}, skill: 's_move' },
+    ];
+    const flow = buildFlow(entries, { name: 'f', origin: ORIGIN, startUrl: `${ORIGIN}/`, vars: {}, session: 's' })!;
+    expect(flow.steps.map((s) => [Boolean(s.adopted), s.skill])).toEqual([
+      [true, undefined],
+      [false, 's_move'],
+    ]);
+  });
+
   it('still drops (and warns about) an observe-only blocked group even when the session continued from its page', () => {
     const entries: RecordedEntry[] = [
       { k: 'instruction', text: 'Read the totals.', url: `${ORIGIN}/orders/7` },

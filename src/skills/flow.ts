@@ -6,6 +6,7 @@ import path from 'node:path';
 import type { LocatorCandidate, RecordedEntry, RecordedInstruction, RecordedReport, StepDiff } from '../daemon/recorder.js';
 import { rootDir } from '../shared/paths.js';
 import { urlParts, urlPattern } from './compile.js';
+import { mintedShape } from '../execution/url.js';
 import { idPositionPart } from './ledger.js';
 import { MIN_ID_LEN, looksLikeId, tokenPattern } from './shape.js';
 import { statedPlainly } from '../spec/rethread.js';
@@ -637,7 +638,116 @@ function resolveGroups(groups: Group[]): Group[] {
     g.adopted = true;
     kept[i] = true;
   }
+  // An adopted group that reached no record, continued by a group that
+  // started on the very page it left and reached one, was COMPLETED by that
+  // group: the two are one step of the flow, not two. Kept as two, the
+  // continuation became a step of its own, pinned to a procedure recorded
+  // on the unsaved form — which every clean replay refuses as past its
+  // start (rule G) once the adopted step's model-first replay saves the
+  // record itself — while the adopted step's outputs were the failed
+  // attempt's and the continuation's reference targets moved with it.
+  // fwod69/70/71's create-quotation recording: the create blocked on a
+  // configurator modal, the next instruction dismissed it, kept one line and
+  // saved (S00021), and 02-create/03-open (then 03-create/04-open) split that
+  // one piece of work between a model-first step and an unreplayable pin.
+  // Merged, the adopted step owns the whole outcome — the continuation's
+  // report values, end url and diffs — replays model-first, graduates into a
+  // procedure that does all of it, and no rescue pin exists to refuse. The
+  // continuation's own procedure is not carried: it is a way of finishing a
+  // page the merged step no longer leaves behind. A continuation that
+  // reached no record (a mere next task on the same page) is left as the
+  // step it is, and an adopted group that reached its record on its own
+  // (fwod27's shape) keeps its successor too.
+  //
+  // "Completed" is read off where the continuation's url went: a rescue
+  // saves the page it was given, so it lands the record before it leaves
+  // that page's route (odoo's form gains `&id=21` in place; grafana's
+  // /dashboard/new opens its settings view, then lands on /d/<uid>/…). A
+  // next task that happens to make a record leaves first — fwod26's
+  // blocked sign-in was followed by the create-contact instruction on the
+  // page it left, which walked to Contacts before it saved contact 44 —
+  // and is a step of its own.
+  for (let i = 0; i < groups.length - 1; i++) {
+    const g = groups[i];
+    if (!kept[i] || !g.adopted) continue;
+    while (i < groups.length - 1) {
+      const next = groups[i + 1];
+      if (!kept[i + 1] || next.firstTool === 'goto') break;
+      if (landsRecord(g.instruction.url, g.endUrl) || !sameUrlState(g.endUrl, next.instruction.url) || !landedBeforeLeaving(next)) break;
+      const values = { ...(g.report?.values ?? {}), ...(next.report?.values ?? {}) };
+      const { skill: _skill, skillParams: _params, ...rest } = next.report ?? { status: 'success' as const, summary: '', values: {} };
+      g.report = { ...rest, values } as Group['report'];
+      g.endUrl = next.endUrl ?? g.endUrl;
+      g.diffs.push(...next.diffs);
+      g.mutations += next.mutations;
+      g.mutationsDiffed += next.mutationsDiffed;
+      g.mutationsEffective += next.mutationsEffective;
+      kept[i + 1] = false;
+      // The merged group now ends where its continuation did; a further
+      // continuation of THAT is judged against the merged group.
+      groups.splice(i + 1, 1);
+      kept.splice(i + 1, 1);
+    }
+  }
   return groups.filter((_, i) => kept[i]);
+}
+
+/**
+ * Whether going from `from` to `to` landed a record: a url part with a
+ * minted shape (execution/url.ts mintedShape — an id, a uid, never a word)
+ * that `from` did not carry at that position, or carried as a word. Odoo's
+ * save turns `…&model=sale.order&view_type=form` into the same with
+ * `&id=21`; a list-to-form navigation gains only `model` and `view_type`.
+ * An app constant that looks minted and merely changes value (odoo's
+ * `action=123` → `action=316`) is not a landing: both sides look minted.
+ */
+function landsRecord(from?: string, to?: string): boolean {
+  if (!from || !to) return false;
+  const before = new Map(urlParts(from).map((p) => [p.label, p.value]));
+  return urlParts(to).some((p) => {
+    if (!mintedShape(p.value)) return false;
+    const was = before.get(p.label);
+    return was === undefined || (was !== p.value && !mintedShape(was));
+  });
+}
+
+/**
+ * Whether this group's steps landed a record (landsRecord, from the url the
+ * instruction was issued on) before any of them left that url's route
+ * (sameRoute). View state on the same route — grafana's `?editview=settings`,
+ * a hash key gained — is not leaving.
+ */
+function landedBeforeLeaving(g: Group): boolean {
+  const from = g.instruction.url;
+  if (!from) return false;
+  for (const u of g.diffs.map((d) => d.url)) {
+    if (!u || u === from) continue;
+    if (landsRecord(from, u)) return true;
+    if (!sameRoute(from, u)) return false;
+  }
+  return false;
+}
+
+/**
+ * Still on the page `a` addressed: every part `a` carries is in `b` with the
+ * same value, or both sides look minted (odoo's `action=315` → `action=287`
+ * says nothing on its own; `model=sale.order` → `model=res.partner` does).
+ * Parts `b` gains are view state, not a departure.
+ */
+function sameRoute(a: string, b: string): boolean {
+  const to = new Map(urlParts(b).map((p) => [p.label, p.value]));
+  return urlParts(a).every((p) => {
+    const v = to.get(p.label);
+    return v !== undefined && (v === p.value || (mintedShape(v) && mintedShape(p.value)));
+  });
+}
+
+/** The same page in the same state: every addressable part equal (samePage ignores hash state, which is where odoo keeps the record). */
+function sameUrlState(a?: string, b?: string): boolean {
+  if (!samePage(a, b)) return false;
+  const pa = urlParts(a!);
+  const pb = urlParts(b!);
+  return pa.length === pb.length && pa.every((p, i) => pb[i].label === p.label && pb[i].value === p.value);
 }
 
 /**
