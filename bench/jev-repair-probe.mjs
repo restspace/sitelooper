@@ -18,6 +18,16 @@
  * answers is "which of THESE elements is the control", so with no element list
  * there is no question to replay — only a ticket with no ballot.
  *
+ * SINCE SITE B, THAT IS NO LONGER PERMANENT. Both repairs that hold the
+ * element list now store it on the ticket (`DriftTicket.rows`): the inline
+ * heal (src/skills/heal-jev.ts) and `patchSegment`. Point `--tickets` at a
+ * directory of `*-drift.json` sidecars and every such ticket becomes a REAL
+ * case here - the page as it actually was, the chain as it actually died. The
+ * label is what happened afterwards: a ticket whose heal the step's own gates
+ * accepted (`healed`, not `recovered`) is labelled with the locator that
+ * worked; anything else is an unlabelled case, run and reported but not
+ * graded, because nobody has established what the right answer was.
+ *
  * So the cases below are synthetic, and labelled as such. What is real in them
  * is the part the repo does own: every dead locator chain is copied verbatim
  * from a published drift ticket (grafana fwgr16-25, the autotask fwat2/3 runs,
@@ -36,6 +46,7 @@
  * wrong answers stop: the gate must sit above every wrong-but-confident case
  * and below as many right ones as possible. The table prints both.
  */
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -43,6 +54,9 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const argv = process.argv.slice(2);
 const arg = (n, d) => (argv.includes(n) ? argv[argv.indexOf(n) + 1] : d);
 const REPEAT = Number(arg('--repeat', 3));
+// A directory of drift sidecars (bench/results/*-drift.json) or one such file.
+// Tickets carrying `rows` are added to the case list as real cases.
+const TICKETS = arg('--tickets', '');
 const JSON_OUT = argv.includes('--json');
 // The default is the repo's own build; --dist points at a private one so a
 // probe run never has to race another process's `npm run build`.
@@ -369,7 +383,69 @@ const CASES = [
   }),
 ];
 
+// --- real cases, from drift tickets -------------------------------------------
+
+/**
+ * Every ticket that carries a live-page ballot, as a case.
+ *
+ * `want` is an INDEX INTO `rows`, so a ticket's recorded answer has to be
+ * found among its own rows — the same row the locator was built from. A
+ * healed-and-verified ticket therefore grades exactly as a synthetic case
+ * does; a ticket with no such row (a repair that failed, or one whose rows
+ * were captured after the page moved on) is carried as `want: undefined`,
+ * asked, and reported ungraded rather than dropped: "what did it say about a
+ * case nobody labelled" is still half of a calibration curve.
+ */
+function ticketCases(where) {
+  if (!where) return [];
+  const root = path.resolve(where);
+  if (!fs.existsSync(root)) {
+    console.error(`--tickets ${root}: not found`);
+    process.exit(2);
+  }
+  const files = fs.statSync(root).isDirectory()
+    ? fs.readdirSync(root).filter((n) => n.endsWith('-drift.json')).map((n) => path.join(root, n))
+    : [root];
+  const out = [];
+  for (const file of files) {
+    let tickets;
+    try {
+      tickets = JSON.parse(fs.readFileSync(file, 'utf8'));
+    } catch {
+      continue;
+    }
+    for (const [i, t] of (Array.isArray(tickets) ? tickets : []).entries()) {
+      if (!t.rows?.length) continue;
+      // The answer, when the run established one: the row whose code-built
+      // locator IS the proposal the step then ran on and passed its own gates.
+      const proved = t.healed && !t.recovered && t.proposal ? JSON.stringify(t.proposal) : null;
+      const want = proved ? t.rows.findIndex((r) => JSON.stringify(locatorFromRow(r)) === proved) : -1;
+      out.push({
+        id: `${path.basename(file).replace('-drift.json', '')}#${i}`,
+        app: 'live',
+        shape: proved ? 'healed' : 'unlabelled',
+        why: `${t.flow}/${t.step} ${t.skill}${t.atStep ? `/${t.atStep}` : ''} — ${t.missedLocator ?? 'no locator'}`,
+        template: t.template ?? t.skill,
+        tool: t.tool ?? 'click',
+        kind: t.recordedKind,
+        families: t.recordedFamilies,
+        // The sidecar keeps the dead chain only as the missed expression, and
+        // that expression is what the state renders — so it is the chain.
+        chain: t.missedLocator ? [{ kind: 'css', selector: t.missedLocator }] : [],
+        rows: t.rows,
+        want: want >= 0 ? want : undefined,
+      });
+    }
+  }
+  return out;
+}
+
+const REAL = ticketCases(TICKETS);
+if (REAL.length) console.error(`[probe] ${REAL.length} real case(s) from drift tickets (${REAL.filter((c) => c.want !== undefined).length} labelled)`);
+const ALL = [...CASES, ...REAL];
+
 // --- running ------------------------------------------------------------------
+
 
 function contextFor(c) {
   return {
@@ -401,8 +477,10 @@ async function runCase(c) {
   const acted = !!reading?.value && reading.confidence >= gate;
   // Graded on the LOCATOR, not the label: a tournament's final label indexes
   // the shortlist, so only the built candidate is comparable across paths.
-  const wanted = c.want === null ? null : locatorFromRow(c.rows[c.want]);
-  const agrees = c.want === null ? !reading?.value : JSON.stringify(reading?.value ?? null) === JSON.stringify(wanted);
+  // `undefined` is "nobody labelled this one": asked and reported, never graded.
+  const wanted = c.want === null || c.want === undefined ? null : locatorFromRow(c.rows[c.want]);
+  const agrees =
+    c.want === undefined ? null : c.want === null ? !reading?.value : JSON.stringify(reading?.value ?? null) === JSON.stringify(wanted);
   return {
     id: c.id, app: c.app, shape: c.shape, chose, agrees, confidence: reading?.confidence ?? 0, acted,
     got: reading?.value ? candidateExpr(reading.value) : null,
@@ -411,7 +489,7 @@ async function runCase(c) {
 }
 
 const rows = [];
-for (const c of CASES) {
+for (const c of ALL) {
   for (let r = 0; r < REPEAT; r++) rows.push(await runCase(c));
 }
 
@@ -421,23 +499,25 @@ if (JSON_OUT) {
   console.log(JSON.stringify({ model: config.model, repeat: REPEAT, usage, rows }, null, 2));
 } else {
   const pad = (s, n) => String(s).padEnd(n);
-  console.log(`\n${CASES.length} synthetic cases × ${REPEAT} (model ${config.model}, gate ${decide.gateFor('repair.propose')})\n`);
+  console.log(`\n${CASES.length} synthetic + ${REAL.length} ticket cases × ${REPEAT} (model ${config.model}, gate ${decide.gateFor('repair.propose')})\n`);
   console.log(`${pad('case', 26)}${pad('shape', 12)}${pad('agree', 7)}${pad('chose', 8)}${pad('conf', 18)}ms`);
-  for (const c of CASES) {
+  for (const c of ALL) {
     const mine = rows.filter((r) => r.id === c.id);
     const ok = mine.filter((r) => r.agrees).length;
     const confs = mine.map((r) => r.confidence.toFixed(2)).join('/');
+    const graded = c.want === undefined ? '  -  ' : `${ok}/${mine.length}`;
     console.log(
-      `${pad(c.id, 26)}${pad(c.shape, 12)}${pad(`${ok}/${mine.length}`, 7)}${pad(mine[0].chose, 8)}${pad(confs, 18)}${Math.round(mine.reduce((a, r) => a + r.ms, 0) / mine.length)}`,
+      `${pad(c.id, 26)}${pad(c.shape, 12)}${pad(graded, 7)}${pad(mine[0].chose, 8)}${pad(confs, 18)}${Math.round(mine.reduce((a, r) => a + r.ms, 0) / mine.length)}`,
     );
-    for (const r of mine.filter((x) => !x.agrees)) console.log(`    MISS: chose ${r.chose} @ ${r.confidence.toFixed(2)} ${r.got ?? ''}${r.why ? ` (${r.why})` : ''}`);
+    for (const r of mine.filter((x) => x.agrees === false)) console.log(`    MISS: chose ${r.chose} @ ${r.confidence.toFixed(2)} ${r.got ?? ''}${r.why ? ` (${r.why})` : ''}`);
   }
-  const agree = rows.filter((r) => r.agrees).length;
+  const gradedRows = rows.filter((r) => r.agrees !== null);
+  const agree = gradedRows.filter((r) => r.agrees).length;
   // The gate-setting numbers: the highest confidence a WRONG answer reached
   // (the gate must be above it) and the spread of the right ones.
-  const wrong = rows.filter((r) => !r.agrees && r.confidence > 0);
-  const rightPicks = rows.filter((r) => r.agrees && r.confidence > 0 && r.chose !== 'none');
-  console.log(`\nagreement ${agree}/${rows.length} (${((100 * agree) / rows.length).toFixed(0)}%)`);
+  const wrong = gradedRows.filter((r) => !r.agrees && r.confidence > 0);
+  const rightPicks = gradedRows.filter((r) => r.agrees && r.confidence > 0 && r.chose !== 'none');
+  console.log(`\nagreement ${agree}/${gradedRows.length} (${gradedRows.length ? ((100 * agree) / gradedRows.length).toFixed(0) : '0'}%)${rows.length - gradedRows.length ? `, ${rows.length - gradedRows.length} ungraded` : ''}`);
   console.log(`worst wrong-answer confidence: ${wrong.length ? Math.max(...wrong.map((r) => r.confidence)).toFixed(2) : 'n/a (no wrong answer carried confidence)'}`);
   if (rightPicks.length) {
     const cs = rightPicks.map((r) => r.confidence).sort((a, b) => a - b);

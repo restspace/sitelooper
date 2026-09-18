@@ -65,10 +65,38 @@ const ID_DRIFTS = [
   ['data-testid="modal-save"', 'data-testid="dialog-save"'],
 ]
 
+/**
+ * `add-part-moved` — the case the other three cannot make: a chain with
+ * NOTHING left in it.
+ *
+ * `both` renames the testid and the wording, which kills the testid, role and
+ * label rungs — but every fwrd* recording of the Add-part click also carries a
+ * css PATH (`#view > section > header > button`) and a recorded POINT, and both
+ * of those still resolve against a button that has not moved. That is a
+ * fallthrough, not a dead chain, and site B (inline healing, PLAN-jev.md) only
+ * ever runs on a dead one.
+ *
+ * So this mode renames the control AND relocates it inside the card header:
+ * out of the header itself and in beside the "Parts" heading. `header > button`
+ * then matches nothing, and the recorded point sits over the subtitle rather
+ * than over a button. The app keeps working — `data-action="add-part"` is what
+ * the click handler dispatches on, and it is untouched — which is the whole
+ * point: the page is fine, the recording's names for it are not.
+ */
+const MOVED_DRIFTS = [
+  [
+    "'<h2 id=\"parts-heading\" class=\"card-title\">Parts</h2>' +",
+    "'<h2 id=\"parts-heading\" class=\"card-title\">Parts</h2>' +" +
+      "\n          '<button type=\"button\" class=\"btn btn-primary\" data-testid=\"part-attach\" data-action=\"add-part\">Attach part</button>' +",
+  ],
+  ['\'<button type="button" class="btn btn-primary" data-testid="add-part" data-action="add-part">Add part</button>\' +', "'' +"],
+]
+
 const DRIFTS = {
   labels: LABEL_DRIFTS,
   ids: ID_DRIFTS,
   both: [...ID_DRIFTS, ...LABEL_DRIFTS],
+  'add-part-moved': MOVED_DRIFTS,
 }
 
 const applyDrift = (body, file, mode) => {
@@ -128,7 +156,11 @@ export function start({ port = Number(process.env.PORT) || 4180, dataDir, fresh 
   const store = createStore({ dataDir, fresh })
   const api = createApi({ store })
 
-  let driftMode = null
+  // Explicit and reversible, and OFF unless it is named: with RD_DRIFT unset
+  // the served bytes are the files on disk, which is what every existing
+  // recording and replay depends on. `/__drift?mode=` still overrides it at
+  // runtime, so a drift A/B can flip mid-session without a restart.
+  let driftMode = process.env.RD_DRIFT && DRIFTS[process.env.RD_DRIFT] ? process.env.RD_DRIFT : null
 
   const server = http.createServer((req, res) => {
     const url = new URL(req.url, 'http://127.0.0.1')

@@ -56,6 +56,12 @@ export const GATES: Record<string, number> = {
   // Deferring costs exactly what the tool cost before, so err high first and
   // revisit once system-one.jsonl has volume.
   'repair.propose': 0.85,
+  // Site B. Same chooser as repair.propose, different consequence: it acts on
+  // the live page with no human and no later variant review, so it is
+  // stricter. Probe: wrong answers top out at 0.77-0.80 and are the
+  // duplicate-row shape the resolves-to-one check refuses anyway; correct picks
+  // sit 0.78-0.99, median 0.99. Deferring costs what the step cost before.
+  'replay.heal': 0.9,
   // Sites I and J, advisory. From bench/jev-zoo.mjs: occurrence readings are
   // 100% right in every confidence bucket over 0.2 and contradict the rules
   // on 1.1% of ordinary corpus pairs at 0.6; expectation readings are 100%

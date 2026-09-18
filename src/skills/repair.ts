@@ -1,6 +1,6 @@
 import { candidateExpr, makeLocator, positionalExpr, type LocatorCandidate } from '../daemon/recorder.js';
 import type { Page } from 'playwright-core';
-import type { Decider } from '../agent/decide.js';
+import { cascade, type Decider } from '../agent/decide.js';
 import type { Provider } from '../agent/llm.js';
 import { fillParams } from './compile.js';
 import { newSkillId, type Skill, type SkillStore } from './store.js';
@@ -57,7 +57,40 @@ export interface DriftTicket {
    * the run itself was standing on, still signed in.
    */
   pageUrl?: string;
+  /**
+   * The step's dead chain was healed INLINE during the run (site B of
+   * PLAN-jev.md, replay.ts `tryHeal`): a locator proposed from the live page
+   * stood in, and the step's own recorded expectations then judged it.
+   * `recovered` says which way that went — false means the step ran on the
+   * proposal and the replay walked past it.
+   */
+  healed?: true;
+  /**
+   * The proposal itself. Carried so the later drain can patch the chain
+   * without asking a model to re-derive on a page that may no longer be open
+   * (`healedProposer`). It is evidence, not a patch: nothing reads it until
+   * the ordinary drain runs, under the ordinary verification.
+   */
+  proposal?: LocatorCandidate;
+  /**
+   * The live page's interactive elements at the moment of the repair, bounded.
+   *
+   * There is no offline corpus for the repair chooser because nothing ever
+   * persisted this list: the question is "which of THESE elements is the
+   * control", so a ticket without the elements is a ticket with no ballot, and
+   * `bench/jev-repair-probe.mjs` had to be synthetic for exactly that reason.
+   * Stored by both repairs that have the list to hand — the inline heal and
+   * `patchSegment` — so every repair the tool performs becomes a replayable
+   * case.
+   */
+  rows?: SnapshotRow[];
 }
+
+/**
+ * How many rows a ticket carries. The ballot itself is capped smaller (40, in
+ * repair-jev.ts); this cap is about what a sweep sidecar is allowed to weigh.
+ */
+export const MAX_TICKET_ROWS = 60;
 
 /**
  * Below this start-page similarity a drift is treated as a redesign: the page
@@ -100,7 +133,12 @@ export function triage(tickets: DriftTicket[], store?: Pick<SkillStore, 'get'>):
       out.push({ kind: 're-record', ticket: t, why: `similarity ${t.similarity} < ${LOCALIZED_SIMILARITY}: the page template changed too much to patch selectors` });
       continue;
     }
-    if (t.fallbackUsed !== null && !positionalExpr(t.fallbackUsed)) {
+    // A healed ticket's `fallbackUsed` is NOT a rung of the stored chain — it
+    // is a locator proposed from the live page during the run (site B) — so
+    // there is no index to promote and `promoteFallback` would simply refuse
+    // it. It is the patch-segment case, and the one with its proposal already
+    // in hand (`healedProposer`), which is where the branch below sends it.
+    if (!t.healed && t.fallbackUsed !== null && !positionalExpr(t.fallbackUsed)) {
       out.push({ kind: 'promote-fallback', ticket: t });
       continue;
     }
@@ -423,6 +461,11 @@ export async function patchSegment(
   const recorded = recordedKindOf(step, chain);
   const rows = await interactiveRows(page);
   const snapshot = renderSnapshot(rows);
+  // Labelled data, taken before anything is proposed so it is stored whatever
+  // the proposer then says: a ticket whose repair FAILED is as useful a case
+  // as one whose repair worked, and it is the only kind the synthetic probe
+  // cannot make up. See DriftTicket.rows.
+  ticket.rows = rows.slice(0, MAX_TICKET_ROWS);
   const proposed = await propose({
     skill, ticket, chain, snapshot, rows,
     recordedKind: recorded?.label, recordedFamilies: recorded?.families, tool: step.tool,
@@ -657,6 +700,25 @@ export interface DiagnosticProposer extends ProposeLocator {
   last?: ProposalDiagnostic;
 }
 
+/**
+ * The proposal a heal already made, when the run then proved it.
+ *
+ * An inline heal (site B) is a repair that has been through a stronger test
+ * than any proposer's: the step RAN on it and its own recorded expectations
+ * accepted the result. Asking a model to re-derive the same locator, on a page
+ * reopened afterwards, is a round trip whose best possible outcome is the
+ * answer already in hand.
+ *
+ * Gated on `!recovered` — the same rule `recordCandidateEvidence` enforces and
+ * for the same reason: a heal inside a step that then went to model recovery
+ * says more about the run than about the locator, so it goes back to the
+ * ordinary proposer. Cascaded IN FRONT of it, never instead of it, so the
+ * absence of a proposal here is simply no opinion.
+ */
+export function healedProposer(): ProposeLocator {
+  return async ({ ticket }) => (ticket.healed && !ticket.recovered && ticket.proposal ? ticket.proposal : null);
+}
+
 /** ProposeLocator backed by the repair model: strict-JSON locator proposals from the live-page snapshot. */
 export function llmProposer(provider: Provider): DiagnosticProposer {
   const propose: DiagnosticProposer = async ({ skill, ticket, chain, snapshot, recordedKind, tool }) => {
@@ -783,6 +845,11 @@ export async function drainDrift(store: SkillStore, tickets: DriftTicket[], opts
   }
 
   const propose = opts.propose;
+  // A heal's own proposal first, the caller's proposer behind it. Built as a
+  // cascade rather than folded into `patchSegment`, so the verification a
+  // proposal gets — resolves to one, right kind, provisional variant that must
+  // earn adoption — is identical whoever proposed it.
+  const proposeChain = cascade<ProposeContext, LocatorCandidate>(healedProposer(), propose);
   for (const a of patches) {
     const url = repairPageUrl(store, a.ticket);
     if (!url) {
@@ -800,7 +867,7 @@ export async function drainDrift(store: SkillStore, tickets: DriftTicket[], opts
     // make the whole repair look like a tool bug.
     let res: PatchResult;
     try {
-      res = await patchSegment(store, a.ticket, page, propose);
+      res = await patchSegment(store, a.ticket, page, proposeChain);
     } catch (err) {
       summary.skipped.push({ skill: a.ticket.skill, step: a.ticket.atStep, why: `the repair model could not be reached (${(err as Error).message.slice(0, 200)})` });
       continue;

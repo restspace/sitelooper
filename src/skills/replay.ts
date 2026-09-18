@@ -8,7 +8,7 @@ import type { Locator, Page } from 'playwright-core';
 import { clip, identityRe, identitySource } from '../shared/text.js';
 import { cosine, fingerprintPage } from '../daemon/fingerprint.js';
 import { candidateExpr, makeLocator, type LocatorCandidate, type StepDiff } from '../daemon/recorder.js';
-import { retired } from './repair.js';
+import { retired, type SnapshotRow } from './repair.js';
 import {
   RESOLVE_POLL_MS,
   RESOLVE_WAIT_MS,
@@ -90,7 +90,146 @@ export interface ReplayOptions {
    * call it — a stray tab a replayed click opens does not move the replay.
    */
   follow?: (page: Page) => void;
+  /**
+   * Inline healing for a step whose whole chain missed (site B of PLAN-jev.md).
+   * Per call, so a test supplies its own; the daemon registers one for the
+   * process with `setInlineHealer`, because the tool layer that builds these
+   * options (src/agent/tools.ts) is neutral about deciders and must stay so.
+   */
+  heal?: InlineHealer;
 }
+
+/**
+ * What replay tells an inline healer about the step whose locator chain just
+ * died, and what a healer may hand back.
+ *
+ * Stated ENTIRELY in this module's own terms — a skill, a step, a chain, a
+ * page — and carrying no idea of what is behind it. That is the whole design
+ * of the seam: healing sits exactly where model recovery sits, one tier below
+ * a dead chain, and a runner that supplies no healer runs the code path that
+ * existed before this type did. Nothing here is in `src/execution`, which a
+ * compiled artifact embeds verbatim, so the artifact cannot acquire a
+ * recovery tier it never had (see docs/shared-execution.md: the artifact's
+ * answer to a dead chain is, and stays, "stop").
+ */
+export interface HealRequest {
+  skill: Skill;
+  step: SkillStep;
+  /** Human step tag, e.g. "5" or "9.2.1" inside a loop. */
+  tag: string;
+  /** Which arg the dead chain was for: "target" or "source". */
+  key: string;
+  /** The dead chain, params already filled — every rung of it missed just now. */
+  chain: LocatorCandidate[];
+  /** The live page the chain was looked for on. */
+  page: Page;
+  signal?: AbortSignal;
+}
+
+export interface HealProposal {
+  /**
+   * The replacement locator. A candidate object, never a selector string a
+   * model wrote: the healer picks a live element and code builds the locator
+   * from it, in the recorder's own candidate order (repair-jev.ts).
+   */
+  candidate: LocatorCandidate;
+  /** One line for the replay's telemetry, its warnings, and the recovery prelude. */
+  note: string;
+  /**
+   * The page's interactive elements the proposal was chosen from, bounded.
+   * Carried onto the drift ticket so a repair that happened once becomes a
+   * replayable case for bench/jev-repair-probe.mjs — the missing half of
+   * site A's corpus (PLAN-jev.md, step-1 status, last bullet).
+   */
+  rows?: SnapshotRow[];
+  /**
+   * Called ONCE with the step's own verdict, after the healed locator has been
+   * acted on and the step's recorded expectations and effect gates have had
+   * their say. This is the label the decision log needs: a heal is "right"
+   * exactly when the deterministic verifier that checks every other replayed
+   * step accepted it.
+   */
+  settled?: (verified: boolean) => void;
+}
+
+/** A healer declines by returning null, exactly as every `Decider` declines. */
+export type InlineHealer = (req: HealRequest) => Promise<HealProposal | null>;
+
+/**
+ * The process-wide healer, for callers that cannot pass `ReplayOptions.heal`.
+ *
+ * `replaySkill` is reached through the neutral tool layer (`run_skill` in
+ * src/agent/tools.ts), which knows nothing about System One and must not learn:
+ * only the composition root — the daemon — asks whether the tier exists
+ * (decide.ts, and the test that enforces it). So the daemon registers the
+ * healer once, here, and the tool layer carries nothing new. Null (the
+ * default, and CI) is the code path that existed before site B.
+ */
+let registeredHealer: InlineHealer | null = null;
+
+export function setInlineHealer(healer: InlineHealer | null): void {
+  registeredHealer = healer;
+}
+
+/**
+ * The BLAST RADIUS policy: why this step's dead chain may not be healed
+ * inline, or null when it may.
+ *
+ * A heal acts on the live page on the strength of one ~free judgement, before
+ * anything has checked it. What makes that safe is not the judgement — it is
+ * that the step's OWN recorded verifier runs immediately afterwards and is
+ * indifferent to how the locator was obtained. So the rule is simply: heal
+ * only where a wrong answer is either harmless or caught.
+ *
+ *  - reads observe; a wrong read publishes a wrong value, but the value is
+ *    then checked against the step's expectations like any other, and a read
+ *    that misses is skipped today, so healing it can only add information.
+ *  - a fill/select/check writes into ONE control and the step's own
+ *    `addedContains` echoes what it wrote (`- textbox "Part name *": {{v3}}`),
+ *    so the wrong field is caught before the form is submitted.
+ *  - a click is the one that commits. It is healed only when the recording
+ *    left something that will contradict a wrong one: a url pattern, added
+ *    lines, or a recorded page effect (a popup/tab/close the runner arms).
+ *    A click with nothing to verify it falls to model recovery exactly as it
+ *    does today — which is the behaviour this whole site is trying to avoid,
+ *    and is still the right answer when nothing can tell success from damage.
+ *  - a step that MINTS a record needs the sharpest of those: a wrongly healed
+ *    mint is a duplicate record nobody asked for and no later step can undo
+ *    (fwod13 finished with two and three orders for exactly this reason), so
+ *    added lines are not enough — the url must have to match.
+ *
+ * And three places where the question is wrong rather than the answer risky:
+ * a loop body (its per-record locator is ambiguous BY DESIGN and the cursor is
+ * what names this pass's record — a healed single-match locator would pin
+ * every pass to one row, which is how fwrd4l edited part A seven times), a
+ * target recorded inside a frame (the healer reads the PAGE's elements, so it
+ * would propose some other document's control — the same refusal
+ * `patchSegment` already makes), and a synthesized read that no run has ever
+ * resolved (`unproven`: there is no drift, because there was never a hit).
+ *
+ * Pure, so it is calibrated by reading it rather than by running a sweep.
+ */
+export function unhealableWhy(step: SkillStep, key: string, tag: string): string | null {
+  if (step.unproven) return 'the step is a synthesized read no run has ever resolved, so nothing about it has drifted';
+  if (tag.includes('.')) return 'it is inside a folded loop, whose per-record locator is ambiguous by design';
+  if (step.contexts?.[key as 'target' | 'source']?.frame?.length) {
+    return `the ${key} was recorded inside ${describeFramePath(step.contexts![key as 'target' | 'source']!.frame!)}, and healing reads the page's own elements`;
+  }
+  if (isReadAction(step.tool)) return null;
+  if (HEAL_WRITE_TOOLS.has(step.tool)) return null;
+  if (!HEAL_COMMIT_TOOLS.has(step.tool)) return `the step's tool (${step.tool}) is not one inline healing acts for`;
+  const expect = step.expect;
+  if (step.mints) {
+    return expect?.urlPattern ? null : 'the step brings a record into existence and recorded no url to check it by';
+  }
+  if (expect?.urlPattern || expect?.addedContains?.length || step.effect) return null;
+  return 'the step recorded nothing that would verify a healed locator (no url pattern, no added lines, no page effect)';
+}
+
+/** Tools that write into one control: the wrong one is echoed back by the step's own expectation. */
+const HEAL_WRITE_TOOLS = new Set(['fill', 'type', 'select', 'check', 'uncheck']);
+/** Tools that COMMIT: healed only against a recorded verifier (see unhealableWhy). */
+const HEAL_COMMIT_TOOLS = new Set(['click', 'dblclick', 'submit', 'press']);
 
 /**
  * One locator that did not resolve as recorded: either a fallback candidate
@@ -112,6 +251,23 @@ export interface LocatorMiss {
   usedIndex?: number;
   /** Which skill the miss belongs to, set when misses from a segment chain are aggregated. */
   skill?: string;
+  /**
+   * The whole chain missed and the step ran on a locator proposed INLINE
+   * (site B). `used` is that locator's expression, so every reader that
+   * already understands "a fallback stood in" reads this one too; these three
+   * fields say it was not one of the recorded rungs.
+   *
+   * EVIDENCE, NOT MUTATION. Nothing here rewrites the stored skill: the
+   * proposal travels on the drift ticket and is only patched into the chain
+   * later, by the ordinary drain, and only for a run that got past the step —
+   * the rule `recordCandidateEvidence` already documents. A heal that ran and
+   * was then contradicted by the step's own gates is a ticket that says so.
+   */
+  healed?: true;
+  /** The proposed candidate itself, so the later drain can patch without asking a model again. */
+  proposal?: LocatorCandidate;
+  /** The page's interactive elements the proposal was picked from, bounded (see HealProposal.rows). */
+  rows?: SnapshotRow[];
 }
 
 export interface ReplayResult {
@@ -152,6 +308,13 @@ export interface ReplayResult {
   fallthroughs: number;
   /** Structured record of every locator that missed its primary. */
   misses: LocatorMiss[];
+  /**
+   * Steps whose dead chain was healed inline and which then ran. Optional
+   * because it is new: every existing construction of a ReplayResult (tests,
+   * the segment-walk's `{ ...replay }` clones) is still a legal one, and a
+   * replay with no healer never sets it.
+   */
+  healed?: { step: string; key: string; locator: string; note: string; verified?: boolean }[];
   /**
    * Per-candidate outcomes from the pass that resolved: which chain index won
    * and which were rejected with the element demonstrably present. The caller
@@ -466,11 +629,84 @@ export async function replaySkill(
   };
   if (gate.at === 1 && !(await passGate(1))) return res;
 
+  // Heals made by the step currently running, awaiting its verdict. The
+  // label a heal's decision log needs is "did the step's own gates accept
+  // it", which is known only after the step returns — see the runOneStep
+  // wrapper below.
+  const pendingHeals: HealProposal[] = [];
+  const healer = opts.heal ?? registeredHealer;
+
+  /**
+   * Site B of PLAN-jev.md: the whole chain for `key` missed, so ask the
+   * healer for a live locator instead of failing the step to a model
+   * recovery (tens of turns, minutes of wall-clock, for what is usually a
+   * renamed control). Returns the locator to act on, or null to fail exactly
+   * as before.
+   *
+   * Two guards in THIS module, on top of whatever the healer applied to its
+   * own answer, because a healer is an injected stranger and the failure
+   * modes are known: the policy above decides whether the step may be healed
+   * at all, and the proposal must resolve to exactly ONE element on the live
+   * page. The second is site A's measured weakness — N identically named rows,
+   * where the chooser picks the first at ≤0.77 — which post-session repair
+   * catches in `patchSegment`'s resolves-to-one check. Healing acts before any
+   * review, so it makes the same check itself, first.
+   */
+  const tryHeal = async (step: SkillStep, tag: string, key: string, chain: LocatorCandidate[], missOf: string): Promise<Locator | null> => {
+    if (!healer) return null;
+    const why = unhealableWhy(step, key, tag);
+    if (why) {
+      res.warnings.push(`step ${tag}: the ${key} chain is dead and was not healed inline — ${why}`);
+      return null;
+    }
+    let proposal: HealProposal | null = null;
+    try {
+      proposal = await healer({ skill, step, tag, key, chain, page, ...(opts.signal ? { signal: opts.signal } : {}) });
+    } catch {
+      // A healer that throws is a healer that is absent: the step falls to
+      // the model, which is what it did before there was one.
+      return null;
+    }
+    if (!proposal) return null;
+    const expr = candidateExpr(proposal.candidate);
+    let locator: Locator;
+    try {
+      locator = makeLocator(page, proposal.candidate);
+      const count = await locator.count();
+      if (count !== 1) {
+        proposal.settled?.(false);
+        res.warnings.push(`step ${tag}: an inline heal proposed ${expr}, which matches ${count} element(s) on this page — refused, a locator that names several things names none`);
+        return null;
+      }
+    } catch {
+      proposal.settled?.(false);
+      return null;
+    }
+    pendingHeals.push(proposal);
+    (res.healed ??= []).push({ step: tag, key, locator: expr, note: proposal.note });
+    // A heal IS drift — the recorded chain did not work — so it counts as a
+    // fallthrough and files its miss, exactly as a fallback that stood in
+    // does. What is different is only that the locator came from the live
+    // page rather than from the chain, which the three fields below say.
+    res.fallthroughs++;
+    res.misses.push({
+      step: tag,
+      key,
+      primary: chain[0] ? candidateExpr(chain[0]) : '(none recorded)',
+      used: expr,
+      healed: true,
+      proposal: proposal.candidate,
+      ...(proposal.rows?.length ? { rows: proposal.rows } : {}),
+    });
+    res.warnings.push(`step ${tag}: ${missOf}; ${proposal.note}`);
+    return locator;
+  };
+
   // One step against the live page. Mutates `res` (lines/warnings/values/
   // stepsRun) and returns how it went; a 'stop' has already set failedAt/reason.
   // `tag` labels the step for humans (e.g. "5" or, inside a loop, "9.2.1");
   // `failIndex` is the top-level step number recorded in failedAt on a stop.
-  const runOneStep = async (
+  const runStepBody = async (
     step: SkillStep,
     tag: string,
     failIndex: number,
@@ -640,7 +876,17 @@ export async function replaySkill(
           absenceMet = true;
           break;
         }
-        resolveError = `no element matched any known locator for ${key}${chain.length ? ` (tried ${chain.length}: ${chain.slice(0, 3).map(candidateExpr).join(', ')}${chain.length > 3 ? ', …' : ''})` : ' (none recorded)'}`;
+        const dead = `no element matched any known locator for ${key}${chain.length ? ` (tried ${chain.length}: ${chain.slice(0, 3).map(candidateExpr).join(', ')}${chain.length > 3 ? ', …' : ''})` : ' (none recorded)'}`;
+        // One rung BELOW the recorded chain and one ABOVE model recovery: a
+        // locator proposed from the live page, which the step's own recorded
+        // expectations then verify exactly as they verify a replayed one.
+        const healedLocator = await tryHeal(step, tag, key, chain, dead);
+        if (healedLocator) {
+          resolved[key] = healedLocator;
+          if (setsSomething(step.tool)) noteInteraction(interacted, candidateNames(chain as { name?: unknown; label?: unknown }[]));
+          continue;
+        }
+        resolveError = dead;
         res.misses.push({ step: tag, key, primary: chain[0] ? candidateExpr(chain[0]) : '(none recorded)', used: null });
         break;
       }
@@ -993,6 +1239,45 @@ export async function replaySkill(
       res.lines.push(`${head} → ${clip(outcome.result.split('\n')[0], MAX_LINE)}`);
     }
     return 'ran';
+  };
+
+  /**
+   * `runStepBody`, plus the one thing the body cannot give an inline heal:
+   * the step's own verdict.
+   *
+   * A heal is right exactly when the deterministic verifier that checks every
+   * other replayed step accepted it — the recorded expectations, the effect
+   * gates, the url. That answer exists only once the step has returned, so
+   * the settle happens here and nowhere else, and it happens on every exit
+   * (a stop and a skip are both "the gates did not accept it"). `splice` from
+   * the depth this call found, so a nested step can never settle an outer
+   * one's proposal.
+   */
+  const runOneStep = async (
+    step: SkillStep,
+    tag: string,
+    failIndex: number,
+    sink?: LoopPass,
+    ambiguousNth?: number,
+  ): Promise<'ran' | 'skipped' | 'stop'> => {
+    const depth = pendingHeals.length;
+    const verdict = await runStepBody(step, tag, failIndex, sink, ambiguousNth);
+    for (const proposal of pendingHeals.splice(depth)) {
+      const verified = verdict === 'ran';
+      proposal.settled?.(verified);
+      const row = res.healed?.find((h) => h.step === tag && h.locator === candidateExpr(proposal.candidate));
+      if (row) row.verified = verified;
+      if (!verified) {
+        // Named for the recovery prompt: the prelude renders these warnings
+        // (renderReplay's `notes:`), so the model that picks the step up is
+        // told which locator was already tried and refused rather than
+        // re-deriving it and being surprised by the same gate.
+        res.warnings.push(
+          `step ${tag}: the inline heal ${candidateExpr(proposal.candidate)} ran and the step's own checks then refused it — treat that locator as known-wrong`,
+        );
+      }
+    }
+    return verdict;
   };
 
   // A folded loop: repeat the body while its guard locator still matches an
@@ -1699,6 +1984,18 @@ export function renderReplay(skill: Skill, res: ReplayResult): string {
   }
   const values = Object.entries(res.values);
   if (values.length) lines.push(`values read from the live page: ${values.map(([k, v]) => `${k}=${JSON.stringify(v)}`).join(', ')}`);
+  // A healed step that the step's own checks then refused is the one fact a
+  // recovery must not have to rediscover: it would otherwise look at the same
+  // page, reach the same plausible control, and be refused by the same gate.
+  // Stated before the general notes, and only for the refused ones — a heal
+  // that verified is ordinary drift telemetry, not instruction.
+  const refused = (res.healed ?? []).filter((h) => h.verified === false);
+  if (refused.length) {
+    lines.push(
+      `ALREADY TRIED and refused by this step's own checks: ${refused.map((h) => `${h.locator} (step ${h.step}, ${h.key})`).join(', ')}. ` +
+        `Those locators resolved on the page; what failed was what the step expected to happen afterwards.`,
+    );
+  }
   if (res.warnings.length) lines.push(`notes: ${res.warnings.join('; ')}`);
   return lines.join('\n');
 }
