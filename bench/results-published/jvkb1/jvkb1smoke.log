@@ -1,0 +1,59 @@
+[drift-store] 2 case(s), mode=rename, gate=0, model recovery DISABLED
+[drift-store] home=/home/user/sitelooper/bench/results/jvkb1smoke-home  store=/home/user/sitelooper/bench/results-published/fwkb3-skills  app=http://127.0.0.1:8085/
+[drift-store] jvkb1smoke-c01 (1/2) 01-signin step 2 target fill — punctuation/rename
+[reset] kanboard: no leftover bench tasks
+[drift-store]   healed conf=1.00 correct verified (74.2s)
+[drift-store] jvkb1smoke-c02 (2/2) 01-signin step 3 target fill — synonym/rename
+[reset] kanboard: deleted 1 leftover bench task(s)
+[drift-store]   healed conf=0.98 correct verified (73.8s)
+
+=== jev-drift-store: fwkb3 on kanboard (jvkb1smoke) ===
+
+case      step         tag/key    tool    transform    conf   guards   verdict      verif  outcome
+#1        01-signin    2/target   fill    punctuation  1.00   pass     correct      yes    healed
+#2        01-signin    3/target   fill    synonym      0.98   pass     correct      yes    healed
+
+cases run 2; dead chains 2; asked 2
+  correct 2   wrong 0   undecidable 0
+  deferred by a guard 0 (orders disagreed 0, none 0, gone-veto 0, code guard 0)
+  chains the perturbation did not kill 0; empty ballots 0; unattributable 0
+  model turns spent across every case: 0 (recovery disabled)
+
+reliability (every asked case, deferred ones included — that is why the gate is 0):
+bucket       n     correct  wrong  undec  accuracy
+0.00–0.50    0     0        0      0      -
+0.50–0.60    0     0        0      0      -
+0.60–0.70    0     0        0      0      -
+0.70–0.80    0     0        0      0      -
+0.80–0.90    0     0        0      0      -
+0.90–1.00    2     2        0      0      100%
+
+what each gate would do (a case is accepted only if every code guard passed too):
+gate   accepted  correct  wrong  undec  share of dead chains healed
+0.50   2         2        0      0      100%
+0.60   2         2        0      0      100%
+0.70   2         2        0      0      100%
+0.80   2         2        0      0      100%
+0.90   2         2        0      0      100%
+
+by transform family:
+key              cases  asked  correct  wrong  undec  median conf
+punctuation      1      1      1        0      0      1.00
+synonym          1      1      1        0      0      0.98
+
+by tool:
+key              cases  asked  correct  wrong  undec  median conf
+fill             2      2      2        0      0      0.99
+
+by perturbation mode:
+key              cases  asked  correct  wrong  undec  median conf
+rename           2      2      2        0      0      0.99
+
+by flow step:
+key              cases  asked  correct  wrong  undec  median conf
+01-signin        2      2      2        0      0      0.99
+
+RECOMMENDED GATE: 0.50 — lowest gate with no false accepts; 2 correct accept(s) support it, healing 100% of dead chains (2 accepted, 0 of them undecidable).
+Current gate in decide.ts GATES['replay.heal'] was set at n=4. This run adds n=2 decided case(s).
+
+wrote /home/user/sitelooper/bench/results/jvkb1smoke-drift-store.json
