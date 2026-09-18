@@ -255,6 +255,34 @@ Open: `triageSession` builds its own decision rows because `jevDecider` is one a
 decision; a batch-shaped `JevBatchSite` + `shadowAll` in decide.ts would absorb it. Do
 it when a second batch site (K) arrives, not before.
 
+### First live sweep — repairdesk `fwrdj2`, 2026-09-18 (local Windows box, not comparable to cloud rounds)
+
+| run | Jev | verified | replayed | model turns | USD | wall |
+|---|---|---|---|---|---|---|
+| n1 record | on | 6/6 | — | 11 orch, 9 `do` | 0.077 | 351s |
+| n2, n3 replay | on | 6/6, 6/6 | 9/9, 9/9 | 0 | 0 | 43s, 40s |
+| n2, n3 replay (same recording) | **off** | 6/6, 6/6 | 9/9, 9/9 | 0 | 0 | 40s, 40s |
+
+No effect on accuracy, replay time or model cost — as expected: nothing drifted, so
+`repair.propose` never ran, and replays never construct a Jev client. The only Jev
+activity was the advisory pass at `stop --save-flow`: 306 occurrence pairs + 202
+expectation lines.
+
+- **Occurrence (I): 58 disagreements, ZERO at ≥0.6.** Quiet on live data, as on the corpus.
+- **Expectation (J): 64 disagreements, 43 at ≥0.6 (21% of lines) — and the replays say
+  the RULES were right on all of them**: four replays passed 9/9 with those lines kept
+  as hard expectations. Jev calls `cell "$250.00"`, `row "Total … $437.50"`,
+  `cell "RD-1013"`, `cell "Blue Fox Cafe"` this-run. They are computed from inputs the
+  flow fixes, or seed rows a reset restores — stable on every run of THIS flow. Jev
+  cannot know that from the line; only replay evidence can. This cuts against step 2's
+  reading of the odoo money figures as "probably a real finding": **J is not
+  promotable on line text alone**, and if it ever gets a say it must sit below replay
+  evidence (a line that has survived N replays is settled, whatever Jev thinks).
+- Gaps found: the harness reads `config` BEFORE `stop`, so the advisory pass's Jev
+  tokens never reach the result file (est. ~$0.01 from the corpus rate); and the
+  pass's duration is only on the daemon's stderr, which goes nowhere. Both want a
+  summary row in `system-one.jsonl` (requests, tokens, ms).
+
 ## 4. Sites, in order of value ÷ risk
 
 ### A. Locator repair proposer — `src/skills/repair.ts:576` (`llmProposer`)
