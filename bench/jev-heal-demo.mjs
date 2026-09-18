@@ -48,14 +48,14 @@
  * and never touches port 4180, which a live benchmark may own):
  *
  *   # a private app instance, drift off by default
- *   PORT=4190 node bench/app/server.mjs --fresh
+ *   PORT=4191 node bench/app/server.mjs --fresh
  *
  *   # the free half: Jev on, no conventional model unless a heal is refused
- *   node bench/jev-heal-demo.mjs --arm on  --app-url http://127.0.0.1:4190/ \
+ *   node bench/jev-heal-demo.mjs --arm on  --app-url http://127.0.0.1:4191/ \
  *     --flow fwrdj2 --skills bench/results/fwrdj2-skills --tag heal-on
  *
  *   # the baseline half: SPENDS model tokens on the recovery
- *   node bench/jev-heal-demo.mjs --arm off --app-url http://127.0.0.1:4190/ \
+ *   node bench/jev-heal-demo.mjs --arm off --app-url http://127.0.0.1:4191/ \
  *     --flow fwrdj2 --skills bench/results/fwrdj2-skills --tag heal-off \
  *     --provider openrouter --model z-ai/glm-5.3
  *
@@ -74,7 +74,7 @@ const arg = (n, d) => (argv.includes(n) ? argv[argv.indexOf(n) + 1] : d);
 
 const opts = {
   arm: arg('--arm', 'on'),
-  appUrl: arg('--app-url', process.env.APP_URL || 'http://127.0.0.1:4190/'),
+  appUrl: arg('--app-url', process.env.APP_URL || 'http://127.0.0.1:4191/'),
   drift: arg('--drift', 'add-part-moved'),
   flow: arg('--flow', 'fwrdj2'),
   skills: arg('--skills', path.join('bench', 'results', 'fwrdj2-skills')),
@@ -89,10 +89,16 @@ if (!['on', 'off'].includes(opts.arm)) {
   console.error('--arm must be `on` or `off`; run the two halves separately so a token-spending half is never started by accident');
   process.exit(2);
 }
-if (new URL(opts.appUrl).port === '4180') {
-  // The live benchmark owns 4180. A drift injected there would change what a
-  // running sweep sees mid-flight.
-  console.error('refusing to drive the app on port 4180: start a private instance (PORT=4190 node bench/app/server.mjs --fresh)');
+// A skill store is keyed by ORIGIN (http_127.0.0.1_4180/), so a recording made
+// on 4180 only replays on 4180: on any other port no skill binds, every step
+// goes to model recovery in BOTH arms, and the A/B measures nothing (the first
+// attempt did exactly this on 4191, 9/9 "recovered", 0 tickets). So the demo
+// must drive the port the recording was made on — and because a drift injected
+// there would change what a running sweep sees mid-flight, it insists the
+// caller says no sweep is running. (Not 4190 either: Node's fetch refuses it
+// as a WHATWG "bad port", while curl does not.)
+if (new URL(opts.appUrl).port === '4180' && !argv.includes('--no-sweep-running')) {
+  console.error('port 4180 is the bench app a sweep may be using: pass --no-sweep-running to confirm nothing else is driving it');
   process.exit(2);
 }
 

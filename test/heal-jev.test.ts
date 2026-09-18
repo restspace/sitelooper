@@ -310,11 +310,16 @@ function healRequest(page: Page): HealRequest {
 }
 
 describe('inlineHealer', () => {
-  it('acts only above its OWN gate, which is stricter than the post-session proposer\'s 0.85', async () => {
-    expect(healGate()).toBeGreaterThan(0.85);
+  // The gate is NOT stricter than repair.propose's any more: the first live
+  // drift (fwrdj2heal-*) showed a real renamed control scoring 0.59-0.86 while
+  // being right every time, so 0.9 healed nothing. What makes acting safe here
+  // is the guards below, not the number — this test pins that a gate exists and
+  // is the site's own.
+  it('acts only above its OWN gate, read from the one table', async () => {
+    expect(healGate()).toBe(0.6);
     const page = fakePage({ url: 'http://h:1/t/1' }, { 'testid:part-attach': 1 }, ROWS, { role: 'button', tag: 'button' });
     const log: SystemOneDecision[] = [];
-    const below = await inlineHealer(scriptedSystemOne(agrees('e1', 0.86)), (d) => log.push(d))(healRequest(page));
+    const below = await inlineHealer(scriptedSystemOne(agrees('e1', 0.55)), (d) => log.push(d))(healRequest(page));
     expect(below).toBeNull();
     expect(log.map((d) => [d.site, d.outcome])).toEqual([[REPLAY_HEAL_SITE, 'deferred']]);
 

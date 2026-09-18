@@ -61,7 +61,18 @@ export const GATES: Record<string, number> = {
   // stricter. Probe: wrong answers top out at 0.77-0.80 and are the
   // duplicate-row shape the resolves-to-one check refuses anyway; correct picks
   // sit 0.78-0.99, median 0.99. Deferring costs what the step cost before.
-  'replay.heal': 0.9,
+  //
+  // It started at 0.9 and healed NOTHING on the first live drift (repairdesk
+  // add-part-moved, fwrdj2heal-*): the right control, `button testid=part-attach
+  // "Attach part"`, was picked in both option orders on all four asks, at 0.83,
+  // 0.65, 0.86 and 0.59. A real renamed-and-moved control simply scores lower
+  // than the synthetic ones. 0.6 is where one of the two dead steps heals; it
+  // is safe to sit this low only because four guards stand behind it — both
+  // orders agree, the locator resolves to exactly ONE element, of the recorded
+  // KIND, and the step's own expectations verify the result (unverifiable
+  // clicks are never healed). n=4, all correct: recalibrate from
+  // replay.heal.verdict rows as they accumulate.
+  'replay.heal': 0.6,
   // Sites I and J, advisory. From bench/jev-zoo.mjs: occurrence readings are
   // 100% right in every confidence bucket over 0.2 and contradict the rules
   // on 1.1% of ordinary corpus pairs at 0.6; expectation readings are 100%
@@ -73,7 +84,24 @@ export const GATES: Record<string, number> = {
 
 /** A site's gate; an unlisted site gets a strict default rather than none. */
 export function gateFor(site: string): number {
-  return GATES[site] ?? 0.9;
+  return gateOverrides()[site] ?? GATES[site] ?? 0.9;
+}
+
+/**
+ * SITELOOPER_JEV_GATES='{"replay.heal":0.6}' — for calibration runs only: a
+ * gate is set from what a site does at several values, and that cannot be
+ * measured without moving it. Malformed JSON is ignored rather than fatal;
+ * a bench run must not die on a typo, and the table above still applies.
+ */
+function gateOverrides(): Record<string, number> {
+  const raw = process.env.SITELOOPER_JEV_GATES;
+  if (!raw) return {};
+  try {
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? (parsed as Record<string, number>) : {};
+  } catch {
+    return {};
+  }
 }
 
 /** What a site read out of Jev's answers, before the gate. */

@@ -238,6 +238,10 @@ function readRound(
     reversed: answers.pickReversed.choice,
     reversedConfidence: answers.pickReversed.confidence,
     gone: answers.gone.noul,
+    // What the label MEANT: without it a deferred row says "e7 at 0.83" and
+    // nobody can tell afterwards whether e7 was the right control (the first
+    // replay.heal rows, fwrdj2heal-on, were exactly that).
+    pickedRow: labels.includes(answers.pick.choice) ? renderSnapshotRow(rows[labels.indexOf(answers.pick.choice)]) : answers.pick.choice,
   };
   const base = { chosen: answers.pick.choice, options, detail };
   if (!agreed) {

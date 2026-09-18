@@ -313,6 +313,49 @@ free and had nothing to do with Jev.** Re-measure p after the fix: removing 120s
 tool time raises p to ~0.70, which is what makes the actor worth more (q=0.8, r=5 =>
 ~1.8x on top).
 
+### Steps 4-5 results — 2026-09-18 (repairdesk, local box)
+
+**Snapshot fix confirmed** (`fwrdj4-n1` vs `fwrdj3-n1`): instruction time 381s -> 269s
+(1.4x), tool time 195s -> 81s, model time unchanged (184s), 6/6 both. p is now **68%**.
+Still unexplained: four batches of 10-13s each (a step timing out inside a batch).
+
+**Shadow actor, 87 live turns (~$0.012 of Jev):** coverage 95% of decidable turns —
+candidate generation is NOT the problem. Agreement is: 44% at confidence >=0.5, 60% at
+>=0.85 (n=5), 67% at >=0.95 (n=3). Clicks 64%, fills 50%, report 30%, snapshot 27%,
+read_all 10%. Report/snapshot/screenshot/read turns are ~60% of model time and are
+exactly where Jev cannot tell that it is time to look, read or finish — the
+counterfactual weakness from step 2, not a wording problem. Measured p=0.68, r=5.0,
+**q=11% at gate 0.5 => 1.06x**; 1.01-1.02x at stricter gates.
+=> **Step 7 (the actor acts) is NOT justified on this evidence.** Caveats: agreement
+with the model is not correctness; one run; one formulation; the cloud baseline's p is
+still unmeasured (results now carry `inner.timing`). The ASTRA doc's 5-10x needed
+q~0.95; measured q is ~0.1. What is worth doing for recording speed is not Jev:
+the batch timeouts, the 9 read-back `locate` calls (33s/recording — site C, code-first),
+and the 12 no-tool-call turns (31s).
+
+**Inline healing A/B** (`bench/jev-heal-demo.mjs`, drift `add-part-moved`, flow fwrdj2;
+two dead chains: 03-open and 04-add; all arms 9/9 replayed, 6/6 verified):
+| arm | healed | model turns | wall |
+|---|---|---|---|
+| Jev off | — | 16 | 101s |
+| Jev on, gate 0.9 | 0 of 2 | 23 | 132s |
+| Jev on, gate 0.6 | 1 of 2 | 10 | 88s |
+Jev picked the right control (`button testid=part-attach "Attach part"`) in both
+option orders on all four asks, at 0.83 / 0.65 / 0.86 / 0.59 — a real drift scores
+lower than the synthetic probe's 0.99s, so 0.9 healed nothing and only added latency.
+At 0.6, 03-open healed in 0.66s, its own expectations verified it, and it cost **0 model
+turns instead of 10-11**; 04-add missed the gate by 0.01 and recovered by model as
+before. Gate set to 0.6 (n=4, all correct — thin; the four code guards are what make it
+safe). `SITELOOPER_JEV_GATES` overrides a gate for calibration runs.
+Two traps recorded in the demo: a store is keyed by ORIGIN, so a recording made on
+:4180 replays only on :4180 (on :4191 every step went to model recovery in both arms
+and the A/B measured nothing, ~$0.15 wasted); and Node's fetch refuses port 4190.
+
+**Where this leaves the plan:** Jev earns its place where code can check its answer
+(A repair, B healing, I occurrence triage). It does not as a first-contact actor.
+Next: recalibrate B on odoo/grafana drift (where fallbacks actually happen); site C in
+code; chase the batch timeouts; measure p on a cloud run.
+
 ## 4. Sites, in order of value ÷ risk
 
 ### A. Locator repair proposer — `src/skills/repair.ts:576` (`llmProposer`)
