@@ -356,6 +356,25 @@ and the A/B measured nothing, ~$0.15 wasted); and Node's fetch refuses port 4190
 Next: recalibrate B on odoo/grafana drift (where fallbacks actually happen); site C in
 code; chase the batch timeouts; measure p on a cloud run.
 
+### Recording speed, the non-Jev fixes — 2026-09-18 (repairdesk, local, all 6/6 verified)
+
+| run | what changed | time inside instructions | model | tools |
+|---|---|---|---|---|
+| fwrdj3 | baseline with timing | 381s (9 instr.) | 182s | 195s |
+| fwrdj4 | scoped-snapshot fail-fast | 269s (9) | 184s | 81s |
+| fwrdj5 | + per-step batch timing (diagnostic) | 199s (9) | 104s | 94s |
+| fwrdj6 | + missing-target fail-fast + site C | 150s (6) | 101s | 43s |
+
+Not a controlled series — the orchestrator chose 6 instructions in fwrdj6 and 9 before,
+and model time swings run to run — but the tool-time column is the fixes: 195s -> 43s,
+and nothing over 6s remains. The three ~13s batches were ONE failed step each: a `fill`
+or `read` opening the batch on a stale @ref / guessed selector, waiting out the action's
+10s actionability timeout (now 3s for a selector, 1s for an @ref, `not-dispatched`).
+Site C: the `locate` model turn went from 9 calls / 33s to 4 calls / 8.8s (2 values
+pinned by code, 1 by Jev, the rest proven unpinnable and not asked).
+What is left is model time (~2/3 of the run) and **8 no-tool-call turns = 20s** —
+the next thing worth looking at, and not a Jev problem either.
+
 ## 4. Sites, in order of value ÷ risk
 
 ### A. Locator repair proposer — `src/skills/repair.ts:576` (`llmProposer`)
