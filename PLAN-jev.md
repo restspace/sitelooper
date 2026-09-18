@@ -407,6 +407,45 @@ published stores once Docker is up (commands in the script header).
   scheduling error, $1.83 wasted, that run invalid). The calibration's per-case resets
   make contamination of ITS cases unlikely but not excluded.
 
+### Healing calibration on cloud boxes — Odoo / Grafana / Kanboard, 2026-09-18
+
+Run as three routines (one box per app, `jev` @ daa8151, no model spend; results on
+`results/jvod1-yfyf4l`, `results/jvgr1-590poq`, `results/jvkb1-bhgek4`). A local attempt
+to run all three in one script was killed by memory pressure half way — one app per
+box is the way to run this.
+
+| app (store) | cases | put to Jev | correct | **wrong** | abstained / undecidable | never reached |
+|---|---|---|---|---|---|---|
+| repairdesk (fwrdj2, local) | 39 | 31 | 29 (with the modal guard) | 0 (2 before the guard) | 2 | 8 reads, no ballot |
+| odoo (fwod34) | 61 | 19 | 8 (0.72-0.97) | **0** | 11 | 28 (06-open onward) + 14 chain-not-dead |
+| grafana (fwgr25) | 69 | 4 | 4 | **0** | 0 | 65 (flow halts at sign-in) |
+| kanboard (fwkb3) | 58 | 46 | 13 (0.55-1.00) | **0** | 33 | 12 unattributable (old harness) |
+
+- **No wrong pick on any third-party app**, and therefore no wrong pick that passed its
+  step's checks — the hole this run was looking for did not appear. With RepairDesk:
+  54 decided picks, 54 correct once the modal guard is in.
+- **Jev abstains when the dead chain describes nothing.** 26 of Kanboard's 33
+  undecidables and most of Odoo's 11 are a chain that is only a bare CSS path
+  (`header > div:nth-of-type(3) > … > a`, `page.locator('a')`): nothing to go on, and
+  Jev answered `none` or scored 0.00-0.42. That is the right behaviour — and it bounds
+  what site B can ever heal: **a step recorded with a name/label/testid is healable; a
+  step recorded only by structure is not.** Worth surfacing at record time.
+- Reads DO get a ballot where the read's element is interactive (Kanboard links: 27 of
+  34 reads were asked); RepairDesk's were td/p and were not.
+- **The calibration is only as wide as what a model-free replay reaches.** fwgr25 needs
+  a recovery at sign-in on today's code and fwod34 at 06-open, so 65 + 28 cases never
+  touched their drifted chain — and the harness first reported them as "no-ballot".
+  Fixed: one undrifted baseline replay names the reachable steps, the rest are scored
+  `not-reachable` unrun (93ff919). Published stores were recorded on other commits and
+  boxes; **a calibration should record its own flow on the box first** (~$0.10-0.50),
+  then drift that store. Not yet run.
+- Scorer bugs found by the runs and fixed: a test id that is a sentence (Grafana) read as
+  its first word, scoring a correct 0.98 pick WRONG-and-verified; heals unattributable
+  when a replay has dead chains of its own (Kanboard) — rows now carry skill/step/key.
+- Gate: nothing here argues for moving `replay.heal` off 0.6. Correct picks span
+  0.55-1.00; the wrong ones we have ever seen (0.81, 0.94) were a structural shape code
+  now excludes. The guards carry the safety, the gate only trims abstentions.
+
 ## 4. Sites, in order of value ÷ risk
 
 ### A. Locator repair proposer — `src/skills/repair.ts:576` (`llmProposer`)
