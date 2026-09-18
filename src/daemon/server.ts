@@ -1528,6 +1528,18 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
             ...referencedValues(step, outputs),
           },
         });
+        // A skill this recovery just compiled carries this run's values the
+        // same way a recording's does, and the export-time strip never sees
+        // it: fwod70-n2's 03-create recovery saved quotation S00022 and read
+        // its heading back by that name, the skill graduated into the pin,
+        // and every later run missed the heading's primary locator and fell
+        // through to a CSS path (two drift lines in the compiled artifact).
+        // Same rule as the export (stripLeakedCandidates): identifiers the
+        // ledger knows this run made, and never an emptied chain.
+        if (this.browser.learn && (learned?.compiled || learned?.merged || learned?.compiledAll?.length)) {
+          const strippedNow = this.stripLeakedCandidates(flow, this.browser.learn);
+          if (strippedNow) opts.progress(`[flow ${flow.name}] ${step.id}: dropped ${strippedNow} locator candidate(s) carrying a value this run minted from the skill(s) this recovery compiled`);
+        }
         // Whether the pin moves is decideRepin's call (see it for the
         // lifecycle and graduation rules). The pin is a hint, not an
         // authority: selection each run is by track record
