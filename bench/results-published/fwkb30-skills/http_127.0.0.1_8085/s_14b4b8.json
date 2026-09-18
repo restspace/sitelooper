@@ -1,0 +1,420 @@
+{
+ "id": "s_14b4b8",
+ "origin": "http://127.0.0.1:8085",
+ "template": "Open {{v1}} and sign in with username admin and password admin. Then navigate to the project named 'Bench Board' and open its board view. Report the names of the board's columns in their left-to-right order, exactly as displayed on the board.",
+ "params": {
+  "v1": {
+   "example": "http://127.0.0.1:8085/",
+   "usedIn": [
+    1
+   ]
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8085/?action=login&controller=AuthController"
+ },
+ "steps": [
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {},
+   "via": {
+    "skill": "s_0b86c6",
+    "step": 1
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e5",
+    "value": "admin"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Username"
+     },
+     {
+      "kind": "label",
+      "label": "Username"
+     },
+     {
+      "kind": "id",
+      "selector": "#form-username"
+     },
+     {
+      "kind": "css",
+      "selector": "#form-username"
+     },
+     {
+      "kind": "point",
+      "x": 619,
+      "y": 96,
+      "w": 308,
+      "h": 28,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8085/?action=login&controller=AuthController",
+    "addedContains": [
+     "- textbox \"Username\": {{*}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e7",
+    "value": "admin"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Password"
+     },
+     {
+      "kind": "label",
+      "label": "Password"
+     },
+     {
+      "kind": "id",
+      "selector": "#form-password"
+     },
+     {
+      "kind": "css",
+      "selector": "#form-password"
+     },
+     {
+      "kind": "point",
+      "x": 619,
+      "y": 152,
+      "w": 308,
+      "h": 28,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8085/?action=login&controller=AuthController",
+    "addedContains": [
+     "- textbox \"Password\": {{*}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e9"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Sign in"
+     },
+     {
+      "kind": "css",
+      "selector": "html > body > div > form > div:nth-of-type(1) > button"
+     },
+     {
+      "kind": "point",
+      "x": 505,
+      "y": 201,
+      "w": 80.7,
+      "h": 30,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8085/",
+    "addedContains": [
+     "- heading \"KB Dashboard for admin\"",
+     "- link \"Dashboard\"",
+     "- link \"My notifications\"",
+     "- link \"A\"",
+     "- link \"New project\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e43"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "My projects"
+     },
+     {
+      "kind": "css",
+      "selector": "#dashboard > div:nth-of-type(1) > ul > li:nth-of-type(2) > a"
+     },
+     {
+      "kind": "point",
+      "x": 64,
+      "y": 141,
+      "w": 81.8,
+      "h": 17,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8085/?action=projects&controller=DashboardController&user_id=:id",
+    "addedContains": [
+     "- heading \"KB Projects overview for admin\"",
+     "- heading \"My projects (0)\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e32"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "Project management"
+     },
+     {
+      "kind": "css",
+      "selector": "#main > div > ul > li:nth-of-type(3) > a"
+     },
+     {
+      "kind": "point",
+      "x": 416,
+      "y": 58,
+      "w": 171.2,
+      "h": 17,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8085/?action=show&controller=ProjectListController",
+    "addedContains": [
+     "- heading \"KB Projects (1)\"",
+     "- link \"Users overview\"",
+     "- textbox \"Search\"",
+     "- link \"Sort\"",
+     "- link \"#1\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e51"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "Bench Board"
+     },
+     {
+      "kind": "css",
+      "selector": "section > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(1) > span > a"
+     },
+     {
+      "kind": "point",
+      "x": 87,
+      "y": 177,
+      "w": 78.6,
+      "h": 15,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8085/?action=show&controller=BoardViewController&project_id=:id",
+    "addedContains": [
+     "- heading \"KB Bench Board\"",
+     "- link \"Configure this project\"",
+     "- link \"Keyboard shortcut: \\\"v o\\\"\"",
+     "- link \"Keyboard shortcut: \\\"v b\\\"\"",
+     "- link \"Keyboard shortcut: \\\"v l\\\"\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "tr:nth-of-type(1) > th:nth-of-type(1) > div:nth-of-type(2) > span:nth-of-type(1) > span > a"
+     },
+     {
+      "kind": "point",
+      "x": 95,
+      "y": 100,
+      "w": 78.8,
+      "h": 17,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "column_1"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "tr:nth-of-type(1) > th:nth-of-type(2) > div:nth-of-type(2) > span:nth-of-type(1) > span > a"
+     },
+     {
+      "kind": "point",
+      "x": 403,
+      "y": 100,
+      "w": 64.6,
+      "h": 17,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "column_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "tr:nth-of-type(1) > th:nth-of-type(3) > div:nth-of-type(2) > span:nth-of-type(1) > span > a"
+     },
+     {
+      "kind": "point",
+      "x": 759,
+      "y": 100,
+      "w": 147.9,
+      "h": 17,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "column_3"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "tr:nth-of-type(1) > th:nth-of-type(4) > div:nth-of-type(2) > span:nth-of-type(1) > span > a"
+     },
+     {
+      "kind": "point",
+      "x": 1028,
+      "y": 100,
+      "w": 56.6,
+      "h": 17,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "column_4"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Signed in as admin on {{v1}} and navigated via Project management → \"Bench Board\" to its board view (BoardViewController, project_id=1). The board's column headers, read left-to-right from the live DOM, are: Backlog, Ready, Work in progress, Done.",
+  "values": {
+   "column_1": "Backlog",
+   "column_2": "Ready",
+   "column_3": "Work in progress",
+   "column_4": "Done",
+   "project": "Bench Board (project_id=1)"
+  }
+ },
+ "contract": 4,
+ "stats": {
+  "uses": 2,
+  "successes": 2,
+  "partial": 0,
+  "created": "2026-09-17T22:40:44.306Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4,
+  "lastUsed": "2026-09-17T22:41:03.029Z"
+ },
+ "status": "validated",
+ "variantOf": "s_0b86c6",
+ "provenance": {
+  "session": "fwkb30-n2",
+  "instruction": "Open http://127.0.0.1:8085/ and sign in with username admin and password admin. Then navigate to the project named 'Bench Board' and open its board view. Report the names of the board's columns in their left-to-right order, exactly as displayed on the board.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-17T22:40:44.306Z"
+ },
+ "revision": 2
+}

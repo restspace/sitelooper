@@ -1,0 +1,143 @@
+{
+  "flow": "fwkb30",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Signed in as admin on http://127.0.0.1:8085/ and navigated via Project management → \"Bench Board\" to its board view (BoardViewController, project_id=1). The board's column headers, read left-to-right from the live DOM, are: Backlog , Ready , Work in progress , Done .",
+      "values": {
+        "column_1": "Backlog ",
+        "column_2": "Ready ",
+        "column_3": "Work in progress ",
+        "column_4": "Done "
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0,
+      "repinned": "s_14b4b8",
+      "repinParams": {
+        "v1": "http://127.0.0.1:8085/"
+      }
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Created the task from the 'Bench Board' board view via the Backlog column's \"Add a new task\" form, filled Title 'fwkb30-n3 Bench Task' and Description 'Task created for run fwkb30-n3', and clicked Save. The app assigned task ID 4 (task page heading \"Task #4\"), and the task landed in the default first column, Backlog. The task detail page (/?controller=TaskViewController&action=show&task_id=4) shows the title exactly as 'fwkb30-n3 Bench Task' and Description 'Task created for run fwkb30-n3', with Column: Backlog, Status: open.",
+      "values": {
+        "title": "fwkb30-n3 Bench Task",
+        "description": "Task created for run fwkb30-n3",
+        "ref": "fwkb30-n3",
+        "task_page_link_href": "/?controller=TaskViewController&action=show&task_id=4",
+        "task_id_displayed": "Task #4",
+        "column": "Backlog",
+        "project": "Bench Board",
+        "status": "open",
+        "task_id": "4"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_23708c; observed column_after_move=Work in progress , board_column_counts_after_move=Backlog 3, Ready 0, Work in progress  1, Done 0, work_in_progress_tasks=4: fwkb30-n3 Bench Task, ref=fwkb30-n3, task_title=fwkb30-n3 Bench Task.",
+      "values": {
+        "column_after_move": "Work in progress ",
+        "board_column_counts_after_move": "Backlog 3, Ready 0, Work in progress  1, Done 0",
+        "work_in_progress_tasks": "4: fwkb30-n3 Bench Task",
+        "ref": "fwkb30-n3",
+        "task_title": "fwkb30-n3 Bench Task"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "4/4",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_74f35a; observed comment_text=Comment added for run fwkb30-n3, ref=fwkb30-n3, task_id=4, task_title=fwkb30-n3 Bench Task, comment_visibility=Standard users.",
+      "values": {
+        "comment_text": "Comment added for run fwkb30-n3",
+        "ref": "fwkb30-n3",
+        "task_id": "4",
+        "task_title": "fwkb30-n3 Bench Task",
+        "comment_visibility": "Standard users"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-set",
+      "status": "success",
+      "summary": "Replayed stored procedure s_556529; observed task_id=4, task_title=fwkb30-n3 Bench Task, due_date_as_displayed_on_task_page=Due date: 12/31/2026 22:41, column=Work in progress.",
+      "values": {
+        "task_id": "4",
+        "task_title": "fwkb30-n3 Bench Task",
+        "due_date_as_displayed_on_task_page": "Due date: 12/31/2026 22:41",
+        "column": "Work in progress"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "value_typed"
+      ]
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_f54e02; observed page_title=Bench Board, #4 - fwkb30-n3 Bench Task, ref=fwkb30-n3, 1_task_id_heading=Task #4, 2_task_title=fwkb30-n3 Bench Task, 3_description=Task created for run fwkb30-n3, 4_column=Work in progress, 5_due_date=12/31/2026 22:41, 6_comment_text=Comment added for run fwkb30-n3, status=open, swimlane=Default swimlane, position=1, created=09/17/2026 22:41.",
+      "values": {
+        "page_title": "Bench Board, #4 - fwkb30-n3 Bench Task",
+        "ref": "fwkb30-n3",
+        "1_task_id_heading": "Task #4",
+        "2_task_title": "fwkb30-n3 Bench Task",
+        "3_description": "Task created for run fwkb30-n3",
+        "4_column": "Work in progress",
+        "5_due_date": "12/31/2026 22:41",
+        "6_comment_text": "Comment added for run fwkb30-n3",
+        "status": "open",
+        "swimlane": "Default swimlane",
+        "position": "1",
+        "created": "09/17/2026 22:41"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 6,
+  "total": 6,
+  "repinned": 1,
+  "drift": 0,
+  "wallMs": 16644,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
