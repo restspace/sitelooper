@@ -42,7 +42,7 @@ describe('batch validation (rejected before anything runs)', () => {
   });
 
   it('rejects a nested batch and a report step', async () => {
-    for (const tool of ['batch', 'report', 'snapshot', 'eval', 'screenshot']) {
+    for (const tool of ['batch', 'report', 'snapshot', 'eval']) {
       const out = await validate([
         { tool: 'fill', args: { target: '#a', value: 'x' } },
         { tool, args: {} },

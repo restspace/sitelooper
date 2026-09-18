@@ -1094,6 +1094,9 @@ export async function runInstruction(
         // Multiline: a native-dialog note may follow the path on its own line.
         const m = execution.result.match(/^screenshot saved: (.+)$/m);
         if (m) screenshots.push(m[1]);
+      } else if (call.name === 'batch') {
+        // A screenshot taken as a batch step: `3. screenshot {…} → screenshot saved: <path>`.
+        for (const m of execution.result.matchAll(/^\d+\. screenshot .*→ screenshot saved: (\S+)/gm)) screenshots.push(m[1]);
       }
 
       // Keep the re-sent context lean: a snapshot's @refs go stale on navigation

@@ -554,6 +554,25 @@ d('script recording (fixture page)', () => {
     await page.evaluate(() => document.getElementById('req')?.remove());
   }, 30_000);
 
+  it('takes a screenshot as a batch step instead of refusing the batch', async () => {
+    const page = await session.getPage();
+    await page.evaluate(() => {
+      const box = document.createElement('div');
+      box.id = 'shot';
+      box.innerHTML = '<label for="shot-a">Note</label><input id="shot-a">';
+      document.body.appendChild(box);
+    });
+    const out = await run('batch', {
+      steps: [
+        { tool: 'fill', args: { target: '#shot-a', value: 'x' } },
+        { tool: 'screenshot', args: {} },
+      ],
+    });
+    expect(out.isError).toBeFalsy();
+    expect(out.result).toMatch(/^2\. screenshot .*→ screenshot saved: .+/m);
+    await page.evaluate(() => document.getElementById('shot')?.remove());
+  }, 30_000);
+
   it('drops actions that failed — a recording is of what worked', async () => {
     const recorder = session.script!;
     const before = recorder.entries.length;

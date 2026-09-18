@@ -67,13 +67,19 @@ const MAX_BATCH_STEPS = 10;
 /**
  * Tools a batch may contain: mechanical actions and cheap checks whose outcome
  * the agent does not need to see before choosing the next step. Everything else
- * (navigation, snapshot/eval/screenshot output, report, nested batch) either
- * feeds a decision or produces output that only makes sense on its own turn.
+ * (navigation, snapshot/eval output, report, nested batch) either feeds a
+ * decision or produces output that only makes sense on its own turn.
+ *
+ * screenshot IS allowed. It was not, and the model kept writing it anyway —
+ * "fill the form, screenshot it, click save" is exactly what prompt rule 9a
+ * asks for — so the whole batch was refused and re-issued: 15 refused batches
+ * across five traced recordings (fwrdj13, fxoff1/2, fxon1/2), each a wasted
+ * model turn. Its output is one short line and feeds no decision.
  */
 const BATCHABLE = new Set([
   'click', 'dblclick', 'modifier_click', 'right_click', 'fill', 'type', 'press',
   'select', 'check', 'hover', 'scroll_into_view', 'wait_for', 'read', 'read_all',
-  'upload', 'dialog_expect',
+  'upload', 'dialog_expect', 'screenshot',
 ]);
 
 /** Per-step lines stay short so a long batch still reads at a glance. */
