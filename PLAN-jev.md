@@ -375,6 +375,38 @@ pinned by code, 1 by Jev, the rest proven unpinnable and not asked).
 What is left is model time (~2/3 of the run) and **8 no-tool-call turns = 20s** —
 the next thing worth looking at, and not a Jev problem either.
 
+### Healing calibration — store-side drift, repairdesk (`bench/jev-drift-store.mjs`, tag `rdcal`), 2026-09-18
+
+We cannot rename controls inside Odoo/Grafana, so the harness drifts a COPY of the
+STORE: one healable step's chain is rewritten into a plausible old description
+(synonym / affix / punctuation / stale-id families, one rename event per step) so every
+rung misses the unchanged app; the original chain is the ground truth. One case per
+replay, gate 0 so every confidence is observed, `--no-model` (no provider key) so a
+deferred heal costs $0. ~230 cases are available across the Odoo/Grafana/Kanboard
+published stores once Docker is up (commands in the script header).
+
+39 dead chains, 31 asked, **27 correct, 2 wrong, 2 undecidable**, 8 never asked.
+- **Confidence does not separate right from wrong**: the two wrong picks sat at 0.81 and
+  0.94, inside the correct picks' range (median 0.96). No gate is clean: 0.6 -> 0.9
+  costs 13% of heals and still accepts one wrong click. **The gate is not what makes
+  site B safe — the code guards and the step's own expectations are** (both wrong
+  picks were refused by the step's recorded expectations, run halted, no damage).
+  `replay.heal` stays 0.6.
+- Both wrong picks were one shape: the step pressed the confirm DIALOG's "Delete part";
+  Jev chose the part row's own "Delete" on the page BEHIND the dialog. **Fixed in code,
+  not by the gate**: while a modal dialog is open (`dialog:modal` / `aria-modal`) only
+  its controls are on the ballot (`SnapshotRow.modal`, `candidateRows`). Re-run of those
+  two cases: 2/2 correct (0.77, 0.94). => 29/29 decided cases correct with the guard.
+- Reads never get a ballot (8 of 11): `interactiveRows` lists controls, and a read's
+  element is a td/p. Site B is click/fill-only today; a dead read is skipped, not healed.
+- Store-drift is EASIER than app-drift (the synthetic twin of `add-part-moved` scored
+  0.99; the real one 0.59-0.86): treat gates read off this harness as optimistic.
+- `replay.heal` rows now carry skill/step/key + the dead chain, so every production
+  heal is a labelled case on its own.
+- Caveat: a local agent-browser run collided with this calibration on port 4180 (my
+  scheduling error, $1.83 wasted, that run invalid). The calibration's per-case resets
+  make contamination of ITS cases unlikely but not excluded.
+
 ## 4. Sites, in order of value ÷ risk
 
 ### A. Locator repair proposer — `src/skills/repair.ts:576` (`llmProposer`)

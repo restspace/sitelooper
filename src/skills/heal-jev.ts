@@ -110,8 +110,19 @@ function healContext(req: HealRequest, rows: SnapshotRow[]): ProposeContext {
 /** The chooser, under site B's name so it takes site B's gate. Same `run`, deliberately. */
 export const healProposeSite: JevSite<ProposeContext, LocatorCandidate> = {
   site: REPLAY_HEAL_SITE,
-  run(client: SystemOne, input: ProposeContext, ctx): Promise<Reading<LocatorCandidate> | null> {
-    return repairProposeSite.run(client, input, ctx);
+  async run(client: SystemOne, input: ProposeContext, ctx): Promise<Reading<LocatorCandidate> | null> {
+    const reading = await repairProposeSite.run(client, input, ctx);
+    if (!reading) return null;
+    // WHICH step the pick was for, and what was dead. The verdict rows carry
+    // skill/step/key; the heal row did not, and it is the only record of a pick
+    // that never became a drift ticket (deferred below the gate, or refused by
+    // the pre-act check). With the dead chain beside it every production heal
+    // is a labelled case with no store at hand.
+    const detail = typeof reading.detail === 'object' && reading.detail && !Array.isArray(reading.detail) ? reading.detail : {};
+    return {
+      ...reading,
+      detail: { ...detail, skill: input.skill.id, step: input.ticket.atStep ?? null, key: input.ticket.key ?? null, deadLocators: input.chain.map((c) => candidateExpr(c)) },
+    };
   },
 };
 

@@ -130,7 +130,17 @@ export function candidateRows(input: ProposeContext): SnapshotRow[] {
     : input.recordedKind
       ? [kindFamily({ role: input.recordedKind })].filter((f): f is string => !!f)
       : [];
-  return (input.rows ?? []).filter((row) => {
+  // A modal dialog makes everything behind it inert, so while one is open the
+  // ballot is the dialog. The store-drift calibration (bench/jev-drift-store.mjs,
+  // rdcal c36/c37) found the two wrong picks of 29: the step pressed the confirm
+  // dialog's "Delete part", and Jev chose the part row's own "Delete" on the
+  // page BEHIND the dialog — at 0.81 and 0.94, unique, right kind, right verb,
+  // so neither the gate nor the resolves-to-one check could see it. Only the
+  // step's own expectations caught it. Code can see it outright.
+  const all = input.rows ?? [];
+  const open = all.some((row) => row.modal);
+  return all.filter((row) => {
+    if (open && !row.modal) return false;
     if (!locatorFromRow(row)) return false;
     if (!families.length) return true;
     const family = kindFamily(rowKind(row));

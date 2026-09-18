@@ -555,6 +555,14 @@ export interface SnapshotRow {
    * drops the very control it was asked to find.
    */
   type?: string;
+  /**
+   * Inside an open MODAL dialog (a `<dialog>` shown with showModal, or an
+   * `aria-modal="true"` container). NOT rendered into the line. A modal makes
+   * the page behind it inert, so while one is open a control outside it cannot
+   * be what a step presses — see candidateRows, and the two live false accepts
+   * (rdcal c36/c37) that put it there.
+   */
+  modal?: true;
 }
 
 /** The interactive elements of the live page, structured. See SnapshotRow. */
@@ -582,6 +590,14 @@ export async function interactiveRows(page: Page, limit = 120): Promise<Snapshot
         if (text && text !== label) row.text = text;
         const type = h.getAttribute('type');
         if (type) row.type = type.toLowerCase();
+        const dlg = h.closest('dialog');
+        let modal = false;
+        try {
+          modal = !!dlg && dlg.matches(':modal');
+        } catch {
+          /* :modal unsupported — fall through to aria-modal */
+        }
+        if (modal || h.closest('[aria-modal="true"]')) row.modal = '1';
         out.push(row);
       }
       return out;
@@ -589,7 +605,7 @@ export async function interactiveRows(page: Page, limit = 120): Promise<Snapshot
     .catch(() => [] as Record<string, string>[]);
   // The page-side walk builds a plain bag of strings (only serialisable
   // values cross the evaluate boundary); `tag` is always set there.
-  return rows as unknown as SnapshotRow[];
+  return rows.map(({ modal, ...rest }) => ({ ...rest, ...(modal ? { modal: true as const } : {}) })) as unknown as SnapshotRow[];
 }
 
 /**

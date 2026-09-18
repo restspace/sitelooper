@@ -123,6 +123,19 @@ describe('the candidate ballot', () => {
     expect(candidateRows(context(rows, { recordedKind: undefined, recordedFamilies: undefined }))).toEqual([rows[1]]);
   });
 
+  // rdcal c36/c37: the step pressed the confirm dialog's "Delete part"; Jev
+  // chose the part row's own "Delete" BEHIND the dialog at 0.81 and 0.94.
+  it('while a modal dialog is open, only its controls are on the ballot', () => {
+    const rows: SnapshotRow[] = [
+      { tag: 'button', testid: 'part-delete-p18', text: 'Delete' },
+      { tag: 'button', testid: 'confirm-no', text: 'Cancel', modal: true },
+      { tag: 'button', testid: 'confirm-yes', text: 'Delete part', modal: true },
+    ];
+    expect(candidateRows(context(rows)).map((r) => r.testid)).toEqual(['confirm-no', 'confirm-yes']);
+    // No modal open: the page is the ballot, as before.
+    expect(candidateRows(context(rows.map(({ modal: _m, ...r }) => r))).length).toBe(3);
+  });
+
   it('a page with no candidate of the recorded kind is not asked about at all', async () => {
     const s1 = scriptedSystemOne(() => ({}));
     const propose = jevProposer(s1);
