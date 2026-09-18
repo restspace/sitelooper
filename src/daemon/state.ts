@@ -1,7 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import type { ChatMessage } from '../agent/llm.js';
+import type { SystemOneDecision } from '../agent/system-one.js';
 import { ensureSessionDir } from '../shared/paths.js';
+
+export type { SystemOneDecision };
 
 const ELIDED = '[elided older tool result — re-inspect the page if needed]';
 const FAILED_ATTEMPT_STUB =
@@ -11,24 +14,6 @@ const SNAPSHOT_STUB =
 
 /** Every placeholder a tool result may already hold, so passes don't restub each other. */
 const STUBS = new Set([ELIDED, FAILED_ATTEMPT_STUB, SNAPSHOT_STUB]);
-
-/** One System One decision, as logged for calibration (see recordSystemOneDecision). */
-export interface SystemOneDecision {
-  /** Which call site asked, e.g. 'repair.propose'. Thresholds are per site. */
-  site: string;
-  /** The served model version — `jev-latest` moves, so a calibration shift must be attributable. */
-  model: string;
-  /** How many options/shards the question ranged over. */
-  options: number;
-  chosen: string | null;
-  confidence: number;
-  /** What the site did with the answer: cleared its gate, or left it to the model path (and why). */
-  outcome: 'acted' | 'deferred';
-  why?: string;
-  /** Whether the deterministic verifier later agreed — the label calibration needs. */
-  verified?: boolean;
-  ms?: number;
-}
 
 /**
  * Per-session agent memory: one running message history (instruction N+1 sees

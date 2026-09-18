@@ -299,6 +299,33 @@ function sleep(ms: number, signal: AbortSignal): Promise<void> {
   });
 }
 
+// --- the decision record -------------------------------------------------------
+
+/** One System One decision, as logged for calibration (see recordSystemOneDecision). */
+export interface SystemOneDecision {
+  /** Which call site asked, e.g. 'repair.propose'. Thresholds are per site. */
+  site: string;
+  /** The served model version — `jev-latest` moves, so a calibration shift must be attributable. */
+  model: string;
+  /** How many options/shards the question ranged over. */
+  options: number;
+  chosen: string | null;
+  confidence: number;
+  /** What the site did with the answer: cleared its gate, or left it to the model path (and why). */
+  outcome: 'acted' | 'deferred';
+  why?: string;
+  /** Whether the deterministic verifier later agreed — the label calibration needs. */
+  verified?: boolean;
+  /**
+   * Shadow mode only (decide.ts `shadow`): whether Jev agreed with the
+   * authoritative decider it ran beside. The disagreements are the dataset.
+   */
+  agrees?: boolean;
+  /** Site-specific context worth keeping beside the numbers (the value, the line, the rule's answer). */
+  detail?: JsonValue;
+  ms?: number;
+}
+
 // --- map/reduce ---------------------------------------------------------------
 
 /** Rough token estimate (chars/4): for budgeting shards, never for billing. */
