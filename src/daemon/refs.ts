@@ -19,6 +19,7 @@ const SCOPE_WAIT_MS = 2_000;
  */
 export async function snapshot(page: Page, opts: SnapshotOptions = {}): Promise<string> {
   let raw: string;
+  if (opts.selector) opts = { ...opts, selector: implicitRoles(opts.selector) };
   const scope = opts.selector ? page.locator(opts.selector) : page;
   if (opts.selector) {
     // A scope that matches nothing must say so NOW. The `mode:'ai'` call below
@@ -192,13 +193,14 @@ export function resolveTarget(page: Page, target: string): Locator {
   const trimmed = target.trim();
   const refMatch = REF_RE.exec(trimmed);
   if (refMatch) return page.locator(`aria-ref=${refMatch[1]}`);
-  const primary = page.locator(trimmed);
+  const selector = implicitRoles(trimmed);
+  const primary = page.locator(selector);
   // The field may be the last link of a scoped chain (`dialog >> role=…`):
   // fwrdj13-n1 wrote it that way twice, and the scope changes nothing about
   // which name the field answers to.
-  const cut = trimmed.lastIndexOf(' >> ');
-  const scope = cut < 0 ? page : page.locator(trimmed.slice(0, cut));
-  const field = FIELD_BY_NAME_RE.exec(cut < 0 ? trimmed : trimmed.slice(cut + 4).trim());
+  const cut = selector.lastIndexOf(' >> ');
+  const scope = cut < 0 ? page : page.locator(selector.slice(0, cut));
+  const field = FIELD_BY_NAME_RE.exec(cut < 0 ? selector : selector.slice(cut + 4).trim());
   if (!field || !LABELLED_ROLES.has(field[1])) return primary;
   // A name WE gave the agent must be a target we accept. The [state: …] diff
   // names a field by its <label>'s text (execution/snapshot.ts, dialect 2),
@@ -212,6 +214,22 @@ export function resolveTarget(page: Page, target: string): Locator {
   // is a strict-mode error rather than a wrong fill.
   const name = field[2].replace(/\\(.)/g, '$1');
   return primary.or(scope.getByRole(field[1] as Parameters<Page['getByRole']>[0]).and(scope.getByLabel(name, { exact: true })));
+}
+
+/**
+ * `[role=dialog]` as a whole chain segment means "the dialog", and the agent
+ * writes it because the snapshot and the diff both SAY `dialog`. But as CSS it
+ * matches only an explicit role attribute: a native <dialog>, <nav> or <main>
+ * has the role and no attribute, so the scope matched nothing. fxon1-n1 lost
+ * five batches (3s each, plus the snapshot turn after) to `[role=dialog] >> …`
+ * on an app that uses <dialog>. The role engine matches both kinds, and is a
+ * strict superset, so the segment is handed to it instead.
+ */
+export function implicitRoles(selector: string): string {
+  return selector
+    .split(' >> ')
+    .map((segment) => segment.trim().replace(/^\[role=["']?([a-z]+)["']?\]$/, 'role=$1'))
+    .join(' >> ');
 }
 
 /** `role=textbox[name="Part name *"]` — the one shape rule 4b teaches. */

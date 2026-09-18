@@ -30,6 +30,13 @@ describe('resolveTarget passes role= selectors through', () => {
     expect(made('dialog >> role=spinbutton[name="Cost *"]')).toBe('dialog >> role=spinbutton[name="Cost *"] OR dialog role:spinbutton AND dialog label:Cost *');
   });
 
+  it('reads a bare [role=x] scope as the role, so a native <dialog> is found', () => {
+    expect(made('[role=dialog] >> role=button[name="Save part"]')).toBe('role=dialog >> role=button[name="Save part"]');
+    expect(made('[role="dialog"]')).toBe('role=dialog');
+    // Only a whole segment: inside a longer css selector it is left as written.
+    expect(made('[role=dialog] input[name="supplier"]')).toBe('[role=dialog] input[name="supplier"]');
+  });
+
   it('still routes an @ref through the aria-ref engine', () => {
     expect(made('@e12')).toBe('aria-ref=e12');
     expect(made('@f1e2')).toBe('aria-ref=f1e2');
