@@ -3,8 +3,8 @@
  *
  * What is pinned: what code refuses however confident Jev was, how a ballot
  * entry becomes a tool call, and the loop's contract — an actor's action is
- * written into the conversation before the model is asked, a failed action
- * hands the turn to the model, and a null or throwing actor leaves the loop
+ * taken while the model is thinking, cancels that call and is written into the
+ * conversation the model is next asked with, and a null or throwing actor leaves the loop
  * exactly as it was.
  */
 import os from 'node:os';
@@ -103,7 +103,7 @@ const loopOpts = { maxTurns: 5, timeoutMs: 30_000, screenshotDir: os.tmpdir() };
 const reportOnly = (seen: ChatMessage[][]) => scriptedProvider([{ toolCalls: [call('report', { status: 'success', summary: 'done' })] }], seen);
 
 describe('an actor in the loop', () => {
-  it('acts before the model is asked, and the model is told what it did', async () => {
+  it('acts while the model is thinking, cancels that call, and the model is then told what it did', async () => {
     const seen: ChatMessage[][] = [];
     const observed: Array<{ name: string; ok: boolean }> = [];
     let asked = 0;
@@ -118,13 +118,16 @@ describe('an actor in the loop', () => {
     expect(result.turns).toBe(1);
     expect(result.timing.actorActs).toBe(1);
     expect(result.timing.turns[0].actorTools).toEqual(['click']);
-    // The model's first prompt already carries the actor's call and its result.
-    const first = seen[0];
+    // The model was asked beside the actor and that call was cancelled; the
+    // prompt its accepted answer came from carries the actor's call and result.
+    expect(seen).toHaveLength(2);
+    expect(seen[0].some((m) => m.role === 'tool')).toBe(false);
+    const first = seen[1];
     const assistant = first.find((m) => m.role === 'assistant');
     expect(assistant && 'tool_calls' in assistant && assistant.tool_calls?.[0].id).toBe('jev_1_1');
     expect(first.some((m) => m.role === 'tool' && m.tool_call_id === 'jev_1_1')).toBe(true);
-    // A failed action ends the actor's turn: it was not asked a second time.
-    expect(asked).toBe(1);
+    // Asked again beside the second model call, it said nothing and the model's answer stood.
+    expect(asked).toBe(2);
     expect(observed).toEqual([{ name: 'click', ok: false }]);
   });
 

@@ -752,19 +752,26 @@ export async function runInstruction(
    * The first tier's turn. Whatever it does is written into the conversation
    * as an ordinary assistant tool call and its result, so the model that is
    * asked next is TOLD what happened to the page rather than finding it moved.
-   * Ends at the first null or the first failed action; the model is then asked
-   * as usual, in the same turn.
+   *
+   * It is asked WHILE the model is thinking, never before: the first A/B
+   * (fwrdj7/8) asked it first and its 78 serial asks cost 18s, most of what
+   * its 7 actions saved. Asked beside the model, a deferral costs nothing —
+   * the model's answer is already on its way — and an action cancels a model
+   * call that had barely begun.
    */
-  const runActor = async (ctx: ShadowTurn, turnTiming: InstructionTiming['turns'][number]): Promise<void> => {
+  const askActor = async (ctx: ShadowTurn, turnTiming: InstructionTiming['turns'][number]): Promise<ToolCall | null> => {
     const actor = opts.actor;
-    if (!actor) return;
-    while (Date.now() < deadline && !opts.signal?.aborted) {
-      const askedAt = Date.now();
-      const next = await actor.next(ctx).catch(() => null);
-      turnTiming.actorMs = (turnTiming.actorMs ?? 0) + (Date.now() - askedAt);
-      timing.actorMs = (timing.actorMs ?? 0) + (Date.now() - askedAt);
-      if (!next?.call.args) return;
-      const { call } = next;
+    if (!actor) return null;
+    const askedAt = Date.now();
+    const next = await actor.next(ctx).catch(() => null);
+    turnTiming.actorMs = (turnTiming.actorMs ?? 0) + (Date.now() - askedAt);
+    timing.actorMs = (timing.actorMs ?? 0) + (Date.now() - askedAt);
+    return next?.call.args ? next.call : null;
+  };
+
+  const runActorCall = async (ctx: ShadowTurn, call: ToolCall, turnTiming: InstructionTiming['turns'][number]): Promise<void> => {
+    const actor = opts.actor!;
+    {
       const summary = summarizeArgs(call.args!);
       opts.onProgress?.(`[turn ${ctx.turn}/${opts.maxTurns}] (jev) ${call.name} ${summary}`);
       state.messages.push({
@@ -788,7 +795,6 @@ export async function runInstruction(
       } catch {
         /* the actor's bookkeeping is not the instruction's problem */
       }
-      if (execution.isError) return;
     }
   };
 
@@ -834,8 +840,6 @@ export async function runInstruction(
     const turnTiming: InstructionTiming['turns'][number] = { modelMs: 0, toolMs: 0, tools: [] };
     timing.turns.push(turnTiming);
     const shadowCtx: ShadowTurn = { turn, instruction, browser };
-    await runActor(shadowCtx, turnTiming);
-    if (Date.now() > deadline) return timedOut(turn - 1);
     // Said before the model is asked, so the observation it may take rides
     // inside the model's own thinking time rather than beside it.
     tellShadow((s) => s.onTurnStart(shadowCtx));
@@ -846,9 +850,21 @@ export async function runInstruction(
       timing.modelCalls += 1;
     };
     try {
-      completion = await provider.complete([system, ...state.messages], toolDefs, {
+      const asked = provider.complete([system, ...state.messages], toolDefs, {
         signal: watchdog.signal,
       });
+      // The actor's answer arrives in ~300ms, long before the model's. If it
+      // acts, the model call is cancelled and this turn is the actor's: the
+      // same turn number is asked again with the action in the conversation.
+      asked.catch(() => {});
+      const actorCall = await askActor(shadowCtx, turnTiming);
+      if (actorCall) {
+        watchdog.abort();
+        await runActorCall(shadowCtx, actorCall, turnTiming);
+        turn--;
+        continue;
+      }
+      completion = await asked;
       modelDone();
     } catch (err) {
       modelDone();
