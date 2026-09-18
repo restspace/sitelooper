@@ -1,0 +1,11 @@
+[spec-replay] resetting odoo
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile bench/results/flows/fwod73.json --out /home/user/sitelooper/bench/results/fwod73-spec-spec-tmp --overwrite-spec
+flow: /home/user/sitelooper/bench/results/fwod73-spec-spec-tmp/fwod73.flow.ts
+spec: /home/user/sitelooper/bench/results/fwod73-spec-spec-tmp/fwod73.spec.ts
+warning 07-report: 07-report read a value that contradicts what the previous step reported
+  why: 07-report read order_statusbar_text "Preview" right after 06-open reported "Cancelled"; 06-open's change may not have landed and a later step may be retrying it. Re-record 06-open.
+  fix: sitelooper rerecord bench/results/flows/fwod73.json 06-open
+[spec-replay] running: npx playwright test --config /home/user/sitelooper/bench/results/fwod73-spec-spec-tmp/playwright.config.mjs
+[spec-replay] fwod73-spec: 1/1 passed, exit=0, 55s, 0 drift line(s) — result written
