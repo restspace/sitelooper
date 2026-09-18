@@ -795,3 +795,24 @@ call rose from ~1.7 to ~2.2 — provider latency), so time is too noisy at n=1 t
 and failures are the evidence. Opening snapshot: snapshot turns 12 -> 3 -> 1 in the on arm,
 calls equal or lower in 2 of 3 pairs; kept on. Left: ~17 of 67 calls are report, its
 naming retry and read-back `locate` calls (2-3 per instruction).
+
+## The actor acts — VALID A/B on fixed instructions (a3f05f9 + look-turn fixes)
+
+Same six instructions both arms (`bench/fixed-instructions.mjs`), empty store, no
+orchestrator, actor told as a user message. No provider errors; every instruction OK;
+all four runs 6/6 verified.
+
+| pair | arm | instr. time | model calls | model s | Jev acts (all succeeded) |
+|---|---|---|---|---|---|
+| 1 | model only | 197s | 71 | 125 | - |
+| 1 | Jev beside | 154s | 52 | 117 | 16 of 63 asks |
+| 2 | model only | 218s | 64 | 174 | - |
+| 2 | Jev beside | 156s | 49 | 106 | 12 of 55 asks |
+
+=> -22% and -29% instruction time, -27% and -23% model calls. 28 actions, 28 succeeded,
+0 wrong, task verified. Jev takes the mechanical run: login fill, open form, three fills,
+save, confirm. The form instructions run in 10-18s against 16-31s. The earlier "q=11%,
+1.06x" was wrong twice over: agreement was the wrong yardstick, and the first acting runs
+crashed after Jev's first action so it never got to take a whole form.
+Still n=2 on one app with data-testid controls. Next: Odoo/Kanboard (no test ids — the
+selector falls to role+name), and a wrong-action audit over more runs before default-on.
