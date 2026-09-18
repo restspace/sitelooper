@@ -98,6 +98,20 @@ export interface LoopShadow {
   onToolExecuted?(ctx: ShadowTurn, call: ToolCall, outcome: { ok: boolean; index: number }): void;
 }
 
+/**
+ * A first tier that may take a turn INSTEAD of the model (PLAN-jev.md §4c
+ * step 7). Like the shadow it is a plain interface implemented elsewhere and
+ * built at the composition root; unlike the shadow it is awaited, because its
+ * answer decides what runs. It returns a whole tool call or null, and null is
+ * always safe: the model is asked exactly as if no actor existed. It must not
+ * throw — the loop treats a throw as null.
+ */
+export interface LoopActor {
+  next(ctx: ShadowTurn): Promise<{ call: ToolCall; ms: number } | null>;
+  /** Every tool call that ran — the actor's own and the model's — so its state has what was done. */
+  observed(call: ToolCall, outcome: { ok: boolean }): void;
+}
+
 export interface LoopOptions {
   maxTurns: number;
   timeoutMs: number;
@@ -122,6 +136,8 @@ export interface LoopOptions {
    * composition root, never here.
    */
   shadow?: LoopShadow;
+  /** A first tier that may act before the model is asked. Optional; composed at the root. */
+  actor?: LoopActor;
   /**
    * Who decides WHICH element a reported value is read back from, when the
    * page shows it in several places (PLAN-jev.md site C). Optional, and a
@@ -154,7 +170,10 @@ export interface InstructionTiming {
   toolMs: number;
   modelCalls: number;
   /** One row per turn: what the model took to decide, what its tool calls took to run, and what they were. */
-  turns: Array<{ modelMs: number; toolMs: number; tools: string[]; steps?: Array<{ tool: string; ms: number; ok: boolean }> }>;
+  turns: Array<{ modelMs: number; toolMs: number; tools: string[]; steps?: Array<{ tool: string; ms: number; ok: boolean }>; actorMs?: number; actorTools?: string[] }>;
+  /** Time spent asking the first-tier actor, and how many actions it took. Absent without one. */
+  actorMs?: number;
+  actorActs?: number;
 }
 
 export interface InstructionResult {
@@ -717,6 +736,62 @@ export async function runInstruction(
     }
   };
 
+  type Ran = Awaited<ReturnType<typeof runTool>>;
+  const settleSnapshots = (callId: string, name: string, args: Record<string, unknown>, execution: Ran): void => {
+    if (execution.isError) return;
+    if (execution.snapshotIncluded) {
+      state.markSnapshot(callId);
+      state.elideSnapshots(callId);
+    } else if (name === 'snapshot') state.elideSnapshots(callId);
+    else if (NAVIGATION_TOOLS.has(name) && !(name === 'tabs' && args.switch_to === undefined)) {
+      state.elideSnapshots();
+    }
+  };
+
+  /**
+   * The first tier's turn. Whatever it does is written into the conversation
+   * as an ordinary assistant tool call and its result, so the model that is
+   * asked next is TOLD what happened to the page rather than finding it moved.
+   * Ends at the first null or the first failed action; the model is then asked
+   * as usual, in the same turn.
+   */
+  const runActor = async (ctx: ShadowTurn, turnTiming: InstructionTiming['turns'][number]): Promise<void> => {
+    const actor = opts.actor;
+    if (!actor) return;
+    while (Date.now() < deadline && !opts.signal?.aborted) {
+      const askedAt = Date.now();
+      const next = await actor.next(ctx).catch(() => null);
+      turnTiming.actorMs = (turnTiming.actorMs ?? 0) + (Date.now() - askedAt);
+      timing.actorMs = (timing.actorMs ?? 0) + (Date.now() - askedAt);
+      if (!next?.call.args) return;
+      const { call } = next;
+      const summary = summarizeArgs(call.args!);
+      opts.onProgress?.(`[turn ${ctx.turn}/${opts.maxTurns}] (jev) ${call.name} ${summary}`);
+      state.messages.push({
+        role: 'assistant',
+        content: null,
+        tool_calls: [{ id: call.id, type: 'function', function: { name: call.name, arguments: call.rawArgs } }],
+      });
+      const toolAt = Date.now();
+      const execution = await runTool(call.name, call.args!);
+      turnTiming.toolMs += Date.now() - toolAt;
+      timing.toolMs += Date.now() - toolAt;
+      (turnTiming.actorTools ??= []).push(call.name);
+      timing.actorActs = (timing.actorActs ?? 0) + 1;
+      actions.push({ tool: call.name, args: summary, ok: !execution.isError });
+      state.messages.push({ role: 'tool', tool_call_id: call.id, content: execution.result });
+      accountActions(skill, call.name, call.args!, execution);
+      settleSnapshots(call.id, call.name, call.args!, execution);
+      transcript.push(`(jev) ${call.name} ${summary} → ${execution.isError ? execution.result.slice(0, 200) : 'ok'}`);
+      try {
+        actor.observed(call, { ok: !execution.isError });
+      } catch {
+        /* the actor's bookkeeping is not the instruction's problem */
+      }
+      if (execution.isError) return;
+    }
+  };
+
   for (let turn = 1; turn <= opts.maxTurns; turn++) {
     if (opts.signal?.aborted) {
       return finish(
@@ -759,6 +834,8 @@ export async function runInstruction(
     const turnTiming: InstructionTiming['turns'][number] = { modelMs: 0, toolMs: 0, tools: [] };
     timing.turns.push(turnTiming);
     const shadowCtx: ShadowTurn = { turn, instruction, browser };
+    await runActor(shadowCtx, turnTiming);
+    if (Date.now() > deadline) return timedOut(turn - 1);
     // Said before the model is asked, so the observation it may take rides
     // inside the model's own thinking time rather than beside it.
     tellShadow((s) => s.onTurnStart(shadowCtx));
@@ -911,6 +988,11 @@ export async function runInstruction(
       // identity of the element the agent acted on, which is what an observer
       // needs to tell whether that element was ever on its ballot.
       tellShadow((s) => s.onToolExecuted?.(shadowCtx, call, { ok: !execution.isError, index: ci }));
+      try {
+        opts.actor?.observed(call, { ok: !execution.isError });
+      } catch {
+        /* as above */
+      }
       state.messages.push({ role: 'tool', tool_call_id: call.id, content: execution.result });
       accountActions(skill, call.name, call.args, execution);
 
@@ -946,15 +1028,7 @@ export async function runInstruction(
       // A result that carried its own `[page: …]` snapshot counts as the
       // current snapshot: it is what the agent will act from, so it is the one
       // that must survive while the ones it superseded are stubbed.
-      if (!execution.isError) {
-        if (execution.snapshotIncluded) {
-          state.markSnapshot(call.id);
-          state.elideSnapshots(call.id);
-        } else if (call.name === 'snapshot') state.elideSnapshots(call.id);
-        else if (NAVIGATION_TOOLS.has(call.name) && !(call.name === 'tabs' && call.args.switch_to === undefined)) {
-          state.elideSnapshots();
-        }
-      }
+      settleSnapshots(call.id, call.name, call.args, execution);
       transcript.push(
         `${call.name} ${summary} → ${execution.isError ? execution.result.slice(0, 200) : 'ok'}`,
       );
@@ -1059,6 +1133,8 @@ export async function runEscalatingInstruction(
       toolMs: first.timing.toolMs + second.timing.toolMs,
       modelCalls: first.timing.modelCalls + second.timing.modelCalls,
       turns: [...first.timing.turns, ...second.timing.turns],
+      ...(first.timing.actorMs || second.timing.actorMs ? { actorMs: (first.timing.actorMs ?? 0) + (second.timing.actorMs ?? 0) } : {}),
+      ...(first.timing.actorActs || second.timing.actorActs ? { actorActs: (first.timing.actorActs ?? 0) + (second.timing.actorActs ?? 0) } : {}),
     },
     screenshots: [...first.screenshots, ...second.screenshots],
     escalation: {

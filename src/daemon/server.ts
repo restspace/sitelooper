@@ -3,7 +3,7 @@ import net from 'node:net';
 import path from 'node:path';
 import { AnthropicProvider, OpenAICompatProvider, resolveProviderConfig, type Provider } from '../agent/llm.js';
 import { buildSystemOne, resolveSystemOneConfig, type SystemOne } from '../agent/system-one.js';
-import { runEscalatingInstruction, type InstructionResult, type SkillRecord } from '../agent/loop.js';
+import { runEscalatingInstruction, type InstructionResult, type LoopActor, type SkillRecord } from '../agent/loop.js';
 import { executeTool } from '../agent/tools.js';
 import { urlPattern as compiledUrlPattern, dropAbsentReadLocators, dropDeadReadLocators, fillParams, markReadsProven, stranded, urlParts } from '../skills/compile.js';
 import type { DriftTicket } from '../skills/repair.js';
@@ -18,6 +18,7 @@ import { expectationDecisions, recordedTexts, recordedValues, threadingDecisions
 import { triageSession } from '../skills/triage-jev.js';
 import { inlineHealer } from '../skills/heal-jev.js';
 import { actorShadow, type ActorShadow } from '../agent/actor-jev.js';
+import { actingActor } from '../agent/actor-act.js';
 import { readBackDecider } from '../agent/readback-jev.js';
 import type { ReadBackDecider } from '../agent/readback.js';
 import { setInlineHealer } from '../skills/replay.js';
@@ -388,6 +389,22 @@ ${describeLeaks(leaks.slice(0, 6))}`);
   }
 
   /**
+   * PLAN-jev.md §4c step 7, the actor that ACTS — an experiment, off unless
+   * SITELOOPER_JEV_ACTOR=act. Before the model is asked, Jev may take a click,
+   * fill, select or check it is confident of; everything else, and any
+   * failure, is the model's. The shadow is measurement beside the model and
+   * this replaces part of the model, so the two are never on together.
+   */
+  private acting: LoopActor | null | undefined;
+  private actingActor(): LoopActor | undefined {
+    if (this.acting === undefined) {
+      const s1 = process.env.SITELOOPER_JEV_ACTOR === 'act' ? this.systemOne() : null;
+      this.acting = s1 ? actingActor(s1, { sink: (d) => this.state.recordSystemOneDecision(d) }) : null;
+    }
+    return this.acting ?? undefined;
+  }
+
+  /**
    * Site C's ballot (PLAN-jev.md): which element a reported value is read back
    * from when the page shows it in several places. Code settles the rest
    * before this is asked (exactly one displayer, or provably none); resolved
@@ -585,7 +602,7 @@ ${describeLeaks(leaks.slice(0, 6))}`);
           screenshotDir,
           signal: controller.signal,
           onProgress: progress,
-          ...(this.actorShadow() ? { shadow: this.actorShadow() } : {}),
+          ...(this.actingActor() ? { actor: this.actingActor() } : this.actorShadow() ? { shadow: this.actorShadow() } : {}),
           ...(this.locateReadBack() ? { locateReadBack: this.locateReadBack()! } : {}),
         };
         // Where this instruction's recording starts, so learning can read back

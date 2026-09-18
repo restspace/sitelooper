@@ -55,6 +55,11 @@ export const GATES: Record<string, number> = {
   // at 0.77. 0.85 clears every wrong answer and keeps 9 of 11 pick cases.
   // Deferring costs exactly what the tool cost before, so err high first and
   // revisit once system-one.jsonl has volume.
+  // §4c step 7, the acting actor. From the shadow log (fwrdj4-n1, 87 turns):
+  // element actions Jev picked that the model then took sit at 0.76-0.99; the
+  // element actions nothing the model did ever matched top out at 0.69. One
+  // run, so this is a starting point for the A/B, not a calibration.
+  'actor.act': 0.75,
   'repair.propose': 0.85,
   // Site B. Same chooser as repair.propose, different consequence: it acts on
   // the live page with no human and no later variant review, so it is
