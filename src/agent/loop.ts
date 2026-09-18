@@ -745,9 +745,13 @@ export async function runInstruction(
     if (execution.snapshotIncluded) {
       state.markSnapshot(callId);
       state.elideSnapshots(callId);
-    } else if (name === 'snapshot') state.elideSnapshots(callId);
-    else if (NAVIGATION_TOOLS.has(name) && !(name === 'tabs' && args.switch_to === undefined)) {
+      supersedeOpening();
+    } else if (name === 'snapshot') {
+      state.elideSnapshots(callId);
+      supersedeOpening();
+    } else if (NAVIGATION_TOOLS.has(name) && !(name === 'tabs' && args.switch_to === undefined)) {
       state.elideSnapshots();
+      supersedeOpening();
     }
   };
 
@@ -758,13 +762,18 @@ export async function runInstruction(
    * fwrdj11-n1's trace shows why: history carries over between instructions,
    * but the snapshots in it are stubbed and their @refs are dead, so the first
    * thing the model can usefully do is look. That is a full model round trip
-   * (~1.5s) to obtain something that costs ~100ms to take. So it is taken
-   * here and written into the conversation as the snapshot call the model
-   * would have made — an ordinary tool call and result, so the elision that
-   * keeps old snapshots out of the prompt applies to it like any other.
-   * Skipped where there is nothing to look at, and with
+   * (~1.5s) to obtain something that costs ~100ms to take, so it is taken here
+   * and appended to the instruction's own message.
+   *
+   * In the USER message, not as a synthetic snapshot call: fwrdj12-n1 tried
+   * the latter and DeepSeek refused every later request in the session with
+   * "reasoning_content in the thinking mode must be passed back" — an
+   * assistant turn it never wrote, first after the user's, is not something
+   * that host accepts. The block is stubbed like any snapshot once a newer
+   * view of the page exists (see settleSnapshots).
    * SITELOOPER_OPENING_SNAPSHOT=off for an A/B.
    */
+  let opening: { message: { content: string | null }; without: string } | null = null;
   const openingSnapshot = async (): Promise<void> => {
     if (process.env.SITELOOPER_OPENING_SNAPSHOT === 'off' || !browser.isOpen) return;
     try {
@@ -773,19 +782,25 @@ export async function runInstruction(
     } catch {
       return;
     }
-    const id = `open_${Date.now().toString(36)}`;
+    const message = state.messages[state.messages.length - 1];
+    if (message?.role !== 'user' || typeof message.content !== 'string') return;
     const execution = await runTool('snapshot', {});
-    if (execution.isError) return;
-    state.messages.push({ role: 'assistant', content: null, tool_calls: [{ id, type: 'function', function: { name: 'snapshot', arguments: '{}' } }] });
-    state.messages.push({ role: 'tool', tool_call_id: id, content: execution.result });
-    state.elideSnapshots(id);
+    if (execution.isError || !execution.result.trim()) return;
+    state.elideSnapshots();
+    opening = { message, without: message.content };
+    message.content = `${message.content}\n\n[page: the page as it is now — these @refs are current, so act on them without calling snapshot first]\n${execution.result}`;
     state.recordTrace({ turn: 0, tool: 'snapshot', args: {}, ok: true, result: execution.result.slice(0, TRACE_RESULT_CHARS) });
+  };
+  const supersedeOpening = (): void => {
+    if (!opening) return;
+    opening.message.content = `${opening.without}\n\n[page: superseded by a later view of the page]`;
+    opening = null;
   };
 
   /**
-   * The first tier's turn. Whatever it does is written into the conversation
-   * as an ordinary assistant tool call and its result, so the model that is
-   * asked next is TOLD what happened to the page rather than finding it moved.
+   * The first tier's turn. Whatever it does is written into the conversation,
+   * so the model that is asked next is TOLD what happened to the page rather
+   * than finding it moved.
    *
    * It is asked WHILE the model is thinking, never before: the first A/B
    * (fwrdj7/8) asked it first and its 78 serial asks cost 18s, most of what
@@ -808,11 +823,6 @@ export async function runInstruction(
     {
       const summary = summarizeArgs(call.args!);
       opts.onProgress?.(`[turn ${ctx.turn}/${opts.maxTurns}] (jev) ${call.name} ${summary}`);
-      state.messages.push({
-        role: 'assistant',
-        content: null,
-        tool_calls: [{ id: call.id, type: 'function', function: { name: call.name, arguments: call.rawArgs } }],
-      });
       const toolAt = Date.now();
       const execution = await runTool(call.name, call.args!);
       turnTiming.toolMs += Date.now() - toolAt;
@@ -821,9 +831,19 @@ export async function runInstruction(
       timing.actorActs = (timing.actorActs ?? 0) + 1;
       actions.push({ tool: call.name, args: summary, ok: !execution.isError });
       state.recordTrace({ turn: ctx.turn, tool: call.name, args: call.args, ok: !execution.isError, result: execution.result.slice(0, TRACE_RESULT_CHARS), by: 'jev' });
-      state.messages.push({ role: 'tool', tool_call_id: call.id, content: execution.result });
+      // Told as a USER message, never as an assistant tool call the model did
+      // not write: DeepSeek in thinking mode answers a synthetic assistant turn
+      // with HTTP 400 ("reasoning_content … must be passed back"), which is
+      // what crashed an instruction after every action in fwrdj8 and fwrdj10.
+      state.messages.push({
+        role: 'user',
+        content: `[actor] This action was already taken for you on the live page — do not repeat it; continue from its result.\n${call.name} ${call.rawArgs}\n→ ${execution.result}`,
+      });
       accountActions(skill, call.name, call.args!, execution);
-      settleSnapshots(call.id, call.name, call.args!, execution);
+      if (!execution.isError && (execution.snapshotIncluded || NAVIGATION_TOOLS.has(call.name))) {
+        state.elideSnapshots();
+        supersedeOpening();
+      }
       transcript.push(`(jev) ${call.name} ${summary} → ${execution.isError ? execution.result.slice(0, 200) : 'ok'}`);
       try {
         actor.observed(call, { ok: !execution.isError });

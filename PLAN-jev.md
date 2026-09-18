@@ -741,3 +741,16 @@ below-gate asks, 30 were observe/read/wait (correct deferrals); element actions 
 a third of all asks. Ceiling on this task is therefore <10% of model calls.
 => Safe, cheap, small. The larger lever is the model's look turns (44 of 87 in fwrdj4),
 which is a code change (return the page diff with every action), not a Jev one.
+
+### CORRECTION to both actor A/Bs — the acting arms were broken (found 2026-09-18)
+
+The actor wrote its action into the conversation as a synthetic assistant tool call.
+DeepSeek in thinking mode rejects the next request with HTTP 400 ("reasoning_content in
+the thinking mode must be passed back"). fwrdj8 lost 4 instructions to it (and two
+conversation resets), fwrdj10 lost 1. The orchestrator retried each, finding Jev's actions
+already applied, and a crashed instruction files no timing row — so the acting arms'
+instruction time and model-call counts are UNDERSTATED and the 121s vs 188s figure is
+void. What stands: 10 Jev actions, all 10 tool calls succeeded, objectives verified.
+Fixed: the action is now told to the model as a `[actor]` user message. Needs a re-run.
+The same fault voided fwrdj12 (opening snapshot as a synthetic call; $0.22, 13
+instructions of orchestrator flailing, and it edited the global config, since restored).

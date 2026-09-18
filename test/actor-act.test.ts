@@ -122,10 +122,11 @@ describe('an actor in the loop', () => {
     // prompt its accepted answer came from carries the actor's call and result.
     expect(seen).toHaveLength(2);
     expect(seen[0].some((m) => m.role === 'tool')).toBe(false);
-    const first = seen[1];
-    const assistant = first.find((m) => m.role === 'assistant');
-    expect(assistant && 'tool_calls' in assistant && assistant.tool_calls?.[0].id).toBe('jev_1_1');
-    expect(first.some((m) => m.role === 'tool' && m.tool_call_id === 'jev_1_1')).toBe(true);
+    // As a USER message: a host in thinking mode rejects an assistant turn it did not write.
+    const told = seen[1].filter((m) => m.role === 'user' && typeof m.content === 'string' && m.content.startsWith('[actor]'));
+    expect(told).toHaveLength(1);
+    expect(told[0].content).toContain('click {"target":"#save"}');
+    expect(seen[1].some((m) => m.role === 'assistant')).toBe(false);
     // Asked again beside the second model call, it said nothing and the model's answer stood.
     expect(asked).toBe(2);
     expect(observed).toEqual([{ name: 'click', ok: false }]);
