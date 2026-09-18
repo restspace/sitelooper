@@ -396,12 +396,31 @@ const cli = (args, env, timeoutMs) =>
     maxBuffer: 64 * 1024 * 1024,
   });
 
+/**
+ * Reset the app, with patience. One failed reset used to fail the case and
+ * move on — so when Grafana stopped answering, 68 cases "ran" in a few seconds
+ * each and the summary looked like a result (grcal, 2026-09-18). A reset is
+ * retried, and a run whose resets keep failing STOPS: on a remote box nobody is
+ * watching, and a fast wrong answer is worse than an early exit.
+ */
+const RESET_TRIES = 4;
+const RESET_WAIT_MS = 15_000;
+const MAX_CONSECUTIVE_RESET_FAILURES = 2;
+let consecutiveResetFailures = 0;
 function resetApp() {
-  const r = spawnSync(process.execPath, [path.join(here, 'reset-app.mjs'), '--target', opts.target], {
-    stdio: ['inherit', 'pipe', 'inherit'],
-    env: { ...process.env, APP_URL: opts.appUrl },
-  });
-  return r.status === 0;
+  for (let i = 0; i < RESET_TRIES; i++) {
+    const r = spawnSync(process.execPath, [path.join(here, 'reset-app.mjs'), '--target', opts.target], {
+      stdio: ['inherit', 'pipe', 'inherit'],
+      env: { ...process.env, APP_URL: opts.appUrl },
+    });
+    if (r.status === 0) {
+      consecutiveResetFailures = 0;
+      return true;
+    }
+    if (i < RESET_TRIES - 1) Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, RESET_WAIT_MS);
+  }
+  consecutiveResetFailures += 1;
+  return false;
 }
 
 /** A finished case's artefacts, read back off disk — see `--rescore`. */
@@ -543,9 +562,15 @@ function scoreCase(c, out) {
 
   // One drifted step => one ask. When a run produced several, pin ours by the
   // row Jev picked against the expression the verdict/ticket names.
-  let heal = heals.length === 1 ? heals[0] : null;
+  // A heal row now says which step it was for (heal-jev.ts detail.skill/step/
+  // key), so attribution is a lookup. It has to be: a published Kanboard replay
+  // has dead chains of its OWN on every run, so one drifted step produced
+  // several asks and 23 of the first 29 kbcal cases were excluded as ambiguous.
+  const myHeals = heals.filter((h) => h.detail?.skill === c.skill && String(h.detail?.step) === String(c.tag) && (h.detail?.key ?? 'target') === c.key);
+  const labelled = heals.some((h) => h.detail?.skill !== undefined);
+  let heal = myHeals.length ? myHeals[myHeals.length - 1] : !labelled && heals.length === 1 ? heals[0] : null;
   let ambiguousAttribution = false;
-  if (!heal && heals.length > 1) {
+  if (!heal && !labelled && heals.length > 1) {
     const want = exprValue(preAct?.chosen ?? settled?.chosen ?? (ticket?.proposal ? candidateExpr(ticket.proposal) : null));
     heal = want ? heals.find((h) => String(h.detail?.pickedRow ?? '').includes(want)) ?? null : null;
     ambiguousAttribution = !heal;
@@ -655,6 +680,11 @@ for (const [i, c] of selected.entries()) {
       (row.asked ? ` conf=${row.confidence?.toFixed(2)} ${row.verdict}${row.verified === null ? '' : row.verified ? ' verified' : ' REFUSED-by-step'}` : '') +
       ` (${((row.wallMs ?? 0) / 1000).toFixed(1)}s)`,
   );
+  if (consecutiveResetFailures >= MAX_CONSECUTIVE_RESET_FAILURES) {
+    console.error(`[drift-store] STOPPING after ${scored.length}/${selected.length} case(s): the app reset failed ${consecutiveResetFailures} cases running (${RESET_TRIES} tries each). The app is down or wedged; the cases below are the ones that ran. Resume with --steps ${i + 1}-${selected.length}.`);
+    process.exitCode = 3;
+    break;
+  }
 }
 
 const asked = scored.filter((c) => c.asked);

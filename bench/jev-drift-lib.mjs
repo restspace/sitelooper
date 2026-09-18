@@ -415,8 +415,14 @@ export function parsePickedRow(line) {
   const head = line.match(/^([A-Za-z][\w-]*)/);
   if (!head) return null;
   row.tag = head[1];
-  for (const [, key, quoted, bare] of line.matchAll(/\b(role|id|testid|label|placeholder|text)=(?:"((?:[^"\\]|\\.)*)"|(\S+))/g)) {
-    row[key] = quoted !== undefined ? JSON.parse(`"${quoted}"`) : bare;
+  // A bare value runs to the NEXT field, not to the next space: the line form
+  // writes role/id/testid unquoted, and Grafana's test ids are sentences
+  // (`testid=data-testid Username input field placeholder="…"`). Cutting at the
+  // first space read that as testid "data-testid" and scored a correct pick at
+  // 0.98 as WRONG-and-verified (grcal-c01) — the most alarming row a
+  // calibration can print, produced by the scorer.
+  for (const [, key, quoted, bare] of line.matchAll(/\b(role|id|testid|label|placeholder|text)=(?:"((?:[^"\\]|\\.)*)"|(.+?))(?=\s+(?:role|id|testid|label|placeholder|text)=|$)/g)) {
+    row[key] = quoted !== undefined ? JSON.parse(`"${quoted}"`) : bare.trim();
   }
   return row;
 }
