@@ -1,0 +1,110 @@
+
+[sweep] run 1/3: fwgr61-n1 (store: /home/user/sitelooper/bench/results/fwgr61-skills)
+[harness] grafana: defaulting APP_URL
+[harness] grafana: defaulting APP_EMAIL
+[harness] grafana: defaulting APP_PASSWORD
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+[harness] grafana responded 302 at http://127.0.0.1:3000/
+stopped: fwgr61-n1
+  flow "fwgr61" saved: 7 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwgr61.json
+  warning: note: 01-open no longer publishes panel_count, grafana_version — no replay reads them from the page and the recording showed no line to read
+  warning: note: 02-create no longer publishes dashboard_uid — no replay reads it from the page and the recording showed no line to read
+  warning: note: 03-open no longer publishes new_panel_type, save_alert — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-set no longer publishes time_from — no replay reads it from the page and the recording showed no line to read
+  warning: note: 06-set no longer publishes auto_refresh_field_in_Settings_General_before, json_model_refresh_field_after_save, json_model_tags, time_from — no replay reads them from the page and the recording showed no line to read
+  warning: note: 07-open no longer publishes dashboard_uid, no_changes_made — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 161 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[1].instruction: "Stat" (output) in "In Grafana, create a NEW dashboard (Dashboards -> New dashboard -> Add visualization, or the + Create -> Dashboard button). Add a panel of visualization type 'S"
+  flow.steps[1].params.v2: "Stat" (output) in "Stat"
+  flow.steps[1].route: "bfyknucqyq0owc" (url) in "http://127.0.0.1:3000/d/bfyknucqyq0owc/:id"
+  flow.steps[2].instruction: "Text" (output) in "On the Grafana dashboard '{{runid}} Bench Dashboard' (currently open at /d/{{02-create.url.p1}}/{{runid}}-bench-dashboard), add a NEW panel of visualization typ"
+  flow.steps[2].route: "bfyknucqyq0owc" (url) in "http://127.0.0.1:3000/d/bfyknucqyq0owc/:id"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwgr61-n1 stop=completed
+turns=8 wall=833.8s
+commands=7 cmdTime=792.4s cmdBytes=12619 timeouts=0
+orchestrator in=7613 cw=0 cr=30272 out=2872
+inner prompt=4432715 cached=4181120 completion=41830
+spend=$0.1065 maxUsd=3
+learn: A_n=0 replayed=0/7 full=0 repaired=0 compiled=7 variants=0
+-> /home/user/sitelooper/bench/results/fwgr61-n1-sitelooper-result.json
+
+fwgr61-n1: objectives passed 6/6
+  obj 1: PASS — all 3 provisioned titles reported
+  obj 2: PASS — type=stat, datasource ok=true
+  obj 3: PASS — type=text, content includes runid=true
+  obj 4: PASS — tags=["bench"], time=now-6h..now
+  obj 5: PASS — refresh="1m"
+  obj 6: PASS — uid bfyknucqyq0owc reported
+
+[sweep] run 2/3: fwgr61-n2 (replay flow fwgr61, no orchestrator)
+[reset] grafana: deleted leftover dashboard "fwgr61-n1 Bench Dashboard" (200)
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+
+fwgr61-n2: objectives passed 6/6
+  obj 1: PASS — all 3 provisioned titles reported
+  obj 2: PASS — type=stat, datasource ok=true
+  obj 3: PASS — type=text, content includes runid=true
+  obj 4: PASS — tags=["bench"], time=now-6h..now
+  obj 5: PASS — refresh="1m"
+  obj 6: PASS — uid bfykophb1f7cwc reported
+
+[sweep] run 3/3: fwgr61-n3 (replay flow fwgr61, no orchestrator)
+[reset] grafana: deleted leftover dashboard "fwgr61-n2 Bench Dashboard" (200)
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+
+fwgr61-n3: objectives passed 6/6
+  obj 1: PASS — all 3 provisioned titles reported
+  obj 2: PASS — type=stat, datasource ok=true
+  obj 3: PASS — type=text, content includes runid=true
+  obj 4: PASS — tags=["bench"], time=now-6h..now
+  obj 5: PASS — refresh="1m"
+  obj 6: PASS — uid cfykox4g3sc8wc reported
+
+Learning sweep fwgr61 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwgr61-n1' │ '6/6'    │ 'completed' │ 8     │ 7    │ 0.1065    │ 0   │ '0/7'        │ 834    │
+│ 1       │ 2 │ 'fwgr61-n2' │ '6/6'    │ 'success'   │ 0     │ 7    │ 0         │ 1   │ '7/7 (flow)' │ 139    │
+│ 2       │ 3 │ 'fwgr61-n3' │ '6/6'    │ 'success'   │ 0     │ 7    │ 0         │ 1   │ '7/7 (flow)' │ 130    │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:3000
+  s_1220d6  validated    5 steps  3/3 (100%)
+           Open {{v1}} and sign in with username admin and password admin (skip the change-password prompt if it appears)…
+  s_1d00c3  validated   12 steps  3/3 (100%)
+           In Grafana, create a NEW dashboard (Dashboards -> New dashboard -> Add visualization, or the + Create -> Dashb…
+  s_513708  validated    4 steps  3/3 (100%)
+           Open the Grafana dashboard '{{v1}}' by browsing Dashboards -> All dashboards (or search) and clicking it, then…
+  s_54648b  validated    1 steps  3/3 (100%)
+           Open the Grafana dashboard '{{v1}}' by browsing Dashboards -> All dashboards (or search) and clicking it, then…
+  s_6adeb8  validated    1 steps  3/3 (100%)
+           Open the Grafana dashboard '{{v1}}' by browsing Dashboards -> All dashboards (or search) and clicking it, then…
+  s_6fbabb  validated    1 steps  3/3 (100%)
+           Open the Grafana dashboard '{{v1}}' by browsing Dashboards -> All dashboards (or search) and clicking it, then…
+  s_7c8bf0  validated    1 steps  3/3 (100%)
+           Open {{v1}} and sign in with username admin and password admin (skip the change-password prompt if it appears)…
+  s_7d5b12  validated    4 steps  3/3 (100%)
+           In Grafana, create a NEW dashboard (Dashboards -> New dashboard -> Add visualization, or the + Create -> Dashb…
+  s_94356b  validated   23 steps  3/3 (100%)
+           On the Grafana dashboard '{{v1}}' (at /d/{{v3}}/{{v4}}), set the dashboard's auto-refresh interval to '1m'. Yo…
+  s_a2ae6f  validated   23 steps  3/3 (100%)
+           On the Grafana dashboard '{{v1}}' (currently open at /d/{{v3}}/{{v4}}), add a NEW panel of visualization type …
+  s_a4413a  validated    1 steps  3/3 (100%)
+           Open the Grafana dashboard '{{v1}}' by browsing Dashboards -> All dashboards (or search) and clicking it, then…
+  s_c8c3e1  validated    2 steps  3/3 (100%)
+           In Grafana, create a NEW dashboard (Dashboards -> New dashboard -> Add visualization, or the + Create -> Dashb…
+  s_e6b017  validated   48 steps  3/3 (100%)
+           On the Grafana dashboard '{{v1}}' (at /d/{{v3}}/{{v4}}), set the dashboard's time range to 'Last 6 hours' usin…
+  s_ea4bc1  validated    4 steps  3/3 (100%)
+           Open {{v1}} and sign in with username admin and password admin (skip the change-password prompt if it appears)…
+  s_f0b011  validated   14 steps  3/3 (100%)
+           On the Grafana dashboard '{{v1}}' (at /d/{{v3}}/{{v4}}), open the dashboard settings (gear/cog icon, 'Dashboar…
+  s_f16527  validated    1 steps  3/3 (100%)
+           Open the Grafana dashboard '{{v1}}' by browsing Dashboards -> All dashboards (or search) and clicking it, then…
+  s_f5d987  validated    2 steps  3/3 (100%)
+           Open {{v1}} and sign in with username admin and password admin (skip the change-password prompt if it appears)…
+  s_f8f99f  validated    1 steps  3/3 (100%)
+           Open the Grafana dashboard '{{v1}}' by browsing Dashboards -> All dashboards (or search) and clicking it, then…
+store: /home/user/sitelooper/bench/results/fwgr61-skills
+
+summary: /home/user/sitelooper/bench/results/fwgr61-sweep.json
