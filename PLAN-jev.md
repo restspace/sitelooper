@@ -442,12 +442,54 @@ pinned one). Also gives `goalSatisfied` (`server.ts:1245`) a soft second opinion
 Map every ticket at once: `renamed / moved / gone / page redesigned` → routes
 promote-fallback vs patch-segment (A) vs re-record without serial strong-model calls.
 
-### F. Experimental, flag-gated, bench-decided
-- **System One actor** for skill-less single-action instructions (function-calling
-  cookbook): `choice` over tool ∈ {click, fill, select, check, read, *not-single-action*},
-  `choice` over same-kind elements, value from instruction spans; min-confidence gate;
-  success is recorded and compiled like any other step. Could remove the agent loop
-  from the easy majority of first-run steps, but it's a second actor to keep correct.
+## 4c. The System One actor — where the multi-x authoring speedup is
+
+Adopted 2026-09-18 from `ASTRA_JEV_RECOMMENDATIONS.md`, which is right that sites A-M
+cannot move the headline number: they replace model calls that are rare (repair,
+relabel) or add judgement beside the agent. Recording time is ~all inner-model turns —
+fwrd42 recorded in 1,212s and replays in 24s; locally fwrdj2 351s vs 40s — so only
+replacing ROUTINE TURNS gives more than tens of percent. This was site F's first
+bullet, parked as "a second actor to keep correct"; it is now the main line, reached
+by measurement rather than by building it and hoping.
+
+Shape (the doc's, constrained by what steps 0-2 measured):
+- Per turn, code builds EXECUTABLE candidates from one observation revision: live
+  controls x compatible task values, generic recipes (open combobox, dismiss dialog),
+  controller ops (observe region, read value, done, escalate). A candidate is
+  `{id, observationId, operation, targetRef, valueRef, description}`; Jev picks an id,
+  code resolves refs. Nothing is generated: values come from a **task contract**
+  (objective, named inputs incl. opaque secret refs, required outputs) — from the outer
+  agent where it can supply one, else from ONE conventional-model interpretation call.
+- Fresh bounded state per decision (observation + diff, contract, done/unresolved,
+  recent actions and failures) — never the growing transcript.
+- It is a `Decider<TurnState, Action>` in a cascade with the existing model turn behind
+  it (decide.ts). "none suitable" / "need more information" / "escalate" are options.
+- Reports assembled by code from output names + captured evidence.
+- >255 options or >~40 rows: the repair tournament (DOM-adjacent shards, fresh final
+  choice; never compare probabilities across groups).
+
+Constraints the doc does not have, from our measurements:
+- **First contact has no verifier.** Repair/healing check Jev against recorded
+  expectations; a first recording has none, and per-decision accuracy compounds
+  (0.95^12 = 54%). An acting site needs its own definition of "verified" (the action's
+  observable effect matches what the candidate said it would do) before it may act.
+- **Progress/completion questions must be "what is on the page"**, not counterfactual
+  (19/40 vs 36/40 in step 2). Some — "has the instruction's intent been met?" — may
+  not restate; those stay with the model.
+- One request ~0.3s; any sharded fan-out ~1.2s. The doc's 0.5-2s/decision holds only
+  if most decisions fit one request.
+- Expected speedup from the doc's own formula with our numbers: p ~95% cloud / ~75-85%
+  local (proxy: record vs replay), r ~10-30x cloud / ~5-10x local => **~5-8x vs the
+  published cloud baseline, ~3x vs today's local deepseek-flash run**. q (share of
+  model time Jev can take) is unknown and is the whole bet — so measure it first:
+
+**The shadow actor** (step 5 below): on every turn of real recordings, build the
+candidates, ask Jev, and log (a) was the model's actual action AMONG the candidates —
+coverage — and (b) did Jev pick it — agreement — by turn type and confidence. Zero
+risk, cents. Coverage x agreement, weighted by model ms per turn type, IS q. It decides
+between ~1.7x (q~50%) and ~7x (q~95%) before any execution path is built.
+
+### F. Still experimental, bench-decided
 - **Hard snapshot pruning** (actually dropping what H ranks low) to cut prompt tokens.
   A wrongly pruned control is an invisible failure; only after H's ranking has a
   measured recall on the corpus.
@@ -475,16 +517,18 @@ Explicitly **not** planned: routing `recoveryRoute` easy/hard (measured flat alr
 | 0 | client + `mapReduce`, config, accounting, decision log, live probe | field names, latency **and fan-out latency at 50–200 shards** confirmed |
 | 1 | A `jevProposer` (tournament reduce) + cascade; M ticket triage | offline agreement ≥ LLM proposer on stored tickets |
 | 2 | I + J **advisory only** (log disagreements, change nothing) | regression zoo: sides with the eventual fix on the named round 23–28 cases; quiet on corpus |
-| 3 | G sidecar observer | matrix: fewer turns/instruction, zero new reds |
-| 4 | C stragglers; H focused snapshot | no report regressions; H recall measured |
-| 5 | B inline healing (read-only/fill first); L candidate ranking | matrix: fewer fallbacks, zero new reds |
-| 6 | K whole-flow map (absorbs E), promote I/J to veto | naming-probe parity; step 2's log |
-| 7 | D paraphrase match | calibration from 1–6; min-confidence curve |
-| 8 | F experiments | bench only |
+| 3 | **Per-turn timing**: model ms vs tool ms per turn, per instruction, in results | p is a number, not a proxy |
+| 4 | **B inline healing** (read-only/fill first); store `interactiveRows` on drift tickets | drift-injection A/B on repairdesk; matrix: fewer fallbacks, zero new reds |
+| 5 | **Shadow actor** (4c): candidates + Jev pick logged beside every real model turn | coverage and agreement by turn type => measured q |
+| 6 | **Task contract** on `do` (named inputs / required outputs); code-assembled reports | no report regressions; typed-vs-read provenance improves |
+| 7 | Actor ACTS on the turn types step 5 shows safe (fills, navigation first), model behind it | equal verified outcomes + clean replay; authoring wall-clock |
+| 8 | G observer; C stragglers | fewer turns/instruction, zero new reds |
+| 9 | K whole-flow map (absorbs E); I to veto if its log stays quiet; J only below replay evidence | naming-probe parity; step 2's log |
+| 10 | D paraphrase match; L candidate ranking | calibration from earlier steps |
+| — | H focused snapshot: parked (fan-out ~1.2s is too slow per turn) | |
 
-After step 0 the contract is fixed and steps 1–4 are independent (parallelisable).
-Step 2 is deliberately early: it changes no behaviour, costs cents, and its log is the
-best evidence we'll get on whether Jev's judgement is worth trusting anywhere else.
+Steps 0-2 are done. 3 is small and first because every later claim about speed needs
+it. 4 and 5 are independent. 7 is gated on 5's numbers, not on the calendar.
 
 ## 7. Risks / open questions
 
