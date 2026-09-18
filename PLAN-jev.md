@@ -754,3 +754,44 @@ void. What stands: 10 Jev actions, all 10 tool calls succeeded, objectives verif
 Fixed: the action is now told to the model as a `[actor]` user message. Needs a re-run.
 The same fault voided fwrdj12 (opening snapshot as a synthetic call; $0.22, 13
 instructions of orchestrator flailing, and it edited the global config, since restored).
+
+## Cutting the look turns (no Jev involved) — trace.jsonl, four fixes, fixed-instruction pairs
+
+The guess ("return the page diff with every action") was already implemented. What the
+model was holding when it looked (new `trace.jsonl`, one row per inner call) showed four
+causes instead, all of them the tool refusing what it had itself told the model:
+
+1. **The diff named a field the resolver refused.** `+ textbox "Part name *"` is the label's
+   text; the accessible name is "Part name" (the `*` is aria-hidden). Rule 4b says target
+   the diff's name, so every such fill failed (3s) and cost a snapshot turn — 3 of 6
+   instructions in fwrdj11. Fix: a field is also found by role + exact label text
+   (`resolveTarget`), including as the last link of a `>>` chain. (4dca04c, df38a5e)
+2. **Every instruction after the first opened with a bare snapshot** (carried-over
+   snapshots are stubbed). Fix: the page rides in the instruction's own message, stubbed
+   when superseded; `SITELOOPER_OPENING_SNAPSHOT=off` disables. (c330a6f)
+3. **`[role=dialog] >> …` matched nothing on a native `<dialog>`.** Five failed batches in
+   one recording. Fix: a bare `[role=x]` segment is read as `role=x`. (cefaf2d)
+4. **A screenshot inside a batch refused the whole batch** — 15 times in five recordings;
+   rule 9a asks for exactly that batch. Fix: screenshot is batchable. (cc16383)
+
+Never write an assistant turn the model did not write: DeepSeek (thinking) 400s on it.
+That voided fwrdj12 and BOTH actor A/Bs (see the correction above).
+
+`bench/fixed-instructions.mjs` replays fwrdj11's six instructions verbatim, no
+orchestrator, empty store. All runs 6/6 verified. off/on = opening snapshot.
+
+| pair (fixes in both arms) | arm | instr. time | model calls | snapshot turns | failed calls |
+|---|---|---|---|---|---|
+| 1: label | off | 203s | 82 | 8 | 9 |
+| 1: label | on | 264s | 104 | 12 | 14 |
+| 2: + role scope | off | 181s | 79 | 9 | 7 |
+| 2: + role scope | on | 143s | 70 | 3 | 8 |
+| 3: + batch screenshot | off | 197s | 67 | 6 | 2 |
+| 3: + batch screenshot | on | 198s | 67 | 1 | 1 |
+
+Failed calls fell from 9-14 to 1-2 per recording and model calls from ~80-100 to 67.
+Wall time did not follow in pair 3 (one 93s instruction in the off arm; model seconds per
+call rose from ~1.7 to ~2.2 — provider latency), so time is too noisy at n=1 to claim; calls
+and failures are the evidence. Opening snapshot: snapshot turns 12 -> 3 -> 1 in the on arm,
+calls equal or lower in 2 of 3 pairs; kept on. Left: ~17 of 67 calls are report, its
+naming retry and read-back `locate` calls (2-3 per instruction).
