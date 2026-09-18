@@ -704,3 +704,24 @@ it. 4 and 5 are independent. 7 is gated on 5's numbers, not on the calendar.
   in the decision log, consider per-origin.
 - `jev-latest` is a moving alias; record the served model version in the decision log so
   a calibration shift is attributable.
+
+## The actor acts — first A/B (3a1989a, RepairDesk, one run per arm)
+
+Re-scoring the shadow log (fwrdj4-n1) showed agreement was the wrong yardstick: of 49
+disagreements, 22 were Jev picking the action the model took 1-3 turns later (after a
+snapshot or screenshot). Agreed-or-early was 62% of answered turns, ~71% at >=0.5.
+So the tier was built behind `SITELOOPER_JEV_ACTOR=act` (src/agent/actor-act.ts): element
+actions only, gate 0.75, one-visible-element check, model fallback, actions written into
+the conversation. Scored by the bench verifiers, not by agreement.
+
+| arm | verified | instructions | instruction time | model calls | model s | tool s | Jev s | cost |
+|---|---|---|---|---|---|---|---|---|
+| fwrdj7 model only | 6/6 | 6 | 198.6s | 79 | 130.0 | 63.2 | 0 | $0.044 |
+| fwrdj8 Jev first | 6/6 | 5 | 183.9s | 56 | 104.1 | 58.9 | 18.1 | $0.052 |
+
+Jev was asked 78 times and acted 7 (all 7 tool calls succeeded, 0.75-0.90); 52 deferrals
+were below the gate and 12 were the two option orders disagreeing. No wrong action, task
+still verified 6/6. But the 78 serial asks cost 18s, which ate most of the 26s of model
+time saved. One run per arm and the orchestrator split the task differently, so the
+7% is inside the noise. **Next: ask Jev concurrently with the model and cancel the model
+when Jev clears the gate — a deferral then costs nothing.** `bench/jev-act-report.mjs`.
