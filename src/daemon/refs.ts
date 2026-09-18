@@ -192,8 +192,27 @@ export function resolveTarget(page: Page, target: string): Locator {
   const trimmed = target.trim();
   const refMatch = REF_RE.exec(trimmed);
   if (refMatch) return page.locator(`aria-ref=${refMatch[1]}`);
-  return page.locator(trimmed);
+  const primary = page.locator(trimmed);
+  const field = FIELD_BY_NAME_RE.exec(trimmed);
+  if (!field || !LABELLED_ROLES.has(field[1])) return primary;
+  // A name WE gave the agent must be a target we accept. The [state: …] diff
+  // names a field by its <label>'s text (execution/snapshot.ts, dialect 2),
+  // and the prompt tells the agent to act on that line as role=…[name="…"].
+  // But a label's text is not always the accessible name: "Part name <span
+  // aria-hidden>*</span>" reads `Part name *` to us and `Part name` to the
+  // role engine, so the target the diff handed out matched nothing. fwrdj11-n1
+  // lost a failed batch (3s) and a snapshot turn to exactly this in 3 of its 6
+  // instructions. So a field is also found by its label's exact text — same
+  // role, so the two can only disagree by naming two different fields, which
+  // is a strict-mode error rather than a wrong fill.
+  const name = field[2].replace(/\\(.)/g, '$1');
+  return primary.or(page.getByRole(field[1] as Parameters<Page['getByRole']>[0]).and(page.getByLabel(name, { exact: true })));
 }
+
+/** `role=textbox[name="Part name *"]` — the one shape rule 4b teaches. */
+const FIELD_BY_NAME_RE = /^role=([a-z]+)\[name="((?:[^"\\]|\\.)*)"\]$/;
+/** Roles a <label> names. */
+const LABELLED_ROLES = new Set(['textbox', 'searchbox', 'spinbutton', 'combobox', 'listbox', 'checkbox', 'radio', 'switch', 'slider']);
 
 export function isRefTarget(target: string): boolean {
   return REF_RE.test(target.trim());

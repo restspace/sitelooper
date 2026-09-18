@@ -536,6 +536,24 @@ d('script recording (fixture page)', () => {
     await page.evaluate(() => document.getElementById('ghosts')?.remove());
   }, 30_000);
 
+  it('accepts the name the [state: …] diff gives a field, even where the label text is not the accessible name', async () => {
+    const page = await session.getPage();
+    await page.evaluate(() => {
+      const box = document.createElement('div');
+      box.id = 'req';
+      box.innerHTML = '<label for="req-name">Part name <span aria-hidden="true">*</span></label><input id="req-name">';
+      document.body.appendChild(box);
+    });
+    // The diff names this field `textbox "Part name *"` (its label's text); the role engine knows it as "Part name".
+    const byDiffName = await run('fill', { target: 'role=textbox[name="Part name *"]', value: 'Bolt' });
+    expect(byDiffName.isError).toBeFalsy();
+    expect(await page.inputValue('#req-name')).toBe('Bolt');
+    const byAccessibleName = await run('fill', { target: 'role=textbox[name="Part name"]', value: 'Nut' });
+    expect(byAccessibleName.isError).toBeFalsy();
+    expect(await page.inputValue('#req-name')).toBe('Nut');
+    await page.evaluate(() => document.getElementById('req')?.remove());
+  }, 30_000);
+
   it('drops actions that failed — a recording is of what worked', async () => {
     const recorder = session.script!;
     const before = recorder.entries.length;

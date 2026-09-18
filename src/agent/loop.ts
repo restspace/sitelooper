@@ -60,6 +60,9 @@ export function loopingCycle(acts: string[]): number {
  */
 const ESCALATION_BUDGET_MULTIPLIER = 1.5;
 
+/** How much of a tool result trace.jsonl keeps: enough to see the [state: …] note and the top of a [page: …] block. */
+const TRACE_RESULT_CHARS = 2500;
+
 /** Cap on the evidence values carried into the durable one-line report entry. */
 const REPORT_FACTS_CHARS = 600;
 
@@ -749,6 +752,37 @@ export async function runInstruction(
   };
 
   /**
+   * The page, handed over with the instruction instead of asked for.
+   *
+   * fwrdj9-n1 opened 5 of its 5 instructions with a bare `snapshot` turn, and
+   * fwrdj11-n1's trace shows why: history carries over between instructions,
+   * but the snapshots in it are stubbed and their @refs are dead, so the first
+   * thing the model can usefully do is look. That is a full model round trip
+   * (~1.5s) to obtain something that costs ~100ms to take. So it is taken
+   * here and written into the conversation as the snapshot call the model
+   * would have made — an ordinary tool call and result, so the elision that
+   * keeps old snapshots out of the prompt applies to it like any other.
+   * Skipped where there is nothing to look at, and with
+   * SITELOOPER_OPENING_SNAPSHOT=off for an A/B.
+   */
+  const openingSnapshot = async (): Promise<void> => {
+    if (process.env.SITELOOPER_OPENING_SNAPSHOT === 'off' || !browser.isOpen) return;
+    try {
+      const url = (await browser.getPage()).url();
+      if (url === 'about:blank' || url.startsWith('chrome-error://')) return;
+    } catch {
+      return;
+    }
+    const id = `open_${Date.now().toString(36)}`;
+    const execution = await runTool('snapshot', {});
+    if (execution.isError) return;
+    state.messages.push({ role: 'assistant', content: null, tool_calls: [{ id, type: 'function', function: { name: 'snapshot', arguments: '{}' } }] });
+    state.messages.push({ role: 'tool', tool_call_id: id, content: execution.result });
+    state.elideSnapshots(id);
+    state.recordTrace({ turn: 0, tool: 'snapshot', args: {}, ok: true, result: execution.result.slice(0, TRACE_RESULT_CHARS) });
+  };
+
+  /**
    * The first tier's turn. Whatever it does is written into the conversation
    * as an ordinary assistant tool call and its result, so the model that is
    * asked next is TOLD what happened to the page rather than finding it moved.
@@ -786,6 +820,7 @@ export async function runInstruction(
       (turnTiming.actorTools ??= []).push(call.name);
       timing.actorActs = (timing.actorActs ?? 0) + 1;
       actions.push({ tool: call.name, args: summary, ok: !execution.isError });
+      state.recordTrace({ turn: ctx.turn, tool: call.name, args: call.args, ok: !execution.isError, result: execution.result.slice(0, TRACE_RESULT_CHARS), by: 'jev' });
       state.messages.push({ role: 'tool', tool_call_id: call.id, content: execution.result });
       accountActions(skill, call.name, call.args!, execution);
       settleSnapshots(call.id, call.name, call.args!, execution);
@@ -797,6 +832,8 @@ export async function runInstruction(
       }
     }
   };
+
+  await openingSnapshot();
 
   for (let turn = 1; turn <= opts.maxTurns; turn++) {
     if (opts.signal?.aborted) {
@@ -1000,6 +1037,7 @@ export async function runInstruction(
       turnTiming.tools.push(call.name);
       if (execution.stepMs) (turnTiming.steps ??= []).push(...execution.stepMs);
       actions.push({ tool: call.name, args: summary, ok: !execution.isError });
+      state.recordTrace({ turn, tool: call.name, args: call.args, ok: !execution.isError, result: execution.result.slice(0, TRACE_RESULT_CHARS) });
       // After the recorder has filed this step: its locator chain is the exact
       // identity of the element the agent acted on, which is what an observer
       // needs to tell whether that element was ever on its ballot.

@@ -155,6 +155,20 @@ export class SessionState {
   }
 
   /**
+   * One row per inner tool call — name, arguments, and the head of what came
+   * back — in `trace.jsonl`. timing.jsonl says a turn was spent looking; only
+   * the result the model was holding when it chose to look says WHY, and that
+   * is what decides whether the look can be engineered away. Best-effort.
+   */
+  recordTrace(row: { turn: number; tool: string; args: unknown; ok: boolean; result: string; by?: 'jev' }): void {
+    try {
+      fs.appendFileSync(path.join(ensureSessionDir(this.session), 'trace.jsonl'), JSON.stringify({ ts: new Date().toISOString(), ...row }) + '\n');
+    } catch {
+      /* best-effort */
+    }
+  }
+
+  /**
    * The System One tier's usage, per served model (see agent/system-one.ts).
    *
    * Deliberately NOT folded into `usageByModel`: everything in that map is

@@ -12,16 +12,26 @@ import { resolveTarget } from '../src/daemon/refs.js';
  * what resolveTarget has to do with it.
  */
 describe('resolveTarget passes role= selectors through', () => {
-  const page = { locator: (s: string) => s } as unknown as Parameters<typeof resolveTarget>[0];
+  // A locator here is the string that made it, so what reached the engine can be read back.
+  const loc = (s: string) => ({ s, or: (o: { s: string }) => loc(`${s} OR ${o.s}`), and: (o: { s: string }) => loc(`${s} AND ${o.s}`), toString: () => s });
+  const page = {
+    locator: (s: string) => loc(s),
+    getByRole: (r: string) => loc(`role:${r}`),
+    getByLabel: (n: string) => loc(`label:${n}`),
+  } as unknown as Parameters<typeof resolveTarget>[0];
+  const made = (target: string) => String(resolveTarget(page, target));
 
   it('hands a role selector to the locator engine verbatim', () => {
-    expect(resolveTarget(page, 'role=button[name="Save"]')).toBe('role=button[name="Save"]');
-    expect(resolveTarget(page, ' role=textbox[name="Order Reference"] ')).toBe('role=textbox[name="Order Reference"]');
+    expect(made('role=button[name="Save"]')).toBe('role=button[name="Save"]');
+  });
+
+  it('also finds a FIELD by its label text, which is the name the diff gave it', () => {
+    expect(made(' role=textbox[name="Part name *"] ')).toBe('role=textbox[name="Part name *"] OR role:textbox AND label:Part name *');
   });
 
   it('still routes an @ref through the aria-ref engine', () => {
-    expect(resolveTarget(page, '@e12')).toBe('aria-ref=e12');
-    expect(resolveTarget(page, '@f1e2')).toBe('aria-ref=f1e2');
+    expect(made('@e12')).toBe('aria-ref=e12');
+    expect(made('@f1e2')).toBe('aria-ref=f1e2');
   });
 });
 
