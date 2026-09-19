@@ -187,6 +187,19 @@ describe('the ballot is the part of the page the instruction is about', () => {
     expect(ids(focusObservation(obs, "move the task titled 'absent' to Done"))).toHaveLength(5);
   });
 
+  it('never drops a control for sitting in a list item, nor treats a number as a record name', () => {
+    const obs = page([
+      control('e1', { name: 'Edit', context: { row: 'fx1 RD Part A $100.00 25%' } }),
+      control('e2', { name: 'Edit', context: { row: 'Seed part $25.00 10%' } }),
+      control('e3', { name: 'Edit', context: { row: 'Other part $7.00 25%' } }),
+      control('add', { name: 'Add part', context: { row: 'Parts Add part' } }),
+    ]);
+    // "Add part" is not repeated per record, so the named record is no reason to drop it.
+    expect(ids(focusObservation(obs, "on the ticket, edit the part named 'fx1 RD Part A' and keep markup 25"))).toEqual(['e1', 'add']);
+    // 25 alone names nothing.
+    expect(ids(focusObservation(obs, 'add a part with cost 100 and markup 25'))).toHaveLength(4);
+  });
+
   it('drops search and filter boxes unless the instruction asks to search', () => {
     const obs = page([control('filter', { tag: 'input', role: 'textbox', name: 'Filter', value: 'status:open' }), control('add', { name: 'New task' })]);
     expect(ids(focusObservation(obs, "create a task titled 'Bolt'"))).toEqual(['add']);

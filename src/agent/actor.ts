@@ -571,12 +571,19 @@ export function focusObservation(obs: ActorObservation, instruction: string, val
   if (inDialog.length) controls = inDialog;
   else controls = controls.filter((c) => !c.context?.chrome || named(c));
 
-  const literals = values.map((v) => v.text.toLowerCase()).filter((t) => t.length > 2);
+  // Only a NAME identifies a record: fxjevf1-n1 let "25" and "100" count, which
+  // matched half the page and dropped the "Add part" button the task needed.
+  // And only a control that is REPEATED per record is dropped — "Edit", "Delete",
+  // a card's menu — since those are what a record's name disambiguates; a control
+  // that merely sits in some list item is not a rival of anything.
+  const literals = values.filter((v) => v.kind === 'text' && v.text.length >= 6).map((v) => v.text.toLowerCase());
   const rowOf = (c: ActorControl): string => c.context?.row?.toLowerCase() ?? '';
   const rows = new Set(controls.map(rowOf).filter(Boolean));
   const mentioned = (row: string): boolean => literals.some((t) => row.includes(t));
   if (rows.size >= ROWS_WORTH_FILTERING && [...rows].some(mentioned)) {
-    controls = controls.filter((c) => !c.context?.row || mentioned(rowOf(c)) || named(c));
+    const key = (c: ActorControl): string => `${c.role}|${c.name ?? ''}`;
+    const inNamedRecord = new Set(controls.filter((c) => mentioned(rowOf(c))).map(key));
+    controls = controls.filter((c) => !c.context?.row || mentioned(rowOf(c)) || !inNamedRecord.has(key(c)));
   }
 
   if (!/\b(search|filter|find)\b/i.test(instruction)) controls = controls.filter((c) => !isSearchField(c));
