@@ -913,3 +913,35 @@ Estimates, not measurements: ~3x less model time and ~2x less instruction time (
 is a ~45s floor) if every step lands. What would falsify it early: Kanboard acting on <10%
 of asks (then selectors, not Jev, are the limit), or the report shadow disagreeing with the
 verifier on status more than 1 time in 20.
+
+### Step 0 result — Kanboard pairs (jakb1, cloud, 3f70a0e): the actor barely acts, and its two acts were wrong
+
+Five fixed instructions, 3 alternating pairs + a smoke run; all 7 runs 6/6 verified, every
+instruction OK, no provider errors. `results/jakb1`.
+
+| run | instr. time | model calls | Jev acted / asked |
+|---|---|---|---|
+| mod1 / mod2 / mod3 | 219s* / 148s / 135s | 77 / 68 / 66 | - |
+| jev1 / jev2 / jev3 (+smoke) | 120s / 123s / 128s (141s) | 57 / 58 / 57 (63) | 0/53, 0/53, 1/53 (1/59) |
+
+(*one 129s instruction.) **Jev acted on 2 of 218 asks (<1%) — the §5 falsifier fired.**
+- Not selectors: only 4 deferrals were "does not resolve to one element". 157 were below
+  the gate and 50 were the two option orders disagreeing. Click confidence: median 0.41,
+  max 0.85; fills median 0.55. Ballots are big — median 72 options, max 120, against
+  ~13-37 on RepairDesk — and step 0 already measured that large irrelevant state dilutes
+  Jev. Kanboard's board page offers every card's menu and the whole nav on every turn.
+- **Both actions were the same WRONG action**: `fill textbox "Filter"` with the task title
+  (0.75, 0.83), overwriting the board's `status:open` filter. Harmless here (the run still
+  verified), but it is the first wrong action the actor has taken, it cleared the gate, and
+  the tool call "succeeded" — so neither the gate nor `verified` catches it. Guard needed:
+  the actor does not overwrite a field that already holds a value unless the instruction
+  says to change/edit it; and search/filter boxes are not form fields.
+- The actor arms used fewer model calls (57-63 vs 66-77) while acting ~never. Nothing in
+  the actor path changes what the model is sent, so treat this as unexplained variance, NOT
+  as a benefit, until a pair with the actor asked-but-muted reproduces it.
+
+=> §5.1's first job changes: not selectors but **ballot size**. Prune in code before asking
+(when a dialog/form is open the ballot is that form — the modal guard generalised; drop
+nav/chrome and per-row menus unless the instruction names the row), shard-and-tournament
+above ~40 options as repair.propose does, then re-measure on Kanboard. RepairDesk's
+22-29% stands, but it is the easy case: small pages, test ids, one form at a time.
