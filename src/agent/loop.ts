@@ -112,7 +112,8 @@ export interface LoopShadow {
 export interface LoopActor {
   next(ctx: ShadowTurn): Promise<{ call: ToolCall; ms: number } | null>;
   /** Every tool call that ran — the actor's own and the model's — so its state has what was done. */
-  observed(call: ToolCall, outcome: { ok: boolean }): void;
+  /** `noEffect`: the call ran, and the page did not visibly change (an action result carrying "[state: no visible change"). */
+  observed(call: ToolCall, outcome: { ok: boolean; noEffect?: boolean }): void;
 }
 
 export interface LoopOptions {
@@ -846,7 +847,7 @@ export async function runInstruction(
       }
       transcript.push(`(jev) ${call.name} ${summary} → ${execution.isError ? execution.result.slice(0, 200) : 'ok'}`);
       try {
-        actor.observed(call, { ok: !execution.isError });
+        actor.observed(call, { ok: !execution.isError, noEffect: !execution.isError && execution.result.includes('[state: no visible change') });
       } catch {
         /* the actor's bookkeeping is not the instruction's problem */
       }

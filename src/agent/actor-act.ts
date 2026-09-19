@@ -194,8 +194,12 @@ export function actingActor(client: SystemOne, opts: ActingActorOptions): LoopAc
       if (!last || `${call.name} ${call.rawArgs}` !== last.key) return;
       // One failure and the tier is silent: the model recovers, with the
       // failed call and its error in front of it.
-      if (!outcome.ok) silenced = true;
-      opts.sink({ ...last.row, verified: outcome.ok });
+      // A click that changed nothing is the cheapest sign of a wrong pick there
+      // is, and the only check a click has. Same consequence as a failure: the
+      // model takes the rest of the instruction, with the result in front of it.
+      const idle = Boolean(outcome.noEffect) && call.name === 'click';
+      if (!outcome.ok || idle) silenced = true;
+      opts.sink({ ...last.row, verified: outcome.ok && !idle, ...(idle ? { why: 'the click changed nothing visible' } : {}) });
       last = null;
     },
   };
