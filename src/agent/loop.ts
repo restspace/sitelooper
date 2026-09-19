@@ -2,6 +2,7 @@ import type { BrowserSession } from '../daemon/browser.js';
 import type { SessionState } from '../daemon/state.js';
 import type { ChatMessage, Provider, ToolCall, ToolDef } from './llm.js';
 import { captureSignature } from '../daemon/diff.js';
+import { evidenceLiterals, readEvidence, renderEvidence } from './evidence.js';
 import { CURRENT_DIALECT, coverageComplete } from '../execution/snapshot.js';
 import { fingerprintPage } from '../daemon/fingerprint.js';
 import { candidatesFor, renderCandidates, type ReplayResult } from '../skills/replay.js';
@@ -59,6 +60,9 @@ export function loopingCycle(acts: string[]): number {
  * wall the first attempt proved is there, not to let one instruction run away.
  */
 const ESCALATION_BUDGET_MULTIPLIER = 1.5;
+
+/** Tools that observe, arm or wait: nothing they do changes what the page shows. */
+const NOT_A_MUTATION = new Set(['snapshot', 'read', 'read_all', 'eval', 'screenshot', 'wait_for', 'fetch_source', 'dialog_expect', 'report', 'hover', 'scroll_into_view']);
 
 /** How much of a tool result trace.jsonl keeps: enough to see the [state: …] note and the top of a [page: …] block. */
 const TRACE_RESULT_CHARS = 2500;
@@ -741,6 +745,26 @@ export async function runInstruction(
   };
 
   type Ran = Awaited<ReturnType<typeof runTool>>;
+
+  /**
+   * §5.3: after an action that may have changed the page, attach where the page
+   * now shows the instruction's own literals — the read the model was about to
+   * spend a turn on (see evidence.ts). Only when it says something new: the
+   * same block twice is noise. SITELOOPER_EVIDENCE=on while it is being measured.
+   */
+  const evidenceOn = process.env.SITELOOPER_EVIDENCE === 'on';
+  const literals = evidenceOn ? evidenceLiterals(instruction) : [];
+  let lastEvidence = '';
+  const evidenceAfter = async (name: string, execution: Ran): Promise<string> => {
+    if (!literals.length || execution.isError || NOT_A_MUTATION.has(name) || !browser.isOpen) return '';
+    const page = await browser.getPage().catch(() => null);
+    if (!page) return '';
+    const block = renderEvidence(await readEvidence(page, literals));
+    if (!block || block === lastEvidence) return '';
+    lastEvidence = block;
+    return block;
+  };
+
   const settleSnapshots = (callId: string, name: string, args: Record<string, unknown>, execution: Ran): void => {
     if (execution.isError) return;
     if (execution.snapshotIncluded) {
@@ -1068,7 +1092,9 @@ export async function runInstruction(
       } catch {
         /* as above */
       }
-      state.messages.push({ role: 'tool', tool_call_id: call.id, content: execution.result });
+      const evidence = await evidenceAfter(call.name, execution);
+      if (evidence) state.recordTrace({ turn, tool: '(evidence)', args: { after: call.name }, ok: true, result: evidence.slice(0, TRACE_RESULT_CHARS) });
+      state.messages.push({ role: 'tool', tool_call_id: call.id, content: execution.result + evidence });
       accountActions(skill, call.name, call.args, execution);
 
       // The same gesture cycle producing the same page response, over and
