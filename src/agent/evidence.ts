@@ -86,7 +86,9 @@ export async function readEvidence(page: Page, literals: readonly string[]): Pro
                   ? holder.tagName.toLowerCase()
                   : 'region';
           const body = clean((record as HTMLElement).innerText || record.textContent).slice(0, maxChars);
-          if (!body || seen.has(body)) continue;
+          // The literal alone — a heading that is just the ticket's title — tells the
+          // model nothing it did not type itself; fxevon1-n1 sent that after every click.
+          if (!body || seen.has(body) || body.toLowerCase() === hit.low) continue;
           seen.add(body);
           out.push({ literal: hit.literal, where, text: body });
         }
