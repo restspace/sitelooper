@@ -1036,3 +1036,32 @@ objectives 1 and 6 are report-only and come back UNVERIFIABLE under
   reads), and — separately from Jev — the model's eval habit (prompt rule 8z) deserves a
   look, since it is both the largest share of Kanboard turns and a recording-quality risk.
 - Keep `actor.act` at 0.75 by default; 0.6 is supportable for fills if ever needed.
+
+### §5.3 evidence reads in code (6fbfa11, c9bf448) — first measurements, no Jev involved
+
+After a mutating action, code reads where the page now shows the instruction's own
+literals and attaches the record to the result (`src/agent/evidence.ts`,
+`SITELOOPER_EVIDENCE=on`; prompt rule 4c). Why it was built: a look turn's OUTPUT is tiny
+(median 25-80 chars: `snapshot {}`, a `read_all` with a guessed selector) — the cost is the
+round trip, and what the model is doing is choosing WHEN and WHERE to look.
+
+- RepairDesk pair 1: look turns went UP (7 -> 20). The block quoted the new part's row with
+  its computed price and the model read the same row again, twice: rule 3a(b) told it to
+  "read back any value you will report". Those looks are CONTRACTUAL, not informational.
+  Fixed in the prompt (an evidence block counts as a read). Pair 2: 0 of 15 blocks followed
+  by a read, reads 5 -> 2, but total looks 9 = 9 and calls 57 vs 56 — RepairDesk has too few
+  looks for this to show.
+- Kanboard jekb1 (4 interleaved pairs, app-state objectives 2-5 pass in all 8 runs):
+
+| arm | model calls | look turns | instr. time |
+|---|---|---|---|
+| evidence off | 61, 59, 69, 58 (mean 61.8) | 29, 19, 42, 28 (29.5) | 130, 128, 156, 132s |
+| evidence on | 54, 51, 59, 61 (mean 56.3) | 21, 20, 28, 26 (23.8) | 128, 114, 122, 152s |
+
+  ~9% fewer calls, ~20% fewer looks; ranges overlap, n=4. 15 of 42 blocks were still
+  followed by a read, and the traces say why: on a board the nearest `<tr>` IS the board, so
+  the "record" was every column's cards cut off at 220 chars — it never reached the card
+  that mattered, nor said which column it was in, which is the question the instruction
+  asks. Fixed: the record is the largest ancestor that fits the quote, and a grid cell is
+  labelled with its column's heading ("cell, under the column headed \"Work in progress\"":
+  "#4 jx1 Bench Task …"). Re-measure as jekb2.

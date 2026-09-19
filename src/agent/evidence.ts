@@ -70,27 +70,44 @@ export async function readEvidence(page: Page, literals: readonly string[]): Pro
           const hit = wanted.find((w) => text.includes(w.low));
           const holder = node.parentElement;
           if (!hit || !holder || !visible(holder) || holder.closest('script,style,noscript,template')) continue;
-          // The RECORD the text sits in: that is where a computed price, a status
-          // or an assigned id will be, beside the name the instruction gave.
-          const record =
-            holder.closest('tr,[role=row],li,[role=listitem],article,[role=article],dl') ??
-            holder.closest('section,form,[role=region],[role=dialog],dialog') ??
-            holder;
+          // The RECORD the text sits in — where a computed price, a status or an
+          // assigned id will be, beside the name the instruction gave. It is the
+          // LARGEST ancestor that still fits the quote, not the nearest row: on a
+          // kanban board the nearest <tr> is the whole board (jekb1: the block
+          // quoted every column's cards, cut off at 220 chars before reaching the
+          // one that mattered, and the model went looking with eval anyway).
+          let record: Element = holder;
+          for (let up = holder.parentElement; up && up !== document.body; up = up.parentElement) {
+            if (clean((up as HTMLElement).innerText || up.textContent).length > maxChars) break;
+            record = up;
+          }
           const where = record.matches('tr,[role=row]')
             ? 'row'
             : record.matches('li,[role=listitem]')
               ? 'item'
-              : record.matches('dl')
-                ? 'details'
+              : record.matches('td,th,[role=cell],[role=gridcell]')
+                ? 'cell'
                 : record === holder
                   ? holder.tagName.toLowerCase()
-                  : 'region';
+                  : 'block';
+          // Which COLUMN it is in, where the page is a grid: a board's question is
+          // never "is the card there" but "which column is it in".
+          let column = '';
+          const cell = holder.closest('td,[role=cell],[role=gridcell]') as HTMLTableCellElement | null;
+          const table = cell?.closest('table,[role=table],[role=grid]');
+          if (cell && table && typeof cell.cellIndex === 'number' && cell.cellIndex >= 0) {
+            const heads = Array.from(table.querySelectorAll('thead th, tr:first-child th'));
+            const head = heads[cell.cellIndex] as HTMLElement | undefined;
+            // The heading's FIRST LINE: a board column's header also carries counts and tooltips.
+            const firstLine = (head?.innerText || head?.textContent || '').split('\n').map((l) => clean(l)).find(Boolean);
+            column = (firstLine ?? '').slice(0, 60);
+          }
           const body = clean((record as HTMLElement).innerText || record.textContent).slice(0, maxChars);
           // The literal alone — a heading that is just the ticket's title — tells the
           // model nothing it did not type itself; fxevon1-n1 sent that after every click.
           if (!body || seen.has(body) || body.toLowerCase() === hit.low) continue;
           seen.add(body);
-          out.push({ literal: hit.literal, where, text: body });
+          out.push({ literal: hit.literal, where: column ? `${where}, under the column headed ${JSON.stringify(column)}` : where, text: body });
         }
         return out;
       },
