@@ -153,3 +153,54 @@ describe('an actor in the loop', () => {
     }
   });
 });
+
+// --- focusing the ballot ------------------------------------------------------------
+
+import { focusObservation, type ActorControl, type ActorObservation } from '../src/agent/actor.js';
+
+const control = (id: string, over: Partial<ActorControl>): ActorControl => ({ id, tag: 'button', role: 'button', ...over });
+const page = (controls: ActorControl[]): ActorObservation => ({ id: 'o1', url: 'http://app/board', controls });
+const ids = (o: ActorObservation) => o.controls.map((c) => c.id);
+
+describe('the ballot is the part of the page the instruction is about', () => {
+  it('is the dialog while one is open', () => {
+    const obs = page([
+      control('nav', { name: 'Projects', context: { chrome: true } }),
+      control('behind', { name: 'New task' }),
+      control('title', { tag: 'input', role: 'textbox', name: 'Title', context: { dialog: 'New task' } }),
+      control('save', { name: 'Save', context: { dialog: 'New task' } }),
+    ]);
+    expect(ids(focusObservation(obs, "create a task titled 'Bolt'"))).toEqual(['title', 'save']);
+  });
+
+  it('drops chrome unless the instruction names the control', () => {
+    const obs = page([control('nav', { name: 'Projects', context: { chrome: true } }), control('add', { name: 'New task' })]);
+    expect(ids(focusObservation(obs, 'create a task'))).toEqual(['add']);
+    expect(ids(focusObservation(obs, 'open Projects and create a task'))).toEqual(['nav', 'add']);
+  });
+
+  it('keeps only the named record when the instruction names one that is on the page', () => {
+    const row = (n: number, title: string) => control(`menu${n}`, { name: 'Menu', context: { row: `#${n} ${title}` } });
+    const obs = page([row(1, 'Seed: alpha'), row(2, 'Seed: beta'), row(3, 'Seed: gamma'), row(4, 'fx1 Bench Task'), control('add', { name: 'New task' })]);
+    expect(ids(focusObservation(obs, "move the task titled 'fx1 Bench Task' to Done"))).toEqual(['menu4', 'add']);
+    // No record named, or the named one is not here: code cannot choose, so every row stays.
+    expect(ids(focusObservation(obs, "move the task titled 'absent' to Done"))).toHaveLength(5);
+  });
+
+  it('drops search and filter boxes unless the instruction asks to search', () => {
+    const obs = page([control('filter', { tag: 'input', role: 'textbox', name: 'Filter', value: 'status:open' }), control('add', { name: 'New task' })]);
+    expect(ids(focusObservation(obs, "create a task titled 'Bolt'"))).toEqual(['add']);
+    expect(ids(focusObservation(obs, "filter the board by 'Bolt'"))).toEqual(['filter', 'add']);
+  });
+});
+
+describe('a field that already holds a value', () => {
+  const held = control('cost', { tag: 'input', role: 'spinbutton', name: 'Cost', value: '100' });
+  const fill = candidate({ operation: 'fill', valueRef: 'v0' });
+
+  it('is not typed over unless the task says to change a value', () => {
+    expect(refusal(fill, "add a part named 'Bolt' with cost 150", undefined, held)).toMatch(/already holds a value/);
+    expect(refusal(fill, 'change the cost from 100 to 150', undefined, held)).toBeNull();
+    expect(refusal(fill, "add a part named 'Bolt'", undefined, { ...held, value: undefined })).toBeNull();
+  });
+});

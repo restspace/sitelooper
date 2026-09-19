@@ -398,8 +398,9 @@ ${describeLeaks(leaks.slice(0, 6))}`);
   private acting: LoopActor | null | undefined;
   private actingActor(): LoopActor | undefined {
     if (this.acting === undefined) {
-      const s1 = process.env.SITELOOPER_JEV_ACTOR === 'act' ? this.systemOne() : null;
-      this.acting = s1 ? actingActor(s1, { sink: (d) => this.state.recordSystemOneDecision(d) }) : null;
+      const mode = process.env.SITELOOPER_JEV_ACTOR;
+      const s1 = mode === 'act' || mode === 'mute' ? this.systemOne() : null;
+      this.acting = s1 ? actingActor(s1, { sink: (d) => this.state.recordSystemOneDecision(d), mute: mode === 'mute' }) : null;
     }
     return this.acting ?? undefined;
   }

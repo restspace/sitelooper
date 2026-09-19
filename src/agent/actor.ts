@@ -58,6 +58,8 @@ export interface ControlContext {
   row?: string;
   /** The enclosing form/section/region's name, when it has one. */
   section?: string;
+  /** Inside the page's own chrome — a nav, header, banner or footer — rather than its content. */
+  chrome?: true;
 }
 
 /**
@@ -526,6 +528,61 @@ export function buildCandidates(input: BuildCandidatesInput): CandidateSet {
   return { candidates: kept, values, truncated, tokens: estimateTokens(kept.map((c) => c.description)) };
 }
 
+// --- focusing the ballot -----------------------------------------------------------
+
+/** A search or filter box: it changes what is LISTED, not what is stored. */
+const isSearchField = (c: ActorControl): boolean =>
+  c.role === 'searchbox' || c.type === 'search' || /\b(search|filter|find)\b/i.test(`${c.name ?? ''} ${c.placeholder ?? ''} ${c.label ?? ''}`);
+
+/** Rows before the row rule applies: a short list is cheap to offer whole. */
+const ROWS_WORTH_FILTERING = 4;
+
+/**
+ * The part of the page this instruction is about — what an ACTING decider is
+ * asked to choose from.
+ *
+ * Measured need (jakb1, Kanboard): the actor acted on 2 of 218 asks. Not for
+ * want of a selector (4 deferrals) but of confidence — click median 0.41 — on
+ * ballots of a median 72 options, where RepairDesk's were 13-37 and it acted on
+ * a quarter. Step 0 had already measured that Jev's accuracy falls with large
+ * irrelevant state. A board page offers the whole nav and every card's menu on
+ * every turn; almost none of it is what any one instruction is about.
+ *
+ * Every rule here only REMOVES, and only what the instruction gives no reason
+ * to touch, so the worst case is a deferral to the model — which sees the whole
+ * page, as it always did:
+ *
+ *  1. An open dialog is the page. (The modal guard of repair-jev, generalised:
+ *     what is behind a dialog is not actionable.)
+ *  2. Chrome — nav, header, footer — goes unless the instruction names the control.
+ *  3. Where the instruction names a record that is on the page, the other
+ *     records' controls go. Where it names none, every row stays: code cannot
+ *     tell which one is meant.
+ *  4. Search and filter boxes go unless the instruction asks to search or filter.
+ *     Both of jakb1's actions were the task title typed into the board's Filter
+ *     box, at 0.75 and 0.83 — a field that takes any text is a magnet for one.
+ */
+export function focusObservation(obs: ActorObservation, instruction: string, values: readonly TaskValue[] = extractValues(instruction)): ActorObservation {
+  const text = instruction.toLowerCase();
+  const named = (c: ActorControl): boolean => Boolean(c.name && c.name.length > 2 && text.includes(c.name.toLowerCase()));
+  let controls = obs.controls;
+
+  const inDialog = controls.filter((c) => c.context?.dialog);
+  if (inDialog.length) controls = inDialog;
+  else controls = controls.filter((c) => !c.context?.chrome || named(c));
+
+  const literals = values.map((v) => v.text.toLowerCase()).filter((t) => t.length > 2);
+  const rowOf = (c: ActorControl): string => c.context?.row?.toLowerCase() ?? '';
+  const rows = new Set(controls.map(rowOf).filter(Boolean));
+  const mentioned = (row: string): boolean => literals.some((t) => row.includes(t));
+  if (rows.size >= ROWS_WORTH_FILTERING && [...rows].some(mentioned)) {
+    controls = controls.filter((c) => !c.context?.row || mentioned(rowOf(c)) || named(c));
+  }
+
+  if (!/\b(search|filter|find)\b/i.test(instruction)) controls = controls.filter((c) => !isSearchField(c));
+  return controls.length === obs.controls.length ? obs : { ...obs, controls };
+}
+
 // --- the live look ----------------------------------------------------------------
 
 /** Controls one observation lists. Past this the page is dense enough for a tournament anyway. */
@@ -629,7 +686,7 @@ export async function observeControls(page: Page, id: string, limit = MAX_CONTRO
           }
           // Where it sits. A dialog and a table row are what tell two
           // identically named controls apart, and nothing else here can.
-          const context: Record<string, string> = {};
+          const context: Record<string, string | boolean> = {};
           const dialog = el.closest('[role=dialog],[role=alertdialog],dialog');
           if (dialog) {
             context.dialog =
@@ -644,6 +701,7 @@ export async function observeControls(page: Page, id: string, limit = MAX_CONTRO
             const label = clean(section.getAttribute('aria-label')) || clean(section.querySelector('legend,h1,h2,h3')?.textContent, 60);
             if (label) context.section = label;
           }
+          if (el.closest('nav,header,footer,[role=navigation],[role=banner],[role=contentinfo]')) context.chrome = true;
           if (Object.keys(context).length) row.context = context;
           out.push(row);
         }

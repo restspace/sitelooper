@@ -3,7 +3,7 @@ import type { LoopActor, ShadowTurn } from './loop.js';
 import type { ToolCall } from './llm.js';
 import type { SystemOne } from './system-one.js';
 import { gateFor, type DecisionSink } from './decide.js';
-import { buildCandidates, observeControls, type ActorCandidate, type ActorOperation, type ControlIdentity, type TaskValue } from './actor.js';
+import { buildCandidates, focusObservation, observeControls, type ActorCandidate, type ActorControl, type ActorOperation, type ControlIdentity, type TaskValue } from './actor.js';
 import { actorTurnSite, type TurnAction, type TurnReadingDetail } from './actor-jev.js';
 
 /**
@@ -52,6 +52,12 @@ const DESTRUCTIVE = /\b(delete|remove|archive|discard|cancel|reset|pay|send|sign
 export interface ActingActorOptions {
   sink: DecisionSink;
   onProgress?: (message: string) => void;
+  /**
+   * Ask, log, never act — the control arm. jakb1's acting runs used fewer model
+   * calls than its model-only runs while acting on <1% of asks, which nothing in
+   * this path explains; a muted arm says whether merely asking changes anything.
+   */
+  mute?: boolean;
 }
 
 const quote = (s: string): string => s.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
@@ -98,13 +104,21 @@ export function toolCallFor(candidate: ActorCandidate, selector: string, values:
 }
 
 /** Why code refuses a pick Jev was confident about, or null. */
-export function refusal(candidate: ActorCandidate, instruction: string, detail: TurnReadingDetail | undefined): string | null {
+/** Words that say an existing value is to be replaced. */
+const CHANGES_A_VALUE = /\b(change|edit|update|replace|rename|correct|set|modify|increase|decrease|clear)\b/i;
+
+export function refusal(candidate: ActorCandidate, instruction: string, detail: TurnReadingDetail | undefined, control?: ActorControl): string | null {
   if (!ACT_OPS.has(candidate.operation)) return `${candidate.operation} is the model's to take`;
   if (!candidate.target) return 'the pick names no control';
   if (detail?.kindConflict) return 'the pick and the turn kind disagree';
   const name = candidate.target.identity.name ?? candidate.target.identity.label ?? '';
   const word = DESTRUCTIVE.exec(name)?.[1];
   if (word && !instruction.toLowerCase().includes(word.toLowerCase())) return `"${name}" destroys something the task does not mention`;
+  // A field that already holds something is only typed over when the task says
+  // to change a value. jakb1's two actions both overwrote a live filter.
+  if (candidate.operation === 'fill' && control?.value && !CHANGES_A_VALUE.test(instruction)) {
+    return 'the field already holds a value and the task does not say to change one';
+  }
   return null;
 }
 
@@ -129,8 +143,9 @@ export function actingActor(client: SystemOne, opts: ActingActorOptions): LoopAc
       if (silenced || acts >= MAX_ACTS || !ctx.browser.isOpen) return null;
       const page = await ctx.browser.getPage().catch(() => null);
       if (!page) return null;
-      const observation = await observeControls(page, `act${++revision}`);
-      if (!observation) return null;
+      const seen = await observeControls(page, `act${++revision}`);
+      if (!seen) return null;
+      const observation = focusObservation(seen, instruction);
       const { candidates, values } = buildCandidates({ observation, instruction });
       const started = Date.now();
       const reading = await actorTurnSite.run(client, { instruction, observation, candidates, values, history }, {}).catch(() => null);
@@ -146,7 +161,7 @@ export function actingActor(client: SystemOne, opts: ActingActorOptions): LoopAc
         chosen: reading.chosen,
         confidence: reading.confidence,
         ms,
-        detail: { turn: ctx.turn, url: observation.url, operation: reading.value?.operation ?? null, kind: detail?.kind ?? null } as Record<string, string | number | null>,
+        detail: { turn: ctx.turn, url: observation.url, operation: reading.value?.operation ?? null, kind: detail?.kind ?? null, controls: observation.controls.length, controlsSeen: seen.controls.length } as Record<string, string | number | null>,
       };
       const defer = (why: string) => {
         opts.sink({ ...row, outcome: 'deferred', why });
@@ -155,12 +170,13 @@ export function actingActor(client: SystemOne, opts: ActingActorOptions): LoopAc
       const picked = reading.value;
       if (!picked) return defer(reading.why ?? 'no pick');
       if (reading.confidence < gate) return defer(`below gate ${gate}`);
-      const refused = refusal(picked, instruction, detail);
+      const refused = refusal(picked, instruction, detail, observation.controls.find((c) => c.id === picked.target?.control));
       if (refused) return defer(refused);
       const selector = await uniqueSelector(page, picked.target!.identity);
       if (!selector) return defer('the control does not resolve to exactly one visible element');
       const call = toolCallFor(picked, selector, values, `jev_${ctx.turn}_${acts + 1}`);
       if (!call) return defer('the pick lacks the value its tool needs');
+      if (opts.mute) return defer('muted: would have acted');
       const key = `${call.name} ${call.rawArgs}`;
       if (taken.has(key)) return defer('this exact action was already taken for this instruction');
 
