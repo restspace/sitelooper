@@ -1065,3 +1065,21 @@ round trip, and what the model is doing is choosing WHEN and WHERE to look.
   asks. Fixed: the record is the largest ancestor that fits the quote, and a grid cell is
   labelled with its column's heading ("cell, under the column headed \"Work in progress\"":
   "#4 jx1 Bench Task …"). Re-measure as jekb2.
+
+- Kanboard jekb2 (53be7fe: largest-fitting record + grid column heading), 4 interleaved pairs:
+
+| arm | model calls | look turns | instr. time |
+|---|---|---|---|
+| evidence off | 83, 83, 96, 63 (mean 81.3) | 43, 39, 57, 30 (42.3) | 172, 185, 243, 144s (186) |
+| evidence on | 56, 64, 50, 96 (mean 66.5) | 25, 25, 24, 43 (29.3) | 132, 143, 110, 264s (162) |
+
+  -18% calls, -31% looks, -13% time; one off run lost an app-state objective (an UNKNOWN
+  instruction), none of the on runs did. Both sessions together (8 pairs): calls 71.5 ->
+  61.4 (-14%), looks 35.9 -> 26.5 (-26%), and `on` used fewer calls in 6 of 8 pairs. Still
+  noisy (on4 = 96 calls; the off baseline itself moved 62 -> 81 between sessions), but it is
+  the first change that moves Kanboard at all, and it needs no Jev.
+  Blocks followed by a read anyway: 36% -> 25%. Remaining noise in the block: a literal the
+  instruction only names to AVOID ("do not touch tasks starting with 'Seed:'") fills the
+  block with the seed cards. Open risk, not yet checked: with fewer labelled reads, do
+  recordings bank fewer named values for replay? Needs a flow sweep with replays before
+  default-on.
