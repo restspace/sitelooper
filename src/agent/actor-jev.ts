@@ -496,6 +496,28 @@ export function modelActionOf(call: ToolCall, recorded: readonly RecordedEntry[]
   };
 }
 
+/**
+ * Every step of a batch as its own action, each with the chain the recorder
+ * filed for it (the i-th recorded step; a failed step files nothing, so the
+ * pairing is only trusted up to the first gap). The turn is SCORED on its first
+ * action — that is the decision an actor would have made — but "was Jev's pick
+ * something the model did soon after?" has to see the whole batch, or a pick
+ * that was the batch's second step reads as one the model never took.
+ */
+export function batchActionsOf(call: ToolCall, recorded: readonly RecordedEntry[]): ModelAction[] {
+  if (call.name !== 'batch' || !Array.isArray(call.args?.steps)) return [];
+  const filed = recorded.filter((e): e is Extract<RecordedEntry, { k: 'step' }> => e.k === 'step');
+  return (call.args.steps as Array<{ tool?: unknown; args?: unknown }>).map((step, i) => {
+    const inner: ToolCall = {
+      id: call.id,
+      name: String(step?.tool ?? ''),
+      args: (step?.args && typeof step.args === 'object' ? step.args : {}) as Record<string, unknown>,
+      rawArgs: '',
+    };
+    return modelActionOf(inner, filed[i] ? [filed[i]] : []);
+  });
+}
+
 /** Same address, modulo a trailing slash and a case-folded host. */
 function normalizeUrl(url: string): string {
   const t = url.trim();
@@ -575,7 +597,7 @@ export function actorShadow(client: SystemOne, opts: ActorShadowOptions): ActorS
    * model time that turn cost. Joined here rather than at read time because
    * only here are all three in hand.
    */
-  const log = async (turn: PendingTurn, action: ModelAction | null, why?: string): Promise<void> => {
+  const log = async (turn: PendingTurn, action: ModelAction | null, why?: string, rest: ModelAction[] = []): Promise<void> => {
     if (turn.logged) return;
     turn.logged = true;
     const { reading, ms, candidates, observation } = await turn.ask;
@@ -605,6 +627,15 @@ export function actorShadow(client: SystemOne, opts: ActorShadowOptions): ActorS
         turnType: detail?.kind ?? null,
         jevOperation: reading.value?.operation ?? null,
         jevPick: reading.chosen,
+        // In WORDS, because candidate ids are per-ballot: "did the model take
+        // Jev's pick a turn or two later?" can only be asked across turns by
+        // what the action was, not by what it was numbered.
+        jevPickIs: candidates.find((c) => c.id === reading.chosen)?.description ?? null,
+        modelActionIs: match.ids.map((id) => candidates.find((c) => c.id === id)?.description ?? id),
+        // The rest of a batch, matched the same way: what the model did NEXT in this same turn.
+        ...(rest.length
+          ? { modelThenIs: rest.flatMap((r) => matchModelAction(candidates, r).ids).map((id) => candidates.find((c) => c.id === id)?.description ?? id) }
+          : {}),
         ...(detail?.kindConflict ? { kindConflict: true } : {}),
         // What the model did.
         modelTool: action?.tool ?? null,
@@ -674,7 +705,7 @@ export function actorShadow(client: SystemOne, opts: ActorShadowOptions): ActorS
       // ballot did not have.
       const recorded = ctx.browser.script?.entriesSince(turn.mark) ?? [];
       pending = null;
-      track(log(turn, modelActionOf(call, recorded)).catch(() => {}));
+      track(log(turn, modelActionOf(call, recorded), undefined, batchActionsOf(call, recorded).slice(1)).catch(() => {}));
     },
 
     async drain(timeoutMs = 6_000) {
