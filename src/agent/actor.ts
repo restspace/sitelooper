@@ -708,7 +708,13 @@ export async function observeControls(page: Page, id: string, limit = MAX_CONTRO
             const label = clean(section.getAttribute('aria-label')) || clean(section.querySelector('legend,h1,h2,h3')?.textContent, 60);
             if (label) context.section = label;
           }
-          if (el.closest('nav,header,footer,[role=navigation],[role=banner],[role=contentinfo]')) context.chrome = true;
+          // The PAGE's chrome only. A <header> or <footer> inside a section, article,
+          // dialog or main is that region's own heading row — fxjevg2-n1's "Add part"
+          // button sits in one, and dropping it as chrome cost the actor both forms.
+          const bar = el.closest('nav,header,footer,[role=navigation],[role=banner],[role=contentinfo]');
+          if (bar && (bar.matches('nav,[role=navigation]') || !bar.parentElement?.closest('main,section,article,dialog,[role=main],[role=dialog],[role=region]'))) {
+            context.chrome = true;
+          }
           if (Object.keys(context).length) row.context = context;
           out.push(row);
         }
