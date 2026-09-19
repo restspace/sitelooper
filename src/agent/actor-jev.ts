@@ -323,7 +323,9 @@ const UNGENERATED_TOOLS = new Set(['press', 'drag', 'scroll_into_view', 'upload'
  */
 const TARGETLESS: ReadonlySet<ActorOperation> = new Set(['read', 'observe', 'wait', 'done', 'back']);
 
-const norm = (s: string | undefined | null): string => (s ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
+// A required field's label text ends in its marker ("Part name *") while its
+// accessible name does not; they are the same control (see refs.ts resolveTarget).
+const norm = (s: string | undefined | null): string => (s ?? '').replace(/\s+/g, ' ').trim().replace(/\s*\*$/, '').toLowerCase();
 
 /**
  * Does this locator chain — the recorder's own description of the element the
