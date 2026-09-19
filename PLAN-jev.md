@@ -945,3 +945,38 @@ instruction OK, no provider errors. `results/jakb1`.
 nav/chrome and per-row menus unless the instruction names the row), shard-and-tournament
 above ~40 options as repair.propose does, then re-measure on Kanboard. RepairDesk's
 22-29% stands, but it is the easy case: small pages, test ids, one form at a time.
+
+### §5.1 first pass — ballot focusing + guards (5968b8e, f753dee, df721a7): RepairDesk better, Kanboard unchanged
+
+`focusObservation` (open dialog is the page; page chrome out unless named; per-record
+duplicates out when the instruction names a record on the page; search/filter boxes out)
+and the no-overwrite guard. Two bugs found by a local RepairDesk check before trusting the
+cloud numbers: numbers counted as record names, and any `<header>` counted as page chrome
+(RepairDesk's "Add part" sits in a section's `<header class=card-head>`) — the actor fell
+from 12-16 actions to 4-6 until both were fixed. `SITELOOPER_JEV_ACTOR=mute` = ask, never act.
+
+| app | arm | runs | instr. time | model calls | Jev acted / asked |
+|---|---|---|---|---|---|
+| RepairDesk | model only (before focusing) | 2 | 197, 218s | 71, 64 | - |
+| RepairDesk | Jev, before focusing | 2 | 154, 156s | 52, 49 | 16/63, 12/55 |
+| RepairDesk | Jev, focusing fixed (fxjevh) | 2 | 130, 142s | 47, 45 | 15/56, 16/56 |
+| Kanboard jakb3 (df721a7) | model only | 3 | 131, 208, 250s | 66, 77, 94 | - |
+| Kanboard jakb3 | muted | 3 | 122, 128, 217s | 61, 61, 87 | 0 (5 would-have) |
+| Kanboard jakb3 | Jev acting (+smoke) | 4 | 131, 167, 164, 194s | 55, 69, 75, 88 | 1/51, 4/70, 1/71, 2/84 |
+
+All runs verified; 31/31 RepairDesk and 8/8 Kanboard actions succeeded, and none was wrong
+(open the named task, Title/Description/Save of the new-task form, the Bench Board link) —
+the Filter-box fault is gone. But:
+- **Kanboard still acts on ~2% of asks.** Focusing is not the lever there: with the chrome
+  rule corrected it keeps 44 of 49 controls (ballot median 64); jakb2's over-eager version
+  cut ballots to 43 and click confidence only moved 0.41 -> 0.49. 119 asks had the two
+  option orders disagree; 316 were below the gate (clicks: 40 of 141 >= 0.6, 14 >= 0.75).
+- **The muted arm settles jakb1's oddity**: muted calls (61, 61, 87; jakb2: 85, 69, 62) sit
+  inside the model-only spread. Asking Jev does nothing by itself; jakb1's gap was noise.
+- Kanboard run-to-run variance is large (model-only 131-250s) — n=3 cannot show a <20% effect.
+
+=> The actor is a RepairDesk-shaped win (small pages, one form at a time): ~25-30% fewer
+model calls there, ~0 on Kanboard, harmless on both. Do not spend more on its ballot. The
+next step with app-independent upside is **5.2 — the report compiled without the model**,
+as a shadow first: report/no-tool turns are 7-15 calls per recording on every app and do
+not depend on ballot size.
