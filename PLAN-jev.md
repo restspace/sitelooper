@@ -1083,3 +1083,19 @@ round trip, and what the model is doing is choosing WHEN and WHERE to look.
   block with the seed cards. Open risk, not yet checked: with fewer labelled reads, do
   recordings bank fewer named values for replay? Needs a flow sweep with replays before
   default-on.
+
+- **Do recordings made with evidence still replay?** (50bf9b1, RepairDesk flow sweeps, k=3:
+  one orchestrated recording, two zero-orchestrator replays of the saved flow.)
+
+| arm | recording | replay 1 | replay 2 | labelled reads in the recording | values a replay publishes |
+|---|---|---|---|---|---|
+| evidence on (fwrdev1) | 6/6, 52 calls, 121s | 6/6, 7/7 steps, $0, 57s | 6/6, 7/7, $0, 56s | 1 | 58 over 7 steps (8.3/step) |
+| evidence off (fwrdev2) | 6/6, 55 calls, 137s | 6/6, 8/8 steps, $0.006, 80s | 6/6, 8/8, $0, 50s | 10 | 76 over 8 steps (9.5/step) |
+
+  The risk did not materialise: the model's own labelled reads fell 10 -> 1, and the replays
+  still verify 6/6 (price and total claims included) at zero model cost and publish a
+  comparable number of named values — the report's values are pinned by the read-back
+  cascade (site C), not by the reads the model used to make. Also 50bf9b1: a literal the
+  instruction names only to avoid ("do not touch … 'Seed:'") is not looked for.
+  Before default-on: one four-app cloud flow sweep with SITELOOPER_EVIDENCE=on (Odoo and
+  Grafana have not seen it at all).
