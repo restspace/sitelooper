@@ -2,16 +2,17 @@
 /**
  * The same instructions, every time — recording speed without the orchestrator's variance.
  *
- *   node bench/fixed-instructions.mjs --from fwrdj11-n1 --runid fxrd1 [--verify]
+ *   node bench/fixed-instructions.mjs --from fwrdj11-n1 --runid fxrd1-n1 [--verify]
+ *   node bench/fixed-instructions.mjs --target kanboard --from fwkb5-n1 --runid fxkb1-n1 --verify
  *
  * A sweep's run 1 lets an orchestrator model split the task into instructions,
  * and it splits it differently every run (4, 5, 6 and 13 instructions across
  * fwrdj9..13), which swamps any change to the inner loop being measured. This
- * replays the `sitelooper do` instructions of one recorded run verbatim — the
- * run tag swapped for the new one, the app-assigned ticket reference swapped
- * for the ticket's title, credentials restored from the bench defaults — into
- * a fresh session with an EMPTY skill store, so every instruction is authored
- * by the inner model. The app must be running and is reset first.
+ * replays the `do` instructions of one recorded run verbatim — the run tag
+ * swapped for the new one, identifiers the app assigned swapped for titles,
+ * credentials restored from the bench defaults — into a fresh session with an
+ * EMPTY skill store, so every instruction is authored by the inner model. The
+ * app must be running; it is reset first (bench/app-reset.mjs).
  *
  * What differs between two arms is then only the environment you launch it
  * with (SITELOOPER_OPENING_SNAPSHOT=off, SITELOOPER_JEV_ACTOR=act, …) and the
@@ -24,36 +25,56 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { APP_DEFAULTS } from './app-defaults.mjs';
+import { resetTarget } from './app-reset.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const argv = process.argv.slice(2);
 const opt = (n, d) => (argv.includes(n) ? argv[argv.indexOf(n) + 1] : d);
 const from = opt('--from');
 const runid = opt('--runid');
-if (!from || !runid) {
-  console.error('usage: node bench/fixed-instructions.mjs --from <recorded-runid> --runid <new-runid> [--verify]');
+const target = opt('--target', 'repairdesk');
+if (!from || !runid || !APP_DEFAULTS[target]) {
+  console.error('usage: node bench/fixed-instructions.mjs [--target repairdesk|kanboard|…] --from <recorded-runid> --runid <new-runid> [--verify] [--dry]');
   process.exit(2);
 }
-const app = { ...APP_DEFAULTS.repairdesk, ...Object.fromEntries(Object.entries(process.env).filter(([k]) => k.startsWith('APP_'))) };
+const app = { ...APP_DEFAULTS[target], ...Object.fromEntries(Object.entries(process.env).filter(([k]) => k.startsWith('APP_'))) };
 
-const transcript = path.join(here, 'results', `${from}-sitelooper-transcript.jsonl`);
+// A recorded run's transcript, local or published; older runs carry the tool's old name.
+const transcript = ['results', 'results-published']
+  .flatMap((d) => ['sitelooper', 'sleep-walker'].map((arm) => path.join(here, d, `${from}-${arm}-transcript.jsonl`)))
+  .find((f) => fs.existsSync(f));
+if (!transcript) {
+  console.error(`no transcript for ${from} under bench/results or bench/results-published`);
+  process.exit(2);
+}
+
+/** Identifiers the APP assigned in the recorded run, which a new run will not get. */
+const APP_ASSIGNED = {
+  repairdesk: [[/\b(?:ticket )?RD-\d{3,}\b/g, `the ticket titled '${runid} RD Bench Ticket'`]],
+  kanboard: [
+    [/ \(task #\d+\)/g, ''],
+    [/\btask #\d+ titled\b/g, 'the task titled'],
+  ],
+};
+
 const instructions = fs
   .readFileSync(transcript, 'utf8')
   .split('\n')
   .filter(Boolean)
   .map((l) => JSON.parse(l))
-  .filter((r) => r.k === 'cmd' && /^sitelooper (--session \S+ )?do "/.test(r.cmd) && r.code === 0)
+  .filter((r) => r.k === 'cmd' && /^(sitelooper|sleep-walker) (--session \S+ )?do "/.test(r.cmd) && r.code === 0)
   .map((r) => /do "((?:[^"\\]|\\.)*)"/.exec(r.cmd)?.[1] ?? '')
   .filter(Boolean)
   .map((text) => {
     let t = text.replace(/\\"/g, '"').split(from).join(runid);
-    // The transcript is redacted; the first «redacted» of a pair is the email.
-    t = t.replace(/«redacted»/, app.APP_EMAIL).replace(/«redacted»/, app.APP_PASSWORD);
-    // The reference is assigned by the app and differs per run; the title does not.
-    return t.replace(/\b(?:ticket )?RD-\d{3,}\b/g, `the ticket titled '${runid} RD Bench Ticket'`);
+    // The transcript is redacted: the one after "password" is the password, every other is the login.
+    t = t.replace(/password «redacted»/g, `password ${app.APP_PASSWORD}`).replace(/«redacted»/g, app.APP_EMAIL);
+    // A reference the app assigned differs per run; the title does not.
+    for (const [re, to] of APP_ASSIGNED[target] ?? []) t = t.replace(re, to);
+    return t;
   });
 if (!instructions.length) {
-  console.error(`no successful "sitelooper do" commands in ${transcript}`);
+  console.error(`no successful "do" commands in ${transcript}`);
   process.exit(2);
 }
 
@@ -63,11 +84,13 @@ const env = { ...process.env, ...app, SITELOOPER_SKILLS: '1', SITELOOPER_SKILLS_
 const cli = path.join(here, '..', 'bin', 'sitelooper.js');
 const run = (args) => spawnSync(process.execPath, [cli, ...args], { env, encoding: 'utf8', timeout: 700_000 });
 if (argv.includes('--dry')) {
-  console.log(instructions.map((t, i) => `${i + 1}. ${t.split(app.APP_PASSWORD).join('***')}`).join('\n\n'));
+  console.log(instructions.map((t, i) => `${i + 1}. ${t.split(`password ${app.APP_PASSWORD}`).join('password ***')}`).join('\n\n'));
   process.exit(0);
 }
 
-await fetch(new URL('__reset', app.APP_URL), { method: 'POST' }).catch(() => fetch(new URL('__reset', app.APP_URL)));
+Object.assign(process.env, app);
+await resetTarget(target);
+console.error(`[fixed] reset ${target}`);
 const started = Date.now();
 const rows = [];
 for (const [i, text] of instructions.entries()) {
@@ -75,14 +98,15 @@ for (const [i, text] of instructions.entries()) {
   const r = run(['do', text, '--session', runid, '--timeout', '600', '--max-turns', '40']);
   const out = `${r.stdout ?? ''}${r.stderr ?? ''}`;
   const status = /^\[(OK|FAIL|BLOCKED)\]/m.exec(out)?.[1] ?? (/LLM HTTP/.test(out) ? 'HTTP-ERROR' : 'UNKNOWN');
-  rows.push({ n: i + 1, status, s: +((Date.now() - at) / 1000).toFixed(1) });
+  rows.push({ n: i + 1, status, s: +((Date.now() - at) / 1000).toFixed(1), ...(status === 'OK' ? {} : { out: out.slice(0, 400) }) });
   console.error(`[fixed] ${i + 1}/${instructions.length} ${status} ${rows.at(-1).s}s`);
 }
 run(['stop', '--session', runid]);
-const summary = { runid, from, instructions: rows, wallS: +((Date.now() - started) / 1000).toFixed(1) };
+const summary = { runid, from, target, instructions: rows, wallS: +((Date.now() - started) / 1000).toFixed(1) };
 if (argv.includes('--verify')) {
-  const v = spawnSync(process.execPath, [path.join(here, 'verify-repairdesk.mjs'), runid], { env, encoding: 'utf8' });
+  const v = spawnSync(process.execPath, [path.join(here, `verify-${target}.mjs`), runid], { env, encoding: 'utf8' });
   summary.verify = (v.stdout ?? '').trim().split('\n').slice(-3).join(' | ');
+  summary.verifyFull = (v.stdout ?? '').trim();
 }
 fs.writeFileSync(path.join(here, 'results', `${runid}-fixed.json`), JSON.stringify(summary, null, 2));
-console.log(JSON.stringify(summary, null, 2));
+console.log(JSON.stringify({ ...summary, verifyFull: undefined }, null, 2));
