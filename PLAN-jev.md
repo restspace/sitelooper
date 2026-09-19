@@ -816,3 +816,100 @@ save, confirm. The form instructions run in 10-18s against 16-31s. The earlier "
 crashed after Jev's first action so it never got to take a whole form.
 Still n=2 on one app with data-testid controls. Next: Odoo/Kanboard (no test ids — the
 selector falls to role+name), and a wrong-action audit over more runs before default-on.
+
+## §5 Plan — more of the inner model's work to Jev (2026-09-19)
+
+**Where the model's time goes now** (fixed six RepairDesk instructions, two runs per arm,
+turns classed by the tools they issued; calls / model seconds):
+
+| turn kind | model only (fxmod1, fxmod2) | with the actor (fxjev1, fxjev2) |
+|---|---|---|
+| act — click/fill/batch/dialog_expect/goto | 41/64s, 39/68s | 24/36s, 30/65s |
+| report — no-tool turns: the report, its naming retry, prose | 10/23s, 15/84s | 7/19s, 7/18s |
+| look — snapshot/read/read_all | 12/17s, 3/5s | 15/49s, 6/11s |
+| locate — read-back of reported values | 5/14s, 6/17s | 4/10s, 5/10s |
+| screenshot / wait | 3/7s, 1/2s | 2/3s, 1/2s |
+
+So after the actor, what is left is roughly: act 27 calls, report 7-15, look 6-15, locate 5.
+Each block below names the block it attacks. Rules carried over from what went wrong:
+score by the app-side verifiers on `bench/fixed-instructions.mjs` pairs (never by agreement
+with the model); one env switch per site until it has >=3 clean pairs on two apps; never
+put a turn the model did not write into the conversation as an assistant message; the model
+stays the fallback for every deferral and every failure; Jev returns ids, code holds
+elements and strings.
+
+### 5.1 Widen the actor (attacks: act, ~27 calls left)
+- **A form is one decision, not N.** Today Jev is asked once per field (63 asks for 16
+  acts). Extra questions on one state are free (step 0: 1 -> 40 questions, same 280ms), so
+  ask `field_i -> which value` for every empty field plus `which control submits` in ONE
+  request and run the result as one batch. Falls back per field below the gate.
+- **Per-operation gates.** A fill is checked in code (read the value back), a click is not.
+  `actor.act.fill` 0.6, `actor.act.click` 0.75. fwrdj8's below-gate element picks were
+  17 clicks and 5 fills/checks, six of them at 0.60-0.74.
+- **goto to an address the instruction states** (deferred twice at 0.97), and
+  **dialog_expect armed by code** before a click whose name the instruction's verb matches
+  (delete/remove/archive) — the model spends a whole turn on each today.
+- **No-test-id apps.** `selectorsFor` falls to role+name; when that is not unique, scope by
+  the candidate's own context (its dialog / row text, already in `ControlContext`) instead
+  of deferring. Sized by the Kanboard run (jakb1) — do this first if deferrals there are
+  mostly "does not resolve to exactly one".
+- **Secrets.** A `{{env:NAME}}` marker in the instruction is a task value like any other;
+  code passes the marker through, so Jev never sees the secret. (Login password fills are
+  the model's today.)
+
+### 5.2 The report without the model (attacks: report, 7-15 calls, up to a third of model time)
+Jev writes no text, so the report is COMPILED: code already holds the action log, every
+labelled read, the diffs and the screenshots.
+- `report.status` — nouls, one per clause of the instruction (code splits on "then/and/."):
+  "the page shows this was done", max over evidence lines, min over clauses; veto noul
+  "an error or rejection is on screen". Below gate -> the model writes the report as now.
+- `report.values` — for each thing the instruction asks to be reported (code extracts
+  "report X, Y and Z"), a choice over the labelled reads and diff lines: which one is X.
+  This is site C's ballot turned around, and it also removes the **naming hold** retry
+  (the second no-tool turn): the label is chosen from code-generated candidates (field
+  label, column header, the instruction's own noun) rather than asked of the model.
+- Summary text is a template over the above ("Did: …; Observed: name=value …"). The
+  orchestrator only needs facts and status; verify that claim by orchestrator turn count
+  and verifier pass rate in a full sweep before default-on.
+- **Shadow first** (cheap, zero risk): log Jev's status and value picks beside the model's
+  accepted report for every instruction; promote when status agrees with the VERIFIER
+  (not the model) on >=95% and no value pick is wrong.
+
+### 5.3 Evidence reads in code (attacks: look 6-15, locate 5)
+- After a mutating batch, code reads the rows/regions that contain the instruction's own
+  literals (the run-tagged names it just typed) and appends them to the action result, so
+  the model's verification read_all/wait_for turn has nothing left to fetch. Where several
+  regions carry the literal, Jev picks (`evidence.region`), as site C does for values.
+- Site C today leaves ~5 locate calls per recording to the model: log why each one fell
+  through (prose value, computed value, several displayers below gate) and widen the code
+  tier or the gate accordingly. No new site; a calibration pass.
+
+### 5.4 Failed targets healed before the model sees them (attacks: 1-9 failed calls per recording)
+A model-written target that matches nothing is the same problem as a drifted locator, and
+`repair.propose` already solves it at 54/54: build the ballot, ask Jev which control the
+dead target meant, act if it resolves to one element of the right kind, and tell the model
+what was substituted. Each save is a 3s wait plus a recovery turn.
+
+### 5.5 Later, and only if 5.1-5.3 hold up: the model plans, Jev executes
+One model call turns the instruction into an ordered list of intents ("open Add part",
+"name = …", "save", "confirm the row shows price"). Jev grounds each intent on the live
+page, code verifies each against its expectation, and the model is re-asked only on a
+deviation. This is the ASTRA shape, and it is where the large multiple lives — but it
+replaces the loop rather than riding beside it, so it waits for evidence that grounding
+(5.1) and completion judgement (5.2) each work alone.
+
+### Order, cost, expected effect
+| step | what | measure | est. model time left (RepairDesk, 6 instr., ~150s today) |
+|---|---|---|---|
+| 0 | read jakb1 (Kanboard pairs) | - | decides how much of 5.1 is selector work |
+| 1 | 5.1 form-as-one-decision + per-op gates + goto/dialog_expect | 3 pairs x 2 apps, ~$0.40 | ~100s |
+| 2 | 5.2 as a shadow, then acting | shadow rides on step 1's runs; then 3 pairs | ~65s |
+| 3 | 5.4 failed-target heal | same pairs | ~60s |
+| 4 | 5.3 evidence reads | same pairs | ~50s |
+| 5 | full four-app sweep with everything on; decide default | cloud, ~$3 | - |
+| 6 | 5.5 plan/execute prototype | separate branch | unknown |
+
+Estimates, not measurements: ~3x less model time and ~2x less instruction time (tool time
+is a ~45s floor) if every step lands. What would falsify it early: Kanboard acting on <10%
+of asks (then selectors, not Jev, are the limit), or the report shadow disagreeing with the
+verifier on status more than 1 time in 20.
