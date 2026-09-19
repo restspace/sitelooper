@@ -13,6 +13,13 @@ describe('evidence literals', () => {
     expect(lits.some((l) => /^\d+$/.test(l))).toBe(false);
   });
 
+  it('skips a string the instruction names only to keep away from', () => {
+    const lits = evidenceLiterals("Move the task titled 'fx1 Bench Task' into 'Work in progress'. Do not touch tasks whose titles start with 'Seed:'.");
+    expect(lits).toEqual(['fx1 Bench Task', 'Work in progress']);
+    // Named for its own sake once is enough to keep it.
+    expect(evidenceLiterals("Open 'Seed: alpha'. Do not delete 'Seed: alpha'.")).toEqual(['Seed: alpha']);
+  });
+
   it('is empty for an instruction that names nothing', () => {
     expect(evidenceLiterals('Open the board and report its columns.')).toEqual([]);
   });

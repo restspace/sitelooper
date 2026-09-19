@@ -44,9 +44,28 @@ export function evidenceLiterals(instruction: string): string[] {
   const seen = new Set<string>();
   for (const v of extractValues(instruction)) {
     if (v.kind !== 'text' || v.text.length < MIN_LITERAL_CHARS) continue;
+    if (namedOnlyToAvoid(instruction, v.text)) continue;
     seen.add(v.text);
   }
   return [...seen];
+}
+
+/**
+ * A string the instruction names only to keep away from: "Do not touch tasks
+ * whose titles start with 'Seed:'". jekb2 looked for it like any other literal
+ * and filled the block with the seed cards. Judged on the literal's own clause —
+ * back to the previous sentence break — so a prohibition elsewhere in the
+ * instruction does not silence the name of the thing being worked on.
+ */
+const AVOIDANCE = /\b(do not|don't|never|avoid|except|other than|apart from|without|ignore|leave)\b/i;
+export function namedOnlyToAvoid(instruction: string, literal: string): boolean {
+  let at = instruction.indexOf(literal);
+  if (at < 0) return false;
+  for (; at >= 0; at = instruction.indexOf(literal, at + 1)) {
+    const clause = instruction.slice(0, at).split(/[.;!?(\n]/).pop() ?? '';
+    if (!AVOIDANCE.test(clause)) return false; // named at least once for its own sake
+  }
+  return true;
 }
 
 /** Where the page shows these literals right now. Never throws: no evidence is a valid answer. */
