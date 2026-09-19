@@ -1007,3 +1007,32 @@ or within 3 turns. A lower bound on right; `never` is only an upper bound on wro
   check a click did something (non-empty [state:] diff) before trusting it.
 - RepairDesk's mid-band misses were picks made AFTER the task was done (open the ticket
   link while the model was reporting): a task-progress problem => sub-goals, not the gate.
+
+### Kanboard gate sweep (jgkb1, d333ffb): a lower gate is SAFE there and buys nothing
+
+Three interleaved rounds, five fixed instructions, no-effect guard on. App-state objectives
+2-5 PASS in every run. CORRECTION to the jakb/jskb entries above: on Kanboard the verifier's
+objectives 1 and 6 are report-only and come back UNVERIFIABLE under
+`bench/fixed-instructions.mjs` (it writes no harness result file with the final text), so
+"verified" for Kanboard means 4 of 4 app-state objectives, not 6/6. RepairDesk's 6/6 stands.
+
+| arm | instr. time | model calls | Jev acted / asked |
+|---|---|---|---|
+| model only | 137, 118, 126s | 61, 57, 60 | - |
+| gate 0.60 | 164, 128, 134s | 67, 56, 56 | 5/67, 2/54, 2/52 |
+| gate 0.45 | 200, 124, 170s | 76, 53, 62 | 4/74, 7/54, 7/65 |
+
+- 27 actions, 27 succeeded, none was a no-effect click, none wrong by inspection: the
+  Bench Board link (6), the run's task link (12), and the new-task form's Title /
+  Description / Save (3 each). So Jev's low-confidence interface-route picks WERE right,
+  and the shadow's "never" was the model going around the UI, as suspected.
+- But model calls and time did not fall (if anything rose at 0.45). Each of these actions
+  replaces a turn the model takes in ~1.5s anyway, and the model still spends its turns on
+  what Jev cannot do: eval (its most used tool on Kanboard), reads, screenshots, reports.
+  At 0.45 a new deferral appears: 23 picks "do not resolve to exactly one element"
+  (Kanboard has no test ids; role+name repeats per card) — the selector work §5.1 listed.
+- => On a Kanboard-shaped app the action turns are not where the time is. Acting more is
+  safe and pointless; the app-independent levers are §5.2 (report) and §5.3 (evidence
+  reads), and — separately from Jev — the model's eval habit (prompt rule 8z) deserves a
+  look, since it is both the largest share of Kanboard turns and a recording-quality risk.
+- Keep `actor.act` at 0.75 by default; 0.6 is supportable for fills if ever needed.
