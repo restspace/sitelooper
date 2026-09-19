@@ -980,3 +980,30 @@ model calls there, ~0 on Kanboard, harmless on both. Do not spend more on its ba
 next step with app-independent upside is **5.2 — the report compiled without the model**,
 as a shadow first: report/no-tool turns are 7-15 calls per recording on every app and do
 not depend on ballot size.
+
+### Were the low-confidence picks right? (shadow scoring, 6b03291/020aac7; `bench/jev-early-report.mjs`)
+
+"Model also took it" = the model's first action that turn, a later step of the same batch,
+or within 3 turns. A lower bound on right; `never` is only an upper bound on wrong.
+
+| band | RepairDesk fxshd1 (1 run) | Kanboard jskb1 (4 runs, 252 asks) |
+|---|---|---|
+| >= 0.75 | 3 picks, 100% | 5 picks, 100% |
+| 0.60-0.75 | 5, 80% | 9, 44% |
+| 0.40-0.60 | 9, 11% | 39, 10% |
+| < 0.40 | 6, 67% | 60, 3% |
+
+- Confidence IS informative: >= 0.75 was right 8 of 8 on both apps. RepairDesk's 0.6-0.75
+  band is 80% (the miss was a Delete the model also clicked, after arming the dialog).
+- **On Kanboard the proxy breaks, because the model does not drive the UI**: `eval` is its
+  most used tool (70 of 252 turns), plus 12 `goto`s to URLs it worked out and 8 `drag`s. Of
+  the 101 element picks the model "never took", 34 fell on eval turns. What Jev kept picking
+  there is the interface's own route: `Add a new task` (24), the task's link (18), `Add a
+  comment` (16), the task sidebar's Board link (13), `Edit the task` (6) — plausibly RIGHT
+  actions the model bypassed (cf. prompt rule 8z). The one clearly wrong family was `fill
+  Filter` (23), which focusObservation now removes.
+- So agreement cannot settle Kanboard in either direction. Only acting can: lower the gate
+  on Kanboard with the verifier as judge (`SITELOOPER_JEV_GATES='{"actor.act":0.45}'`), and
+  check a click did something (non-empty [state:] diff) before trusting it.
+- RepairDesk's mid-band misses were picks made AFTER the task was done (open the ticket
+  link while the model was reporting): a task-progress problem => sub-goals, not the gate.
