@@ -1253,3 +1253,17 @@ What live showed that offline could not:
 Status: one instruction in six replayed, correctly, at a calibration gate. Promising
 mechanism, thin coverage; the lever is WHERE skills can start (or chaining a "get to the
 start page" skill), not the matcher.
+
+### How much does the start page limit the no-model path? (`bench/start-page-spread.mjs`)
+Across the 18 RepairDesk stores, per objective, the page each chain head was recorded from,
+and the chance two independent runs start that objective on the same KIND of page:
+add a part 50% (list x11 / ticket detail x11), sign in 60% (/#/login x8 / entry x3),
+edit cost 89%, mark Ready / delete+archive / create 100%. **Weighted 84%.**
+So the limit is real but moderate, and it is concentrated: "is the ticket already open?" My
+live test store (fwrdev2) was the unlucky case for both add-part and edit (its edit skill is
+the one store in 17 recorded from the list). The `{{vN}}`-slotted form of a detail url also
+pins the record, which is identity, not page kind (`--exact` counts it separately: 62%).
+Generic remedy worth building: a skill whose start pattern is CONCRETE (no :id, no slot —
+e.g. /#/tickets) is eligible from anywhere, reached by navigating to its own recorded start
+url first — which is what a flow already does ("the flow establishes its own starting
+page"), and is a recorded url, not a worked-out one. That helps the exact matcher too.
