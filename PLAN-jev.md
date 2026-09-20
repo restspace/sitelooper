@@ -1193,3 +1193,32 @@ matcher in the zero-model path — Jev match (gate 0.8, verified skills, start-p
 precondition), code-then-Jev binding, every slot bound and shape-checked or no replay; the
 skill's own expectations and the model path remain the safety net — and measure on a sweep
 where the orchestrator rewords run 2's instructions.
+
+### CORRECTION to the slot-binding result: the 96% leaned on RepairDesk-specific shapes
+The code tier above knew what a RepairDesk part name, ticket title and reference look like.
+A live binder cannot. Re-run with only app-independent knowledge (`--generic`, `--cue`,
+`--generic2` in `bench/jev-bind-offline.mjs`), same 400 pairs:
+
+| code tier (then Jev >= 0.5 for what it leaves) | skills every slot right | skills with a WRONG slot |
+|---|---|---|
+| app-specific shapes (the earlier result) | 96% | 1.5% |
+| `--generic`: the only literal of the same generic shape | 13% | 84% |
+| `--cue`: the template's word before the blank also precedes one literal | 11% | 9.0% |
+| `--generic2`: same generic shape, then token overlap with the RECORDED example | 91% | 5.9% |
+
+- "The only literal of that shape is the one" is badly wrong generically: a run-id blank and a
+  ticket reference are both "a token with a digit" (343 wrong slots of 1,634).
+- Comparing with the recorded example is the generic signal that works (91%), and its 25 wrong
+  slots are ONE class: a blank whose value the new wording does not state (a ticket title)
+  given the only text literal present (a part name) on one shared token. A minimum-overlap
+  threshold made it far worse (301 wrong: 'RD-1015' vs 'RD-1091' share 1 token of 3) and was
+  dropped rather than tuned on one app.
+- 1,188 of 1,877 slots (63%) carry a SESSION BINDING (`02-create.ticket_ref`,
+  `output:i2:ticket_title`, `var:runid`): live, those come from the run ledger exactly as the
+  exact binder already does, not from the instruction — which is precisely the class the
+  generic tier gets wrong.
+=> Matching (first half) stands: 0 wrong procedures in 600. Binding is the weak half. Live
+design: ledger bindings first; a slot WITH a binding the ledger cannot fill is bound from text
+only by an unambiguous example-overlap winner, else no replay; the rest by example-overlap,
+Jev for contested candidates; generic shape must equal the example's. Expect well under the
+offline 96% coverage, and measure the wrong-value rate live before trusting it.

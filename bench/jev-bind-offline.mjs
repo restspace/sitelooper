@@ -148,8 +148,79 @@ const overlap = (a, b) => {
   for (const x of A) if (B.has(x)) n++;
   return n / (A.size + B.size - n || 1);
 };
+// --generic: the shapes a LIVE binder can know about any app — a url, an email, a number,
+// a date, a reference-shaped token (no spaces, carries a digit), or free text. The default
+// shapes above know RepairDesk's part names and ticket titles, which flatters code.
+const GENERIC = argv.includes('--generic');
+const genericShape = (v) => {
+  const t = String(v).trim();
+  if (/^https?:\/\//i.test(t)) return 'url';
+  if (/^[^\s@]+@[^\s@]+$/.test(t)) return 'email';
+  if (/^\$?\d+(?:[.,]\d+)?%?$/.test(t)) return 'number';
+  if (/^\d{4}-\d{2}-\d{2}|^\d{1,2}\/\d{1,2}\/\d{2,4}/.test(t)) return 'date';
+  if (!/\s/.test(t) && /\d/.test(t)) return 'code';
+  return 'text';
+};
+/**
+ * --cue: the generic code tier that does NOT assume "the only literal of this shape is the
+ * one". (--generic showed that assumption is wrong 343 times in 1,634: a run-id blank and a
+ * ticket reference are both "a token with a digit".) A slot is bound in code only when the
+ * WORD BEFORE IT in the template ("reference {{v1}}", "titled '{{v2}}'", "cost {{v5}}") also
+ * stands before exactly one literal of the same shape in the new instruction.
+ */
+const CUE = argv.includes('--cue');
+const cueOf = (template, slot) => new RegExp(`([A-Za-z]+)[\\s:=('"]*\\{\\{${slot}\\}\\}`).exec(template)?.[1]?.toLowerCase();
+function cueBind(slot, p, h, q, literals) {
+  const cue = cueOf(h.template, slot);
+  if (!cue || cue.length < 3) return null;
+  const g = genericShape(p.example ?? '');
+  const hits = literals.filter((l) => {
+    if (genericShape(l.text) !== g) return false;
+    const at = q.text.indexOf(l.text);
+    if (at < 0) return false;
+    const before = /([A-Za-z]+)[\s:=('"]*$/.exec(q.text.slice(0, at))?.[1]?.toLowerCase();
+    return before === cue;
+  });
+  return hits.length === 1 ? hits[0].ref : null;
+}
+/**
+ * --generic2: an app-independent code tier that compares each candidate with the value the
+ * blank was RECORDED with. Same generic shape first; then token overlap with the example
+ * (no run-tag normalising — 'fwrdev2-n2 RD Part A' still shares "rd part a" with the new
+ * run's part name and nothing with its ticket reference). A clear winner binds; a best
+ * overlap of zero means the new wording does not state this value (none) — except a number
+ * or a url, which never overlap, where the template's cue word decides; a tie goes to Jev.
+ */
+const GENERIC2 = argv.includes('--generic2');
+const rawToks = (v) => new Set(String(v).toLowerCase().split(/[^a-z0-9]+/).filter(Boolean));
+const rawOverlap = (x, y) => { const A = rawToks(x), B = rawToks(y); let n = 0; for (const t of A) if (B.has(t)) n++; return n / (A.size + B.size - n || 1); };
+function generic2(slot, p, h, q, literals) {
+  const ex = String(p.example ?? '');
+  const g = genericShape(ex);
+  const cands = literals.filter((l) => genericShape(l.text) === g);
+  if (!cands.length) return 'none';
+  if (g === 'number' || g === 'url' || g === 'date') {
+    if (cands.length === 1 && g !== 'number') return cands[0].ref;
+    return cueBind(slot, p, h, q, literals); // null = ask Jev
+  }
+  const ranked = cands.map((l) => ({ ref: l.ref, s: rawOverlap(l.text, ex) })).sort((x, y) => y.s - x.s);
+  // (A minimum-overlap threshold was tried here and made things far worse — 301 wrong slots:
+  // 'RD-1015' and 'RD-1091' share one token of three. Left out rather than tuned on one app.)
+  if (ranked[0].s === 0) return 'none';
+  if (ranked.length === 1 || ranked[0].s > ranked[1].s) return ranked[0].ref;
+  return null;
+}
 function baselineFor(p, literals, codeOnly = false) {
   const ex = String(p.example ?? '');
+  if (GENERIC) {
+    const g = genericShape(ex);
+    const same = literals.filter((l) => genericShape(l.text) === g);
+    if (!same.length) return 'none';
+    if (same.length === 1) return same[0].ref;
+    if (codeOnly) return null;
+    const ranked = same.map((l) => ({ ref: l.ref, s: overlap(l.text, ex) })).sort((a, b) => b.s - a.s);
+    return ranked[0].s > ranked[1].s ? ranked[0].ref : 'none';
+  }
   const isNum = /^\d+(?:\.\d+)?$/.test(ex);
   const shape = shapeOf(ex);
   const cands = literals.filter((l) => (isNum ? l.kind === 'number' || l.kind === 'money' : shape ? shapeOf(l.text) === shape : l.kind !== 'number'));
@@ -219,7 +290,13 @@ async function worker() {
       jev = { error: String(e).slice(0, 80) };
     }
     const base = Object.fromEntries(Object.entries(h.params).map(([slot, p]) => [slot, baselineFor(p, literals)]));
-    const code = Object.fromEntries(Object.entries(h.params).map(([slot, p]) => [slot, baselineFor(p, literals, true)]));
+    const code = Object.fromEntries(Object.entries(h.params).map(([slot, p]) => [slot, GENERIC2 ? generic2(slot, p, h, q, literals) : CUE ? cueBind(slot, p, h, q, literals) : baselineFor(p, literals, true)]));
+    // With --cue, a Jev pick must at least have the SHAPE of the value the blank was recorded with.
+    if (CUE || GENERIC2) for (const [slot, j] of Object.entries(jev)) {
+      if (!j?.pick || j.pick === 'none') continue;
+      const lit = literals.find((l) => l.ref === j.pick);
+      if (lit && genericShape(lit.text) !== genericShape(h.params[slot]?.example ?? '')) jev[slot] = { pick: null, confidence: 0, vetoed: true };
+    }
     rows.push({ q, h, store, literals, truth, jev, base, code });
   }
 }
@@ -265,4 +342,4 @@ const lit = (r, ref) => (ref === 'none' ? 'none' : JSON.stringify(r.literals.fin
 for (const { r, slot, j } of bad.slice(0, 14)) {
   console.log(`  ${j.confidence.toFixed(2)} {{${slot}}} recorded ${JSON.stringify(r.h.params[slot].example)}: Jev ${lit(r, j.pick)}, truth ${lit(r, r.truth[slot])}\n        template: ${r.h.template.slice(0, 120)}\n        instruction: ${r.q.text.slice(0, 120)}`);
 }
-if (opt('--json')) fs.writeFileSync(opt('--json'), JSON.stringify(rows.map((r) => ({ q: r.q.text, template: r.h.template, params: r.h.params, literals: r.literals, truth: r.truth, jev: r.jev, base: r.base })), null, 1));
+if (opt('--json')) fs.writeFileSync(opt('--json'), JSON.stringify(rows.map((r) => ({ q: r.q.text, template: r.h.template, params: r.h.params, literals: r.literals, truth: r.truth, jev: r.jev, base: r.base, code: r.code })), null, 1));
