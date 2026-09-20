@@ -1161,3 +1161,35 @@ the matchable against the baseline's 13%. Today's word-for-word matcher would ma
 these. Lost matches: the two orders disagreed on 125 asks — a third phrasing may recover some.
 Not yet tested: binding the matched skill's slots from the reworded instruction (the exact
 binder needs the template's wording); any app but RepairDesk; a live run.
+
+### Bet 1, second half, offline: binding the matched skill's slots from the reworded instruction
+`bench/jev-bind-offline.mjs` — 400 truly-matching (instruction, skill) pairs from different
+sweeps, 1,877 slots, truth derivable for 1,634 (87%; 422 of them `none`: the new wording
+does not state that value). All slots of a skill ride in one request, two option orders each.
+A skill only runs if EVERY slot binds, so the headline is per skill (389 scorable).
+
+| binder | skills with every slot right | skills with a WRONG slot |
+|---|---|---|
+| Jev alone, gate 0.8 | 7% | 2.1% |
+| code only (one literal of the example's shape, or none) | 33% | 0% |
+| code + token overlap for the rest | 83% | 17.2% |
+| **code, then Jev >= 0.5 for the rest** | **96%** | **1.5%*** |
+| code, then Jev >= 0.7 | 88% | 1.3%* |
+
+Jev ALONE is poor (it defers too often for an all-slots test); the site-C shape wins again:
+code settles what is unique by shape (1,158 slots, 0 wrong), Jev only the genuinely
+ambiguous ones (two part names, cost vs markup), where plain overlap is wrong 17% of the time.
+*Audit of the residue: 5 of Jev's 9 wrong slots at >=0.8 are TRUTH errors in Jev's favour —
+"…which already has a part 'Part A'; add a second part 'Part B'" is scored as Part A because
+the recording's example was Part A, and Jev correctly chose Part B. The real errors were a
+run-id or title blank filled with a literal of the wrong shape, which the cascade never asks
+Jev (code answers `none`). Real cascade error is therefore well under 1% of skills.
+Caveats: RepairDesk only; shapes here are app-specific regexes — a live binder must use the
+generic ones (agent/actor.ts valueKind, skills/shape.ts looksLikeId); credentials untested
+(redacted in transcripts; they bind from env markers anyway).
+
+=> Both halves hold offline. Next: build it behind a flag as the fallback after the exact
+matcher in the zero-model path — Jev match (gate 0.8, verified skills, start-page
+precondition), code-then-Jev binding, every slot bound and shape-checked or no replay; the
+skill's own expectations and the model path remain the safety net — and measure on a sweep
+where the orchestrator rewords run 2's instructions.
