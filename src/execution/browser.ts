@@ -134,6 +134,39 @@ export async function robustClick(loc: Locator, opts: ClickOpts): Promise<string
   const act: ClickAct = (o) => (opts.dbl ? loc.dblclick(o) : loc.click(o));
   let firstFailure = '';
   let waitedForEnabled = false;
+  // A target that matches NOTHING is settled first, in a few seconds, and
+  // said plainly. Every tier below waits its whole timeout for an element
+  // that is not there — Playwright's click for attached/visible, the forced
+  // click for a box, the synthetic event for a node — so a stale snapshot
+  // ref or a control the app only shows in some state cost the full action
+  // deadline (fwod71-n1: Odoo's "Save manually" after the form re-rendered,
+  // 30s and a turn, then the deadline refusal) before the agent learned
+  // that nothing was clicked. One bounded wait for it to be attached at
+  // all; a control that re-mounts every render is attached most of the
+  // time and passes. Skipped where the locator cannot be asked (a port
+  // without waitFor).
+  const probe = typeof (loc as { waitFor?: unknown }).waitFor === 'function' ? Math.min(ABSENT_PROBE_MS, tierBudget(opts)) : 0;
+  if (probe >= 1) {
+    const attached = await loc
+      .first()
+      .waitFor({ state: 'attached', timeout: probe })
+      .then(
+        () => true,
+        (err: unknown) => {
+          const message = err instanceof Error ? err.message : String(err);
+          if (UNCERTAIN_DISPATCH.test(message)) throw actionFailure('unknown', 'teardown', err instanceof Error ? err : message);
+          return false;
+        },
+      );
+    if (!attached) {
+      throw actionFailure(
+        'not-dispatched',
+        'never-attached',
+        `${label === 'clicked' ? 'click' : 'double-click'} NOT dispatched: no element matched the target within ${Math.round(probe / 1000)}s, so nothing was clicked. ` +
+          'The page has moved on since this reference was taken (a re-render, a closed dialog, a control the app shows only in some state): take a fresh snapshot and click what is there now.',
+      );
+    }
+  }
   for (let i = 0; i < CLICK_TIERS.length; i++) {
     const tier = CLICK_TIERS[i];
     // Every tier before this one failed in a way that proves nothing went out
@@ -202,6 +235,9 @@ export async function robustClick(loc: Locator, opts: ClickOpts): Promise<string
   }
   return fireWhenAttached(loc, opts, label, firstFailure);
 }
+
+/** How long robustClick waits for a target to be attached at all before refusing it as absent. */
+const ABSENT_PROBE_MS = 3_000;
 
 /** How long robustClick asks whether a control that refused a click is disabled. */
 const DISABLED_PROBE_MS = 500;

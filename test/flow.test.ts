@@ -7,7 +7,7 @@ import {
   ignorableRefs,
   leadingValue,
   pruneUnsourcedOutputs,
-  consumedReportedOutputs, consumedUrlOutputs, buildFlow, foldValue, lintFlowRefs, lintUnpublishedOutputs, liveReadsFor, looksLikeReportedData, mutatingIntent, noteOutputEvidence, recoveryRoute, referencableOutputs, resolveInstruction, resolveStepParams, sameValue, softResolveInstruction, unbankedMutations, unreportedOutputs, urlOutputs, valueLineCandidates, varyingValues, type Flow, type FlowStep } from '../src/skills/flow.js';
+  consumedReportedOutputs, consumedUrlOutputs, buildFlow, foldValue, lintFlowRefs, lintUnpublishedOutputs, liveReadsFor, liveReadsForRecovery, looksLikeReportedData, mutatingIntent, noteOutputEvidence, recoveryRoute, referencableOutputs, resolveInstruction, resolveStepParams, sameValue, softResolveInstruction, unbankedMutations, unreportedOutputs, urlOutputs, valueLineCandidates, varyingValues, type Flow, type FlowStep } from '../src/skills/flow.js';
 import { bindSkill, publishedOutputs, synthesizeReport } from '../src/skills/learn.js';
 import { SkillStore, type Skill, type SkillStep } from '../src/skills/store.js';
 import { compileSkill, dropAbsentReadLocators, dropDeadReadLocators, markReadsProven } from '../src/skills/compile.js';
@@ -979,6 +979,56 @@ describe('work the recording did that the flow does not contain', () => {
     expect(unbankedMutations(entries)).toEqual([]);
     const flow = buildFlow(entries, { name: 'f', origin: ORIGIN, startUrl: `${ORIGIN}/`, vars: {}, session: 's' })!;
     expect(flow.steps.map((s) => Boolean(s.adopted))).toEqual([true, false]);
+  });
+
+  // fwod69/70/71: the create blocked on a configurator modal with the form
+  // unsaved; the next instruction, issued on that very page, dismissed the
+  // modal and saved (the url gained id=21). Two steps split one piece of
+  // work: a model-first create and a rescue pin that every clean replay
+  // refuses as past its start once the create saves for itself. One step.
+  it('merges a continuation that landed the record an adopted create left unsaved into the adopted step', () => {
+    const form = `${ORIGIN}/web#action=316&cids=1&menu_id=194&model=sale.order&view_type=form`;
+    const entries: RecordedEntry[] = [
+      { k: 'instruction', text: 'Create a quotation with one line and save it.', url: `${ORIGIN}/web#action=123&cids=1&menu_id=81` },
+      { k: 'step', tool: 'click', args: { target: '@e1' }, locators: {}, diff: { url: form } },
+      { k: 'step', tool: 'fill', args: { target: '@e2', value: 'x' }, locators: {} },
+      { k: 'report', status: 'failure', summary: 'a configurator modal blocks the save', values: { product_name: 'Customizable Desk', quotation_number: 'NOT ASSIGNED' }, skill: 's_failed' },
+      { k: 'instruction', text: "On the unsaved quotation form there is a blocking 'Configure your product' modal. Dismiss it, keep one line, save.", url: form },
+      { k: 'step', tool: 'click', args: { target: '@e3' }, locators: {}, diff: { url: `${form}&id=21` } },
+      { k: 'report', status: 'success', summary: 'saved', values: { quotation_number: 'S00021', product_name: '[E-COM11] Cabinet with Doors' }, skill: 's_rescue', skillParams: { v1: 'x' } },
+      { k: 'instruction', text: 'Open quotation S00021 and confirm it.', url: `${form}&id=21` },
+      { k: 'step', tool: 'click', args: { target: '@e4' }, locators: {} },
+      { k: 'report', status: 'success', summary: 'confirmed', values: {}, skill: 's_confirm' },
+    ];
+    const flow = buildFlow(entries, { name: 'f', origin: ORIGIN, startUrl: `${ORIGIN}/`, vars: {}, session: 's' })!;
+    expect(flow.steps.map((s) => [s.id, Boolean(s.adopted), s.skill])).toEqual([
+      ['01-create', true, undefined],
+      ['02-open', false, 's_confirm'],
+    ]);
+    // The merged step owns the continuation's outcome: its values (the
+    // continuation's on conflict), its end url, and the reference targets.
+    expect(flow.steps[0].recorded.quotation_number).toBe('S00021');
+    expect(flow.steps[0].recorded.product_name).toBe('[E-COM11] Cabinet with Doors');
+    expect(flow.steps[0].outputs).toEqual(expect.arrayContaining(['quotation_number', 'product_name']));
+    expect(flow.steps[1].instruction).toContain('{{01-create.quotation_number}}');
+    expect(unbankedMutations(entries)).toEqual([]);
+  });
+
+  it('keeps a continuation that reached no record as the next step it is', () => {
+    const board = `${ORIGIN}/board/3`;
+    const entries: RecordedEntry[] = [
+      { k: 'instruction', text: 'Create a task.', url: `${ORIGIN}/` },
+      { k: 'step', tool: 'click', args: { target: '@e1' }, locators: {}, diff: { url: board } },
+      { k: 'report', status: 'blocked', summary: 'turn cap', values: {} },
+      { k: 'instruction', text: 'Move the task to Done.', url: board },
+      { k: 'step', tool: 'click', args: { target: '@e2' }, locators: {}, diff: { url: board } },
+      { k: 'report', status: 'success', summary: 'moved', values: {}, skill: 's_move' },
+    ];
+    const flow = buildFlow(entries, { name: 'f', origin: ORIGIN, startUrl: `${ORIGIN}/`, vars: {}, session: 's' })!;
+    expect(flow.steps.map((s) => [Boolean(s.adopted), s.skill])).toEqual([
+      [true, undefined],
+      [false, 's_move'],
+    ]);
   });
 
   it('still drops (and warns about) an observe-only blocked group even when the session continued from its page', () => {
@@ -2379,5 +2429,55 @@ describe('a derived value minted by an earlier segment of the chain (fwod57)', (
     expect(found[0].why).not.toContain('no step before step');
     expect(found[0].why).toContain('nothing that runs before step 1 mints it');
     expect(found[0].why).toContain('neither a segment of this procedure ahead of s_sixth nor a step of s_sixth before step 1');
+  });
+});
+
+// fwod71-n2: 03-create's recovery chose '[FURN_6666] Acoustic Bloc Screens',
+// reported product_name from the page, never read it, and graduated into the
+// pin; n3 published no product_name and 04-open/06-open fell back on an
+// unresolved reference while the compiled artifact refused the flow. The flow
+// runner now gives a re-pinned recovery the export's synthesized reads, from
+// THIS run's reported values and the page the step ended on.
+describe('liveReadsForRecovery', () => {
+  const flow = (): Flow => ({
+    name: 'od',
+    origin: ORIGIN,
+    startUrl: `${ORIGIN}/`,
+    vars: {},
+    steps: [
+      { id: '02-create', instruction: 'Create the customer.', outputs: ['contact_name'], recorded: { contact_name: 'x Bench Customer' }, skill: 's_c' },
+      { id: '03-create', instruction: 'Create a quotation with one line; report product_name and untaxed_amount.', outputs: ['product_name', 'untaxed_amount', 'order_reference'], recorded: { product_name: '[E-COM11] Cabinet with Doors', untaxed_amount: '£ 420.00', order_reference: 'S00021' }, skill: 's_old' },
+      { id: '04-open', instruction: "Open quotation {{03-create.order_reference}} showing line {{03-create.product_name}} at {{03-create.untaxed_amount}}.", outputs: [], recorded: {}, skill: 's_o', params: { v1: '{{03-create.product_name}}' } },
+    ],
+  }) as unknown as Flow;
+  const page = ['- heading "S00022"', '- cell "[FURN_6666] Acoustic Bloc Screens"', '- link "[FURN_6666] Acoustic Bloc Screens"', '- link "£ 885.00"', '- link "£ 885.00"'];
+  const reported = { product_name: '[FURN_6666] Acoustic Bloc Screens', untaxed_amount: '£ 885.00', order_reference: 'S00022', status: 'Quotation' };
+
+  it("reads a later step's reference the recovery reported but never read, by this run's value on the page the step ended on", () => {
+    const reads = liveReadsForRecovery(flow(), '03-create', 's_new', reported, page, () => [], (v) => v === 'S00022');
+    // untaxed_amount is shown twice (ambiguous), order_reference is this run's own record id: neither gets a read.
+    expect(reads).toEqual([
+      {
+        stepId: '03-create',
+        skill: 's_new',
+        output: 'product_name',
+        value: '[FURN_6666] Acoustic Bloc Screens',
+        source: 'start',
+        read: {
+          tool: 'read',
+          args: { target: '@synth', what: 'text' },
+          locators: { target: [{ kind: 'role', role: 'link', name: '[FURN_6666] Acoustic Bloc Screens' }] },
+          label: 'product_name',
+          unproven: true,
+        },
+      },
+    ]);
+  });
+
+  it('adds nothing the chain already publishes, nothing for a skill the store lacks, and nothing no later step references', () => {
+    expect(liveReadsForRecovery(flow(), '03-create', 's_new', reported, page, () => ['product_name'], (v) => v === 'S00022')).toEqual([]);
+    expect(liveReadsForRecovery(flow(), '03-create', 's_new', reported, page, () => null)).toEqual([]);
+    // status is reported and on no later step; 02-create's contact_name is referenced by nobody after it
+    expect(liveReadsForRecovery(flow(), '02-create', 's_new', { contact_name: 'x Bench Customer' }, ['- link "x Bench Customer"'], () => [])).toEqual([]);
   });
 });

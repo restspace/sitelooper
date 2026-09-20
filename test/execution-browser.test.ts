@@ -247,3 +247,40 @@ describe('shared DOM settling resource lifecycle', () => {
     expect(vi.getTimerCount()).toBe(0);
   });
 });
+
+// fwod71-n1: Odoo's "Save manually" was clicked after the form re-rendered,
+// every tier waited its full timeout for an element that was not there, and
+// the agent learned nothing until the 30s deadline refusal. A target that
+// matches nothing is now settled in one bounded wait and said plainly.
+describe('a click on a target that matches nothing fails fast', () => {
+  const withWaitFor = (attached: boolean) => {
+    const target = {
+      click: vi.fn().mockResolvedValue(undefined),
+      dblclick: vi.fn().mockResolvedValue(undefined),
+      scrollIntoViewIfNeeded: vi.fn().mockResolvedValue(undefined),
+      evaluate: vi.fn().mockResolvedValue(undefined),
+      elementHandle: vi.fn().mockResolvedValue(null),
+      isDisabled: vi.fn().mockResolvedValue(false),
+      isEnabled: vi.fn().mockResolvedValue(false),
+      waitFor: attached ? vi.fn().mockResolvedValue(undefined) : vi.fn().mockRejectedValue(new Error('Timeout 3000ms exceeded waiting for locator to be attached')),
+    };
+    (target as { first?: () => unknown }).first = () => target;
+    return { target, loc: target as unknown as Locator };
+  };
+
+  it('refuses in one bounded wait, dispatching nothing, when the target never attaches', async () => {
+    const { target, loc } = withWaitFor(false);
+    const refused = await robustClick(loc, { timeout: 100 }).catch((e: unknown) => e);
+    expect(String((refused as Error).message)).toMatch(/NOT dispatched: no element matched the target within \ds/);
+    expect(outcomeOfError(refused)).toBe('not-dispatched');
+    expect(target.click).not.toHaveBeenCalled();
+    expect(target.evaluate).not.toHaveBeenCalled();
+    expect(target.elementHandle).not.toHaveBeenCalled();
+  });
+
+  it('clicks as before once the target is attached', async () => {
+    const { target, loc } = withWaitFor(true);
+    await expect(robustClick(loc, { timeout: 100 })).resolves.toBe('clicked');
+    expect(target.waitFor).toHaveBeenCalledTimes(1);
+  });
+});
