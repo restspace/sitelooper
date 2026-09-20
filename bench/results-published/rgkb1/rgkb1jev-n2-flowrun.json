@@ -1,0 +1,261 @@
+{
+  "flow": "rgkb1jev",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_ed9dce; observed page_title=Dashboard for admin, heading=KB Dashboard for admin, empty_state_text=There is nothing assigned to you..",
+      "values": {
+        "page_title": "Dashboard for admin",
+        "heading": "KB Dashboard for admin",
+        "empty_state_text": "There is nothing assigned to you."
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "logged_in_user"
+      ]
+    },
+    {
+      "id": "02-find",
+      "status": "success",
+      "summary": "Replayed stored procedure s_ac543f; observed project_id=1, backlog_task_title_1=Seed: triage inbox, backlog_task_title_2=Seed: order missing parts, backlog_task_title_3=Seed: ship repaired device, task_cards_visible_1=Seed: triage inbox, task_cards_visible_2=Seed: order missing parts, task_cards_visible_3=Seed: ship repaired device, th_board_column_header=Ready , th_board_column_header_2=Work in progress , th_board_column_header_3=Done .",
+      "values": {
+        "project_id": "1",
+        "backlog_task_title_1": "Seed: triage inbox",
+        "backlog_task_title_2": "Seed: order missing parts",
+        "backlog_task_title_3": "Seed: ship repaired device",
+        "task_cards_visible_1": "Seed: triage inbox",
+        "task_cards_visible_2": "Seed: order missing parts",
+        "task_cards_visible_3": "Seed: ship repaired device",
+        "th_board_column_header": "Ready ",
+        "th_board_column_header_2": "Work in progress ",
+        "th_board_column_header_3": "Done "
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "page_title"
+      ]
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Used the Backlog  column's \"Add a new task\" form on the Bench Board (project_id=1) to create a task with title \"rgkb1jev-n2 Bench Task\" and description \"Bench task created for run rgkb1jev-n2\", leaving all other fields at their defaults and clicking Save. The page then showed the confirmation message \"Task created successfully.\" and a new card appeared in the Backlog  column whose text reads \"#4  rgkb1jev-n2 Bench Task\" — so the app assigned task ID #4 ; the Backlog  column count went from 3 to 4 and the three pre-existing \"Seed:\" tasks (#1, #2, #3) are unchanged.",
+      "values": {
+        "task_title": "rgkb1jev-n2 Bench Task",
+        "task_description": "Bench task created for run rgkb1jev-n2",
+        "board_task_cards": "#1 Seed: triage inbox, #2 Seed: order missing parts, #3 Seed: ship repaired device, #4 rgkb1jev-n2 Bench Task",
+        "run_id": "rgkb1jev-n2",
+        "task_reference_as_shown": "#4 ",
+        "confirmation_message": "Task created successfully.",
+        "board_column": "Backlog "
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-verify",
+      "status": "success",
+      "summary": "Task #4 \"rgkb1jev-n2 Bench Task\" is now displayed inside the \"Work in progress \" column of the Bench Board (project_id=1). The Work in progress column header now reports \"Task count 1 (Total number of tasks in this column across all swimlanes 1)\" and the card is the only card in that column, i.e. position 1 of 1 (left-to-right it sits in the third column, between the empty \"Ready \" and \"Done \" columns). The three \"Seed:\" tasks (#1, #2, #3) remain untouched in the Backlog column, whose count is 3. The card's \"Days in this column\" reads <15m, consistent with the move having just happened. A stored-procedure replay had stopped part-way, so I re-issued a different drag from the card body to the Work in progress cell; that drag took effect.",
+      "values": {
+        "task_id": "#4 ",
+        "task_title": "rgkb1jev-n2 Bench Task",
+        "target_column": "Work in progress ",
+        "work_in_progress_header": "Work in progress  Task count 1 (Total number of tasks in this column across all swimlanes 1)",
+        "work_in_progress_task_count": "1",
+        "card_position_in_column": "1 of 1 (only card in the column)",
+        "work_in_progress_cell_content": "#4  rgkb1jev-n2 Bench Task  Task age in days <15m  Days in this column <15m  Task priority P0",
+        "backlog_task_count": "3",
+        "backlog_cards": "#2 Seed: order missing parts, #3 Seed: ship repaired device, #1 Seed: triage inbox (all unchanged)",
+        "ready_column": "empty",
+        "done_column": "empty",
+        "work_in_progress_header_2": "Work in progress  \nTask count\n1  (\nTotal number of tasks in this column across all swimlanes\n1)",
+        "work_in_progress_cell_co": "#4 \n \nrgkb1jev-n2 Bench Task\n \nTask age in days\n<15m \nDays in this column\n<15m \nTask priority\nP0",
+        "ref": "rgkb1jev-n2"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_b0c4ea stopped at step 2 — after step 2 the page did not show \"- cell \\\"Work in progress \\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "replayed": "1/14",
+      "repaired": false,
+      "turns": 6,
+      "unreported": [
+        "work_in_progress_column_cards",
+        "wip_header_count",
+        "wip_card",
+        "backlog_header_count",
+        "run_id"
+      ]
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_8ad9f9; observed comment_text=Progress note for run rgkb1jev-n2, task_title=rgkb1jev-n2 Bench Task, comments_section_content=A admin Created at: 09/20/2026 20:29 Updated at: 09/20/2026 20:29 Visibility: Standard users  Progress note for run rgkb1jev-n2, run_id=rgkb1jev-n2, task_page_url=http://127.0.0.1:8085/?controller=TaskViewController&action=show&task_id=4, task_comments=A\nadmin Created at: 09/20/2026 20:32 Updated at: 09/20/2026 20:32 Visibility: Standard users\n\nProgress note for run rgkb1jev-n2, comment_visibility=Standard users, task_id=4.",
+      "values": {
+        "comment_text": "Progress note for run rgkb1jev-n2",
+        "task_title": "rgkb1jev-n2 Bench Task",
+        "comments_section_content": "A admin Created at: 09/20/2026 20:29 Updated at: 09/20/2026 20:29 Visibility: Standard users  Progress note for run rgkb1jev-n2",
+        "run_id": "rgkb1jev-n2",
+        "task_page_url": "http://127.0.0.1:8085/?controller=TaskViewController&action=show&task_id=4",
+        "task_comments": "A\nadmin Created at: 09/20/2026 20:32 Updated at: 09/20/2026 20:32 Visibility: Standard users\n\nProgress note for run rgkb1jev-n2",
+        "comment_visibility": "Standard users",
+        "task_id": "4"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "06-set",
+      "status": "success",
+      "summary": "Replayed stored procedure s_13febb; observed run_id=rgkb1jev-n2, due_date_field_value_in_edit_form=12/31/2026 20:32, due_date_as_displayed_after_save=Due date: 12/31/2026 20:32, confirmation_message=Task updated successfully., task_id=4, task_title=rgkb1jev-n2 Bench Task.",
+      "values": {
+        "run_id": "rgkb1jev-n2",
+        "due_date_field_value_in_edit_form": "12/31/2026 20:32",
+        "due_date_as_displayed_after_save": "Due date: 12/31/2026 20:32",
+        "confirmation_message": "Task updated successfully.",
+        "task_id": "4",
+        "task_title": "rgkb1jev-n2 Bench Task"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "entered_text"
+      ]
+    },
+    {
+      "id": "07-change",
+      "status": "success",
+      "summary": "Read-only verification completed on the live page (nothing changed). (1) Board columns left-to-right: Backlog, Ready, Work in progress, Done. (2) The card \"#4 rgkb1jev-n2 Bench Task\" sits in the \"Work in progress\" column (3rd column; Work in progress \"Task count 1 (Total number of tasks in this column across all swimlanes 1)\"); Ready and Done are empty. (3) Description on task #4: \"Bench task created for run rgkb1jev-n2\". (4) One comment: \"Progress note for run rgkb1jev-n2\", attributed to admin, created/updated 09/20/2026 20:32, Visibility: Standard users. (5) Due date as displayed: \"Due date: 12/31/2026 20:32\" (the edit field holds 12/31/2026 20:32), also shown on the board card. (6) Numeric ID as displayed: #4 (task page heading \"Task #4\", card label \"#4 \"). (7) Confirmed: the three Seed: tasks (#2 Seed: order missing parts, #3 Seed: ship repaired device, #1 Seed: triage inbox) are all still in the Backlog column (Task count 3), unmodified. A 7-step replay had failed at its step 4; I re-derived the board state myself instead of re-running it.",
+      "values": {
+        "board_columns_left_to_right": "Backlog, Ready, Work in progress, Done",
+        "card4_column": "Work in progress (3rd column; Task count 1, total across all swimlanes 1)",
+        "ready_column_task_count": "0 (no count badge shown)",
+        "done_column_task_count": "0 (no count badge shown)",
+        "task_id_as_displayed": "#4 ",
+        "task_title": "rgkb1jev-n2 Bench Task",
+        "task_description": "Bench task created for run rgkb1jev-n2",
+        "task_comment_text": "Progress note for run rgkb1jev-n2",
+        "comment_attribution": "A\nadmin Created at: 09/20/2026 20:32 Updated at: 09/20/2026 20:32 Visibility: Standard users",
+        "comment_author": "admin",
+        "comment_created_at": "09/20/2026 20:32",
+        "comment_visibility": "Standard users",
+        "comment_count": "1",
+        "due_date_as_displayed": "Due date: 12/31/2026 20:32",
+        "due_date_on_board_card": "12/31/2026 20:32",
+        "backlog_column": "Backlog  Task count 3 ( Total number of tasks in this column across all swimlanes 3)",
+        "backlog_cards": "#2 Seed: order missing parts | #3 Seed: ship repaired device | #1 Seed: triage inbox",
+        "backlog_task_count": "3",
+        "total_cards_on_board": "4",
+        "run_id": "rgkb1jev-n2",
+        "board_column_header": "Ready",
+        "board_column_header_2": "Done",
+        "a_href_task_id": "Seed: order missing parts",
+        "a_href_task_id_2": "Seed: ship repaired device",
+        "a_href_task_id_3": "Seed: triage inbox",
+        "ref": "7-step"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_b938a0 stopped at step 4 — after step 4 the page did not show \"- link \\\"Backlog \\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "replayed": "3/7",
+      "repaired": false,
+      "turns": 14,
+      "unreported": [
+        "task4_column",
+        "task4_comments",
+        "task4_due_date_displayed",
+        "board_column_dom_mapping",
+        "task4_summary_values",
+        "task4_comment_text"
+      ]
+    }
+  ],
+  "passed": 7,
+  "total": 7,
+  "repinned": 0,
+  "drift": 3,
+  "driftTickets": [
+    {
+      "flow": "rgkb1jev",
+      "step": "04-verify",
+      "skill": "s_b0c4ea",
+      "similarity": 1,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_b0c4ea stopped at step 2 — after step 2 the page did not show \"- cell \\\"Work in progress \\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "reason": "after step 2 the page did not show \"- cell \\\"Work in progress \\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "pageUrlPattern": "http://127.0.0.1:8085/?action=show&controller=BoardViewController&project_id=:id",
+      "pageUrl": "http://127.0.0.1:8085/?controller=BoardViewController&action=show&project_id=1"
+    },
+    {
+      "flow": "rgkb1jev",
+      "step": "06-set",
+      "skill": "s_13febb",
+      "atStep": "9",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.locator('li', { hasText: '12/31/2026 20:30' })",
+      "fallbackUsed": "page.locator('#task-summary > div > div > div:nth-of-type(4) > ul > li:nth-of-type(1)')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8085/?action=show&controller=TaskViewController&task_id=:id",
+      "pageUrl": "http://127.0.0.1:8085/?controller=TaskViewController&action=show&task_id=4"
+    },
+    {
+      "flow": "rgkb1jev",
+      "step": "07-change",
+      "skill": "s_b938a0",
+      "similarity": 1,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_b938a0 stopped at step 4 — after step 4 the page did not show \"- link \\\"Backlog \\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "reason": "after step 4 the page did not show \"- link \\\"Backlog \\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "pageUrlPattern": "http://127.0.0.1:8085/?action=show&controller=BoardViewController&project_id=:id&search=",
+      "pageUrl": "http://127.0.0.1:8085/?controller=BoardViewController&action=show&project_id=1&search="
+    }
+  ],
+  "wallMs": 101683,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 342493,
+    "completionTokens": 8573,
+    "cachedTokens": 301824
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 342493,
+      "completionTokens": 8573,
+      "cachedTokens": 301824
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
