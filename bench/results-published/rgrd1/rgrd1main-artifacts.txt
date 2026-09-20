@@ -1,0 +1,16 @@
+ok    no locator leaks (100 non-fatal, in reportTemplate/urlPattern/expectations)
+FAIL  3 reference(s) are not republished by their producing step: those steps pay recovery on every run
+      07-delete needs {{06-change.probe_ticket_deleted_or_archived}}, not republished by 06-change (agreed 0×, which resolves nothing) — recovery every run
+      08-open needs {{06-change.probe_ticket_ref}}, not republished by 06-change (agreed 0×, which resolves nothing) — recovery every run
+      08-open needs {{06-change.probe_ticket_deleted_or_archived}}, not republished by 06-change (agreed 0×, which resolves nothing) — recovery every run
+FAIL  2 navigation target(s) carry a value this run made
+  s_aa1061.steps[4].args.url: "http://127.0.0.1:4180/#/tickets" (output) in "http://127.0.0.1:4180/#/tickets/{{v6}}"
+  s_b16dfa.steps[0].args.url: "http://127.0.0.1:4180/#/tickets" (output) in "http://127.0.0.1:4180/#/tickets/{{v6}}"
+      (check each: a minted record id here is a wrong-record bug; an app constant is a ledger false positive)
+      n2 03-add: page.locator('[data-testid="part-row-p18"] td').nth(0)
+      n3 03-add: page.locator('[data-testid="part-row-p18"] td').nth(0)
+FAIL  2 step(s) resolved by POSITION, which can act on the wrong record
+ok    the flow establishes its own starting page
+ok    every flow step carries a procedure
+      n2: tier A 7/8, 19 model turns, 8/8 passed
+      n3: tier A 7/8, 16 model turns, 8/8 passed

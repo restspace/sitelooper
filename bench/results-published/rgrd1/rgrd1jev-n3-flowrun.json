@@ -1,0 +1,190 @@
+{
+  "flow": "rgrd1jev",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Signed in on the Repair Desk login page (http://127.0.0.1:4180/#/login) with bench@example.com / bench-pass-1234 via the \"Sign in\" button. The app accepted the credentials and redirected to the Tickets view at http://127.0.0.1:4180/#/tickets, where the header shows the account name \"Bench User\" and a \"Sign out\" button, confirming an authenticated session. The landed view is the \"Repair tickets\" list: heading \"Repair tickets\", a \"New ticket\" button, a \"Filter tickets\" region (Status combobox, Search box, Show archived checkbox) and a tickets table showing 1–10 of 13 rows (RD-1014 … newest first, columns Ref/Title/Customer/Status/Parts/Created) with Previous/Next pagination.",
+      "values": {
+        "password": "bench-pass-1234",
+        "signed_in_user": "Bench User",
+        "landing_page_url": "http://127.0.0.1:4180/#/tickets",
+        "tickets_shown": "Showing 1–10 of 13",
+        "first_ticket_ref": "RD-1014"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_2da3b1; observed ticket_title_shown=rgrd1jev-n3 RD Bench Ticket, test_run_id=rgrd1jev-n3, ticket_reference=RD-1023, parts=0, created=2026-09-20, tickets_count_after=Showing 1–10 of 14.",
+      "values": {
+        "ticket_title_shown": "rgrd1jev-n3 RD Bench Ticket",
+        "test_run_id": "rgrd1jev-n3",
+        "ticket_reference": "RD-1023",
+        "parts": "0",
+        "created": "2026-09-20",
+        "tickets_count_after": "Showing 1–10 of 14"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "customer"
+      ]
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "Opened RD-1023 from the tickets list (landed on the detail route http://127.0.0.1:4180/#/tickets/t15). The detail page has a \"Parts\" region whose header says \"Price is calculated from cost and markup when the part is saved.\" with an \"Add part\" button. The Add part dialog required Part name*, Cost* and Markup %* (Quantity defaulted to 1 and Supplier was optional). I entered name 'rgrd1jev-n3 RD Part A', cost 100, markup 25 and clicked the dialog's \"Add part\" button. The dialog closed and the parts list refreshed: the row \"rgrd1jev-n3 RD Part A | $100.00 | 25% | 1 | No supplier | $125.00\" now shows, and a Total (price × quantity) row of $125.00 replaced the previous \"No parts on this ticket yet.\" empty state (verified by reading the live DOM cells).",
+      "values": {
+        "part_name_shown": "rgrd1jev-n3 RD Part A",
+        "test_run_id": "rgrd1jev-n3",
+        "ticket_detail_url": "http://127.0.0.1:4180/#/tickets/t15",
+        "ticket_reference": "RD-1023",
+        "part_cost_shown": "$100.00",
+        "part_markup_shown": "25%",
+        "part_price_computed": "$125.00",
+        "part_qty": "1",
+        "part_supplier_shown": "No supplier",
+        "markup_hint_text": "Price is calculated from cost and markup when the part is saved.",
+        "parts_total_label": "Total (price × quantity)",
+        "parts_total_shown": "Total (price × quantity)\t$125.00\t"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_e764cf; observed new_part_name=rgrd1jev-n3 RD Part B, parts_rows_shown=Part A $100.00 25% 1 → $125.00; Part B $200.00 25% 1 → $250.00, test_run_id=rgrd1jev-n3, new_part_cost=$200.00, new_part_markup=25%, new_part_price_computed=$250.00, new_part_qty=1, new_part_supplier=No supplier, ticket_reference=RD-1023, parts_total_shown=$375.00, table_tfoot_tr_1=Total (price × quantity), parts_total_value=$375.00, parts_total_label=Total (price × quantity)\t$375.00\t.",
+      "values": {
+        "new_part_name": "rgrd1jev-n3 RD Part B",
+        "parts_rows_shown": "Part A $100.00 25% 1 → $125.00; Part B $200.00 25% 1 → $250.00",
+        "test_run_id": "rgrd1jev-n3",
+        "new_part_cost": "$200.00",
+        "new_part_markup": "25%",
+        "new_part_price_computed": "$250.00",
+        "new_part_qty": "1",
+        "new_part_supplier": "No supplier",
+        "ticket_reference": "RD-1023",
+        "parts_total_shown": "$375.00",
+        "table_tfoot_tr_1": "Total (price × quantity)",
+        "parts_total_value": "$375.00",
+        "parts_total_label": "Total (price × quantity)\t$375.00\t"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-edit",
+      "status": "success",
+      "summary": "Replayed stored procedure s_cb2af4; observed ref=rgrd1jev-n3, ticket_reference=RD-1023, ticket_title=rgrd1jev-n3 RD Bench Ticket, part_a_name=rgrd1jev-n3 RD Part A, part_a_cost_after=$150.00, part_a_qty=1, part_a_price_computed=$187.50, parts_total_label=Total (price × quantity), parts_total_after=$437.50, ticket_status_shown=Draft, part_b_row=rgrd1jev-n3 RD Part B\t$200.00\t25%\t1\tNo supplier\t$250.00\tEdit Delete.",
+      "values": {
+        "ref": "rgrd1jev-n3",
+        "ticket_reference": "RD-1023",
+        "ticket_title": "rgrd1jev-n3 RD Bench Ticket",
+        "part_a_name": "rgrd1jev-n3 RD Part A",
+        "part_a_cost_after": "$150.00",
+        "part_a_qty": "1",
+        "part_a_price_computed": "$187.50",
+        "parts_total_label": "Total (price × quantity)",
+        "parts_total_after": "$437.50",
+        "ticket_status_shown": "Draft",
+        "part_b_row": "rgrd1jev-n3 RD Part B\t$200.00\t25%\t1\tNo supplier\t$250.00\tEdit Delete"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0,
+      "repinned": "s_cb2af4",
+      "repinParams": {
+        "v1": "{{02-create.ticket_reference}}",
+        "v2": "{{03-open.part_name_shown}}",
+        "v3": "{{runid}}",
+        "v4": "150"
+      },
+      "unreported": [
+        "part_a_markup_after",
+        "test_run_id",
+        "table_tr_1",
+        "parts_total_value"
+      ]
+    },
+    {
+      "id": "06-change",
+      "status": "success",
+      "summary": "Replayed stored procedure s_b6456f; observed precondition_message=Ticket is not ready — Part \"rgrd1jev-n3 RD Part A\" has no supplier — Part \"rgrd1jev-n3 RD Part B\" has no supplier, final_status_shown=Ready, ticket_reference=RD-1023, ticket_title=rgrd1jev-n3 RD Bench Ticket, part_a_price=$187.50, part_b_price=$250.00, parts_total_after=$437.50, test_run_id=rgrd1jev-n3 RD Bench Ticket.",
+      "values": {
+        "precondition_message": "Ticket is not ready — Part \"rgrd1jev-n3 RD Part A\" has no supplier — Part \"rgrd1jev-n3 RD Part B\" has no supplier",
+        "final_status_shown": "Ready",
+        "ticket_reference": "RD-1023",
+        "ticket_title": "rgrd1jev-n3 RD Bench Ticket",
+        "part_a_price": "$187.50",
+        "part_b_price": "$250.00",
+        "parts_total_after": "$437.50",
+        "test_run_id": "rgrd1jev-n3 RD Bench Ticket"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "part_a_supplier",
+        "part_b_supplier"
+      ]
+    },
+    {
+      "id": "07-remove",
+      "status": "success",
+      "summary": "On RD-1023 I deleted both parts via each row's \"Delete\" button, which opened an in-app confirm dialog (heading \"Confirm\", buttons \"Cancel\"/\"Delete part\") that I accepted; after each delete the parts table refreshed and after the second one the region shows the empty state \"No parts on this ticket yet.\" with no part rows and no total row. I then clicked \"Archive ticket\" (no confirmation dialog appeared; the button flipped to \"Unarchive ticket\") and the ticket header now shows Status \"Ready\" plus an \"Archived\" badge. Verification on the tickets list: without Show archived the count dropped to \"Showing 1–10 of 13\" and RD-1023 is absent; after ticking \"Show archived\" the row \"RD-1023 | rgrd1jev-n3 RD Bench Ticket Archived RD Bench Ticket | Archived | Blue Fox Cafe | Ready | 0 | 2026-09-20\" appears, confirming it is archived and gone from the active list.",
+      "values": {
+        "status_and_archived_after": "Status / Ready, with an additional \"Archived\" badge shown on the ticket",
+        "active_list_after": "Showing 1–10 of 13 (was 14); no RD-1023 row present without Show archived",
+        "archived_row_seen": "RD-1023 | rgrd1jev-n3 RD Bench Ticket | Archived | Blue Fox Cafe | Ready | 0 | 2026-09-20",
+        "status_after_archive": "Status\nReady\nArchived",
+        "ticket_reference": "RD-1023",
+        "test_run_id": "rgrd1jev-n3 RD Bench Ticket Archived"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 7,
+  "total": 7,
+  "repinned": 1,
+  "drift": 0,
+  "wallMs": 25857,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

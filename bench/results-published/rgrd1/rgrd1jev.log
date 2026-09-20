@@ -1,0 +1,119 @@
+
+[sweep] run 1/3: rgrd1jev-n1 (store: /home/user/sitelooper/bench/results/rgrd1jev-skills)
+[harness] repairdesk: defaulting APP_URL
+[harness] repairdesk: defaulting APP_EMAIL
+[harness] repairdesk: defaulting APP_PASSWORD
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+[harness] repairdesk responded 200 at http://127.0.0.1:4180/
+stopped: rgrd1jev-n1
+  flow "rgrd1jev" saved: 7 step(s), vars runid → /home/user/sitelooper/bench/results/flows/rgrd1jev.json
+  warning: note: dropped 9 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: note: 01-signin no longer publishes landing_view — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-create no longer publishes initial_status — no replay reads it from the page and the recording showed no line to read
+  warning: note: 03-open no longer publishes add_part_required_fields — no replay reads it from the page and the recording showed no line to read
+  warning: note: 04-add no longer publishes dialog_required_fields, ticket_detail_url — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-edit no longer publishes edit_dialog_fields, ticket_detail_url — no replay reads them from the page and the recording showed no line to read
+  warning: note: 07-remove no longer publishes ticket_detail_url — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 223 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "bench-pass-1234" (output) in "Sign in with email bench@example.com and password bench-pass-1234 on the login page, then confirm you are signed in and report what page/view you land on."
+  flow.steps[0].params.v2: "bench-pass-1234" (output) in "bench-pass-1234"
+  flow.steps[0].route: "http://127.0.0.1:4180/#/tickets" (output) in "http://127.0.0.1:4180/#/tickets"
+  flow.steps[1].route: "http://127.0.0.1:4180/#/tickets" (output) in "http://127.0.0.1:4180/#/tickets"
+  flow.steps[2].route: "http://127.0.0.1:4180/#/tickets" (output) in "http://127.0.0.1:4180/#/tickets/:id"
+arm=sitelooper model=z-ai/glm-5.3 runid=rgrd1jev-n1 stop=completed
+turns=9 wall=185.7s
+commands=8 cmdTime=153.0s cmdBytes=10091 timeouts=0
+orchestrator in=5705 cw=0 cr=31936 out=1835
+inner prompt=977264 cached=896768 completion=14146
+spend=$0.0476 maxUsd=1.5
+learn: A_n=0 replayed=0/7 full=0 repaired=0 compiled=7 variants=0
+-> /home/user/sitelooper/bench/results/rgrd1jev-n1-sitelooper-result.json
+
+=== rgrd1jev-n1 === (run self-reported: completed)
+  obj 1  PASS  seq 1: ticket t15 (RD-1021) "rgrd1jev-n1 RD Bench Ticket"
+  obj 2  PASS  seq 2 p18 cost=100 markup=25 price=125.00
+  obj 3  PASS  seq 3 p19 cost=200 markup=25 price=250.00
+  obj 4  PASS  seq 4: cost 100 -> 150, price 125.00 -> 187.50 (want 187.50), after the create at seq 2
+  obj 5  PASS  seq 7: status Draft -> Ready
+  obj 6  PASS  part A deleted, part B deleted, archive entry at seq 10; state: 0 part(s) surviving, ticket t15 archived=true
+  claim 2  ok — run reported 125.00, app recorded 125.00
+  claim 3  ok — run reported 250.00, app recorded 250.00
+  claim 4  ok — run reported 187.50, app recorded 187.50
+  summary: 6/6 objectives PASS, 0 price claim mismatch(es), 0 duplicate ticket(s)
+
+App state: 15 tickets total, 1 left by benchmark runs (0 still active), 17 parts total, 10 mutation log entries.
+
+[sweep] run 2/3: rgrd1jev-n2 (replay flow rgrd1jev, no orchestrator)
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+[sweep] rgrd1jev-n2: 1 drift ticket(s) → rgrd1jev-n2-drift.json
+
+=== rgrd1jev-n2 === (run self-reported: no result file)
+  note: no result file in /home/user/sitelooper/bench/results — objectives are still scored from the log,
+        but the run's claimed prices cannot be cross-checked.
+  obj 1  PASS  seq 1: ticket t15 (RD-1022) "rgrd1jev-n2 RD Bench Ticket"
+  obj 2  PASS  seq 2 p18 cost=100 markup=25 price=125.00
+  obj 3  PASS  seq 3 p19 cost=200 markup=25 price=250.00
+  obj 4  PASS  seq 4: cost 100 -> 150, price 125.00 -> 187.50 (want 187.50), after the create at seq 2
+  obj 5  PASS  seq 7: status Draft -> Ready
+  obj 6  PASS  part A deleted, part B deleted, archive entry at seq 10; state: 0 part(s) surviving, ticket t15 archived=true
+  claim 2  no claim parsed from the run's final report
+  claim 3  no claim parsed from the run's final report
+  claim 4  no claim parsed from the run's final report
+  summary: 6/6 objectives PASS, 0 price claim mismatch(es), 0 duplicate ticket(s)
+
+App state: 15 tickets total, 1 left by benchmark runs (0 still active), 17 parts total, 10 mutation log entries.
+
+[sweep] run 3/3: rgrd1jev-n3 (replay flow rgrd1jev, no orchestrator)
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+
+=== rgrd1jev-n3 === (run self-reported: no result file)
+  note: no result file in /home/user/sitelooper/bench/results — objectives are still scored from the log,
+        but the run's claimed prices cannot be cross-checked.
+  obj 1  PASS  seq 1: ticket t15 (RD-1023) "rgrd1jev-n3 RD Bench Ticket"
+  obj 2  PASS  seq 2 p18 cost=100 markup=25 price=125.00
+  obj 3  PASS  seq 3 p19 cost=200 markup=25 price=250.00
+  obj 4  PASS  seq 4: cost 100 -> 150, price 125.00 -> 187.50 (want 187.50), after the create at seq 2
+  obj 5  PASS  seq 7: status Draft -> Ready
+  obj 6  PASS  part A deleted, part B deleted, archive entry at seq 10; state: 0 part(s) surviving, ticket t15 archived=true
+  claim 2  no claim parsed from the run's final report
+  claim 3  no claim parsed from the run's final report
+  claim 4  no claim parsed from the run's final report
+  summary: 6/6 objectives PASS, 0 price claim mismatch(es), 0 duplicate ticket(s)
+
+App state: 15 tickets total, 1 left by benchmark runs (0 still active), 17 parts total, 10 mutation log entries.
+
+Learning sweep rgrd1jev (K=3)
+┌─────────┬───┬───────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid         │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼───────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'rgrd1jev-n1' │ '6/6'    │ 'completed' │ 9     │ 8    │ 0.0476    │ 0    │ '0/7'        │ 186    │
+│ 1       │ 2 │ 'rgrd1jev-n2' │ '6/6'    │ 'success'   │ 4     │ 7    │ 0.0026    │ 0.86 │ '7/7 (flow)' │ 40     │
+│ 2       │ 3 │ 'rgrd1jev-n3' │ '6/6'    │ 'success'   │ 0     │ 7    │ 0         │ 1    │ '7/7 (flow)' │ 26     │
+└─────────┴───┴───────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:4180
+  s_1b8201  validated    4 steps  3/3 (100%)
+           Sign in with email {{v1}} and password {{v2}} on the login page, then confirm you are signed in and report wha…
+  s_2da3b1  validated   11 steps  3/3 (100%)
+           Create a new repair ticket with the title exactly '{{v2}}'. Fill in any required fields the form demands (e.g.…
+  s_2f2a03  validated    3 steps  3/3 (100%)
+           Sign in with email {{v1}} and password {{v2}} on the login page, then confirm you are signed in and report wha…
+  s_733edf  validated    3 steps  3/3 (100%)
+           On the ticket detail page for {{v1}} (status {{v2}}), remove both parts: delete '{{v3}}' and '{{v5}}' using ea…
+  s_9d35dd  validated    8 steps  3/3 (100%)
+           On the ticket detail page for {{v1}} (status {{v2}}), remove both parts: delete '{{v3}}' and '{{v5}}' using ea…
+  s_b0c0b5  validated   16 steps  3/3 (100%)
+           Open the ticket {{v1}} titled '{{v2}}' from the tickets list, and on its detail page add a part named exactly …
+  s_b6456f  validated   17 steps  3/3 (100%)
+           On the ticket detail page for {{v1}}, change the ticket's status to 'Ready'. The app enforces preconditions be…
+  s_b8842c  validated    1 steps  3/3 (100%)
+           Open the ticket {{v1}} titled '{{v2}}' from the tickets list, and on its detail page add a part named exactly …
+  s_e764cf  validated   16 steps  3/3 (100%)
+           On the ticket detail page for {{v1}} (currently showing part '{{v2}}'), add a second part named exactly '{{v4}…
+  s_16ddfe  demoted     13 steps  1/2 (50%)
+           On the ticket detail page for {{v1}}, edit the part named '{{v2}}' to change its cost from 100 to {{v4}} (keep…
+  s_cb2af4  validated   13 steps  2/2 (100%)  variant of s_16ddfe
+           On the ticket detail page for {{v1}}, edit the part named '{{v2}}' to change its cost from 100 to {{v4}} (keep…
+store: /home/user/sitelooper/bench/results/rgrd1jev-skills
+
+summary: /home/user/sitelooper/bench/results/rgrd1jev-sweep.json
+SWEEP2_EXIT_CODE=0

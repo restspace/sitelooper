@@ -1,0 +1,135 @@
+
+[sweep] run 1/3: rgrd1main-n1 (store: /home/user/sitelooper/bench/results/rgrd1main-skills)
+[harness] repairdesk: defaulting APP_URL
+[harness] repairdesk: defaulting APP_EMAIL
+[harness] repairdesk: defaulting APP_PASSWORD
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+[harness] repairdesk responded 200 at http://127.0.0.1:4180/
+stopped: rgrd1main-n1
+  flow "rgrd1main" saved: 8 step(s), vars runid → /home/user/sitelooper/bench/results/flows/rgrd1main.json
+  warning: note: dropped 7 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: note: 01-open no longer publishes ticket_record_id, parts_section, other_sections — no replay reads them from the page and the recording showed no line to read
+  warning: note: 02-add no longer publishes parts_table_total, parts_table_headers — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-add no longer publishes part_table_headers, part_1_name, part_1_cost, part_1_markup, part_1_qty, part_1_supplier, part_1_price, part_2_name, part_2_cost, part_2_markup, part_2_qty, part_2_supplier, part_2_price, part_2_actions, parts_table_total_label, parts_table_total_value, parts_table_total_row — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-report no longer publishes buttons_before — no replay reads it from the page and the recording showed no line to read
+  warning: note: 06-change no longer publishes probe_ticket_customer, probe_ticket_parts_count, probe_ticket_url, probe_ticket_status_after_attempt, probe_error_alert_heading — no replay reads them from the page and the recording showed no line to read
+  warning: note: 07-delete no longer publishes button_after_archive, appears_in_active_tickets_list, appears_in_archived_view, list_summary, screenshot_ref_1, screenshot_ref_2 — no replay reads them from the page and the recording showed no line to read
+  warning: note: 08-open no longer publishes probe_archive_error_message, probe_appears_in_active_list, show_archived_unchecked_result, tickets_from_this_run_still_active, screenshot_ref_1, screenshot_ref_2 — no replay reads them from the page and the recording showed no line to read
+  warning: warning: contradicted-step: 05-report read status_after "Ready" right after 04-find reported "Draft"; 04-find's change may not have landed and a later step may be retrying it. Re-record 04-find.
+  warning: warning: 211 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[4].instruction: "Ready" (output) in "On the ticket detail view for ticket {{01-open.ticket_reference}} (titled '{{runid}} RD Bench Ticket', currently status {{01-open.status}}), click the 'Mark Rea"
+  flow.steps[5].instruction: "Ready" (output) in "First, reload/re-navigate to the ticket detail view for ticket {{01-open.ticket_reference}} (titled '{{runid}} RD Bench Ticket') and confirm the Status shown is"
+  flow.steps[5].params.v4: "Ready" (output) in "Ready"
+  flow.steps[6].instruction: "No parts on this ticket yet." (output) in "On the ticket detail view for ticket {{01-open.ticket_reference}} (titled '{{runid}} RD Bench Ticket', status Ready), delete BOTH parts ('{{runid}} RD Part A' a"
+  flow.steps[6].instruction: "Ready" (output) in "On the ticket detail view for ticket {{01-open.ticket_reference}} (titled '{{runid}} RD Bench Ticket', status Ready), delete BOTH parts ('{{runid}} RD Part A' a"
+  warning: {{06-change.probe_ticket_deleted_or_archived}} (used by 07-delete) can only be re-observed by model recovery — consider re-recording so the value is read from the page.
+  warning: {{06-change.probe_ticket_ref}} (used by 08-open) can only be re-observed by model recovery, and 08-open's procedure types or locates by it — so `sitelooper spec` will REFUSE to compile this flow (unsourced-ref) until 06-change reads probe_ticket_ref from an element. Re-record 06-change now, while this session is still open.
+  warning: 06-change reports probe_ticket_ref, probe_ticket_deleted_or_archived, but no segment of the procedure it pins (s_b16dfa, through its last segment s_dcb7ec) re-reads them from the page — a replay without the model will succeed without those values; re-record so a read for them lands in s_dcb7ec.
+arm=sitelooper model=z-ai/glm-5.3 runid=rgrd1main-n1 stop=completed
+turns=9 wall=532.2s
+commands=8 cmdTime=432.1s cmdBytes=22812 timeouts=0
+orchestrator in=41151 cw=0 cr=13952 out=4104
+inner prompt=2408347 cached=2243456 completion=26999
+spend=$0.127 maxUsd=1.5
+learn: A_n=0.194 replayed=1/8 full=1 repaired=0 compiled=7 variants=0
+-> /home/user/sitelooper/bench/results/rgrd1main-n1-sitelooper-result.json
+
+=== rgrd1main-n1 === (run self-reported: completed)
+  obj 1  PASS  seq 1: ticket t15 (RD-1015) "rgrd1main-n1 RD Bench Ticket"
+  obj 2  PASS  seq 2 p18 cost=100 markup=25 price=125.00
+  obj 3  PASS  seq 3 p19 cost=200 markup=25 price=250.00
+  obj 4  PASS  seq 4: cost 100 -> 150, price 125.00 -> 187.50 (want 187.50), after the create at seq 2
+  obj 5  PASS  seq 5: status Draft -> Ready
+  obj 6  PASS  part A deleted, part B deleted, archive entry at seq 9; state: 0 part(s) surviving, ticket t15 archived=true
+  claim 2  ok — run reported 125.00, app recorded 125.00
+  claim 3  ok — run reported 250.00, app recorded 250.00
+  claim 4  ok — run reported 187.50, app recorded 187.50
+  summary: 6/6 objectives PASS, 0 price claim mismatch(es), 0 duplicate ticket(s)
+
+App state: 16 tickets total, 1 left by benchmark runs (0 still active), 17 parts total, 10 mutation log entries.
+
+[sweep] run 2/3: rgrd1main-n2 (replay flow rgrd1main, no orchestrator)
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+[sweep] rgrd1main-n2: 2 drift ticket(s) → rgrd1main-n2-drift.json
+
+=== rgrd1main-n2 === (run self-reported: no result file)
+  note: no result file in /home/user/sitelooper/bench/results — objectives are still scored from the log,
+        but the run's claimed prices cannot be cross-checked.
+  obj 1  PASS  seq 1: ticket t15 (RD-1017) "rgrd1main-n2 RD Bench Ticket"
+  obj 2  PASS  seq 2 p18 cost=100 markup=25 price=125.00
+  obj 3  PASS  seq 3 p19 cost=200 markup=25 price=250.00
+  obj 4  PASS  seq 4: cost 100 -> 150, price 125.00 -> 187.50 (want 187.50), after the create at seq 2
+  obj 5  PASS  seq 5: status Draft -> Ready
+  obj 6  PASS  part A deleted, part B deleted, archive entry at seq 9; state: 0 part(s) surviving, ticket t15 archived=true
+  claim 2  no claim parsed from the run's final report
+  claim 3  no claim parsed from the run's final report
+  claim 4  no claim parsed from the run's final report
+  summary: 6/6 objectives PASS, 0 price claim mismatch(es), 0 duplicate ticket(s)
+
+App state: 16 tickets total, 1 left by benchmark runs (0 still active), 17 parts total, 10 mutation log entries.
+
+[sweep] run 3/3: rgrd1main-n3 (replay flow rgrd1main, no orchestrator)
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+[sweep] rgrd1main-n3: 3 drift ticket(s) → rgrd1main-n3-drift.json
+
+=== rgrd1main-n3 === (run self-reported: no result file)
+  note: no result file in /home/user/sitelooper/bench/results — objectives are still scored from the log,
+        but the run's claimed prices cannot be cross-checked.
+  obj 1  PASS  seq 1: ticket t15 (RD-1019) "rgrd1main-n3 RD Bench Ticket"
+  obj 2  PASS  seq 2 p18 cost=100 markup=25 price=125.00
+  obj 3  PASS  seq 3 p19 cost=200 markup=25 price=250.00
+  obj 4  PASS  seq 4: cost 100 -> 150, price 125.00 -> 187.50 (want 187.50), after the create at seq 2
+  obj 5  PASS  seq 5: status Draft -> Ready
+  obj 6  PASS  part A deleted, part B deleted, archive entry at seq 9; state: 0 part(s) surviving, ticket t15 archived=true
+  claim 2  no claim parsed from the run's final report
+  claim 3  no claim parsed from the run's final report
+  claim 4  no claim parsed from the run's final report
+  summary: 6/6 objectives PASS, 0 price claim mismatch(es), 0 duplicate ticket(s)
+
+App state: 16 tickets total, 1 left by benchmark runs (0 still active), 17 parts total, 10 mutation log entries.
+
+Learning sweep rgrd1main (K=3)
+┌─────────┬───┬────────────────┬──────────┬─────────────┬───────┬──────┬───────────┬───────┬──────────────┬────────┐
+│ (index) │ n │ runid          │ verified │ stop        │ turns │ cmds │ total_usd │ A_n   │ replayed     │ wall_s │
+├─────────┼───┼────────────────┼──────────┼─────────────┼───────┼──────┼───────────┼───────┼──────────────┼────────┤
+│ 0       │ 1 │ 'rgrd1main-n1' │ '6/6'    │ 'completed' │ 9     │ 8    │ 0.127     │ 0.194 │ '1/8'        │ 532    │
+│ 1       │ 2 │ 'rgrd1main-n2' │ '6/6'    │ 'success'   │ 19    │ 8    │ 0.0067    │ 0.88  │ '8/8 (flow)' │ 85     │
+│ 2       │ 3 │ 'rgrd1main-n3' │ '6/6'    │ 'success'   │ 16    │ 8    │ 0.0059    │ 0.88  │ '8/8 (flow)' │ 76     │
+└─────────┴───┴────────────────┴──────────┴─────────────┴───────┴──────┴───────────┴───────┴──────────────┴────────┘
+http://127.0.0.1:4180
+  s_da98d7  validated   19 steps  6/6 (100%)
+           On the ticket detail view for ticket {{v1}} (titled '{{v2}}'), use the 'Add part' button in the Parts section …
+  s_051d07  validated    2 steps  3/3 (100%)
+           Open the ticket detail view for ticket {{v1}} (titled '{{v2}}', status {{v4}}, 0 parts) and archive it using t…
+  s_14abf9  validated    4 steps  3/3 (100%)
+           First, reload/re-navigate to the ticket detail view for ticket {{v1}} (titled '{{v2}}') and confirm the Status…
+  s_57626c  validated    3 steps  3/3 (100%)
+           On the ticket detail view for ticket {{v1}} (titled '{{v2}}', status {{v4}}), delete BOTH parts ('{{v5}}' and …
+  s_5c126c  validated    6 steps  3/3 (100%)
+           Open {{v2}} and sign in with email {{v3}} and password {{v4}}. Then create a new ticket titled '{{v5}}', filli…
+  s_74b2e2  validated    1 steps  3/3 (100%)
+           Open {{v2}} and sign in with email {{v3}} and password {{v4}}. Then create a new ticket titled '{{v5}}', filli…
+  s_7f5af4  validated    5 steps  3/3 (100%)
+           Open {{v2}} and sign in with email {{v3}} and password {{v4}}. Then create a new ticket titled '{{v5}}', filli…
+  s_8f381a  validated   11 steps  3/3 (100%)
+           On the ticket detail view for ticket {{v1}} (titled '{{v2}}', currently status {{v4}}), click the 'Mark Ready'…
+  s_aa1061  validated    5 steps  3/3 (100%)
+           First, reload/re-navigate to the ticket detail view for ticket {{v1}} (titled '{{v2}}') and confirm the Status…
+  s_aa3036  validated    9 steps  3/3 (100%)
+           On the ticket detail view for ticket {{v1}} (titled '{{v2}}', status {{v4}}), delete BOTH parts ('{{v5}}' and …
+  s_b16dfa  validated    2 steps  3/3 (100%)
+           First, reload/re-navigate to the ticket detail view for ticket {{v1}} (titled '{{v2}}') and confirm the Status…
+  s_c8ed08  validated    3 steps  3/3 (100%)
+           Open {{v2}} and sign in with email {{v3}} and password {{v4}}. Then create a new ticket titled '{{v5}}', filli…
+  s_dcb7ec  validated    7 steps  3/3 (100%)
+           First, reload/re-navigate to the ticket detail view for ticket {{v1}} (titled '{{v2}}') and confirm the Status…
+  s_f125c9  validated   17 steps  3/3 (100%)
+           On the ticket detail view for ticket {{v1}}, find the row for part '{{v2}}' in the Parts table. Use its Edit a…
+  s_24131c  provisional  9 steps  1/1 (100%)
+           Open the ticket detail view for ticket {{v1}} (titled '{{v2}}', status {{v4}}, 0 parts) and archive it using t…
+  s_ba3afd  provisional  3 steps  1/1 (100%)
+           Open the ticket detail view for ticket {{v1}} (titled '{{v2}}', status {{v4}}, 0 parts) and archive it using t…
+store: /home/user/sitelooper/bench/results/rgrd1main-skills
+
+summary: /home/user/sitelooper/bench/results/rgrd1main-sweep.json
+SWEEP1_EXIT_CODE=0

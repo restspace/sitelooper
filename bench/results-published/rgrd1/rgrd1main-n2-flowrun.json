@@ -1,0 +1,276 @@
+{
+  "flow": "rgrd1main",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Signed in at http://127.0.0.1:4180/ as bench@example.com (the tab initially sat on about:blank) and created a new ticket via the \"New ticket\" dialog (Title = required; Customer = optional, filled with \"Bench Test Customer\"). The app created ticket RD-1017 and I opened its detail view at http://127.0.0.1:4180/#/tickets/t15 (record id t15).",
+      "values": {
+        "header_section": "Ticket ref RD-1015, heading 'rgrd1main-n2 RD Bench Ticket', 'Customer: Bench Test Customer · Raised 2026-09-20', Status: Draft, buttons 'Mark Ready' and 'Archive ticket'",
+        "ticket_reference": "RD-1017",
+        "ticket_title": "rgrd1main-n2 RD Bench Ticket",
+        "status": "Draft",
+        "customer": "Bench Test Customer",
+        "raised": "Customer: Bench Test Customer · Raised 2026-09-20",
+        "session_ref": "rgrd1main-n2 RD Bench Ticket"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_da98d7; observed part_name=rgrd1main-n2 RD Part A, screenshot=/root/.sitelooper/sessions/rgrd1main-n2/screenshots/shot-1789935206726.jpg, session_ref=rgrd1main-n2, ticket_reference=RD-1017, ticket_title=rgrd1main-n2 RD Bench Ticket, ticket_status=Draft, part_cost=$100.00, part_markup=25%, part_quantity=2, part_price=$125.00, part_actions=Edit Delete, parts_table_total_row_1=Total (price × quantity), parts_table_total_row_2=$250.00.",
+      "values": {
+        "part_name": "rgrd1main-n2 RD Part A",
+        "screenshot": "/root/.sitelooper/sessions/rgrd1main-n2/screenshots/shot-1789935206726.jpg",
+        "session_ref": "rgrd1main-n2",
+        "ticket_reference": "RD-1017",
+        "ticket_title": "rgrd1main-n2 RD Bench Ticket",
+        "ticket_status": "Draft",
+        "part_cost": "$100.00",
+        "part_markup": "25%",
+        "part_quantity": "2",
+        "part_price": "$125.00",
+        "part_actions": "Edit Delete",
+        "parts_table_total_row_1": "Total (price × quantity)",
+        "parts_table_total_row_2": "$250.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "19/19",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "part_supplier"
+      ]
+    },
+    {
+      "id": "03-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_da98d7; observed screenshot=/root/.sitelooper/sessions/rgrd1main-n2/screenshots/shot-1789935206726.jpg, session_ref=rgrd1main-n2, ticket_reference=RD-1017, ticket_title=rgrd1main-n2 RD Bench Ticket, ticket_status=Draft, part_name=rgrd1main-n2 RD Part A, part_cost=$200.00, part_markup=25%, part_quantity=2, part_price=$250.00, part_actions=Edit Delete, parts_table_total_row_1=Total (price × quantity), parts_table_total_row_2=$750.00.",
+      "values": {
+        "screenshot": "/root/.sitelooper/sessions/rgrd1main-n2/screenshots/shot-1789935206726.jpg",
+        "session_ref": "rgrd1main-n2",
+        "ticket_reference": "RD-1017",
+        "ticket_title": "rgrd1main-n2 RD Bench Ticket",
+        "ticket_status": "Draft",
+        "part_name": "rgrd1main-n2 RD Part A",
+        "part_cost": "$200.00",
+        "part_markup": "25%",
+        "part_quantity": "2",
+        "part_price": "$250.00",
+        "part_actions": "Edit Delete",
+        "parts_table_total_row_1": "Total (price × quantity)",
+        "parts_table_total_row_2": "$750.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "19/19",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-find",
+      "status": "success",
+      "summary": "Used the \"Edit\" action on the 'rgrd1main-n2 RD Bench Ticket RD Part A' row of the Parts table on ticket RD-1017, changed Cost from 100 to 150 (markup 25, qty 2 and supplier left untouched) and saved. The table refreshed and I read the row from the live DOM: Name \"rgrd1main-n2 RD Bench Ticket RD Part A\", Cost \"$150.00\", Markup \"25%\", Qty \"2\", Supplier \"Bench Supplies Ltd\", Price \"$187.50\" (150 × 1.25). The table's total row is now \"Total (price × quantity)\" = \"$875.00\" (375.00 + 500.00).",
+      "values": {
+        "screenshot": "/root/.sitelooper/sessions/rgrd1main-n2/screenshots/shot-1789935298119.jpg",
+        "parts_table_after_edit": "NAME\tCOST\tMARKUP\tQTY\tSUPPLIER\tPRICE\tACTIONS\nrgrd1main-n2 RD Part A\t$150.00\t25%\t2\tBench Supplies Ltd\t$187.50\tEdit Delete\nrgrd1main-n2 RD Part B\t$200.00\t25%\t2\tBench Supplies Ltd\t$250.00\tEdit Delete\nTotal (price × quantity)\t$875.00\t",
+        "ticket_reference": "RD-1017",
+        "ticket_title": "rgrd1main-n2 RD Bench Ticket",
+        "ticket_status": "Draft",
+        "edited_part_name": "rgrd1main-n2 RD Part A",
+        "edited_part_cost": "$150.00",
+        "edited_part_markup": "25%",
+        "edited_part_qty": "2",
+        "edited_part_supplier": "Bench Supplies Ltd",
+        "edited_part_price": "$187.50",
+        "edited_part_actions": "Edit Delete",
+        "other_part_row": "rgrd1main-n2 RD Part B\t$200.00\t25%\t2\tBench Supplies Ltd\t$250.00\tEdit Delete",
+        "parts_table_total_row": "Total (price × quantity)\t$875.00\t",
+        "session_ref": "rgrd1main-n2 RD Bench Ticket"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-report",
+      "status": "success",
+      "summary": "Clicked \"Mark Ready\" on ticket RD-1017 (http://127.0.0.1:4180/#/tickets/t15). The app did NOT refuse: no dialog and no error/validation message appeared, and the Status on the live page changed from \"Mark Draft\" to \"Ready\" (verified by reading the Status value: \"Ready\"). The action buttons changed accordingly from \"Mark Ready\" to \"Mark Mark Draft\" + \"Mark Closed\". Final status: Ready.",
+      "values": {
+        "observed_status_options": "Draft, Ready, Closed",
+        "screenshot": "/root/.sitelooper/sessions/rgrd1main-n2/screenshots/shot-1789935319890.jpg",
+        "status_after": "Ready",
+        "ticket_reference": "RD-1017",
+        "ticket_title": "rgrd1main-n2 RD Bench Ticket",
+        "parts_count_at_time_of_transition": "2",
+        "parts_table_total_at_time_of_transition": "$875.00",
+        "buttons_after_1": "Mark Draft",
+        "buttons_after_2": "Mark Closed",
+        "buttons_after_3": "Archive ticket",
+        "status_before": "Mark Draft"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "06-change",
+      "status": "success",
+      "summary": "Replayed stored procedure s_dcb7ec; observed probe_error_alert_body=A ticket needs at least one part before it can be marked Ready, screenshot=/root/.sitelooper/sessions/rgrd1main-n2/screenshots/shot-1789935406336.jpg, session_ref=rgrd1main-n2, probe_error_message_verbatim=Ticket is not ready\n\nA ticket needs at least one part before it can be marked Ready, probe_ticket_status_before_attempt=Draft, original_ticket_ref=RD-1017, original_ticket_title=rgrd1main-n2 RD Bench Ticket, original_ticket_status_after_reload=Ready, probe_ticket_title=rgrd1main-n2 RD Precondition Probe, original_ticket_buttons_after_reload_1=Mark Draft, original_ticket_buttons_after_reload_2=Mark Closed, original_ticket_buttons_after_reload_3=Archive ticket.",
+      "values": {
+        "probe_error_alert_body": "A ticket needs at least one part before it can be marked Ready",
+        "screenshot": "/root/.sitelooper/sessions/rgrd1main-n2/screenshots/shot-1789935406336.jpg",
+        "session_ref": "rgrd1main-n2",
+        "probe_error_message_verbatim": "Ticket is not ready\n\nA ticket needs at least one part before it can be marked Ready",
+        "probe_ticket_status_before_attempt": "Draft",
+        "original_ticket_ref": "RD-1017",
+        "original_ticket_title": "rgrd1main-n2 RD Bench Ticket",
+        "original_ticket_status_after_reload": "Ready",
+        "probe_ticket_title": "rgrd1main-n2 RD Precondition Probe",
+        "original_ticket_buttons_after_reload_1": "Mark Draft",
+        "original_ticket_buttons_after_reload_2": "Mark Closed",
+        "original_ticket_buttons_after_reload_3": "Archive ticket"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "18/18",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "probe_ticket_ref",
+        "probe_ticket_deleted_or_archived"
+      ]
+    },
+    {
+      "id": "07-delete",
+      "status": "success",
+      "summary": "Replayed stored procedure s_57626c; observed ticket_reference=RD-1017, ticket_title=rgrd1main-n2 RD Bench Ticket, parts_before=2 (rgrd1main-n2 RD Part A $150.00/25%/2/$187.50; rgrd1main-n2 RD Part B $200.00/25%/2/$250.00; total $875.00), archive_visible_effect=header button changed from 'Archive ticket' to 'Unarchive ticket'; 'Archived' badge appeared in the header, status_before_archive=Ready, status_after_archive=Ready (unchanged; archive is a separate flag), active_list_search_result_showarchived_checked=RD-1017 | rgrd1main-n2 RD Bench Ticket (Archived) | Bench Test Customer | Ready | 0 | 2026-09-20, screenshot_empty_parts=/root/.sitelooper/sessions/rgrd1main-n2/screenshots/shot-1789935548355.jpg, screenshot_archived_detail=/root/.sitelooper/sessions/rgrd1main-n2/screenshots/shot-1789935553150.jpg, screenshot_list_archived=/root/.sitelooper/sessions/rgrd1main-n2/screenshots/shot-1789935561654.jpg, session_ref=rgrd1main-n2, part_a_delete_dialog_verbatim=Delete the part \"rgrd1main-n2 RD Part A\" from this ticket? This cannot be undone., part_b_delete_dialog_verbatim=Delete the part \"rgrd1main-n2 RD Part B\" from this ticket? This cannot be undone..",
+      "values": {
+        "ticket_reference": "RD-1017",
+        "ticket_title": "rgrd1main-n2 RD Bench Ticket",
+        "parts_before": "2 (rgrd1main-n2 RD Part A $150.00/25%/2/$187.50; rgrd1main-n2 RD Part B $200.00/25%/2/$250.00; total $875.00)",
+        "archive_visible_effect": "header button changed from 'Archive ticket' to 'Unarchive ticket'; 'Archived' badge appeared in the header",
+        "status_before_archive": "Ready",
+        "status_after_archive": "Ready (unchanged; archive is a separate flag)",
+        "active_list_search_result_showarchived_checked": "RD-1017 | rgrd1main-n2 RD Bench Ticket (Archived) | Bench Test Customer | Ready | 0 | 2026-09-20",
+        "screenshot_empty_parts": "/root/.sitelooper/sessions/rgrd1main-n2/screenshots/shot-1789935548355.jpg",
+        "screenshot_archived_detail": "/root/.sitelooper/sessions/rgrd1main-n2/screenshots/shot-1789935553150.jpg",
+        "screenshot_list_archived": "/root/.sitelooper/sessions/rgrd1main-n2/screenshots/shot-1789935561654.jpg",
+        "session_ref": "rgrd1main-n2",
+        "part_a_delete_dialog_verbatim": "Delete the part \"rgrd1main-n2 RD Part A\" from this ticket? This cannot be undone.",
+        "part_b_delete_dialog_verbatim": "Delete the part \"rgrd1main-n2 RD Part B\" from this ticket? This cannot be undone."
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "08-open",
+      "status": "success",
+      "summary": "This run's probe ticket is RD-1018 ('rgrd1main-n2 RD Precondition Probe'), not the recorded RD-1016 — I found it by searching the Tickets list. Archiving on its detail view was accepted: no dialog and no error appeared, the header button flipped from 'Archive ticket' to 'Unarchive ticket', and the list row gained an 'Archived' badge (status remained Draft, 0 parts). Back on the Tickets list, searching 'rgrd1main-n2' with 'Show archived' UNCHECKED returned \"No tickets match the current filters.\" (i.e. no active ticket from this run); with 'Show archived' CHECKED, \"Showing 1–2 of 2\": RD-1018 rgrd1main-n2 RD Precondition Probe [Archived] | Not recorded | Draft | 0 | 2026-09-20 and RD-1017 rgrd1main-n2 RD Bench Ticket [Archived] | Bench Test Customer | Ready | 0 | 2026-09-20.",
+      "values": {
+        "probe_ticket_reference": "RD-1018",
+        "probe_ticket_title": "rgrd1main-n2 RD Precondition Probe",
+        "probe_archive_visible_effect": "header 'Archive ticket' → 'Unarchive ticket'; row badge 'Archived'",
+        "probe_status_after_archive": "Draft",
+        "archive_dialog_or_error": "none (no dialog, no error message)",
+        "search_rgrd1main-n2_showarchived_unchecked": "No tickets match the current filters. (0 rows)",
+        "search_rgrd1main-n2_showarchived_checked": "Showing 1–2 of 2",
+        "checked_row_1": "RD-1018 | rgrd1main-n2 RD Precondition Probe [Archived] | Not recorded | Draft | 0 | 2026-09-20",
+        "checked_row_2": "RD-1017 | rgrd1main-n2 RD Bench Ticket [Archived] | Bench Test Customer | Ready | 0 | 2026-09-20",
+        "active_tickets_from_this_run": "none",
+        "screenshot_probe_before_archive": "/root/.sitelooper/sessions/rgrd1main-n2/shot-probe-before-archive.jpg",
+        "screenshot_list_no_active": "/root/.sitelooper/sessions/rgrd1main-n2/shot-list-no-active.jpg",
+        "screenshot_list_showarchived": "/root/.sitelooper/sessions/rgrd1main-n2/shot-list-showarchived.jpg",
+        "ref": "rgrd1main-n2",
+        "ref_2": "RD-1016",
+        "ref_3": "RD-1017"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 06-change.probe_ticket_ref, 06-change.probe_ticket_deleted_or_archived, 06-change.probe_ticket_deleted_or_archived, 06-change.probe_ticket_ref",
+      "replayed": "2/2",
+      "repaired": false,
+      "turns": 19,
+      "unreported": [
+        "probe_ticket_ref",
+        "probe_status_before_archive",
+        "search_term",
+        "screenshots",
+        "tickets_list_no_active_m",
+        "tickets_list_with_archiv",
+        "original_ticket_reference"
+      ]
+    }
+  ],
+  "passed": 8,
+  "total": 8,
+  "repinned": 0,
+  "drift": 2,
+  "driftTickets": [
+    {
+      "flow": "rgrd1main",
+      "step": "03-add",
+      "skill": "s_da98d7",
+      "atStep": "11",
+      "key": "target",
+      "similarity": 0.859,
+      "missedLocator": "page.locator('section > div > table > tbody > tr > td:nth-of-type(1)')",
+      "fallbackUsed": "page.locator('[data-testid=\"part-row-p18\"] td').nth(0)",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    },
+    {
+      "flow": "rgrd1main",
+      "step": "08-open",
+      "skill": "s_051d07",
+      "similarity": 0.966,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 06-change.probe_ticket_ref, 06-change.probe_ticket_deleted_or_archived, 06-change.probe_ticket_deleted_or_archived, 06-change.probe_ticket_ref",
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t16"
+    }
+  ],
+  "wallMs": 85190,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 278710,
+    "completionTokens": 4506,
+    "cachedTokens": 257152
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 278710,
+      "completionTokens": 4506,
+      "cachedTokens": 257152
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
