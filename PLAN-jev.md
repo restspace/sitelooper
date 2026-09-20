@@ -1099,3 +1099,28 @@ round trip, and what the model is doing is choosing WHEN and WHERE to look.
   instruction names only to avoid ("do not touch … 'Seed:'") is not looked for.
   Before default-on: one four-app cloud flow sweep with SITELOOPER_EVIDENCE=on (Odoo and
   Grafana have not seen it at all).
+
+### Evidence reads — full Odoo and Grafana flow sweeps (df2e775; on then off on the same box, k=3 each)
+
+| app | arm | recording | replay 1 | replay 2 | looks / labelled reads | verify-artifacts |
+|---|---|---|---|---|---|---|
+| Odoo evod1 | on | 6/6, 108 calls, 272s, $0.12 | 6/6, 7/7, **18 model turns** | 6/6, 7/7, **8 model turns** | 47 / 0 | not-republished x3, **8 nav targets carry a run value** |
+| Odoo evod1 | off | 6/6, 86 calls, 236s, $0.08 | 6/6, 7/7, 0 turns | 6/6, 7/7, 0 turns | 38 / 23 | not-republished x4 |
+| Grafana evgr1 | on | 6/6, 171 calls, 648s, $0.12 | 6/6, 6/6, 0 turns | 6/6, 6/6, 0 turns | 67 / 5 | 1 nav target |
+| Grafana evgr1 | off | 6/6, 157 calls, 691s, $0.37 | 6/6, 7/7, 0 turns | 6/6, 7/7, 0 turns | 57 / 31 | 1 nav target, 4 positional steps |
+
+Every run of both apps verified 6/6. But evidence reads bought nothing on either: more model
+calls and more looks in both `on` recordings (n=1 per arm, so within recording variance, but
+certainly no saving), while the model's labelled reads collapsed (23 -> 0, 31 -> 5).
+Odoo's `on` replays paid model recovery on the last step. Cause, from the trace: that
+recording's final instruction wandered and navigated by `goto` to URLs the model worked out
+(`…model=sale.order&view_type=form&id=21`, three times) — prompt rule 2 forbids it, nothing
+enforces it — so the compiled step's first URL expectation did not hold on replay. Not
+provably caused by the evidence block; not cleared either.
+
+**Verdict on §5.3 as built:** Kanboard -14% calls / -26% looks (8 pairs); RepairDesk neutral;
+Grafana neutral; Odoo no gain and a worse recording. Not a default. Keep behind
+SITELOOPER_EVIDENCE=on. What the sweeps argue for instead is the strict-UI `goto` guard
+(refuse a goto to a URL the instruction/briefing does not state): worked-out-URL navigation
+shows up in Kanboard (12 gotos/4 runs), Odoo (this failure) and Grafana (5-8 gotos per
+recording, and the "navigation target carries a run value" artifact failure in both arms).
