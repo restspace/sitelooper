@@ -5,7 +5,7 @@ import { AnthropicProvider, OpenAICompatProvider, resolveProviderConfig, type Pr
 import { buildSystemOne, resolveSystemOneConfig, type SystemOne } from '../agent/system-one.js';
 import { runEscalatingInstruction, type InstructionResult, type LoopActor, type SkillRecord } from '../agent/loop.js';
 import { executeTool } from '../agent/tools.js';
-import { urlPattern as compiledUrlPattern, dropAbsentReadLocators, dropDeadReadLocators, fillParams, markReadsProven, stranded, urlParts } from '../skills/compile.js';
+import { urlPattern as compiledUrlPattern, dropAbsentReadLocators, dropDeadReadLocators, fillParams, markReadsProven, stranded, urlMatches, urlParts } from '../skills/compile.js';
 import type { DriftTicket } from '../skills/repair.js';
 import type { Page } from 'playwright-core';
 import { agentGesturesOutsideReplay, bindSkill, canAdoptPin, decideRepin, learnFromInstruction, matchTemplate, pinStatus, publishedOutputs, selectCandidates, synthesizeReport } from '../skills/learn.js';
@@ -19,7 +19,7 @@ import { triageSession } from '../skills/triage-jev.js';
 import { inlineHealer } from '../skills/heal-jev.js';
 import { actorShadow, type ActorShadow } from '../agent/actor-jev.js';
 import { actingActor } from '../agent/actor-act.js';
-import { bindParaphrase, eligibleSkills, type MatchSkill, type PickLiteral } from '../skills/paraphrase.js';
+import { bindParaphrase, concreteStart, eligibleSkills, type MatchSkill, type PickLiteral } from '../skills/paraphrase.js';
 import { jevMatchSkill, jevPickLiteral } from '../skills/paraphrase-jev.js';
 import { readBackDecider } from '../agent/readback-jev.js';
 import type { ReadBackDecider } from '../agent/readback.js';
@@ -328,11 +328,12 @@ ${describeLeaks(leaks.slice(0, 6))}`);
     instruction: string,
     url: string,
     progress: (m: string) => void,
+    anywhere = false,
   ): Promise<{ skill: import('../skills/store.js').Skill; params: Record<string, string> } | null> {
     const matcher = this.paraphraseMatcher();
     if (!matcher) return null;
     const started = Date.now();
-    const eligible = eligibleSkills(skills, url);
+    const eligible = eligibleSkills(skills, url, anywhere);
     const skill = eligible.length ? await matcher.match({ instruction, skills: eligible }, {}) : null;
     if (!skill) return null;
     const bound = await bindParaphrase(skill, instruction, this.knownValues(), matcher.pick);
@@ -2134,10 +2135,22 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
     // selection is by the store's own lifecycle (validated > success rate >
     // experience), so a fragile pin cannot dominate the step run after run.
     let candidates: { skill: import('../skills/store.js').Skill; params: Record<string, string> }[];
+    const startNav = process.env.SITELOOPER_START_NAV === 'on';
     if (chosen) {
       candidates = selectCandidates(store.list(origin), chosen.id, instruction, chosen.params, this.knownValues());
     } else {
-      const m = matchTemplate(store.list(origin), instruction, url, this.knownValues()) ?? (await this.matchReworded(store.list(origin), instruction, url, progress));
+      const skills = store.list(origin);
+      let m = matchTemplate(skills, instruction, url, this.knownValues());
+      // SITELOOPER_START_NAV=on: a skill that starts on a CONCRETE page is eligible from
+      // anywhere (paraphrase.ts concreteStart) — tried as if the browser stood there, and
+      // navigated to below only if it is the one chosen.
+      if (!m && startNav) {
+        for (const start of new Set(skills.map(concreteStart).filter((s): s is string => Boolean(s)))) {
+          m = matchTemplate(skills, instruction, start, this.knownValues());
+          if (m) break;
+        }
+      }
+      m ??= await this.matchReworded(skills, instruction, url, progress, startNav);
       candidates = m ? [m] : [];
     }
     if (!candidates.length) return { why: chosen ? `the pinned skill ${chosen.id} bound no params for this instruction` : 'no validated skill matched the instruction and page' };
@@ -2148,6 +2161,17 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
     let wrongRecord: string | undefined;
     let pinPast = false;
     const refusals: string[] = [];
+    // The chosen skill starts elsewhere: go to its own recorded start page first. The move is
+    // recorded inside this instruction's group, and undone below if the skill then refuses.
+    let movedFrom: string | null = null;
+    const head = !chosen ? candidates[0]?.skill : undefined;
+    const startAt = head && !urlMatches(head.preconditions.urlPattern, url) ? concreteStart(head) : null;
+    if (startAt) {
+      progress(`[skill] ${head!.id} starts on ${startAt}; going there first`);
+      const moved = await executeTool(this.browser, 'goto', { url: startAt }, screenshotDir, signal);
+      if (moved.isError) return { why: `could not reach ${head!.id}'s start page ${startAt}` };
+      movedFrom = url;
+    }
     for (const cand of candidates) {
       if (attempts >= MAX_CANDIDATE_ATTEMPTS) break;
       progress(`[skill] trying ${cand.skill.id} (${cand.skill.status}, ${cand.skill.stats.successes}/${cand.skill.stats.uses}) without the model`);
@@ -2190,6 +2214,8 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       break; // partial: the page has changed — hand what ran to recovery, never restart another candidate
     }
     if (!match || !replay) {
+      // Nothing ran: put the browser back where the caller left it before the model takes over.
+      if (movedFrom) await executeTool(this.browser, 'goto', { url: movedFrom }, screenshotDir, signal).catch(() => null);
       const why = refusals.length ? `every candidate refused — ${refusals.join('; ')}` : 'no candidate ran';
       return withVariance({ ...(wrongRecord ? { wrongRecord } : {}), ...(pinPast ? { pinPast } : {}), why });
     }

@@ -58,9 +58,35 @@ export interface ContestQuery {
 /** Which of several plausible literals fills a blank, or null. */
 export type PickLiteral = Decider<ContestQuery, TaskValue>;
 
-/** Skills a zero-model path may run here: verified, a chain's head, and starting on this page. */
-export function eligibleSkills(skills: readonly Skill[], url: string): Skill[] {
-  return skills.filter((s) => isVerified(s) && !(s.seq && s.seq.index > 0) && urlMatches(s.preconditions.urlPattern, url));
+/**
+ * A start pattern that is itself an ADDRESS: no record id, no slot, no wildcard.
+ *
+ * A skill replays only from the page its recording started on, and where an instruction
+ * starts is an accident of where the last one ended: across 18 RepairDesk stores "add a part"
+ * was recorded from the tickets list 11 times and from the ticket's page 11 times
+ * (bench/start-page-spread.mjs), so a stored skill is ineligible half the time for a reason
+ * that has nothing to do with what it does. A skill whose start page is concrete can be run
+ * from anywhere by going to that recorded address first — what a flow already does for its
+ * own start. A pattern carrying a record id cannot: the address does not say WHICH record.
+ */
+export function concreteStart(skill: Skill): string | null {
+  const pattern = skill.preconditions.urlPattern;
+  if (!pattern || /:[A-Za-z]|\{\{|\*/.test(pattern.replace(/^https?:/i, ''))) return null;
+  try {
+    return new URL(pattern).href;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Skills a zero-model path may run here: verified, a chain's head, and starting on this
+ * page — or, with `anywhere`, on a concrete page that can be navigated to first.
+ */
+export function eligibleSkills(skills: readonly Skill[], url: string, anywhere = false): Skill[] {
+  return skills.filter(
+    (s) => isVerified(s) && !(s.seq && s.seq.index > 0) && (urlMatches(s.preconditions.urlPattern, url) || (anywhere && concreteStart(s) !== null)),
+  );
 }
 
 export type ValueShape = 'url' | 'email' | 'number' | 'date' | 'code' | 'text';

@@ -68,3 +68,26 @@ describe('binding a reworded instruction', () => {
     expect(out).toEqual({ refused: expect.stringContaining('states no number') });
   });
 });
+
+import { concreteStart, eligibleSkills } from '../src/skills/paraphrase.js';
+
+describe('a skill that starts on a concrete page can be reached from anywhere', () => {
+  const at = (urlPattern: string) => ({ ...addPart, preconditions: { urlPattern }, stats: { uses: 2, successes: 2, verifiedContract: 1 } }) as unknown as Skill;
+
+  it('knows an address from a pattern that needs a record', () => {
+    expect(concreteStart(at('http://127.0.0.1:4180/#/tickets'))).toBe('http://127.0.0.1:4180/#/tickets');
+    expect(concreteStart(at('http://127.0.0.1:4180/#/tickets/:id'))).toBeNull();
+    expect(concreteStart(at('http://127.0.0.1:4180/#/tickets/{{v4}}'))).toBeNull();
+    expect(concreteStart(at('http://127.0.0.1:8069/web#action=:id&model=sale.order'))).toBeNull();
+  });
+
+  it('is only offered from elsewhere when asked to be', () => {
+    const list = at('http://127.0.0.1:4180/#/tickets');
+    const detail = at('http://127.0.0.1:4180/#/tickets/:id');
+    const here = 'http://127.0.0.1:4180/#/tickets/t15';
+    // Verification is the store's business; this test is about the page rule alone.
+    const pages = (anywhere: boolean) => eligibleSkills([list, detail], here, anywhere).map((s) => s.preconditions.urlPattern);
+    expect(pages(false)).not.toContain('http://127.0.0.1:4180/#/tickets');
+    if (pages(true).length) expect(pages(true)).toContain('http://127.0.0.1:4180/#/tickets');
+  });
+});
