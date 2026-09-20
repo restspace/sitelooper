@@ -336,7 +336,8 @@ ${describeLeaks(leaks.slice(0, 6))}`);
     const eligible = eligibleSkills(skills, url, anywhere);
     const skill = eligible.length ? await matcher.match({ instruction, skills: eligible }, {}) : null;
     if (!skill) return null;
-    const bound = await bindParaphrase(skill, instruction, this.knownValues(), matcher.pick);
+    const chain = skill.seq ? skills.filter((s) => s.id !== skill.id && s.seq?.chain === skill.seq!.chain) : [];
+    const bound = await bindParaphrase(skill, instruction, this.knownValues(), matcher.pick, chain);
     const ms = Date.now() - started;
     if ('refused' in bound) {
       progress(`[skill] reworded instruction matched ${skill.id} but was not bound: ${bound.refused} (${ms}ms)`);

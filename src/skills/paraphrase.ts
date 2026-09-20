@@ -138,8 +138,26 @@ export interface BindingPlan {
   refused?: string;
 }
 
+/**
+ * The blanks a procedure actually USES: named anywhere in the steps, preconditions or report
+ * of the skill or of the later segments of its chain. A template slots every literal the
+ * recorded instruction happened to state — "(currently status {{v4}})" — and the exact binder
+ * fills them all for free because it reads the same wording. A reworded instruction need not
+ * state them, and jmrd1 refused a correct match 9 times over a status or a run tag that no
+ * step, precondition or report ever reads. A blank nothing uses cannot reach the page.
+ */
+export function usedSlots(skill: Skill, chain: readonly Skill[] = []): Set<string> {
+  const used = new Set<string>();
+  for (const s of [skill, ...chain]) {
+    const { template: _t, params: _p, ...body } = s as unknown as Record<string, unknown>;
+    for (const m of JSON.stringify(body).matchAll(/\{\{(v\d+)\}\}/g)) used.add(m[1]);
+    for (const [slot, p] of Object.entries(s.params)) if (p.usedIn?.length) used.add(slot);
+  }
+  return used;
+}
+
 /** Everything code can settle about a skill's blanks, and what it cannot. */
-export function planBinding(skill: Skill, instruction: string, known: Record<string, string>): BindingPlan {
+export function planBinding(skill: Skill, instruction: string, known: Record<string, string>, used?: ReadonlySet<string>): BindingPlan {
   const literals = extractValues(instruction);
   const bound: Record<string, string> = {};
   const contested: Record<string, TaskValue[]> = {};
@@ -148,6 +166,11 @@ export function planBinding(skill: Skill, instruction: string, known: Record<str
     // 1. The run's own ledger, exactly as bindSkill resolves it.
     if (p.binding && known[p.binding]) {
       bound[slot] = known[p.binding];
+      continue;
+    }
+    // 0. A blank nothing reads: its recorded value stands in, and reaches nothing.
+    if (used && !used.has(slot)) {
+      bound[slot] = p.example;
       continue;
     }
     const shape = shapeOf(p.example);
@@ -214,8 +237,10 @@ export async function bindParaphrase(
   instruction: string,
   known: Record<string, string>,
   pick?: PickLiteral,
+  /** The later segments of this skill's chain, whose steps read the same blanks. */
+  chain: readonly Skill[] = [],
 ): Promise<{ params: Record<string, string> } | { refused: string }> {
-  const plan = planBinding(skill, instruction, known);
+  const plan = planBinding(skill, instruction, known, usedSlots(skill, chain));
   if (plan.refused) return { refused: plan.refused };
   const params = { ...plan.bound };
   for (const [slot, candidates] of Object.entries(plan.contested)) {

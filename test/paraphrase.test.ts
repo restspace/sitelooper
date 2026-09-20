@@ -91,3 +91,26 @@ describe('a skill that starts on a concrete page can be reached from anywhere', 
     if (pages(true).length) expect(pages(true)).toContain('http://127.0.0.1:4180/#/tickets');
   });
 });
+
+import { usedSlots } from '../src/skills/paraphrase.js';
+
+describe('only the blanks a procedure uses have to be bound', () => {
+  const head = {
+    ...addPart,
+    template: "On ticket {{v1}} (currently status {{v6}}), add a part named '{{v3}}' with cost {{v4}} and markup {{v5}}.",
+    params: { v1: p('RD-1091', '02-create.ticket_ref'), v3: { example: 'old-n1 RD Part A', usedIn: [] }, v4: { example: '100', usedIn: [] }, v5: { example: '25', usedIn: [] }, v6: { example: 'Draft', usedIn: [] } },
+    steps: [{ tool: 'click', args: { target: '{{v1}}' } }],
+    seq: { chain: 'c1', index: 0, of: 2 },
+  } as unknown as Skill;
+  const tail = { ...head, id: 's_tail', seq: { chain: 'c1', index: 1, of: 2 }, steps: [{ tool: 'fill', args: { value: '{{v3}}' } }, { tool: 'fill', args: { value: '{{v4}}' } }, { tool: 'fill', args: { value: '{{v5}}' } }] } as unknown as Skill;
+
+  it('reads use off the whole chain, not the head alone', () => {
+    expect([...usedSlots(head)].sort()).toEqual(['v1']);
+    expect([...usedSlots(head, [tail])].sort()).toEqual(['v1', 'v3', 'v4', 'v5']);
+  });
+
+  it('does not refuse over a status the new wording leaves out and nothing reads', async () => {
+    const out = await bindParaphrase(head, "On ticket RD-1200 add the part 'new-n2 RD Part A' with cost 140 and markup 30.", { '02-create.ticket_ref': 'RD-1200' }, undefined, [tail]);
+    expect(out).toEqual({ params: { v1: 'RD-1200', v3: 'new-n2 RD Part A', v4: '140', v5: '30', v6: 'Draft' } });
+  });
+});

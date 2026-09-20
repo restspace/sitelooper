@@ -105,15 +105,19 @@ console.error(`[fixed] reset ${target}`);
 const started = Date.now();
 const rows = [];
 let liveRef = null;
+// The REPORT only: with --progress the output also carries every page the agent looked at, seed records included.
+const reportOf = (out) => { const at = out.search(/^\[(OK|FAIL|BLOCKED)\]/m); return at < 0 ? '' : out.slice(at); };
 for (const [i, recorded] of instructions.entries()) {
   const text = LIVE_REFS && liveRef && REF_SHAPE[target] ? recorded.replace(REF_SHAPE[target], liveRef) : recorded;
   const at = Date.now();
-  const r = run(['do', text, '--session', runid, '--timeout', '600', '--max-turns', '40']);
+  const r = run(['do', text, '--session', runid, '--timeout', '600', '--max-turns', '40', '--progress']);
   const out = `${r.stdout ?? ''}${r.stderr ?? ''}`;
   // This run's own reference: the first one an instruction reports that the recorded text did not carry.
-  if (LIVE_REFS && !liveRef && REF_SHAPE[target]) liveRef = out.match(REF_SHAPE[target])?.find((ref) => !recorded.includes(ref)) ?? null;
+  if (LIVE_REFS && !liveRef && REF_SHAPE[target]) liveRef = reportOf(out).match(REF_SHAPE[target])?.find((ref) => !recorded.includes(ref)) ?? null;
   const status = /^\[(OK|FAIL|BLOCKED)\]/m.exec(out)?.[1] ?? (/LLM HTTP/.test(out) ? 'HTTP-ERROR' : 'UNKNOWN');
-  rows.push({ n: i + 1, status, s: +((Date.now() - at) / 1000).toFixed(1), ...(status === 'OK' ? {} : { out: out.slice(0, 400) }) });
+  // The [skill] progress lines say whether an instruction was replayed, refused or handed to the model.
+  const skill = out.split('\n').filter((l) => l.includes('[skill]')).map((l) => l.trim().slice(0, 300));
+  rows.push({ n: i + 1, status, s: +((Date.now() - at) / 1000).toFixed(1), skill, ...(status === 'OK' ? {} : { out: out.slice(0, 400) }) });
   console.error(`[fixed] ${i + 1}/${instructions.length} ${status} ${rows.at(-1).s}s`);
 }
 run(['stop', '--session', runid]);
