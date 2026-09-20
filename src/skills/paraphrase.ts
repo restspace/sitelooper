@@ -112,6 +112,19 @@ export function resemblance(a: string, b: string): number {
   return shared / (A.size + B.size - shared || 1);
 }
 
+/** A value's character pattern: runs of capitals, lower case and digits, punctuation kept. */
+export function patternOf(value: string): string {
+  return String(value).replace(/[A-Z]+/g, 'A').replace(/[a-z]+/g, 'a').replace(/\d+/g, '9');
+}
+
+/** Tokens that occur in more than one of these texts. */
+function sharedTokens(texts: readonly string[]): Set<string> {
+  const count = new Map<string, number>();
+  for (const t of texts) for (const tok of tokens(t)) count.set(tok, (count.get(tok) ?? 0) + 1);
+  return new Set([...count].filter(([, n]) => n > 1).map(([tok]) => tok));
+}
+const distinctive = (value: string, shared: ReadonlySet<string>): Set<string> => new Set([...tokens(value)].filter((t) => !shared.has(t)));
+
 /** The word standing before a blank in the template: `cost {{v5}}` → "cost". */
 function cueOf(template: string, slot: string): string | undefined {
   return new RegExp(`([A-Za-z]+)[\\s:=('"]*\\{\\{${slot}\\}\\}`).exec(template)?.[1]?.toLowerCase();
@@ -162,6 +175,29 @@ export function planBinding(skill: Skill, instruction: string, known: Record<str
   const bound: Record<string, string> = {};
   const contested: Record<string, TaskValue[]> = {};
   const unstated: Record<string, string> = {};
+  const sharedAcrossBlanks = sharedTokens(Object.values(skill.params).map((x) => x.example));
+  /**
+   * A value the instruction does not state but THIS RUN already produced. A recorded binding
+   * names the ledger key of the run that made the recording ('output:i2:ticket_title'); a new
+   * session's keys are its own model's labels, so the key misses even though the run knows the
+   * value. The ledger is therefore also searched by VALUE, under the same tests a literal must
+   * pass — and only a single hit counts: the ledger is never put to a decider.
+   */
+  const ledger = [...new Set(Object.values(known))];
+  const fromLedger = (slot: string, example: string): boolean => {
+    const shape = shapeOf(example);
+    const mine = distinctive(example, sharedAcrossBlanks);
+    const hits = ledger.filter((v) => {
+      if (shapeOf(v) !== shape) return false;
+      if (shape === 'code') return patternOf(v) === patternOf(example);
+      if (shape !== 'text') return false;
+      const theirs = tokens(v);
+      return mine.size > 0 && [...mine].some((t) => theirs.has(t));
+    });
+    if (hits.length !== 1) return false;
+    bound[slot] = hits[0];
+    return true;
+  };
   for (const [slot, p] of Object.entries(skill.params)) {
     // 1. The run's own ledger, exactly as bindSkill resolves it.
     if (p.binding && known[p.binding]) {
@@ -176,7 +212,7 @@ export function planBinding(skill: Skill, instruction: string, known: Record<str
     const shape = shapeOf(p.example);
     const same = literals.filter((l) => shapeOf(l.text) === shape);
     if (!same.length) {
-      unstated[slot] = `{{${slot}}} (recorded as ${JSON.stringify(p.example)}): the instruction states no ${shape}`;
+      if (!fromLedger(slot, p.example)) unstated[slot] = `{{${slot}}} (recorded as ${JSON.stringify(p.example)}): the instruction states no ${shape}`;
       continue;
     }
     let plausible: TaskValue[];
@@ -184,16 +220,32 @@ export function planBinding(skill: Skill, instruction: string, known: Record<str
       // These never resemble one another token-wise: the template's cue word, or being alone.
       const cued = byCue(skill.template, slot, instruction, same);
       plausible = cued.length ? cued : same;
-    } else {
-      const ranked = same.map((l) => ({ l, s: resemblance(l.text, p.example) })).filter((r) => r.s > 0).sort((a, b) => b.s - a.s);
-      if (!ranked.length) {
-        unstated[slot] = `{{${slot}}} (recorded as ${JSON.stringify(p.example)}): nothing the instruction states resembles it`;
+    } else if (shape === 'code') {
+      // A reference has no words to compare: it must be PATTERNED like the recorded one
+      // (RD-1090 ~ RD-1091, not ~ a run tag like fwrdev2-n1 — both are "a token with a digit").
+      plausible = same.filter((l) => patternOf(l.text) === patternOf(p.example));
+      if (!plausible.length) {
+        if (!fromLedger(slot, p.example)) unstated[slot] = `{{${slot}}} (recorded as ${JSON.stringify(p.example)}): nothing the instruction states is patterned like it`;
         continue;
       }
-      plausible = ranked.filter((r) => r.s === ranked[0].s).map((r) => r.l);
-      // Several that resemble it AT ALL are rivals even when one resembles it more:
-      // overlap follows the recording, and the instruction may mean the other one.
-      if (ranked.length > 1 && !p.binding) plausible = ranked.map((r) => r.l);
+    } else {
+      // Resemblance on what is DISTINCTIVE about the recorded value. Tokens shared across the
+      // skill's own blanks (a run tag, an app prefix) say nothing about which role a value
+      // plays, so they are dropped from the RECORDED side. The literals are compared whole:
+      // 'Part A' and 'Part B' both carry "part", so both stay in the running and the decider
+      // chooses — overlap follows the recording, and the instruction may mean the other one.
+      // jmrd2 (live): without this a ticket-title blank the instruction did not state was about
+      // to be given the only text literal present, a part name, on "RD" and the run tag.
+      const mine = distinctive(p.example, sharedAcrossBlanks);
+      if (!mine.size) return { bound, contested, unstated, refused: `{{${slot}}} (recorded as ${JSON.stringify(p.example)}) has nothing distinctive to be recognised by` };
+      plausible = same.filter((l) => {
+        const theirs = tokens(l.text);
+        return [...mine].some((t) => theirs.has(t));
+      });
+      if (!plausible.length) {
+        if (!fromLedger(slot, p.example)) unstated[slot] = `{{${slot}}} (recorded as ${JSON.stringify(p.example)}): nothing the instruction states resembles it`;
+        continue;
+      }
     }
     if (plausible.length === 1) bound[slot] = plausible[0].text;
     else if (p.binding) return { bound, contested, unstated, refused: `{{${slot}}} is a session value the run has not produced, and the instruction does not single it out` };

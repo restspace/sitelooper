@@ -63,6 +63,19 @@ describe('binding a reworded instruction', () => {
     expect(await bindParaphrase(odd, reworded, ledger)).toHaveProperty('refused');
   });
 
+  it('does not give a title blank the only text literal around, a part name', async () => {
+    // jmrd2, live: the ledger had no title, the instruction stated none, and "RD" plus the run tag
+    // were all the part name shared with the recorded title.
+    const out = await bindParaphrase(addPart, "On ticket RD-1200 add the part 'old-n1 RD Part A' with cost 140 and markup 30.", { '02-create.ticket_ref': 'RD-1200' });
+    expect(out).toEqual({ refused: expect.stringContaining('{{v2}}') });
+  });
+
+  it('tells a reference from a run tag by its pattern', async () => {
+    const tagged = { ...addPart, params: { ...addPart.params, v1: p('RD-1091') } } as typeof addPart;
+    const plan = planBinding(tagged, "For run new-n2, on ticket RD-1200 add the part 'new-n2 RD Part A' with cost 140 and markup 30.", ledger);
+    expect(plan.bound.v1).toBe('RD-1200');
+  });
+
   it('refuses when the instruction states nothing of a blank\'s shape', async () => {
     const out = await bindParaphrase(addPart, "On ticket RD-1200 add the part 'new-n2 RD Part A'.", ledger);
     expect(out).toEqual({ refused: expect.stringContaining('states no number') });
@@ -112,5 +125,15 @@ describe('only the blanks a procedure uses have to be bound', () => {
   it('does not refuse over a status the new wording leaves out and nothing reads', async () => {
     const out = await bindParaphrase(head, "On ticket RD-1200 add the part 'new-n2 RD Part A' with cost 140 and markup 30.", { '02-create.ticket_ref': 'RD-1200' }, undefined, [tail]);
     expect(out).toEqual({ params: { v1: 'RD-1200', v3: 'new-n2 RD Part A', v4: '140', v5: '30', v6: 'Draft' } });
+  });
+});
+
+describe('a value this run already produced is found in its ledger by value', () => {
+  it('under the new session\'s own key, and only when exactly one value fits', async () => {
+    const session = { 'output:i1:new_ticket_reference': 'RD-1200', 'output:i1:new_ticket_title': 'new-n2 RD Bench Ticket' };
+    const text = "Add the part 'new-n2 RD Part A' with cost 140 and markup 30.";
+    expect(await bindParaphrase(addPart, text, session)).toEqual({ params: expect.objectContaining({ v1: 'RD-1200', v2: 'new-n2 RD Bench Ticket' }) });
+    const two = { ...session, 'output:i3:other_ticket': 'new-n2 RD Second Ticket' };
+    expect(await bindParaphrase(addPart, text, two)).toHaveProperty('refused');
   });
 });

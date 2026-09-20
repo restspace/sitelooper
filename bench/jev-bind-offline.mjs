@@ -210,6 +210,53 @@ function generic2(slot, p, h, q, literals) {
   if (ranked.length === 1 || ranked[0].s > ranked[1].s) return ranked[0].ref;
   return null;
 }
+/**
+ * --generic3: resemblance on what is DISTINCTIVE. jmrd2 (live) showed the generic2 failure
+ * about to happen for real: a ticket-title blank the instruction did not state was about to be
+ * given the only text literal present, a part name, on the tokens they share — the run tag and
+ * "RD". Those tokens are shared across the skill's OWN blanks (and across the instruction's own
+ * literals), which is exactly what marks them as not saying which role a value plays. So they
+ * are dropped from both sides before comparing. A reference-shaped token has no words to
+ * compare: it must have the same character pattern as the recorded one (RD-1090 ~ RD-1091,
+ * not ~ fwrdev2-n1).
+ */
+const GENERIC3 = argv.includes('--generic3');
+const mask = (v) => String(v).replace(/[A-Z]+/g, 'A').replace(/[a-z]+/g, 'a').replace(/\d+/g, '9');
+const sharedTokens = (texts) => {
+  const count = new Map();
+  for (const t of texts) for (const tok of rawToks(t)) count.set(tok, (count.get(tok) ?? 0) + 1);
+  return new Set([...count].filter(([, n]) => n > 1).map(([tok]) => tok));
+};
+function generic3(slot, p, h, q, literals) {
+  const ex = String(p.example ?? '');
+  const g = genericShape(ex);
+  const cands = literals.filter((l) => genericShape(l.text) === g);
+  if (!cands.length) return 'none';
+  if (g === 'number' || g === 'url' || g === 'date') {
+    if (cands.length === 1 && g !== 'number') return cands[0].ref;
+    return cueBind(slot, p, h, q, literals);
+  }
+  if (g === 'code') {
+    const same = cands.filter((l) => mask(l.text) === mask(ex));
+    return same.length === 1 ? same[0].ref : same.length ? null : 'none';
+  }
+  const dropEx = sharedTokens(Object.values(h.params).map((x) => x.example ?? ''));
+  const dropLit = sharedTokens(literals.map((l) => l.text));
+  const distinct = (v, drop) => new Set([...rawToks(v)].filter((t) => !drop.has(t)));
+  const A = distinct(ex, dropEx);
+  if (!A.size) return null; // nothing distinctive about the recorded value: not code's call
+  const scored = cands
+    .map((l) => {
+      const B = distinct(l.text, dropLit);
+      let n = 0;
+      for (const t of A) if (B.has(t)) n++;
+      return { ref: l.ref, s: n / (A.size + B.size - n || 1) };
+    })
+    .filter((r) => r.s > 0)
+    .sort((x, y) => y.s - x.s);
+  if (!scored.length) return 'none';
+  return scored.length === 1 ? scored[0].ref : null; // rivals go to Jev
+}
 function baselineFor(p, literals, codeOnly = false) {
   const ex = String(p.example ?? '');
   if (GENERIC) {
@@ -290,9 +337,9 @@ async function worker() {
       jev = { error: String(e).slice(0, 80) };
     }
     const base = Object.fromEntries(Object.entries(h.params).map(([slot, p]) => [slot, baselineFor(p, literals)]));
-    const code = Object.fromEntries(Object.entries(h.params).map(([slot, p]) => [slot, GENERIC2 ? generic2(slot, p, h, q, literals) : CUE ? cueBind(slot, p, h, q, literals) : baselineFor(p, literals, true)]));
+    const code = Object.fromEntries(Object.entries(h.params).map(([slot, p]) => [slot, GENERIC3 ? generic3(slot, p, h, q, literals) : GENERIC2 ? generic2(slot, p, h, q, literals) : CUE ? cueBind(slot, p, h, q, literals) : baselineFor(p, literals, true)]));
     // With --cue, a Jev pick must at least have the SHAPE of the value the blank was recorded with.
-    if (CUE || GENERIC2) for (const [slot, j] of Object.entries(jev)) {
+    if (CUE || GENERIC2 || GENERIC3) for (const [slot, j] of Object.entries(jev)) {
       if (!j?.pick || j.pick === 'none') continue;
       const lit = literals.find((l) => l.ref === j.pick);
       if (lit && genericShape(lit.text) !== genericShape(h.params[slot]?.example ?? '')) jev[slot] = { pick: null, confidence: 0, vetoed: true };
