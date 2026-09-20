@@ -1124,3 +1124,40 @@ SITELOOPER_EVIDENCE=on. What the sweeps argue for instead is the strict-UI `goto
 (refuse a goto to a URL the instruction/briefing does not state): worked-out-URL navigation
 shows up in Kanboard (12 gotos/4 runs), Odoo (this failure) and Grafana (5-8 gotos per
 recording, and the "navigation target carries a run value" artifact failure in both arms).
+
+## §6 Where Jev fits: replay time and compile time, not recording (2026-09-20)
+
+Verdict on "replace the inner model while recording": a dead end. Measured ceiling: actor
+-22..29% on RepairDesk, ~0 on Kanboard; a lower gate is safe there and buys nothing (the
+model batches, its turns are looks and reports, and Jev cannot track task progress); and
+recording happens ONCE — replays are already model-free. What worked (healing, 54/54) had
+four properties: a narrow question, one right answer visible, a check in code, an expensive
+alternative. Those hold at replay/compile time. Bets, ranked: (1) reworded instruction ->
+stored skill; (2) unrecorded interruptions at replay (overlays, expired sessions);
+(3) fuzzy option picking with new data; (4) compile-time pruning with replay as the oracle;
+(5) healing vs a code baseline (still owed).
+
+### Bet 1, offline: does Jev match a reworded instruction to the right stored skill?
+`bench/jev-match-offline.mjs` — 18 RepairDesk stores x 139 orchestrator instructions from
+OTHER sweeps, 600 sampled pairs, ~cents. Truth by objective-set labels (regex, audited);
+right = a procedure asking for exactly the same set, else `none` (200 of 600). Baseline =
+token Jaccard on blanked text. Two option orders must agree.
+
+| decider | gate | right skill (of 400 matchable) | correct none | wrong procedure | start-page-gated |
+|---|---|---|---|---|---|
+| Jev | 0.70 | 236 (59%) | 185 | 3* | 12 |
+| Jev | 0.80 | 200 (50%) | 191 | 3* | 6 |
+| Jev | 0.90 | 145 (36%) | 193 | 3* | 4 |
+| Jaccard | 0.30 | 248 (62%) | 155 | 28 | 26 |
+| Jaccard | 0.40 | 145 (36%) | 192 | 6 | 6 |
+| Jaccard | 0.50 | 53 (13%) | 199 | 0 | 1 |
+
+*All three are ONE instruction the regex mislabelled ("…Do NOT delete or remove the
+parts" read as a delete objective); Jev's pick (the mark-Ready procedure) was right. So
+after audit: **0 wrong procedures in 600 at >= 0.7**. "Start-page-gated" = the pick differs
+from the instruction only by signing in first, which the live matcher's urlPattern
+precondition already refuses. At equal safety (no wrong procedure) Jev matches ~50-59% of
+the matchable against the baseline's 13%. Today's word-for-word matcher would match ~0 of
+these. Lost matches: the two orders disagreed on 125 asks — a third phrasing may recover some.
+Not yet tested: binding the matched skill's slots from the reworded instruction (the exact
+binder needs the template's wording); any app but RepairDesk; a live run.
