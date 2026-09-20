@@ -1267,3 +1267,33 @@ Generic remedy worth building: a skill whose start pattern is CONCRETE (no :id, 
 e.g. /#/tickets) is eligible from anywhere, reached by navigating to its own recorded start
 url first — which is what a flow already does ("the flow establishes its own starting
 page"), and is a recorded url, not a worked-out one. That helps the exact matcher too.
+
+### Bet 1 live on cloud boxes — three runs of 3 arms x 3 rounds (RepairDesk, reworded instructions vs a validated store)
+Arms: A today's path; C Jev match + start-page navigation at gate 0.8; D the same at 0.5
+(calibration). `bench/fixed-instructions.mjs --skills … --live-refs`. **All 27 runs verified
+6/6; no wrong procedure and no wrong value was ever replayed.**
+
+| run (code) | arm | matched / asked | bound | ran without the model | wall (3 rounds) | model calls |
+|---|---|---|---|---|---|---|
+| jmrd1 (51c4a0f) | A | - | - | 0 of 6 | 137, 150, 123s | 53, 57, 52 |
+| | C | 3, 2, 3 of 5 | 0, 1, 0 | 0 | 131, 131, 149s | 44, 51, 56 |
+| | D | 4, 4, 4 of 5 | 1, 1, 2 | 1, 1, 1 | 130, 115, 145s | 42, 40, 46 |
+| jmrd3 (9445cea) | A | - | - | 0 of 6 | 142, 167, 159s | 52, 53, 55 |
+| | C | 2, 2, 3 of 5 | 0, 1, 0 | 0, 1, 0 | 176, 162, 136s | 61, 58, 50 |
+| | D | 4, 3, 4 of 5 | 1, 1, 1 | 1, 1, 1 | 173, 185, 123s | 51, 52, 38 |
+
+- The mechanism works end to end: matched -> bound (one contested blank settled by Jev at
+  1.00) -> browser taken to the skill's recorded start page -> three-segment chain replayed,
+  "add a part" in 7-8s against ~20-30s with the model. Start-page navigation lifted matching
+  at gate 0.8 from 0 of 5 to 2-3 of 5.
+- **Binding is what caps it at one instruction in six.** Every other match was refused,
+  correctly: the reworded instruction does not state a value the procedure reads (the ticket
+  title, the current status), and the session's ledger did not supply it either.
+  jmrd2's trace also caught a near-miss — a title blank about to be given a part name — which
+  9445cea closes (distinctive tokens, reference patterns, ledger lookup by value).
+- One replayed instruction saves ~15s of ~150s: invisible in wall time at n=3 (A 156s, C 158s,
+  D 160s in jmrd3). Today's path is also not "author from scratch" — the model already calls
+  `run_skill` itself on about half of these instructions.
+=> Safe, working, and small on this data. The constraint is not Jev: a stored procedure needs
+values a differently-worded instruction often omits. It pays where instructions restate
+their operands (or the session ledger carries them under stable names), not in general.
