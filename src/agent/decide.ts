@@ -60,6 +60,11 @@ export const GATES: Record<string, number> = {
   // element actions nothing the model did ever matched top out at 0.69. One
   // run, so this is a starting point for the A/B, not a calibration.
   'actor.act': 0.75,
+  // PLAN-jev §6 bet 1. match: 0 wrong procedures in 600 offline at >= 0.7 (RepairDesk);
+  // running the wrong procedure mutates a live app, so it sits at 0.8. bind: Jev's real
+  // errors on contested blanks were under 0.8 offline.
+  'match.paraphrase': 0.8,
+  'bind.contested': 0.8,
   'repair.propose': 0.85,
   // Site B. Same chooser as repair.propose, different consequence: it acts on
   // the live page with no human and no later variant review, so it is

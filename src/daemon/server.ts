@@ -19,6 +19,8 @@ import { triageSession } from '../skills/triage-jev.js';
 import { inlineHealer } from '../skills/heal-jev.js';
 import { actorShadow, type ActorShadow } from '../agent/actor-jev.js';
 import { actingActor } from '../agent/actor-act.js';
+import { bindParaphrase, eligibleSkills, type MatchSkill, type PickLiteral } from '../skills/paraphrase.js';
+import { jevMatchSkill, jevPickLiteral } from '../skills/paraphrase-jev.js';
 import { readBackDecider } from '../agent/readback-jev.js';
 import type { ReadBackDecider } from '../agent/readback.js';
 import { setInlineHealer } from '../skills/replay.js';
@@ -320,6 +322,31 @@ ${describeLeaks(leaks.slice(0, 6))}`);
     return out;
   }
 
+  /** The exact matcher found nothing: is this instruction a stored procedure in other words? */
+  private async matchReworded(
+    skills: import('../skills/store.js').Skill[],
+    instruction: string,
+    url: string,
+    progress: (m: string) => void,
+  ): Promise<{ skill: import('../skills/store.js').Skill; params: Record<string, string> } | null> {
+    const matcher = this.paraphraseMatcher();
+    if (!matcher) return null;
+    const started = Date.now();
+    const eligible = eligibleSkills(skills, url);
+    const skill = eligible.length ? await matcher.match({ instruction, skills: eligible }, {}) : null;
+    if (!skill) return null;
+    const bound = await bindParaphrase(skill, instruction, this.knownValues(), matcher.pick);
+    const ms = Date.now() - started;
+    if ('refused' in bound) {
+      progress(`[skill] reworded instruction matched ${skill.id} but was not bound: ${bound.refused} (${ms}ms)`);
+      this.state.recordSystemOneDecision({ site: 'bind.paraphrase', model: 'code', options: Object.keys(skill.params).length, chosen: null, confidence: 0, outcome: 'deferred', why: bound.refused, ms, detail: { skill: skill.id } });
+      return null;
+    }
+    progress(`[skill] reworded instruction matched ${skill.id} and bound ${Object.keys(bound.params).length} blank(s) in ${ms}ms`);
+    this.state.recordSystemOneDecision({ site: 'bind.paraphrase', model: 'code', options: Object.keys(skill.params).length, chosen: skill.id, confidence: 1, outcome: 'acted', ms, detail: { skill: skill.id, blanks: Object.keys(bound.params).join(',') } });
+    return { skill, params: bound.params };
+  }
+
   private provider(overrides: { provider?: string; model?: string; baseUrl?: string } = {}): Provider {
     return build(resolveProviderConfig(overrides));
   }
@@ -403,6 +430,23 @@ ${describeLeaks(leaks.slice(0, 6))}`);
       this.acting = s1 ? actingActor(s1, { sink: (d) => this.state.recordSystemOneDecision(d), mute: mode === 'mute' }) : null;
     }
     return this.acting ?? undefined;
+  }
+
+  /**
+   * PLAN-jev.md §6 bet 1: a REWORDED instruction matched to a validated skill and replayed
+   * without the model. An experiment, off unless SITELOOPER_JEV_MATCH=on. It runs only after
+   * the exact matcher found nothing, only among skills the exact matcher would itself accept
+   * (verified, a chain's head, starting on this page), and only when every blank binds —
+   * otherwise the model runs the instruction as it always did.
+   */
+  private paraphrase: { match: MatchSkill; pick: PickLiteral } | null | undefined;
+  private paraphraseMatcher(): { match: MatchSkill; pick: PickLiteral } | undefined {
+    if (this.paraphrase === undefined) {
+      const s1 = process.env.SITELOOPER_JEV_MATCH === 'on' ? this.systemOne() : null;
+      const sink = (d: Parameters<SessionState['recordSystemOneDecision']>[0]) => this.state.recordSystemOneDecision(d);
+      this.paraphrase = s1 ? { match: jevMatchSkill(s1, sink), pick: jevPickLiteral(s1, sink) } : null;
+    }
+    return this.paraphrase ?? undefined;
   }
 
   /**
@@ -2093,7 +2137,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
     if (chosen) {
       candidates = selectCandidates(store.list(origin), chosen.id, instruction, chosen.params, this.knownValues());
     } else {
-      const m = matchTemplate(store.list(origin), instruction, url, this.knownValues());
+      const m = matchTemplate(store.list(origin), instruction, url, this.knownValues()) ?? (await this.matchReworded(store.list(origin), instruction, url, progress));
       candidates = m ? [m] : [];
     }
     if (!candidates.length) return { why: chosen ? `the pinned skill ${chosen.id} bound no params for this instruction` : 'no validated skill matched the instruction and page' };

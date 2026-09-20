@@ -48,6 +48,14 @@ if (!transcript) {
   process.exit(2);
 }
 
+/**
+ * --live-refs: keep the recorded run's references in the text and swap in THIS run's, read off
+ * the earlier instructions' own reports — what a real orchestrator does ("ticket RD-1063" in
+ * run 1 becomes "ticket RD-1200" here). Without it a reference is replaced by the record's
+ * title, which removes exactly the value a stored skill's reference blank needs.
+ */
+const LIVE_REFS = argv.includes('--live-refs');
+const REF_SHAPE = { repairdesk: /\bRD-\d{3,}\b/g, kanboard: /#\d+\b/g };
 /** Identifiers the APP assigned in the recorded run, which a new run will not get. */
 const APP_ASSIGNED = {
   repairdesk: [[/\b(?:ticket )?RD-\d{3,}\b/g, `the ticket titled '${runid} RD Bench Ticket'`]],
@@ -70,7 +78,7 @@ const instructions = fs
     // The transcript is redacted: the one after "password" is the password, every other is the login.
     t = t.replace(/password «redacted»/g, `password ${app.APP_PASSWORD}`).replace(/«redacted»/g, app.APP_EMAIL);
     // A reference the app assigned differs per run; the title does not.
-    for (const [re, to] of APP_ASSIGNED[target] ?? []) t = t.replace(re, to);
+    if (!LIVE_REFS) for (const [re, to] of APP_ASSIGNED[target] ?? []) t = t.replace(re, to);
     return t;
   });
 if (!instructions.length) {
@@ -79,6 +87,9 @@ if (!instructions.length) {
 }
 
 const store = fs.mkdtempSync(path.join(os.tmpdir(), `${runid}-skills-`));
+// --skills <dir>: start from a COPY of an existing store (validated skills recorded under other
+// wording) instead of an empty one — the reworded-instruction experiment of PLAN-jev.md §6.
+if (opt('--skills')) fs.cpSync(path.resolve(opt('--skills')), store, { recursive: true });
 const env = { ...process.env, ...app, SITELOOPER_SKILLS: '1', SITELOOPER_SKILLS_DIR: store };
 // The worktree's own CLI, argv passed as-is: no shell, so no quoting of the instruction text.
 const cli = path.join(here, '..', 'bin', 'sitelooper.js');
@@ -93,10 +104,14 @@ await resetTarget(target);
 console.error(`[fixed] reset ${target}`);
 const started = Date.now();
 const rows = [];
-for (const [i, text] of instructions.entries()) {
+let liveRef = null;
+for (const [i, recorded] of instructions.entries()) {
+  const text = LIVE_REFS && liveRef && REF_SHAPE[target] ? recorded.replace(REF_SHAPE[target], liveRef) : recorded;
   const at = Date.now();
   const r = run(['do', text, '--session', runid, '--timeout', '600', '--max-turns', '40']);
   const out = `${r.stdout ?? ''}${r.stderr ?? ''}`;
+  // This run's own reference: the first one an instruction reports that the recorded text did not carry.
+  if (LIVE_REFS && !liveRef && REF_SHAPE[target]) liveRef = out.match(REF_SHAPE[target])?.find((ref) => !recorded.includes(ref)) ?? null;
   const status = /^\[(OK|FAIL|BLOCKED)\]/m.exec(out)?.[1] ?? (/LLM HTTP/.test(out) ? 'HTTP-ERROR' : 'UNKNOWN');
   rows.push({ n: i + 1, status, s: +((Date.now() - at) / 1000).toFixed(1), ...(status === 'OK' ? {} : { out: out.slice(0, 400) }) });
   console.error(`[fixed] ${i + 1}/${instructions.length} ${status} ${rows.at(-1).s}s`);
