@@ -554,6 +554,26 @@ d('script recording (fixture page)', () => {
     await page.evaluate(() => document.getElementById('req')?.remove());
   }, 30_000);
 
+  it('runs a batch step written flat, with its arguments beside the tool name', async () => {
+    const page = await session.getPage();
+    await page.evaluate(() => {
+      const box = document.createElement('div');
+      box.id = 'flat';
+      box.innerHTML = '<label for="flat-a">Flat</label><input id="flat-a"><input id="flat-b">';
+      document.body.appendChild(box);
+    });
+    const out = await run('batch', {
+      steps: [
+        { tool: 'fill', target: '#flat-a', value: 'one' },
+        { tool: 'fill', args: { target: '#flat-b', value: 'two' } },
+      ],
+    });
+    expect(out.isError).toBeFalsy();
+    expect(await page.inputValue('#flat-a')).toBe('one');
+    expect(await page.inputValue('#flat-b')).toBe('two');
+    await page.evaluate(() => document.getElementById('flat')?.remove());
+  }, 30_000);
+
   it('takes a screenshot as a batch step instead of refusing the batch', async () => {
     const page = await session.getPage();
     await page.evaluate(() => {

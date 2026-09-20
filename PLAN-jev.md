@@ -1222,3 +1222,34 @@ design: ledger bindings first; a slot WITH a binding the ledger cannot fill is b
 only by an unambiguous example-overlap winner, else no replay; the rest by example-overlap,
 Jev for contested candidates; generic shape must equal the example's. Expect well under the
 offline 96% coverage, and measure the wrong-value rate live before trusting it.
+
+### Bet 1 live, first runs (3168858, fa17a94; RepairDesk, fwrdj11's six instructions against fwrdev2's validated store)
+`SITELOOPER_JEV_MATCH=on`: after the exact matcher, Jev matches among verified heads that
+start on this page; blanks bind ledger-first, then by resemblance to the recorded example,
+contested ones by Jev, an unstated one derived from a blank that contains it; every blank
+binds or nothing replays. `bench/fixed-instructions.mjs --skills <store> --live-refs`.
+
+| run | gate | matched / asked | bound | replayed without the model | verified |
+|---|---|---|---|---|---|
+| fxmtoff1 (today's path) | - | - | - | 0 of 6 (model called run_skill itself on 3) | 6/6 |
+| fxmton1 | 0.8 | 0 / 5 (right picks at 0.58, 0.61) | - | 0 | 6/6 |
+| fxmtg50a | 0.5 | 2 / 5 | 0 (run-tag blank unstated) | 0 | 6/6 |
+| fxmtg50b (+ derived blanks) | 0.5 | 2 / 5 | 1 (one contested blank, Jev 1.00) | **1: 8.3s against ~20-25s** | 6/6 |
+
+What live showed that offline could not:
+- **The start page is the real limit.** A skill runs only from the page its recording
+  started on; mid-task the browser is on the ticket's detail page and the add-part / edit
+  skills start on the list, so they are not even candidates. 3 of 5 `none`s were CORRECT.
+  The exact matcher has the same limit; offline had no notion of "current page".
+- **Live confidence runs lower** than the offline set (right picks 0.53-0.75, not >= 0.8).
+- **Binding refusals are doing their job**: a second "add part" instruction that names no
+  title could not derive the run tag and was refused rather than guessed.
+- Today's path is not "author from scratch": with a store present the model calls
+  `run_skill` itself on about half the instructions, so the saving over TODAY is smaller
+  than the saving over forced authoring.
+- Unrelated find: a batch step written FLAT ({"tool":"click","target":…}, no `args`) ran
+  with no arguments and waited out a 34s deadline — four times in fxmtg50b, 136s. Fixed:
+  a flat step's other keys are its arguments.
+Status: one instruction in six replayed, correctly, at a calibration gate. Promising
+mechanism, thin coverage; the lever is WHERE skills can start (or chaining a "get to the
+start page" skill), not the matcher.

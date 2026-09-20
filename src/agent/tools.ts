@@ -912,7 +912,13 @@ async function executeBatch(
         `step ${i + 1}: ${tool ? `"${tool}" cannot be used inside a batch` : 'missing "tool"'} — allowed tools are ${[...BATCHABLE].join(', ')}. Nothing was executed; re-issue without that step.`,
       );
     }
-    const stepArgs = step.args;
+    // A step written FLAT — {"tool":"click","target":"@e5"} instead of
+    // {"tool":"click","args":{"target":"@e5"}} — says exactly what it means, and a
+    // long session's model writes it that way more and more. It used to run with NO
+    // arguments: fxmtg50b-n1 spent 34s, four times, in a targetless click waiting out its
+    // deadline. The step's other keys are its arguments.
+    const { tool: _tool, args: nested, ...flat } = step as Record<string, unknown>;
+    const stepArgs = nested ?? (Object.keys(flat).length ? flat : undefined);
     if (stepArgs !== undefined && (typeof stepArgs !== 'object' || stepArgs === null || Array.isArray(stepArgs))) {
       return fail(`step ${i + 1}: "args" must be an object. Nothing was executed.`);
     }
