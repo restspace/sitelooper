@@ -1,0 +1,511 @@
+{
+  "name": "evod1off",
+  "origin": "http://127.0.0.1:8069",
+  "startUrl": "http://127.0.0.1:8069/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-open",
+      "instruction": "Open http://127.0.0.1:8069/ and sign in to Odoo with login 'admin' and password 'admin'. Then create a new customer contact named exactly '{{runid}} Bench Customer' with the City field set to 'Benchville', and save the record. Report the customer's name and city exactly as shown on the saved record. Note: this Odoo instance long-polls and is never network-idle, so wait for concrete page elements instead of waiting for network idle.",
+      "skill": "s_2d82e1",
+      "params": {
+        "v2": "http://127.0.0.1:8069/",
+        "v3": "{{runid}} Bench Customer",
+        "v4": "Benchville",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "customer_name",
+        "city",
+        "ref"
+      ],
+      "recorded": {
+        "customer_name": "evod1off-n1 Bench Customer",
+        "city": "Benchville",
+        "partner_id": "47",
+        "ref": "evod1off-n1",
+        "url": "http://127.0.0.1:8069/web#cids=1&menu_id=109&action=156&model=res.partner&view_type=form&id=47",
+        "url.q.menu_id": "109",
+        "url.q.action": "156",
+        "url.q.id": "47"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=res.partner&view_type=form",
+      "outputEvidence": {
+        "customer_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "city": {
+          "same": 1,
+          "differed": 0
+        },
+        "partner_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.q.menu_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.q.action": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.q.id": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "In Odoo (already signed in as admin), go to the Sales app and create a new quotation (sales order) with customer '{{runid}} Bench Customer' (choose it from the customer autocomplete dropdown so it is a real selected value, not just typed text). Add exactly ONE order line: pick any product from the product catalogue via the product autocomplete dropdown, with quantity 3. Save the quotation. Report: the product name you chose, the unit price the app filled in for that line, and the Untaxed Amount the app computes (as shown in the order totals). Do not confirm the order yet. Note: this Odoo instance long-polls and is never network-idle, so wait for concrete page elements instead of network idle.",
+      "skill": "s_8914b5",
+      "params": {
+        "v1": "{{runid}} Bench Customer",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "order_reference",
+        "customer_name",
+        "customer_city",
+        "product_name",
+        "quantity",
+        "unit_price",
+        "taxes",
+        "tax_20_amount",
+        "total",
+        "totals_summary",
+        "customer_reference"
+      ],
+      "recorded": {
+        "order_reference": "S00024",
+        "sale_order_id": "24",
+        "customer_name": "evod1off-n1 Bench Customer",
+        "customer_city": "Benchville",
+        "product_name": "[FURN_6666] Acoustic Bloc Screens",
+        "quantity": "3.00",
+        "unit_price": "295.00",
+        "taxes": "20%",
+        "line_tax_excl": "£ 885.00",
+        "untaxed_amount": "£ 885.00",
+        "tax_20_amount": "£ 177.00",
+        "total": "£ 1,062.00",
+        "totals_summary": "Untaxed Amount\t£ 885.00\nTAX 20%\t\n£ 177.00\n\nTotal\t£ 1,062.00",
+        "status": "Quotation (not confirmed)",
+        "line_1_subtotal": "£ 885.00",
+        "customer_reference": "evod1off-n1",
+        "product_1_internal_reference": "FURN_6666",
+        "url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=24",
+        "url.q.menu_id": "194",
+        "url.q.action": "316",
+        "url.q.id": "24"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "order_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "sale_order_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "customer_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "customer_city": {
+          "same": 1,
+          "differed": 0
+        },
+        "product_name": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "quantity": {
+          "same": 1,
+          "differed": 0
+        },
+        "unit_price": {
+          "same": 1,
+          "differed": 0
+        },
+        "taxes": {
+          "same": 1,
+          "differed": 0
+        },
+        "line_tax_excl": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "untaxed_amount": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "tax_20_amount": {
+          "same": 0,
+          "differed": 1
+        },
+        "total": {
+          "same": 0,
+          "differed": 1
+        },
+        "totals_summary": {
+          "same": 0,
+          "differed": 1
+        },
+        "status": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "line_1_subtotal": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "customer_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "product_1_internal_reference": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.q.menu_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.q.action": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.q.id": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "03-open",
+      "instruction": "In Odoo (already signed in as admin), open the existing quotation {{02-create.order_reference}} (customer '{{runid}} Bench Customer') in the Sales app. It currently has one order line for product '{{02-create.product_name}}' quantity 3. Add a SECOND order line: a DIFFERENT product from the product catalogue (chosen via the product autocomplete dropdown so it is a real selected value), with quantity 2. Save the quotation. Report: the product name you chose for the second line, and the new Untaxed Amount the app computes in the order totals after saving. Do not confirm the order yet. Note: this Odoo instance long-polls and is never network-idle, so wait for concrete page elements instead of network idle.",
+      "skill": "s_12c6a1",
+      "params": {
+        "v1": "{{02-create.order_reference}}",
+        "v2": "{{runid}} Bench Customer",
+        "v4": "{{02-create.product_name}}",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "totals",
+        "order_reference",
+        "customer_reference",
+        "product_1_internal_reference"
+      ],
+      "recorded": {
+        "totals": "Untaxed Amount\t£ 1,165.00\nTAX 20%\t\n£ 233.00\n\nTotal\t£ 1,398.00",
+        "order_reference": "S00024",
+        "customer_reference": "evod1off-n1",
+        "product_1_internal_reference": "FURN_6666"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "totals": {
+          "same": 1,
+          "differed": 0
+        },
+        "order_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "customer_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "product_1_internal_reference": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        }
+      }
+    },
+    {
+      "id": "04-open",
+      "instruction": "In Odoo (already signed in as admin), open the existing quotation {{02-create.order_reference}} (customer '{{runid}} Bench Customer') in the Sales app. It has two order lines: line 1 = '{{02-create.product_name}}' quantity 3, line 2 = '[E-COM11] Cabinet with Doors' quantity 2. Change the FIRST line's quantity from 3 to 5 (leave the second line unchanged at quantity 2). Save the quotation. Report the new Untaxed Amount the app computes in the order totals after saving, and confirm the quantities shown on both lines. Do not confirm the order yet. Note: this Odoo instance long-polls and is never network-idle, so wait for concrete page elements instead of network idle.",
+      "skill": "s_03f14e",
+      "params": {
+        "v1": "{{02-create.order_reference}}",
+        "v2": "{{runid}} Bench Customer",
+        "v4": "{{02-create.product_name}}",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "totals",
+        "line_1_quantity",
+        "line_2_quantity",
+        "order_reference",
+        "product_1_internal_reference"
+      ],
+      "recorded": {
+        "totals": "Untaxed Amount\t£ 1,755.00\nTAX 20%\t\n£ 351.00\n\nTotal\t£ 2,106.00",
+        "line_1_quantity": "5.00",
+        "line_2_quantity": "2.00",
+        "order_reference": "S00024",
+        "product_1_internal_reference": "FURN_6666"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "totals": {
+          "same": 1,
+          "differed": 0
+        },
+        "line_1_quantity": {
+          "same": 1,
+          "differed": 0
+        },
+        "line_2_quantity": {
+          "same": 1,
+          "differed": 0
+        },
+        "order_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "product_1_internal_reference": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        }
+      }
+    },
+    {
+      "id": "05-open",
+      "instruction": "In Odoo (already signed in as admin), open the existing quotation {{02-create.order_reference}} (customer '{{runid}} Bench Customer') in the Sales app. It has two order lines: line 1 = '{{02-create.product_name}}' quantity 5, line 2 = '[E-COM11] Cabinet with Doors' quantity 2, Untaxed Amount £1,755.00. Confirm the quotation so it becomes a sales order (click the Confirm button and accept any confirmation dialog). Report: the order reference/name (e.g. {{02-create.order_reference}}) and the status the app now shows on the record after confirmation (read it from the page). Note: this Odoo instance long-polls and is never network-idle, so wait for concrete page elements instead of network idle.",
+      "skill": "s_64eda2",
+      "params": {
+        "v1": "{{02-create.order_reference}}",
+        "v2": "{{runid}} Bench Customer",
+        "v4": "{{02-create.product_name}}",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "order_reference_heading",
+        "status_current",
+        "status_quotation_sent"
+      ],
+      "recorded": {
+        "order_reference_heading": "S00024",
+        "status_current": "Sales Order",
+        "status_quotation_sent": "Quotation Sent",
+        "status_quotation": "Quotation"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "order_reference_heading": {
+          "same": 0,
+          "differed": 1
+        },
+        "status_current": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "status_quotation_sent": {
+          "same": 1,
+          "differed": 0
+        },
+        "status_quotation": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        }
+      }
+    },
+    {
+      "id": "06-open",
+      "instruction": "In Odoo (already signed in as admin), open the confirmed sales order {{02-create.order_reference}} (customer '{{runid}} Bench Customer') in the Sales app. It is currently in '{{05-open.status_current}}' status. Cancel this sales order so nothing stays active: use the Cancel action (there may be a Cancel button in the header or under a dropdown menu; if a confirmation dialog appears, accept it). Report the status the app shows on the record after cancelling (read it from the page). Note: this Odoo instance long-polls and is never network-idle, so wait for concrete page elements instead of network idle.",
+      "skill": "s_0de23e",
+      "params": {
+        "v1": "{{02-create.order_reference}}",
+        "v2": "{{runid}} Bench Customer",
+        "v4": "{{05-open.status_current}}",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "statusbar_text",
+        "order_reference_heading",
+        "status_sales_order",
+        "status_quotation_sent",
+        "customer_reference"
+      ],
+      "recorded": {
+        "statusbar_text": "Cancelled\nSales Order\nQuotation Sent\nQuotation",
+        "order_reference_heading": "S00024",
+        "status_sales_order": "Sales Order",
+        "status_quotation_sent": "Quotation Sent",
+        "status_quotation": "Quotation",
+        "cancel_confirmation_accepted": "true",
+        "customer_reference": "evod1off-n1"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "statusbar_text": {
+          "same": 1,
+          "differed": 0
+        },
+        "order_reference_heading": {
+          "same": 0,
+          "differed": 1
+        },
+        "status_sales_order": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "status_quotation_sent": {
+          "same": 1,
+          "differed": 0
+        },
+        "status_quotation": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "cancel_confirmation_accepted": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "customer_reference": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "07-verify",
+      "instruction": "In Odoo (already signed in as admin), verify two things and report them: (1) Open the sales order {{02-create.order_reference}} in the Sales app and report the exact status shown in its status bar (it should be cancelled) and the order lines with their quantities. (2) Open the contact '{{runid}} Bench Customer' in the Contacts app and report its name and City field as shown on the saved record. Do not modify anything — read only. Note: this Odoo instance long-polls and is never network-idle, so wait for concrete page elements instead of network idle.",
+      "skill": "s_da10e7",
+      "params": {
+        "v1": "{{02-create.order_reference}}",
+        "v2": "{{runid}} Bench Customer",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "contact_name",
+        "contact_city",
+        "order_reference",
+        "customer_reference"
+      ],
+      "recorded": {
+        "contact_name": "evod1off-n1 Bench Customer",
+        "contact_city": "Benchville",
+        "order_reference": "S00024",
+        "product_1_internal_reference": "FURN_6666",
+        "customer_reference": "evod1off-n1",
+        "url": "http://127.0.0.1:8069/web#id=47&cids=1&menu_id=194&model=res.partner&view_type=form"
+      },
+      "route": "http://127.0.0.1:8069/web#cids=:id&id=:id&menu_id=:id&model=res.partner&view_type=form",
+      "outputEvidence": {
+        "contact_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "contact_city": {
+          "same": 1,
+          "differed": 0
+        },
+        "order_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "product_1_internal_reference": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "customer_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "evod1off-n1",
+    "created": "2026-09-20T00:03:05.440Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "warnings": [
+    "contradicted-step: 04-open read totals \"Untaxed Amount\t£ 1,755.00\" right after 03-open reported \"Untaxed Amount\t£ 1,165.00\"; 03-open's change may not have landed and a later step may be retrying it. Re-record 03-open."
+  ],
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-open",
+      "outputs": [
+        "partner_id"
+      ]
+    },
+    {
+      "stepId": "02-create",
+      "outputs": [
+        "sale_order_id",
+        "line_tax_excl",
+        "untaxed_amount",
+        "status",
+        "line_1_subtotal",
+        "product_1_internal_reference"
+      ]
+    },
+    {
+      "stepId": "05-open",
+      "outputs": [
+        "status_quotation"
+      ]
+    },
+    {
+      "stepId": "06-open",
+      "outputs": [
+        "status_quotation",
+        "cancel_confirmation_accepted"
+      ]
+    },
+    {
+      "stepId": "07-verify",
+      "outputs": [
+        "product_1_internal_reference"
+      ]
+    }
+  ]
+}

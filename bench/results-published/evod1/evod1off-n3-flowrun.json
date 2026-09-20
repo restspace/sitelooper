@@ -1,0 +1,198 @@
+{
+  "flow": "evod1off",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_7bc1c8 (3 steps).",
+      "values": {
+        "customer_name": "evod1off-n3 Bench Customer",
+        "city": "Benchville",
+        "ref": "evod1off-n3 Bench Customer"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_d4e136 (9 steps).",
+      "values": {
+        "customer_reference": "evod1off-n3",
+        "order_reference": "S00026",
+        "customer_name": "evod1off-n3 Bench Customer",
+        "customer_city": "Benchville",
+        "quantity": "3.00",
+        "unit_price": "295.00",
+        "taxes": "20%",
+        "tax_20_amount": "£ 177.00",
+        "total": "£ 1,062.00",
+        "totals_summary": "Untaxed Amount\t£ 885.00\nTAX 20%\t\n£ 177.00\n\nTotal\t£ 1,062.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "20/20",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "product_name"
+      ]
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_12c6a1 (9 steps).",
+      "values": {
+        "customer_reference": "evod1off-n3",
+        "totals": "Untaxed Amount\t£ 1,165.00\nTAX 20%\t\n£ 233.00\n\nTotal\t£ 1,398.00",
+        "order_reference": "S00026"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "product_1_internal_reference"
+      ]
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_03f14e (8 steps).",
+      "values": {
+        "totals": "Untaxed Amount\t£ 1,755.00\nTAX 20%\t\n£ 351.00\n\nTotal\t£ 2,106.00",
+        "order_reference": "S00026",
+        "line_1_quantity": "5.00",
+        "line_2_quantity": "2.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "product_1_internal_reference"
+      ]
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_64eda2 (4 steps).",
+      "values": {
+        "order_reference_heading": "S00026",
+        "status_quotation_sent": "Quotation Sent"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "4/4",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "status_current"
+      ]
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_0de23e (9 steps).",
+      "values": {
+        "customer_reference": "evod1off-n3",
+        "statusbar_text": "Cancelled\nSales Order\nQuotation Sent\nQuotation",
+        "order_reference_heading": "S00026",
+        "status_quotation_sent": "Quotation Sent"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "status_sales_order"
+      ]
+    },
+    {
+      "id": "07-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_e9878b (4 steps).",
+      "values": {
+        "contact_name": "evod1off-n3 Bench Customer",
+        "contact_city": "Benchville",
+        "order_reference": "S00026",
+        "customer_reference": "evod1off-n3 Bench Customer"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 7,
+  "total": 7,
+  "repinned": 0,
+  "drift": 3,
+  "driftTickets": [
+    {
+      "flow": "evod1off",
+      "step": "06-open",
+      "skill": "s_0de23e",
+      "atStep": "8",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.locator('aria-ref=e1731')",
+      "fallbackUsed": "page.getByRole('heading', { name: 'S00026', exact: true })",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=26"
+    },
+    {
+      "flow": "evod1off",
+      "step": "07-verify",
+      "skill": "s_e9878b",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.locator('aria-ref=e2292')",
+      "fallbackUsed": "page.getByRole('combobox', { name: 'e.g. Lumber Inc', exact: true })",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#cids=:id&id=:id&menu_id=:id&model=res.partner&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#id=49&cids=1&menu_id=194&model=res.partner&view_type=form"
+    },
+    {
+      "flow": "evod1off",
+      "step": "07-verify",
+      "skill": "s_e9878b",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.locator('aria-ref=e2305')",
+      "fallbackUsed": "page.getByRole('textbox', { name: 'City', exact: true })",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#cids=:id&id=:id&menu_id=:id&model=res.partner&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#id=49&cids=1&menu_id=194&model=res.partner&view_type=form"
+    }
+  ],
+  "wallMs": 54212,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

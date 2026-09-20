@@ -1,0 +1,124 @@
+
+[sweep] run 1/3: evod1off-n1 (store: /home/user/sitelooper/bench/results/evod1off-skills)
+[harness] odoo: defaulting APP_URL
+[harness] odoo: defaulting APP_EMAIL
+[harness] odoo: defaulting APP_PASSWORD
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+[harness] odoo responded 303 at http://127.0.0.1:8069/
+stopped: evod1off-n1
+  flow "evod1off" saved: 7 step(s), vars runid → /home/user/sitelooper/bench/results/flows/evod1off.json
+  warning: note: dropped 2 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: note: 9 goal/report value(s) carrying a value this run made were slotted or dropped:
+  s_03f14e.reportTemplate.summary dropped (narrates a value this run made)
+  s_0de23e.reportTemplate.summary dropped (narrates a value this run made)
+  s_12c6a1.reportTemplate.summary dropped (narrates a value this run made)
+  s_64eda2.reportTemplate.summary dropped (narrates a value this run made)
+  s_7bc1c8.reportTemplate.values.partner_id dropped (recorded literal of a value this run made)
+  s_7bc1c8.reportTemplate.summary dropped (narrates a value this run made)
+  s_d4e136.reportTemplate.values.sale_order_id dropped (recorded literal of a value this run made)
+  s_d4e136.reportTemplate.summary dropped (narrates a value this run made)
+  s_e9878b.reportTemplate.summary dropped (narrates a value this run made)
+  warning: note: 01-open no longer publishes partner_id — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-create no longer publishes sale_order_id, line_tax_excl, untaxed_amount, status, line_1_subtotal, product_1_internal_reference — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-open no longer publishes status_quotation — no replay reads it from the page and the recording showed no line to read
+  warning: note: 06-open no longer publishes status_quotation, cancel_confirmation_accepted — no replay reads them from the page and the recording showed no line to read
+  warning: note: 07-verify no longer publishes product_1_internal_reference — no replay reads it from the page and the recording showed no line to read
+  warning: warning: contradicted-step: 04-open read totals "Untaxed Amount	£ 1,755.00" right after 03-open reported "Untaxed Amount	£ 1,165.00"; 03-open's change may not have landed and a later step may be retrying it. Re-record 03-open.
+  warning: warning: 61 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "Benchville" (output) in "Open http://127.0.0.1:8069/ and sign in to Odoo with login 'admin' and password 'admin'. Then create a new customer contact named exactly '{{runid}} Bench Custo"
+  flow.steps[0].params.v4: "Benchville" (output) in "Benchville"
+  s_03f14e.steps[0].expect.addedContains[0]: "£ 885.00" (output) in "- row \"20% £ 885.00\""
+  s_03f14e.steps[0].expect.addedContains[0]: "20%" (output) in "- row \"20% £ 885.00\""
+  s_03f14e.steps[1].expect.addedContains[0]: "20%" (output) in "- row \"20% £ 1,475.00\""
+  warning: {{02-create.product_name}} (used by 03-open) can only be re-observed by model recovery — consider re-recording so the value is read from the page.
+  warning: {{05-open.status_current}} (used by 06-open) can only be re-observed by model recovery — consider re-recording so the value is read from the page.
+  warning: 02-create reports product_name, but no segment of the procedure it pins (s_8914b5, through its last segment s_d4e136) re-reads it from the page — a replay without the model will succeed without that value; re-record so a read for it lands in s_d4e136.
+  warning: 05-open reports status_current, but no segment of the procedure it pins (s_64eda2, with any later segment of its chain) re-reads it from the page — a replay without the model will succeed without that value; re-record so a read for it lands in that procedure's last segment.
+arm=sitelooper model=z-ai/glm-5.3 runid=evod1off-n1 stop=completed
+turns=8 wall=307.4s
+commands=7 cmdTime=239.4s cmdBytes=6201 timeouts=0
+orchestrator in=10273 cw=0 cr=23200 out=5546
+inner prompt=1484930 cached=1347968 completion=19290
+spend=$0.081 maxUsd=1.5
+learn: A_n=0 replayed=0/7 full=0 repaired=0 compiled=7 variants=0
+-> /home/user/sitelooper/bench/results/evod1off-n1-sitelooper-result.json
+
+evod1off-n1: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00024
+
+[sweep] run 2/3: evod1off-n2 (replay flow evod1off, no orchestrator)
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+[sweep] evod1off-n2: 3 drift ticket(s) → evod1off-n2-drift.json
+
+evod1off-n2: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00025
+
+[sweep] run 3/3: evod1off-n3 (replay flow evod1off, no orchestrator)
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+[sweep] evod1off-n3: 3 drift ticket(s) → evod1off-n3-drift.json
+
+evod1off-n3: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00026
+
+Learning sweep evod1off (K=3)
+┌─────────┬───┬───────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid         │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼───────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'evod1off-n1' │ '6/6'    │ 'completed' │ 8     │ 7    │ 0.081     │ 0   │ '0/7'        │ 307    │
+│ 1       │ 2 │ 'evod1off-n2' │ '6/6'    │ 'success'   │ 0     │ 7    │ 0         │ 1   │ '7/7 (flow)' │ 54     │
+│ 2       │ 3 │ 'evod1off-n3' │ '6/6'    │ 'success'   │ 0     │ 7    │ 0         │ 1   │ '7/7 (flow)' │ 54     │
+└─────────┴───┴───────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8069
+  s_03f14e  validated    8 steps  3/3 (100%)
+           In Odoo (already signed in as admin), open the existing quotation {{v1}} (customer '{{v2}}') in the Sales app.…
+  s_0de23e  validated    9 steps  3/3 (100%)
+           In Odoo (already signed in as admin), open the confirmed sales order {{v1}} (customer '{{v2}}') in the Sales a…
+  s_12c6a1  validated    9 steps  3/3 (100%)
+           In Odoo (already signed in as admin), open the existing quotation {{v1}} (customer '{{v2}}') in the Sales app.…
+  s_2d82e1  validated    1 steps  3/3 (100%)
+           Open {{v2}} and sign in to Odoo with login 'admin' and password 'admin'. Then create a new customer contact na…
+  s_392ade  validated    1 steps  3/3 (100%)
+           In Odoo (already signed in as admin), go to the Sales app and create a new quotation (sales order) with custom…
+  s_42ddc7  validated    8 steps  3/3 (100%)
+           In Odoo (already signed in as admin), go to the Sales app and create a new quotation (sales order) with custom…
+  s_55128e  validated    3 steps  3/3 (100%)
+           Open {{v2}} and sign in to Odoo with login 'admin' and password 'admin'. Then create a new customer contact na…
+  s_64eda2  validated    4 steps  3/3 (100%)
+           In Odoo (already signed in as admin), open the existing quotation {{v1}} (customer '{{v2}}') in the Sales app.…
+  s_761590  validated    2 steps  3/3 (100%)
+           Open {{v2}} and sign in to Odoo with login 'admin' and password 'admin'. Then create a new customer contact na…
+  s_7bc1c8  validated    3 steps  3/3 (100%)
+           Open {{v2}} and sign in to Odoo with login 'admin' and password 'admin'. Then create a new customer contact na…
+  s_8914b5  validated    2 steps  3/3 (100%)
+           In Odoo (already signed in as admin), go to the Sales app and create a new quotation (sales order) with custom…
+  s_92df74  validated    3 steps  3/3 (100%)
+           Open {{v2}} and sign in to Odoo with login 'admin' and password 'admin'. Then create a new customer contact na…
+  s_99b3b3  validated    1 steps  3/3 (100%)
+           Open {{v2}} and sign in to Odoo with login 'admin' and password 'admin'. Then create a new customer contact na…
+  s_d4e136  validated    9 steps  3/3 (100%)
+           In Odoo (already signed in as admin), go to the Sales app and create a new quotation (sales order) with custom…
+  s_da10e7  validated    1 steps  3/3 (100%)
+           In Odoo (already signed in as admin), verify two things and report them: (1) Open the sales order {{v1}} in th…
+  s_e9878b  validated    4 steps  3/3 (100%)
+           In Odoo (already signed in as admin), verify two things and report them: (1) Open the sales order {{v1}} in th…
+store: /home/user/sitelooper/bench/results/evod1off-skills
+
+summary: /home/user/sitelooper/bench/results/evod1off-sweep.json

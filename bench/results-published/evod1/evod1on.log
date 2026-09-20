@@ -1,0 +1,163 @@
+
+[sweep] run 1/3: evod1on-n1 (store: /home/user/sitelooper/bench/results/evod1on-skills)
+[harness] odoo: defaulting APP_URL
+[harness] odoo: defaulting APP_EMAIL
+[harness] odoo: defaulting APP_PASSWORD
+[reset] odoo: no leftover bench customers
+[harness] odoo responded 303 at http://127.0.0.1:8069/
+stopped: evod1on-n1
+  flow "evod1on" saved: 7 step(s), vars runid → /home/user/sitelooper/bench/results/flows/evod1on.json
+  warning: note: dropped 2 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: note: 5 goal/report value(s) carrying a value this run made were slotted or dropped:
+  s_01f61d.reportTemplate.values.record_id dropped (recorded literal of a value this run made)
+  s_01f61d.reportTemplate.summary dropped (narrates a value this run made)
+  s_2529fb.reportTemplate.values.record_id dropped (recorded literal of a value this run made)
+  s_2529fb.reportTemplate.summary dropped (narrates a value this run made)
+  s_9c6b7e.reportTemplate.values.record_id dropped (recorded literal of a value this run made)
+  warning: note: 01-signin no longer publishes record_id, model — no replay reads them from the page and the recording showed no line to read
+  warning: note: 02-create no longer publishes untaxed_amount, tax_20, total, record_id, line1_unit_price_displayed, untaxed_amount_displayed, product_reference — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-open no longer publishes tax_rate — no replay reads it from the page and the recording showed no line to read
+  warning: note: 05-open no longer publishes status — no replay reads it from the page and the recording showed no line to read
+  warning: note: 06-open no longer publishes status_after_cancel, record_id, o_form_statusbar_o_statu, statusbar_quotation, cancel_dialog_button_label — no replay reads them from the page and the recording showed no line to read
+  warning: note: 07-open no longer publishes order_status_bar — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 213 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "Benchville" (output) in "Sign in to Odoo at http://127.0.0.1:8069/ with login 'admin' and password 'admin' (the login form is already showing). After signing in, navigate to the Sales a"
+  flow.steps[0].instruction: "admin" (output) in "Sign in to Odoo at http://127.0.0.1:8069/ with login 'admin' and password 'admin' (the login form is already showing). After signing in, navigate to the Sales a"
+  flow.steps[0].params.v3: "Benchville" (output) in "Benchville"
+  flow.steps[0].route: "res.partner" (output) in "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=res.partner&view_type=form"
+  flow.steps[1].instruction: "Untaxed Amount" (output) in "In the Odoo Sales app, create a new Quotation for the customer '{{runid}} Bench Customer' (use the customer autocomplete dropdown - the value only counts when a"
+  warning: {{02-create.product_name}} (used by 03-open) can only be re-observed by model recovery — consider re-recording so the value is read from the page.
+  warning: 02-create reports product_name, but no segment of the procedure it pins (s_2a3ae1, through its last segment s_2529fb) re-reads it from the page — a replay without the model will succeed without that value; re-record so a read for it lands in s_2529fb.
+arm=sitelooper model=z-ai/glm-5.3 runid=evod1on-n1 stop=completed
+turns=9 wall=401.2s
+commands=8 cmdTime=277.4s cmdBytes=9097 timeouts=0
+orchestrator in=22829 cw=0 cr=17920 out=8662
+inner prompt=2109000 cached=1932032 completion=24668
+spend=$0.1219 maxUsd=1.5
+learn: A_n=0 replayed=0/7 full=0 repaired=0 compiled=7 variants=0
+-> /home/user/sitelooper/bench/results/evod1on-n1-sitelooper-result.json
+
+evod1on-n1: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00021
+
+[sweep] run 2/3: evod1on-n2 (replay flow evod1on, no orchestrator)
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+[sweep] evod1on-n2: 1 drift ticket(s) → evod1on-n2-drift.json
+
+evod1on-n2: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00022
+
+[sweep] run 3/3: evod1on-n3 (replay flow evod1on, no orchestrator)
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+[sweep] evod1on-n3: 1 drift ticket(s) → evod1on-n3-drift.json
+
+evod1on-n3: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00023
+
+Learning sweep evod1on (K=3)
+┌─────────┬───┬──────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid        │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼──────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'evod1on-n1' │ '6/6'    │ 'completed' │ 9     │ 8    │ 0.1219    │ 0    │ '0/7'        │ 401    │
+│ 1       │ 2 │ 'evod1on-n2' │ '6/6'    │ 'success'   │ 18    │ 7    │ 0.0156    │ 0.86 │ '7/7 (flow)' │ 153    │
+│ 2       │ 3 │ 'evod1on-n3' │ '6/6'    │ 'success'   │ 8     │ 7    │ 0.0051    │ 0.86 │ '7/7 (flow)' │ 83     │
+└─────────┴───┴──────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8069
+  s_0070c7  validated    1 steps  3/3 (100%)
+           Sign in to Odoo at http://127.0.0.1:8069/ with login 'admin' and password 'admin' (the login form is already s…
+  s_01f61d  validated    4 steps  3/3 (100%)
+           Sign in to Odoo at http://127.0.0.1:8069/ with login 'admin' and password 'admin' (the login form is already s…
+  s_2529fb  validated   10 steps  3/3 (100%)
+           In the Odoo Sales app, create a new Quotation for the customer '{{v1}}' (use the customer autocomplete dropdow…
+  s_2a3ae1  validated    1 steps  3/3 (100%)
+           In the Odoo Sales app, create a new Quotation for the customer '{{v1}}' (use the customer autocomplete dropdow…
+  s_2d28d0  provisional  1 steps  1/3 (33%)
+           Final verification in Odoo Sales app: (1) Open the sales order {{v1}} (customer '{{v2}}') and report the statu…
+  s_30a257  validated    1 steps  3/3 (100%)
+           Sign in to Odoo at http://127.0.0.1:8069/ with login 'admin' and password 'admin' (the login form is already s…
+  s_4c5cc9  validated    3 steps  3/3 (100%)
+           Sign in to Odoo at http://127.0.0.1:8069/ with login 'admin' and password 'admin' (the login form is already s…
+  s_509ddd  validated    3 steps  3/3 (100%)
+           Final verification in Odoo Sales app: (1) Open the sales order {{v1}} (customer '{{v2}}') and report the statu…
+  s_63d54d  validated    1 steps  3/3 (100%)
+           Final verification in Odoo Sales app: (1) Open the sales order {{v1}} (customer '{{v2}}') and report the statu…
+  s_704106  validated    1 steps  3/3 (100%)
+           In the Odoo Sales app, create a new Quotation for the customer '{{v1}}' (use the customer autocomplete dropdow…
+  s_83ec00  validated   27 steps  3/3 (100%)
+           Open the existing quotation {{v1}} in the Odoo Sales app (customer '{{v2}}'). Add a SECOND order line: a DIFFE…
+  s_8609ef  validated    1 steps  3/3 (100%)
+           Final verification in Odoo Sales app: (1) Open the sales order {{v1}} (customer '{{v2}}') and report the statu…
+  s_999216  validated   21 steps  3/3 (100%)
+           Open the existing quotation {{v1}} in the Odoo Sales app (customer '{{v2}}'). It has two order lines: line 1 i…
+  s_9c6b7e  validated   11 steps  3/3 (100%)
+           Open the confirmed sales order {{v1}} in the Odoo Sales app (customer '{{v2}}', status '{{v4}}'). Cancel it so…
+  s_9e7e6e  validated    7 steps  3/3 (100%)
+           In the Odoo Sales app, create a new Quotation for the customer '{{v1}}' (use the customer autocomplete dropdow…
+  s_a607fc  validated    3 steps  3/3 (100%)
+           Sign in to Odoo at http://127.0.0.1:8069/ with login 'admin' and password 'admin' (the login form is already s…
+  s_c14873  validated   17 steps  3/3 (100%)
+           Open the existing quotation {{v1}} in the Odoo Sales app (customer '{{v2}}'). Confirm it by clicking the Confi…
+  s_d5fb6c  validated    3 steps  3/3 (100%)
+           Sign in to Odoo at http://127.0.0.1:8069/ with login 'admin' and password 'admin' (the login form is already s…
+  s_e9c489  validated    1 steps  3/3 (100%)
+           Sign in to Odoo at http://127.0.0.1:8069/ with login 'admin' and password 'admin' (the login form is already s…
+  s_ed713f  validated    1 steps  3/3 (100%)
+           Final verification in Odoo Sales app: (1) Open the sales order {{v1}} (customer '{{v2}}') and report the statu…
+  s_ede741  validated    2 steps  3/3 (100%)
+           Sign in to Odoo at http://127.0.0.1:8069/ with login 'admin' and password 'admin' (the login form is already s…
+  s_0a0a5d  provisional  2 steps  1/1 (100%)  variant of s_2d28d0
+           Final verification in Odoo Sales app: (1) Open the sales order {{v1}} (customer '{{v2}}') and report the statu…
+  s_13921c  provisional  1 steps  1/1 (100%)  variant of s_2d28d0
+           Final verification in Odoo Sales app: (1) Open the sales order {{v1}} (customer '{{v2}}') and report the statu…
+  s_24483a  provisional  1 steps  1/1 (100%)
+           Final verification in Odoo Sales app: (1) Open the sales order {{v1}} (customer '{{v2}}') and report the statu…
+  s_49b2dd  provisional  1 steps  1/1 (100%)
+           Final verification in Odoo Sales app: (1) Open the sales order {{v1}} (customer '{{v2}}') and report the statu…
+  s_556ba2  provisional  2 steps  1/1 (100%)  variant of s_2d28d0
+           Final verification in Odoo Sales app: (1) Open the sales order {{v1}} (customer '{{v2}}') and report the statu…
+  s_585b55  provisional  1 steps  1/1 (100%)  variant of s_2d28d0
+           Final verification in Odoo Sales app: (1) Open the sales order {{v1}} (customer '{{v2}}') and report the statu…
+  s_61edfd  provisional  1 steps  1/1 (100%)  variant of s_2d28d0
+           Final verification in Odoo Sales app: (1) Open the sales order {{v1}} (customer '{{v2}}') and report the statu…
+  s_71c393  provisional  1 steps  1/1 (100%)  variant of s_2d28d0
+           Final verification in Odoo Sales app: (1) Open the sales order {{v1}} (customer '{{v2}}') and report the statu…
+  s_759093  provisional  5 steps  1/1 (100%)
+           Final verification in Odoo Sales app: (1) Open the sales order {{v1}} (customer '{{v2}}') and report the statu…
+  s_8115bc  provisional  1 steps  1/1 (100%)  variant of s_2d28d0
+           Final verification in Odoo Sales app: (1) Open the sales order {{v1}} (customer '{{v2}}') and report the statu…
+  s_8620c6  provisional  3 steps  1/1 (100%)  variant of s_2d28d0
+           Final verification in Odoo Sales app: (1) Open the sales order {{v1}} (customer '{{v2}}') and report the statu…
+  s_9181aa  provisional  1 steps  1/1 (100%)  variant of s_2d28d0
+           Final verification in Odoo Sales app: (1) Open the sales order {{v1}} (customer '{{v2}}') and report the statu…
+  s_943046  provisional  1 steps  1/1 (100%)  variant of s_2d28d0
+           Final verification in Odoo Sales app: (1) Open the sales order {{v1}} (customer '{{v2}}') and report the statu…
+  s_b17344  provisional  1 steps  1/1 (100%)
+           Final verification in Odoo Sales app: (1) Open the sales order {{v1}} (customer '{{v2}}') and report the statu…
+  s_c275bf  provisional  8 steps  1/1 (100%)  variant of s_2d28d0
+           Final verification in Odoo Sales app: (1) Open the sales order {{v1}} (customer '{{v2}}') and report the statu…
+  s_cb76e1  provisional  1 steps  1/1 (100%)  variant of s_2d28d0
+           Final verification in Odoo Sales app: (1) Open the sales order {{v1}} (customer '{{v2}}') and report the statu…
+  s_d03889  provisional  6 steps  1/1 (100%)  variant of s_2d28d0
+           Final verification in Odoo Sales app: (1) Open the sales order {{v1}} (customer '{{v2}}') and report the statu…
+  s_d28c4c  provisional  1 steps  1/1 (100%)  variant of s_2d28d0
+           Final verification in Odoo Sales app: (1) Open the sales order {{v1}} (customer '{{v2}}') and report the statu…
+store: /home/user/sitelooper/bench/results/evod1on-skills
+
+summary: /home/user/sitelooper/bench/results/evod1on-sweep.json
