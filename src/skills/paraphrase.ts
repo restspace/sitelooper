@@ -106,6 +106,8 @@ export interface BindingPlan {
   bound: Record<string, string>;
   /** Slots with several plausible literals: a decider's, or a refusal without one. */
   contested: Record<string, TaskValue[]>;
+  /** Blanks the instruction does not state, with why — a value may still be DERIVED for them (see deriveUnstated). */
+  unstated: Record<string, string>;
   /** Why this skill cannot be bound from this instruction at all. */
   refused?: string;
 }
@@ -115,6 +117,7 @@ export function planBinding(skill: Skill, instruction: string, known: Record<str
   const literals = extractValues(instruction);
   const bound: Record<string, string> = {};
   const contested: Record<string, TaskValue[]> = {};
+  const unstated: Record<string, string> = {};
   for (const [slot, p] of Object.entries(skill.params)) {
     // 1. The run's own ledger, exactly as bindSkill resolves it.
     if (p.binding && known[p.binding]) {
@@ -123,7 +126,10 @@ export function planBinding(skill: Skill, instruction: string, known: Record<str
     }
     const shape = shapeOf(p.example);
     const same = literals.filter((l) => shapeOf(l.text) === shape);
-    if (!same.length) return { bound, contested, refused: `{{${slot}}} (recorded as ${JSON.stringify(p.example)}): the instruction states no ${shape}` };
+    if (!same.length) {
+      unstated[slot] = `{{${slot}}} (recorded as ${JSON.stringify(p.example)}): the instruction states no ${shape}`;
+      continue;
+    }
     let plausible: TaskValue[];
     if (shape === 'number' || shape === 'url' || shape === 'date' || shape === 'email') {
       // These never resemble one another token-wise: the template's cue word, or being alone.
@@ -131,17 +137,46 @@ export function planBinding(skill: Skill, instruction: string, known: Record<str
       plausible = cued.length ? cued : same;
     } else {
       const ranked = same.map((l) => ({ l, s: resemblance(l.text, p.example) })).filter((r) => r.s > 0).sort((a, b) => b.s - a.s);
-      if (!ranked.length) return { bound, contested, refused: `{{${slot}}} (recorded as ${JSON.stringify(p.example)}): nothing the instruction states resembles it` };
+      if (!ranked.length) {
+        unstated[slot] = `{{${slot}}} (recorded as ${JSON.stringify(p.example)}): nothing the instruction states resembles it`;
+        continue;
+      }
       plausible = ranked.filter((r) => r.s === ranked[0].s).map((r) => r.l);
       // Several that resemble it AT ALL are rivals even when one resembles it more:
       // overlap follows the recording, and the instruction may mean the other one.
       if (ranked.length > 1 && !p.binding) plausible = ranked.map((r) => r.l);
     }
     if (plausible.length === 1) bound[slot] = plausible[0].text;
-    else if (p.binding) return { bound, contested, refused: `{{${slot}}} is a session value the run has not produced, and the instruction does not single it out` };
+    else if (p.binding) return { bound, contested, unstated, refused: `{{${slot}}} is a session value the run has not produced, and the instruction does not single it out` };
     else contested[slot] = plausible;
   }
-  return { bound, contested };
+  return { bound, contested, unstated };
+}
+
+/**
+ * A blank the instruction does not state, read off one it does.
+ *
+ * A run tag is the case (fxmtg50a-n1): the recording held {{v3}} = "fwrdev2-n1" and
+ * {{v2}} = "fwrdev2-n1 RD Bench Ticket", and the new instruction states only the title.
+ * Where one blank's recorded value sits INSIDE another's, the same cut of the other's new
+ * value is this blank's new value — arithmetic on two strings the recording supplies, no
+ * guess. Anything that does not line up exactly (the rest of the recorded value is not the
+ * rest of the new one, or the cut changes shape) derives nothing, and the blank stays unbound.
+ */
+export function deriveUnstated(skill: Skill, params: Record<string, string>, slot: string): string | null {
+  const example = skill.params[slot]?.example ?? '';
+  if (example.length < 3) return null;
+  for (const [other, value] of Object.entries(params)) {
+    const whole = skill.params[other]?.example ?? '';
+    const at = whole.indexOf(example);
+    if (other === slot || at < 0 || whole === example) continue;
+    const before = whole.slice(0, at);
+    const after = whole.slice(at + example.length);
+    if (!value.startsWith(before) || !value.endsWith(after) || value.length <= before.length + after.length) continue;
+    const cut = value.slice(before.length, value.length - after.length);
+    if (shapeOf(cut) === shapeOf(example)) return cut;
+  }
+  return null;
 }
 
 /**
@@ -161,6 +196,11 @@ export async function bindParaphrase(
     const chosen = pick ? await pick({ instruction, skill, slot, candidates }, {}) : null;
     if (!chosen) return { refused: `{{${slot}}}: ${candidates.length} literals could fill it and none was singled out` };
     params[slot] = chosen.text;
+  }
+  for (const [slot, why] of Object.entries(plan.unstated)) {
+    const derived = deriveUnstated(skill, params, slot);
+    if (!derived) return { refused: why };
+    params[slot] = derived;
   }
   // No literal fills two DIFFERENT blanks: that is one value read twice, not two values.
   const seen = new Map<string, string>();

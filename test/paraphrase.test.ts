@@ -54,6 +54,15 @@ describe('binding a reworded instruction', () => {
     expect(await bindParaphrase(addPart, second, ledger, pickB)).toEqual({ params: expect.objectContaining({ v3: 'new-n2 RD Part B', v4: '200', v5: '25' }) });
   });
 
+  it('derives a blank the instruction does not state from one that contains it', async () => {
+    const withRun = { ...addPart, params: { ...addPart.params, v6: p('old-n1', 'var:runid') } } as typeof addPart;
+    const out = await bindParaphrase(withRun, reworded, ledger);
+    expect(out).toEqual({ params: expect.objectContaining({ v6: 'new-n2', v3: 'new-n2 RD Part A' }) });
+    // Only when the rest of the recorded value is the rest of the new one.
+    const odd = { ...addPart, params: { ...addPart.params, v6: p('old-n1 XYZ') } } as typeof addPart;
+    expect(await bindParaphrase(odd, reworded, ledger)).toHaveProperty('refused');
+  });
+
   it('refuses when the instruction states nothing of a blank\'s shape', async () => {
     const out = await bindParaphrase(addPart, "On ticket RD-1200 add the part 'new-n2 RD Part A'.", ledger);
     expect(out).toEqual({ refused: expect.stringContaining('states no number') });
