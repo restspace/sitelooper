@@ -55,7 +55,7 @@ if (!transcript) {
  * title, which removes exactly the value a stored skill's reference blank needs.
  */
 const LIVE_REFS = argv.includes('--live-refs');
-const REF_SHAPE = { repairdesk: /\bRD-\d{3,}\b/g, kanboard: /#\d+\b/g, openproject: /#\d+\b/g, gitea: /#\d+\b/g, vikunja: /\bBENCH-\d+\b/g };
+const REF_SHAPE = { repairdesk: /\bRD-\d{3,}\b/g, kanboard: /#\d+\b/g, openproject: /#\d+\b/g, gitea: /#\d+\b/g, vikunja: /\bBENCH-\d+\b/g, espocrm: /\b[0-9a-f]{17}\b/g, snipeit: /\bBA-\d{5}\b/g };
 /** Identifiers the APP assigned in the recorded run, which a new run will not get. */
 const APP_ASSIGNED = {
   repairdesk: [[/\b(?:ticket )?RD-\d{3,}\b/g, `the ticket titled '${runid} RD Bench Ticket'`]],
@@ -74,6 +74,12 @@ const APP_ASSIGNED = {
   // BENCH-<index> is unambiguous (no other text has that shape), so every one
   // is replaced, as repairdesk's RD-<n>.
   vikunja: [[/\b(?:task )?BENCH-\d+\b/g, `the task titled '${runid} Bench Task'`]],
+  // A record id is 17 hex characters, a shape nothing else in the task has,
+  // so every one is replaced, as vikunja's BENCH-<n>.
+  espocrm: [[/\b(?:opportunity )?[0-9a-f]{17}\b/g, `the opportunity named '${runid} Bench Opportunity'`]],
+  // An asset tag BA-<n> is unambiguous (the seed assets are SEED-<n>), so every
+  // one is replaced, as repairdesk's RD-<n>.
+  snipeit: [[/\b(?:asset (?:tag )?)?BA-\d{5}\b/g, `the asset named '${runid} Bench Asset'`]],
 };
 
 const instructions = fs

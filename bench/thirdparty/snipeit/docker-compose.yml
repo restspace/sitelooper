@@ -1,0 +1,73 @@
+# Third-party benchmark target: Snipe-IT (real production app we did not write).
+#
+# Widens the matrix by CLIENT TECHNOLOGY: Laravel Blade server-rendered pages
+# with jQuery, select2 AJAX dropdowns for every relation (model, status,
+# location, user) whose options only exist after a typed search round-trips,
+# bootstrap-table list views that search and paginate client-side over
+# /api/v1, and a separate check-out form reached from the asset's page.
+#
+# Two containers: the Apache image and a MariaDB kept small (64 MB buffer
+# pool, no performance schema). First boot migrates in ~30-60s. APP_KEY is
+# fixed so sessions and Passport survive a recreate; seed.sh creates the admin
+# and settings row (so there is no setup wizard) and mints the API token.
+#
+#   up:    docker compose -f bench/thirdparty/snipeit/docker-compose.yml up -d
+#   seed:  bash bench/thirdparty/snipeit/seed.sh   (admin, settings, API token; idempotent)
+#   reset: node bench/reset-app.mjs --target snipeit   (idempotent: seeds the rest too)
+#   web:   http://127.0.0.1:8098   (admin / bench-admin-pass)
+#   api:   /api/v1, Bearer <bench/thirdparty/snipeit/.api-token>
+services:
+  db:
+    image: mariadb:11.4.13
+    environment:
+      MARIADB_DATABASE: snipeit
+      MARIADB_USER: snipeit
+      MARIADB_PASSWORD: bench-db-pass
+      MARIADB_ROOT_PASSWORD: bench-db-root-pass
+    command:
+      - --innodb-buffer-pool-size=64M
+      - --performance-schema=OFF
+      - --max-connections=40
+    volumes:
+      - snipeit-db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  app:
+    image: snipe/snipe-it:v8.7.2
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8098:80"
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      # Fixed, because a bench box is thrown away; public on purpose.
+      APP_KEY: base64:YmVuY2gtc25pcGVpdC1hcHAta2V5LTAxMjM0NTY3ODk=
+      APP_URL: http://127.0.0.1:8098
+      APP_TIMEZONE: UTC
+      APP_LOCALE: en-US
+      APP_FORCE_TLS: "false"
+      SECURE_COOKIES: "false"
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_DATABASE: snipeit
+      DB_USERNAME: snipeit
+      DB_PASSWORD: bench-db-pass
+      MAIL_MAILER: log
+      MAIL_FROM_ADDR: bench@example.com
+      MAIL_FROM_NAME: Bench
+      MAIL_REPLYTO_ADDR: bench@example.com
+      MAIL_REPLYTO_NAME: Bench
+    volumes:
+      - snipeit-data:/var/lib/snipeit
+
+volumes:
+  snipeit-db:
+  snipeit-data:

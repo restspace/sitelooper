@@ -19,11 +19,13 @@ since a run that dies on a CAPTCHA says nothing about sitelooper.
 | OpenProject 17 | 8090 | Angular inside Rails/Turbo/Primer; **click-to-edit fields that save in place**; ng-select autocompletes; minted `#id`s | admin / bench-admin-pass |
 | Gitea 1.27 | 8095 | Go templates + Vue islands; **Fomantic-UI sidebar pickers that apply on menu close**; markdown textareas; minted `#number`s | admin / bench-admin-pass |
 | Vikunja 0.24 | 8096 | Vue 3 SPA; **contenteditable heading that saves on blur**; flatpickr date popup; label multiselect that creates on type; `BENCH-<n>` identifiers unlike the url's id | admin / bench-admin-pass |
+| EspoCRM 10.0 | 8097 | Backbone.js SPA, hash routes; **pencil inline edit and full Edit forms**; link fields with autocomplete + select-modal; Stream posts; 17-char hex record ids only in the url | admin / bench-admin-pass |
+| Snipe-IT 8.7 | 8098 | Laravel Blade + jQuery; **select2 AJAX dropdowns for every relation**; bootstrap-table lists over /api/v1; datepicker; a separate check-out form; minted `BA-<n>` asset tags | admin / bench-admin-pass |
 
 Bring one up with:
 
     docker compose -f bench/thirdparty/<name>/docker-compose.yml up -d
-    bash bench/thirdparty/<name>/seed.sh      # odoo, openproject and gitea only
+    bash bench/thirdparty/<name>/seed.sh      # odoo, openproject, gitea and snipeit only
 
 Reset either with `down -v` followed by `up -d` and a re-seed.
 

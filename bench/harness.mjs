@@ -152,6 +152,21 @@ const TARGETS = {
     notReadyHint:
       'Start it with: docker compose -f bench/thirdparty/gitea/docker-compose.yml up -d (then seed.sh once)',
   },
+  espocrm: {
+    task: 'tasks/espocrm-opportunity-flow.md',
+    defaults: APP_DEFAULTS.espocrm,
+    // Reset is also the idempotent seed — see resetEspocrm.
+    reset: () => resetTarget('espocrm'),
+    notReadyHint: 'Start it with: docker compose -f bench/thirdparty/espocrm/docker-compose.yml up -d',
+  },
+  snipeit: {
+    task: 'tasks/snipeit-asset-flow.md',
+    defaults: APP_DEFAULTS.snipeit,
+    // Reset is also the idempotent seed — see resetSnipeit.
+    reset: () => resetTarget('snipeit'),
+    notReadyHint:
+      'Start it with: docker compose -f bench/thirdparty/snipeit/docker-compose.yml up -d (then seed.sh once)',
+  },
   grafana: {
     task: 'tasks/grafana-dashboard-flow.md',
     defaults: APP_DEFAULTS.grafana,

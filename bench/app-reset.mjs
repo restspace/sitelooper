@@ -502,6 +502,209 @@ async function resetVikunja() {
   }
 }
 
+/**
+ * EspoCRM reset doubles as the SEED, as kanboard's does: account "Bench
+ * Account" plus a look-alike distractor, user "bench-assignee" (Bench
+ * Assignee) plus a look-alike distractor, and three "Seed:" opportunities on
+ * Bench Account at stage Prospecting, unassigned. Earlier runs' "<runid> Bench
+ * Opportunity"s are DELETED (ids are random hex, so nothing is reused). A seed
+ * opportunity a wayward run touched is deleted and re-created rather than
+ * patched field by field. Everything goes through /api/v1 with HTTP Basic as
+ * the admin the image installs from ESPOCRM_ADMIN_USERNAME/PASSWORD.
+ */
+async function resetEspocrm() {
+  const base = (process.env.APP_URL || 'http://127.0.0.1:8097/').replace(/\/$/, '');
+  const auth = 'Basic ' + Buffer.from(`${process.env.ESPOCRM_USER || 'admin'}:${process.env.ESPOCRM_PASSWORD || 'bench-admin-pass'}`).toString('base64');
+  const api = async (method, route, body) => {
+    const res = await fetch(`${base}/api/v1/${route}`, {
+      method,
+      headers: { authorization: auth, ...(body ? { 'content-type': 'application/json' } : {}) },
+      ...(body ? { body: JSON.stringify(body) } : {}),
+    });
+    const text = await res.text();
+    if (!res.ok) throw new Error(`espocrm ${method} ${route}: HTTP ${res.status} ${res.headers.get('x-status-reason') ?? ''} ${text.slice(0, 300)}`);
+    return text ? JSON.parse(text) : null;
+  };
+  /** Every record of an entity type matching one where-clause. */
+  const find = async (entity, where) => {
+    const out = [];
+    for (let offset = 0; ; offset += 200) {
+      const q = new URLSearchParams({ maxSize: '200', offset: String(offset) });
+      where.forEach((w, i) => {
+        for (const [k, v] of Object.entries(w)) q.set(`where[${i}][${k}]`, String(v));
+      });
+      const page = await api('GET', `${entity}?${q}`);
+      out.push(...page.list);
+      if (page.list.length < 200) return out;
+    }
+  };
+
+  // Accounts: the one the task links, and a look-alike the autocomplete also offers.
+  const accountIds = {};
+  for (const name of ['Bench Account', 'Bench Accounting Services']) {
+    const found = await find('Account', [{ type: 'equals', attribute: 'name', value: name }]);
+    accountIds[name] = found[0]?.id ?? (await api('POST', 'Account', { name })).id;
+    if (!found.length) log(`espocrm: created account "${name}"`);
+  }
+
+  // Users: the assignee, and a look-alike.
+  const USERS = [
+    { userName: 'bench-assignee', firstName: 'Bench', lastName: 'Assignee' },
+    { userName: 'bench-assistant', firstName: 'Bench', lastName: 'Assistant' },
+  ];
+  for (const u of USERS) {
+    const found = await find('User', [{ type: 'equals', attribute: 'userName', value: u.userName }]);
+    if (found.length) {
+      if (!found[0].isActive) await api('PUT', `User/${found[0].id}`, { isActive: true });
+      continue;
+    }
+    await api('POST', 'User', {
+      ...u, type: 'regular', isActive: true,
+      emailAddress: `${u.userName}@example.com`,
+      password: 'Bench-Assignee-1234%', passwordConfirm: 'Bench-Assignee-1234%',
+    });
+    log(`espocrm: created user "${u.userName}"`);
+  }
+
+  // Earlier runs' debris.
+  const leftovers = await find('Opportunity', [{ type: 'endsWith', attribute: 'name', value: ' Bench Opportunity' }]);
+  for (const o of leftovers) await api('DELETE', `Opportunity/${o.id}`);
+  log(leftovers.length ? `espocrm: deleted ${leftovers.length} leftover bench opportunit(ies)` : 'espocrm: no leftover bench opportunities');
+
+  // The seed opportunities the read-only objective reports, each exactly as seeded.
+  const SEED = [
+    { name: 'Seed: annual support renewal', amount: 4800, closeDate: '2026-10-15' },
+    { name: 'Seed: pilot expansion', amount: 9000, closeDate: '2026-11-30' },
+    { name: 'Seed: training package', amount: 2500, closeDate: '2027-01-31' },
+  ];
+  const seeds = await find('Opportunity', [{ type: 'startsWith', attribute: 'name', value: 'Seed:' }]);
+  for (const s of SEED) {
+    const found = seeds.filter((o) => o.name === s.name);
+    const pristine = found.find((o) =>
+      o.stage === 'Prospecting' && !o.assignedUserId && o.accountId === accountIds['Bench Account'] &&
+      Number(o.amount) === s.amount && o.closeDate === s.closeDate);
+    for (const o of found) if (o !== pristine) await api('DELETE', `Opportunity/${o.id}`);
+    if (!pristine) {
+      await api('POST', 'Opportunity', {
+        ...s, amountCurrency: 'USD', stage: 'Prospecting', probability: 10,
+        accountId: accountIds['Bench Account'], assignedUserId: null,
+      });
+      log(`espocrm: seeded opportunity "${s.name}"`);
+    }
+  }
+  // Anything else named Seed: (a copy a run made) goes too.
+  for (const o of seeds) if (!SEED.some((s) => s.name === o.name)) await api('DELETE', `Opportunity/${o.id}`);
+}
+
+/**
+ * Snipe-IT reset doubles as the SEED, as kanboard's does: category "Bench
+ * Laptops", manufacturer "Bench Manufacturer", the model "Bench Laptop Model"
+ * plus a look-alike, the status label "Ready to Deploy" (the install ships it),
+ * locations "Bench Office" plus a look-alike, the user "Bench Assignee"
+ * (bench-assignee) plus a look-alike, and three "Seed:" assets that are
+ * checked in, Ready to Deploy, at Bench Warehouse. Earlier runs' "<runid>
+ * Bench Asset"s are checked in and DELETED (Snipe-IT soft-deletes; asset tags
+ * keep counting up, BA-00001, BA-00002, ..., so a stored tag can never pass by
+ * coincidence). Everything goes through /api/v1 with the Bearer token
+ * bench/thirdparty/snipeit/seed.sh mints into .api-token (or SNIPEIT_API_TOKEN).
+ */
+async function resetSnipeit() {
+  const base = (process.env.APP_URL || 'http://127.0.0.1:8098/').replace(/\/$/, '');
+  const { readFileSync } = await import('node:fs');
+  let token = process.env.SNIPEIT_API_TOKEN;
+  if (!token) {
+    try {
+      token = readFileSync(path.join(here, 'thirdparty', 'snipeit', '.api-token'), 'utf8').trim();
+    } catch {
+      throw new Error('snipeit: no API token — run bash bench/thirdparty/snipeit/seed.sh first');
+    }
+  }
+  const api = async (method, route, body) => {
+    const res = await fetch(`${base}/api/v1${route}`, {
+      method,
+      headers: {
+        authorization: `Bearer ${token}`, accept: 'application/json',
+        ...(body ? { 'content-type': 'application/json' } : {}),
+      },
+      ...(body ? { body: JSON.stringify(body) } : {}),
+    });
+    const text = await res.text();
+    if (!res.ok) throw new Error(`snipeit ${method} ${route}: HTTP ${res.status} ${text.slice(0, 300)}`);
+    const json = text ? JSON.parse(text) : null;
+    // Snipe-IT answers a refused write with HTTP 200 and status "error".
+    if (json?.status === 'error') throw new Error(`snipeit ${method} ${route}: ${JSON.stringify(json.messages).slice(0, 300)}`);
+    return json;
+  };
+  const rows = async (route, search) => {
+    const out = [];
+    for (let offset = 0; ; offset += 500) {
+      const q = new URLSearchParams({ limit: '500', offset: String(offset), ...(search ? { search } : {}) });
+      const page = await api('GET', `${route}?${q}`);
+      out.push(...page.rows);
+      if (page.rows.length < 500) return out;
+    }
+  };
+  /** The id of the record named `name`, created from `body` when absent. */
+  const ensure = async (route, name, body, key = 'name') => {
+    const found = (await rows(route, name)).find((r) => r[key] === name);
+    if (found) return found.id;
+    const made = await api('POST', route, body);
+    log(`snipeit: created ${route.slice(1)} "${name}"`);
+    return made.payload.id;
+  };
+
+  const category = await ensure('/categories', 'Bench Laptops', { name: 'Bench Laptops', category_type: 'asset' });
+  const manufacturer = await ensure('/manufacturers', 'Bench Manufacturer', { name: 'Bench Manufacturer' });
+  const model = await ensure('/models', 'Bench Laptop Model', { name: 'Bench Laptop Model', category_id: category, manufacturer_id: manufacturer });
+  await ensure('/models', 'Bench Desktop Model', { name: 'Bench Desktop Model', category_id: category, manufacturer_id: manufacturer });
+  const ready = await ensure('/statuslabels', 'Ready to Deploy', { name: 'Ready to Deploy', type: 'deployable' });
+  await ensure('/statuslabels', 'Pending', { name: 'Pending', type: 'pending' });
+  await ensure('/locations', 'Bench Office', { name: 'Bench Office' });
+  const warehouse = await ensure('/locations', 'Bench Warehouse', { name: 'Bench Warehouse' });
+  for (const [username, last] of [['bench-assignee', 'Assignee'], ['bench-assistant', 'Assistant']]) {
+    await ensure('/users', username, {
+      first_name: 'Bench', last_name: last, username, email: `${username}@example.com`,
+      password: 'Bench-User-Pass-1234', password_confirmation: 'Bench-User-Pass-1234', activated: true,
+    }, 'username');
+  }
+
+  const assets = await rows('/hardware');
+  const leftovers = assets.filter((a) => / Bench Asset$/.test(a.name ?? ''));
+  for (const a of leftovers) {
+    if (a.assigned_to) await api('POST', `/hardware/${a.id}/checkin`, { note: 'bench reset' });
+    await api('DELETE', `/hardware/${a.id}`);
+  }
+  log(leftovers.length ? `snipeit: deleted ${leftovers.length} leftover bench asset(s)` : 'snipeit: no leftover bench assets');
+
+  // The seed assets objective 1 reads: present, checked in, and as seeded.
+  const SEED = [
+    ['Seed: Reception Laptop', 'SEED-0001'],
+    ['Seed: Training Laptop', 'SEED-0002'],
+    ['Seed: Spare Laptop', 'SEED-0003'],
+  ];
+  for (const [name, tag] of SEED) {
+    const a = assets.find((x) => x.asset_tag === tag);
+    const want = { name, model_id: model, status_id: ready, rtd_location_id: warehouse, notes: null };
+    if (!a) {
+      await api('POST', '/hardware', { asset_tag: tag, ...want });
+      log(`snipeit: seeded asset "${name}" (${tag})`);
+      continue;
+    }
+    if (a.assigned_to) await api('POST', `/hardware/${a.id}/checkin`, { note: 'bench reset' });
+    if (a.assigned_to || a.name !== name || a.model?.id !== model || a.status_label?.id !== ready ||
+        a.rtd_location?.id !== warehouse || a.notes) {
+      await api('PATCH', `/hardware/${a.id}`, want);
+      log(`snipeit: restored seed asset "${name}" (${tag})`);
+    }
+  }
+  // Anything else named Seed: (a copy a run made) goes too.
+  for (const a of assets) {
+    if (!/^Seed:/.test(a.name ?? '') || SEED.some(([, tag]) => tag === a.asset_tag)) continue;
+    if (a.assigned_to) await api('POST', `/hardware/${a.id}/checkin`, { note: 'bench reset' });
+    await api('DELETE', `/hardware/${a.id}`);
+  }
+}
+
 function resetAtelyr() {
   log('atelyr: restoring datastore baseline');
   execFileSync(process.execPath, [path.join(here, 'reset.mjs'), '--restore'], { stdio: 'inherit' });
@@ -516,6 +719,8 @@ const RESETS = {
   openproject: resetOpenproject,
   gitea: resetGitea,
   vikunja: resetVikunja,
+  espocrm: resetEspocrm,
+  snipeit: resetSnipeit,
 };
 
 export const RESET_TARGETS = Object.keys(RESETS);

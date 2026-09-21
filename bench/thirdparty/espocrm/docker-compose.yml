@@ -1,0 +1,71 @@
+# Third-party benchmark target: EspoCRM (real production app we did not write).
+#
+# Widens the matrix by CLIENT TECHNOLOGY: a Backbone.js SPA with hash routing
+# (#Opportunity/view/<id>) — no matrix target runs Backbone — whose record ids
+# are 17-character hex strings minted by the server and visible only in the
+# url, never small numbers in a heading. Detail views edit fields in place
+# behind a pencil or through a full Edit form; link fields (account, assigned
+# user) are autocompletes with a "select" button that opens a searchable modal
+# list; enums are <select>s; the Stream panel takes posts.
+#
+# Two containers: the Apache image (PHP app, installs itself on first boot
+# from the env below, ~60-90s) and MariaDB kept small. No daemon/websocket
+# containers: nothing the task does needs scheduled jobs.
+#
+#   up:    docker compose -f bench/thirdparty/espocrm/docker-compose.yml up -d
+#   reset: node bench/reset-app.mjs --target espocrm   (idempotent: seeds too)
+#   web:   http://127.0.0.1:8097   (admin / bench-admin-pass)
+#   api:   /api/v1, HTTP Basic admin:bench-admin-pass
+services:
+  db:
+    image: mariadb:11.4.13
+    command:
+      - --innodb-buffer-pool-size=32M
+      - --performance-schema=OFF
+      - --max-connections=40
+    environment:
+      MARIADB_ROOT_PASSWORD: bench-root-pass
+      MARIADB_DATABASE: espocrm
+      MARIADB_USER: espocrm
+      MARIADB_PASSWORD: espocrm
+    volumes:
+      - espocrm-db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  espocrm:
+    image: espocrm/espocrm:10.0.8-apache
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8097:80"
+    environment:
+      ESPOCRM_DATABASE_PLATFORM: Mysql
+      ESPOCRM_DATABASE_HOST: db
+      ESPOCRM_DATABASE_NAME: espocrm
+      ESPOCRM_DATABASE_USER: espocrm
+      ESPOCRM_DATABASE_PASSWORD: espocrm
+      ESPOCRM_ADMIN_USERNAME: admin
+      ESPOCRM_ADMIN_PASSWORD: bench-admin-pass
+      ESPOCRM_SITE_URL: http://127.0.0.1:8097
+      # Fixed locale, so run 1 and every replay type and read the same formats.
+      ESPOCRM_LANGUAGE: en_US
+      ESPOCRM_DATE_FORMAT: MM/DD/YYYY
+      ESPOCRM_TIME_ZONE: UTC
+      ESPOCRM_DEFAULT_CURRENCY: USD
+    # 10.x wants these three mounted separately; mounting /var/www/html whole
+    # is the legacy layout, which it warns about and will not upgrade.
+    volumes:
+      - espocrm-data:/var/www/html/data
+      - espocrm-custom:/var/www/html/custom
+      - espocrm-client-custom:/var/www/html/client/custom
+
+volumes:
+  espocrm-db:
+  espocrm-data:
+  espocrm-custom:
+  espocrm-client-custom:

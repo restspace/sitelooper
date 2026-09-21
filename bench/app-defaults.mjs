@@ -59,4 +59,18 @@ export const APP_DEFAULTS = {
     APP_EMAIL: 'admin',
     APP_PASSWORD: 'bench-admin-pass',
   },
+  // The espocrm image installs this admin on first boot from
+  // ESPOCRM_ADMIN_USERNAME/PASSWORD in its docker-compose.yml.
+  espocrm: {
+    APP_URL: 'http://127.0.0.1:8097/',
+    APP_EMAIL: 'admin',
+    APP_PASSWORD: 'bench-admin-pass',
+  },
+  // bench/thirdparty/snipeit/seed.sh creates this admin and the settings row,
+  // so the /setup wizard never opens.
+  snipeit: {
+    APP_URL: 'http://127.0.0.1:8098/',
+    APP_EMAIL: 'admin',
+    APP_PASSWORD: 'bench-admin-pass',
+  },
 };

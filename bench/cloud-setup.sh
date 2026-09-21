@@ -288,6 +288,34 @@ for WITH_TARGET in $WITH_TARGETS; do
       # in, and is the idempotent seed for everything else, as for kanboard.
       node bench/reset-app.mjs --target vikunja
       ;;
+    espocrm)
+      # First boot installs the app into the data volume from the env in its
+      # docker-compose.yml (~60-90s warm); allow five minutes on a cold box.
+      # The API answers 401 without credentials once the install is done.
+      for _ in $(seq 1 150); do
+        code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 -u admin:bench-admin-pass http://127.0.0.1:8097/api/v1/App/user || true)"
+        [ "$code" = "200" ] && break; sleep 2
+      done
+      echo "    espocrm api App/user: HTTP ${code:-unreachable}"
+      # No seed.sh: the image installs the admin; the reset is the idempotent
+      # seed for everything else, as for kanboard.
+      node bench/reset-app.mjs --target espocrm
+      ;;
+    snipeit)
+      # Apache + MariaDB; first boot migrates in ~30-60s warm, allow five
+      # minutes on a cold box. /login answers 302 (to /setup) until seeded.
+      for _ in $(seq 1 150); do
+        code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://127.0.0.1:8098/login || true)"
+        { [ "$code" = "200" ] || [ "$code" = "302" ]; } && break; sleep 2
+      done
+      echo "    snipeit login page: HTTP ${code:-unreachable}"
+      # seed.sh makes Passport's signing keys, the admin and the settings row
+      # (so no setup wizard) and mints the API token into
+      # bench/thirdparty/snipeit/.api-token; the reset is the idempotent seed
+      # for everything else, as for kanboard.
+      bash bench/thirdparty/snipeit/seed.sh
+      node bench/reset-app.mjs --target snipeit
+      ;;
   esac
 done
 
