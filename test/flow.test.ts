@@ -1056,6 +1056,33 @@ describe('work the recording did that the flow does not contain', () => {
     expect(unbankedMutations(entries)).toEqual([]);
   });
 
+  // ghost fwgh1-n1: the blocked create saved the post (the editor url gained
+  // its id), published, and went back to the list; the next instruction
+  // opened that post from the list and read it. Opening a record the adopted
+  // group already reached is not completing it: the check is its own step.
+  it('keeps a successor that merely opens the record the adopted group reached before leaving it', () => {
+    const list = `${ORIGIN}/ghost/#/posts`;
+    const post = `${ORIGIN}/ghost/#/editor/post/6ab1b947f1466900016043ff`;
+    const entries: RecordedEntry[] = [
+      { k: 'instruction', text: "Create a post titled 'x Bench Post' and publish it.", url: list },
+      { k: 'step', tool: 'click', args: { target: '@e1' }, locators: {}, diff: { url: `${ORIGIN}/ghost/#/editor/post`, alerts: [], added: ['- textbox "Post title"'] } },
+      { k: 'step', tool: 'fill', args: { target: '@e2', value: 'x Bench Post' }, locators: {}, diff: { url: post, alerts: [], added: [] } },
+      { k: 'step', tool: 'click', args: { target: '@e3' }, locators: {}, diff: { url: list, alerts: [], added: ['- link "x Bench Post"'] } },
+      { k: 'report', status: 'failure', summary: 'publish date not confirmed', values: { post_title: 'x Bench Post' } },
+      { k: 'instruction', text: "Open the published post 'x Bench Post' and report its publish date and its row in the list.", url: list },
+      { k: 'step', tool: 'read', args: { target: '@e4', what: 'text' }, locators: {}, result: '"x Bench Post — Published"' },
+      { k: 'step', tool: 'click', args: { target: '@e5' }, locators: {}, diff: { url: post, alerts: [], added: ['- heading "Post settings"'] } },
+      { k: 'step', tool: 'read', args: { target: '@e6', what: 'value' }, locators: {}, result: '"2026-09-01"' },
+      { k: 'report', status: 'success', summary: 'read', values: { post_list_row: 'x Bench Post — Published', publish_date: '2026-09-01' }, skill: 's_check' },
+    ] as unknown as RecordedEntry[];
+    const flow = buildFlow(entries, { name: 'f', origin: ORIGIN, startUrl: list, vars: {}, session: 's' })!;
+    expect(flow.steps.map((s) => [Boolean(s.adopted), s.skill])).toEqual([
+      [true, undefined],
+      [false, 's_check'],
+    ]);
+    expect(flow.steps[0].outputs).not.toContain('post_list_row');
+  });
+
   it('keeps a continuation that reached no record as the next step it is', () => {
     const board = `${ORIGIN}/board/3`;
     const entries: RecordedEntry[] = [

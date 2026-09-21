@@ -868,7 +868,8 @@ function resolveGroups(groups: Group[]): Group[] {
   // page the merged step no longer leaves behind. A continuation that
   // reached no record (a mere next task on the same page) is left as the
   // step it is, and an adopted group that reached its record on its own
-  // (fwod27's shape) keeps its successor too.
+  // (fwod27's shape) keeps its successor too — wherever in its steps it
+  // reached it (fwgh1: saved, then went back to the list).
   //
   // "Completed" is read off where the continuation's url went: a rescue
   // saves the page it was given, so it lands the record before it leaves
@@ -884,7 +885,16 @@ function resolveGroups(groups: Group[]): Group[] {
     while (i < groups.length - 1) {
       const next = groups[i + 1];
       if (!kept[i + 1] || next.firstTool === 'goto') break;
-      if (landsRecord(g.instruction.url, g.endUrl) || !sameUrlState(g.endUrl, next.instruction.url) || !landedBeforeLeaving(next)) break;
+      // Reached ANYWHERE in its own steps, not only where it ended: ghost
+      // fwgh1-n1's blocked create went list → #/editor/post/<id> (the post
+      // saved, id minted) → back to the list, and the next instruction — a
+      // settings check that opened that post from the list — "landed" the
+      // id only by opening it. Merged, 02-create owned the check's reads
+      // (post_list_row, publish_time_in_list) with a procedure that never
+      // returns to the list: unreported on every replay, and the check
+      // never got a pin of its own.
+      const reached = g.diffs.some((d) => landsRecord(g.instruction.url, d.url)) || landsRecord(g.instruction.url, g.endUrl);
+      if (reached || !sameUrlState(g.endUrl, next.instruction.url) || !landedBeforeLeaving(next)) break;
       const values = { ...(g.report?.values ?? {}), ...(next.report?.values ?? {}) };
       const { skill: _skill, skillParams: _params, ...rest } = next.report ?? { status: 'success' as const, summary: '', values: {} };
       g.report = { ...rest, values } as Group['report'];
