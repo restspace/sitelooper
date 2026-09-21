@@ -1,0 +1,93 @@
+
+[sweep] run 1/3: fwec1-n1 (store: /home/user/sitelooper/bench/results/fwec1-skills)
+[harness] espocrm: defaulting APP_URL
+[harness] espocrm: defaulting APP_EMAIL
+[harness] espocrm: defaulting APP_PASSWORD
+[reset] espocrm: no leftover bench opportunities
+[harness] espocrm responded 200 at http://127.0.0.1:8097/
+stopped: fwec1-n1
+  flow "fwec1" saved: 4 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwec1.json
+  warning: note: 01-signin no longer publishes matching_count — no replay reads it from the page and the recording showed no line to read
+  warning: note: 03-open no longer publishes post_author_and_time, compose_box_after_post — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-report no longer publishes stage, close_date_stored_value, assigned_user, stream_post_author_time — no replay reads them from the page and the recording showed no line to read
+  warning: note: 1 step(s) adopted from non-success instruction(s) whose work the session continued from (02-create) — they replay model-first with doubled budget, and a non-success there does not halt the flow
+  warning: warning: 50 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[1].instruction: "Bench Assignee" (output) in "Create a new Opportunity in EspoCRM with these exact values: Name = '{{runid}} Bench Opportunity'; Account = 'Bench Account' (this is a link field — you must ac"
+  flow.steps[1].instruction: "Bench Account" (output) in "Create a new Opportunity in EspoCRM with these exact values: Name = '{{runid}} Bench Opportunity'; Account = 'Bench Account' (this is a link field — you must ac"
+  flow.steps[1].instruction: "Negotiation" (output) in "Create a new Opportunity in EspoCRM with these exact values: Name = '{{runid}} Bench Opportunity'; Account = 'Bench Account' (this is a link field — you must ac"
+  flow.steps[1].instruction: "2026-12-31" (output) in "Create a new Opportunity in EspoCRM with these exact values: Name = '{{runid}} Bench Opportunity'; Account = 'Bench Account' (this is a link field — you must ac"
+  flow.steps[1].instruction: "12500" (output) in "Create a new Opportunity in EspoCRM with these exact values: Name = '{{runid}} Bench Opportunity'; Account = 'Bench Account' (this is a link field — you must ac"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwec1-n1 stop=completed
+turns=7 wall=230.0s
+commands=6 cmdTime=200.2s cmdBytes=25600 timeouts=0
+orchestrator in=13574 cw=0 cr=28864 out=2267
+inner prompt=1399575 cached=1302016 completion=18182
+spend=$0.0662 maxUsd=3
+learn: A_n=0 replayed=0/5 full=0 repaired=0 compiled=4 variants=0
+-> /home/user/sitelooper/bench/results/fwec1-n1-sitelooper-result.json
+
+fwec1-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — id=6ab1b02db0b8615b9, account=Bench Account, description includes runid=true
+  obj 3: PASS — stage=Negotiation
+  obj 4: PASS — amount=12500 USD, closeDate=2026-12-31
+  obj 5: PASS — assignedUser=Bench Assignee
+  obj 6: PASS — 1 post(s), 1 carrying the runid
+  obj 7: PASS — record id 6ab1b02db0b8615b9 reported
+
+[sweep] run 2/3: fwec1-n2 (replay flow fwec1, no orchestrator)
+[reset] espocrm: deleted 1 leftover bench opportunit(ies)
+
+fwec1-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — id=6ab1b0e3c2d9e9f95, account=Bench Account, description includes runid=true
+  obj 3: PASS — stage=Negotiation
+  obj 4: PASS — amount=12500 USD, closeDate=2026-12-31
+  obj 5: PASS — assignedUser=Bench Assignee
+  obj 6: PASS — 1 post(s), 1 carrying the runid
+  obj 7: PASS — record id 6ab1b0e3c2d9e9f95 reported
+[sweep] fwec1-n2: 02-create has no pinned skill — 38 model turn(s), on every replay
+
+[sweep] run 3/3: fwec1-n3 (replay flow fwec1, no orchestrator)
+[reset] espocrm: deleted 1 leftover bench opportunit(ies)
+[sweep] fwec1-n3: 1 drift ticket(s) → fwec1-n3-drift.json
+
+fwec1-n3: objectives passed 1/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: FAIL — opportunity not found
+  obj 3: FAIL — no opportunity
+  obj 4: FAIL — no opportunity
+  obj 5: FAIL — no opportunity
+  obj 6: FAIL — no opportunity
+  obj 7: FAIL — no opportunity to report
+
+Learning sweep fwec1 (K=3)
+┌─────────┬───┬────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid      │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwec1-n1' │ '7/7'    │ 'completed' │ 7     │ 6    │ 0.0662    │ 0    │ '0/5'        │ 230    │
+│ 1       │ 2 │ 'fwec1-n2' │ '7/7'    │ 'success'   │ 38    │ 4    │ 0.0161    │ 0.75 │ '4/4 (flow)' │ 116    │
+│ 2       │ 3 │ 'fwec1-n3' │ '1/7'    │ 'halted'    │ 29    │ 4    │ 0.0109    │ 0.5  │ '1/4 (flow)' │ 96     │
+└─────────┴───┴────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8097
+  s_71ede4  validated    4 steps  3/3 (100%)
+           Sign in to EspoCRM with username {{v1}} and password {{v2}}. Then go to the Opportunities list and report the …
+  s_a496f6  validated    7 steps  3/3 (100%)
+           Sign in to EspoCRM with username {{v1}} and password {{v2}}. Then go to the Opportunities list and report the …
+  s_140657  validated   11 steps  2/2 (100%)
+           Final verification on the EspoCRM opportunity '{{v1}}' at #Opportunity/view/{{v3}}. Reload/reopen the record p…
+  s_26edaf  provisional  1 steps  1/2 (50%)
+           Create a new Opportunity in EspoCRM with these exact values: Name = '{{v2}}'; Account = 'Bench Account' (this …
+  s_860cbe  validated    5 steps  2/2 (100%)
+           On the EspoCRM record page for the opportunity '{{v1}}' (currently open at #Opportunity/view/{{v3}}), find the…
+  s_005253  provisional 21 steps  1/1 (100%)
+           Create a new Opportunity in EspoCRM with these exact values: Name = '{{v2}}'; Account = 'Bench Account' (this …
+  s_3753ed  provisional  9 steps  1/1 (100%)
+           The EspoCRM create-Opportunity form is currently open at #Opportunity/create with Name '{{v1}}', Account '{{v3…
+  s_952076  provisional 25 steps  1/1 (100%)
+           Create a new Opportunity in EspoCRM with these exact values: Name = '{{v2}}'; Account = 'Bench Account' (this …
+  s_f0c568  provisional  6 steps  1/1 (100%)
+           The EspoCRM create-Opportunity form is currently open at #Opportunity/create with Name '{{v1}}', Account '{{v3…
+store: /home/user/sitelooper/bench/results/fwec1-skills
+
+summary: /home/user/sitelooper/bench/results/fwec1-sweep.json

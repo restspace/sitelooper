@@ -1,0 +1,138 @@
+{
+  "flow": "fwec1",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Signed in to EspoCRM as admin and opened the Opportunities list (http://127.0.0.1:8097/#Opportunity), which shows 3 records (\"1–3 / 3\"). All three names start with \"Seed:\": \"Seed: training package\", \"Seed: pilot expansion\", \"Seed: annual support renewal\". Nothing was modified.",
+      "values": {
+        "opportunity_name_1": "Seed: training package",
+        "opportunity_name_2": "Seed: pilot expansion",
+        "opportunity_name_3": "Seed: annual support renewal",
+        "matching_opportunity_names_1": "Seed: training package",
+        "matching_opportunity_names_2": "Seed: pilot expansion",
+        "matching_opportunity_names_3": "Seed: annual support renewal",
+        "total_records_in_list": "1–3 / 3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Created the Opportunity \"fwec1-n2 Bench Opportunity\" in EspoCRM via the create form (Account and Assigned User both committed through the record-picker dialogs, not free text) and saved it. I then reopened it at #Opportunity/view/6ab1b0e3c2d9e9f95 (a fresh page load) and read every field back from the record view: Name \"fwec1-n2 Bench Opportunity\", Account \"Bench Account\" (link → #Account/view/6ab1af8ea27a9e14c), Stage \"Negotiation\", Amount \"$12,500.00\", Close Date \"Dec 31\", Assigned User \"Bench Assignee\" (link → #User/view/6ab1af9023e3251cb), Description \"Bench opportunity for run fwec1-n2\". The account picker also listed the similarly named \"Bench Accounting Services\", which I did not choose. The detail view abbreviates the close date because the year is the current one (system date Mon Sep 21 2026); I confirmed the stored value by briefly opening the Edit form, which shows 12/31/2026, and left it with Cancel without saving. Nothing else was modified.",
+      "values": {
+        "account": "Bench Account",
+        "account_id": "6ab1af8ea27a9e14c",
+        "account_list_option_not_chosen": "Bench Accounting Services",
+        "amount": "$12,500.00",
+        "assigned_user": "Bench Assignee",
+        "assigned_user_id": "6ab1af9023e3251cb",
+        "close_date_in_edit_form": "12/31/2026",
+        "close_date_shown_on_detail": "Dec 31",
+        "description": "Bench opportunity for run fwec1-n2",
+        "name": "fwec1-n2 Bench Opportunity",
+        "record_id": "6ab1b0e3c2d9e9f95",
+        "record_url": "http://127.0.0.1:8097/#Opportunity/view/6ab1b0e3c2d9e9f95",
+        "stage": "Negotiation",
+        "system_date_at_verification": "Mon Sep 21 2026",
+        "amount_field": "12,500.00",
+        "account_link_href": "#Account/view/6ab1af8ea27a9e14c",
+        "assigned_user_link_href": "#User/view/6ab1af9023e3251cb",
+        "ref": "fwec1-n2",
+        "assignedUser": "Bench Assignee",
+        "assignedUser_id": "6ab1af9023e3251cb"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "the flow step has no pinned skill",
+      "replayed": null,
+      "repaired": false,
+      "turns": 38,
+      "repinned": "s_26edaf",
+      "repinParams": {
+        "v1": "{{runid}}",
+        "v2": "{{runid}} Bench Opportunity",
+        "v3": "12500",
+        "v4": "2026-12-31",
+        "v5": "Bench opportunity for run {{runid}}",
+        "v6": "{{02-create.url.h2}}"
+      },
+      "unreported": [
+        "amount_on_screen",
+        "expected_closeDate",
+        "close_date_shown",
+        "close_date_field_value_committed",
+        "probability"
+      ]
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "In the Stream panel on the Opportunity record page I typed 'Bench stream post for run fwec1-n2 Bench Opportunity' into the \"Write your comment here\" box and clicked Post; the compose box cleared and the Post/Preview buttons disappeared. The post now renders in the Stream list as a post by Admin at 22:31 whose body text is \"Bench stream post for run fwec1-n2 Bench Opportunity\" (exact text read from the live DOM, paragraph inside the post's complex-text block).",
+      "values": {
+        "post_text": "Bench stream post for run fwec1-n2",
+        "record_id": "6ab1b0e3c2d9e9f95",
+        "ref": "fwec1-n2 Bench Opportunity"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-report",
+      "status": "success",
+      "summary": "Replayed stored procedure s_140657; observed record_id=6ab1b0e3c2d9e9f95, ref=fwec1-n2, name=fwec1-n2 Bench Opportunity, account=Bench Account, amount=$12,500.00, close_date_shown=Dec 31, description=Bench opportunity for run fwec1-n2, stream_post_text=Bench stream post for run fwec1-n2.",
+      "values": {
+        "record_id": "6ab1b0e3c2d9e9f95",
+        "ref": "fwec1-n2",
+        "name": "fwec1-n2 Bench Opportunity",
+        "account": "Bench Account",
+        "amount": "$12,500.00",
+        "close_date_shown": "Dec 31",
+        "description": "Bench opportunity for run fwec1-n2",
+        "stream_post_text": "Bench stream post for run fwec1-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 4,
+  "total": 4,
+  "repinned": 1,
+  "drift": 0,
+  "wallMs": 116495,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 616886,
+    "completionTokens": 11720,
+    "cachedTokens": 567808
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 616886,
+      "completionTokens": 11720,
+      "cachedTokens": 567808
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

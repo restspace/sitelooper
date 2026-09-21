@@ -1,0 +1,34 @@
+{
+  "arm": "spec",
+  "runid": "fwec1-spec",
+  "target": "espocrm",
+  "flow": "fwec1.json",
+  "flowName": "fwec1",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwec1-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwec1-spec-spec-tmp/fwec1.flow.ts",
+  "specFile": "bench/results/fwec1-spec-spec-tmp/fwec1.spec.ts",
+  "wallMs": 8041,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwec1",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 5037,
+      "error": "Error: 02-create needs {{02-create.url.h2}}, and this run never published it. No `[sitelooper skip]` line was logged for 02-create on this run, so no read of 02-create.url.h2 was even attempted: check that 02-create is a step of this flow and that it is the step that publishes this value, rather than re-recording a read that may be working. Stopping here instead of passing an empty value into 02-create: blank, a record-scoped locator matches every record and a known slot loses its identity, so the step would do its work to the wrong one. Everything earlier steps did stands; nothing of 02-create has run.",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "logTail": "\nRunning 1 test using 1 worker\n\n[sitelooper step] 01-signin\n  ✘  1 fwec1.spec.ts:9:1 › fwec1 (5.0s)\n\n\n  1) fwec1.spec.ts:9:1 › fwec1 › 02-create: Create a new Opportunity in EspoCRM with these exact values: Name = '{{runid}} Bench Opportunity'; Account = 'Bench Account' (this is a link field — you must actually select the record 'Bench Account' from the suggestions or the select dialog, not just type it; note other accounts have similar names so pick the exact one); Stage = 'Negotiation'; Amount = 12500 (default currency); Close Date = 2026-12-31; Assigned User = 'Bench Assignee' (also a link field — actually select the user 'Bench Assignee' from the suggestions or select dialog, exact match); Description = 'Bench opportunity for run {{runid}}'. Save the record. Then verify by reopening the record and report the values shown for Name, Account, Stage, Amount, Close Date, Assigned User, and Description, plus the record ID from the page address (#Opportunity/view/<id>). \n\n    Error: 02-create needs {{02-create.url.h2}}, and this run never published it. No `[sitelooper skip]` line was logged for 02-create on this run, so no read of 02-create.url.h2 was even attempted: check that 02-create is a step of this flow and that it is the step that publishes this value, rather than re-recording a read that may be working. Stopping here instead of passing an empty value into 02-create: blank, a record-scoped locator matches every record and a known slot loses its identity, so the step would do its work to the wrong one. Everything earlier steps did stands; nothing of 02-create has run.\n\n       at fwec1.flow.ts:9800\n\n      9798 |         ` attempted: check that ${sid} is a step of this flow and that it is the step that publishes` +\n      9799 |         ` this value, rather than re-recording a read that may be working.`;\n    > 9800 |     throw new Error(\n           |           ^\n      9801 |       `${by} needs {{${ref}}}, and this run never published it` +\n      9802 |         (value === '' ? ' (it was published empty)' : '') +\n      9803 |         `. ${trail}` +\n        at need (/home/user/sitelooper/bench/results/fwec1-spec-spec-tmp/fwec1.flow.ts:9800:11)\n        at /home/user/sitelooper/bench/results/fwec1-spec-spec-tmp/fwec1.flow.ts:12569:177\n        at runFlow (/home/user/sitelooper/bench/results/fwec1-spec-spec-tmp/fwec1.flow.ts:12568:5)\n        at /home/user/sitelooper/bench/results/fwec1-spec-spec-tmp/fwec1.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/fwec1-fwec1/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/fwec1-fwec1/error-context.md\n\n  1 failed\n    fwec1.spec.ts:9:1 › fwec1 ──────────────────────────────────────────────────────────────────────\n"
+}

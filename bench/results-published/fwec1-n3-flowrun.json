@@ -1,0 +1,88 @@
+{
+  "flow": "fwec1",
+  "status": "halted",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Signed in to EspoCRM as admin and opened the Opportunities list (http://127.0.0.1:8097/#Opportunity), which shows 3 records (\"1–3 / 3\"). All three names start with \"Seed:\": \"Seed: training package\", \"Seed: pilot expansion\", \"Seed: annual support renewal\". Nothing was modified.",
+      "values": {
+        "opportunity_name_1": "Seed: training package",
+        "opportunity_name_2": "Seed: pilot expansion",
+        "opportunity_name_3": "Seed: annual support renewal",
+        "matching_opportunity_names_1": "Seed: training package",
+        "matching_opportunity_names_2": "Seed: pilot expansion",
+        "matching_opportunity_names_3": "Seed: annual support renewal",
+        "total_records_in_list": "1–3 / 3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "failure",
+      "summary": "The Opportunity was NOT saved — no record was created, so there is no record ID to report. I was still on /#Opportunity/create with the form filled when the turn cap hit. Verified on the live form (last snapshot of #main): Name = \"fwec1-n3 Bench Opportunity\", Amount = \"12,500.00\" (USD shown), Close Date = \"12/31/2026\" (picked from the date picker, not typed), Description = \"Bench opportunity for run fwec1-n3\", and the Account field textbox reads \"Bench Account\" — but the Account link and the Assigned User link were NOT demonstrably committed (the Account select dialog was opened and a \"Bench Account\" row link was clicked, yet the field still renders as a plain textbox with my typed text and no chip/badge; the Assigned User field was typed as \"Bench Assignee\" but the suggestion list was never confirmed closed with a picked option — the last snapshot shows it as a textbox containing my text, still [active]). I never clicked Save, so nothing was modified on the server. Claimed values for Account/Assigned User are unconfirmed; the record does not exist.",
+      "values": {
+        "name_field": "fwec1-n3 Bench Opportunity",
+        "amount_field": "12,500.00 (USD)",
+        "close_date_field": "12/31/2026",
+        "description_field": "Bench opportunity for run fwec1-n3",
+        "account_field_unconfirmed": "Bench Account (text typed; link not confirmed committed)",
+        "assigned_user_field_unconfirmed": "Bench Assignee (text typed; link not confirmed committed)",
+        "record_id": "none — record not saved"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 02-create.url.h2",
+      "replayed": "1/1",
+      "repaired": false,
+      "turns": 29
+    }
+  ],
+  "passed": 1,
+  "total": 4,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwec1",
+      "step": "02-create",
+      "skill": "s_26edaf",
+      "similarity": 1.001,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 02-create.url.h2",
+      "pageUrlPattern": "http://127.0.0.1:8097/#Opportunity/create",
+      "pageUrl": "http://127.0.0.1:8097/#Opportunity/create"
+    }
+  ],
+  "wallMs": 96105,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 392334,
+    "completionTokens": 8296,
+    "cachedTokens": 359808
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 392334,
+      "completionTokens": 8296,
+      "cachedTokens": 359808
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "halted",
+  "nextActions": []
+}
