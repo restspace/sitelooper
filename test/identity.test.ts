@@ -839,6 +839,54 @@ describe('a step that MINTS a record is known as such', () => {
     expect(prelude).not.toContain('ALREADY CREATED');
     expect(prelude).toMatch(/may already exist/);
   });
+
+  // fwop3 05-add, both replays: segment 2/5 typed the note and clicked "Submit
+  // comment", segment 3/5 stopped on its first step, and recovery was shown
+  // only the stopped segment — so it posted the comment again (2 comments
+  // carrying the runid). A comment mints no url: `created` is empty.
+  it('tells recovery every step the earlier segments of a chain ran, not only the stopped one', async () => {
+    const { renderChainStop } = await import('../src/skills/replay.js');
+    const result = (over: object) =>
+      ({
+        ok: true, refused: false, warnings: [], values: {}, misses: [], derivedValues: {},
+        generalisations: [], candidateEvidence: [], created: [], similarity: null, fallthroughs: 0, ...over,
+      }) as unknown as import('../src/skills/replay.js').ReplayResult;
+    const seg = (id: string, index: number) => ({ id, steps: [{}], seq: { chain: 's_1c1aeb', index, of: 5 } }) as unknown as Skill;
+    const earlier = [
+      { skill: seg('s_b2332d', 0), res: result({ stepsRun: 1, stepsTotal: 1, lines: ['1. click role=tab[name="Activity"] → clicked'] }) },
+      {
+        skill: seg('s_5749e4', 1),
+        res: result({
+          stepsRun: 3, stepsTotal: 3,
+          lines: ['1. click → clicked', '2. type text="Progress note for run fwop3-n2: work started" → typed', '3. click role=button[name="Submit comment"] → clicked'],
+        }),
+      },
+    ];
+    const stopped = result({ ok: false, stepsRun: 0, stepsTotal: 1, failedAt: 1, lines: ['1. click → FAILED: expected url …/relations'] });
+    const prelude = renderChainStop(earlier, seg('s_5b3db7', 2), stopped);
+    expect(prelude).toContain('2 earlier segment(s)');
+    expect(prelude).toContain('s_5749e4 (segment 2/5): 3/3 steps ok');
+    expect(prelude).toContain('Submit comment');
+    expect(prelude).toContain('Progress note for run fwop3-n2');
+    expect(prelude).toMatch(/Do not do any of it again/);
+    // the earlier segments come BEFORE the stop, and the stop is still rendered
+    expect(prelude.indexOf('Submit comment')).toBeLessThan(prelude.indexOf('Then a stored segment stopped'));
+    expect(prelude).toContain('replayed s_5b3db7: 0/1 steps ok, FAILED at step 1');
+    // a stop at step 1 no longer claims "Steps 1-0 HAVE run"
+    expect(prelude).not.toContain('Steps 1-0');
+  });
+
+  it('keeps the single-procedure prelude when no earlier segment ran', async () => {
+    const { renderChainStop, renderReplay } = await import('../src/skills/replay.js');
+    const skill = { id: 's_one', steps: [{}, {}] } as unknown as Skill;
+    const res = {
+      ok: false, refused: false, stepsRun: 1, stepsTotal: 2, failedAt: 2, lines: [], warnings: [], values: {},
+      misses: [], derivedValues: {}, generalisations: [], candidateEvidence: [], created: [], similarity: null, fallthroughs: 0,
+    } as unknown as import('../src/skills/replay.js').ReplayResult;
+    expect(renderChainStop([], skill, res)).toBe(
+      `[replay] A stored procedure was replayed before you started and stopped part-way. Its output:\n${renderReplay(skill, res)}`,
+    );
+  });
 });
 
 describe('a replay that acted is never retried by a sibling', () => {

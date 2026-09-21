@@ -11,7 +11,7 @@ import type { Page } from 'playwright-core';
 import { agentGesturesOutsideReplay, bindSkill, canAdoptPin, decideRepin, instructionEntry, learnFromInstruction, matchTemplate, pinStartsElsewhere, pinStatus, publishedOutputs, selectCandidates, synthesizeReport } from '../skills/learn.js';
 import { buildFlow, consumedReportedOutputs, consumedUrlOutputs, ignorableRefs, jsonLeaves, lintFlowRefs, lintUnpublishedOutputs, listFlows, liveReadsFor, liveReadsForRecovery, loadFlow, loadFlowFile, lookupOutput, mutatingIntent, noteOutputEvidence, pruneUnsourcedOutputs, recoveryRoute, remapParams, resolveInstruction, resolveStepParams, softResolveInstruction, saveFlow, staleInstructionIds, unbankedMutations, unreportedOutputs, urlOutputs, varyingValues, type RunSpecific } from '../skills/flow.js';
 import { applyRelabelToEntries, applyRelabelToSkills, relabelCases, requestRelabelPlan } from '../skills/relabel.js';
-import { goalSatisfied, renderReplay } from '../skills/replay.js';
+import { goalSatisfied, renderChainStop } from '../skills/replay.js';
 import { drainDrift, llmProposer, recordCandidateEvidence } from '../skills/repair.js';
 import { cascadeProposer } from '../skills/repair-jev.js';
 import { expectationDecisions, recordedTexts, recordedValues, threadingDecisions } from '../skills/triage.js';
@@ -1044,6 +1044,12 @@ ${describeLeaks(leaks.slice(0, 6))}`);
         if (!plan.size) emptyTrace();
         if (plan.size) {
           const applied = applyRelabelToEntries(entries, plan);
+          // The ledger takes the same renames, or every renamed `output:`
+          // origin stops resolving: buildFlow below binds pinned skills
+          // against knownValues(), and fwgr64's 07-report exported with no
+          // params because its v3 origin said `grafana_host` while the ledger
+          // still said `ref` (ledger.ts renameOutputs).
+          for (const [index, renames] of plan) this.ledger.renameOutputs(`i${index}`, renames);
           // A skill may be the head of a segment chain whose LATER segment
           // holds the labelled read, so the whole chain takes the rename.
           const skillIndex = new Map<string, number>();
@@ -2333,6 +2339,9 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
     const derived: Record<string, string> = { ...replay.derivedValues };
     let current = match.skill;
     let last = match.skill; // whose replay `replay` currently holds
+    // Each segment the walk advanced past, with what its replay did: a stop
+    // later in the chain hands ALL of it to recovery (renderChainStop).
+    const earlier: { skill: typeof current; res: typeof replay }[] = [];
     while (replay.ok && current.seq && current.seq.index < current.seq.of - 1) {
       const next = store.list(origin).find((s) => s.seq?.chain === current.seq!.chain && s.seq?.index === current.seq!.index + 1);
       if (!next) {
@@ -2345,6 +2354,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       // does when it fails — recording it here too doubled its stats.
       if (last.id !== match.skill.id) store.recordOutcome(last.id, { ok: true, fallthroughs: replay.fallthroughs, instructionSucceeded: true });
       agg.segmentsDone++;
+      earlier.push({ skill: current, res: replay });
       progress(`[skill] chain ${current.seq.chain}: segment ${next.seq!.index + 1}/${next.seq!.of} → ${next.id}`);
       const nextExec = await executeTool(this.browser, 'run_skill', { id: next.id, params: { ...match.params, ...derived } }, screenshotDir, signal);
       const r = nextExec.replay;
@@ -2417,11 +2427,8 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       tier: 'A',
     };
     if (!replay.ok) {
-      const ranNote = agg.segmentsDone
-        ? `[replay] ${agg.segmentsDone} earlier segment(s) of this procedure chain replayed cleanly and HAVE changed the page. Then a stored segment stopped part-way. Its output:\n`
-        : `[replay] A stored procedure was replayed before you started and stopped part-way. Its output:\n`;
       return withVariance({
-        prelude: ranNote + renderReplay(last, replay),
+        prelude: renderChainStop(earlier, last, replay),
         partial: record,
         why: `${last.id} stopped at step ${replay.failedAt ?? '?'} — ${replay.reason ?? 'no reason recorded'}`,
         ...(pinPast ? { pinPast } : {}),

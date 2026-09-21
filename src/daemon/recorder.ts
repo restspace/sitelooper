@@ -8,7 +8,7 @@ import { dispatchesFirstMatch } from '../execution/lifecycle.js';
 import { rootFor, type FramePath, type PageEffect, type Root } from '../execution/context.js';
 import { urlPattern } from '../skills/compile.js';
 import { foldValue } from '../skills/flow.js';
-import { isRefTarget, refHint, resolveTarget } from './refs.js';
+import { isRefTarget, refHint, refOf, resolveTarget } from './refs.js';
 import { tagComponent } from '../skills/components.js';
 import { GENERATED_ID_HEX_RUN, skeleton } from '../skills/shape.js';
 
@@ -783,7 +783,7 @@ export async function describeTarget(
     }
   }
 
-  const ref = raw.trim().replace(/^@/, '');
+  const ref = refOf(raw) ?? raw.trim().replace(/^@/, '');
   const handle = await page
     .locator(`aria-ref=${ref}`)
     .first()

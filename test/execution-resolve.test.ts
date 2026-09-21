@@ -19,6 +19,7 @@ import {
   isDrift,
   orderCandidates,
   resolveCandidates,
+  snapshotRefCandidate,
   structuralCandidate,
   type CandidateObservation,
   type PointGeometry,
@@ -470,5 +471,42 @@ describe('identityValues', () => {
     expect(identityFields({ kind: 'css', selector: "//tr[contains(., '{{v5}}')]" } as { name?: string })).toEqual([]);
     expect(identityFields({ kind: 'testid', attr: 'data-testid', value: '{{v5}}' } as { name?: string })).toEqual([]);
     expect(identityFields({ kind: 'role', role: 'button' } as { name?: string })).toEqual([]);
+  });
+});
+
+// fwop3 05-add: s_5b3db7 stored `aria-ref=e423` (the "Relations" tab, as the
+// recording agent typed it) as its primary css candidate. A non-structural
+// primary is a trusted handle, so on both replays it resolved to whatever held
+// e423 in the daemon's last snapshot — the Wikis tab — ahead of the stored
+// `tab "Relations"` right behind it.
+describe('snapshot refs (snapshotRefCandidate)', () => {
+  it('names the aria-ref engine, in any segment, and nothing else', () => {
+    expect(snapshotRefCandidate({ kind: 'css', selector: 'aria-ref=e423' })).toBe(true);
+    expect(snapshotRefCandidate({ kind: 'css', selector: 'ARIA-REF=f1e2' })).toBe(true);
+    expect(snapshotRefCandidate({ kind: 'css', selector: 'dialog >> aria-ref=e9' })).toBe(true);
+    expect(snapshotRefCandidate({ kind: 'css', selector: '[aria-ref="x"]' })).toBe(false);
+    expect(snapshotRefCandidate({ kind: 'css', selector: 'role=tab[name="Relations"]' })).toBe(false);
+    expect(snapshotRefCandidate({ kind: 'role' })).toBe(false);
+  });
+
+  it('is never tried, even when it matches exactly one element, and is not a miss', async () => {
+    const ref = fakeLocator({ counts: [1] }, 'aria-ref=e423');
+    const named = fakeLocator({ counts: [1] }, 'tab Relations');
+    const hit = await resolveCandidates(fakePage(), [
+      obs({ locator: ref, index: 0, kind: 'css', ephemeral: true }),
+      obs({ locator: named, index: 1, kind: 'role' }),
+    ]);
+    expect(hit?.locator).toBe(named);
+    expect(hit?.index).toBe(1);
+    expect(ref.calls).toEqual([]);
+    // nothing better FAILED, so this is not drift (s_5749e4's `aria-ref=e417`
+    // filed a drift ticket on n2 for the same reason)
+    expect(hit?.missed).toEqual([]);
+    expect(isDrift(hit!)).toBe(false);
+  });
+
+  it('leaves a chain of nothing but a snapshot ref unresolved rather than acting on it', async () => {
+    const ref = fakeLocator({ counts: [1] }, 'aria-ref=e423');
+    expect(await resolveCandidates(fakePage(), [obs({ locator: ref, index: 0, kind: 'css', ephemeral: true })])).toBeNull();
   });
 });

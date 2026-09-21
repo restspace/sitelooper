@@ -78,6 +78,8 @@ export interface CandidateObservation {
   point?: PointGeometry;
   /** Demonstrated volatile by later runs (hit 0, missed repeatedly). Ordered last within its class. */
   retired?: boolean;
+  /** Names a slot in one agent snapshot, not an element (see snapshotRefCandidate). Never resolved; set only when true. */
+  ephemeral?: boolean;
 }
 
 /** Policy for one resolution. Named, because seven positional flags is how a call site gets one wrong. */
@@ -194,6 +196,25 @@ export function structuralCandidate(c: { kind: string; nth?: number; selector?: 
 }
 
 /**
+ * A candidate that addresses the element through Playwright's `aria-ref`
+ * engine: `aria-ref=e423` names whatever held ref e423 in the most recent AI
+ * snapshot of THIS page, so it identifies nothing across runs — and worse, it
+ * is not absent on a later run, it is some OTHER element. fwop3's 05-add chain
+ * stored `aria-ref=e423` (the "Relations" tab, typed by the recording agent)
+ * as its primary css candidate; a primary that is not structural is a handle,
+ * trusted without the identity guard, so on both replays the daemon clicked
+ * the Wikis tab — the element that held e423 in its own last snapshot — while
+ * the stored `tab "Relations"` right behind it would have found the tab. In
+ * the compiled artifact the same selector has no snapshot to resolve against
+ * at all. Refs are no longer stored (daemon/refs.ts refOf); this keeps the
+ * ones already in stores from ever being resolved, in both runners.
+ */
+export function snapshotRefCandidate(c: { kind: string; selector?: string }): boolean {
+  if (c.kind !== 'css' && c.kind !== 'id') return false;
+  return (c.selector ?? '').split('>>').some((segment) => /^\s*aria-ref\s*=/i.test(segment));
+}
+
+/**
  * The class a candidate belongs to, as a sort key: identity (0), handle (1),
  * path (2), point (3). A point is the last resort behind every path.
  */
@@ -297,7 +318,10 @@ export function isDrift(hit: { index: number; missed: readonly unknown[] }): boo
  */
 export async function resolveCandidates(page: Page, cands: readonly CandidateObservation[], policy: ResolvePolicy = {}): Promise<Resolution | null> {
   const { allowMultiple = false, ambiguousNth, requireIdentity = [], stayOnOrigin, waitMs = 0, pollMs = RESOLVE_POLL_MS } = policy;
-  const ordered = orderCandidates(cands);
+  // A snapshot ref is not tried at all, and so is never a miss: it was never a
+  // way of finding this element on this run (snapshotRefCandidate), and counting
+  // it absent filed a drift ticket on every run for s_5749e4's `aria-ref=e417`.
+  const ordered = orderCandidates(cands.filter((c) => !c.ephemeral));
   const recordedBox = cands.find((c) => c.kind === 'point' && c.point)?.point ?? null;
 
   /**

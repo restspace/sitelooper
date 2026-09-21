@@ -92,7 +92,7 @@ export function rememberRefs(page: Page, snapshotText: string): void {
 
 /** The role (and name, when the line carried one) a ref showed in a snapshot. */
 export function refHint(page: Page, ref: string): { role: string; name?: string } | undefined {
-  return refLines.get(page)?.get(ref.replace(/^@/, ''));
+  return refLines.get(page)?.get(refOf(ref) ?? ref.replace(/^@/, ''));
 }
 
 /** `- button "Save" [@e12]` → e12: { role: 'button', name: 'Save' }. */
@@ -180,8 +180,23 @@ export function truncate(text: string, maxChars: number): string {
   return `${head}\n… [truncated ${dropped.length} chars of this page.${scope}]`;
 }
 
-/** `@e12`, or `@f1e2` for an element inside the page's first iframe. */
-const REF_RE = /^@?((?:f\d+)?e\d+)$/;
+/**
+ * `@e12`, or `@f1e2` for an element inside the page's first iframe — and the
+ * engine's own spelling, `aria-ref=e12`, which is the same ref. We teach that
+ * spelling ourselves (truncate's "Snapshot one with selector aria-ref=eNN"),
+ * so the agent uses it for actions too: fwop3-n1 clicked the "Relations" tab
+ * as `aria-ref=e423`. Not recognised here, it was taken for a SELECTOR, and the
+ * recorder stored it as the chain's primary css candidate — a handle, trusted
+ * without an identity check. A ref is only a slot in the LAST snapshot, so on
+ * both replays (n2, n3) e423 was the Wikis tab, the click landed there, and
+ * 05-add fell back to the model.
+ */
+const REF_RE = /^(?:@|aria-ref=)?((?:f\d+)?e\d+)$/;
+
+/** The bare ref (`e12`, `f1e2`) a target names, in any spelling REF_RE accepts, or null for a selector. */
+export function refOf(target: string): string | null {
+  return REF_RE.exec(target.trim())?.[1] ?? null;
+}
 
 /**
  * Resolve an agent-supplied target to a Locator. `@e12` (or bare `e12`)
@@ -192,8 +207,8 @@ const REF_RE = /^@?((?:f\d+)?e\d+)$/;
  */
 export function resolveTarget(page: Page, target: string): Locator {
   const trimmed = target.trim();
-  const refMatch = REF_RE.exec(trimmed);
-  if (refMatch) return page.locator(`aria-ref=${refMatch[1]}`);
+  const ref = refOf(trimmed);
+  if (ref) return page.locator(`aria-ref=${ref}`);
   const selector = implicitRoles(trimmed);
   const primary = page.locator(selector);
   // The field may be the last link of a scoped chain (`dialog >> role=…`):

@@ -1397,6 +1397,73 @@ describe('a value the task stated before the run showed it is not a later step\'
   });
 });
 
+describe('a value the app showed before the run changed anything is not a later step\'s output (fwkb35)', () => {
+  const K = 'http://127.0.0.1:8085';
+  const BOARD = `${K}/?controller=BoardViewController&action=show&project_id=1`;
+  // The board 02-create started on, trimmed from a kanboard recording's
+  // startText: the reset's seed tasks and the columns, before the create ran.
+  const seededBoard = ['- heading "KB Bench Board"', '- link "Backlog"', '- link "#2"', '- link "Seed: order missing parts"', '- link "Work in progress"', '- link "#1"', '- link "Seed: triage inbox"'].join('\n');
+  const entries = (): RecordedEntry[] => [
+    { k: 'step', tool: 'goto', args: { url: `${K}/` }, locators: {} },
+    { k: 'instruction', text: "Sign in and navigate to the board of the project named 'Bench Board' and report the board's column names.", url: `${K}/login`, startText: '- textbox "Username"\n- button "Sign in"' },
+    { k: 'report', status: 'success', summary: 'Columns: Backlog, Ready, Work in progress, Done.', values: { column_1: 'Backlog', column_3: 'Work in progress' }, skill: 's_board' },
+    { k: 'instruction', text: "On the 'Bench Board' project board, create a new task with title exactly 'r1 Bench Task'; report its id.", url: BOARD, startText: seededBoard },
+    { k: 'step', tool: 'click', args: { target: '@e9' }, locators: {}, diff: { url: BOARD, alerts: [], added: ['- link "#4"', '- link "r1 Bench Task"'] } },
+    { k: 'report', status: 'success', summary: 'Created task #4.', values: { task_id_displayed: '#4' }, skill: 's_create' },
+    // 03-verify: the drag moved the seed task instead, and the step failed; the
+    // repair below continued on the page it left, so it is adopted.
+    { k: 'instruction', text: "On the 'Bench Board' project board, move the task titled 'r1 Bench Task' (task #4) so that it sits in the 'Work in progress' column. Do not modify or move any task whose title starts with 'Seed:'.", url: BOARD },
+    { k: 'step', tool: 'drag', args: { source: '@e3', target: '@e7' }, locators: {}, diff: { url: BOARD, alerts: [], added: [] } },
+    { k: 'report', status: 'failure', summary: "Moved '#1 Seed: triage inbox' by mistake.", values: { task_1_title: 'Seed: triage inbox', task_4_current_column: 'Backlog (NOT moved)' } },
+    { k: 'instruction', text: "IMPORTANT repair step: the task '#1 Seed: triage inbox' was accidentally moved from the 'Work in progress' column into the 'Backlog' column. Restore it.", url: BOARD },
+    { k: 'step', tool: 'click', args: { target: '@e5' }, locators: {}, diff: { url: BOARD, alerts: [], added: [] } },
+    { k: 'report', status: 'success', summary: 'Restored.', values: { task_1_current_column: 'Work in progress' }, skill: 's_repair' },
+    { k: 'instruction', text: "Move the task titled 'r1 Bench Task' (task #4) into the 'Work in progress' column.", url: BOARD },
+    { k: 'report', status: 'success', summary: 'Moved.', values: { task_4_column_name: 'Work in progress' }, skill: 's_move' },
+  ];
+  const bind = (skill: string) => (skill === 's_repair' ? { v1: 'Seed: triage inbox', v2: 'Work in progress', v3: 'Backlog' } : null);
+
+  it("04-report's seed title stays literal, while the column 01-open read and the task id 02-create made still thread", () => {
+    const flow = buildFlow(entries(), { name: 'f', origin: K, startUrl: `${K}/`, vars: { runid: 'r1' }, session: 's', bind })!;
+    const [open, create, verify, repair, move] = flow.steps;
+    expect(verify.adopted).toBe(true);
+    expect(verify.recorded.task_1_title).toBe('Seed: triage inbox');
+    expect(repair.instruction).toContain("the task '#1 Seed: triage inbox' was accidentally moved");
+    expect(repair.instruction).not.toContain('.task_1_title}}');
+    expect(repair.params).toEqual({ v1: 'Seed: triage inbox', v2: `{{${open.id}.column_3}}`, v3: `{{${open.id}.column_1}}` });
+    // fwkb34's legitimate threading: a column read by a step before any change,
+    // and the id the create minted, which no page showed before it ran.
+    expect(repair.instruction).toContain(`from the '{{${open.id}.column_3}}' column`);
+    expect(move.instruction).toContain(`(task {{${create.id}.task_id_displayed}})`);
+  });
+
+  it('a later run that saw the value differ keeps it threaded (evidence only adds)', () => {
+    const flow = buildFlow(entries(), { name: 'f', origin: K, startUrl: `${K}/`, vars: { runid: 'r1' }, session: 's', bind, runSpecific: (v) => v === 'Seed: triage inbox' })!;
+    expect(flow.steps[3].params?.v1).toBe(`{{${flow.steps[2].id}.task_1_title}}`);
+  });
+
+  it('fwod11: a record the run created is shown only after the first change, so its id still threads', () => {
+    const O = 'http://127.0.0.1:8069';
+    const list = '- heading "Quotations"\n- cell "S00021"\n- cell "Created 09/22/2026"\n- cell "22 records"';
+    const flow = buildFlow([
+      { k: 'step', tool: 'goto', args: { url: `${O}/` }, locators: {} },
+      { k: 'instruction', text: 'Sign in and open the Sales app; report the page heading.', url: `${O}/web/login` },
+      { k: 'report', status: 'success', summary: 'Quotations.', values: { heading: 'Quotations' }, skill: 's_open' },
+      { k: 'instruction', text: 'Create a quotation for the customer and save it; report the product.', url: `${O}/odoo/sales`, startText: list },
+      { k: 'step', tool: 'click', args: { target: '@e4' }, locators: {}, diff: { url: `${O}/odoo/sales/22`, alerts: [], added: ['- heading "S00022"'] } },
+      { k: 'report', status: 'success', summary: 'Saved.', values: { product: 'Customizable Desk' }, skill: 's_create' },
+      { k: 'instruction', text: 'Confirm the open quotation; report the order reference and record id.', url: `${O}/odoo/sales/22`, startText: '- heading "S00022"' },
+      { k: 'report', status: 'success', summary: 'Confirmed.', values: { order_ref: 'S00022', record: '22' }, skill: 's_confirm' },
+      { k: 'instruction', text: 'Cancel the sales order S00022 (record 22).', url: `${O}/odoo/sales/22` },
+      { k: 'report', status: 'success', summary: 'Cancelled.', values: { status: 'Cancelled' }, skill: 's_cancel' },
+    ], { name: 'f', origin: O, startUrl: `${O}/`, vars: {}, session: 's' })!;
+    const confirm = flow.steps[2].id;
+    // "22" sits inside a date and a count on the list page before the create,
+    // which is not the page showing record 22: only a whole element name is.
+    expect(flow.steps[3].instruction).toMatch(new RegExp(`^Cancel the sales order \\{\\{${confirm}\\.order_ref\\}\\} \\(record \\{\\{[^}]+\\}\\}\\)\\.$`));
+  });
+});
+
 describe('remapParams', () => {
   // rpat1 re-pinned 04-add and kept the OLD skill's slot names; rpat2 then
   // guessed by value and wrote an earlier run's literal into a live run.

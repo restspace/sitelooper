@@ -217,6 +217,14 @@ describe('observationSource / observationSources', () => {
     expect(observationSource({ kind: 'css', selector: '.plain' }, 2)).toContain('structural: false');
   });
 
+  // The shared snapshotRefCandidate, rendered as replay's resolveChain passes
+  // it — only when true — so the artifact never tries a stored `aria-ref=e423`.
+  it('marks a snapshot ref ephemeral, and nothing else', () => {
+    expect(observationSource({ kind: 'css', selector: 'aria-ref=e423' }, 0)).toContain('ephemeral: true');
+    expect(observationSource({ kind: 'css', selector: '.plain' }, 0)).not.toContain('ephemeral');
+    expect(observationSource(role, 0)).not.toContain('ephemeral');
+  });
+
   it('carries the slots as a template literal, so a parameter is filled at run time', () => {
     const src = observationSource({ kind: 'role', role: 'button', name: 'Save {{v1}}' }, 0);
     expect(src).toContain("carries: JSON.stringify({ kind: 'role', role: 'button', name: `Save ${p.v1}` })");

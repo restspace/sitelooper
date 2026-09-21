@@ -481,6 +481,22 @@ d('script recording (fixture page)', () => {
     expect(described.chain).toEqual([{ kind: 'role', role: 'button', name: 'Pick TestData' }]);
   }, 60_000);
 
+  // fwop3-n1 clicked the "Relations" tab as `aria-ref=e423`; described as a raw
+  // selector it became the stored primary css candidate, and both replays
+  // clicked whatever held e423 in their own last snapshot (the Wikis tab).
+  it('describes an aria-ref=eNN target as the element it names, never as a stored selector', async () => {
+    const page = await session.getPage();
+    await page.evaluate(() => document.body.insertAdjacentHTML('beforeend', '<div id="tabs-fixture" role="tablist"><a role="tab" href="#r">Relations</a><a role="tab" href="#w">Wikis</a></div>'));
+    const snap = await run('snapshot', {});
+    const ref = /tab "Relations" \[@(e\d+)\]/.exec(snap.result)?.[1];
+    expect(ref).toBeTruthy();
+    const described = await describeTarget(page, `aria-ref=${ref}`, true);
+    expect(described.verified).toBe(true);
+    expect(described.chain?.some((c) => c.kind === 'css' && /aria-ref/.test(c.selector))).toBe(false);
+    expect(described.chain).toContainEqual({ kind: 'role', role: 'tab', name: 'Relations' });
+    await page.evaluate(() => document.getElementById('tabs-fixture')?.remove());
+  }, 60_000);
+
   it('records a raw CSS target verbatim and flags it when it is not unique', async () => {
     const recorder = session.script!;
     await run('read', { target: '.dup', what: 'count' });

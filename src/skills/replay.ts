@@ -17,6 +17,7 @@ import {
   identityValues,
   isDrift,
   resolveCandidates,
+  snapshotRefCandidate,
   structuralCandidate,
   type CandidateObservation,
   type ResolvePolicy as SharedResolvePolicy,
@@ -1717,6 +1718,8 @@ export async function resolveChain(
     // Demonstrated volatile by later runs: store evidence, an INPUT to the
     // shared ordering rather than a rule of its own.
     retired: retired(candidate),
+    // A snapshot ref names nothing on this run; the shared policy never tries it.
+    ...(snapshotRefCandidate(candidate) ? { ephemeral: true } : {}),
   }));
   const hit = await resolveCandidates(page, observations, { pollMs: RESOLVE_POLL_MS, ...shared });
   if (!hit) return null;
@@ -1979,8 +1982,11 @@ export function renderReplay(skill: Skill, res: ReplayResult): string {
     lines.push(`  not run: steps ${res.failedAt + 1}-${res.stepsTotal}`);
   }
   if (!res.ok) {
+    // "Steps 1-0 HAVE run" is what a stop at step 1 used to say (fwop3 05-add).
     lines.push(
-      `Steps 1-${res.stepsRun} HAVE run and changed the page — do not repeat them. Observe the current page and continue from here to finish the instruction yourself.`,
+      res.stepsRun > 0
+        ? `Steps 1-${res.stepsRun} HAVE run and changed the page — do not repeat them. Observe the current page and continue from here to finish the instruction yourself.`
+        : `No step of ${skill.id} completed. Observe the current page and continue from here to finish the instruction yourself.`,
     );
     // Naming the steps is not enough when the steps CREATED something. fwod13
     // replayed 02-create part-way, stopped, and recovery created a second
@@ -2018,6 +2024,41 @@ export function renderReplay(skill: Skill, res: ReplayResult): string {
   }
   if (res.warnings.length) lines.push(`notes: ${res.warnings.join('; ')}`);
   return lines.join('\n');
+}
+
+/**
+ * The recovery prelude for a procedure CHAIN that stopped part-way: every
+ * earlier segment that replayed cleanly, step by step, then the stopped
+ * segment as renderReplay renders it.
+ *
+ * Naming only the stopped segment is how fwop3's 05-add ("add a comment ...
+ * Submit the comment") ended with TWO comments on both replays: segment 2/5
+ * (s_5749e4) opened the editor, typed the note and clicked "Submit comment";
+ * segment 3/5 (s_5b3db7) then stopped on its first step, and the model was
+ * shown "2 earlier segment(s) ... HAVE changed the page" and s_5b3db7's one
+ * failed click — nothing that said the comment was already posted. A comment
+ * mints no url, so `created` was empty and no duplicate warning fired either;
+ * the model read the instruction, added the comment, and the run carried two.
+ * What a replay DISPATCHED is a fact the engine has and the model cannot see
+ * on the page reliably (OpenProject folded that first comment into the
+ * work package's "created this" journal entry), so it is stated, in full.
+ */
+export function renderChainStop(earlier: readonly { skill: Skill; res: ReplayResult }[], last: Skill, res: ReplayResult): string {
+  if (!earlier.length) return `[replay] A stored procedure was replayed before you started and stopped part-way. Its output:\n${renderReplay(last, res)}`;
+  const ran = earlier.flatMap(({ skill, res: r }) => [
+    `  ${skill.id}${skill.seq ? ` (segment ${skill.seq.index + 1}/${skill.seq.of})` : ''}: ${r.stepsRun}/${r.stepsTotal} steps ok`,
+    ...r.lines.map((l) => '    ' + l),
+    ...(r.created.length ? [`    created: ${r.created.map((c) => JSON.stringify(c)).join(', ')}`] : []),
+  ]);
+  return [
+    `[replay] ${earlier.length} earlier segment(s) of this procedure chain replayed cleanly and HAVE changed the page. ` +
+      `Every step listed here RAN in this run: each click, fill and submit reached the app, so its effect is already there. ` +
+      `Do not do any of it again — a second submit, save or create is a silent duplicate, not a recovery. ` +
+      `Check it on the page and do only what the instruction still needs:`,
+    ...ran,
+    `Then a stored segment stopped part-way. Its output:`,
+    renderReplay(last, res),
+  ].join('\n');
 }
 
 /** Which stored skills could apply on this page, best first. */

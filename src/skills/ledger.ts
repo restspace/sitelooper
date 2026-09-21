@@ -406,6 +406,31 @@ export class RunLedger {
     return out;
   }
 
+  /**
+   * Follow a relabel (relabel.ts) of what `step` reported: `renames` is
+   * old name -> new name. Returns how many entries moved.
+   *
+   * The post-session relabel renames the entries and the compiled skills'
+   * `output:i<n>:<name>` bindings, and the flow export then binds every pinned
+   * skill against THIS ledger (server.ts `knownValues`). A ledger still keyed
+   * by the old name answers no renamed binding. grafana fwgr64: i1 reported
+   * the host as `ref`, the relabel made it `grafana_host` in 07-report's skill
+   * (v3's origin), the ledger kept `output:i1:ref`, bindSkill found no value
+   * for v3 and refused the whole skill — so the export wrote 07-report with
+   * no params at all, and both replays took the model and the compile
+   * refused it as `unbound-pin`.
+   */
+  renameOutputs(step: string, renames: Readonly<Record<string, string>>): number {
+    let moved = 0;
+    this.entries = this.entries.map((e) => {
+      const b = e.binding;
+      if (b.from !== 'output' || b.step !== step || !renames[b.name] || renames[b.name] === b.name) return e;
+      moved++;
+      return { ...e, binding: { ...b, name: renames[b.name] } };
+    });
+    return moved;
+  }
+
   /** Every entry, oldest first. */
   all(): LedgerEntry[] {
     return [...this.entries];

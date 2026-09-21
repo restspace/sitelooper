@@ -367,6 +367,7 @@ export function buildFlow(
   const produced: { stepId: string; output: string; value: string }[] = [];
   const seenUrl = new Set(urlParts(opts.startUrl).map((p) => p.value));
   const varEntries = Object.entries(opts.vars).filter(([, v]) => v.length >= 2).sort((a, b) => b[1].length - a[1].length);
+  const baseline = baselineOf(entries);
 
   let prevId: string | undefined;
   let prevGroup: Group | undefined;
@@ -492,6 +493,13 @@ export function buildFlow(
       // task's own vocabulary, so this step cannot be where it came from. See
       // statedBeforeShown for the evidence and the cases.
       if (statedBeforeShown(entries, g.instruction, value)) continue;
+      // And the same question asked of the PAGE rather than the task: a value
+      // the app was already showing before this run changed anything is the
+      // app's baseline data, not something a step after that point produced.
+      // A later run that saw it differ outranks the page (evidence only adds
+      // threading, see `RunSpecific`). See baselineOf for the evidence and the
+      // cases.
+      if (!opts.runSpecific?.(value) && baseline && entries.indexOf(g.instruction) >= baseline.at && baseline.names.has(foldValue(value))) continue;
       // EVERY reported value becomes a reference. Run 1 makes no judgement
       // about which of them name a record, because it cannot: "New (unsaved)"
       // and "S00021" are both just strings a step reported, and the question
@@ -628,6 +636,78 @@ function shownBefore(entries: readonly RecordedEntry[], at: number, value: strin
   }
   const own = entries[at];
   return own.k === 'instruction' && page(own);
+}
+
+/**
+ * What the app was showing before this run changed anything: the entry index
+ * of the first instruction that asks for a change (mutatingIntent), and the
+ * folded values the recording saw up to that point — element names on the
+ * start pages of every instruction up to and including that one, element
+ * names a step's diff added before it, and the values reported or read back
+ * before it. Null when no instruction asks for a change, so a flow that only
+ * observes is never touched.
+ *
+ * WHY. buildFlow threads a value to the step that reported it. For a value the
+ * run MADE that is the point: odoo's S00022 first appears after the create,
+ * and only the reference ties a later "cancel S00022" to this run's order. But
+ * a value the app showed before the run did anything is the app's baseline —
+ * a seed record, a column, the app's own chrome — and the bench resets to that
+ * baseline before every run, so it is the same on every run and a step after
+ * the first change is not where it came from. kanboard fwkb35: 03-verify's
+ * drag displaced the seed task '#1 Seed: triage inbox' (the step failed and
+ * was adopted), 03-verify reported `task_1_title = "Seed: triage inbox"`, and
+ * the repair instruction 04-report was exported as "the task
+ * '#1 {{03-verify.task_1_title}}' was accidentally moved". 03-verify has no
+ * procedure that reads that, so `spec` refused the flow (unsourced-ref), and
+ * n2's model-first 03-verify reported the bench task under that name instead,
+ * so 04-report's replay was told to "restore" '#1 fwkb35-n2 Bench Task'. The
+ * title was on the board 02-create started on, before that create ran.
+ * statedBeforeShown does not reach it: no instruction stated it before
+ * 03-verify did.
+ *
+ * WHAT IT MUST NOT CATCH. A value first shown after the first change is the
+ * run's own and stays threaded: odoo's order number, kanboard's task "#4",
+ * a grafana uid. A value reported by a step BEFORE the first change stays
+ * threaded to that step too (the producer must be at or after the boundary):
+ * fwkb34's `{{02-open.board_column_work_in_progress}}` is read by a step that
+ * changes nothing, and a later identical report never displaces the earlier
+ * producer anyway (the earliest producer of a value wins in buildFlow).
+ *
+ * Deliberately narrower than shownBefore, because it acts in the direction
+ * that is dangerous: a wrongly literal value makes every replay act on run
+ * 1's record. So it takes a whole element NAME (valueLineCandidates' parse),
+ * or a whole reported or read value, never a substring of page text: a record
+ * id "22" inside a date on a list page is not the page showing record 22.
+ */
+function baselineOf(entries: readonly RecordedEntry[]): { at: number; names: Set<string> } | null {
+  const at = entries.findIndex((e) => e.k === 'instruction' && mutatingIntent(e.text) !== null);
+  if (at < 0) return null;
+  const names = new Set<string>();
+  const addLines = (lines: readonly string[] | undefined): void => {
+    for (const line of lines ?? []) {
+      const m = /^- ([\w-]+) ("(?:[^"\\]|\\.)*")/.exec(line.trim());
+      if (!m) continue;
+      try {
+        const name = foldValue(String(JSON.parse(m[2])));
+        if (name) names.add(name);
+      } catch {
+        // an unparseable name is no evidence
+      }
+    }
+  };
+  const addValue = (v: unknown): void => {
+    if (typeof v === 'string' && foldValue(v)) names.add(foldValue(v));
+  };
+  for (let k = 0; k <= at; k++) {
+    const e = entries[k];
+    if (e.k === 'instruction') addLines(e.startText?.split('\n'));
+    if (k === at) break;
+    if (e.k === 'step') {
+      addLines(e.diff?.added);
+      addValue(e.result);
+    } else if (e.k === 'report') Object.values(e.values ?? {}).forEach(addValue);
+  }
+  return { at, names };
 }
 
 interface Group {

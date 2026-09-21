@@ -17,7 +17,7 @@
  * for (`observationSource`): the live locator plus the compile-time facts.
  */
 import type { LocatorCandidate } from '../daemon/recorder.js';
-import { structuralCandidate } from '../execution/resolve.js';
+import { snapshotRefCandidate, structuralCandidate } from '../execution/resolve.js';
 import { VOLATILE_TOKEN_SHAPE, WILDCARD, fieldByName, volatileMatcher } from '../shared/text.js';
 
 export interface SourceOptions {
@@ -353,6 +353,8 @@ export function observationSource(c: LocatorCandidate, index: number, o: SourceO
     `carries: JSON.stringify(${objectSource(named as Record<string, unknown>, o)})`,
   ];
   if (c.nth !== undefined) fields.push(`nth: ${c.nth}`);
+  // The shared rule, rendered as replay passes it: only when true.
+  if (snapshotRefCandidate(c)) fields.push('ephemeral: true');
   if (c.kind === 'point') {
     // A recording without a role or tag is malformed, not a compile crash: an
     // empty tag matches nothing at markPoint, which is the honest miss.

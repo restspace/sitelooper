@@ -601,9 +601,10 @@ function resolveAdjacentRun(
  * Bind a specific skill's {{vN}} slots from an instruction by reading its
  * template as a pattern. Used by flow replay, where the skill is already
  * chosen (pinned), so its status and the page are the flow's concern, not this
- * function's. Returns null unless every slot binds — except a slot the
- * template cannot justify splitting from its neighbour, which is deliberately
- * left unbound (see `resolveAdjacentRun`).
+ * function's. Returns null unless every slot binds — from the template, by
+ * origin, or out of a bound slot that contains it (`deriveContained`) —
+ * except a slot the template cannot justify splitting from its neighbour,
+ * which is deliberately left unbound (see `resolveAdjacentRun`).
  */
 export function bindSkill(skill: Skill, instruction: string, known: Record<string, string> = {}): Record<string, string> | null {
   const names: string[] = [];
@@ -641,7 +642,98 @@ export function bindSkill(skill: Skill, instruction: string, known: Record<strin
     const value = known[p.binding];
     if (value) params[n] = value;
   }
+  // A slot the template never states and whose origin this run has not banked
+  // may still be IN the instruction — inside a slot that is. See
+  // `deriveContained`. Only template/origin-bound values serve as hosts, so a
+  // derivation never feeds another one.
+  const hosts = Object.entries(params)
+    .filter(([h]) => typeof skill.params[h]?.example === 'string')
+    .map(([h, value]) => ({ example: String(skill.params[h].example), value }));
+  for (const [n, p] of Object.entries(skill.params)) {
+    if (params[n] || refused.has(n) || !p.example) continue;
+    const derived = deriveContained(String(p.example), hosts);
+    if (derived) params[n] = derived;
+  }
   return Object.keys(skill.params).every((n) => params[n] || refused.has(n)) ? params : null;
+}
+
+/**
+ * The value a slot the template never states takes on THIS run, read out of a
+ * bound slot whose recorded example contained this slot's recorded example.
+ *
+ * WHY (grafana fwgr64 07-report). The template states `'{{v1}}' at {{v8}}`;
+ * v2 (the bare runid, example `fwgr64-n1`) and v3 (the host, `127.0.0.1`) are
+ * swallowed whole by those longer slots and appear in it nowhere. Both carry
+ * an origin (`var:runid`, `output:i1:grafana_host`), and bindSkill binds such
+ * a slot by origin — but at compile time there is no ledger, and at replay
+ * the host was never published (the export pruned it as unread), so neither
+ * had a value, bindSkill returned null for the WHOLE skill, both replays
+ * handed 07-report to the model (29-30 turns) and the compile refused the
+ * flow as `unbound-pin` — with every value it needed sitting in the
+ * instruction the step was given.
+ *
+ * The recording is the evidence: the host's example is `L + example + R`,
+ * so on this run the slot is what stands where the example stood. It is
+ * anchored at one end by the WHOLE literal context (L, or R) and stopped at
+ * the other by the delimiter that ended the example in the recording (R's
+ * first character, or L's last) — the whole of the far context is not
+ * required, because it routinely holds another run value (v8's tail is
+ * `…/efyxnzqqt40e8c/fwgr64-n1-bench-dashboard`, a minted uid and the runid,
+ * neither of which recurs). A delimiter must be a non-word character the
+ * example itself does not contain; that is what makes the stop reproduce the
+ * recorded split exactly. A `{{ref}}` is one unit (compile reads the
+ * instruction's references where replay reads their values, and the two must
+ * agree — a `.` inside `{{02-create.url.p1}}` is not a delimiter).
+ *
+ * Every host and anchor that yields a value must yield the SAME value; any
+ * disagreement, or no reading at all, leaves the slot unbound and bindSkill
+ * refuses as before. So this never falls back to the recording's own value:
+ * the result is text of this run's instruction or it is nothing.
+ */
+function deriveContained(example: string, hosts: ReadonlyArray<{ example: string; value: string }>): string | null {
+  const found = new Set<string>();
+  for (const host of hosts) {
+    const at = host.example.indexOf(example);
+    // Absent, the slot itself, or ambiguous (two occurrences: which one?).
+    if (at < 0 || host.example === example || host.example.indexOf(example, at + 1) >= 0) continue;
+    const left = host.example.slice(0, at);
+    const right = host.example.slice(at + example.length);
+    const stops = (c: string | undefined): c is string => c !== undefined && /[^\p{L}\p{N}_]/u.test(c) && !example.includes(c);
+    // Anchored on the whole left context, stopped by right's first character.
+    if (host.value.startsWith(left) && (right === '' || stops(right[0]))) {
+      const rest = host.value.slice(left.length);
+      const end = right === '' ? rest.length : indexOutsideRefs(rest, right[0], 'first');
+      const v = end > 0 ? rest.slice(0, end).trim() : '';
+      if (v) found.add(v);
+    }
+    // Anchored on the whole right context, stopped by left's last character.
+    if (host.value.endsWith(right) && (left === '' || stops(left[left.length - 1]))) {
+      const head = host.value.slice(0, host.value.length - right.length);
+      const start = left === '' ? 0 : indexOutsideRefs(head, left[left.length - 1], 'last') + 1;
+      const v = start > 0 || left === '' ? head.slice(start).trim() : '';
+      if (v) found.add(v);
+    }
+  }
+  return found.size === 1 ? [...found][0] : null;
+}
+
+/** Index of `ch` in `text` outside any `{{…}}` reference, or -1. */
+function indexOutsideRefs(text: string, ch: string, which: 'first' | 'last'): number {
+  let hit = -1;
+  for (let i = 0; i < text.length; i++) {
+    if (text.startsWith('{{', i)) {
+      const close = text.indexOf('}}', i + 2);
+      if (close >= 0) {
+        i = close + 1;
+        continue;
+      }
+    }
+    if (text[i] === ch) {
+      if (which === 'first') return i;
+      hit = i;
+    }
+  }
+  return hit;
 }
 
 function squash(text: string): string {
