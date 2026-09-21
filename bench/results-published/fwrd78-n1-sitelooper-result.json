@@ -1,0 +1,118 @@
+{
+  "arm": "sitelooper",
+  "target": "repairdesk",
+  "machine": {
+    "platform": "linux",
+    "arch": "x64",
+    "node": "v22.22.2",
+    "cpus": 4,
+    "memGB": 17,
+    "tool": "sitelooper ? author browser tests with an agent; run compiled tests with Playwri",
+    "commit": "054282a"
+  },
+  "mutationLogPath": "/home/user/sitelooper/bench/results/fwrd78-n1-sitelooper-mutationlog.json",
+  "provider": "openrouter",
+  "model": "z-ai/glm-5.3",
+  "runid": "fwrd78-n1",
+  "task": "bench/tasks/repairdesk-ticket-flow.md",
+  "briefed": false,
+  "reset": true,
+  "stopReason": "completed",
+  "turns": 10,
+  "wallMs": 164669,
+  "orchestrator": {
+    "input": 17159,
+    "cacheWrite": 0,
+    "cacheRead": 25920,
+    "output": 1823
+  },
+  "inner": {
+    "promptTokens": 883179,
+    "cachedTokens": 800000,
+    "completionTokens": 10142,
+    "instructions": 8,
+    "byModel": {
+      "deepseek/deepseek-v4.1-flash": {
+        "promptTokens": 883179,
+        "completionTokens": 10142,
+        "cachedTokens": 800000,
+        "instructions": 8
+      }
+    },
+    "servedByModel": {
+      "deepseek/deepseek-v4.1-flash": [
+        "DeepSeek"
+      ]
+    },
+    "skills": {
+      "instructions": 8,
+      "offered": 5,
+      "invoked": 0,
+      "fullReplays": 0,
+      "repaired": 0,
+      "refused": 0,
+      "tierA": 0,
+      "stepsReplayed": 0,
+      "deterministicActions": 0,
+      "totalActions": 56,
+      "compiled": 8,
+      "merged": 0,
+      "variants": 0
+    },
+    "model": "deepseek/deepseek-v4.1-flash",
+    "fallbackModel": "z-ai/glm-5.3",
+    "provider": "openrouter",
+    "timing": {
+      "deepseek/deepseek-v4.1-flash": {
+        "totalMs": 124155,
+        "modelMs": 96958,
+        "toolMs": 23346,
+        "modelCalls": 55,
+        "instructions": 8
+      }
+    },
+    "systemOne": {
+      "jev-1.13.0": {
+        "inputTokens": 8673,
+        "outputTokens": 562,
+        "requests": 5
+      }
+    }
+  },
+  "commandCount": 9,
+  "subcommands": {
+    "open": 1,
+    "do": 8
+  },
+  "invocationCount": 9,
+  "commandMs": 129992,
+  "commandBytes": 10963,
+  "timeouts": 0,
+  "contextTruncations": 0,
+  "coarse": true,
+  "learn": {
+    "dir": "/home/user/sitelooper/bench/results/fwrd78-skills",
+    "instructions": 8,
+    "offered": 5,
+    "invoked": 0,
+    "fullReplays": 0,
+    "repaired": 0,
+    "refused": 0,
+    "tierA": 0,
+    "stepsReplayed": 0,
+    "deterministicActions": 0,
+    "totalActions": 56,
+    "compiled": 8,
+    "merged": 0,
+    "variants": 0,
+    "deterministicFraction": 0
+  },
+  "orBackends": [
+    "Mistral"
+  ],
+  "orReportedCostUsd": 0.0357,
+  "maxUsd": 3,
+  "spendUsd": 0.0601,
+  "finalText": "All objectives completed. Final report:\n\n**1. Ticket created — DONE.** Ticket `RD-1015`, title \"fwrd78-n1 RD Bench Ticket\", customer Marlow Bakery, initial status Draft. Only the Title field was required in the create dialog.\n\n**2. Part A added — DONE.** \"fwrd78-n1 RD Part A\", cost $100.00, markup 25%, qty 1. App-computed price: **$125.00** (parts total $125.00).\n\n**3. Part B added — DONE.** \"fwrd78-n1 RD Part B\", cost $200.00, markup 25%, qty 1. App-computed price: **$250.00** (parts total $375.00).\n\n**4. Part A cost changed to 150 — DONE.** Row now reads $150.00 / 25% / qty 1. App-computed price afterwards: **$187.50** (parts total $437.50; Part B unchanged at $250.00).\n\n**5. Status set to Ready — DONE.** Precondition discovered: **every part on the ticket must have a supplier**. First \"Mark Ready\" attempt was rejected with the alert: *\"Ticket is not ready — Part \"fwrd78-n1 RD Part A\" has no supplier / Part \"fwrd78-n1 RD Part B\" has no supplier\"*. I satisfied it by editing each part and setting Supplier = \"Marlow Bakery\" (costs/markups/prices untouched), then \"Mark Ready\" succeeded. Final status on screen: **Ready** (buttons became Mark Draft / Mark Closed).\n\n**6. Parts removed and ticket archived — DONE.** Each part deleted via its row Delete button with confirmation text: *\"Delete the part \"fwrd78-n1 RD Part A\" from this ticket? This cannot be undone.\"* (same wording for Part B). After both deletions the Parts table showed \"No parts on this ticket yet.\" with no total row. Archiving then applied immediately with no dialog and no precondition error; the detail view shows Status Ready plus an \"Archived\" indicator and the button flipped to \"Unarchive ticket\". Verified: the default ticket list no longer contains RD-1015 (\"Showing 1–10 of 13\", absent on both pages); with \"Show archived\" ticked it appears as \"RD-1015 | fwrd78-n1 RD Bench Ticket | Marlow Bakery | Ready | Archived | 0 | 2026-09-21\", and its parts table is empty. Nothing created by this run remains active.",
+  "transcriptPath": "/home/user/sitelooper/bench/results/fwrd78-n1-sitelooper-transcript.jsonl"
+}

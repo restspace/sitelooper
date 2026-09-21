@@ -1,0 +1,118 @@
+
+[sweep] run 1/3: fwrd78-n1 (store: /home/user/sitelooper/bench/results/fwrd78-skills)
+[harness] repairdesk: defaulting APP_URL
+[harness] repairdesk: defaulting APP_EMAIL
+[harness] repairdesk: defaulting APP_PASSWORD
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+[harness] repairdesk responded 200 at http://127.0.0.1:4180/
+stopped: fwrd78-n1
+  flow "fwrd78" saved: 8 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwrd78.json
+  warning: note: dropped 9 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: note: 01-signin no longer publishes landing_page, nav_items, tickets_summary, first_ticket — no replay reads them from the page and the recording showed no line to read
+  warning: note: 02-create no longer publishes ticket_status — no replay reads it from the page and the recording showed no line to read
+  warning: note: 03-open no longer publishes parts_total — no replay reads it from the page and the recording showed no line to read
+  warning: note: 06-change no longer publishes precondition — no replay reads it from the page and the recording showed no line to read
+  warning: note: 07-remove no longer publishes parts_total_after_first_delete, archive_button_after — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 151 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "bench-pass-1234" (output) in "Sign in with email bench@example.com and password bench-pass-1234, then report what page/view you land on and any visible navigation items."
+  flow.steps[0].params.v2: "bench-pass-1234" (output) in "bench-pass-1234"
+  flow.steps[1].instruction: "Marlow Bakery" (output) in "Create a new repair ticket titled exactly '{{runid}} RD Bench Ticket'. Fill in any required fields the form demands (discover them; use plausible values, e.g. c"
+  flow.steps[1].params.v3: "Marlow Bakery" (output) in "Marlow Bakery"
+  flow.steps[5].instruction: "Ready" (output) in "On ticket {{02-create.ticket_reference}}, change the ticket status to 'Ready'. The app enforces preconditions before it will accept that status — attempt it, re"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwrd78-n1 stop=completed
+turns=10 wall=164.7s
+commands=9 cmdTime=130.0s cmdBytes=10963 timeouts=0
+orchestrator in=17159 cw=0 cr=25920 out=1823
+inner prompt=883179 cached=800000 completion=10142
+spend=$0.0601 maxUsd=3
+learn: A_n=0 replayed=0/8 full=0 repaired=0 compiled=8 variants=0
+-> /home/user/sitelooper/bench/results/fwrd78-n1-sitelooper-result.json
+
+=== fwrd78-n1 === (run self-reported: completed)
+  obj 1  PASS  seq 1: ticket t15 (RD-1015) "fwrd78-n1 RD Bench Ticket"
+  obj 2  PASS  seq 2 p18 cost=100 markup=25 price=125.00
+  obj 3  PASS  seq 3 p19 cost=200 markup=25 price=250.00
+  obj 4  PASS  seq 4: cost 100 -> 150, price 125.00 -> 187.50 (want 187.50), after the create at seq 2
+  obj 5  PASS  seq 7: status Draft -> Ready
+  obj 6  PASS  part A deleted, part B deleted, archive entry at seq 10; state: 0 part(s) surviving, ticket t15 archived=true
+  claim 2  ok — run reported 125.00, app recorded 125.00
+  claim 3  ok — run reported 250.00, app recorded 250.00
+  claim 4  ok — run reported 187.50, app recorded 187.50
+  summary: 6/6 objectives PASS, 0 price claim mismatch(es), 0 duplicate ticket(s)
+
+App state: 15 tickets total, 1 left by benchmark runs (0 still active), 17 parts total, 10 mutation log entries.
+
+[sweep] run 2/3: fwrd78-n2 (replay flow fwrd78, no orchestrator)
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+[sweep] fwrd78-n2: 7 drift ticket(s) → fwrd78-n2-drift.json
+
+=== fwrd78-n2 === (run self-reported: no result file)
+  note: no result file in /home/user/sitelooper/bench/results — objectives are still scored from the log,
+        but the run's claimed prices cannot be cross-checked.
+  obj 1  PASS  seq 1: ticket t15 (RD-1016) "fwrd78-n2 RD Bench Ticket"
+  obj 2  PASS  seq 2 p18 cost=100 markup=25 price=125.00
+  obj 3  PASS  seq 3 p19 cost=200 markup=25 price=250.00
+  obj 4  PASS  seq 4: cost 100 -> 150, price 125.00 -> 187.50 (want 187.50), after the create at seq 2
+  obj 5  PASS  seq 7: status Draft -> Ready
+  obj 6  PASS  part A deleted, part B deleted, archive entry at seq 10; state: 0 part(s) surviving, ticket t15 archived=true
+  claim 2  no claim parsed from the run's final report
+  claim 3  no claim parsed from the run's final report
+  claim 4  no claim parsed from the run's final report
+  summary: 6/6 objectives PASS, 0 price claim mismatch(es), 0 duplicate ticket(s)
+
+App state: 15 tickets total, 1 left by benchmark runs (0 still active), 17 parts total, 10 mutation log entries.
+
+[sweep] run 3/3: fwrd78-n3 (replay flow fwrd78, no orchestrator)
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+[sweep] fwrd78-n3: 7 drift ticket(s) → fwrd78-n3-drift.json
+
+=== fwrd78-n3 === (run self-reported: no result file)
+  note: no result file in /home/user/sitelooper/bench/results — objectives are still scored from the log,
+        but the run's claimed prices cannot be cross-checked.
+  obj 1  PASS  seq 1: ticket t15 (RD-1017) "fwrd78-n3 RD Bench Ticket"
+  obj 2  PASS  seq 2 p18 cost=100 markup=25 price=125.00
+  obj 3  PASS  seq 3 p19 cost=200 markup=25 price=250.00
+  obj 4  PASS  seq 4: cost 100 -> 150, price 125.00 -> 187.50 (want 187.50), after the create at seq 2
+  obj 5  PASS  seq 7: status Draft -> Ready
+  obj 6  PASS  part A deleted, part B deleted, archive entry at seq 10; state: 0 part(s) surviving, ticket t15 archived=true
+  claim 2  no claim parsed from the run's final report
+  claim 3  no claim parsed from the run's final report
+  claim 4  no claim parsed from the run's final report
+  summary: 6/6 objectives PASS, 0 price claim mismatch(es), 0 duplicate ticket(s)
+
+App state: 15 tickets total, 1 left by benchmark runs (0 still active), 17 parts total, 10 mutation log entries.
+
+Learning sweep fwrd78 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwrd78-n1' │ '6/6'    │ 'completed' │ 10    │ 9    │ 0.0601    │ 0   │ '0/8'        │ 165    │
+│ 1       │ 2 │ 'fwrd78-n2' │ '6/6'    │ 'success'   │ 0     │ 8    │ 0         │ 1   │ '8/8 (flow)' │ 51     │
+│ 2       │ 3 │ 'fwrd78-n3' │ '6/6'    │ 'success'   │ 0     │ 8    │ 0         │ 1   │ '8/8 (flow)' │ 51     │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:4180
+  s_20f1c5  validated   19 steps  3/3 (100%)
+           On ticket {{v1}}, add a second part named '{{v3}}' with cost {{v4}} and markup {{v5}}. Wait for the detail vie…
+  s_25d569  validated   14 steps  3/3 (100%)
+           On ticket {{v1}}, change the ticket status to 'Ready'. The app enforces preconditions before it will accept th…
+  s_2ed92c  validated   16 steps  3/3 (100%)
+           On ticket {{v1}}, edit the part named '{{v2}}' and change its cost from 100 to {{v4}}, keeping markup 25. Wait…
+  s_3c1d3f  validated    1 steps  3/3 (100%)
+           Sign in with email {{v1}} and password {{v2}}, then report what page/view you land on and any visible navigati…
+  s_3d38c9  validated    3 steps  3/3 (100%)
+           Verify the end state: on the tickets list, confirm that ticket {{v1}} ('{{v2}}') does NOT appear in the defaul…
+  s_4a05a5  validated   10 steps  3/3 (100%)
+           Create a new repair ticket titled exactly '{{v2}}'. Fill in any required fields the form demands (discover the…
+  s_5cf976  validated    3 steps  3/3 (100%)
+           Sign in with email {{v1}} and password {{v2}}, then report what page/view you land on and any visible navigati…
+  s_84fddd  validated   15 steps  3/3 (100%)
+           Open ticket {{v1}} (titled '{{v2}}') from the ticket list and add a part named '{{v4}}' with cost {{v5}} and m…
+  s_8fcbf2  validated    9 steps  3/3 (100%)
+           On ticket {{v1}}, remove both parts ('{{v2}}' and '{{v4}}') using the delete/remove control on each part row, …
+  s_dda47f  validated    2 steps  3/3 (100%)
+           Verify the end state: on the tickets list, confirm that ticket {{v1}} ('{{v2}}') does NOT appear in the defaul…
+  s_eefbd7  validated    1 steps  3/3 (100%)
+           Open ticket {{v1}} (titled '{{v2}}') from the ticket list and add a part named '{{v4}}' with cost {{v5}} and m…
+store: /home/user/sitelooper/bench/results/fwrd78-skills
+
+summary: /home/user/sitelooper/bench/results/fwrd78-sweep.json

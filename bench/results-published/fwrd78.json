@@ -1,0 +1,768 @@
+{
+  "name": "fwrd78",
+  "origin": "http://127.0.0.1:4180",
+  "startUrl": "http://127.0.0.1:4180/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in with email bench@example.com and password bench-pass-1234, then report what page/view you land on and any visible navigation items.",
+      "skill": "s_5cf976",
+      "params": {
+        "v1": "bench@example.com",
+        "v2": "bench-pass-1234"
+      },
+      "outputs": [
+        "heading",
+        "password"
+      ],
+      "recorded": {
+        "landing_page": "Repair tickets list view at /#/tickets",
+        "heading": "Repair tickets",
+        "nav_items": "Skip to main content (link), Repair Desk (brand link), Tickets (nav link), Bench User (user label), Sign out (button)",
+        "tickets_summary": "Showing 1–10 of 13 tickets",
+        "first_ticket": "RD-1014 Under-counter fridge door misaligned — Marlow Bakery — Draft",
+        "password": "bench-pass-1234",
+        "url": "http://127.0.0.1:4180/#/tickets"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets",
+      "outputEvidence": {
+        "landing_page": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "heading": {
+          "same": 1,
+          "differed": 0
+        },
+        "nav_items": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "tickets_summary": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "first_ticket": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "password": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "Create a new repair ticket titled exactly '{{runid}} RD Bench Ticket'. Fill in any required fields the form demands (discover them; use plausible values, e.g. customer Marlow Bakery if a customer is required). Submit the form and wait for the list/detail view to refresh so the new ticket is visible, then report the ticket's reference number, title, and status as shown on screen.",
+      "skill": "s_4a05a5",
+      "params": {
+        "v2": "{{runid}} RD Bench Ticket",
+        "v3": "Marlow Bakery",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "ticket_reference",
+        "ticket_title",
+        "customer",
+        "parts",
+        "created",
+        "list_summary",
+        "form_required_fields",
+        "screenshot",
+        "test_run_id"
+      ],
+      "recorded": {
+        "ticket_reference": "RD-1015",
+        "ticket_title": "fwrd78-n1 RD Bench Ticket",
+        "ticket_status": "Draft",
+        "customer": "Marlow Bakery",
+        "parts": "0",
+        "created": "2026-09-21",
+        "list_summary": "Showing 1–10 of 14 (was 13 before create)",
+        "form_required_fields": "only Title * was required; Customer was optional free-text",
+        "screenshot": "/root/.sitelooper/sessions/fwrd78-n1/screenshots/shot-1789989800641.jpg",
+        "test_run_id": "fwrd78-n1"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets",
+      "outputEvidence": {
+        "ticket_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "ticket_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "ticket_status": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "customer": {
+          "same": 1,
+          "differed": 0
+        },
+        "parts": {
+          "same": 1,
+          "differed": 0
+        },
+        "created": {
+          "same": 1,
+          "differed": 0
+        },
+        "list_summary": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "form_required_fields": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "screenshot": {
+          "same": 0,
+          "differed": 1
+        },
+        "test_run_id": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "03-open",
+      "instruction": "Open ticket {{02-create.ticket_reference}} (titled '{{runid}} RD Bench Ticket') from the ticket list and add a part named '{{runid}} RD Part A' with cost 100 and markup 25. If the part form computes a price automatically, report the computed price shown on screen. Wait for the ticket detail view to refresh so the part is listed, then report the part's name, cost, markup, and the price the app computes for it, exactly as displayed.",
+      "skill": "s_eefbd7",
+      "params": {
+        "v1": "{{02-create.ticket_reference}}",
+        "v2": "{{runid}} RD Bench Ticket",
+        "v4": "{{runid}} RD Part A",
+        "v5": "100",
+        "v6": "25",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "ticket_reference",
+        "ticket_title",
+        "ticket_status",
+        "part_name",
+        "part_cost",
+        "part_markup",
+        "part_price",
+        "part_qty",
+        "supplier",
+        "price_note",
+        "screenshot",
+        "test_run_id"
+      ],
+      "recorded": {
+        "ticket_reference": "RD-1015",
+        "ticket_title": "fwrd78-n1 RD Bench Ticket",
+        "ticket_status": "Draft",
+        "part_name": "fwrd78-n1 RD Part A",
+        "part_cost": "$100.00",
+        "part_markup": "25%",
+        "part_price": "$125.00",
+        "part_qty": "1",
+        "supplier": "No supplier",
+        "parts_total": "$125.00 (Total price × quantity)",
+        "price_note": "Price is calculated from cost and markup when the part is saved.",
+        "screenshot": "/root/.sitelooper/sessions/fwrd78-n1/screenshots/shot-1789989818633.jpg",
+        "test_run_id": "fwrd78-n1",
+        "url": "http://127.0.0.1:4180/#/tickets/t15",
+        "url.h1": "t15"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets/:id",
+      "outputEvidence": {
+        "ticket_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "ticket_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "ticket_status": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "part_cost": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_markup": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_price": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_qty": {
+          "same": 1,
+          "differed": 0
+        },
+        "supplier": {
+          "same": 1,
+          "differed": 0
+        },
+        "parts_total": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "price_note": {
+          "same": 1,
+          "differed": 0
+        },
+        "screenshot": {
+          "same": 0,
+          "differed": 1
+        },
+        "test_run_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.h1": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "04-add",
+      "instruction": "On ticket {{02-create.ticket_reference}}, add a second part named '{{runid}} RD Part B' with cost 200 and markup 25. Wait for the detail view to refresh so both parts are listed, then report the new part's name, cost, markup, and the price the app computes for it, plus the parts total shown in the table footer.",
+      "skill": "s_20f1c5",
+      "params": {
+        "v1": "{{02-create.ticket_reference}}",
+        "v3": "{{runid}} RD Part B",
+        "v4": "200",
+        "v5": "25",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "ticket_reference",
+        "new_part_name",
+        "new_part_cost",
+        "new_part_markup",
+        "new_part_qty",
+        "new_part_supplier",
+        "new_part_price",
+        "parts_total",
+        "screenshot",
+        "test_run_id",
+        "part_a_name",
+        "part_a_cost",
+        "part_a_markup",
+        "part_a_qty",
+        "part_a_supplier",
+        "part_a_price"
+      ],
+      "recorded": {
+        "ticket_reference": "RD-1015",
+        "new_part_name": "fwrd78-n1 RD Part B",
+        "new_part_cost": "$200.00",
+        "new_part_markup": "25%",
+        "new_part_qty": "1",
+        "new_part_supplier": "No supplier",
+        "new_part_price": "$250.00",
+        "parts_total": "$375.00",
+        "screenshot": "/root/.sitelooper/sessions/fwrd78-n1/screenshots/shot-1789989832995.jpg",
+        "test_run_id": "fwrd78-n1",
+        "part_a_name": "fwrd78-n1 RD Part A",
+        "part_a_cost": "$100.00",
+        "part_a_markup": "25%",
+        "part_a_qty": "1",
+        "part_a_supplier": "No supplier",
+        "part_a_price": "$125.00"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets/:id",
+      "outputEvidence": {
+        "ticket_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "new_part_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "new_part_cost": {
+          "same": 1,
+          "differed": 0
+        },
+        "new_part_markup": {
+          "same": 1,
+          "differed": 0
+        },
+        "new_part_qty": {
+          "same": 1,
+          "differed": 0
+        },
+        "new_part_supplier": {
+          "same": 1,
+          "differed": 0
+        },
+        "new_part_price": {
+          "same": 1,
+          "differed": 0
+        },
+        "parts_total": {
+          "same": 1,
+          "differed": 0
+        },
+        "screenshot": {
+          "same": 0,
+          "differed": 1
+        },
+        "test_run_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "part_a_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "part_a_cost": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_a_markup": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_a_qty": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_a_supplier": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_a_price": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "05-edit",
+      "instruction": "On ticket {{02-create.ticket_reference}}, edit the part named '{{runid}} RD Part A' and change its cost from 100 to 150, keeping markup 25. Wait for the detail view to refresh, then report the part's cost, markup, and the price the app computes afterwards, plus the updated parts total in the table footer.",
+      "skill": "s_2ed92c",
+      "params": {
+        "v1": "{{02-create.ticket_reference}}",
+        "v2": "{{runid}} RD Part A",
+        "v4": "150",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "ticket_reference",
+        "part_name",
+        "part_cost",
+        "part_markup",
+        "part_qty",
+        "part_price",
+        "parts_total",
+        "screenshot",
+        "test_run_id",
+        "part_b_name",
+        "part_b_cost",
+        "part_b_markup",
+        "part_b_qty",
+        "part_b_supplier",
+        "part_b_price"
+      ],
+      "recorded": {
+        "ticket_reference": "RD-1015",
+        "part_name": "fwrd78-n1 RD Part A",
+        "part_cost": "$150.00",
+        "part_markup": "25%",
+        "part_qty": "1",
+        "part_price": "$187.50",
+        "parts_total": "$437.50",
+        "screenshot": "/root/.sitelooper/sessions/fwrd78-n1/screenshots/shot-1789989846624.jpg",
+        "test_run_id": "fwrd78-n1",
+        "part_b_name": "fwrd78-n1 RD Part B",
+        "part_b_cost": "$200.00",
+        "part_b_markup": "25%",
+        "part_b_qty": "1",
+        "part_b_supplier": "No supplier",
+        "part_b_price": "$250.00"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets/:id",
+      "outputEvidence": {
+        "ticket_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "part_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "part_cost": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_markup": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_qty": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_price": {
+          "same": 1,
+          "differed": 0
+        },
+        "parts_total": {
+          "same": 1,
+          "differed": 0
+        },
+        "screenshot": {
+          "same": 0,
+          "differed": 1
+        },
+        "test_run_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "part_b_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "part_b_cost": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_b_markup": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_b_qty": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_b_supplier": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_b_price": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "06-change",
+      "instruction": "On ticket {{02-create.ticket_reference}}, change the ticket status to 'Ready'. The app enforces preconditions before it will accept that status — attempt it, read any validation/error message the app shows, discover what the preconditions are, satisfy them (e.g. fill whatever fields or complete whatever steps the app demands), and retry until the status is actually 'Ready' on screen. Do NOT delete or remove the parts. Report exactly what was required: every precondition you found, the exact error/validation text shown, what you did to satisfy each, and the final status shown on the ticket.",
+      "skill": "s_25d569",
+      "params": {
+        "v1": "{{02-create.ticket_reference}}",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "ticket_reference",
+        "ticket_title",
+        "final_status",
+        "error_on_first_attempt",
+        "parts_after",
+        "parts_total",
+        "status_buttons_after",
+        "screenshot",
+        "validation_error_1",
+        "test_run_id"
+      ],
+      "recorded": {
+        "ticket_reference": "RD-1015",
+        "ticket_title": "fwrd78-n1 RD Bench Ticket",
+        "final_status": "Ready",
+        "error_on_first_attempt": "\"Ticket is not ready\\n\\nPart \\\"fwrd78-n1 RD Part A\\\" has no supplier\\nPart \\\"fwrd78-n1 RD Part B\\\" has no supplier\"",
+        "precondition": "every part on the ticket must have a non-empty Supplier (parts were not touched: Part A $150.00/25%/$187.50, Part B $200.00/25%/$250.00)",
+        "parts_after": "fwrd78-n1 RD Part A — $150.00 — 25% — 1 — Marlow Bakery — $187.50, fwrd78-n1 RD Part B — $200.00 — 25% — 1 — Marlow Bakery — $250.00",
+        "parts_total": "$437.50",
+        "status_buttons_after": "Mark Draft / Mark Closed (Mark Ready no longer offered)",
+        "screenshot": "/root/.sitelooper/sessions/fwrd78-n1/screenshots/shot-1789989877483.jpg",
+        "validation_error_1": "Ticket is not ready\n\nPart \"fwrd78-n1 RD Part A\" has no supplier\nPart \"fwrd78-n1 RD Part B\" has no supplier",
+        "test_run_id": "fwrd78-n1"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets/:id",
+      "outputEvidence": {
+        "ticket_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "ticket_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "final_status": {
+          "same": 1,
+          "differed": 0
+        },
+        "error_on_first_attempt": {
+          "same": 0,
+          "differed": 1
+        },
+        "precondition": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "parts_after": {
+          "same": 0,
+          "differed": 1
+        },
+        "parts_total": {
+          "same": 1,
+          "differed": 0
+        },
+        "status_buttons_after": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "screenshot": {
+          "same": 0,
+          "differed": 1
+        },
+        "validation_error_1": {
+          "same": 0,
+          "differed": 1
+        },
+        "test_run_id": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "07-remove",
+      "instruction": "On ticket {{02-create.ticket_reference}}, remove both parts ('{{runid}} RD Part A' and '{{runid}} RD Part B') using the delete/remove control on each part row, confirming any confirmation dialog. Wait for the detail view to refresh after each delete so the part is actually gone from the Parts table. Then archive the ticket (find the archive action; if the app blocks archiving while parts exist, that confirms the parts must be gone first). Report the confirmation text shown for each part deletion, the parts count/total after both are removed, and the confirmation text and resulting state after archiving (e.g. the ticket no longer appears in the default ticket list, or an 'Archived' indicator is shown).",
+      "skill": "s_8fcbf2",
+      "params": {
+        "v1": "{{02-create.ticket_reference}}",
+        "v2": "{{runid}} RD Part A",
+        "v4": "{{runid}} RD Part B",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "ticket_reference",
+        "delete_partA_confirm_text",
+        "delete_partB_confirm_text",
+        "parts_after_both_deletes",
+        "archive_confirmation_text",
+        "ticket_detail_after_archive",
+        "default_list_summary",
+        "default_list_first_rows",
+        "screenshot",
+        "test_run_id"
+      ],
+      "recorded": {
+        "ticket_reference": "RD-1015",
+        "delete_partA_confirm_text": "Confirm\n\nDelete the part \"fwrd78-n1 RD Part A\" from this ticket? This cannot be undone.\n\nCancel\nDelete part",
+        "delete_partB_confirm_text": "Confirm\n\nDelete the part \"fwrd78-n1 RD Part B\" from this ticket? This cannot be undone.\n\nCancel\nDelete part",
+        "parts_after_both_deletes": "No parts on this ticket yet. (no total row rendered)",
+        "parts_total_after_first_delete": "$250.00",
+        "archive_confirmation_text": "none shown — \"Archive ticket\" applied immediately with no dialog",
+        "ticket_detail_after_archive": "RD-1015 / fwrd78-n1 RD Bench Ticket / Customer: Marlow Bakery · Raised 2026-09-21 / Status Ready / Archived / Mark Draft / Mark Closed",
+        "archive_button_after": "Unarchive ticket",
+        "default_list_summary": "Showing 1–10 of 13 (was 14 before archive)",
+        "default_list_first_rows": "RD-1014 Under-counter fridge door misaligned Marlow Bakery Draft 1 2026-01-23, RD-1012 Ice machine producing hollow cubes The Anchor Inn Draft 2 2026-01-21",
+        "screenshot": "/root/.sitelooper/sessions/fwrd78-n1/screenshots/shot-1789989901448.jpg",
+        "test_run_id": "fwrd78-n1"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets",
+      "outputEvidence": {
+        "ticket_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "delete_partA_confirm_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "delete_partB_confirm_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "parts_after_both_deletes": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "parts_total_after_first_delete": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "archive_confirmation_text": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ticket_detail_after_archive": {
+          "same": 0,
+          "differed": 1
+        },
+        "archive_button_after": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "default_list_summary": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "default_list_first_rows": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "screenshot": {
+          "same": 0,
+          "differed": 1
+        },
+        "test_run_id": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "08-verify",
+      "instruction": "Verify the end state: on the tickets list, confirm that ticket {{02-create.ticket_reference}} ('{{runid}} RD Bench Ticket') does NOT appear in the default list. Then tick 'Show archived' and confirm {{02-create.ticket_reference}} appears there with an archived indicator and status Ready. Open it and confirm its Parts table shows no parts (e.g. 'No parts on this ticket yet.'). Report exactly what you observed.",
+      "skill": "s_3d38c9",
+      "params": {
+        "v1": "{{02-create.ticket_reference}}",
+        "v2": "{{runid}} RD Bench Ticket",
+        "v4": "Ready",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "default_list_summary",
+        "default_list_page2",
+        "with_show_archived",
+        "detail_after_open",
+        "parts_table",
+        "screenshot",
+        "ticket_reference",
+        "test_run_id"
+      ],
+      "recorded": {
+        "default_list_summary": "Showing 1–10 of 13 — RD-1015 not present on page 1",
+        "default_list_page2": "RD-1003, RD-1002, RD-1001 — RD-1015 not present on page 2 either",
+        "with_show_archived": "Showing 1–10 of 15 — RD-1015 present as first row: RD-1015 | fwrd78-n1 RD Bench Ticket | Marlow Bakery | Ready | Archived | 0 | 2026-09-21",
+        "detail_after_open": "RD-1015 / fwrd78-n1 RD Bench Ticket / Customer: Marlow Bakery · Raised 2026-09-21 / Status Ready / Archived / buttons Mark Draft, Mark Closed, Unarchive ticket",
+        "parts_table": "Single row: \"No parts on this ticket yet.\"",
+        "screenshot": "/root/.sitelooper/sessions/fwrd78-n1/screenshots/shot-1789989921699.jpg",
+        "ticket_reference": "RD-1015",
+        "test_run_id": "fwrd78-n1"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets/:id",
+      "outputEvidence": {
+        "default_list_summary": {
+          "same": 0,
+          "differed": 1
+        },
+        "default_list_page2": {
+          "same": 0,
+          "differed": 1
+        },
+        "with_show_archived": {
+          "same": 0,
+          "differed": 1
+        },
+        "detail_after_open": {
+          "same": 0,
+          "differed": 1
+        },
+        "parts_table": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "screenshot": {
+          "same": 0,
+          "differed": 1
+        },
+        "ticket_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "test_run_id": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwrd78-n1",
+    "created": "2026-09-21T11:25:31.264Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "landing_page",
+        "nav_items",
+        "tickets_summary",
+        "first_ticket"
+      ]
+    },
+    {
+      "stepId": "02-create",
+      "outputs": [
+        "ticket_status"
+      ]
+    },
+    {
+      "stepId": "03-open",
+      "outputs": [
+        "parts_total"
+      ]
+    },
+    {
+      "stepId": "06-change",
+      "outputs": [
+        "precondition"
+      ]
+    },
+    {
+      "stepId": "07-remove",
+      "outputs": [
+        "parts_total_after_first_delete",
+        "archive_button_after"
+      ]
+    }
+  ]
+}

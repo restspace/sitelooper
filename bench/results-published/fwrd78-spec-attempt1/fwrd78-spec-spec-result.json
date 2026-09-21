@@ -1,0 +1,34 @@
+{
+  "arm": "spec",
+  "runid": "fwrd78-spec",
+  "target": "repairdesk",
+  "flow": "fwrd78.json",
+  "flowName": "fwrd78",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwrd78-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwrd78-spec-spec-tmp/fwrd78.flow.ts",
+  "specFile": "bench/results/fwrd78-spec-spec-tmp/fwrd78.spec.ts",
+  "wallMs": 4037,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwrd78",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 607,
+      "error": "Error: 01-signin s_5cf976: not on the page this procedure starts from (expects http://127.0.0.1:4180/#/login, browser is at http://127.0.0.1:4180/#/tickets) — nothing of this segment has run",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "logTail": "\nRunning 1 test using 1 worker\n\n  ✘  1 fwrd78.spec.ts:9:1 › fwrd78 (607ms)\n\n\n  1) fwrd78.spec.ts:9:1 › fwrd78 › 01-signin: Sign in with email bench@example.com and password bench-pass-1234, then report what page/view you land on and any visible navigation items. \n\n    Error: 01-signin s_5cf976: not on the page this procedure starts from (expects http://127.0.0.1:4180/#/login, browser is at http://127.0.0.1:4180/#/tickets) — nothing of this segment has run\n\n       at fwrd78.flow.ts:10769\n\n      10767 |   const verdict = preconditionVerdict(pattern, url, p, similarity, mints);\n      10768 |   for (const line of verdict.warnings) logWarning(`${where}: ${line}`);\n    > 10769 |   if (verdict.refuse) throw new Error(`${where}: ${verdict.refuse} — nothing of this segment has run`);\n            |                             ^\n      10770 | }\n      10771 |\n      10772 | /**\n        at preconditionGate (/home/user/sitelooper/bench/results/fwrd78-spec-spec-tmp/fwrd78.flow.ts:10769:29)\n        at Object.01-signin (/home/user/sitelooper/bench/results/fwrd78-spec-spec-tmp/fwrd78.flow.ts:11284:11)\n        at /home/user/sitelooper/bench/results/fwrd78-spec-spec-tmp/fwrd78.flow.ts:15200:7\n        at runFlow (/home/user/sitelooper/bench/results/fwrd78-spec-spec-tmp/fwrd78.flow.ts:15199:5)\n        at /home/user/sitelooper/bench/results/fwrd78-spec-spec-tmp/fwrd78.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/fwrd78-fwrd78/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/fwrd78-fwrd78/error-context.md\n\n  1 failed\n    fwrd78.spec.ts:9:1 › fwrd78 ────────────────────────────────────────────────────────────────────\n"
+}
