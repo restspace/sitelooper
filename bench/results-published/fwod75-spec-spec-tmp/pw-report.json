@@ -1,0 +1,189 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwod75-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwod75-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwod75-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwod75-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwod75-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwod75.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwod75-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwod75.spec.ts",
+      "file": "fwod75.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwod75",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 61986,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper skip] 01-signin s_1af67f/11 target: no locator recorded — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 07-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 08-open\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Navigate to http://127.0.0.1:8069/ and sign in with login 'admin' and password 'admin'. Do not wait for network idle (the app long-polls); wait for concrete page state instead. After login, report which user is shown as logged in and what page you land on.",
+                      "duration": 7059
+                    },
+                    {
+                      "title": "02-create: In Odoo, create a new customer (contact) named exactly '{{runid}} Bench Customer' with the City field set to 'Benchville'. Use the Contacts app (or Sales app's customer creation) — create it as an individual/company contact of type Customer. Fill any required fields, save, and then verify by reopening the record: report the exact name shown and the City value shown on the saved record.",
+                      "duration": 9563
+                    },
+                    {
+                      "title": "03-create: In Odoo, create a new quotation in the Sales app (Sales → Orders → Quotations → New). Set the Customer to '{{runid}} Bench Customer' — this is an autocomplete dropdown, so you must actually select the option from the dropdown, not just type it. Then add exactly ONE order line: pick any product from the product catalogue (again via the autocomplete dropdown, actually choosing an option), set the quantity to 3. Save the quotation. Then report: (a) the product name you chose, (b) the unit price the app filled in for that line, (c) the untaxed amount the app computes in the totals section, and (d) the quotation's reference/name if shown. Do not wait for network idle; wait on concrete page state.",
+                      "duration": 10149
+                    },
+                    {
+                      "title": "04-open: In Odoo, open the existing quotation {{03-create.quotation_reference}} (Sales → Orders → Quotations, search for {{03-create.quotation_reference}}, open it; it is for customer '{{runid}} Bench Customer' and currently has one order line: {{03-create.product}}, quantity 3). Add a SECOND order line: choose a DIFFERENT product from the product catalogue via the autocomplete dropdown (actually select an option from the dropdown, not just typing), and set its quantity to 2. Save the quotation. Then report: (a) the product name of the new second line, (b) its unit price, and (c) the new Untaxed Amount shown in the totals section. Do not wait for network idle; wait on concrete page state.",
+                      "duration": 4393
+                    },
+                    {
+                      "title": "05-open: In Odoo, open the quotation {{03-create.quotation_reference}} (Sales → Orders → Quotations, search {{03-create.quotation_reference}}; customer '{{runid}} Bench Customer', two order lines: {{03-create.product}} qty 3, and {{04-open.new_product}} qty 2). Change the FIRST line's quantity ({{03-create.product}}) from 3 to 5. Save the quotation. Then report: (a) the quantity shown on the first line after saving, and (b) the new Untaxed Amount shown in the totals section. Do not wait for network idle; wait on concrete page state.",
+                      "duration": 3024
+                    },
+                    {
+                      "title": "06-open: In Odoo, open the quotation {{03-create.quotation_reference}} (Sales → Orders → Quotations, search {{03-create.quotation_reference}}; customer '{{runid}} Bench Customer', status {{03-create.status}}). Confirm it so it becomes a sales order — click the Confirm button (and confirm any dialog that appears, e.g. about the quotation date). After confirmation, report: (a) the order reference/name shown (e.g. {{03-create.quotation_reference}}), and (b) the status the app now shows in the status bar (e.g. 'Sales Order'). Do not wait for network idle; wait on concrete page state.",
+                      "duration": 1481
+                    },
+                    {
+                      "title": "07-open: In Odoo, open the sales order {{03-create.quotation_reference}} (Sales → Orders → Orders, search {{03-create.quotation_reference}}; customer '{{runid}} Bench Customer', status 'Sales Order'). Cancel it so nothing stays active — use the Cancel action (it may be under an Action/⚙ menu or a Cancel button; if a confirmation dialog appears, accept it). After cancelling, report the status the app shows in the status bar for this order. Do not wait for network idle; wait on concrete page state.",
+                      "duration": 10097
+                    },
+                    {
+                      "title": "08-open: Final verification, read-only (do not modify anything): In Odoo, (1) open the contact '{{runid}} Bench Customer' in the Contacts app and report its exact Name and City as shown on the saved record; (2) open the sales order {{03-create.quotation_reference}} in Sales → Orders → Orders and report its reference, customer, the current status shown in the status bar, and the Untaxed Amount in the totals. Report exactly what is displayed on the pages.",
+                      "duration": 15445
+                    }
+                  ],
+                  "startTime": "2026-09-21T16:12:20.703Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fbe91d482b2053db8a8b-43b251692551e6e7a183",
+          "file": "fwod75.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-21T16:12:18.627Z",
+    "duration": 64249.042,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
