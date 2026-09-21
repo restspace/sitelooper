@@ -162,6 +162,44 @@ d('skill replay (fixture page)', () => {
   });
 
   /**
+   * fwop4-n2 08-open: a read-only procedure on the wrong page skipped every
+   * read and still reported ok. The shared observedNothing makes that a
+   * failure; one read taken is enough to count as having replayed.
+   */
+  it('fails a read-only procedure whose every read was skipped, and not one that took a read', async () => {
+    const page = await session.getPage();
+    await page.goto(fixtureUrl);
+    const readSkill = (id: string, selectors: string[]): Skill => ({
+      id,
+      origin: new URL(fixtureUrl).origin,
+      template: 'report the fields',
+      params: {},
+      preconditions: { urlPattern: fixtureUrl },
+      steps: selectors.map((selector, i) => ({
+        tool: 'read',
+        args: { target: '@e1', what: 'text' },
+        locators: { target: [{ kind: 'css', selector }] },
+        label: `f${i}`,
+      })),
+      stats: { uses: 1, successes: 1, partial: 0, created: 't', failedAtStep: {}, fallthroughs: 0 },
+      status: 'validated',
+      provenance: { session: 's', instruction: 'i', created: 't' },
+    });
+    const blind = readSkill('s_blind', ['#no-such-a', '#no-such-b']);
+    session.learn!.put(blind);
+    const out = await run('run_skill', { id: blind.id, params: {} });
+    session.learn!.remove(blind.id);
+    expect(out.replay?.ok).toBe(false);
+    expect(out.replay?.reason).toMatch(/every read of this read-only procedure was skipped/);
+
+    const seeing = readSkill('s_seeing', ['#no-such-a', 'body']);
+    session.learn!.put(seeing);
+    const out2 = await run('run_skill', { id: seeing.id, params: {} });
+    session.learn!.remove(seeing.id);
+    expect(out2.replay?.ok).toBe(true);
+  }, 60_000);
+
+  /**
    * fwgr26's create head: three recorded clicks on Grafana's "New" (a menu
    * toggle) then the "New dashboard" link inside the menu. Replayed
    * literally, the third click shut the menu and the link was gone. A click

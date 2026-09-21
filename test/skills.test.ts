@@ -214,6 +214,41 @@ describe('cross-instruction url record-id slotting (fwod29)', () => {
     expect(fillParams(String(gotoStep.args.url), bound!)).toBe(`${OP}/projects/bench-project/work_packages/details/42/activity`);
   });
 
+  // fwop4 08-open (s_c4a13c step 1): the id was banked from
+  // `…/work_packages/details/41/overview` at p4, but the read-back step went
+  // to `…/work_packages/41` — the same record at p3. The exact-position rule
+  // left it literal; n2 read a deleted work package at tier A and n3 demoted
+  // the pin. A whole-segment id of the same kind is the same record.
+  it('slots a banked path id standing at ANOTHER path position of a later url (fwop4 08-open)', () => {
+    const OP = 'http://127.0.0.1:8090';
+    const known: Record<string, string> = { 'var:runid': 'x7', 'url:i3:p4': '41', 'output:i3:wp_id': '#41' };
+    const instr = "Open the work package #41 (subject 'x7 Bench Work Package') and report its subject.";
+    const page = `${OP}/projects/bench-project/work_packages/41`;
+    const entries: RecordedEntry[] = [
+      { k: 'instruction', text: instr, url: `${OP}/projects/bench-project/work_packages` } as RecordedEntry,
+      step('goto', { url: page }, [], { diff: { url: page, alerts: [], added: ['- heading "x7 Bench Work Package"'] } }),
+      step('read', { target: '@e1', what: 'text', label: 'subject' }, [{ kind: 'css', selector: '.subject' }], { result: '"x7 Bench Work Package"' }),
+    ];
+    const [skill] = compileSkills({ entries, instruction: instr, report: { status: 'success', summary: 'read' }, session: 's', knownValues: known });
+    const gotoStep = skill.steps.find((st) => st.tool === 'goto')!;
+    expect(String(gotoStep.args.url)).not.toMatch(/\/41$/);
+    const bound = bindSkill(skill, instr.replaceAll('x7', 'k9').replace('#41', '#42'), { 'var:runid': 'k9', 'url:i3:p4': '42', 'output:i3:wp_id': '#42' });
+    expect(bound).toBeTruthy();
+    expect(fillParams(String(gotoStep.args.url), bound!)).toBe(`${OP}/projects/bench-project/work_packages/42`);
+  });
+
+  it('relocates a banked id only as a whole segment of the same kind, and only once', () => {
+    const s = { name: 'v1', value: '41', at: 'p4', relocatable: true };
+    expect(substituteUrlId('http://h:1/wp/41', [s])).toBe('http://h:1/wp/{{v1}}');
+    // Twice in the url: which one is the record? Neither is written.
+    expect(substituteUrlId('http://h:1/wp/41/copy/41', [s])).toBe('http://h:1/wp/41/copy/41');
+    // Inside a segment, or in the hash route when banked in the path: no.
+    expect(substituteUrlId('http://h:1/wp/41-x', [s])).toBe('http://h:1/wp/41-x');
+    expect(substituteUrlId('http://h:1/#/wp/41', [s])).toBe('http://h:1/#/wp/41');
+    // Not relocatable (banked at a named key): exact position only, as before.
+    expect(substituteUrlId('http://h:1/wp/41', [{ name: 'v1', value: '41', at: 'p4' }])).toBe('http://h:1/wp/41');
+  });
+
   it('leaves no earlier-instruction ledger identifier literal inside any args.url', () => {
     // The invariant, stated over the whole compile rather than one assertion
     // per app: whatever the label, a value the ledger banked from a url

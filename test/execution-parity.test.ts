@@ -421,12 +421,17 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     locators: { target: [{ kind: 'id', selector }] },
     label: 'x',
   });
+  // A second read that always resolves: the producer is then not a read-only
+  // procedure that observed NOTHING (observedNothing, which fails it on both
+  // runners before 02-mark is asked) — what is on trial here is only that a
+  // missed value is never used.
+  const seenStep: SkillStep = { tool: 'read', args: { target: '@e2', what: 'text' }, locators: { target: [{ kind: 'id', selector: '#target' }] }, label: 'seen' };
   // A function, not a constant: `origin` is only known once the fixture server
   // is listening, which is beforeAll — after this describe body has run.
   const markStep = (): SkillStep[] => [{ tool: 'goto', args: { url: `${origin}/record/{{v1}}` }, locators: {} }, MARK];
 
   const readSkill = (selector: string): Skill => ({
-    ...skillOf([readStep(selector)]),
+    ...skillOf([readStep(selector), seenStep]),
     id: 's_read',
     template: 'read the target',
   });
@@ -457,7 +462,7 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
         instruction: 'read the target',
         params: {},
         outputs: ['x'],
-        segments: [{ id: 's_read', template: 'read the target', params: {}, preconditions: { urlPattern: `${origin}/` }, steps: [readStep(selector)] }],
+        segments: [{ id: 's_read', template: 'read the target', params: {}, preconditions: { urlPattern: `${origin}/` }, steps: [readStep(selector), seenStep] }],
       },
       {
         id: '02-mark',
@@ -2246,7 +2251,7 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
             instruction: 'read the target',
             params: {},
             outputs: ['x'],
-            segments: [{ id: 's_read', template: 'read the target', params: {}, preconditions: { urlPattern: `${origin}/` }, steps: [readStep('#nope')] }],
+            segments: [{ id: 's_read', template: 'read the target', params: {}, preconditions: { urlPattern: `${origin}/` }, steps: [readStep('#nope'), seenStep] }],
           },
           {
             id: '02-pick',
@@ -3349,6 +3354,25 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(replay.outputs.gone ?? '').toBe(emitted.outputs['01-clear.gone']);
       expect(replay.outputs.shown).toBe('Item 2');
       expect(emitted.outputs['01-clear.shown']).toBe('Item 2');
+    }, 120_000);
+
+    /**
+     * fwop4-n2 08-open: a read-only procedure on the wrong page skipped every
+     * read and reported ok. The shared observedNothing fails it — in both
+     * runners, after the same steps, and before anything later could use its
+     * blank values. (One read taken is enough to pass: the case above.)
+     */
+    it('both runners fail a read-only procedure that skipped every read it could take', async () => {
+      const steps: SkillStep[] = [
+        { tool: 'read', args: { target: '@e1', what: 'text' }, locators: { target: [{ kind: 'id', selector: '#nope' }] }, label: 'a' },
+        { tool: 'read', args: { target: '@e2', what: 'text' }, locators: { target: [{ kind: 'id', selector: '#nope-too' }] }, label: 'b' },
+      ];
+      const { replay, emitted } = await both(steps, 2);
+
+      expect(replay.ok).toBe(false);
+      expect(emitted.ok).toBe(false);
+      expect(replay.reason).toContain('every read of this read-only procedure was skipped');
+      expect(emitted.reason).toContain('every read of this read-only procedure was skipped');
     }, 120_000);
 
     /**

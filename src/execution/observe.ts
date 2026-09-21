@@ -15,6 +15,41 @@ export function isElementRead(what: unknown): what is ReadWhat {
   return what === 'text' || what === 'value' || what === 'attr' || what === 'count';
 }
 
+/** The part of a procedure step observedNothing looks at. */
+export interface ObservingStep {
+  tool: string;
+  args?: Record<string, unknown>;
+  locators?: Record<string, readonly unknown[] | undefined>;
+  /** What the read publishes as; an unlabelled read is only an observation, and the artifact does not take it. */
+  label?: string;
+}
+
+/** Tools that neither set nor select anything: a procedure of only these (and reads) is read-only. */
+const LOOKING_TOOLS = new Set(['goto', 'back', 'wait_for', 'screenshot', 'scroll', 'hover']);
+
+/**
+ * A READ-ONLY procedure (navigation and reads, nothing that sets anything)
+ * that took none of the reads it could take has not replayed: it looked at a
+ * page and saw nothing it was recorded seeing. Each skipped read alone is an
+ * observation lost, never a failure — but when every one of them is lost the
+ * procedure is on the wrong page, and "ran" would be a false pass.
+ *
+ * fwop4-n2 08-open is that pass: s_c4a13c's goto kept run 1's work package
+ * (41, deleted by the reset), all nine reads skipped, the step reported tier A
+ * 10/10 and its report came from the template, naming run 2's record. Only
+ * reads with a recorded way to find their element count: one whose chain is
+ * empty is skipped on every run by design ("has no locator left"), and only
+ * LABELLED reads, the ones both runners take (an unlabelled read is a comment
+ * in the artifact).
+ */
+export function observedNothing(steps: readonly ObservingStep[], skippedReads: number): boolean {
+  const reads = steps.filter(
+    (s) => (s.tool === 'read' || s.tool === 'read_all') && Boolean(s.label) && isElementRead(s.args?.what ?? 'text') && (s.locators?.target?.length ?? 0) > 0,
+  ).length;
+  if (!reads || skippedReads < reads) return false;
+  return steps.every((s) => s.tool === 'read' || s.tool === 'read_all' || LOOKING_TOOLS.has(s.tool));
+}
+
 /**
  * A recorded `read` (one element) or `read_all` (every match), as the daemon's
  * read tools take it and a compiled artifact replays it. `read_all` reads

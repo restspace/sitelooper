@@ -25,7 +25,7 @@ import {
 import { isRefTarget } from '../daemon/refs.js';
 import { settleDom } from '../daemon/settle.js';
 import { TRANSIENT_LINE, fillParams, fillParamsDeep, urlMatches, urlPart, urlPattern } from './compile.js';
-import { flattenRead, liveAlerts, liveAlertsObserved, resolveForRead, takeRead, type ObservedAlerts } from '../execution/observe.js';
+import { flattenRead, liveAlerts, liveAlertsObserved, observedNothing, resolveForRead, takeRead, type ObservedAlerts } from '../execution/observe.js';
 import {
   addedLines,
   alertsComplete,
@@ -443,6 +443,9 @@ export async function replaySkill(
   // step that resolves its target normally, or by the first step that misses
   // without belonging to the dialog.
   let absentDialog: { name: string; lines: string[] } | null = null;
+  // Reads this replay skipped (target not found, or the read errored): a
+  // read-only procedure that skipped every one did not replay (observedNothing).
+  let readsSkipped = 0;
 
   // Copy the caller's bindings: derived ({{dN}}) values minted mid-replay are
   // bound into this map as steps execute, so later steps see them.
@@ -924,6 +927,7 @@ export async function replaySkill(
     if (!resolveError) absentDialog = null;
     if (resolveError) {
       if (isRead) {
+        if (step.label && step.locators.target?.length) readsSkipped++;
         res.warnings.push(`step ${tag}: skipped read — ${resolveError}`);
         res.lines.push(`${head} → skipped (${resolveError})`);
         return 'skipped';
@@ -1075,6 +1079,7 @@ export async function replaySkill(
             return decodeRead(result);
           });
           if (!taken.ok) {
+            if (step.label) readsSkipped++;
             res.warnings.push(`step ${tag}: read errored — ${clip(taken.message, 120)}`);
             res.lines.push(`${head} → skipped (${clip(taken.message, 120)})`);
             return { status: 'skipped' };
@@ -1400,6 +1405,13 @@ export async function replaySkill(
   }
 
   res.ok = res.stepsRun === skill.steps.length && res.failedAt === undefined;
+  if (res.ok && observedNothing(skill.steps, readsSkipped)) {
+    const first = skill.steps.findIndex((s) => s.tool === 'read' || s.tool === 'read_all') + 1;
+    res.ok = false;
+    res.failedAt = first;
+    res.reason = `every read of this read-only procedure was skipped (${readsSkipped}) — the page is not the one it was recorded reading`;
+    res.lines.push(`${first}. → FAILED: ${res.reason}`);
+  }
   res.url = page.url();
   return res;
 }

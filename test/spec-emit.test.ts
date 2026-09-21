@@ -1126,8 +1126,8 @@ describe('expectations', () => {
     expect(plain).toContain("alertGate(alertsBefore1, alertsAfter1, { where: '01-do s_test1/1', isRead: false, params: p });");
     // and a read is exempt, exactly as replay's unrecordedAlert exempts it
     const read = withExpect(undefined, 'read', { target: '@e1', what: 'text' });
-    expect(read).not.toContain('alertGate(');
-    expect(read).not.toContain('liveAlerts(');
+    expect(stepBodies(read)).not.toContain('alertGate(');
+    expect(stepBodies(read)).not.toContain('liveAlerts(');
     expect(syntaxErrors(out)).toEqual([]);
 
     // the verdict itself, run from the artifact: unrecorded stops, expected-but-missing warns, unobserved is neither
@@ -2997,3 +2997,31 @@ describe('runSpecCheck: a run in which a step was already satisfied', () => {
   });
 });
 
+
+// fwop4-n2 08-open: a read-only procedure on the wrong page skipped every read
+// and passed. The artifact asks the shared observedNothing after the same
+// steps replay does, and only where it can ever hold.
+describe('read-only segment that observed nothing', () => {
+  const read = (selector: string, label: string): SkillStep => ({
+    tool: 'read',
+    args: { target: '@e1', what: 'text' },
+    locators: { target: [{ kind: 'css', selector }] },
+    label,
+  });
+
+  it('a read-only segment counts its skipped reads and throws when it took none', () => {
+    const source = emit(specOf([{ tool: 'goto', args: { url: 'http://app.test/items/41' }, locators: {} }, read('.subject', 'subject'), read('.status', 'status')]));
+    expect(syntaxErrors(source)).toEqual([]);
+    const body = stepBodies(source);
+    expect(body).toMatch(/const readsBefore\d+ = skippedReads\.length;/);
+    expect(body).toMatch(/if \(observedNothing\(\[.*\], skippedReads\.length - readsBefore\d+\)\) \{/);
+    expect(body).toContain('every read of this read-only procedure was skipped');
+    // The shared predicate is carried, not restated.
+    expect(source).toContain('function observedNothing(');
+  });
+
+  it('a segment that sets anything carries no such check', () => {
+    const source = emit(specOf([{ tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Save' }] } }, read('.status', 'status')]));
+    expect(stepBodies(source)).not.toContain('observedNothing(');
+  });
+});

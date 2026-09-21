@@ -978,7 +978,7 @@ export function discoverSlots(
   for (const step of steps) {
     if (!NAVIGATION_TOOLS.has(step.tool) || typeof step.args.url !== 'string') continue;
     for (const part of urlParts(step.args.url)) {
-      if (!knownOrigins.some((o) => o.label === part.label && o.value === part.value)) continue;
+      if (!knownOrigins.some((o) => o.value === part.value && (o.label === part.label || relocatesTo(o, part.label)))) continue;
       if (urlIdVals.includes(part.value)) continue;
       if (knownVals.includes(part.value) || varOnly.includes(part.value) || values.has(part.value)) continue;
       urlIdVals.push(part.value);
@@ -996,6 +996,42 @@ export interface UrlPositionSlot {
   name: string;
   value: string;
   at: string;
+  /** Banked at a path or hash-route position: may be written at ANOTHER
+   *  position of the same kind in a later url (see relocatesTo). */
+  relocatable?: boolean;
+}
+
+/**
+ * A record id the ledger banked from one path position may stand at another
+ * position in a later url: the same record has more than one route.
+ * fwop4's 03-create banked work package 41 from
+ * `/work_packages/details/41/overview` (p4); 08-open's goto was
+ * `/work_packages/41` (p3), so the id stayed literal, n2 "replayed" 10/10
+ * against the deleted work package (every read skipped, the report filled
+ * from its template), n3 fell to the model and the pin was demoted.
+ *
+ * Provenance still decides, never the characters: the ledger banked this
+ * value as an identifier from a url position. What relocation adds is only
+ * WHERE it may be written — a WHOLE segment of the same kind (path to path,
+ * hash route to hash route), and only where the url holds it exactly once
+ * (substituteUrlId). The rule the exact-position arm guards — no rewrite of
+ * a uid inside grafana's slug — still holds: a slug is never a whole segment
+ * equal to the uid.
+ */
+function relocatesTo(origin: { label: string; value: string }, label: string): boolean {
+  const from = /^(p|h)\d+$/.exec(origin.label);
+  const to = /^(p|h)\d+$/.exec(label);
+  return Boolean(from && to && from[1] === to[1]);
+}
+
+/** Where a relocatable slot stands in `url`: its banked position when it is
+ *  there, else the one same-kind segment wholly equal to it, else nothing. */
+function relocatedLabel(url: string, s: UrlPositionSlot): string | null {
+  const parts = urlParts(url);
+  if (parts.some((p) => p.label === s.at && p.value === s.value)) return s.at;
+  const kind = s.at[0];
+  const hits = parts.filter((p) => /^(p|h)\d+$/.test(p.label) && p.label[0] === kind && p.value === s.value);
+  return hits.length === 1 ? hits[0].label : null;
 }
 
 /**
@@ -1022,7 +1058,10 @@ export function substituteUrlParts(url: string, minted: UrlPositionSlot[]): stri
  */
 export function substituteUrlId(url: string, slots: UrlPositionSlot[]): string {
   let out = url;
-  for (const s of slots) out = replaceAtUrlPart(out, s.at, s.value, `{{${s.name}}}`);
+  for (const s of slots) {
+    const at = s.relocatable ? relocatedLabel(out, s) : s.at;
+    if (at) out = replaceAtUrlPart(out, at, s.value, `{{${s.name}}}`);
+  }
   return out;
 }
 
@@ -1115,7 +1154,7 @@ function urlIdSlotPositions(slots: Map<string, string>, known: Record<string, st
   const positions = urlOriginPositions(known);
   const out: UrlPositionSlot[] = [];
   for (const [name, value] of slots) {
-    for (const o of positions) if (o.value === value) out.push({ name, value, at: o.label });
+    for (const o of positions) if (o.value === value) out.push({ name, value, at: o.label, ...(relocatesTo(o, o.label) ? { relocatable: true } : {}) });
   }
   return out;
 }

@@ -1,6 +1,7 @@
 import { dispatchesFirstMatch, isMutatingAction, isReadAction, spansEveryMatch } from '../execution/lifecycle.js';
 import { DEFAULT_BROWSER_PROFILE, isNavigatingAction, type BrowserProfile } from '../execution/browser.js';
 import { setsSomething } from '../execution/echo.js';
+import { observedNothing } from '../execution/observe.js';
 import { segmentGate } from '../execution/gates.js';
 /**
  * The IR as `@playwright/test` source (Tier 2: no sitelooper runtime).
@@ -2621,7 +2622,10 @@ function readLines(step: SkillStep, ctx: Ctx): string[] {
     const r = resolutionLines(chain, step, 'target', ctx, { allowMultiple: spansEveryMatch(step.tool, step.args ?? {}), waitMs: 'RESOLVE_WAIT_MS' }, `${framed}.root`);
     return [
       `const ${framed} = await rootFor(page, ${JSON.stringify(frame)}, RESOLVE_WAIT_MS);`,
-      `if ('error' in ${framed}) console.log(${q(`[sitelooper skip] ${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex} target: `)} + ${framed}.error + ' — value left empty');`,
+      `if ('error' in ${framed}) {`,
+      `  skippedReads.push(${q(`${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex} target`)});`,
+      `  console.log(${q(`[sitelooper skip] ${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex} target: `)} + ${framed}.error + ' — value left empty');`,
+      `}`,
       `${out} = 'root' in ${framed} ? await readOptional(page, [`,
       ...r.open,
       `], ${r.where}, ${r.policy}, ${read}, ${r.opts}) : '';`,
@@ -2898,6 +2902,25 @@ function emitSegment(segment: SpecSegment, ctx: Ctx): string[] {
     out.push('');
     const lines = step.tool === 'loop' ? emitLoop(step, segment, i + 1, ctx) : emitSkillStep(step, segment, i + 1, ctx);
     out.push(...lines);
+  }
+  // A read-only segment that skipped every read it could take did not replay
+  // (the shared observedNothing, asked by replay after the same steps). Only
+  // emitted where it can ever hold, so other segments carry nothing.
+  const shape = segment.steps.map((s) => ({
+    tool: s.tool,
+    args: { what: s.args?.what ?? 'text' },
+    locators: { target: (s.locators?.target ?? []).map(() => 0) },
+    ...(s.label ? { label: s.label } : {}),
+  }));
+  if (observedNothing(shape, Number.MAX_SAFE_INTEGER)) {
+    const base = `readsBefore${ctx.segments}`;
+    out.splice(2, 0, `const ${base} = skippedReads.length;`);
+    out.push(
+      '',
+      `if (observedNothing(${JSON.stringify(shape)}, skippedReads.length - ${base})) {`,
+      `  throw new Error(${q(`${segment.id}: every read of this read-only procedure was skipped — the page is not the one it was recorded reading`)});`,
+      '}',
+    );
   }
   // Everything this segment mints is on `p` from here to the end of the body,
   // so the segments BEHIND it can act on it (see Ctx.minted). Added after the
