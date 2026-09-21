@@ -167,6 +167,13 @@ const TARGETS = {
     notReadyHint:
       'Start it with: docker compose -f bench/thirdparty/snipeit/docker-compose.yml up -d (then seed.sh once)',
   },
+  ghost: {
+    task: 'tasks/ghost-post-flow.md',
+    defaults: APP_DEFAULTS.ghost,
+    // Reset is also the idempotent seed (and the owner setup) — see resetGhost.
+    reset: () => resetTarget('ghost'),
+    notReadyHint: 'Start it with: docker compose -f bench/thirdparty/ghost/docker-compose.yml up -d',
+  },
   grafana: {
     task: 'tasks/grafana-dashboard-flow.md',
     defaults: APP_DEFAULTS.grafana,

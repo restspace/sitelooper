@@ -73,4 +73,11 @@ export const APP_DEFAULTS = {
     APP_EMAIL: 'admin',
     APP_PASSWORD: 'bench-admin-pass',
   },
+  // resetGhost creates this owner through the setup wizard's own endpoint, so
+  // /ghost/#/setup never opens. Ghost signs in by email.
+  ghost: {
+    APP_URL: 'http://127.0.0.1:8099/',
+    APP_EMAIL: 'admin@bench.local',
+    APP_PASSWORD: 'bench-admin-pass',
+  },
 };

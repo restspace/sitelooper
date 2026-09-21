@@ -316,6 +316,20 @@ for WITH_TARGET in $WITH_TARGETS; do
       bash bench/thirdparty/snipeit/seed.sh
       node bench/reset-app.mjs --target snipeit
       ;;
+    ghost)
+      # Node + SQLite; first boot migrates in ~10-30s warm, allow five minutes
+      # on a cold box. The setup-status endpoint answers 200 (unauthenticated)
+      # once the admin API is up, set up or not.
+      for _ in $(seq 1 150); do
+        code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://127.0.0.1:8099/ghost/api/admin/authentication/setup/ || true)"
+        [ "$code" = "200" ] && break; sleep 2
+      done
+      echo "    ghost admin api setup: HTTP ${code:-unreachable}"
+      # No seed.sh: the reset sets up the owner through the setup wizard's own
+      # endpoint on first use, and is the idempotent seed for everything else,
+      # as for kanboard.
+      node bench/reset-app.mjs --target ghost
+      ;;
   esac
 done
 

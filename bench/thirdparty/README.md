@@ -21,6 +21,7 @@ since a run that dies on a CAPTCHA says nothing about sitelooper.
 | Vikunja 0.24 | 8096 | Vue 3 SPA; **contenteditable heading that saves on blur**; flatpickr date popup; label multiselect that creates on type; `BENCH-<n>` identifiers unlike the url's id | admin / bench-admin-pass |
 | EspoCRM 10.0 | 8097 | Backbone.js SPA, hash routes; **pencil inline edit and full Edit forms**; link fields with autocomplete + select-modal; Stream posts; 17-char hex record ids only in the url | admin / bench-admin-pass |
 | Snipe-IT 8.7 | 8098 | Laravel Blade + jQuery; **select2 AJAX dropdowns for every relation**; bootstrap-table lists over /api/v1; datepicker; a separate check-out form; minted `BA-<n>` asset tags | admin / bench-admin-pass |
+| Ghost 6.64 | 8099 | Ember.js admin SPA, hash routes; **Koenig/Lexical contenteditable post body**; settings side panel with a create-on-type tag input, excerpt textarea and date picker; multi-stage publish modal; title-derived slugs | admin@bench.local / bench-admin-pass |
 
 Bring one up with:
 

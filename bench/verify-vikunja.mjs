@@ -149,9 +149,15 @@ for (const runid of runids) {
 
   const description = String(task?.description ?? '')
   const inProject = task?.project_id === project.id
-  obj(2, Boolean(task && inProject && description.includes(runid)),
+  // Exactly once: a description holding the runid twice was saved doubled —
+  // fwvk1's every replay saved "Bench task created for run fwvk1-n2Bench task
+  // created for run fwvk1-n2" (a set-value recipe that appended), which is
+  // wrong work, not a pass.
+  const runidCount = description.split(runid).length - 1
+  obj(2, Boolean(task && inProject && runidCount === 1),
     !task ? 'task not found'
-      : `project=${inProject ? 'Bench Project' : `#${task.project_id} (not Bench Project)`}, description includes runid=${description.includes(runid)}`)
+      : `project=${inProject ? 'Bench Project' : `#${task.project_id} (not Bench Project)`}, description includes runid=${runidCount > 0}` +
+        (runidCount > 1 ? ` — ${runidCount} times, the description was saved doubled: ${JSON.stringify(description.slice(0, 300))}` : ''))
 
   obj(3, Boolean(task && dueOn(task.due_date, DUE)),
     !task ? 'no task' : `due date=${String(task.due_date).startsWith('0001-') ? '(not set)' : task.due_date}, want ${DUE}`)

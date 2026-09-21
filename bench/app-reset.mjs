@@ -539,6 +539,11 @@ async function resetEspocrm() {
     }
   };
 
+  // The task states its date as 2026-12-31. The image's env applies only at install time,
+  // so the format is enforced on every reset (fwec1: an ISO date typed into a MM/DD/YYYY
+  // field was read as 10/12/2031, and the failed create was adopted).
+  await api('PUT', 'Settings', { dateFormat: 'YYYY-MM-DD' });
+
   // Accounts: the one the task links, and a look-alike the autocomplete also offers.
   const accountIds = {};
   for (const name of ['Bench Account', 'Bench Accounting Services']) {
@@ -705,6 +710,103 @@ async function resetSnipeit() {
   }
 }
 
+/**
+ * Ghost reset doubles as the SEED, as kanboard's does. On a fresh install it
+ * first creates the owner through /ghost/api/admin/authentication/setup/ (the
+ * endpoint the /ghost/#/setup wizard posts to), so the wizard is never left
+ * open. Then: the tags "Bench News" and "Bench Guides" plus a look-alike
+ * "Bench Newsletter", and three published "Seed:" posts tagged Bench Guides.
+ * Every other post (earlier runs' "<runid> Bench Post"s and the install's own
+ * sample posts) and every other tag (the tag input CREATES a tag from whatever
+ * is typed unless a suggestion is chosen, so a run can leave "Bench New"
+ * behind) is DELETED. A seed post a wayward run touched is deleted and
+ * re-created rather than patched field by field. Everything goes through the
+ * Admin API with a staff session cookie (POST /ghost/api/admin/session).
+ */
+async function resetGhost() {
+  const base = (process.env.APP_URL || 'http://127.0.0.1:8099/').replace(/\/$/, '');
+  const origin = new URL(base).origin;
+  const email = process.env.GHOST_EMAIL || 'admin@bench.local';
+  const password = process.env.GHOST_PASSWORD || 'bench-admin-pass';
+  let cookie = '';
+  const call = async (method, route, body) => {
+    const res = await fetch(`${base}/ghost/api/admin${route}`, {
+      method,
+      headers: {
+        origin, accept: 'application/json', 'accept-version': 'v6.0',
+        ...(cookie ? { cookie } : {}),
+        ...(body ? { 'content-type': 'application/json' } : {}),
+      },
+      ...(body ? { body: JSON.stringify(body) } : {}),
+    });
+    const text = await res.text();
+    return { res, text, body: text && /json/.test(res.headers.get('content-type') ?? '') ? JSON.parse(text) : null };
+  };
+  const api = async (method, route, body) => {
+    const r = await call(method, route, body);
+    if (!r.res.ok) throw new Error(`ghost ${method} ${route}: HTTP ${r.res.status} ${r.text.slice(0, 300)}`);
+    return r.body;
+  };
+
+  const setup = await api('GET', '/authentication/setup/');
+  if (!setup.setup?.[0]?.status) {
+    await api('POST', '/authentication/setup/', {
+      setup: [{ name: 'Bench Admin', email, password, blogTitle: 'Bench Blog' }],
+    });
+    log(`ghost: created the owner "${email}"`);
+  }
+  const session = await call('POST', '/session/', { username: email, password });
+  if (!session.res.ok) throw new Error(`ghost: sign-in failed: HTTP ${session.res.status} ${session.text.slice(0, 300)}`);
+  cookie = session.res.headers.getSetCookie().map((c) => c.split(';')[0]).join('; ');
+  const me = await api('GET', '/users/me/');
+  if (me.users?.[0]?.status !== 'active') {
+    throw new Error(`ghost: the session is not usable (device verification on?): ${JSON.stringify(me).slice(0, 200)}`);
+  }
+
+  // Tags: exactly the seed set.
+  const SEED_TAGS = ['Bench News', 'Bench Guides', 'Bench Newsletter'];
+  const tags = (await api('GET', '/tags/?limit=all')).tags.sort((a, b) => a.created_at.localeCompare(b.created_at));
+  const tagIds = {};
+  for (const t of tags) {
+    if (SEED_TAGS.includes(t.name) && !tagIds[t.name]) { tagIds[t.name] = t.id; continue; }
+    await api('DELETE', `/tags/${t.id}/`);
+    log(`ghost: deleted tag "${t.name}"`);
+  }
+  for (const name of SEED_TAGS) {
+    if (tagIds[name]) continue;
+    tagIds[name] = (await api('POST', '/tags/', { tags: [{ name }] })).tags[0].id;
+    log(`ghost: seeded tag "${name}"`);
+  }
+
+  // Posts: exactly the seed set, each as seeded.
+  const SEED = [
+    { title: 'Seed: Welcome to the bench', body: 'The bench blog opens.' },
+    { title: 'Seed: Release notes for September', body: 'What changed this month.' },
+    { title: 'Seed: House style guide', body: 'How we write here.' },
+  ];
+  const posts = (await api('GET', '/posts/?limit=all&include=tags&formats=plaintext')).posts;
+  let removed = 0;
+  for (const p of posts) {
+    const s = SEED.find((x) => x.title === p.title);
+    const pristine = s && p.status === 'published' && !p.custom_excerpt && !p.featured &&
+      String(p.plaintext ?? '').trim() === s.body &&
+      p.tags.length === 1 && p.tags[0].id === tagIds['Bench Guides'] &&
+      !posts.some((q) => q !== p && q.title === p.title && q.created_at < p.created_at);
+    if (pristine) { s.kept = true; continue; }
+    await api('DELETE', `/posts/${p.id}/`);
+    removed++;
+  }
+  log(removed ? `ghost: deleted ${removed} post(s) (earlier runs' and non-seed)` : 'ghost: no posts to delete');
+  for (const s of SEED) {
+    if (s.kept) continue;
+    await api('POST', '/posts/?source=html', {
+      posts: [{ title: s.title, html: `<p>${s.body}</p>`, status: 'published', tags: [{ id: tagIds['Bench Guides'] }] }],
+    });
+    log(`ghost: seeded post "${s.title}"`);
+  }
+  // The install's sample pages are left alone: the task never looks at pages.
+}
+
 function resetAtelyr() {
   log('atelyr: restoring datastore baseline');
   execFileSync(process.execPath, [path.join(here, 'reset.mjs'), '--restore'], { stdio: 'inherit' });
@@ -721,6 +823,7 @@ const RESETS = {
   vikunja: resetVikunja,
   espocrm: resetEspocrm,
   snipeit: resetSnipeit,
+  ghost: resetGhost,
 };
 
 export const RESET_TARGETS = Object.keys(RESETS);

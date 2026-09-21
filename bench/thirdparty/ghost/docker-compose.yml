@@ -1,0 +1,53 @@
+# Third-party benchmark target: Ghost (real production app we did not write).
+#
+# Widens the matrix by CLIENT TECHNOLOGY: an Ember.js admin SPA on hash routes
+# (/ghost/#/editor/post/<id>), whose post body is the Koenig editor — a Lexical
+# contenteditable, not a textarea, so typed text only exists once the editor's
+# own model has taken it — a post-settings side panel (tag token input that
+# CREATES a tag from whatever is typed unless a suggestion is chosen, an excerpt
+# textarea that saves on blur, a publish date/time picker) and a multi-stage
+# publish flow modal.
+#
+# One container (~220 MB image, ~250-350 MB RAM): SQLite in the content volume,
+# NODE_ENV=development because Ghost supports SQLite only there. The owner is
+# created by the reset through /ghost/api/admin/authentication/setup/ (the
+# setup wizard's own endpoint), so no /ghost/#/setup is left open. Mail is never
+# delivered; staff device verification (an emailed code on a new-device
+# sign-in) is turned off so a fresh browser can sign in with the password alone.
+#
+#   up:    docker compose -f bench/thirdparty/ghost/docker-compose.yml up -d
+#   reset: node bench/reset-app.mjs --target ghost   (idempotent: sets up the owner and seeds too)
+#   web:   http://127.0.0.1:8099/ghost/   (admin@bench.local / bench-admin-pass)
+#   api:   /ghost/api/admin, session cookie from POST /ghost/api/admin/session
+services:
+  ghost:
+    image: ghost:6.64.0-alpine
+    ports:
+      - "127.0.0.1:8099:2368"
+    environment:
+      NODE_ENV: development
+      url: http://127.0.0.1:8099
+      database__client: sqlite3
+      database__connection__filename: /var/lib/ghost/content/data/ghost.db
+      database__useNullAsDefault: "true"
+      # A new-device sign-in otherwise waits for an emailed code no one reads.
+      security__staffDeviceVerification: "false"
+      # Every sign-in from 127.0.0.1 — the reset's, the verifier's and each
+      # run's browser — counts against one per-IP limit of 100 an hour
+      # (measured: a 429 at the 90th sign-in), and four wrong passwords lock
+      # the account for ten minutes. A bench box signs in far more than that.
+      spam__global_block__freeRetries: "1000000"
+      spam__user_login__freeRetries: "1000"
+      # Nothing is ever sent: a bench box has no mail, and a failed send must
+      # not be retried against the network.
+      mail__transport: stub
+      logging__level: warn
+      privacy__useUpdateCheck: "false"
+      privacy__useGravatar: "false"
+      privacy__useRpcPing: "false"
+      privacy__useStructuredData: "false"
+    volumes:
+      - ghost-content:/var/lib/ghost/content
+
+volumes:
+  ghost-content:
