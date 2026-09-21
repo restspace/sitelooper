@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { evalMutation, urlHeldStill } from '../src/agent/tools.js';
+import { startPageSettled } from '../src/execution/action.js';
 
 // The eval tool is read-only: a mutation issued through it runs but can never
 // be replayed (eval steps carry no locator and are dropped at compile), which
@@ -53,6 +54,28 @@ describe('urlHeldStill', () => {
     const seen = await urlHeldStill({ url: () => url }, 'http://app/a', () => pending, fast);
     expect(seen).toBe('http://app/b');
     expect(Date.now() - t0).toBeGreaterThanOrEqual(200);
+  });
+
+  // The flow's start page (both runners, after waitForContent). fwrd78: a
+  // bare entry url routed to `#/tickets`, the app asked the server who was
+  // signed in, and only the 401 moved the fresh browser to `#/login` — the
+  // artifact read the url in between and refused the sign-in segment.
+  it('startPageSettled follows a signed-out redirect the app makes after it painted', async () => {
+    let url = 'http://app/#/tickets';
+    let pending = 1; // GET /api/me, still out
+    setTimeout(() => {
+      pending = 0;
+      url = 'http://app/#/login';
+    }, 150);
+    const seen = await startPageSettled({ url: () => url }, () => pending, { stillMs: 100, pollMs: 10 });
+    expect(seen).toBe('http://app/#/login');
+  });
+
+  it('startPageSettled costs one look on a page with nothing in flight', async () => {
+    let asked = 0;
+    const seen = await startPageSettled({ url: () => 'http://app/login' }, () => (asked++, 0), { pollMs: 10 });
+    expect(seen).toBe('http://app/login');
+    expect(asked).toBe(1);
   });
 
   it('gives up at the deadline when a request never settles', async () => {

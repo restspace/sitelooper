@@ -100,8 +100,11 @@ export function urlEffectVerdict(
   liveUrl: string,
   params: Record<string, string>,
   where: string,
+  link?: { from: string; href: string },
 ): UrlEffectVerdict {
   if (!pattern || urlMatches(pattern, liveUrl, params)) return { warnings: [] };
+  const landed = linkLandingWarning(pattern, liveUrl, params, where, link);
+  if (landed) return { warnings: [landed] };
   const soft = softUrlMatch(pattern, liveUrl, params);
   if (!soft) {
     const shown = shownPattern(pattern, params);
@@ -112,6 +115,37 @@ export function urlEffectVerdict(
     generalised: soft.generalised,
     diffs: soft.diffs,
   };
+}
+
+/**
+ * A link click whose recorded landing is the page the link LEFT, and which
+ * this run followed to exactly where the link points: the recording captured
+ * the url before the link's navigation committed, and the click did what the
+ * element itself says it does. Null when that is not the case.
+ *
+ * fwop2 (OpenProject, round 33): the recorder's settle gave up on a cold
+ * server's Turbo Drive visit, so s_f4e3b6's click on "Bench Project" was
+ * stored as landing on `/projects`, the list it was clicked on. Both replays
+ * went to `/projects/bench-project` — the link's own href — and were refused
+ * "expected url …/projects but browser is at …/projects/bench-project", so
+ * 01-signin fell back to the model on every replay of the flow.
+ *
+ * Narrow on purpose: the recorded url must be the one this click started on
+ * (the recording saw no navigation at all), and the live url must be the
+ * link's href — never merely somewhere else. `link` is what the click's
+ * action observation reported (ClickObservation.linkTarget), in both runners.
+ */
+export function linkLandingWarning(
+  pattern: string,
+  liveUrl: string,
+  params: Record<string, string>,
+  where: string,
+  link: { from: string; href: string } | undefined,
+): string | null {
+  if (!link || !urlMatches(pattern, link.from, params)) return null;
+  if (!urlMatches(link.href, liveUrl) || urlMatches(link.href, link.from)) return null;
+  const shown = shownPattern(pattern, params);
+  return `${where}: recorded url ${shown} is the page the clicked link left (captured before its navigation committed); the click went where the link points, ${liveUrl} — accepted`;
 }
 
 function describeDiffs(diffs: UrlSegDiff[]): string {

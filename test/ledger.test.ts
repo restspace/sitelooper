@@ -421,6 +421,58 @@ describe('id-position url parts', () => {
   });
 });
 
+describe('a short record id in a path position (fwop2 06-open)', () => {
+  // OpenProject addresses a work package as `/work_packages/details/41/…`.
+  // 02-create minted 41 at `p4`; the length floor kept it out of the ledger,
+  // so 06-open's compile had no origin to slot its `goto …/details/41/activity`
+  // against and s_71f332 step 7 sent every replay to a deleted work package.
+  const created = 'http://127.0.0.1:8090/projects/bench-project/work_packages/details/41/overview';
+  const parts = [
+    { label: 'p0', value: 'projects' },
+    { label: 'p1', value: 'bench-project' },
+    { label: 'p2', value: 'work_packages' },
+    { label: 'p3', value: 'details' },
+    { label: 'p4', value: '41' },
+    { label: 'p5', value: 'overview' },
+  ];
+
+  it('banks a two-digit path id at its position', async () => {
+    const { pathIdPart } = await import('../src/skills/ledger.js');
+    expect(pathIdPart({ label: 'p4', value: '41' })).toBe(true);
+    expect(pathIdPart({ label: 'h1', value: '41' })).toBe(true);
+    const l = new RunLedger();
+    const banked = l.addUrlIds(created, 'i2', parts);
+    expect(banked.map((e) => [bindingKey(e.binding), e.value, e.kind])).toEqual([['url:i2:p4', '41', 'identifier']]);
+  });
+
+  it('vouches past the floor only — shape basis, so it never refuses a recording on its own', () => {
+    // A path digit run can be an app constant a click revealed (fwod19's
+    // lesson for query params), so banking it must not quarantine a step
+    // whose locator happens to carry the same digits.
+    const l = new RunLedger();
+    const [entry] = l.addUrlIds(created, 'i2', parts);
+    expect(entry.basis).toBe('shape');
+    const [leak] = scanForLeaks({ steps: [{ locators: { target: [{ kind: 'role', role: 'heading', name: 'Task (#41)' }] } }] }, l, 's');
+    expect(leak.value).toBe('41');
+    expect(fatal(leak)).toBe(false);
+    // ...while a recovery that NAVIGATES to it is still the recording's record.
+    expect(navigationLeaks(scanForLeaks({ steps: [{ args: { url: 'http://127.0.0.1:8090/projects/bench-project/work_packages/41/activity' } }] }, l, 's'))).toEqual(['41']);
+  });
+
+  it('leaves single digits and non-id query params where they were', async () => {
+    const { pathIdPart } = await import('../src/skills/ledger.js');
+    // One digit is a page number or a tab index as often as a record.
+    expect(pathIdPart({ label: 'p1', value: '7' })).toBe(false);
+    // Query/state keys keep their own rule (idPositionPart; fwod29's patch).
+    expect(pathIdPart({ label: 'q.menu_id', value: '81' })).toBe(false);
+    // A word or a mixed token below the floor is not a digit run.
+    expect(pathIdPart({ label: 'p2', value: 'v2' })).toBe(false);
+    const l = new RunLedger();
+    expect(l.addUrlIds('http://x/projects/7', 'i1', [{ label: 'p0', value: 'projects' }, { label: 'p1', value: '7' }])).toEqual([]);
+    expect(l.addUrlIds('http://x/web#menu_id=81', 'i1', [{ label: 'q.menu_id', value: '81' }])).toEqual([]);
+  });
+});
+
 describe('what earlier runs settled outranks what the characters say', () => {
   const load = () => import('../src/skills/ledger.js');
 

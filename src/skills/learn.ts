@@ -2,7 +2,8 @@ import { isMutatingAction, mutatesSteps } from '../execution/lifecycle.js';
 import type { InstructionResult, SkillRecord } from '../agent/loop.js';
 import type { Report } from '../agent/report.js';
 import type { RecordedEntry, RecordedInstruction } from '../daemon/recorder.js';
-import { compileSkills, escapeRe, fillParams, samePageContexts, sameProcedure, urlMatches } from './compile.js';
+import { compileSkills, escapeRe, fillParams, samePageContexts, sameProcedure, urlMatches, urlPattern, variantStart } from './compile.js';
+import { landedOnRecordedPage } from '../execution/gates.js';
 import { ComponentStore, learnRecipes } from './components.js';
 import { contractOf, isVerified, successRate, type Skill, type SkillStore } from './store.js';
 
@@ -20,6 +21,14 @@ export interface LearnedRecord {
   superseded?: string;
   /** Component recipes compiled from this instruction's recording. */
   recipes?: string[];
+  /**
+   * The WHOLE instruction's procedure, stored (or merged) beside a variant
+   * that starts after steps this recording replayed through other skills —
+   * the only one of the two that is a procedure for the step (see
+   * learnFromInstruction). Its segments, in chain order, in `wholeAll`.
+   */
+  whole?: string;
+  wholeAll?: string[];
 }
 
 /**
@@ -131,18 +140,45 @@ export function learnFromInstruction(
   if (fullReplay) return Object.keys(out).length ? out : null;
   const variantOf = sk?.invoked && !sk.refused && sk.stepsReplayed < sk.stepsTotal ? sk.invoked : undefined;
 
-  const skills = compileSkills({
-    entries: input.entries,
-    instruction: input.instruction,
-    report: input.result.report,
-    session: input.session,
-    model: input.model,
-    now: input.now,
-    variantOf,
-    knownValues: input.vars,
-  });
-  if (!skills.length) return Object.keys(out).length ? out : null;
+  const compile = (variant: string | undefined) =>
+    compileSkills({
+      entries: input.entries,
+      instruction: input.instruction,
+      report: input.result.report,
+      session: input.session,
+      model: input.model,
+      now: input.now,
+      variantOf: variant,
+      knownValues: input.vars,
+    });
+  const skills = compile(variantOf);
+  // A variant that starts AFTER steps this recording replayed through other
+  // skills (an earlier segment of the chain it repaired) covers the tail of
+  // the instruction, not the instruction: replay composes a chain by its own
+  // `seq`, so nothing ever runs that tail after the prefix it omits. It is
+  // stored as before — it is the repair, gated on the page it ran on — and
+  // the whole recording is stored beside it as the instruction's procedure,
+  // the one a flow step can be pinned to. fwop2's 01-signin was re-pinned to
+  // a tail that began in the signed-in projects list; the compiled artifact
+  // ran it on a fresh browser's login form and missed its first click.
+  const whole = variantOf && variantStart(input.entries, variantOf).dropped ? compile(undefined) : [];
+  if (!skills.length && !whole.length) return Object.keys(out).length ? out : null;
+  if (skills.length) Object.assign(out, keep(store, skills, variantOf));
+  if (whole.length) {
+    const kept = keep(store, whole, undefined);
+    out.whole = kept.merged ?? kept.compiled;
+    if (kept.compiledAll) out.wholeAll = kept.compiledAll;
+  }
+  return out;
+}
 
+/**
+ * Store one compiled recording: merged into twins that already hold it, or
+ * put as new skills. Split out of learnFromInstruction so a variant and the
+ * whole recording it was cut from are each asked the same question.
+ */
+function keep(store: SkillStore, skills: Skill[], variantOf: string | undefined): Pick<LearnedRecord, 'compiled' | 'compiledAll' | 'merged' | 'variantOf'> {
+  const out: Pick<LearnedRecord, 'compiled' | 'compiledAll' | 'merged' | 'variantOf'> = {};
   const existing = store.list(skills[0].origin);
   // A twin is an existing skill with this recording's shape at the same
   // chain position. Merge only when EVERY segment has a twin and the twins
@@ -891,6 +927,12 @@ export function decideRepin(input: {
    * and the pin moved anyway.
    */
   mintedLeaks?: string[];
+  /**
+   * pinStartsElsewhere's verdict: the candidate's procedure starts on a page
+   * other than the one this step began on, so it covers only part of the
+   * step (fwop2 01-signin: a tail recorded after the sign-in it omits).
+   */
+  startsElsewhere?: string | null;
 }): { skill: string; graduated: boolean } | { refused: string } | null {
   const { step, outcome } = input;
   // A full replay of the incumbent itself leaves nothing to move.
@@ -904,6 +946,7 @@ export function decideRepin(input: {
   if (input.mintedLeaks?.length) {
     return { refused: `not re-pinning ${cand.skill} — its navigation carries an identifier this run made (${input.mintedLeaks.slice(0, 3).join(', ')}), so it would replay onto this run's record` };
   }
+  if (input.startsElsewhere) return { refused: `not re-pinning ${cand.skill} — ${input.startsElsewhere}` };
   if (input.reportStatus !== 'success' || !input.adoptable || cand.status === 'demoted') return null;
   // An adopted step graduates on its first clean recovery whatever the
   // candidate's status: it now owns a skill that completed it, and keeping
@@ -914,6 +957,32 @@ export function decideRepin(input: {
   const nothingToKeep = !step.skill || input.incumbent === 'missing' || input.incumbent === 'demoted';
   if (nothingToKeep) return { skill: cand.skill, graduated: false };
   return null;
+}
+
+/**
+ * Whether a re-pin candidate starts where the step did. A pin is the step's
+ * WHOLE procedure: the daemon runs it on whatever page the previous step left
+ * (or the flow's start url), and the compiled artifact runs it and nothing
+ * else. A candidate whose chain head is gated on another page starts after
+ * something the step had to do first — fwop2's 01-signin was re-pinned to a
+ * procedure whose first click is a project in the signed-in projects list,
+ * recorded after its chain's sign-in segments had replayed; inside that
+ * daemon session the browser was already signed in, and the artifact's fresh
+ * browser was on the login form. The evidence is the recording's own: the
+ * page the instruction began on, against the head's stored start pattern
+ * (landedOnRecordedPage — a strict match, or a soft one on minted values).
+ * Null when it starts there, or when either side is unknown.
+ */
+export function pinStartsElsewhere(store: SkillStore, candidateId: string, stepStartUrl: string | undefined): string | null {
+  if (!stepStartUrl) return null;
+  const cand = store.get(candidateId);
+  if (!cand) return null;
+  const head = cand.seq
+    ? (store.list(cand.origin).find((s) => s.seq?.chain === cand.seq!.chain && s.seq.index === 0) ?? cand)
+    : cand;
+  const pattern = head.preconditions.urlPattern;
+  if (!pattern || landedOnRecordedPage(pattern, stepStartUrl)) return null;
+  return `its procedure starts on ${pattern} (${head.id}), and this step began on ${urlPattern(stepStartUrl)}: it covers only what follows something the step had to do first`;
 }
 
 export function instructionEntry(entries: RecordedEntry[]): RecordedInstruction | undefined {

@@ -222,6 +222,18 @@ describe('emitFlowFile layout', () => {
     expect(wait).toBeGreaterThan(start);
     expect(wait).toBeLessThan(source.indexOf("await test.step('01-do"));
     expect(source).toContain('async function waitForContent(page: Page, timeoutMs = 5000): Promise<void> {');
+    // …and then for it to finish ROUTING, on the requests it counts from the
+    // start url on (fwrd78: content was a static shell, `#/tickets` was read
+    // while the app still asked who was signed in). Every flow installs the
+    // traffic it counts, not only one with an observed action.
+    const traffic = source.indexOf('    pageTraffic(page);');
+    const routed = source.indexOf('    await startPageSettled(page).catch(() => {});');
+    expect(traffic).toBeGreaterThan(-1);
+    expect(traffic).toBeLessThan(start);
+    expect(routed).toBeGreaterThan(wait);
+    expect(routed).toBeLessThan(source.indexOf("await test.step('01-do"));
+    expect(source).toContain('async function startPageSettled(');
+    expect(source).toContain('function inFlightRequests(');
     // The recorded browser travels (a flow saved before profiles were stored
     // gets the default it was recorded at), and runFlow judges the page it is
     // handed against it before navigating — warning, never resizing.
@@ -675,14 +687,14 @@ describe('expectations', () => {
    */
   it('checks a recorded url through the shared urlEffect verdict, whatever the pattern shape', () => {
     const path = withExpect({ urlPattern: 'http://app.test/items/:id' });
-    expect(path).toContain("await urlEffect(page, 'http://app.test/items/:id', p, '01-do s_test1/1', volatile1);");
+    expect(path).toContain("await urlEffect(page, 'http://app.test/items/:id', p, '01-do s_test1/1', volatile1, obs1?.link());");
     expect(path).not.toContain('toHaveURL(');
     expect(path).not.toContain('new RegExp(`^http');
     expect(path).toContain('// Shared execution source: gates.ts. Regenerate to update.');
     expect(path).toContain('function urlEffectVerdict(');
     // the slot stays a marker in the emitted call; `p` fills it at run time, as replay does
     const slotted = withExpect({ urlPattern: 'http://app.test/items/{{v1}}' });
-    expect(slotted).toContain("await urlEffect(page, 'http://app.test/items/{{v1}}', p, '01-do s_test1/1', volatile1);");
+    expect(slotted).toContain("await urlEffect(page, 'http://app.test/items/{{v1}}', p, '01-do s_test1/1', volatile1, obs1?.link());");
     expect(slotted).toMatch(/async '01-do'\(page: Page, p: \{[^}]*\bv1: string/);
     // the adapter: a strict match is waited for on the navigation itself, then
     // the verdict is asked ONCE of wherever the browser is; a warning is logged,
@@ -690,7 +702,12 @@ describe('expectations', () => {
     const helper = /\nasync function urlEffect\(page: Page[\s\S]*?\n\}\n/.exec(path);
     expect(helper).not.toBeNull();
     expect(helper![0]).toContain('await page.waitForURL((url) => urlMatches(pattern, url.toString(), p), { timeout: URL_WAIT_MS }).catch(() => {});');
-    expect(helper![0]).toContain('const verdict = urlEffectVerdict(pattern, page.url(), p, where);');
+    expect(helper![0]).toContain('const verdict = urlEffectVerdict(pattern, page.url(), p, where, link);');
+    // a click that went where its link points, recorded before the link's
+    // navigation committed, is the shared linkLandingWarning, asked before any
+    // wait (fwop2 s_f4e3b6; replay's expectedUrl asks it first too)
+    expect(helper![0]).toContain('const landed = linkLandingWarning(pattern, page.url(), p, where, link);');
+    expect(helper![0].indexOf('linkLandingWarning(')).toBeLessThan(helper![0].indexOf('waitForURL('));
     expect(helper![0]).toContain('for (const line of verdict.warnings) logWarning(line);');
     expect(helper![0]).toContain('if (verdict.stop) throw new Error(verdict.stop);');
     expect(path).toContain('const URL_WAIT_MS = 5000;');
@@ -713,13 +730,17 @@ describe('expectations', () => {
     expect(urlEffectVerdict('http://app.test/items/{{v1}}/edit', 'http://app.test/', p, 'x').stop).toBe(
       'after x expected url http://app.test/items/42/edit but browser is at http://app.test/',
     );
+    // a link click recorded on the page it left, followed to the link's href: accepted, as in replay
+    const link = { from: 'http://app.test/items', href: 'http://app.test/items/42' };
+    expect(urlEffectVerdict('http://app.test/items', 'http://app.test/items/42', p, 'x', link).stop).toBeUndefined();
+    expect(urlEffectVerdict('http://app.test/items', 'http://app.test/items/42', p, 'x').stop).toBeDefined();
   });
 
   it('matches a query-shaped hash as unordered STATE, through the shared urlMatches itself (the odoo failure)', () => {
     const out = withExpect({ urlPattern: 'http://app.test/web#action=:id&cids=1&menu_id={{v1}}' });
     // The artifact calls the daemon's own urlMatches on the recorded pattern,
     // markers intact, and fills the slots from `p` exactly as replay fills them.
-    expect(out).toContain("await urlEffect(page, 'http://app.test/web#action=:id&cids=1&menu_id={{v1}}', p, '01-do s_test1/1', volatile1);");
+    expect(out).toContain("await urlEffect(page, 'http://app.test/web#action=:id&cids=1&menu_id={{v1}}', p, '01-do s_test1/1', volatile1, obs1?.link());");
     expect(out).toContain('// Shared execution source: url.ts. Regenerate to update.');
     expect(out).toContain('function urlMatches(pattern: string, url: string, params: Record<string, string> = {}): boolean {');
     // the slot the pattern names is one the step's `p` carries
@@ -729,7 +750,7 @@ describe('expectations', () => {
     expect(out).not.toContain('hashState(');
     // a hash ROUTE takes the very same form — there is no regex to fall back to
     const route = withExpect({ urlPattern: 'http://app.test/a#/detail/:id' });
-    expect(route).toContain("await urlEffect(page, 'http://app.test/a#/detail/:id', p, '01-do s_test1/1', volatile1);");
+    expect(route).toContain("await urlEffect(page, 'http://app.test/a#/detail/:id', p, '01-do s_test1/1', volatile1, obs1?.link());");
     expect(route).not.toContain('toHaveURL(');
     expect(syntaxErrors(out)).toEqual([]);
   });

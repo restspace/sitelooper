@@ -16,7 +16,7 @@ import { identityMarkerVerdict, markersBound } from '../src/execution/gates.js';
 import { observedChange } from '../src/execution/lifecycle.js';
 import type { LocatorCandidate } from '../src/daemon/recorder.js';
 import type { SkillStep } from '../src/skills/store.js';
-import { bindSkill, canAdoptPin, learnFromInstruction, matchTemplate, publishedOutputs, sameChainProcedure, selectCandidates, synthesizeReport } from '../src/skills/learn.js';
+import { bindSkill, canAdoptPin, decideRepin, learnFromInstruction, matchTemplate, pinStartsElsewhere, publishedOutputs, sameChainProcedure, selectCandidates, synthesizeReport } from '../src/skills/learn.js';
 import { candidatesFor, renderCandidates } from '../src/skills/replay.js';
 import { SKILL_CONTRACT, SITEMAP_FILE, SkillStore, contractOf, isVerified, originOf, originSlug, type Skill } from '../src/skills/store.js';
 
@@ -166,6 +166,52 @@ describe('cross-instruction url record-id slotting (fwod29)', () => {
     // a param bound to it could not resolve at bind time, and an unbindable
     // param refuses the whole skill.
     expect(urlOriginPositions({ '02-create.url.p1': 'abc' })).toEqual([]);
+  });
+
+  // fwop2 06-open (OpenProject, s_71f332 step 7): the recording went back to
+  // `…/work_packages/details/41/activity` after submitting its comment, and 41
+  // was the work package 02-create minted at `p4`. Two digits sat below the
+  // ledger's length floor, so no `url:i2:p4` origin existed, the goto stayed
+  // literal, and both replays navigated to a work package the reset had
+  // deleted. With the path position vouching for it, the ledger banks it and
+  // compile writes the slot at exactly that position.
+  it('slots a two-digit record id the ledger banked at a PATH position (fwop2 06-open)', async () => {
+    const { RunLedger, bindingKey } = await import('../src/skills/ledger.js');
+    const OP = 'http://127.0.0.1:8090';
+    const created = `${OP}/projects/bench-project/work_packages/details/41/overview`;
+    const ledger = new RunLedger();
+    ledger.addUrlIds(`${OP}/projects/bench-project/work_packages`, 'i1', urlParts(`${OP}/projects/bench-project/work_packages`));
+    ledger.addUrlIds(created, 'i2', urlParts(created));
+    ledger.add('#41', { from: 'output', step: 'i2', name: 'wp_id' });
+    ledger.add('41', { from: 'output', step: 'i2', name: 'wp_numeric_id' });
+    const known: Record<string, string> = { 'var:runid': 'x7' };
+    for (const e of ledger.all()) known[bindingKey(e.binding)] = e.value;
+    expect(known['url:i2:p4']).toBe('41');
+
+    const instr = "Open the work package with ID #41 titled 'x7 Bench Work Package' and go to its Activity tab. Add a comment 'Comment for run x7'.";
+    const activity = `${OP}/projects/bench-project/work_packages/details/41/activity`;
+    const entries: RecordedEntry[] = [
+      { k: 'instruction', text: instr, url: activity } as RecordedEntry,
+      step('type', { target: '@e2', text: 'Comment for run x7' }, [{ kind: 'role', role: 'textbox', name: 'Add a comment' }]),
+      step('click', { target: '@e3' }, [{ kind: 'role', role: 'button', name: 'Submit comment' }], { diff: { url: activity, alerts: [], added: ['- button "Actions"'] } }),
+      step('goto', { url: activity }, [], { diff: { url: activity, alerts: [], added: [] } }),
+      step('read', { target: '@e5', what: 'text' }, [{ kind: 'css', selector: '[data-anchor-comment-id] .op-uc-container' }], { result: '"Comment for run x7"' }),
+    ];
+    const skills = compileSkills({
+      entries,
+      instruction: instr,
+      report: { status: 'success', summary: 'commented', evidence: { values: { comment_text: 'Comment for run x7' } } },
+      session: 's',
+      knownValues: known,
+    });
+    const gotoStep = skills.flatMap((s) => s.steps).find((st) => st.tool === 'goto')!;
+    const slot = Object.entries(skills[0].params).find(([, p]) => p.binding === 'url:i2:p4');
+    expect(slot, 'the minted id binds by the position it was banked at').toBeTruthy();
+    expect(String(gotoStep.args.url)).toBe(`${OP}/projects/bench-project/work_packages/details/{{${slot![0]}}}/activity`);
+    // A later run resolves its own work package from the same origin.
+    const bound = bindSkill(skills[0], instr.replaceAll('x7', 'k9').replace('#41', '#42'), { 'var:runid': 'k9', 'url:i2:p4': '42', 'output:i2:wp_id': '#42' });
+    expect(bound).toBeTruthy();
+    expect(fillParams(String(gotoStep.args.url), bound!)).toBe(`${OP}/projects/bench-project/work_packages/details/42/activity`);
   });
 
   it('leaves no earlier-instruction ledger identifier literal inside any args.url', () => {
@@ -2503,6 +2549,14 @@ describe('removedContains: the dialog a step closed', () => {
     expect(compile({ removed: WELCOME }, { fingerprintAfter: [0.1] }).steps[0].expect?.removedContains).toBeUndefined();
     expect(compile({ removed: ['- button "Close"', '- row "Seed: triage inbox"'] }).steps[0].expect?.removedContains).toBeUndefined();
   });
+
+  // fwod74: a configurator Cancel that also took away the order line it had
+  // half-added undid work — a removed record line or this run's own value is a
+  // consequence, whatever dialog went with it.
+  it('records none when the step also removed a record line or this run\'s own value', () => {
+    expect(compile({ removed: [...WELCOME, '- row "£ 0.00"'] }).steps[0].expect?.removedContains).toBeUndefined();
+    expect(compile({ removed: [...WELCOME, '- listitem "Seed: triage inbox"'] }).steps[0].expect?.removedContains).toBeUndefined();
+  });
 });
 
 describe('maskMinted', () => {
@@ -2857,5 +2911,87 @@ describe('adjacent slots are not split on a guess (fwod55)', () => {
     const pattern = `${ORIGIN}/web#cids=1&model=sale.order&view_type=form&id=:id`;
     const verdict = identityMarkerVerdict(pattern, `${ORIGIN}/web#cids=1&model=sale.order&view_type=form&id=19`, params, want, 'absent');
     expect(verdict.pass).toBe(false);
+  });
+});
+
+/**
+ * fwop2 01-signin. The step's pinned chain replayed its sign-in and
+ * welcome-dialog segments, stopped in the projects-list segment, and the
+ * model finished the step. The repair was stored as a variant of the stopped
+ * segment — rightly keeping only its own steps — but gated on the page the
+ * INSTRUCTION began on (`/login`) with a first step that clicks a project in
+ * the signed-in list. n3 re-pinned the step to it; inside the daemon session
+ * the browser was already signed in, and the compiled artifact's fresh
+ * browser was on the login form.
+ */
+describe('a repair that starts after replayed segments (fwop2)', () => {
+  const OP = 'http://127.0.0.1:8090';
+  const SIGNIN = "Sign in with username 'admin' and password 'bench-admin-pass', then open the work packages of the project 'Bench Project'.";
+  const via = (skill: string, n: number) => ({ via: { skill, step: n } });
+  const signin = (): RecordedEntry[] => [
+    { k: 'instruction', text: SIGNIN, url: `${OP}/login?back_url=${encodeURIComponent(`${OP}/`)}`, fingerprint: [1, 0, 0] } as RecordedEntry,
+    step('fill', { target: '@e1', value: 'admin' }, [{ kind: 'label', label: 'Username' }], via('s_login', 1)),
+    step('fill', { target: '@e2', value: 'bench-admin-pass' }, [{ kind: 'label', label: 'Password' }], via('s_login', 2)),
+    step('click', { target: '@e3' }, [{ kind: 'role', role: 'button', name: 'Sign in' }], {
+      ...via('s_login', 3),
+      diff: { url: `${OP}/projects`, alerts: [], added: ['- link "Bench Project"', '- button "Sign out"'] },
+      fingerprintAfter: [0, 1, 0],
+    }),
+    // The stopped segment's own first step, then the model's repair.
+    step('click', { target: '@e7' }, [{ kind: 'role', role: 'link', name: 'Bench Project' }], {
+      ...via('s_list', 1),
+      diff: { url: `${OP}/projects/bench-project`, alerts: [], added: ['- link "Work packages"'] },
+      fingerprintAfter: [0, 0, 1],
+    }),
+    step('click', { target: '@e9' }, [{ kind: 'role', role: 'link', name: 'Work packages' }], {
+      diff: { url: `${OP}/projects/bench-project/work_packages`, alerts: [], added: ['- heading "Work packages"'] },
+      fingerprintAfter: [1, 1, 0],
+    }),
+  ];
+  const signinReport = { status: 'success' as const, summary: 'Signed in and opened the work packages of Bench Project.', evidence: { values: {} } };
+  const stopped = { listed: [], invoked: 's_list', stepsReplayed: 0, stepsTotal: 3, repaired: true, refused: false, fallthroughs: 0, similarity: null, deterministicActions: 0, totalActions: 5 };
+  const result: InstructionResult = { report: signinReport, turns: 8, usage: { promptTokens: 0, completionTokens: 0, cachedTokens: 0 }, screenshots: [], skill: stopped };
+
+  it('gates a variant on the page its first kept step ran on, not where the instruction began', () => {
+    const [variant] = compileSkills({ entries: signin(), instruction: SIGNIN, report: signinReport, session: 's', variantOf: 's_list' });
+    expect(variant.preconditions.urlPattern).toBe(urlPattern(`${OP}/projects`));
+    expect(variant.preconditions.fingerprint).toEqual([0, 1, 0]);
+    expect(variant.steps[0].locators?.target?.[0]).toMatchObject({ role: 'link', name: 'Bench Project' });
+    // The whole recording still starts where the instruction did.
+    const [whole] = compileSkills({ entries: signin(), instruction: SIGNIN, report: signinReport, session: 's' });
+    expect(urlMatches(whole.preconditions.urlPattern, `${OP}/login`)).toBe(true);
+    expect(whole.steps[0].tool).toBe('fill');
+  });
+
+  it('stores the whole recording beside the tail variant, and only the whole starts where the step did', () => {
+    const store = new SkillStore(path.join(tmp, 'fwop2-whole'));
+    const learned = learnFromInstruction(store, { result, instruction: SIGNIN, entries: signin(), session: 's', now: '2026-09-21T11:37:00Z' });
+    expect(learned?.variantOf).toBe('s_list');
+    const tail = store.get(learned!.compiled!)!;
+    expect(tail.variantOf).toBe('s_list');
+    expect(learned?.whole).toBeTruthy();
+    const whole = store.get(learned!.whole!)!;
+    expect(whole.variantOf).toBeUndefined();
+    expect(whole.steps[0].tool).toBe('fill');
+
+    const began = `${OP}/login?back_url=${encodeURIComponent(`${OP}/`)}`;
+    expect(pinStartsElsewhere(store, whole.id, began)).toBeNull();
+    const why = pinStartsElsewhere(store, tail.id, began);
+    expect(why).toMatch(/starts on .*\/projects/);
+    expect(decideRepin({ step: { id: '01-signin', skill: 's_login' }, reportStatus: 'success', outcome: undefined, compiled: { skill: tail.id, status: tail.status }, incumbent: 'demoted', stray: 0, adoptable: true, startsElsewhere: why })).toEqual({
+      refused: `not re-pinning ${tail.id} — ${why}`,
+    });
+    expect(decideRepin({ step: { id: '01-signin', skill: 's_login' }, reportStatus: 'success', outcome: undefined, compiled: { skill: whole.id, status: whole.status }, incumbent: 'demoted', stray: 0, adoptable: true, startsElsewhere: null })).toEqual({
+      skill: whole.id,
+      graduated: false,
+    });
+  });
+
+  it('a repair with nothing replayed ahead of it stores no second procedure', () => {
+    const store = new SkillStore(path.join(tmp, 'fwop2-nowhole'));
+    const own = signin().map((e) => (e.k === 'step' ? { ...e, via: undefined } : e));
+    const learned = learnFromInstruction(store, { result, instruction: SIGNIN, entries: own, session: 's', now: '2026-09-21T11:37:00Z' });
+    expect(learned?.compiled).toBeTruthy();
+    expect(learned?.whole).toBeUndefined();
   });
 });

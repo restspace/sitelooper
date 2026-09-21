@@ -7,7 +7,7 @@ import type { LocatorCandidate, RecordedEntry, RecordedInstruction, RecordedRepo
 import { rootDir } from '../shared/paths.js';
 import { urlParts, urlPattern } from './compile.js';
 import { mintedShape } from '../execution/url.js';
-import { idPositionPart } from './ledger.js';
+import { idPositionPart, pathIdPart } from './ledger.js';
 import { MIN_ID_LEN, looksLikeId, tokenPattern } from './shape.js';
 import { statedPlainly } from '../spec/rethread.js';
 
@@ -181,9 +181,17 @@ export type RunSpecific = (value: string) => boolean;
  * record pointer in an unnamed position, like a grafana uid at `p1`. Then the
  * url's own vocabulary (position), then the characters (shape). Evidence only
  * ever adds; see `RunSpecific` for why agreement may not take away.
+ *
+ * Position has two spellings below the shape arm's floor: an `id=` state key
+ * (odoo's `#id=44`) and a digit run in a path segment (OpenProject's
+ * `/work_packages/details/41/overview`). The path one is the ledger's
+ * pathIdPart, shared so the ledger, this minting and the replay's publishing
+ * cannot drift apart: fwop2's 02-create minted work package 41, and no
+ * `{{02-create.url.p4}}` was minted, published or banked, so 06-open's goto
+ * kept 41 literally and every replay opened a deleted work package.
  */
 export function referencablePart(part: { label: string; value: string }, runSpecific?: RunSpecific): boolean {
-  return Boolean(runSpecific?.(part.value)) || (part.value.length >= MIN_ID_LEN && looksLikeId(part.value, 'first-run')) || idPositionPart(part);
+  return Boolean(runSpecific?.(part.value)) || (part.value.length >= MIN_ID_LEN && looksLikeId(part.value, 'first-run')) || idPositionPart(part) || pathIdPart(part);
 }
 
 /**
@@ -479,6 +487,11 @@ export function buildFlow(
       // zero-model replay of 04-open could not publish it, and 05-open went
       // to the model on every replay (19–44 turns).
       if (replaceToken(g.instruction.text, value, ' ') !== g.instruction.text) continue;
+      // The same fact one instruction further back: a value the TASK stated
+      // before this step ran, and before the run had shown it anywhere, is the
+      // task's own vocabulary, so this step cannot be where it came from. See
+      // statedBeforeShown for the evidence and the cases.
+      if (statedBeforeShown(entries, g.instruction, value)) continue;
       // EVERY reported value becomes a reference. Run 1 makes no judgement
       // about which of them name a record, because it cannot: "New (unsaved)"
       // and "S00021" are both just strings a step reported, and the question
@@ -531,6 +544,90 @@ export function buildFlow(
     provenance: { session: opts.session, created: opts.now ?? new Date().toISOString(), ...(opts.model ? { model: opts.model } : {}) },
     ...(warnings.length ? { warnings } : {}),
   };
+}
+
+/**
+ * Did an instruction BEFORE `producer` already state `value`, at a moment when
+ * nothing in the recording had yet shown it?
+ *
+ * buildFlow threads every reported value into later instructions by plain
+ * token match, with no check that the later mention has anything to do with
+ * the step that reported it. fwgr63's 03-open reported
+ * `button_save_dashboard = "Save dashboard"`, the label of the app's own
+ * button, and 05-open's wording "(Save dashboard, confirm the save…)" became
+ * `({{03-open.button_save_dashboard}}, …)`. No replay ever published that
+ * value (the export's synthesized read looked for the save drawer's heading,
+ * which is gone once the save is done), so the sweep verified 6/6 while
+ * `spec` refused the flow: `05-open: slot v5 is bound to
+ * {{03-open.button_save_dashboard}}, and nothing has ever published
+ * button_save_dashboard`. kanboard fwkb8/27/28/30/33 show the defect in its
+ * plainest form: 02-create reported `status = "open"`, and a later step's
+ * "open the task page" was exported as "{{02-create.status}} the task page".
+ *
+ * WHY THE EARLIER INSTRUCTION IS THE EVIDENCE. Whoever writes a flow's
+ * instructions learns about the run through one channel, the `do` report (its
+ * summary and values). A value stated in an instruction that comes before
+ * every report and page that could have shown it was known before the run
+ * produced anything, so it is a constant of the task. "Save dashboard" was in
+ * 02-create's wording ("use Save dashboard, enter the name, confirm") before
+ * 03-open ran, and "open" was in 01-open's. The earlier instruction keeps the
+ * literal in the flow, so every replay runs with it whatever the later step
+ * reports. Making a later step depend on the later producer adds a way to
+ * fail and makes the flow no more specific to the run.
+ *
+ * WHAT IT MUST NOT CATCH. The author also copies values the run HAS shown
+ * into later wording. fwod11's 03-open to 05-open say "quotation S00022"
+ * because an earlier report named it, and 07-open's `{{06-open.e2551}}` is
+ * the only thing that ties the cancel to THIS run's order. If the run showed
+ * the value anywhere before the stating instruction, it stays threaded as
+ * before. That covers a report's summary or values, a step's args, result,
+ * locators and page diff, an earlier start page or url, and the stating
+ * instruction's own start page. That net is wider than what the author saw, on
+ * purpose: a net that is too wide leaves things as they were, while one that
+ * is too narrow would turn a record's id into the recording's literal. It
+ * ignores case for the same reason. Kanboard's legitimate threading never
+ * reaches this test: no instruction up to the producer states fwkb34's
+ * `{{02-open.board_column_work_in_progress}}` or
+ * `{{03-create.task_id_as_displayed}}`.
+ *
+ * Measured on the 195 published flows (every origin/results/fw* branch that
+ * carries its flow, checked against each n1 transcript's `do` output): 28
+ * consumed references carry a value stated before its producer ran. The run
+ * had not yet shown 17 of them: "Save dashboard" (fwgr10, fwgr63), "bench",
+ * "Last 6 hours", "1m", "browser", "open", "admin", "Ready" and "Untaxed
+ * Amount". Every one is the task's wording or the app's own text. The run had
+ * already shown 8 of them, and those stay threaded: odoo's S00021/S00022,
+ * grafana's "now" and "now-6h", "Dashboard saved", "Cancel", and fwgr53's
+ * "text". The other 3 had no transcript to check.
+ */
+function statedBeforeShown(entries: readonly RecordedEntry[], producer: RecordedInstruction, value: string): boolean {
+  const end = entries.indexOf(producer);
+  if (end <= 0 || value.length < 2) return false;
+  for (let k = 0; k < end; k++) {
+    const e = entries[k];
+    if (e.k !== 'instruction' || replaceToken(e.text, value, ' ') === e.text) continue;
+    // The EARLIEST instruction that states it decides: if the run had already
+    // shown the value by then, every later statement came after that too.
+    return !shownBefore(entries, k, value);
+  }
+  return false;
+}
+
+/** Whether anything recorded before entry `at`, or `at`'s own start page, could have shown `value`. See statedBeforeShown. */
+function shownBefore(entries: readonly RecordedEntry[], at: number, value: string): boolean {
+  // replaceToken's boundary, the same rule that threads the value, with both
+  // sides lowered so a page's "Save Dashboard" also counts as having shown it.
+  const lower = value.toLowerCase();
+  const hit = (s: unknown): boolean => typeof s === 'string' && replaceToken(s.toLowerCase(), lower, ' ') !== s.toLowerCase();
+  const page = (e: RecordedInstruction): boolean => hit(e.startText) || hit(e.url);
+  for (let k = 0; k < at; k++) {
+    const e = entries[k];
+    if (e.k === 'report' && (hit(e.summary) || Object.values(e.values ?? {}).some(hit))) return true;
+    if (e.k === 'instruction' && page(e)) return true;
+    if (e.k === 'step' && hit(JSON.stringify(e))) return true;
+  }
+  const own = entries[at];
+  return own.k === 'instruction' && page(own);
 }
 
 interface Group {
@@ -620,7 +717,10 @@ function samePage(a?: string, b?: string): boolean {
  *   2. the next kept group picked up exactly where it left off — issued on
  *      the same page the group ended on, and not opening with a `goto`
  *      (a successor that navigates away first is the workaround case, where
- *      the drop is correct).
+ *      the drop is correct);
+ *   3. the next group did not throw that work away and do it again
+ *      (redidFromScratch) — the same workaround, reached by a click instead
+ *      of a `goto`.
  * Scanned right-to-left so a chain of continuations adopts as a chain.
  *
  * Marks `adopted` on the group (unbankedMutations reads it) and returns the
@@ -635,6 +735,7 @@ function resolveGroups(groups: Group[]): Group[] {
     if (!g.report || !g.mutations || !kept[i + 1]) continue;
     if (next.firstTool === 'goto') continue;
     if (!samePage(g.endUrl, next.instruction.url)) continue;
+    if (redidFromScratch(g, next)) continue;
     g.adopted = true;
     kept[i] = true;
   }
@@ -724,6 +825,51 @@ function landedBeforeLeaving(g: Group): boolean {
     if (!u || u === from) continue;
     if (landsRecord(from, u)) return true;
     if (!sameRoute(from, u)) return false;
+  }
+  return false;
+}
+
+/**
+ * Whether `next`, issued on the unsaved page `g` left, discarded that page and
+ * made the record again from a fresh copy of it: its steps left `g`'s end
+ * page (a different route) without landing a record there, later came back to
+ * the same page in its record-less state — every url part equal, minted-shape
+ * values aside, and no part gained — and landed a record from THAT.
+ *
+ * fwod74's recording: 03-create blocked on a configurator modal with the
+ * quotation form unsaved (`…model=sale.order&view_type=form`, no id); the
+ * next instruction, issued on that form, was "Discard that unsaved draft …
+ * Then create a NEW quotation from scratch" — Discard (→ `view_type=list`),
+ * New (→ the form again, no id), Save (→ `&id=21`). Rule 2 saw only the
+ * shared start page and adopted 03-create, so every replay ran it
+ * model-first to the save its own instruction asks for (S00022/S00024) and
+ * then 04-open made the order the recording actually kept (S00023/S00025):
+ * two orders where the task asked for one, objectives 1/6 on both replays —
+ * n3 at tier A with no model turn at all, once 03-create had graduated into
+ * a pin that saves. The recording made ONE order; the blocked attempt was
+ * superseded, exactly as when the successor opens with a `goto`.
+ *
+ * The fresh copy is what tells a redo from a continuation that merely left
+ * and came back: a successor that opens the record the blocked group's work
+ * became (a list row → `…&id=21`) never passes through the record-less form,
+ * and one that lands the record in place is resolveGroups' merge. A group
+ * that had already landed its record (fwod27) is not "unsaved" and is never
+ * judged here.
+ */
+function redidFromScratch(g: Group, next: Group): boolean {
+  const page = g.endUrl;
+  if (!page || landsRecord(g.instruction.url, page)) return false;
+  let left = false;
+  let fresh: string | undefined;
+  for (const u of next.diffs.map((d) => d.url)) {
+    if (!u) continue;
+    if (!left) {
+      if (landsRecord(page, u)) return false;
+      if (!sameRoute(page, u)) left = true;
+      continue;
+    }
+    if (fresh && landsRecord(fresh, u) && sameRoute(page, u)) return true;
+    if (sameRoute(page, u) && sameRoute(u, page)) fresh = u;
   }
   return false;
 }

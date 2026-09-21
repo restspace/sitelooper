@@ -92,6 +92,54 @@ export function compileSkill(input: CompileInput): Skill | null {
   return compileSkills(input)[0] ?? null;
 }
 
+/**
+ * Where a VARIANT's own procedure starts: the page its first step ran on,
+ * after every step the recording replayed through a different stored skill
+ * ahead of it (`dropped`, the steps compileSkills leaves to that skill). Walked
+ * with the seam rules compileSkills splits by — a popup/close/switch moves to
+ * `afterUrl`, a navigation that crosses a template takes the landing's
+ * fingerprint and added lines, one inside a template only moves the url — so
+ * the variant is gated on the page its steps were recorded on. With nothing
+ * dropped, the instruction's own start (`dropped` 0) and nothing changes.
+ */
+export function variantStart(
+  entries: RecordedEntry[],
+  variantOf: string | undefined,
+  slots: Map<string, string> = new Map(),
+): { url: string; fingerprint?: number[]; startText?: string; startTextComplete?: boolean; dropped: number } {
+  const head = entries.find((e): e is RecordedInstruction => e.k === 'instruction');
+  const steps = entries.filter((e): e is RecordedStep => e.k === 'step');
+  let at: { url: string; fingerprint?: number[]; startText?: string; startTextComplete?: boolean } = {
+    url: head?.url ?? firstUrl(steps) ?? '',
+    fingerprint: head?.fingerprint,
+    startText: head?.startText,
+    startTextComplete: head?.startTextComplete,
+  };
+  let dropped = 0;
+  if (!variantOf) return { ...at, dropped };
+  for (const step of steps) {
+    if (!step.via || step.via.skill === variantOf) break;
+    dropped++;
+    if (step.effect && step.effect.kind !== 'navigate' && step.afterUrl) {
+      at = { url: step.afterUrl, ...(step.fingerprintAfter ? { fingerprint: step.fingerprintAfter } : {}) };
+      continue;
+    }
+    if (step.diff?.url && step.diff.url !== at.url) {
+      const crossed = urlPattern(step.diff.url, slots, { query: false }) !== urlPattern(at.url, slots, { query: false });
+      at = crossed
+        ? {
+            url: step.diff.url,
+            ...(step.fingerprintAfter ? { fingerprint: step.fingerprintAfter } : {}),
+            // The landing's ADDED lines are not the whole page: a goal read
+            // against them would take text that was already there for new.
+            ...(step.diff.added?.length ? { startText: step.diff.added.join('\n'), startTextComplete: false } : {}),
+          }
+        : { ...at, url: step.diff.url };
+    }
+  }
+  return { ...at, dropped };
+}
+
 /** One recorded segment: the steps that ran on one page template. */
 interface Segment {
   steps: RecordedStep[];
@@ -161,6 +209,15 @@ export function compileSkills(input: CompileInput): Skill[] {
   // that skill's procedure, not this variant's.
   if (input.variantOf) kept = kept.filter((s) => !s.via || s.via.skill === input.variantOf);
   if (!kept.length) return [];
+  // …and so it STARTS where its first kept step did, not where the
+  // instruction began: the steps dropped ahead of it moved the page. fwop2's
+  // 01-signin replayed its chain's sign-in and welcome-dialog segments, the
+  // projects-list segment stopped, and the repair was stored gated on
+  // `/login` (the instruction's start) with a first step that clicks a
+  // project in the signed-in projects list — a precondition no page it can
+  // run on satisfies, and the compiled artifact then ran it on the login form.
+  const start = variantStart(input.entries, input.variantOf, slots);
+  const beginsAt = start.dropped ? start : { url: startUrl, fingerprint: head?.fingerprint, startText: head?.startText, startTextComplete: head?.startTextComplete };
 
   // Split at page-template seams. A step that navigated (diff.url) to a url
   // with a DIFFERENT pattern ends its segment; the recorder's fingerprintAfter
@@ -172,11 +229,11 @@ export function compileSkills(input: CompileInput): Skill[] {
   const segments: Segment[] = [];
   let seg: Segment = {
     steps: [],
-    startUrl,
-    ...(head?.fingerprint ? { fingerprint: head.fingerprint } : {}),
-    ...(head?.startText ? { startText: head.startText } : {}),
+    startUrl: beginsAt.url,
+    ...(beginsAt.fingerprint ? { fingerprint: beginsAt.fingerprint } : {}),
+    ...(beginsAt.startText ? { startText: beginsAt.startText } : {}),
   };
-  let currentUrl = startUrl;
+  let currentUrl = beginsAt.url;
   for (const [ki, step] of kept.entries()) {
     seg.steps.push(step);
     // A goto the next step immediately navigates away from is no page the
@@ -212,7 +269,7 @@ export function compileSkills(input: CompileInput): Skill[] {
   // post-nav url). Kept only where they can pay: a later step or a later
   // segment's start url mentions the value — otherwise the marker would just
   // blunt the minting step's own expectation for nothing.
-  const mintedAll = discoverMinted(kept, startUrl, slots);
+  const mintedAll = discoverMinted(kept, beginsAt.url, slots);
   const minted = mintedAll.filter(
     (m) =>
       JSON.stringify(kept.slice(m.keptIndex + 1).map((s) => [s.args, s.locators, s.diff ?? null])).includes(m.value) ||
@@ -446,8 +503,8 @@ export function compileSkills(input: CompileInput): Skill[] {
   // recording's own before/after pair: report text that was NOT on the page
   // when the instruction began. See deriveGoal.
   const goal = deriveGoal({
-    startText: head?.startText,
-    startTextComplete: head?.startTextComplete,
+    startText: beginsAt.startText,
+    startTextComplete: beginsAt.startTextComplete,
     reportValues,
     sub,
     // Single-segment only: startText is the page the instruction BEGAN on,
@@ -1405,7 +1462,10 @@ export function urlPattern(url: string, slots: Map<string, string> = new Map(), 
  * call site has to know which of the two owns the source.
  */
 export { TRANSIENT_LINE, maskMinted } from '../execution/expect.js';
-import { DIALOG_LINE, DISMISSAL, TRANSIENT_LINE, identifiesNothing, maskForeignValue, maskMinted, maskPopupItem } from '../execution/expect.js';
+import { DIALOG_LINE, DISMISSAL, SLOT_LINE, TRANSIENT_LINE, identifiesNothing, maskForeignValue, maskMinted, maskPopupItem } from '../execution/expect.js';
+
+/** A line naming one record of a collection — never part of a dialog's own chrome (see expectationFor's removals). */
+const RECORD_LINE = /^-?\s*(row|cell|gridcell|rowheader|listitem|article|treeitem)\b/;
 
 /**
  * Args that name WHERE the step acted, not WHAT it put on the page: a
@@ -1471,7 +1531,14 @@ function expectationFor(step: RecordedStep, slots: Map<string, string>): StepExp
         .map((l) => maskMinted(maskVolatile(substitute(l, slots))))
         .filter((l) => DIALOG_LINE.test(l) || !identifiesNothing(l))
     : [];
-  if (removed.some((l) => DIALOG_LINE.test(l))) out.removedContains = removed.slice(0, MAX_ADDED_LINES).map((l) => l.slice(0, 120));
+  // A removal is a consequence too. Snapshot lines are flat, so what a step
+  // took away cannot be proved to have been INSIDE the dialog — but a record's
+  // own line (a row, a cell, a list item) or a line carrying this run's own
+  // value is never dialog chrome. fwod74's configurator Cancel took away the
+  // dialog AND the order line it had half-added (`- row "£ 0.00"`, the product
+  // combobox showing {{v4}}): that step undid work, it did not merely dismiss.
+  const consequential = removed.some((l) => RECORD_LINE.test(l) || SLOT_LINE.test(l));
+  if (!consequential && removed.some((l) => DIALOG_LINE.test(l))) out.removedContains = removed.slice(0, MAX_ADDED_LINES).map((l) => l.slice(0, 120));
   if (!Object.keys(out).length) return undefined;
   // The recording's dialect travels with its lines, so replay and the artifact
   // render the live page the way these lines were written.

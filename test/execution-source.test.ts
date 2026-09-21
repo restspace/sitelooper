@@ -104,7 +104,7 @@ describe('standalone execution source', () => {
     expect(source).toContain("changedCreation(urlPart(urlBefore2, 'p1'), await urlPartWhen(page, 'p1', urlBefore2))");
     expect(source).toContain('=> urlMatches(');
     // ...and the gate verdicts with the observation they are asked over.
-    expect(source).toContain("await urlEffect(page, 'http://app.test/record/{{d1}}', p, '01-actions s_runtime/2', volatile1);");
+    expect(source).toContain("await urlEffect(page, 'http://app.test/record/{{d1}}', p, '01-actions s_runtime/2', volatile1, obs2?.link());");
     expect(source).toContain("alertGate(alertsBefore2, alertsAfter2, { where: '01-actions s_runtime/2', isRead: false, expectedContains: 'Saved {{v1}}', params: p, effectConfirmed: changes2.confirmed === true });");
     expect(source).toContain('alertsAfter2 = await settledAlerts(page);');
     // ...a navigation resolved through the shared retargetNavigation, whose

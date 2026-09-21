@@ -99,6 +99,39 @@ export function idPositionPart(part: { label: string; value: string }): boolean 
 }
 
 /**
+ * A digit run in a PATH (or hash-path) segment: the url addressing a record
+ * by position, `/work_packages/details/41/overview`. The ledger has always
+ * banked these as identifiers — "a digit run in a PATH position is the app
+ * saying this is the record" (addUrlIds) — but only through the length
+ * floor, which is a noise guard for SHAPE-guessed values and so silently
+ * dropped every record id shorter than three characters.
+ *
+ * fwop2 (OpenProject) is the bill. 02-create minted work package 41 at `p4`;
+ * the floor kept `41` out of the ledger, so 06-open's compile had no
+ * `url:i2:p4` origin to slot its `goto …/details/41/activity` against, and
+ * s_71f332 step 7 carried 41 literally. Both replays navigated to a work
+ * package the reset had deleted ("The work package you are looking for
+ * cannot be found or has been deleted.") and paid 15 and 7 recovery turns.
+ * The flow could not reference it either: buildFlow's minting and the
+ * replay's urlOutputs (referencablePart) applied the same floor, so no
+ * `{{02-create.url.p4}}` existed to bind the slot from.
+ *
+ * Two digits at least: a single digit stands as a whole token in too much of
+ * every url and page (a page number, a tab index, `nth-of-type(1)`) for the
+ * leak guards keyed on the banked value to stay meaningful.
+ *
+ * The same kind of thing as idPositionPart — a record pointer named by where
+ * it sits in the url — but not the same confidence: a path digit run can be
+ * an app constant a click revealed (`/projects/12/…`), which is fwod19's
+ * lesson for query params. So it only vouches a value past the FLOOR; it
+ * never earns `basis: 'position'`, and never refuses an export on its own
+ * (see fatal).
+ */
+export function pathIdPart(part: { label: string; value: string }): boolean {
+  return /^(p|h)\d+$/.test(part.label) && /^\d{2,10}$/.test(part.value);
+}
+
+/**
  * The values a run WATCHED CHANGE at a url position, from the segment diffs a
  * url gate treated as volatile (gates.ts urlEffectVerdict, "url segment(s)
  * differ from recorded (X→Y)"). Both sides: the recording's value and this
@@ -357,10 +390,15 @@ export class RunLedger {
         // refusal downstream can require a confident one. Ranked as they are
         // trusted: a run that watched the value change, then the url's own
         // vocabulary, then the characters.
+        //
+        // A path digit run is vouched past the length floor (pathIdPart) and
+        // still kinded on `shape`: its position entitles `41` to be BANKED —
+        // so compile slots a later navigation to it, and a recovery that
+        // navigates to it is not pinned — not to refuse a recording.
         {
           kind: 'identifier',
           basis: runSpecific ? 'variance' : idPositionPart(part) ? 'position' : 'shape',
-          vouched: runSpecific || idPositionPart(part),
+          vouched: runSpecific || idPositionPart(part) || pathIdPart(part),
         },
       );
       if (entry) out.push(entry);

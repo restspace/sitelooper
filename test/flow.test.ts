@@ -599,6 +599,48 @@ describe('urlOutputs', () => {
   });
 });
 
+describe('a short record id in a path position is a flow reference (fwop2 06-open)', () => {
+  const OP = 'http://127.0.0.1:8090';
+  const details = (id: string, tab: string) => `${OP}/projects/bench-project/work_packages/details/${id}/${tab}`;
+
+  it('mints {{02-create.url.p4}} and threads the goto slot through it', () => {
+    // fwop2: 02-create's Save landed on `…/details/41/overview`. Two digits sat
+    // below the minting floor, so no url output was minted, and 06-open's
+    // procedure could only bind its goto slot to a reported read-back — or,
+    // with none, to the recording's literal 41.
+    const entries: RecordedEntry[] = [
+      { k: 'instruction', text: "Create a work package with subject 'x7 Bench Work Package' and report its ID.", url: `${OP}/projects/bench-project/work_packages` },
+      {
+        k: 'step', tool: 'click', args: { target: '@e1' },
+        locators: { target: { expr: 'x', verified: true, raw: '@e1', chain: [{ kind: 'role', role: 'button', name: 'Save' }] } },
+        diff: { url: details('41', 'overview'), alerts: [], added: [] },
+      },
+      { k: 'report', status: 'success', summary: 'Created #41.', values: { wp_id: '#41' }, skill: 's_create' },
+      { k: 'instruction', text: "Open the work package with ID #41 and add a comment 'Comment for run x7'.", url: details('41', 'activity') },
+      { k: 'report', status: 'success', summary: 'Commented.', values: {}, skill: 's_comment' },
+    ];
+    const flow = buildFlow(entries, {
+      name: 'op', origin: OP, startUrl: `${OP}/projects/bench-project/work_packages`, vars: { runid: 'x7' }, session: 's',
+      // s_71f332's goto slot, bound by its ledger origin (url:i2:p4) to the recorded 41.
+      bind: (id) => (id === 's_comment' ? { v2: '#41', v7: '41' } : null),
+    })!;
+    const [create, comment] = flow.steps;
+    expect(create.recorded['url.p4']).toBe('41');
+    expect(comment.params?.v7).toBe(`{{${create.id}.url.p4}}`);
+    // "#41" is the reported id, longer, so it still threads under its report name.
+    expect(comment.params?.v2).toBe(`{{${create.id}.wp_id}}`);
+  });
+
+  it('the replay publishes the part it minted, so the reference resolves to THIS run\'s id', () => {
+    const out = urlOutputs(details('42', 'overview'));
+    expect(out['url.p4']).toBe('42');
+    // Route words stay unpublished.
+    expect(out['url.p3']).toBeUndefined();
+    // ...and a lone digit is not a reference.
+    expect(urlOutputs(`${OP}/projects/7`)['url.p1']).toBeUndefined();
+  });
+});
+
 describe('a refused export keeps the recording', () => {
   it('writes .rejected.json, and listFlows does not offer it', async () => {
     const { saveRejectedFlow, listFlows, flowsDir } = await import('../src/skills/flow.js');
@@ -1031,6 +1073,64 @@ describe('work the recording did that the flow does not contain', () => {
     ]);
   });
 
+  // fwod74: the create blocked with the quotation form unsaved, and the next
+  // instruction — issued on that form — discarded it and made a NEW quotation
+  // from scratch. Adopted, the blocked create replayed model-first to the save
+  // its own instruction asks for, then the redo made a second order: two
+  // orders on both replays where the recording (and the task) made one.
+  it('does not adopt a blocked create whose successor discarded it and made the record again', () => {
+    const home = `${ORIGIN}/web#action=123&cids=1&menu_id=81`;
+    const form = `${ORIGIN}/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form`;
+    const list = `${ORIGIN}/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=list`;
+    const entries: RecordedEntry[] = [
+      { k: 'instruction', text: 'Create a quotation with one line and save it.', url: home },
+      { k: 'step', tool: 'click', args: { target: '@e1' }, locators: {}, diff: { url: form, alerts: [], added: [] } },
+      { k: 'step', tool: 'fill', args: { target: '@e2', value: 'x' }, locators: {} },
+      { k: 'report', status: 'failure', summary: 'never saved', values: { breadcrumb_before_save: 'Quotations / New' } },
+      {
+        k: 'instruction',
+        text: "There is an UNSAVED draft quotation (breadcrumb 'Quotations / New'). Discard it, then create a NEW quotation from scratch and save it.",
+        url: form,
+      },
+      { k: 'step', tool: 'click', args: { target: '@e3' }, locators: {}, diff: { url: form, alerts: [], added: [] } },
+      { k: 'step', tool: 'click', args: { target: '@e4' }, locators: {}, diff: { url: list, alerts: [], added: [] } },
+      { k: 'step', tool: 'click', args: { target: '@e5' }, locators: {}, diff: { url: form, alerts: [], added: [] } },
+      { k: 'step', tool: 'click', args: { target: '@e6' }, locators: {}, diff: { url: `${form}&id=21`, alerts: [], added: [] } },
+      { k: 'report', status: 'success', summary: 'saved S00021', values: { order_reference: 'S00021' }, skill: 's_redo' },
+    ] as unknown as RecordedEntry[];
+    const flow = buildFlow(entries, { name: 'f', origin: ORIGIN, startUrl: `${ORIGIN}/`, vars: {}, session: 's' })!;
+    // One create in the flow — the one the recording kept.
+    expect(flow.steps.map((s) => [s.skill, Boolean(s.adopted)])).toEqual([['s_redo', false]]);
+    // The blocked attempt's work is dropped, and said so, as for a `goto` workaround.
+    expect(unbankedMutations(entries)).toHaveLength(1);
+    expect(unbankedMutations(entries)[0]).toContain('Create a quotation');
+  });
+
+  it('still adopts a blocked create whose successor left its page and then opened the record it became', () => {
+    // Leaving an unsaved form can save it (odoo saves a dirty form on a
+    // breadcrumb click): the successor goes to the list and opens the row. It
+    // never passes through a record-less copy of the form, so it built on the
+    // blocked group's work rather than redoing it.
+    const home = `${ORIGIN}/web#action=123&cids=1&menu_id=81`;
+    const form = `${ORIGIN}/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form`;
+    const list = `${ORIGIN}/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=list`;
+    const entries: RecordedEntry[] = [
+      { k: 'instruction', text: 'Create a quotation with one line and save it.', url: home },
+      { k: 'step', tool: 'click', args: { target: '@e1' }, locators: {}, diff: { url: form, alerts: [], added: [] } },
+      { k: 'report', status: 'blocked', summary: 'turn cap', values: {} },
+      { k: 'instruction', text: 'Go back to the quotations list and open the quotation.', url: form },
+      { k: 'step', tool: 'click', args: { target: '@e2' }, locators: {}, diff: { url: list, alerts: [], added: [] } },
+      { k: 'step', tool: 'click', args: { target: '@e3' }, locators: {}, diff: { url: `${form}&id=21`, alerts: [], added: [] } },
+      { k: 'report', status: 'success', summary: 'opened S00021', values: {}, skill: 's_open' },
+    ] as unknown as RecordedEntry[];
+    const flow = buildFlow(entries, { name: 'f', origin: ORIGIN, startUrl: `${ORIGIN}/`, vars: {}, session: 's' })!;
+    expect(flow.steps.map((s) => [s.skill, Boolean(s.adopted)])).toEqual([
+      [undefined, true],
+      ['s_open', false],
+    ]);
+    expect(unbankedMutations(entries)).toEqual([]);
+  });
+
   it('still drops (and warns about) an observe-only blocked group even when the session continued from its page', () => {
     const entries: RecordedEntry[] = [
       { k: 'instruction', text: 'Read the totals.', url: `${ORIGIN}/orders/7` },
@@ -1217,6 +1317,83 @@ describe('input echoes are not outputs (fwgr23 05-open)', () => {
     expect(flow.steps[1].instruction).not.toContain('.tag}}');
     // an observed value (the time range was read, not typed) still threads
     expect(flow.steps[1].instruction).toContain(`{{${flow.steps[0].id}.time_range}}`);
+  });
+});
+
+describe('a value the task stated before the run showed it is not a later step\'s output (fwgr63, fwkb33)', () => {
+  const G = 'http://127.0.0.1:3000';
+  const bind = (params: Record<string, Record<string, string>>) => (skill: string) => params[skill] ?? null;
+
+  it("fwgr63: 05-open's 'Save dashboard' stays literal instead of binding to 03-open's reported button label", () => {
+    // Trimmed from fwgr63-n1: 02-create's wording names the button before any
+    // report or page had shown it; 03-open reported it as a value; 05-open
+    // clicks it. The flow bound 05-open v5 to {{03-open.button_save_dashboard}},
+    // which nothing ever published, and `spec` refused the flow.
+    const entries: RecordedEntry[] = [
+      { k: 'step', tool: 'goto', args: { url: `${G}/` }, locators: {} },
+      { k: 'instruction', text: "Sign in to Grafana and open the dashboard 'Service health'; report its panel titles.", url: `${G}/login`, startText: '- heading "Welcome to Grafana"\n- button "Log in"' },
+      { k: 'report', status: 'success', summary: 'Opened Service Health; panels Request rate, Error count.', values: { panel_titles_1: 'Request rate' }, skill: 's_open' },
+      { k: 'instruction', text: "Create a NEW dashboard with a Stat panel titled 'r1 Availability', then save it as 'r1 Bench Dashboard' (use Save dashboard, enter the name, confirm).", url: `${G}/d/bench-service-health/service-health`, startText: '- heading "Service Health"\n- button "Edit"' },
+      { k: 'step', tool: 'click', args: { target: '@e9' }, locators: { target: { expr: 'x', verified: true, raw: '@e9', chain: [{ kind: 'role', role: 'button', name: 'Save dashboard' }] } } },
+      { k: 'report', status: 'success', summary: "Saved via Save dashboard as 'r1 Bench Dashboard'.", values: { dashboard_name: 'r1 Bench Dashboard' }, skill: 's_create' },
+      { k: 'instruction', text: "Open 'r1 Bench Dashboard', add a Text panel titled 'r1 Notes', save it, and report what you see.", url: `${G}/d/abc/r1-bench-dashboard` },
+      { k: 'report', status: 'success', summary: 'Added the Notes panel and saved.', values: { button_save_dashboard: 'Save dashboard', availability_panel_value: '45.2' }, skill: 's_notes' },
+      { k: 'instruction', text: 'Set auto-refresh to 1m, then SAVE the dashboard (Save dashboard, confirm the save). Report the refresh interval and the value shown (45.2).', url: `${G}/d/abc/r1-bench-dashboard` },
+      { k: 'report', status: 'success', summary: 'Refresh 1m.', values: { auto_refresh: '1m' }, skill: 's_refresh' },
+    ];
+    const flow = buildFlow(entries, {
+      name: 'f', origin: G, startUrl: `${G}/`, vars: { runid: 'r1' }, session: 's',
+      bind: bind({ s_refresh: { v5: 'Save dashboard' } }),
+    })!;
+    const [, , notes, refresh] = flow.steps;
+    expect(refresh.instruction).toContain('(Save dashboard, confirm the save)');
+    expect(refresh.instruction).not.toContain('.button_save_dashboard}}');
+    expect(refresh.params).toEqual({ v5: 'Save dashboard' });
+    // The rule is about the value's provenance, not about the producing step:
+    // a value 03-open observed that no earlier instruction stated still threads.
+    expect(refresh.instruction).toContain(`{{${notes.id}.availability_panel_value}}`);
+  });
+
+  it("fwkb33: the verb 'open' is not 02-create's reported status, while its task id and a read column name still thread (fwkb34)", () => {
+    const K = 'http://127.0.0.1:8085';
+    const entries: RecordedEntry[] = [
+      { k: 'step', tool: 'goto', args: { url: `${K}/` }, locators: {} },
+      { k: 'instruction', text: "Sign in and navigate to the project 'Bench Board' and open its board. Report the board's column names.", url: `${K}/login` },
+      { k: 'report', status: 'success', summary: 'Columns: Backlog, Ready, Work in progress, Done.', values: { board_column_work_in_progress: 'Work in progress' }, skill: 's_board' },
+      { k: 'instruction', text: "Create a task titled 'r1 Bench Task'; report its id and status.", url: `${K}/?controller=BoardViewController&action=show&project_id=1` },
+      { k: 'report', status: 'success', summary: 'Created task #4.', values: { task_card_label: '#4', status: 'open' }, skill: 's_create' },
+      { k: 'instruction', text: "Move task #4 to the 'Work in progress' column, then open the task page for task #4 and add a comment.", url: `${K}/?controller=TaskViewController&action=show&task_id=4` },
+      { k: 'report', status: 'success', summary: 'Moved and commented.', values: { comment: 'Comment for run r1' }, skill: 's_move' },
+    ];
+    const flow = buildFlow(entries, { name: 'f', origin: K, startUrl: `${K}/`, vars: { runid: 'r1' }, session: 's' })!;
+    const [board, create, move] = flow.steps;
+    expect(move.instruction).toContain('then open the task page');
+    expect(move.instruction).not.toContain('.status}}');
+    // kanboard's legitimate threading is untouched: the minted task id and the
+    // column name a step read off the board are not stated before their producer.
+    expect(move.instruction).toContain(`task {{${create.id}.task_card_label}}`);
+    expect(move.instruction).toContain(`'{{${board.id}.board_column_work_in_progress}}' column`);
+  });
+
+  it('fwod11: a record id the author copied from an earlier report still threads, and so does one only a page showed', () => {
+    const O = 'http://127.0.0.1:8069';
+    const entries = (shownBy: 'report' | 'page'): RecordedEntry[] => [
+      { k: 'step', tool: 'goto', args: { url: `${O}/` }, locators: {} },
+      { k: 'instruction', text: 'Create a quotation for the customer and save it; report the product.', url: `${O}/odoo/sales` },
+      { k: 'report', status: 'success', summary: shownBy === 'report' ? 'Saved quotation S00022.' : 'Saved the quotation.', values: { product: 'Customizable Desk' }, skill: 's_create' },
+      { k: 'instruction', text: 'On the open quotation S00022, set the quantity to 3 and save.', url: `${O}/odoo/sales/22`, ...(shownBy === 'page' ? { startText: '- heading "S00022"' } : {}) },
+      { k: 'report', status: 'success', summary: 'Quantity 3.', values: { qty: '3.00' }, skill: 's_qty' },
+      // (The producer's own wording must not name it: an echo of the step's own
+      // instruction is dropped by the fwgr23 rule above, a different question.)
+      { k: 'instruction', text: 'Confirm the open quotation; report the order reference.', url: `${O}/odoo/sales/22` },
+      { k: 'report', status: 'success', summary: 'Confirmed.', values: { order_ref: 'S00022' }, skill: 's_confirm' },
+      { k: 'instruction', text: 'Cancel the sales order S00022.', url: `${O}/odoo/sales/22` },
+      { k: 'report', status: 'success', summary: 'Cancelled.', values: { status: 'Cancelled' }, skill: 's_cancel' },
+    ];
+    for (const shownBy of ['report', 'page'] as const) {
+      const flow = buildFlow(entries(shownBy), { name: 'f', origin: O, startUrl: `${O}/`, vars: {}, session: 's' })!;
+      expect(flow.steps[3].instruction).toBe(`Cancel the sales order {{${flow.steps[2].id}.order_ref}}.`);
+    }
   });
 });
 

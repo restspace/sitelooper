@@ -69,6 +69,8 @@ export interface RequestRecord {
   responseAt?: number;
   contentType?: string;
   finishedAt?: number;
+  /** The endpoint the request's redirect chain began at, when it was redirected there. */
+  chainEndpoint?: string;
 }
 
 export interface ActionClock {
@@ -114,6 +116,8 @@ export interface PageTraffic {
   classify(r: RequestRecord, now: number, baselineAt: number): LongLivedWhy | null;
   /** Called on every request, response, finish and main-frame navigation; returns the unsubscribe. */
   subscribe(listener: () => void): () => void;
+  /** Requests started at or after `since` (open or finished), from a bounded recent history, in start order. */
+  startedSince(since: number): RequestRecord[];
 }
 
 const realClock: ActionClock = {
@@ -168,6 +172,20 @@ interface RequestLike {
   resourceType(): string;
   method(): string;
   url(): string;
+  redirectedFrom?(): RequestLike | null;
+}
+
+/** How many recent requests a page's traffic keeps for startedSince. */
+const RECENT_REQUESTS = 256;
+
+/** origin + pathname of a url: the endpoint a request is recorded under. */
+export function endpointOf(url: string): string {
+  try {
+    const parsed = new URL(url);
+    return `${parsed.origin}${parsed.pathname}`;
+  } catch {
+    return url;
+  }
 }
 interface ResponseLike {
   request(): RequestLike;
@@ -188,6 +206,7 @@ export function pageTraffic(page: Page | PageEventsPort, opts: { policy?: Traffi
   const policy = opts.policy ?? DEFAULT_TRAFFIC_POLICY;
   const clock = opts.clock ?? realClock;
   const open = new Map<unknown, RequestRecord>();
+  const recent: RequestRecord[] = [];
   const known: Set<string> = new Set();
   const listeners = new Set<() => void>();
   let lastFinish = -Infinity;
@@ -216,20 +235,29 @@ export function pageTraffic(page: Page | PageEventsPort, opts: { policy?: Traffi
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
+    startedSince: (since) => recent.filter((r) => r.startedAt >= since),
   };
   traffics.set(port, traffic);
   if (typeof port.on !== 'function') return traffic;
   port.on('request', (req: RequestLike) => {
     let url = '';
-    let endpoint = '';
     try {
       url = req.url();
-      const parsed = new URL(url);
-      endpoint = `${parsed.origin}${parsed.pathname}`;
     } catch {
-      endpoint = url;
+      // unreadable: recorded under the empty endpoint
     }
-    open.set(req, { type: req.resourceType(), method: req.method(), endpoint, url, startedAt: clock.now() });
+    const record: RequestRecord = { type: req.resourceType(), method: req.method(), endpoint: endpointOf(url), url, startedAt: clock.now() };
+    // A redirect hop is a new request; the chain's first url is what a link asked for.
+    let first: RequestLike | null = null;
+    try {
+      for (let hop = req.redirectedFrom?.() ?? null; hop; hop = hop.redirectedFrom?.() ?? null) first = hop;
+      if (first) record.chainEndpoint = endpointOf(first.url());
+    } catch {
+      // a chain that cannot be walked: the request stands for itself
+    }
+    open.set(req, record);
+    recent.push(record);
+    if (recent.length > RECENT_REQUESTS) recent.shift();
     notify();
   });
   port.on('response', (res: ResponseLike) => {
@@ -282,6 +310,35 @@ export function inFlightRequests(page: Page | PageEventsPort): number {
   return traffic.pending().filter((r) => traffic.policy.countedTypes.includes(r.type) && traffic.classify(r, now, -Infinity) === null).length;
 }
 
+/**
+ * How long the flow's start page gets to finish ROUTING once it shows
+ * content. Longer than a click's LATE_NAV_MS: the redirect waits on a server
+ * round trip the app makes after it painted (who is signed in?), and it runs
+ * once per flow, not once per action.
+ */
+export const START_SETTLE_MS = 3_000;
+
+/**
+ * Where the flow's start navigation actually leaves the browser: the url once
+ * it has held still, with nothing the page asked of the server still out.
+ * Both runners judge the first segment's start page right after the start
+ * goto, and "shows content" (waitForContent) is not "has finished routing".
+ * fwrd78's artifact refused its sign-in segment on `#/tickets` twice, while
+ * the daemon passed it at tier A twice: the app paints a static shell (a skip
+ * link is content), sets `#/tickets` for a bare entry url, asks `/api/me`, and
+ * only on the 401 moves a signed-out visitor to `#/login`. The browser was
+ * never signed in — a fresh context has no session cookie — it was read
+ * mid-route. A page with nothing in flight and a url that does not move
+ * returns at once (urlHeldStill), so a server-rendered start page pays nothing.
+ */
+export async function startPageSettled(
+  page: Pick<Page, 'url'>,
+  inFlightNow: () => number = () => inFlightRequests(page as Page),
+  timing: { lateNavMs?: number; stillMs?: number; pollMs?: number } = {},
+): Promise<string> {
+  return urlHeldStill(page, page.url(), inFlightNow, { lateNavMs: START_SETTLE_MS, ...timing });
+}
+
 export interface ActionOptions {
   /** The whole action — dispatch, every wait, the effect — ends by this long after beginAction. */
   deadlineMs: number;
@@ -307,11 +364,19 @@ export interface ActionOptions {
   policy?: TrafficPolicy;
 }
 
+/** A click on a link: where the page was when the action began, and where the link points. */
+export interface LinkNavigation {
+  from: string;
+  href: string;
+}
+
 /** How an action ended, and what its settle waited on. */
 export interface SettleVerdict {
   outcome: ActionOutcome;
   /** Where the page is once the action settled. */
   url: string;
+  /** The action was a click on a link that leaves the document (ClickObservation.linkTarget). */
+  link?: LinkNavigation;
   via?: DispatchVia;
   waited: { domMs: number; networkMs: number; urlMs: number; effectMs: number };
   /** Open requests that were not waited for, and why. */
@@ -327,6 +392,10 @@ export interface ActionObservation {
   dispatched(via: DispatchVia): void;
   /** The action threw: its outcome is what the error proves (outcomeOfError), and the error is rethrown. */
   failed(err: unknown): never;
+  /** The clicked element links this tab to `href`: the settle waits on that navigation (LINK_NAV_WAIT_MS). */
+  linkTarget(href: string): void;
+  /** The link this action clicked, once one was reported. */
+  link(): LinkNavigation | undefined;
   /** Wait for the action's evidence; the same promise on a second call. */
   settle(): Promise<SettleVerdict>;
   /** Stop every wait now and release what the observation subscribed to. */
@@ -370,6 +439,37 @@ const MAX_SETTLE_ROUNDS = 8;
 export const ACTION_ANNOUNCE_WAIT_MS = 2_000;
 /** How often a standing announcement is looked at again. */
 const ACTION_ANNOUNCE_POLL_MS = 100;
+
+/**
+ * The most a click on a link waits for the navigation the link promised,
+ * while the request it asked for is still open and the url has not moved.
+ *
+ * A LINK'S HREF IS THE ELEMENT'S OWN WORD THAT THE CLICK NAVIGATES. An app
+ * that fetches the next page and only then pushes its url (a Rails app under
+ * Turbo Drive) leaves the url on the old page for as long as the server takes
+ * to answer. fwop2-n1 clicked "Bench Project" on a cold server's project list:
+ * the settle's network budget (2s) ran out, the fetch turned "long-open" at
+ * 5s, the url wait saw the old url, and the step was recorded as landing on
+ * `/projects` — the page it was leaving. The agent then read the url, found
+ * it unmoved, clicked again (which restarts the visit), and went to the href
+ * with a goto. Both replays, on a warm server, did navigate, and the url gate
+ * refused them for being on the right page (s_f4e3b6 step 1).
+ *
+ * So a click whose target reported a link (robustClick, linkTarget) and that
+ * asked the server for that link's url holds its settle while that request
+ * — or a redirect it began — is still open and the url is still the old one,
+ * then gives the url LINK_COMMIT_GRACE_MS to move once the answer is in.
+ * Evidence, not a sleep: a link its page handles without asking for the url
+ * (a modal, a client route) costs nothing, and the wait ends the moment the
+ * url moves. Bounded, and within the action's deadline.
+ */
+export const LINK_NAV_WAIT_MS = 15_000;
+/** After a link's request is answered, how long the url gets to move before the page is taken to stay. */
+export const LINK_COMMIT_GRACE_MS = 500;
+/** How often the url is looked at while a link's navigation is awaited. */
+const LINK_POLL_MS = 100;
+/** Request types a link's navigation rides on: a document load, or the fetch/XHR of a client-side visit. */
+const LINK_REQUEST_TYPES: ReadonlySet<string> = new Set(['document', 'fetch', 'xhr']);
 
 /** The page's own DOM, through the shared settle: the load event first, then quiet. */
 function pageDom(page: Page, clock: ActionClock): DomPort {
@@ -438,6 +538,7 @@ export function beginAction(page: Page, opts: ActionOptions): ActionObservation 
     ? dom.announced().then((texts) => { for (const t of texts) baselineAnnounced.add(t); }, () => {})
     : Promise.resolve();
   let via: DispatchVia | undefined;
+  let link: LinkNavigation | undefined;
   let dispatchedAt: number | undefined;
   let failedOutcome: 'not-dispatched' | 'unknown' | undefined;
   let cancelled = false;
@@ -594,6 +695,38 @@ export function beginAction(page: Page, opts: ActionOptions): ActionObservation 
       break;
     }
 
+    // A clicked link whose navigation is still on its way (LINK_NAV_WAIT_MS).
+    if (link && !cancelled) {
+      const started = clock.now();
+      const target = endpointOf(link.href);
+      const end = Math.min(started + LINK_NAV_WAIT_MS, deadline);
+      let moved = false;
+      for (;;) {
+        if (cancelled || readUrl() !== urlBefore) break;
+        const asked = traffic
+          .startedSince(baselineAt - policy.recentMs)
+          .filter((r) => LINK_REQUEST_TYPES.has(r.type) && (r.chainEndpoint ?? r.endpoint) === target);
+        // The link asked the server nothing: its page handled the click.
+        if (!asked.length) break;
+        const now = clock.now();
+        const open = asked.some((r) => r.finishedAt === undefined && traffic.pending().includes(r));
+        const answeredAt = Math.max(...asked.map((r) => r.finishedAt ?? -Infinity));
+        const until = open ? end : Math.min(end, answeredAt + LINK_COMMIT_GRACE_MS);
+        if (now >= until) {
+          if (open && deadline <= started + LINK_NAV_WAIT_MS) deadlineHit = true;
+          break;
+        }
+        await wake(Math.min(LINK_POLL_MS, until - now));
+        moved = true;
+      }
+      waited.urlMs += clock.now() - started;
+      // The new page arrived: let it render and ask for what it needs.
+      if (moved && readUrl() !== urlBefore && !cancelled) {
+        await quietDom();
+        await waitNetwork();
+      }
+    }
+
     if (opts.navigating && !cancelled) {
       const started = clock.now();
       const lateNavMs = Math.min(LATE_NAV_MS, remaining());
@@ -641,6 +774,7 @@ export function beginAction(page: Page, opts: ActionOptions): ActionObservation 
     return {
       outcome,
       url: readUrl(),
+      ...(link ? { link } : {}),
       ...(via ? { via } : {}),
       waited,
       ignored: [...ignored].map(([r, why]) => ({ url: r.url, why })),
@@ -658,6 +792,10 @@ export function beginAction(page: Page, opts: ActionOptions): ActionObservation 
       failedOutcome = outcomeOfError(err);
       throw err;
     },
+    linkTarget: (href) => {
+      link ??= { from: urlBefore, href };
+    },
+    link: () => link,
     settle: () => (settling ??= run()),
     cancel: () => {
       cancelled = true;

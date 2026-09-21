@@ -1,7 +1,7 @@
 import { changedCreation, dispatchesFirstMatch, isMutatingAction, isReadAction, runStepLifecycle, spansEveryMatch, type StepActionResult } from '../execution/lifecycle.js';
 import { outcomeLabel, outcomeOfError, type ActionOutcome } from '../execution/browser.js';
 import type { ActionExpectation } from '../execution/action.js';
-import { IDENTITY_POLL_MS, IDENTITY_WAIT_MS, SOFT_MATCH_MIN_SIMILARITY, alertVerdict, errorPageVerdict, gotoLandingVerdict, identityMarkerVerdict, isErrorPageUrl, landedOnRecordedPage, markersBound, preconditionVerdict, retargetNavigation, segmentGate, fillableChain, unfilledStepVerdict, urlEffectVerdict, urlRecordParts } from '../execution/gates.js';
+import { IDENTITY_POLL_MS, IDENTITY_WAIT_MS, SOFT_MATCH_MIN_SIMILARITY, alertVerdict, errorPageVerdict, gotoLandingVerdict, identityMarkerVerdict, isErrorPageUrl, landedOnRecordedPage, markersBound, preconditionVerdict, retargetNavigation, segmentGate, fillableChain, linkLandingWarning, unfilledStepVerdict, urlEffectVerdict, urlRecordParts } from '../execution/gates.js';
 import type { UrlSegDiff } from '../execution/url.js';
 import { LOOP_SHRINK_WAIT_MS, pageReadable, runFoldedLoop, type LoopPass } from '../execution/loop.js';
 import type { Locator, Page } from 'playwright-core';
@@ -76,6 +76,8 @@ export interface StepRunResult {
   outcome?: ActionOutcome;
   /** The executor's action observation already settled the page after the action. */
   settled?: true;
+  /** The action clicked a link that leaves the document (the shared LinkNavigation): the url gate reads it. */
+  link?: { from: string; href: string };
 }
 
 export interface ReplayOptions {
@@ -1459,9 +1461,14 @@ type StepGate = (g: StepGateInput) => Promise<StepVerdict | null> | StepVerdict 
  * same-shape url whose literal segment(s) disagree is treated as volatile
  * (mechanism 2): warn, stage the generalisation, continue.
  */
-const expectedUrl: StepGate = async ({ step, page, params, tag, failIndex }) => {
+const expectedUrl: StepGate = async ({ step, page, params, tag, failIndex, outcome }) => {
   const pattern = step.expect?.urlPattern;
   if (!pattern || urlMatches(pattern, page.url(), params)) return null;
+  // A link click that went where the link points, recorded as staying on the
+  // page it left (fwop2 s_f4e3b6, linkLandingWarning): there is nothing still
+  // on its way to wait for.
+  const landed = linkLandingWarning(pattern, page.url(), params, `step ${tag}`, outcome.link);
+  if (landed) return { warnings: [landed] };
   // The recorded url may still be on its way: an SPA sign-in answers the
   // click, then routes to the landing page a moment later. fwat2's sign-in
   // step was judged at "/" on every replay and sent to recovery, whose
@@ -1484,7 +1491,7 @@ const expectedUrl: StepGate = async ({ step, page, params, tag, failIndex }) => 
   }
   // The window is spent; the shared verdict (src/execution/gates.ts) decides
   // strict / soft-and-continue / stop exactly as the artifact does.
-  const verdict = urlEffectVerdict(pattern, page.url(), params, `step ${tag}`);
+  const verdict = urlEffectVerdict(pattern, page.url(), params, `step ${tag}`, outcome.link);
   if (verdict.stop) return { stop: verdict.stop };
   return {
     warnings: verdict.warnings,

@@ -285,11 +285,18 @@ const HELPERS: { token: string; source: string[] }[] = [
       ' * stops. Only the WAIT is this file\'s own: the recorded url may still be on',
       ' * its way (an SPA sign-in answers the click, then routes a moment later), so',
       ' * a strict match is given URL_WAIT_MS on the navigation itself before the',
-      ' * verdict is asked once, of wherever the browser then is.',
+      ' * verdict is asked once, of wherever the browser then is. `link` is what the',
+      " * step's click reported of the link it clicked (the shared beginAction): a",
+      ' * click that went where its link points, recorded as staying on the page it',
+      ' * left, is the shared linkLandingWarning and waits for nothing.',
       ' */',
-      'async function urlEffect(page: Page, pattern: string, p: Record<string, string>, where: string, volatile: UrlSegDiff[]): Promise<void> {',
+      'async function urlEffect(page: Page, pattern: string, p: Record<string, string>, where: string, volatile: UrlSegDiff[], link?: LinkNavigation): Promise<void> {',
+      '  if (!urlMatches(pattern, page.url(), p)) {',
+      '    const landed = linkLandingWarning(pattern, page.url(), p, where, link);',
+      '    if (landed) return logWarning(landed);',
+      '  }',
       '  await page.waitForURL((url) => urlMatches(pattern, url.toString(), p), { timeout: URL_WAIT_MS }).catch(() => {});',
-      '  const verdict = urlEffectVerdict(pattern, page.url(), p, where);',
+      '  const verdict = urlEffectVerdict(pattern, page.url(), p, where, link);',
       '  for (const line of verdict.warnings) logWarning(line);',
       '  // What this step watched vary is the segment\'s evidence from here on',
       '  // (navigationTarget), whether or not the step goes on to stop.',
@@ -1481,12 +1488,15 @@ function expectationLines(step: SkillStep, ctx: Ctx, out: string[], linesBefore:
  * The alert half is a lifecycle observation (before/after), emitted by
  * emitSkillStep.
  */
-function effectLines(step: SkillStep, ctx: Ctx, out: string[]): void {
+function effectLines(step: SkillStep, ctx: Ctx, out: string[], observed?: string): void {
   const pattern = step.expect?.urlPattern;
   if (!pattern) return;
   noteSlots(pattern, ctx);
   ctx.volatileUsed = true;
-  out.push(`await urlEffect(page, ${q(pattern)}, p, ${q(`${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`)}, ${ctx.volatile});`);
+  // The link the step's click reported (robustClick), as replay's url gate
+  // reads it off the executor's StepRun; no other tool reports one.
+  const link = observed && (step.tool === 'click' || step.tool === 'dblclick') ? `, ${observed}?.link()` : '';
+  out.push(`await urlEffect(page, ${q(pattern)}, p, ${q(`${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`)}, ${ctx.volatile}${link});`);
 }
 
 /**
@@ -2011,7 +2021,7 @@ function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number,
     const sent = nav ? `${nav}.url` : src(step.args.url);
     checks.push(`{ const landing = gotoLandingVerdict(${sent}, page.url(), ${q(where)}); if (landing) throw new Error(landing); }`);
   }
-  effectLines(step, ctx, checks);
+  effectLines(step, ctx, checks, observed);
   // A read raises no alert of its own (replay exempts it), unless the
   // recording expects one; the daemon's expectedAlert gate has no read test.
   const alerts = !isRead || step.expect?.alertContains ? `alertsBefore${ctx.urls}` : null;
@@ -3363,13 +3373,14 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
   const body = [...bodies.flatMap((b) => b.lines), ...calls].join('\n');
   // runFlow judges the browser it is handed (profileMismatch, readLiveBrowser);
   // named here because runFlow is written after the helper scan.
-  // A flow with an observed action records its page's traffic from the start
-  // url on (runFlow, below), so the first action's baseline includes the load.
-  const observesActions = body.includes('beginAction(');
+  // Every flow records its page's traffic from the start url on (runFlow,
+  // below): the first action's baseline includes the load, and the start
+  // page's routing wait (startPageSettled) counts those requests — which a
+  // flow with no observed action needs as much as one with.
   // GOTO_TIMEOUT_MS is named unconditionally: runFlow's own start-url goto
   // passes it, and runFlow is written after this scan, so a flow whose steps
   // never navigate would otherwise reference a constant the file does not carry.
-  const helpers = neededHelpers([body, 'profileMismatch(', 'readLiveBrowser(', 'GOTO_TIMEOUT_MS', ...(observesActions ? ['pageTraffic('] : [])].join('\n'), [recipesHelper(spec)]);
+  const helpers = neededHelpers([body, 'profileMismatch(', 'readLiveBrowser(', 'GOTO_TIMEOUT_MS', 'pageTraffic(', 'startPageSettled('].join('\n'), [recipesHelper(spec)]);
 
   const out: string[] = [
     '// @sitelooper-flow v1',
@@ -3516,7 +3527,7 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
   out.push('      run.warnings.push(browserMismatch);');
   out.push("      console.log(`[sitelooper warn] ${browserMismatch}`);");
   out.push('    }');
-  if (observesActions) out.push("    // Traffic is recorded from the start url on, as the daemon records it from adopting the page.", '    pageTraffic(page);');
+  out.push("    // Traffic is recorded from the start url on, as the daemon records it from adopting the page.", '    pageTraffic(page);');
   // Bounded like every other goto this file emits: the start url is the one
   // navigation a flow ALWAYS makes, and an unbounded one here hangs the run
   // before the first `[sitelooper step]` line is printed — which is exactly
@@ -3529,6 +3540,13 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
   // login route only once it has rendered: fwrd75's artifact read `#/tickets`
   // and refused the sign-in segment the daemon had passed three times.
   out.push('    await waitForContent(page).catch(() => {});');
+  // …and content is not the end of routing. fwrd78's app painted a static
+  // shell (a skip link is content), sat on `#/tickets` while it asked the
+  // server who was signed in, and only on the 401 sent the fresh browser to
+  // `#/login`: the artifact read the url in between and refused its sign-in
+  // segment on both attempts, where the daemon passed twice at tier A. The
+  // shared startPageSettled, exactly as the daemon's runFlow waits.
+  out.push('    await startPageSettled(page).catch(() => {});');
   for (const [i, b] of bodies.entries()) {
     out.push(`    await test.step(${q(`${b.step.id}: ${b.step.instruction}`)}, async () => {`);
     // The arguments are built INSIDE test.step and before `steps[id]` is

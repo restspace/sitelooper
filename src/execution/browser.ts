@@ -69,6 +69,12 @@ export function outcomeLabel(outcome: ActionOutcome): string {
 export interface ClickObservation {
   remaining(): number;
   dispatched?(via: DispatchVia): void;
+  /**
+   * The clicked element is a link that navigates this tab to `href` (absolute,
+   * another document than the one it is on): told BEFORE the click goes out,
+   * so the settle can wait on the navigation the link itself promises.
+   */
+  linkTarget?(href: string): void;
 }
 
 type ClickOpts = { timeout: number; dbl?: boolean; obs?: ClickObservation };
@@ -167,6 +173,7 @@ export async function robustClick(loc: Locator, opts: ClickOpts): Promise<string
       );
     }
   }
+  await reportLinkTarget(loc, opts);
   for (let i = 0; i < CLICK_TIERS.length; i++) {
     const tier = CLICK_TIERS[i];
     // Every tier before this one failed in a way that proves nothing went out
@@ -234,6 +241,48 @@ export async function robustClick(loc: Locator, opts: ClickOpts): Promise<string
     }
   }
   return fireWhenAttached(loc, opts, label, firstFailure);
+}
+
+/** The most robustClick spends asking whether its target is a link, and where to. */
+const LINK_PROBE_MS = 500;
+
+/**
+ * Tell the action's observation where the clicked element links to, when it
+ * is a link that leaves this document in this tab — the element's own
+ * statement of the navigation the click is about to start. Asked only of an
+ * observation that listens, never fails the click, and costs one evaluate.
+ */
+async function reportLinkTarget(loc: Locator, opts: ClickOpts): Promise<void> {
+  if (!opts.obs?.linkTarget || typeof (loc as { evaluate?: unknown }).evaluate !== 'function') return;
+  const budget = Math.min(LINK_PROBE_MS, tierBudget(opts));
+  if (budget < 1) return;
+  const target = typeof (loc as { first?: unknown }).first === 'function' ? loc.first() : loc;
+  const href = await target.evaluate(linkHrefOf, undefined, { timeout: budget }).catch(() => null);
+  if (href) opts.obs.linkTarget(href);
+}
+
+/**
+ * Runs in the page: the absolute url the element (or the link around it)
+ * navigates this tab to, or null when a click on it does not leave the
+ * document — no href, an in-page `#` anchor or hash route, `javascript:`, a
+ * download, or a link that opens another tab or frame.
+ */
+export function linkHrefOf(el: Element): string | null {
+  const a = el.closest('a[href], area[href]') as HTMLAnchorElement | HTMLAreaElement | null;
+  if (!a || a.hasAttribute('download')) return null;
+  const target = (a.getAttribute('target') ?? '').trim().toLowerCase();
+  if (target && target !== '_self') return null;
+  let url: URL;
+  try {
+    url = new URL(a.href, document.baseURI);
+  } catch {
+    return null;
+  }
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
+  const here = new URL(document.location.href);
+  url.hash = '';
+  here.hash = '';
+  return url.href === here.href ? null : a.href;
 }
 
 /** How long robustClick waits for a target to be attached at all before refusing it as absent. */

@@ -489,7 +489,8 @@ describe('emitted step lifecycle', () => {
     expect(bind.body).toContain('if (!run.created.includes(minted1)) run.created.push(minted1);');
     // The effect gates in replay's STEP_GATES order: error page, url, page changes, alerts.
     expect(verify.body).toContain("errorPageGate(page, '01-step s_emit/1');");
-    expect(verify.body).toContain(`await urlEffect(page, '${ORIGIN}/orders/{{d1}}', p, '01-step s_emit/1', volatile1);`);
+    // A click's url gate is handed the link the click reported (fwop2 s_f4e3b6: linkLandingWarning).
+    expect(verify.body).toContain(`await urlEffect(page, '${ORIGIN}/orders/{{d1}}', p, '01-step s_emit/1', volatile1, obs1?.link());`);
     expect(verify.body).toContain("alertGate(alertsBefore1, alertsAfter1, { where: '01-step s_emit/1', isRead: false, params: p, effectConfirmed: changes1.confirmed === true });");
     expect(verify.body.indexOf('errorPageGate(')).toBeLessThan(verify.body.indexOf('await urlEffect('));
     expect(verify.body.indexOf('await urlEffect(')).toBeLessThan(verify.body.indexOf('alertGate('));

@@ -8,7 +8,7 @@ import { executeTool } from '../agent/tools.js';
 import { urlPattern as compiledUrlPattern, dropAbsentReadLocators, dropDeadReadLocators, fillParams, markReadsProven, stranded, urlMatches, urlParts } from '../skills/compile.js';
 import type { DriftTicket } from '../skills/repair.js';
 import type { Page } from 'playwright-core';
-import { agentGesturesOutsideReplay, bindSkill, canAdoptPin, decideRepin, learnFromInstruction, matchTemplate, pinStatus, publishedOutputs, selectCandidates, synthesizeReport } from '../skills/learn.js';
+import { agentGesturesOutsideReplay, bindSkill, canAdoptPin, decideRepin, instructionEntry, learnFromInstruction, matchTemplate, pinStartsElsewhere, pinStatus, publishedOutputs, selectCandidates, synthesizeReport } from '../skills/learn.js';
 import { buildFlow, consumedReportedOutputs, consumedUrlOutputs, ignorableRefs, jsonLeaves, lintFlowRefs, lintUnpublishedOutputs, listFlows, liveReadsFor, liveReadsForRecovery, loadFlow, loadFlowFile, lookupOutput, mutatingIntent, noteOutputEvidence, pruneUnsourcedOutputs, recoveryRoute, remapParams, resolveInstruction, resolveStepParams, softResolveInstruction, saveFlow, staleInstructionIds, unbankedMutations, unreportedOutputs, urlOutputs, varyingValues, type RunSpecific } from '../skills/flow.js';
 import { applyRelabelToEntries, applyRelabelToSkills, relabelCases, requestRelabelPlan } from '../skills/relabel.js';
 import { goalSatisfied, renderReplay } from '../skills/replay.js';
@@ -37,6 +37,7 @@ import { aliasLegacyEnv, ensureSessionDir, socketPath, validateSessionName } fro
 import { BrowserSession } from './browser.js';
 import { DEFAULT_BROWSER_PROFILE } from '../execution/browser.js';
 import { observedChange } from '../execution/lifecycle.js';
+import { startPageSettled } from '../execution/action.js';
 import { coverageComplete, recordedValueShown } from '../execution/snapshot.js';
 import { captureSignature } from './diff.js';
 import { recordedStandIn, referencableOutputs } from '../skills/flow.js';
@@ -1347,6 +1348,10 @@ ${describeLeaks(certain.slice(0, 30))}${certain.length > 30 ? `\n  … and ${cer
     // `load` fires before a client-rendered app has painted, and the first
     // step's precondition (fingerprint, identity text) is judged right after.
     await waitForContent(page).catch(() => {});
+    // …and content is not the end of routing: a signed-out visitor is sent to
+    // the login route only once the app has asked who is signed in. Shared
+    // with the compiled artifact (startPageSettled, fwrd78).
+    await startPageSettled(page).catch(() => {});
     this.browser.script?.commit(await this.browser.script.prepare(page, 'goto', { url: flow.startUrl }).catch(() => null), 'ok');
 
     const screenshotDir = path.join(ensureSessionDir(this.opts.session), 'screenshots');
@@ -1783,7 +1788,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
         // through to a CSS path (two drift lines in the compiled artifact).
         // Same rule as the export (stripLeakedCandidates): identifiers the
         // ledger knows this run made, and never an emptied chain.
-        if (this.browser.learn && (learned?.compiled || learned?.merged || learned?.compiledAll?.length)) {
+        if (this.browser.learn && (learned?.compiled || learned?.merged || learned?.compiledAll?.length || learned?.whole)) {
           const strippedNow = this.stripLeakedCandidates(flow, this.browser.learn);
           if (strippedNow) opts.progress(`[flow ${flow.name}] ${step.id}: dropped ${strippedNow} locator candidate(s) carrying a value this run minted from the skill(s) this recovery compiled`);
         }
@@ -1805,7 +1810,10 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
         // recovery with no pin (fwod47-n2 03-add) or whose pin refused before
         // replaying (fwgr39-n3 04-open) has no replay outcome at all, and
         // gating on one left both steps unpinned after a clean recovery.
-        const compiledId = learned?.compiled ?? learned?.merged;
+        // A repair that stored a tail variant also stored the whole recording
+        // (learnFromInstruction `whole`): that, not the tail, is the step's
+        // procedure (fwop2 01-signin).
+        const compiledId = learned?.whole ?? learned?.compiled ?? learned?.merged;
         const compiledSkill = compiledId ? this.browser.learn.get(compiledId) : null;
         const compiled = compiledSkill ? { skill: compiledSkill.id, status: compiledSkill.status } : undefined;
         const candidateId = outcome?.ok ? outcome.skill : compiled?.skill;
@@ -1853,6 +1861,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
           stray: agentGesturesOutsideReplay(recoveryEntries),
           adoptable,
           mintedLeaks,
+          startsElsewhere: candidateId ? pinStartsElsewhere(this.browser.learn, candidateId, instructionEntry(recoveryEntries)?.url) : null,
         });
         // Refusing the pin is not enough: replay selects candidates from the
         // store by track record, not only the pin. fwod46-n2's recovery

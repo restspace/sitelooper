@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { Locator, Page } from 'playwright-core';
 import { actionFailure, NAVIGATING_ACTIONS, outcomeLabel, outcomeOfError, robustClick, type ActionOutcome } from '../execution/browser.js';
-import { beginAction, type ActionExpectation, type ActionObservation, type SettleVerdict } from '../execution/action.js';
+import { beginAction, type ActionExpectation, type ActionObservation, type LinkNavigation, type SettleVerdict } from '../execution/action.js';
 import { CURRENT_DIALECT, addedLines, removedLines, type PageObservation } from '../execution/snapshot.js';
 import { DIALOG_LINE } from '../execution/expect.js';
 import { POPUP_WAIT_MS, type PageEffect } from '../execution/context.js';
@@ -682,7 +682,7 @@ async function runStep(
           expect: opts.expect,
         })
       : null;
-    const result = scrubSecrets(await dispatch(session, name, resolveSecretsDeep(args), screenshotDir, signal, opts.resolved, obs));
+    let result = scrubSecrets(await dispatch(session, name, resolveSecretsDeep(args), screenshotDir, signal, opts.resolved, obs));
     // The action's evidence: the DOM quiet, the requests it started landed, a
     // debounced request given its moment, the url held still after a tool that
     // may navigate, the expected effect polled for.
@@ -696,6 +696,14 @@ async function runStep(
     // compiler cut a segment boundary at a page the procedure was only passing
     // through. Both are the observation's url wait now (urlHeldStill inside it).
     const verdict: SettleVerdict | null = obs ? await obs.settle() : null;
+    // A link whose navigation had still not committed when the settle ran out
+    // (action.ts LINK_NAV_WAIT_MS) is said to the model, because the page it
+    // sees next is the old one. fwop2-n1's agent found the url unmoved, clicked
+    // the link again — which restarts a Turbo visit — and ended on a goto.
+    if (verdict?.link && verdict.url === verdict.link.from) {
+      result += `
+note: this link points to ${verdict.link.href}, and its navigation had not committed when the action settled (the server is still answering). Observe the page again before acting; do not click the link again.`;
+    }
     let diff: StepDiff | undefined;
     let observations: StepRun['observations'];
     // The page signature is a race against CAPTURE_TIMEOUT, and it loses on a
@@ -761,6 +769,7 @@ async function runStep(
       ...(observations ? { observations } : {}),
       ...(captureFailed ? { captureFailed: true as const } : {}),
       ...(verdict ? { outcome: verdict.outcome, settled: true as const } : {}),
+      ...(verdict?.link ? { link: verdict.link } : {}),
     };
   } finally {
     obs?.cancel();
@@ -838,6 +847,8 @@ export interface StepRun {
   outcome?: ActionOutcome;
   /** The action's observation settled the page, so a caller need not settle it again. */
   settled?: true;
+  /** The action clicked a link that leaves the document: where it began, and where the link points (action.ts LinkNavigation). */
+  link?: LinkNavigation;
 }
 
 /** A signature taken once the page has loaded and the DOM has gone quiet: for a step that had no action observation. */
