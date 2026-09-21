@@ -14,7 +14,7 @@ import { BrowserSession } from '../src/daemon/browser.js';
 import { pointLocator } from '../src/execution/point.js';
 import { resolveCandidates, type CandidateObservation } from '../src/execution/resolve.js';
 import { makeLocator, type LocatorCandidate } from '../src/daemon/recorder.js';
-import { roleName, volatileMatcher } from '../src/shared/text.js';
+import { fieldByName, roleName, volatileMatcher } from '../src/shared/text.js';
 import { candidateSource, chainSource, matcherSource, observationSource, observationSources, stringSource } from '../src/spec/locators.js';
 
 /** What the generated file inlines; the regex tests need it in scope. */
@@ -268,6 +268,19 @@ describe('observationSource / observationSources', () => {
     expect((await resolveCandidates(bearing as never, [observe(bearing)], { requireIdentity: [value], waitMs: 0 }))?.index).toBe(1);
   });
 
+  it('adds the label fallback to a stored role=…[name] field, and to nothing else', () => {
+    expect(candidateSource({ kind: 'css', selector: 'role=textbox[name="Part name *"]' })).toBe(
+      "page.locator('role=textbox[name=\"Part name *\"]').or(page.getByRole(\"textbox\").and(page.getByLabel('Part name *', { exact: true })))",
+    );
+    expect(candidateSource({ kind: 'css', selector: 'dialog >> role=spinbutton[name="Cost *"]' })).toContain(
+      ".or(page.locator('dialog').getByRole(\"spinbutton\").and(page.locator('dialog').getByLabel('Cost *', { exact: true })))",
+    );
+    // a role the label does not name, and any other selector, stay as they were
+    expect(candidateSource({ kind: 'css', selector: 'role=button[name="Save"]' })).toBe("page.locator('role=button[name=\"Save\"]')");
+    expect(candidateSource({ kind: 'css', selector: '#name' })).toBe("page.locator('#name')");
+    expect(fieldByName('role=textbox[name="A \\"q\\""]')).toEqual({ scope: null, role: 'textbox', name: 'A "q"' });
+  });
+
   it('puts the recorded match index on BOTH the locator and the observation', () => {
     const src = observationSource({ kind: 'css', selector: 'button.dup', nth: 1 }, 0);
     expect(src).toContain("locator: page.locator('button.dup').nth(1)");
@@ -354,6 +367,23 @@ d('emitted source resolves what makeLocator resolves (fixture page)', () => {
       await same(makeLocator(page, c), new Function('page', 'p', 'roleName', `return ${src}`)(page, {}, roleName) as Locator);
     }, 30_000);
   }
+
+  // fwrd79 03-open: a stored `role=textbox[name="Part name *"]` whose asterisk
+  // is aria-hidden names nothing to the role engine. Both runners now also
+  // find the field by its label's exact text, and find the SAME field.
+  it('a stored role=…[name] field is found by its label text, the same in both runners', async () => {
+    const page = await session.getPage();
+    await page.evaluate(() => {
+      const label = document.createElement('label');
+      label.innerHTML = 'Part name <span aria-hidden="true">*</span> <input id="pn" type="text" />';
+      document.body.append(label);
+    });
+    const c: LocatorCandidate = { kind: 'css', selector: 'role=textbox[name="Part name *"]' };
+    expect(await page.locator(c.selector).count()).toBe(0);
+    const live = makeLocator(page, c);
+    expect(await live.evaluate((el) => el.id)).toBe('pn');
+    await same(live, new Function('page', 'p', 'roleName', `return ${candidateSource(c)!}`)(page, {}, roleName) as Locator);
+  }, 30_000);
 
   it('the emitted observations resolve to the identity row, never to the other one', async () => {
     const page = await session.getPage();

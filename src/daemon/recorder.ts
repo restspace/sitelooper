@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { ElementHandle, Frame, Locator, Page } from 'playwright-core';
 import { ensureSessionDir } from '../shared/paths.js';
-import { escapeRe, roleName, volatileMatcher } from '../shared/text.js';
+import { escapeRe, fieldByName, roleName, volatileMatcher } from '../shared/text.js';
 import { pointLocator } from '../execution/point.js';
 import { dispatchesFirstMatch } from '../execution/lifecycle.js';
 import { rootFor, type FramePath, type PageEffect, type Root } from '../execution/context.js';
@@ -101,9 +101,17 @@ export function makeLocator(page: Root, c: LocatorCandidate): Locator {
       loc = page.getByText(volatileMatcher(c.text), { exact: true });
       break;
     case 'id':
-    case 'css':
+    case 'css': {
       loc = page.locator(c.selector);
+      // A stored `role=textbox[name="Part name *"]` also finds the field by
+      // its label's exact text (fieldByName, shared with the artifact).
+      const field = c.kind === 'css' ? fieldByName(c.selector) : null;
+      if (field) {
+        const scope = field.scope === null ? page : page.locator(field.scope);
+        loc = loc.or(scope.getByRole(field.role as Parameters<Page['getByRole']>[0]).and(scope.getByLabel(field.name, { exact: true })));
+      }
       break;
+    }
     case 'scoped': {
       const within = page.locator(c.container, { hasText: c.hasText });
       loc = c.selector ? within.locator(c.selector) : within;

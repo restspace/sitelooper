@@ -18,7 +18,7 @@
  */
 import type { LocatorCandidate } from '../daemon/recorder.js';
 import { structuralCandidate } from '../execution/resolve.js';
-import { VOLATILE_TOKEN_SHAPE, WILDCARD, volatileMatcher } from '../shared/text.js';
+import { VOLATILE_TOKEN_SHAPE, WILDCARD, fieldByName, volatileMatcher } from '../shared/text.js';
 
 export interface SourceOptions {
   /** expression for the page, default 'page' */
@@ -225,9 +225,17 @@ export function candidateSource(c: LocatorCandidate, o: SourceOptions = {}): str
       src = `${page}.getByText(${matcherSource(c.text, o)}, { exact: true })`;
       break;
     case 'id':
-    case 'css':
+    case 'css': {
       src = `${page}.locator(${stringSource(c.selector, o)})`;
+      // makeLocator's label fallback for a stored `role=…[name="…"]`
+      // (fieldByName, the shared parse): same locator in both runners.
+      const field = c.kind === 'css' ? fieldByName(c.selector) : null;
+      if (field) {
+        const scope = field.scope === null ? page : `${page}.locator(${stringSource(field.scope, o)})`;
+        src += `.or(${scope}.getByRole(${JSON.stringify(field.role)}).and(${scope}.getByLabel(${stringSource(field.name, o)}, { exact: true })))`;
+      }
       break;
+    }
     case 'scoped':
       // hasText stays a plain substring match on the container, exactly as
       // makeLocator passes it: the recorded value names the RECORD.

@@ -1,4 +1,5 @@
 import type { Locator, Page } from 'playwright-core';
+import { fieldByName } from '../execution/text.js';
 
 export interface SnapshotOptions {
   /** Keep only lines that carry a ref or look interactive. */
@@ -198,10 +199,9 @@ export function resolveTarget(page: Page, target: string): Locator {
   // The field may be the last link of a scoped chain (`dialog >> role=…`):
   // fwrdj13-n1 wrote it that way twice, and the scope changes nothing about
   // which name the field answers to.
-  const cut = selector.lastIndexOf(' >> ');
-  const scope = cut < 0 ? page : page.locator(selector.slice(0, cut));
-  const field = FIELD_BY_NAME_RE.exec(cut < 0 ? selector : selector.slice(cut + 4).trim());
-  if (!field || !LABELLED_ROLES.has(field[1])) return primary;
+  const field = fieldByName(selector);
+  if (!field) return primary;
+  const scope = field.scope === null ? page : page.locator(field.scope);
   // A name WE gave the agent must be a target we accept. The [state: …] diff
   // names a field by its <label>'s text (execution/snapshot.ts, dialect 2),
   // and the prompt tells the agent to act on that line as role=…[name="…"].
@@ -212,8 +212,7 @@ export function resolveTarget(page: Page, target: string): Locator {
   // instructions. So a field is also found by its label's exact text — same
   // role, so the two can only disagree by naming two different fields, which
   // is a strict-mode error rather than a wrong fill.
-  const name = field[2].replace(/\\(.)/g, '$1');
-  return primary.or(scope.getByRole(field[1] as Parameters<Page['getByRole']>[0]).and(scope.getByLabel(name, { exact: true })));
+  return primary.or(scope.getByRole(field.role as Parameters<Page['getByRole']>[0]).and(scope.getByLabel(field.name, { exact: true })));
 }
 
 /**
@@ -232,10 +231,6 @@ export function implicitRoles(selector: string): string {
     .join(' >> ');
 }
 
-/** `role=textbox[name="Part name *"]` — the one shape rule 4b teaches. */
-const FIELD_BY_NAME_RE = /^role=([a-z]+)\[name="((?:[^"\\]|\\.)*)"\]$/;
-/** Roles a <label> names. */
-const LABELLED_ROLES = new Set(['textbox', 'searchbox', 'spinbutton', 'combobox', 'listbox', 'checkbox', 'radio', 'switch', 'slider']);
 
 export function isRefTarget(target: string): boolean {
   return REF_RE.test(target.trim());

@@ -144,3 +144,29 @@ export function roleName(text: string): RegExp {
     .join(VOLATILE_TOKEN_SHAPE);
   return new RegExp(`^${NAME_NOISE_SHAPE}${body}${NAME_NOISE_SHAPE}$`, 'u');
 }
+
+/** Roles a <label> names. */
+const LABELLED_ROLES = new Set(['textbox', 'searchbox', 'spinbutton', 'combobox', 'listbox', 'checkbox', 'radio', 'switch', 'slider']);
+
+/**
+ * A selector naming a labelled field as `role=textbox[name="Part name *"]`,
+ * optionally as the last link of a scoped chain (`dialog >> role=…`): the
+ * scope, role and name, or null for any other selector.
+ *
+ * WHY IT IS SHARED. A label's text is not always the field's accessible name:
+ * "Part name <span aria-hidden>*</span>" reads `Part name *` in our snapshot
+ * and `Part name` to Playwright's role engine, so this selector matches
+ * nothing as written. The daemon's live target resolution (daemon/refs.ts)
+ * already accepted the field by its label's exact text; a STORED candidate of
+ * this shape did not, in either runner. fwrd79's 03-open stored exactly this
+ * as its fill's only candidate, and the compiled spec failed there with
+ * "none of 1 recorded locators resolved". One parse, used by live resolution,
+ * makeLocator and the emitted artifact alike.
+ */
+export function fieldByName(selector: string): { scope: string | null; role: string; name: string } | null {
+  const cut = selector.lastIndexOf(' >> ');
+  const last = (cut < 0 ? selector : selector.slice(cut + 4)).trim();
+  const m = /^role=([a-z]+)\[name="((?:[^"\\]|\\.)*)"\]$/.exec(last);
+  if (!m || !LABELLED_ROLES.has(m[1])) return null;
+  return { scope: cut < 0 ? null : selector.slice(0, cut), role: m[1], name: m[2].replace(/\\(.)/g, '$1') };
+}
