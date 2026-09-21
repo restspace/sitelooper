@@ -233,68 +233,75 @@ app-side verifier's count (mutation log, JSON-RPC or HTTP API state), never an a
 All cells are cloud runs on identical hardware, one box per target; full detail in
 [bench/MATRIX-SUMMARY.md](bench/MATRIX-SUMMARY.md).
 
-**Matrix 1 — first contact.** sitelooper: set 26 (2026-09-03, build e048128; glm-5.3
-orchestrator, deepseek-v4-flash inner with glm-5.3 escalation). agent-browser: set 17, same era,
-glm-5.3.
+**Matrix 1 — first contact.** sitelooper: the latest green sweep of each target (rounds 29–32,
+2026-09-18, builds c2652f4 → ab5de17; glm-5.3 orchestrator, deepseek-v4.1-flash inner pinned to
+DeepSeek's backend with glm-5.3 escalation), with the set 28 cell it replaced in parentheses.
+agent-browser: set 17, glm-5.3.
 
 | target | sitelooper | agent-browser |
 |---|---|---|
-| repairdesk (in-repo SPA) | 7/7 · $0.07 · 1212s (set 28; set 26: 7/7 · $0.09 · 819s) | 6/6 · $0.19 · 67s |
-| kanboard (PHP, drag-and-drop) | 6/6 · $0.21 · 1078s (set 28; set 26: 6/6 · $0.04 · 385s) | **2/6 (turn-cap)** · $0.77 · 118s |
-| grafana (React SPA) | 6/6 · $0.14 · 1381s (set 28; set 26: 6/6 · $0.48 · 2037s) | 6/6 · $1.05 · 448s |
-| odoo (dense CRUD) | 6/6 · $0.38 · 1451s (set 28d; set 26: 6/6 · $0.59 · 1651s) | 6/6 · $1.51 · 302s |
+| repairdesk (in-repo SPA) | **6/6** · $0.08 · 396s (fwrd77 on c2652f4; set 28: 7/7 on the older 7-objective task · $0.07 · 1212s) | 6/6 · $0.19 · 67s |
+| kanboard (PHP, drag-and-drop) | **6/6** · $0.07 · 320s (fwkb33 on f10415a; set 28: 6/6 · $0.21 · 1078s) | **2/6 (turn-cap)** · $0.77 · 118s |
+| grafana (React SPA) | **6/6** · $0.10 · 801s (fwgr62 on c2652f4; set 28: 6/6 · $0.14 · 1381s) | 6/6 · $1.05 · 448s |
+| odoo (dense CRUD) | **6/6** · $0.11 · 482s (fwod73 on ab5de17; set 28d: 6/6 · $0.38 · 1451s) | 6/6 · $1.51 · 302s |
 | atelyr (private React app, local) | 2/2 checkable · $0.76 · 2557s (set 28e; set 28: 6 reported, 2/2 checkable · $1.43 · 3043s) | — |
 
-On first contact sitelooper is the slowest arm on every target, by design: it drives a cheap
-inner model and spends the extra time recording verified locators, value provenance and effect
-expectations. What that buys is the lowest cost on every target (2–19× cheaper), a 25/25 objective
-record including the board that turn-capped agent-browser at 2/6, and the recording that makes
-Matrix 2 exist.
+On first contact sitelooper is still the slowest arm on every target, by design: it drives a
+cheap inner model and spends the extra time recording verified locators, value provenance and
+effect expectations. The gap has narrowed since set 28 (recordings now take 1.6–6× agent-browser's
+wall clock, down from 3–18×) and the cost lead has widened: 2–14× cheaper on every target, a 24/24
+objective record including the board that turn-capped agent-browser at 2/6, and the recording
+that makes Matrix 2 exist.
 
-**Matrix 2 — every run after the first.** The same four flows repeated: sitelooper replays (set
-24, two replays each) against re-running the agent, against a Playwright script the agent authored
-from its own run, against literal codegen from the recording, and against **Tier 2 spec** — the
-same recording compiled by `sitelooper compile` into a standalone `@playwright/test` spec with no
-sitelooper runtime in the loop at all, then replayed under the real Playwright test runner
-(`bench/spec-replay.mjs`).
+**Matrix 2 — every run after the first.** The same four flows repeated: sitelooper replays (the
+two zero-orchestrator replays of each Matrix 1 recording, against a reset app) against re-running
+the agent, against a Playwright script the agent authored from its own run, against literal
+codegen from the recording, and against **Tier 2 spec** — the same recording compiled by
+`sitelooper compile` into a standalone `@playwright/test` spec with no sitelooper runtime in the
+loop at all, then replayed under the real Playwright test runner (`bench/spec-replay.mjs`).
 
 | target | sitelooper replay (r1, r2) | agent re-run | authored script | codegen | Tier 2 spec |
 |---|---|---|---|---|---|
-| repairdesk | **7/7, 7/7** · $0.00, $0.00 · 25s, 25s (set 31, m4rd on d28346a; every step at tier A, zero model turns; set 30 on a7f0c6e: 55s, 55s before the late-navigation fix; set 28: 24s, 23s) | 6/6 · $0.19 · 67s every time | 1/6, 1/6 · $0 | 6/6, 6/6 · $0 | **6/6, 6/6** · $0.00 · 15s, 15s (set 31, m4rd; 0 drift; repair converged with 4 candidate promotions, spec check passed in 14s; repaired spec 6/6 in 14s) |
-| kanboard | **4/4 checkable, same** · $0.00, $0.00 · 27s, 27s (set 31, m4kb on d28346a; all five steps at tier A, zero turns; two objectives are report-based and a zero-model replay writes no report; set 30: 45s, 45s; set 28: 23s, 23s) | 2/6 · $0.77 · 118s every time | 5/6, 5/6 · $0 | 4/4 (+2 n/a) · $0 | **4/4 checkable, same** · $0.00 · 15s, 14s (set 31, m4kb; 0 drift; repair converged with no change, spec check passed in 13s; repaired spec 4/4 in 14s) |
-| grafana | **6/6, 6/6** · $0.00, $0.00 · 54s, 54s (set 31, m4gr on d28346a; every step at tier A, zero model turns; set 30: 79s, 79s; set 28: 47s, 47s) | 6/6 · $1.05 · 448s every time | 0/6, 0/6 · $0 | 0/6, 0/6 · $0 | **4/6, 4/6** · $0.00 · 33s, 33s (set 31, m4gr; 0 drift; objectives 1 and 6 unverifiable by design, the spec arm writes no finalText; repair converged with 6 changes: 3 promotions, 1 model-proposed heading locator, 2 never-hit point candidates retired; spec check passed in 33s; repaired spec 4/6 in 34s) |
-| odoo | **6/6, 6/6** · $0.02, $0.01 · 787s, 556s (set 31, m4od2 on d28346a, flow fwod34r3; model-bound, so the click-wait fix barely shows: 06-open fell back to the model on both replays, 24 then 39 turns, because its pinned skill's precondition names the order LIST page while the flow arrives on the order FORM, a store defect in 06-open's recording; r1 also lost 16 turns to a one-off sign-in fallback; set 30: 258s, 568s; set 28d on fwod34: 664s, 243s) | 6/6 · $1.51 · 302s every time | 1/6, 1/6 · $0 | 0/6, 0/6 · $0 | **6/6, 6/6** · $0.00 · 79s, 79s (set 31, m4od2; 0 drift both runs; repair 9/9 ×3 at tier A with no change, spec check passed in 77s; repaired spec 6/6 in 78s; set 30: 77s, 77s) |
+| repairdesk | **6/6, 6/6** · $0.00, $0.00 · 31s, 31s (fwrd77 on c2652f4; all eight steps at tier A, zero model turns, no re-pins; set 31 on the older 6-step recording: 25s, 25s) | 6/6 · $0.19 · 67s every time | 1/6, 1/6 · $0 | 6/6, 6/6 · $0 | **6/6** · $0.00 · 35s (fwrd77; 1/1 passed, 0 drift; set 31: 15s, 15s) |
+| kanboard | **6/6, 6/6** · $0.00, $0.00 · 28s, 28s (fwkb33 on f10415a; all six steps at tier A, zero turns, no re-pins; the replay now writes the report the two report-based objectives need; set 31: 4/4 checkable · 27s, 27s) | 2/6 · $0.77 · 118s every time | 5/6, 5/6 · $0 | 4/4 (+2 n/a) · $0 | **4/6** · $0.00 · 25s (fwkb33; 1/1 passed, 0 drift; objectives 1 and 6 unverifiable by design, the spec arm writes no finalText; set 31: 15s, 14s) |
+| grafana | **6/6, 6/6** · $0.00, $0.00 · 76s, 77s (fwgr62 on c2652f4; all six steps at tier A, zero turns, no re-pins; set 31: 54s, 54s) | 6/6 · $1.05 · 448s every time | 0/6, 0/6 · $0 | 0/6, 0/6 · $0 | **4/6** · $0.00 · 77s (fwgr62; 1/1 passed, 0 drift; objectives 1 and 6 unverifiable by design; set 31: 33s, 33s) |
+| odoo | **6/6, 6/6** · $0.00, $0.00 · 62s, 62s (fwod73 on ab5de17; all seven steps at tier A, **zero model turns**, no re-pins; set 31 on fwod34r3 was model-bound at 787s, 556s and 40, 39 turns) | 6/6 · $1.51 · 302s every time | 1/6, 1/6 · $0 | 0/6, 0/6 · $0 | **6/6** · $0.00 · 55s (fwod73; 1/1 passed, 0 drift; set 31: 79s, 79s) |
 | atelyr | 12/12 flow steps · $0.13, $0.43 · 710s, 1002s (set 28e; 114 then 134 model turns; nine of twelve steps at zero turns on the second replay, the three re-pinned steps among them) | — | — | — | not yet run |
 
-**Set 31 (d28346a), the current build.** The set 30 routine rerun on one fix. Set 30's zero-model
-replays had run at roughly twice set 28's wall clock; bisected locally on the repairdesk recording to
-93ac1f7, where the recorder's "give a click's late navigation a moment" made every click, press and
-select in learning mode wait 1.5s unless the url moved, and replays run in learning mode. d28346a
-ends that wait as soon as the page has no request in flight. Same boxes, same recordings, same
-scores, and the replay wall clocks came back: repairdesk 55s → 25s, kanboard 45s → 27s, grafana
-79s → 54s, all at zero model turns. Odoo did not move (258s, 568s → 787s, 556s) because its
-replays are model-bound: 06-open falls back to the model on every run of fwod34r3 (its recorded
-precondition names the order list page and the flow arrives on the order form), so the wall clock
-is model turns, not click waits; the first set 31 odoo box also ran the wrong flow (fwod34, whose
-demoted 08-open needs the model) because fwod34r3 was only on a results branch, so it was
-published on this branch at 16f9a4b and the target relaunched as m4od2. Every compiled spec passed
-both runs with 0 drift at the same scores as set 30, every repair converged with its spec check
-passing, and every repaired spec passed again. No goal-state guard fired and no diagnostic
-appeared: the published stores predate goals, so no skill carries one yet.
+**Rounds 29–32 (c2652f4 → ab5de17), the current build.** These cells come from the convergence
+sweeps, which differ from set 31 in one important way: set 31 replayed the same old recordings
+on every build, while a round records the flow fresh (Matrix 1), replays it twice with no
+orchestrator (Matrix 2) and compiles it once, all on one box from one sweep. A target counts as
+green when every verifier objective passes on the recording and both replays, every replayed step
+runs at tier A with zero model turns, and the compiled spec compiles and passes with the same
+verifier (report-only objectives are unverifiable for the spec arm). Repairdesk and grafana were
+green in rounds 28 and 29, kanboard in 28, 29 and 30, and odoo in 31 and 32, after which the sweep
+loop stopped. Odoo is the row that moved: its replays no longer fall back to the model at all,
+so they run in 62s instead of 556–787s. Repairdesk's and grafana's clocks are higher than set 31
+because the recorded flows are longer (repairdesk now signs in and reports, eight steps against
+six), not because any step waited on a model. Rules A–Q in `src/daemon/server.ts`,
+`src/skills/flow.ts` and `src/execution/browser.ts` are the fixes those rounds added; four of
+them (a recovery's skill gets reads for referenced values, a pin past its start mid-chain is
+moved, a blocked create and its save merge into one adopted step, and a click on an absent target
+is refused in 3s) were committed after the last round whose recording met odoo's product
+configurator modal, so they are unit-tested but not yet exercised by a cloud run.
 
-| target | sitelooper replay r1, r2 (set 30 → set 31) | verifier | compiled spec a, b | repair | repaired spec | agent-browser, every run |
-|---|---|---|---|---|---|---|
-| repairdesk | 55s → **25s, 25s** · 0 turns · $0 | 7/7, 7/7 | 6/6, 6/6 · 15s, 15s | converged, 4 promotions, check passed | 6/6 · 14s | 6/6 · $0.19 · 67s |
-| kanboard | 45s → **27s, 27s** · 0 turns · $0 | 4/4 checkable ×2 | 4/4 ×2 · 15s, 14s | no change, check passed | 4/4 · 14s | 2/6 · $0.77 · 118s |
-| grafana | 79s → **54s, 54s** · 0 turns · $0 | 6/6, 6/6 | 4/6 ×2 · 33s, 33s | converged, 6 changes, check passed | 4/6 · 34s | 6/6 · $1.05 · 448s |
-| odoo | 258s, 568s → 787s, 556s · 40, 39 turns · $0.02, $0.01 | 6/6, 6/6 | 6/6, 6/6 · 79s, 79s | no change, check passed | 6/6 · 78s | 6/6 · $1.51 · 302s |
+| target | recording (first contact) | sitelooper replay r1, r2 | verifier | compiled spec | agent-browser, every run |
+|---|---|---|---|---|---|
+| repairdesk | 6/6 · $0.08 · 396s | **31s, 31s** · 0 turns · $0 | 6/6, 6/6 | 6/6 · 35s · 0 drift | 6/6 · $0.19 · 67s |
+| kanboard | 6/6 · $0.07 · 320s | **28s, 28s** · 0 turns · $0 | 6/6, 6/6 | 4/6 (+2 report-only) · 25s · 0 drift | 2/6 · $0.77 · 118s |
+| grafana | 6/6 · $0.10 · 801s | **76s, 77s** · 0 turns · $0 | 6/6, 6/6 | 4/6 (+2 report-only) · 77s · 0 drift | 6/6 · $1.05 · 448s |
+| odoo | 6/6 · $0.11 · 482s | **62s, 62s** · 0 turns · $0 | 6/6, 6/6 | 6/6 · 55s · 0 drift | 6/6 · $1.51 · 302s |
 
-Read across a row: the replay is the daemon re-running the recording with no orchestrator, the
-compiled spec is the same recording under plain Playwright with no sitelooper runtime and no model
-at all, and agent-browser is what it costs to have an agent do the task again from scratch. On the
-three targets whose replays need no model turns, the replay beats agent-browser by 2.7×, 4.4× and
-8.3× on wall clock at zero cost, and the compiled spec by 4.5×, 8.4× and 13.6×. Odoo's replay is
-the one still paying for model turns, and its compiled spec runs the same flow in 79s.
+Read across a row: the recording is the first-contact run that produced the flow, the replay is
+the daemon re-running it with no orchestrator, the compiled spec is the same recording under
+plain Playwright with no sitelooper runtime and no model at all, and agent-browser is what it
+costs to have an agent do the task again from scratch. Every replay on every target now runs at
+zero model turns and zero cost, beating agent-browser on wall clock by 2.2× (repairdesk), 4.2×
+(kanboard), 5.9× (grafana) and 4.9× (odoo); the compiled specs beat it by 1.9×, 4.7×, 5.8× and
+5.5×. Raw files for these cells are on the `results/fwrd77-o4ivwd`, `results/fwkb33-8ryhlw`,
+`results/fwgr62-e3so3m` and `results/fwod73-h60311` branches (sweep table, both flowruns, the
+compiled spec, its Playwright report and every verifier log).
 
 **Tier 2 spec, status.** `bench/spec-replay.mjs` compiles a published flow + skill store
 (`sitelooper compile <flow> --out <tmp>` with `SITELOOPER_SKILLS_DIR` pointing at the store) and
