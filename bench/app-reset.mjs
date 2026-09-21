@@ -199,6 +199,87 @@ async function resetKanboard() {
   }
 }
 
+/**
+ * OpenProject reset doubles as the SEED, as kanboard's does: project "Bench
+ * Project" exists with its three seed work packages, the user "Bench Assignee"
+ * is a Member of it (the assignee autocomplete offers only members), and no
+ * "<runid> Bench Work Package" from an earlier run survives. Everything goes
+ * through /api/v3 with the fixed admin token bench/thirdparty/openproject/
+ * seed.sh mints. Reference data (the role, the type) is looked up by NAME:
+ * its ids are the demo seed's and are not ours to depend on.
+ */
+async function resetOpenproject() {
+  const base = (process.env.APP_URL || 'http://127.0.0.1:8090/').replace(/\/$/, '');
+  const token = process.env.OPENPROJECT_API_TOKEN || 'bench-api-token';
+  const auth = 'Basic ' + Buffer.from(`apikey:${token}`).toString('base64');
+  const api = async (method, route, body) => {
+    const res = await fetch(`${base}/api/v3${route}`, {
+      method,
+      headers: { authorization: auth, ...(body ? { 'content-type': 'application/json' } : {}) },
+      ...(body ? { body: JSON.stringify(body) } : {}),
+    });
+    if (res.status === 404 && method === 'GET') return null;
+    const text = await res.text();
+    if (!res.ok) throw new Error(`openproject ${method} ${route}: HTTP ${res.status} ${text.slice(0, 300)}`);
+    return text ? JSON.parse(text) : null;
+  };
+  const q = (filters) => `filters=${encodeURIComponent(JSON.stringify(filters))}&pageSize=500`;
+  const named = async (route, name) => {
+    const hit = (await api('GET', route))._embedded.elements.find((e) => e.name === name);
+    if (!hit) throw new Error(`openproject: no ${route.slice(1)} named "${name}" — was the instance seeded?`);
+    return hit;
+  };
+
+  let project = await api('GET', '/projects/bench-project');
+  if (!project) {
+    project = await api('POST', '/projects', { name: 'Bench Project', identifier: 'bench-project' });
+    log('openproject: created project "Bench Project"');
+  }
+  const projectHref = `/api/v3/projects/${project.id}`;
+
+  const [assignee] = (await api('GET', `/users?${q([{ login: { operator: '=', values: ['bench-assignee'] } }])}`))._embedded.elements;
+  let assigneeId = assignee?.id;
+  if (!assigneeId) {
+    assigneeId = (await api('POST', '/users', {
+      login: 'bench-assignee', firstName: 'Bench', lastName: 'Assignee',
+      email: 'bench-assignee@example.com', password: 'Bench-Assignee-1234%', status: 'active',
+    })).id;
+    log('openproject: created user "Bench Assignee"');
+  }
+  const memberships = (await api('GET', `/memberships?${q([
+    { project: { operator: '=', values: [String(project.id)] } },
+    { principal: { operator: '=', values: [String(assigneeId)] } },
+  ])}`))._embedded.elements;
+  if (!memberships.length) {
+    const member = await named('/roles', 'Member');
+    await api('POST', '/memberships', {
+      _links: { project: { href: projectHref }, principal: { href: `/api/v3/users/${assigneeId}` }, roles: [{ href: `/api/v3/roles/${member.id}` }] },
+    });
+    log('openproject: made "Bench Assignee" a Member of Bench Project');
+  }
+
+  // Earlier runs' debris: every work package named "<something> Bench Work
+  // Package", open or closed (status operator "*" is "any").
+  const all = (await api('GET', `/projects/${project.id}/work_packages?${q([{ status: { operator: '*', values: [] } }])}`))._embedded.elements;
+  let removed = 0;
+  for (const wp of all) {
+    if (!/ Bench Work Package$/.test(wp.subject)) continue;
+    await api('DELETE', `/work_packages/${wp.id}`);
+    removed++;
+  }
+  log(removed ? `openproject: deleted ${removed} leftover bench work package(s)` : 'openproject: no leftover bench work packages');
+
+  // The seed work packages the read-only objective reports. Recreate any that
+  // are missing so every run reads one baseline.
+  const SEED = ['Seed: triage inbox', 'Seed: order missing parts', 'Seed: ship repaired device'];
+  const task = await named('/types', 'Task');
+  for (const subject of SEED) {
+    if (all.some((wp) => wp.subject === subject)) continue;
+    await api('POST', `/projects/${project.id}/work_packages`, { subject, _links: { type: { href: `/api/v3/types/${task.id}` } } });
+    log(`openproject: seeded work package "${subject}"`);
+  }
+}
+
 function resetAtelyr() {
   log('atelyr: restoring datastore baseline');
   execFileSync(process.execPath, [path.join(here, 'reset.mjs'), '--restore'], { stdio: 'inherit' });
@@ -210,6 +291,7 @@ const RESETS = {
   odoo: resetOdoo,
   grafana: resetGrafana,
   kanboard: resetKanboard,
+  openproject: resetOpenproject,
 };
 
 export const RESET_TARGETS = Object.keys(RESETS);

@@ -38,4 +38,11 @@ export const APP_DEFAULTS = {
     APP_EMAIL: 'admin',
     APP_PASSWORD: 'admin',
   },
+  // The password is pinned by the compose file's OPENPROJECT_SEED_ADMIN_USER_*
+  // settings, which also turn off the forced change on first sign-in.
+  openproject: {
+    APP_URL: 'http://127.0.0.1:8090/',
+    APP_EMAIL: 'admin',
+    APP_PASSWORD: 'bench-admin-pass',
+  },
 };

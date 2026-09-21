@@ -15,7 +15,7 @@
  * the compiler was willing to ship an artifact, not that the artifact passes.
  *
  * Usage:
- *   node bench/corpus-check.mjs [--apps rd,od,gr,kb] [--limit N] [--since fwrd50]
+ *   node bench/corpus-check.mjs [--apps rd,od,gr,kb,op] [--limit N] [--since fwrd50]
  *                               [--jobs 2] [--baseline <file>] [--out <file>]
  *                               [--at <commit>] [--no-fetch] [--compile-only]
  *                               [--quiet]
@@ -132,13 +132,13 @@ function untar(buf, destDir) {
 // enumerate
 // ---------------------------------------------------------------------------
 
-const APPS = ['rd', 'od', 'gr', 'kb'];
+const APPS = ['rd', 'od', 'gr', 'kb', 'op'];
 
 /** `results/fwrd69-hh6jhj` → { runid: 'fwrd69', app: 'rd', num: 69 }. */
 function parseBranch(name) {
   const short = name.replace(/^.*?results\//, '');
   const runid = short.split('-')[0];
-  const m = /^fw(rd|od|gr|kb)(\d*)$/.exec(runid);
+  const m = /^fw(rd|od|gr|kb|op)(\d*)$/.exec(runid);
   if (!m) return null;
   return { branch: `results/${short}`, short, runid, app: m[1], num: m[2] ? Number(m[2]) : 0 };
 }

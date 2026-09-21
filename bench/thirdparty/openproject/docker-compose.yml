@@ -1,0 +1,54 @@
+# Third-party benchmark target: OpenProject (real production app we did not write).
+#
+# Widens the matrix by CLIENT TECHNOLOGY, per the selection principle from the
+# 2026-08-24 shakedown: every defect so far came from DOM idioms we had not
+# seen, never from a task we had not tried. OpenProject is Angular inside a
+# Rails/Turbo/Primer shell — no matrix target runs Angular — and it carries
+# two idioms nothing else here does: click-to-edit fields that save in place
+# with no form Submit, and ng-select autocompletes. Its work packages are
+# minted `#<id>`s that appear in headings and urls, the shape most of the
+# odoo-era rules were written for, so it is where rules that are general and
+# rules that quietly fit odoo come apart.
+#
+# The all-in-one image: Postgres and memcached inside the one container, data
+# in two volumes. It is heavy (~4 GB RAM) and its first boot migrates and
+# seeds for several minutes; the healthcheck's start period allows for that.
+#
+#   up:    docker compose -f bench/thirdparty/openproject/docker-compose.yml up -d
+#   reset: node bench/reset-app.mjs --target openproject   (idempotent: seeds too)
+#   web:   http://127.0.0.1:8090   (admin / bench-admin-pass)
+#   api:   /api/v3, Basic apikey:<token> — token minted by seed.sh into the data volume
+services:
+  openproject:
+    image: openproject/openproject:17.8.0
+    ports:
+      - "127.0.0.1:8090:80"
+    environment:
+      # Fixed, because a bench box is thrown away; it only has to be stable
+      # across restarts. It must be SECRET_KEY_BASE (the OPENPROJECT_-prefixed
+      # name is ignored), and 17.x refuses to boot on the image's default
+      # "OVERWRITE_ME" — the worker exits in a loop and the healthcheck never
+      # passes. Public on purpose: this key protects nothing but a bench box.
+      SECRET_KEY_BASE: 565d35b70c82fe07052ba66a5888f29e0e46487ae38d4ff415e99d35a4a2c2dcf4a3c36d9026ac5d3b98cb052001f6a195ab9e93a4490fe65c751e77eec36f77
+      OPENPROJECT_HOST__NAME: 127.0.0.1:8090
+      OPENPROJECT_HTTPS: "false"
+      OPENPROJECT_DEFAULT__LANGUAGE: en
+      # The seeded admin is otherwise forced to change its password on first
+      # sign-in, which would make run 1 structurally different from every
+      # replay. Pin the password and turn the reset off.
+      OPENPROJECT_SEED_ADMIN_USER_PASSWORD: bench-admin-pass
+      OPENPROJECT_SEED_ADMIN_USER_PASSWORD_RESET: "false"
+      OPENPROJECT_SEED_ADMIN_USER_NAME: Bench Admin
+    volumes:
+      - openproject-pgdata:/var/openproject/pgdata
+      - openproject-assets:/var/openproject/assets
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -o /dev/null http://127.0.0.1:80/health_checks/default"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 600s
+
+volumes:
+  openproject-pgdata:
+  openproject-assets:

@@ -252,6 +252,19 @@ for WITH_TARGET in $WITH_TARGETS; do
       # The reset doubles as the idempotent seed (Bench Board + seed tasks).
       node bench/reset-app.mjs --target kanboard
       ;;
+    openproject)
+      # First boot migrates and seeds a database inside the container; ~90s
+      # on a warm machine, allow ten minutes for a cold cloud box.
+      for _ in $(seq 1 300); do
+        code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://127.0.0.1:8090/health_checks/default || true)"
+        [ "$code" = "200" ] && break; sleep 2
+      done
+      echo "    openproject health check: HTTP ${code:-unreachable}"
+      # seed.sh mints the fixed API token (skips it when present); the reset
+      # is the idempotent seed for everything else, as for kanboard.
+      bash bench/thirdparty/openproject/seed.sh
+      node bench/reset-app.mjs --target openproject
+      ;;
   esac
 done
 

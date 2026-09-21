@@ -55,13 +55,17 @@ if (!transcript) {
  * title, which removes exactly the value a stored skill's reference blank needs.
  */
 const LIVE_REFS = argv.includes('--live-refs');
-const REF_SHAPE = { repairdesk: /\bRD-\d{3,}\b/g, kanboard: /#\d+\b/g };
+const REF_SHAPE = { repairdesk: /\bRD-\d{3,}\b/g, kanboard: /#\d+\b/g, openproject: /#\d+\b/g };
 /** Identifiers the APP assigned in the recorded run, which a new run will not get. */
 const APP_ASSIGNED = {
   repairdesk: [[/\b(?:ticket )?RD-\d{3,}\b/g, `the ticket titled '${runid} RD Bench Ticket'`]],
   kanboard: [
     [/ \(task #\d+\)/g, ''],
     [/\btask #\d+ titled\b/g, 'the task titled'],
+  ],
+  openproject: [
+    [/ \(work package #\d+\)/g, ''],
+    [/\bwork package #\d+ titled\b/g, 'the work package titled'],
   ],
 };
 
