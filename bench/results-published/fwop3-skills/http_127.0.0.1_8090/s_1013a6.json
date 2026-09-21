@@ -1,0 +1,121 @@
+{
+ "id": "s_1013a6",
+ "origin": "http://127.0.0.1:8090",
+ "template": "On the detail page of work package {{v1}} ('{{v3}}') in {{v5}}, add a comment to the work package whose text includes '{{v4}}' (e.g. '{{v7}}'). Submit the comment. Then verify and report, reading from the page after a reload: (a) the comment text now shown under the work package's activity, (b) the work package's subject, type, description text, assignee, status and finish date exactly as displayed.",
+ "params": {
+  "v1": {
+   "example": "#43",
+   "usedIn": [],
+   "known": true,
+   "binding": "03-create.displayed_id"
+  },
+  "v2": {
+   "example": "43",
+   "usedIn": [],
+   "known": true,
+   "binding": "04-edit.url.p4"
+  },
+  "v3": {
+   "example": "fwop3-n3 Bench Work Package",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i3:subject"
+  },
+  "v4": {
+   "example": "fwop3-n3",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v5": {
+   "example": "Bench Project",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i1:bench_project_link"
+  },
+  "v7": {
+   "example": "Progress note for run fwop3-n3: work started",
+   "usedIn": [],
+   "known": true
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/{{v2}}/overview?query_props={\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1405"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "tab",
+      "name": "Activity"
+     },
+     {
+      "kind": "css",
+      "selector": "op-scrollable-tabs > div > div > ul > li:nth-of-type(2) > a"
+     },
+     {
+      "kind": "point",
+      "x": 1027,
+      "y": 356,
+      "w": 95.8,
+      "h": 38,
+      "role": "tab",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/{{v2}}/activity?query_props={\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}",
+    "addedContains": [
+     "- button \"Show everything\"",
+     "- button \"Newest at the bottom\"",
+     "- link \"{{*}} {{*}} PM\"",
+     "- button \"Add a comment. Type @ to notify people.\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_b2332d",
+    "step": 1
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-21T15:30:48.984Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_0bf3b3",
+  "index": 0,
+  "of": 6
+ },
+ "provenance": {
+  "session": "fwop3-n3",
+  "instruction": "On the detail page of work package #43 ('fwop3-n3 Bench Work Package') in Bench Project, add a comment to the work package whose text includes 'fwop3-n3' (e.g. 'Progress note for run fwop3-n3: work started'). Submit the comment. Then verify and report, reading from the page after a reload: (a) the comment text now shown under the work package's activity, (b) the work package's subject, type, description text, assignee, status and finish date exactly as displayed.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-21T15:30:48.984Z",
+  "transforms": [
+   {
+    "name": "unfreezeExpectations",
+    "at": 1,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- button \\\"Show everything\\\"\",\"- button \\\"Newest at the bottom\\\"\",\"- link \\\"Bench Admin\\\"\",\"- link \\\"{{*}} {{*}} PM\\\"\",\"- button \\\"Add a comment. Type @ to notify people.\\\"\"] → [\"- button \\\"Show everything\\\"\",\"- button \\\"Newest at the bottom\\\"\",\"- link \\\"{{*}} {{*}} PM\\\"\",\"- button \\\"Add a comment. Type @ to notify people.\\\"\"]"
+   }
+  ]
+ },
+ "revision": 1
+}

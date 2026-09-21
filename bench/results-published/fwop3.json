@@ -1,0 +1,577 @@
+{
+  "name": "fwop3",
+  "origin": "http://127.0.0.1:8090",
+  "startUrl": "http://127.0.0.1:8090/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to OpenProject at http://127.0.0.1:8090/login with username 'admin' and password 'bench-admin-pass'. Then navigate to the project named 'Bench Project' and open its work packages list. Report the subjects of all work packages whose subject starts with 'Seed:', exactly as shown on screen. Do not modify anything.",
+      "skill": "s_5ec48a",
+      "params": {
+        "v1": "admin",
+        "v2": "bench-admin-pass"
+      },
+      "outputs": [
+        "work_package_subjects",
+        "pagination_total",
+        "view",
+        "screenshot",
+        "project_menu_link",
+        "bench_project_link"
+      ],
+      "recorded": {
+        "work_package_subjects": "Seed: triage inbox (id 38), Seed: order missing parts (id 39), Seed: ship repaired device (id 40)",
+        "pagination_total": "(1 - 3/3)\\nYou are on the only page.",
+        "total_in_view": "3",
+        "view": "Default: All open",
+        "screenshot": "/root/.sitelooper/sessions/fwop3-n1/screenshots/shot-1790003710487.jpg",
+        "project_menu_link": "Project",
+        "bench_project_link": "Bench Project",
+        "url": "http://127.0.0.1:8090/projects/bench-project/work_packages"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages",
+      "outputEvidence": {
+        "work_package_subjects": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "pagination_total": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "total_in_view": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "view": {
+          "same": 2,
+          "differed": 0
+        },
+        "screenshot": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "project_menu_link": {
+          "same": 2,
+          "differed": 0
+        },
+        "bench_project_link": {
+          "same": 2,
+          "differed": 0
+        },
+        "url": {
+          "same": 2,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-add",
+      "instruction": "On the Bench Project work packages list page, adjust the filters so that ALL work packages are shown regardless of status (e.g. add/change the status filter to 'all' or open the 'All' view). Then report every work package subject that starts with 'Seed:', exactly as displayed, along with each one's type and status. Do not modify or edit any work package.",
+      "skill": "s_5cea75",
+      "params": {
+        "v1": "Bench Project"
+      },
+      "outputs": [
+        "pagination",
+        "filter_before",
+        "closed_status_check",
+        "screenshots"
+      ],
+      "recorded": {
+        "seed_work_package_rows": "[object Object], [object Object], [object Object]",
+        "total_work_packages": "3",
+        "pagination": "(1 - 3/3) You are on the only page.",
+        "active_filters_after_change": "none (query_props f:[])",
+        "filter_before": "Status = open (\"All open\" default view, 1 filter)",
+        "closed_status_check": "Status = closed -> \"No work packages to display. Either none have been created or all work packages are filtered out.\"",
+        "screenshots": "/root/.sitelooper/sessions/fwop3-n1/screenshots/shot-1790003787047.jpg, /root/.sitelooper/sessions/fwop3-n1/screenshots/shot-1790003818518.jpg",
+        "url": "http://127.0.0.1:8090/projects/bench-project/work_packages?query_props=%7B%22c%22%3A%5B%22id%22%2C%22subject%22%2C%22type%22%2C%22status%22%2C%22assignee%22%2C%22priority%22%5D%2C%22hi%22%3Atrue%2C%22g%22%3A%22%22%2C%22is%22%3Atrue%2C%22tv%22%3Afalse%2C%22hla%22%3A%5B%22status%22%2C%22priority%22%2C%22dueDate%22%5D%2C%22t%22%3A%22id%3Aasc%22%2C%22f%22%3A%5B%7B%22n%22%3A%22status%22%2C%22o%22%3A%22c%22%2C%22v%22%3A%5B%5D%7D%5D%2C%22ts%22%3A%22PT0S%22%2C%22pp%22%3A20%2C%22pa%22%3A1%7D"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages",
+      "outputEvidence": {
+        "seed_work_package_rows": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "total_work_packages": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "pagination": {
+          "same": 0,
+          "differed": 2
+        },
+        "active_filters_after_change": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "filter_before": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "closed_status_check": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "screenshots": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "url": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "03-create",
+      "instruction": "In the project 'Bench Project', create a new work package of type 'Task' with subject exactly '{{runid}} Bench Work Package' and a description containing the text '{{runid}}' (e.g. 'Bench work package created for run {{runid}}'). Save it. Then report the new work package's numeric ID as shown by the app (OpenProject displays it as #<number>), its type and its subject exactly as displayed on its detail page.",
+      "skill": "s_5bcfe2",
+      "params": {
+        "v1": "Bench Project",
+        "v4": "{{runid}} Bench Work Package",
+        "v3": "{{runid}}",
+        "v5": "Bench work package created for run {{runid}}"
+      },
+      "outputs": [
+        "work_package_id",
+        "displayed_id",
+        "subject",
+        "description",
+        "page_title",
+        "creation_alert",
+        "screenshots",
+        "ref"
+      ],
+      "recorded": {
+        "work_package_id": "41",
+        "displayed_id": "#41",
+        "type": "Task",
+        "subject": "fwop3-n1 Bench Work Package",
+        "description": "Bench work package created for run fwop3-n1",
+        "status": "New (per new-WP default; the detail header reported Type/Subject explicitly, status not explicitly read back)",
+        "page_title": "Task: fwop3-n1 Bench Work Package (#41) | Work Packages | Bench Project | OpenProject",
+        "creation_alert": "Successful creation.",
+        "screenshots": "/root/.sitelooper/sessions/fwop3-n1/screenshots/shot-1790003893593.jpg, /root/.sitelooper/sessions/fwop3-n1/screenshots/shot-1790003907284.jpg",
+        "ref": "fwop3-n1",
+        "url": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/41/overview?query_props=%7B%22c%22%3A%5B%22id%22%2C%22subject%22%2C%22type%22%2C%22status%22%2C%22assignee%22%2C%22priority%22%5D%2C%22hi%22%3Atrue%2C%22g%22%3A%22%22%2C%22is%22%3Atrue%2C%22tv%22%3Afalse%2C%22hla%22%3A%5B%22status%22%2C%22priority%22%2C%22dueDate%22%5D%2C%22t%22%3A%22id%3Aasc%22%2C%22f%22%3A%5B%5D%2C%22ts%22%3A%22PT0S%22%2C%22pp%22%3A20%2C%22pa%22%3A1%7D",
+        "url.p4": "41"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "outputEvidence": {
+        "work_package_id": {
+          "same": 0,
+          "differed": 2
+        },
+        "displayed_id": {
+          "same": 0,
+          "differed": 2
+        },
+        "type": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "subject": {
+          "same": 0,
+          "differed": 2
+        },
+        "description": {
+          "same": 0,
+          "differed": 2
+        },
+        "status": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "page_title": {
+          "same": 0,
+          "differed": 2
+        },
+        "creation_alert": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "screenshots": {
+          "same": 0,
+          "differed": 2
+        },
+        "ref": {
+          "same": 0,
+          "differed": 2
+        },
+        "url": {
+          "same": 0,
+          "differed": 2
+        },
+        "url.p4": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "04-edit",
+      "instruction": "On the detail page of work package {{03-create.displayed_id}} ('{{runid}} Bench Work Package') in Bench Project, edit fields in place: (1) set the Assignee to the user 'Bench Assignee' — this is an autocomplete, so type the name and actually pick the matching option from the dropdown that appears; (2) set the Status to 'In progress'; (3) set the Finish date to 2026-12-31. Each field saves on its own without a page-level Save button. Afterwards report the values now displayed on the page for Assignee, Status and Finish date, exactly as shown.",
+      "skill": "s_56eefa",
+      "params": {
+        "v1": "{{03-create.displayed_id}}",
+        "v3": "{{runid}} Bench Work Package",
+        "v5": "Bench Project",
+        "v7": "Bench Assignee",
+        "v8": "2026-12-31",
+        "v2": "{{03-create.url.p4}}",
+        "v4": "{{runid}}"
+      },
+      "outputs": [
+        "assignee",
+        "assignee_element",
+        "status",
+        "finish_date",
+        "date_field_text",
+        "work_package",
+        "datepicker_feedback",
+        "screenshot"
+      ],
+      "recorded": {
+        "assignee": "Bench Assignee",
+        "assignee_element": "button aria-label \"Assignee Bench Assignee: Edit\" (avatar \"BA\", title=\"Bench Assignee\")",
+        "status": "In progress",
+        "finish_date": "12/31/2026",
+        "date_field_text": "no start date - 12/31/2026",
+        "work_package": "#41 Task: fwop3-n1 Bench Work Package",
+        "save_alerts": "Successful update. (assignee), Successful update. (status), Successful update. (finish date)",
+        "datepicker_feedback": "Date picker updated. Scheduling mode: Manual, working days only, Finish date: 2026-12-31",
+        "screenshot": "/root/.sitelooper/sessions/fwop3-n1/screenshots/shot-1790003987928.jpg"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "outputEvidence": {
+        "assignee": {
+          "same": 2,
+          "differed": 0
+        },
+        "assignee_element": {
+          "same": 2,
+          "differed": 0
+        },
+        "status": {
+          "same": 2,
+          "differed": 0
+        },
+        "finish_date": {
+          "same": 2,
+          "differed": 0
+        },
+        "date_field_text": {
+          "same": 2,
+          "differed": 0
+        },
+        "work_package": {
+          "same": 0,
+          "differed": 2
+        },
+        "save_alerts": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "datepicker_feedback": {
+          "same": 2,
+          "differed": 0
+        },
+        "screenshot": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "05-add",
+      "instruction": "On the detail page of work package {{03-create.displayed_id}} ('{{runid}} Bench Work Package') in Bench Project, add a comment to the work package whose text includes '{{runid}}' (e.g. 'Progress note for run {{runid}}: work started'). Submit the comment. Then verify and report, reading from the page after a reload: (a) the comment text now shown under the work package's activity, (b) the work package's subject, type, description text, assignee, status and finish date exactly as displayed.",
+      "skill": "s_1013a6",
+      "params": {
+        "v1": "{{03-create.displayed_id}}",
+        "v2": "{{04-edit.url.p4}}",
+        "v3": "{{03-create.subject}}",
+        "v4": "{{runid}}",
+        "v5": "{{01-signin.bench_project_link}}",
+        "v7": "Progress note for run {{runid}}: work started"
+      },
+      "outputs": [
+        "work_package",
+        "comment_text",
+        "subject",
+        "type",
+        "description",
+        "assignee",
+        "status",
+        "finish_date",
+        "date_field_text",
+        "screenshots",
+        "ref"
+      ],
+      "recorded": {
+        "work_package": "#41 Task: fwop3-n1 Bench Work Package",
+        "comment_text": "Progress note for run fwop3-n1: work started",
+        "comment_meta": "created by Bench Admin on 09/21/2026 03:18 PM (Activity tab, after full page reload)",
+        "subject": "fwop3-n1 Bench Work Package",
+        "type": "TASK",
+        "description": "Bench work package created for run fwop3-n1",
+        "assignee": "Bench Assignee",
+        "status": "In progress",
+        "finish_date": "12/31/2026",
+        "date_field_text": "no start date - 12/31/2026",
+        "screenshots": "/root/.sitelooper/sessions/fwop3-n1/screenshots/shot-1790004063057.jpg, /root/.sitelooper/sessions/fwop3-n1/screenshots/shot-1790004074765.jpg",
+        "ref": "fwop3-n1",
+        "url": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/41/overview"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "outputEvidence": {
+        "work_package": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "comment_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_meta": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "subject": {
+          "same": 0,
+          "differed": 1
+        },
+        "type": {
+          "same": 1,
+          "differed": 0
+        },
+        "description": {
+          "same": 0,
+          "differed": 1
+        },
+        "assignee": {
+          "same": 1,
+          "differed": 0
+        },
+        "status": {
+          "same": 1,
+          "differed": 0
+        },
+        "finish_date": {
+          "same": 1,
+          "differed": 0
+        },
+        "date_field_text": {
+          "same": 1,
+          "differed": 0
+        },
+        "screenshots": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "06-open",
+      "instruction": "Verification only, no modifications: open work package {{03-create.displayed_id}} in Bench Project and read its full details page fresh. Report exactly what is displayed for: the numeric ID (as #number), subject, type, description, assignee, status, finish date, and the text of any comments listed in its activity. Then open the Bench Project work packages list (all statuses, no filters) and confirm the list of work package subjects shown, to verify the three 'Seed:' work packages are still present and unmodified (still status New).",
+      "skill": "s_189d51",
+      "params": {
+        "v1": "{{03-create.displayed_id}}",
+        "v3": "Bench Project",
+        "v2": "{{03-create.url.p4}}",
+        "v5": "{{runid}}"
+      },
+      "outputs": [
+        "wp41_id",
+        "wp41_subject",
+        "wp41_type",
+        "wp41_description",
+        "wp41_status",
+        "wp41_comments",
+        "list_pagination",
+        "screenshots",
+        "ref"
+      ],
+      "recorded": {
+        "wp41_id": "#41",
+        "wp41_subject": "fwop3-n1 Bench Work Package",
+        "wp41_type": "TASK",
+        "wp41_description": "Bench work package created for run fwop3-n1",
+        "wp41_assignee": "Bench Assignee (avatar BA)",
+        "wp41_status": "In progress",
+        "wp41_finish_date": "12/31/2026",
+        "wp41_date_field_text": "no start date - 12/31/2026",
+        "wp41_comments": "Progress note for run fwop3-n1: work started",
+        "wp41_comment_meta": "Bench Admin created this on 09/21/2026 03:18 PM",
+        "list_filter_badge": "Filter 0 (no filters applied)",
+        "list_pagination": "(1 - 4/4) You are on the only page.",
+        "work_package_list_rows": "[object Object], [object Object], [object Object], [object Object]",
+        "screenshots": "/root/.sitelooper/sessions/fwop3-n1/screenshots/shot-1790004120068.jpg, /root/.sitelooper/sessions/fwop3-n1/screenshots/shot-1790004133279.jpg",
+        "ref": "fwop3-n1",
+        "url": "http://127.0.0.1:8090/projects/bench-project/work_packages?query_props=%7B%22c%22%3A%5B%22id%22%2C%22subject%22%2C%22type%22%2C%22status%22%2C%22assignee%22%2C%22priority%22%5D%2C%22hi%22%3Atrue%2C%22g%22%3A%22%22%2C%22is%22%3Atrue%2C%22tv%22%3Afalse%2C%22hla%22%3A%5B%22status%22%2C%22priority%22%2C%22dueDate%22%5D%2C%22t%22%3A%22id%3Aasc%22%2C%22f%22%3A%5B%5D%2C%22ts%22%3A%22PT0S%22%2C%22pp%22%3A20%2C%22pa%22%3A1%7D"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages",
+      "outputEvidence": {
+        "wp41_id": {
+          "same": 0,
+          "differed": 2
+        },
+        "wp41_subject": {
+          "same": 0,
+          "differed": 2
+        },
+        "wp41_type": {
+          "same": 2,
+          "differed": 0
+        },
+        "wp41_description": {
+          "same": 0,
+          "differed": 2
+        },
+        "wp41_assignee": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "wp41_status": {
+          "same": 2,
+          "differed": 0
+        },
+        "wp41_finish_date": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "wp41_date_field_text": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "wp41_comments": {
+          "same": 0,
+          "differed": 2
+        },
+        "wp41_comment_meta": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "list_filter_badge": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "list_pagination": {
+          "same": 0,
+          "differed": 2
+        },
+        "work_package_list_rows": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "screenshots": {
+          "same": 0,
+          "differed": 2
+        },
+        "ref": {
+          "same": 0,
+          "differed": 2
+        },
+        "url": {
+          "same": 2,
+          "differed": 0
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwop3-n1",
+    "created": "2026-09-21T15:22:46.270Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "warnings": [
+    "contradicted-step: 06-open read screenshots \"/root/.sitelooper/sessions/fwop3-n1/screenshots/shot-1790004120068.jpg, /root/.sitelooper/sessions/fwop3-n1/screenshots/shot-1790004133279.jpg\" right after 05-add reported \"/root/.sitelooper/sessions/fwop3-n1/screenshots/shot-1790004063057.jpg, /root/.sitelooper/sessions/fwop3-n1/screenshots/shot-1790004074765.jpg\"; 05-add's change may not have landed and a later step may be retrying it. Re-record 05-add."
+  ],
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "total_in_view"
+      ]
+    },
+    {
+      "stepId": "02-add",
+      "outputs": [
+        "seed_work_package_rows",
+        "total_work_packages",
+        "active_filters_after_change"
+      ]
+    },
+    {
+      "stepId": "03-create",
+      "outputs": [
+        "type",
+        "status"
+      ]
+    },
+    {
+      "stepId": "04-edit",
+      "outputs": [
+        "save_alerts"
+      ]
+    },
+    {
+      "stepId": "05-add",
+      "outputs": [
+        "comment_meta"
+      ]
+    },
+    {
+      "stepId": "06-open",
+      "outputs": [
+        "wp41_assignee",
+        "wp41_finish_date",
+        "wp41_date_field_text",
+        "wp41_comment_meta",
+        "list_filter_badge",
+        "work_package_list_rows"
+      ]
+    }
+  ]
+}

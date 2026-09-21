@@ -1,0 +1,164 @@
+
+[sweep] run 1/3: fwop3-n1 (store: /home/user/sitelooper/bench/results/fwop3-skills)
+[harness] openproject: defaulting APP_URL
+[harness] openproject: defaulting APP_EMAIL
+[harness] openproject: defaulting APP_PASSWORD
+[reset] openproject: no leftover bench work packages
+[harness] openproject responded 302 at http://127.0.0.1:8090/
+stopped: fwop3-n1
+  flow "fwop3" saved: 6 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwop3.json
+  warning: note: 2 goal/report value(s) carrying a value this run made were slotted or dropped:
+  s_5cea75.reportTemplate.values.screenshots dropped (recorded literal of a value this run made)
+  s_5e728a.reportTemplate.values.screenshot dropped (recorded literal of a value this run made)
+  warning: note: 01-signin no longer publishes total_in_view — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-add no longer publishes seed_work_package_rows, total_work_packages, active_filters_after_change — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-create no longer publishes type, status — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-edit no longer publishes save_alerts — no replay reads it from the page and the recording showed no line to read
+  warning: note: 05-add no longer publishes comment_meta — no replay reads it from the page and the recording showed no line to read
+  warning: note: 06-open no longer publishes wp41_assignee, wp41_finish_date, wp41_date_field_text, wp41_comment_meta, list_filter_badge, work_package_list_rows — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-create: added a read for creation_alert to s_55440d (page.getByRole('alert', { name: 'Successful creation.', exact: true }); seen on the instruction's own page)
+  warning: warning: contradicted-step: 06-open read screenshots "/root/.sitelooper/sessions/fwop3-n1/screenshots/shot-1790004120068.jpg, /root/.sitelooper/sessions/fwop3-n1/screenshots/shot-1790004133279.jpg" right after 05-add reported "/root/.sitelooper/sessions/fwop3-n1/screenshots/shot-1790004063057.jpg, /root/.sitelooper/sessions/fwop3-n1/screenshots/shot-1790004074765.jpg"; 05-add's change may not have landed and a later step may be retrying it. Re-record 05-add.
+  warning: warning: 1 value(s) KNOWN to be this run's survived unslotted — a replay will act on or wait for the recording's value (non-fatal outside locators):
+  flow.warnings[0]: "fwop3-n1" (var) in "contradicted-step: 06-open read screenshots \"/root/.sitelooper/sessions/fwop3-n1/screenshots/shot-1790004120068.jpg, /root/.sitelooper/sessions/fwop3-n1/screens"
+  warning: warning: 136 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "Bench Project" (output) in "Sign in to OpenProject at http://127.0.0.1:8090/login with username 'admin' and password 'bench-admin-pass'. Then navigate to the project named 'Bench Project' "
+  flow.steps[0].instruction: "Project" (output) in "Sign in to OpenProject at http://127.0.0.1:8090/login with username 'admin' and password 'bench-admin-pass'. Then navigate to the project named 'Bench Project' "
+  flow.steps[1].instruction: "Bench Project" (output) in "On the Bench Project work packages list page, adjust the filters so that ALL work packages are shown regardless of status (e.g. add/change the status filter to "
+  flow.steps[1].instruction: "Project" (output) in "On the Bench Project work packages list page, adjust the filters so that ALL work packages are shown regardless of status (e.g. add/change the status filter to "
+  flow.steps[1].params.v1: "Bench Project" (output) in "Bench Project"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwop3-n1 stop=completed
+turns=8 wall=538.9s
+commands=7 cmdTime=393.2s cmdBytes=10188 timeouts=0
+orchestrator in=8390 cw=0 cr=24320 out=2542
+inner prompt=2727530 cached=2561408 completion=31275
+spend=$0.081 maxUsd=3
+learn: A_n=0 replayed=0/6 full=0 repaired=0 compiled=6 variants=0
+-> /home/user/sitelooper/bench/results/fwop3-n1-sitelooper-result.json
+
+fwop3-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — work package id 41 reported
+
+[sweep] run 2/3: fwop3-n2 (replay flow fwop3, no orchestrator)
+[reset] openproject: deleted 1 leftover bench work package(s)
+[sweep] fwop3-n2: 3 drift ticket(s) → fwop3-n2-drift.json
+  *** EXTRA MUTATION *** 2 comments carry the runid — the run commented more than once, so a step ran twice with the first attempt landing.
+
+fwop3-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 2 comment(s), 2 carrying the runid
+  obj 7: PASS — work package id 42 reported
+
+[sweep] run 3/3: fwop3-n3 (replay flow fwop3, no orchestrator)
+[reset] openproject: deleted 1 leftover bench work package(s)
+[sweep] fwop3-n3: 3 drift ticket(s) → fwop3-n3-drift.json
+  *** EXTRA MUTATION *** 2 comments carry the runid — the run commented more than once, so a step ran twice with the first attempt landing.
+
+fwop3-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 2 comment(s), 2 carrying the runid
+  obj 7: PASS — work package id 43 reported
+
+Learning sweep fwop3 (K=3)
+┌─────────┬───┬────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid      │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwop3-n1' │ '7/7'    │ 'completed' │ 8     │ 7    │ 0.081     │ 0    │ '0/6'        │ 539    │
+│ 1       │ 2 │ 'fwop3-n2' │ '7/7'    │ 'success'   │ 25    │ 6    │ 0.0358    │ 0.83 │ '6/6 (flow)' │ 289    │
+│ 2       │ 3 │ 'fwop3-n3' │ '7/7'    │ 'success'   │ 30    │ 6    │ 0.0177    │ 0.83 │ '6/6 (flow)' │ 189    │
+└─────────┴───┴────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8090
+  s_01bc19  validated    1 steps  3/3 (100%)
+           Sign in to OpenProject at http://127.0.0.1:8090/login with username '{{v1}}' and password '{{v2}}'. Then navig…
+  s_189d51  validated    1 steps  3/3 (100%)
+           Verification only, no modifications: open work package {{v1}} in {{v3}} and read its full details page fresh. …
+  s_20a3fc  validated    5 steps  3/3 (100%)
+           Verification only, no modifications: open work package {{v1}} in {{v3}} and read its full details page fresh. …
+  s_55440d  validated    5 steps  3/3 (100%)
+           In the project '{{v1}}', create a new work package of type 'Task' with subject exactly '{{v4}}' and a descript…
+  s_56eefa  validated   12 steps  3/3 (100%)
+           On the detail page of work package {{v1}} ('{{v3}}') in {{v5}}, edit fields in place: (1) set the Assignee to …
+  s_5749e4  validated    5 steps  3/3 (100%)
+           On the detail page of work package {{v1}} ('{{v3}}') in {{v5}}, add a comment to the work package whose text i…
+  s_5b3db7  demoted      1 steps  1/3 (33%)
+           On the detail page of work package {{v1}} ('{{v3}}') in {{v5}}, add a comment to the work package whose text i…
+  s_5bcfe2  validated    3 steps  3/3 (100%)
+           In the project '{{v1}}', create a new work package of type 'Task' with subject exactly '{{v4}}' and a descript…
+  s_5cea75  validated    8 steps  3/3 (100%)
+           On the {{v1}} work packages list page, adjust the filters so that ALL work packages are shown regardless of st…
+  s_5e728a  validated    3 steps  3/3 (100%)
+           Sign in to OpenProject at http://127.0.0.1:8090/login with username '{{v1}}' and password '{{v2}}'. Then navig…
+  s_5ec48a  validated    3 steps  3/3 (100%)
+           Sign in to OpenProject at http://127.0.0.1:8090/login with username '{{v1}}' and password '{{v2}}'. Then navig…
+  s_70f911  validated    4 steps  3/3 (100%)
+           In the project '{{v1}}', create a new work package of type 'Task' with subject exactly '{{v4}}' and a descript…
+  s_7efbf1  validated    2 steps  3/3 (100%)
+           Sign in to OpenProject at http://127.0.0.1:8090/login with username '{{v1}}' and password '{{v2}}'. Then navig…
+  s_87ae62  validated    3 steps  3/3 (100%)
+           Sign in to OpenProject at http://127.0.0.1:8090/login with username '{{v1}}' and password '{{v2}}'. Then navig…
+  s_b2332d  validated    1 steps  3/3 (100%)
+           On the detail page of work package {{v1}} ('{{v3}}') in {{v5}}, add a comment to the work package whose text i…
+  s_055983  provisional  1 steps  1/1 (100%)
+           On the detail page of work package {{v1}} ('{{v3}}') in {{v5}}, add a comment to the work package whose text i…
+  s_07ee28  provisional  4 steps  1/1 (100%)  variant of s_5b3db7
+           On the detail page of work package {{v1}} ('{{v3}}') in {{v5}}, add a comment to the work package whose text i…
+  s_1013a6  provisional  1 steps  1/1 (100%)
+           On the detail page of work package {{v1}} ('{{v3}}') in {{v5}}, add a comment to the work package whose text i…
+  s_14f90a  provisional  1 steps  1/1 (100%)  variant of s_5b3db7
+           On the detail page of work package {{v1}} ('{{v3}}') in {{v5}}, add a comment to the work package whose text i…
+  s_1e6b83  provisional  1 steps  1/1 (100%)  variant of s_5b3db7
+           On the detail page of work package {{v1}} ('{{v3}}') in {{v5}}, add a comment to the work package whose text i…
+  s_1f4027  provisional  1 steps  1/1 (100%)
+           On the detail page of work package {{v1}} ('{{v3}}') in {{v5}}, add a comment to the work package whose text i…
+  s_274d67  provisional  5 steps  1/1 (100%)
+           On the detail page of work package {{v1}} ('{{v3}}') in {{v5}}, add a comment to the work package whose text i…
+  s_3166c2  provisional  7 steps  1/1 (100%)
+           On the detail page of work package {{v1}} ('{{v3}}') in {{v5}}, add a comment to the work package whose text i…
+  s_47d2c0  provisional  5 steps  1/1 (100%)  variant of s_5b3db7
+           On the detail page of work package {{v1}} ('{{v3}}') in {{v5}}, add a comment to the work package whose text i…
+  s_500c86  provisional  1 steps  1/1 (100%)  variant of s_5b3db7
+           On the detail page of work package {{v1}} ('{{v3}}') in {{v5}}, add a comment to the work package whose text i…
+  s_7a19e9  provisional  8 steps  1/1 (100%)
+           On the detail page of work package {{v1}} ('{{v3}}') in {{v5}}, add a comment to the work package whose text i…
+  s_81c11c  provisional  1 steps  1/1 (100%)
+           On the detail page of work package {{v1}} ('{{v3}}') in {{v5}}, add a comment to the work package whose text i…
+  s_8c10c9  provisional  1 steps  1/1 (100%)  variant of s_5b3db7
+           On the detail page of work package {{v1}} ('{{v3}}') in {{v5}}, add a comment to the work package whose text i…
+  s_9e807e  provisional  1 steps  1/1 (100%)  variant of s_5b3db7
+           On the detail page of work package {{v1}} ('{{v3}}') in {{v5}}, add a comment to the work package whose text i…
+  s_9fbc0a  provisional  4 steps  1/1 (100%)
+           On the detail page of work package {{v1}} ('{{v3}}') in {{v5}}, add a comment to the work package whose text i…
+  s_a3d457  provisional  1 steps  1/1 (100%)
+           On the detail page of work package {{v1}} ('{{v3}}') in {{v5}}, add a comment to the work package whose text i…
+  s_adc0b1  provisional  5 steps  1/1 (100%)
+           On the detail page of work package {{v1}} ('{{v3}}') in {{v5}}, add a comment to the work package whose text i…
+  s_c0b574  provisional  8 steps  1/1 (100%)  variant of s_5b3db7
+           On the detail page of work package {{v1}} ('{{v3}}') in {{v5}}, add a comment to the work package whose text i…
+  s_c5ab5a  provisional  5 steps  1/1 (100%)  variant of s_5b3db7
+           On the detail page of work package {{v1}} ('{{v3}}') in {{v5}}, add a comment to the work package whose text i…
+  s_cea86e  provisional  1 steps  1/1 (100%)
+           On the detail page of work package {{v1}} ('{{v3}}') in {{v5}}, add a comment to the work package whose text i…
+  s_d07657  provisional  5 steps  1/1 (100%)
+           On the detail page of work package {{v1}} ('{{v3}}') in {{v5}}, add a comment to the work package whose text i…
+  s_d5b8a8  provisional  5 steps  1/1 (100%)
+           On the detail page of work package {{v1}} ('{{v3}}') in {{v5}}, add a comment to the work package whose text i…
+  s_e28e3e  provisional  1 steps  1/1 (100%)
+           On the detail page of work package {{v1}} ('{{v3}}') in {{v5}}, add a comment to the work package whose text i…
+  s_ec2e9e  provisional  1 steps  1/1 (100%)
+           On the detail page of work package {{v1}} ('{{v3}}') in {{v5}}, add a comment to the work package whose text i…
+store: /home/user/sitelooper/bench/results/fwop3-skills
+
+summary: /home/user/sitelooper/bench/results/fwop3-sweep.json

@@ -1,0 +1,206 @@
+{
+  "flow": "fwop3",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Signed in to Open\n          Project\n as 'admin' at http://127.0.0.1:8090/login, navigated to the 'Bench \n          Project\n' and opened its Work packages list (/projects/bench-project/work_packages, view \"Default: All open\"). The list has a single page showing 3 work packages total (pagination \"(1 - 3/3)\", \"You are on the only page.\"), and all three subjects start with \"Seed:\": \"Seed: triage inbox\", \"Seed: order missing parts\", \"Seed: ship repaired device\". Nothing was modified.",
+      "values": {
+        "view": "Default: All open",
+        "project_menu_link": "\n          Project\n",
+        "bench_project_link": "Bench Project"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-add",
+      "status": "success",
+      "summary": "On the Bench Project work packages list I opened the filter panel and removed the pre-applied \"Status = open\" filter, so the query now carries no filters (`\"f\":[]`) and shows work packages of every status; the list reports \"(1 - 3/3)\" — one page, 3 work packages total. All three subjects start with \"Seed:\" and each is Type \"Task\" with Status \"New\": \"Seed: triage inbox\" (id 38), \"Seed: order missing parts\" (id 39), \"Seed: ship repaired device\" (id 40). To prove nothing was hidden by status, I also temporarily added a Status = closed filter, which returned \"No work packages to display\" — so no closed work packages exist in this project — then removed it again. No work package was created, edited or deleted (no inline editing was triggered).",
+      "values": {
+        "pagination": "(1 - 3/3)\nYou are on the only page."
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_55440d; observed page_title=Task: fwop3-n3 Bench Work Package (#41) | Work Packages | Bench Project | OpenProject, screenshots=/root/.sitelooper/sessions/fwop3-n3/screenshots/shot-1790003893593.jpg, /root/.sitelooper/sessions/fwop3-n3/screenshots/shot-1790003907284.jpg, ref=fwop3-n3, work_package_id=43, displayed_id=#43, subject=fwop3-n3 Bench Work Package, description=Bench work package created for run fwop3-n3.",
+      "values": {
+        "page_title": "Task: fwop3-n3 Bench Work Package (#41) | Work Packages | Bench Project | OpenProject",
+        "screenshots": "/root/.sitelooper/sessions/fwop3-n3/screenshots/shot-1790003893593.jpg, /root/.sitelooper/sessions/fwop3-n3/screenshots/shot-1790003907284.jpg",
+        "ref": "fwop3-n3",
+        "work_package_id": "43",
+        "displayed_id": "#43",
+        "subject": "fwop3-n3 Bench Work Package",
+        "description": "Bench work package created for run fwop3-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "creation_alert"
+      ]
+    },
+    {
+      "id": "04-edit",
+      "status": "success",
+      "summary": "Replayed stored procedure s_56eefa; observed assignee=Bench Assignee, assignee_element=button aria-label \"Assignee Bench Assignee: Edit\" (avatar \"BA\", title=\"Bench Assignee\"), work_package=#43 Task: fwop3-n3 Bench Work Package, datepicker_feedback=Date picker updated. Scheduling mode: Manual, working days only, Finish date: 2026-12-31, screenshot=/root/.sitelooper/sessions/fwop3-n3/screenshots/shot-1790003987928.jpg, finish_date=12/31/2026, date_field_text=no start date - 12/31/2026.",
+      "values": {
+        "assignee": "Bench Assignee",
+        "assignee_element": "button aria-label \"Assignee Bench Assignee: Edit\" (avatar \"BA\", title=\"Bench Assignee\")",
+        "work_package": "#43 Task: fwop3-n3 Bench Work Package",
+        "datepicker_feedback": "Date picker updated. Scheduling mode: Manual, working days only, Finish date: 2026-12-31",
+        "screenshot": "/root/.sitelooper/sessions/fwop3-n3/screenshots/shot-1790003987928.jpg",
+        "finish_date": "12/31/2026",
+        "date_field_text": "no start date - 12/31/2026"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "status"
+      ]
+    },
+    {
+      "id": "05-add",
+      "status": "success",
+      "summary": "Comment added and submitted on work package #43 'fwop3-n3 Bench Work Package' in Bench Project; after re-loading the page, the comment is shown under Bench Admin's journal entry on the ACTIVITY tab with text exactly \"Progress note for run fwop3-n3: work started\" (09/21/2026 03:28 PM). The work package's own values, read from the details panel on the OVERVIEW tab after the reload, are reported in evidence.values: subject \"fwop3-n3 Bench Work Package\", type \"TASK\", description \"Bench work package created for run fwop3-n3\", assignee \"Bench Assignee\", status \"In progress\", Finish date \"12/31/2026\". No work package field was modified after submission.",
+      "values": {
+        "assignee": "Bench Assignee",
+        "assignee_avatar": "BA",
+        "comment_author": "Bench Admin",
+        "comment_text": "Progress note for run fwop3-n3: work started",
+        "comment_timestamp": "09/21/2026 03:28 PM",
+        "date_field_text": "no start date - 12/31/2026",
+        "description": "Bench work package created for run fwop3-n3",
+        "finish_date": "12/31/2026",
+        "journal_item_ids": "item-component-66, item-component-67 (two render nodes carrying the identical comment; presented as a single entry in the feed)",
+        "status": "In progress",
+        "subject": "fwop3-n3 Bench Work Package",
+        "type": "TASK",
+        "work_package_id": "#43",
+        "ref": "fwop3-n3"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_5b3db7 stopped at step 1 — after step 1 expected url http://127.0.0.1:8090/projects/bench-project/work_packages/details/43/relations but browser is at http://127.0.0.1:8090/projects/bench-project/work_packages/details/43/wikis",
+      "replayed": "0/1",
+      "repaired": false,
+      "turns": 30,
+      "repinned": "s_1013a6",
+      "repinParams": {
+        "v1": "{{03-create.displayed_id}}",
+        "v2": "{{04-edit.url.p4}}",
+        "v3": "{{03-create.subject}}",
+        "v4": "{{runid}}",
+        "v5": "{{01-signin.bench_project_link}}",
+        "v7": "Progress note for run {{runid}}: work started"
+      }
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_20a3fc; observed wp41_id=#43, wp41_description=Bench work package created for run fwop3-n3, wp41_comments=Progress note for run fwop3-n3: work started, screenshots=/root/.sitelooper/sessions/fwop3-n3/screenshots/shot-1790004120068.jpg, /root/.sitelooper/sessions/fwop3-n3/screenshots/shot-1790004133279.jpg, wp41_subject=fwop3-n3 Bench Work Package, wp41_status=In progress, list_pagination=(1 - 4/4)\nYou are on the only page., ref=fwop3-n3 Bench Work Package, wp41_type=TASK.",
+      "values": {
+        "wp41_id": "#43",
+        "wp41_description": "Bench work package created for run fwop3-n3",
+        "wp41_comments": "Progress note for run fwop3-n3: work started",
+        "screenshots": "/root/.sitelooper/sessions/fwop3-n3/screenshots/shot-1790004120068.jpg, /root/.sitelooper/sessions/fwop3-n3/screenshots/shot-1790004133279.jpg",
+        "wp41_subject": "fwop3-n3 Bench Work Package",
+        "wp41_status": "In progress",
+        "list_pagination": "(1 - 4/4)\nYou are on the only page.",
+        "ref": "fwop3-n3 Bench Work Package",
+        "wp41_type": "TASK"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 6,
+  "total": 6,
+  "repinned": 1,
+  "drift": 3,
+  "driftTickets": [
+    {
+      "flow": "fwop3",
+      "step": "01-signin",
+      "skill": "s_7efbf1",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByRole('button', { name: 'Close', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages"
+    },
+    {
+      "flow": "fwop3",
+      "step": "03-create",
+      "skill": "s_55440d",
+      "atStep": "5",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.getByRole('alert', { name: 'Successful creation.', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview?query_props={\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/43/overview?query_props=%7B%22c%22%3A%5B%22id%22%2C%22subject%22%2C%22type%22%2C%22status%22%2C%22assignee%22%2C%22priority%22%5D%2C%22hi%22%3Atrue%2C%22g%22%3A%22%22%2C%22is%22%3Atrue%2C%22tv%22%3Afalse%2C%22hla%22%3A%5B%22status%22%2C%22priority%22%2C%22dueDate%22%5D%2C%22t%22%3A%22id%3Aasc%22%2C%22f%22%3A%5B%5D%2C%22ts%22%3A%22PT0S%22%2C%22pp%22%3A20%2C%22pa%22%3A1%7D"
+    },
+    {
+      "flow": "fwop3",
+      "step": "05-add",
+      "skill": "s_5749e4",
+      "atStep": "5",
+      "key": "target",
+      "similarity": 0.997,
+      "missedLocator": "page.locator('aria-ref=e417')",
+      "fallbackUsed": "page.getByRole('tab', { name: 'Overview', exact: true })",
+      "fallbackIndex": 1,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/wikis",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/43/wikis"
+    }
+  ],
+  "wallMs": 188828,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 535876,
+    "completionTokens": 15967,
+    "cachedTokens": 491648
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 535876,
+      "completionTokens": 15967,
+      "cachedTokens": 491648
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
