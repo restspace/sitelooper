@@ -1,0 +1,13 @@
+error 07-report: it is pinned to s_752017 but the flow binds none of its slots, and no skill binds them from the instruction — the compiled spec would run with the recording's own values
+  why: replay refuses this step for the same reason ("the pinned skill s_752017 bound no params for this instruction") and hands it to the model; a compiled spec has no model, so it would type and look for the recorded run's record.
+  fix: sitelooper rerecord bench/results/flows/fwgr64.json 07-report
+
+nothing written: the error(s) above are about the RECORDING, not the app — a compiled spec would fail at a locator and read as drift.
+re-record the step(s) with the fix command above.
+  warning: 07-report: slot v1 has no flow binding — the recorded value is inlined
+  warning: 07-report: slot v2 has no flow binding — the recorded value is inlined
+  warning: 07-report: slot v3 has no flow binding — the recorded value is inlined
+  warning: 07-report: slot v6 has no flow binding — the recorded value is inlined
+  warning: 07-report: slot v7 has no flow binding — the recorded value is inlined
+  warning: 07-report: slot v8 has no flow binding — the recorded value is inlined
+sitelooper: refused: unbound-pin — see the diagnostics above
