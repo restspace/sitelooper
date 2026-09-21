@@ -1,0 +1,553 @@
+{
+  "name": "fwec2",
+  "origin": "http://127.0.0.1:8097",
+  "startUrl": "http://127.0.0.1:8097/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to EspoCRM with username 'admin' and password 'bench-admin-pass' and verify you reach the dashboard/home page. Report what page you land on.",
+      "skill": "s_23bd2a",
+      "params": {
+        "v1": "admin",
+        "v2": "bench-admin-pass"
+      },
+      "outputs": [
+        "final_url",
+        "page_title",
+        "landed_page",
+        "footer_text",
+        "login_form_present_after"
+      ],
+      "recorded": {
+        "final_url": "http://127.0.0.1:8097/",
+        "page_title": "EspoCRM",
+        "landed_page": "EspoCRM home dashboard (Stream / My Activities)",
+        "dashboard_headings": "H4: Stream, H4: My Activities",
+        "footer_text": "© 2026 EspoCRM, Inc.",
+        "login_form_present_after": "false (Username/Password textboxes and 'Log in' button removed from DOM)",
+        "url": "http://127.0.0.1:8097/"
+      },
+      "route": "http://127.0.0.1:8097/",
+      "outputEvidence": {
+        "final_url": {
+          "same": 2,
+          "differed": 0
+        },
+        "page_title": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "landed_page": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "dashboard_headings": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "footer_text": {
+          "same": 2,
+          "differed": 0
+        },
+        "login_form_present_after": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "url": {
+          "same": 2,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-report",
+      "instruction": "Navigate to the Opportunities list view (e.g. via the Opportunities link in the top navigation or by going to {{01-signin.url}}#Opportunity). Report the names of all opportunities whose name starts with 'Seed:' exactly as shown on the page, and also report the total number of records in the list.",
+      "skill": "s_cd00f9",
+      "params": {
+        "v1": "{{01-signin.url}}"
+      },
+      "outputs": [
+        "list_pagination",
+        "seed_opportunity_name_1",
+        "seed_opportunity_name_2",
+        "seed_opportunity_name_3",
+        "seed_opportunities_1",
+        "seed_opportunities_2",
+        "seed_opportunities_3"
+      ],
+      "recorded": {
+        "list_total": "3 (pagination control reads \"1–3 / 3\")",
+        "seed_count": "3 of 3 records",
+        "list_pagination": "1–3 / 3",
+        "seed_opportunity_name_1": "Seed: training package",
+        "seed_opportunity_name_2": "Seed: pilot expansion",
+        "seed_opportunity_name_3": "Seed: annual support renewal",
+        "seed_opportunities_1": "Seed: training package",
+        "seed_opportunities_2": "Seed: pilot expansion",
+        "seed_opportunities_3": "Seed: annual support renewal",
+        "url": "http://127.0.0.1:8097/#Opportunity"
+      },
+      "route": "http://127.0.0.1:8097/#Opportunity",
+      "outputEvidence": {
+        "list_total": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "seed_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "list_pagination": {
+          "same": 2,
+          "differed": 0
+        },
+        "seed_opportunity_name_1": {
+          "same": 2,
+          "differed": 0
+        },
+        "seed_opportunity_name_2": {
+          "same": 2,
+          "differed": 0
+        },
+        "seed_opportunity_name_3": {
+          "same": 2,
+          "differed": 0
+        },
+        "seed_opportunities_1": {
+          "same": 2,
+          "differed": 0
+        },
+        "seed_opportunities_2": {
+          "same": 2,
+          "differed": 0
+        },
+        "seed_opportunities_3": {
+          "same": 2,
+          "differed": 0
+        },
+        "url": {
+          "same": 2,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "03-create",
+      "instruction": "On the Opportunities list view, click 'Create Opportunity' and fill in the new opportunity form with these values: Name = '{{runid}} Bench Opportunity'; Account = 'Bench Account' (this is a link field — type it and pick the actual 'Bench Account' record from the autocomplete suggestions, do not just leave typed text); Stage = 'Negotiation'; Amount = 12500; Close Date = 2026-12-31; Assigned User = 'Bench Assignee' (also a link field — pick the actual user record from the suggestions, not just typed text); Description = 'Bench opportunity created for run {{runid}}'. Then save the record. IMPORTANT: there are other accounts and users with similar names, so verify the chosen values are exactly 'Bench Account' and 'Bench Assignee'. After saving, report the values shown on the record's detail page for Name, Account, Stage, Amount, Close Date, Assigned User and Description.",
+      "outputs": [
+        "record_saved",
+        "detail_page_values",
+        "form_values_unverified_as_saved",
+        "account_hidden_id",
+        "record_url",
+        "opportunity_id",
+        "Name",
+        "Account",
+        "Stage",
+        "Amount",
+        "Close Date",
+        "Assigned User",
+        "Description",
+        "account_link",
+        "assigned_user_link",
+        "run_id",
+        "account_id",
+        "assigned_user_id"
+      ],
+      "recorded": {
+        "record_saved": "NOT CONFIRMED — page still showed 'Opportunities › create' after clicking Save; no detail page observed",
+        "detail_page_values": "none — no saved record was opened",
+        "form_values_unverified_as_saved": "{\"Name\":\"fwec2-n1 Bench Opportunity\",\"Account\":\"Bench Account (hidden accountId=6ab1c1272cdb25b51)\",\"Stage\":\"Negotiation option selected from selectize list\",\"Amount\":\"12,500.00 as displayed in the form input\",\"Close Date\":\"2026-12-31\",\"Assigned User\":\"Bench Assignee (hidden assignedUserId set, non…",
+        "account_hidden_id": "6ab1c1272cdb25b51",
+        "record_url": "http://127.0.0.1:8097/#Opportunity/view/6ab1c1f146d221daf",
+        "opportunity_id": "6ab1c1f146d221daf",
+        "Name": "fwec2-n1 Bench Opportunity",
+        "Account": "Bench Account",
+        "Stage": "Negotiation",
+        "Amount": "$12,500.00",
+        "Close Date": "Dec 31 (year not displayed on the page)",
+        "Assigned User": "Bench Assignee",
+        "Description": "Bench opportunity created for run fwec2-n1",
+        "account_link": "#Account/view/6ab1c1272cdb25b51",
+        "assigned_user_link": "#User/view/6ab1c128a19d99ee9",
+        "run_id": "fwec2-n1",
+        "account_id": "6ab1c1272cdb25b51",
+        "assigned_user_id": "6ab1c128a19d99ee9",
+        "url": "http://127.0.0.1:8097/#Opportunity/view/6ab1c1f146d221daf",
+        "url.h2": "6ab1c1f146d221daf"
+      },
+      "route": "http://127.0.0.1:8097/#Opportunity/view/:id",
+      "skill": "s_cb58c7",
+      "params": {
+        "v1": "{{runid}}",
+        "v2": "{{runid}} Bench Opportunity",
+        "v3": "12500",
+        "v4": "2026-12-31",
+        "v5": "Bench opportunity created for run {{runid}}"
+      },
+      "outputEvidence": {
+        "record_saved": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "detail_page_values": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "form_values_unverified_as_saved": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "account_hidden_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "record_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "opportunity_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "Name": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "Account": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "Stage": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "Amount": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "Close Date": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "Assigned User": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "Description": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "account_link": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "assigned_user_link": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "run_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "account_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "assigned_user_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.h2": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "04-edit",
+      "instruction": "On the opportunity detail page for '{{runid}} Bench Opportunity', click the pencil/edit icon on the Close Date field to edit it in place, and read the exact value shown in the date input field (it should show the full date including year). Report that exact value, then close/cancel the inline edit without changing anything (or if it saves, make sure the value stays the same). Do not change the date.",
+      "skill": "s_985e5f",
+      "params": {
+        "v1": "{{runid}} Bench Opportunity",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "close_date_input_value",
+        "detail_page_close_date_before",
+        "run_id"
+      ],
+      "recorded": {
+        "close_date_input_value": "2026-12-31",
+        "detail_page_close_date_before": "Dec 31",
+        "detail_page_close_date_after_cancel": "Dec 31",
+        "inline_edit_state_after_cancel": "closed, no input element present",
+        "datepicker_shown": "December 2026",
+        "run_id": "fwec2-n1"
+      },
+      "route": "http://127.0.0.1:8097/#Opportunity/view/:id",
+      "outputEvidence": {
+        "close_date_input_value": {
+          "same": 1,
+          "differed": 0
+        },
+        "detail_page_close_date_before": {
+          "same": 1,
+          "differed": 0
+        },
+        "detail_page_close_date_after_cancel": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "inline_edit_state_after_cancel": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "datepicker_shown": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "run_id": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "05-find",
+      "instruction": "On the opportunity detail page for '{{runid}} Bench Opportunity' ({{03-create.url}}), find the Stream panel and post a new note with the text 'Bench stream post for run {{runid}}'. Submit the post and verify it appears in the Stream panel. Report the exact text of the post as displayed in the Stream and confirm it is visible.",
+      "skill": "s_37a6f3",
+      "params": {
+        "v1": "{{runid}} Bench Opportunity",
+        "v3": "{{03-create.url}}",
+        "v6": "Bench stream post for run {{runid}}",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "post_text",
+        "post_time",
+        "stream_panel_text",
+        "run_id"
+      ],
+      "recorded": {
+        "post_text": "Bench stream post for run fwec2-n1",
+        "post_author": "Admin",
+        "post_time": "23:48",
+        "post_visible": "true (non-zero size, in viewport, visible)",
+        "stream_panel_text": "Stream Admin Bench stream post for run fwec2-n1 23:48 Admin created this opportunity assigned to Bench Assignee Negotiation 23:46",
+        "run_id": "fwec2-n1",
+        "stream_post_element_size": "745x26"
+      },
+      "route": "http://127.0.0.1:8097/#Opportunity/view/:id",
+      "urlVariance": [
+        "6ab1c1f146d221daf",
+        "6ab1c2d11acff2a74"
+      ],
+      "outputEvidence": {
+        "post_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "post_author": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "post_time": {
+          "same": 0,
+          "differed": 1
+        },
+        "post_visible": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "stream_panel_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "run_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "stream_post_element_size": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        }
+      }
+    },
+    {
+      "id": "06-open",
+      "instruction": "Open the opportunity detail page at {{03-create.url}} and do a final read-only verification. Report: (1) the exact URL in the address bar, (2) the record's Name, (3) the Account name shown, (4) the Stage shown, (5) the Amount shown including currency symbol, (6) the Assigned User shown, (7) the Description text, (8) whether the Stream contains a post whose text includes '{{runid}}' and its exact text. Do not modify anything.",
+      "skill": "s_dbfc4b",
+      "params": {
+        "v1": "{{03-create.url}}",
+        "v4": "{{runid}}"
+      },
+      "outputs": [
+        "address_bar_url",
+        "Name",
+        "Account",
+        "Amount",
+        "Description",
+        "stream_post_exact_text",
+        "Close_Date_shown",
+        "run_id"
+      ],
+      "recorded": {
+        "address_bar_url": "http://127.0.0.1:8097/#Opportunity/view/6ab1c1f146d221daf",
+        "Name": "fwec2-n1 Bench Opportunity",
+        "Account": "Bench Account",
+        "Stage": "Negotiation",
+        "Amount": "$12,500.00",
+        "Assigned_User": "Bench Assignee",
+        "Description": "Bench opportunity created for run fwec2-n1",
+        "stream_contains_fwec2-n1_post": "yes",
+        "stream_post_exact_text": "Bench stream post for run fwec2-n1",
+        "stream_post_author_time": "Admin, 23:48",
+        "Close_Date_shown": "Dec 31",
+        "run_id": "fwec2-n1"
+      },
+      "outputEvidence": {
+        "address_bar_url": {
+          "same": 0,
+          "differed": 2
+        },
+        "Name": {
+          "same": 0,
+          "differed": 2
+        },
+        "Account": {
+          "same": 2,
+          "differed": 0
+        },
+        "Stage": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "Amount": {
+          "same": 2,
+          "differed": 0
+        },
+        "Assigned_User": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "Description": {
+          "same": 0,
+          "differed": 2
+        },
+        "stream_contains_fwec2-n1_post": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "stream_post_exact_text": {
+          "same": 0,
+          "differed": 2
+        },
+        "stream_post_author_time": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "Close_Date_shown": {
+          "same": 2,
+          "differed": 0
+        },
+        "run_id": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwec2-n1",
+    "created": "2026-09-21T23:48:57.322Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "dashboard_headings"
+      ]
+    },
+    {
+      "stepId": "02-report",
+      "outputs": [
+        "list_total",
+        "seed_count"
+      ]
+    },
+    {
+      "stepId": "04-edit",
+      "outputs": [
+        "detail_page_close_date_after_cancel",
+        "inline_edit_state_after_cancel",
+        "datepicker_shown"
+      ]
+    },
+    {
+      "stepId": "05-find",
+      "outputs": [
+        "post_author",
+        "post_visible",
+        "stream_post_element_size"
+      ]
+    },
+    {
+      "stepId": "06-open",
+      "outputs": [
+        "Stage",
+        "Assigned_User",
+        "stream_contains_fwec2-n1_post",
+        "stream_post_author_time"
+      ]
+    }
+  ]
+}
