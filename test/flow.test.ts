@@ -1147,6 +1147,117 @@ describe('work the recording did that the flow does not contain', () => {
     expect(flow.steps[0].adopted).toBeUndefined();
   });
 
+  // kanboard fwkb35, from its transcript (the instructions and reports are
+  // the run's own; the script was not published, so the urls, page texts and
+  // steps are the shape fwkb3's script records for the same pages). 03-verify's
+  // drag missed the run's task and displaced seed task #1 into Backlog, and it
+  // reported failure; 04-report, issued on task #1's page where 03-verify had
+  // ended, moved #1 back; 05-set moved the run's task properly. Adopted,
+  // 03-verify was a step with no procedure (the compiled spec throws there)
+  // and 04-report a repair with nothing to repair on every replay.
+  describe('a failed group whose successor undid it (fwkb35)', () => {
+    const KB = 'http://127.0.0.1:8085';
+    const board = `${KB}/?controller=BoardViewController&action=show&project_id=1`;
+    const task = (id: number): string => `${KB}/?controller=TaskViewController&action=show&task_id=${id}`;
+    const boardText = (backlog: string[], wip: string[]): string =>
+      [
+        '- heading "KB Bench Board"', '- link "Dashboard"', '- textbox "Filter": status:open', '- row ""', '- cell ""',
+        '- link "Add a new task"', '- link "Backlog"', '- cell "Ready"', '- link "Ready"', '- cell "Work in progress"',
+        '- link "Work in progress"', '- cell "Done"', '- link "Done"', '- row ""', '- cell ""',
+        ...backlog.flatMap((t) => [`- link "#${t.split(' ')[0]}"`, `- link "${t.slice(t.indexOf(' ') + 1)}"`]),
+        '- cell ""', '- cell ""',
+        ...wip.flatMap((t) => [`- link "#${t.split(' ')[0]}"`, `- link "${t.slice(t.indexOf(' ') + 1)}"`]),
+        '- cell ""',
+      ].join('\n');
+    const seeds = ['2 Seed: order missing parts', '3 Seed: ship repaired device'];
+    const S0 = boardText([...seeds, '4 fwkb35-n1 Bench Task'], ['1 Seed: triage inbox']);
+    const step = (tool: string, url?: string, added: string[] = []): RecordedEntry =>
+      ({ k: 'step', tool, args: { target: '@e1' }, locators: {}, ...(url ? { diff: { url, alerts: [], added } } : {}) }) as RecordedEntry;
+    const fixture = (o: { afterRepair?: string; touched?: number } = {}): RecordedEntry[] => [
+      { k: 'instruction', text: "Open http://127.0.0.1:8085/ and sign in with username 'admin' and password 'admin'. Then navigate to the board of the project named 'Bench Board' and report the names of the board's columns in their left-to-right order, exactly as displayed on the board page." },
+      step('goto'), step('fill', `${KB}/?controller=AuthController&action=login`), step('click', `${KB}/`), step('click', board),
+      { k: 'report', status: 'success', summary: 'columns read', values: { column_1: 'Backlog', column_2: 'Ready', column_3: 'Work in progress', column_4: 'Done' }, skill: 's_e5e299' },
+      { k: 'instruction', text: "On the 'Bench Board' project board, create a new task with title exactly 'fwkb35-n1 Bench Task' and a description that includes the text 'fwkb35-n1' (e.g. 'Bench task for run fwkb35-n1'). Leave it in the default/first column. Submit the form and verify the task was created, then report the task's numeric ID exactly as the app displays it (Kanboard shows it as #<number> on the task card and task page) and the column the task ended up in.", url: board, startText: boardText(seeds, ['1 Seed: triage inbox']), startDialect: 2 },
+      step('click', board, ['- textbox "Title"']), step('fill', board), step('click', board, ['- link "#4"', '- link "fwkb35-n1 Bench Task"']),
+      { k: 'report', status: 'success', summary: 'created #4', values: { task_id_displayed: '#4', task_title: 'fwkb35-n1 Bench Task', task_url: '/?controller=TaskViewController&action=show&task_id=4' }, skill: 's_8cbf22' },
+      { k: 'instruction', text: "On the 'Bench Board' project board, move the task titled 'fwkb35-n1 Bench Task' (task #4) so that it sits in the 'Work in progress' column. You can drag the card to that column or use the task's move action from its card menu or task page — whichever works. Do not modify or move any task whose title starts with 'Seed:'. After moving, reload/verify the board and report which column the task 'fwkb35-n1 Bench Task' is now in.", url: board, startText: S0, startDialect: 2 },
+      step('drag', board), step('read'), step('click', task(o.touched ?? 1), ['- heading "Seed: triage inbox"']), step('read'),
+      { k: 'report', status: 'failure', summary: "my drag moved '#1 Seed: triage inbox' out of 'Work in progress' into 'Backlog'", values: { task_4_title: 'fwkb35-n1 Bench Task', task_4_current_column: 'Backlog (NOT moved)', task_1_title: 'Seed: triage inbox', task_1_current_column: 'Backlog (unintentionally displaced from Work in progress)', board_ready: 'empty', move_position_url_pattern: '/?controller=TaskMovePositionController&action=show&task_id=<id>' } },
+      { k: 'instruction', text: "IMPORTANT repair step: On the 'Bench Board' project, the task '#1 Seed: triage inbox' was accidentally moved from the 'Work in progress' column into the 'Backlog' column. Restore it: move task #1 back to the 'Work in progress' column. Use the reliable route /?controller=TaskMovePositionController&action=show&task_id=1 (a page with a position/move form) rather than dragging, or drag carefully after re-reading the current board. Do not touch any other task. Then reload the board and report the current column of task #1 and the full list of task cards per column.", url: task(o.touched ?? 1), startText: '- heading "Seed: triage inbox"\n- link "Move position"', startDialect: 2 },
+      step('click', task(o.touched ?? 1), ['- heading "Move task to another position on the board"']), step('select', task(o.touched ?? 1)), step('click', task(o.touched ?? 1)), step('goto'), step('read'),
+      { k: 'report', status: 'success', summary: 'Repair done.', values: { task_1_title: 'Seed: triage inbox', task_1_current_column: 'Work in progress', work_in_progress: '#1 Seed: triage inbox', done: '(empty)' }, skill: 's_910777' },
+      { k: 'instruction', text: "On the 'Bench Board' project, move the task titled 'fwkb35-n1 Bench Task' (task #4) into the 'Work in progress' column. Use the reliable route /?controller=TaskMovePositionController&action=show&task_id=4 (a page with a position/move form: set Column to 'Work in progress' and Save) rather than dragging. Do not modify or move any task whose title starts with 'Seed:'. After saving, reload the board and report which column task #4 is in, plus the full list of task cards per column to confirm the seed tasks are untouched.", url: board, startText: o.afterRepair ?? S0, startDialect: 2 },
+      step('goto'), step('click', task(4), ['- heading "Move task to another position on the board"']), step('select', task(4)), step('click', task(4)), step('goto'), step('read'),
+      { k: 'report', status: 'success', summary: 'moved #4', values: { task_4_title: 'fwkb35-n1 Bench Task', task_4_column_name: 'Work in progress' }, skill: 's_2d7b70' },
+      { k: 'instruction', text: "On the task page for task #4 titled 'fwkb35-n1 Bench Task' (route /?controller=TaskViewController&action=show&task_id=4), set the task's due date to 2026-12-31. Use the task's edit/details form (e.g. 'Edit' or 'Edit task' from the task page or its dropdown menu) and set the due date field to 2026-12-31 (use the date picker or type it in the format the app expects, e.g. 2026-12-31 or 12/31/2026). Save the form, then reload the task page and report the due date exactly as displayed on the task page, plus the task title and column.", url: task(4), startText: '- heading "fwkb35-n1 Bench Task"', startDialect: 2 },
+      step('click', task(4), ['- textbox "Due Date"']), step('fill', task(4)), step('click', task(4), ['- listitem: "Due date: 12/31/2026 15:18"']),
+      { k: 'report', status: 'success', summary: 'due date set', values: { due_date_displayed: 'Due date: 12/31/2026 15:18', task_title: 'fwkb35-n1 Bench Task', column: 'Work in progress', status: 'open' }, skill: 's_877b7f' },
+      { k: 'instruction', text: "Final verification, read-only (do not change anything): Open the task page for task #4 (route /?controller=TaskViewController&action=show&task_id=4) and report exactly: (a) the task title, (b) the task's numeric ID as displayed (the #number shown), (c) the full description text, (d) the column the task is in, (e) the due date as displayed, (f) the text of all comments on the task. Then open the 'Bench Board' board page and report the board's column names left-to-right and which column contains the card 'fwkb35-n1 Bench Task'. Do not edit, move, or create anything.", url: task(4), startText: '- heading "fwkb35-n1 Bench Task"', startDialect: 2 },
+      step('read'),
+      { k: 'report', status: 'success', summary: 'verified', values: { task_title: 'fwkb35-n1 Bench Task' }, skill: 's_257568' },
+    ] as RecordedEntry[];
+    const build = (entries: RecordedEntry[]) => buildFlow(entries, { name: 'f', origin: KB, startUrl: `${KB}/`, vars: { runid: 'fwkb35-n1' }, session: 's' })!;
+
+    it('drops the failed attempt and the repair that put the board back, and says so', () => {
+      const entries = fixture();
+      const flow = build(entries);
+      expect(flow.steps.map((s) => [s.id, s.skill, Boolean(s.adopted)])).toEqual([
+        ['01-open', 's_e5e299', false],
+        ['02-create', 's_8cbf22', false],
+        ['03-set', 's_2d7b70', false],
+        ['04-set', 's_877b7f', false],
+        ['05-change', 's_257568', false],
+      ]);
+      // The seed task's title is nobody's output any more.
+      expect(flow.steps.some((s) => s.instruction.includes('task_1_title'))).toBe(false);
+      const warnings = unbankedMutations(entries);
+      expect(warnings).toHaveLength(1);
+      expect(warnings[0]).toContain("On the 'Bench Board' project board, move the task");
+      expect(warnings[0]).toContain('IMPORTANT repair step');
+      expect(warnings[0]).toContain('NEITHER is in the flow');
+    });
+
+    it('keeps adopting when the page after the repair does not read as it did before the failure', () => {
+      // The repair did not put #1 back: the pair does not net to nothing.
+      const entries = fixture({ afterRepair: boardText([...seeds, '1 Seed: triage inbox', '4 fwkb35-n1 Bench Task'], []) });
+      const flow = build(entries);
+      expect(flow.steps.map((s) => [s.id, Boolean(s.adopted)]).slice(2, 4)).toEqual([
+        ['03-verify', true],
+        ['04-report', false],
+      ]);
+      expect(unbankedMutations(entries)).toEqual([]);
+    });
+
+    it('keeps adopting when the pair reached a record the run had not shown before it', () => {
+      // Same board afterwards, but the pair worked on task 9, which that board
+      // never listed: made and removed, or made where the board cannot show it.
+      const entries = fixture({ touched: 9 });
+      const flow = build(entries);
+      expect(flow.steps.map((s) => [s.id, Boolean(s.adopted)]).slice(2, 4)).toEqual([
+        ['03-verify', true],
+        ['04-report', false],
+      ]);
+    });
+
+    it('keeps adopting when a later instruction is worded on something only the pair reported', () => {
+      const entries = fixture();
+      const i = entries.findIndex((e) => e.k === 'instruction' && e.text.startsWith('Final verification'));
+      entries[i] = { ...(entries[i] as Extract<RecordedEntry, { k: 'instruction' }>), text: 'Final verification, read-only: confirm the board still lists the column Backlog (unintentionally displaced from Work in progress).' };
+      const flow = build(entries);
+      expect(flow.steps.find((s) => s.id === '03-verify')?.adopted).toBe(true);
+    });
+
+    it('does not thread the verb "open" to a later report of status "open" when the task said "Open" first', () => {
+      // 08-change was exported as "Then {{07-set.status}} the 'Bench Board'
+      // board page": 01-open stated the word, capitalised, before any page
+      // showed it.
+      const flow = build(fixture());
+      const last = flow.steps[flow.steps.length - 1];
+      expect(last.instruction).toContain("Then open the 'Bench Board' board page");
+      expect(last.instruction).not.toContain('.status}}');
+    });
+  });
+
   it('reports an instruction whose report never arrived at all', () => {
     // A truncated recording: the daemon died mid-instruction. The work is just
     // as absent from the flow as a blocked one's.

@@ -6,7 +6,7 @@ import path from 'node:path';
 import type { LocatorCandidate, RecordedEntry, RecordedInstruction, RecordedReport, StepDiff } from '../daemon/recorder.js';
 import { rootDir } from '../shared/paths.js';
 import { urlParts, urlPattern } from './compile.js';
-import { mintedShape } from '../execution/url.js';
+import { mintedShape, urlShapeOf } from '../execution/url.js';
 import { idPositionPart, pathIdPart } from './ledger.js';
 import { MIN_ID_LEN, looksLikeId, tokenPattern } from './shape.js';
 import { statedPlainly } from '../spec/rethread.js';
@@ -611,9 +611,20 @@ export function buildFlow(
 function statedBeforeShown(entries: readonly RecordedEntry[], producer: RecordedInstruction, value: string): boolean {
   const end = entries.indexOf(producer);
   if (end <= 0 || value.length < 2) return false;
+  // Case aside, as shownBefore does. kanboard fwkb35 stated "open" only at the
+  // head of a sentence ("Open http://…" in 01-open, "Open the task page" in
+  // 06-open), 07-set reported `status = "open"`, and 08-change's "Then open
+  // the 'Bench Board' board page" was exported as "Then {{07-set.status}} the
+  // 'Bench Board' board page". A capital does not make the word something the
+  // author learned from the run. Over the published flows and scripts, what
+  // this adds is all of that kind: grafana's "bench" tag (fwgr7, fwgr17) and
+  // its new-panel default "Panel Title" (fwgr18, stated as "the panel
+  // title"), odoo's "Quotation" and "Cancel" — the task's words or the app's
+  // own. A value the run made cannot be stated, in any case, before it exists.
+  const lower = value.toLowerCase();
   for (let k = 0; k < end; k++) {
     const e = entries[k];
-    if (e.k !== 'instruction' || replaceToken(e.text, value, ' ') === e.text) continue;
+    if (e.k !== 'instruction' || replaceToken(e.text.toLowerCase(), lower, ' ') === e.text.toLowerCase()) continue;
     // The EARLIEST instruction that states it decides: if the run had already
     // shown the value by then, every later statement came after that too.
     return !shownBefore(entries, k, value);
@@ -730,6 +741,12 @@ interface Group {
   firstTool?: string;
   /** Set by resolveGroups: kept despite a non-success report — see there. */
   adopted?: boolean;
+  /**
+   * Set by resolveGroups on a non-success group that would have been adopted,
+   * but whose successor put back what it did (undoneByNext): the successor,
+   * dropped with it. unbankedMutations names the pair.
+   */
+  undoneBy?: Group;
   /** Every recorded page diff of this instruction's steps, in order (liveReadsFor reads the last page's). */
   diffs: StepDiff[];
 }
@@ -800,11 +817,13 @@ function samePage(a?: string, b?: string): boolean {
  *      the drop is correct);
  *   3. the next group did not throw that work away and do it again
  *      (redidFromScratch) — the same workaround, reached by a click instead
- *      of a `goto`.
+ *      of a `goto`;
+ *   4. the next group did not UNDO it (undoneByNext) — then neither group is
+ *      part of the path: the next is dropped with it.
  * Scanned right-to-left so a chain of continuations adopts as a chain.
  *
- * Marks `adopted` on the group (unbankedMutations reads it) and returns the
- * kept groups.
+ * Marks `adopted` (or `undoneBy`) on the group (unbankedMutations reads both)
+ * and returns the kept groups.
  */
 function resolveGroups(groups: Group[]): Group[] {
   const kept = groups.map((g) => g.report?.status === 'success');
@@ -816,6 +835,11 @@ function resolveGroups(groups: Group[]): Group[] {
     if (next.firstTool === 'goto') continue;
     if (!samePage(g.endUrl, next.instruction.url)) continue;
     if (redidFromScratch(g, next)) continue;
+    if (undoneByNext(groups, i)) {
+      g.undoneBy = next;
+      kept[i + 1] = false;
+      continue;
+    }
     g.adopted = true;
     kept[i] = true;
   }
@@ -952,6 +976,113 @@ function redidFromScratch(g: Group, next: Group): boolean {
     if (sameRoute(page, u) && sameRoute(u, page)) fresh = u;
   }
   return false;
+}
+
+/**
+ * Whether the group after `groups[i]` UNDID it: the page `groups[i]` was
+ * issued on reads exactly as it did before, the next time an instruction
+ * starts there, right after the successor — so whatever the failed group
+ * changed, its successor put back, and the two together changed nothing.
+ *
+ * kanboard fwkb35's recording: 03-verify was to move the run's task #4 to
+ * "Work in progress"; its drag missed, displaced the SEED task #1 into
+ * Backlog instead, and it reported failure. The orchestrator's next
+ * instruction, issued on the task page 03-verify had wandered to, was a
+ * repair — "move task #1 back to the 'Work in progress' column" — which
+ * succeeded, and the one after it (05-set) moved #4 properly. Rule 2 adopted
+ * 03-verify (it mutated, and the repair began where it ended), so the flow
+ * carried a failed attempt with no procedure — `spec` warned the compiled
+ * test throws there, and every replay ran it model-first (6-15 turns) —
+ * followed by a repair with nothing to repair ("No repair was needed" on
+ * n2). The recording's path is 01, 02, 05: the accident and its repair net
+ * to nothing, so neither is a step. This is redidFromScratch's sibling: there
+ * the successor discarded the work and did it again, here it reverses it.
+ *
+ * THE EVIDENCE is the page itself, before and after the pair. 03-verify
+ * started on the board with #1 in Work in progress and #2-#4 in Backlog;
+ * 05-set started on the same board url and saw the same board, line for
+ * line. Both snapshots must be whole pages (startTextComplete, which only
+ * dialect 2 records) at the same address, or they prove nothing. And the
+ * successor must itself have acted and succeeded: a group that changed
+ * nothing cannot have put anything back, and one that failed too is not a
+ * reversal anyone saw finish.
+ *
+ * WHAT IT MUST NOT CATCH, each checked from the recording, not the wording:
+ *  - a continuation (fwgr13/14/16, fwod20/27, fwod69-71's merge): its work
+ *    shows on the page it was aimed at — a saved dashboard, an order id in
+ *    the url — so the start page never reads the same again, or the next
+ *    instruction starts somewhere else;
+ *  - a pair that reached a record the run had not shown before it (an
+ *    id-like url part absent from the page the failed group started on and
+ *    from every earlier url): a record made and deleted, or
+ *    made on a page the start page does not list, is not "nothing" even if
+ *    the start page cannot tell. fwkb35's pair only reached task #1, whose
+ *    `#1` card was on that board all along;
+ *  - a pair whose report a later instruction quotes (a value no earlier
+ *    report, instruction or the start page had): the author learned
+ *    something from it that the rest of the flow is worded on, so it is not
+ *    without trace. fwkb35's later wording reuses only values 01-open and
+ *    02-create had already reported.
+ * Anything short of that keeps today's adoption: a wrongly dropped step loses
+ * the run's work silently, while a wrongly kept one is only slow.
+ */
+function undoneByNext(groups: readonly Group[], i: number): boolean {
+  const g = groups[i];
+  const next = groups[i + 1];
+  const before = g.instruction;
+  const after = groups[i + 2]?.instruction;
+  if (!after || !next.mutations || next.report?.status !== 'success') return false;
+  if (!before.startText || before.startText !== after.startText) return false;
+  // Only a snapshot that SAYS whether it is whole: dialect-1 recordings wrote
+  // no startTextComplete and cut the page at a smaller budget. fwod20's shows
+  // why that matters: its cancel instructions started on a sales order under
+  // one Cancel dialog and then under two stacked ones, and the two capped
+  // snapshots of the form beneath read the same.
+  if (before.startDialect !== 2 || after.startDialect !== 2) return false;
+  if (before.startTextComplete === false || after.startTextComplete === false) return false;
+  // The WHOLE address, query included: urlParts leaves the query out as view
+  // state, and kanboard keeps every page in it (`?controller=…&task_id=1`), so
+  // by urlParts alone its board and a task page are the same place.
+  const address = (u: string): Map<string, string> =>
+    new Map([...urlParts(u).map((p): [string, string] => [p.label, p.value]), ...[...(urlShapeOf(u)?.query ?? [])].map(([k, v]): [string, string] => [`?${k}`, v])]);
+  const sameAddress = (a?: string, b?: string): boolean => {
+    if (!samePage(a, b)) return false;
+    const pa = address(a!);
+    const pb = address(b!);
+    return pa.size === pb.size && [...pa].every(([k, v]) => pb.get(k) === v);
+  };
+  if (!sameAddress(before.url, after.url)) return false;
+  const has = (text: string | undefined, value: string): boolean => Boolean(text) && replaceToken(text!, value, ' ') !== text;
+  const earlier = groups.slice(0, i);
+  const urlsBefore = new Set(
+    [...earlier.flatMap((h) => [h.instruction.url, ...h.diffs.map((d) => d.url)]), before.url]
+      .filter((u): u is string => Boolean(u))
+      .flatMap((u) => [...address(u).values()]),
+  );
+  const trail = [before.url, ...g.diffs.map((d) => d.url), next.instruction.url, ...next.diffs.map((d) => d.url)].filter((u): u is string => Boolean(u));
+  // What landedParts counts, over the whole address, plus an id-like value
+  // swapped for another at the same place (task_id=1 → task_id=9), which
+  // landsRecord deliberately does not count as a landing (odoo's `action=`
+  // changes that way between menus) but which here may be another record.
+  for (let k = 1; k < trail.length; k++) {
+    const was = address(trail[k - 1]);
+    for (const [label, value] of address(trail[k])) {
+      const prior = was.get(label);
+      if (prior === value || !mintedShape(value)) continue;
+      if (prior !== undefined && mintedShape(prior) && !/\d/.test(value)) continue;
+      if (!urlsBefore.has(value) && !has(before.startText, value)) return false;
+    }
+  }
+  const known = (v: string): boolean =>
+    has(before.startText, v) ||
+    has(before.text, v) ||
+    earlier.some((h) => has(h.instruction.text, v) || Object.values(h.report?.values ?? {}).some((x) => typeof x === 'string' && foldValue(x) === foldValue(v)));
+  const later = groups.slice(i + 2);
+  for (const v of [...Object.values(g.report?.values ?? {}), ...Object.values(next.report?.values ?? {})]) {
+    if (typeof v !== 'string' || v.length < 2 || known(v)) continue;
+    if (later.some((h) => has(h.instruction.text, v))) return false;
+  }
+  return true;
 }
 
 /**
@@ -1239,9 +1370,20 @@ export function unbankedMutations(entries: RecordedEntry[]): string[] {
   const groups = groupByInstruction(entries);
   resolveGroups(groups); // marks `adopted` in place
   const out: string[] = [];
+  const quote = (text: string): string => `"${text.slice(0, 70)}${text.length > 70 ? '…' : ''}"`;
   for (const g of groups) {
     if (g.report?.status === 'success' || g.adopted || !g.mutations) continue;
     const text = g.instruction.text;
+    // The pair undoneByNext drops: the successor reported success, so this is
+    // the only place its absence from the flow is said.
+    if (g.undoneBy) {
+      out.push(
+        `instruction ${quote(text)} ran ${g.mutations} state-changing step(s) and reported ${g.report!.status}; ` +
+          `the next instruction ${quote(g.undoneBy.instruction.text)} put back what it changed (the page it started on ` +
+          `read the same afterwards) — the pair nets to nothing, so NEITHER is in the flow`,
+      );
+      continue;
+    }
     out.push(
       `instruction "${text.slice(0, 70)}${text.length > 70 ? '…' : ''}" ran ${g.mutations} state-changing step(s) ` +
         `but reported ${g.report ? g.report.status : 'nothing'} — its work is NOT in the flow`,
