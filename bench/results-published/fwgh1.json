@@ -1,0 +1,206 @@
+{
+  "name": "fwgh1",
+  "origin": "http://127.0.0.1:8099",
+  "startUrl": "http://127.0.0.1:8099/ghost/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "In Ghost admin at http://127.0.0.1:8099/ghost/, sign in with admin@bench.local / bench-admin-pass. Go to Posts and report the titles of published posts whose title starts with 'Seed:', exactly as shown.",
+      "skill": "s_abb0a5",
+      "params": {
+        "v1": "http://127.0.0.1:8099/ghost/",
+        "v2": "admin@bench.local",
+        "v3": "bench-admin-pass"
+      },
+      "outputs": [
+        "current_url",
+        "published_seed_titles_1",
+        "published_seed_titles_2",
+        "published_seed_titles_3"
+      ],
+      "recorded": {
+        "count_published_seed_posts": "3",
+        "post_ids": "6ab1b8f4f1466900016043eb, 6ab1b8f4f1466900016043f0, 6ab1b8f4f1466900016043f5",
+        "current_url": "about:blank",
+        "published_seed_titles_1": "Seed: Welcome to the bench",
+        "published_seed_titles_2": "Seed: Release notes for September",
+        "published_seed_titles_3": "Seed: House style guide",
+        "url": "http://127.0.0.1:8099/ghost/#/posts/"
+      },
+      "route": "http://127.0.0.1:8099/ghost/#/posts/",
+      "outputEvidence": {
+        "count_published_seed_posts": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "post_ids": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "current_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "published_seed_titles_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "published_seed_titles_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "published_seed_titles_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "In the Ghost admin, create a new post titled '{{runid}} Bench Post'. In the body editor type a single paragraph containing the runid '{{runid}}' (e.g. 'Bench test post for {{runid}}.'). Then in the post's settings panel: select the EXISTING tag 'Bench News' from the tag field's suggestions (do not create a new tag; 'Bench Newsletter' also exists but don't use it), set a custom excerpt containing '{{runid}}', set the publish date to 2026-09-01, and report the URL slug shown in settings. Save. Then complete the publish flow so the post is published (not scheduled — if the date is in the future, still ensure it ends up published, e.g. set the date but also continue the publish confirmation until status is Published). Verify afterwards that the post settings show tag Bench News only, the excerpt, publish date 2026-09-01, and report the exact slug.",
+      "outputs": [
+        "post_title",
+        "slug",
+        "tag",
+        "excerpt",
+        "body",
+        "status",
+        "publish_date_verified",
+        "published_confirmation",
+        "publish_date",
+        "publish_time",
+        "post_status",
+        "post_list_row",
+        "publish_time_in_list",
+        "ref"
+      ],
+      "recorded": {
+        "post_title": "fwgh1-n1 Bench Post",
+        "slug": "fwgh1-n1-bench-post",
+        "tag": "Bench News",
+        "excerpt": "Custom excerpt for fwgh1-n1.",
+        "body": "Bench test post for fwgh1-n1.",
+        "status": "Published",
+        "publish_date_verified": "NO - could not set/confirm 2026-09-01; flow min-date blocks past dates and 'live now' uses current time",
+        "published_confirmation": "Boom! It's out there. That's 4 posts published.",
+        "publish_date": "2026-09-01",
+        "publish_time": "00:00 UTC",
+        "post_status": "Published (\"Published\" status link present; \"Unpublish\" button available; \"Update\" disabled = no pending changes; string \"scheduled\" appears nowhere on the page)",
+        "post_list_row": "fwgh1-n1 Bench Post — 01 Sep 2026 — Published",
+        "publish_time_in_list": "00:00",
+        "ref": "fwgh1-n1",
+        "url": "http://127.0.0.1:8099/ghost/#/editor/post/6ab1b947f1466900016043ff",
+        "url.h2": "6ab1b947f1466900016043ff"
+      },
+      "route": "http://127.0.0.1:8099/ghost/#/editor/post/:id",
+      "outputEvidence": {
+        "post_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "slug": {
+          "same": 0,
+          "differed": 1
+        },
+        "tag": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "excerpt": {
+          "same": 0,
+          "differed": 1
+        },
+        "body": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "status": {
+          "same": 1,
+          "differed": 0
+        },
+        "publish_date_verified": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "published_confirmation": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "publish_date": {
+          "same": 1,
+          "differed": 0
+        },
+        "publish_time": {
+          "same": 1,
+          "differed": 0
+        },
+        "post_status": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "post_list_row": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "publish_time_in_list": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.h2": {
+          "same": 0,
+          "differed": 1
+        }
+      },
+      "skill": "s_91611d",
+      "params": {
+        "v1": "{{runid}}",
+        "v2": "{{runid}} Bench Post",
+        "v3": "Bench test post for {{runid}}."
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwgh1-n1",
+    "created": "2026-09-21T23:12:30.461Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "count_published_seed_posts",
+        "post_ids"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,89 @@
+{
+  "flow": "fwgh1",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Signed in to Ghost admin at http://127.0.0.1:8099/ghost/ as admin@bench.local and opened the Posts list. The list shows exactly 3 posts (no pagination/scroll beyond the viewport), each marked \"Published\" and each title starting with \"Seed:\".",
+      "values": {
+        "current_url": "http://127.0.0.1:8099/ghost/#/signin",
+        "published_seed_titles_1": "Seed: Welcome to the bench",
+        "published_seed_titles_2": "Seed: Release notes for September",
+        "published_seed_titles_3": "Seed: House style guide"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Task complete. Created and published the post \"fwgh1-n2 Bench Post\" in Ghost admin. Typed the body paragraph \"Bench test post for fwgh1-n2.\", selected the existing tag \"Bench News\" from the tag field's suggestions (Bench Newsletter left untouched), set excerpt \"Bench test excerpt for fwgh1-n2.\" and publish date 2026-09-01 (00:00 UTC), then completed the publish flow (Publish → Continue, final review → \"Publish post, right now\"); Ghost confirmed \"Boom! It's out there. That's 4 posts published.\" Re-opened the post in the editor and verified from the live page: status Published (top bar \"Published / View post\" with Unpublish available), settings show the single tag Bench News, the excerpt \"Bench test excerpt for fwgh1-n2.\", publish date 2026-09-01 00:00 UTC, and post URL slug fwgh1-n2-bench-post (127.0.0.1:8099/fwgh1-n2-bench-post/). Note the date 2026-09-01 fell in the past relative to the site clock (the default new-post date was 2026-09-21), so Ghost published it immediately rather than scheduling it.",
+      "values": {
+        "author": "Bench Admin",
+        "body_paragraph": "Bench test post for fwgh1-n2.",
+        "excerpt": "Bench test excerpt for fwgh1-n2.",
+        "post_title": "fwgh1-n2 Bench Post",
+        "post_url": "127.0.0.1:8099/fwgh1-n2-bench-post/",
+        "publish_confirmation": "Boom! It's out there. That's 4 posts published.",
+        "publish_date": "2026-09-01",
+        "publish_time": "00:00 UTC",
+        "slug": "fwgh1-n2-bench-post",
+        "status": "Published",
+        "tags": "Bench News",
+        "ref": "fwgh1-n2",
+        "ref_2": "127.0.0.1"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "the flow step has no pinned skill",
+      "replayed": null,
+      "repaired": false,
+      "turns": 18,
+      "repinned": "s_91611d",
+      "repinParams": {
+        "v1": "{{runid}}",
+        "v2": "{{runid}} Bench Post",
+        "v3": "Bench test post for {{runid}}."
+      },
+      "unreported": [
+        "tag",
+        "body",
+        "post_list_row",
+        "publish_time_in_list"
+      ]
+    }
+  ],
+  "passed": 2,
+  "total": 2,
+  "repinned": 1,
+  "drift": 0,
+  "wallMs": 66528,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 208646,
+    "completionTokens": 4732,
+    "cachedTokens": 188288
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 208646,
+      "completionTokens": 4732,
+      "cachedTokens": 188288
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

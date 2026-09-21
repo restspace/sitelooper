@@ -1,0 +1,97 @@
+{
+ "id": "s_abb0a5",
+ "origin": "http://127.0.0.1:8099",
+ "template": "In Ghost admin at {{v1}}, sign in with {{v2}} / {{v3}}. Go to Posts and report the titles of published posts whose title starts with 'Seed:', exactly as shown.",
+ "params": {
+  "v1": {
+   "example": "http://127.0.0.1:8099/ghost/",
+   "usedIn": [
+    3
+   ]
+  },
+  "v2": {
+   "example": "admin@bench.local",
+   "usedIn": []
+  },
+  "v3": {
+   "example": "bench-admin-pass",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8099/ghost/"
+ },
+ "steps": [
+  {
+   "tool": "wait_for",
+   "args": {
+    "target": "body",
+    "state": "visible",
+    "timeout_ms": 15000
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "body"
+     },
+     {
+      "kind": "css",
+      "selector": "html > body"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 450,
+      "w": 1264,
+      "h": 884,
+      "role": null,
+      "tag": "body",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "what": "url",
+    "label": "current_url"
+   },
+   "locators": {},
+   "label": "current_url"
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {}
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-21T23:09:51.795Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4,
+  "lastUsed": "2026-09-21T23:13:50.047Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_499ec6",
+  "index": 0,
+  "of": 4
+ },
+ "provenance": {
+  "session": "fwgh1-n1",
+  "instruction": "In Ghost admin at http://127.0.0.1:8099/ghost/, sign in with admin@bench.local / bench-admin-pass. Go to Posts and report the titles of published posts whose title starts with 'Seed:', exactly as shown.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-21T23:09:51.795Z"
+ },
+ "revision": 3
+}
