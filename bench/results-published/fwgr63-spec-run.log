@@ -1,0 +1,13 @@
+[spec-replay] resetting grafana
+[reset] grafana: deleted leftover dashboard "fwgr63-n3 Bench Dashboard" (200)
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile bench/results/flows/fwgr63.json --out /home/user/sitelooper/bench/results/fwgr63-spec-spec-tmp --overwrite-spec
+error 05-open: slot v5 is bound to {{03-open.button_save_dashboard}}, and nothing has ever published button_save_dashboard
+  why: 03-open's only source for button_save_dashboard is a read the flow export synthesized from the value the recording reported — no run has resolved it or read a value back through it. 05-open types or locates by v5, so the artifact would stop here on every run, part-way through the flow and with everything earlier already done.
+  fix: re-record 03-open so it reads button_save_dashboard from an element (`sitelooper rerecord <flow file> 03-open`), or take {{03-open.button_save_dashboard}} out of 05-open's v5
+
+nothing written: the error(s) above are about the RECORDING, not the app — a compiled spec would fail at a locator and read as drift.
+re-record the step(s) with the fix command above.
+  warning: 03-open: step 23 (wait_for hidden) acts on one element through a single unindexed candidate, page.locator('[role="dialog"][aria-label="Drawer title Save dashboard"]') — never proved to identify one element on the page that produced it, so this run acts on whatever it matches first; re-record the step (sitelooper rerecord) to derive a full chain for it
+sitelooper: refused: unsourced-ref — see the diagnostics above
+[spec-replay] fwgr63-spec: not compilable — result written (exit 2)
