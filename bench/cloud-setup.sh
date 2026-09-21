@@ -265,6 +265,29 @@ for WITH_TARGET in $WITH_TARGETS; do
       bash bench/thirdparty/openproject/seed.sh
       node bench/reset-app.mjs --target openproject
       ;;
+    gitea)
+      # Single small container on SQLite; boots in seconds.
+      for _ in $(seq 1 60); do
+        code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://127.0.0.1:8095/api/healthz || true)"
+        [ "$code" = "200" ] && break; sleep 2
+      done
+      echo "    gitea health check: HTTP ${code:-unreachable}"
+      # seed.sh creates the admin (skips it when present); the reset is the
+      # idempotent seed for everything else, as for kanboard.
+      bash bench/thirdparty/gitea/seed.sh
+      node bench/reset-app.mjs --target gitea
+      ;;
+    vikunja)
+      # Single small container on SQLite; migrates and boots in seconds.
+      for _ in $(seq 1 60); do
+        code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://127.0.0.1:8096/api/v1/info || true)"
+        [ "$code" = "200" ] && break; sleep 2
+      done
+      echo "    vikunja api info: HTTP ${code:-unreachable}"
+      # No seed.sh: the reset registers the bench user when it cannot sign
+      # in, and is the idempotent seed for everything else, as for kanboard.
+      node bench/reset-app.mjs --target vikunja
+      ;;
   esac
 done
 

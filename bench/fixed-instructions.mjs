@@ -55,7 +55,7 @@ if (!transcript) {
  * title, which removes exactly the value a stored skill's reference blank needs.
  */
 const LIVE_REFS = argv.includes('--live-refs');
-const REF_SHAPE = { repairdesk: /\bRD-\d{3,}\b/g, kanboard: /#\d+\b/g, openproject: /#\d+\b/g };
+const REF_SHAPE = { repairdesk: /\bRD-\d{3,}\b/g, kanboard: /#\d+\b/g, openproject: /#\d+\b/g, gitea: /#\d+\b/g, vikunja: /\bBENCH-\d+\b/g };
 /** Identifiers the APP assigned in the recorded run, which a new run will not get. */
 const APP_ASSIGNED = {
   repairdesk: [[/\b(?:ticket )?RD-\d{3,}\b/g, `the ticket titled '${runid} RD Bench Ticket'`]],
@@ -67,6 +67,13 @@ const APP_ASSIGNED = {
     [/ \(work package #\d+\)/g, ''],
     [/\bwork package #\d+ titled\b/g, 'the work package titled'],
   ],
+  gitea: [
+    [/ \(issue #\d+\)/g, ''],
+    [/\bissue #\d+ titled\b/g, 'the issue titled'],
+  ],
+  // BENCH-<index> is unambiguous (no other text has that shape), so every one
+  // is replaced, as repairdesk's RD-<n>.
+  vikunja: [[/\b(?:task )?BENCH-\d+\b/g, `the task titled '${runid} Bench Task'`]],
 };
 
 const instructions = fs

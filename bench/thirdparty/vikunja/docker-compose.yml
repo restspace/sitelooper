@@ -1,0 +1,55 @@
+# Third-party benchmark target: Vikunja (real production app we did not write).
+#
+# Widens the matrix by CLIENT TECHNOLOGY, per the selection principle from the
+# 2026-08-24 shakedown: every defect so far came from DOM idioms we had not
+# seen, never from a task we had not tried. Vikunja is a Vue 3 SPA (Vite) with
+# client-side routing — no matrix target runs Vue — and a task detail view
+# whose heading is contenteditable and saves on blur, a flatpickr-style date
+# picker behind a button, a label multiselect that CREATES a label from
+# whatever is typed if no option is chosen, and a priority <select> that saves
+# on change. Its tasks carry two identities: the url's /tasks/<id> and the
+# displayed project-scoped identifier BENCH-<index>, which differ.
+#
+# One small container (~90 MB image, well under 100 MB RAM): the Go API serves
+# the frontend too, SQLite in the data volume, no install wizard. There is no
+# built-in admin: the reset REGISTERS the bench user through /api/v1/register
+# when it cannot sign in, so registration stays enabled.
+#
+#   up:    docker compose -f bench/thirdparty/vikunja/docker-compose.yml up -d
+#   reset: node bench/reset-app.mjs --target vikunja   (idempotent: seeds too)
+#   web:   http://127.0.0.1:8096   (admin / bench-admin-pass)
+#   api:   /api/v1, Bearer <JWT from POST /api/v1/login>
+services:
+  vikunja:
+    image: vikunja/vikunja:0.24.6
+    ports:
+      - "127.0.0.1:8096:3456"
+    environment:
+      VIKUNJA_SERVICE_PUBLICURL: http://127.0.0.1:8096/
+      # Fixed so a restart does not sign every session out. Public on purpose:
+      # it protects nothing but a bench box.
+      VIKUNJA_SERVICE_JWTSECRET: bench-vikunja-jwt-secret-not-a-secret
+      VIKUNJA_SERVICE_ENABLEREGISTRATION: "true"
+      VIKUNJA_SERVICE_TIMEZONE: UTC
+      # Unauthenticated routes (login, register) default to 10 requests a
+      # minute per IP. The reset and the verifier each sign in, and so does
+      # every run's browser, all from 127.0.0.1: back-to-back resets hit HTTP 429.
+      VIKUNJA_RATELIMIT_NOAUTHLIMIT: "1000"
+      VIKUNJA_DATABASE_TYPE: sqlite
+      VIKUNJA_DATABASE_PATH: /db/vikunja.db
+    # The image runs as uid 1000, but a fresh named volume is root's (even at
+    # /app/vikunja/files), so SQLite cannot create its file: "open
+    # /app/vikunja/files/vikunja.db: permission denied". A throwaway bench
+    # box can run it as root rather than carry a chown init container.
+    user: "0:0"
+    volumes:
+      - vikunja-db:/db
+      - vikunja-files:/app/vikunja/files
+    healthcheck:
+      # The image is FROM scratch — no shell, curl or wget — so the container
+      # has no healthcheck; cloud-setup.sh polls /api/v1/info from outside.
+      disable: true
+
+volumes:
+  vikunja-db:
+  vikunja-files:

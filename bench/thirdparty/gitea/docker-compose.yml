@@ -1,0 +1,48 @@
+# Third-party benchmark target: Gitea (real production app we did not write).
+#
+# Widens the matrix by CLIENT TECHNOLOGY: Go server templates with Vue islands,
+# and Fomantic-UI dropdowns in the issue sidebar - the label, assignee and
+# milestone pickers are multi-select menus that apply their choice only when the
+# menu CLOSES, not when an item is clicked. The issue body and comments are
+# markdown-editor textareas. Issues are minted `#<number>`s in headings and urls.
+#
+# The rootless image with SQLite: one small container (~150 MB RAM), boots in
+# seconds. INSTALL_LOCK skips the install wizard; seed.sh creates the admin.
+#
+#   up:    docker compose -f bench/thirdparty/gitea/docker-compose.yml up -d
+#   seed:  bash bench/thirdparty/gitea/seed.sh   (admin user; idempotent)
+#   reset: node bench/reset-app.mjs --target gitea   (idempotent: seeds the rest too)
+#   web:   http://127.0.0.1:8095   (admin / bench-admin-pass)
+#   api:   /api/v1, HTTP Basic admin:bench-admin-pass
+services:
+  gitea:
+    image: gitea/gitea:1.27.3-rootless
+    ports:
+      - "127.0.0.1:8095:3000"
+    environment:
+      GITEA__database__DB_TYPE: sqlite3
+      GITEA__security__INSTALL_LOCK: "true"
+      # Fixed, because a bench box is thrown away; public on purpose.
+      GITEA__security__SECRET_KEY: bench-secret-key-not-a-secret-0123456789abcdef
+      GITEA__server__ROOT_URL: http://127.0.0.1:8095/
+      GITEA__server__DOMAIN: 127.0.0.1
+      GITEA__server__HTTP_PORT: "3000"
+      GITEA__server__OFFLINE_MODE: "true"
+      GITEA__server__DISABLE_SSH: "true"
+      GITEA__service__DISABLE_REGISTRATION: "true"
+      GITEA__service__REQUIRE_SIGNIN_VIEW: "false"
+      GITEA__mailer__ENABLED: "false"
+      GITEA__log__LEVEL: warn
+    volumes:
+      - gitea-data:/var/lib/gitea
+      - gitea-config:/etc/gitea
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO /dev/null http://127.0.0.1:3000/api/healthz || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+
+volumes:
+  gitea-data:
+  gitea-config:

@@ -20,14 +20,14 @@ see classes we have not met yet. Periodic fresh sweeps remain the way new shapes
 ## Usage
 
 ```
-node bench/corpus-check.mjs [--apps rd,od,gr,kb,op] [--limit N] [--since fwrd50]
+node bench/corpus-check.mjs [--apps rd,od,gr,kb,op,gt,vk] [--limit N] [--since fwrd50]
                             [--jobs 2] [--baseline <file>] [--out <file>]
                             [--at <commit>] [--no-fetch] [--compile-only] [--quiet]
 ```
 
 | flag | meaning |
 | --- | --- |
-| `--apps` | restrict to these apps (`rd` repairdesk, `od` odoo, `gr` grafana, `kb` kanboard, `op` openproject) |
+| `--apps` | restrict to these apps (`rd` repairdesk, `od` odoo, `gr` grafana, `kb` kanboard, `op` openproject, `gt` gitea, `vk` vikunja) |
 | `--limit N` | first N branches in ref order (use for smoke runs) |
 | `--since <runid>` | only runids numerically ≥ this |
 | `--jobs N` | concurrent compiles; default 2 — this is memory-bound, do not raise it on a small box |

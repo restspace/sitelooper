@@ -45,4 +45,18 @@ export const APP_DEFAULTS = {
     APP_EMAIL: 'admin',
     APP_PASSWORD: 'bench-admin-pass',
   },
+  // Vikunja has no built-in admin: resetVikunja registers this user when it
+  // cannot sign in with it.
+  vikunja: {
+    APP_URL: 'http://127.0.0.1:8096/',
+    APP_EMAIL: 'admin',
+    APP_PASSWORD: 'bench-admin-pass',
+  },
+  // bench/thirdparty/gitea/seed.sh creates this admin with no forced password
+  // change (INSTALL_LOCK leaves no install wizard to make one).
+  gitea: {
+    APP_URL: 'http://127.0.0.1:8095/',
+    APP_EMAIL: 'admin',
+    APP_PASSWORD: 'bench-admin-pass',
+  },
 };

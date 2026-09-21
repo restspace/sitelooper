@@ -137,6 +137,21 @@ const TARGETS = {
     notReadyHint:
       'Start it with: docker compose -f bench/thirdparty/openproject/docker-compose.yml up -d (then seed.sh once)',
   },
+  vikunja: {
+    task: 'tasks/vikunja-task-flow.md',
+    defaults: APP_DEFAULTS.vikunja,
+    // Reset is also the idempotent seed (it registers the user too) — see resetVikunja.
+    reset: () => resetTarget('vikunja'),
+    notReadyHint: 'Start it with: docker compose -f bench/thirdparty/vikunja/docker-compose.yml up -d',
+  },
+  gitea: {
+    task: 'tasks/gitea-issue-flow.md',
+    defaults: APP_DEFAULTS.gitea,
+    // Reset is also the idempotent seed — see resetGitea.
+    reset: () => resetTarget('gitea'),
+    notReadyHint:
+      'Start it with: docker compose -f bench/thirdparty/gitea/docker-compose.yml up -d (then seed.sh once)',
+  },
   grafana: {
     task: 'tasks/grafana-dashboard-flow.md',
     defaults: APP_DEFAULTS.grafana,
