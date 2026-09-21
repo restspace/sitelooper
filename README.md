@@ -130,7 +130,8 @@ The checker uses your actual Playwright config, project and relative fixture imp
 and `--project` to select them. `--isolated` is a separate compiler smoke test and cannot earn readiness.
 
 Evidence is written to `<name>.readiness.json`, including the artifact hash, individual run verdicts,
-and distinct dataset count. The states are `compiled` and `spec-verified`; failures distinguish
+and distinct dataset count. `--report <file.json>` writes it to a path you choose instead, creating
+the directory, so a CI job can name the artifact it uploads before the run happens. The states are `compiled` and `spec-verified`; failures distinguish
 `blocked`, `unavailable`, and `failed`. A missing browser, dependency, or failed reset exits nonzero.
 Three clean runs establish an execution gate, not a statistical guarantee against flakiness.
 
@@ -206,7 +207,10 @@ is rejected with migration guidance.
 
 Use `--json` for versioned authoring, compile, check and repair results. Existing result fields remain
 available alongside `schemaVersion`, `stage`, `outcome` and `nextActions`. Next actions use a command
-and argument array, avoiding shell-command parsing. Progress goes to stderr. For multiline instructions:
+and argument array, avoiding shell-command parsing. Progress goes to stderr. `check` and `build`
+also accept `--report <file.json>`, which writes that same document to a fixed path — independently
+of `--json`, so a caller can keep readable output and still collect the result. For multiline
+instructions:
 
 ```sh
 sitelooper --session ticket do --instruction-file tests/create-ticket.md --json

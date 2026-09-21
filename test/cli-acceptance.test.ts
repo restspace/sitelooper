@@ -117,4 +117,45 @@ describe('CLI subprocess contracts', () => {
     expect(result.json.readiness.blockers.join(' ')).toContain('fixtureIsolation');
     expect(fs.existsSync(result.json.compilation.flowFile)).toBe(true);
   });
+
+  // --report exists so a CI workflow can name the result file before the run.
+  // The path it names is therefore written even when the verdict is a failure
+  // and even when its directory does not exist yet: a job whose upload step
+  // silently finds nothing is exactly the hole this closes.
+  it('check --report writes the result document to a chosen path, creating its directory', () => {
+    const flow = path.join(dir, 'missing.flow.ts');
+    fs.writeFileSync(flow, '// artifact');
+    const report = path.join(dir, 'ci-out', 'nested', 'check.json');
+    const result = run(['check', flow, '--report', report]);
+    expect(result.status).toBe(2);
+    const written = JSON.parse(fs.readFileSync(report, 'utf8'));
+    expect(written).toMatchObject({ schemaVersion: 1, stage: 'spec-check', outcome: 'unavailable', specCheck: { ran: false } });
+    // The file is the same document --json printed, so one parser reads both.
+    expect(written).toEqual(result.json);
+  });
+
+  it('--report does not require --json and leaves human output on stdout', () => {
+    const flow = path.join(dir, 'missing.flow.ts');
+    fs.writeFileSync(flow, '// artifact');
+    const report = path.join(dir, 'plain.json');
+    const result = spawnSync(process.execPath, [cli, 'check', flow, '--report', report], {
+      cwd: dir, encoding: 'utf8', env: { ...process.env, SITELOOPER_HOME: path.join(dir, 'home') }, timeout: 20_000,
+    });
+    expect(result.status).toBe(2);
+    expect(result.stdout).not.toContain('"schemaVersion"');
+    expect(JSON.parse(fs.readFileSync(report, 'utf8'))).toMatchObject({ stage: 'spec-check', outcome: 'unavailable' });
+  });
+
+  // Readiness already has a canonical, versioned result document. --report
+  // moves that one file rather than writing a second copy beside it, so the
+  // archived evidence and the CI artifact can never disagree.
+  it('build --report relocates the readiness evidence instead of duplicating it', () => {
+    const report = path.join(dir, 'ci-out', 'readiness.json');
+    const result = run(['build', bundle(), '--report', report]);
+    expect(result.status).toBe(2);
+    const written = JSON.parse(fs.readFileSync(report, 'utf8'));
+    expect(written).toMatchObject({ schemaVersion: 1, stage: 'readiness', outcome: 'blocked', executionVerified: false });
+    expect(path.resolve(written.evidenceFile)).toBe(path.resolve(report));
+    expect(fs.existsSync(result.json.compilation.flowFile.replace(/\.flow\.ts$/, '.readiness.json'))).toBe(false);
+  });
 });

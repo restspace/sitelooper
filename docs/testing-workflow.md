@@ -110,5 +110,18 @@ suite. The candidate flow and proposal remain available for review.
 
 For required CI readiness, check the process exit code and `readiness.outcome === 'verified'`.
 Archive the `.readiness.json` evidence with the exact generated flow and user spec it hashes.
+Use `--report <file.json>` to write that evidence to a path the workflow already names, so the
+upload step does not have to locate it after the fact:
+
+```sh
+sitelooper check tests/sitelooper/ticket.flow.ts --ready --fixture-isolation \
+  --var runid=verify-{n} --report ci-artifacts/ticket.readiness.json
+```
+
+The file is written for every outcome, including a failure, and its directory is created. Note the
+exit-code split when gating on it: `2` means the check could not run (missing browser, missing
+reset command, blocked readiness) and `4` means it ran and failed. Treating any nonzero exit as a
+test failure will report broken infrastructure as a product regression.
+
 Readiness evidence is a record of those executions, not an attestation of every dependency in the
 project; reverify after changing fixtures, app versions or test configuration.

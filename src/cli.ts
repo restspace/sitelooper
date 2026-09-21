@@ -80,6 +80,9 @@ Verification options:
   --target-url <url>                       # override the recorded entry URL
   --negative-spec <file.spec.ts>           # explicit test asserting failure detection
   --isolated                              # compiler smoke test; cannot establish readiness
+  --report <file.json>                     # write the result document to a path you chose,
+      creating its directory; the same bytes --json prints. For --ready and build this is
+      the readiness evidence file, moved rather than copied. Independent of --json.
   Readiness requires distinct inputs for parameterized flows, all required steps executed,
   no skipped tests, no already-satisfied shortcuts and no locator drift. Retries are disabled.
   Missing setup or dependencies means unavailable, never a successful check.
@@ -155,6 +158,7 @@ function parseArgv(argv: string[]): ParsedArgs {
     'negative-spec',
     'instruction-file',
     'propose',
+    'report',
   ]);
   /**
    * Every flag that takes no value. Unknown options are rejected rather than
@@ -390,9 +394,44 @@ function request(
 
 let jsonWritten = false;
 let activeCommand = 'command';
+
+/** The versioned result document: what `--json` prints and what `--report` writes. */
+function envelope(data: object, stage: string, outcome: string, nextActions: Array<{ command: string; args: string[]; step?: string }> = []): object {
+  return { ...data, schemaVersion: 1, stage, outcome, nextActions };
+}
+
 function emitJson(data: object, stage: string, outcome: string, nextActions: Array<{ command: string; args: string[]; step?: string }> = []): void {
   jsonWritten = true;
-  console.log(JSON.stringify({ ...data, schemaVersion: 1, stage, outcome, nextActions }, null, 2));
+  console.log(JSON.stringify(envelope(data, stage, outcome, nextActions), null, 2));
+}
+
+/**
+ * `--report <path>` — the result document at a path the caller chose.
+ *
+ * WHY THIS EXISTS. A CI job needs the machine-readable verdict at a path it
+ * wrote into the workflow file BEFORE the run, so an upload step can name it
+ * unconditionally. `--json` puts it on stdout, which a job then has to tee and
+ * separate from progress; readiness' own `.readiness.json` lands next to the
+ * flow file and was silently skipped when its directory did not exist. This
+ * writes the same bytes `--json` prints, to a path that is known in advance,
+ * and creates the directory rather than skipping the write.
+ *
+ * Independent of `--json`: a job can keep human output on stdout and still get
+ * the file. Never fails the command — a report that cannot be written is a
+ * warning on stderr, not a second failure mode stacked on the real verdict.
+ */
+function reportPath(flags: Map<string, string | boolean>): string | undefined {
+  return flags.get('report') ? path.resolve(String(flags.get('report'))) : undefined;
+}
+
+function writeReport(file: string | undefined, data: object, stage: string, outcome: string): void {
+  if (!file) return;
+  try {
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(file, JSON.stringify(envelope(data, stage, outcome), null, 2) + '\n');
+  } catch (err) {
+    console.error(`sitelooper: could not write report to ${file}: ${(err as Error).message}`);
+  }
 }
 
 function emitCommandJson(data: object): void {
@@ -1120,7 +1159,9 @@ function checkSpecCommand(
     liveReplayPassed: false,
     onProgress: onProgress ?? ((m) => console.error(m)),
   });
-  if (json) emitJson({ file, specCheck: result }, 'spec-check', !result.ran ? 'unavailable' : result.passed ? 'passed' : 'failed');
+  const outcome = !result.ran ? 'unavailable' : result.passed ? 'passed' : 'failed';
+  writeReport(reportPath(flags), { file, specCheck: result }, 'spec-check', outcome);
+  if (json) emitJson({ file, specCheck: result }, 'spec-check', outcome);
   else {
     console.log(result.verdict);
     for (const d of result.drift) console.log(`  ${d}`);
@@ -1145,9 +1186,16 @@ function checkOptions(flags: Map<string, string | boolean>) {
 
 function readinessCommand(file: string, flags: Map<string, string | boolean>, json: boolean, onProgress?: (m: string) => void, compilation?: ReturnType<typeof compileFlow>): void {
   const config = loadProjectConfig();
+  // Readiness already has a canonical result document — the evidence file,
+  // itself versioned with schemaVersion/stage/outcome — so `--report` moves
+  // that one file rather than writing a second copy beside it. The report
+  // records where it went in its own `evidenceFile` field.
+  const evidenceFile = reportPath(flags);
+  if (evidenceFile) fs.mkdirSync(path.dirname(evidenceFile), { recursive: true });
   const result = runReadinessCheck({
     flowFile: file,
     ...checkOptions(flags),
+    ...(evidenceFile ? { evidenceFile } : {}),
     runs: flags.has('runs') ? Number(flags.get('runs')) : config.verificationRuns,
     fixtureIsolation: flags.has('fixture-isolation') || config.fixtureIsolation,
     requiredInputs: config.requiredVars,
@@ -1160,6 +1208,7 @@ function readinessCommand(file: string, flags: Map<string, string | boolean>, js
     console.log(`execution: ${result.executionVerified ? 'verified' : 'not verified'}`);
     for (const blocker of result.blockers) console.error(`  ${blocker}`);
     console.log(`failure detection: ${result.failureDetection}`);
+    if (fs.existsSync(result.evidenceFile)) console.log(`evidence: ${result.evidenceFile}`);
   }
   if (result.outcome !== 'verified') process.exit(result.outcome === 'unavailable' || result.outcome === 'blocked' ? 2 : 4);
 }
