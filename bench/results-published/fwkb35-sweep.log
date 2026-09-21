@@ -1,0 +1,100 @@
+
+[sweep] run 1/3: fwkb35-n1 (store: /home/user/sitelooper/bench/results/fwkb35-skills)
+[harness] kanboard: defaulting APP_URL
+[harness] kanboard: defaulting APP_EMAIL
+[harness] kanboard: defaulting APP_PASSWORD
+[reset] kanboard: no leftover bench tasks
+[harness] kanboard responded 302 at http://127.0.0.1:8085/
+stopped: fwkb35-n1
+  flow "fwkb35" saved: 8 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwkb35.json
+  warning: note: dropped 1 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: note: 2 goal/report value(s) carrying a value this run made were slotted or dropped:
+  s_910777.goal.requireText[0] dropped (names a value this run made, with no slot to bind it)
+  s_910777.reportTemplate.values.backlog dropped (recorded literal of a value this run made)
+  warning: note: 01-open no longer publishes columns_left_to_right — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-create no longer publishes task_id_numeric, column — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-report no longer publishes ready, done, backlog_task_count — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-set no longer publishes ready, done, move_position_page_title — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-open no longer publishes comment_author — no replay reads it from the page and the recording showed no line to read
+  warning: note: 07-set no longer publishes due_date_raw_value_set — no replay reads it from the page and the recording showed no line to read
+  warning: note: 08-change no longer publishes column, due_date_displayed, comment_visibility, board_columns_left_to_right, ready_cards, done_cards, task_swimlane, task_column — no replay reads them from the page and the recording showed no line to read
+  warning: note: 1 step(s) adopted from non-success instruction(s) whose work the session continued from (03-verify) — they replay model-first with doubled budget, and a non-success there does not halt the flow
+  warning: warning: 134 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "admin" (output) in "Open http://127.0.0.1:8085/ and sign in with username 'admin' and password 'admin'. Then navigate to the board of the project named 'Bench Board' and report the"
+  flow.steps[6].instruction: "2026-12-31" (output) in "On the task page for task {{02-create.task_id_displayed}} titled '{{runid}} Bench Task' (route {{02-create.task_url}}), set the task's due date to 2026-12-31. U"
+  s_257568.steps[0].locators.target[0].name: "Task #4" (output) in "Task #4"
+  s_257568.reportTemplate.summary: "Backlog, Ready, Work in progress, Done" (output) in "Read-only verification complete. On the task page {{v1}}: (a) title '{{v3}}'; (b) displayed as Task #4 (page heading / title 'Task #4', card shows #4); (c) desc"
+  s_257568.reportTemplate.summary: "Seed: ship repaired device" (output) in "Read-only verification complete. On the task page {{v1}}: (a) title '{{v3}}'; (b) displayed as Task #4 (page heading / title 'Task #4', card shows #4); (c) desc"
+  warning: {{03-verify.task_1_title}} (used by 04-report) can only be re-observed by model recovery, and 04-report's procedure types or locates by it — so `sitelooper spec` will REFUSE to compile this flow (unsourced-ref) until 03-verify reads task_1_title from an element. Re-record 03-verify now, while this session is still open.
+  warning: {{02-create.task_url}} (used by 06-open) can only be re-observed by model recovery — consider re-recording so the value is read from the page.
+  warning: 02-create reports task_url, but no segment of the procedure it pins (s_8cbf22, with any later segment of its chain) re-reads it from the page — a replay without the model will succeed without that value; re-record so a read for it lands in that procedure's last segment.
+arm=sitelooper model=z-ai/glm-5.3 runid=fwkb35-n1 stop=completed
+turns=9 wall=378.9s
+commands=8 cmdTime=349.9s cmdBytes=9370 timeouts=0
+orchestrator in=10072 cw=0 cr=28928 out=3014
+inner prompt=2678133 cached=2475520 completion=36889
+spend=$0.095 maxUsd=3
+learn: A_n=0 replayed=0/8 full=0 repaired=0 compiled=7 variants=0
+-> /home/user/sitelooper/bench/results/fwkb35-n1-sitelooper-result.json
+
+fwkb35-n1: objectives passed 6/6
+  obj 1: PASS — all 4 column names reported (Backlog | Ready | Work in progress | Done)
+  obj 2: PASS — description includes runid=true
+  obj 3: PASS — column=Work in progress
+  obj 4: PASS — 1 comment(s), 1 carrying the runid
+  obj 5: PASS — date_due=2026-12-31, want 2026-12-31
+  obj 6: PASS — task id 4 reported
+
+[sweep] run 2/3: fwkb35-n2 (replay flow fwkb35, no orchestrator)
+[reset] kanboard: deleted 1 leftover bench task(s)
+[sweep] fwkb35-n2: 3 drift ticket(s) → fwkb35-n2-drift.json
+
+fwkb35-n2: objectives passed 6/6
+  obj 1: PASS — all 4 column names reported (Backlog | Ready | Work in progress | Done)
+  obj 2: PASS — description includes runid=true
+  obj 3: PASS — column=Work in progress
+  obj 4: PASS — 1 comment(s), 1 carrying the runid
+  obj 5: PASS — date_due=2026-12-31, want 2026-12-31
+  obj 6: PASS — task id 4 reported
+
+[sweep] run 3/3: fwkb35-n3 (replay flow fwkb35, no orchestrator)
+[reset] kanboard: deleted 1 leftover bench task(s)
+[sweep] fwkb35-n3: 3 drift ticket(s) → fwkb35-n3-drift.json
+
+fwkb35-n3: objectives passed 6/6
+  obj 1: PASS — all 4 column names reported (Backlog | Ready | Work in progress | Done)
+  obj 2: PASS — description includes runid=true
+  obj 3: PASS — column=Work in progress
+  obj 4: PASS — 1 comment(s), 1 carrying the runid
+  obj 5: PASS — date_due=2026-12-31, want 2026-12-31
+  obj 6: PASS — task id 4 reported
+
+Learning sweep fwkb35 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwkb35-n1' │ '6/6'    │ 'completed' │ 9     │ 8    │ 0.095     │ 0    │ '0/8'        │ 379    │
+│ 1       │ 2 │ 'fwkb35-n2' │ '6/6'    │ 'success'   │ 10    │ 8    │ 0.0059    │ 0.75 │ '8/8 (flow)' │ 62     │
+│ 2       │ 3 │ 'fwkb35-n3' │ '6/6'    │ 'success'   │ 15    │ 8    │ 0.0133    │ 0.88 │ '8/8 (flow)' │ 136    │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8085
+  s_2d7b70  validated   14 steps  5/5 (100%)
+           On the 'Bench Board' project, move the task titled '{{v1}}' (task #4) into the '{{v3}}' column. Use the reliab…
+  s_257568  validated    5 steps  3/3 (100%)
+           Final verification, read-only (do not change anything): Open the task page for task #4 (route {{v1}}) and repo…
+  s_4e0a13  validated   10 steps  3/3 (100%)
+           Open the task page for task #4 titled '{{v1}}' (route {{v3}}) and add a comment whose text includes the runid …
+  s_877b7f  validated   12 steps  3/3 (100%)
+           On the task page for task #4 titled '{{v1}}' (route {{v3}}), set the task's due date to 2026-12-31. Use the ta…
+  s_8cbf22  validated    8 steps  3/3 (100%)
+           On the 'Bench Board' project board, create a new task with title exactly '{{v2}}' and a description that inclu…
+  s_e5e299  validated   10 steps  3/3 (100%)
+           Open {{v1}} and sign in with username 'admin' and password 'admin'. Then navigate to the board of the project …
+  s_23b6cb  validated    4 steps  2/2 (100%)
+           IMPORTANT repair step: On the 'Bench Board' project, the task '#1 {{v1}}' was accidentally moved from the '{{v…
+  s_910777  provisional  7 steps  1/1 (100%)
+           IMPORTANT repair step: On the 'Bench Board' project, the task '#1 {{v1}}' was accidentally moved from the '{{v…
+store: /home/user/sitelooper/bench/results/fwkb35-skills
+
+summary: /home/user/sitelooper/bench/results/fwkb35-sweep.json
+SWEEP_EXIT:0

@@ -1,0 +1,255 @@
+{
+  "flow": "fwkb35",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_e5e299; observed column_1=Backlog , column_2=Ready , column_3=Work in progress , column_4=Done .",
+      "values": {
+        "column_1": "Backlog ",
+        "column_2": "Ready ",
+        "column_3": "Work in progress ",
+        "column_4": "Done "
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Created a new task on the 'Bench Board' project board (project_id=1) via the Backlog column's \"Add a new task\" link, with title exactly 'fwkb35-n3 Bench Task' and description 'Bench task for run fwkb35-n3'. After saving, the board reloaded and the task appears as card #4 in the first column, Backlog (column_id=1). Verified on the live board: the card in the Backlog column shows \"#4\" and the link to task_id=4 has the text \"fwkb35-n3 Bench Task\".",
+      "values": {
+        "task_title": "fwkb35-n3 Bench Task",
+        "task_description": "Bench task for run fwkb35-n3",
+        "ref": "fwkb35-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "task_id_displayed",
+        "task_url"
+      ]
+    },
+    {
+      "id": "03-verify",
+      "status": "success",
+      "summary": "Moved task #4 'fwkb35-n3 Bench Task' into the 'Work in progress ' column using the task's move form (TaskMovePositionController for task_id=4, Column set to 'Work in progress', Save). Verifying on the reloaded board (/?controller=BoardViewController&action=show&project_id=1), the 'Work in progress ' column (3rd column, data-column-id=3) now contains #4 'fwkb35-n3 Bench Task' (plus the seed 'Seed: triage inbox' #1, which was already there before this run — the project activity stream (/index.php?controller=ActivityController&action=project&project_id=1) shows the last move of task #1 was at 15:16, while this run's move is logged at 15:20, so no Seed: task was touched). No Seed: task was moved or modified; Backlog still holds #2 'Seed: order missing parts' and #3 'Seed: ship repaired device', and Ready/Done are empty.",
+      "values": {
+        "activity_stream_url": "http://127.0.0.1:8085/?controller=ActivityController&action=project&project_id=1",
+        "task_move_form_url": "http://127.0.0.1:8085/?controller=TaskMovePositionController&action=show&task_id=4",
+        "seed_task_1_url": "http://127.0.0.1:8085/?controller=TaskViewController&action=show&task_id=1",
+        "task_1_title": "fwkb35-n3 Bench Task",
+        "task_id_displayed": "#4",
+        "task_4_column_name": "Work in progress ",
+        "task_4_column_id": "3",
+        "backlog_cell": "#2 Seed: order missing parts, #3 Seed: ship repaired device",
+        "work_in_progress_cell": "#1 Seed: triage inbox, #4 fwkb35-n3 Bench Task",
+        "ready_cell": "(empty)",
+        "done_cell": "(empty)",
+        "activity_last_seed_move_of_task_1": "09/21/2026 15:16 moved the task #1 to the column \"Work in progress\"",
+        "activity_this_run": "09/21/2026 15:20 moved the task #4 to the column \"Work in progress\"",
+        "backlog_cell_2": "#2 \n \nSeed: order missing parts\nTask age in days\n<15m \nDays in this column\n<15m \nTask priority\nP0\n#3 \n \nSeed: ship repaired device\nTask age in days\n<15m \nDays in this column\n<15m \nTask priority\nP0",
+        "work_in_progress_cell_2": "#1 \n \nSeed: triage inbox\nTask age in days\n<15m \nDays in this column\n<15m \nTask priority\nP0\n#4 \n \nfwkb35-n3 Bench Task\n \nTask age in days\n<15m \nDays in this column\n<15m \nTask priority\nP0",
+        "th_td": "Ready",
+        "th_td_2": "Done",
+        "ref": "fwkb35-n3"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 02-create.task_id_displayed",
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 15,
+      "unreported": [
+        "task_4_title",
+        "task_4_current_column",
+        "task_4_target_column",
+        "board_ready",
+        "board_work_in_progress",
+        "board_done",
+        "move_position_url_pattern"
+      ]
+    },
+    {
+      "id": "04-report",
+      "status": "success",
+      "summary": "No repair was needed and no action was taken: the live 'Bench Board' shows the described accidental move had not happened. Task #1 is 'Seed: triage inbox' (not 'fwkb35-n3 Bench Task Bench Task') and it is currently in the 'Work in progress ' column, not Backlog. The task titled 'fwkb35-n3 Bench Task Bench Task' is #4 and it is already in 'Work in progress '. Since #1 is a 'Seed:' task and the target task is already in the requested column, I deliberately did not move anything (\"Do not touch any other task\").",
+      "values": {
+        "task_4_column": "Work in progress",
+        "work_in_progress_column_cards": "Seed: triage inbox (#1), fwkb35-n3 Bench Task (#4)",
+        "task_1_title": "Seed: triage inbox",
+        "task_4_title": "fwkb35-n3 Bench Task",
+        "task_1_column": "Work in progress ",
+        "ref": "fwkb35-n3 Bench Task"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "4/4",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "task_1_current_column",
+        "work_in_progress",
+        "work_in_progress_task_count"
+      ]
+    },
+    {
+      "id": "05-set",
+      "status": "success",
+      "summary": "Replayed stored procedure s_2d7b70; observed work_in_progress=fwkb35-n3 Bench Task (#4), Seed: triage inbox (#1), seed_tasks_status=untouched — #1 Seed: triage inbox in Work in progress , #2 and #3 Seed: tasks in Backlog (unchanged from before this step), task_4_column_id=3, task_4_title=fwkb35-n3 Bench Task, backlog_card_1=Seed: order missing parts, backlog_card_2=Seed: ship repaired device, work_in_progress_card_1=Seed: triage inbox, task_4_column_name=Work in progress , ref=fwkb35-n3 Bench Task.",
+      "values": {
+        "work_in_progress": "fwkb35-n3 Bench Task (#4), Seed: triage inbox (#1)",
+        "seed_tasks_status": "untouched — #1 Seed: triage inbox in Work in progress , #2 and #3 Seed: tasks in Backlog (unchanged from before this step)",
+        "task_4_column_id": "3",
+        "task_4_title": "fwkb35-n3 Bench Task",
+        "backlog_card_1": "Seed: order missing parts",
+        "backlog_card_2": "Seed: ship repaired device",
+        "work_in_progress_card_1": "Seed: triage inbox",
+        "task_4_column_name": "Work in progress ",
+        "ref": "fwkb35-n3 Bench Task"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_4e0a13; observed comment_text=Comment for run fwkb35-n3, ref=fwkb35-n3, comment_visibility=Standard users, task_id=4, task_title=fwkb35-n3 Bench Task, current_column=Work in progress, task_position=1.",
+      "values": {
+        "comment_text": "Comment for run fwkb35-n3",
+        "ref": "fwkb35-n3",
+        "comment_visibility": "Standard users",
+        "task_id": "4",
+        "task_title": "fwkb35-n3 Bench Task",
+        "current_column": "Work in progress",
+        "task_position": "1"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "07-set",
+      "status": "success",
+      "summary": "Replayed stored procedure s_877b7f; observed ref=fwkb35-n3, due_date_displayed=Due date: 12/31/2026 15:22, task_title=fwkb35-n3 Bench Task, task_id=4, column=Work in progress, position=1, status=open, modified=09/21/2026 15:22, assignee=not assigned .",
+      "values": {
+        "ref": "fwkb35-n3",
+        "due_date_displayed": "Due date: 12/31/2026 15:22",
+        "task_title": "fwkb35-n3 Bench Task",
+        "task_id": "4",
+        "column": "Work in progress",
+        "position": "1",
+        "status": "open",
+        "modified": "09/21/2026 15:22",
+        "assignee": "not assigned "
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "08-change",
+      "status": "success",
+      "summary": "Replayed stored procedure s_257568; observed description=Bench task for run fwkb35-n3, comments=Comment for run fwkb35-n3, card_location=fwkb35-n3 Bench Task -> Work in progress, work_in_progress_cards=fwkb35-n3 Bench Task (#4), Seed: triage inbox (#1), task_status=Status: open, task_number_displayed=Task #4, task_title=fwkb35-n3 Bench Task, comment_author=admin, ref=fwkb35-n3 Bench Task.",
+      "values": {
+        "description": "Bench task for run fwkb35-n3",
+        "comments": "Comment for run fwkb35-n3",
+        "card_location": "fwkb35-n3 Bench Task -> Work in progress",
+        "work_in_progress_cards": "fwkb35-n3 Bench Task (#4), Seed: triage inbox (#1)",
+        "task_status": "Status: open",
+        "task_number_displayed": "Task #4",
+        "task_title": "fwkb35-n3 Bench Task",
+        "comment_author": "admin",
+        "ref": "fwkb35-n3 Bench Task"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 8,
+  "total": 8,
+  "repinned": 0,
+  "drift": 3,
+  "driftTickets": [
+    {
+      "flow": "fwkb35",
+      "step": "02-create",
+      "skill": "s_8cbf22",
+      "atStep": "6",
+      "key": "target",
+      "similarity": 0.988,
+      "missedLocator": "page.locator('div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(2) > div > a > strong')",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8085/?action=show&controller=BoardViewController&project_id=:id",
+      "pageUrl": "http://127.0.0.1:8085/?controller=BoardViewController&action=show&project_id=1"
+    },
+    {
+      "flow": "fwkb35",
+      "step": "02-create",
+      "skill": "s_8cbf22",
+      "atStep": "7",
+      "key": "target",
+      "similarity": 0.988,
+      "missedLocator": "page.locator('td:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(3) > a')",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8085/?action=show&controller=BoardViewController&project_id=:id",
+      "pageUrl": "http://127.0.0.1:8085/?controller=BoardViewController&action=show&project_id=1"
+    },
+    {
+      "flow": "fwkb35",
+      "step": "03-verify",
+      "skill": "s_2d7b70",
+      "similarity": 0.999,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 02-create.task_id_displayed",
+      "pageUrlPattern": "http://127.0.0.1:8085/?action=show&controller=BoardViewController&project_id=:id",
+      "pageUrl": "http://127.0.0.1:8085/?controller=BoardViewController&action=show&project_id=1"
+    }
+  ],
+  "wallMs": 136385,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 310976,
+    "completionTokens": 14644,
+    "cachedTokens": 286336
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 310976,
+      "completionTokens": 14644,
+      "cachedTokens": 286336
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

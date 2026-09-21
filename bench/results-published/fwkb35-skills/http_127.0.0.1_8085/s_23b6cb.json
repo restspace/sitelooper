@@ -1,0 +1,203 @@
+{
+ "id": "s_23b6cb",
+ "origin": "http://127.0.0.1:8085",
+ "template": "IMPORTANT repair step: On the 'Bench Board' project, the task '#1 {{v1}}' was accidentally moved from the '{{v3}} ' column into the '{{v4}} ' column. Restore it: move task #1 back to the '{{v3}} ' column. Use the reliable route /?controller=TaskMovePositionController&action=show&task_id=1 (a page with a position/move form) rather than dragging, or drag carefully after re-reading the current board. Do not touch any other task. Then reload the board and report the current column of task #1 and the full list of task cards per column.",
+ "params": {
+  "v1": {
+   "example": "fwkb35-n2 Bench Task",
+   "usedIn": [
+    2,
+    4
+   ],
+   "known": true,
+   "binding": "03-verify.task_1_title"
+  },
+  "v2": {
+   "example": "fwkb35-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "Work in progress",
+   "usedIn": [],
+   "known": true,
+   "binding": "01-open.column_3"
+  },
+  "v4": {
+   "example": "Backlog",
+   "usedIn": [],
+   "known": true,
+   "binding": "01-open.column_1"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8085/?action=show&controller=BoardViewController&project_id=:id"
+ },
+ "steps": [
+  {
+   "tool": "read",
+   "args": {
+    "what": "text",
+    "target": "a[href=\"/?controller=TaskViewController&action=show&task_id=1\"]",
+    "label": "task_1_title"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "a[href=\"/?controller=TaskViewController&action=show&task_id=1\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "td:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(3) > a"
+     },
+     {
+      "kind": "point",
+      "x": 706,
+      "y": 162,
+      "w": 116,
+      "h": 16,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "task_1_title"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "what": "text",
+    "target": "a[href=\"/?controller=TaskViewController&action=show&task_id=4\"]",
+    "label": "task_4_title"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "a[href=\"/?controller=TaskViewController&action=show&task_id=4\"]"
+     },
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "{{v1}}"
+     },
+     {
+      "kind": "css",
+      "selector": "td:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(3) > a"
+     },
+     {
+      "kind": "point",
+      "x": 720,
+      "y": 241,
+      "w": 144.5,
+      "h": 16,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "task_4_title"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "tr:nth-of-type(1) > th:nth-of-type(3) > div:nth-of-type(2) > span:nth-of-type(1) > span > a"
+     },
+     {
+      "kind": "point",
+      "x": 759,
+      "y": 100,
+      "w": 147.9,
+      "h": 17,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "task_1_column"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "{{v1}}"
+     },
+     {
+      "kind": "css",
+      "selector": "td:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(3) > a"
+     },
+     {
+      "kind": "point",
+      "x": 720,
+      "y": 241,
+      "w": 144.5,
+      "h": 16,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "ref"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "No repair was needed and no action was taken: the live 'Bench Board' shows the described accidental move had not happened. Task #1 is 'Seed: triage inbox' (not '{{v1}}') and it is currently in the '{{v3}}' column, not {{v4}}. The task titled '{{v1}}' is #4 and it is already in '{{v3}}'. Since #1 is a 'Seed:' task and the target task is already in the requested column, I deliberately did not move anything (\"Do not touch any other task\").",
+  "values": {
+   "task_1_title": "Seed: triage inbox",
+   "task_1_column": "{{v3}}",
+   "task_4_title": "{{v1}}",
+   "task_4_column": "{{v3}}",
+   "backlog_column_cards": "Seed: order missing parts (#2), Seed: ship repaired device (#3)",
+   "ready_column_cards": "(empty)",
+   "work_in_progress_column_cards": "Seed: triage inbox (#1), {{v1}} (#4)",
+   "done_column_cards": "(empty)",
+   "screenshot": "/home/user/sitelooper/board_state_repair_check.png",
+   "ref": "{{v2}}",
+   "ref_2": "board-column-1",
+   "ref_3": "board-column-3"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 2,
+  "successes": 2,
+  "partial": 0,
+  "created": "2026-09-21T15:20:28.523Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-21T15:22:46.839Z"
+ },
+ "status": "validated",
+ "provenance": {
+  "session": "fwkb35-n2",
+  "instruction": "IMPORTANT repair step: On the 'Bench Board' project, the task '#1 fwkb35-n2 Bench Task' was accidentally moved from the 'Work in progress ' column into the 'Backlog ' column. Restore it: move task #1 back to the 'Work in progress ' column. Use the reliable route /?controller=TaskMovePositionController&action=show&task_id=1 (a page with a position/move form) rather than dragging, or drag carefully after re-reading the current board. Do not touch any other task. Then reload the board and report the current column of task #1 and the full list of task cards per column.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-21T15:20:28.523Z"
+ },
+ "revision": 2
+}
