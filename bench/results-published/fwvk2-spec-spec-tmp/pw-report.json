@@ -1,0 +1,190 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwvk2-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwvk2-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwvk2-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwvk2-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwvk2-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwvk2.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwvk2-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwvk2.spec.ts",
+      "file": "fwvk2.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwvk2",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 33041,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] step 02-create s_8dd672/1: none of the 3 expected page change(s) appeared in the step diff (found on the page instead)\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe prosemirror/set-value (r_1ab693); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_2dadc7/7: read 'task_description' returned a value the skill itself set/selected ('Bench task for run fwvk2-spec') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-set s_3c1e96/16: read 'task_title' returned a value the skill itself set/selected ('fwvk2-spec Bench Task') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-set\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-add\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe prosemirror/set-value (r_1ab693); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 05-add s_710db2/4: read 'comment_text' returned a value the skill itself set/selected ('Comment for run fwvk2-spec') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-add\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-report\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:8096/ and sign in with username 'admin' and password 'bench-admin-pass'. Then navigate to the project named 'Bench Project' and list the titles of all tasks in it whose title starts with 'Seed:', exactly as displayed. Report those titles verbatim.",
+                      "duration": 4935
+                    },
+                    {
+                      "title": "02-create: In the Vikunja project 'Bench Project' ({{01-open.url}}), create a new task with the exact title '{{runid}} Bench Task' and a description that includes the text '{{runid}}' (e.g. 'Bench task for run {{runid}}'). Use the project's task-creation UI (e.g. 'New Task' button / add task input). After creating it, open the task's own detail page and set its description to include '{{runid}}' if it is not already set. Verify the task exists with that title and a description containing '{{runid}}', and report the task's detail page URL and the identifier shown on the page (Vikunja displays it like BENCH-<number>).",
+                      "duration": 10654
+                    },
+                    {
+                      "title": "03-set: On the Vikunja task detail page for the task '{{runid}} Bench Task' ({{02-create.url}}), set the task's Due Date to 2026-12-31 (December 31, 2026) and its Priority to 'High'. These fields edit in place and save automatically when changed or when you click away — there is no whole-page Save button. After setting both, verify on the page that the due date shows 2026-12-31 (or Dec 31, 2026) and the priority shows High, and report exactly what the page displays for both fields.",
+                      "duration": 7151
+                    },
+                    {
+                      "title": "04-add: On the Vikunja task detail page for '{{runid}} Bench Task' ({{02-create.url}}), add the EXISTING label named 'Backend' to the task. Important: the label field creates a NEW label from whatever text is typed unless an existing label is chosen from its suggestions — so type 'Backend' and select the existing 'Backend' label from the suggestion dropdown that appears, do not create a new one. Then verify the task shows the label 'Backend' on its detail page and report exactly what labels are displayed for the task.",
+                      "duration": 5125
+                    },
+                    {
+                      "title": "05-add: On the Vikunja task detail page for '{{runid}} Bench Task' ({{02-create.url}}), add a comment to the task whose text includes '{{runid}}' (e.g. 'Comment for run {{runid}}'). Use the comments section at the bottom of the task page, submit it, and verify the comment appears on the page with text containing '{{runid}}'. Report the comment text exactly as displayed.",
+                      "duration": 2201
+                    },
+                    {
+                      "title": "06-report: Final verification, read-only: On the Vikunja task detail page {{02-create.url}} (task '{{runid}} Bench Task'), reload the page and report: (1) the task title, (2) the identifier shown on the page (like BENCH-<number>), (3) the description text, (4) the due date displayed, (5) the priority displayed, (6) the labels displayed, (7) the comments displayed. Then go to the project 'Bench Project' ({{01-open.url}}) and report the titles of all tasks in the list. Do not modify anything.",
+                      "duration": 2316
+                    }
+                  ],
+                  "startTime": "2026-09-21T23:49:26.504Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "094a3f2cb6cfb4a06e4b-c6f49b2b5ce73878e241",
+          "file": "fwvk2.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-21T23:49:24.753Z",
+    "duration": 34966.067,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

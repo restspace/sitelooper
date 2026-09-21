@@ -1,0 +1,120 @@
+
+[sweep] run 1/3: fwvk2-n1 (store: /home/user/sitelooper/bench/results/fwvk2-skills)
+[harness] vikunja: defaulting APP_URL
+[harness] vikunja: defaulting APP_EMAIL
+[harness] vikunja: defaulting APP_PASSWORD
+[reset] vikunja: no leftover bench tasks
+[harness] vikunja responded 200 at http://127.0.0.1:8096/
+stopped: fwvk2-n1
+  flow "fwvk2" saved: 6 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwvk2.json
+  warning: note: 01-open no longer publishes seed_task_count — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-create no longer publishes task_detail_url — no replay reads it from the page and the recording showed no line to read
+  warning: note: 03-set no longer publishes verified_after_reload — no replay reads it from the page and the recording showed no line to read
+  warning: note: 04-add no longer publishes labels_displayed, label_created_new — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-report no longer publishes identifier, due_date — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-add: added a read for comment_author to s_710db2 (page.getByRole('button', { name: 'admin', exact: true }); seen on the next instruction's start page)
+  warning: warning: 86 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "Bench Project" (output) in "Open http://127.0.0.1:8096/ and sign in with username 'admin' and password 'bench-admin-pass'. Then navigate to the project named 'Bench Project' and list the t"
+  flow.steps[0].instruction: "admin" (output) in "Open http://127.0.0.1:8096/ and sign in with username 'admin' and password 'bench-admin-pass'. Then navigate to the project named 'Bench Project' and list the t"
+  flow.steps[0].params.v2: "admin" (output) in "admin"
+  flow.steps[1].instruction: "Bench Project" (output) in "In the Vikunja project 'Bench Project' ({{01-open.url}}), create a new task with the exact title '{{runid}} Bench Task' and a description that includes the text"
+  flow.steps[1].params.v1: "Bench Project" (output) in "Bench Project"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwvk2-n1 stop=completed
+turns=7 wall=172.1s
+commands=6 cmdTime=151.6s cmdBytes=5579 timeouts=0
+orchestrator in=11303 cw=0 cr=14784 out=2170
+inner prompt=946735 cached=876800 completion=12627
+spend=$0.0501 maxUsd=3
+learn: A_n=0 replayed=0/6 full=0 repaired=0 compiled=6 variants=0
+-> /home/user/sitelooper/bench/results/fwvk2-n1-sitelooper-result.json
+
+fwvk2-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — project=Bench Project, description includes runid=true
+  obj 3: PASS — due date=2026-12-31T12:00:00Z, want 2026-12-31
+  obj 4: PASS — priority=3 (want 3 = High)
+  obj 5: PASS — labels=Backend#1; seeded Backend is #1
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — identifier BENCH-4 reported
+
+[sweep] run 2/3: fwvk2-n2 (replay flow fwvk2, no orchestrator)
+[reset] vikunja: deleted 1 leftover bench task(s)
+[reset] vikunja: re-created "Seed: ship repaired device" as BENCH-4 so the next task is BENCH-5
+[sweep] fwvk2-n2: 10 drift ticket(s) → fwvk2-n2-drift.json
+
+fwvk2-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — project=Bench Project, description includes runid=true
+  obj 3: PASS — due date=2026-12-31T12:00:00Z, want 2026-12-31
+  obj 4: PASS — priority=3 (want 3 = High)
+  obj 5: PASS — labels=Backend#1; seeded Backend is #1
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — identifier BENCH-5 reported
+
+[sweep] run 3/3: fwvk2-n3 (replay flow fwvk2, no orchestrator)
+[reset] vikunja: deleted 1 leftover bench task(s)
+[reset] vikunja: re-created "Seed: ship repaired device" as BENCH-5 so the next task is BENCH-6
+
+fwvk2-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — project=Bench Project, description includes runid=true
+  obj 3: PASS — due date=2026-12-31T12:00:00Z, want 2026-12-31
+  obj 4: PASS — priority=3 (want 3 = High)
+  obj 5: PASS — labels=Backend#1; seeded Backend is #1
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — identifier BENCH-6 reported
+
+Learning sweep fwvk2 (K=3)
+┌─────────┬───┬────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid      │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwvk2-n1' │ '7/7'    │ 'completed' │ 7     │ 6    │ 0.0501    │ 0    │ '0/6'        │ 172    │
+│ 1       │ 2 │ 'fwvk2-n2' │ '7/7'    │ 'success'   │ 22    │ 6    │ 0.0091    │ 0.67 │ '6/6 (flow)' │ 120    │
+│ 2       │ 3 │ 'fwvk2-n3' │ '7/7'    │ 'success'   │ 0     │ 6    │ 0         │ 1    │ '6/6 (flow)' │ 29     │
+└─────────┴───┴────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8096
+  s_16fa66  validated    3 steps  3/3 (100%)
+           Final verification, read-only: On the Vikunja task detail page {{v1}} (task '{{v2}}'), reload the page and rep…
+  s_2828b0  validated    1 steps  3/3 (100%)
+           On the Vikunja task detail page for '{{v1}}' ({{v3}}), add the EXISTING label named 'Backend' to the task. Imp…
+  s_3c1e96  validated   16 steps  3/3 (100%)
+           On the Vikunja task detail page for the task '{{v1}}' ({{v3}}), set the task's Due Date to 2026-12-31 ({{v4}} …
+  s_5f4637  demoted      3 steps  1/3 (33%)
+           In the Vikunja project '{{v1}}' (http://127.0.0.1:8096/projects/2/5), create a new task with the exact title '…
+  s_6c87e4  validated    8 steps  3/3 (100%)
+           Final verification, read-only: On the Vikunja task detail page {{v1}} (task '{{v2}}'), reload the page and rep…
+  s_7069db  validated    3 steps  2/3 (67%)
+           Open {{v1}} and sign in with username '{{v2}}' and password '{{v3}}'. Then navigate to the project named 'Benc…
+  s_710db2  validated    8 steps  3/3 (100%)
+           On the Vikunja task detail page for '{{v1}}' ({{v3}}), add a comment to the task whose text includes '{{v2}}' …
+  s_789bb9  validated    1 steps  3/3 (100%)
+           Open {{v1}} and sign in with username '{{v2}}' and password '{{v3}}'. Then navigate to the project named 'Benc…
+  s_ad0789  validated    5 steps  3/3 (100%)
+           On the Vikunja task detail page for '{{v1}}' ({{v3}}), add the EXISTING label named 'Backend' to the task. Imp…
+  s_ea67ff  validated    4 steps  3/3 (100%)
+           On the Vikunja task detail page for '{{v1}}' ({{v3}}), add the EXISTING label named 'Backend' to the task. Imp…
+  s_2dadc7  validated    7 steps  2/2 (100%)  variant of s_5f4637
+           In the Vikunja project '{{v1}}' ({{v2}}), create a new task with the exact title '{{v4}}' and a description th…
+  s_8dd672  validated    4 steps  2/2 (100%)  variant of s_5f4637
+           In the Vikunja project '{{v1}}' ({{v2}}), create a new task with the exact title '{{v4}}' and a description th…
+  s_8f98cd  validated    1 steps  2/2 (100%)
+           Open {{v1}} and sign in with username '{{v2}}' and password '{{v3}}'. Then navigate to the project named 'Benc…
+  s_c9fdd3  validated    7 steps  2/2 (100%)
+           Open {{v1}} and sign in with username '{{v2}}' and password '{{v3}}'. Then navigate to the project named 'Benc…
+  s_20dd4b  provisional 19 steps  1/1 (100%)  variant of s_7069db
+           Open http://127.0.0.1:8096/ and sign in with username '{{v2}}' and password '{{v3}}'. Then navigate to the pro…
+  s_23a75d  provisional  7 steps  1/1 (100%)
+           In the Vikunja project '{{v1}}' (http://127.0.0.1:8096/projects/2/5), create a new task with the exact title '…
+  s_3e9bcc  provisional  7 steps  1/1 (100%)
+           Open {{v1}} and sign in with username '{{v2}}' and password '{{v3}}'. Then navigate to the project named 'Benc…
+  s_77be62  provisional  1 steps  1/1 (100%)
+           Open {{v1}} and sign in with username '{{v2}}' and password '{{v3}}'. Then navigate to the project named 'Benc…
+  s_94196d  provisional  1 steps  1/1 (100%)  variant of s_7069db
+           Open http://127.0.0.1:8096/ and sign in with username '{{v2}}' and password '{{v3}}'. Then navigate to the pro…
+  s_d48eb5  provisional  6 steps  1/1 (100%)  variant of s_7069db
+           Open http://127.0.0.1:8096/ and sign in with username '{{v2}}' and password '{{v3}}'. Then navigate to the pro…
+  s_eb9f9c  provisional 19 steps  1/1 (100%)
+           Open {{v1}} and sign in with username '{{v2}}' and password '{{v3}}'. Then navigate to the project named 'Benc…
+store: /home/user/sitelooper/bench/results/fwvk2-skills
+
+summary: /home/user/sitelooper/bench/results/fwvk2-sweep.json

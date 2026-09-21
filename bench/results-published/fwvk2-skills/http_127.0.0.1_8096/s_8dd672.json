@@ -1,0 +1,253 @@
+{
+ "id": "s_8dd672",
+ "origin": "http://127.0.0.1:8096",
+ "template": "In the Vikunja project '{{v1}}' ({{v2}}), create a new task with the exact title '{{v4}}' and a description that includes the text '{{v3}}' (e.g. '{{v5}}'). Use the project's task-creation UI (e.g. 'New Task' button / add task input). After creating it, open the task's own detail page and set its description to include '{{v3}}' if it is not already set. Verify the task exists with that title and a description containing '{{v3}}', and report the task's detail page URL and the identifier shown on the page (Vikunja displays it like BENCH-<number>).",
+ "params": {
+  "v1": {
+   "example": "Bench Project",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i1:project"
+  },
+  "v2": {
+   "example": "http://127.0.0.1:8096/projects/2/7",
+   "usedIn": [],
+   "known": true,
+   "binding": "01-open.url"
+  },
+  "v3": {
+   "example": "fwvk2-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v4": {
+   "example": "fwvk2-n2 Bench Task",
+   "usedIn": [
+    2,
+    4
+   ],
+   "known": true
+  },
+  "v5": {
+   "example": "Bench task for run fwvk2-n2",
+   "usedIn": [],
+   "known": true
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8096/projects/:id/:id"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e437"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > main > div > div:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 350,
+      "y": 110,
+      "w": 35.3,
+      "h": 26,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "mints": {
+    "at": "p2"
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/projects/:id/{{d1}}",
+    "addedContains": [
+     "- textbox \"Add a task…\"",
+     "- button \"Use magic prefixes to define due dates, assignees and other task properties.\"",
+     "- button \"Add\" [disabled]"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e627",
+    "value": "{{v4}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Add a task…"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Add a task…"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div > div > p:nth-of-type(1) > textarea"
+     },
+     {
+      "kind": "point",
+      "x": 749,
+      "y": 183,
+      "w": 815.9,
+      "h": 38,
+      "role": "textbox",
+      "tag": "textarea",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/projects/:id/{{d1}}",
+    "addedContains": [
+     "- textbox \"Add a task…\": {{v4}}",
+     "- button \"Add\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e632"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Add"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div > div > p:nth-of-type(2) > button"
+     },
+     {
+      "kind": "point",
+      "x": 1204,
+      "y": 183,
+      "w": 70.1,
+      "h": 38,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/projects/:id/{{d1}}",
+    "addedContains": [
+     "- textbox \"Add a task…\"",
+     "- button \"Add\" [disabled]",
+     "- link \"{{v4}}\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=link[name=\"{{v4}}\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=link[name=\"{{v4}}\"]"
+     },
+     {
+      "kind": "scoped",
+      "container": "span",
+      "hasText": "{{v4}}",
+      "selector": "a"
+     },
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "{{v4}}"
+     },
+     {
+      "kind": "css",
+      "selector": "ul > div:nth-of-type(1) > div > div:nth-of-type(2) > span:nth-of-type(1) > a"
+     },
+     {
+      "kind": "point",
+      "x": 445,
+      "y": 230,
+      "w": 156.1,
+      "h": 22,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "mints": {
+    "at": "p1"
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/tasks/{{d2}}",
+    "addedContains": [
+     "- button \"BENCH-{{d1}}\"",
+     "- heading \"BENCH-{{d1}}\"",
+     "- heading \"{{v4}}\"",
+     "- heading \"Description\"",
+     "- button \"1\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "derived": {
+  "d1": {
+   "step": 1,
+   "at": "p2",
+   "example": "5"
+  },
+  "d2": {
+   "step": 4,
+   "at": "p1",
+   "example": "6"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 2,
+  "successes": 2,
+  "partial": 0,
+  "created": "2026-09-21T23:47:19.215Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-21T23:48:14.880Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_c9d12a",
+  "index": 0,
+  "of": 2
+ },
+ "variantOf": "s_5f4637",
+ "provenance": {
+  "session": "fwvk2-n2",
+  "instruction": "In the Vikunja project 'Bench Project' (http://127.0.0.1:8096/projects/2/7), create a new task with the exact title 'fwvk2-n2 Bench Task' and a description that includes the text 'fwvk2-n2' (e.g. 'Bench task for run fwvk2-n2'). Use the project's task-creation UI (e.g. 'New Task' button / add task input). After creating it, open the task's own detail page and set its description to include 'fwvk2-n2' if it is not already set. Verify the task exists with that title and a description containing 'fwvk2-n2', and report the task's detail page URL and the identifier shown on the page (Vikunja displays it like BENCH-<number>).",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-21T23:47:19.215Z"
+ },
+ "revision": 2
+}

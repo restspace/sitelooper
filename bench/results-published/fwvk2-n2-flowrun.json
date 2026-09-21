@@ -1,0 +1,311 @@
+{
+  "flow": "fwvk2",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Signed in to http://127.0.0.1:8096/ as 'admin' (the earlier replayed fill steps had not persisted — both fields were empty on arrival, so I re-filled them and clicked LOGIN, which landed on the Overview at /). Opened the 'Bench Project' (projects/2) and checked its tasks in List, Kanban and Table views, all of which show the same 3 tasks, each with a 'Seed:' title, all un-done. The 'Seed:' titles verbatim are: \"Seed: ship repaired device\" (BENCH-4), \"Seed: order missing parts\" (BENCH-2) and \"Seed: triage inbox\" (BENCH-1).",
+      "values": {
+        "project": "Bench Project",
+        "seed_task_count": "3",
+        "views_checked": "List (3 rows), Kanban (Backlog bucket: BENCH-1, BENCH-2, BENCH-4), Table (3 rows, Done column all unchecked)",
+        "main_a": "List",
+        "main_a_2": "Table",
+        "main_a_3": "Kanban",
+        "main_a_4": "Seed: triage inbox",
+        "main_a_5": "Seed: order missing parts",
+        "main_a_6": "Seed: ship repaired device",
+        "ref": "BENCH-4",
+        "ref_2": "BENCH-2",
+        "ref_3": "BENCH-1",
+        "seed_task_titles_1": "Seed: ship repaired device",
+        "seed_task_titles_2": "Seed: order missing parts",
+        "seed_task_titles_3": "Seed: triage inbox",
+        "seed_task_ids_1": "BENCH-4",
+        "seed_task_ids_2": "BENCH-2",
+        "seed_task_ids_3": "BENCH-1"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_7069db stopped at step 3 — after step 3 expected url http://127.0.0.1:8096/ but browser is at http://127.0.0.1:8096/login",
+      "replayed": "2/3",
+      "repaired": false,
+      "turns": 12,
+      "unreported": [
+        "project_name",
+        "seed_task_title_1",
+        "seed_task_title_2",
+        "seed_task_title_3"
+      ]
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "The stored skill s_5f4637 failed at its first step (no 'Add a task…' input in Table view), so I did it manually: switched to the List view of Bench Project, created the task via the add-task input with the exact title 'fwvk2-n2 Bench Task', opened its detail page (/tasks/6, identifier BENCH-5), typed the description 'Bench task for run fwvk2-n2' into the description editor and clicked SAVE (page confirmed 'Description Saved!'). After a full reload the task detail page shows heading 'BENCH-5', title 'fwvk2-n2 Bench Task', project 'Bench Project', and description 'Bench task for run fwvk2-n2' containing 'fwvk2-n2'.",
+      "values": {
+        "task_detail_url": "http://127.0.0.1:8096/tasks/6",
+        "task_identifier": "BENCH-5",
+        "task_title": "fwvk2-n2 Bench Task",
+        "task_description": "Bench task for run fwvk2-n2",
+        "project": "Bench Project",
+        "ref": "s_5f4637",
+        "ref_2": "fwvk2-n2"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "every candidate refused — s_5f4637: failed at step 1 before touching the page — no element matched any known locator for target (tried 4: page.getByRole('textbox', { name: 'Add a task…', exact: true }), page.getByPlaceholder('Add a task…'), page.locator('div > div > div > div > p:nth-of-type(1) > textarea'), …)",
+      "replayed": "0/3",
+      "repaired": true,
+      "turns": 10,
+      "repinned": "s_8dd672",
+      "repinParams": {
+        "v1": "Bench Project",
+        "v2": "{{01-open.url}}",
+        "v3": "{{runid}}",
+        "v4": "{{runid}} Bench Task",
+        "v5": "Bench task for run {{runid}}"
+      },
+      "unreported": [
+        "run_reference"
+      ]
+    },
+    {
+      "id": "03-set",
+      "status": "success",
+      "summary": "On the task detail page http://127.0.0.1:8096/tasks/6 I used the \"Set Due Date\" popup: opened the date picker, chose December 2026 and clicked day 31, then clicked the popup's \"Confirm\" button (the picker's three-panel row showed \"31 Dec 2026, 12:00:00\"). I then used \"Set Priority\" and selected \"High\" from the dropdown (value 3). I then reloaded the page to confirm persistence: the Due Date control displays \"31 Dec 2026, 12:00:00\" and the Priority dropdown shows \"High\" as the selected option. Screenshot captured.",
+      "values": {
+        "task_title": "fwvk2-n2 Bench Task",
+        "due_date_displayed": "31 Dec 2026, 12:00:00",
+        "task_identifier": "BENCH-5"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-add",
+      "status": "success",
+      "summary": "On the task detail page http://127.0.0.1:8096/tasks/6 I clicked \"Add Labels\", typed \"Backend\" into the \"Type to add a label…\" field, and the suggestion dropdown offered the single existing option \"Backend — Click or press enter to select\", which I clicked rather than pressing Enter. The task's Labels section now displays exactly one label: \"Backend\". Verified after a page reload that it persists, and checked the workspace Labels page (/labels), which still lists only Backend, Docs and Frontend — so the existing label was reused, no duplicate created. The only label displayed for the task is \"Backend\".",
+      "values": {
+        "task_identifier": "BENCH-5",
+        "task_title": "fwvk2-n2 Bench Task",
+        "priority": "High",
+        "due_date": "31 Dec 2026, 12:00:00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-add",
+      "status": "success",
+      "summary": "On the task detail page http://127.0.0.1:8096/tasks/6 I clicked the comment editor in the Comments section (placeholder \"Add your comment, hit '/' for more options…\"), typed 'Comment for run fwvk2-n2' (the prosemirror recipe filled and verified the value), and clicked the \"Comment\" button. The comment posted immediately — the comments region now reads \"admin / less than a minute ago / Comment for run fwvk2-n2\", and Edit/Delete controls appeared for it. The comment text displayed is exactly \"Comment for run fwvk2-n2\", which contains 'fwvk2-n2'.",
+      "values": {
+        "comment_text": "Comment for run fwvk2-n2",
+        "run_reference": "fwvk2-n2",
+        "comment_timestamp": "less than a minute ago",
+        "task_identifier": "BENCH-5",
+        "task_title": "fwvk2-n2 Bench Task",
+        "comment_author": "admin"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "06-report",
+      "status": "success",
+      "summary": "Replayed stored procedure s_6c87e4; observed task_url=http://127.0.0.1:8096/tasks/6, title=fwvk2-n2 Bench Task, description=Bench task for run fwvk2-n2, comments=admin — less than a minute ago — \"Comment for run fwvk2-n2\", project_task_titles_1=fwvk2-n2 Bench Task, comments_section_text= Comments, run_reference=fwvk2-n2 Bench Task.",
+      "values": {
+        "task_url": "http://127.0.0.1:8096/tasks/6",
+        "title": "fwvk2-n2 Bench Task",
+        "description": "Bench task for run fwvk2-n2",
+        "comments": "admin — less than a minute ago — \"Comment for run fwvk2-n2\"",
+        "project_task_titles_1": "fwvk2-n2 Bench Task",
+        "comments_section_text": " Comments",
+        "run_reference": "fwvk2-n2 Bench Task"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "priority",
+        "labels",
+        "project_task_titles_2",
+        "project_task_titles_3",
+        "project_task_titles_4"
+      ]
+    }
+  ],
+  "passed": 6,
+  "total": 6,
+  "repinned": 1,
+  "drift": 10,
+  "driftTickets": [
+    {
+      "flow": "fwvk2",
+      "step": "01-open",
+      "skill": "s_7069db",
+      "similarity": 0.98,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_7069db stopped at step 3 — after step 3 expected url http://127.0.0.1:8096/ but browser is at http://127.0.0.1:8096/login",
+      "reason": "after step 3 expected url http://127.0.0.1:8096/ but browser is at http://127.0.0.1:8096/login",
+      "pageUrlPattern": "http://127.0.0.1:8096/login",
+      "pageUrl": "http://127.0.0.1:8096/login"
+    },
+    {
+      "flow": "fwvk2",
+      "step": "02-create",
+      "skill": "s_5f4637",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.481,
+      "missedLocator": "page.getByRole('textbox', { name: 'Add a task…', exact: true })",
+      "fallbackUsed": null,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8096/projects/:id/:id",
+      "pageUrl": "http://127.0.0.1:8096/projects/2/7"
+    },
+    {
+      "flow": "fwvk2",
+      "step": "06-report",
+      "skill": "s_6c87e4",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.454,
+      "missedLocator": "page.locator('ul > div:nth-of-type(1) > div > div:nth-of-type(2) > span:nth-of-type(1) > a')",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8096/projects/:id/:id",
+      "pageUrl": "http://127.0.0.1:8096/projects/2/7"
+    },
+    {
+      "flow": "fwvk2",
+      "step": "06-report",
+      "skill": "s_6c87e4",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 0.454,
+      "missedLocator": "page.locator('span', { hasText: 'fwvk2-n2 Bench Task' }).locator('span > span:nth-of-type(2)')",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8096/projects/:id/:id",
+      "pageUrl": "http://127.0.0.1:8096/projects/2/7"
+    },
+    {
+      "flow": "fwvk2",
+      "step": "06-report",
+      "skill": "s_6c87e4",
+      "atStep": "3",
+      "key": "target",
+      "similarity": 0.454,
+      "missedLocator": "page.locator('div:nth-of-type(1) > div > div:nth-of-type(2) > div:nth-of-type(1) > span > span')",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8096/projects/:id/:id",
+      "pageUrl": "http://127.0.0.1:8096/projects/2/7"
+    },
+    {
+      "flow": "fwvk2",
+      "step": "06-report",
+      "skill": "s_6c87e4",
+      "atStep": "4",
+      "key": "target",
+      "similarity": 0.454,
+      "missedLocator": "page.locator('ul > div:nth-of-type(1) > div > div:nth-of-type(2) > span:nth-of-type(1) > a')",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8096/projects/:id/:id",
+      "pageUrl": "http://127.0.0.1:8096/projects/2/7"
+    },
+    {
+      "flow": "fwvk2",
+      "step": "06-report",
+      "skill": "s_6c87e4",
+      "atStep": "5",
+      "key": "target",
+      "similarity": 0.454,
+      "missedLocator": "page.locator('ul > div:nth-of-type(2) > div > div:nth-of-type(2) > span:nth-of-type(1) > a')",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8096/projects/:id/:id",
+      "pageUrl": "http://127.0.0.1:8096/projects/2/7"
+    },
+    {
+      "flow": "fwvk2",
+      "step": "06-report",
+      "skill": "s_6c87e4",
+      "atStep": "6",
+      "key": "target",
+      "similarity": 0.454,
+      "missedLocator": "page.locator('ul > div:nth-of-type(3) > div > div:nth-of-type(2) > span:nth-of-type(1) > a')",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8096/projects/:id/:id",
+      "pageUrl": "http://127.0.0.1:8096/projects/2/7"
+    },
+    {
+      "flow": "fwvk2",
+      "step": "06-report",
+      "skill": "s_6c87e4",
+      "atStep": "7",
+      "key": "target",
+      "similarity": 0.454,
+      "missedLocator": "page.locator('ul > div:nth-of-type(4) > div > div:nth-of-type(2) > span:nth-of-type(1) > a')",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8096/projects/:id/:id",
+      "pageUrl": "http://127.0.0.1:8096/projects/2/7"
+    },
+    {
+      "flow": "fwvk2",
+      "step": "06-report",
+      "skill": "s_6c87e4",
+      "atStep": "8",
+      "key": "target",
+      "similarity": 0.454,
+      "missedLocator": "page.locator('span', { hasText: 'fwvk2-n2 Bench Task' }).locator('a')",
+      "fallbackUsed": "page.getByRole('link', { name: 'fwvk2-n2 Bench Task', exact: true })",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8096/projects/:id/:id",
+      "pageUrl": "http://127.0.0.1:8096/projects/2/7"
+    }
+  ],
+  "wallMs": 119834,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 262137,
+    "completionTokens": 5901,
+    "cachedTokens": 229504
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 262137,
+      "completionTokens": 5901,
+      "cachedTokens": 229504
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
