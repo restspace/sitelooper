@@ -1,0 +1,196 @@
+{
+ "id": "s_f09f36",
+ "origin": "http://127.0.0.1:8069",
+ "template": "In Odoo Sales there is currently an UNSAVED draft quotation form open (breadcrumb '{{v1}}', customer '{{v2}}', one line '{{v4}}' qty 1 price {{v5}}). Discard that unsaved draft (use the Discard action or navigate away, do NOT save it). Then create a NEW quotation from scratch: customer '{{v2}}' selected from the customer autocomplete dropdown (an option must actually be clicked). Add exactly ONE order line with a SIMPLE product that does NOT have variants and does NOT trigger the 'Configure your product' configurator dialog — for example a service product or a plain product like '{{v6}} Bloc Screens', 'Cabinet with Doors', 'Large Cabinet', 'Product Test' or similar non-configurable item. Pick it from the product autocomplete dropdown (an option must actually be clicked). Set the line quantity to 3. Then SAVE the quotation. Report: (a) the product name chosen, (b) the unit price the app filled in on the line, (c) the Untaxed Amount shown in the totals, (d) the quotation reference/name (e.g. S00042) shown after saving. Do not confirm the quotation.",
+ "params": {
+  "v1": {
+   "example": "New",
+   "usedIn": [],
+   "known": true,
+   "binding": "03-create.breadcrumb_before_save"
+  },
+  "v2": {
+   "example": "fwod74-n2 Bench Customer",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:contact_name"
+  },
+  "v3": {
+   "example": "fwod74-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v4": {
+   "example": "[FURN_8220] Four Person Desk",
+   "usedIn": [],
+   "known": true,
+   "binding": "03-create.product_option_chosen"
+  },
+  "v5": {
+   "example": "0.00",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i3:unit_price_2"
+  },
+  "v6": {
+   "example": "Acoustic",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1916"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Cancel"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 316,
+      "y": 129,
+      "w": 65.6,
+      "h": 33,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+    "addedContains": [
+     "- button \"Set to Quotation\"",
+     "- radio \"Cancelled\" [disabled]",
+     "- link \"{{v2}} {{*}}\"",
+     "- link \"{{v4}}\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_f74dbc",
+    "step": 1
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1484"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 189,
+      "y": 79,
+      "w": 26,
+      "h": 17.5,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_f74dbc",
+    "step": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1463"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "Quotations"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div:nth-of-type(2) > ol > li > a"
+     },
+     {
+      "kind": "point",
+      "x": 101,
+      "y": 62,
+      "w": 62.9,
+      "h": 16.3,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&menu_id=:id&model=sale.order&view_type=list",
+    "addedContains": [
+     "- button \"Remove\"",
+     "- searchbox \"Search...\"",
+     "- link \"Close the onboarding panel\"",
+     "- button \"Company Data\"",
+     "- heading \"Company Data\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 2,
+  "successes": 2,
+  "partial": 0,
+  "created": "2026-09-21T11:39:32.207Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-21T11:41:38.999Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_5e2df7",
+  "index": 0,
+  "of": 3
+ },
+ "variantOf": "s_f74dbc",
+ "provenance": {
+  "session": "fwod74-n2",
+  "instruction": "In Odoo Sales there is currently an UNSAVED draft quotation form open (breadcrumb 'New', customer 'fwod74-n2 Bench Customer', one line '[FURN_8220] Four Person Desk' qty 1 price 0.00). Discard that unsaved draft (use the Discard action or navigate away, do NOT save it). Then create a NEW quotation from scratch: customer 'fwod74-n2 Bench Customer' selected from the customer autocomplete dropdown (an option must actually be clicked). Add exactly ONE order line with a SIMPLE product that does NOT have variants and does NOT trigger the 'Configure your product' configurator dialog — for example a service product or a plain product like 'Acoustic Bloc Screens', 'Cabinet with Doors', 'Large Cabinet', 'Product Test' or similar non-configurable item. Pick it from the product autocomplete dropdown (an option must actually be clicked). Set the line quantity to 3. Then SAVE the quotation. Report: (a) the product name chosen, (b) the unit price the app filled in on the line, (c) the Untaxed Amount shown in the totals, (d) the quotation reference/name (e.g. S00042) shown after saving. Do not confirm the quotation.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-21T11:39:32.207Z",
+  "transforms": [
+   {
+    "name": "unfreezeExpectations",
+    "at": 1,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- button \\\"Set to Quotation\\\"\",\"- radio \\\"Cancelled\\\" [disabled]\",\"- link \\\"{{v2}} Benchville\\\"\",\"- link \\\"{{v4}}\\\"\"] → [\"- button \\\"Set to Quotation\\\"\",\"- radio \\\"Cancelled\\\" [disabled]\",\"- link \\\"{{v2}} {{*}}\\\"\",\"- link \\\"{{v4}}\\\"\"]"
+   }
+  ]
+ },
+ "revision": 2
+}

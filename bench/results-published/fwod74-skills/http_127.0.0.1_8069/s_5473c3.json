@@ -1,0 +1,992 @@
+{
+ "id": "s_5473c3",
+ "origin": "http://127.0.0.1:8069",
+ "template": "Verify the final state in Odoo Sales: open the order {{v1}} and confirm (a) its status is '{{v2}}', (b) its customer is '{{v3}}', and (c) it has two order lines (Large Cabinet qty {{v5}} and Acoustic Bloc Screens qty {{v6}}) with {{v7}} £2,190.00. Report exactly what you see. Do not change anything.",
+ "params": {
+  "v1": {
+   "example": "S00021",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i4:order_reference"
+  },
+  "v2": {
+   "example": "Cancelled",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i8:status_after_cancel"
+  },
+  "v3": {
+   "example": "fwod74-n1 Bench Customer",
+   "usedIn": [
+    11
+   ],
+   "known": true,
+   "binding": "output:i2:contact_name"
+  },
+  "v4": {
+   "example": "fwod74-n1",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v5": {
+   "example": "5.00",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i6:first_line_new_quantity"
+  },
+  "v6": {
+   "example": "2.00",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i5:second_product_quantity"
+  },
+  "v7": {
+   "example": "Untaxed Amount",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i4:untaxed_amount_label"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+  "fingerprint": [
+   0.009,
+   0.003,
+   0.003,
+   0,
+   0.006,
+   0.088,
+   0.012,
+   0.006,
+   0.003,
+   0.012,
+   0.012,
+   0,
+   0.009,
+   0.056,
+   0.029,
+   0.018,
+   0.02,
+   0.003,
+   0.023,
+   0.015,
+   0,
+   0.023,
+   0.029,
+   0.018,
+   0.012,
+   0.006,
+   0.006,
+   0.02,
+   0,
+   0.047,
+   0.006,
+   0.047,
+   0.088,
+   0.038,
+   0.006,
+   0,
+   0.015,
+   0,
+   0,
+   0.009,
+   0,
+   0.018,
+   0.041,
+   0.038,
+   0.012,
+   0.026,
+   0.012,
+   0.064,
+   0.05,
+   0.029,
+   0.015,
+   0.003,
+   0,
+   0.088,
+   0.006,
+   0.006,
+   0.003,
+   0.035,
+   0.032,
+   0.003,
+   0,
+   0,
+   0.012,
+   0.187,
+   0,
+   0.012,
+   0.012,
+   0.047,
+   0.018,
+   0.006,
+   0,
+   0,
+   0.012,
+   0.012,
+   0.064,
+   0.012,
+   0.015,
+   0.012,
+   0.015,
+   0,
+   0.009,
+   0.041,
+   0.064,
+   0,
+   0.02,
+   0,
+   0.029,
+   0.1,
+   0.029,
+   0.023,
+   0.047,
+   0,
+   0.015,
+   0,
+   0.07,
+   0.009,
+   0,
+   0.041,
+   0.009,
+   0,
+   0.044,
+   0.026,
+   0.009,
+   0.026,
+   0.035,
+   0,
+   0.029,
+   0.006,
+   0.006,
+   0.012,
+   0.003,
+   0.018,
+   0,
+   0.006,
+   0.059,
+   0.003,
+   0,
+   0,
+   0,
+   0.114,
+   0,
+   0.006,
+   0.006,
+   0.009,
+   0.02,
+   0.003,
+   0.012,
+   0.006,
+   0.006,
+   0.006,
+   0.009,
+   0.006,
+   0.038,
+   0.009,
+   0.018,
+   0.015,
+   0.003,
+   0,
+   0,
+   0.015,
+   0.006,
+   0.053,
+   0.023,
+   0.02,
+   0.006,
+   0.003,
+   0.006,
+   0.006,
+   0.032,
+   0.059,
+   0.047,
+   0,
+   0.059,
+   0.012,
+   0.009,
+   0.006,
+   0.012,
+   0.015,
+   0.029,
+   0.003,
+   0.012,
+   0.029,
+   0.02,
+   0.012,
+   0.012,
+   0.012,
+   0,
+   0,
+   0.012,
+   0,
+   0.006,
+   0.015,
+   0.032,
+   0.006,
+   0.003,
+   0.064,
+   0,
+   0,
+   0.006,
+   0.12,
+   0,
+   0.018,
+   0.038,
+   0.026,
+   0.009,
+   0.009,
+   0.023,
+   0,
+   0.018,
+   0.032,
+   0.006,
+   0.006,
+   0.009,
+   0.006,
+   0.006,
+   0.018,
+   0.094,
+   0.009,
+   0.023,
+   0.006,
+   0,
+   0.029,
+   0,
+   0.053,
+   0.006,
+   0,
+   0.003,
+   0.009,
+   0.023,
+   0,
+   0.006,
+   0.015,
+   0,
+   0.006,
+   0,
+   0,
+   0.003,
+   0.003,
+   0.012,
+   0.026,
+   0,
+   0.003,
+   0.018,
+   0.012,
+   0,
+   0.009,
+   0.012,
+   0,
+   0,
+   0,
+   0.003,
+   0.02,
+   0.006,
+   0.006,
+   0.006,
+   0.029,
+   0.018,
+   0.006,
+   0.018,
+   0.02,
+   0.018,
+   0,
+   0.067,
+   0.006,
+   0.018,
+   0.009,
+   0,
+   0.006,
+   0.003,
+   0.012,
+   0.012,
+   0.006,
+   0,
+   0.173,
+   0.135,
+   0.061,
+   0.006,
+   0,
+   0.015,
+   0.032,
+   0.012,
+   0.009,
+   0.003,
+   0.003,
+   0.006,
+   0.141,
+   0.029,
+   0.079,
+   0.02,
+   0.012,
+   0.006,
+   0.009,
+   0.003,
+   0,
+   0.029,
+   0.012,
+   0.018,
+   0.006,
+   0.006,
+   0.026,
+   0.006,
+   0.035,
+   0.003,
+   0.059,
+   0.012,
+   0.006,
+   0.009,
+   0.009,
+   0.015,
+   0.02,
+   0,
+   0.012,
+   0.012,
+   0.006,
+   0.006,
+   0.009,
+   0,
+   0.012,
+   0.003,
+   0.07,
+   0.044,
+   0.003,
+   0,
+   0.015,
+   0.018,
+   0,
+   0.009,
+   0.006,
+   0.018,
+   0.003,
+   0.023,
+   0.012,
+   0.088,
+   0.006,
+   0.009,
+   0,
+   0,
+   0.015,
+   0.067,
+   0,
+   0.018,
+   0.003,
+   0.038,
+   0.05,
+   0,
+   0.015,
+   0,
+   0.006,
+   0.009,
+   0,
+   0.003,
+   0,
+   0.003,
+   0.012,
+   0,
+   0.02,
+   0.035,
+   0,
+   0.026,
+   0.059,
+   0,
+   0.012,
+   0,
+   0.012,
+   0,
+   0.012,
+   0.035,
+   0,
+   0.006,
+   0.012,
+   0.029,
+   0.038,
+   0.061,
+   0.003,
+   0.006,
+   0,
+   0.035,
+   0.003,
+   0.015,
+   0.035,
+   0.044,
+   0.05,
+   0.003,
+   0.006,
+   0.015,
+   0.047,
+   0.006,
+   0,
+   0.012,
+   0,
+   0.038,
+   0.003,
+   0.006,
+   0.018,
+   0,
+   0.009,
+   0,
+   0.003,
+   0.006,
+   0.035,
+   0.012,
+   0.006,
+   0.006,
+   0,
+   0.02,
+   0.018,
+   0.003,
+   0.041,
+   0.012,
+   0.006,
+   0.012,
+   0.029,
+   0.009,
+   0.009,
+   0.003,
+   0.009,
+   0.076,
+   0.015,
+   0.006,
+   0,
+   0.006,
+   0.026,
+   0.012,
+   0.012,
+   0.006,
+   0.009,
+   0.006,
+   0.026,
+   0,
+   0.018,
+   0.056,
+   0.015,
+   0.018,
+   0.006,
+   0,
+   0.059,
+   0.053,
+   0.023,
+   0.006,
+   0.012,
+   0.023,
+   0.012,
+   0,
+   0,
+   0.012,
+   0.044,
+   0.003,
+   0.015,
+   0.006,
+   0.003,
+   0.009,
+   0.006,
+   0.006,
+   0.003,
+   0.006,
+   0,
+   0.006,
+   0.003,
+   0.026,
+   0.003,
+   0.012,
+   0.044,
+   0,
+   0.006,
+   0.006,
+   0,
+   0.026,
+   0.038,
+   0.009,
+   0.003,
+   0,
+   0.026,
+   0.041,
+   0.097,
+   0.006,
+   0.003,
+   0.012,
+   0.012,
+   0,
+   0.003,
+   0.085,
+   0.02,
+   0,
+   0,
+   0.018,
+   0.015,
+   0,
+   0.114,
+   0.018,
+   0.656,
+   0.041,
+   0,
+   0.035,
+   0.015,
+   0.044,
+   0.003,
+   0,
+   0,
+   0.006,
+   0.006,
+   0.041,
+   0.003,
+   0,
+   0.006,
+   0.006,
+   0.032,
+   0.006,
+   0.012,
+   0.009,
+   0.032,
+   0.006,
+   0.006,
+   0.091,
+   0,
+   0,
+   0.009,
+   0.018,
+   0.067,
+   0.003,
+   0.015,
+   0.006,
+   0.015,
+   0.026,
+   0.018,
+   0.351,
+   0.006,
+   0.018,
+   0.018,
+   0.032,
+   0.006,
+   0.015,
+   0
+  ],
+  "requireText": [
+   "{{v1}}",
+   "{{v2}}"
+  ]
+ },
+ "steps": [
+  {
+   "tool": "read",
+   "args": {
+    "target": ".o_statusbar_status",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_statusbar_status"
+     },
+     {
+      "kind": "role",
+      "role": "radiogroup",
+      "name": "Statusbar"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div"
+     },
+     {
+      "kind": "point",
+      "x": 1052,
+      "y": 129,
+      "w": 424.1,
+      "h": 33,
+      "role": "radiogroup",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "statusbar_full_text"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": ".o_breadcrumb",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_breadcrumb"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div:nth-of-type(1) > div > div:nth-of-type(1) > div:nth-of-type(2)",
+      "nth": 1
+     },
+     {
+      "kind": "point",
+      "x": 108,
+      "y": 71,
+      "w": 76.3,
+      "h": 33.8,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "breadcrumb_final"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": ".o_form_view a[name=\"partner_id\"], .o_form_view .o_field_widget[name=\"partner_id\"]",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_form_view a[name=\"partner_id\"], .o_form_view .o_field_widget[name=\"partner_id\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div",
+      "nth": 0
+     },
+     {
+      "kind": "point",
+      "x": 401,
+      "y": 256,
+      "w": 445.8,
+      "h": 45,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "customer_as_shown"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > h1 > div > span"
+     },
+     {
+      "kind": "point",
+      "x": 89,
+      "y": 195,
+      "w": 96.5,
+      "h": 31,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "order_reference"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div > a > span:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 265,
+      "y": 245,
+      "w": 173.5,
+      "h": 23,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "customer_name"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div > a > span:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 210,
+      "y": 268,
+      "w": 63.8,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "customer_city"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div > div > button > sup"
+     },
+     {
+      "kind": "point",
+      "x": 1169,
+      "y": 765,
+      "w": 5.8,
+      "h": 0,
+      "role": null,
+      "tag": "sup",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "order_line_count"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(1) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1205,
+      "y": 622,
+      "w": 66.2,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "untaxed_amount"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(2) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1195,
+      "y": 645,
+      "w": 86,
+      "h": 21,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "tax_20_percent"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(3) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1195,
+      "y": 670,
+      "w": 86,
+      "h": 21,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "total"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "text",
+      "text": "{{v3}}"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div > a > span:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 265,
+      "y": 245,
+      "w": 173.5,
+      "h": 23,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "ref"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div > ul > li > span:nth-of-type(2)",
+      "nth": 0
+     },
+     {
+      "kind": "point",
+      "x": 222,
+      "y": 892,
+      "w": 62.3,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "status_shown"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "table > tbody > tr:nth-of-type(2) > td:nth-of-type(2) > div > a"
+     },
+     {
+      "kind": "point",
+      "x": 169,
+      "y": 486,
+      "w": 228,
+      "h": 21,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "ref_2"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Verified order {{v1}} in place (it was already open; I performed read-only checks only, no writes — the page reported \"no visible change\"). (a) Status: the statusbar radio \"{{v2}}\" is the checked one and the statusbar's full text is \"{{v2}} / Sales Order / Quotation Sent / Quotation\", all four disabled; header and breadcrumb still read \"{{v1}}\" / \"Quotations / {{v1}}\", and the only action button now offered is \"Set to Quotation\" (no Confirm), consistent with a cancelled order. (b) Customer: shown as an internal link \"{{v3}}\" with \"Benchville\" beneath it, matching exactly. (c) Lines: exactly two rows — \"[E-COM07] Large Cabinet\" qty {{v5}} @ 320.00, 20% tax, £1,600.00, and \"[FURN_6666] Acoustic Bloc Screens\" qty {{v6}} @ 295.00, 20% tax, £590.00 — with the totals footer reading {{v7}} £2,190.00, TAX 20% £438.00, Total £2,628.00. Every element of the instruction is confirmed as stated.",
+  "values": {
+   "order_reference": "{{v1}}",
+   "breadcrumb_final": "Quotations\n{{v1}}",
+   "header_reference": "{{v1}}",
+   "status_shown": "{{v2}}",
+   "statusbar_full_text": "{{v2}}\nSales Order\nQuotation Sent\nQuotation",
+   "statusbar_checked_radio": "{{v2}} [checked] [disabled]; Sales Order, Quotation Sent, Quotation all [disabled]",
+   "customer_name": "{{v3}}",
+   "customer_city": "Benchville",
+   "customer_as_shown": "{{v3}}\nBenchville",
+   "line_1": "[E-COM07] Large Cabinet — qty {{v5}} @ 320.00, 20% tax, £ 1,600.00",
+   "line_2": "[FURN_6666] Acoustic Bloc Screens — qty {{v6}} @ 295.00, 20% tax, £ 590.00",
+   "order_line_count": "2",
+   "untaxed_amount": "£ 2,190.00",
+   "tax_20_percent": "£ 438.00",
+   "total": "£ 2,628.00",
+   "available_button": "Set to Quotation (no Confirm button present)",
+   "page_title": "Odoo - {{v1}}",
+   "ref": "{{v4}}",
+   "ref_2": "FURN_6666"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-21T11:34:12.655Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-21T11:42:05.652Z"
+ },
+ "status": "validated",
+ "provenance": {
+  "session": "fwod74-n1",
+  "instruction": "Verify the final state in Odoo Sales: open the order S00021 and confirm (a) its status is 'Cancelled', (b) its customer is 'fwod74-n1 Bench Customer', and (c) it has two order lines (Large Cabinet qty 5.00 and Acoustic Bloc Screens qty 2.00) with Untaxed Amount £2,190.00. Report exactly what you see. Do not change anything.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-21T11:34:12.655Z"
+ },
+ "revision": 4
+}
