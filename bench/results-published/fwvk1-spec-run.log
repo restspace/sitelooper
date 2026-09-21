@@ -1,0 +1,13 @@
+[spec-replay] resetting vikunja
+[reset] vikunja: deleted 1 leftover bench task(s)
+[reset] vikunja: re-created "Seed: ship repaired device" as BENCH-6 so the next task is BENCH-7
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile bench/results/flows/fwvk1.json --out /home/user/sitelooper/bench/results/fwvk1-spec-spec-tmp --overwrite-spec
+flow: /home/user/sitelooper/bench/results/fwvk1-spec-spec-tmp/fwvk1.flow.ts
+spec: /home/user/sitelooper/bench/results/fwvk1-spec-spec-tmp/fwvk1.spec.ts
+warning a component recipe is demoted in the store, and the compiled artifact omits it for good
+  why: prosemirror/set-value: seed recipe r_1ab693 is demoted in the component store (2 consecutive verification failures); the snapshot omits it. The snapshot is compile-time state: the daemon keeps validating, learning and demoting after this file is written; the artifact runs what it was given.
+  fix: record the widget again with the daemon to learn a working recipe, then recompile
+warning a learned component recipe travels in the compiled artifact as data
+  why: prosemirror/set-value: uses learned recipe r_8188f5 learned in session fwvk1-n1 (validated) rather than the shipped seed; the artifact carries it as data. The snapshot is compile-time state: the daemon keeps validating, learning and demoting after this file is written; the artifact runs what it was given.
+[spec-replay] running: npx playwright test --config /home/user/sitelooper/bench/results/fwvk1-spec-spec-tmp/playwright.config.mjs
+[spec-replay] fwvk1-spec: 1/1 passed, exit=0, 43s, 1 drift line(s) — result written

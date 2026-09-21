@@ -1,0 +1,327 @@
+{
+ "id": "s_32fccd",
+ "origin": "http://127.0.0.1:8096",
+ "template": "Open http://127.0.0.1:8096/ and sign in with username '{{v2}}' and password '{{v3}}'. Then navigate to the project named 'Bench Project' and report the titles of all tasks whose title starts with 'Seed:', exactly as shown on the page. Do not modify or open any tasks; just read and report the titles.",
+ "params": {
+  "v2": {
+   "example": "admin",
+   "usedIn": [
+    1,
+    4
+   ]
+  },
+  "v3": {
+   "example": "bench-admin-pass",
+   "usedIn": [
+    2,
+    5
+   ]
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8096/login"
+ },
+ "steps": [
+  {
+   "tool": "fill",
+   "args": {
+    "target": "role=textbox[name=\"Username Or Email Address\"]",
+    "value": "{{v2}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Username Or Email Address"
+     },
+     {
+      "kind": "label",
+      "label": "Username Or Email Address"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "e.g. frederick"
+     },
+     {
+      "kind": "id",
+      "selector": "#username"
+     },
+     {
+      "kind": "css",
+      "selector": "#username"
+     },
+     {
+      "kind": "point",
+      "x": 896,
+      "y": 275,
+      "w": 448,
+      "h": 40,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/login",
+    "addedContains": [
+     "- textbox \"e.g. frederick\": {{v2}}"
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_9f7dc9",
+    "step": 1
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "role=textbox[name=\"Password\"]",
+    "value": "{{v3}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Password"
+     },
+     {
+      "kind": "label",
+      "label": "Password"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "e.g. •••••••••••"
+     },
+     {
+      "kind": "id",
+      "selector": "#password"
+     },
+     {
+      "kind": "css",
+      "selector": "#password"
+     },
+     {
+      "kind": "point",
+      "x": 896,
+      "y": 359,
+      "w": 448,
+      "h": 40,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/login",
+    "addedContains": [
+     "- textbox \"e.g. •••••••••••\": {{v3}}"
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_9f7dc9",
+    "step": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Login\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#loginform > button"
+     },
+     {
+      "kind": "point",
+      "x": 708,
+      "y": 444,
+      "w": 71.1,
+      "h": 34,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/login",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_9f7dc9",
+    "step": 3
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e32",
+    "value": "{{v2}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Username Or Email Address"
+     },
+     {
+      "kind": "label",
+      "label": "Username Or Email Address"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "e.g. frederick"
+     },
+     {
+      "kind": "id",
+      "selector": "#username"
+     },
+     {
+      "kind": "css",
+      "selector": "#username"
+     },
+     {
+      "kind": "point",
+      "x": 896,
+      "y": 275,
+      "w": 448,
+      "h": 40,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/login",
+    "addedContains": [
+     "- textbox \"e.g. frederick\": {{v2}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e39",
+    "value": "{{v3}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Password"
+     },
+     {
+      "kind": "label",
+      "label": "Password"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "e.g. •••••••••••"
+     },
+     {
+      "kind": "id",
+      "selector": "#password"
+     },
+     {
+      "kind": "css",
+      "selector": "#password"
+     },
+     {
+      "kind": "point",
+      "x": 896,
+      "y": 381,
+      "w": 448,
+      "h": 40,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/login",
+    "addedContains": [
+     "- textbox \"e.g. •••••••••••\": {{v3}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e47"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#loginform > button"
+     },
+     {
+      "kind": "point",
+      "x": 708,
+      "y": 466,
+      "w": 71.1,
+      "h": 34,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/",
+    "addedContains": [
+     "- button \"Hide the menu\"",
+     "- button \"Open the search/quick action bar\"",
+     "- button \"{{v2}}\"",
+     "- link \"Overview\"",
+     "- link \"Upcoming\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-21T22:01:26.610Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_4b0772",
+  "index": 0,
+  "of": 3
+ },
+ "variantOf": "s_9f7dc9",
+ "provenance": {
+  "session": "fwvk1-n3",
+  "instruction": "Open http://127.0.0.1:8096/ and sign in with username 'admin' and password 'bench-admin-pass'. Then navigate to the project named 'Bench Project' and report the titles of all tasks whose title starts with 'Seed:', exactly as shown on the page. Do not modify or open any tasks; just read and report the titles.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-21T22:01:26.610Z"
+ },
+ "revision": 1
+}

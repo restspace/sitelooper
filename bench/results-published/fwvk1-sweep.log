@@ -1,0 +1,112 @@
+
+[sweep] run 1/3: fwvk1-n1 (store: /home/user/sitelooper/bench/results/fwvk1-skills)
+[harness] vikunja: defaulting APP_URL
+[harness] vikunja: defaulting APP_EMAIL
+[harness] vikunja: defaulting APP_PASSWORD
+[reset] vikunja: no leftover bench tasks
+[harness] vikunja responded 200 at http://127.0.0.1:8096/
+stopped: fwvk1-n1
+  flow "fwvk1" saved: 6 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwvk1.json
+  warning: note: dropped 1 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: note: 01-open no longer publishes seed_task_count — no replay reads it from the page and the recording showed no line to read
+  warning: note: 04-create no longer publishes labels_list_page_url, all_labels_in_app, count_of_labels_named_Backend, labels_page_url_path, label_name_docs, label_name_frontend — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 82 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "Bench Project" (output) in "Open http://127.0.0.1:8096/ and sign in with username 'admin' and password 'bench-admin-pass'. Then navigate to the project named 'Bench Project' and report the"
+  flow.steps[0].instruction: "admin" (output) in "Open http://127.0.0.1:8096/ and sign in with username 'admin' and password 'bench-admin-pass'. Then navigate to the project named 'Bench Project' and report the"
+  flow.steps[0].params.v2: "admin" (output) in "admin"
+  flow.steps[1].instruction: "Bench Project" (output) in "In the project 'Bench Project', create a new task with the title exactly '{{runid}} Bench Task' and a description that includes the text '{{runid}}' (e.g. 'Benc"
+  flow.steps[1].params.v1: "Bench Project" (output) in "Bench Project"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwvk1-n1 stop=completed
+turns=7 wall=269.1s
+commands=6 cmdTime=232.6s cmdBytes=6007 timeouts=0
+orchestrator in=10899 cw=0 cr=15808 out=2753
+inner prompt=1636141 cached=1528192 completion=21526
+spend=$0.0655 maxUsd=3
+learn: A_n=0 replayed=0/6 full=0 repaired=0 compiled=6 variants=0
+-> /home/user/sitelooper/bench/results/fwvk1-n1-sitelooper-result.json
+
+fwvk1-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — project=Bench Project, description includes runid=true
+  obj 3: PASS — due date=2026-12-31T00:00:00Z, want 2026-12-31
+  obj 4: PASS — priority=3 (want 3 = High)
+  obj 5: PASS — labels=Backend#1; seeded Backend is #1
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — identifier BENCH-4 reported
+
+[sweep] run 2/3: fwvk1-n2 (replay flow fwvk1, no orchestrator)
+[reset] vikunja: deleted 1 leftover bench task(s)
+[reset] vikunja: re-created "Seed: ship repaired device" as BENCH-4 so the next task is BENCH-5
+[sweep] fwvk1-n2: 1 drift ticket(s) → fwvk1-n2-drift.json
+
+fwvk1-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — project=Bench Project, description includes runid=true
+  obj 3: PASS — due date=2026-12-31T00:00:00Z, want 2026-12-31
+  obj 4: PASS — priority=3 (want 3 = High)
+  obj 5: PASS — labels=Backend#1; seeded Backend is #1
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — identifier BENCH-5 reported
+
+[sweep] run 3/3: fwvk1-n3 (replay flow fwvk1, no orchestrator)
+[reset] vikunja: deleted 1 leftover bench task(s)
+[reset] vikunja: re-created "Seed: ship repaired device" as BENCH-5 so the next task is BENCH-6
+[sweep] fwvk1-n3: 2 drift ticket(s) → fwvk1-n3-drift.json
+
+fwvk1-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — project=Bench Project, description includes runid=true
+  obj 3: PASS — due date=2026-12-31T00:00:00Z, want 2026-12-31
+  obj 4: PASS — priority=3 (want 3 = High)
+  obj 5: PASS — labels=Backend#1; seeded Backend is #1
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — identifier BENCH-6 reported
+
+Learning sweep fwvk1 (K=3)
+┌─────────┬───┬────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid      │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwvk1-n1' │ '7/7'    │ 'completed' │ 7     │ 6    │ 0.0655    │ 0    │ '0/6'        │ 269    │
+│ 1       │ 2 │ 'fwvk1-n2' │ '7/7'    │ 'success'   │ 0     │ 6    │ 0         │ 1    │ '6/6 (flow)' │ 39     │
+│ 2       │ 3 │ 'fwvk1-n3' │ '7/7'    │ 'success'   │ 4     │ 6    │ 0.0017    │ 0.83 │ '6/6 (flow)' │ 56     │
+└─────────┴───┴────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8096
+  s_21eb50  validated    9 steps  3/3 (100%)
+           On the task detail page for the task titled '{{v1}}' (at {{v3}}), add a comment to the task whose text include…
+  s_2818e9  validated    1 steps  3/3 (100%)
+           Open {{v1}} and sign in with username '{{v2}}' and password '{{v3}}'. Then navigate to the project named 'Benc…
+  s_3168ce  validated    5 steps  3/3 (100%)
+           In the project '{{v1}}', create a new task with the title exactly '{{v3}}' and a description that includes the…
+  s_46c818  validated    4 steps  3/3 (100%)
+           On the task detail page for the task titled '{{v1}}' (at {{v3}}), attach the EXISTING label named 'Backend' to…
+  s_4ed347  validated   11 steps  3/3 (100%)
+           Open the task detail page at {{v1}} and read back, without changing anything: (1) the task title, (2) the task…
+  s_73d7bd  validated   15 steps  3/3 (100%)
+           In the project '{{v1}}', create a new task with the title exactly '{{v3}}' and a description that includes the…
+  s_9f7dc9  validated    3 steps  2/3 (67%)
+           Open {{v1}} and sign in with username '{{v2}}' and password '{{v3}}'. Then navigate to the project named 'Benc…
+  s_d1f12f  validated    5 steps  3/3 (100%)
+           On the task detail page for the task titled '{{v1}}' (at {{v3}}), attach the EXISTING label named 'Backend' to…
+  s_d7618a  validated   20 steps  3/3 (100%)
+           On the task detail page for the task titled '{{v1}}' (at {{v3}}), set the task's due date to {{v4}} ({{v5}} 31…
+  s_dd5887  validated    1 steps  3/3 (100%)
+           On the task detail page for the task titled '{{v1}}' (at {{v3}}), attach the EXISTING label named 'Backend' to…
+  s_e54e34  validated    1 steps  2/2 (100%)
+           Open {{v1}} and sign in with username '{{v2}}' and password '{{v3}}'. Then navigate to the project named 'Benc…
+  s_fc046c  validated    7 steps  2/2 (100%)
+           Open {{v1}} and sign in with username '{{v2}}' and password '{{v3}}'. Then navigate to the project named 'Benc…
+  s_32fccd  provisional  6 steps  1/1 (100%)  variant of s_9f7dc9
+           Open http://127.0.0.1:8096/ and sign in with username '{{v2}}' and password '{{v3}}'. Then navigate to the pro…
+  s_5f9a1a  provisional  4 steps  1/1 (100%)  variant of s_9f7dc9
+           Open http://127.0.0.1:8096/ and sign in with username '{{v2}}' and password '{{v3}}'. Then navigate to the pro…
+  s_72a728  provisional  1 steps  1/1 (100%)
+           Open {{v1}} and sign in with username '{{v2}}' and password '{{v3}}'. Then navigate to the project named 'Benc…
+  s_cf2c6a  provisional  4 steps  1/1 (100%)
+           Open {{v1}} and sign in with username '{{v2}}' and password '{{v3}}'. Then navigate to the project named 'Benc…
+  s_f45aaf  provisional  7 steps  1/1 (100%)
+           Open {{v1}} and sign in with username '{{v2}}' and password '{{v3}}'. Then navigate to the project named 'Benc…
+  s_fd37e0  provisional  1 steps  1/1 (100%)  variant of s_9f7dc9
+           Open http://127.0.0.1:8096/ and sign in with username '{{v2}}' and password '{{v3}}'. Then navigate to the pro…
+store: /home/user/sitelooper/bench/results/fwvk1-skills
+
+summary: /home/user/sitelooper/bench/results/fwvk1-sweep.json
