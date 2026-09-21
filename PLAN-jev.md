@@ -1297,3 +1297,39 @@ Arms: A today's path; C Jev match + start-page navigation at gate 0.8; D the sam
 => Safe, working, and small on this data. The constraint is not Jev: a stored procedure needs
 values a differently-worded instruction often omits. It pays where instructions restate
 their operands (or the session ledger carries them under stable names), not in general.
+
+## Jev switched off: regression check against main (2026-09-20/21)
+
+Question: with `SITELOOPER_JEV=off` does the branch cost, run or verify any worse than `main`? The
+branch is not main-with-a-switch: loop.ts (opening snapshot, settling, trace), tools.ts (flat batch
+steps, screenshot in a batch), refs.ts (label fallback), prompt.ts (3a/4c) and the code tiers of the
+replay/repair cascades are always on. Tested on `jev-with-main` (5418e1d = jev fd7ea16 + main ab5de17).
+
+Unit suite, Jev off, bounded forks: 1912 passed / 3 failed; the 3 were a stale dist/ after the merge
+(rebuild.test ×2) and a 5 s timeout under load (cli-acceptance); both files pass alone after a build.
+
+Paired cloud sweeps, same box, main first then the branch (all experiment flags off, no TypeSafe key
+in the shell), k=3 flow sweeps, results on `results/rgrd1-0hb36s`, `rgod1-2dunlf`, `rggr1`, `rgkb1`:
+
+| app | arm | n1 verified / usd / wall | n2 | n3 | verify-artifacts |
+|---|---|---|---|---|---|
+| repairdesk | main | 6/6 $0.127 532s | 6/6 19 turns 85s | 6/6 16 turns 76s | FAIL 2 positional |
+| repairdesk | jev-off | 6/6 $0.048 186s | 6/6 4 turns 40s | 6/6 0 turns 26s | ok |
+| odoo | main | 6/6 $0.107 466s | 6/6 0 turns 70s | 6/6 0 turns 73s | ok |
+| odoo | jev-off | 6/6 $0.087 382s | 6/6 0 turns 94s | 6/6 0 turns 94s | ok |
+| grafana | main | 6/6 $0.109 713s | 6/6 0 turns 103s | 6/6 0 turns 90s | ok |
+| grafana | jev-off | 6/6 $0.118 623s | 6/6 0 turns 278s | 6/6 0 turns 110s | ok |
+| kanboard | main | 6/6 $0.099 419s | **5/6** 0 turns 27s | **5/6** 0 turns 27s | ok |
+| kanboard | jev-off | 6/6 $0.081 325s | 6/6 20 turns 102s | 6/6 0 turns 37s | FAIL 2 positional |
+
+Reading: 12/12 branch runs verified 6/6 (main 10/12); recording cost $0.334 vs $0.442 summed, wall
+1516 s vs 2130 s. Nothing here says the branch lost anything. It does not prove it gained either: one
+pair per app, and the orchestrator split the task differently per arm (7 vs 8 instructions), so
+replay wall times are not like for like (odoo/grafana replays are one instruction longer on the branch).
+The blemishes on both sides are the recording-quality variance of rounds 21-32, not branch-specific:
+- grafana jev n2 278 s: one drift ticket, a `status "Dashboard saved"` toast locator missed and waited out.
+- kanboard jev n2: two procedures stopped on a recorded-expectation mismatch and recovered via the
+  model (20 turns); 06-set fell to a positional fallback for a due-date `li` (the artifacts FAIL).
+- kanboard main n2/n3: replays "succeeded" but obj 1 failed (Backlog column absent from the report) —
+  the recording published no read for it; silent, where the branch's run fell back and verified.
+- repairdesk main: two positional steps and 16-19 model turns per replay.
