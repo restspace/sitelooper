@@ -1,0 +1,40 @@
+
+Running 1 test using 1 worker
+
+  ✘  1 fwop2.spec.ts:9:1 › fwop2 (7.0s)
+
+
+  1) fwop2.spec.ts:9:1 › fwop2 › 01-signin: Sign in to OpenProject at http://127.0.0.1:8090/ with username 'admin' and password 'bench-admin-pass'. After signing in, navigate to the project named 'Bench Project' and open its work packages list. Then report the subjects of all work packages whose subject starts with 'Seed:', exactly as shown on the page. Do not modify anything. 
+
+    Error: none of 3 recorded locators resolved at 01-signin s_6f1e3a/1 target (page is at http://127.0.0.1:8090/login?back_url=http%3A%2F%2F127.0.0.1%3A8090%2Fprojects%2Fbench-project): getByRole('link', { name: /^[\s\p{Co}\p{So}\p{Cf}]*Bench\s+Project[\s\p{Co}\p{So}\p{Cf}]*$/u }) | locator('#project-3 > td:nth-of-type(3) > div > span > a') | locator('[data-sitelooper-point="446,308"]')
+
+       at fwop2.flow.ts:10074
+
+      10072 | /** The stop for a chain that resolved nothing, shared by `pick` and `pickOrNavigate`. */
+      10073 | function pickMiss(page: Page, candidates: CandidateObservation[], where: string, note?: string): Error {
+    > 10074 |   return new Error(
+            |          ^
+      10075 |     // The url and the recorded step are half the answer whenever a chain
+      10076 |     // misses wholesale: a locator that named the control on the day it was
+      10077 |     // recorded usually misses because the page is not the page the step
+        at pickMiss (/home/user/sitelooper/bench/results/fwop2-spec-spec-tmp/fwop2.flow.ts:10074:10)
+        at pickOrNavigate (/home/user/sitelooper/bench/results/fwop2-spec-spec-tmp/fwop2.flow.ts:10124:9)
+        at Object.act (/home/user/sitelooper/bench/results/fwop2-spec-spec-tmp/fwop2.flow.ts:10354:22)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwop2-spec-spec-tmp/fwop2.flow.ts:7666:18)
+        at Object.01-signin (/home/user/sitelooper/bench/results/fwop2-spec-spec-tmp/fwop2.flow.ts:10346:5)
+        at /home/user/sitelooper/bench/results/fwop2-spec-spec-tmp/fwop2.flow.ts:13459:7
+        at runFlow (/home/user/sitelooper/bench/results/fwop2-spec-spec-tmp/fwop2.flow.ts:13458:5)
+        at /home/user/sitelooper/bench/results/fwop2-spec-spec-tmp/fwop2.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwop2-fwop2/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwop2-fwop2/error-context.md
+
+  1 failed
+    fwop2.spec.ts:9:1 › fwop2 ──────────────────────────────────────────────────────────────────────

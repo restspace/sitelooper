@@ -1,0 +1,80 @@
+{
+ "id": "s_40aaa9",
+ "origin": "http://127.0.0.1:8090",
+ "template": "Sign in to OpenProject at http://127.0.0.1:8090/ with username 'admin' and password 'bench-admin-pass'. After signing in, navigate to the project named 'Bench Project' and open its work packages list. Then report the subjects of all work packages whose subject starts with 'Seed:', exactly as shown on the page. Do not modify anything.",
+ "params": {},
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8090/login"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=link[name=\"Bench Project\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "Bench Project"
+     },
+     {
+      "kind": "css",
+      "selector": "#project-3 > td:nth-of-type(3) > div > span > a"
+     },
+     {
+      "kind": "point",
+      "x": 446,
+      "y": 308,
+      "w": 87.2,
+      "h": 16,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/projects/bench-project",
+    "addedContains": [
+     "- button \"Bench Project\"",
+     "- link \"You are here: Project home\"",
+     "- link \"Work packages\"",
+     "- button \"Open Work packages sub-menu\"",
+     "- link \"Gantt charts\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_f4e3b6",
+    "step": 1
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-21T11:33:49.866Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_6e24d8",
+  "index": 0,
+  "of": 3
+ },
+ "variantOf": "s_f4e3b6",
+ "provenance": {
+  "session": "fwop2-n2",
+  "instruction": "Sign in to OpenProject at http://127.0.0.1:8090/ with username 'admin' and password 'bench-admin-pass'. After signing in, navigate to the project named 'Bench Project' and open its work packages list. Then report the subjects of all work packages whose subject starts with 'Seed:', exactly as shown on the page. Do not modify anything.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-21T11:33:49.866Z"
+ },
+ "revision": 1
+}

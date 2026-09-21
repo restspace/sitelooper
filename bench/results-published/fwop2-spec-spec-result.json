@@ -1,0 +1,34 @@
+{
+  "arm": "spec",
+  "runid": "fwop2-spec",
+  "target": "openproject",
+  "flow": "fwop2.json",
+  "flowName": "fwop2",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwop2-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwop2-spec-spec-tmp/fwop2.flow.ts",
+  "specFile": "bench/results/fwop2-spec-spec-tmp/fwop2.spec.ts",
+  "wallMs": 11077,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwop2",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 6956,
+      "error": "Error: none of 3 recorded locators resolved at 01-signin s_6f1e3a/1 target (page is at http://127.0.0.1:8090/login?back_url=http%3A%2F%2F127.0.0.1%3A8090%2Fprojects%2Fbench-project): getByRole('link', { name: /^[\\s\\p{Co}\\p{So}\\p{Cf}]*Bench\\s+Project[\\s\\p{Co}\\p{So}\\p{Cf}]*$/u }) | locator('#project-3 > td:nth-of-type(3) > div > span > a') | locator('[data-sitelooper-point=\"446,308\"]')",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "logTail": "\nRunning 1 test using 1 worker\n\n  ✘  1 fwop2.spec.ts:9:1 › fwop2 (7.0s)\n\n\n  1) fwop2.spec.ts:9:1 › fwop2 › 01-signin: Sign in to OpenProject at http://127.0.0.1:8090/ with username 'admin' and password 'bench-admin-pass'. After signing in, navigate to the project named 'Bench Project' and open its work packages list. Then report the subjects of all work packages whose subject starts with 'Seed:', exactly as shown on the page. Do not modify anything. \n\n    Error: none of 3 recorded locators resolved at 01-signin s_6f1e3a/1 target (page is at http://127.0.0.1:8090/login?back_url=http%3A%2F%2F127.0.0.1%3A8090%2Fprojects%2Fbench-project): getByRole('link', { name: /^[\\s\\p{Co}\\p{So}\\p{Cf}]*Bench\\s+Project[\\s\\p{Co}\\p{So}\\p{Cf}]*$/u }) | locator('#project-3 > td:nth-of-type(3) > div > span > a') | locator('[data-sitelooper-point=\"446,308\"]')\n\n       at fwop2.flow.ts:10074\n\n      10072 | /** The stop for a chain that resolved nothing, shared by `pick` and `pickOrNavigate`. */\n      10073 | function pickMiss(page: Page, candidates: CandidateObservation[], where: string, note?: string): Error {\n    > 10074 |   return new Error(\n            |          ^\n      10075 |     // The url and the recorded step are half the answer whenever a chain\n      10076 |     // misses wholesale: a locator that named the control on the day it was\n      10077 |     // recorded usually misses because the page is not the page the step\n        at pickMiss (/home/user/sitelooper/bench/results/fwop2-spec-spec-tmp/fwop2.flow.ts:10074:10)\n        at pickOrNavigate (/home/user/sitelooper/bench/results/fwop2-spec-spec-tmp/fwop2.flow.ts:10124:9)\n        at Object.act (/home/user/sitelooper/bench/results/fwop2-spec-spec-tmp/fwop2.flow.ts:10354:22)\n        at runStepLifecycle (/home/user/sitelooper/bench/results/fwop2-spec-spec-tmp/fwop2.flow.ts:7666:18)\n        at Object.01-signin (/home/user/sitelooper/bench/results/fwop2-spec-spec-tmp/fwop2.flow.ts:10346:5)\n        at /home/user/sitelooper/bench/results/fwop2-spec-spec-tmp/fwop2.flow.ts:13459:7\n        at runFlow (/home/user/sitelooper/bench/results/fwop2-spec-spec-tmp/fwop2.flow.ts:13458:5)\n        at /home/user/sitelooper/bench/results/fwop2-spec-spec-tmp/fwop2.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/fwop2-fwop2/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/fwop2-fwop2/error-context.md\n\n  1 failed\n    fwop2.spec.ts:9:1 › fwop2 ──────────────────────────────────────────────────────────────────────\n"
+}

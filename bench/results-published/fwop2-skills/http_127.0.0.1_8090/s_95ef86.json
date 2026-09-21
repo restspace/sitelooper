@@ -1,0 +1,134 @@
+{
+ "id": "s_95ef86",
+ "origin": "http://127.0.0.1:8090",
+ "template": "In OpenProject (already signed in as admin), open the work package with ID {{v1}} titled '{{v2}}' in project '{{v4}}' and verify all of the following on its page, reporting the exact displayed values: (a) the work package ID as shown in the page heading (as '#<number>'), (b) its type, (c) its subject, (d) its description text, (e) its assignee, (f) its status, (g) its finish date, and (h) the text of the comment on its Activity tab. Do not change anything — read only. Also confirm the project's work packages list still shows the three 'Seed:' work packages with status unchanged.",
+ "params": {
+  "v1": {
+   "example": "#42",
+   "usedIn": [],
+   "known": true,
+   "binding": "02-create.wp_id"
+  },
+  "v2": {
+   "example": "fwop2-n2 Bench Work Package",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:wp_subject"
+  },
+  "v3": {
+   "example": "fwop2-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v4": {
+   "example": "Bench Project",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i1:project_name"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/:id/activity"
+ },
+ "steps": [
+  {
+   "tool": "read_all",
+   "args": {
+    "target": ".work-packages--info-row",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".work-packages--info-row"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > wp-single-view > div > div:nth-of-type(1) > div"
+     },
+     {
+      "kind": "point",
+      "x": 634,
+      "y": 180,
+      "w": 440.9,
+      "h": 19,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "work_packages_info_row"
+  },
+  {
+   "tool": "read_all",
+   "args": {
+    "target": ".wp-date-field, .date-edit-button, [data-test-selector=\"work-packages--date-field\"], [aria-label*=\"date\"]",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".wp-date-field, .date-edit-button, [data-test-selector=\"work-packages--date-field\"], [aria-label*=\"date\"]"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Start date : Edit"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(6) > div:nth-of-type(2) > op-editable-attribute-field > div > div:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 517,
+      "y": 964,
+      "w": 162.4,
+      "h": 23,
+      "role": "button",
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "finish_date_displayed"
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:8090/projects/bench-project/work_packages"
+   },
+   "locators": {}
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 2,
+  "successes": 2,
+  "partial": 0,
+  "created": "2026-09-21T11:36:01.968Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4,
+  "lastUsed": "2026-09-21T11:38:16.608Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_d8436c",
+  "index": 0,
+  "of": 2
+ },
+ "provenance": {
+  "session": "fwop2-n2",
+  "instruction": "In OpenProject (already signed in as admin), open the work package with ID #42 titled 'fwop2-n2 Bench Work Package' in project 'Bench Project' and verify all of the following on its page, reporting the exact displayed values: (a) the work package ID as shown in the page heading (as '#<number>'), (b) its type, (c) its subject, (d) its description text, (e) its assignee, (f) its status, (g) its finish date, and (h) the text of the comment on its Activity tab. Do not change anything — read only. Also confirm the project's work packages list still shows the three 'Seed:' work packages with status unchanged.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-21T11:36:01.968Z"
+ },
+ "revision": 2
+}

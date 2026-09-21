@@ -1,0 +1,252 @@
+{
+ "id": "s_53fc64",
+ "origin": "http://127.0.0.1:8090",
+ "template": "In OpenProject (already signed in as admin), open the work package with ID {{v1}} titled '{{v2}}' in project '{{v4}}' and go to its Activity tab (comments). Add a comment whose text includes '{{v3}}' (e.g. '{{v5}}'). Submit/save the comment. Then verify the comment appears in the activity list and report the exact comment text shown and the author.",
+ "params": {
+  "v1": {
+   "example": "#43",
+   "usedIn": [],
+   "known": true,
+   "binding": "02-create.wp_id"
+  },
+  "v2": {
+   "example": "fwop2-n3 Bench Work Package",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:wp_subject"
+  },
+  "v3": {
+   "example": "fwop2-n3",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v4": {
+   "example": "Bench Project",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i1:project"
+  },
+  "v5": {
+   "example": "Comment for run fwop2-n3",
+   "usedIn": [
+    2
+   ],
+   "known": true
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/activity"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=textbox[name=\"Add a comment. Type @ to notify people.\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Add a comment. Type @ to notify people."
+     },
+     {
+      "kind": "label",
+      "label": "Add a comment. Type @ to notify people."
+     },
+     {
+      "kind": "css",
+      "selector": "opce-ckeditor-augmented-textarea > div > op-ckeditor > div > div:nth-of-type(2) > div"
+     },
+     {
+      "kind": "point",
+      "x": 1066,
+      "y": 523,
+      "w": 384,
+      "h": 100,
+      "role": "textbox",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/activity",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_71f332",
+    "step": 3
+   }
+  },
+  {
+   "tool": "type",
+   "args": {
+    "delay_ms": 30,
+    "target": "role=textbox[name=\"Add a comment. Type @ to notify people.\"]",
+    "text": "{{v5}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Add a comment. Type @ to notify people."
+     },
+     {
+      "kind": "label",
+      "label": "Add a comment. Type @ to notify people."
+     },
+     {
+      "kind": "css",
+      "selector": "opce-ckeditor-augmented-textarea > div > op-ckeditor > div > div:nth-of-type(2) > div"
+     },
+     {
+      "kind": "point",
+      "x": 1066,
+      "y": 523,
+      "w": 384,
+      "h": 100,
+      "role": "textbox",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/activity",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_71f332",
+    "step": 4
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "role=textbox[name=\"Add a comment. Type @ to notify people.\"]",
+    "what": "text",
+    "label": "typed_comment_text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Add a comment. Type @ to notify people."
+     },
+     {
+      "kind": "label",
+      "label": "Add a comment. Type @ to notify people."
+     },
+     {
+      "kind": "css",
+      "selector": "opce-ckeditor-augmented-textarea > div > op-ckeditor > div > div:nth-of-type(2) > div"
+     },
+     {
+      "kind": "point",
+      "x": 1066,
+      "y": 523,
+      "w": 384,
+      "h": 100,
+      "role": "textbox",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "comment_text",
+   "via": {
+    "skill": "s_71f332",
+    "step": 5
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Submit comment\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Submit comment"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > div > div > button"
+     },
+     {
+      "kind": "point",
+      "x": 1229,
+      "y": 611,
+      "w": 69.6,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/activity",
+    "addedContains": [
+     "- button \"Actions\"",
+     "- button \"Add reaction\"",
+     "- button \"Add a comment. Type @ to notify people.\"",
+     "- button \"Submit comment\" [disabled]"
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_71f332",
+    "step": 6
+   }
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:8090/projects/bench-project/work_packages/43/activity"
+   },
+   "locators": {}
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-21T11:38:12.113Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_5667a8",
+  "index": 1,
+  "of": 3
+ },
+ "variantOf": "s_71f332",
+ "provenance": {
+  "session": "fwop2-n3",
+  "instruction": "In OpenProject (already signed in as admin), open the work package with ID #43 titled 'fwop2-n3 Bench Work Package' in project 'Bench Project' and go to its Activity tab (comments). Add a comment whose text includes 'fwop2-n3' (e.g. 'Comment for run fwop2-n3'). Submit/save the comment. Then verify the comment appears in the activity list and report the exact comment text shown and the author.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-21T11:38:12.113Z",
+  "transforms": [
+   {
+    "name": "dropSupersededNavigation",
+    "at": 5,
+    "reason": "the next step navigates again, to \"http://127.0.0.1:8090/projects/bench-project/work_packages/43/activity\""
+   }
+  ]
+ },
+ "revision": 1
+}
