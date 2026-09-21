@@ -1,0 +1,91 @@
+{
+ "id": "s_0c1f37",
+ "origin": "http://127.0.0.1:8098",
+ "template": "Create a new asset in Snipe-IT: go to Assets -> Create New (the asset creation form). Fill in: Asset Name = '{{v2}}'; Model = '{{v3}}' (a searchable dropdown — type it and actually select the matching option from the dropdown list); Status = '{{v4}}' (searchable dropdown, select the option); Default Location = '{{v5}}' (searchable dropdown, select the option); Purchase Date = {{v6}} (use the date picker or type it in the format the field expects). Fill any other required fields with sensible values but do NOT create new models, locations, categories or users — pick existing options only. Then save the asset. After saving, report the asset's name, asset tag, model, status, location and purchase date exactly as displayed on the asset's page.",
+ "params": {
+  "v1": {
+   "example": "fwsi1-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "fwsi1-n2 Bench Asset",
+   "usedIn": [],
+   "known": true
+  },
+  "v3": {
+   "example": "Bench Laptop Model",
+   "usedIn": []
+  },
+  "v4": {
+   "example": "Ready to Deploy",
+   "usedIn": []
+  },
+  "v5": {
+   "example": "Bench Office",
+   "usedIn": []
+  },
+  "v6": {
+   "example": "2026-03-15",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8098/hardware?order=asc&page=:id&search=Seed:&size=:id&sort=created_at"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "a[href$=\"/hardware/create\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > ul > li:nth-of-type(9) > ul > li:nth-of-type(1) > a"
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8098/hardware/create",
+    "addedContains": [
+     "- heading \"Assets Create New\"",
+     "- button \"Save\"",
+     "- combobox \"Company\"",
+     "- combobox \"Select Company\"",
+     "- textbox \"Select Company\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_f8eda3",
+    "step": 1
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-21T22:37:25.138Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_da652d",
+  "index": 0,
+  "of": 4
+ },
+ "provenance": {
+  "session": "fwsi1-n2",
+  "instruction": "Create a new asset in Snipe-IT: go to Assets -> Create New (the asset creation form). Fill in: Asset Name = 'fwsi1-n2 Bench Asset'; Model = 'Bench Laptop Model' (a searchable dropdown — type it and actually select the matching option from the dropdown list); Status = 'Ready to Deploy' (searchable dropdown, select the option); Default Location = 'Bench Office' (searchable dropdown, select the option); Purchase Date = 2026-03-15 (use the date picker or type it in the format the field expects). Fill any other required fields with sensible values but do NOT create new models, locations, categories or users — pick existing options only. Then save the asset. After saving, report the asset's name, asset tag, model, status, location and purchase date exactly as displayed on the asset's page.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-21T22:37:25.138Z"
+ },
+ "revision": 1
+}

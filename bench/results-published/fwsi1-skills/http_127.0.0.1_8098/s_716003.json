@@ -1,0 +1,85 @@
+{
+ "id": "s_716003",
+ "origin": "http://127.0.0.1:8098",
+ "template": "Go to the Assets list (Assets -> List All, or the asset listing page). Find every asset whose NAME starts with the text '{{v1}}' (use the search/filter on the list, and make sure you see all matching rows, including on additional pages if the list is paginated). For each such asset report: its exact name and its asset tag exactly as displayed. Do not modify anything. Report the full list of matching assets.",
+ "params": {
+  "v1": {
+   "example": "Seed:",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8098/"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e14"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "header > nav > div:nth-of-type(2) > ul > li:nth-of-type(2) > a"
+     },
+     {
+      "kind": "point",
+      "x": 368,
+      "y": 25,
+      "w": 46.3,
+      "h": 50,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8098/hardware",
+    "addedContains": [
+     "- heading \"Assets\"",
+     "- combobox \"bulk_actions\"",
+     "- combobox \"Select rows to see available actions\"",
+     "- textbox \"Select rows to see available actions\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_b525a2",
+    "step": 1
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-21T22:35:54.099Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_274b25",
+  "index": 0,
+  "of": 2
+ },
+ "provenance": {
+  "session": "fwsi1-n2",
+  "instruction": "Go to the Assets list (Assets -> List All, or the asset listing page). Find every asset whose NAME starts with the text 'Seed:' (use the search/filter on the list, and make sure you see all matching rows, including on additional pages if the list is paginated). For each such asset report: its exact name and its asset tag exactly as displayed. Do not modify anything. Report the full list of matching assets.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-21T22:35:54.099Z",
+  "transforms": [
+   {
+    "name": "unfreezeExpectations",
+    "at": 1,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- heading \\\"Assets\\\"\",\"- heading \\\"Assets\\\"\",\"- combobox \\\"bulk_actions\\\"\",\"- combobox \\\"Select rows to see available actions\\\"\",\"- textbox \\\"Select rows to see available actions\\\"\"] → [\"- heading \\\"Assets\\\"\",\"- combobox \\\"bulk_actions\\\"\",\"- combobox \\\"Select rows to see available actions\\\"\",\"- textbox \\\"Select rows to see available actions\\\"\"]"
+   }
+  ]
+ },
+ "revision": 1
+}

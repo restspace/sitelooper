@@ -1,0 +1,14 @@
+[spec-replay] resetting snipeit
+[reset] snipeit: deleted 1 leftover bench asset(s)
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile bench/results/flows/fwsi1.json --out /home/user/sitelooper/bench/results/fwsi1-spec-spec-tmp --overwrite-spec
+flow: /home/user/sitelooper/bench/results/fwsi1-spec-spec-tmp/fwsi1.flow.ts
+spec: /home/user/sitelooper/bench/results/fwsi1-spec-spec-tmp/fwsi1.spec.ts
+warning 02-find: 02-find read a value that contradicts what the previous step reported
+  why: 02-find read screenshot "/home/user/sitelooper/assets_seed_filter.png" right after 01-open reported "/home/user/sitelooper/dashboard_signed_in.png"; 01-open's change may not have landed and a later step may be retrying it. Re-record 01-open.
+  fix: sitelooper rerecord bench/results/flows/fwsi1.json 01-open
+warning 05-change: 05-change read a value that contradicts what the previous step reported
+  why: 05-change read a_status_text_on_details_tab "Ready to Deploy (with status label badge "Deployed")" right after 04-set reported "Deployed (Ready to Deploy)"; 04-set's change may not have landed and a later step may be retrying it. Re-record 04-set.
+  fix: sitelooper rerecord bench/results/flows/fwsi1.json 04-set
+[spec-replay] running: npx playwright test --config /home/user/sitelooper/bench/results/fwsi1-spec-spec-tmp/playwright.config.mjs
+[spec-replay] fwsi1-spec: 1/1 passed, exit=0, 79s, 0 drift line(s) — result written
+SPEC_REPLAY_EXIT=0

@@ -1,0 +1,238 @@
+{
+  "flow": "fwsi1",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_9de24b; observed heading=Dashboard, login_alert= Success: \n×\nYou have successfully logged in., logged_in_user=Bench Admin .",
+      "values": {
+        "heading": "Dashboard",
+        "login_alert": " Success: \n×\nYou have successfully logged in.",
+        "logged_in_user": "Bench Admin "
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-find",
+      "status": "success",
+      "summary": "Searched the Assets list (http://127.0.0.1:8098/hardware) for names starting with \"Seed:\" (search box set to \"Seed:\", URL now includes search=Seed%3A). The filtered list shows \"Showing 1 to 3 of 3 rows\" on a single pagination page, so all matches are visible. Exactly 3 assets match, and nothing was modified. Full list (name — asset tag): 1) Seed: Reception Laptop — SEED-0001; 2) Seed: Training Laptop — SEED-0002; 3) Seed: Spare Laptop — SEED-0003.",
+      "values": {
+        "total_matching_rows": "3",
+        "pagination": "1 page only",
+        "asset_1_name": "Seed: Reception Laptop",
+        "asset_1_tag": "SEED-0001",
+        "asset_2_name": "Seed: Training Laptop",
+        "asset_2_tag": "SEED-0002",
+        "asset_3_name": "Seed: Spare Laptop",
+        "asset_3_tag": "SEED-0003",
+        "current_url": "http://127.0.0.1:8098/hardware?page=1&size=20&order=asc&sort=created_at&search=Seed%3A"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_9f2836 stopped at step 2 — after step 2 expected url http://127.0.0.1:8098/hardware?order=asc&page=:id&search=Seed:&size=:id&sort=created_at but browser is at http://127.0.0.1:8098/hardware",
+      "replayed": "1/9",
+      "repaired": false,
+      "turns": 8,
+      "unreported": [
+        "matching_asset_count"
+      ]
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Created a new asset via the Create Asset form. The earlier replay had mis-typed the model text into the Asset Name field, so I corrected the name to 'fwsi1-n2 Bench Asset', then set Model=Bench Laptop Model (select2, committed — list closed), Status=Ready to Deploy, Default Location=Bench Office, and Purchase Date=2026-03-15, and saved. The app confirmed \"Asset with tag BA-00005 was created successfully\" and redirected to its page (http://127.0.0.1:8098/hardware/5). Verified from that asset page: Name = fwsi1-n2 Bench Asset, Asset Tag = BA-00005, Model = Bench Laptop Model, Status = Ready to Deploy, Default Location = Bench Office, Purchase Date = 2026-03-15. All values were existing options — no new models, locations, categories or users were created.",
+      "values": {
+        "asset_name": "fwsi1-n2 Bench Asset",
+        "asset_tag": "BA-00005",
+        "model": "Bench Laptop Model",
+        "status": "Ready to Deploy",
+        "default_location": "Bench Office",
+        "purchase_date": "2026-03-15",
+        "purchase_date_display": "Purchased 2026-03-15 - 6 months 6 days ago",
+        "asset_page_url": "http://127.0.0.1:8098/hardware/5",
+        "asset_name_field": "fwsi1-n2 Bench AssetBench Laptop Model",
+        "ref": "fwsi1-n2"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_ac6978 stopped at step 4 — after step 4 the page did not show \"- searchbox \\\"\\\": Bench Laptop Model\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "replayed": "3/21",
+      "repaired": false,
+      "turns": 24,
+      "unreported": [
+        "model_displayed",
+        "location",
+        "category",
+        "purchase_date_field",
+        "run_id"
+      ]
+    },
+    {
+      "id": "04-set",
+      "status": "success",
+      "summary": "Replayed stored procedure s_684e1e; observed assignee_shown=Bench Assignee, history_note_text=Checked out for bench run fwsi1-n2, note_entered=Checked out for bench run fwsi1-n2, history_target=Bench Assignee, run_id=fwsi1-n2, assignee_dropdown_option=Bench Assignee (bench-assignee), asset_page_url=http://127.0.0.1:8098/hardware/5#history, asset_tag=BA-00005, asset_name=fwsi1-n2 Bench Asset, expected_checkin=2026-09-21 10:37 PM, history_action=checkout, assigned_user_id=2.",
+      "values": {
+        "assignee_shown": "Bench Assignee",
+        "history_note_text": "Checked out for bench run fwsi1-n2",
+        "note_entered": "Checked out for bench run fwsi1-n2",
+        "history_target": "Bench Assignee",
+        "run_id": "fwsi1-n2",
+        "assignee_dropdown_option": "Bench Assignee (bench-assignee)",
+        "asset_page_url": "http://127.0.0.1:8098/hardware/5#history",
+        "asset_tag": "BA-00005",
+        "asset_name": "fwsi1-n2 Bench Asset",
+        "expected_checkin": "2026-09-21 10:37 PM",
+        "history_action": "checkout",
+        "assigned_user_id": "2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "26/26",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "checkout_date_used"
+      ]
+    },
+    {
+      "id": "05-change",
+      "status": "success",
+      "summary": "Read-only verification of asset BA-00005 (http://127.0.0.1:8098/hardware/5), no changes saved. (a) On the Details tab the Status shown is \"Ready to Deploy\" (status type: Deployed); the live DOM contains both the \"Ready to Deploy\" label link (status_type=RTD) and the \"Deployed\" type link in the asset header. (b) In the Edit form, the Status dropdown's selected option is \"Ready to Deploy\" (value 2); I then left via Cancel without saving. Details tab also shows: Model = Bench Laptop Model, Default Location = Bench Office, Purchase Date = 2026-03-15 (displayed \"Purchased 2026-03-15 - 6 months 6 days ago\"), and Assigned To / checked out to = Bench Assignee. The History tab (2 rows) shows the checkout entry: 2026-09-21 10:37 PM, Bench Admin, action \"checkout\", target Bench Assignee, note \"Checked out for bench run fwsi1-n2\".",
+      "values": {
+        "a_status_field_details_tab": "Ready to Deploy (status type: Deployed)",
+        "b_edit_status_selected_option": "Ready to Deploy",
+        "model": "Bench Laptop Model",
+        "default_location": "Bench Office",
+        "purchase_date": "2026-03-15",
+        "assigned_to": "Bench Assignee",
+        "history_checkout_note": "Checked out for bench run fwsi1-n2",
+        "asset_tag": "BA-00005",
+        "asset_name": "fwsi1-n2 Bench Asset",
+        "ref": "fwsi1-n2"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_8e44f7 stopped at step 2 — after step 2 none of the 2 recorded page change(s) appeared (e.g. \"- link \\\"Bench Laptop Model\\\"\") — the step ran but did not have its recorded effect",
+      "replayed": "1/3",
+      "repaired": false,
+      "turns": 21,
+      "unreported": [
+        "b_edit_status_value",
+        "category",
+        "purchase_date_field_value",
+        "run_id"
+      ]
+    },
+    {
+      "id": "06-report",
+      "status": "success",
+      "summary": "Replayed stored procedure s_907772; observed row1=Seed: Reception Laptop | SEED-0001 | Ready to Deploy | Bench Warehouse, row2=Seed: Training Laptop | SEED-0002 | Ready to Deploy | Bench Warehouse, row3=Seed: Spare Laptop | SEED-0003 | Ready to Deploy | Bench Warehouse, row4=fwsi1-n2 Bench Asset | BA-00005 | Ready to Deploy / Deployed | Bench Office | assigned Bench Assignee (bench-assignee), seed_assets_unchanged=yes - all three present, Ready to Deploy, Bench Warehouse, new_asset_present=fwsi1-n2 Bench Asset, tag BA-00005, assets_list_url=http://127.0.0.1:8098/hardware, seed_asset_tag_1=SEED-0001, seed_asset_tag_2=SEED-0002, seed_asset_tag_3=SEED-0003, row_count=\n                                                4\n                                            .",
+      "values": {
+        "row1": "Seed: Reception Laptop | SEED-0001 | Ready to Deploy | Bench Warehouse",
+        "row2": "Seed: Training Laptop | SEED-0002 | Ready to Deploy | Bench Warehouse",
+        "row3": "Seed: Spare Laptop | SEED-0003 | Ready to Deploy | Bench Warehouse",
+        "row4": "fwsi1-n2 Bench Asset | BA-00005 | Ready to Deploy / Deployed | Bench Office | assigned Bench Assignee (bench-assignee)",
+        "seed_assets_unchanged": "yes - all three present, Ready to Deploy, Bench Warehouse",
+        "new_asset_present": "fwsi1-n2 Bench Asset, tag BA-00005",
+        "assets_list_url": "http://127.0.0.1:8098/hardware",
+        "seed_asset_tag_1": "SEED-0001",
+        "seed_asset_tag_2": "SEED-0002",
+        "seed_asset_tag_3": "SEED-0003",
+        "row_count": "\n                                                4\n                                            "
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 6,
+  "total": 6,
+  "repinned": 0,
+  "drift": 4,
+  "driftTickets": [
+    {
+      "flow": "fwsi1",
+      "step": "02-find",
+      "skill": "s_9f2836",
+      "similarity": 1.001,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_9f2836 stopped at step 2 — after step 2 expected url http://127.0.0.1:8098/hardware?order=asc&page=:id&search=Seed:&size=:id&sort=created_at but browser is at http://127.0.0.1:8098/hardware",
+      "reason": "after step 2 expected url http://127.0.0.1:8098/hardware?order=asc&page=:id&search=Seed:&size=:id&sort=created_at but browser is at http://127.0.0.1:8098/hardware",
+      "pageUrlPattern": "http://127.0.0.1:8098/hardware",
+      "pageUrl": "http://127.0.0.1:8098/hardware"
+    },
+    {
+      "flow": "fwsi1",
+      "step": "03-create",
+      "skill": "s_ac6978",
+      "similarity": 1.001,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_ac6978 stopped at step 4 — after step 4 the page did not show \"- searchbox \\\"\\\": Bench Laptop Model\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "reason": "after step 4 the page did not show \"- searchbox \\\"\\\": Bench Laptop Model\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "pageUrlPattern": "http://127.0.0.1:8098/hardware/create",
+      "pageUrl": "http://127.0.0.1:8098/hardware/create"
+    },
+    {
+      "flow": "fwsi1",
+      "step": "04-set",
+      "skill": "s_684e1e",
+      "atStep": "4",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "(none recorded)",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8098/hardware/:id#history",
+      "pageUrl": "http://127.0.0.1:8098/hardware/5#history"
+    },
+    {
+      "flow": "fwsi1",
+      "step": "05-change",
+      "skill": "s_8e44f7",
+      "similarity": 1,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_8e44f7 stopped at step 2 — after step 2 none of the 2 recorded page change(s) appeared (e.g. \"- link \\\"Bench Laptop Model\\\"\") — the step ran but did not have its recorded effect",
+      "reason": "after step 2 none of the 2 recorded page change(s) appeared (e.g. \"- link \\\"Bench Laptop Model\\\"\") — the step ran but did not have its recorded effect",
+      "pageUrlPattern": "http://127.0.0.1:8098/hardware/:id#details",
+      "pageUrl": "http://127.0.0.1:8098/hardware/5#details"
+    }
+  ],
+  "wallMs": 218849,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 1124526,
+    "completionTokens": 13776,
+    "cachedTokens": 1053312
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 1124526,
+      "completionTokens": 13776,
+      "cachedTokens": 1053312
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

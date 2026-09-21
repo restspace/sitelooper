@@ -1,0 +1,193 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwsi1-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwsi1-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwsi1-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwsi1-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwsi1-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwsi1.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwsi1-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwsi1.spec.ts",
+      "file": "fwsi1.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwsi1",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 75710,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-find s_425a6f/11: read 'search_filter_applied' returned a value the skill itself set/selected ('Seed:') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-find\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-create s_4e508b/22: read 'purchase_date' returned a value the skill itself set/selected ('2026-03-15') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-create s_4e508b/24: read 'purchase_date' returned a value the skill itself set/selected ('2026-03-15') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-create s_4e508b/25: expected alert containing \"Success: × Asset with tag BA-00006 was created successfully. Click here to view.\"\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-create\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 04-set s_22a1f8/12: read 'checkout_date_used' returned a value the skill itself set/selected ('2026-09-21 22:32:43') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 04-set s_22a1f8/14: read 'history_note_text' returned a value the skill itself set/selected ('Checked out for bench run fwsi1-spec') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 04-set s_22a1f8/15: read 'checkout_date_used' returned a value the skill itself set/selected ('2026-09-21 22:32:43') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-set\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-change\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-report\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:8098/ and sign in with username admin and password bench-admin-pass. Then confirm you are signed in by reporting the page title/heading you land on.",
+                      "duration": 5408
+                    },
+                    {
+                      "title": "02-find: Go to the Assets list (Assets -> List All, or the asset listing page). Find every asset whose NAME starts with the text 'Seed:' (use the search/filter on the list, and make sure you see all matching rows, including on additional pages if the list is paginated). For each such asset report: its exact name and its asset tag exactly as displayed. Do not modify anything. Report the full list of matching assets.",
+                      "duration": 4332
+                    },
+                    {
+                      "title": "03-create: Create a new asset in Snipe-IT: go to Assets -> Create New (the asset creation form). Fill in: Asset Name = '{{runid}} Bench Asset'; Model = 'Bench Laptop Model' (a searchable dropdown — type it and actually select the matching option from the dropdown list); Status = 'Ready to Deploy' (searchable dropdown, select the option); Default Location = 'Bench Office' (searchable dropdown, select the option); Purchase Date = 2026-03-15 (use the date picker or type it in the format the field expects). Fill any other required fields with sensible values but do NOT create new models, locations, categories or users — pick existing options only. Then save the asset. After saving, report the asset's name, asset tag, model, status, location and purchase date exactly as displayed on the asset's page.",
+                      "duration": 34755
+                    },
+                    {
+                      "title": "04-set: On the asset page for the asset named '{{runid}} Bench Asset' (asset tag {{03-create.asset_tag}}, at {{03-create.url}}), perform a CHECKOUT: click the 'Check Out' action/button on that asset's page. In the checkout form, set the checkout target to the USER 'Bench Assignee' (a searchable dropdown — type the name and actually select the matching user option from the dropdown; do not create a new user). Add a note whose text includes the runid '{{runid}}' (for example: 'Checked out for bench run {{runid}}'). Fill any other required fields sensibly (e.g. checkout date = today if required) and submit the checkout. After it succeeds, report: the assignee/user shown on the asset page, the status shown, and the note text as displayed (check the asset's checkout history / activity section for the note).",
+                      "duration": 26685
+                    },
+                    {
+                      "title": "05-change: Verification only, do not change anything: On the asset page for asset tag {{03-create.asset_tag}} (name '{{runid}} Bench Asset', {{03-create.url}}), report exactly: (a) the text shown in the Status field/label on the Details tab, and (b) to confirm the underlying status label, open the asset's Edit form and report which Status option is shown as selected in the status dropdown, then CANCEL/navigate away WITHOUT saving any changes. Also report from the Details tab: the Model, the Default Location, the Purchase Date, and the user it is Assigned To / checked out to. Finally report the note text on the checkout entry in the History tab.",
+                      "duration": 2916
+                    },
+                    {
+                      "title": "06-report: Read-only check, do not modify anything: Go to the Assets list (http://127.0.0.1:8098/hardware) and report every asset row shown: its exact name, asset tag, status, and location. Confirm whether the three assets named '{{02-find.asset_1_name}}', '{{02-find.asset_2_name}}' and '{{02-find.asset_3_name}}' are still present and unchanged (status {{05-change.b_edit_status_selected_option}}, location Bench Warehouse), and that the new asset '{{runid}} Bench Asset' appears with tag {{03-create.asset_tag}}.",
+                      "duration": 1063
+                    }
+                  ],
+                  "startTime": "2026-09-21T22:43:44.715Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "66a00f2cc5e3ceba65f3-5a30f8cb7345ce990483",
+          "file": "fwsi1.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-21T22:43:43.097Z",
+    "duration": 77489.83,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
