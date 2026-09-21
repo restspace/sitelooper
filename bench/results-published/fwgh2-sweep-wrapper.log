@@ -1,0 +1,105 @@
++ cd /home/user/sitelooper
++ export SITELOOPER_PROVIDER=openrouter
++ SITELOOPER_PROVIDER=openrouter
++ export SITELOOPER_MODEL=deepseek/deepseek-v4.1-flash
++ SITELOOPER_MODEL=deepseek/deepseek-v4.1-flash
++ export SITELOOPER_FALLBACK_MODEL=z-ai/glm-5.3
++ SITELOOPER_FALLBACK_MODEL=z-ai/glm-5.3
++ export 'SITELOOPER_EXTRA_BODY={"provider":{"only":["DeepSeek"]}}'
++ SITELOOPER_EXTRA_BODY='{"provider":{"only":["DeepSeek"]}}'
++ node bench/sweep.mjs --k 3 --base fwgh2 --learn bench/results/fwgh2-skills --flow fwgh2 --verify-cmd 'node bench/verify-ghost.mjs' --arm sitelooper --target ghost --task bench/tasks/ghost-post-flow.md --provider openrouter --model z-ai/glm-5.3 --maxUsd 3.00 --coarse --out bench/results
++ tee bench/results/fwgh2-sweep.log
+
+[sweep] run 1/3: fwgh2-n1 (store: /home/user/sitelooper/bench/results/fwgh2-skills)
+[harness] ghost: defaulting APP_URL
+[harness] ghost: defaulting APP_EMAIL
+[harness] ghost: defaulting APP_PASSWORD
+[reset] ghost: no posts to delete
+[harness] ghost responded 200 at http://127.0.0.1:8099/
+stopped: fwgh2-n1
+  flow "fwgh2" saved: 3 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwgh2.json
+  warning: note: 02-create no longer publishes post_id, published_post_total_after — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 21 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[1].instruction: "Bench News" (output) in "In Ghost admin, create a new post titled '{{runid}} Bench Post'. In its body, type one paragraph containing the text '{{runid}} Bench Post test paragraph with r"
+  flow.steps[1].params.v3: "Bench News" (output) in "Bench News"
+  s_06029d.steps[0].locators.target[0].hasText: "Bench Admin" (output) in "{{v1}} Bench Post By Bench Admin in {{v3}} - 01 Sep 2026 Published"
+  s_06029d.steps[0].locators.target[0].hasText: "01 Sep 2026" (output) in "{{v1}} Bench Post By Bench Admin in {{v3}} - 01 Sep 2026 Published"
+  s_06029d.steps[1].locators.target[0].name: "Bench Admin" (output) in "{{v1}} Bench Post By Bench Admin in {{v3}} - 01 Sep 2026 Published"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwgh2-n1 stop=completed
+turns=4 wall=108.5s
+commands=3 cmdTime=97.6s cmdBytes=2840 timeouts=0
+orchestrator in=3583 cw=0 cr=9024 out=696
+inner prompt=347615 cached=309376 completion=5422
+spend=$0.0204 maxUsd=3
+learn: A_n=0 replayed=0/3 full=0 repaired=0 compiled=3 variants=0
+-> /home/user/sitelooper/bench/results/fwgh2-n1-sitelooper-result.json
+
+fwgh2-n1: objectives passed 6/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: FAIL — fwgh2-n1-bench-post, body includes runid=true — 2 times, the body was saved doubled: "fwgh2-n1 Bench Post test paragraph with runid fwgh2-n1."
+  obj 3: PASS — tags=Bench News (bench-news), want only the seeded Bench News (bench-news)
+  obj 4: PASS — custom excerpt="fwgh2-n1 custom excerpt for the bench post"
+  obj 5: PASS — status=published, visibility=public
+  obj 6: PASS — published_at=2026-09-01T10:00:00.000Z, want 2026-09-01
+  obj 7: PASS — slug fwgh2-n1-bench-post reported
+
+[sweep] run 2/3: fwgh2-n2 (replay flow fwgh2, no orchestrator)
+[reset] ghost: deleted 1 post(s) (earlier runs' and non-seed)
+
+fwgh2-n2: objectives passed 6/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: FAIL — fwgh2-n2-bench-post, body includes runid=true — 2 times, the body was saved doubled: "fwgh2-n2 Bench Post test paragraph with runid fwgh2-n2."
+  obj 3: PASS — tags=Bench News (bench-news), want only the seeded Bench News (bench-news)
+  obj 4: PASS — custom excerpt="fwgh2-n2 custom excerpt for the bench post"
+  obj 5: PASS — status=published, visibility=public
+  obj 6: PASS — published_at=2026-09-01T10:00:00.000Z, want 2026-09-01
+  obj 7: PASS — slug fwgh2-n2-bench-post reported
+
+[sweep] run 3/3: fwgh2-n3 (replay flow fwgh2, no orchestrator)
+[reset] ghost: deleted 1 post(s) (earlier runs' and non-seed)
+
+fwgh2-n3: objectives passed 6/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: FAIL — fwgh2-n3-bench-post, body includes runid=true — 2 times, the body was saved doubled: "fwgh2-n3 Bench Post test paragraph with runid fwgh2-n3."
+  obj 3: PASS — tags=Bench News (bench-news), want only the seeded Bench News (bench-news)
+  obj 4: PASS — custom excerpt="fwgh2-n3 custom excerpt for the bench post"
+  obj 5: PASS — status=published, visibility=public
+  obj 6: PASS — published_at=2026-09-01T10:00:00.000Z, want 2026-09-01
+  obj 7: PASS — slug fwgh2-n3-bench-post reported
+
+Learning sweep fwgh2 (K=3)
+┌─────────┬───┬────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid      │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwgh2-n1' │ '6/7'    │ 'completed' │ 4     │ 3    │ 0.0204    │ 0   │ '0/3'        │ 108    │
+│ 1       │ 2 │ 'fwgh2-n2' │ '6/7'    │ 'success'   │ 0     │ 3    │ 0         │ 1   │ '3/3 (flow)' │ 42     │
+│ 2       │ 3 │ 'fwgh2-n3' │ '6/7'    │ 'success'   │ 0     │ 3    │ 0         │ 1   │ '3/3 (flow)' │ 42     │
+└─────────┴───┴────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8099
+  s_06029d  validated    2 steps  3/3 (100%)
+           In Ghost admin, create a new post titled '{{v1}} Bench Post'. In its body, type one paragraph containing the t…
+  s_27fe81  validated   10 steps  3/3 (100%)
+           Open {{v5}} in the browser (public site, not admin) and confirm it loads with the title '{{v4}}' and a body pa…
+  s_497061  validated    7 steps  3/3 (100%)
+           In Ghost admin, create a new post titled '{{v1}} Bench Post'. In its body, type one paragraph containing the t…
+  s_705cec  validated    5 steps  3/3 (100%)
+           Go to {{v1}}, sign in with email {{v2}} and password {{v3}}, then go to the Posts list and report the titles o…
+  s_7b1c83  validated    2 steps  3/3 (100%)
+           In Ghost admin, create a new post titled '{{v1}} Bench Post'. In its body, type one paragraph containing the t…
+  s_88fc13  validated   12 steps  3/3 (100%)
+           In Ghost admin, create a new post titled '{{v1}} Bench Post'. In its body, type one paragraph containing the t…
+  s_8f22d1  validated    3 steps  3/3 (100%)
+           Go to {{v1}}, sign in with email {{v2}} and password {{v3}}, then go to the Posts list and report the titles o…
+  s_ad4efe  validated    1 steps  3/3 (100%)
+           Go to {{v1}}, sign in with email {{v2}} and password {{v3}}, then go to the Posts list and report the titles o…
+  s_bbcf13  validated    1 steps  3/3 (100%)
+           Go to {{v1}}, sign in with email {{v2}} and password {{v3}}, then go to the Posts list and report the titles o…
+  s_c243e7  validated    1 steps  3/3 (100%)
+           Open {{v5}} in the browser (public site, not admin) and confirm it loads with the title '{{v4}}' and a body pa…
+  s_f7f6c0  validated    1 steps  3/3 (100%)
+           In Ghost admin, create a new post titled '{{v1}} Bench Post'. In its body, type one paragraph containing the t…
+store: /home/user/sitelooper/bench/results/fwgh2-skills
+
+summary: /home/user/sitelooper/bench/results/fwgh2-sweep.json
++ echo 'SWEEP_EXIT_CODE: 0'
+SWEEP_EXIT_CODE: 0

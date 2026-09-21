@@ -1,0 +1,154 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwgh2-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwgh2-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwgh2-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwgh2-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwgh2-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwgh2.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwgh2-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwgh2.spec.ts",
+      "file": "fwgh2.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwgh2",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 31380,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe contenteditable/set-value (r_7b1e49); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-open\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Go to http://127.0.0.1:8099/ghost/, sign in with email admin@bench.local and password bench-admin-pass, then go to the Posts list and report the titles of all published posts whose title starts with 'Seed:' exactly as shown.",
+                      "duration": 5645
+                    },
+                    {
+                      "title": "02-create: In Ghost admin, create a new post titled '{{runid}} Bench Post'. In its body, type one paragraph containing the text '{{runid}} Bench Post test paragraph with runid {{runid}}.' (typed once). In the post's settings panel: add the existing tag 'Bench News' by choosing it from the tag field's suggestions (NOT creating a new tag, and NOT 'Bench Newsletter'); set the custom excerpt to a short text including '{{runid}}'; set the publish date to 2026-09-01 (a past date so it publishes immediately, not schedules — set date like 2026-09-01 10:00); set the URL slug if needed. Then publish the post via the Publish confirmation flow, making sure it ends up published (not draft, not scheduled). Finally reopen the post and report: the tag shown, the excerpt, the status (published), the publish date, and the URL slug exactly as shown in the settings panel.",
+                      "duration": 23404
+                    },
+                    {
+                      "title": "03-open: Open http://127.0.0.1:8099/{{runid}}-bench-post/ in the browser (public site, not admin) and confirm it loads with the title '{{runid}} Bench Post' and a body paragraph containing '{{runid}}', and report what you see.",
+                      "duration": 1415
+                    }
+                  ],
+                  "startTime": "2026-09-21T23:52:31.196Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "880e85e0ee6577caf579-6a0ed3bf777aab4d3a69",
+          "file": "fwgh2.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-21T23:52:29.600Z",
+    "duration": 33169.248999999996,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

@@ -1,0 +1,25 @@
++ cd /home/user/sitelooper
++ node bench/spec-replay.mjs --flow bench/results/flows/fwgh2.json --skills bench/results/fwgh2-skills --tag fwgh2-spec --target ghost --reset --out bench/results
++ tee bench/results/fwgh2-spec-run.log
+[spec-replay] resetting ghost
+[reset] ghost: deleted 1 post(s) (earlier runs' and non-seed)
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile bench/results/flows/fwgh2.json --out /home/user/sitelooper/bench/results/fwgh2-spec-spec-tmp --overwrite-spec
+flow: /home/user/sitelooper/bench/results/fwgh2-spec-spec-tmp/fwgh2.flow.ts
+spec: /home/user/sitelooper/bench/results/fwgh2-spec-spec-tmp/fwgh2.spec.ts
+[spec-replay] running: npx playwright test --config /home/user/sitelooper/bench/results/fwgh2-spec-spec-tmp/playwright.config.mjs
+[spec-replay] fwgh2-spec: 1/1 passed, exit=0, 34s, 0 drift line(s) — result written
++ echo 'SPEC_REPLAY_EXIT: 0'
+SPEC_REPLAY_EXIT: 0
++ node bench/verify-ghost.mjs fwgh2-spec
++ tee bench/results/fwgh2-spec-verify.log
+
+fwgh2-spec: objectives passed 4/7
+  obj 1: UNVERIFIABLE — no result file with finalText found
+  obj 2: FAIL — fwgh2-spec-bench-post, body includes runid=true — 2 times, the body was saved doubled: "fwgh2-spec Bench Post test paragraph with runid fwgh2-spec."
+  obj 3: PASS — tags=Bench News (bench-news), want only the seeded Bench News (bench-news)
+  obj 4: PASS — custom excerpt="fwgh2-spec custom excerpt for the bench post"
+  obj 5: PASS — status=published, visibility=public
+  obj 6: PASS — published_at=2026-09-01T10:00:00.000Z, want 2026-09-01
+  obj 7: UNVERIFIABLE — no result file with finalText found
++ echo 'VERIFY_EXIT: 1'
+VERIFY_EXIT: 1
