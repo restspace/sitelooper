@@ -1,0 +1,103 @@
+{
+ "id": "s_a9cb37",
+ "origin": "http://127.0.0.1:8069",
+ "template": "Open {{v2}} and sign in with login 'admin' and password 'admin' (if already signed in, just continue). Then open the Contacts app and create a new contact named exactly '{{v3}}' with its City field set to '{{v4}}' (fill any other required fields), save it, and verify the saved record shows that name and that city. Report the exact name and city displayed on the saved record. Note: this Odoo app long-polls and is never network-idle - wait for concrete page state (e.g. the saved record's fields or a toast), never for network idle.",
+ "params": {
+  "v1": {
+   "example": "fwod76-n1",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "http://127.0.0.1:8069/",
+   "usedIn": [
+    3
+   ]
+  },
+  "v3": {
+   "example": "fwod76-n1 Bench Customer",
+   "usedIn": [],
+   "known": true
+  },
+  "v4": {
+   "example": "Benchville",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8069/"
+ },
+ "steps": [
+  {
+   "tool": "wait_for",
+   "args": {
+    "target": "body",
+    "state": "visible",
+    "timeout_ms": 15000
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "body"
+     },
+     {
+      "kind": "css",
+      "selector": "html > body"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 450,
+      "w": 1264,
+      "h": 884,
+      "role": null,
+      "tag": "body",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "what": "url"
+   },
+   "locators": {},
+   "label": "initial_page_url"
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v2}}"
+   },
+   "locators": {}
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-21T18:10:53.882Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4,
+  "lastUsed": "2026-09-21T18:17:32.392Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_bbe75f",
+  "index": 0,
+  "of": 6
+ },
+ "provenance": {
+  "session": "fwod76-n1",
+  "instruction": "Open http://127.0.0.1:8069/ and sign in with login 'admin' and password 'admin' (if already signed in, just continue). Then open the Contacts app and create a new contact named exactly 'fwod76-n1 Bench Customer' with its City field set to 'Benchville' (fill any other required fields), save it, and verify the saved record shows that name and that city. Report the exact name and city displayed on the saved record. Note: this Odoo app long-polls and is never network-idle - wait for concrete page state (e.g. the saved record's fields or a toast), never for network idle.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-21T18:10:53.882Z"
+ },
+ "revision": 3
+}

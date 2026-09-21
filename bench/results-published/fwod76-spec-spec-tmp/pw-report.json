@@ -1,0 +1,194 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwod76-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwod76-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwod76-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwod76-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwod76-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwod76.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwod76-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwod76.spec.ts",
+      "file": "fwod76.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwod76",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 57404,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper recipe] filled via recipe aria-combobox/set-value (r_dcf2db); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe aria-combobox/set-value (r_dcf2db); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe aria-combobox/set-value (r_dcf2db); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe aria-combobox/set-value (r_dcf2db); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe aria-combobox/set-value (r_dcf2db); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 07-open\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:8069/ and sign in with login 'admin' and password 'admin' (if already signed in, just continue). Then open the Contacts app and create a new contact named exactly '{{runid}} Bench Customer' with its City field set to 'Benchville' (fill any other required fields), save it, and verify the saved record shows that name and that city. Report the exact name and city displayed on the saved record. Note: this Odoo app long-polls and is never network-idle - wait for concrete page state (e.g. the saved record's fields or a toast), never for network idle.",
+                      "duration": 10878
+                    },
+                    {
+                      "title": "02-create: In the Odoo Sales app, create a new quotation (Sales Orders > Quotations > New) for the customer '{{runid}} Bench Customer' (choose them from the autocomplete dropdown - typing alone does not count). Add exactly ONE order line: pick any product from the product catalogue via the order-line product autocomplete dropdown, with quantity 3. Let Odoo fill in the unit price automatically from the product. Save the quotation. Then report: (a) the exact product name you chose, (b) the unit price Odoo filled in on the line, and (c) the Untaxed Amount the app computes in the quotation totals. Do not confirm the quotation yet. Note: this Odoo app long-polls and is never network-idle - wait for concrete page state (e.g. the totals updating or the saved form), never for network idle.",
+                      "duration": 18249
+                    },
+                    {
+                      "title": "03-open: Open the existing quotation {{02-create.quotation_reference}} (for customer '{{runid}} Bench Customer') in the Odoo Sales app if it is not already open. Add a SECOND order line to it: a DIFFERENT product from '{{02-create.product_name}}' (pick it from the order-line product autocomplete dropdown), with quantity 2. Let Odoo auto-fill the unit price. Save the quotation. Then report: (a) the exact product name of the new second line, and (b) the new Untaxed Amount the app computes in the quotation totals. Do not confirm the quotation. Note: this Odoo app long-polls and is never network-idle - wait for concrete page state (e.g. the totals updating or the saved form), never for network idle.",
+                      "duration": 4121
+                    },
+                    {
+                      "title": "04-open: Open the existing quotation {{02-create.quotation_reference}} in the Odoo Sales app if it is not already open. It has two order lines: line 1 is '{{02-create.product_name}}' quantity 3, line 2 is '{{03-open.new_product_name}}' quantity 2. Change ONLY the first line's quantity from 3 to 5 (leave the second line untouched). Save the quotation. Then report the Untaxed Amount the app computes in the quotation totals after the change, plus the quantity shown on each line to confirm only line 1 changed. Do not confirm the quotation. Note: this Odoo app long-polls and is never network-idle - wait for concrete page state (e.g. the totals updating or the saved form), never for network idle.",
+                      "duration": 3231
+                    },
+                    {
+                      "title": "05-open: Open the existing quotation {{02-create.quotation_reference}} in the Odoo Sales app if it is not already open. It is still in 'Quotation' status with two order lines (Cabinet with Doors x5, Desk Combination x2). Confirm the quotation so it becomes a sales order (click the Confirm button and wait for the statusbar to change). Then report: (a) the order reference/name shown (e.g. {{02-create.quotation_reference}}), and (b) the exact status the app now shows in the statusbar after confirmation. Note: this Odoo app long-polls and is never network-idle - wait for concrete page state (e.g. the statusbar changing to the confirmed state), never for network idle.",
+                      "duration": 1458
+                    },
+                    {
+                      "title": "06-open: Open the existing sales order {{02-create.quotation_reference}} in the Odoo Sales app if it is not already open. It is currently in '{{05-open.status_after_confirm}}' status. Cancel the order (use the Cancel action/button, confirming any dialog that appears) so nothing stays active. Then report the exact status the app shows in the statusbar after cancelling, and confirm the order reference is still {{02-create.quotation_reference}}. Note: this Odoo app long-polls and is never network-idle - wait for concrete page state (e.g. the statusbar changing to the cancelled state), never for network idle.",
+                      "duration": 15232
+                    },
+                    {
+                      "title": "07-open: Final verification, no changes to make: (1) In the Odoo Sales app, open the sales order {{02-create.quotation_reference}} and report its current statusbar status, its customer name, and the two order lines with their quantities. (2) Then open the contact '{{runid}} Bench Customer' in Contacts and report its City field value. Do not modify anything. Note: this Odoo app long-polls and is never network-idle - wait for concrete page state, never for network idle.",
+                      "duration": 3517
+                    }
+                  ],
+                  "startTime": "2026-09-21T18:20:01.863Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1ed94fa647d3acb736ff-562a141566b2ed5d9c1c",
+          "file": "fwod76.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-21T18:20:00.014Z",
+    "duration": 59423.043,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

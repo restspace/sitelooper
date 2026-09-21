@@ -1,0 +1,8 @@
+flow: /home/user/sitelooper/bench/results/fwod76-spec-spec-tmp/fwod76.flow.ts
+spec: /home/user/sitelooper/bench/results/fwod76-spec-spec-tmp/fwod76.spec.ts
+warning 03-open: 03-open read a value that contradicts what the previous step reported
+  why: 03-open read order_line_count "2" right after 02-create reported "1"; 02-create's change may not have landed and a later step may be retrying it. Re-record 02-create.
+  fix: sitelooper rerecord bench/results/flows/fwod76.json 02-create
+warning a learned component recipe travels in the compiled artifact as data
+  why: aria-combobox/set-value: uses learned recipe r_dcf2db learned in session fwod76-n1 (validated) rather than the shipped seed; the artifact carries it as data. The snapshot is compile-time state: the daemon keeps validating, learning and demoting after this file is written; the artifact runs what it was given.
+
