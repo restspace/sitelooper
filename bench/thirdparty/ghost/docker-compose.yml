@@ -27,6 +27,11 @@ services:
     environment:
       NODE_ENV: development
       url: http://127.0.0.1:8099
+      # Ghost's default host binds "::" (dual-stack). On a box with IPv6
+      # disabled at the kernel (no /proc/net/if_inet6), that bind fails with
+      # libuv -97 (EAFNOSUPPORT) and the container exits immediately. Force
+      # IPv4-only.
+      server__host: 0.0.0.0
       database__client: sqlite3
       database__connection__filename: /var/lib/ghost/content/data/ghost.db
       database__useNullAsDefault: "true"
