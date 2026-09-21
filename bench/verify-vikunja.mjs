@@ -29,6 +29,18 @@ const PASSWORD = process.env.VIKUNJA_PASSWORD || 'bench-admin-pass'
 const OUT = process.env.BENCH_OUT || 'bench/results'
 const DUE = '2026-12-31'
 const PRIORITY_HIGH = 3
+// Saved doubled = the same text twice over: a repeated paragraph, or one paragraph
+// that is some text followed by itself (fwvk1: "…run fwvk1-n2Bench task…run fwvk1-n2").
+// Counting the runid instead is wrong: a text may name it twice by design (fwgh2).
+const paras = (t) => String(t ?? '').split(/\n+/).map((s) => s.trim()).filter(Boolean)
+const selfRepeat = (p) => {
+  for (let i = 1; i < p.length; i++) {
+    const a = p.slice(0, i).trim(), b = p.slice(i).trim()
+    if (a.length >= 4 && a === b) return true
+  }
+  return false
+}
+const doubled = (t) => { const ps = paras(t); return new Set(ps).size < ps.length || ps.some(selfRepeat) }
 
 const runids = process.argv.slice(2)
 if (!runids.length) {
@@ -149,15 +161,16 @@ for (const runid of runids) {
 
   const description = String(task?.description ?? '')
   const inProject = task?.project_id === project.id
-  // Exactly once: a description holding the runid twice was saved doubled —
-  // fwvk1's every replay saved "Bench task created for run fwvk1-n2Bench task
-  // created for run fwvk1-n2" (a set-value recipe that appended), which is
-  // wrong work, not a pass.
-  const runidCount = description.split(runid).length - 1
-  obj(2, Boolean(task && inProject && runidCount === 1),
+  // Not saved doubled: fwvk1's every replay saved "Bench task created for run
+  // fwvk1-n2Bench task created for run fwvk1-n2" (a set-value recipe that
+  // appended), which is wrong work, not a pass. Judged on the text (tags
+  // stripped), not on how often the runid appears.
+  const runidCount = runid ? description.split(runid).length - 1 : 0
+  const descDoubled = doubled(description.replace(/<\/p>\s*<p>/g, '\n').replace(/<[^>]+>/g, ''))
+  obj(2, Boolean(task && inProject && runidCount >= 1 && !descDoubled),
     !task ? 'task not found'
       : `project=${inProject ? 'Bench Project' : `#${task.project_id} (not Bench Project)`}, description includes runid=${runidCount > 0}` +
-        (runidCount > 1 ? ` — ${runidCount} times, the description was saved doubled: ${JSON.stringify(description.slice(0, 300))}` : ''))
+        (descDoubled ? ` — the description was saved doubled: ${JSON.stringify(description.slice(0, 300))}` : ''))
 
   obj(3, Boolean(task && dueOn(task.due_date, DUE)),
     !task ? 'no task' : `due date=${String(task.due_date).startsWith('0001-') ? '(not set)' : task.due_date}, want ${DUE}`)

@@ -22,7 +22,7 @@ Substitute the runid you were given for `<RUNID>` everywhere above, exactly as p
 
 - Do not modify the seed posts (titles starting `Seed:`); objective 1 only reads them.
 - The post body is a rich-text editor: text only counts once it has been typed into the
-  editor and the post saved, and it should appear once, not twice.
+  editor and the post saved, and the paragraph should appear once, not twice.
 - Tag, excerpt, publish date and URL live in the post's settings panel. The tag field
   creates a NEW tag from whatever text is typed unless an existing tag is chosen from its
   suggestions; objective 3 needs the existing `Bench News`, not a new tag, and a similar

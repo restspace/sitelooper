@@ -9,9 +9,9 @@
  * last button is the only one that publishes.
  *
  *   obj 1  (report-only: the published Seed: posts' titles)            checked against finalText
- *   obj 2  a post "<runid> Bench Post" exists whose body carries the runid exactly once
+ *   obj 2  a post "<runid> Bench Post" exists whose body carries the runid, not saved doubled
  *   obj 3  its only tag is the seeded Bench News (not a new tag, not Bench Newsletter)
- *   obj 4  its custom excerpt carries the runid exactly once
+ *   obj 4  its custom excerpt carries the runid, not saved doubled
  *   obj 5  it is published, public
  *   obj 6  its publish date is 2026-09-01 (site timezone UTC)
  *   obj 7  (report-only: its URL slug)                                 checked against finalText
@@ -78,6 +78,18 @@ if (!seeds.length) {
 const seedTag = [...tags].sort((a, b) => a.created_at.localeCompare(b.created_at)).find((t) => t.name === TAG) ?? null
 // An empty runid (a sweep that lost its id) matches nothing, rather than everything.
 const count = (text, needle) => (needle ? String(text ?? '').split(needle).length - 1 : 0)
+// Saved doubled = the same text twice over: a repeated paragraph, or one paragraph
+// that is some text followed by itself (fwvk1: "…run fwvk1-n2Bench task…run fwvk1-n2").
+// Counting the runid instead is wrong: a text may name it twice by design (fwgh2).
+const paras = (t) => String(t ?? '').split(/\n+/).map((s) => s.trim()).filter(Boolean)
+const selfRepeat = (p) => {
+  for (let i = 1; i < p.length; i++) {
+    const a = p.slice(0, i).trim(), b = p.slice(i).trim()
+    if (a.length >= 4 && a === b) return true
+  }
+  return false
+}
+const doubled = (t) => { const ps = paras(t); return new Set(ps).size < ps.length || ps.some(selfRepeat) }
 
 const report = []
 let anyFailure = false
@@ -134,14 +146,14 @@ for (const runid of runids) {
       'so objectives 2-7 cannot be attributed to any single post.')
   }
 
-  // Exactly once: a body holding the runid twice was typed twice (a fill
-  // that appended to what an earlier attempt had already put there).
+  // The body must hold the runid and must not be saved doubled (a fill that
+  // appended to what an earlier attempt had already put there).
   const body = String(post?.plaintext ?? '')
-  const bodyCount = count(body, runid)
-  obj(2, Boolean(post) && bodyCount === 1,
+  const bodyDoubled = doubled(body)
+  obj(2, Boolean(post) && count(body, runid) >= 1 && !bodyDoubled,
     !post ? 'post not found'
-      : `${post.slug}, body includes runid=${bodyCount > 0}` +
-        (bodyCount > 1 ? ` — ${bodyCount} times, the body was saved doubled: ${JSON.stringify(body.slice(0, 300))}` : ''))
+      : `${post.slug}, body includes runid=${count(body, runid) > 0}` +
+        (bodyDoubled ? ` — the body was saved doubled: ${JSON.stringify(body.slice(0, 300))}` : ''))
 
   const postTags = post?.tags ?? []
   obj(3, postTags.length === 1 && Boolean(seedTag) && postTags[0].id === seedTag.id,
@@ -149,11 +161,11 @@ for (const runid of runids) {
       : `tags=${postTags.length ? postTags.map((t) => `${t.name} (${t.slug})`).join(', ') : '(none)'}, want only the seeded ${TAG} (${seedTag?.slug ?? 'missing!'})`)
 
   const excerpt = post?.custom_excerpt ?? ''
-  const excerptCount = count(excerpt, runid)
-  obj(4, Boolean(post) && excerptCount === 1,
+  const excerptDoubled = doubled(excerpt)
+  obj(4, Boolean(post) && count(excerpt, runid) >= 1 && !excerptDoubled,
     !post ? 'no post'
       : `custom excerpt=${excerpt ? JSON.stringify(excerpt.slice(0, 200)) : '(none)'}` +
-        (excerptCount > 1 ? ` — runid ${excerptCount} times, saved doubled` : ''))
+        (excerptDoubled ? ' — saved doubled' : ''))
 
   obj(5, post?.status === 'published' && post?.visibility === 'public',
     !post ? 'no post' : `status=${post.status}, visibility=${post.visibility}`)
