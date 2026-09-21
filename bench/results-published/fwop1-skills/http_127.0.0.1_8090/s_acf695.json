@@ -1,0 +1,115 @@
+{
+ "id": "s_acf695",
+ "origin": "http://127.0.0.1:8090",
+ "template": "Open http://127.0.0.1:8090/ and sign in with username 'admin' and password 'bench-admin-pass'. Then navigate to the project named 'Bench Project' and open its work packages list (table view). Report the subjects of all work packages whose subject starts with 'Seed:', exactly as displayed, one per line. Do not modify anything.",
+ "params": {},
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8090/"
+ },
+ "steps": [
+  {
+   "tool": "read",
+   "args": {
+    "what": "text",
+    "target": "role=dialog[name=\"User menu\"] >> nth=0",
+    "label": "user_menu_text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=dialog[name=\"User menu\"] >> nth=0"
+     },
+     {
+      "kind": "label",
+      "label": "User menu",
+      "nth": 1
+     },
+     {
+      "kind": "css",
+      "selector": "#wrapper > header > div:nth-of-type(3) > dialog-helper > dialog"
+     },
+     {
+      "kind": "point",
+      "x": 1120,
+      "y": 450,
+      "w": 320,
+      "h": 900,
+      "role": null,
+      "tag": "dialog",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "user_menu_text"
+  },
+  {
+   "tool": "press",
+   "args": {
+    "key": "Escape"
+   },
+   "locators": {},
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/",
+    "addedContains": [
+     "- tooltip \"User menu\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "a[href=\"/projects\"] >> nth=0"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "a[href=\"/projects\"] >> nth=0"
+     },
+     {
+      "kind": "css",
+      "selector": "#op-app-header--modules-menu-list > li:nth-of-type(6) > a"
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/projects",
+    "addedContains": [
+     "- link \"Go back one menu level\"",
+     "- textbox \"Search\"",
+     "- link \"Active projects\"",
+     "- link \"My projects\"",
+     "- link \"Favorite projects\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-21T10:27:41.680Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_cb20a9",
+  "index": 1,
+  "of": 5
+ },
+ "variantOf": "s_a16d7e",
+ "provenance": {
+  "session": "fwop1-n3",
+  "instruction": "Open http://127.0.0.1:8090/ and sign in with username 'admin' and password 'bench-admin-pass'. Then navigate to the project named 'Bench Project' and open its work packages list (table view). Report the subjects of all work packages whose subject starts with 'Seed:', exactly as displayed, one per line. Do not modify anything.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-21T10:27:41.680Z"
+ },
+ "revision": 1
+}

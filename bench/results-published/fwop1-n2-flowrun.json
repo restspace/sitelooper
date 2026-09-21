@@ -1,0 +1,207 @@
+{
+  "flow": "fwop1",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "The session was already signed in as admin (user menu \"BA\") from the earlier replayed chain; from the OpenProject home I opened Projects → \"Bench Project\" → Work packages, which loaded the table view at /projects/bench-project/work_packages (\"All open | Work Packages | Bench Project\"). The table shows 3 work packages on a single page (pagination \"(1 - 3/3) You are on the only page.\"), and all three subjects start with \"Seed:\": \"Seed: triage inbox\", \"Seed: order missing parts\", \"Seed: ship repaired device\" (read from the live DOM; the \"Work package leaf at level 0.\" text in the cell is an sr-only hierarchy indicator, not part of the subject). Nothing was modified.",
+      "values": {
+        "start_url": "http://127.0.0.1:8090/",
+        "signin_username": "admin",
+        "project_name": "Bench Project",
+        "work_packages_view": "Work packages table (All open)",
+        "pagination": "(1 - 3/3) You are on the only page.",
+        "work_package_count": "3",
+        "subject_1": "Seed: triage inbox",
+        "subject_2": "Seed: order missing parts",
+        "subject_3": "Seed: ship repaired device",
+        "pagination_2": "(1 - 3/3)\nYou are on the only page.",
+        "seed_subjects_1": "Seed: triage inbox",
+        "seed_subjects_2": "Seed: order missing parts",
+        "seed_subjects_3": "Seed: ship repaired device"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_a16d7e stopped at step 1 — no element matched any known locator for target (tried 3: page.getByRole('button', { name: 'Close', exact: true }), page.locator('#user-form > div:nth-of-type(4) > div > button:nth-of-type(1)'), elementAt(828, 547) /* button */)",
+      "replayed": "0/2",
+      "repaired": false,
+      "turns": 16,
+      "unreported": [
+        "work_packages_url",
+        "projects_list_url",
+        "seed_subject_1",
+        "seed_subject_2",
+        "seed_subject_3",
+        "filter_view",
+        "seed_work_package_id_1",
+        "seed_work_package_id_2",
+        "seed_work_package_id_3"
+      ]
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "In Bench Project's work packages table I used \"Create new work package\" → menuitem \"Task\", which opened /projects/bench-project/work_packages/create_new?type=1. I set Subject to \"fwop1-n2 Bench Work Package\" and typed description \"Bench work package for run fwop1-n2\" (verified by reading the editor's text back: exactly that string). For Assignee I typed \"Bench Assignee\" into the autocomplete and clicked the matching option \"BA Bench Assignee <bench-assignee@example.com>\"; the dropdown listbox closed and an assignee chip \"Bench Assignee\" rendered in the form. Status was set by opening the status selector and clicking the \"In progress\" option (listbox then closed), and the Finish date was set through the date picker to 2026-12-31, which the form then displayed as \"no start date - 2026-12-31\". Clicking Save showed alert \"Successful creation.\" and navigated to /projects/bench-project/work_packages/details/42/overview titled \"Task: fwop1-n2 Bench Work Package (#42)\". The live detail page header shows the id span \"#42\", and its attribute panel shows assignee \"Bench Assignee\" (aria-label \"Assignee Bench Assignee: Edit\"), status \"In progress\" (aria-label \"Status In progress: Edit\") and finish date 12/31/2026. Nothing existing was modified beyond creating this one work package.",
+      "values": {
+        "work_package_number_displayed": "#42",
+        "work_package_type_and_subject": "Task: fwop1-n2 Bench Work Package",
+        "assignee": "Bench Assignee",
+        "status": "In progress",
+        "finish_date": "12/31/2026",
+        "finish_date_field_displayed": "no start date - 12/31/2026",
+        "alert": "Successful creation.",
+        "description_text": "Bench work package for run fwop1-n2",
+        "work_packages_edit_actio": "Bench Project",
+        "work_packages_edit_actio_2": "Create",
+        "work_packages_edit_actio_3": "Create new work package",
+        "work_packages_edit_actio_4": "Save",
+        "ref": "fwop1-n2"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "the flow step has no pinned skill",
+      "replayed": null,
+      "repaired": false,
+      "turns": 35,
+      "repinned": "s_91b027",
+      "repinParams": {
+        "v1": "Bench Project",
+        "v2": "{{01-open.url}}",
+        "v3": "{{runid}}",
+        "v4": "{{runid}} Bench Work Package",
+        "v5": "Bench work package for run {{runid}}",
+        "v6": "Bench Assignee",
+        "v7": "2026-12-31"
+      },
+      "unreported": [
+        "form_url",
+        "subject_entered",
+        "saved",
+        "work_package_id",
+        "work_package_url",
+        "subject",
+        "type",
+        "assignee_row_displayed",
+        "page_title",
+        "save_confirmation",
+        "run_ref"
+      ]
+    },
+    {
+      "id": "03-edit",
+      "status": "success",
+      "summary": "Replayed stored procedure s_9b2a3d; observed page_title=Task: fwop1-n2 Bench Work Package (#42) | Work Packages | Bench Project | OpenProject, work_package_id=42, status_shown=In progress, date_row_full_text=no start date - 12/31/2026.",
+      "values": {
+        "page_title": "Task: fwop1-n2 Bench Work Package (#42) | Work Packages | Bench Project | OpenProject",
+        "work_package_id": "42",
+        "status_shown": "In progress",
+        "date_row_full_text": "no start date - 12/31/2026"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "update_confirmation"
+      ]
+    },
+    {
+      "id": "04-add",
+      "status": "success",
+      "summary": "On work package #42 I switched to the Activity tab, clicked the \"Add a comment. Type @ to notify people.\" button which opened the CKEditor comment box, typed the text \"Comment for run fwop1-n2\" (fill reported the value verified on the component), and submitted it via the \"Submit comment\" button — the editor then closed and the \"Add a comment\" button reappeared, indicating success. The comment is confirmed present in the activity/comment list on the live page: the journal entry reads \"BA | Bench Admin | created this on | 09/21/2026 10:21 AM | Comment for run fwop1-n2\", and reading the comment body element returns exactly \"Comment for run fwop1-n2\". Author displayed: Bench Admin.",
+      "values": {
+        "comment_text_shown": "Comment for run fwop1-n2",
+        "activity_entry": "BA | Bench Admin | created this on | 09/21/2026 10:21 AM | Comment for run fwop1-n2",
+        "target_work_package": "fwop1-n2 Bench Work Package (#42)",
+        "run_ref": "fwop1-n2",
+        "work_package_id": "42"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_8df6a0; observed comment_text_in_activity=Comment for run fwop1-n2, run_ref=fwop1-n2, numeric_id_displayed=#42, subject=fwop1-n2 Bench Work Package, description_text=Bench work package for run fwop1-n2, status=In progress, finish_date=12/31/2026, date_row_full_text=no start date - 12/31/2026, comment_author=Bench Admin, type=TASK.",
+      "values": {
+        "comment_text_in_activity": "Comment for run fwop1-n2",
+        "run_ref": "fwop1-n2",
+        "numeric_id_displayed": "#42",
+        "subject": "fwop1-n2 Bench Work Package",
+        "description_text": "Bench work package for run fwop1-n2",
+        "status": "In progress",
+        "finish_date": "12/31/2026",
+        "date_row_full_text": "no start date - 12/31/2026",
+        "comment_author": "Bench Admin",
+        "type": "TASK"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "repinned": 1,
+  "drift": 2,
+  "driftTickets": [
+    {
+      "flow": "fwop1",
+      "step": "01-open",
+      "skill": "s_a16d7e",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.846,
+      "missedLocator": "page.getByRole('button', { name: 'Close', exact: true })",
+      "fallbackUsed": null,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8090/",
+      "pageUrl": "http://127.0.0.1:8090/"
+    },
+    {
+      "flow": "fwop1",
+      "step": "03-edit",
+      "skill": "s_9b2a3d",
+      "atStep": "7",
+      "key": "target",
+      "similarity": 0.997,
+      "missedLocator": "page.getByRole('alert', { name: 'Successful update.', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/42/overview"
+    }
+  ],
+  "wallMs": 166855,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 785909,
+    "completionTokens": 11859,
+    "cachedTokens": 731392
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 785909,
+      "completionTokens": 11859,
+      "cachedTokens": 731392
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

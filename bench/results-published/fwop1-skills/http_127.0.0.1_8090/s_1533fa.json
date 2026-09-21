@@ -1,0 +1,81 @@
+{
+ "id": "s_1533fa",
+ "origin": "http://127.0.0.1:8090",
+ "template": "Open http://127.0.0.1:8090/ and sign in with username 'admin' and password 'bench-admin-pass'. Then navigate to the project named 'Bench Project' and open its work packages list (table view). Report the subjects of all work packages whose subject starts with 'Seed:', exactly as displayed, one per line. Do not modify anything.",
+ "params": {},
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8090/login"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=link[name=\"Projects\"] >> nth=0"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=link[name=\"Projects\"] >> nth=0"
+     },
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "Projects",
+      "nth": 0
+     },
+     {
+      "kind": "css",
+      "selector": "#projects-wrapper > a"
+     },
+     {
+      "kind": "point",
+      "x": 122,
+      "y": 302,
+      "w": 219,
+      "h": 36,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/projects",
+    "addedContains": [
+     "- link \"Go back one menu level\"",
+     "- textbox \"Search\"",
+     "- link \"Active projects\"",
+     "- link \"My projects\"",
+     "- link \"Favorite projects\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-21T10:24:25.099Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_09ec31",
+  "index": 0,
+  "of": 4
+ },
+ "variantOf": "s_a16d7e",
+ "provenance": {
+  "session": "fwop1-n2",
+  "instruction": "Open http://127.0.0.1:8090/ and sign in with username 'admin' and password 'bench-admin-pass'. Then navigate to the project named 'Bench Project' and open its work packages list (table view). Report the subjects of all work packages whose subject starts with 'Seed:', exactly as displayed, one per line. Do not modify anything.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-21T10:24:25.099Z"
+ },
+ "revision": 1
+}

@@ -1,0 +1,207 @@
+{
+  "flow": "fwop1",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Session on http://127.0.0.1:8090/ is signed in (user menu shows \"BA / Bench Admin\"); navigated Projects → Bench Project → Work packages, which opened the table view at /projects/bench-project/work_packages (\"All open\", single page). Read the rows from the live DOM: three work packages, all with subjects starting with \"Seed:\". Nothing was modified.",
+      "values": {
+        "seed_work_package_count": "3",
+        "row_ids": "#38 Seed: triage inbox (TASK, New); #39 Seed: order missing parts (TASK, New); #40 Seed: ship repaired device (TASK, New)",
+        "signed_in_user_display_name": "Bench Admin",
+        "start_url": "http://127.0.0.1:8090/",
+        "view": "Work packages table view, filter \"All open\", pagination: \"You are on the only page.\"",
+        "work_packages_table_url": "http://127.0.0.1:8090/projects/bench-project/work_packages",
+        "user_menu_text": "User menu\nBA\nBench Admin\nMy page\nMy activity\nAccount settings\nAdministration\nSign out",
+        "project_a_a_href_project": "Bench Project",
+        "tbody_tr": "Create new work package",
+        "seed_work_package_subjects_1": "Seed: triage inbox",
+        "seed_work_package_subjects_2": "Seed: order missing parts",
+        "seed_work_package_subjects_3": "Seed: ship repaired device"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_a16d7e stopped at step 1 — no element matched any known locator for target (tried 3: page.getByRole('button', { name: 'Close', exact: true }), page.locator('#user-form > div:nth-of-type(4) > div > button:nth-of-type(1)'), elementAt(828, 547) /* button */)",
+      "replayed": "0/2",
+      "repaired": false,
+      "turns": 17,
+      "unreported": [
+        "work_packages_url",
+        "projects_list_url",
+        "seed_subject_1",
+        "seed_subject_2",
+        "seed_subject_3",
+        "filter_view",
+        "seed_work_package_id_1",
+        "seed_work_package_id_2",
+        "seed_work_package_id_3"
+      ]
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Resumed the create form at /projects/bench-project/work_packages/create_new?type=1 (type Task, subject \"fwop1-n3 Bench Work Package\" and description \"Bench work package for run fwop1-n3\" were already filled by the replayed segment). I committed the Assignee autocomplete by clicking the \"BA Bench Assignee bench-assignee@example.com\" option (the chip \"Bench Assignee\" rendered in the field), set Status to \"In progress\" via its dropdown (verified in the form), and set Finish date to 2026-12-31 via the date picker, then clicked Save. Save succeeded: alert \"Successful creation.\" and the page navigated to the new work package's detail page, whose info row shows \"#43\" and title \"Task: fwop1-n3 Bench Work Package (#43)\".",
+      "values": {
+        "work_package_number_displayed": "#43",
+        "work_package_title": "Task: fwop1-n3 Bench Work Package (#43)",
+        "assignee_after_save": "BA / Bench Assignee",
+        "finish_date_after_save": "no start date - 12/31/2026",
+        "status_in_form_before_save": "In progress",
+        "creation_alert": "Successful creation.",
+        "description_text": "Bench work package for run fwop1-n3",
+        "screenshot_form_before_save": "/root/.sitelooper/sessions/fwop1-n3/screenshots/shot-1789986547221.jpg",
+        "finish_date_field_value": "2026-12-31",
+        "ref": "fwop1-n3"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_eeffbc stopped at step 6 — after step 6 none of the 1 recorded page change(s) appeared (e.g. \"- option \\\"BA Bench Assigneebench-assignee@example.com\\\"\") — the step ran but did not have its recorded effect",
+      "replayed": "5/13",
+      "repaired": false,
+      "turns": 29,
+      "unreported": [
+        "form_url",
+        "subject_entered",
+        "saved",
+        "work_package_id",
+        "work_package_url",
+        "subject",
+        "type",
+        "assignee",
+        "assignee_row_displayed",
+        "page_title",
+        "save_confirmation",
+        "run_ref"
+      ]
+    },
+    {
+      "id": "03-edit",
+      "status": "success",
+      "summary": "Replayed stored procedure s_9b2a3d; observed page_title=Task: fwop1-n3 Bench Work Package (#43) | Work Packages | Bench Project | OpenProject, work_package_id=43, status_shown=In progress, date_row_full_text=no start date - 12/31/2026.",
+      "values": {
+        "page_title": "Task: fwop1-n3 Bench Work Package (#43) | Work Packages | Bench Project | OpenProject",
+        "work_package_id": "43",
+        "status_shown": "In progress",
+        "date_row_full_text": "no start date - 12/31/2026"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "update_confirmation"
+      ]
+    },
+    {
+      "id": "04-add",
+      "status": "success",
+      "summary": "On work package #43 I switched to the Activity tab, clicked the \"Add a comment. Type @ to notify people.\" button which opened the CKEditor comment box, typed the text \"Comment for run fwop1-n3\" (fill reported the value verified on the component), and submitted it via the \"Submit comment\" button — the editor then closed and the \"Add a comment\" button reappeared, indicating success. The comment is confirmed present in the activity/comment list on the live page: the journal entry reads \"BA | Bench Admin | created this on | 09/21/2026 10:21 AM | Comment for run fwop1-n3\", and reading the comment body element returns exactly \"Comment for run fwop1-n3\". Author displayed: Bench Admin.",
+      "values": {
+        "comment_text_shown": "Comment for run fwop1-n3",
+        "activity_entry": "BA | Bench Admin | created this on | 09/21/2026 10:21 AM | Comment for run fwop1-n3",
+        "target_work_package": "fwop1-n3 Bench Work Package (#43)",
+        "run_ref": "fwop1-n3",
+        "work_package_id": "43"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_8df6a0; observed comment_text_in_activity=Comment for run fwop1-n3, run_ref=fwop1-n3, numeric_id_displayed=#43, subject=fwop1-n3 Bench Work Package, description_text=Bench work package for run fwop1-n3, status=In progress, finish_date=12/31/2026, date_row_full_text=no start date - 12/31/2026, comment_author=Bench Admin, type=TASK.",
+      "values": {
+        "comment_text_in_activity": "Comment for run fwop1-n3",
+        "run_ref": "fwop1-n3",
+        "numeric_id_displayed": "#43",
+        "subject": "fwop1-n3 Bench Work Package",
+        "description_text": "Bench work package for run fwop1-n3",
+        "status": "In progress",
+        "finish_date": "12/31/2026",
+        "date_row_full_text": "no start date - 12/31/2026",
+        "comment_author": "Bench Admin",
+        "type": "TASK"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "repinned": 0,
+  "drift": 3,
+  "driftTickets": [
+    {
+      "flow": "fwop1",
+      "step": "01-open",
+      "skill": "s_a16d7e",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.846,
+      "missedLocator": "page.getByRole('button', { name: 'Close', exact: true })",
+      "fallbackUsed": null,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8090/",
+      "pageUrl": "http://127.0.0.1:8090/"
+    },
+    {
+      "flow": "fwop1",
+      "step": "02-create",
+      "skill": "s_eeffbc",
+      "similarity": 1,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_eeffbc stopped at step 6 — after step 6 none of the 1 recorded page change(s) appeared (e.g. \"- option \\\"BA Bench Assigneebench-assignee@example.com\\\"\") — the step ran but did not have its recorded effect",
+      "reason": "after step 6 none of the 1 recorded page change(s) appeared (e.g. \"- option \\\"BA Bench Assigneebench-assignee@example.com\\\"\") — the step ran but did not have its recorded effect",
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/create_new?type=:id",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/create_new?type=1"
+    },
+    {
+      "flow": "fwop1",
+      "step": "03-edit",
+      "skill": "s_9b2a3d",
+      "atStep": "7",
+      "key": "target",
+      "similarity": 0.997,
+      "missedLocator": "page.getByRole('alert', { name: 'Successful update.', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/43/overview"
+    }
+  ],
+  "wallMs": 203735,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 767724,
+    "completionTokens": 13985,
+    "cachedTokens": 699648
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 767724,
+      "completionTokens": 13985,
+      "cachedTokens": 699648
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

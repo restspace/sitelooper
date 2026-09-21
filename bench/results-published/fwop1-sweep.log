@@ -1,0 +1,135 @@
+
+[sweep] run 1/3: fwop1-n1 (store: /home/user/sitelooper/bench/results/fwop1-skills)
+[harness] openproject: defaulting APP_URL
+[harness] openproject: defaulting APP_EMAIL
+[harness] openproject: defaulting APP_PASSWORD
+[reset] openproject: no leftover bench work packages
+[harness] openproject responded 302 at http://127.0.0.1:8090/
+stopped: fwop1-n1
+  flow "fwop1" saved: 5 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwop1.json
+  warning: note: 01-open no longer publishes total_count, project_link — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-edit no longer publishes start_date_shown, finish_date_shown, date_input_value — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-add no longer publishes comment_author_shown — no replay reads it from the page and the recording showed no line to read
+  warning: note: 05-open no longer publishes assignee, accountable, start_date, comment_timestamp — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-edit: added a read for update_confirmation to s_9b2a3d (page.getByRole('alert', { name: 'Successful update.', exact: true }); seen on the instruction's own page)
+  warning: note: 1 step(s) adopted from non-success instruction(s) whose work the session continued from (02-create) — they replay model-first with doubled budget, and a non-success there does not halt the flow
+  warning: warning: 159 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].route: "http://127.0.0.1:8090/projects/bench-project/work_packages" (output) in "http://127.0.0.1:8090/projects/bench-project/work_packages"
+  flow.steps[0].route: "http://127.0.0.1:8090/projects" (output) in "http://127.0.0.1:8090/projects/bench-project/work_packages"
+  flow.steps[1].instruction: "Bench Assignee" (output) in "In the 'Bench Project' project ({{01-open.url}}), create a new work package of type 'Task' with subject exactly '{{runid}} Bench Work Package' and a description"
+  flow.steps[1].instruction: "In progress" (output) in "In the 'Bench Project' project ({{01-open.url}}), create a new work package of type 'Task' with subject exactly '{{runid}} Bench Work Package' and a description"
+  flow.steps[1].instruction: "2026-12-31" (output) in "In the 'Bench Project' project ({{01-open.url}}), create a new work package of type 'Task' with subject exactly '{{runid}} Bench Work Package' and a description"
+  warning: {{02-create.work_package_number_displayed}} (used by 03-edit) can only be re-observed by model recovery — consider re-recording so the value is read from the page.
+arm=sitelooper model=z-ai/glm-5.3 runid=fwop1-n1 stop=completed
+turns=7 wall=389.9s
+commands=6 cmdTime=338.8s cmdBytes=9218 timeouts=0
+orchestrator in=6629 cw=0 cr=24064 out=2287
+inner prompt=2296802 cached=2146176 completion=30652
+spend=$0.0733 maxUsd=3
+learn: A_n=0 replayed=0/6 full=0 repaired=0 compiled=5 variants=0
+-> /home/user/sitelooper/bench/results/fwop1-n1-sitelooper-result.json
+
+fwop1-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — work package id 41 reported
+
+[sweep] run 2/3: fwop1-n2 (replay flow fwop1, no orchestrator)
+[reset] openproject: deleted 1 leftover bench work package(s)
+[sweep] fwop1-n2: 2 drift ticket(s) → fwop1-n2-drift.json
+
+fwop1-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — work package id 42 reported
+[sweep] fwop1-n2: 02-create has no pinned skill — 35 model turn(s), on every replay
+
+[sweep] run 3/3: fwop1-n3 (replay flow fwop1, no orchestrator)
+[reset] openproject: deleted 1 leftover bench work package(s)
+[sweep] fwop1-n3: 3 drift ticket(s) → fwop1-n3-drift.json
+
+fwop1-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — work package id 43 reported
+
+Learning sweep fwop1 (K=3)
+┌─────────┬───┬────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid      │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwop1-n1' │ '7/7'    │ 'completed' │ 7     │ 6    │ 0.0733    │ 0   │ '0/6'        │ 390    │
+│ 1       │ 2 │ 'fwop1-n2' │ '7/7'    │ 'success'   │ 51    │ 5    │ 0.0175    │ 0.6 │ '5/5 (flow)' │ 167    │
+│ 2       │ 3 │ 'fwop1-n3' │ '7/7'    │ 'success'   │ 46    │ 5    │ 0.0207    │ 0.6 │ '5/5 (flow)' │ 204    │
+└─────────┴───┴────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8090
+  s_42bd5d  validated    1 steps  3/3 (100%)
+           Open work package {{v1}} in Bench Project ({{v2}}) and verify, reporting exactly what the page shows for each:…
+  s_8206ad  validated    5 steps  3/3 (100%)
+           On the work package detail page for work package {{v1}} ('{{v2}}', {{v4}}), add a comment whose text includes …
+  s_8df6a0  validated    8 steps  3/3 (100%)
+           Open work package {{v1}} in Bench Project ({{v2}}) and verify, reporting exactly what the page shows for each:…
+  s_9b2a3d  validated    7 steps  3/3 (100%)
+           On the work package detail page {{v1}} (work package {{v4}}, '{{v5}}'), edit fields in place: (1) set the Fini…
+  s_a16d7e  provisional  2 steps  1/3 (33%)
+           Open {{v1}} and sign in with username '{{v2}}' and password '{{v3}}'. Then navigate to the project named 'Benc…
+  s_ae5a5c  validated    3 steps  3/3 (100%)
+           Open {{v1}} and sign in with username '{{v2}}' and password '{{v3}}'. Then navigate to the project named 'Benc…
+  s_cef093  validated    1 steps  3/3 (100%)
+           On the work package detail page for work package {{v1}} ('{{v2}}', {{v4}}), add a comment whose text includes …
+  s_db499c  validated    3 steps  3/3 (100%)
+           Open {{v1}} and sign in with username '{{v2}}' and password '{{v3}}'. Then navigate to the project named 'Benc…
+  s_91b027  validated    2 steps  2/2 (100%)
+           In the '{{v1}}' project ({{v2}}), create a new work package of type 'Task' with subject exactly '{{v4}}' and a…
+  s_eeffbc  provisional 13 steps  1/2 (50%)
+           In the '{{v1}}' project ({{v2}}), create a new work package of type 'Task' with subject exactly '{{v4}}' and a…
+  s_1533fa  provisional  1 steps  1/1 (100%)  variant of s_a16d7e
+           Open http://127.0.0.1:8090/ and sign in with username 'admin' and password 'bench-admin-pass'. Then navigate t…
+  s_1ca779  provisional  1 steps  1/1 (100%)
+           Open {{v1}} and sign in with username '{{v2}}' and password '{{v3}}'. Then navigate to the project named 'Benc…
+  s_2a5f35  provisional  1 steps  1/1 (100%)  variant of s_a16d7e
+           Open http://127.0.0.1:8090/ and sign in with username 'admin' and password 'bench-admin-pass'. Then navigate t…
+  s_33717f  provisional 13 steps  1/1 (100%)  variant of s_eeffbc
+           In the '{{v1}}' project ({{v2}}), create a new work package of type 'Task' with subject exactly '{{v4}}' and a…
+  s_452421  provisional  1 steps  1/1 (100%)  variant of s_eeffbc
+           In the '{{v1}}' project ({{v2}}), create a new work package of type 'Task' with subject exactly '{{v4}}' and a…
+  s_5ca384  provisional  3 steps  1/1 (100%)  variant of s_eeffbc
+           In the '{{v1}}' project ({{v2}}), create a new work package of type 'Task' with subject exactly '{{v4}}' and a…
+  s_5cd72c  provisional  8 steps  1/1 (100%)  variant of s_a16d7e
+           Open http://127.0.0.1:8090/ and sign in with username 'admin' and password 'bench-admin-pass'. Then navigate t…
+  s_92f393  provisional 11 steps  1/1 (100%)
+           Open {{v1}} and sign in with username '{{v2}}' and password '{{v3}}'. Then navigate to the project named 'Benc…
+  s_acf695  provisional  3 steps  1/1 (100%)  variant of s_a16d7e
+           Open http://127.0.0.1:8090/ and sign in with username 'admin' and password 'bench-admin-pass'. Then navigate t…
+  s_b5ecd9  provisional  7 steps  1/1 (100%)
+           In the '{{v1}}' project ({{v2}}), create a new work package of type 'Task' with subject exactly '{{v4}}' and a…
+  s_baa091  provisional  1 steps  1/1 (100%)  variant of s_a16d7e
+           Open http://127.0.0.1:8090/ and sign in with username 'admin' and password 'bench-admin-pass'. Then navigate t…
+  s_bece7d  provisional  6 steps  1/1 (100%)
+           In the 'Bench Project' project ({{v1}}), create a new work package of type 'Task' with subject exactly '{{v3}}…
+  s_c8c035  provisional  1 steps  1/1 (100%)  variant of s_a16d7e
+           Open http://127.0.0.1:8090/ and sign in with username 'admin' and password 'bench-admin-pass'. Then navigate t…
+  s_cac5c7  provisional  1 steps  1/1 (100%)
+           In the 'Bench Project' project ({{v1}}), create a new work package of type 'Task' with subject exactly '{{v3}}…
+  s_d8862b  provisional  6 steps  1/1 (100%)  variant of s_a16d7e
+           Open http://127.0.0.1:8090/ and sign in with username 'admin' and password 'bench-admin-pass'. Then navigate t…
+  s_e14556  provisional  1 steps  1/1 (100%)  variant of s_a16d7e
+           Open http://127.0.0.1:8090/ and sign in with username 'admin' and password 'bench-admin-pass'. Then navigate t…
+  s_e6b0b2  provisional  1 steps  1/1 (100%)  variant of s_a16d7e
+           Open http://127.0.0.1:8090/ and sign in with username 'admin' and password 'bench-admin-pass'. Then navigate t…
+  s_fa4f28  provisional  5 steps  1/1 (100%)
+           Open {{v1}} and sign in with username '{{v2}}' and password '{{v3}}'. Then navigate to the project named 'Benc…
+store: /home/user/sitelooper/bench/results/fwop1-skills
+
+summary: /home/user/sitelooper/bench/results/fwop1-sweep.json
