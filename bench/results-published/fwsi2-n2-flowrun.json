@@ -1,0 +1,177 @@
+{
+  "flow": "fwsi2",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_aef3cf; observed login_alert= Success: \n×\nYou have successfully logged in., logged_in_user=Bench Admin , page_title=\n        Dashboard\n                :: Bench Assets\n    .",
+      "values": {
+        "login_alert": " Success: \n×\nYou have successfully logged in.",
+        "logged_in_user": "Bench Admin ",
+        "page_title": "\n        Dashboard\n                :: Bench Assets\n    "
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-find",
+      "status": "success",
+      "summary": "Opened the Assets list at /hardware (all assets) and searched/filtered for \"Seed:\". The list contains exactly 3 assets in total (both the unfiltered view and the \"Seed:\" filtered view returned the same 3 rows, so there is no pagination gap), and all three have names starting with \"Seed:\". No records were modified. The three assets are: Seed: Reception Laptop (SEED-0001), Seed: Training Laptop (SEED-0002), Seed: Spare Laptop (SEED-0003).",
+      "values": {
+        "assets_list_url": "http://127.0.0.1:8098/hardware",
+        "asset_1_name": "Seed: Reception Laptop",
+        "asset_1_tag": "SEED-0001",
+        "asset_2_name": "Seed: Training Laptop",
+        "asset_2_tag": "SEED-0002",
+        "asset_3_name": "Seed: Spare Laptop",
+        "asset_3_tag": "SEED-0003"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_9204c8; observed asset_name=fwsi2-n2 Bench Asset, status=Ready to Deploy (deployable), purchase_date=2026-03-15 (shown as 'Purchased 2026-03-15'), form_purchase_date=2026-03-15, ref=fwsi2-n2, create_page_url=http://127.0.0.1:8098/hardware/create, asset_tag=BA-00005, detail_url=http://127.0.0.1:8098/hardware/5, model=Bench Laptop Model, model_category=Bench Laptops, manufacturer=Bench Manufacturer.",
+      "values": {
+        "asset_name": "fwsi2-n2 Bench Asset",
+        "status": "Ready to Deploy (deployable)",
+        "purchase_date": "2026-03-15 (shown as 'Purchased 2026-03-15')",
+        "form_purchase_date": "2026-03-15",
+        "ref": "fwsi2-n2",
+        "create_page_url": "http://127.0.0.1:8098/hardware/create",
+        "asset_tag": "BA-00005",
+        "detail_url": "http://127.0.0.1:8098/hardware/5",
+        "model": "Bench Laptop Model",
+        "model_category": "Bench Laptops",
+        "manufacturer": "Bench Manufacturer"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "22/22",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-create",
+      "status": "success",
+      "summary": "Checked out 'fwsi2-n2 Bench Asset' (tag BA-00005) to user 'Bench Assignee' and verified the result. Note: the asset is NOT at /hardware/4 — that URL returns \"That asset was not found or you do not have permission to access it\" (this is why the replayed procedure s_390208 failed). The live list view shows this asset's detail URL as /hardware/5, which is where I completed the work: I opened /hardware/5/checkout, selected the real option \"Bench Assignee (bench-assignee)\" from the searchable user combobox (list closed after selection), entered the note \"Checkout note for run fwsi2-n2\", and submitted; the app flashed \"Success: Asset checked out successfully.\" and redirected to /hardware/5, where the header now shows \"Ready to Deploy Deployed — Bench Assignee\" with \"Last Checkout 2026-09-21\". The asset's History tab (now 2 entries) contains the checkout row: 2026-09-21 11:50 PM, Bench Admin, checkout, Bench Assignee, note \"Checkout note for run fwsi2-n2\", Current Location: [id: 1] Bench Office. No users, models or locations were created.",
+      "values": {
+        "assignee_shown": "Bench Assignee",
+        "checkout_note_shown": "Checkout note for run fwsi2-n2",
+        "asset_tag": "BA-00005",
+        "asset_name": "fwsi2-n2 Bench Asset",
+        "asset_detail_url": "http://127.0.0.1:8098/hardware/5",
+        "checkout_url_used": "http://127.0.0.1:8098/hardware/5/checkout",
+        "history_checkout_row": "2026-09-21 11:50 PM | Bench Admin | checkout | fwsi2-n2 Bench Asset #BA-00005 - Bench Laptop Model | Bench Assignee | Checkout note for run fwsi2-n2 | Current Location: [id: 1] Bench Office",
+        "status_line": "Ready to Deploy Deployed — Bench Assignee, Last Checkout 2026-09-21",
+        "instruction_url_note": "/hardware/4 gave 'That asset was not found or you do not have permission to access it'; the asset lives at /hardware/5",
+        "ref": "fwsi2-n2",
+        "ref_2": "s_390208"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_390208 stopped at step 1 — step 1 raised an alert the recording never saw: Error: × That asset was not found or you do not have permission to access it",
+      "replayed": "0/1",
+      "repaired": false,
+      "turns": 20,
+      "unreported": [
+        "checkout_note_in_history",
+        "assigned_user_select_value",
+        "current_url"
+      ]
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "IMPORTANT URL CORRECTION: the asset named 'fwsi2-n2 Bench Asset' (tag BA-00005) is NOT at /hardware/4 — /hardware/4 is a different asset (\"fwsi2-n1 Bench Asset #BA-00004\"). The asset you asked about lives at /hardware/5, which is where the browser already was and where I read the fields (I did not modify anything; I only switched between the Details/History view tabs). On /hardware/5 the live DOM shows exactly: (1) Asset Name = \"fwsi2-n2 Bench Asset\"; (2) Asset Tag = \"BA-00005\"; (3) Model = \"Bench Laptop Model\" (sidebar; category \"Bench Laptops\", manufacturer \"Bench Manufacturer\"); (4) Status = the status well reads \"Ready to Deploy\" with a grey badge reading \"Deployed\" beside it — i.e. on-screen text \"Ready to Deploy Deployed\"; (5) Default Location = \"Bench Office\"; (6) Purchase Date = shown as \"Purchased 2026-03-15 - 6 months 6 days ago\"; (7) Checked Out To = \"Bench Assignee\" (a link to /users/2), and the same well shows a \"Last Checkout 2026-09-21\" timestamp. Note: the Details section has no literal \"Status\"/\"Checked Out To\"/\"Purchase Date\" labels for this asset — those values appear in the status well and the sidebar profile block, and I am quoting those on-screen strings.",
+      "values": {
+        "asset_name": "fwsi2-n2 Bench Asset",
+        "asset_tag": "BA-00005",
+        "model": "Bench Laptop Model",
+        "model_category": "Bench Laptops",
+        "manufacturer": "Bench Manufacturer",
+        "status_shown": "Ready to Deploy",
+        "status_badge": "Deployed",
+        "status_well_full_text": "Ready to Deploy Deployed Bench Assignee",
+        "default_location": "Bench Office",
+        "purchase_date_shown": "Purchased 2026-03-15 - 6 months 6 days ago",
+        "checked_out_to": "Bench Assignee (/users/2)",
+        "last_checkout": "2026-09-21 2 minutes 19 seconds ago",
+        "page_heading": "Assets fwsi2-n2 Bench Asset #BA-00005 - Bench Laptop Model",
+        "url_in_instruction_hardware_4_actually_is": "fwsi2-n1 Bench Asset #BA-00004",
+        "asset_detail_url": "http://127.0.0.1:8098/hardware/5",
+        "sidebar_model_info": "Copy to Clipboard\nBench Laptop Model\n Model No.\nCopy to Clipboard\n \nCopy to Clipboard\nBench Laptops\n Bench Manufacturer\n Purchased 2026-03-15 - 6 months 6 days ago\n BYOD\n Requestable\n Created By Bench Admin\n Created 2026-09-21 11:49 PM\n Updated 2026-09-21 11:50 PM",
+        "hardware_4_title": "Assets  fwsi2-n1 Bench Asset #BA-00004 - Bench Laptop Model",
+        "hardware_5_title": "Assets  fwsi2-n2 Bench Asset #BA-00005 - Bench Laptop Model",
+        "details_dl": "Asset Tag\nCopy to Clipboard\nBA-00005\nAsset Name\nCopy to Clipboard\nfwsi2-n2 Bench Asset\nCurrent Value\nCopy to Clipboard\nUSD\nLast Audit\nNo value\nNext Audit Date\nNo value\nDefault Location\nCopy to Clipboard\nBench Office",
+        "dl_table_display": "Asset Tag",
+        "dl_table_display_2": "Asset Name",
+        "dl_table_display_3": "Current Value",
+        "dl_table_display_4": "Last Audit",
+        "dl_table_display_5": "Next Audit Date",
+        "dl_table_display_6": "Default Location",
+        "ref": "fwsi2-n2",
+        "ref_2": "fwsi2-n1",
+        "ref_3": "BA-00004"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "every candidate refused — s_1ed04c: not on the page this procedure starts from (expects http://127.0.0.1:8098/hardware/:id, browser is at http://127.0.0.1:8098/hardware/5#history) — nothing was run",
+      "replayed": null,
+      "repaired": false,
+      "turns": 29
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwsi2",
+      "step": "04-create",
+      "skill": "s_390208",
+      "similarity": 1.001,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_390208 stopped at step 1 — step 1 raised an alert the recording never saw: Error: × That asset was not found or you do not have permission to access it",
+      "reason": "step 1 raised an alert the recording never saw: Error: × That asset was not found or you do not have permission to access it",
+      "pageUrlPattern": "http://127.0.0.1:8098/hardware",
+      "pageUrl": "http://127.0.0.1:8098/hardware"
+    }
+  ],
+  "wallMs": 218809,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 1078446,
+    "completionTokens": 20307,
+    "cachedTokens": 969600
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 1078446,
+      "completionTokens": 20307,
+      "cachedTokens": 969600
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

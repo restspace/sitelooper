@@ -1,0 +1,158 @@
+{
+  "flow": "fwsi2",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_aef3cf; observed login_alert= Success: \n×\nYou have successfully logged in., logged_in_user=Bench Admin , page_title=\n        Dashboard\n                :: Bench Assets\n    .",
+      "values": {
+        "login_alert": " Success: \n×\nYou have successfully logged in.",
+        "logged_in_user": "Bench Admin ",
+        "page_title": "\n        Dashboard\n                :: Bench Assets\n    "
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-find",
+      "status": "success",
+      "summary": "Opened the Assets list at /hardware (all assets) and searched/filtered for \"Seed:\". The list contains exactly 3 assets in total (both the unfiltered view and the \"Seed:\" filtered view returned the same 3 rows, so there is no pagination gap), and all three have names starting with \"Seed:\". No records were modified. The three assets are: Seed: Reception Laptop (SEED-0001), Seed: Training Laptop (SEED-0002), Seed: Spare Laptop (SEED-0003).",
+      "values": {
+        "assets_list_url": "http://127.0.0.1:8098/hardware",
+        "asset_1_name": "Seed: Reception Laptop",
+        "asset_1_tag": "SEED-0001",
+        "asset_2_name": "Seed: Training Laptop",
+        "asset_2_tag": "SEED-0002",
+        "asset_3_name": "Seed: Spare Laptop",
+        "asset_3_tag": "SEED-0003"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_9204c8; observed asset_name=fwsi2-n3 Bench Asset, status=Ready to Deploy (deployable), purchase_date=2026-03-15 (shown as 'Purchased 2026-03-15'), form_purchase_date=2026-03-15, ref=fwsi2-n3, create_page_url=http://127.0.0.1:8098/hardware/create, asset_tag=BA-00006, detail_url=http://127.0.0.1:8098/hardware/6, model=Bench Laptop Model, model_category=Bench Laptops, manufacturer=Bench Manufacturer.",
+      "values": {
+        "asset_name": "fwsi2-n3 Bench Asset",
+        "status": "Ready to Deploy (deployable)",
+        "purchase_date": "2026-03-15 (shown as 'Purchased 2026-03-15')",
+        "form_purchase_date": "2026-03-15",
+        "ref": "fwsi2-n3",
+        "create_page_url": "http://127.0.0.1:8098/hardware/create",
+        "asset_tag": "BA-00006",
+        "detail_url": "http://127.0.0.1:8098/hardware/6",
+        "model": "Bench Laptop Model",
+        "model_category": "Bench Laptops",
+        "manufacturer": "Bench Manufacturer"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "22/22",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-create",
+      "status": "success",
+      "summary": "Signed-in as Bench Admin, I located the asset 'fwsi2-n3 Bench Asset' (tag BA-00006) — note it actually lives at /hardware/6, not /hardware/4 as the instruction stated — and checked it out via its Checkout form: selected the user 'Bench Assignee' from the searchable user dropdown (an actual option, verified as the selected value \"Bench Assignee (bench-assignee)\"), entered the note 'Checkout note for run fwsi2-n3' and submitted (\"Asset checked out successfully\"). Re-opening the asset detail page (/hardware/6) confirms the header shows \"Deployed — Bench Assignee\" with Last Checkout 2026-09-21, and the asset's History tab contains the checkout entry naming Bench Assignee with the note text. No records were created or modified beyond this checkout.",
+      "values": {
+        "assignee_shown": "Bench Assignee",
+        "checkout_note_shown": "Checkout note for run fwsi2-n3",
+        "asset_tag": "BA-00006",
+        "asset_name": "fwsi2-n3 Bench Asset",
+        "asset_detail_url": "http://127.0.0.1:8098/hardware/6",
+        "checkout_status_header": "Ready to Deploy / Deployed / Bench Assignee / Last Checkout 2026-09-21",
+        "history_entry": "2026-09-21 11:54 PM Bench Admin checkout fwsi2-n3 Bench Asset #BA-00006 - Bench Laptop Model → Bench Assignee (1) — 'Checkout note for run fwsi2-n3' — Current Location: [id: 1] Bench Office",
+        "location": "Bench Office",
+        "model": "Bench Laptop Model (Bench Laptops, Bench Manufacturer)",
+        "purchase_date": "Purchased 2026-03-15",
+        "ref": "fwsi2-n3",
+        "ref_2": "s_889a72"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_889a72 stopped at step 1 — step 1 raised an alert the recording never saw: Error: × That asset was not found or you do not have permission to access it",
+      "replayed": "0/1",
+      "repaired": false,
+      "turns": 19,
+      "unreported": [
+        "checkout_note_in_history",
+        "assigned_user_select_value",
+        "current_url"
+      ]
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Read-only check of /hardware/4 (View Asset BA-00006). Quoting the on-screen text exactly: (1) Asset Name: \"fwsi2-n3 Bench Asset\"; (2) Asset Tag: \"BA-00006\"; (3) Model: \"Bench Laptop Model\"; (4) Status: the details section shows the status \"Ready to Deploy\" (blue dot) followed by a separate grey badge \"Deployed\", then an arrow to the user — i.e. both strings are displayed, exactly \"Ready to Deploy\" and \"Deployed\"; (5) Default Location: \"Bench Office\"; (6) Purchase Date: displayed as \" Purchased 2026-03-15 - 6 months 6 days ago\" (there is no literal \"Purchase Date\" label row, the purchase line itself reads \"Purchased 2026-03-15\"); (7) Checked Out to: \"Bench Assignee\" (a link). The page header reads \"  Assets  fwsi2-n3 Bench Asset #BA-00006 - Bench Laptop Model\". Nothing was clicked or modified.",
+      "values": {
+        "ref": "fwsi2-n3",
+        "page_title": "  Assets  fwsi2-n3 Bench Asset #BA-00006 - Bench Laptop Model",
+        "default_location": "Bench Office",
+        "asset_name": "fwsi2-n3 Bench Asset",
+        "asset_tag": "BA-00006",
+        "model": "Bench Laptop Model",
+        "purchase_date_shown": " Purchased 2026-03-15 - 6 months 6 days ago",
+        "page_heading": "  Assets  fwsi2-n3 Bench Asset #BA-00006 - Bench Laptop Model",
+        "checked_out_to": "Bench Assignee"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwsi2",
+      "step": "04-create",
+      "skill": "s_889a72",
+      "similarity": null,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_889a72 stopped at step 1 — step 1 raised an alert the recording never saw: Error: × That asset was not found or you do not have permission to access it",
+      "reason": "step 1 raised an alert the recording never saw: Error: × That asset was not found or you do not have permission to access it",
+      "pageUrlPattern": "http://127.0.0.1:8098/hardware",
+      "pageUrl": "http://127.0.0.1:8098/hardware"
+    }
+  ],
+  "wallMs": 108190,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 287475,
+    "completionTokens": 4536,
+    "cachedTokens": 254080
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 287475,
+      "completionTokens": 4536,
+      "cachedTokens": 254080
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
