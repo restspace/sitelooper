@@ -1,0 +1,44 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-signin
+[sitelooper warn] 02-create s_d642e4/7: read 'ticket_title' returned a value the skill itself set/selected ('fwrd79-spec RD Bench Ticket') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 02-create s_d642e4/13: read 'run_prefix' returned a value the skill itself set/selected ('fwrd79-spec RD Bench Ticket') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper step] 02-create
+  ✘  1 fwrd79.spec.ts:9:1 › fwrd79 (11.6s)
+
+
+  1) fwrd79.spec.ts:9:1 › fwrd79 › 03-open: Open the ticket with reference {{02-create.new_ticket_reference}} (title '{{runid}} RD Bench Ticket') and add a part to it named '{{runid}} RD Part A' with cost 100 and markup 25. Find the parts section on the ticket detail page, use the add-part form, fill in the name, cost and markup, and submit. Wait for the part to actually appear in the ticket's parts list (the view refreshes a short beat after the mutation, so wait on concrete page state rather than the first render). Then report the price the app computes/displays for this part, plus any other computed values shown for it. 
+
+    Error: none of 1 recorded locators resolved at 03-open s_20cb91/2 target (page is at http://127.0.0.1:4180/#/tickets/t15): locator('role=textbox[name="Part name *"]')
+
+       at fwrd79.flow.ts:11579
+
+      11577 | /** The stop for a chain that resolved nothing, shared by `pick` and `pickOrNavigate`. */
+      11578 | function pickMiss(page: Page, candidates: CandidateObservation[], where: string, note?: string): Error {
+    > 11579 |   return new Error(
+            |          ^
+      11580 |     // The url and the recorded step are half the answer whenever a chain
+      11581 |     // misses wholesale: a locator that named the control on the day it was
+      11582 |     // recorded usually misses because the page is not the page the step
+        at pickMiss (/home/user/sitelooper/bench/results/fwrd79-spec-spec-tmp/fwrd79.flow.ts:11579:10)
+        at pick (/home/user/sitelooper/bench/results/fwrd79-spec-spec-tmp/fwrd79.flow.ts:11574:9)
+        at Object.act (/home/user/sitelooper/bench/results/fwrd79-spec-spec-tmp/fwrd79.flow.ts:13110:22)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwrd79-spec-spec-tmp/fwrd79.flow.ts:9177:18)
+        at Object.03-open (/home/user/sitelooper/bench/results/fwrd79-spec-spec-tmp/fwrd79.flow.ts:13097:5)
+        at /home/user/sitelooper/bench/results/fwrd79-spec-spec-tmp/fwrd79.flow.ts:16293:7
+        at runFlow (/home/user/sitelooper/bench/results/fwrd79-spec-spec-tmp/fwrd79.flow.ts:16292:5)
+        at /home/user/sitelooper/bench/results/fwrd79-spec-spec-tmp/fwrd79.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwrd79-fwrd79/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwrd79-fwrd79/error-context.md
+
+  1 failed
+    fwrd79.spec.ts:9:1 › fwrd79 ────────────────────────────────────────────────────────────────────

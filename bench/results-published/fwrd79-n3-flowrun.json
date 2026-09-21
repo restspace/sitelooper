@@ -1,0 +1,1255 @@
+{
+  "flow": "fwrd79",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Signed in to Repair Desk with bench@example.com / bench-pass-1234: the login form accepted the credentials and redirected from /#/login to /#/tickets. The page now shows the signed-in state — the header renders the user \"Bench User\" and a \"Sign out\" button — plus the \"Repair tickets\" list (\"Showing 1–10 of 13\") with filter controls (Status, Search, Show archived) and a Tickets table (Ref/Title/Customer/Status/Parts/Created) whose newest rows are RD-1014 (Marlow Bakery, Draft), RD-1012 (The Anchor Inn, Draft), RD-1011 (Pinehurst Grocers, Draft) and RD-1010 (Marlow Bakery, Draft).",
+      "values": {
+        "password": "bench-pass-1234",
+        "final_url": "http://127.0.0.1:4180/#/tickets",
+        "newest_ticket_reference_1": "RD-1014",
+        "newest_ticket_reference_2": "RD-1012",
+        "signed_in_user": "Bench User",
+        "tickets_heading": "Repair tickets",
+        "tickets_count_text": "Showing 1–10 of 13",
+        "newest_ticket_refs_1": "RD-1014",
+        "newest_ticket_refs_2": "RD-1012",
+        "newest_ticket_refs_3": "RD-1011",
+        "newest_ticket_refs_4": "RD-1010"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_d642e4; observed ticket_title=fwrd79-n3 RD Bench Ticket, run_prefix=fwrd79-n3, new_ticket_reference=RD-1017, ticket_customer=Not recorded, ticket_parts_count=0, ticket_created=2026-09-21, list_count_after=Showing 1–10 of 14, form_helper_text=Raise a repair job. The reference is assigned automatically..",
+      "values": {
+        "ticket_title": "fwrd79-n3 RD Bench Ticket",
+        "run_prefix": "fwrd79-n3",
+        "new_ticket_reference": "RD-1017",
+        "ticket_customer": "Not recorded",
+        "ticket_parts_count": "0",
+        "ticket_created": "2026-09-21",
+        "list_count_after": "Showing 1–10 of 14",
+        "form_helper_text": "Raise a repair job. The reference is assigned automatically."
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_20cb91; observed part_name=fwrd79-n3 RD Part A, ticket_reference=RD-1017, ticket_title=fwrd79-n3 RD Bench Ticket, ticket_status=Draft, part_cost=$100.00, part_markup=25%, part_qty=1, part_supplier=No supplier, part_computed_price=$125.00, formula_note=Price is calculated from cost and markup when the part is saved., run_prefix=fwrd79-n3 RD Bench Ticket.",
+      "values": {
+        "part_name": "fwrd79-n3 RD Part A",
+        "ticket_reference": "RD-1017",
+        "ticket_title": "fwrd79-n3 RD Bench Ticket",
+        "ticket_status": "Draft",
+        "part_cost": "$100.00",
+        "part_markup": "25%",
+        "part_qty": "1",
+        "part_supplier": "No supplier",
+        "part_computed_price": "$125.00",
+        "formula_note": "Price is calculated from cost and markup when the part is saved.",
+        "run_prefix": "fwrd79-n3 RD Bench Ticket"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-add",
+      "status": "success",
+      "summary": "On the RD-1017 detail page (/#/tickets/t15) I opened the \"Add part\" dialog, filled Part name = \"fwrd79-n3 RD Part B\", Cost = 200, Markup % = 25 (Quantity left at 1, Supplier blank) and clicked the dialog's \"Add part\" button. The dialog closed and the parts table refreshed with the new row: \"fwrd79-n3 RD Part B — $200.00, 25%, qty 1, No supplier, Price $250.00\", and the table footer total changed from $125.00 to \"Total (price × quantity) $375.00\" (Part A $125.00 + Part B $250.00).",
+      "values": {
+        "part_b_name": "fwrd79-n3 RD Part B",
+        "existing_part_a": "fwrd79-n3 RD Part A — $100.00 / 25% / qty 1 / $125.00",
+        "run_prefix": "fwrd79-n3",
+        "ticket_reference": "RD-1017",
+        "ticket_title": "fwrd79-n3 RD Bench Ticket",
+        "part_b_cost": "$200.00",
+        "part_b_markup": "25%",
+        "part_b_qty": "1",
+        "part_b_supplier": "No supplier",
+        "part_b_computed_price": "$250.00",
+        "parts_table_total": "$375.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-edit",
+      "status": "success",
+      "summary": "On RD-1017 (/#/tickets/t15) I clicked Edit on the first parts row, whose dialog came prefilled (name \"fwrd79-n3 RD Part A\", cost 100, markup 25, qty 1), changed Cost to 150, left Markup at 25 and clicked \"Save part\". The dialog closed and the parts table refreshed: the row now reads \"fwrd79-n3 RD Part A — $150.00, 25%, qty 1, No supplier, Price $187.50\", and the footer total recalculated from $375.00 to \"Total (price × quantity) $437.50\" (Part A $187.50 + Part B $250.00).",
+      "values": {
+        "other_part": "fwrd79-n3 RD Part B — $200.00 / 25% / qty 1 / $250.00",
+        "run_prefix": "fwrd79-n3",
+        "edited_part": "fwrd79-n3 RD Part A",
+        "markup": "25%",
+        "new_computed_price": "$187.50",
+        "new_cost": "$150.00",
+        "parts_table_total": "$437.50",
+        "qty": "1",
+        "ticket_reference": "RD-1017"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "06-change",
+      "status": "success",
+      "summary": "On RD-1017 (/#/tickets/t15, status Mark Draft) clicking \"Mark Ready\" was rejected with the alert \"Ticket is not ready / Part \\\"fwrd79-n3 RD Bench Ticket RD Part A\\\" has no supplier / Part \\\"fwrd79-n3 RD Bench Ticket RD Part B\\\" has no supplier\". I satisfied the precondition by opening each part's Edit dialog (Edit → Supplier field, previously blank, shown in the table as \"No supplier\") and setting Supplier = \"Acme Supplies\", saving each and waiting for the refreshed rows. Retrying \"Mark Ready\" then produced no error: the action buttons changed to \"Mark Mark Draft\"/\"Mark Closed\" (instead of \"Mark Ready\") and the Status line on the page now reads \"Ready\" (read from the live DOM: the status paragraph contains \"Status / Ready\"). Parts total remains $437.50 (Part A $187.50 + Part B $250.00).",
+      "values": {
+        "blocking_error_message": "Ticket is not ready — Part \"fwrd79-n3 RD Part A\" has no supplier; Part \"fwrd79-n3 RD Part B\" has no supplier",
+        "final_status": "Ready",
+        "ticket_reference": "RD-1017",
+        "ticket_title": "fwrd79-n3 RD Bench Ticket",
+        "parts_table_total": "$437.50",
+        "post_ready_controls_1": "Mark Draft",
+        "post_ready_controls_2": "Mark Closed",
+        "status_before": "Mark Draft",
+        "run_prefix": "fwrd79-n3 RD Bench Ticket"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "18/18",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "07-remove",
+      "status": "success",
+      "summary": "Deleted both parts on RD-1017. Each row's Delete opened an in-page \"Confirm\" dialog (buttons \"Cancel\" / \"Delete part\"), which I confirmed. After deleting Part A the table refreshed to one row (Part B) with total $250.00; after confirming deletion of Part B the table refreshed again to the empty state: the only row left is \"No parts on this ticket yet.\" (0 part rows) and the \"Total (price × quantity)\" footer row disappeared entirely, so no total is displayed. The ticket's status remains \"Ready\" (status paragraph reads \"Status / Ready\", with \"Mark Draft\"/\"Mark Closed\" still offered).",
+      "values": {
+        "empty_state_text": "No parts on this ticket yet.",
+        "ticket_status": "Ready",
+        "ticket_reference": "RD-1017",
+        "ticket_title": "fwrd79-n3 RD Bench Ticket"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "08-archive",
+      "status": "success",
+      "summary": "Replayed stored procedure s_7e3486; observed archived_indicator_on_detail_page=the status paragraph renders both badges: \"Status\", \"Ready\" and \"Archived\"; action button now \"Unarchive ticket\", default_tickets_list=\"Showing 1–10 of 13\" with top row RD-1014 — RD-1017 does NOT appear, show_archived_list=with \"Show archived\" checked, RD-1017 appears as \"RD-1017  fwrd79-n3 RD Bench Ticket Archived  Not recorded  Ready  0  2026-09-21\", ticket_status=Ready (archived), archive_control_after=Unarchive ticket, ticket_reference=RD-1017, ticket_title=fwrd79-n3 RD Bench Ticket, run_prefix=fwrd79-n3 RD Bench Ticket.",
+      "values": {
+        "archived_indicator_on_detail_page": "the status paragraph renders both badges: \"Status\", \"Ready\" and \"Archived\"; action button now \"Unarchive ticket\"",
+        "default_tickets_list": "\"Showing 1–10 of 13\" with top row RD-1014 — RD-1017 does NOT appear",
+        "show_archived_list": "with \"Show archived\" checked, RD-1017 appears as \"RD-1017  fwrd79-n3 RD Bench Ticket Archived  Not recorded  Ready  0  2026-09-21\"",
+        "ticket_status": "Ready (archived)",
+        "archive_control_after": "Unarchive ticket",
+        "ticket_reference": "RD-1017",
+        "ticket_title": "fwrd79-n3 RD Bench Ticket",
+        "run_prefix": "fwrd79-n3 RD Bench Ticket"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 8,
+  "total": 8,
+  "repinned": 0,
+  "drift": 8,
+  "driftTickets": [
+    {
+      "flow": "fwrd79",
+      "step": "03-open",
+      "skill": "s_20cb91",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 1.004,
+      "missedLocator": "page.locator('role=textbox[name=\"Part name *\"]')",
+      "fallbackUsed": "page.getByTestId('field-name')",
+      "recovered": false,
+      "healed": true,
+      "proposal": {
+        "kind": "testid",
+        "attr": "data-testid",
+        "value": "field-name"
+      },
+      "rows": [
+        {
+          "tag": "a",
+          "text": "Skip to main content"
+        },
+        {
+          "tag": "a",
+          "testid": "nav-brand",
+          "text": "RD Repair Desk"
+        },
+        {
+          "tag": "a",
+          "testid": "nav-tickets",
+          "text": "Tickets"
+        },
+        {
+          "tag": "button",
+          "id": "sign-out",
+          "testid": "sign-out",
+          "text": "Sign out",
+          "type": "button"
+        },
+        {
+          "tag": "a",
+          "testid": "back-to-list",
+          "text": "Tickets"
+        },
+        {
+          "tag": "button",
+          "testid": "status-to-Ready",
+          "text": "Mark Ready",
+          "type": "button"
+        },
+        {
+          "tag": "button",
+          "testid": "archive",
+          "text": "Archive ticket",
+          "type": "button"
+        },
+        {
+          "tag": "button",
+          "testid": "add-part",
+          "text": "Add part",
+          "type": "button"
+        },
+        {
+          "tag": "label",
+          "label": "Part name *",
+          "modal": true
+        },
+        {
+          "tag": "input",
+          "id": "f-name",
+          "testid": "field-name",
+          "type": "text",
+          "modal": true
+        },
+        {
+          "tag": "label",
+          "label": "Cost *",
+          "modal": true
+        },
+        {
+          "tag": "input",
+          "id": "f-cost",
+          "testid": "field-cost",
+          "type": "number",
+          "modal": true
+        },
+        {
+          "tag": "label",
+          "label": "Markup % *",
+          "modal": true
+        },
+        {
+          "tag": "input",
+          "id": "f-markup",
+          "testid": "field-markup",
+          "type": "number",
+          "modal": true
+        },
+        {
+          "tag": "label",
+          "label": "Quantity",
+          "modal": true
+        },
+        {
+          "tag": "input",
+          "id": "f-quantity",
+          "testid": "field-quantity",
+          "type": "number",
+          "modal": true
+        },
+        {
+          "tag": "label",
+          "label": "Supplier",
+          "modal": true
+        },
+        {
+          "tag": "input",
+          "id": "f-supplier",
+          "testid": "field-supplier",
+          "type": "text",
+          "modal": true
+        },
+        {
+          "tag": "button",
+          "id": "modal-cancel",
+          "testid": "modal-cancel",
+          "text": "Cancel",
+          "type": "button",
+          "modal": true
+        },
+        {
+          "tag": "button",
+          "id": "modal-save",
+          "testid": "modal-save",
+          "text": "Add part",
+          "type": "submit",
+          "modal": true
+        }
+      ],
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    },
+    {
+      "flow": "fwrd79",
+      "step": "03-open",
+      "skill": "s_20cb91",
+      "atStep": "3",
+      "key": "target",
+      "similarity": 1.004,
+      "missedLocator": "page.locator('role=spinbutton[name=\"Cost *\"]')",
+      "fallbackUsed": "page.getByTestId('field-cost')",
+      "recovered": false,
+      "healed": true,
+      "proposal": {
+        "kind": "testid",
+        "attr": "data-testid",
+        "value": "field-cost"
+      },
+      "rows": [
+        {
+          "tag": "a",
+          "text": "Skip to main content"
+        },
+        {
+          "tag": "a",
+          "testid": "nav-brand",
+          "text": "RD Repair Desk"
+        },
+        {
+          "tag": "a",
+          "testid": "nav-tickets",
+          "text": "Tickets"
+        },
+        {
+          "tag": "button",
+          "id": "sign-out",
+          "testid": "sign-out",
+          "text": "Sign out",
+          "type": "button"
+        },
+        {
+          "tag": "a",
+          "testid": "back-to-list",
+          "text": "Tickets"
+        },
+        {
+          "tag": "button",
+          "testid": "status-to-Ready",
+          "text": "Mark Ready",
+          "type": "button"
+        },
+        {
+          "tag": "button",
+          "testid": "archive",
+          "text": "Archive ticket",
+          "type": "button"
+        },
+        {
+          "tag": "button",
+          "testid": "add-part",
+          "text": "Add part",
+          "type": "button"
+        },
+        {
+          "tag": "label",
+          "label": "Part name *",
+          "modal": true
+        },
+        {
+          "tag": "input",
+          "id": "f-name",
+          "testid": "field-name",
+          "type": "text",
+          "modal": true
+        },
+        {
+          "tag": "label",
+          "label": "Cost *",
+          "modal": true
+        },
+        {
+          "tag": "input",
+          "id": "f-cost",
+          "testid": "field-cost",
+          "type": "number",
+          "modal": true
+        },
+        {
+          "tag": "label",
+          "label": "Markup % *",
+          "modal": true
+        },
+        {
+          "tag": "input",
+          "id": "f-markup",
+          "testid": "field-markup",
+          "type": "number",
+          "modal": true
+        },
+        {
+          "tag": "label",
+          "label": "Quantity",
+          "modal": true
+        },
+        {
+          "tag": "input",
+          "id": "f-quantity",
+          "testid": "field-quantity",
+          "type": "number",
+          "modal": true
+        },
+        {
+          "tag": "label",
+          "label": "Supplier",
+          "modal": true
+        },
+        {
+          "tag": "input",
+          "id": "f-supplier",
+          "testid": "field-supplier",
+          "type": "text",
+          "modal": true
+        },
+        {
+          "tag": "button",
+          "id": "modal-cancel",
+          "testid": "modal-cancel",
+          "text": "Cancel",
+          "type": "button",
+          "modal": true
+        },
+        {
+          "tag": "button",
+          "id": "modal-save",
+          "testid": "modal-save",
+          "text": "Add part",
+          "type": "submit",
+          "modal": true
+        }
+      ],
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    },
+    {
+      "flow": "fwrd79",
+      "step": "03-open",
+      "skill": "s_20cb91",
+      "atStep": "4",
+      "key": "target",
+      "similarity": 1.004,
+      "missedLocator": "page.locator('role=spinbutton[name=\"Markup % *\"]')",
+      "fallbackUsed": "page.getByTestId('field-markup')",
+      "recovered": false,
+      "healed": true,
+      "proposal": {
+        "kind": "testid",
+        "attr": "data-testid",
+        "value": "field-markup"
+      },
+      "rows": [
+        {
+          "tag": "a",
+          "text": "Skip to main content"
+        },
+        {
+          "tag": "a",
+          "testid": "nav-brand",
+          "text": "RD Repair Desk"
+        },
+        {
+          "tag": "a",
+          "testid": "nav-tickets",
+          "text": "Tickets"
+        },
+        {
+          "tag": "button",
+          "id": "sign-out",
+          "testid": "sign-out",
+          "text": "Sign out",
+          "type": "button"
+        },
+        {
+          "tag": "a",
+          "testid": "back-to-list",
+          "text": "Tickets"
+        },
+        {
+          "tag": "button",
+          "testid": "status-to-Ready",
+          "text": "Mark Ready",
+          "type": "button"
+        },
+        {
+          "tag": "button",
+          "testid": "archive",
+          "text": "Archive ticket",
+          "type": "button"
+        },
+        {
+          "tag": "button",
+          "testid": "add-part",
+          "text": "Add part",
+          "type": "button"
+        },
+        {
+          "tag": "label",
+          "label": "Part name *",
+          "modal": true
+        },
+        {
+          "tag": "input",
+          "id": "f-name",
+          "testid": "field-name",
+          "type": "text",
+          "modal": true
+        },
+        {
+          "tag": "label",
+          "label": "Cost *",
+          "modal": true
+        },
+        {
+          "tag": "input",
+          "id": "f-cost",
+          "testid": "field-cost",
+          "type": "number",
+          "modal": true
+        },
+        {
+          "tag": "label",
+          "label": "Markup % *",
+          "modal": true
+        },
+        {
+          "tag": "input",
+          "id": "f-markup",
+          "testid": "field-markup",
+          "type": "number",
+          "modal": true
+        },
+        {
+          "tag": "label",
+          "label": "Quantity",
+          "modal": true
+        },
+        {
+          "tag": "input",
+          "id": "f-quantity",
+          "testid": "field-quantity",
+          "type": "number",
+          "modal": true
+        },
+        {
+          "tag": "label",
+          "label": "Supplier",
+          "modal": true
+        },
+        {
+          "tag": "input",
+          "id": "f-supplier",
+          "testid": "field-supplier",
+          "type": "text",
+          "modal": true
+        },
+        {
+          "tag": "button",
+          "id": "modal-cancel",
+          "testid": "modal-cancel",
+          "text": "Cancel",
+          "type": "button",
+          "modal": true
+        },
+        {
+          "tag": "button",
+          "id": "modal-save",
+          "testid": "modal-save",
+          "text": "Add part",
+          "type": "submit",
+          "modal": true
+        }
+      ],
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    },
+    {
+      "flow": "fwrd79",
+      "step": "04-add",
+      "skill": "s_d6f02b",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.locator('role=dialog >> role=textbox[name=\"Part name *\"]')",
+      "fallbackUsed": "page.getByTestId('field-name')",
+      "recovered": false,
+      "healed": true,
+      "proposal": {
+        "kind": "testid",
+        "attr": "data-testid",
+        "value": "field-name"
+      },
+      "rows": [
+        {
+          "tag": "a",
+          "text": "Skip to main content"
+        },
+        {
+          "tag": "a",
+          "testid": "nav-brand",
+          "text": "RD Repair Desk"
+        },
+        {
+          "tag": "a",
+          "testid": "nav-tickets",
+          "text": "Tickets"
+        },
+        {
+          "tag": "button",
+          "id": "sign-out",
+          "testid": "sign-out",
+          "text": "Sign out",
+          "type": "button"
+        },
+        {
+          "tag": "a",
+          "testid": "back-to-list",
+          "text": "Tickets"
+        },
+        {
+          "tag": "button",
+          "testid": "status-to-Ready",
+          "text": "Mark Ready",
+          "type": "button"
+        },
+        {
+          "tag": "button",
+          "testid": "archive",
+          "text": "Archive ticket",
+          "type": "button"
+        },
+        {
+          "tag": "button",
+          "testid": "add-part",
+          "text": "Add part",
+          "type": "button"
+        },
+        {
+          "tag": "button",
+          "testid": "part-edit-p18",
+          "text": "Edit",
+          "type": "button"
+        },
+        {
+          "tag": "button",
+          "testid": "part-delete-p18",
+          "text": "Delete",
+          "type": "button"
+        },
+        {
+          "tag": "label",
+          "label": "Part name *",
+          "modal": true
+        },
+        {
+          "tag": "input",
+          "id": "f-name",
+          "testid": "field-name",
+          "type": "text",
+          "modal": true
+        },
+        {
+          "tag": "label",
+          "label": "Cost *",
+          "modal": true
+        },
+        {
+          "tag": "input",
+          "id": "f-cost",
+          "testid": "field-cost",
+          "type": "number",
+          "modal": true
+        },
+        {
+          "tag": "label",
+          "label": "Markup % *",
+          "modal": true
+        },
+        {
+          "tag": "input",
+          "id": "f-markup",
+          "testid": "field-markup",
+          "type": "number",
+          "modal": true
+        },
+        {
+          "tag": "label",
+          "label": "Quantity",
+          "modal": true
+        },
+        {
+          "tag": "input",
+          "id": "f-quantity",
+          "testid": "field-quantity",
+          "type": "number",
+          "modal": true
+        },
+        {
+          "tag": "label",
+          "label": "Supplier",
+          "modal": true
+        },
+        {
+          "tag": "input",
+          "id": "f-supplier",
+          "testid": "field-supplier",
+          "type": "text",
+          "modal": true
+        },
+        {
+          "tag": "button",
+          "id": "modal-cancel",
+          "testid": "modal-cancel",
+          "text": "Cancel",
+          "type": "button",
+          "modal": true
+        },
+        {
+          "tag": "button",
+          "id": "modal-save",
+          "testid": "modal-save",
+          "text": "Add part",
+          "type": "submit",
+          "modal": true
+        }
+      ],
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    },
+    {
+      "flow": "fwrd79",
+      "step": "04-add",
+      "skill": "s_d6f02b",
+      "atStep": "3",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.locator('role=dialog >> role=spinbutton[name=\"Cost *\"]')",
+      "fallbackUsed": "page.getByTestId('field-cost')",
+      "recovered": false,
+      "healed": true,
+      "proposal": {
+        "kind": "testid",
+        "attr": "data-testid",
+        "value": "field-cost"
+      },
+      "rows": [
+        {
+          "tag": "a",
+          "text": "Skip to main content"
+        },
+        {
+          "tag": "a",
+          "testid": "nav-brand",
+          "text": "RD Repair Desk"
+        },
+        {
+          "tag": "a",
+          "testid": "nav-tickets",
+          "text": "Tickets"
+        },
+        {
+          "tag": "button",
+          "id": "sign-out",
+          "testid": "sign-out",
+          "text": "Sign out",
+          "type": "button"
+        },
+        {
+          "tag": "a",
+          "testid": "back-to-list",
+          "text": "Tickets"
+        },
+        {
+          "tag": "button",
+          "testid": "status-to-Ready",
+          "text": "Mark Ready",
+          "type": "button"
+        },
+        {
+          "tag": "button",
+          "testid": "archive",
+          "text": "Archive ticket",
+          "type": "button"
+        },
+        {
+          "tag": "button",
+          "testid": "add-part",
+          "text": "Add part",
+          "type": "button"
+        },
+        {
+          "tag": "button",
+          "testid": "part-edit-p18",
+          "text": "Edit",
+          "type": "button"
+        },
+        {
+          "tag": "button",
+          "testid": "part-delete-p18",
+          "text": "Delete",
+          "type": "button"
+        },
+        {
+          "tag": "label",
+          "label": "Part name *",
+          "modal": true
+        },
+        {
+          "tag": "input",
+          "id": "f-name",
+          "testid": "field-name",
+          "type": "text",
+          "modal": true
+        },
+        {
+          "tag": "label",
+          "label": "Cost *",
+          "modal": true
+        },
+        {
+          "tag": "input",
+          "id": "f-cost",
+          "testid": "field-cost",
+          "type": "number",
+          "modal": true
+        },
+        {
+          "tag": "label",
+          "label": "Markup % *",
+          "modal": true
+        },
+        {
+          "tag": "input",
+          "id": "f-markup",
+          "testid": "field-markup",
+          "type": "number",
+          "modal": true
+        },
+        {
+          "tag": "label",
+          "label": "Quantity",
+          "modal": true
+        },
+        {
+          "tag": "input",
+          "id": "f-quantity",
+          "testid": "field-quantity",
+          "type": "number",
+          "modal": true
+        },
+        {
+          "tag": "label",
+          "label": "Supplier",
+          "modal": true
+        },
+        {
+          "tag": "input",
+          "id": "f-supplier",
+          "testid": "field-supplier",
+          "type": "text",
+          "modal": true
+        },
+        {
+          "tag": "button",
+          "id": "modal-cancel",
+          "testid": "modal-cancel",
+          "text": "Cancel",
+          "type": "button",
+          "modal": true
+        },
+        {
+          "tag": "button",
+          "id": "modal-save",
+          "testid": "modal-save",
+          "text": "Add part",
+          "type": "submit",
+          "modal": true
+        }
+      ],
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    },
+    {
+      "flow": "fwrd79",
+      "step": "04-add",
+      "skill": "s_d6f02b",
+      "atStep": "4",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.locator('role=dialog >> role=spinbutton[name=\"Markup % *\"]')",
+      "fallbackUsed": "page.getByTestId('field-markup')",
+      "recovered": false,
+      "healed": true,
+      "proposal": {
+        "kind": "testid",
+        "attr": "data-testid",
+        "value": "field-markup"
+      },
+      "rows": [
+        {
+          "tag": "a",
+          "text": "Skip to main content"
+        },
+        {
+          "tag": "a",
+          "testid": "nav-brand",
+          "text": "RD Repair Desk"
+        },
+        {
+          "tag": "a",
+          "testid": "nav-tickets",
+          "text": "Tickets"
+        },
+        {
+          "tag": "button",
+          "id": "sign-out",
+          "testid": "sign-out",
+          "text": "Sign out",
+          "type": "button"
+        },
+        {
+          "tag": "a",
+          "testid": "back-to-list",
+          "text": "Tickets"
+        },
+        {
+          "tag": "button",
+          "testid": "status-to-Ready",
+          "text": "Mark Ready",
+          "type": "button"
+        },
+        {
+          "tag": "button",
+          "testid": "archive",
+          "text": "Archive ticket",
+          "type": "button"
+        },
+        {
+          "tag": "button",
+          "testid": "add-part",
+          "text": "Add part",
+          "type": "button"
+        },
+        {
+          "tag": "button",
+          "testid": "part-edit-p18",
+          "text": "Edit",
+          "type": "button"
+        },
+        {
+          "tag": "button",
+          "testid": "part-delete-p18",
+          "text": "Delete",
+          "type": "button"
+        },
+        {
+          "tag": "label",
+          "label": "Part name *",
+          "modal": true
+        },
+        {
+          "tag": "input",
+          "id": "f-name",
+          "testid": "field-name",
+          "type": "text",
+          "modal": true
+        },
+        {
+          "tag": "label",
+          "label": "Cost *",
+          "modal": true
+        },
+        {
+          "tag": "input",
+          "id": "f-cost",
+          "testid": "field-cost",
+          "type": "number",
+          "modal": true
+        },
+        {
+          "tag": "label",
+          "label": "Markup % *",
+          "modal": true
+        },
+        {
+          "tag": "input",
+          "id": "f-markup",
+          "testid": "field-markup",
+          "type": "number",
+          "modal": true
+        },
+        {
+          "tag": "label",
+          "label": "Quantity",
+          "modal": true
+        },
+        {
+          "tag": "input",
+          "id": "f-quantity",
+          "testid": "field-quantity",
+          "type": "number",
+          "modal": true
+        },
+        {
+          "tag": "label",
+          "label": "Supplier",
+          "modal": true
+        },
+        {
+          "tag": "input",
+          "id": "f-supplier",
+          "testid": "field-supplier",
+          "type": "text",
+          "modal": true
+        },
+        {
+          "tag": "button",
+          "id": "modal-cancel",
+          "testid": "modal-cancel",
+          "text": "Cancel",
+          "type": "button",
+          "modal": true
+        },
+        {
+          "tag": "button",
+          "id": "modal-save",
+          "testid": "modal-save",
+          "text": "Add part",
+          "type": "submit",
+          "modal": true
+        }
+      ],
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    },
+    {
+      "flow": "fwrd79",
+      "step": "05-edit",
+      "skill": "s_5b8198",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 1.002,
+      "missedLocator": "page.locator('role=dialog >> role=spinbutton[name=\"Cost *\"]')",
+      "fallbackUsed": "page.getByTestId('field-cost')",
+      "recovered": false,
+      "healed": true,
+      "proposal": {
+        "kind": "testid",
+        "attr": "data-testid",
+        "value": "field-cost"
+      },
+      "rows": [
+        {
+          "tag": "a",
+          "text": "Skip to main content"
+        },
+        {
+          "tag": "a",
+          "testid": "nav-brand",
+          "text": "RD Repair Desk"
+        },
+        {
+          "tag": "a",
+          "testid": "nav-tickets",
+          "text": "Tickets"
+        },
+        {
+          "tag": "button",
+          "id": "sign-out",
+          "testid": "sign-out",
+          "text": "Sign out",
+          "type": "button"
+        },
+        {
+          "tag": "a",
+          "testid": "back-to-list",
+          "text": "Tickets"
+        },
+        {
+          "tag": "button",
+          "testid": "status-to-Ready",
+          "text": "Mark Ready",
+          "type": "button"
+        },
+        {
+          "tag": "button",
+          "testid": "archive",
+          "text": "Archive ticket",
+          "type": "button"
+        },
+        {
+          "tag": "button",
+          "testid": "add-part",
+          "text": "Add part",
+          "type": "button"
+        },
+        {
+          "tag": "button",
+          "testid": "part-edit-p18",
+          "text": "Edit",
+          "type": "button"
+        },
+        {
+          "tag": "button",
+          "testid": "part-delete-p18",
+          "text": "Delete",
+          "type": "button"
+        },
+        {
+          "tag": "button",
+          "testid": "part-edit-p19",
+          "text": "Edit",
+          "type": "button"
+        },
+        {
+          "tag": "button",
+          "testid": "part-delete-p19",
+          "text": "Delete",
+          "type": "button"
+        },
+        {
+          "tag": "label",
+          "label": "Part name *",
+          "modal": true
+        },
+        {
+          "tag": "input",
+          "id": "f-name",
+          "testid": "field-name",
+          "type": "text",
+          "modal": true
+        },
+        {
+          "tag": "label",
+          "label": "Cost *",
+          "modal": true
+        },
+        {
+          "tag": "input",
+          "id": "f-cost",
+          "testid": "field-cost",
+          "type": "number",
+          "modal": true
+        },
+        {
+          "tag": "label",
+          "label": "Markup % *",
+          "modal": true
+        },
+        {
+          "tag": "input",
+          "id": "f-markup",
+          "testid": "field-markup",
+          "type": "number",
+          "modal": true
+        },
+        {
+          "tag": "label",
+          "label": "Quantity",
+          "modal": true
+        },
+        {
+          "tag": "input",
+          "id": "f-quantity",
+          "testid": "field-quantity",
+          "type": "number",
+          "modal": true
+        },
+        {
+          "tag": "label",
+          "label": "Supplier",
+          "modal": true
+        },
+        {
+          "tag": "input",
+          "id": "f-supplier",
+          "testid": "field-supplier",
+          "type": "text",
+          "modal": true
+        },
+        {
+          "tag": "button",
+          "id": "modal-cancel",
+          "testid": "modal-cancel",
+          "text": "Cancel",
+          "type": "button",
+          "modal": true
+        },
+        {
+          "tag": "button",
+          "id": "modal-save",
+          "testid": "modal-save",
+          "text": "Save part",
+          "type": "submit",
+          "modal": true
+        }
+      ],
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    },
+    {
+      "flow": "fwrd79",
+      "step": "06-change",
+      "skill": "s_93ade4",
+      "atStep": "9",
+      "key": "target",
+      "similarity": 1.002,
+      "missedLocator": "page.locator('table tbody tr:nth-child(2)')",
+      "fallbackUsed": "page.locator('#view > section > div > table > tbody > tr:nth-of-type(2)')",
+      "fallbackIndex": 2,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    }
+  ],
+  "wallMs": 61648,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
