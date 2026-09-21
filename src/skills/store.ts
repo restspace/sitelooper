@@ -379,6 +379,17 @@ export interface StepExpectation {
   /** Soft: page lines that appeared after the step. */
   addedContains?: string[];
   /**
+   * The dialog this step CLOSED: the lines it took off the page, headed by a
+   * `- dialog "…"` line. Present only on a step that dismissed a dialog. Not an
+   * assertion checked after the step — it is the step's precondition, the
+   * evidence that makes it conditional: when its target cannot be found and
+   * that dialog is not on the page, the step is already in effect and is
+   * skipped (src/execution/expect.ts dismissalAlreadyInEffect). An optional
+   * field, so no SKILL_CONTRACT bump: a build that ignores it fails on the
+   * missing target exactly as before.
+   */
+  removedContains?: string[];
+  /**
    * The line dialect `addedContains` and `alertContains` are written in
    * (src/execution/snapshot.ts LineDialect); absent = 1, every expectation
    * compiled before dialects existed. Per step, not per skill: a repair can

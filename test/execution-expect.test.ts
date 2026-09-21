@@ -7,8 +7,10 @@
  */
 import { describe, expect, it } from 'vitest';
 import {
+  DISMISSAL,
   TRANSIENT_LINE,
   consequentialExpectations,
+  dismissalAlreadyInEffect,
   expectedChangesVerdict,
   identifiesNothing,
   isEchoLine,
@@ -430,6 +432,53 @@ describe('namesDialogControl', () => {
     expect(namesDialogControl(step({ target: [{ kind: 'role', role: 'button', name: 'Mark' }] }), dialog, {})).toBeNull();
     expect(namesDialogControl(step({ target: [{ kind: 'role', role: 'button', name: 'Disc' }] }), dialog, {})).toBeNull();
     expect(namesDialogControl(step({ target: [{ kind: 'role', role: 'button', name: '' }] }), dialog, {})).toBeNull();
+  });
+});
+
+/**
+ * fwop1: OpenProject's first sign-in raised a "Welcome to OpenProject" dialog
+ * nothing in the procedure opened, and the recording's first step clicked its
+ * Close. No later run had the dialog; both replays fell to the model and the
+ * compiled spec failed 0/7 on the missing button. A dismissal whose dialog is
+ * not on the page is already in effect — decided from the step's OWN recorded
+ * removal, so it needs no opener anywhere in the procedure.
+ */
+describe('dismissalAlreadyInEffect', () => {
+  const WELCOME = ['- dialog "Welcome to OpenProject, {{v1}}"', '- button "Close"', '- combobox "Language"'];
+  const dismissal = (over: Record<string, unknown> = {}) =>
+    ({ locators: { target: [{ kind: 'role', role: 'button', name: 'Close' }] }, expect: { removedContains: WELCOME }, ...over }) as never;
+  const look = (lines: string[], complete = true) => ({ lines, complete });
+  const params = { v1: 'Bench Admin' };
+
+  it('skips a dismissal whose dialog is not on a page the look covered', () => {
+    expect(dismissalAlreadyInEffect(dismissal(), look(['- link "Projects"']), params)).toEqual({ dialog: 'Welcome to OpenProject, {{v1}}', control: 'Close' });
+  });
+
+  it('does not skip when the dialog IS there — its control missing is a real failure', () => {
+    expect(dismissalAlreadyInEffect(dismissal(), look(['- dialog "Welcome to OpenProject, Bench Admin"', '- link "Projects"']), params)).toBeNull();
+  });
+
+  it('proves nothing absent from a look that could not cover the page, or no look at all', () => {
+    expect(dismissalAlreadyInEffect(dismissal(), look(['- link "Projects"'], false), params)).toBeNull();
+    expect(dismissalAlreadyInEffect(dismissal(), null, params)).toBeNull();
+  });
+
+  it('never skips a confirm: the control must be named as a dismissal', () => {
+    const confirm = dismissal({
+      locators: { target: [{ kind: 'role', role: 'button', name: 'Delete' }] },
+      expect: { removedContains: ['- dialog "Delete this work package?"', '- button "Delete"', '- button "Cancel"'] },
+    });
+    expect(dismissalAlreadyInEffect(confirm, look([]), {})).toBeNull();
+    for (const name of ['OK', 'Save', 'Accept all', 'Confirm']) expect(DISMISSAL.test(name)).toBe(false);
+    for (const name of ['Close', 'Cancel', 'Not now', 'Got it', 'Maybe later', 'Skip', '×']) expect(DISMISSAL.test(name)).toBe(true);
+  });
+
+  it('never skips a minting step, a target the dialog did not list, or a step that recorded closing no dialog', () => {
+    expect(dismissalAlreadyInEffect(dismissal({ mints: { at: 'p1' } }), look([]), params)).toBeNull();
+    expect(dismissalAlreadyInEffect(dismissal({ locators: { target: [{ kind: 'role', role: 'button', name: 'Dismiss' }] } }), look([]), params)).toBeNull();
+    expect(dismissalAlreadyInEffect(dismissal({ locators: { target: [{ kind: 'css', selector: '#close' }] } }), look([]), params)).toBeNull();
+    expect(dismissalAlreadyInEffect(dismissal({ expect: { removedContains: ['- button "Close"'] } }), look([]), params)).toBeNull();
+    expect(dismissalAlreadyInEffect(dismissal({ expect: {} }), look([]), params)).toBeNull();
   });
 });
 

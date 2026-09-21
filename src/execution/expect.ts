@@ -480,6 +480,61 @@ export function namesDialogControl(step: DialogControlStep, dialogLines: readonl
 }
 
 /**
+ * Is this step a dismissal whose work is already done — the dialog it was
+ * recorded closing is not on the page?
+ *
+ * A step is an action taken to reach a state, and a replay should act only
+ * when the state is not already there. The toggle skip applies that to what a
+ * step ADDS (a popup already open is not clicked again), `absentDialog` to a
+ * dialog an earlier step of the same segment recorded opening. Neither covers
+ * a dialog nothing in the procedure opened. fwop1's sign-in landed on
+ * OpenProject's first-login "Welcome to OpenProject" dialog, the procedure's
+ * next segment began by clicking its Close, and every later run — the admin
+ * no longer a first-time user — had no dialog: both replays fell to the model
+ * for 16-17 turns and the compiled spec failed 0/7 at its first action. The
+ * same shape is every cookie banner, onboarding tour and what's-new dialog.
+ *
+ * So the evidence is the step's OWN recorded removal (StepExpectation.
+ * removedContains), and the step is conditional on it. Called only once the
+ * target has failed to resolve in the runner's full resolve window, so a
+ * dialog that appears late has had the time to appear; and all of these must
+ * hold, or it is an ordinary miss:
+ *   - the recorded removals include a dialog, and the target names one of the
+ *     controls they listed (namesDialogControl — membership proven, never
+ *     inferred from the target being missing), by a DISMISSAL name. Compile
+ *     records removals only for a step whose whole effect was the dialog
+ *     going (no added line, alert, navigation, page effect or read), and the
+ *     name is the second, independent guard against skipping a confirm;
+ *   - the step mints nothing (a skipped mutation cannot be undone);
+ *   - a live look that COVERED the page does not show the dialog. A look that
+ *     could not cover it proves nothing absent, and a dialog that IS there
+ *     with its control missing is a real failure.
+ * Frame steps are excluded by the callers, as for `absentDialog`.
+ */
+/**
+ * Button names that dismiss a dialog without acting — UI convention, not app
+ * knowledge. A confirm ("Delete", "Save", "OK", "Accept") never matches: it
+ * also closes its dialog, but skipping it when the dialog did not appear
+ * would hide exactly the regression a missing confirm dialog is.
+ */
+export const DISMISSAL = /^(cancel|close|dismiss|no|no,? thanks|not now|later|maybe later|skip|got it|back|keep editing|[×✕✖])$/i;
+
+export function dismissalAlreadyInEffect(
+  step: DialogControlStep & { mints?: unknown; expect?: { removedContains?: readonly string[] } },
+  live: LiveLines | null,
+  params: Record<string, string>,
+): { dialog: string; control: string } | null {
+  const removed = step.expect?.removedContains;
+  if (!removed?.length || step.mints) return null;
+  const dialogLine = removed.find((l) => DIALOG_LINE.test(l));
+  if (dialogLine === undefined) return null;
+  const control = namesDialogControl(step, liveLines(removed, params), params);
+  if (control === null || !DISMISSAL.test(control.trim()) || !live?.complete) return null;
+  if (lineShows(live.lines, liveLines([dialogLine], params))) return null;
+  return { dialog: DIALOG_LINE.exec(dialogLine)![1], control };
+}
+
+/**
  * What an action's observation (src/execution/action.ts `beginAction`) polls
  * for as the step's completion: the HARD half of its recorded page changes —
  * the lines carrying this run's own `{{vN}}` values, filled — in the step's

@@ -1405,7 +1405,7 @@ export function urlPattern(url: string, slots: Map<string, string> = new Map(), 
  * call site has to know which of the two owns the source.
  */
 export { TRANSIENT_LINE, maskMinted } from '../execution/expect.js';
-import { TRANSIENT_LINE, identifiesNothing, maskForeignValue, maskMinted, maskPopupItem } from '../execution/expect.js';
+import { DIALOG_LINE, DISMISSAL, TRANSIENT_LINE, identifiesNothing, maskForeignValue, maskMinted, maskPopupItem } from '../execution/expect.js';
 
 /**
  * Args that name WHERE the step acted, not WHAT it put on the page: a
@@ -1454,6 +1454,24 @@ function expectationFor(step: RecordedStep, slots: Map<string, string>): StepExp
       .filter((l) => !identifiesNothing(l));
     if (lasting.length) out.addedContains = lasting.slice(0, MAX_ADDED_LINES).map((l) => l.slice(0, 120));
   }
+  // The dialog this step closed (StepDiff.removed, kept by the recorder only
+  // when a dialog went) — recorded only when closing it was the step's WHOLE
+  // effect: nothing lasting added, no alert, no navigation to another page
+  // template, no popup/close/switch, not a read. That is what makes the step
+  // conditional (dismissalAlreadyInEffect); a step with a consequence of its
+  // own is the procedure's, dialog or not. Masked as added lines are, so a
+  // later run's own values match; the dialog line itself is kept even unnamed
+  // — `- dialog ""` identifies nothing as an EFFECT, but as the thing that
+  // must be absent it is the conservative reading: any unnamed dialog on the
+  // page counts as it.
+  const inert = !out.addedContains && !out.alertContains && !step.fingerprintAfter && !step.effect && step.label === undefined;
+  const removed = inert
+    ? (step.diff.removed ?? [])
+        .filter((l) => !TRANSIENT_LINE.test(l))
+        .map((l) => maskMinted(maskVolatile(substitute(l, slots))))
+        .filter((l) => DIALOG_LINE.test(l) || !identifiesNothing(l))
+    : [];
+  if (removed.some((l) => DIALOG_LINE.test(l))) out.removedContains = removed.slice(0, MAX_ADDED_LINES).map((l) => l.slice(0, 120));
   if (!Object.keys(out).length) return undefined;
   // The recording's dialect travels with its lines, so replay and the artifact
   // render the live page the way these lines were written.
@@ -1645,10 +1663,10 @@ export function unfreezeExpectations(steps: SkillStep[], published: readonly str
     if (kept.length) step.expect!.addedContains = kept;
     else {
       delete step.expect!.addedContains;
-      // lineDialect describes addedContains and alertContains; with neither
-      // left it describes nothing, and an expectation of nothing but a dialect
-      // is no expectation.
-      if (!step.expect!.alertContains) delete step.expect!.lineDialect;
+      // lineDialect describes addedContains, alertContains and
+      // removedContains; with none left it describes nothing, and an
+      // expectation of nothing but a dialect is no expectation.
+      if (!step.expect!.alertContains && !step.expect!.removedContains) delete step.expect!.lineDialect;
       if (!Object.keys(step.expect!).length) delete step.expect;
     }
     notes.push({
@@ -1837,8 +1855,6 @@ export function dropSupersededNavigation(steps: SkillStep[], notes?: TransformNo
   });
 }
 
-/** Button names that dismiss a dialog without acting — UI convention, not app knowledge. */
-const DISMISSAL = /^(cancel|close|dismiss|no|not now|back|keep editing)$/i;
 
 /**
  * Drop a dialog the recording opened and immediately dismissed. fwgr25's

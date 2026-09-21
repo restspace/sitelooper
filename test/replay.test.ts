@@ -205,6 +205,89 @@ d('skill replay (fixture page)', () => {
   }, 30_000);
 
   /**
+   * fwop1: OpenProject's first sign-in raised a "Welcome" dialog nothing in
+   * the procedure opened, and the recording clicked its Close. Every later run
+   * had no dialog, so the Close was missing and replay fell to the model. A
+   * dismissal whose dialog is not on the page is already in effect; one whose
+   * dialog IS there is clicked; and a confirm is never skipped this way.
+   */
+  describe('a dismissal of a dialog nothing in the procedure opened', () => {
+    const WELCOME = ['- dialog "Welcome to the app"', '- button "Close"'];
+    const skillOf = (id: string, first: { name: string; removed: string[] }): Skill => ({
+      id,
+      origin: new URL(fixtureUrl).origin,
+      template: 'close the welcome and create',
+      params: {},
+      preconditions: { urlPattern: fixtureUrl },
+      steps: [
+        { tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'role', role: 'button', name: first.name }] }, expect: { urlPattern: fixtureUrl, removedContains: first.removed } },
+        { tool: 'click', args: { target: '@e2' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Create' }] }, expect: { urlPattern: fixtureUrl, addedContains: ['- heading "Created"'] } },
+      ],
+      stats: { uses: 1, successes: 1, partial: 0, created: 't', failedAtStep: {}, fallthroughs: 0 },
+      status: 'validated',
+      provenance: { session: 's', instruction: 'i', created: 't' },
+    });
+    const setUp = async (withDialog: boolean) => {
+      const page = await session.getPage();
+      await page.goto(fixtureUrl);
+      await page.evaluate((open) => {
+        const create = document.createElement('button');
+        create.type = 'button';
+        create.textContent = 'Create';
+        create.addEventListener('click', () => {
+          const h = document.createElement('h2');
+          h.textContent = 'Created';
+          document.body.append(h);
+        });
+        document.body.append(create);
+        if (!open) return;
+        const dialog = document.createElement('div');
+        dialog.setAttribute('role', 'dialog');
+        dialog.setAttribute('aria-label', 'Welcome to the app');
+        const close = document.createElement('button');
+        close.type = 'button';
+        close.textContent = 'Close';
+        close.addEventListener('click', () => dialog.remove());
+        dialog.append(close);
+        document.body.append(dialog);
+      }, withDialog);
+      return page;
+    };
+    const replay = async (skill: Skill) => {
+      session.learn!.put(skill);
+      try {
+        return await run('run_skill', { id: skill.id, params: {} });
+      } finally {
+        session.learn!.remove(skill.id);
+      }
+    };
+
+    it('skips the Close when the dialog is not there, and runs the rest', async () => {
+      const page = await setUp(false);
+      const out = await replay(skillOf('s_welcome_absent', { name: 'Close', removed: WELCOME }));
+      expect(out.replay?.ok).toBe(true);
+      expect(out.replay?.warnings.some((w) => /closes the dialog "Welcome to the app".*already in effect/.test(w))).toBe(true);
+      expect(await page.locator('h2', { hasText: 'Created' }).count()).toBe(1);
+    }, 30_000);
+
+    it('clicks the Close when the dialog is there', async () => {
+      const page = await setUp(true);
+      const out = await replay(skillOf('s_welcome_present', { name: 'Close', removed: WELCOME }));
+      expect(out.replay?.ok).toBe(true);
+      expect(out.replay?.warnings.some((w) => /already in effect/.test(w))).toBe(false);
+      expect(await page.locator('[role=dialog]').count()).toBe(0);
+      expect(await page.locator('h2', { hasText: 'Created' }).count()).toBe(1);
+    }, 30_000);
+
+    it('never skips a confirm whose dialog did not appear: that is a stop', async () => {
+      const page = await setUp(false);
+      const out = await replay(skillOf('s_confirm_absent', { name: 'Remove permanently', removed: ['- dialog "Remove this item?"', '- button "Remove permanently"'] }));
+      expect(out.replay?.ok).toBe(false);
+      expect(await page.locator('h2', { hasText: 'Created' }).count()).toBe(0);
+    }, 30_000);
+  });
+
+  /**
    * C06. "Is this record already in the goal state?" was answered by looking
    * for the identity anywhere on the page and the goal anywhere on the page.
    * On a list those are two different records: an orders grid showing S00039
@@ -1068,6 +1151,40 @@ d('segment chains (two fixture pages)', () => {
     expect(skills[0].steps[0].expect).toBeUndefined();
     expect(skills[1].preconditions.urlPattern).toContain('detail.html');
     expect(skills[1].preconditions.fingerprint?.length).toBeGreaterThan(0);
+  }, 60_000);
+
+  /**
+   * fwop1's Close recorded NO page change — the dialog going was its whole
+   * effect — so nothing made it conditional. The recorder now keeps what a
+   * step took off the page when a dialog went, and compile carries it as the
+   * step's removedContains: the evidence dismissalAlreadyInEffect reads.
+   */
+  it('records the dialog a click closed, and compiles it as the step\'s removedContains', async () => {
+    const page = await session.getPage();
+    await page.goto(fixtureUrl);
+    await page.evaluate(() => {
+      const dialog = document.createElement('div');
+      dialog.setAttribute('role', 'dialog');
+      dialog.setAttribute('aria-label', 'Welcome to the app');
+      const close = document.createElement('button');
+      close.type = 'button';
+      close.textContent = 'Close';
+      close.addEventListener('click', () => dialog.remove());
+      dialog.append(close);
+      document.body.append(dialog);
+    });
+    const recorder = session.script!;
+    const mark = recorder.mark();
+    const instr = 'close the welcome dialog';
+    recorder.beginInstruction(instr, { url: page.url() });
+    const snap = (await run('snapshot', {})).result;
+    await run('click', { target: /button "Close" \[(@e\d+)\]/.exec(snap)![1] });
+    const entries = recorder.entriesSince(mark);
+    const click = entries.find((e) => e.k === 'step' && e.tool === 'click');
+    expect(click && click.k === 'step' && click.diff?.removed).toEqual(expect.arrayContaining(['- dialog "Welcome to the app"', '- button "Close"']));
+    const [skill] = compileSkills({ entries, instruction: instr, report: { status: 'success', summary: 'closed', evidence: { values: {} } }, session: 'dismiss' });
+    expect(skill.steps[0].expect?.removedContains).toEqual(expect.arrayContaining(['- dialog "Welcome to the app"', '- button "Close"']));
+    expect(skill.steps[0].expect?.addedContains).toBeUndefined();
   }, 60_000);
 });
 

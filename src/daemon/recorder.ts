@@ -212,6 +212,14 @@ export interface StepDiff {
   alerts: string[];
   added: string[];
   /**
+   * What the action took OFF the page — recorded only when that includes a
+   * dialog, i.e. only for a step that closed one. A dismissal's whole effect
+   * is a disappearance, which `added` cannot express: fwop1's first-sign-in
+   * "Close" recorded no added line at all, so nothing marked it as a step that
+   * is already done when the dialog is not there (see dismissalAlreadyInEffect).
+   */
+  removed?: string[];
+  /**
    * The line dialect `added` and `alerts` are written in (src/execution/
    * snapshot.ts LineDialect). Absent on recordings made before dialects
    * existed, which are dialect 1.

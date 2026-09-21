@@ -39,7 +39,7 @@ import {
   type LineDialect,
   type PageObservation,
 } from '../execution/snapshot.js';
-import { effectExpectation, expectedChangesVerdict, liveLines, namesDialogControl } from '../execution/expect.js';
+import { dismissalAlreadyInEffect, effectExpectation, expectedChangesVerdict, liveLines, namesDialogControl } from '../execution/expect.js';
 // The observation dialect and the content-expectation rules live in the
 // shared execution modules, where a compiled artifact embeds them too.
 // Re-exported so this module's callers need not know which owns the source.
@@ -943,6 +943,19 @@ export async function replaySkill(
         } else {
           res.warnings.push(`step ${tag}: target missing after the absent dialog ${JSON.stringify(absentDialog.name)}, but it names nothing that dialog contained — treated as this procedure's own step, not part of the dialog`);
           absentDialog = null;
+        }
+      }
+      // A dismissal whose dialog is not on the page is already in effect (the
+      // shared dismissalAlreadyInEffect): the dialog it was recorded closing
+      // appeared on its own — nothing in this procedure opened it, so
+      // `absentDialog` above cannot know about it — and on this run it never
+      // came. Asked only after the resolve window, and never of a frame step.
+      if (!step.contexts?.target?.frame?.length && !step.contexts?.source?.frame?.length && step.expect?.removedContains?.length) {
+        const done = dismissalAlreadyInEffect(step, await captureLines(page, dialectOf(step)), params);
+        if (done) {
+          res.warnings.push(`step ${tag}: skipped — it closes the dialog ${JSON.stringify(done.dialog)} with ${JSON.stringify(done.control)}, and that dialog is not open this time: already in effect`);
+          res.lines.push(`${head} → skipped (dialog ${JSON.stringify(done.dialog)} not open — already in effect)`);
+          return 'skipped';
         }
       }
       // Navigation by recorded destination (PLAN-replay-v2 "order of

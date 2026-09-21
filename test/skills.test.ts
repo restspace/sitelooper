@@ -2466,6 +2466,45 @@ describe('dropDismissedDialogs (fwgr25: a dialog opened and cancelled is a no-op
   });
 });
 
+/**
+ * fwop1: the Close of OpenProject's first-login dialog recorded NO page change
+ * — its whole effect was the dialog going, which added lines cannot express —
+ * so nothing marked it as a step that is already done when the dialog is not
+ * there. Compile now carries what a step took off the page, but only for a
+ * step whose ENTIRE effect was closing a dialog: that is what makes it
+ * conditional rather than the procedure's own.
+ */
+describe('removedContains: the dialog a step closed', () => {
+  const URL0 = `${ORIGIN}/?first_time_user=true`;
+  const WELCOME = ['- dialog "Welcome to OpenProject, Bench Admin"', '- button "Close"', '- combobox "Language"'];
+  const compile = (closeDiff: Partial<RecordedStep['diff']> & object, extra: Partial<RecordedStep> = {}) =>
+    compileSkill({
+      entries: [
+        { k: 'instruction', text: 'open the projects list', url: URL0 } as RecordedEntry,
+        step('click', { target: '@e19' }, [{ kind: 'role', role: 'button', name: 'Close' }], { diff: { url: URL0, alerts: [], added: [], ...closeDiff }, ...extra }),
+        step('click', { target: '@e20' }, [{ kind: 'role', role: 'link', name: 'Projects' }], { diff: { url: URL0, alerts: [], added: ['- heading "Projects"'] } }),
+      ],
+      instruction: 'open the projects list',
+      report: { status: 'success', summary: 'opened' },
+      session: 's',
+    })!;
+
+  it('records the removal for a step whose only effect was a dialog going', () => {
+    const s = compile({ removed: WELCOME });
+    expect(s.steps[0].expect?.removedContains).toEqual(WELCOME);
+    // nothing else changes: the next step still asserts what it added
+    expect(s.steps[1].expect?.addedContains).toEqual(['- heading "Projects"']);
+    expect(s.steps[1].expect?.removedContains).toBeUndefined();
+  });
+
+  it('records none for a step that had a consequence of its own, or closed no dialog', () => {
+    expect(compile({ removed: WELCOME, added: ['- heading "Deleted"'] }).steps[0].expect?.removedContains).toBeUndefined();
+    expect(compile({ removed: WELCOME, alerts: ['Work package deleted'] }).steps[0].expect?.removedContains).toBeUndefined();
+    expect(compile({ removed: WELCOME }, { fingerprintAfter: [0.1] }).steps[0].expect?.removedContains).toBeUndefined();
+    expect(compile({ removed: ['- button "Close"', '- row "Seed: triage inbox"'] }).steps[0].expect?.removedContains).toBeUndefined();
+  });
+});
+
 describe('maskMinted', () => {
   // Provenance, not shape: a control value the procedure did not put there
   // (no slot) is the app's, whatever it looks like — an id, a default, a

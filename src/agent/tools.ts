@@ -3,7 +3,8 @@ import path from 'node:path';
 import type { Locator, Page } from 'playwright-core';
 import { actionFailure, NAVIGATING_ACTIONS, outcomeLabel, outcomeOfError, robustClick, type ActionOutcome } from '../execution/browser.js';
 import { beginAction, type ActionExpectation, type ActionObservation, type SettleVerdict } from '../execution/action.js';
-import { CURRENT_DIALECT, addedLines, type PageObservation } from '../execution/snapshot.js';
+import { CURRENT_DIALECT, addedLines, removedLines, type PageObservation } from '../execution/snapshot.js';
+import { DIALOG_LINE } from '../execution/expect.js';
 import { POPUP_WAIT_MS, type PageEffect } from '../execution/context.js';
 import { isElementRead, readElements } from '../execution/observe.js';
 export { fireWhenAttached, urlHeldStill } from '../execution/browser.js';
@@ -711,10 +712,16 @@ async function runStep(
         // Recorded in CURRENT_DIALECT (the signature's lines), and tagged so:
         // compile carries the tag onto the step's expectation, and every runner
         // renders the live page in the dialect the expectation was written in.
+        // Removals are kept only when a dialog went: that is the one
+        // disappearance a later run acts on (a dismissal whose dialog is not
+        // there is already in effect), and every other removal would be store
+        // weight nothing reads.
+        const removed = removedLines(before.lines, after.lines) ?? [];
         diff = scrubSecretsDeep({
           url: after.url,
           alerts: after.alerts.filter((a) => !before.alerts.includes(a)),
           added: addedLines(before.lines, after.lines) ?? [],
+          ...(removed.some((l) => DIALOG_LINE.test(l)) ? { removed } : {}),
           dialect: CURRENT_DIALECT,
         });
         // The observations themselves, in memory only (never recorded): a replay

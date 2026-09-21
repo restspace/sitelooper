@@ -1102,6 +1102,45 @@ const HELPERS: { token: string; source: string[] }[] = [
       '}',
     ],
   },
+  {
+    token: 'await dismissalSkip(',
+    source: [
+      '/**',
+      ' * Is this step a dismissal of a dialog that is not open — already in effect?',
+      ' *',
+      " * WHICH REPLAY RULE THIS MIRRORS. runOneStep, on a target that did not",
+      ' * resolve in its window: a step recorded closing a dialog (and doing nothing',
+      ' * else) whose dialog is not on the page is skipped — the shared',
+      ' * dismissalAlreadyInEffect decides, over the same recorded removals and a',
+      " * look in the step's dialect. Replay asks after its resolve window, so this",
+      ' * waits the same window for a VISIBLE target first (a modal library keeps a',
+      ' * closed dialog, Close button and all, hidden in the DOM): a target that',
+      ' * shows up is acted on by the pick below as usual, and a false return leaves',
+      ' * that pick to report the miss exactly as it would have.',
+      ' */',
+      'async function dismissalSkip(',
+      '  page: Page,',
+      '  candidates: Locator[],',
+      '  step: { locators: Record<string, { kind: string; name?: string; text?: string; label?: string; hasText?: string }[]>; expect: { removedContains: string[] } },',
+      '  p: Record<string, string>,',
+      '  where: string,',
+      '  dialect: LineDialect = 1,',
+      '): Promise<boolean> {',
+      '  for (let waited = 0; ; waited += RESOLVE_POLL_MS) {',
+      '    for (const candidate of candidates) {',
+      '      const n = await candidate.count().catch(() => 0);',
+      '      for (let i = 0; i < Math.min(n, 5); i++) if (await candidate.nth(i).isVisible().catch(() => false)) return false;',
+      '    }',
+      '    if (waited >= RESOLVE_WAIT_MS) break;',
+      '    await page.waitForTimeout(RESOLVE_POLL_MS);',
+      '  }',
+      '  const done = dismissalAlreadyInEffect(step, await captureLines(page, dialect), p);',
+      '  if (!done) return false;',
+      '  console.log(`[sitelooper skip] ${where}: closes the dialog ${JSON.stringify(done.dialog)} with ${JSON.stringify(done.control)}, which is not open — already in effect`);',
+      '  return true;',
+      '}',
+    ],
+  },
 ];
 
 /**
@@ -1557,6 +1596,35 @@ function resolutionLines(
  * when the recording has no candidate at all — the caller then emits a TODO
  * rather than a statement it cannot target.
  */
+/**
+ * The already-in-effect guard for a dismissal (dismissalSkip, over the shared
+ * dismissalAlreadyInEffect): nothing for a step that recorded closing no
+ * dialog, a read, a minting step, or one inside a loop body or a frame (the
+ * caller checks those two) — replay's own exclusions.
+ */
+function dismissalLines(step: SkillStep, chain: LocatorCandidate[], ctx: Ctx): string[] {
+  const removed = step.expect?.removedContains;
+  if (!removed?.some((l) => DIALOG_LINE.test(l)) || step.mints || isReadAction(step.tool)) return [];
+  const { sources } = candidateSources(chain, { slot: slotAsParam });
+  if (!sources.length) return [];
+  const locators = Object.fromEntries(
+    Object.entries(step.locators ?? {}).map(([key, cands]) => [
+      key,
+      (cands ?? []).map((c) => {
+        const { kind, name, text, label, hasText } = c as { kind: string; name?: string; text?: string; label?: string; hasText?: string };
+        return { kind, ...(name !== undefined && { name }), ...(text !== undefined && { text }), ...(label !== undefined && { label }), ...(hasText !== undefined && { hasText }) };
+      }),
+    ]),
+  );
+  noteSlots(locators, ctx);
+  noteSlots(removed, ctx);
+  const where = `${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`;
+  const guard = JSON.stringify({ locators, expect: { removedContains: removed } });
+  return [
+    `if (await dismissalSkip(page, [${sources.join(', ')}], ${guard}, p, ${q(where)}${step.expect?.lineDialect === 2 ? ', 2' : ''})) return { status: 'skipped' };`,
+  ];
+}
+
 function actionTarget(step: SkillStep, key: 'target' | 'source', ctx: Ctx, out: string[], hoist?: string): string | null {
   const chain = step.locators?.[key] ?? [];
   if (!chain.length) return null;
@@ -1583,6 +1651,7 @@ function actionTarget(step: SkillStep, key: 'target' | 'source', ctx: Ctx, out: 
   if (hoist) out.push(`const ${hoist}: CandidateObservation[] = [`, ...open, '];');
   const list = (head: string) => (candidates ? [`${head}${candidates}, ${where}, `] : [`${head}[`, ...open, `], ${where}, `]);
   const note = ctx.note ? `, ${q(ctx.note)}` : '';
+  if (key === 'target' && root === 'page' && !ctx.loopSink) out.push(...dismissalLines(step, chain, ctx));
   const destPattern = step.expect?.urlPattern;
   if (key === 'target' && destPattern && (step.tool === 'click' || step.tool === 'dblclick') && !ctx.loopSink) {
     // Replay's navigation fallback (the shared recover.ts): a missed

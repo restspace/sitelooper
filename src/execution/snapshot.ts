@@ -651,6 +651,12 @@ export function addedLines(before: string[] | null, after: string[] | null): str
   return after.filter((l) => !before.includes(l)).slice(0, MAX_ADDED_LINES);
 }
 
+/** The mirror of addedLines: what was on the page before the action and is gone after it. */
+export function removedLines(before: string[] | null, after: string[] | null): string[] | null {
+  if (before === null || after === null) return null;
+  return before.filter((l) => !after.includes(l)).slice(0, MAX_ADDED_LINES);
+}
+
 export interface LineShowsOptions {
   /**
    * Identity matching: the want must sit at a letter/digit boundary on both

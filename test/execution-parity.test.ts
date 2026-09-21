@@ -1726,6 +1726,66 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     }, 180_000);
 
     /**
+     * G00. A dismissal of a dialog NOTHING in the procedure opened (fwop1:
+     * OpenProject's first-login "Welcome" dialog, raised by sign-in, closed by
+     * the next segment's first click). Recorded with the removal it made, the
+     * Close is conditional: skipped as already in effect when the dialog is
+     * not on the page, clicked when it is — and a confirm is never skipped
+     * that way, missing dialog or not. The Mark log proves each leg went on,
+     * or stopped, before the next mutation.
+     */
+    it('both runners skip a dismissal whose dialog is not open, click it when it is, and never skip a confirm', async () => {
+      const dismiss = (name: string, dialog: string): SkillStep => ({
+        tool: 'click',
+        args: { target: '@e9' },
+        locators: { target: [{ kind: 'role', role: 'button', name }] },
+        expect: { urlPattern: `${origin}/`, removedContains: [`- dialog "${dialog}"`, `- button "${name}"`] },
+      });
+      const CLOSE = dismiss('Close', 'Welcome to the app');
+
+      const absent = await both([CLOSE, MARK], 1);
+      expect(absent.replay.ok, absent.replay.reason ?? '').toBe(true);
+      expect(absent.emitted.ok, absent.emitted.reason ?? '').toBe(true);
+      expect(absent.replayLog).toEqual(['mark:Item 1']);
+      expect(absent.emittedLog).toEqual(['mark:Item 1']);
+      expect(absent.replay.warnings?.join(' ')).toMatch(/closes the dialog "Welcome to the app".*already in effect/);
+
+      // The dialog on the page: the Close is clicked (and removes it), not skipped.
+      const withDialog: PageHook = (page) =>
+        page.addInitScript(() => {
+          document.addEventListener('DOMContentLoaded', () => {
+            const dialog = document.createElement('div');
+            dialog.setAttribute('role', 'dialog');
+            dialog.setAttribute('aria-label', 'Welcome to the app');
+            const close = document.createElement('button');
+            close.type = 'button';
+            close.textContent = 'Close';
+            close.addEventListener('click', () => dialog.remove());
+            dialog.append(close);
+            document.body.append(dialog);
+          });
+        });
+      reset(1);
+      const replayPresent = await replayOf(skillOf([CLOSE, MARK]), {}, withDialog);
+      const replayPresentLog = [...fx.log];
+      reset(1);
+      const emittedPresent = await emittedOf(specOf([CLOSE, MARK]), {}, withDialog);
+      const emittedPresentLog = [...fx.log];
+      expect(replayPresent.ok, replayPresent.reason ?? '').toBe(true);
+      expect(emittedPresent.ok, emittedPresent.reason ?? '').toBe(true);
+      expect(replayPresent.warnings?.join(' ')).not.toMatch(/already in effect/);
+      expect(replayPresentLog).toEqual(['mark:Item 1']);
+      expect(emittedPresentLog).toEqual(['mark:Item 1']);
+
+      // A confirm whose dialog did not appear is a stop in both, before Mark.
+      const confirm = await both([dismiss('Remove permanently', 'Remove this item?'), MARK], 1);
+      expect(confirm.replay.ok).toBe(false);
+      expect(confirm.emitted.ok).toBe(false);
+      expect(confirm.replayLog).toEqual([]);
+      expect(confirm.emittedLog).toEqual([]);
+    }, 180_000);
+
+    /**
      * G01b. An unrecorded alert beside a CONFIRMED effect is reported, and the
      * run goes on. fwgr34: the page a step landed on rendered an alert its
      * recording's after-look had come too early to see. An alert alone cannot
