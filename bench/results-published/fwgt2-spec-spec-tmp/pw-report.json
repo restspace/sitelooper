@@ -1,0 +1,207 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwgt2-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwgt2-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwgt2-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwgt2-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwgt2-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwgt2.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwgt2-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwgt2.spec.ts",
+      "file": "fwgt2.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwgt2",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 41141,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper skip] 01-signin s_d9c12f/10 target: no locator recorded — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 01-signin s_d9c12f/11 target: no locator recorded — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 01-signin s_d9c12f/12 target: no locator recorded — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-open\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 05-open s_514a38/2 target: primary getByText('bench-assignee', { exact: true }) missed; used #2 getByText('bench-assignee (Bench Assignee)', { exact: true }) (#1 absent)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-open\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 06-open s_c5414f/9: read 'sidebar_milestone_after_apply' returned a value the skill itself set/selected ('Bench Milestone') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-open\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 07-add s_322b11/4: read 'comment_text_as_displayed' returned a value the skill itself set/selected ('Comment for run fwgt2-spec') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 07-add\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 08-open s_b817ad/1 target: primary getByRole('heading', { name: /^[\\s\\p{Co}\\p{So}\\p{Cf}]*fwgt2-spec\\s+Bench\\s+Issue\\s+#4[\\s\\p{Co}\\p{So}\\p{Cf}]*$/u }) missed; used #2 locator('h1') (#1 absent)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 08-open\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in to Gitea with username 'admin' and password 'bench-admin-pass' (use the Sign In link/form at the top right if not already signed in). Verify you are signed in as admin and report the username shown in the top-right user menu.",
+                      "duration": 5055
+                    },
+                    {
+                      "title": "02-open: Go to the repository 'bench/bench-repo' (navigate to http://127.0.0.1:8095/bench/bench-repo then open its Issues tab, showing OPEN issues). List the titles of all OPEN issues whose title starts with 'Seed:', exactly as displayed on the page. Report each title verbatim, one per line, and also report the total count of open issues shown.",
+                      "duration": 696
+                    },
+                    {
+                      "title": "03-create: In the repository bench/bench-repo, create a new issue with title exactly '{{runid}} Bench Issue' and a description (markdown text area) that includes the text '{{runid}}' (e.g. 'Bench issue created for run {{runid}}'). Submit it. Then report the new issue's number exactly as the app displays it (Gitea shows it as #<number>), the issue title as shown on the issue page, and the description text as displayed.",
+                      "duration": 7841
+                    },
+                    {
+                      "title": "04-open: On the issue page for issue {{03-create.issue_number_as_displayed}} in bench/bench-repo ({{03-create.url}}), open the Labels picker in the issue sidebar and set the issue's labels to exactly 'bug' and 'priority-high' (no other labels). Wait for the app to apply the change so the sidebar shows the labels 'bug' and 'priority-high' on the issue. Report the exact list of label names shown in the issue sidebar after applying.",
+                      "duration": 14515
+                    },
+                    {
+                      "title": "05-open: On the issue page for issue {{03-create.issue_number_as_displayed}} in bench/bench-repo ({{03-create.url}}), open the Assignees picker in the issue sidebar and assign the issue to the user 'bench-assignee'. Wait for the app to apply the change so the sidebar shows 'bench-assignee' as the assignee on the issue. Report the exact assignee name(s) shown in the issue sidebar after applying, and confirm it persisted after a page reload.",
+                      "duration": 4240
+                    },
+                    {
+                      "title": "06-open: On the issue page for issue {{03-create.issue_number_as_displayed}} in bench/bench-repo ({{03-create.url}}), open the Milestone picker in the issue sidebar and set the issue's milestone to 'Bench Milestone'. Wait for the app to apply the change so the sidebar shows 'Bench Milestone' as the milestone on the issue. Report the exact milestone name shown in the issue sidebar after applying, and confirm it persisted after a page reload.",
+                      "duration": 1935
+                    },
+                    {
+                      "title": "07-add: On the issue page for issue {{03-create.issue_number_as_displayed}} in bench/bench-repo ({{03-create.url}}), add a comment using the comment markdown text area at the bottom of the issue. The comment text must include '{{runid}}' (e.g. 'Comment for run {{runid}}'). Submit the comment and wait for it to appear on the issue page. Report the exact comment text as displayed on the issue page after posting.",
+                      "duration": 5129
+                    },
+                    {
+                      "title": "08-open: Open a fresh page at {{03-create.url}} and verify the full state of issue {{03-create.issue_number_as_displayed}}. Report exactly, reading from the rendered page: (1) the issue title and its number as displayed (e.g. '{{03-create.issue_number_as_displayed}}'), (2) the full description text, (3) the complete list of labels shown in the sidebar, (4) the assignee(s) shown in the sidebar, (5) the milestone shown in the sidebar, (6) the text of every comment on the issue. Do not change anything.",
+                      "duration": 1164
+                    }
+                  ],
+                  "startTime": "2026-09-21T23:53:58.076Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": "W3NpdGVsb29wZXIgZHJpZnRdIDA1LW9wZW4gc181MTRhMzgvMiB0YXJnZXQ6IHByaW1hcnkgZ2V0QnlUZXh0KCdiZW5jaC1hc3NpZ25lZScsIHsgZXhhY3Q6IHRydWUgfSkgbWlzc2VkOyB1c2VkICMyIGdldEJ5VGV4dCgnYmVuY2gtYXNzaWduZWUgKEJlbmNoIEFzc2lnbmVlKScsIHsgZXhhY3Q6IHRydWUgfSkgKCMxIGFic2VudCkKW3NpdGVsb29wZXIgZHJpZnRdIDA4LW9wZW4gc19iODE3YWQvMSB0YXJnZXQ6IHByaW1hcnkgZ2V0QnlSb2xlKCdoZWFkaW5nJywgeyBuYW1lOiAvXltcc1xwe0NvfVxwe1NvfVxwe0NmfV0qZndndDItc3BlY1xzK0JlbmNoXHMrSXNzdWVccysjNFtcc1xwe0NvfVxwe1NvfVxwe0NmfV0qJC91IH0pIG1pc3NlZDsgdXNlZCAjMiBsb2NhdG9yKCdoMScpICgjMSBhYnNlbnQp"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b0180750cf37753aacac-61eda82be9f525de83f9",
+          "file": "fwgt2.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-21T23:53:56.376Z",
+    "duration": 43083.159,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

@@ -1,0 +1,236 @@
+{
+  "flow": "fwgt2",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_d9c12f; observed user_menu_item_profile=\n\t\t\t\t\t\t\n\t\t\t\t\t\tProfile\n\t\t\t\t\t, user_menu_item_starred=\n\t\t\t\t\t\t\t\n\t\t\t\t\t\t\tStarred\n\t\t\t\t\t\t, user_menu_item_subscriptions=\n\t\t\t\t\t\t\n\t\t\t\t\t\tSubscriptions\n\t\t\t\t\t, user_menu_item_settings=\n\t\t\t\t\t\t\n\t\t\t\t\t\tSettings\n\t\t\t\t\t, user_menu_item_help=\n\t\t\t\t\t\t\n\t\t\t\t\t\tHelp\n\t\t\t\t\t, role_menu_a_role_menuite_6=\n\t\t\t\t\t\t\n\t\t\t\t\t\tSite Administration\n\t\t\t\t\t, user_menu_item_sign_out=\n\t\t\t\t\t\t\n\t\t\t\t\t\tSign Out\n\t\t\t\t\t, user_menu_accessible_name=.",
+      "values": {
+        "user_menu_item_profile": "\n\t\t\t\t\t\t\n\t\t\t\t\t\tProfile\n\t\t\t\t\t",
+        "user_menu_item_starred": "\n\t\t\t\t\t\t\t\n\t\t\t\t\t\t\tStarred\n\t\t\t\t\t\t",
+        "user_menu_item_subscriptions": "\n\t\t\t\t\t\t\n\t\t\t\t\t\tSubscriptions\n\t\t\t\t\t",
+        "user_menu_item_settings": "\n\t\t\t\t\t\t\n\t\t\t\t\t\tSettings\n\t\t\t\t\t",
+        "user_menu_item_help": "\n\t\t\t\t\t\t\n\t\t\t\t\t\tHelp\n\t\t\t\t\t",
+        "role_menu_a_role_menuite_6": "\n\t\t\t\t\t\t\n\t\t\t\t\t\tSite Administration\n\t\t\t\t\t",
+        "user_menu_item_sign_out": "\n\t\t\t\t\t\t\n\t\t\t\t\t\tSign Out\n\t\t\t\t\t",
+        "user_menu_accessible_name": ""
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "signed_in_username",
+        "user_menu_avatar_title"
+      ]
+    },
+    {
+      "id": "02-open",
+      "status": "success",
+      "summary": "Opened bench/bench-repo's Issues tab with the Open state filter applied (http://127.0.0.1:8095/bench/bench-repo/issues?q=&type=all&state=open, page title \"Issues - bench-repo - Gitea: Git with a cup of tea\"). The issue list shows the \"Open (3)\" tab active and \"Closed (0)\"; the tab strip on the repo nav reads \"Issues 3\". The list renders exactly 3 open issues, and all 3 have titles beginning with \"Seed:\": \"Seed: ship repaired device\" (#3), \"Seed: order missing parts\" (#2), and \"Seed: triage inbox\" (#1) — titles read verbatim from the live DOM issue-title links.",
+      "values": {
+        "open_issue_count": "3",
+        "closed_issue_count": "0",
+        "repo_owner": "bench",
+        "repo_name": "bench-repo"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Created the issue in bench/bench-repo via the \"New Issue\" form and submitted it; the app navigated to http://127.0.0.1:8095/bench/bench-repo/issues/4 with page title \"#6 - fwgt2-n3 Bench Issue - bench-repo - Gitea: Git with a cup of tea\". The issue page heading reads \"fwgt2-n3 Bench Issue #6\" and the description body renders \"Bench issue created for run fwgt2-n3\". The repo nav now shows \"Issues 4\" (was 3).",
+      "values": {
+        "ref": "fwgt2-n3",
+        "issue_heading_full": "fwgt2-n3 Bench Issue #6",
+        "issue_description_displayed": "Bench issue created for run fwgt2-n3",
+        "issue_number_as_displayed": "#6",
+        "issue_title_on_page": "fwgt2-n3 Bench Issue",
+        "issues_count_in_repo_nav": "4",
+        "page_title": "#6 - fwgt2-n3 Bench Issue - bench-repo - Gitea: Git with a cup of tea"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "On issue #6 of bench/bench-repo I opened the sidebar Labels picker, selected exactly \"bug\" and \"priority-high\", and closed the picker to commit the change (the widget posts to /bench/bench-repo/issues/labels?issue_ids=4 only when the dropdown hides — the hidden label_ids input read \"1,2\" before closing). The sidebar label list then rendered \"bug\" and \"priority-high\", and after a full page reload both labels are still present (sidebar shows links \"bug\" and \"priority-high\"), so the change is persisted server-side. No other labels are set. Note: clicking the options alone only ticks the picker; the update is sent when the dropdown is dismissed (Escape did not dismiss it here — clicking the picker header did).",
+      "values": {
+        "issue_page_url": "http://127.0.0.1:8095/bench/bench-repo/issues/6",
+        "sidebar_labels_before": "No labels",
+        "label_ids_hidden_input": "1,2",
+        "sidebar_labels_after_apply": "bug\npriority-high",
+        "issue_number": "#6",
+        "persisted_after_reload": " Yes"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "19/19",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "On issue #6 of bench/bench-repo I opened the sidebar Assignees picker, clicked the option \"bench-assignee\n(Bench Assignee)\" (data-value=3), which ticked the item and set the combo's hidden assignee_ids field to \"3\", then committed the change by dismissing the picker with an outside click — that hide is what makes the widget POST to /bench/bench-repo/issues/assignee?issue_ids=4. The sidebar then rendered the assignee as \"bench-assignee\n(Bench Assignee)\" (link to /bench/bench-repo/issues?assignee=3). A full page reload of /bench/bench-repo/issues/4 confirmed persistence: the sidebar assignee line reads \"bench-assignee\n(Bench Assignee)\" and the combo's hidden value is \"3\". Whole task done and verified. Note: Escape does not dismiss this dropdown; only an outside click committed the change.",
+      "values": {
+        "assignment_update_endpoint": "/bench/bench-repo/issues/assignee?issue_ids=4",
+        "url_check": "http://127.0.0.1:8095/bench/bench-repo/issues/6",
+        "sidebar_assignees_before": "No Assignees",
+        "assignee_id_after_apply": "3",
+        "issue_heading_text": "fwgt2-n3 Bench Issue",
+        "issue_number": "#6",
+        "persisted_after_reload": " Yes",
+        "sidebar_assignees": "bench-assignee\n(Bench Assignee)"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_c5414f; observed milestone_link=http://127.0.0.1:8095/bench/bench-repo/milestone/1, issue_number=#6, milestone_id=1, sidebar_milestone_before=No Milestone, persisted_after_reload= Yes, issue_content_right_issu=Backlog.",
+      "values": {
+        "milestone_link": "http://127.0.0.1:8095/bench/bench-repo/milestone/1",
+        "issue_number": "#6",
+        "milestone_id": "1",
+        "sidebar_milestone_before": "No Milestone",
+        "persisted_after_reload": " Yes",
+        "issue_content_right_issu": "Backlog"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "sidebar_milestone_after_apply"
+      ]
+    },
+    {
+      "id": "07-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_5a472e; observed comment_text_as_displayed=Comment for run fwgt2-n3, run_id=fwgt2-n3, comment_count=opened  by admin · 1 comment.",
+      "values": {
+        "comment_text_as_displayed": "Comment for run fwgt2-n3",
+        "run_id": "fwgt2-n3",
+        "comment_count": "opened  by admin · 1 comment"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "08-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_b817ad; observed comments=Comment for run fwgt2-n3 (by admin, issuecomment-5), run_id=fwgt2-n3, issue_heading_displayed=fwgt2-n3 Bench Issue #6, labels_sidebar=bug | priority-high, issue_description=Bench issue created for run fwgt2-n3, projects_sidebar=No projects, comment_count=1, assignee_sidebar=bench-assignee\n(Bench Assignee), repo_issue_counter=Issues\n4, comment_text=Comment for run fwgt2-n3.",
+      "values": {
+        "comments": "Comment for run fwgt2-n3 (by admin, issuecomment-5)",
+        "run_id": "fwgt2-n3",
+        "issue_heading_displayed": "fwgt2-n3 Bench Issue #6",
+        "labels_sidebar": "bug | priority-high",
+        "issue_description": "Bench issue created for run fwgt2-n3",
+        "projects_sidebar": "No projects",
+        "comment_count": "1",
+        "assignee_sidebar": "bench-assignee\n(Bench Assignee)",
+        "repo_issue_counter": "Issues\n4",
+        "comment_text": "Comment for run fwgt2-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 8,
+  "total": 8,
+  "repinned": 0,
+  "drift": 4,
+  "driftTickets": [
+    {
+      "flow": "fwgt2",
+      "step": "01-signin",
+      "skill": "s_d9c12f",
+      "atStep": "10",
+      "key": "target",
+      "similarity": 1.002,
+      "missedLocator": "page.getByRole('menu', { name: 'admin', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/",
+      "pageUrl": "http://127.0.0.1:8095/"
+    },
+    {
+      "flow": "fwgt2",
+      "step": "01-signin",
+      "skill": "s_d9c12f",
+      "atStep": "11",
+      "key": "target",
+      "similarity": 1.002,
+      "missedLocator": "page.getByRole('menu', { name: 'admin', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/",
+      "pageUrl": "http://127.0.0.1:8095/"
+    },
+    {
+      "flow": "fwgt2",
+      "step": "05-open",
+      "skill": "s_514a38",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.getByText('bench-assignee', { exact: true })",
+      "fallbackUsed": "page.getByText('bench-assignee (Bench Assignee)', { exact: true })",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/6"
+    },
+    {
+      "flow": "fwgt2",
+      "step": "08-open",
+      "skill": "s_b817ad",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.getByRole('heading', { name: 'fwgt2-n3 Bench Issue #4', exact: true })",
+      "fallbackUsed": "page.locator('h1')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/6"
+    }
+  ],
+  "wallMs": 58594,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
