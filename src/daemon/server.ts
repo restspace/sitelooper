@@ -5,7 +5,7 @@ import { AnthropicProvider, OpenAICompatProvider, resolveProviderConfig, type Pr
 import { buildSystemOne, resolveSystemOneConfig, type SystemOne } from '../agent/system-one.js';
 import { runEscalatingInstruction, type InstructionResult, type LoopActor, type SkillRecord } from '../agent/loop.js';
 import { executeTool } from '../agent/tools.js';
-import { urlPattern as compiledUrlPattern, dropAbsentReadLocators, dropDeadReadLocators, fillParams, markReadsProven, stranded, urlMatches, urlParts } from '../skills/compile.js';
+import { urlPattern as compiledUrlPattern, carryOpener, dropAbsentReadLocators, dropDeadReadLocators, fillParams, markReadsProven, stranded, urlMatches, urlParts } from '../skills/compile.js';
 import type { DriftTicket } from '../skills/repair.js';
 import type { Page } from 'playwright-core';
 import { agentGesturesOutsideReplay, bindSkill, canAdoptPin, decideRepin, instructionEntry, learnFromInstruction, matchTemplate, pinStartsElsewhere, pinStatus, publishedOutputs, selectCandidates, synthesizeReport } from '../skills/learn.js';
@@ -746,7 +746,10 @@ ${describeLeaks(leaks.slice(0, 6))}`);
             ? learnFromInstruction(this.browser.learn, {
                 result,
                 instruction,
-                entries: entriesSince,
+                // A popup an earlier instruction opened and left open, that
+                // this one's first gesture acts in, is carried in front of its
+                // procedure (compile.ts carryOpener, gitea fwgt1-n1 04-set).
+                entries: carryOpener(this.browser.script?.entries.slice(0, mark) ?? [], entriesSince),
                 session: this.opts.session,
                 model: provider.model,
                 vars: this.knownValues(),
@@ -1761,6 +1764,10 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
           session: this.opts.session,
           model: opts.provider.model,
           harmlessStop,
+          // The ledger step this recovery banked its own url ids under: one
+          // it minted inside the compiled span is derived, not a param bound
+          // to this very step (compile.ts ownUrlMints, espocrm fwec1-n2).
+          ownStep: ledgerStep,
           // Slot-by-policy inputs: this run's declared vars plus every url
           // provenance value minted so far, so a skill compiled from a repair
           // is generic across runs instead of baking in this run's ids.
@@ -1905,7 +1912,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
             candidate,
             sibling?.params ?? {},
             flow.steps.map((st) => st.id),
-            { instruction: step.instruction, ledgerSteps },
+            { instruction: step.instruction, ledgerSteps, self: step.id },
           );
           if (remap.unbound.length) {
             opts.progress(`[flow ${flow.name}] ${step.id}: not re-pinning ${candidate.id} — slot(s) ${remap.unbound.join(', ')} identify the record but carry no origin to rebind from`);

@@ -2702,6 +2702,80 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
   });
 
   /**
+   * Standing fills (the shared src/execution/refill.ts). fwvk1 n3 01-open:
+   * the login fills passed their own checks, the app then rebuilt the form
+   * (its service worker reloaded /login), and the Login click submitted it
+   * empty. The fixture's form is replaced by an empty one 150ms after both
+   * fields first hold a value; Sign in posts what the fields hold at the
+   * click. Both runners must refill the emptied fields before the click, so
+   * the app is signed in once, with this run's values.
+   */
+  describe('standing fills', () => {
+    it('both runners refill a form the page emptied after its fills were checked, before the click that submits it', async () => {
+      const steps: SkillStep[] = [
+        { tool: 'goto', args: { url: `${origin}/relogin` }, locators: {} },
+        { tool: 'fill', args: { target: '@e1', value: 'admin' }, locators: { target: [{ kind: 'role', role: 'textbox', name: 'Username' }] } },
+        { tool: 'fill', args: { target: '@e2', value: 'pass-x42' }, locators: { target: [{ kind: 'css', selector: '#password' }] } },
+        { tool: 'click', args: { target: '@e3' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Sign in' }] } },
+      ];
+      const { replay, emitted, replayLog, emittedLog } = await both(steps, 0);
+
+      expect(replayLog, 'replay must submit the refilled form').toEqual(['commit:login:admin:pass-x42']);
+      expect(emittedLog, 'the artifact must submit the refilled form').toEqual(['commit:login:admin:pass-x42']);
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      // Said, and never with the values: one of them is a password.
+      expect(replay.warnings?.some((w) => /empty again before this click/.test(w)), JSON.stringify(replay.warnings)).toBe(true);
+      expect(emitted.warnings?.some((w) => /empty again before this click/.test(w)), JSON.stringify(emitted.warnings)).toBe(true);
+      expect(JSON.stringify([replay.warnings, emitted.warnings])).not.toContain('pass-x42');
+    }, 120_000);
+  });
+
+  /**
+   * Disclosure toggles (the shared src/execution/toggle.ts). fwsi1 05-change
+   * recorded a hide-then-show pair on "Show/Hide More Information"; compile
+   * folds it to one click flagged `toggle`, which must leave the panel SHOWN:
+   * skipped when the panel already shows, clicked when it does not. The log
+   * counts the clicks that landed.
+   */
+  describe('disclosure toggles', () => {
+    const toggleSteps = (state: string, toggle = true): SkillStep[] => [
+      { tool: 'goto', args: { url: `${origin}/disclosure/${state}` }, locators: {} },
+      {
+        tool: 'click',
+        args: { target: '@e1' },
+        locators: { target: [{ kind: 'role', role: 'button', name: 'Show/Hide More Information' }] },
+        ...(toggle ? { toggle: true as const } : {}),
+        expect: { addedContains: ['- link "Model One"', '- link "Maker One"'], lineDialect: 2 },
+      },
+    ];
+
+    it('both runners skip a toggle whose panel already shows, and leave it shown', async () => {
+      const { replay, emitted, replayLog, emittedLog } = await both(toggleSteps('open'), 0);
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replayLog).toEqual([]);
+      expect(emittedLog).toEqual([]);
+    }, 120_000);
+
+    it('both runners click a toggle whose panel is hidden, once', async () => {
+      const { replay, emitted, replayLog, emittedLog } = await both(toggleSteps('closed'), 0);
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replayLog).toEqual(['commit:panel:shown']);
+      expect(emittedLog).toEqual(['commit:panel:shown']);
+    }, 120_000);
+
+    it('without the flag, both runners click a shown panel shut and stop on its missing effect', async () => {
+      const { replay, emitted, replayLog, emittedLog } = await both(toggleSteps('open', false), 0);
+      expect(replay.ok).toBe(false);
+      expect(emitted.ok).toBe(false);
+      expect(replayLog).toEqual(['commit:panel:hidden']);
+      expect(emittedLog).toEqual(['commit:panel:hidden']);
+    }, 120_000);
+  });
+
+  /**
    * Gap 10. A read that returns only what the procedure itself typed confirms
    * the control, not that the app kept it. Replay flags it (echoedValues) and
    * the flow runner drops it from its confident values; the artifact had no

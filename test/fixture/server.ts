@@ -438,6 +438,67 @@ document.getElementById('save-choice').addEventListener('click', () => commit('c
 </body></html>`;
 
 /**
+ * A login form an app rebuilds while it is still starting up (fwvk1 n3
+ * 01-open: Vikunja's service worker took control and reloaded /login after
+ * both fills had passed their checks). Here: 150ms after both fields first
+ * hold a value, the form is replaced by a fresh, empty one — same ids, same
+ * labels, same url. Sign in posts what the fields hold AT THE CLICK
+ * (`commit:login:<user>:<pass>`), and an empty field posts nothing and says
+ * so — the fixture's log is the oracle, not either runner's report.
+ */
+const RELOGIN = `<!doctype html><html><head><meta charset="utf-8"><title>Sign in</title></head><body>
+<h1>Sign in</h1>
+<div id="host"></div>
+<p id="status"></p>
+<script>
+const FORM = '<form id="loginform" onsubmit="return false"><label for="username">Username</label><input id="username" name="username">' +
+  '<label for="password">Password</label><input id="password" name="password" type="password">' +
+  '<button id="login" type="button">Sign in</button></form>';
+const host = document.getElementById('host');
+let rebuilt = false;
+const mount = () => {
+  host.innerHTML = FORM;
+  const user = document.getElementById('username');
+  const pass = document.getElementById('password');
+  const armed = () => {
+    if (rebuilt || !user.value || !pass.value) return;
+    rebuilt = true;
+    setTimeout(mount, 150);
+  };
+  user.addEventListener('input', armed);
+  pass.addEventListener('input', armed);
+  document.getElementById('login').addEventListener('click', () => {
+    const u = document.getElementById('username').value;
+    const p = document.getElementById('password').value;
+    if (!u || !p) { document.getElementById('status').textContent = 'Username and password are required'; return; }
+    fetch('/commit/login/' + encodeURIComponent(u + ':' + p), { method: 'POST' })
+      .then(() => { document.getElementById('status').textContent = 'Signed in as ' + u; });
+  });
+};
+mount();
+</script>
+</body></html>`;
+
+/**
+ * A disclosure (fwsi1 05-change's "Show/Hide More Information"): one button
+ * shows and hides a panel of links. `/disclosure/open` starts shown,
+ * `/disclosure/closed` hidden. Every click posts the state it left the panel
+ * in (`commit:panel:shown|hidden`), so the log says how many clicks landed.
+ */
+const DISCLOSURE = (state: string) => `<!doctype html><html><head><meta charset="utf-8"><title>Asset</title></head><body>
+<h1>Asset</h1>
+<button id="expand" type="button" aria-label="Show/Hide More Information">i</button>
+<div id="panel"${state === 'open' ? '' : ' hidden'}><a href="#m">Model One</a> <a href="#k">Maker One</a></div>
+<script>
+document.getElementById('expand').addEventListener('click', () => {
+  const panel = document.getElementById('panel');
+  panel.hidden = !panel.hidden;
+  fetch('/commit/panel/' + (panel.hidden ? 'hidden' : 'shown'), { method: 'POST' });
+});
+</script>
+</body></html>`;
+
+/**
  * A state change whose only evidence is what the page renders after it:
  * Stamp posts `/stamp/doc` and, when the server accepts it, adds a "Revert"
  * button. A REJECTED stamp raises no toast — the page simply stays as it was
@@ -1032,6 +1093,16 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
     if (url === '/editor' && req.method === 'GET') {
       res.writeHead(200, { 'content-type': 'text/html' });
       res.end(EDITOR);
+      return;
+    }
+    if (url.startsWith('/disclosure/') && req.method === 'GET') {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end(DISCLOSURE(url.slice('/disclosure/'.length)));
+      return;
+    }
+    if (url === '/relogin' && req.method === 'GET') {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end(RELOGIN);
       return;
     }
     if (url.startsWith('/commit/') && req.method === 'POST') {

@@ -294,6 +294,16 @@ export interface SkillStep {
   page?: number;
   /** What the step did to the page itself: opened a popup, closed its page, switched tabs. Both runners follow it. */
   effect?: PageEffect;
+  /**
+   * A disclosure toggle: the recording clicked this control once to HIDE what
+   * it then clicked it again to show (src/skills/toggles.ts). Compiled to this
+   * one click, which both runners skip as already in effect when every line
+   * it is recorded adding is already showing — the rule the popup opener guard
+   * applies to popup lines, widened to all of this step's lines. An optional
+   * field, so no SKILL_CONTRACT bump: a build that ignores it clicks, which
+   * can only stop a run whose panel was already open, never pass a wrong one.
+   */
+  toggle?: true;
   expect?: StepExpectation;
   /** For read/read_all steps: which report value this read supplied, if any. */
   label?: string;

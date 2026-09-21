@@ -93,3 +93,50 @@ describe('compile: page effects', () => {
     expect(foldLoops([popupClick('1'), popupClick('2')]).map((s) => s.tool)).toEqual(['click', 'click']);
   });
 });
+
+/**
+ * snipeit fwsi1 02-find: the recording filled "Seed:" and then "" (a clear);
+ * the list rewrote its query string on a debounce after its AJAX call, and
+ * the url landed during the clear's settle. A fill never navigates, so the
+ * url after one is judged on its path only — in the daemon and the artifact
+ * alike, both through the shared url matcher.
+ */
+describe('a url seen after a fill or type is judged on its path only (fwsi1)', () => {
+  const O = 'http://127.0.0.1:8099';
+  const LIST = `${O}/hardware`;
+  const REWRITTEN = `${LIST}?order=asc&page=1&search=Seed:&size=20&sort=created_at`;
+  const fill = (value: string, url: string): RecordedStep => ({
+    k: 'step',
+    tool: 'fill',
+    args: { target: '@e5', value },
+    locators: { target: { expr: "page.getByRole('searchbox', { name: 'Search' })", verified: true, raw: '@e5', chain: [{ kind: 'role', role: 'searchbox', name: 'Search' }] } },
+    diff: { url, alerts: [], added: [], dialect: 2 },
+  });
+
+  it('stores the fill\'s url pattern without the query, and still a click\'s with it', async () => {
+    const { urlMatches } = await import('../src/execution/url.js');
+    const [skill] = compileSkills({
+      entries: [
+        { k: 'instruction', text: "Search the asset list for 'Seed:' and report the matches.", url: LIST },
+        fill('Seed:', LIST),
+        fill('', REWRITTEN),
+        {
+          k: 'step',
+          tool: 'click',
+          args: { target: '@e9' },
+          locators: { target: { expr: "page.getByRole('link', { name: 'Next' })", verified: true, raw: '@e9', chain: [{ kind: 'role', role: 'link', name: 'Next' }] } },
+          diff: { url: `${LIST}?order=asc&page=2`, alerts: [], added: [], dialect: 2 },
+        },
+      ],
+      instruction: "Search the asset list for 'Seed:' and report the matches.",
+      report: { status: 'success', summary: 'found', evidence: { values: {} } },
+      session: 's',
+    });
+    const clear = skill.steps.find((s) => s.tool === 'fill' && s.args.value === '');
+    expect(clear?.expect?.urlPattern).toBe(LIST);
+    expect(urlMatches(clear!.expect!.urlPattern!, LIST)).toBe(true);
+    expect(urlMatches(clear!.expect!.urlPattern!, REWRITTEN)).toBe(true);
+    expect(urlMatches(clear!.expect!.urlPattern!, `${O}/users`)).toBe(false);
+    expect(skill.steps.find((s) => s.tool === 'click')?.expect?.urlPattern).toContain('?');
+  });
+});

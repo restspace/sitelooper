@@ -10,6 +10,7 @@ import {
   recipeFamilyOf,
   recognizeComponent,
   SEED_RECIPES,
+  squashText,
   type RecipeAttempt,
   type RecipeBook,
   type RecipeFamily,
@@ -148,11 +149,32 @@ export class ComponentStore {
     fs.renameSync(tmp, this.file);
   }
 
-  /** Stored recipes plus seeds for any (family, intent) not represented. */
+  /**
+   * Stored recipes plus seeds for any (family, intent) not represented.
+   *
+   * A stored SEED runs the procedure this build ships, not the one it
+   * materialised with: the file keeps a seed's lifecycle, never its steps.
+   * One whose shipped steps changed starts over provisional with a clean
+   * failure streak — its record was earned by a procedure that no longer
+   * runs (fwvk1: the prosemirror seed was demoted for the Escape it pressed,
+   * and a store that kept that demotion would never try the seed again).
+   */
   list(): Recipe[] {
-    const stored = this.read();
+    const shipped = new Map(seedRecipes().map((s) => [s.id, s]));
+    const stored = this.read().map((r) => {
+      const seed = r.seeded ? shipped.get(r.id) : undefined;
+      if (!seed || (JSON.stringify(seed.steps) === JSON.stringify(r.steps) && seed.verifyRead === r.verifyRead)) return r;
+      const { verifyRead: _stale, ...rest } = r;
+      return {
+        ...rest,
+        steps: seed.steps,
+        ...(seed.verifyRead ? { verifyRead: seed.verifyRead } : {}),
+        status: 'provisional' as const,
+        stats: { ...r.stats, failStreak: 0 },
+      };
+    });
     const covered = new Set(stored.map((r) => `${r.family}\n${r.intent}`));
-    return [...stored, ...seedRecipes().filter((s) => !covered.has(`${s.family}\n${s.intent}`))];
+    return [...stored, ...[...shipped.values()].filter((s) => !covered.has(`${s.family}\n${s.intent}`))];
   }
 
   get(id: string): Recipe | null {
@@ -366,6 +388,32 @@ export function renderComponents(families: ComponentFamily[], store: ComponentSt
 const MAX_RECIPE_STEPS = 8;
 const MIN_RECIPE_STEPS = 2;
 const RECIPE_TOOLS = new Set(['click', 'dblclick', 'fill', 'type', 'press']);
+/** A recorded select-all, whatever modifier the platform spelled it with. */
+const SELECT_ALL = /^(?:Control|Meta|ControlOrMeta)\+a$/i;
+
+/** A read's recorded result as text: the recorder keeps it JSON-encoded. */
+function readText(result: unknown): string {
+  if (typeof result !== 'string') return '';
+  try {
+    const parsed: unknown = JSON.parse(result);
+    return typeof parsed === 'string' ? parsed : result;
+  } catch {
+    return result;
+  }
+}
+
+/**
+ * Whether the recording itself showed the run that ends at `end` failing: the
+ * first read after it, before any other step that acts, returned text that
+ * does not contain the payload. No such read proves nothing either way.
+ */
+function readBackMissed(steps: readonly RecordedStep[], end: number, payload: string): boolean {
+  for (const s of steps.slice(end)) {
+    if (s.tool === 'read') return !squashText(readText(s.result)).includes(squashText(payload));
+    if (RECIPE_TOOLS.has(s.tool) || s.tool === 'select' || s.tool === 'check' || s.tool === 'goto') return false;
+  }
+  return false;
+}
 
 /**
  * Compile recipes from a recording: a maximal run of consecutive
@@ -373,6 +421,17 @@ const RECIPE_TOOLS = new Set(['click', 'dblclick', 'fill', 'type', 'press']);
  * carrying a payload the instruction names (so it can be parameterised),
  * becomes a provisional set-value recipe. Conservative by construction:
  * bounded length, action primitives only, payload required.
+ *
+ * A set-value recipe must REPLACE the component's content (verifyRecipe
+ * holds it to exactly the payload). fwvk1 n1 typed a task description with
+ * a click and a type into an empty editor — no select-all, because there was
+ * nothing to select — and the recipe learned from it appended on every later
+ * run. So a run that inserts text with no clearing step of its own (a
+ * select-all, or a fill, which replaces) gets a select-all ahead of the
+ * insert. And a run the recording itself showed failing is not learned: the
+ * read taken right after it (before any other action) returned text that
+ * does not contain the payload — fwvk1 n1's read-back was "nch task created
+ * for run fwvk1-n1", two characters dropped.
  */
 export function compileRecipes(
   entries: RecordedEntry[],
@@ -400,6 +459,7 @@ export function compileRecipes(
     if (!payload) continue;
     const family = familyOf(fam);
     if (!family) continue;
+    if (readBackMissed(steps, i, payload)) continue;
     const recipeSteps: RecipeStep[] = run.map((s) => {
       const rel = s.component?.rel || undefined;
       switch (s.tool) {
@@ -415,6 +475,9 @@ export function compileRecipes(
           return { action: 'fill', ...(rel ? { target: rel } : {}), text: String(s.args.value ?? '').split(payload).join('{{value}}') };
       }
     });
+    const insertAt = recipeSteps.findIndex((s) => s.action === 'insertText');
+    const clears = recipeSteps.some((s) => s.action === 'fill' || (s.action === 'press' && SELECT_ALL.test(s.key ?? '')));
+    if (insertAt >= 0 && !clears) recipeSteps.splice(insertAt, 0, { action: 'press', key: 'ControlOrMeta+a' });
     recipeSteps.push({ action: 'settle', ms: 300 });
     const now = opts.now ?? new Date().toISOString();
     out.push({

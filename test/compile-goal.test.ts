@@ -92,6 +92,27 @@ describe('goal derivation', () => {
     expect(skill.goal).toEqual({ requireText: ['Cancelled'] });
   });
 
+  // gitea fwgt1-n1: reports carried prose the page never showed ("2 (no other
+  // labels, …)", "not set (not modified in this instruction)"). As goal
+  // markers they could never all be on a page, so the already-satisfied
+  // guard never fired. A marker is text the recording SAW: a read, a read-
+  // back, or an element name a step's diff added.
+  it('takes no goal marker from report prose the page never showed, and keeps the read-back one', () => {
+    const report = {
+      ...CANCEL_REPORT,
+      evidence: { values: { ...CANCEL_REPORT.evidence.values, cancel_note: 'Cancelled (no longer active in this instruction)', verification: 'reload, then read the status bar' } },
+    };
+    const [skill] = compile(cancelRecording(BEFORE), CANCEL, report, { quotation_ref: 'S00021', current_status: 'Sales Order' });
+    expect(skill.goal).toEqual({ requireText: ['Cancelled'] });
+  });
+
+  it('keeps a marker a step\'s diff added even when no read returned it', () => {
+    const entries = cancelRecording(BEFORE).filter((e) => !(e.k === 'step' && e.tool === 'read' && e.label === 'statusbar_text'));
+    const report = { ...CANCEL_REPORT, evidence: { values: { order_status: 'Cancelled', order_reference: 'S00021' } } };
+    const [skill] = compile(entries, CANCEL, report, { quotation_ref: 'S00021' });
+    expect(skill.goal).toEqual({ requireText: ['Cancelled'] });
+  });
+
   it('gives a read-only procedure no goal', () => {
     const entries: RecordedEntry[] = [
       { k: 'instruction', text: 'Read the status of sales order S00021.', url: `${ORIGIN}/odoo/sales/21`, fingerprint: [1, 0, 0], startText: BEFORE },

@@ -26,7 +26,7 @@ export type ActionOutcome = 'not-dispatched' | 'dispatched' | 'effect-verified' 
 export type DispatchVia = 'actionable' | 'forced' | 'synthetic' | 'rerender-window' | 'native';
 
 /** Why an action failed, for a caller that wants more than its outcome. */
-export type ActionFailureReason = 'disabled' | 'teardown' | 'strict' | 'never-attached' | 'rerender' | 'timeout' | 'deadline';
+export type ActionFailureReason = 'disabled' | 'teardown' | 'strict' | 'never-attached' | 'rerender' | 'timeout' | 'deadline' | 'not-an-input';
 
 /** An error that says what is known about the action that threw it. */
 export interface ActionFailure extends Error {
@@ -401,9 +401,31 @@ export async function fireWhenAttached(loc: Locator, opts: ClickOpts, label = 'c
  * (or number inputs end up appending). We set the value through the native
  * prototype setter and dispatch input/change so React's synthetic event
  * system picks it up. Invisible to the agent: `fill` just works.
+ *
+ * Only a target that CAN be filled is clicked: an input, a textarea, a
+ * contenteditable, or an element inside a label whose control is an input or
+ * textarea (Playwright's own fill retargets exactly those). Anything else is
+ * refused before the focusing click, not after it. fwsi1 n1 filled select2's
+ * rendered <span>: the click opened the dropdown, the fill then threw, and a
+ * step that throws is never recorded — so the dropdown's search box was open
+ * for the next, recorded `type`, and every replay (which never opened it)
+ * typed "Bench Laptop Model" into the asset's name instead.
  */
 export async function reactSafeFill(locator: Locator, value: string): Promise<void> {
   await locator.waitFor({ state: 'visible', timeout: 10_000 });
+  const what = await locator.evaluate((el) => {
+    const typed = (n: Element | null | undefined) => n?.tagName === 'INPUT' || n?.tagName === 'TEXTAREA';
+    if (typed(el) || (el as HTMLElement).isContentEditable) return null;
+    if (typed(el.closest('label')?.control)) return null;
+    return `<${el.tagName.toLowerCase()}>`;
+  });
+  if (what) {
+    throw actionFailure(
+      'not-dispatched',
+      'not-an-input',
+      `fill: the target is a ${what}, not a field that can be filled (an input, a textarea or a contenteditable) — nothing was clicked or typed; click it, or fill the field it opens`,
+    );
+  }
   await locator.scrollIntoViewIfNeeded().catch(() => {});
   await locator.click({ timeout: 5_000 }).catch(() => {}); // focus; some widgets need it
   const handled = await locator.evaluate((el, val) => {

@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import ts from 'typescript';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { SEED_RECIPES, type RecipeProcedure } from '../src/execution/recipes.js';
 import type { Flow } from '../src/skills/flow.js';
 import { ComponentStore, seedRecipeId, seedRecipes, snapshotRecipes, type Recipe } from '../src/skills/components.js';
@@ -234,6 +234,10 @@ function runnableHelpers(source: string, log: string[]): Record<string, (...args
  * description; `closest` says which family roots the target sits inside,
  * `shown` what the verification read sees. Every action is logged in order.
  */
+/** What document.activeElement is while a test runs: the fake target contains it. */
+const FOCUSED = { focused: true };
+vi.stubGlobal('document', { activeElement: FOCUSED });
+
 class World {
   calls: string[] = [];
   closest = new Set<string>();
@@ -271,6 +275,7 @@ class World {
         return ['chosen'];
       },
       pressSequentially: async (text: string, o: unknown) => void world.calls.push(`pressSequentially ${desc} ${text} ${JSON.stringify(o)}`),
+      focus: async () => void world.calls.push(`focus ${desc}`),
       evaluate: async (fn: (el: unknown, arg: unknown) => unknown, arg: unknown) => {
         world.calls.push(`evaluate ${desc}`);
         return fn(world.element(desc), arg);
@@ -283,7 +288,7 @@ class World {
     };
   }
   element(desc: string): unknown {
-    if (desc === 'target') return { closest: (sel: string) => (this.closest.has(sel) ? { root: sel } : null) };
+    if (desc === 'target') return { tagName: 'INPUT', closest: (sel: string) => (this.closest.has(sel) ? { root: sel } : null), contains: (n: unknown) => n === FOCUSED };
     return { ...this.shown, matches: (sel: string) => desc === `root(${sel})`, blur: () => void this.calls.push(`blur ${desc}`) };
   }
   /** A pinned element handle: the recognised root, or an element found inside it. */
@@ -317,7 +322,8 @@ describe('the emitted adapters, run from the whole helper block', () => {
   it('fill: a recognized editor gets its recipe, verified on the widget, and the native setter never runs', async () => {
     const w = new World();
     w.closest.add('.monaco-editor');
-    w.shown = { innerText: 'line one\nnotes for run x77' };
+    // exactly the payload: a set-value recipe verifies only on a replaced value (fwvk1)
+    w.shown = { innerText: 'notes for run x77\n' };
     const log: string[] = [];
     const { fill } = runnableHelpers(source, log);
     await fill(w.loc('target'), 'notes for run x77');
@@ -355,7 +361,7 @@ describe('the emitted adapters, run from the whole helper block', () => {
     const { fill } = runnableHelpers(source, log);
     await fill(w.loc('target'), 'v');
     // recognition, then reactSafeFill's own visible-wait: the only one
-    expect(w.calls).toEqual(['elementHandle target', 'evaluateHandle target', 'dispose jshandle target', 'dispose target', 'waitFor target visible', 'scroll target', 'click target', 'evaluate target', 'fill target v']);
+    expect(w.calls).toEqual(['elementHandle target', 'evaluateHandle target', 'dispose jshandle target', 'dispose target', 'waitFor target visible', 'evaluate target', 'scroll target', 'click target', 'evaluate target', 'fill target v']);
     expect(log).toEqual([]);
   });
 
@@ -402,7 +408,7 @@ describe('the emitted adapters, run from the whole helper block', () => {
     const log: string[] = [];
     await runnableHelpers(narrowed, log).fill(w.loc('target'), 'v');
     // no set-value recipe offered at all: recognition is skipped, straight to reactSafeFill
-    expect(w.calls).toEqual(['waitFor target visible', 'scroll target', 'click target', 'evaluate target', 'fill target v']);
+    expect(w.calls).toEqual(['waitFor target visible', 'evaluate target', 'scroll target', 'click target', 'evaluate target', 'fill target v']);
     expect(log).toEqual([]);
   });
 });

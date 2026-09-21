@@ -75,7 +75,8 @@ describe('standalone execution source', () => {
           id: 's_measured', template: 'confirm on the list',
           params: {},
           preconditions: { urlPattern: 'http://app.test/', fingerprint: Array.from({ length: FINGERPRINT_DIMS }, (_, i) => (i % 9 === 0 ? 0.333 : 0)) },
-          steps: [{ tool: 'click', args: { target: '@e1' }, locators: { target } }],
+          // A disclosure toggle (a hide-then-show pair, compiled to one click): the shared toggle rule.
+          steps: [{ tool: 'click', args: { target: '@e1' }, locators: { target }, toggle: true, expect: { addedContains: ['- link "More details"'] } }],
         }],
       }],
     };

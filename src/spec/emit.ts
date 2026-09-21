@@ -1,6 +1,8 @@
 import { dispatchesFirstMatch, isMutatingAction, isReadAction, spansEveryMatch } from '../execution/lifecycle.js';
 import { DEFAULT_BROWSER_PROFILE, isNavigatingAction, type BrowserProfile } from '../execution/browser.js';
 import { setsSomething } from '../execution/echo.js';
+import { standingFillRole } from '../execution/refill.js';
+import { toggleEffectLines } from '../execution/toggle.js';
 import { observedNothing } from '../execution/observe.js';
 import { segmentGate } from '../execution/gates.js';
 /**
@@ -1334,6 +1336,14 @@ interface Ctx {
    */
   volatile?: string;
   volatileUsed?: boolean;
+  /**
+   * The current segment's ledger of standing fills (the shared
+   * restoreStandingFills), declared only in a segment that fills something —
+   * replay keeps exactly this list per replayed skill. `standingUsed` says a
+   * line named it.
+   */
+  standing?: string;
+  standingUsed?: boolean;
   /** The step-scoped variable holding this goto's navigation target (retargetNavigation). */
   navTarget?: string;
   /** Segments emitted so far in this body, so each ledger names its own local. */
@@ -1539,7 +1549,10 @@ function noteSlots(value: unknown, ctx: Ctx): void {
  */
 function wrapAlreadyInEffect(step: SkillStep, ctx: Ctx, out: string[], actionAt: number): void {
   const opener = openerExpectations(step);
-  if (!opener.length) return;
+  if (!opener.length) {
+    wrapToggle(step, ctx, out, actionAt);
+    return;
+  }
   noteSlots(opener, ctx);
   const where = `${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`;
   const acted = out
@@ -1563,6 +1576,36 @@ function wrapAlreadyInEffect(step: SkillStep, ctx: Ctx, out: string[], actionAt:
     // that everything after it depends on. One line on stdout is what makes
     // that legible in a bench log.
     `  console.log(${q(`[sitelooper skip] ${where}: recorded popup already showing — click skipped`)});`,
+    "  return { status: 'skipped' };",
+    '} else {',
+    ...acted,
+    '}',
+  );
+}
+
+/**
+ * The disclosure toggle's twin of the guard above: replay's runStepBody skips
+ * a click compiled from a hide-then-show pair (SkillStep.toggle, fwsi1
+ * 05-change) when EVERY line it is recorded adding already shows — the shared
+ * toggleAlreadyShown over the shared toggleEffectLines, asked after the
+ * target resolved, as replay asks it.
+ */
+function wrapToggle(step: SkillStep, ctx: Ctx, out: string[], actionAt: number): void {
+  const lines = step.tool === 'click' && step.toggle ? toggleEffectLines(step.expect?.addedContains) : [];
+  if (!lines.length) return;
+  noteSlots(lines, ctx);
+  const where = `${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`;
+  const acted = out
+    .splice(actionAt)
+    .flatMap((l) => l.split('\n'))
+    .map((l) => (l ? '  ' + l : l));
+  out.push(
+    '// A disclosure toggle: the recording hid this panel and showed it again, compiled to',
+    '// the one click that leaves it shown. Clicking it while it shows would hide it, so it',
+    '// is skipped when every line it adds is already on the page (as replay skips it):',
+    ...lines.map((l) => `//   ${commentSafe(l)}`),
+    `if (await toggleAlreadyShown(page, [${lines.map(q).join(', ')}], p${step.expect?.lineDialect === 2 ? ', 2' : ''})) {`,
+    `  console.log(${q(`[sitelooper skip] ${where}: toggled panel already showing — click skipped`)});`,
     "  return { status: 'skipped' };",
     '} else {',
     ...acted,
@@ -2045,6 +2088,13 @@ function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number,
   }
   const positional = ctx.positional;
   ctx.positional = undefined;
+  // A submitting action refills what this segment filled and the page emptied
+  // since, and it and every other setting action retire the ledger — asked
+  // after the settle and the page check, before anything resolves, where
+  // replay's runStepBody asks it (restoreStandingFills).
+  const role = standingFillRole(step.tool);
+  const standing = ctx.standing && (role === 'submit' || role === 'retire') ? ctx.standing : undefined;
+  if (standing) ctx.standingUsed = true;
   const indent = (lines: string[]) => lines.flatMap((line) => line.split('\n').map((part) => part ? `    ${part}` : part));
   return [
     `// @step ${where}`,
@@ -2060,6 +2110,7 @@ function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number,
     '    await settle(page);',
     // Replay asks which page it is on before it resolves anything.
     ...(step.page !== undefined ? [`    pageGate(page, ${step.page}, ${q(where)});`] : []),
+    ...(standing ? [`    for (const warning of await restoreStandingFills(page, ${standing}, ${q(step.tool)}, ${q(where)})) logWarning(warning);`] : []),
     `    ${urlBefore} = page.url();`,
     ...(alerts ? [`    ${alerts} = (await liveAlerts(page${dialectArg(step)})) ?? [];`] : []),
     ...(linesBefore ? [`    ${linesBefore} = await capturePageLines(page${dialectArg(step)});`] : []),
@@ -2437,6 +2488,12 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
   // The action's observation begins just before it dispatches, after the
   // arming below (both before the dispatch, as replay orders them).
   if (!(step.tool === 'drag' && !out[out.length - 1]?.includes('.dragTo('))) observeAction(step, ctx, out);
+  // A fill that ran joins the segment's standing fills, with the url it ran on
+  // (replay notes the same once the step has run).
+  if (step.tool === 'fill' && ctx.standing) {
+    ctx.standingUsed = true;
+    out.push(`noteFill(${ctx.standing}, ${target}, ${src(str('value'))}, page.url());`);
+  }
   // A recorded popup/close is armed after the target resolved and before the
   // action dispatches, as replay arms it: a target=_blank click can raise its
   // popup before the click call returns.
@@ -2891,6 +2948,12 @@ function emitSegment(segment: SpecSegment, ctx: Ctx): string[] {
   // by another skill's observation (see navigationTarget).
   ctx.volatile = `volatile${ctx.segments}`;
   ctx.volatileUsed = false;
+  // One standing-fill ledger per segment, as replay keeps one per replayed
+  // skill — and only where the segment fills anything (loop bodies included),
+  // since an empty ledger answers every step with nothing.
+  const fills = (steps: readonly SkillStep[]): boolean => steps.some((s) => s.tool === 'fill' || (Array.isArray(s.body) && fills(s.body)));
+  ctx.standing = fills(segment.steps) ? `filled${ctx.segments}` : undefined;
+  ctx.standingUsed = false;
   out.push(`// ${segment.id}: ${commentSafe(segment.template)}`);
   out.push(`// recorded on a page matching ${commentSafe(segment.preconditions.urlPattern)}`);
   // The gate goes immediately before the first page-dependent step — replay
@@ -2932,10 +2995,15 @@ function emitSegment(segment: SpecSegment, ctx: Ctx): string[] {
   if (ctx.echoUsed) {
     out.splice(2, 0, `// What this segment types, selects or names: a read that returns only that is an echo (see echoRead).`, `const ${ctx.echoes} = new Set<string>();`);
   }
+  if (ctx.standingUsed) {
+    out.splice(2, 0, `// What this segment filled, which must still stand when the action that submits it goes (see restoreStandingFills).`, `const ${ctx.standing}: StandingFill[] = [];`);
+  }
   ctx.echoes = undefined;
   ctx.echoUsed = false;
   ctx.volatile = undefined;
   ctx.volatileUsed = false;
+  ctx.standing = undefined;
+  ctx.standingUsed = false;
   return out;
 }
 

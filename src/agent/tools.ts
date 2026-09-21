@@ -51,6 +51,8 @@ const STATE_CHANGING = new Set([
 const NAVIGATED = new Set(['goto', 'back']);
 /** Budget for a snapshot folded into an action result: enough to act from, not a whole page. */
 const AUTO_SNAPSHOT_CHARS = 3_500;
+/** The most lines kept of a removal that is a step's only evidence (it added nothing): enough to tell a toggle pair (collapseTogglePairs). */
+const MAX_KEPT_REMOVALS = 60;
 /** How long an action that has visibly done nothing gets to show its first effect. */
 const REACTION_MS = 400;
 /** Tools whose effect may be a navigation the app performs on the answer to a request (shared: src/execution/browser.ts). */
@@ -720,16 +722,20 @@ note: this link points to ${verdict.link.href}, and its navigation had not commi
         // Recorded in CURRENT_DIALECT (the signature's lines), and tagged so:
         // compile carries the tag onto the step's expectation, and every runner
         // renders the live page in the dialect the expectation was written in.
-        // Removals are kept only when a dialog went: that is the one
-        // disappearance a later run acts on (a dismissal whose dialog is not
-        // there is already in effect), and every other removal would be store
-        // weight nothing reads.
+        // Removals are kept when a dialog went — the disappearance a later run
+        // acts on (a dismissal whose dialog is not there is already in effect)
+        // — and when nothing was added, where the removal is the step's only
+        // evidence. Every other removal would be store weight nothing reads.
         const removed = removedLines(before.lines, after.lines) ?? [];
+        const added = addedLines(before.lines, after.lines) ?? [];
         diff = scrubSecretsDeep({
           url: after.url,
           alerts: after.alerts.filter((a) => !before.alerts.includes(a)),
-          added: addedLines(before.lines, after.lines) ?? [],
-          ...(removed.some((l) => DIALOG_LINE.test(l)) ? { removed } : {}),
+          added,
+          // ...and whenever it added nothing: a disclosure that collapsed has
+          // only a disappearance to show (fwsi1 05-change), which compile
+          // needs to tell a toggle pair from two clicks (collapseTogglePairs).
+          ...(removed.some((l) => DIALOG_LINE.test(l)) ? { removed } : !added.length ? { removed: removed.slice(0, MAX_KEPT_REMOVALS) } : {}),
           dialect: CURRENT_DIALECT,
         });
         // The observations themselves, in memory only (never recorded): a replay

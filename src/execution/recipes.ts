@@ -1,5 +1,5 @@
 import type { ElementHandle, Locator, Page } from 'playwright-core';
-import { reactSafeFill, reactSafeSelect, settleDom } from './browser.js';
+import { actionFailure, reactSafeFill, reactSafeSelect, settleDom } from './browser.js';
 
 /**
  * Component recipes — the RUNNER, shared by daemon replay and the standalone
@@ -79,14 +79,24 @@ export function recipeFamilyOf(id: string): RecipeFamily | undefined {
   return RECIPE_FAMILIES.find((f) => f.id === id);
 }
 
-/** Select-all → replace → commit, the shape every keyboard-driven editor takes. */
-export function editorSetValueSteps(clickTarget?: string, blurTarget?: string): RecipeStep[] {
+/**
+ * Select-all → replace → commit, the shape every keyboard-driven editor takes.
+ *
+ * The Escape (`escape`, on by default) dismisses a CODE editor's completion widget before the blur, so
+ * the blur cannot accept a suggestion into the value. A rich-text editor has
+ * no such widget, and the app hosting one often binds Escape to "cancel this
+ * edit": fwvk1's task description (a tiptap/ProseMirror editor) threw the
+ * inserted text away on it, every seed attempt failed its verification, and
+ * two failures demoted the seed — which is how a learned recipe that appends
+ * came to serve the family. So the rich-text seeds do not press it.
+ */
+export function editorSetValueSteps(clickTarget?: string, blurTarget?: string, opts: { escape?: boolean } = {}): RecipeStep[] {
   return [
     { action: 'click', ...(clickTarget ? { target: clickTarget } : {}) },
     { action: 'press', key: 'ControlOrMeta+a' },
     { action: 'insertText', text: '{{value}}' },
     { action: 'settle', ms: 400 },
-    { action: 'press', key: 'Escape' },
+    ...(opts.escape === false ? [] : [{ action: 'press', key: 'Escape' } as RecipeStep]),
     { action: 'blur', ...(blurTarget ? { target: blurTarget } : {}) },
     { action: 'settle', ms: 200 },
   ];
@@ -106,8 +116,8 @@ export const SEED_RECIPES: SeedRecipe[] = [
   { family: 'monaco', intent: 'read-value', steps: [], verifyRead: '.view-lines' },
   { family: 'codemirror6', intent: 'set-value', steps: editorSetValueSteps('.cm-content', '.cm-content'), verifyRead: '.cm-content' },
   { family: 'codemirror6', intent: 'read-value', steps: [], verifyRead: '.cm-content' },
-  { family: 'prosemirror', intent: 'set-value', steps: editorSetValueSteps() },
-  { family: 'contenteditable', intent: 'set-value', steps: editorSetValueSteps() },
+  { family: 'prosemirror', intent: 'set-value', steps: editorSetValueSteps(undefined, undefined, { escape: false }) },
+  { family: 'contenteditable', intent: 'set-value', steps: editorSetValueSteps(undefined, undefined, { escape: false }) },
   {
     family: 'aria-combobox',
     intent: 'select-option',
@@ -291,11 +301,21 @@ export async function readComponentValue(root: ElementHandle, recipe: Pick<Recip
  * The honesty rule made structural: the recipe only succeeded if the
  * component's effective value re-observes the payload. A recipe that cannot
  * prove its effect reports failure and the caller falls back.
+ *
+ * A SET-VALUE recipe must replace, so it verifies only when the component
+ * then holds exactly the payload (whitespace-squashed). Containment let a
+ * recipe that appends pass: fwvk1's learned prosemirror recipe (click, then
+ * insertText — no select-all) ran twice on one description, each run
+ * "verified" because the doubled text contains the value, and every replay
+ * saved "Bench task created for run fwvk1-n2Bench task created for run
+ * fwvk1-n2". A select-option recipe keeps containment: the combobox shows
+ * the chosen option among its own chrome.
  */
-export async function verifyRecipe(root: ElementHandle, recipe: Pick<RecipeProcedure, 'verifyRead'>, payload: string): Promise<boolean> {
+export async function verifyRecipe(root: ElementHandle, recipe: Pick<RecipeProcedure, 'verifyRead'> & { intent?: RecipeIntent }, payload: string, intent: RecipeIntent | undefined = recipe.intent): Promise<boolean> {
   const value = await readComponentValue(root, recipe);
   if (value === null) return false;
   if (!payload) return true;
+  if (intent === 'set-value') return squashText(value) === squashText(payload);
   return squashText(value).includes(squashText(payload));
 }
 
@@ -375,7 +395,7 @@ export async function applyRecipe(page: Page, target: Locator, intent: RecipeInt
   let attempt: RecipeAttempt;
   try {
     await executeRecipe(page, rec.root, recipe, payload);
-    attempt = { family: rec.family.id, intent, recipe, ok: await verifyRecipe(rec.root, recipe, payload) };
+    attempt = { family: rec.family.id, intent, recipe, ok: await verifyRecipe(rec.root, recipe, payload, intent) };
   } catch (err) {
     attempt = { family: rec.family.id, intent, recipe, ok: false, error: err instanceof Error ? err.message : String(err) };
   } finally {
@@ -422,8 +442,41 @@ export async function typeWithRecipe(
 ): Promise<RecipeAttempt | null> {
   const attempt = await applyRecipe(page, target, 'set-value', text, book);
   if (attempt?.ok) return attempt;
+  await focusOrRefuse(target, opts.timeout);
   await target.pressSequentially(text, opts);
   return null;
+}
+
+/**
+ * Keys go to whatever holds focus, so a `type` whose target cannot take focus
+ * types into some OTHER field. fwsi1 03-create step 4 typed into select2's
+ * rendered <span> (not focusable): the recording's keys reached the
+ * dropdown's search box, which an unrecorded failed fill had opened; every
+ * replay's reached the asset name field, which still had focus, and appended
+ * "Bench Laptop Model" to it before the step's own check stopped it. So the
+ * target is focused and must then hold focus itself — or contain what does
+ * (a wrapper whose inner input takes it, across open shadow roots), or be
+ * inside the label of what does — before a key is sent. Otherwise the step
+ * fails with nothing typed.
+ */
+async function focusOrRefuse(target: Locator, timeout?: number): Promise<void> {
+  await target.focus(timeout === undefined ? {} : { timeout });
+  const holds = await target.evaluate((el) => {
+    let active: Element | null = document.activeElement;
+    const label = el.closest('label')?.control ?? null;
+    while (active) {
+      if (active === el || el.contains(active) || active === label) return true;
+      active = active.shadowRoot?.activeElement ?? null;
+    }
+    return false;
+  });
+  if (!holds) {
+    throw actionFailure(
+      'not-dispatched',
+      'not-an-input',
+      'type: target cannot take keyboard focus — click it or type into the field it opens (nothing was typed)',
+    );
+  }
 }
 
 /** Select: the verified attempt, or the options the native select chose. */

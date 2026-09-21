@@ -47,6 +47,8 @@ import { dismissalAlreadyInEffect, effectExpectation, expectedChangesVerdict, li
 export { lineShows, type LineShowsOptions } from '../execution/snapshot.js';
 export { consequentialExpectations, isEchoLine } from '../execution/expect.js';
 import { candidateNames, echoVerdict, noteInteraction, setsSomething } from '../execution/echo.js';
+import { noteFill, restoreStandingFills, type StandingFill } from '../execution/refill.js';
+import { toggleAlreadyShown, toggleEffectLines } from '../execution/toggle.js';
 import { mayNavigateToDestination, navigateToDestination, textHeldElsewhere } from '../execution/recover.js';
 import { CONTEXT_CONTRACT, contractOf, contractVerdict, isVerified, originOf, stepsCarryContext, type Skill, type SkillStep } from './store.js';
 import { armPageEffect, describeFramePath, pageIndexVerdict, rootFor, stepEffect, type Root } from '../execution/context.js';
@@ -437,6 +439,11 @@ export async function replaySkill(
   // echo (confirming the control, not app persistence); see echoedValues and
   // the shared rule, src/execution/echo.ts, which the artifact embeds.
   const interacted = new Set<string>();
+  // The fills this segment made that must still stand when the action that
+  // submits them goes (the shared src/execution/refill.ts, which the artifact
+  // embeds and keeps per segment too): fwvk1 n3 01-open's login form was
+  // rebuilt between its checked fills and the Login click.
+  const standing: StandingFill[] = [];
   // A recorded dialog that did not open (see StepVerdict.absentDialog): while
   // set, a step whose target cannot be found AND which names one of that
   // dialog's own controls is skipped as belonging to it; cleared by the next
@@ -785,6 +792,11 @@ export async function replaySkill(
       res.lines.push(`${head} → FAILED: ${offPage}`);
       return 'stop';
     }
+    // Where the artifact asks it: after the settle and the page check, before
+    // anything resolves — a submitting action refills what this segment filled
+    // and the page emptied since; it and every other setting action retire the
+    // ledger (restoreStandingFills).
+    res.warnings.push(...(await restoreStandingFills(page, standing, step.tool, `step ${tag}`)));
 
     // A read/read_all is an OBSERVATION, not a state change: its failure means
     // a value could not be re-captured, never that the procedure is broken. So
@@ -1032,6 +1044,15 @@ export async function replaySkill(
       res.lines.push(`${head} → skipped (already in effect)`);
       return 'skipped';
     }
+    // A disclosure toggle compiled from a hide-then-show pair (SkillStep.toggle,
+    // fwsi1 05-change): the same guard over ALL of its lines, every one of
+    // which must show (the shared toggleAlreadyShown, which the artifact asks).
+    const toggled = step.tool === 'click' && step.toggle ? toggleEffectLines(step.expect?.addedContains) : [];
+    if (toggled.length && (await toggleAlreadyShown(page, toggled, params, dialectOf(step)))) {
+      res.warnings.push(`step ${tag}: the panel this toggle shows (${clip(toggled[0], 60)}) is already showing — a click would hide it; skipped as already in effect`);
+      res.lines.push(`${head} → skipped (already in effect)`);
+      return 'skipped';
+    }
 
     const warnings: string[] = [];
     /** Where a recorded page effect left the procedure, once the action has run. */
@@ -1258,6 +1279,7 @@ export async function replaySkill(
       res.lines.push(`${head} → ${key} = ${clip(outcome.result, MAX_LINE)}`);
     } else {
       res.lines.push(`${head} → ${clip(outcome.result.split('\n')[0], MAX_LINE)}`);
+      if (step.tool === 'fill' && resolved.target) noteFill(standing, resolved.target, String(args.value ?? ''), page.url());
     }
     return 'ran';
   };

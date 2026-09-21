@@ -762,6 +762,9 @@ async function resetGhost() {
   if (me.users?.[0]?.status !== 'active') {
     throw new Error(`ghost: the session is not usable (device verification on?): ${JSON.stringify(me).slice(0, 200)}`);
   }
+  // The verifier judges the publish date in UTC, so a run that changed the site timezone
+  // must not carry into the next one.
+  await api('PUT', '/settings/', { settings: [{ key: 'timezone', value: 'Etc/UTC' }] });
 
   // Tags: exactly the seed set.
   const SEED_TAGS = ['Bench News', 'Bench Guides', 'Bench Newsletter'];

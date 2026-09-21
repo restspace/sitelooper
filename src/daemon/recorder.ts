@@ -220,8 +220,10 @@ export interface StepDiff {
   alerts: string[];
   added: string[];
   /**
-   * What the action took OFF the page — recorded only when that includes a
-   * dialog, i.e. only for a step that closed one. A dismissal's whole effect
+   * What the action took OFF the page — recorded when that includes a dialog
+   * (a step that closed one), and whenever the action added nothing (its whole
+   * visible effect was to hide something: a disclosure toggle collapsing,
+   * which compile's collapseTogglePairs reads — fwsi1 05-change). A dismissal's whole effect
    * is a disappearance, which `added` cannot express: fwop1's first-sign-in
    * "Close" recorded no added line at all, so nothing marked it as a step that
    * is already done when the dialog is not there (see dismissalAlreadyInEffect).
@@ -266,6 +268,8 @@ export interface RecordedStep {
    * the page it continues on. Compile starts the next segment there.
    */
   afterUrl?: string;
+  /** Set by compile (collapseTogglePairs), never by the recorder: see SkillStep.toggle. */
+  toggle?: true;
   /** The recognized component the target sits inside, for recipe compilation. */
   component?: { family: string; rel: string };
   /**

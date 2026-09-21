@@ -306,6 +306,28 @@ describe('step bodies', () => {
     expect(goto).toContain("await page.goto(nav1.url, { waitUntil: 'load', timeout: GOTO_TIMEOUT_MS });");
   });
 
+  // fwvk1 n3 01-open: the fills a click submits must still stand when it goes
+  // (the shared restoreStandingFills, which replay asks at the same place).
+  it('notes each fill, and asks the standing fills ahead of the actions that submit or retire them', () => {
+    const loc = { target: [{ kind: 'testid' as const, attr: 'data-testid', value: 'f' }] };
+    const fill: SkillStep = { tool: 'fill', args: { target: '@e1', value: '{{v1}}' }, locators: loc };
+    const click: SkillStep = { tool: 'click', args: { target: '@e2' }, locators: loc };
+    const select: SkillStep = { tool: 'select', args: { target: '@e3', option: 'A' }, locators: loc };
+    const read: SkillStep = { tool: 'read', args: { target: '@e4', what: 'text' }, locators: loc, label: 'r' };
+    const body = emit(specOf([fill, read, click, select], { segments: [segment([fill, read, click, select])] }));
+    expect(body).toContain('const filled1: StandingFill[] = [];');
+    expect(body).toContain('noteFill(filled1, hit1.locator, `${p.v1}`, page.url());');
+    expect(body).toContain("for (const warning of await restoreStandingFills(page, filled1, 'click', '01-do s_test1/3')) logWarning(warning);");
+    expect(body).toContain("for (const warning of await restoreStandingFills(page, filled1, 'select', '01-do s_test1/4')) logWarning(warning);");
+    expect(body).not.toContain("restoreStandingFills(page, filled1, 'read'");
+    // asked in prepare, after the settle, before the url and the lines are taken
+    const prepare = body.slice(body.indexOf("// @step 01-do s_test1/3"));
+    expect(prepare.indexOf('restoreStandingFills(')).toBeGreaterThan(prepare.indexOf('await settle(page);'));
+    expect(prepare.indexOf('restoreStandingFills(')).toBeLessThan(prepare.indexOf(' = page.url();'));
+    // a segment that fills nothing carries no ledger at all
+    expect(emit(specOf([click]))).not.toContain('StandingFill');
+  });
+
   it('presses a key on the page when the recording had no target', () => {
     expect(one({ tool: 'press', args: { key: 'Escape' }, locators: {} })).toContain("await page.keyboard.press('Escape').catch(actionFailed);");
   });

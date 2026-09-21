@@ -3,7 +3,7 @@ import { isMutatingAction } from '../execution/lifecycle.js';
 import type { Skill, SkillStep } from './store.js';
 import fs from 'node:fs';
 import path from 'node:path';
-import type { LocatorCandidate, RecordedEntry, RecordedInstruction, RecordedReport, StepDiff } from '../daemon/recorder.js';
+import type { LocatorCandidate, RecordedEntry, RecordedInstruction, RecordedReport, RecordedStep, StepDiff } from '../daemon/recorder.js';
 import { rootDir } from '../shared/paths.js';
 import { urlParts, urlPattern } from './compile.js';
 import { mintedShape, urlShapeOf } from '../execution/url.js';
@@ -749,6 +749,8 @@ interface Group {
   undoneBy?: Group;
   /** Every recorded page diff of this instruction's steps, in order (liveReadsFor reads the last page's). */
   diffs: StepDiff[];
+  /** This instruction's state-changing steps, in order (reappliedByNext compares them). */
+  acts: RecordedStep[];
 }
 
 function groupByInstruction(entries: RecordedEntry[]): Group[] {
@@ -762,7 +764,7 @@ function groupByInstruction(entries: RecordedEntry[]): Group[] {
       // predecessor (truncated recording) stands alone.
       const prev = groups[groups.length - 1];
       if (e.resume && prev?.instruction.text === e.text) continue;
-      groups.push({ instruction: e, mutations: 0, mutationsDiffed: 0, mutationsEffective: 0, diffs: [] });
+      groups.push({ instruction: e, mutations: 0, mutationsDiffed: 0, mutationsEffective: 0, diffs: [], acts: [] });
     } else if (e.k === 'report' && groups.length) groups[groups.length - 1].report = e;
     else if (e.k === 'step' && groups.length) {
       const g = groups[groups.length - 1];
@@ -771,6 +773,7 @@ function groupByInstruction(entries: RecordedEntry[]): Group[] {
       if (!g.firstTool) g.firstTool = e.tool;
       if (isMutatingAction(e.tool)) {
         g.mutations += 1;
+        g.acts.push(e);
         if (e.diff) {
           g.mutationsDiffed += 1;
           const moved = Boolean(e.diff.url) && Boolean(g.instruction.url) && e.diff.url !== g.instruction.url;
@@ -818,7 +821,9 @@ function samePage(a?: string, b?: string): boolean {
  *   3. the next group did not throw that work away and do it again
  *      (redidFromScratch) — the same workaround, reached by a click instead
  *      of a `goto`;
- *   4. the next group did not UNDO it (undoneByNext) — then neither group is
+ *   4. the groups after it did not make its choices over again
+ *      (reappliedByNext) — the same workaround, done in place;
+ *   5. the next group did not UNDO it (undoneByNext) — then neither group is
  *      part of the path: the next is dropped with it.
  * Scanned right-to-left so a chain of continuations adopts as a chain.
  *
@@ -835,6 +840,7 @@ function resolveGroups(groups: Group[]): Group[] {
     if (next.firstTool === 'goto') continue;
     if (!samePage(g.endUrl, next.instruction.url)) continue;
     if (redidFromScratch(g, next)) continue;
+    if (reappliedByNext(groups, kept, i)) continue;
     if (undoneByNext(groups, i)) {
       g.undoneBy = next;
       kept[i + 1] = false;
@@ -884,6 +890,7 @@ function resolveGroups(groups: Group[]): Group[] {
       g.report = { ...rest, values } as Group['report'];
       g.endUrl = next.endUrl ?? g.endUrl;
       g.diffs.push(...next.diffs);
+      g.acts.push(...next.acts);
       g.mutations += next.mutations;
       g.mutationsDiffed += next.mutationsDiffed;
       g.mutationsEffective += next.mutationsEffective;
@@ -976,6 +983,77 @@ function redidFromScratch(g: Group, next: Group): boolean {
     if (sameRoute(page, u) && sameRoute(u, page)) fresh = u;
   }
   return false;
+}
+
+/**
+ * Whether the kept groups after `groups[i]`, carrying on from the page it
+ * ended on, made one of its CHOICES over again: the same in-place pick (a
+ * click whose recorded diff shows nothing added, no alert and no move — a
+ * menu item ticked, an option chosen, never an opener or a commit) or the
+ * same value typed into the same field, on the same element. Then `groups[i]`
+ * was superseded where it stood, as redidFromScratch's successor supersedes
+ * it after leaving the page, and adopting it makes every replay do the work
+ * twice.
+ *
+ * gitea fwgt1-n1: 03-set was to set two labels, an assignee and a milestone
+ * from the issue sidebar's pickers; it ticked 'bug' (twice), never saw a
+ * label applied, and reported failure on the page it started on. 04-set,
+ * 05-set and 06-set then did labels, assignee and milestone one at a time,
+ * and 04-set's first gesture was the same `link "bug"` pick. Adopted, 03-set
+ * replayed model-first and applied all three; 04-set's pin then ticked 'bug'
+ * and 'priority-high' again — these pickers TOGGLE — and 05-set's the
+ * assignee: n2 and n3 ended with no labels and no assignee (5/7).
+ *
+ * Only a group that took the flow nowhere (it ended on the very page state
+ * it started on), so the successors' start is reached without it: fwgr14's
+ * create left /dashboard/new behind, fwod69's form, fwod27's record, and
+ * their continuations saved that page rather than re-picking on it. The scan
+ * stops at the first group that does not carry straight on (another page, a
+ * `goto` first, a dropped group).
+ */
+function reappliedByNext(groups: readonly Group[], kept: readonly boolean[], i: number): boolean {
+  const g = groups[i];
+  if (!g.instruction.url || !sameUrlState(g.instruction.url, g.endUrl)) return false;
+  const choices = g.acts.filter(isChoice);
+  if (!choices.length) return false;
+  for (let j = i + 1; j < groups.length; j++) {
+    const h = groups[j];
+    if (!kept[j] || h.firstTool === 'goto' || !samePage(g.endUrl, h.instruction.url)) break;
+    if (h.acts.some((s) => isChoice(s) && choices.some((c) => sameChoice(c, s)))) return true;
+  }
+  return false;
+}
+
+/** A value-bearing gesture: a value entered, or a click that changed nothing visible around it (a pick, not an opener or a commit). */
+function isChoice(s: RecordedStep): boolean {
+  if (typeof choiceValue(s) === 'string') return true;
+  if (s.tool !== 'click' || !s.diff) return false;
+  return !s.diff.added?.length && !s.diff.alerts?.length;
+}
+
+function choiceValue(s: RecordedStep): string | undefined {
+  if (s.tool !== 'fill' && s.tool !== 'select' && s.tool !== 'type') return undefined;
+  const v = s.args.value ?? s.args.text ?? s.args.values;
+  return v === undefined ? undefined : JSON.stringify(v);
+}
+
+/** The same gesture on the same element: same tool and value, and a shared way of naming the target that is not a position on the screen. */
+function sameChoice(a: RecordedStep, b: RecordedStep): boolean {
+  if (a.tool !== b.tool || choiceValue(a) !== choiceValue(b)) return false;
+  const la = a.locators?.target;
+  const lb = b.locators?.target;
+  if (!la || !lb) return false;
+  if (la.expr && la.expr === lb.expr) return true;
+  const key = (c: LocatorCandidate): string | null => {
+    if (c.kind === 'point') return null;
+    const { nth: _nth, seen: _seen, ...name } = c;
+    return JSON.stringify(name);
+  };
+  const ka = new Set((la.chain ?? []).map(key).filter((k): k is string => k !== null));
+  return (lb.chain ?? []).some((c) => {
+    const k = key(c);
+    return k !== null && ka.has(k);
+  });
 }
 
 /**
@@ -2315,12 +2393,14 @@ export function ignorableRefs(
  *    superseded. Same rule as the compile side's `statedPlainly`
  *    (spec/rethread.ts): a value carrying a run-scoped bound value (the
  *    runid) is never "stated plainly".
+ *  - `self`: the step being re-pinned. No origin naming it (by id, or by the
+ *    ledger index it ran under) is an origin for its own slots.
  */
 export function remapParams(
   skill: Skill,
   inherited: Record<string, string> = {},
   stepIds?: Iterable<string>,
-  opts: { instruction?: string; ledgerSteps?: ReadonlyMap<string, { id: string; outputs: readonly string[] }> } = {},
+  opts: { instruction?: string; ledgerSteps?: ReadonlyMap<string, { id: string; outputs: readonly string[] }>; self?: string } = {},
 ): { params: Record<string, string>; unbound: string[] } {
   // A binding key names where a value comes from: "runid" / "var:runid" (a
   // declared var), "…:landed_page" / "output:…:landed_page" (an output), or
@@ -2336,14 +2416,19 @@ export function remapParams(
   // and an origin naming anything else is no origin at all: the slot falls
   // through to `inherited`, then the literal example, then `unbound`.
   const known = stepIds ? new Set(stepIds) : null;
-  const resolvable = (step: string): boolean => !known || known.has(step);
+  // A step's slot is never fed by that step's own url or output: the value
+  // does not exist until the step has run (espocrm fwec1-n2 re-pinned
+  // 02-create with `v6: {{02-create.url.h2}}`; n3 stopped on it unresolved,
+  // and the compiled script died on it). Such a slot has no origin, so a
+  // record-identifying one leaves the re-pin refused.
+  const resolvable = (step: string): boolean => step !== opts.self && (!known || known.has(step));
   // A ledger index the caller can place: the step that ran as `i3`, if it
   // publishes what the origin names. Url parts are published on demand (the
   // runner captures whatever the flow's references ask for), so a placed
   // index names one outright; an output must be declared.
   const placed = (step: string, output?: string): string | null => {
     const at = opts.ledgerSteps?.get(step);
-    if (!at) return null;
+    if (!at || at.id === opts.self) return null;
     if (output !== undefined && !at.outputs.includes(output)) return null;
     return at.id;
   };

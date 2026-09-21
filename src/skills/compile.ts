@@ -1,4 +1,4 @@
-import { mutatesSteps } from '../execution/lifecycle.js';
+import { isMutatingAction, mutatesSteps } from '../execution/lifecycle.js';
 import type { LocatorCandidate, RecordedEntry, RecordedInstruction, RecordedStep } from '../daemon/recorder.js';
 import type { Report } from '../agent/report.js';
 import { contractFor, newSkillId, originOf, type Skill, type SkillParam, type SkillStep, type StepExpectation } from './store.js';
@@ -7,6 +7,7 @@ import { occursAsToken, replaceAsToken } from './ledger.js';
 import { WILDCARD, escapeRe, identityRe, maskVolatile } from '../shared/text.js';
 import { CREDENTIAL_KEY, fillParamsDeep, queryPairs, safeDecode, urlParts } from '../execution/url.js';
 import { contextsEqual, framesEqual } from '../execution/context.js';
+import { collapseTogglePairs } from './toggles.js';
 
 /**
  * The url rules live in src/execution/url.ts, where a compiled artifact embeds
@@ -55,6 +56,9 @@ const VALUE_ARGS = new Set(['value', 'text', 'option', 'url', 'prompt_text']);
 /** Steps whose recorded diff is a landing, not an effect (see expectationFor). */
 export const NAVIGATION_TOOLS = new Set(['goto', 'back']);
 
+/** Steps that enter a value and never navigate (see expectationFor's urlPattern). */
+const VALUE_ENTRY_TOOLS = new Set(['fill', 'type']);
+
 const MAX_ADDED_LINES = 5;
 const MAX_SLOT_VALUES = 12;
 
@@ -74,6 +78,12 @@ export interface CompileInput {
    * Keys are informational; only the values matter.
    */
   knownValues?: Record<string, string>;
+  /**
+   * The ledger step this very instruction banks under (`i2`): a `url:i2:…`
+   * known value is one THIS recording minted, and where the compiled span
+   * itself minted it, it is derived, never a param (ownUrlMints).
+   */
+  ownStep?: string;
 }
 
 /**
@@ -90,6 +100,105 @@ export interface CompileInput {
  */
 export function compileSkill(input: CompileInput): Skill | null {
   return compileSkills(input)[0] ?? null;
+}
+
+/** A popup container's line: replay's OPENER_LINE (replay imports this module, so it is restated, not imported). */
+const POPUP_LINE = /^-?\s*(dialog|alertdialog|menu|menubar|listbox|tooltip)\b/;
+
+/**
+ * One instruction's entries, with the click that OPENED the popup its first
+ * gesture acts in carried in front of its steps, when an earlier instruction
+ * opened it and left it open.
+ *
+ * gitea fwgt1-n1: 03-set clicked the Labels picker (added `- listbox …`,
+ * `- link "bug"`) and gave up with the menu still open; 04-set, issued on
+ * that page, began by ticking `link "bug"` in it. Compiled from its own
+ * entries, 04-set's procedure started with the tick, so every clean replay
+ * (and the artifact) aimed at an item in a menu nothing had opened. Its
+ * procedure needs the opener; the recording has it, one instruction back.
+ *
+ * Carried only on the recording's own evidence: the first state-changing
+ * step names its target by role and name; that element is on the page this
+ * instruction started on (startText, when recorded); the latest step of the
+ * instruction just before whose diff ADDED it is a click that opened a popup
+ * without leaving this instruction's page; nothing navigated after it; and
+ * that instruction reported failure (a successful one's procedure ends with
+ * the click itself, and one with no report, or a resume, is the same
+ * instruction still in flight). Over every published recording (935
+ * instructions) this fires once, on fwgt1-n1 04-set. Safe when the popup is open after
+ * all: a click whose recorded effect is a popup already showing is skipped
+ * as already in effect by replay (openerLines) and by the artifact alike,
+ * because such pickers toggle. Not for a recording that replayed stored
+ * steps (`via`): a variant's start is variantStart's to decide.
+ */
+export function carryOpener(before: readonly RecordedEntry[], entries: RecordedEntry[]): RecordedEntry[] {
+  const head = entries[0];
+  // A resume carries on its own attempt, which it is compiled with.
+  if (head?.k !== 'instruction' || !head.url || head.resume) return entries;
+  const steps = entries.filter((e): e is RecordedStep => e.k === 'step');
+  if (steps.some((s) => s.via)) return entries;
+  const first = steps.find((s) => isMutatingAction(s.tool));
+  const role = first?.locators?.target?.chain?.find((c): c is Extract<LocatorCandidate, { kind: 'role' }> => c.kind === 'role');
+  if (!role) return entries;
+  const line = `- ${role.role} ${JSON.stringify(role.name)}`;
+  const names = (l: string): boolean => l.trim() === line || l.trim().startsWith(`${line}:`) || l.trim().startsWith(`${line} [`);
+  if (head.startText !== undefined && !head.startText.split('\n').some(names)) return entries;
+  const page = pathOf(head.url);
+  // Only the instruction just before this one: what it left open is what
+  // this one began in (a line an older instruction added may have been on
+  // the page for other reasons ever since).
+  for (let k = before.length - 1; k >= 0; k--) {
+    const e = before[k];
+    if (e.k === 'instruction') return entries;
+    if (e.k !== 'step') continue;
+    if (e.tool === 'goto' || e.tool === 'back' || e.effect) return entries;
+    if (e.diff?.url && pathOf(e.diff.url) !== page) return entries;
+    if (!e.diff?.added?.some(names)) continue;
+    if (e.tool !== 'click' || !e.diff.added.some((l) => POPUP_LINE.test(l))) return entries;
+    // An opening, not an arrival: the page it was clicked on is the page it
+    // left open (a link that navigated here also "added" every line of it).
+    if (pathOf(urlBefore(before, k) ?? '') !== page) return entries;
+    // Left open by an instruction that reported failure — work that is not a
+    // step of the flow, or one replayed model-first. A successful one's own
+    // procedure ends with this click, so its replay leaves the popup open as
+    // the recording did; one with no report is the same instruction still
+    // in flight, compiled with it.
+    const closed = reportAfter(before, k);
+    if (!closed || closed.status === 'success') return entries;
+    const { via: _via, result: _result, ...opener } = e;
+    return [head, opener, ...entries.slice(1)];
+  }
+  return entries;
+}
+
+/** Where the browser was just before entries[k] ran: the latest earlier diffed step's url, or its instruction's. */
+function urlBefore(entries: readonly RecordedEntry[], k: number): string | undefined {
+  for (let j = k - 1; j >= 0; j--) {
+    const e = entries[j];
+    if (e.k === 'step' && e.diff?.url) return e.diff.url;
+    if (e.k === 'instruction') return e.url;
+  }
+  return undefined;
+}
+
+/** The report that closed the instruction entries[k] ran under, if it has one. */
+function reportAfter(entries: readonly RecordedEntry[], k: number): Extract<RecordedEntry, { k: 'report' }> | undefined {
+  for (let j = k + 1; j < entries.length; j++) {
+    const e = entries[j];
+    if (e.k === 'report') return e;
+    if (e.k === 'instruction') return undefined;
+  }
+  return undefined;
+}
+
+/** A url's origin and path, the page it addresses (query and hash are view state). */
+function pathOf(url: string): string {
+  try {
+    const u = new URL(url);
+    return `${u.origin}${decodeURIComponent(u.pathname)}`;
+  } catch {
+    return url;
+  }
 }
 
 /**
@@ -175,18 +284,6 @@ export function compileSkills(input: CompileInput): Skill[] {
 
   const slots = discoverSlots(input.instruction, steps, input.knownValues);
   const sub = (s: string) => substitute(s, slots);
-  /** Slots whose value the ledger banked from a url POSITION under an earlier
-   *  instruction, each carrying the label it was banked at — the only slots
-   *  substituteUrlId may write into a navigation arg's url, and only there. */
-  const urlIdSlots = urlIdSlotPositions(slots, input.knownValues);
-  const urlIdNames = new Set(urlIdSlots.map((s) => s.name));
-  /** Every slot EXCEPT those, for a navigation url: a url-origin slot is
-   *  written by position, never by matching its characters (see below). */
-  const nonUrlIdSlots = new Map([...slots].filter(([n]) => !urlIdNames.has(n)));
-  /** The caller's values for THIS run — a runid, a record it vouched for. */
-  const runValues = Object.values(input.knownValues ?? {})
-    .map((v) => String(v ?? '').trim())
-    .filter((v) => v.length >= 3);
 
   const reportValues = input.report.evidence?.values ?? {};
   // Inspection-only actions the agent used to ORIENT itself — probe the DOM with
@@ -196,7 +293,7 @@ export function compileSkills(input: CompileInput): Skill[] {
   // fatal, which is exactly what sent the sign-in and archive steps to recovery
   // on every replay. Keep the actions, the synthetic read-backs, and any read
   // whose value the run actually reported; drop the rest.
-  const replayable = steps.filter((step) => {
+  const replayable = collapseTogglePairs(steps).filter((step) => {
     if (step.tool === 'screenshot' || step.tool === 'eval') return false;
     if (step.tool === 'read' || step.tool === 'read_all') {
       return step.args.target === '(read-back)' || Boolean(readLabel(step, reportValues));
@@ -209,6 +306,22 @@ export function compileSkills(input: CompileInput): Skill[] {
   // that skill's procedure, not this variant's.
   if (input.variantOf) kept = kept.filter((s) => !s.via || s.via.skill === input.variantOf);
   if (!kept.length) return [];
+  // A url id this span minted is its OUTPUT: derived ({{dN}}, discoverMinted),
+  // never a param — even when the ledger, which banked it before this compile,
+  // handed it in as known. See ownUrlMints.
+  for (const name of ownUrlMints(startUrl, steps, kept, slots, input.knownValues, input.ownStep)) slots.delete(name);
+  /** Slots whose value the ledger banked from a url POSITION under an earlier
+   *  instruction, each carrying the label it was banked at — the only slots
+   *  substituteUrlId may write into a navigation arg's url, and only there. */
+  const urlIdSlots = urlIdSlotPositions(slots, input.knownValues);
+  const urlIdNames = new Set(urlIdSlots.map((s) => s.name));
+  /** Every slot EXCEPT those, for a navigation url: a url-origin slot is
+   *  written by position, never by matching its characters (see below). */
+  const nonUrlIdSlots = new Map([...slots].filter(([n]) => !urlIdNames.has(n)));
+  /** The caller's values for THIS run — a runid, a record it vouched for. */
+  const runValues = Object.values(input.knownValues ?? {})
+    .map((v) => String(v ?? '').trim())
+    .filter((v) => v.length >= 3);
   // …and so it STARTS where its first kept step did, not where the
   // instruction began: the steps dropped ahead of it moved the page. fwop2's
   // 01-signin replayed its chain's sign-in and welcome-dialog segments, the
@@ -364,6 +477,7 @@ export function compileSkills(input: CompileInput): Skill[] {
       }
       if (Object.keys(contexts).length) out.contexts = contexts;
       if (step.page !== undefined) out.page = step.page;
+      if (step.toggle) out.toggle = true;
       if (step.effect) {
         out.effect =
           step.effect.kind === 'popup' && step.afterUrl
@@ -506,6 +620,7 @@ export function compileSkills(input: CompileInput): Skill[] {
     startText: beginsAt.startText,
     startTextComplete: beginsAt.startTextComplete,
     reportValues,
+    seen: seenOnPage(steps),
     sub,
     // Single-segment only: startText is the page the instruction BEGAN on,
     // and only when no page-template seam was crossed is that the same page
@@ -616,6 +731,8 @@ function deriveGoal(opts: {
   startText: string | undefined;
   startTextComplete?: boolean;
   reportValues: Record<string, unknown>;
+  /** What this instruction's steps saw on the page, folded (seenOnPage). */
+  seen: readonly string[];
   sub: (s: string) => string;
   mutating: boolean;
   identities: Set<string>;
@@ -631,6 +748,7 @@ function deriveGoal(opts: {
       if (!/[A-Za-z]/.test(line)) continue; // digits and punctuation are ids and counts, not states
       if (before.includes(line.toLowerCase())) continue;
       if (opts.identities.has(line)) continue;
+      if (!sawOnPage(line, opts.seen)) continue;
       const subbed = opts.sub(line);
       if (subbed.includes('{{')) continue;
       if (seen.has(subbed.toLowerCase())) continue;
@@ -640,6 +758,50 @@ function deriveGoal(opts: {
     }
   }
   return out.length ? { requireText: out } : null;
+}
+
+/**
+ * Every text this instruction's own steps SAW on the page, folded
+ * (whitespace collapsed, lower-cased): each line a read or read-back
+ * returned, each line a step's diff added (element names and the values
+ * they showed) and each alert it raised. A goal marker must stand in one of
+ * these (sawOnPage), never be only the report's own wording.
+ *
+ * gitea fwgt1-n1: 04-set reported `labels_displayed_count: "2 (no other
+ * labels, no \"No labels\" placeholder)"` and 05-set `milestone_shown_on_
+ * issue_sidebar: "not set (not modified in this instruction)"` — prose no
+ * start page carried, so both became goal markers. goalSatisfied requires
+ * every marker and no page ever shows those sentences, so the already-
+ * satisfied guard (fwod34) could never fire for either step.
+ */
+function seenOnPage(steps: readonly RecordedStep[]): string[] {
+  const out = new Set<string>();
+  const add = (v: unknown): void => {
+    if (Array.isArray(v)) return v.forEach(add);
+    if (typeof v !== 'string') return;
+    for (const line of v.split('\n')) {
+      const f = line.replace(/\s+/g, ' ').trim().toLowerCase();
+      if (f) out.add(f);
+    }
+  };
+  for (const s of steps) {
+    if ((s.tool === 'read' || s.tool === 'read_all') && typeof s.result === 'string') {
+      try {
+        add(JSON.parse(s.result));
+      } catch {
+        add(s.result);
+      }
+    }
+    add(s.diff?.added ?? []);
+    add(s.diff?.alerts ?? []);
+  }
+  return [...out];
+}
+
+/** A report line the page showed: it stands, as a whole token run, in something a step saw. */
+function sawOnPage(line: string, seen: readonly string[]): boolean {
+  const f = line.replace(/\s+/g, ' ').trim().toLowerCase();
+  return seen.some((s) => occursAsToken(s, f));
 }
 
 const MIN_IDENTITY_LEN = 4;
@@ -844,6 +1006,68 @@ function discoverMinted(kept: RecordedStep[], startUrl: string, slots: Map<strin
     }
   });
   return out;
+}
+
+/**
+ * The slots holding a url id THIS instruction minted inside the span being
+ * compiled: a `url:<ownStep>:…` known value that first appears in a kept
+ * step's post-action url (not a navigation's landing) — absent from the url
+ * the instruction began on, from every url and argument before it (the
+ * steps ahead of the span included, and the PARTS of every navigation's
+ * url), and never typed. That step made the record; every later occurrence
+ * is downstream of it, which is what discoverMinted's {{dN}} is for.
+ *
+ * espocrm fwec1-n2: the recovery of adopted 02-create saved the opportunity
+ * (`#Opportunity/create` → `#Opportunity/view/6ab1b0e3…`) and then went back
+ * to it by `goto`. The flow runner banks what a recovery minted BEFORE the
+ * re-pin compile (server.ts), and keeps own url ids in the compile's known
+ * values (ledger.ts withoutOwnOutputs, for fwgr41), so the id became slot
+ * `v6` bound to `url:i2:h2` — and `i2` IS 02-create. The re-pin bound it as
+ * `{{02-create.url.h2}}`, a step's param fed by its own output: n3 stopped
+ * with that reference unresolved, and the compiled script died on it. n1's
+ * own compile of the same save had derived it (`view/{{d1}}`).
+ *
+ * Only this instruction's own ids: a url id an EARLIER step banked that this
+ * span lands on by a click (a list row opening the record 02-create made)
+ * is the record the step was TOLD to act on, and stays a slot bound to that
+ * step. And only an id minted inside the span: one minted by steps a variant
+ * leaves to another skill reaches the span as an input (fwgr41's goto), and
+ * stays a slot as before.
+ */
+function ownUrlMints(
+  startUrl: string,
+  steps: readonly RecordedStep[],
+  kept: readonly RecordedStep[],
+  slots: ReadonlyMap<string, string>,
+  known: Record<string, string> = {},
+  ownStep?: string,
+): string[] {
+  if (!ownStep) return [];
+  const own = new Set(Object.entries(known).filter(([k]) => k.startsWith(`url:${ownStep}:`)).map(([, v]) => v));
+  if (!own.size) return [];
+  const seen = new Set<string>(urlParts(startUrl).map((p) => p.value));
+  const saw = (s: RecordedStep): void => {
+    for (const v of Object.values(s.args)) {
+      if (typeof v !== 'string') continue;
+      seen.add(v);
+      if (s.args.url === v) for (const p of urlParts(v)) seen.add(p.value);
+    }
+  };
+  const head = kept[0] ? steps.indexOf(kept[0]) : -1;
+  for (const s of steps.slice(0, Math.max(0, head))) {
+    saw(s);
+    if (s.diff?.url) for (const p of urlParts(s.diff.url)) seen.add(p.value);
+  }
+  const minted = new Set<string>();
+  for (const s of kept) {
+    saw(s);
+    if (!s.diff?.url) continue;
+    for (const p of urlParts(s.diff.url)) {
+      if (!seen.has(p.value) && !NAVIGATION_TOOLS.has(s.tool) && own.has(p.value)) minted.add(p.value);
+      seen.add(p.value);
+    }
+  }
+  return [...slots].filter(([, v]) => minted.has(v)).map(([name]) => name);
 }
 
 /**
@@ -1529,7 +1753,13 @@ function expectationFor(step: RecordedStep, slots: Map<string, string>): StepExp
   // an expectation, exactly as when goto/back were never diffed.
   if (!step.diff || NAVIGATION_TOOLS.has(step.tool)) return undefined;
   const out: StepExpectation = {};
-  if (step.diff.url) out.urlPattern = urlPattern(step.diff.url, slots);
+  // A fill or a type never navigates: a url seen after one is where the page
+  // happened to be while it settled, so only its path is evidence. snipeit
+  // fwsi1 02-find filled "Seed:" then "" (a clear); the list rewrote its
+  // query string on a debounce after its AJAX call, the rewrite landed during
+  // the clear's settle, and every replay stopped on `…/hardware?…search=Seed:…`
+  // against a browser at `…/hardware`.
+  if (step.diff.url) out.urlPattern = urlPattern(step.diff.url, slots, VALUE_ENTRY_TOOLS.has(step.tool) ? { query: false } : {});
   if (step.diff.alerts[0]) out.alertContains = substitute(step.diff.alerts[0], slots).slice(0, 120);
   if (step.diff.added.length) {
     // A status or progress indicator is the page in transit, not where the

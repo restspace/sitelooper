@@ -6,6 +6,7 @@ vi.mock('../src/execution/browser.js', () => ({
   settleDom: vi.fn().mockResolvedValue(undefined),
   reactSafeFill: vi.fn().mockResolvedValue(undefined),
   reactSafeSelect: vi.fn().mockResolvedValue(['opt-1']),
+  actionFailure: (_outcome: string, _reason: string, message: string) => new Error(message),
 }));
 
 import { reactSafeFill, reactSafeSelect, settleDom } from '../src/execution/browser.js';
@@ -63,6 +64,8 @@ class World {
   mirror: { innerText: string } = { innerText: '' };
   /** Run after `insertText` — the recipe's own DOM change. */
   afterInsert: () => void = () => {};
+  /** Whether focusing the target leaves focus inside it (a type's precondition). */
+  focusable = true;
   page: Page;
   keyboard = {
     press: vi.fn(async (key: string) => void this.calls.push(`press ${key}`)),
@@ -87,7 +90,7 @@ class World {
 
   /** The fake DOM element an evaluate runs against. */
   element(desc: string): unknown {
-    if (desc === 'target') return { closest: (sel: string) => (this.closest.has(sel) ? { root: sel } : null) };
+    if (desc === 'target') return { tagName: 'INPUT', closest: (sel: string) => (this.closest.has(sel) ? { root: sel } : null), contains: (n: unknown) => n === FOCUSED && this.focusable };
     const shown = this.mirrored && desc.startsWith('target') && desc.includes('.last') ? this.mirror : this.shown;
     return { ...shown, matches: (sel: string) => desc === `root(${sel})`, blur: () => void this.calls.push(`blur ${desc}`) };
   }
@@ -108,6 +111,7 @@ class World {
       },
       fill: async (text: string, o: { timeout: number }) => void world.calls.push(`fill ${desc} ${text} t=${o.timeout}`),
       pressSequentially: async (text: string, o: unknown) => void world.calls.push(`pressSequentially ${desc} ${text} ${JSON.stringify(o)}`),
+      focus: async () => void world.calls.push(`focus ${desc}`),
       evaluate: async (fn: (el: unknown, arg: unknown) => unknown, arg: unknown, o?: { timeout: number }) => {
         if (!world.present(desc)) throw new Error(`timeout waiting for ${desc}`);
         world.calls.push(`evaluate ${desc}${o ? ` t=${o.timeout}` : ''}`);
@@ -158,6 +162,10 @@ function book(recipes: RecipeProcedure[], onAttempt = vi.fn()): RecipeBook & { o
   return { ...snapshotBook({ version: 1, recipes }), onAttempt };
 }
 
+/** What document.activeElement is while a test runs: the target contains it only when World.focusable. */
+const FOCUSED = { focused: true };
+vi.stubGlobal('document', { activeElement: FOCUSED });
+
 let w: World;
 beforeEach(() => {
   w = new World();
@@ -187,8 +195,8 @@ describe('seed table', () => {
     const cm = SEED_RECIPES.find((s) => s.family === 'codemirror6' && s.intent === 'set-value')!;
     expect(cm.verifyRead).toBe('.cm-content');
     expect(cm.steps).toEqual(editorSetValueSteps('.cm-content', '.cm-content'));
-    expect(SEED_RECIPES.find((s) => s.family === 'prosemirror')!.steps).toEqual(editorSetValueSteps());
-    expect(SEED_RECIPES.find((s) => s.family === 'contenteditable')!.steps).toEqual(editorSetValueSteps());
+    expect(SEED_RECIPES.find((s) => s.family === 'prosemirror')!.steps).toEqual(editorSetValueSteps(undefined, undefined, { escape: false }));
+    expect(SEED_RECIPES.find((s) => s.family === 'contenteditable')!.steps).toEqual(editorSetValueSteps(undefined, undefined, { escape: false }));
     // the combobox types, then clicks the portal option carrying the payload
     expect(comboSeed().steps.map((s) => s.action)).toEqual(['click', 'press', 'insertText', 'settle', 'click', 'settle']);
     expect(comboSeed().steps[4]).toEqual({ action: 'click', target: 'page:[role="option"]', withText: '{{value}}' });
@@ -202,6 +210,18 @@ describe('seed table', () => {
       { action: 'blur', target: '.b' },
       { action: 'settle', ms: 200 },
     ]);
+  });
+
+  // fwvk1: Vikunja's tiptap description discards the edit on Escape, so the
+  // prosemirror seed failed every verification and was demoted. Only a code
+  // editor has a completion widget for Escape to dismiss.
+  it('presses Escape only in the code editors, never in a rich-text one', () => {
+    const presses = (family: string) =>
+      SEED_RECIPES.find((s) => s.family === family && s.intent === 'set-value')!.steps.filter((s) => s.action === 'press').map((s) => s.key);
+    expect(presses('monaco')).toEqual(['ControlOrMeta+a', 'Escape']);
+    expect(presses('codemirror6')).toEqual(['ControlOrMeta+a', 'Escape']);
+    expect(presses('prosemirror')).toEqual(['ControlOrMeta+a']);
+    expect(presses('contenteditable')).toEqual(['ControlOrMeta+a']);
   });
 
   it("is the store's seed list, ids assigned by the store", () => {
@@ -299,6 +319,25 @@ describe('verifyRecipe', () => {
     w.shown = { value: 'typed value' };
     expect(await verifyRecipe(root, {}, 'typed value')).toBe(true);
     expect(w.calls.at(-1)).toBe('evaluate root');
+  });
+  // fwvk1: a learned prosemirror recipe that appends "verified" on a
+  // description holding the value twice, and every replay saved it doubled.
+  it('holds a set-value recipe to exactly the payload, and anything else to containment', async () => {
+    const root = w.handle('root');
+    w.shown = { innerText: 'Bench task created for run n2Bench task created for run n2' };
+    expect(await verifyRecipe(root, { intent: 'set-value' }, 'Bench task created for run n2')).toBe(false);
+    expect(await verifyRecipe(root, {}, 'Bench task created for run n2', 'set-value')).toBe(false);
+    expect(await verifyRecipe(root, { intent: 'select-option' }, 'Bench task created for run n2')).toBe(true);
+    w.shown = { innerText: '  Bench task created for run n2\n' };
+    expect(await verifyRecipe(root, { intent: 'set-value' }, 'Bench task created for run n2')).toBe(true);
+  });
+  it('an appending set-value recipe is an unverified attempt, and the native setter takes over', async () => {
+    w.closest.add('.ProseMirror');
+    w.shown = { innerText: 'old body new body' };
+    const appends: RecipeProcedure = { id: 'r_app', family: 'prosemirror', intent: 'set-value', steps: [{ action: 'click' }, { action: 'insertText', text: '{{value}}' }] };
+    const target = w.loc('target');
+    expect(await fillWithRecipe(w.page, target, 'new body', book([appends]))).toBeNull();
+    expect(reactSafeFill).toHaveBeenCalledWith(target, 'new body');
   });
   it('is false when the read node is missing — an unobservable effect is a failure, not a pass', async () => {
     const root = w.handle('root');
@@ -446,6 +485,14 @@ describe('the ladders', () => {
     expect(w.calls.some((c) => c.startsWith('pressSequentially'))).toBe(false);
     expect(await typeWithRecipe(w.page, target, 'typed', book([]), { timeout: 10_000, delay: 20 })).toBeNull();
     expect(w.calls.at(-1)).toBe('pressSequentially target typed {"timeout":10000,"delay":20}');
+  });
+  // fwsi1 03-create: keys for select2's non-focusable <span> went to the asset name.
+  it('type: a target that does not hold focus once focused is refused before any key is sent', async () => {
+    w.focusable = false;
+    const target = w.loc('target');
+    await expect(typeWithRecipe(w.page, target, 'Bench Laptop Model', book([]))).rejects.toThrow(/cannot take keyboard focus/);
+    expect(w.calls).toContain('focus target');
+    expect(w.calls.some((c) => c.startsWith('pressSequentially'))).toBe(false);
   });
   it('select: the select-option recipe, else reactSafeSelect with the recorded fallback', async () => {
     w.closest.add('[role="combobox"]');

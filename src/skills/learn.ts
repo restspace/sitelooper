@@ -85,6 +85,8 @@ export function learnFromInstruction(
     now?: string;
     /** Run-scoped values (flow vars, url provenance) to slot by policy at compile. */
     vars?: Record<string, string>;
+    /** The ledger step THIS instruction banks under (`i2`), for compile's ownStep. */
+    ownStep?: string;
     /**
      * The caller watched the recovery and saw the stop cost nothing: the
      * instruction succeeded and nothing changed the page after the replay
@@ -150,6 +152,7 @@ export function learnFromInstruction(
       now: input.now,
       variantOf: variant,
       knownValues: input.vars,
+      ...(input.ownStep ? { ownStep: input.ownStep } : {}),
     });
   const skills = compile(variantOf);
   // A variant that starts AFTER steps this recording replayed through other

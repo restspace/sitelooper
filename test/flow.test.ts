@@ -1131,6 +1131,48 @@ describe('work the recording did that the flow does not contain', () => {
     expect(unbankedMutations(entries)).toEqual([]);
   });
 
+  // gitea fwgt1-n1: 03-set (labels + assignee + milestone at once) ticked
+  // 'bug' in the Labels picker, saw nothing applied and failed on the issue
+  // page it started on; 04-set, issued there, ticked the same 'bug' item.
+  // Adopted, 03-set replayed model-first and applied everything, then 04's
+  // pin and 05's toggled the labels and the assignee back off.
+  describe('a failed group whose successors made its choices again (fwgt1)', () => {
+    const issue = `${ORIGIN}/bench/bench-repo/issues/4`;
+    const loc = (chain: unknown[]) => ({ target: { expr: JSON.stringify(chain[0]), verified: true, raw: '@e1', chain } }) as never;
+    const bug = [{ kind: 'role', role: 'link', name: 'bug' }, { kind: 'css', selector: '#_aria_dropdown_menu_32 > div:nth-of-type(2) > a:nth-of-type(2)' }];
+    const opener = [{ kind: 'css', selector: 'div > div:nth-of-type(3) > div:nth-of-type(1)' }];
+    const fixture = (o: { pick?: unknown[]; ended?: string } = {}): RecordedEntry[] =>
+      [
+        { k: 'instruction', text: "Set the labels 'bug' and 'priority-high', the assignee and the milestone.", url: issue },
+        { k: 'step', tool: 'click', args: { target: '@e245' }, locators: loc(opener), diff: { url: issue, alerts: [], added: ['- listbox "Clear labels bug"'] } },
+        { k: 'step', tool: 'click', args: { target: 'role=link[name="bug"]' }, locators: loc(bug), diff: { url: o.ended ?? issue, alerts: [], added: [] } },
+        { k: 'report', status: 'failure', summary: 'No labels', values: { labels_visible_on_issue: 'none' } },
+        { k: 'instruction', text: "Set the issue's labels to exactly 'bug' and 'priority-high'.", url: o.ended ?? issue },
+        { k: 'step', tool: 'click', args: { target: '@e376' }, locators: loc(o.pick ?? bug), diff: { url: o.ended ?? issue, alerts: [], added: [] } },
+        { k: 'report', status: 'success', summary: 'labels set', values: {}, skill: 's_labels' },
+      ] as RecordedEntry[];
+    const build = (entries: RecordedEntry[]) => buildFlow(entries, { name: 'f', origin: ORIGIN, startUrl: issue, vars: {}, session: 's' })!;
+
+    it('does not adopt it, and says its work is not in the flow', () => {
+      const entries = fixture();
+      expect(build(entries).steps.map((s) => [s.skill, Boolean(s.adopted)])).toEqual([['s_labels', false]]);
+      expect(unbankedMutations(entries)).toHaveLength(1);
+    });
+
+    it('still adopts it when the successor picked something else', () => {
+      const other = [{ kind: 'role', role: 'link', name: 'priority-high' }, { kind: 'css', selector: '#_aria_dropdown_menu_32 > div:nth-of-type(2) > a:nth-of-type(5)' }];
+      expect(build(fixture({ pick: other })).steps.map((s) => [s.skill, Boolean(s.adopted)])).toEqual([
+        [undefined, true],
+        ['s_labels', false],
+      ]);
+    });
+
+    it('still adopts it when it took the flow to another page first (a continuation, not a redo)', () => {
+      const flow = build(fixture({ ended: `${ORIGIN}/bench/bench-repo/issues/new` }));
+      expect(flow.steps.map((s) => Boolean(s.adopted))).toEqual([true, false]);
+    });
+  });
+
   it('still drops (and warns about) an observe-only blocked group even when the session continued from its page', () => {
     const entries: RecordedEntry[] = [
       { k: 'instruction', text: 'Read the totals.', url: `${ORIGIN}/orders/7` },
@@ -1729,6 +1771,35 @@ describe('remapParams', () => {
     });
   });
 
+  // espocrm fwec1-n2: the recovery of adopted 02-create (ledger index i2)
+  // saved the record and its compile slotted the new id as v6, bound to
+  // `url:i2:h2`. Re-pinned onto 02-create, that became
+  // `{{02-create.url.h2}}` — the step's param fed by its own output, which no
+  // run has when the step starts: n3 stopped on it unresolved.
+  it('never binds a re-pinned step\'s slot to that step\'s own url or output', async () => {
+    const { remapParams } = await import('../src/skills/flow.js');
+    const ids = ['01-open', '02-create', '03-open'];
+    const ledgerSteps = new Map([['i2', { id: '02-create', outputs: ['name'] }]]);
+    const skill = {
+      params: {
+        v1: { example: 'fwec1-n2', usedIn: [], known: true, binding: 'var:runid' },
+        v6: { example: '6ab1b0e3c2d9e9f95', usedIn: [1], known: true, binding: 'url:i2:h2' },
+      },
+    } as never;
+    // Without `self` the index is placed on 02-create — the fwec1-n2 binding.
+    expect(remapParams(skill, {}, ids, { ledgerSteps }).params.v6).toBe('{{02-create.url.h2}}');
+    // Re-pinning 02-create itself: no origin, so the re-pin is refused.
+    expect(remapParams(skill, {}, ids, { ledgerSteps, self: '02-create' })).toEqual({
+      params: { v1: '{{runid}}', v6: '6ab1b0e3c2d9e9f95' },
+      unbound: ['v6'],
+    });
+    // Spelled with the flow's own id, the same.
+    const named = { params: { v6: { example: '6ab1b0e3c2d9e9f95', usedIn: [1], known: true, binding: 'url:02-create:h2' } } } as never;
+    expect(remapParams(named, {}, ids, { self: '02-create' }).unbound).toEqual(['v6']);
+    // A LATER step pinned onto it binds as before.
+    expect(remapParams(skill, {}, ids, { ledgerSteps, self: '03-open' }).params.v6).toBe('{{02-create.url.h2}}');
+  });
+
   it('does not take a run-scoped literal for one the instruction states plainly', async () => {
     const { remapParams } = await import('../src/skills/flow.js');
     const ids = ['01-open', '04-open'];
@@ -1753,10 +1824,13 @@ describe('remapParams', () => {
  * Record-time no-op detection, read off the recording that motivated it.
  *
  * fwod34's orchestrator wrote 08-open to cancel a sales order it had already
- * told 06-open to cancel. The recording says so: 08-open's seven
+ * told 06-open to cancel. (06-open, blocked with the order still a Sales
+ * Order, is no longer a step: 08-open clicked the same Cancel again, so it
+ * superseded the attempt — fwgt1's reappliedByNext — and 07-open/08-open are
+ * now 06-open/07-open.) The recording says so: 08-open's seven
  * state-changing steps every one produced an empty diff (no signature line
  * added, no alert, no navigation), and the pre-state snapshot already carried
- * "Cancelled" before it ran. Its five genuinely mutating siblings do not look
+ * "Cancelled" before it ran. Its four genuinely mutating siblings do not look
  * like that, and neither do the two read-only checks that quote a mutating
  * verb ("Read-only check, do not change anything") — the whole point of the
  * guards is that 09-change, whose step id is a mutating verb, stays quiet.
@@ -1785,23 +1859,23 @@ describe('record-time no-op steps (fwod34 08-open)', () => {
     const flow = fwod34();
     // The fixture is the real thing: the same nine steps the published flow has.
     expect(flow.steps.map((s) => s.id)).toEqual([
-      '01-signin', '02-create', '03-open', '04-open', '05-open', '06-open', '07-open', '08-open', '09-change',
+      '01-signin', '02-create', '03-open', '04-open', '05-open', '06-open', '07-open', '08-change',
     ]);
     expect(flow.warnings).toHaveLength(1);
     expect(flow.warnings![0]).toBe(
-      "noop-step: 08-open changed nothing: its instruction asks to cancel, the recording's 7 state-changing actions " +
+      "noop-step: 07-open changed nothing: its instruction asks to cancel, the recording's 7 state-changing actions " +
         "left the page unchanged, and the page already showed 'Cancelled' before it ran. The step may be redundant.",
     );
   });
 
   it('stays silent on the steps that genuinely changed the app, and on the read-only checks', () => {
     const warned = (fwod34().warnings ?? []).join('\n');
-    // The five mutating steps: each ran state-changing tools whose diffs
+    // The four mutating steps: each ran state-changing tools whose diffs
     // added lines, raised alerts or navigated.
-    for (const id of ['02-create', '03-open', '04-open', '05-open', '06-open']) expect(warned).not.toContain(id);
-    // 01-signin mutated too; 07-open and 09-change quote a mutating verb
+    for (const id of ['02-create', '03-open', '04-open', '05-open']) expect(warned).not.toContain(id);
+    // 01-signin mutated too; 06-open and 08-change quote a mutating verb
     // ("change", "Cancelled") but declare themselves read-only.
-    for (const id of ['01-signin', '07-open', '09-change']) expect(warned).not.toContain(id);
+    for (const id of ['01-signin', '06-open', '08-change']) expect(warned).not.toContain(id);
   });
 
   /** A minimal session: one instruction, its steps, its report. */

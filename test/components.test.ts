@@ -50,6 +50,30 @@ describe('seeds and store', () => {
   });
 });
 
+describe('stored seeds run the shipped procedure', () => {
+  // fwvk1: the prosemirror seed was demoted for an Escape the shipped seed no
+  // longer presses; a store that kept the old steps and the demotion would
+  // never try the fixed seed.
+  it('a seed stored with steps this build no longer ships starts over provisional, with the shipped steps', () => {
+    const seed = store.list().find((r) => r.family === 'prosemirror' && r.intent === 'set-value')!;
+    const stale: Recipe = {
+      ...seed,
+      steps: [...seed.steps.slice(0, 4), { action: 'press', key: 'Escape' }, ...seed.steps.slice(4)],
+      status: 'demoted',
+      stats: { ...seed.stats, uses: 2, failStreak: 2 },
+    };
+    store.put(stale);
+    const now = store.get(seed.id)!;
+    expect(now.steps).toEqual(seed.steps);
+    expect(now.status).toBe('provisional');
+    expect(now.stats.failStreak).toBe(0);
+    expect(now.stats.uses).toBe(2);
+    // ...while a seed stored with the shipped steps keeps its lifecycle
+    store.put({ ...seed, status: 'demoted', stats: { ...seed.stats, failStreak: 2 } });
+    expect(store.get(seed.id)!.status).toBe('demoted');
+  });
+});
+
 describe('lifecycle', () => {
   it('validates on the second verified success and demotes after two straight failures', () => {
     const seed = store.list().find((r) => r.family === 'monaco' && r.intent === 'set-value')!;
@@ -133,6 +157,27 @@ describe('compileRecipes', () => {
     // but starting at press: click was via, so run = [press, type] (2 steps, has payload)
     const got = compileRecipes(viaEntries, INSTR, { session: 's' });
     expect(got.length).toBeLessThanOrEqual(1);
+  });
+  // fwvk1 n1: a click and a type into an EMPTY tiptap description — no
+  // select-all, since there was nothing to select. Learned as recorded, the
+  // recipe appended on every later run.
+  const DESC = "Create a task with a description that includes 'Bench task created for run n1'.";
+  const typedIntoEditor = (readBack?: string): RecordedEntry[] => [
+    { k: 'instruction', text: DESC, url: 'http://h:1/tasks/4' },
+    { k: 'step', tool: 'click', args: { target: '.ProseMirror' }, locators: {}, component: { family: 'prosemirror', rel: '' } },
+    { k: 'step', tool: 'type', args: { target: '.ProseMirror', text: 'Bench task created for run n1' }, locators: {}, component: { family: 'prosemirror', rel: '' } },
+    ...(readBack === undefined ? [] : [{ k: 'step' as const, tool: 'read', args: { target: '.ProseMirror', what: 'text' }, locators: {}, result: JSON.stringify(readBack) }]),
+    { k: 'step', tool: 'click', args: { target: '@e9' }, locators: {} },
+  ];
+  it('a run that inserts with no clearing step of its own learns a select-all ahead of the insert', () => {
+    for (const entries of [typedIntoEditor(), typedIntoEditor('Bench task created for run n1')]) {
+      const [r] = compileRecipes(entries, DESC, { session: 's', now: '2026-09-21T01:00:00Z' });
+      expect(r.steps).toEqual([{ action: 'click' }, { action: 'press', key: 'ControlOrMeta+a' }, { action: 'insertText', text: '{{value}}' }, { action: 'settle', ms: 300 }]);
+    }
+  });
+  it('a run whose read-back right after it did not show the payload is not learned', () => {
+    // fwvk1 n1's read-back: two characters dropped
+    expect(compileRecipes(typedIntoEditor('nch task created for run n1'), DESC, { session: 's' })).toEqual([]);
   });
   it('learnRecipes stores once and dedupes structural twins', () => {
     const first = learnRecipes(store, componentRun(), INSTR, 's', '2026-08-25T01:00:00Z');
