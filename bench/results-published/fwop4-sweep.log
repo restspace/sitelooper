@@ -1,0 +1,123 @@
+
+[sweep] run 1/3: fwop4-n1 (store: /home/user/sitelooper/bench/results/fwop4-skills)
+[harness] openproject: defaulting APP_URL
+[harness] openproject: defaulting APP_EMAIL
+[harness] openproject: defaulting APP_PASSWORD
+[reset] openproject: no leftover bench work packages
+[harness] openproject responded 302 at http://127.0.0.1:8090/
+stopped: fwop4-n1
+  flow "fwop4" saved: 8 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwop4.json
+  warning: note: 01-open no longer publishes signed_in_user, user_menu_links, my_meetings — no replay reads them from the page and the recording showed no line to read
+  warning: note: 02-open no longer publishes tab, view, total_work_packages_shown, type_status_assignee_priority — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-create no longer publishes work_package_type — no replay reads it from the page and the recording showed no line to read
+  warning: note: 04-set no longer publishes assignee_display_field_title_attr, dropdown_option_label — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-change no longer publishes status_dropdown_options — no replay reads it from the page and the recording showed no line to read
+  warning: note: 06-set no longer publishes date_picker_input_echo_after_save, date_picker_labels — no replay reads them from the page and the recording showed no line to read
+  warning: note: 07-add no longer publishes comment_author_avatar, comment_journal_entry — no replay reads them from the page and the recording showed no line to read
+  warning: note: 08-open no longer publishes 6_finish_date, 8_comment_author, comment_journal_id — no replay reads them from the page and the recording showed no line to read
+  warning: note: 02-open: added a read for project to s_2d5369 (page.getByRole('button', { name: 'Bench Project', exact: true }), page.getByRole('link', { name: 'Bench Project', exact: true }); seen on the next instruction's start page)
+  warning: note: 03-create: added a read for creation_alert to s_5e651e (page.getByRole('alert', { name: 'Successful creation.', exact: true }); seen on the instruction's own page)
+  warning: note: 04-set: added a read for update_alert to s_82f4dd (page.getByRole('alert', { name: 'Successful update.', exact: true }); seen on the instruction's own page)
+  warning: note: 05-change: added a read for status_before to s_59b660 (page.getByRole('menuitem', { name: 'New', exact: true }); seen on the instruction's own page)
+  warning: note: 05-change: added a read for status_after_list_row to s_59b660 (page.getByRole('menuitem', { name: 'In progress', exact: true }); seen on the instruction's own page)
+  warning: note: 05-change: added a read for update_alert to s_59b660 (page.getByRole('alert', { name: 'Successful update.', exact: true }); seen on the instruction's own page)
+  warning: note: 06-set: added a read for update_alert to s_d3f67b (page.getByRole('alert', { name: 'Successful update.', exact: true }); seen on the instruction's own page)
+  warning: note: 07-add: added a read for comment_author_displayed to s_503167 (page.getByRole('link', { name: 'Bench Admin', exact: true }); seen on the next instruction's start page)
+  warning: warning: 221 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[1].instruction: "Bench Project" (output) in "Navigate to the project named 'Bench Project' in {{01-open.heading_openproject}} (e.g. via Projects list or search), open its 'Work packages' tab, and list the "
+  flow.steps[1].instruction: "Work packages" (output) in "Navigate to the project named 'Bench Project' in {{01-open.heading_openproject}} (e.g. via Projects list or search), open its 'Work packages' tab, and list the "
+  flow.steps[2].instruction: "Bench Project" (output) in "In the {{01-open.heading_openproject}} project 'Bench Project', create a new work package of type 'Task' with subject exactly '{{runid}} Bench Work Package' and"
+  flow.steps[2].params.v2: "Bench Project" (output) in "Bench Project"
+  flow.steps[3].instruction: "Bench Assignee" (output) in "On the {{01-open.heading_openproject}} work package page for work package {{03-create.work_package_id_displayed}} (subject '{{runid}} Bench Work Package' in pro"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwop4-n1 stop=completed
+turns=9 wall=428.4s
+commands=8 cmdTime=382.8s cmdBytes=11837 timeouts=0
+orchestrator in=10998 cw=0 cr=29952 out=2736
+inner prompt=2898538 cached=2722816 completion=30309
+spend=$0.0884 maxUsd=3
+learn: A_n=0 replayed=0/8 full=0 repaired=0 compiled=8 variants=0
+-> /home/user/sitelooper/bench/results/fwop4-n1-sitelooper-result.json
+
+fwop4-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — work package id 41 reported
+
+[sweep] run 2/3: fwop4-n2 (replay flow fwop4, no orchestrator)
+[reset] openproject: deleted 1 leftover bench work package(s)
+[sweep] fwop4-n2: 17 drift ticket(s) → fwop4-n2-drift.json
+
+fwop4-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — work package id 42 reported
+
+[sweep] run 3/3: fwop4-n3 (replay flow fwop4, no orchestrator)
+[reset] openproject: deleted 1 leftover bench work package(s)
+[sweep] fwop4-n3: 8 drift ticket(s) → fwop4-n3-drift.json
+
+fwop4-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — work package id 43 reported
+
+Learning sweep fwop4 (K=3)
+┌─────────┬───┬────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid      │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwop4-n1' │ '7/7'    │ 'completed' │ 9     │ 8    │ 0.0884    │ 0    │ '0/8'        │ 428    │
+│ 1       │ 2 │ 'fwop4-n2' │ '7/7'    │ 'success'   │ 0     │ 8    │ 0         │ 1    │ '8/8 (flow)' │ 166    │
+│ 2       │ 3 │ 'fwop4-n3' │ '7/7'    │ 'success'   │ 8     │ 8    │ 0.0056    │ 0.88 │ '8/8 (flow)' │ 152    │
+└─────────┴───┴────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8090
+  s_0d9303  validated    1 steps  3/3 (100%)
+           Navigate to the project named 'Bench Project' in {{v1}} (e.g. via Projects list or search), open its 'Work pac…
+  s_18e9b4  validated    3 steps  3/3 (100%)
+           Open {{v1}} in the browser, sign in with username 'admin' and password '{{v2}}', and confirm you are signed in…
+  s_2d5369  validated    7 steps  3/3 (100%)
+           Navigate to the project named 'Bench Project' in {{v1}} (e.g. via Projects list or search), open its 'Work pac…
+  s_32b91f  validated    2 steps  3/3 (100%)
+           In the {{v1}} project '{{v2}}', create a new work package of type 'Task' with subject exactly '{{v4}}' and a d…
+  s_503167  validated    4 steps  3/3 (100%)
+           On the {{v1}} work package page for work package {{v2}} (subject '{{v4}}' in project {{v6}}), add a comment wh…
+  s_531b2f  validated    7 steps  3/3 (100%)
+           On the {{v1}} work package page for work package {{v2}} (subject '{{v4}}' in project {{v6}}), add a comment wh…
+  s_59b660  validated   10 steps  3/3 (100%)
+           On the {{v1}} work package page for work package {{v2}} (subject '{{v4}}' in project {{v6}}), change the Statu…
+  s_5e651e  validated    5 steps  3/3 (100%)
+           In the {{v1}} project '{{v2}}', create a new work package of type 'Task' with subject exactly '{{v4}}' and a d…
+  s_5eb693  validated    4 steps  3/3 (100%)
+           In the {{v1}} project '{{v2}}', create a new work package of type 'Task' with subject exactly '{{v4}}' and a d…
+  s_73d76e  validated    1 steps  3/3 (100%)
+           On the {{v1}} work package page for work package {{v2}} (subject '{{v4}}' in project {{v6}}), add a comment wh…
+  s_768261  validated    1 steps  3/3 (100%)
+           Open {{v1}} in the browser, sign in with username 'admin' and password '{{v2}}', and confirm you are signed in…
+  s_82f4dd  validated   10 steps  3/3 (100%)
+           On the {{v1}} work package page for work package {{v2}} (subject '{{v4}}' in project {{v6}}), set the Assignee…
+  s_b0dcb8  validated    1 steps  3/3 (100%)
+           On the {{v1}} work package page for work package {{v2}} (subject '{{v4}}' in project {{v6}}), add a comment wh…
+  s_ccbfeb  validated   13 steps  3/3 (100%)
+           Open {{v1}} in the browser, sign in with username 'admin' and password '{{v2}}', and confirm you are signed in…
+  s_d3f67b  validated   14 steps  3/3 (100%)
+           On the {{v1}} work package page for work package {{v2}} (subject '{{v4}}' in project {{v6}}), set the Finish d…
+  s_df51ea  validated    1 steps  3/3 (100%)
+           Navigate to the project named 'Bench Project' in {{v1}} (e.g. via Projects list or search), open its 'Work pac…
+  s_c4a13c  demoted     10 steps  2/2 (100%)
+           Open the {{v1}} work package page for work package {{v2}} in project '{{v4}}' (subject '{{v5}}') with a fresh …
+  s_72b805  demoted     14 steps  1/1 (100%)
+           Open the {{v1}} work package page for work package {{v2}} in project '{{v4}}' (subject '{{v5}}') with a fresh …
+store: /home/user/sitelooper/bench/results/fwop4-skills
+
+summary: /home/user/sitelooper/bench/results/fwop4-sweep.json

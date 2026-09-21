@@ -1,0 +1,17 @@
+[spec-replay] resetting openproject
+[reset] openproject: deleted 1 leftover bench work package(s)
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile bench/results/flows/fwop4.json --out /home/user/sitelooper/bench/results/fwop4-spec-spec-tmp --overwrite-spec
+error 08-open: it is pinned to the demoted skill s_c4a13c — the compiled spec inherits a procedure whose last replays failed at the same step
+  why: s_c4a13c is demoted: 2 of 2 replays succeeded; last used 2026-09-21T18:18:38.078Z.
+  fix: sitelooper rerecord bench/results/flows/fwop4.json 08-open
+
+nothing written: the error(s) above are about the RECORDING, not the app — a compiled spec would fail at a locator and read as drift.
+re-record the step(s) with the fix command above, or pass --allow-demoted to compile the demoted pin anyway.
+  warning: 03-create: step 5 (read creation_alert) has no locator left — it publishes nothing, as replay skips it
+  warning: 04-set: step 10 (read update_alert) has no locator left — it publishes nothing, as replay skips it
+  warning: 05-change: step 8 (read status_before) has no locator left — it publishes nothing, as replay skips it
+  warning: 05-change: step 9 (read status_after_list_row) has no locator left — it publishes nothing, as replay skips it
+  warning: 05-change: step 10 (read update_alert) has no locator left — it publishes nothing, as replay skips it
+  warning: 06-set: step 14 (read update_alert) has no locator left — it publishes nothing, as replay skips it
+sitelooper: refused: a step is pinned to a demoted skill — see the diagnostics above (--allow-demoted compiles it anyway)
+[spec-replay] fwop4-spec: not compilable — result written (exit 2)
