@@ -1,0 +1,157 @@
+{
+  "flow": "fwsi4",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Signed in at http://127.0.0.1:8098/ with username 'admin' and the provided password. The login succeeded: a flash alert \"Success: You have successfully logged in.\" appeared and the browser landed on the dashboard, whose browser/page title is \"\n        Dashboard\n                :: Bench Assets\n    \" (main heading \"Dashboard\"). The page shows a logged-in navigation bar (Assets, Licenses, Accessories, Consumables, Components, Users, Alerts, Bench Admin , Admin Settings) and dashboard tiles plus a \"Recent Activity\" panel, confirming a real authenticated session.",
+      "values": {
+        "main_heading": "Dashboard",
+        "login_alert": " Success: \n×\nYou have successfully logged in.",
+        "logged_in_user": "Bench Admin ",
+        "page_title": "\n        Dashboard\n                :: Bench Assets\n    "
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-find",
+      "status": "success",
+      "summary": "Replayed stored procedure s_141707; observed filter_used=Name contains \"Seed:\" (filter[name]=Seed:, operator=and), match_count=3, asset_1_tag=SEED-0001, asset_1_name=Seed: Reception Laptop, asset_2_tag=SEED-0002, asset_2_name=Seed: Training Laptop, asset_3_tag=SEED-0003, asset_3_name=Seed: Spare Laptop.",
+      "values": {
+        "filter_used": "Name contains \"Seed:\" (filter[name]=Seed:, operator=and)",
+        "match_count": "3",
+        "asset_1_tag": "SEED-0001",
+        "asset_1_name": "Seed: Reception Laptop",
+        "asset_2_tag": "SEED-0002",
+        "asset_2_name": "Seed: Training Laptop",
+        "asset_3_tag": "SEED-0003",
+        "asset_3_name": "Seed: Spare Laptop"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "The asset was already created by the previous attempt (it had submitted the form and followed the success link); on resuming I verified the resulting asset view page at http://127.0.0.1:8098/hardware/4 (title \"\n            View Asset BA-00005\n                    :: Bench Assets\n    \"). Reading the live page confirmed every required value exactly as displayed: Asset Name \"Copy to Clipboard\nfwsi4-n2 Bench Asset Bench Asset\", Asset Tag \"BA-00005\" (auto-assigned), Model \"Bench Laptop Model\" (shown in the page heading \"Copy to Clipboard\nfwsi4-n2 Bench Asset Bench Asset #BA-00005 - Bench Laptop Model\"), Status \"Ready to Deploy\", Default Location \"Bench Office\", and Purchase Date \"Purchased 2026-03-15\". No duplicate asset was created — I performed only read-only verification on the existing record.",
+      "values": {
+        "asset_name": "fwsi4-n2 Bench Asset",
+        "purchase_date": "2026-03-15",
+        "asset_tag": "BA-00005",
+        "asset_tag_displayed": "Copy to Clipboard\nBA-00005",
+        "asset_name_displayed": "Copy to Clipboard\nfwsi4-n2 Bench Asset",
+        "default_location_display": "Copy to Clipboard\nBench Office",
+        "status": "Ready to Deploy",
+        "page_heading_2": "  Assets  fwsi4-n2 Bench Asset #BA-00005 - Bench Laptop Model",
+        "asset_model": "Bench Laptop Model",
+        "purchase_date_displayed": " Purchased 2026-03-15 - 6 months 1 week ago",
+        "page_heading": "  Assets  fwsi4-n2 Bench Asset #BA-00005 - Bench Laptop Model",
+        "page_title": "\n            View Asset BA-00005\n                    :: Bench Assets\n    ",
+        "default_location": "Bench Office",
+        "run_reference": "Copy to Clipboard\nfwsi4-n2 Bench Asset"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "37/37",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_edfea6: step 6: read 'asset_name' returned a value the skill itself set/selected ('fwsi4-n2 Bench Asset') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_edfea6: step 7: read 'purchase_date' returned a value the skill itself set/selected ('2026-03-15') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_edfea6: step 17: read 'asset_name' returned a value the skill itself set/selected ('fwsi4-n2 Bench Asset') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_edfea6: step 18: read 'purchase_date' returned a value the skill itself set/selected ('2026-03-15') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_edfea6: step 19: expected alert containing \"Success: × Asset with tag BA-00004 was created successfully. Click here to view.\""
+      ]
+    },
+    {
+      "id": "04-set",
+      "status": "success",
+      "summary": "Replayed stored procedure s_faa3c1; observed checkout_note=Checked out to Bench Assignee for run fwsi4-n2, history_entry=2026-09-22 08:49 AM | Bench Admin | checkout | fwsi4-n2 Bench Asset #BA-00005 - Bench Laptop Model | Bench Assignee | Checked out to Bench Assignee for run fwsi4-n2 | Current Location: [id: 1] Bench Office, checkout_form_url=http://127.0.0.1:8098/hardware/5/checkout, run_reference=fwsi4-n2, asset_tag=BA-00005, asset_name=fwsi4-n2 Bench Asset, checkout_date=2026-09-22 08:51 AM, assignee= Bench Assignee.",
+      "values": {
+        "checkout_note": "Checked out to Bench Assignee for run fwsi4-n2",
+        "history_entry": "2026-09-22 08:49 AM | Bench Admin | checkout | fwsi4-n2 Bench Asset #BA-00005 - Bench Laptop Model | Bench Assignee | Checked out to Bench Assignee for run fwsi4-n2 | Current Location: [id: 1] Bench Office",
+        "checkout_form_url": "http://127.0.0.1:8098/hardware/5/checkout",
+        "run_reference": "fwsi4-n2",
+        "asset_tag": "BA-00005",
+        "asset_name": "fwsi4-n2 Bench Asset",
+        "checkout_date": "2026-09-22 08:51 AM",
+        "assignee": " Bench Assignee"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_5e7c2a: step 4: read 'checkout_note' returned a value the skill itself set/selected ('Checked out to Bench Assignee for run fwsi4-n2') — confirms the control, not persistence; dropped from the report's confident values"
+      ]
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_942296; observed page_title=View Asset BA-00005 :: Bench Assets, history_checkout_row=2026-09-22 08:49 AM | Bench Admin | checkout | fwsi4-n2 Bench Asset #BA-00005 - Bench Laptop Model | Bench Assignee | Checked out to Bench Assignee for run fwsi4-n2 | Current Location: [id: 1] Bench Office, run_reference=fwsi4-n2, 1_asset_tag=BA-00005, 2_asset_name=fwsi4-n2 Bench Asset, 3_model=Bench Laptop Model, 5_default_location=Bench Office, 6_purchase_date= Purchased 2026-03-15 - 6 months 1 week ago, 8_most_recent_checkout_note=Checked out to Bench Assignee for run fwsi4-n2, page_heading_h1=  Assets  fwsi4-n2 Bench Asset #BA-00005 - Bench Laptop Model.",
+      "values": {
+        "page_title": "View Asset BA-00005 :: Bench Assets",
+        "history_checkout_row": "2026-09-22 08:49 AM | Bench Admin | checkout | fwsi4-n2 Bench Asset #BA-00005 - Bench Laptop Model | Bench Assignee | Checked out to Bench Assignee for run fwsi4-n2 | Current Location: [id: 1] Bench Office",
+        "run_reference": "fwsi4-n2",
+        "1_asset_tag": "BA-00005",
+        "2_asset_name": "fwsi4-n2 Bench Asset",
+        "3_model": "Bench Laptop Model",
+        "5_default_location": "Bench Office",
+        "6_purchase_date": " Purchased 2026-03-15 - 6 months 1 week ago",
+        "8_most_recent_checkout_note": "Checked out to Bench Assignee for run fwsi4-n2",
+        "page_heading_h1": "  Assets  fwsi4-n2 Bench Asset #BA-00005 - Bench Laptop Model"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_942296: step 8: skipped read — no element matched any known locator for target (none recorded)"
+      ]
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwsi4",
+      "step": "05-open",
+      "skill": "s_942296",
+      "atStep": "8",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "(none recorded)",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8098/hardware/:id#history",
+      "pageUrl": "http://127.0.0.1:8098/hardware/5#history"
+    }
+  ],
+  "wallMs": 49407,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
