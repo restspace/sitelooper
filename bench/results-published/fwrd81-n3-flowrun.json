@@ -1,0 +1,182 @@
+{
+  "flow": "fwrd81",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Signed in as bench@example.com and created a new ticket titled exactly 'fwrd81-n3 RD Bench Ticket RD Bench Ticket' (customer \"Bench Customer Ltd\"). After submitting, the list refreshed and showed the new row, and its detail page confirms it exists. The detail page shows reference RD-1017, heading 'fwrd81-n3 RD Bench Ticket RD Bench Ticket', Status \"Draft\", Customer \"Bench Customer Ltd\", Raised 2026-09-22, and an empty Parts table (\"No parts on this ticket yet.\"). Available actions are \"Mark Ready\" and \"Archive ticket\".",
+      "values": {
+        "ticket_reference": "RD-1017",
+        "ticket_status": "Draft",
+        "ticket_details": "Customer: Bench Customer Ltd · Raised 2026-09-22",
+        "detail_url": "http://127.0.0.1:4180/#/tickets/t15",
+        "ticket_title": "fwrd81-n3 RD Bench Ticket",
+        "ticket_customer": "Bench Customer Ltd",
+        "parts": "No parts on this ticket yet.",
+        "ref": "fwrd81-n3 RD Bench Ticket"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_ddcd8a; observed part_name=fwrd81-n3 RD Part A, ref=fwrd81-n3, part_row_text=fwrd81-n3 RD Part A\t$100.00\t25%\t1\tBench Supplies Co\t$125.00\tEdit Delete, ticket_reference=RD-1017, part_cost=$100.00, part_markup=25%, part_quantity=1, computed_price=$125.00, parts_total=Total (price × quantity)\t$125.00\t.",
+      "values": {
+        "part_name": "fwrd81-n3 RD Part A",
+        "ref": "fwrd81-n3",
+        "part_row_text": "fwrd81-n3 RD Part A\t$100.00\t25%\t1\tBench Supplies Co\t$125.00\tEdit Delete",
+        "ticket_reference": "RD-1017",
+        "part_cost": "$100.00",
+        "part_markup": "25%",
+        "part_quantity": "1",
+        "computed_price": "$125.00",
+        "parts_total": "Total (price × quantity)\t$125.00\t"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_ddcd8a: step 9: read 'part_name' returned a value the skill itself set/selected ('fwrd81-n3 RD Part A') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_ddcd8a: step 13: read 'part_supplier' returned a value the skill itself set/selected ('Bench Supplies Co') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "part_supplier"
+      ]
+    },
+    {
+      "id": "03-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_658cea; observed part_b_name=fwrd81-n3 RD Part B, ref=fwrd81-n3, part_b_row=fwrd81-n3 RD Part B\t$200.00\t25%\t1\tBench Supplies Co\t$250.00\tEdit Delete, parts_table_text=NAME\tCOST\tMARKUP\tQTY\tSUPPLIER\tPRICE\tACTIONS\nfwrd81-n3 RD Part A\t$100.00\t25%\t1\tBench Supplies Co\t$125.00\tEdit Delete\nfwrd81-n3 RD Part B\t$200.00\t25%\t1\tBench Supplies Co\t$250.00\tEdit Delete\nTotal (price × quantity)\t$375.00\t, ticket_reference=RD-1017, part_b_cost=$200.00, part_b_quantity=1, computed_price_part_b=$250.00, parts_total_label=Total (price × quantity), parts_total_amount=$375.00, part_a_row=fwrd81-n3 RD Part A\t$100.00\t25%\t1\tBench Supplies Co\t$125.00\tEdit Delete, part_b_markup=25%.",
+      "values": {
+        "part_b_name": "fwrd81-n3 RD Part B",
+        "ref": "fwrd81-n3",
+        "part_b_row": "fwrd81-n3 RD Part B\t$200.00\t25%\t1\tBench Supplies Co\t$250.00\tEdit Delete",
+        "parts_table_text": "NAME\tCOST\tMARKUP\tQTY\tSUPPLIER\tPRICE\tACTIONS\nfwrd81-n3 RD Part A\t$100.00\t25%\t1\tBench Supplies Co\t$125.00\tEdit Delete\nfwrd81-n3 RD Part B\t$200.00\t25%\t1\tBench Supplies Co\t$250.00\tEdit Delete\nTotal (price × quantity)\t$375.00\t",
+        "ticket_reference": "RD-1017",
+        "part_b_cost": "$200.00",
+        "part_b_quantity": "1",
+        "computed_price_part_b": "$250.00",
+        "parts_total_label": "Total (price × quantity)",
+        "parts_total_amount": "$375.00",
+        "part_a_row": "fwrd81-n3 RD Part A\t$100.00\t25%\t1\tBench Supplies Co\t$125.00\tEdit Delete",
+        "part_b_markup": "25%"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "19/19",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_658cea: step 11: read 'part_b_name' returned a value the skill itself set/selected ('fwrd81-n3 RD Part B') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_658cea: step 14: read 'part_b_supplier' returned a value the skill itself set/selected ('Bench Supplies Co') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "part_b_supplier"
+      ]
+    },
+    {
+      "id": "04-edit",
+      "status": "success",
+      "summary": "On ticket RD-1017's detail page I clicked Edit on the 'fwrd81-n3 RD Part A' row, changed Cost from 100 to 150 (markup 25 and quantity 1 left unchanged), and clicked \"Save part\". The edit dialog closed and the parts table refreshed in place: the Part A row now reads \"fwrd81-n3 RD Part A $150.00 25% 1 Bench Supplies Co $187.50\". The app recomputed the part price as $187.50, and the overall parts total is now \"Total (price × quantity) $437.50\" (Part A $187.50 + Part B $250.00). Both values were read from the live DOM after the refresh.",
+      "values": {
+        "ref": "fwrd81-n3",
+        "part_a_row_after_edit": "fwrd81-n3 RD Part A\t$150.00\t25%\t1\tBench Supplies Co\t$187.50\tEdit Delete",
+        "ticket_reference": "RD-1017",
+        "computed_price_part_a": "$187.50",
+        "parts_total_label_after_edit": "Total (price × quantity)",
+        "parts_total_amount_after_edit": "$437.50",
+        "part_b_name_unchanged": "fwrd81-n3 RD Part B",
+        "part_b_cost_unchanged": "$200.00",
+        "part_b_markup_unchanged": "25%",
+        "part_b_quantity_unchanged": "1",
+        "part_b_supplier_unchanged": "Bench Supplies Co",
+        "part_b_price_unchanged": "$250.00",
+        "part_b_actions_unchanged": "Edit Delete"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-set",
+      "status": "success",
+      "summary": "Replayed stored procedure s_e11e69; observed parts=fwrd81-n3 RD Part A $150.00 25% 1 -> $187.50; fwrd81-n3 RD Part B $200.00 25% 1 -> $250.00, precondition_error_message_verbatim=Ticket is not ready\n\nA ticket needs at least one part before it can be marked Ready, ticket_reference=RD-1017, final_status=Ready, parts_total=$437.50, actions_available_when_ready_1=Mark Draft, actions_available_when_ready_2=Mark Closed, actions_available_when_ready_3=Archive ticket, ref_2=fwrd81-n3 RD Bench Ticket.",
+      "values": {
+        "parts": "fwrd81-n3 RD Part A $150.00 25% 1 -> $187.50; fwrd81-n3 RD Part B $200.00 25% 1 -> $250.00",
+        "precondition_error_message_verbatim": "Ticket is not ready\n\nA ticket needs at least one part before it can be marked Ready",
+        "ticket_reference": "RD-1017",
+        "final_status": "Ready",
+        "parts_total": "$437.50",
+        "actions_available_when_ready_1": "Mark Draft",
+        "actions_available_when_ready_2": "Mark Closed",
+        "actions_available_when_ready_3": "Archive ticket",
+        "ref_2": "fwrd81-n3 RD Bench Ticket"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "06-delete",
+      "status": "success",
+      "summary": "Deleting parts was NOT blocked by Ready status — no refusal message appeared and no status change back to Draft was needed. Each delete opened an in-page \"Confirm\" modal reading verbatim: 'Delete the part \"fwrd81-n3 RD Bench Ticket RD Part A\" from this ticket? This cannot be undone.' (and the same for Part B); I confirmed with \"Delete part\" each time and the table refreshed, dropping Part A ($187.50 row) then Part B, leaving 'No parts on this ticket yet.' Archiving required NO confirmation: clicking \"Archive ticket\" archived instantly and the button became \"Unarchive ticket\". Final detail page for RD-1017 'fwrd81-n3 RD Bench Ticket RD Bench Ticket' shows Status \"Ready\" plus an \"Archived\" badge, parts table empty, and actions \"Mark Draft\"/\"Mark Closed\"/\"Unarchive ticket\". The default tickets list (archived excluded, 13 total) does NOT contain RD-1017; ticking \"Show archived\" (15 total) reveals it as 'RD-1017 | fwrd81-n3 RD Bench Ticket RD Bench Ticket Archived | Bench Customer Ltd | Ready | 0 | 2026-09-22'.",
+      "values": {
+        "status_refusal_on_delete": "none — both parts deleted while the ticket was in Ready status; no error and no need to change status back to Draft",
+        "confirmation_text_part_a": "Confirm / Delete the part \"fwrd81-n3 RD Part A\" from this ticket? This cannot be undone. / Cancel / Delete part",
+        "confirmation_text_part_b": "Confirm / Delete the part \"fwrd81-n3 RD Part B\" from this ticket? This cannot be undone. / Cancel / Delete part",
+        "archive_confirmation": "none offered — clicking 'Archive ticket' archived immediately and the button changed to 'Unarchive ticket'",
+        "active_list_total": "Showing 1–10 of 13 (RD-1017 absent from the non-archived list)",
+        "archived_row_RD1015": "RD-1017 / fwrd81-n3 RD Bench Ticket Archived / Bench Customer Ltd / Ready / 0 / 2026-09-22",
+        "delete_confirmation_text": "Confirm\n\nDelete the part \"fwrd81-n3 RD Part A\" from this ticket? This cannot be undone.\n\nCancel\nDelete part",
+        "delete_confirmation_text_2": "Confirm\n\nDelete the part \"fwrd81-n3 RD Part B\" from this ticket? This cannot be undone.\n\nCancel\nDelete part",
+        "status_and_archive_state": "Status\nReady\nArchived",
+        "archived_list_row_rd1015": "RD-1017\tfwrd81-n3 RD Bench Ticket Archived\tBench Customer Ltd\tReady\t0\t2026-09-22",
+        "show_archived_total": "Showing 1–10 of 15",
+        "ticket_reference": "RD-1017",
+        "parts_table_after_deletes": "No parts on this ticket yet.",
+        "final_status_label": "Status",
+        "final_status_value": "Ready",
+        "final_archive_state_value": "Archived",
+        "detail_actions_final_1": "Mark Draft",
+        "detail_actions_final_2": "Mark Closed",
+        "detail_actions_final_3": "Unarchive ticket",
+        "ref": "fwrd81-n3 RD Bench Ticket"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "23/23",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 6,
+  "total": 6,
+  "repinned": 0,
+  "drift": 0,
+  "wallMs": 34062,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

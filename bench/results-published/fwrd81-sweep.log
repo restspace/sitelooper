@@ -1,0 +1,120 @@
+
+[sweep] run 1/3: fwrd81-n1 (store: /home/user/sitelooper/bench/results/fwrd81-skills)
+[harness] repairdesk: defaulting APP_URL
+[harness] repairdesk: defaulting APP_EMAIL
+[harness] repairdesk: defaulting APP_PASSWORD
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+[harness] repairdesk responded 200 at http://127.0.0.1:4180/
+stopped: fwrd81-n1
+  flow "fwrd81" saved: 6 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwrd81.json
+  warning: note: dropped 8 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: note: 05-set no longer publishes probe_ticket_used_for_error, probe_ticket_reference — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 164 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[4].instruction: "Ready" (output) in "On the ticket detail page for '{{runid}} RD Bench Ticket' (reference {{01-open.ticket_reference}}), attempt to set the ticket status to 'Ready' (there is a 'Mar"
+  flow.steps[5].instruction: "Ready" (output) in "On the ticket detail page for '{{runid}} RD Bench Ticket' (reference {{01-open.ticket_reference}}, currently status Ready), delete both parts: '{{runid}} RD Par"
+  flow.steps[5].params.v4: "Ready" (output) in "Ready"
+  s_030186.template: "Ready" (output) in "On the ticket detail page for '{{v1}}' (reference {{v3}}), attempt to set the ticket status to 'Ready' (there is a 'Mark Ready' action). The app enforces precon"
+  s_030186.steps[0].locators.target[1].name: "Ready" (output) in "Mark Ready"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwrd81-n1 stop=completed
+turns=7 wall=171.3s
+commands=6 cmdTime=149.9s cmdBytes=9000 timeouts=0
+orchestrator in=8959 cw=0 cr=19648 out=2368
+inner prompt=1051954 cached=984832 completion=12141
+spend=$0.0487 maxUsd=3
+learn: A_n=0 replayed=0/6 full=0 repaired=0 compiled=6 variants=0
+-> /home/user/sitelooper/bench/results/fwrd81-n1-sitelooper-result.json
+
+=== fwrd81-n1 === (run self-reported: completed)
+  obj 1  PASS  seq 1: ticket t15 (RD-1015) "fwrd81-n1 RD Bench Ticket"
+  obj 2  PASS  seq 2 p18 cost=100 markup=25 price=125.00
+  obj 3  PASS  seq 3 p19 cost=200 markup=25 price=250.00
+  obj 4  PASS  seq 4: cost 100 -> 150, price 125.00 -> 187.50 (want 187.50), after the create at seq 2
+  obj 5  PASS  seq 5: status Draft -> Ready
+  obj 6  PASS  part A deleted, part B deleted, archive entry at seq 8; state: 0 part(s) surviving, ticket t15 archived=true
+  claim 2  ok — run reported 125.00, app recorded 125.00
+  claim 3  ok — run reported 250.00, app recorded 250.00
+  claim 4  ok — run reported 187.50, app recorded 187.50
+  summary: 6/6 objectives PASS, 0 price claim mismatch(es), 0 duplicate ticket(s)
+
+App state: 15 tickets total, 1 left by benchmark runs (0 still active), 17 parts total, 8 mutation log entries.
+
+[sweep] run 2/3: fwrd81-n2 (replay flow fwrd81, no orchestrator)
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+
+=== fwrd81-n2 === (run self-reported: no result file)
+  note: no result file in /home/user/sitelooper/bench/results — objectives are still scored from the log,
+        but the run's claimed prices cannot be cross-checked.
+  obj 1  PASS  seq 1: ticket t15 (RD-1016) "fwrd81-n2 RD Bench Ticket"
+  obj 2  PASS  seq 2 p18 cost=100 markup=25 price=125.00
+  obj 3  PASS  seq 3 p19 cost=200 markup=25 price=250.00
+  obj 4  PASS  seq 4: cost 100 -> 150, price 125.00 -> 187.50 (want 187.50), after the create at seq 2
+  obj 5  PASS  seq 5: status Draft -> Ready
+  obj 6  PASS  part A deleted, part B deleted, archive entry at seq 8; state: 0 part(s) surviving, ticket t15 archived=true
+  claim 2  no claim parsed from the run's final report
+  claim 3  no claim parsed from the run's final report
+  claim 4  no claim parsed from the run's final report
+  summary: 6/6 objectives PASS, 0 price claim mismatch(es), 0 duplicate ticket(s)
+
+App state: 15 tickets total, 1 left by benchmark runs (0 still active), 17 parts total, 8 mutation log entries.
+
+[sweep] run 3/3: fwrd81-n3 (replay flow fwrd81, no orchestrator)
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+
+=== fwrd81-n3 === (run self-reported: no result file)
+  note: no result file in /home/user/sitelooper/bench/results — objectives are still scored from the log,
+        but the run's claimed prices cannot be cross-checked.
+  obj 1  PASS  seq 1: ticket t15 (RD-1017) "fwrd81-n3 RD Bench Ticket"
+  obj 2  PASS  seq 2 p18 cost=100 markup=25 price=125.00
+  obj 3  PASS  seq 3 p19 cost=200 markup=25 price=250.00
+  obj 4  PASS  seq 4: cost 100 -> 150, price 125.00 -> 187.50 (want 187.50), after the create at seq 2
+  obj 5  PASS  seq 5: status Draft -> Ready
+  obj 6  PASS  part A deleted, part B deleted, archive entry at seq 8; state: 0 part(s) surviving, ticket t15 archived=true
+  claim 2  no claim parsed from the run's final report
+  claim 3  no claim parsed from the run's final report
+  claim 4  no claim parsed from the run's final report
+  summary: 6/6 objectives PASS, 0 price claim mismatch(es), 0 duplicate ticket(s)
+
+App state: 15 tickets total, 1 left by benchmark runs (0 still active), 17 parts total, 8 mutation log entries.
+
+Learning sweep fwrd81 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwrd81-n1' │ '6/6'    │ 'completed' │ 7     │ 6    │ 0.0487    │ 0   │ '0/6'        │ 171    │
+│ 1       │ 2 │ 'fwrd81-n2' │ '6/6'    │ 'success'   │ 0     │ 6    │ 0         │ 1   │ '6/6 (flow)' │ 34     │
+│ 2       │ 3 │ 'fwrd81-n3' │ '6/6'    │ 'success'   │ 0     │ 6    │ 0         │ 1   │ '6/6 (flow)' │ 34     │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:4180
+  s_030186  validated    3 steps  3/3 (100%)
+           On the ticket detail page for '{{v1}}' (reference {{v3}}), attempt to set the ticket status to 'Ready' (there …
+  s_047f98  validated    8 steps  3/3 (100%)
+           Open {{v2}} and sign in with email {{v3}} and password {{v4}}. Then create a new ticket titled exactly '{{v1}}…
+  s_13ca77  validated    1 steps  3/3 (100%)
+           On the ticket detail page for '{{v1}}' (reference {{v3}}), attempt to set the ticket status to 'Ready' (there …
+  s_1707b1  validated    9 steps  3/3 (100%)
+           On the ticket detail page for '{{v1}}' (reference {{v3}}, currently status {{v4}}), delete both parts: '{{v5}}…
+  s_196b4b  validated    1 steps  3/3 (100%)
+           On the ticket detail page for '{{v1}}' (reference {{v3}}), attempt to set the ticket status to 'Ready' (there …
+  s_1faf6f  validated    3 steps  3/3 (100%)
+           Open {{v2}} and sign in with email {{v3}} and password {{v4}}. Then create a new ticket titled exactly '{{v1}}…
+  s_5a8cd9  validated    5 steps  3/3 (100%)
+           Open {{v2}} and sign in with email {{v3}} and password {{v4}}. Then create a new ticket titled exactly '{{v1}}…
+  s_658cea  validated   19 steps  3/3 (100%)
+           On the ticket detail page for '{{v1}}' (reference {{v3}}), add a second part named exactly '{{v2}} RD Part B' …
+  s_7f86f8  validated   15 steps  3/3 (100%)
+           On the ticket detail page for '{{v1}}' (reference {{v3}}), edit the part named '{{v4}}' to change its cost fro…
+  s_8e2cbf  validated    2 steps  3/3 (100%)
+           On the ticket detail page for '{{v1}}' (reference {{v3}}), attempt to set the ticket status to 'Ready' (there …
+  s_c905fc  validated    1 steps  3/3 (100%)
+           Open {{v2}} and sign in with email {{v3}} and password {{v4}}. Then create a new ticket titled exactly '{{v1}}…
+  s_ddcd8a  validated   15 steps  3/3 (100%)
+           On the ticket detail page for '{{v1}}' (reference {{v3}}), add a part named exactly '{{v2}} RD Part A' with co…
+  s_e11e69  validated    7 steps  3/3 (100%)
+           On the ticket detail page for '{{v1}}' (reference {{v3}}), attempt to set the ticket status to 'Ready' (there …
+  s_ee4e6e  validated   10 steps  3/3 (100%)
+           On the ticket detail page for '{{v1}}' (reference {{v3}}, currently status {{v4}}), delete both parts: '{{v5}}…
+  s_f4b4ca  validated    4 steps  3/3 (100%)
+           On the ticket detail page for '{{v1}}' (reference {{v3}}, currently status {{v4}}), delete both parts: '{{v5}}…
+store: /home/user/sitelooper/bench/results/fwrd81-skills
+
+summary: /home/user/sitelooper/bench/results/fwrd81-sweep.json

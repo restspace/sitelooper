@@ -1,0 +1,184 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwrd81-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwrd81-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwrd81-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwrd81-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwrd81-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwrd81.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwrd81-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwrd81.spec.ts",
+      "file": "fwrd81.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwrd81",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 34873,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-add s_ddcd8a/9: read 'part_name' returned a value the skill itself set/selected ('fwrd81-spec RD Part A') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-add s_ddcd8a/13: read 'part_supplier' returned a value the skill itself set/selected ('Bench Supplies Co') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-add\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-add s_658cea/11: read 'part_b_name' returned a value the skill itself set/selected ('fwrd81-spec RD Part B') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-add s_658cea/14: read 'part_b_supplier' returned a value the skill itself set/selected ('Bench Supplies Co') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-add\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-edit\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-set\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-delete\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:4180/ and sign in with email bench@example.com and password bench-pass-1234. Then create a new ticket titled exactly '{{runid}} RD Bench Ticket' (fill in any other required fields sensibly). After submitting, wait for the list/detail view to refresh and confirm the ticket '{{runid}} RD Bench Ticket' exists, and report its status and any details shown on its detail page.",
+                      "duration": 7206
+                    },
+                    {
+                      "title": "02-add: On the ticket detail page for '{{runid}} RD Bench Ticket' (reference {{01-open.ticket_reference}}), add a part named exactly '{{runid}} RD Part A' with cost 100 and markup 25. Save it, wait for the parts table to refresh so the new part row is visible, and report the price the app computes for this part (the exact value shown in the parts table for '{{runid}} RD Part A').",
+                      "duration": 4395
+                    },
+                    {
+                      "title": "03-add: On the ticket detail page for '{{runid}} RD Bench Ticket' (reference {{01-open.ticket_reference}}), add a second part named exactly '{{runid}} RD Part B' with cost 200 and markup 25 (quantity 1). Save it, wait for the parts table to refresh so both part rows are visible, and report the price the app computes for '{{runid}} RD Part B' (the exact value shown in its row), plus the overall parts total shown on the page.",
+                      "duration": 5252
+                    },
+                    {
+                      "title": "04-edit: On the ticket detail page for '{{runid}} RD Bench Ticket' (reference {{01-open.ticket_reference}}), edit the part named '{{runid}} RD Part A' to change its cost from 100 to 150 (keep markup 25, quantity 1). Save the change, wait for the parts table to refresh, and report the new price the app computes for '{{runid}} RD Part A' (exact value in its Price cell) plus the updated overall parts total.",
+                      "duration": 2352
+                    },
+                    {
+                      "title": "05-set: On the ticket detail page for '{{runid}} RD Bench Ticket' (reference {{01-open.ticket_reference}}), attempt to set the ticket status to 'Ready' (there is a 'Mark Ready' action). The app enforces preconditions before it will accept that status — if it refuses, read the exact error/validation message it shows and report it verbatim. Then discover what the preconditions are (explore the page, any status workflow hints, other fields/actions on the ticket) and satisfy them, and get the ticket into status 'Ready'. Report exactly what was required to satisfy the preconditions, and the final status shown on the page.",
+                      "duration": 7689
+                    },
+                    {
+                      "title": "06-delete: On the ticket detail page for '{{runid}} RD Bench Ticket' (reference {{01-open.ticket_reference}}, currently status Ready), delete both parts: '{{runid}} RD Part A' and '{{runid}} RD Part B'. Confirm each deletion if a confirmation is required, and wait for the parts table to refresh after each delete so the row is actually gone. If the app refuses to delete a part while the ticket is in Ready status, read the exact error message and satisfy whatever it requires (e.g. change status back to {{01-open.ticket_status}} first), then delete both parts. Then archive the ticket using the '{{05-set.actions_available_when_ready_3}}' action (confirm if asked). Finally verify: the parts table shows no parts, and the ticket no longer appears in the active tickets list (check the tickets list view — it may be under an archived filter or gone entirely). Report exactly what was required, the confirmation text shown, and the final state of the ticket and the list.",
+                      "duration": 6823
+                    }
+                  ],
+                  "startTime": "2026-09-22T09:16:53.646Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e651bb4ac7858e66448d-eb21f454e88de97dee8f",
+          "file": "fwrd81.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-22T09:16:51.340Z",
+    "duration": 37505.746,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
