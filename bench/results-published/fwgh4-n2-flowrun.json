@@ -1,0 +1,197 @@
+{
+  "flow": "fwgh4",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Signed in to Ghost at http://127.0.0.1:8099/ghost/ as admin@bench.local and opened Posts → Published. The published list contains exactly 3 posts, and all 3 have titles starting with 'Seed:': \"Seed: Release notes for September\", \"Seed: House style guide\", and \"Seed: Welcome to the bench\". No other (non-Seed) published posts and no pagination/load-more control were present.",
+      "values": {
+        "seed_post_title_1": "Seed: Release notes for September",
+        "seed_post_title_2": "Seed: House style guide",
+        "seed_post_title_3": "Seed: Welcome to the bench",
+        "published_seed_post_titles_1": "Seed: Release notes for September",
+        "published_seed_post_titles_2": "Seed: House style guide",
+        "published_seed_post_titles_3": "Seed: Welcome to the bench",
+        "all_rows_status": "Published"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_17f69b; observed body_paragraph=This bench post was created by run fwgh4-n2 for testing., drafts_list_row_text=fwgh4-n2 Bench Post + By Bench Admin - a few seconds ago + Draft, post_title_element_text=fwgh4-n2 Bench Post, post_status=Draft, post_title_displayed=fwgh4-n2 Bench Post, drafts_list_row_author_line=By Bench Admin - a few seconds ago, runid=fwgh4-n2 Bench Post.",
+      "values": {
+        "body_paragraph": "This bench post was created by run fwgh4-n2 for testing.",
+        "drafts_list_row_text": "fwgh4-n2 Bench Post + By Bench Admin - a few seconds ago + Draft",
+        "post_title_element_text": "fwgh4-n2 Bench Post",
+        "post_status": "Draft",
+        "post_title_displayed": "fwgh4-n2 Bench Post",
+        "drafts_list_row_author_line": "By Bench Admin - a few seconds ago",
+        "runid": "fwgh4-n2 Bench Post"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "Opened the draft 'fwgh4-n2 Bench Post' in the Ghost editor via Posts (Published/Drafts list) and opened its Settings panel. Added the existing tag 'Bench News' (chosen from the suggestion dropdown — the option 'Bench Newsletter' was left untouched; the tag chips now read exactly 'Bench News'), filled Custom excerpt with 'Excerpt for bench post fwgh4-n2.', and set the publish date to 2026-09-01 via the date picker calendar (clicking the 2026-09-01 day cell), leaving the offered time at 07:20 UTC. Editor header still reads 'Draft - Saved'; the post was not published.",
+      "values": {
+        "post_title": "fwgh4-n2 Bench Post",
+        "tag_shown": "Bench News",
+        "tags_on_post": "Bench News (only; Bench Newsletter not added)",
+        "custom_excerpt": "Excerpt for bench post fwgh4-n2.",
+        "publish_date_shown": "2026-09-01",
+        "publish_time_shown": "07:20 UTC",
+        "slug_shown": "fwgh4-n2-bench-post",
+        "post_url_display": "127.0.0.1:8099/fwgh4-n2-bench-post/",
+        "post_status": "Draft - Saved",
+        "editor_url": "http://127.0.0.1:8099/ghost/#/editor/post",
+        "publish_time": "07:20",
+        "ref": "fwgh4-n2"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_b6b518 stopped at step 1 — after step 1 expected url http://127.0.0.1:8099/ghost/#/editor/post/:id but browser is at http://127.0.0.1:8099/ghost#/editor/post",
+      "replayed": "0/1",
+      "repaired": false,
+      "turns": 12,
+      "unreported": [
+        "post_slug",
+        "post_url",
+        "editor_status",
+        "runid",
+        "site_host"
+      ]
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Today's date in the app is 2026-09-22 (the publish-date picker's calendar showed September 2026 with day 22 highlighted and the UTC clock read 2026-09-22), so the post's 2026-09-01 publish date was backdated, not future. Opening 'This bench post was created by run fwgh4-n2 for testing. Bench Post' and clicking Publish produced the \"Ready, set, publish. Share it with the world.\" sheet offering Publish / Not sent as newsletter / Right now / \"Continue, final review →\"; the final review said \"Your post will be published on your site.\" with a single \"Publish post, right now\" button — no Schedule option appeared. Confirming published the post, and the public URL http://127.0.0.1:8099/This bench post was created by run fwgh4-n2 for testing.-bench-post/ loads the live post showing H1 \"This bench post was created by run fwgh4-n2 for testing. Bench Post\", tag \"BENCH NEWS\", excerpt \"Excerpt for bench post This bench post was created by run fwgh4-n2 for testing..\", date 01 Sep 2026, and the body paragraph containing runid This bench post was created by run fwgh4-n2 for testing..",
+      "values": {
+        "resulting_status": "Published",
+        "published_toast": "Boom! It's out there. That's 4 posts published. — heading 'fwgh4-n2 Bench Post'",
+        "publish_date_shown": "01 Sep 2026 (set value 2026-09-01, time 00:00 UTC)",
+        "public_url": "http://127.0.0.1:8099/fwgh4-n2-bench-post/",
+        "public_page_verified": "yes — page title, H1 'fwgh4-n2 Bench Post', excerpt and body paragraph 'This bench post was created by run fwgh4-n2 for testing.' all render publicly",
+        "tag_on_post": "BENCH NEWS",
+        "custom_excerpt": "Excerpt for bench post fwgh4-n2.",
+        "runid": "This bench post was created by run fwgh4-n2 for testing."
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_d24b2f: step 1: primary locator did not resolve; used fallback #3 elementAt(974, 223) /* button */"
+      ]
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_4fde69; observed status_editor_header=Published (header shows link \"Published View post\" + Unpublish button; Update button disabled = no unsaved changes), status_posts_list=Published — row text: \"fwgh4-n2 Bench Post | By Bench Admin in Bench News - 01 Sep 2026 | Published\", tag_only_bench_news=yes — Tags section contains only \"Bench News\" (\"Bench Admin\" is the Authors field, not a tag), editor_header_status=Posts\nPublished\nUpdate\nUnpublish, slug_settings_panel=fwgh4-n2-bench-post, post_url_under_slug=\n        \n            Update\n        \n\n\n, tags_on_post=Bench News, custom_excerpt=Excerpt for bench post fwgh4-n2., body_text=This bench post was created by run fwgh4-n2 for testing., site_host=127.0.0.1:8099/fwgh4-n2-bench-post/, runid=This bench post was created by run fwgh4-n2 for testing..",
+      "values": {
+        "status_editor_header": "Published (header shows link \"Published View post\" + Unpublish button; Update button disabled = no unsaved changes)",
+        "status_posts_list": "Published — row text: \"fwgh4-n2 Bench Post | By Bench Admin in Bench News - 01 Sep 2026 | Published\"",
+        "tag_only_bench_news": "yes — Tags section contains only \"Bench News\" (\"Bench Admin\" is the Authors field, not a tag)",
+        "editor_header_status": "Posts\nPublished\nUpdate\nUnpublish",
+        "slug_settings_panel": "fwgh4-n2-bench-post",
+        "post_url_under_slug": "\n        \n            Update\n        \n\n\n",
+        "tags_on_post": "Bench News",
+        "custom_excerpt": "Excerpt for bench post fwgh4-n2.",
+        "body_text": "This bench post was created by run fwgh4-n2 for testing.",
+        "site_host": "127.0.0.1:8099/fwgh4-n2-bench-post/",
+        "runid": "This bench post was created by run fwgh4-n2 for testing."
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_4fde69: step 4: primary locator did not resolve; used fallback #2 elementAt(934, 303) /* span */"
+      ]
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "repinned": 0,
+  "drift": 3,
+  "driftTickets": [
+    {
+      "flow": "fwgh4",
+      "step": "03-open",
+      "skill": "s_b6b518",
+      "similarity": 0.998,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_b6b518 stopped at step 1 — after step 1 expected url http://127.0.0.1:8099/ghost/#/editor/post/:id but browser is at http://127.0.0.1:8099/ghost#/editor/post",
+      "reason": "after step 1 expected url http://127.0.0.1:8099/ghost/#/editor/post/:id but browser is at http://127.0.0.1:8099/ghost#/editor/post",
+      "pageUrlPattern": "http://127.0.0.1:8099/ghost/#/editor/post",
+      "pageUrl": "http://127.0.0.1:8099/ghost/#/editor/post"
+    },
+    {
+      "flow": "fwgh4",
+      "step": "04-open",
+      "skill": "s_d24b2f",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.locator('#ember114')",
+      "fallbackUsed": "elementAt(974, 223) /* button */",
+      "fallbackIndex": 2,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8099/:id/",
+      "pageUrl": "http://127.0.0.1:8099/fwgh4-n2-bench-post/"
+    },
+    {
+      "flow": "fwgh4",
+      "step": "05-open",
+      "skill": "s_4fde69",
+      "atStep": "4",
+      "key": "target",
+      "similarity": 0.998,
+      "missedLocator": "page.locator('#ember123 > span:nth-of-type(1)')",
+      "fallbackUsed": "elementAt(934, 303) /* span */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8099/ghost/#/editor/post/:id",
+      "pageUrl": "http://127.0.0.1:8099/ghost/#/editor/post/6ab22c3010ce4f00019f58f5"
+    }
+  ],
+  "wallMs": 88153,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 144726,
+    "completionTokens": 4025,
+    "cachedTokens": 130432
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 144726,
+      "completionTokens": 4025,
+      "cachedTokens": 130432
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

@@ -1,0 +1,525 @@
+{
+  "name": "fwgh4",
+  "origin": "http://127.0.0.1:8099",
+  "startUrl": "http://127.0.0.1:8099/ghost/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-open",
+      "instruction": "Open http://127.0.0.1:8099/ghost/ and sign in with email admin@bench.local and password bench-admin-pass (dismiss/skip any onboarding or setup prompts if they appear). Then go to the Posts area, look at the published posts, and report the exact titles of every post whose title starts with 'Seed:' that is published (not draft, not scheduled), exactly as displayed in the list.",
+      "skill": "s_662f69",
+      "params": {
+        "v1": "http://127.0.0.1:8099/ghost/",
+        "v2": "admin@bench.local",
+        "v3": "bench-admin-pass"
+      },
+      "outputs": [
+        "all_rows_status",
+        "seed_post_title_1",
+        "seed_post_title_2",
+        "seed_post_title_3",
+        "published_seed_post_titles_1",
+        "published_seed_post_titles_2",
+        "published_seed_post_titles_3"
+      ],
+      "recorded": {
+        "published_post_count": "3",
+        "list_filter": "Type filter = Published posts",
+        "all_rows_status": "Published",
+        "seed_post_title_1": "Seed: Release notes for September",
+        "seed_post_title_2": "Seed: House style guide",
+        "seed_post_title_3": "Seed: Welcome to the bench",
+        "published_seed_post_titles_1": "Seed: Release notes for September",
+        "published_seed_post_titles_2": "Seed: House style guide",
+        "published_seed_post_titles_3": "Seed: Welcome to the bench",
+        "url": "http://127.0.0.1:8099/ghost/#/posts?type=published"
+      },
+      "route": "http://127.0.0.1:8099/ghost/#/posts",
+      "outputEvidence": {
+        "published_post_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "list_filter": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "all_rows_status": {
+          "same": 2,
+          "differed": 0
+        },
+        "seed_post_title_1": {
+          "same": 2,
+          "differed": 0
+        },
+        "seed_post_title_2": {
+          "same": 2,
+          "differed": 0
+        },
+        "seed_post_title_3": {
+          "same": 2,
+          "differed": 0
+        },
+        "published_seed_post_titles_1": {
+          "same": 2,
+          "differed": 0
+        },
+        "published_seed_post_titles_2": {
+          "same": 2,
+          "differed": 0
+        },
+        "published_seed_post_titles_3": {
+          "same": 2,
+          "differed": 0
+        },
+        "url": {
+          "same": 2,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "In the Ghost admin at http://127.0.0.1:8099/ghost/, create a new post with the exact title '{{runid}} Bench Post'. In the post body editor, type a single paragraph of text that includes the runid '{{runid}}' (e.g. 'This bench post was created by run {{runid}} for testing.'). Make sure the paragraph appears only once in the body. Save the post as a draft (do NOT publish yet). Report the title shown and confirm the draft was saved.",
+      "skill": "s_72baac",
+      "params": {
+        "v2": "{{runid}} Bench Post",
+        "v1": "{{runid}}",
+        "v3": "This bench post was created by run {{runid}} for testing."
+      },
+      "outputs": [
+        "post_title_displayed",
+        "post_status",
+        "body_paragraph",
+        "drafts_list_row_text",
+        "drafts_list_row_author_line",
+        "post_title_element_text",
+        "runid"
+      ],
+      "recorded": {
+        "post_title_displayed": "fwgh4-n1 Bench Post",
+        "post_id": "6ab22b6510ce4f00019f58e5",
+        "post_status": "Draft",
+        "editor_status_before_nav": "Draft",
+        "body_paragraph": "This bench post was created by run fwgh4-n1 for testing.",
+        "runid_occurrences_in_body": "1",
+        "drafts_list_row_text": "fwgh4-n1 Bench Post + By Bench Admin - a few seconds ago + Draft",
+        "drafts_list_row_author_line": "By Bench Admin - a few seconds ago",
+        "post_title_element_text": "fwgh4-n1 Bench Post",
+        "runid": "fwgh4-n1",
+        "url": "http://127.0.0.1:8099/ghost/#/posts?type=draft"
+      },
+      "route": "http://127.0.0.1:8099/ghost/#/posts",
+      "outputEvidence": {
+        "post_title_displayed": {
+          "same": 0,
+          "differed": 2
+        },
+        "post_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "post_status": {
+          "same": 2,
+          "differed": 0
+        },
+        "editor_status_before_nav": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "body_paragraph": {
+          "same": 0,
+          "differed": 2
+        },
+        "runid_occurrences_in_body": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "drafts_list_row_text": {
+          "same": 0,
+          "differed": 2
+        },
+        "drafts_list_row_author_line": {
+          "same": 2,
+          "differed": 0
+        },
+        "post_title_element_text": {
+          "same": 0,
+          "differed": 2
+        },
+        "runid": {
+          "same": 0,
+          "differed": 2
+        },
+        "url": {
+          "same": 2,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "03-open",
+      "instruction": "In the Ghost admin, open the draft post titled '{{runid}} Bench Post' for editing, and open its settings panel (the gear/settings button). Do three things in the settings panel: (1) In the tags field, type 'Bench News' and choose the EXISTING tag 'Bench News' from the suggestion dropdown (do not create a new tag; note a similar tag 'Bench Newsletter' also exists — pick 'Bench News' exactly). (2) In the 'Custom excerpt' field, type text that includes the runid '{{runid}}', e.g. 'Excerpt for bench post {{runid}}.'. (3) Set the publish date to 2026-09-01 (date September 1, 2026; keep the time as whatever it offers, e.g. 12:00). Then report: the tag shown on the post, the custom excerpt text shown, the publish date shown, and the URL slug exactly as displayed in the settings panel. Do NOT publish the post yet.",
+      "skill": "s_1ebebb",
+      "params": {
+        "v1": "{{02-create.post_title_element_text}}",
+        "v2": "{{runid}}",
+        "v3": "Excerpt for bench post {{runid}}."
+      },
+      "outputs": [
+        "post_title",
+        "tag_shown",
+        "custom_excerpt",
+        "publish_date_shown",
+        "post_slug",
+        "post_url",
+        "editor_status",
+        "runid",
+        "site_host"
+      ],
+      "recorded": {
+        "post_title": "fwgh4-n1 Bench Post",
+        "tag_shown": "Bench News",
+        "custom_excerpt": "Excerpt for bench post fwgh4-n1.",
+        "publish_date_shown": "2026-09-01",
+        "publish_time_shown": "00:00 UTC",
+        "post_slug": "fwgh4-n1-bench-post",
+        "post_url": "127.0.0.1:8099/fwgh4-n1-bench-post/",
+        "editor_status": "Draft - Saved",
+        "post_id": "6ab22b6510ce4f00019f58e5",
+        "runid": "fwgh4-n1",
+        "site_host": "127.0.0.1",
+        "url": "http://127.0.0.1:8099/ghost/#/editor/post/6ab22b6510ce4f00019f58e5"
+      },
+      "route": "http://127.0.0.1:8099/ghost/#/editor/post/:id",
+      "outputEvidence": {
+        "post_title": {
+          "same": 0,
+          "differed": 2
+        },
+        "tag_shown": {
+          "same": 2,
+          "differed": 0
+        },
+        "custom_excerpt": {
+          "same": 0,
+          "differed": 2
+        },
+        "publish_date_shown": {
+          "same": 2,
+          "differed": 0
+        },
+        "publish_time_shown": {
+          "same": 0,
+          "differed": 1,
+          "absent": 1
+        },
+        "post_slug": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "post_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "editor_status": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "post_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "runid": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "site_host": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "url": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "04-open",
+      "instruction": "In the Ghost admin, open the draft post titled '{{runid}} Bench Post' in the editor. First report what today's current date appears to be in the app (e.g. from the publish date picker or any timestamp). Then complete the publish flow: click the Publish button and confirm in the 'Ready to publish?' confirmation dialog. IMPORTANT: if the confirmation offers 'Schedule post' instead of 'Publish' (because the publish date 2026-09-01 is in the future), do NOT schedule it — instead report exactly what the dialog said and what options it offered, and leave the post unpublished. If it publishes successfully, report the resulting status of the post ({{01-open.all_rows_status}} / Scheduled / Draft), the publish date shown, and whether the post is publicly visible at its URL http://127.0.0.1:8099/{{runid}}-bench-post/ (check by opening that URL in a new tab and reporting whether the post content loads publicly).",
+      "skill": "s_d24b2f",
+      "params": {
+        "v1": "{{runid}} Bench Post",
+        "v3": "2026-09-01",
+        "v4": "{{01-open.all_rows_status}}",
+        "v5": "Draft",
+        "v9": "http://127.0.0.1:8099/{{runid}}-bench-post/",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "app_current_date",
+        "dialog_final_step",
+        "resulting_status",
+        "published_toast",
+        "publish_date_shown",
+        "tag_on_post",
+        "custom_excerpt",
+        "public_url",
+        "public_page_verified",
+        "runid"
+      ],
+      "recorded": {
+        "app_current_date": "2026-09-22 (today highlighted in the publish-date picker: September 2026, day 22; system time UTC 2026-09-22T07:18Z)",
+        "dialog_first_step": "Heading 'Publish' — 'Ready, set, publish. Share it with the world.' with options: Publish / Not sent as newsletter / Right now / Continue, final review →",
+        "dialog_final_step": "'Ready, set, publish. Share it with the world. Your post will be published on your site.' — buttons: 'Publish post, right now', 'Back to settings' (no Schedule option offered)",
+        "resulting_status": "Published",
+        "published_toast": "Boom! It's out there. That's 4 posts published. — heading 'fwgh4-n1 Bench Post'",
+        "publish_date_shown": "01 Sep 2026 (set value 2026-09-01, time 00:00 UTC)",
+        "tag_on_post": "Bench News",
+        "custom_excerpt": "Excerpt for bench post fwgh4-n1.",
+        "public_url": "http://127.0.0.1:8099/fwgh4-n1-bench-post/",
+        "public_page_verified": "yes — page title, H1 'fwgh4-n1 Bench Post', excerpt and body paragraph 'This bench post was created by run fwgh4-n1 for testing.' all render publicly",
+        "runid": "fwgh4-n1",
+        "url": "http://127.0.0.1:8099/fwgh4-n1-bench-post/"
+      },
+      "route": "http://127.0.0.1:8099/:id/",
+      "outputEvidence": {
+        "app_current_date": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "dialog_first_step": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "dialog_final_step": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "resulting_status": {
+          "same": 2,
+          "differed": 0
+        },
+        "published_toast": {
+          "same": 0,
+          "differed": 2
+        },
+        "publish_date_shown": {
+          "same": 2,
+          "differed": 0
+        },
+        "tag_on_post": {
+          "same": 0,
+          "differed": 2
+        },
+        "custom_excerpt": {
+          "same": 0,
+          "differed": 2
+        },
+        "public_url": {
+          "same": 0,
+          "differed": 2
+        },
+        "public_page_verified": {
+          "same": 0,
+          "differed": 2
+        },
+        "runid": {
+          "same": 0,
+          "differed": 2
+        },
+        "url": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "05-open",
+      "instruction": "In the Ghost admin at http://127.0.0.1:8099/ghost/, open the post titled '{{runid}} Bench Post' in the editor and open its settings panel. Verify and report exactly: (1) the post's status ({{01-open.all_rows_status}} / Draft / Scheduled) as shown in the editor header and in the Posts list, (2) the publish date shown in the settings panel, (3) the URL slug shown in the settings panel exactly as displayed, (4) the tag(s) shown on the post — list every tag and confirm whether 'Bench News' is the only one, (5) the custom excerpt text shown, (6) that the body contains the paragraph 'This bench post was created by run {{runid}} for testing.' exactly once (count occurrences of the runid {{runid}} in the body). Also confirm the three seed posts ('{{01-open.seed_post_title_1}}', '{{01-open.seed_post_title_2}}', '{{01-open.seed_post_title_3}}') are still published and unmodified in the Posts list.",
+      "skill": "s_058ae4",
+      "params": {
+        "v1": "127.0.0.1",
+        "v2": "{{runid}} Bench Post",
+        "v4": "{{01-open.all_rows_status}}",
+        "v5": "Draft",
+        "v6": "Bench News",
+        "v7": "This bench post was created by run {{runid}} for testing.",
+        "v3": "{{runid}}",
+        "v8": "{{01-open.seed_post_title_1}}",
+        "v9": "{{01-open.seed_post_title_2}}",
+        "v10": "{{01-open.seed_post_title_3}}"
+      },
+      "outputs": [
+        "status_editor_header",
+        "status_posts_list",
+        "slug_settings_panel",
+        "post_url_under_slug",
+        "tags_on_post",
+        "tag_only_bench_news",
+        "custom_excerpt",
+        "body_text",
+        "editor_header_status",
+        "runid",
+        "site_host"
+      ],
+      "recorded": {
+        "status_editor_header": "Published (header shows link \"Published View post\" + Unpublish button; Update button disabled = no unsaved changes)",
+        "status_posts_list": "Published — row text: \"fwgh4-n1 Bench Post | By Bench Admin in Bench News - 01 Sep 2026 | Published\"",
+        "publish_date_settings_panel": "2026-09-01 (date button reads \"2026-09-01\")",
+        "publish_time_settings_panel": "00:00 UTC",
+        "slug_settings_panel": "fwgh4-n1-bench-post",
+        "post_url_under_slug": "127.0.0.1:8099/fwgh4-n1-bench-post/",
+        "tags_on_post": "Bench News",
+        "tag_only_bench_news": "yes — Tags section contains only \"Bench News\" (\"Bench Admin\" is the Authors field, not a tag)",
+        "custom_excerpt": "Excerpt for bench post fwgh4-n1.",
+        "body_text": "This bench post was created by run fwgh4-n1 for testing.",
+        "runid_count_in_body": "1",
+        "seed_posts_in_list": "[object Object], [object Object], [object Object]",
+        "all_posts_list_count": "4",
+        "editor_header_status": "Posts\nPublished\nUpdate\nUnpublish",
+        "runid": "fwgh4-n1",
+        "site_host": "127.0.0.1"
+      },
+      "route": "http://127.0.0.1:8099/ghost/#/editor/post/:id",
+      "outputEvidence": {
+        "status_editor_header": {
+          "same": 2,
+          "differed": 0
+        },
+        "status_posts_list": {
+          "same": 0,
+          "differed": 2
+        },
+        "publish_date_settings_panel": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "publish_time_settings_panel": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "slug_settings_panel": {
+          "same": 0,
+          "differed": 2
+        },
+        "post_url_under_slug": {
+          "same": 0,
+          "differed": 2
+        },
+        "tags_on_post": {
+          "same": 2,
+          "differed": 0
+        },
+        "tag_only_bench_news": {
+          "same": 2,
+          "differed": 0
+        },
+        "custom_excerpt": {
+          "same": 0,
+          "differed": 2
+        },
+        "body_text": {
+          "same": 0,
+          "differed": 2
+        },
+        "runid_count_in_body": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "seed_posts_in_list": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "all_posts_list_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "editor_header_status": {
+          "same": 2,
+          "differed": 0
+        },
+        "runid": {
+          "same": 0,
+          "differed": 2
+        },
+        "site_host": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwgh4-n1",
+    "created": "2026-09-22T07:20:02.044Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-open",
+      "outputs": [
+        "published_post_count",
+        "list_filter"
+      ]
+    },
+    {
+      "stepId": "02-create",
+      "outputs": [
+        "post_id",
+        "editor_status_before_nav",
+        "runid_occurrences_in_body"
+      ]
+    },
+    {
+      "stepId": "03-open",
+      "outputs": [
+        "publish_time_shown",
+        "post_id"
+      ]
+    },
+    {
+      "stepId": "04-open",
+      "outputs": [
+        "dialog_first_step"
+      ]
+    },
+    {
+      "stepId": "05-open",
+      "outputs": [
+        "publish_date_settings_panel",
+        "publish_time_settings_panel",
+        "runid_count_in_body",
+        "seed_posts_in_list",
+        "all_posts_list_count"
+      ]
+    }
+  ]
+}

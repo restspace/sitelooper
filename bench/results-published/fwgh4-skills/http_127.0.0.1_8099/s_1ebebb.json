@@ -1,0 +1,105 @@
+{
+ "id": "s_1ebebb",
+ "origin": "http://127.0.0.1:8099",
+ "template": "In the Ghost admin, open the draft post titled '{{v1}}' for editing, and open its settings panel (the gear/settings button). Do three things in the settings panel: (1) In the tags field, type 'Bench News' and choose the EXISTING tag 'Bench News' from the suggestion dropdown (do not create a new tag; note a similar tag 'Bench Newsletter' also exists — pick 'Bench News' exactly). (2) In the 'Custom excerpt' field, type text that includes the runid '{{v2}}', e.g. '{{v3}}'. (3) Set the publish date to 2026-09-01 (date September 1, 2026; keep the time as whatever it offers, e.g. 12:00). Then report: the tag shown on the post, the custom excerpt text shown, the publish date shown, and the URL slug exactly as displayed in the settings panel. Do NOT publish the post yet.",
+ "params": {
+  "v1": {
+   "example": "fwgh4-n2 Bench Post",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:post_title_element_text"
+  },
+  "v2": {
+   "example": "fwgh4-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "Excerpt for bench post fwgh4-n2.",
+   "usedIn": [],
+   "known": true
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8099/ghost/#/posts"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e782"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "New post"
+     },
+     {
+      "kind": "id",
+      "selector": "#ember101"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"posts-filters\"] a"
+     },
+     {
+      "kind": "css",
+      "selector": "#ember101"
+     },
+     {
+      "kind": "point",
+      "x": 1196,
+      "y": 44,
+      "w": 87.6,
+      "h": 32,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8099/ghost/#/editor/post",
+    "addedContains": [
+     "- button \"Add feature image\"",
+     "- textbox \"Post title\"",
+     "- button \"Settings\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_b6b518",
+    "step": 1
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 2,
+  "successes": 2,
+  "partial": 0,
+  "created": "2026-09-22T07:21:07.713Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-22T07:22:01.425Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_acd454",
+  "index": 0,
+  "of": 4
+ },
+ "variantOf": "s_b6b518",
+ "provenance": {
+  "session": "fwgh4-n2",
+  "instruction": "In the Ghost admin, open the draft post titled 'fwgh4-n2 Bench Post' for editing, and open its settings panel (the gear/settings button). Do three things in the settings panel: (1) In the tags field, type 'Bench News' and choose the EXISTING tag 'Bench News' from the suggestion dropdown (do not create a new tag; note a similar tag 'Bench Newsletter' also exists — pick 'Bench News' exactly). (2) In the 'Custom excerpt' field, type text that includes the runid 'fwgh4-n2', e.g. 'Excerpt for bench post fwgh4-n2.'. (3) Set the publish date to 2026-09-01 (date September 1, 2026; keep the time as whatever it offers, e.g. 12:00). Then report: the tag shown on the post, the custom excerpt text shown, the publish date shown, and the URL slug exactly as displayed in the settings panel. Do NOT publish the post yet.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-22T07:21:07.713Z"
+ },
+ "revision": 2
+}

@@ -1,0 +1,180 @@
+{
+  "flow": "fwgh4",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Signed in to Ghost at http://127.0.0.1:8099/ghost/ as admin@bench.local and opened Posts → Published. The published list contains exactly 3 posts, and all 3 have titles starting with 'Seed:': \"Seed: Release notes for September\", \"Seed: House style guide\", and \"Seed: Welcome to the bench\". No other (non-Seed) published posts and no pagination/load-more control were present.",
+      "values": {
+        "seed_post_title_1": "Seed: Release notes for September",
+        "seed_post_title_2": "Seed: House style guide",
+        "seed_post_title_3": "Seed: Welcome to the bench",
+        "published_seed_post_titles_1": "Seed: Release notes for September",
+        "published_seed_post_titles_2": "Seed: House style guide",
+        "published_seed_post_titles_3": "Seed: Welcome to the bench",
+        "all_rows_status": "Published"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_17f69b; observed body_paragraph=This bench post was created by run fwgh4-n3 for testing., drafts_list_row_text=fwgh4-n3 Bench Post + By Bench Admin - a few seconds ago + Draft, post_title_element_text=fwgh4-n3 Bench Post, post_status=Draft, post_title_displayed=fwgh4-n3 Bench Post, drafts_list_row_author_line=By Bench Admin - a few seconds ago, runid=fwgh4-n3 Bench Post.",
+      "values": {
+        "body_paragraph": "This bench post was created by run fwgh4-n3 for testing.",
+        "drafts_list_row_text": "fwgh4-n3 Bench Post + By Bench Admin - a few seconds ago + Draft",
+        "post_title_element_text": "fwgh4-n3 Bench Post",
+        "post_status": "Draft",
+        "post_title_displayed": "fwgh4-n3 Bench Post",
+        "drafts_list_row_author_line": "By Bench Admin - a few seconds ago",
+        "runid": "fwgh4-n3 Bench Post"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_75cb81; observed custom_excerpt=Excerpt for bench post fwgh4-n3., ref=fwgh4-n3, slug_shown=fwgh4-n3-bench-post, publish_date_shown=2026-09-01, publish_time=07:21, post_status=Saving..., post_title=fwgh4-n3 Bench Post, post_url_display=127.0.0.1:8099/fwgh4-n3-bench-post/.",
+      "values": {
+        "custom_excerpt": "Excerpt for bench post fwgh4-n3.",
+        "ref": "fwgh4-n3",
+        "slug_shown": "fwgh4-n3-bench-post",
+        "publish_date_shown": "2026-09-01",
+        "publish_time": "07:21",
+        "post_status": "Saving...",
+        "post_title": "fwgh4-n3 Bench Post",
+        "post_url_display": "127.0.0.1:8099/fwgh4-n3-bench-post/"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_75cb81: step 7: read 'custom_excerpt' returned a value the skill itself set/selected ('Excerpt for bench post fwgh4-n3.') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_75cb81: step 13: read 'tag_shown' returned a value the skill itself set/selected ('Bench News') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "repinned": "s_1ebebb",
+      "repinParams": {
+        "v1": "{{02-create.post_title_element_text}}",
+        "v2": "{{runid}}",
+        "v3": "Excerpt for bench post {{runid}}."
+      },
+      "unreported": [
+        "tag_shown",
+        "post_slug",
+        "post_url",
+        "editor_status",
+        "runid",
+        "site_host"
+      ]
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Today's date in the app is 2026-09-22 (the publish-date picker's calendar showed September 2026 with day 22 highlighted and the UTC clock read 2026-09-22), so the post's 2026-09-01 publish date was backdated, not future. Opening 'This bench post was created by run fwgh4-n3 for testing. Bench Post' and clicking Publish produced the \"Ready, set, publish. Share it with the world.\" sheet offering Publish / Not sent as newsletter / Right now / \"Continue, final review →\"; the final review said \"Your post will be published on your site.\" with a single \"Publish post, right now\" button — no Schedule option appeared. Confirming published the post, and the public URL http://127.0.0.1:8099/This bench post was created by run fwgh4-n3 for testing.-bench-post/ loads the live post showing H1 \"This bench post was created by run fwgh4-n3 for testing. Bench Post\", tag \"BENCH NEWS\", excerpt \"Excerpt for bench post This bench post was created by run fwgh4-n3 for testing..\", date 01 Sep 2026, and the body paragraph containing runid This bench post was created by run fwgh4-n3 for testing..",
+      "values": {
+        "resulting_status": "Published",
+        "published_toast": "Boom! It's out there. That's 4 posts published. — heading 'fwgh4-n3 Bench Post'",
+        "publish_date_shown": "01 Sep 2026 (set value 2026-09-01, time 00:00 UTC)",
+        "public_url": "http://127.0.0.1:8099/fwgh4-n3-bench-post/",
+        "public_page_verified": "yes — page title, H1 'fwgh4-n3 Bench Post', excerpt and body paragraph 'This bench post was created by run fwgh4-n3 for testing.' all render publicly",
+        "tag_on_post": "BENCH NEWS",
+        "custom_excerpt": "Excerpt for bench post fwgh4-n3.",
+        "runid": "This bench post was created by run fwgh4-n3 for testing."
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_d24b2f: step 1: primary locator did not resolve; used fallback #3 elementAt(974, 223) /* button */"
+      ]
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_4fde69; observed status_editor_header=Published (header shows link \"Published View post\" + Unpublish button; Update button disabled = no unsaved changes), status_posts_list=Published — row text: \"fwgh4-n3 Bench Post | By Bench Admin in Bench News - 01 Sep 2026 | Published\", tag_only_bench_news=yes — Tags section contains only \"Bench News\" (\"Bench Admin\" is the Authors field, not a tag), editor_header_status=Posts\nPublished\nUpdate\nUnpublish, slug_settings_panel=fwgh4-n3-bench-post, post_url_under_slug=\n        \n            Update\n        \n\n\n, tags_on_post=Bench News, custom_excerpt=Excerpt for bench post fwgh4-n3., body_text=This bench post was created by run fwgh4-n3 for testing., site_host=127.0.0.1:8099/fwgh4-n3-bench-post/, runid=This bench post was created by run fwgh4-n3 for testing..",
+      "values": {
+        "status_editor_header": "Published (header shows link \"Published View post\" + Unpublish button; Update button disabled = no unsaved changes)",
+        "status_posts_list": "Published — row text: \"fwgh4-n3 Bench Post | By Bench Admin in Bench News - 01 Sep 2026 | Published\"",
+        "tag_only_bench_news": "yes — Tags section contains only \"Bench News\" (\"Bench Admin\" is the Authors field, not a tag)",
+        "editor_header_status": "Posts\nPublished\nUpdate\nUnpublish",
+        "slug_settings_panel": "fwgh4-n3-bench-post",
+        "post_url_under_slug": "\n        \n            Update\n        \n\n\n",
+        "tags_on_post": "Bench News",
+        "custom_excerpt": "Excerpt for bench post fwgh4-n3.",
+        "body_text": "This bench post was created by run fwgh4-n3 for testing.",
+        "site_host": "127.0.0.1:8099/fwgh4-n3-bench-post/",
+        "runid": "This bench post was created by run fwgh4-n3 for testing."
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_4fde69: step 4: primary locator did not resolve; used fallback #2 elementAt(934, 303) /* span */"
+      ]
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "repinned": 1,
+  "drift": 2,
+  "driftTickets": [
+    {
+      "flow": "fwgh4",
+      "step": "04-open",
+      "skill": "s_d24b2f",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.locator('#ember114')",
+      "fallbackUsed": "elementAt(974, 223) /* button */",
+      "fallbackIndex": 2,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8099/:id/",
+      "pageUrl": "http://127.0.0.1:8099/fwgh4-n3-bench-post/"
+    },
+    {
+      "flow": "fwgh4",
+      "step": "05-open",
+      "skill": "s_4fde69",
+      "atStep": "4",
+      "key": "target",
+      "similarity": 0.998,
+      "missedLocator": "page.locator('#ember123 > span:nth-of-type(1)')",
+      "fallbackUsed": "elementAt(934, 303) /* span */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8099/ghost/#/editor/post/:id",
+      "pageUrl": "http://127.0.0.1:8099/ghost/#/editor/post/6ab22c8c10ce4f00019f5906"
+    }
+  ],
+  "wallMs": 48639,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
