@@ -4,9 +4,10 @@
 
 ### Since 0.3.0: benchmark rounds 33–46
 - Five new third-party benchmark targets: OpenProject (from round 33), and Gitea, Vikunja,
-  EspoCRM, Snipe-IT and Ghost (from round 36). All ten targets were green on their latest
-  sweep as of round 44 (`bench/SWEEPS.md`): every run verified, every replay step
-  model-free, and the compiled Playwright script passing.
+  EspoCRM, Snipe-IT and Ghost (from round 36). Every target has reached green
+  (`bench/SWEEPS.md`: every run verified, every replay step model-free, the compiled
+  Playwright script passing); the confirmation rounds that followed were 5/10 and 6/10
+  green, the misses being new recording routes, whose gaps are fixed below.
 - Robustness fixes, each found by a sweep and fixed at its cause rather than per app:
   - A tab a click opens is credited to that click, even when it arrives late or has no opener.
   - Form fields a page reload empties are filled again before the submit, and a submit the
