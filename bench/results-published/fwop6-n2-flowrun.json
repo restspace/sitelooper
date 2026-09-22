@@ -1,0 +1,542 @@
+{
+  "flow": "fwop6",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Signed in as admin (already done by the replayed segments) and opened Bench Project's work packages list at http://127.0.0.1:8090/projects/bench-project/work_packages. Reading the live table (ids 38-40) shows exactly three work packages whose subject begins with 'Seed:' — none was opened or modified.",
+      "values": {
+        "ref": "38-40",
+        "seed_work_package_subjects_1": "Seed: triage inbox",
+        "seed_work_package_subjects_2": "Seed: order missing parts",
+        "seed_work_package_subjects_3": "Seed: ship repaired device",
+        "work_package_ids_1": "38",
+        "work_package_ids_2": "39",
+        "work_package_ids_3": "40"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_4b8679 stopped at step 2 — after step 2 expected url http://127.0.0.1:8090/projects but browser is at http://127.0.0.1:8090/projects/bench-project",
+      "replayed": "1/3",
+      "repaired": false,
+      "turns": 10,
+      "warnings": [
+        "s_26af63: step 1: skipped — it closes the dialog \"Welcome to OpenProject, Bench Admin\" with \"Close\", and that dialog is not open this time: already in effect",
+        "s_4b8679: step 1: recorded url http://127.0.0.1:8090/projects is the page the clicked link left (captured before its navigation committed); the click went where the link points, http://127.0.0.1:8090/projects/bench-project — accepted",
+        "s_4b8679: step 2: no element matched any known locator for target (tried 3: page.getByRole('link', { name: 'Bench Project', exact: true }), page.locator('#project-3 > td:nth-of-type(3) > div > span > a'), elementAt(446, 308) /* link */); healed inline: the step ran on page.getByRole('button', { name: 'Bench Project', exact: true }), proposed from the live page (nothing in the recorded chain resolved)",
+        "s_4b8679: step 2: the inline heal page.getByRole('button', { name: 'Bench Project', exact: true }) ran and the step's own checks then refused it — treat that locator as known-wrong"
+      ],
+      "unreported": [
+        "project_name",
+        "seed_work_package_subject_1",
+        "seed_work_package_subject_2",
+        "seed_work_package_subject_3",
+        "projects_link_text",
+        "seed_subjects_all_1",
+        "seed_subjects_all_2",
+        "seed_subjects_all_3"
+      ]
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_e9ab72; observed page_title=Task: fwop6-n2 Bench Work Package (#41) | Work Packages | Bench Project | OpenProject, project=Bench Project, run_reference=fwop6-n2, create_form_url=http://127.0.0.1:8090/projects/bench-project/work_packages/create_new?type=1, description=Bench work package for run fwop6-n2, subject=fwop6-n2 Bench Work Package, work_package_id=42, work_package_id_display=#42, create_button=Create, create_new_work_package_button=Create new work package.",
+      "values": {
+        "page_title": "Task: fwop6-n2 Bench Work Package (#41) | Work Packages | Bench Project | OpenProject",
+        "project": "Bench Project",
+        "run_reference": "fwop6-n2",
+        "create_form_url": "http://127.0.0.1:8090/projects/bench-project/work_packages/create_new?type=1",
+        "description": "Bench work package for run fwop6-n2",
+        "subject": "fwop6-n2 Bench Work Package",
+        "work_package_id": "42",
+        "work_package_id_display": "#42",
+        "create_button": "Create",
+        "create_new_work_package_button": "Create new work package"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_21a30a: step 2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_501be6: step 2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_501be6: step 3: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_501be6: step 4: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear"
+      ]
+    },
+    {
+      "id": "03-set",
+      "status": "success",
+      "summary": "Replayed stored procedure s_21aeb6; observed work_package=#42 fwop6-n2 Bench Work Package, wp41_assignee_display=BA\nBench Assignee, assignee_field_text_with_avatar=BA\nBench Assignee.",
+      "values": {
+        "work_package": "#42 fwop6-n2 Bench Work Package",
+        "wp41_assignee_display": "BA\nBench Assignee",
+        "assignee_field_text_with_avatar": "BA\nBench Assignee"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_21aeb6: step 6: read 'assignee_displayed_value' returned a value the skill itself set/selected ('Bench Assignee') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "assignee_displayed_value"
+      ]
+    },
+    {
+      "id": "04-change",
+      "status": "success",
+      "summary": "Replayed stored procedure s_903633; observed work_package=#42 fwop6-n2 Bench Work Package.",
+      "values": {
+        "work_package": "#42 fwop6-n2 Bench Work Package"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_903633: step 1: url segment(s) differ from recorded (41→42) — treated as volatile",
+        "s_903633: step 2: url segment(s) differ from recorded (41→42) — treated as volatile",
+        "s_903633: step 3: read 'status_after_displayed' returned a value the skill itself set/selected ('In progress') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_903633: step 4: read 'status_after_displayed' returned a value the skill itself set/selected ('In progress') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_903633: step 5: the target chain is dead and was not healed inline — the step is a synthesized read no run has ever resolved, so nothing about it has drifted",
+        "s_903633: step 5: skipped read — no element matched any known locator for target (tried 1: page.getByRole('menuitem', { name: 'New', exact: true }))",
+        "s_903633: step 6: read 'detail_header_status_button' returned a value the skill itself set/selected ('In progress') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_903633: step 7: the target chain is dead and was not healed inline — the step is a synthesized read no run has ever resolved, so nothing about it has drifted",
+        "s_903633: step 7: skipped read — no element matched any known locator for target (tried 1: page.getByRole('menuitem', { name: 'In progress', exact: true }))"
+      ],
+      "unreported": [
+        "status_before",
+        "status_after_displayed",
+        "detail_header_status_button",
+        "grid_row_41_status_cell"
+      ]
+    },
+    {
+      "id": "05-set",
+      "status": "success",
+      "summary": "Replayed stored procedure s_8b0573; observed work_package=#42 fwop6-n2 Bench Work Package, combined_date_field_display=no start date - 12/31/2026, finish_date_displayed=12/31/2026.",
+      "values": {
+        "work_package": "#42 fwop6-n2 Bench Work Package",
+        "combined_date_field_display": "no start date - 12/31/2026",
+        "finish_date_displayed": "12/31/2026"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_8b0573: step 1: url segment(s) differ from recorded (41→42) — treated as volatile",
+        "s_8b0573: step 2: url segment(s) differ from recorded (41→42) — treated as volatile",
+        "s_8b0573: step 3: read 'finish_date_input_value_typed' returned a value the skill itself set/selected ('2026-12-31') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_8b0573: step 4: url segment(s) differ from recorded (41→42) — treated as volatile"
+      ],
+      "unreported": [
+        "finish_date_input_value_typed"
+      ]
+    },
+    {
+      "id": "06-add",
+      "status": "success",
+      "summary": "On work package #42's details view I opened the Activity tab. The comment editor was collapsed, so I first clicked the \"Add a comment. Type @ to notify people.\" placeholder button, which expanded the CKEditor comment box; I typed 'Comment for run fwop6-n2' and clicked the \"Submit\" button. The editor collapsed and a new journal entry appeared. I then reloaded the page and re-opened the work package's Activity tab: the activity list contains the comment rendering as \"Comment for run fwop6-n2\" (in the live DOM: <p class=\"op-uc-p\">Comment for run fwop6-n2</p>), so the comment persisted. The activity pane text reads: \"Show everything / Newest at the bottom / BA Bench Admin / created this on 09/22/2026 09:16 AM / Comment for run fwop6-n2 / Add a comment. Type @ to notify people.\"",
+      "values": {
+        "activity_entry_context": "BA Bench Admin created this on 09/22/2026 09:16 AM — Comment for run fwop6-n2",
+        "comment_paragraph_html": "<p class=\"op-uc-p\">Comment for run fwop6-n2</p>",
+        "work_package": "#42 fwop6-n2 Bench Work Package",
+        "run_reference": "fwop6-n2",
+        "activity_pane_text": "Show everything\nNewest at the bottom\nBA\nBench Admin\ncreated this on\n09/22/2026 09:22 AM\n\nComment for run fwop6-n2\n\nAdd a comment. Type @ to notify people.",
+        "comment_text_as_displayed": "Comment for run fwop6-n2",
+        "project": "Bench Project"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_80842e: step 1: primary locator did not resolve; used fallback #2 elementAt(1069, 350) /* p */"
+      ]
+    },
+    {
+      "id": "07-open",
+      "status": "success",
+      "summary": "Opened work package #42's details/activity page read-only (no edits made; the only actions were reads and a screenshot). Read from the page: (1) ID as displayed: #42 (in the info row \"#42: Created by Bench Admin. Last updated on 09/22/2026 9:23 AM.\"); (2) subject: fwop6-n2 Bench Work Package; (3) type: TASK (header button \"Type TASK: Edit\"); (4) description: Bench work package for run fwop6-n2; (5) assignee: Bench Assignee (chip with \"BA\" initials); (6) status: In progress (header status button); (7) finish date: 12/31/2026 (the Date field displays \"no start date - 12/31/2026\"); (8) activity comment: \"Comment for run fwop6-n2\" by BA Bench Admin, created 09/22/2026 09:16 AM. Page title confirms \"TASK: fwop6-n2 Bench Work Package (#42)\".",
+      "values": {
+        "page_title": "Task: fwop6-n2 Bench Work Package (#42) | Bench Project | OpenProject",
+        "run_reference": "fwop6-n2",
+        "activity_pane_full_text": "Show everything\nNewest at the bottom\nBA\nBench Admin\ncreated this on\n09/22/2026 09:22 AM\n\nComment for run fwop6-n2\n\nAdd a comment. Type @ to notify people.",
+        "id_displayed": "#42",
+        "subject": "fwop6-n2 Bench Work Package",
+        "description": "Bench work package for run fwop6-n2",
+        "assignee": "Bench Assignee",
+        "status": "In progress",
+        "finish_date": "12/31/2026",
+        "date_field_display": "no start date - 12/31/2026",
+        "comment_text": "Comment for run fwop6-n2",
+        "id_context": "#42: Created by Bench Admin. Last updated on 09/22/2026 9:23 AM.",
+        "type": "TASK"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_ce1fcf: step 9: primary locator did not resolve; used fallback #2 elementAt(1069, 350) /* p */"
+      ]
+    }
+  ],
+  "passed": 7,
+  "total": 7,
+  "repinned": 0,
+  "drift": 6,
+  "driftTickets": [
+    {
+      "flow": "fwop6",
+      "step": "01-open",
+      "skill": "s_26af63",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.995,
+      "missedLocator": "page.getByRole('button', { name: 'Close', exact: true })",
+      "fallbackUsed": null,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project"
+    },
+    {
+      "flow": "fwop6",
+      "step": "01-open",
+      "skill": "s_4b8679",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 0.995,
+      "missedLocator": "page.getByRole('link', { name: 'Bench Project', exact: true })",
+      "fallbackUsed": "page.getByRole('button', { name: 'Bench Project', exact: true })",
+      "recovered": true,
+      "healed": true,
+      "proposal": {
+        "kind": "role",
+        "role": "button",
+        "name": "Bench Project"
+      },
+      "rows": [
+        {
+          "tag": "div"
+        },
+        {
+          "tag": "div"
+        },
+        {
+          "tag": "a",
+          "id": "skip-navigation--content",
+          "label": "Click here to skip over the menu and go to the content",
+          "text": "Jump to content"
+        },
+        {
+          "tag": "button",
+          "id": "dialog-show-dialog-43cf3078-0fc7-419b-88e9-8f0cb876865e",
+          "type": "button"
+        },
+        {
+          "tag": "a",
+          "text": "Home"
+        },
+        {
+          "tag": "div",
+          "role": "search",
+          "label": "Search in OpenProject"
+        },
+        {
+          "tag": "button",
+          "id": "top-menu-search-button",
+          "label": "Search",
+          "type": "button"
+        },
+        {
+          "tag": "input",
+          "role": "combobox",
+          "label": "Search in OpenProject",
+          "type": "text"
+        },
+        {
+          "tag": "div",
+          "role": "status"
+        },
+        {
+          "tag": "button",
+          "id": "op-app-header--quick-add-menu-button",
+          "type": "button"
+        },
+        {
+          "tag": "svg",
+          "role": "img",
+          "label": "Add…"
+        },
+        {
+          "tag": "a",
+          "id": "icon-button-c151f078-a3ac-4598-a091-296362f81768"
+        },
+        {
+          "tag": "button",
+          "id": "op-app-header--help-menu-button",
+          "type": "button"
+        },
+        {
+          "tag": "button",
+          "id": "dialog-show-dialog-234a07b2-7617-4ec0-a298-e7a7daaf8703",
+          "text": "BA",
+          "type": "button"
+        },
+        {
+          "tag": "div",
+          "role": "img",
+          "label": "User menu",
+          "text": "BA"
+        },
+        {
+          "tag": "button",
+          "label": "Collapse project menu"
+        },
+        {
+          "tag": "button",
+          "id": "projects-menu",
+          "text": "Bench Project",
+          "type": "button"
+        },
+        {
+          "tag": "button",
+          "id": "menu-toggle--collapse-button",
+          "type": "button"
+        },
+        {
+          "tag": "hr",
+          "role": "presentation"
+        },
+        {
+          "tag": "a",
+          "text": "Project home"
+        },
+        {
+          "tag": "a",
+          "id": "main-menu-work-packages",
+          "text": "Work packages"
+        },
+        {
+          "tag": "button",
+          "label": "Open Work packages sub-menu",
+          "type": "button"
+        },
+        {
+          "tag": "a",
+          "id": "main-menu-gantt",
+          "text": "Gantt charts"
+        },
+        {
+          "tag": "button",
+          "label": "Open Gantt charts sub-menu",
+          "type": "button"
+        },
+        {
+          "tag": "a",
+          "text": "Boards"
+        },
+        {
+          "tag": "button",
+          "label": "Open Boards sub-menu",
+          "type": "button"
+        },
+        {
+          "tag": "a",
+          "text": "Meetings"
+        },
+        {
+          "tag": "button",
+          "label": "Open Meetings sub-menu",
+          "type": "button"
+        },
+        {
+          "tag": "a",
+          "text": "Wiki"
+        },
+        {
+          "tag": "a",
+          "text": "Backlogs"
+        },
+        {
+          "tag": "button",
+          "label": "Open Backlogs sub-menu",
+          "type": "button"
+        },
+        {
+          "tag": "a",
+          "text": "News"
+        },
+        {
+          "tag": "a",
+          "text": "Time and costs"
+        },
+        {
+          "tag": "button",
+          "label": "Open Time and costs sub-menu",
+          "type": "button"
+        },
+        {
+          "tag": "a",
+          "text": "Documents"
+        },
+        {
+          "tag": "button",
+          "label": "Open Documents sub-menu",
+          "type": "button"
+        },
+        {
+          "tag": "a",
+          "text": "Members"
+        },
+        {
+          "tag": "button",
+          "label": "Open Members sub-menu",
+          "type": "button"
+        },
+        {
+          "tag": "a",
+          "text": "Project settings"
+        },
+        {
+          "tag": "button",
+          "label": "Open Project settings sub-menu",
+          "type": "button"
+        },
+        {
+          "tag": "a",
+          "id": "page-header-0f34e43a-23ad-4fd1-acb8-25cbfae21dad"
+        },
+        {
+          "tag": "button",
+          "id": "primary-menu-2d68317d-7ed9-496e-a388-8d060a33942b-button",
+          "type": "button"
+        },
+        {
+          "tag": "a",
+          "text": "Overview"
+        },
+        {
+          "tag": "a",
+          "text": "Dashboard"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "id": "7fd937fa-be38-45b1-942e-cd842618eb35",
+          "text": "-"
+        },
+        {
+          "tag": "button",
+          "id": "primary-menu-0c049518-05dc-42b5-89ab-aecacd143e68-button",
+          "label": "Edit status",
+          "text": "Not set",
+          "type": "button"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "id": "9e2ac8dd-d6f2-4024-8880-8994365158f0",
+          "text": "-"
+        },
+        {
+          "tag": "button",
+          "id": "primary-menu-b563c83b-00b0-47ba-9135-c2971cfd568f-button",
+          "type": "button"
+        }
+      ],
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project"
+    },
+    {
+      "flow": "fwop6",
+      "step": "04-change",
+      "skill": "s_903633",
+      "atStep": "5",
+      "key": "target",
+      "similarity": 0.998,
+      "missedLocator": "page.getByRole('menuitem', { name: 'New', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/42/overview"
+    },
+    {
+      "flow": "fwop6",
+      "step": "04-change",
+      "skill": "s_903633",
+      "atStep": "7",
+      "key": "target",
+      "similarity": 0.998,
+      "missedLocator": "page.getByRole('menuitem', { name: 'In progress', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/42/overview"
+    },
+    {
+      "flow": "fwop6",
+      "step": "06-add",
+      "skill": "s_80842e",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.locator('#work-packages-activities-tab-journals-item-component-show-63 > div > div:nth-of-type(1) > div > p')",
+      "fallbackUsed": "elementAt(1069, 350) /* p */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/:id/activity",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/42/activity"
+    },
+    {
+      "flow": "fwop6",
+      "step": "07-open",
+      "skill": "s_ce1fcf",
+      "atStep": "9",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.locator('#work-packages-activities-tab-journals-item-component-show-63 > div > div:nth-of-type(1) > div > p')",
+      "fallbackUsed": "elementAt(1069, 350) /* p */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/:id/activity",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/42/activity"
+    }
+  ],
+  "wallMs": 135477,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 108346,
+    "completionTokens": 1567,
+    "cachedTokens": 97152
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 108346,
+      "completionTokens": 1567,
+      "cachedTokens": 97152
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

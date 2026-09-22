@@ -1,0 +1,202 @@
+{
+ "id": "s_433dd7",
+ "origin": "http://127.0.0.1:8090",
+ "template": "Open {{v1}} and sign in with username '{{v2}}' and password '{{v3}}'. Then navigate to the project named 'Bench Project' and open its work packages list. Report the subjects of all work packages whose subject starts with 'Seed:', exactly as displayed, one per line. Do not modify or open any work package for editing - just read the list.",
+ "params": {
+  "v1": {
+   "example": "http://127.0.0.1:8090/",
+   "usedIn": [
+    1
+   ]
+  },
+  "v2": {
+   "example": "admin",
+   "usedIn": [
+    2
+   ]
+  },
+  "v3": {
+   "example": "bench-admin-pass",
+   "usedIn": [
+    3
+   ]
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8090/login"
+ },
+ "steps": [
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {},
+   "via": {
+    "skill": "s_53d82b",
+    "step": 1
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e50",
+    "value": "{{v2}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "label",
+      "label": "Username *",
+      "nth": 1
+     },
+     {
+      "kind": "id",
+      "selector": "#username"
+     },
+     {
+      "kind": "css",
+      "selector": "#username"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 265,
+      "w": 469,
+      "h": 32,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/login",
+    "addedContains": [
+     "- textbox \"Username *\": {{v2}}"
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_83708b",
+    "step": 1
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e55",
+    "value": "{{v3}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "label",
+      "label": "Password *",
+      "nth": 1
+     },
+     {
+      "kind": "id",
+      "selector": "#password"
+     },
+     {
+      "kind": "css",
+      "selector": "#password"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 338,
+      "w": 469,
+      "h": 32,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/login",
+    "addedContains": [
+     "- textbox \"Password *\": {{v3}}"
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_83708b",
+    "step": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e58"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Sign in",
+      "nth": 1
+     },
+     {
+      "kind": "css",
+      "selector": "#login-form > form > div > div:nth-of-type(3) > div:nth-of-type(1) > button"
+     },
+     {
+      "kind": "point",
+      "x": 440,
+      "y": 391,
+      "w": 68.8,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/",
+    "addedContains": [
+     "- link \"Notifications\"",
+     "- button \"BA\"",
+     "- img \"User menu\"",
+     "- button \"Collapse project menu\"",
+     "- button \"All projects\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_83708b",
+    "step": 3
+   }
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-22T09:24:58.841Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_8c5f32",
+  "index": 0,
+  "of": 5
+ },
+ "provenance": {
+  "session": "fwop6-n3",
+  "instruction": "Open http://127.0.0.1:8090/ and sign in with username 'admin' and password 'bench-admin-pass'. Then navigate to the project named 'Bench Project' and open its work packages list. Report the subjects of all work packages whose subject starts with 'Seed:', exactly as displayed, one per line. Do not modify or open any work package for editing - just read the list.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-22T09:24:58.841Z"
+ },
+ "revision": 1
+}
