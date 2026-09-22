@@ -1,0 +1,96 @@
+{
+ "id": "s_077352",
+ "origin": "http://127.0.0.1:8099",
+ "template": "Go to {{v1}} and sign in with email {{v2}} and password {{v3}} if a sign-in form appears. After signing in, open the Posts list and report the exact titles of every post whose title starts with 'Seed:', along with each one's status (published / draft / scheduled) exactly as shown in the list.",
+ "params": {
+  "v1": {
+   "example": "http://127.0.0.1:8099/ghost/",
+   "usedIn": [
+    3
+   ]
+  },
+  "v2": {
+   "example": "admin@bench.local",
+   "usedIn": []
+  },
+  "v3": {
+   "example": "bench-admin-pass",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8099/ghost/"
+ },
+ "steps": [
+  {
+   "tool": "wait_for",
+   "args": {
+    "target": "body",
+    "state": "visible"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "body"
+     },
+     {
+      "kind": "css",
+      "selector": "html > body"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 450,
+      "w": 1264,
+      "h": 884,
+      "role": null,
+      "tag": "body",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "what": "url",
+    "label": "current_url"
+   },
+   "locators": {},
+   "label": "current_url"
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {}
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-22T10:17:46.324Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4,
+  "lastUsed": "2026-09-22T10:21:57.288Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_fe4d39",
+  "index": 0,
+  "of": 5
+ },
+ "provenance": {
+  "session": "fwgh7-n1",
+  "instruction": "Go to http://127.0.0.1:8099/ghost/ and sign in with email admin@bench.local and password bench-admin-pass if a sign-in form appears. After signing in, open the Posts list and report the exact titles of every post whose title starts with 'Seed:', along with each one's status (published / draft / scheduled) exactly as shown in the list.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-22T10:17:46.324Z"
+ },
+ "revision": 3
+}

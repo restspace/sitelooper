@@ -1,0 +1,108 @@
+
+[sweep] run 1/3: fwgh7-n1 (store: /home/user/sitelooper/bench/results/fwgh7-skills)
+[harness] ghost: defaulting APP_URL
+[harness] ghost: defaulting APP_EMAIL
+[harness] ghost: defaulting APP_PASSWORD
+[reset] ghost: no posts to delete
+[harness] ghost responded 200 at http://127.0.0.1:8099/
+stopped: fwgh7-n1
+  flow "fwgh7" saved: 5 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwgh7.json
+  warning: note: 01-signin no longer publishes drafts_count, scheduled_count — no replay reads them from the page and the recording showed no line to read
+  warning: note: 02-create no longer publishes post_id, fwgh7-n1_occurrences_in_body — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-open no longer publishes tags, authors, publish_time — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-open no longer publishes fwgh7_post_access, post_id, post_list_item_tag_1, post_list_item_last_updated, post_list_item_publish_date — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 1 value(s) KNOWN to be this run's survived unslotted — a replay will act on or wait for the recording's value (non-fatal outside locators):
+  flow.pruned[1].outputs[1]: "fwgh7-n1" (var) in "fwgh7-n1_occurrences_in_body"
+  warning: warning: 103 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[2].instruction: "2026-09-01" (output) in "In the Ghost admin, open the post titled '{{runid}} Bench Post' (its editor is at {{02-create.url}}) and open its settings panel (the post settings sidebar). In"
+  flow.steps[2].instruction: "Bench News" (output) in "In the Ghost admin, open the post titled '{{runid}} Bench Post' (its editor is at {{02-create.url}}) and open its settings panel (the post settings sidebar). In"
+  flow.steps[2].params.v5: "2026-09-01" (output) in "2026-09-01"
+  flow.steps[3].instruction: "2026-09-01" (output) in "In the Ghost admin, open the post titled '{{runid}} Bench Post' (editor at {{02-create.url}}) and publish it using the app's publish confirmation flow: click th"
+  flow.steps[3].instruction: "Published" (output) in "In the Ghost admin, open the post titled '{{runid}} Bench Post' (editor at {{02-create.url}}) and publish it using the app's publish confirmation flow: click th"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwgh7-n1 stop=completed
+turns=6 wall=235.8s
+commands=5 cmdTime=180.8s cmdBytes=6861 timeouts=0
+orchestrator in=14898 cw=0 cr=8640 out=7601
+inner prompt=1102752 cached=1014016 completion=15503
+spend=$0.0824 maxUsd=3
+learn: A_n=0 replayed=0/5 full=0 repaired=0 compiled=5 variants=0
+-> /home/user/sitelooper/bench/results/fwgh7-n1-sitelooper-result.json
+
+fwgh7-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — fwgh7-n1-bench-post, body includes runid=true
+  obj 3: PASS — tags=Bench News (bench-news), want only the seeded Bench News (bench-news)
+  obj 4: PASS — custom excerpt="Bench post for run fwgh7-n1."
+  obj 5: PASS — status=published, visibility=public
+  obj 6: PASS — published_at=2026-09-01T00:00:00.000Z, want 2026-09-01
+  obj 7: PASS — slug fwgh7-n1-bench-post reported
+
+[sweep] run 2/3: fwgh7-n2 (replay flow fwgh7, no orchestrator)
+[reset] ghost: deleted 1 post(s) (earlier runs' and non-seed)
+[sweep] fwgh7-n2: 2 drift ticket(s) → fwgh7-n2-drift.json
+
+fwgh7-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — fwgh7-n2-bench-post, body includes runid=true
+  obj 3: PASS — tags=Bench News (bench-news), want only the seeded Bench News (bench-news)
+  obj 4: PASS — custom excerpt="Bench post for run fwgh7-n2."
+  obj 5: PASS — status=published, visibility=public
+  obj 6: PASS — published_at=2026-09-01T00:00:00.000Z, want 2026-09-01
+  obj 7: PASS — slug fwgh7-n2-bench-post reported
+
+[sweep] run 3/3: fwgh7-n3 (replay flow fwgh7, no orchestrator)
+[reset] ghost: deleted 1 post(s) (earlier runs' and non-seed)
+[sweep] fwgh7-n3: 2 drift ticket(s) → fwgh7-n3-drift.json
+
+fwgh7-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — fwgh7-n3-bench-post, body includes runid=true
+  obj 3: PASS — tags=Bench News (bench-news), want only the seeded Bench News (bench-news)
+  obj 4: PASS — custom excerpt="Bench post for run fwgh7-n3."
+  obj 5: PASS — status=published, visibility=public
+  obj 6: PASS — published_at=2026-09-01T00:00:00.000Z, want 2026-09-01
+  obj 7: PASS — slug fwgh7-n3-bench-post reported
+
+Learning sweep fwgh7 (K=3)
+┌─────────┬───┬────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid      │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwgh7-n1' │ '7/7'    │ 'completed' │ 6     │ 5    │ 0.0824    │ 0   │ '0/5'        │ 236    │
+│ 1       │ 2 │ 'fwgh7-n2' │ '7/7'    │ 'success'   │ 0     │ 5    │ 0         │ 1   │ '5/5 (flow)' │ 53     │
+│ 2       │ 3 │ 'fwgh7-n3' │ '7/7'    │ 'success'   │ 0     │ 5    │ 0         │ 1   │ '5/5 (flow)' │ 52     │
+└─────────┴───┴────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8099
+  s_077352  validated    3 steps  3/3 (100%)
+           Go to {{v1}} and sign in with email {{v2}} and password {{v3}} if a sign-in form appears. After signing in, op…
+  s_1439ae  validated    1 steps  3/3 (100%)
+           Go to {{v1}} and sign in with email {{v2}} and password {{v3}} if a sign-in form appears. After signing in, op…
+  s_192703  validated    2 steps  3/3 (100%)
+           In the Ghost admin at http://127.0.0.1:8099/ghost/, create a new post with the exact title '{{v2}}' and a body…
+  s_40f30a  validated    2 steps  3/3 (100%)
+           In the Ghost admin, open the post titled '{{v1}}' (editor at {{v5}}) and publish it using the app's publish co…
+  s_593303  validated   13 steps  3/3 (100%)
+           In the Ghost admin, open the post titled '{{v1}}' (its editor is at http://127.0.0.1:8099/ghost/#/editor/post/…
+  s_60141a  validated    6 steps  3/3 (100%)
+           In the Ghost admin, open the post titled '{{v1}}' (editor at {{v5}}) and publish it using the app's publish co…
+  s_6c909c  validated    4 steps  3/3 (100%)
+           Go to {{v1}} and sign in with email {{v2}} and password {{v3}} if a sign-in form appears. After signing in, op…
+  s_96416d  validated    3 steps  3/3 (100%)
+           Go to {{v1}} and sign in with email {{v2}} and password {{v3}} if a sign-in form appears. After signing in, op…
+  s_a9558f  validated    2 steps  3/3 (100%)
+           Go to {{v1}} and sign in with email {{v2}} and password {{v3}} if a sign-in form appears. After signing in, op…
+  s_a9d9a0  validated    1 steps  3/3 (100%)
+           In the Ghost admin, open the post titled '{{v1}}' (editor at {{v5}}) and publish it using the app's publish co…
+  s_b8e248  validated    3 steps  3/3 (100%)
+           In the Ghost admin, open the post titled '{{v1}}' (editor at {{v5}}) and publish it using the app's publish co…
+  s_ba9829  validated    1 steps  3/3 (100%)
+           In the Ghost admin at http://127.0.0.1:8099/ghost/, create a new post with the exact title '{{v2}}' and a body…
+  s_c1ce26  validated    3 steps  3/3 (100%)
+           Final verification in the Ghost admin at http://127.0.0.1:8099/ghost/: open the Posts list and report (a) the …
+  s_df4b37  validated    5 steps  3/3 (100%)
+           In the Ghost admin at http://127.0.0.1:8099/ghost/, create a new post with the exact title '{{v2}}' and a body…
+  s_fa3520  validated    1 steps  3/3 (100%)
+           Final verification in the Ghost admin at http://127.0.0.1:8099/ghost/: open the Posts list and report (a) the …
+store: /home/user/sitelooper/bench/results/fwgh7-skills
+
+summary: /home/user/sitelooper/bench/results/fwgh7-sweep.json
+SWEEP_EXIT_CODE=0

@@ -1,0 +1,163 @@
+{
+  "flow": "fwgh7",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Signed in to Ghost admin at http://127.0.0.1:8099/ghost/ (admin@bench.local) and opened the Posts list (#/posts). Three posts starting with 'Seed:' are shown, all with status Published: \"Seed: Welcome to the bench\", \"Seed: Release notes for September\", and \"Seed: House style guide\". I also checked the Drafts and Scheduled filters, both of which were empty, so no additional matching posts exist.",
+      "values": {
+        "current_url": "http://127.0.0.1:8099/ghost/#/signin",
+        "seed_post_title_1": "Seed: Welcome to the bench",
+        "seed_post_title_2": "Seed: Release notes for September",
+        "seed_post_title_3": "Seed: House style guide"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_df4b37; observed body_text=This bench post was created for run fwgh7-n3., post_title=fwgh7-n3 Bench Post, save_indicator=Saving..., ref=fwgh7-n3.",
+      "values": {
+        "body_text": "This bench post was created for run fwgh7-n3.",
+        "post_title": "fwgh7-n3 Bench Post",
+        "save_indicator": "Saving...",
+        "ref": "fwgh7-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_df4b37: step 3: read 'body_text' returned a value the skill itself set/selected ('This bench post was created for run fwgh7-n3.') — confirms the control, not persistence; dropped from the report's confident values"
+      ]
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_593303; observed excerpt=Bench post for run fwgh7-n3., publish_date=2026-09-01, url_slug=fwgh7-n3-bench-post, post_id=6ab256c7ef2a670001e51384, post_title=fwgh7-n3 Bench Post, status_indicator=Draft - Saved, body_text=This bench post was created for run fwgh7-n3., ref=fwgh7-n3.",
+      "values": {
+        "excerpt": "Bench post for run fwgh7-n3.",
+        "publish_date": "2026-09-01",
+        "url_slug": "fwgh7-n3-bench-post",
+        "post_id": "6ab256c7ef2a670001e51384",
+        "post_title": "fwgh7-n3 Bench Post",
+        "status_indicator": "Draft - Saved",
+        "body_text": "This bench post was created for run fwgh7-n3.",
+        "ref": "fwgh7-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_593303: step 7: none of the 1 expected page change(s) appeared in the step diff (found on the page instead)",
+        "s_593303: step 8: the panel this toggle shows (- heading \"Post settings\") is already showing — a click would hide it; skipped as already in effect"
+      ]
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Published the post through the app's confirmation flow: clicked Publish, the dialog was set to publish \"Right now\" (no scheduling), clicked \"Continue, final review →\", then \"Publish post, right now\". The editor header now shows \"Published\" with an \"Unpublish\" button and the settings panel is read-only (Update disabled). Settings read back: Post access = Public, publish date 2026-09-01 (00:00 UTC; displayed as \"01 Sep 2026\"), tag Bench News, excerpt \"Bench post for run fwgh7-n3.\". The post is live on the public site: it appears on http://127.0.0.1:8099/ and renders at http://127.0.0.1:8099/fwgh7-n3-bench-post/ with its title, tag, excerpt and body paragraph. Today's date per the browser/app is Tue 22 Sep 2026 (2026-09-22 UTC), i.e. after the 2026-09-01 publish date, so it published immediately rather than being scheduled.",
+      "values": {
+        "publish_date_shown": "2026-09-01 (time 00:00 UTC); shown as \"01 Sep 2026\" in the post list and publish confirmation",
+        "public_site_url": "http://127.0.0.1:8099/fwgh7-n3-bench-post/",
+        "public_post_url": "/fwgh7-n3-bench-post/",
+        "ref": "fwgh7-n3",
+        "tags": "Bench News",
+        "excerpt": "Bench post for run fwgh7-n3.",
+        "url_slug": "fwgh7-n3-bench-post",
+        "status_shown": "Published",
+        "body_text": "This bench post was created for run fwgh7-n3."
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_40f30a: step 1: skipped read — no element matched any known locator for target (none recorded)"
+      ],
+      "unreported": [
+        "post_id"
+      ]
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_c1ce26; observed seed_posts=Seed: Welcome to the bench — Published; Seed: Release notes for September — Published; Seed: House style guide — Published, fwgh7_post_status=Published, fwgh7_post_tags=Bench News (exactly one tag chip; no Bench Newsletter present), fwgh7_post_excerpt=Bench post for run fwgh7-n3., fwgh7_post_slug=fwgh7-n3-bench-post, fwgh7_post_body_text=This bench post was created for run fwgh7-n3. (one visible paragraph; visible occurrences of 'fwgh7-n3' in the body: 1), post_list_item_tag_2=Bench News, fwgh7_post_author=Bench Admin, ref=fwgh7-n3.",
+      "values": {
+        "seed_posts": "Seed: Welcome to the bench — Published; Seed: Release notes for September — Published; Seed: House style guide — Published",
+        "fwgh7_post_status": "Published",
+        "fwgh7_post_tags": "Bench News (exactly one tag chip; no Bench Newsletter present)",
+        "fwgh7_post_excerpt": "Bench post for run fwgh7-n3.",
+        "fwgh7_post_slug": "fwgh7-n3-bench-post",
+        "fwgh7_post_body_text": "This bench post was created for run fwgh7-n3. (one visible paragraph; visible occurrences of 'fwgh7-n3' in the body: 1)",
+        "post_list_item_tag_2": "Bench News",
+        "fwgh7_post_author": "Bench Admin",
+        "ref": "fwgh7-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "4/4",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_c1ce26: step 2: skipped read — no element matched any known locator for target (none recorded)"
+      ]
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "repinned": 0,
+  "drift": 2,
+  "driftTickets": [
+    {
+      "flow": "fwgh7",
+      "step": "04-open",
+      "skill": "s_40f30a",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.998,
+      "missedLocator": "(none recorded)",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8099/ghost/#/editor/post/:id",
+      "pageUrl": "http://127.0.0.1:8099/ghost/#/editor/post/6ab256c7ef2a670001e51384"
+    },
+    {
+      "flow": "fwgh7",
+      "step": "05-open",
+      "skill": "s_c1ce26",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "(none recorded)",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8099/ghost/#/posts",
+      "pageUrl": "http://127.0.0.1:8099/ghost/#/posts"
+    }
+  ],
+  "wallMs": 52477,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
