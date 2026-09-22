@@ -1,5 +1,5 @@
 /**
- * Step 5 of PLAN-jev.md, the deterministic half: what goes on the ballot.
+ * Step 5 of notes/PLAN-jev.md, the deterministic half: what goes on the ballot.
  *
  * Candidate generation is a pure function of an observation and the
  * instruction, so all of this runs with no browser, no key and no model. What

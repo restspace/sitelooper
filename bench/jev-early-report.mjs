@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Were Jev's LOW-confidence picks right? (PLAN-jev.md §5.1, the Kanboard question.)
+ * Were Jev's LOW-confidence picks right? (notes/PLAN-jev.md §5.1, the Kanboard question.)
  *
  *   node bench/jev-early-report.mjs <session|file.jsonl> [...]      # shadow runs (SITELOOPER_JEV_SHADOW=actor)
  *

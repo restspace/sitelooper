@@ -90,7 +90,7 @@ export class Daemon {
    * own. A later instruction naming one of these is naming a value of this
    * run, not of the app, so compile must slot it; fwgr6 shipped n1's uid 62
    * times inside skill templates because recording had no such registry.
-   * See PLAN-provenance.md.
+   * See notes/PLAN-provenance.md.
    */
   private ledger = new RunLedger();
   /**
@@ -476,7 +476,7 @@ ${describeLeaks(leaks.slice(0, 6))}`);
   }
 
   /**
-   * PLAN-jev.md step 5, the shadow actor: MEASUREMENT ONLY. Beside every real
+   * notes/PLAN-jev.md step 5, the shadow actor: MEASUREMENT ONLY. Beside every real
    * model turn it builds the candidate actions, asks Jev, and logs whether the
    * model's actual action was offered and whether Jev picked it — which,
    * weighted by that turn's model time, is the share of model time a Jev actor
@@ -494,7 +494,7 @@ ${describeLeaks(leaks.slice(0, 6))}`);
   }
 
   /**
-   * PLAN-jev.md §4c step 7, the actor that ACTS — an experiment, off unless
+   * notes/PLAN-jev.md §4c step 7, the actor that ACTS — an experiment, off unless
    * SITELOOPER_JEV_ACTOR=act. Before the model is asked, Jev may take a click,
    * fill, select or check it is confident of; everything else, and any
    * failure, is the model's. The shadow is measurement beside the model and
@@ -511,7 +511,7 @@ ${describeLeaks(leaks.slice(0, 6))}`);
   }
 
   /**
-   * PLAN-jev.md §6 bet 1: a REWORDED instruction matched to a validated skill and replayed
+   * notes/PLAN-jev.md §6 bet 1: a REWORDED instruction matched to a validated skill and replayed
    * without the model. An experiment, off unless SITELOOPER_JEV_MATCH=on. It runs only after
    * the exact matcher found nothing, only among skills the exact matcher would itself accept
    * (verified, a chain's head, starting on this page), and only when every blank binds —
@@ -528,7 +528,7 @@ ${describeLeaks(leaks.slice(0, 6))}`);
   }
 
   /**
-   * Site C's ballot (PLAN-jev.md): which element a reported value is read back
+   * Site C's ballot (notes/PLAN-jev.md): which element a reported value is read back
    * from when the page shows it in several places. Code settles the rest
    * before this is asked (exactly one displayer, or provably none); resolved
    * per ask, so `config set jev off` applies to the next instruction, and with
@@ -547,7 +547,7 @@ ${describeLeaks(leaks.slice(0, 6))}`);
   private advisory: Promise<unknown>[] = [];
 
   /**
-   * Sites I and J, ADVISORY (PLAN-jev.md step 2): log where the shape rules
+   * Sites I and J, ADVISORY (notes/PLAN-jev.md step 2): log where the shape rules
    * and Jev disagree about a threaded value or a recorded expectation line.
    * It changes nothing — the flow, the skills and the artifact are byte for
    * byte what they were, and compile never reads what this writes — and a
@@ -582,7 +582,7 @@ ${describeLeaks(leaks.slice(0, 6))}`);
   }
 
   async listen(): Promise<void> {
-    // Site B (PLAN-jev.md): a replayed step whose whole locator chain misses is
+    // Site B (notes/PLAN-jev.md): a replayed step whose whole locator chain misses is
     // offered a live-page proposal before it costs a model recovery. Registered
     // rather than passed, because the tool layer that builds ReplayOptions is
     // neutral about deciders; resolved per ask, so `config set jev off` applies

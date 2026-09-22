@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Offline agreement probe for site A of PLAN-jev.md — the locator-repair
+ * Offline agreement probe for site A of notes/PLAN-jev.md — the locator-repair
  * proposer (`repair.propose`). Live Jev calls, no browser.
  *
  *   node bench/jev-repair-probe.mjs

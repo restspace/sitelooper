@@ -235,7 +235,7 @@ const publishes = new Map(
 // never resolves a reference to its recorded literal (flow.ts RunSpecific — a
 // reset app reproduces a minted id exactly), so a reference its producer does
 // not republish pays recovery every run whatever the evidence says. Run 1
-// references everything on purpose (PLAN-evidence-over-shape.md), so a flow
+// references everything on purpose (notes/PLAN-evidence-over-shape.md), so a flow
 // only one run has seen is a note, not a failure.
 const unjudged = new Set();
 const fragile = new Set();

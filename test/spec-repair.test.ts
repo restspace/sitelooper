@@ -736,7 +736,7 @@ describe('foldPatchedVariants', () => {
   });
 });
 
-// The evidence codemod is the one repair action PLAN-self-updating-spec.md
+// The evidence codemod is the one repair action notes/PLAN-self-updating-spec.md
 // calls "cheap, no model": reorder / retire from sidecar evidence, never a
 // guess. Every rule it has is stated here directly, because the live proof
 // (fwrd42's 06-report, which filed the same ticket on every run until the

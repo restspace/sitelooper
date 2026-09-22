@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Second half of bet 1 (PLAN-jev.md §6): once a reworded instruction is matched
+ * Second half of bet 1 (notes/PLAN-jev.md §6): once a reworded instruction is matched
  * to a stored skill, can its SLOTS be bound from the new wording?
  *
  *   node bench/jev-bind-offline.mjs [--max 400] [--seed 1] [--json out.json]

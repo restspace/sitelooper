@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * How often does a stored skill's START PAGE keep it from running? (PLAN-jev.md §6.)
+ * How often does a stored skill's START PAGE keep it from running? (notes/PLAN-jev.md §6.)
  *
  *   node bench/start-page-spread.mjs
  *

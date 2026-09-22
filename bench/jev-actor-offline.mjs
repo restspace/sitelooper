@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * OFFLINE half of PLAN-jev.md step 5: the actor's question, replayed from
+ * OFFLINE half of notes/PLAN-jev.md step 5: the actor's question, replayed from
  * stored recordings, before any paid model run.
  *
  *   node bench/jev-actor-offline.mjs --dist ./dist-step5          # the fixture recordings

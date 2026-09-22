@@ -50,7 +50,7 @@ export function originOf(url: string): string | null {
  *
  * The query string used to be dropped, so `edit?id=123` and `edit?id=999`
  * were one page and kanboard's every `?controller=…&action=…` route read as
- * `/` (ROBUSTNESS.md, finding 3). It is kept now, less the keys `noiseQueryKey`
+ * `/` (notes/ROBUSTNESS.md, finding 3). It is kept now, less the keys `noiseQueryKey`
  * names: tracking tags and cache busters say nothing about which page it is.
  */
 export interface UrlShape {
@@ -340,7 +340,7 @@ export function mintedShape(value: string): boolean {
  * shape, everything matched already, or a slot value broke segmentation.
  *
  * A disagreement alone is not evidence of volatility, so two kinds are never
- * soft (ROBUSTNESS.md, finding 3):
+ * soft (notes/ROBUSTNESS.md, finding 3):
  *  - a segment where either side is a WORD rather than a minted shape:
  *    `/orders/success` against `/orders/failure`, `/items/7/edit` against
  *    `/items/7/view`, are different pages, and generalising them to `:var`

@@ -107,7 +107,7 @@ export interface LoopShadow {
 }
 
 /**
- * A first tier that may take a turn INSTEAD of the model (PLAN-jev.md §4c
+ * A first tier that may take a turn INSTEAD of the model (notes/PLAN-jev.md §4c
  * step 7). Like the shadow it is a plain interface implemented elsewhere and
  * built at the composition root; unlike the shadow it is awaited, because its
  * answer decides what runs. It returns a whole tool call or null, and null is
@@ -140,7 +140,7 @@ export interface LoopOptions {
    */
   recordAs?: { text: string; resume: true };
   /**
-   * An observer beside the real turn (PLAN-jev.md step 5). Optional and
+   * An observer beside the real turn (notes/PLAN-jev.md step 5). Optional and
    * advisory: it is told what happened and can say nothing back. Built at the
    * composition root, never here.
    */
@@ -149,7 +149,7 @@ export interface LoopOptions {
   actor?: LoopActor;
   /**
    * Who decides WHICH element a reported value is read back from, when the
-   * page shows it in several places (PLAN-jev.md site C). Optional, and a
+   * page shows it in several places (notes/PLAN-jev.md site C). Optional, and a
    * plain function type: the cascade behind it — Jev, or nothing — is composed
    * at the composition root, and this module never asks whether a System One
    * tier exists. With no decider the ambiguous values go to the model exactly
@@ -590,7 +590,7 @@ export async function runInstruction(
             for (const k of Object.keys(values)) delete values[k];
             for (const [k, v] of Object.entries(report.evidence?.values ?? {})) values[k] = String(v);
           }
-          // The read-back cascade (PLAN-jev.md site C): code, then the
+          // The read-back cascade (notes/PLAN-jev.md site C): code, then the
           // optional System One tier, then the model — which until this
           // existed ran on EVERY instruction (9 of 9 in fwrdj3-n1, 9 of 9 in
           // fwrdj4-n1, 2.0-7.4s each, 33s and 36s of those recordings) to

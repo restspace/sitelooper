@@ -1,7 +1,7 @@
 /**
  * Differential harness: one procedure, two runners.
  *
- * Nearly every correctness finding in CORRECTNESS_PLAN.md is a place where
+ * Nearly every correctness finding in notes/CORRECTNESS_PLAN.md is a place where
  * daemon replay and the emitted Playwright artifact disagree — replay
  * advances a cursor where the spec calls `.first()`; replay has a progress
  * guard the spec had nothing like; a gate applies on one side and not the
@@ -2487,7 +2487,7 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
      * different failure, after different work. Both must now do the same work
      * and stop for the same reason.
      *
-     * ROBUSTNESS.md finding 1: the progress guard used to be judged after the
+     * notes/ROBUSTNESS.md finding 1: the progress guard used to be judged after the
      * body, so both runners marked Item 2 TWICE before noticing. It is now
      * asked once the pass's targets resolve and before they are acted on, so
      * Item 2 is marked once.
@@ -3409,7 +3409,7 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
    * postconditions, a read of nothing, and a rejected record-creating click.
    * The mutation log is the oracle throughout.
    */
-  describe('false successes (ROBUSTNESS.md)', () => {
+  describe('false successes (notes/ROBUSTNESS.md)', () => {
     /**
      * Finding 2. Approve is disabled: Playwright's own click waits for it to
      * be enabled and gives up, and the forced tier used to "succeed" on a
@@ -3532,7 +3532,7 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     }, 180_000);
   });
 
-  describe('observation dialects (ROBUSTNESS.md finding 4)', () => {
+  describe('observation dialects (notes/ROBUSTNESS.md finding 4)', () => {
     /** A procedure with a v1 param, run from `/` through its own goto, as both runners see it. */
     const dialectProcedure = (id: string, steps: SkillStep[]): { skill: Skill; spec: SpecFlow } => {
       const params: Record<string, SkillParam> = { v1: { example: 'a@b.test', usedIn: [2], known: true } };
@@ -3613,7 +3613,7 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     }, 240_000);
   });
 
-  describe('frame and page context (ROBUSTNESS.md finding 5)', () => {
+  describe('frame and page context (notes/ROBUSTNESS.md finding 5)', () => {
     /** One self-navigating procedure, stamped with the contract its steps need, as both runners see it. */
     const contextProcedure = (id: string, steps: SkillStep[]): { skill: Skill; spec: SpecFlow } => {
       const skill: Skill = { ...skillOf(steps), id, template: id, contract: 3, stats: { ...skillOf(steps).stats, verifiedContract: 3 } };

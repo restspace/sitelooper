@@ -6,7 +6,7 @@ import { MAX_ITEMS_PER_ASK, READBACK_LOCATE_SITE, readBackDecider, readBackLocat
 import type { DisplayCandidate, ReadBackAsk, ReadBackItem } from '../src/agent/readback.js';
 
 /**
- * Site C's ballot (PLAN-jev.md). Scripted client throughout — CI has no
+ * Site C's ballot (notes/PLAN-jev.md). Scripted client throughout — CI has no
  * TypeSafe key, and the point of the tier is that its absence is
  * indistinguishable from its silence. What is under test is what goes ON the
  * ballot, which answers are refused, and that a pick is only ever one of the

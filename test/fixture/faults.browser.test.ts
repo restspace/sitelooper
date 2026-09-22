@@ -1,6 +1,6 @@
 /**
  * Proves the FIXTURE's fault injection actually does what it claims, per
- * CORRECTNESS_PLAN.md §9.1 ("the local fixture server should expose ... a
+ * notes/CORRECTNESS_PLAN.md §9.1 ("the local fixture server should expose ... a
  * verifier-only mutation log and controllable faults"). This file tests the
  * fixture server itself — not sitelooper's behaviour under these faults,
  * which is separate work.

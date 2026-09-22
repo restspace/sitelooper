@@ -24,7 +24,7 @@ afterEach(() => {
  * That segment is a run id in the fragment (`run-1` / `run-2`), and the page
  * picks its content from it. It used to be the page body itself (`primary">A`
  * against `fallback">B`), which the url gate only let through because it
- * generalised any disagreeing segment — the very false success ROBUSTNESS.md
+ * generalised any disagreeing segment — the very false success notes/ROBUSTNESS.md
  * finding 3 names. Only a minted-shaped value is volatile now.
  */
 const pageFor = (run: string) =>

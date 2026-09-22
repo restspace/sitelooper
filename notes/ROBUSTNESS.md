@@ -16,7 +16,7 @@ Sharing an implementation prevents daemon/spec divergence, but does not establis
 
 **Priority: high. Confirmed by a diagnostic probe.**
 
-Location: [src/execution/loop.ts](src/execution/loop.ts), `runFoldedLoop`.
+Location: [src/execution/loop.ts](../src/execution/loop.ts), `runFoldedLoop`.
 
 Failed guard counts are converted to zero with `catch(() => 0)`. A probe whose guard count threw `Error('page closed')` returned:
 
@@ -39,7 +39,7 @@ Acceptance evidence: a closed or navigating page cannot produce a successful dra
 
 **Priority: high. Confirmed with a real-browser probe.**
 
-Location: [src/execution/browser.ts](src/execution/browser.ts), `CLICK_TIERS` and `robustClick`.
+Location: [src/execution/browser.ts](../src/execution/browser.ts), `CLICK_TIERS` and `robustClick`.
 
 Clicks automatically escalate from normal actionability checks to forced clicks and synthetic events. In a real-browser probe, a disabled HTML button returned:
 
@@ -63,7 +63,7 @@ Acceptance evidence: disabled controls cannot be reported as effective actions; 
 
 **Priority: high. Confirmed by direct calls to the built implementation.**
 
-Locations: [src/execution/url.ts](src/execution/url.ts), `urlDiff`, `urlMatches`, and `softUrlMatch`; [src/execution/gates.ts](src/execution/gates.ts), `urlEffectVerdict`.
+Locations: [src/execution/url.ts](../src/execution/url.ts), `urlDiff`, `urlMatches`, and `softUrlMatch`; [src/execution/gates.ts](../src/execution/gates.ts), `urlEffectVerdict`.
 
 The URL model ignores ordinary query parameters and accepts limited path differences as volatility. The probes established:
 
@@ -85,7 +85,7 @@ Acceptance evidence: different bound record IDs refuse a match; success and fail
 
 **Priority: high. Confirmed with a real-browser probe and source inspection.**
 
-Locations: [src/daemon/refs.ts](src/daemon/refs.ts), agent accessibility snapshots; [src/execution/snapshot.ts](src/execution/snapshot.ts), `describeInPage`, `nameOf`, and `capturePage`.
+Locations: [src/daemon/refs.ts](../src/daemon/refs.ts), agent accessibility snapshots; [src/execution/snapshot.ts](../src/execution/snapshot.ts), `describeInPage`, `nameOf`, and `capturePage`.
 
 The agent's accessibility snapshot and verification's DOM capture describe different views of the page. Verification implements its own accessible-name approximation and traverses only the current document.
 
@@ -107,7 +107,7 @@ Acceptance evidence: standard labels survive capture; embedded content can be ob
 
 **Priority: high for broader app support. Source-inspection finding.**
 
-Locations: [src/daemon/recorder.ts](src/daemon/recorder.ts), `LocatorCandidate` and `makeLocator`; [src/spec/emit.ts](src/spec/emit.ts), the `tabs` action branch.
+Locations: [src/daemon/recorder.ts](../src/daemon/recorder.ts), `LocatorCandidate` and `makeLocator`; [src/spec/emit.ts](../src/spec/emit.ts), the `tabs` action branch.
 
 Live refs support iframe elements, but persistent locator candidates have no frame path and reconstruction starts from `Page`. The persistent model cannot express the context needed to reconstruct an in-frame target. Compiled tab switching is explicitly unsupported.
 
@@ -125,7 +125,7 @@ Acceptance evidence: record/replay/compile an iframe action and a popup workflow
 
 **Priority: medium-high. Source-inspection finding.**
 
-Locations: [src/execution/browser.ts](src/execution/browser.ts), `trackRequests` (formerly in `src/daemon/browser.ts`, which now re-exports it); [src/daemon/settle.ts](src/daemon/settle.ts), `STREAMING_PATH`, `installRequestTracking`, and `settlePage`; [src/execution/browser.ts](src/execution/browser.ts), `settleDom`.
+Locations: [src/execution/browser.ts](../src/execution/browser.ts), `trackRequests` (formerly in `src/daemon/browser.ts`, which now re-exports it); [src/daemon/settle.ts](../src/daemon/settle.ts), `STREAMING_PATH`, `installRequestTracking`, and `settlePage`; [src/execution/browser.ts](../src/execution/browser.ts), `settleDom`.
 
 Separate request trackers use different definitions of activity. Streaming detection guesses from route names such as `notifications`, `watch`, and `poll`. DOM settling uses a short quiet probe, which cannot establish that a debounced request has started or completed.
 
@@ -143,7 +143,7 @@ Acceptance evidence: delayed/debounced saves wait for their effect; long-lived s
 
 **Priority: medium. Structural recommendation supported by source inspection.**
 
-Locations: [src/skills/compile.ts](src/skills/compile.ts), [src/skills/store.ts](src/skills/store.ts), [src/spec/ir.ts](src/spec/ir.ts), and [src/spec/lower.ts](src/spec/lower.ts).
+Locations: [src/skills/compile.ts](../src/skills/compile.ts), [src/skills/store.ts](../src/skills/store.ts), [src/spec/ir.ts](../src/spec/ir.ts), and [src/spec/lower.ts](../src/spec/lower.ts).
 
 Procedures pass through recording, skills, flow, spec IR, and generated source, then back through lift/lower for repair. Lowering reconstructs missing metadata and assigns `validated` with zero execution successes. That is an internal evidence-model concern; it does not demonstrate that the public readiness gate is bypassed.
 
@@ -163,7 +163,7 @@ Acceptance evidence: meaningful procedure semantics survive round trips without 
 
 **Priority: medium. Structural recommendation supported by source inspection.**
 
-Locations: [src/spec/runtime-source.ts](src/spec/runtime-source.ts), `parseExecutionSource`; [src/spec/emit.ts](src/spec/emit.ts), `neededHelpers`; [test/execution-parity.test.ts](test/execution-parity.test.ts).
+Locations: [src/spec/runtime-source.ts](../src/spec/runtime-source.ts), `parseExecutionSource`; [src/spec/emit.ts](../src/spec/emit.ts), `neededHelpers`; [test/execution-parity.test.ts](../test/execution-parity.test.ts).
 
 Runtime embedding strips imports and exports with regular expressions. Helper selection searches source text for tokens. This places hidden restrictions on ordinary TypeScript changes and creates another mechanism maintainers must understand.
 

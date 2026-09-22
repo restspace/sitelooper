@@ -385,7 +385,7 @@ describe('the emitted adapter over the shared policy', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Frame and page context (ROBUSTNESS.md finding 5): the chain resolves inside
+// Frame and page context (notes/ROBUSTNESS.md finding 5): the chain resolves inside
 // the recorded frame, a recorded popup is armed before the action and
 // followed, and a step without either emits exactly what it did before.
 // ---------------------------------------------------------------------------

@@ -1,5 +1,5 @@
 /**
- * One observation per action (ROBUSTNESS.md finding 6): begun BEFORE the
+ * One observation per action (notes/ROBUSTNESS.md finding 6): begun BEFORE the
  * action dispatches, it owns the action's whole deadline, its baseline of the
  * page's traffic, and what it expects to see, and it says afterwards how the
  * action ended — not dispatched, dispatched, effect verified, or unknown.

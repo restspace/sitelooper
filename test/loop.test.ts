@@ -1060,7 +1060,7 @@ const browserEnabled = process.env.BP_BROWSER_TESTS === '1';
 });
 
 /**
- * The read-back cascade (PLAN-jev.md site C). The model's `locate` turn ran on
+ * The read-back cascade (notes/PLAN-jev.md site C). The model's `locate` turn ran on
  * 9 of 9 instructions in fwrdj3-n1 and 9 of 9 in fwrdj4-n1, at 2.0-7.4s of
  * full-history prompt each. These are the three claims that make it stop: code
  * settles what it can, the model is asked only about the rest, and with no

@@ -2,7 +2,7 @@
  * The navigation fallback's two rungs (src/execution/recover.ts) against a
  * stubbed page: a substitute link's click whose outcome is unknown must never
  * be followed by the direct navigation — that would be a second commit of
- * whatever the link does (ROBUSTNESS.md finding 2).
+ * whatever the link does (notes/ROBUSTNESS.md finding 2).
  */
 import type { Page } from 'playwright-core';
 import { describe, expect, it, vi } from 'vitest';

@@ -1344,7 +1344,7 @@ async function repairCommand(positional: string[], flags: Map<string, string | b
 }
 
 
-// --- repair on a compiled spec (PLAN-self-updating-spec.md, phase 4) ---
+// --- repair on a compiled spec (notes/PLAN-self-updating-spec.md, phase 4) ---
 
 /**
  * `--var k=v` may repeat, and `parseArgv` keeps only the last one, so the
@@ -1483,7 +1483,7 @@ function runResetCmd(cmd: string | undefined, label: string, say: (m: string) =>
 
 /**
  * `sitelooper repair <name.flow.ts>` — the self-updating half of the compiled
- * runner (PLAN-self-updating-spec.md, "The loop").
+ * runner (notes/PLAN-self-updating-spec.md, "The loop").
  *
  * Lift the owned file back to its IR, stage it into a THROWAWAY store and flow
  * file, replay it against the live app through the daemon (whose recovery
@@ -1730,7 +1730,7 @@ async function repairFlowCommand(
   });
 
   // Never weaken an expectation: an assertion that no longer holds is a test
-  // failure for a human, not drift (PLAN-self-updating-spec.md). The one
+  // failure for a human, not drift (notes/PLAN-self-updating-spec.md). The one
   // reported-not-refused case is a repair VARIANT — see SpecDiff for why that
   // is not a loophole.
   const gateExpectations = () => {

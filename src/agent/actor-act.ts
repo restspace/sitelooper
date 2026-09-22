@@ -7,7 +7,7 @@ import { buildCandidates, focusObservation, observeControls, type ActorCandidate
 import { actorTurnSite, type TurnAction, type TurnReadingDetail } from './actor-jev.js';
 
 /**
- * PLAN-jev.md §4c step 7, behind a flag: the System One actor ACTS.
+ * notes/PLAN-jev.md §4c step 7, behind a flag: the System One actor ACTS.
  *
  * The shadow (actor-jev.ts) scored Jev against the model's own next action,
  * which assumes the model is the reference. Re-reading its log showed that to

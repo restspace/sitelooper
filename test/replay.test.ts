@@ -1940,7 +1940,7 @@ d('prose read-back through a stable test hook (fixture page)', () => {
 });
 
 /**
- * ROBUSTNESS.md finding 5, end to end: record through the tools the agent
+ * notes/ROBUSTNESS.md finding 5, end to end: record through the tools the agent
  * uses, compile through learning, replay through run_skill — against a fixture
  * server whose mutation log is the oracle. The page has its own Save and an
  * iframe with an identical one; an opener page opens a popup that closes

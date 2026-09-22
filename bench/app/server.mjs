@@ -73,7 +73,7 @@ const ID_DRIFTS = [
  * label rungs — but every fwrd* recording of the Add-part click also carries a
  * css PATH (`#view > section > header > button`) and a recorded POINT, and both
  * of those still resolve against a button that has not moved. That is a
- * fallthrough, not a dead chain, and site B (inline healing, PLAN-jev.md) only
+ * fallthrough, not a dead chain, and site B (inline healing, notes/PLAN-jev.md) only
  * ever runs on a dead one.
  *
  * So this mode renames the control AND relocates it inside the card header:

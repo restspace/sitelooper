@@ -1,5 +1,5 @@
 /**
- * The shared frame and page context (src/execution/context.ts, ROBUSTNESS.md
+ * The shared frame and page context (src/execution/context.ts, notes/ROBUSTNESS.md
  * finding 5), with fake roots: how a recorded frame path is found again, what
  * it refuses, and how a recorded page effect is followed. The browser half is
  * in test/replay.test.ts (record -> compile -> replay on /frames and /opener).

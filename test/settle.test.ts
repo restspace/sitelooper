@@ -89,7 +89,7 @@ d('settle (real page)', () => {
     expect(elapsed).toBeLessThan(3_500); // and it is bounded
   }, 30_000);
 
-  // No path is taken for a stream by its name any more (ROBUSTNESS.md finding 6):
+  // No path is taken for a stream by its name any more (notes/ROBUSTNESS.md finding 6):
   // a poll the page opened before the settle is the page's own, and is not waited for.
   it('does not wait out a long-poll the page already had open', async () => {
     const page = await session.getPage();

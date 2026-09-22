@@ -27,7 +27,7 @@ import { maskVolatile } from '../shared/text.js';
  * `maskPublishedValues` are shape and provenance guesses at "will this line
  * be on the page on EVERY run of this procedure?".
  *
- * This module is the ENUMERATOR half of PLAN-jev.md sites I and J: it lists
+ * This module is the ENUMERATOR half of notes/PLAN-jev.md sites I and J: it lists
  * every (value, occurrence) pair and every recorded expectation line the
  * rules ruled on, with the answer they gave. It is pure, synchronous and
  * model-free — nothing here may import the System One client (see

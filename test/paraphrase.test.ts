@@ -1,5 +1,5 @@
 /**
- * PLAN-jev.md §6 bet 1: binding a stored skill's blanks from a REWORDED instruction.
+ * notes/PLAN-jev.md §6 bet 1: binding a stored skill's blanks from a REWORDED instruction.
  * The rules here are the ones the offline measurement argued for
  * (bench/jev-bind-offline.mjs): ledger first, resemblance to the recorded
  * example, contested blanks to a decider, and no replay unless every blank binds.

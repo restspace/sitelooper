@@ -238,7 +238,7 @@ describe('expectedChangesVerdict', () => {
   });
 
   /**
-   * ROBUSTNESS.md finding 4. A live look that could not cover the page (a cap
+   * notes/ROBUSTNESS.md finding 4. A live look that could not cover the page (a cap
    * reached, a visible frame unread, a virtualised list) has not shown a line
    * ABSENT. The stop stands — nothing established the effect — but it is
    * marked unobserved and says why; and the conditional branch that reads

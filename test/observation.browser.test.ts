@@ -5,7 +5,7 @@
  * expectation compiled before dialects existed is matched against dialect-1
  * lines, so they must be the old capture's lines byte for byte — the old page
  * function is kept below, verbatim, as the oracle, and both are run against
- * the same live page. DIALECT 2 SEES WHAT DIALECT 1 COULD NOT (ROBUSTNESS.md
+ * the same live page. DIALECT 2 SEES WHAT DIALECT 1 COULD NOT (notes/ROBUSTNESS.md
  * finding 4): a `<label for>` name, disabled state, open shadow roots, and
  * rendered frames, same- and cross-origin — and the coverage says when a look
  * cannot establish absence.

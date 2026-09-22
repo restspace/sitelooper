@@ -1,5 +1,5 @@
 /**
- * Site A of PLAN-jev.md: the locator-repair proposer as a System One choice.
+ * Site A of notes/PLAN-jev.md: the locator-repair proposer as a System One choice.
  *
  * Everything here runs against a SCRIPTED client — CI has no TypeSafe key, and
  * the point of the tier is that its absence is indistinguishable from its

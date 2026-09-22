@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Drift-injection A/B for site B of PLAN-jev.md — inline replay healing.
+ * Drift-injection A/B for site B of notes/PLAN-jev.md — inline replay healing.
  *
  * The gate on step 4 of the order-of-work table is "drift-injection A/B on
  * repairdesk; matrix: fewer fallbacks, zero new reds". This is that A/B, in one
@@ -9,7 +9,7 @@
  * THE EXPERIMENT
  *
  * `bench/results/flows/fwrdj2.json` + `bench/results/fwrdj2-skills` are the
- * first live Jev sweep (PLAN-jev.md, "First live sweep"): 9/9 steps replayed,
+ * first live Jev sweep (notes/PLAN-jev.md, "First live sweep"): 9/9 steps replayed,
  * 0 model turns, 40s. Nothing drifted in it, so `repair.propose` never ran and
  * neither would healing. So we BREAK one control and replay the same flow
  * twice, changing nothing but whether Jev is present:

@@ -15,7 +15,7 @@
  *
  * This is that home. A value enters ONCE, with a Binding saying how a later
  * run re-derives its own, and every producer asks the ledger rather than
- * guessing. See PLAN-provenance.md.
+ * guessing. See notes/PLAN-provenance.md.
  */
 
 /** How a later run obtains its own value for a slot. */
@@ -350,7 +350,7 @@ export class RunLedger {
       // compiled locator carries the recording run's record into every replay
       // while every check passes. `identifierLike("Order Alpha")` is false;
       // so is `identifierLike("abcd")`. That is the exact case
-      // PLAN-evidence-over-shape.md was written for.
+      // notes/PLAN-evidence-over-shape.md was written for.
       //
       // Widening the shape test cannot fix it — fatal() already lost a
       // release cycle to the opposite error (odoo's menu id 123 banked as a
@@ -685,7 +685,7 @@ export function fatal(leak: Leak): boolean {
   //
   // So the rule moved to bench/verify-artifacts.mjs, where a false positive
   // costs a look instead of a run. A gate may only enforce what a single run
-  // can actually establish; see PLAN-evidence-over-shape.md, which makes the
+  // can actually establish; see notes/PLAN-evidence-over-shape.md, which makes the
   // deferred version -- run 1 proposes, run 2 decides -- stage 1.
   // ...and only when something better than the token's spelling put it here.
   //

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * THE REGRESSION ZOO for PLAN-jev.md sites I and J — record-time value/occurrence
+ * THE REGRESSION ZOO for notes/PLAN-jev.md sites I and J — record-time value/occurrence
  * triage and expectation triage, both ADVISORY.
  *
  *   node bench/jev-zoo.mjs                      # the labelled zoo, live

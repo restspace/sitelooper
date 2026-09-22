@@ -64,7 +64,7 @@ describe('shared click dispatch safety', () => {
   });
 
   /**
-   * ROBUSTNESS.md finding 2. A forced click on a disabled button dispatches
+   * notes/ROBUSTNESS.md finding 2. A forced click on a disabled button dispatches
    * nothing the app handles, and used to come back "clicked (forced past
    * actionability checks)". A disabled control is now refused before any tier
    * below Playwright's own click, and the message says nothing was dispatched.
@@ -152,7 +152,7 @@ describe('shared click dispatch safety', () => {
 });
 
 /**
- * ROBUSTNESS.md finding 2: what a click's failure proves travels on the error
+ * notes/ROBUSTNESS.md finding 2: what a click's failure proves travels on the error
  * (`actionOutcome`), with the model-facing words unchanged; and the action's
  * deadline cuts every tier.
  */

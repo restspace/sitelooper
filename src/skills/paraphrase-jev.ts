@@ -5,7 +5,7 @@ import type { ContestQuery, MatchQuery, MatchSkill, PickLiteral } from './paraph
 import type { Skill } from './store.js';
 
 /**
- * The two System One sites behind paraphrase.ts (PLAN-jev.md §6, bet 1).
+ * The two System One sites behind paraphrase.ts (notes/PLAN-jev.md §6, bet 1).
  *
  * Both follow the rules the earlier sites paid for: the instruction lives in
  * the QUESTION, the question is about what the texts SAY (never what would

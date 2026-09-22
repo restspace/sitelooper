@@ -1,6 +1,6 @@
 /**
  * The RunLedger and its leak scanner, checked against the artifacts that
- * exposed each defect. Phase 1 of PLAN-provenance.md: before the ledger is
+ * exposed each defect. Phase 1 of notes/PLAN-provenance.md: before the ledger is
  * allowed to replace anyone's recognition logic, it has to reproduce every
  * leak we found the slow way — by reading drift files after a two-hour cloud
  * sweep. If a case here does not fire, the ledger is incomplete, and that is
@@ -374,7 +374,7 @@ describe('fatal leaks', () => {
     // Telling an app constant from a minted uid needs a SECOND run. A gate may
     // only enforce what one run can establish, so the check moved to
     // bench/verify-artifacts.mjs where being wrong costs a look, not a sweep.
-    // See PLAN-evidence-over-shape.md.
+    // See notes/PLAN-evidence-over-shape.md.
     expect(fatal(at('s.steps[0].args.url', 'identifier'))).toBe(false);
   });
 });

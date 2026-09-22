@@ -12,7 +12,7 @@
 // hand-building two IRs, and none of them need a live app.
 //
 // The one rule this module enforces rather than merely reports is
-// PLAN-self-updating-spec.md's "never weaken an expectation": a repair that
+// notes/PLAN-self-updating-spec.md's "never weaken an expectation": a repair that
 // dropped a step's `expect` is a refusal, not a diff line, and
 // `droppedExpectations` is what the CLI gates the write on.
 import fs from 'node:fs';
@@ -69,7 +69,7 @@ const exprs = (chain: LocatorCandidate[]) => chain.map((c) => candidateExpr(c));
  * something new), and a changed url pattern is reported as a change, not a
  * weakening — the pattern names where the app went, and the app moving is the
  * drift being repaired. Dropping the whole clause, or dropping members of
- * `addedContains`, is the thing PLAN-self-updating-spec.md forbids: it turns
+ * `addedContains`, is the thing notes/PLAN-self-updating-spec.md forbids: it turns
  * a red build green by asserting less.
  */
 
@@ -218,7 +218,7 @@ export interface StagedRepair {
  * The point of the isolation is that the run this stages is a REAL sitelooper
  * run — it re-pins, it stores repair variants, it folds candidate evidence
  * back — and none of that may touch `~/.sitelooper`. The spec is the source of
- * truth (PLAN-self-updating-spec.md's one design decision); the store is a
+ * truth (notes/PLAN-self-updating-spec.md's one design decision); the store is a
  * scratch buffer that exists for the length of one repair.
  */
 export function stageRepair(spec: SpecFlow, dir: string): StagedRepair {
@@ -322,7 +322,7 @@ export function foldPatchedVariants(
 
 // --- evidence codemod --------------------------------------------------------
 //
-// PLAN-self-updating-spec.md, "what the agent is allowed to change": reorder
+// notes/PLAN-self-updating-spec.md, "what the agent is allowed to change": reorder
 // candidates and retire a candidate are the CHEAP, no-model edits — "always a
 // pure codemod from sidecar evidence". Everything below is that codemod. It
 // reads only `seen` (the hit/miss counters replay banks) and the run's own

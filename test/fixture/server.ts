@@ -2,7 +2,7 @@
  * Shared HTTP fixture server: a tiny "Items" list app with a Remove/Mark
  * affordance per row, backed by a mutation log that only the server can
  * write. execution-parity.test.ts uses this as the differential-harness
- * oracle (see CORRECTNESS_PLAN.md §9.1: "both runners said ok" must never
+ * oracle (see notes/CORRECTNESS_PLAN.md §9.1: "both runners said ok" must never
  * stand in for "the right thing happened once").
  *
  * Per §9.1, the fixture also needs to expose CONTROLLABLE FAULTS so
@@ -275,7 +275,7 @@ document.querySelector('.mark').addEventListener('click', async (e) => {
  * Approve logs `mark:approve` when its handler runs. A browser suppresses
  * clicks on a disabled button, so a forced click there dispatches nothing the
  * app sees: a runner that reports it as clicked has claimed an action that
- * never happened (ROBUSTNESS.md, finding 2). `/gate/late` starts disabled and
+ * never happened (notes/ROBUSTNESS.md, finding 2). `/gate/late` starts disabled and
  * enables Approve 1.5s after load: disabled only while the page settles, the
  * timing a runner must wait out rather than refuse (fwgr39-n3).
  */
@@ -323,7 +323,7 @@ document.querySelector('.mark').addEventListener('click', async (e) => {
  * button that lands on `/outcome/<result>`, and the outcome page has a Mark
  * button. `success` against `failure` is a different page, not a volatile
  * value, so a runner that recorded success must not mark on failure
- * (ROBUSTNESS.md, finding 3). `/checkout-q/<result>` is the same flow with
+ * (notes/ROBUSTNESS.md, finding 3). `/checkout-q/<result>` is the same flow with
  * the outcome in the QUERY, `/outcome?result=<result>`: the half of the
  * finding the url model used to drop.
  */
@@ -850,7 +850,7 @@ document.querySelector('.mark').addEventListener('click', async (e) => {
 </body></html>`;
 
 /**
- * Everything the first snapshot dialect could not see (ROBUSTNESS.md finding
+ * Everything the first snapshot dialect could not see (notes/ROBUSTNESS.md finding
  * 4), on one page: a `<label for>` input, a disabled button, a button in an
  * OPEN shadow root (with a status toast beside it), a same-origin iframe, a
  * frame from `cross` (another origin, when given), a `display:none` iframe,
@@ -892,7 +892,7 @@ const OBSERVE_FRAME = (label: string) => `<!doctype html><html><head><meta chars
 </body></html>`;
 
 /**
- * An effect that lands INSIDE an iframe (ROBUSTNESS.md finding 4): Open
+ * An effect that lands INSIDE an iframe (notes/ROBUSTNESS.md finding 4): Open
  * payment puts a `Confirm payment` button into the same-origin payment frame
  * — in `ok` mode; in `broken` mode the click does nothing. Mark sits in the
  * page itself. A procedure recorded in dialect 2 expects the frame's button;
@@ -921,7 +921,7 @@ document.querySelector('.mark').addEventListener('click', async (e) => {
 </body></html>`;
 
 /**
- * Frame context (ROBUSTNESS.md finding 5): `/frames` has a Save of its own
+ * Frame context (notes/ROBUSTNESS.md finding 5): `/frames` has a Save of its own
  * (POST /note) and a payment iframe, titled "Payment", whose document has an
  * IDENTICAL Save (POST /frame-save). A procedure recorded on the frame's Save
  * must press that one, never the page's. `/frames/renamed` is the same page
@@ -969,7 +969,7 @@ document.getElementById('approve').addEventListener('click', () => {
 </body></html>`;
 
 /**
- * Waiting (ROBUSTNESS.md finding 6). Each page's effect arrives through the
+ * Waiting (notes/ROBUSTNESS.md finding 6). Each page's effect arrives through the
  * server, which logs it, so a test asserts what the APPLICATION saw:
  *  - `/debounce` (`?live=1`: with an event stream open from load): typing into Title saves 200ms after the last keystroke
  *    (POST /api/save/<value>, answered 300ms later), then shows "Saved: <value>".

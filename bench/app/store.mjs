@@ -222,7 +222,7 @@ export function createStore({ dataDir, fresh = false } = {}) {
      * an artifact of this reset. Odoo, whose sequence genuinely advances
      * (S00021, S00022, S00023), makes the same value come out volatile — which
      * is the correct answer, and the one a real target gives. See
-     * PLAN-evidence-over-shape.md.
+     * notes/PLAN-evidence-over-shape.md.
      */
     reset() {
       const highWater = counters.ref

@@ -1,5 +1,5 @@
 /**
- * Waiting on action-specific evidence, in a real browser (ROBUSTNESS.md
+ * Waiting on action-specific evidence, in a real browser (notes/ROBUSTNESS.md
  * finding 6). Browser-gated:
  *   BP_BROWSER_TESTS=1 npx vitest run test/action.browser.test.ts
  * Every case asserts what the fixture APPLICATION logged or rendered, not only

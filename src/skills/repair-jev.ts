@@ -15,7 +15,7 @@ import {
 import { kindFamily, renderSnapshotRow, type DiagnosticProposer, type ProposeContext, type ProposeLocator, type SnapshotRow } from './repair.js';
 
 /**
- * Site A of PLAN-jev.md: the locator-repair proposer, as a System One choice.
+ * Site A of notes/PLAN-jev.md: the locator-repair proposer, as a System One choice.
  *
  * `llmProposer` is already a choice problem wearing a generation costume — it
  * shows a strong model a flat list of the page's interactive elements and asks

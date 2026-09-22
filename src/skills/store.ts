@@ -142,7 +142,7 @@ export interface Skill {
  * The HIGHEST contract this build reads, not the one every procedure is
  * stamped with: a procedure is stamped `contractFor(steps)`. Contract 3 is a
  * procedure that says where its targets live or what it does to its page
- * (SkillStep.contexts / page / effect, ROBUSTNESS.md finding 5). Those are new
+ * (SkillStep.contexts / page / effect, notes/ROBUSTNESS.md finding 5). Those are new
  * optional fields, which alone would be no bump — except that a build which
  * ignores them does not merely do less: it resolves an in-frame Save against
  * the main page, where an identical Save may well be, and presses it. So a

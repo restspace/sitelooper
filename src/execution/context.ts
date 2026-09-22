@@ -1,6 +1,6 @@
 /**
  * WHERE a persistent target lives, and what a step does to the page it runs
- * on (ROBUSTNESS.md, finding 5), shared by daemon replay and embedded
+ * on (notes/ROBUSTNESS.md, finding 5), shared by daemon replay and embedded
  * verbatim in the standalone artifact.
  *
  * A live `@f1e2` ref reaches into an iframe, so an agent's in-frame click

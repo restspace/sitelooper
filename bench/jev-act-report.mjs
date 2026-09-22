@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * The acting actor's A/B, read off two recording sessions (PLAN-jev.md §4c step 7).
+ * The acting actor's A/B, read off two recording sessions (notes/PLAN-jev.md §4c step 7).
  *
  *   node bench/jev-act-report.mjs fwrdj7-n1 fwrdj8-n1     # model-only arm, then the acting arm
  *

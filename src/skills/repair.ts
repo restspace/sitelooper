@@ -59,7 +59,7 @@ export interface DriftTicket {
   pageUrl?: string;
   /**
    * The step's dead chain was healed INLINE during the run (site B of
-   * PLAN-jev.md, replay.ts `tryHeal`): a locator proposed from the live page
+   * notes/PLAN-jev.md, replay.ts `tryHeal`): a locator proposed from the live page
    * stood in, and the step's own recorded expectations then judged it.
    * `recovered` says which way that went — false means the step ran on the
    * proposal and the replay walked past it.
@@ -821,7 +821,7 @@ export interface DrainOptions {
  * (promote-fallback), then the model-and-live-page one (patch-segment).
  * Re-record is REPORTED, never attempted — a broad redesign is a fresh
  * recording, and guessing at it is how a spec quietly stops testing what it
- * says it tests (PLAN-self-updating-spec.md, "what the agent is allowed to
+ * says it tests (notes/PLAN-self-updating-spec.md, "what the agent is allowed to
  * change").
  *
  * Takes the store, the page opener and the proposer as arguments rather than

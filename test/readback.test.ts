@@ -16,7 +16,7 @@ import {
 import type { RecordedStep } from '../src/daemon/recorder.js';
 
 /**
- * Site C's code decider (PLAN-jev.md). Everything here is the SEARCH and the
+ * Site C's code decider (notes/PLAN-jev.md). Everything here is the SEARCH and the
  * cascade around it; what the page-side sweep actually finds is checked by the
  * browser-backed block at the bottom, because only a real page can answer
  * "which element displays this".

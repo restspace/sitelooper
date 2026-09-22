@@ -1403,7 +1403,7 @@ export function discoverSlots(
   // name to read and the characters say nothing, so it stayed literal and
   // s_e013d1 step 7 navigated every later run to run 1's dead dashboard
   // (s_0e342c step 7 the same, one uid later). Position cannot grow by reading
-  // more names (PLAN-evidence-over-shape.md); it grows by trusting what the
+  // more names (notes/PLAN-evidence-over-shape.md); it grows by trusting what the
   // ledger banked, whatever the label.
   const urlIdVals: string[] = [];
   const knownOrigins = urlOriginPositions(known);
@@ -1871,7 +1871,7 @@ export function slotsUsed(text: string): string[] {
  * + hash route, with id-like segments replaced by `:id`. Slot values become
  * their markers, so a skill recorded on `/tickets/x7` matches
  * `/tickets/{{v1}}` on the next run, and one recorded on `edit?id=x7` matches
- * `edit?id={{v1}}` — which, filled, refuses `edit?id=x8` (ROBUSTNESS.md,
+ * `edit?id={{v1}}` — which, filled, refuses `edit?id=x8` (notes/ROBUSTNESS.md,
  * finding 3). Query pairs are reduced like hash-state pairs, less the keys
  * the shared `noiseQueryKey` drops; a credential-named key keeps its key and
  * stores a wildcard, never the value, since a pattern is persisted and

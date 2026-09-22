@@ -14,7 +14,7 @@ import {
 } from './actor.js';
 
 /**
- * Step 5 of PLAN-jev.md, half two: the System One ACTOR, as a shadow.
+ * Step 5 of notes/PLAN-jev.md, half two: the System One ACTOR, as a shadow.
  *
  * §4c's bet is that most routine turns of first-contact authoring are choices
  * among enumerable actions. The number that settles it is `q` — the share of

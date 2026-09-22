@@ -53,7 +53,7 @@ describe('diffSignatures', () => {
   });
 
   /**
-   * ROBUSTNESS.md finding 4: two looks that both stopped at a cap (or could not
+   * notes/ROBUSTNESS.md finding 4: two looks that both stopped at a cap (or could not
    * read a visible frame) agreeing is not "nothing changed", only "nothing
    * changed in what they saw". The text says which, and `nothingChanged` is
    * kept for the claim a complete look can make.

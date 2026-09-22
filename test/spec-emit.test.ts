@@ -2119,7 +2119,7 @@ describe('wait_for on an absent target', () => {
  * it says. Whole, never one function alone — `pick`, `resolveTarget` and
  * `readOptional` are adapters over the shared `resolveCandidates` that sits in
  * the same block, and a helper cut out of it in isolation fails closed, which
- * reads as a pass (see PARITY_GAPS.md).
+ * reads as a pass (see notes/PARITY_GAPS.md).
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function runnableHelpers(source: string, con: unknown = { warn: () => {}, log: () => {} }): Record<string, any> {

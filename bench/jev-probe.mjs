@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Is the System One tier what PLAN-jev.md assumes it is? Live calls, no browser.
+ * Is the System One tier what notes/PLAN-jev.md assumes it is? Live calls, no browser.
  *
  *   npm run build && node bench/jev-probe.mjs
  *   node bench/jev-probe.mjs --fanout 50,100,200 --repeat 5 --raw

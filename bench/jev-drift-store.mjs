@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
- * Calibration harness for site B of PLAN-jev.md — inline replay healing.
+ * Calibration harness for site B of notes/PLAN-jev.md — inline replay healing.
  *
  * WHY THIS EXISTS. The `replay.heal` gate was lowered 0.9 -> 0.6 on **n=4**:
  * four asks against one real repairdesk drift (`add-part-moved`), all correct,
- * at 0.59-0.86 (PLAN-jev.md, "Steps 4-5 results"). Four observations of one
+ * at 0.59-0.86 (notes/PLAN-jev.md, "Steps 4-5 results"). Four observations of one
  * control on one app cannot set a threshold that decides whether a click fires
  * on a live page with nothing but code guards behind it. What a gate needs is
  * a RELIABILITY CURVE: many dead-chain cases, spread across apps, tools and

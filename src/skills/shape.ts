@@ -35,7 +35,7 @@
  *    value a later run contradicted is this run's. One demonstration of
  *    difference is a permanent veto; agreement demonstrates nothing.
  *
- * See PLAN-evidence-over-shape.md for the full argument.
+ * See notes/PLAN-evidence-over-shape.md for the full argument.
  */
 
 /**

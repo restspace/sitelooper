@@ -1,5 +1,5 @@
 /**
- * The action observation (src/execution/action.ts, ROBUSTNESS.md finding 6),
+ * The action observation (src/execution/action.ts, notes/ROBUSTNESS.md finding 6),
  * with every port faked: a simulated clock that only moves when the code
  * under test sleeps or a scripted event is due, a page that emits scripted
  * request events, and a DOM that reports scripted mutations. No assertion

@@ -174,7 +174,7 @@ describe('goal derivation', () => {
   });
 
   /**
-   * ROBUSTNESS.md finding 4. A start page cut at its budget, or taken by a look
+   * notes/ROBUSTNESS.md finding 4. A start page cut at its budget, or taken by a look
    * that could not cover the page, does not show what was NOT on the page: a
    * "Cancelled" beyond the cut would read as brought into existence, and the
    * goal built on it would skip a cancel that never happened.

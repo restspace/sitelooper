@@ -251,7 +251,7 @@ describe('liftFlowFile: negative cases (hand-edited files)', () => {
   });
 
   /**
-   * ROBUSTNESS.md finding 5: a step's frame path, page index and page effect
+   * notes/ROBUSTNESS.md finding 5: a step's frame path, page index and page effect
    * travel in FLOW verbatim (a version-2 spec), and a malformed one is refused
    * naming the field — the artifact acts on all three.
    */

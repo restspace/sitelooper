@@ -10,14 +10,14 @@ Sitelooper executes a stored procedure two ways:
 They are required to reach the same verdict about the same page. Historically
 each rule was written twice — once per runner — and the pair agreed only until
 one of them was fixed. Three defects in a row had that exact shape, which is what
-`PARITY_GAPS.md` and `test/execution-parity.test.ts` exist to catch.
+`notes/PARITY_GAPS.md` and `test/execution-parity.test.ts` exist to catch.
 
 `src/execution/` is the answer to the cause rather than the symptom: ordinary,
 type-checked TypeScript that the daemon **imports** and the artifact **embeds**.
 One implementation, two callers.
 
 > This branch does not claim full parity. What is shared is listed below; what
-> is still target-specific is listed below that, with reasons. `PARITY_GAPS.md`
+> is still target-specific is listed below that, with reasons. `notes/PARITY_GAPS.md`
 > is the live audit.
 
 ---
@@ -143,7 +143,7 @@ The module is embedded only when some segment carries a vector.
 Verdict messages describe a live url through `describeUrl` —
 `serializeShape(urlShapeOf(url))` — because those messages travel into recovery
 prompts and persisted run records, and a query string is where `?token=…` lives.
-(A state-shaped hash is still re-serialised; see `PARITY_GAPS.md`.)
+(A state-shaped hash is still re-serialised; see `notes/PARITY_GAPS.md`.)
 
 ### `observe.ts` — live-region alerts
 
@@ -272,7 +272,7 @@ types `ActionObservation`, `ActionOptions`, `ActionExpectation`,
 `LongLivedWhy`, `ActionClock`, `PageEventsPort`, `DomPort`, and
 `DEFAULT_TRAFFIC_POLICY`, `ACTION_QUIET_MS`, `ACTION_DOM_MAX_MS`,
 `ACTION_START_GRACE_MS`, `ACTION_NETWORK_CAP_MS`, `ACTION_EFFECT_WAIT_MS`,
-`ACTION_EFFECT_POLL_MS`. Imports `browser.ts` only (ROBUSTNESS.md finding 6).
+`ACTION_EFFECT_POLL_MS`. Imports `browser.ts` only (notes/ROBUSTNESS.md finding 6).
 
 **Traffic.** `pageTraffic(page)` records the page's requests once (a WeakMap
 per page): type, method, endpoint (origin + path), start, response and
@@ -305,7 +305,7 @@ deadline cut a wait. Quiet alone never verifies an effect.
 
 The expectation both runners pass is `expect.ts` `effectExpectation`: the
 step's recorded `{{vN}}` lines, filled, in its line dialect — the hard half of
-the effect gate. The url is deliberately not part of it (see ROBUSTNESS.md).
+the effect gate. The url is deliberately not part of it (see notes/ROBUSTNESS.md).
 
 | | Daemon | Artifact (`src/spec/emit.ts`) |
 |---|---|---|
@@ -355,7 +355,7 @@ value, in order; the artifact's `<step>.minted` output stays the latest.
 `rootFor`, `describeFrameHop`, `describeFramePath`, `framesEqual`,
 `contextsEqual`, `stepEffect`, `pageIndexVerdict`, `armPageEffect`,
 `POPUP_WAIT_MS`, `FRAME_POLL_MS`. Imports `url.ts` (`urlMatches`) only
-(ROBUSTNESS.md finding 5).
+(notes/ROBUSTNESS.md finding 5).
 
 **Frames.** A recorded element inside an iframe is described against its own
 frame (recorder.ts `targetRoot` / `framePathOf`): every candidate is verified
@@ -747,8 +747,8 @@ use `unsupportedCapability`.
    - a **parity case** in `test/execution-parity.test.ts`, which runs both
      runners against a real fixture app and compares the application's mutation
      log — not merely that both reported success. Take the next cell from the
-     uncovered list at the end of `PARITY_GAPS.md`.
-7. **Update `PARITY_GAPS.md`**: move the entry to "Closed on this branch", citing
+     uncovered list at the end of `notes/PARITY_GAPS.md`.
+7. **Update `notes/PARITY_GAPS.md`**: move the entry to "Closed on this branch", citing
    the shared function and both call sites.
 
 Two rules about the tests themselves. Do not adjust a parity expectation to make

@@ -114,7 +114,7 @@ const TARGETS = {
   // them: fwgr13's replays renamed run 1's dashboard rather than making their
   // own, and fwod20 left S00021, S00022 and S00023 in the orders list at once.
   // A clean baseline per run is also what the cleanup assumption in
-  // PLAN-evidence-over-shape.md rests on.
+  // notes/PLAN-evidence-over-shape.md rests on.
   odoo: {
     task: 'tasks/odoo-sale-flow.md',
     defaults: APP_DEFAULTS.odoo,

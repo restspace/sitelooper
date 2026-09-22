@@ -109,7 +109,7 @@ if (!instructions.length) {
 
 const store = fs.mkdtempSync(path.join(os.tmpdir(), `${runid}-skills-`));
 // --skills <dir>: start from a COPY of an existing store (validated skills recorded under other
-// wording) instead of an empty one — the reworded-instruction experiment of PLAN-jev.md §6.
+// wording) instead of an empty one — the reworded-instruction experiment of notes/PLAN-jev.md §6.
 if (opt('--skills')) fs.cpSync(path.resolve(opt('--skills')), store, { recursive: true });
 const env = { ...process.env, ...app, SITELOOPER_SKILLS: '1', SITELOOPER_SKILLS_DIR: store };
 // The worktree's own CLI, argv passed as-is: no shell, so no quoting of the instruction text.

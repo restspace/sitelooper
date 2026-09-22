@@ -15,7 +15,7 @@ import { candidateRows, repairProposeSite } from './repair-jev.js';
 import type { HealProposal, HealRequest, InlineHealer } from './replay.js';
 
 /**
- * Site B of PLAN-jev.md: inline replay healing.
+ * Site B of notes/PLAN-jev.md: inline replay healing.
  *
  * B IS SITE A, ASKED AT A DIFFERENT MOMENT. When a daemon replay finds that
  * every locator in a step's chain misses, today the step fails and goes to a
@@ -68,7 +68,7 @@ export const REPLAY_HEAL_VERDICT_SITE = 'replay.heal.verdict';
 /**
  * How many of the live page's rows ride along on the drift ticket.
  *
- * This is the labelled-data half of the site (PLAN-jev.md, step-1 status, last
+ * This is the labelled-data half of the site (notes/PLAN-jev.md, step-1 status, last
  * bullet): site A has NO offline corpus because nothing ever persisted the
  * element list a proposal was made against, so `bench/jev-repair-probe.mjs` is
  * synthetic. A heal already holds that list; storing it makes every repair

@@ -83,7 +83,7 @@ describe('urlEffectVerdict', () => {
   });
 
   /**
-   * ROBUSTNESS.md finding 3: a disagreement alone is not evidence that a value
+   * notes/ROBUSTNESS.md finding 3: a disagreement alone is not evidence that a value
    * is volatile. A word route is a page the app chose, and a slot the caller
    * filled names a record — neither may be generalised to `:var`.
    */
@@ -104,7 +104,7 @@ describe('urlEffectVerdict', () => {
     expect(preconditionVerdict('http://app.test/orders/success', 'http://app.test/orders/failure', {}, null).refuse).toBeDefined();
   });
 
-  /** ROBUSTNESS.md finding 3, the query half: the query is part of which page it is. */
+  /** notes/ROBUSTNESS.md finding 3, the query half: the query is part of which page it is. */
   it('judges the query on the keys both urls carry, and requires a key filled from a bound value', () => {
     // the finding's own probe: a caller-named record in the query
     expect(urlEffectVerdict('https://app.test/edit?id={{v1}}', 'https://app.test/edit?id=999', { v1: '123' }, 'step 2').stop).toBe(

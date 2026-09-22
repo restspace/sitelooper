@@ -3,7 +3,7 @@ import type { Locator, Page } from 'playwright-core';
 /** Browser execution shared by replay and the standalone spec bundle. */
 
 /**
- * What is known about an action once it has been attempted (ROBUSTNESS.md
+ * What is known about an action once it has been attempted (notes/ROBUSTNESS.md
  * finding 2). The four are different facts, and every caller that decides
  * whether something may be tried again needs to tell them apart:
  *  - `not-dispatched`: there is PROOF nothing reached the app (Playwright's

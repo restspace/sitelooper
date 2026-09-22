@@ -2,7 +2,7 @@ import type { Page } from 'playwright-core';
 import { extractValues } from './actor.js';
 
 /**
- * PLAN-jev.md §5.3: evidence reads in code.
+ * notes/PLAN-jev.md §5.3: evidence reads in code.
  *
  * About half of the model's turns on a Kanboard-shaped app are LOOKS, and
  * jgkb1's traces show what most of them are: after a mutation the model wants

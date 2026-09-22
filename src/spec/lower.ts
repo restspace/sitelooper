@@ -113,7 +113,7 @@ function toFlowStep(spec: SpecFlow, step: SpecStep, now: string, skills: Skill[]
  * Mirrors `flowToSpec`'s own ordering exactly (same per-step segment order,
  * same chain-id choice) so that `flowToSpec(specToFlow(spec).flow, store)`
  * reproduces `spec` once the returned skills are in a store `flowToSpec` can
- * read — see `stageForReplay`, and PLAN-self-updating-spec.md's round-trip
+ * read — see `stageForReplay`, and notes/PLAN-self-updating-spec.md's round-trip
  * invariant.
  */
 export function specToFlow(spec: SpecFlow): { flow: Flow; skills: Skill[] } {

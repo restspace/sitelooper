@@ -4,7 +4,7 @@ import { urlMatches } from './compile.js';
 import { isVerified, type Skill } from './store.js';
 
 /**
- * PLAN-jev.md §6, bet 1: a REWORDED instruction run without the model.
+ * notes/PLAN-jev.md §6, bet 1: a REWORDED instruction run without the model.
  *
  * `matchTemplate` (learn.ts) needs the instruction to match a validated skill's
  * template word for word, and an orchestrator never says the same thing twice —

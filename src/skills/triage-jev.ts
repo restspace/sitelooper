@@ -14,7 +14,7 @@ import type { ExpectationDecision, ThreadingDecision } from './triage.js';
 import { ruleAnswer } from './triage.js';
 
 /**
- * PLAN-jev.md sites I and J, ADVISORY ONLY.
+ * notes/PLAN-jev.md sites I and J, ADVISORY ONLY.
  *
  * The enumerator (triage.ts) says what the shape rules ruled. This asks Jev
  * the same questions and logs where the two DISAGREE. Nothing here may change

@@ -89,7 +89,7 @@ describe('goalSatisfied', () => {
   });
 
   /**
-   * ROBUSTNESS.md finding 4: a look that stopped at a cap, or could not read a
+   * notes/ROBUSTNESS.md finding 4: a look that stopped at a cap, or could not read a
    * visible frame, is not the page. Skipping a step on it risks work that
    * never happened; running it costs one replay.
    */

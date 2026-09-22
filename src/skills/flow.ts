@@ -95,7 +95,7 @@ export interface FlowStep {
    * just strings a step reported. Run 2 settles it by producing its own value
    * for the same output — Odoo says "New (unsaved)" again (app furniture) and
    * "S00023" (this run's record). Same mechanism as a locator candidate's
-   * `seen: {hit, miss}`; see PLAN-evidence-over-shape.md.
+   * `seen: {hit, miss}`; see notes/PLAN-evidence-over-shape.md.
    *
    * `absent` is the third outcome, and the one this used to be blind to: the
    * replay SUCCEEDED and reported no value for an output the recording did
@@ -558,7 +558,7 @@ export function buildFlow(
       // reference costs a recovery turn, never a wrong record). A reference a
       // replay cannot fill goes to recovery; there is no literal fallback,
       // because agreement across runs does not show the app owns a value
-      // (see `RunSpecific` and PLAN-evidence-over-shape.md).
+      // (see `RunSpecific` and notes/PLAN-evidence-over-shape.md).
       produced.push({ stepId: id, output, value });
       // An id can be minted where no url ever carries it: an app that saves
       // over its own API answers with JSON, and the run reads that answer

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * THE q MEASUREMENT for PLAN-jev.md §4c — the shadow actor's numbers.
+ * THE q MEASUREMENT for notes/PLAN-jev.md §4c — the shadow actor's numbers.
  *
  *   node bench/jev-actor-report.mjs                        # every session that has actor rows
  *   node bench/jev-actor-report.mjs fwrdj2-n1 fwrdj2-n2    # named sessions

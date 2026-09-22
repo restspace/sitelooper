@@ -16,7 +16,7 @@
  *   fwod20  n1 created S00021, n2 S00022, n3 S00023, all still in the orders
  *           list together. A replay looking for "the" order could find three.
  *
- * It also blocks the cleanup assumption in PLAN-evidence-over-shape.md: if the
+ * It also blocks the cleanup assumption in notes/PLAN-evidence-over-shape.md: if the
  * last run's records are still there, "the recorded value is still on the page"
  * stops meaning "the app puts it there every run" and starts meaning "the last
  * run left it behind" — which would inline a live record identity, the one

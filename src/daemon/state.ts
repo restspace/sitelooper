@@ -139,7 +139,7 @@ export class SessionState {
 
   recordTiming(model: string, t: { totalMs: number; modelMs: number; toolMs: number; modelCalls: number; turns?: unknown[] }): void {
     // The per-turn rows go to disk, not into `config`: they are what weights a
-    // turn TYPE by the model time it costs (PLAN-jev.md 4c), and nothing reads
+    // turn TYPE by the model time it costs (notes/PLAN-jev.md 4c), and nothing reads
     // them at run time. Best-effort, like the decision log.
     try {
       fs.appendFileSync(path.join(ensureSessionDir(this.session), 'timing.jsonl'), JSON.stringify({ ts: new Date().toISOString(), model, ...t }) + '\n');
@@ -192,7 +192,7 @@ export class SessionState {
    * Append one System One decision to `system-one.jsonl` in the session dir.
    *
    * This file is the calibration dataset: every confidence threshold in
-   * PLAN-jev.md is meant to be read off it (what was asked, what came back,
+   * notes/PLAN-jev.md is meant to be read off it (what was asked, what came back,
    * whether the site acted, and — filled in by the site once known — whether
    * the deterministic verifier agreed), not taken from the docs' generic
    * figures. Best-effort: a log that cannot be written must not fail a step.

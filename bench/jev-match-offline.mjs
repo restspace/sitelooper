@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Can Jev match a REWORDED instruction to the stored skill that does it?
- * (PLAN-jev.md §6, bet 1 — offline, no browser, no inner model, cents.)
+ * (notes/PLAN-jev.md §6, bet 1 — offline, no browser, no inner model, cents.)
  *
  *   node bench/jev-match-offline.mjs [--max 600] [--seed 1] [--json out.json]
  *

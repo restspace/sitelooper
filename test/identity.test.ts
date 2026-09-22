@@ -538,7 +538,7 @@ describe('a self-navigating procedure is checked AFTER its goto', () => {
   });
 
   /**
-   * ROBUSTNESS.md finding 4: a look that could not cover the page (here the
+   * notes/ROBUSTNESS.md finding 4: a look that could not cover the page (here the
    * element cap) has not shown the marker ABSENT. The step stops just the
    * same — nothing confirmed the record — but as an unconfirmed identity,
    * marked unobserved, not as a proven wrong record (which would send the flow

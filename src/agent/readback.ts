@@ -6,7 +6,7 @@ import { lineShows } from '../execution/snapshot.js';
 import { MIN_ID_LEN } from '../skills/shape.js';
 
 /**
- * Site C of PLAN-jev.md, the code half: source a reported value's read-back
+ * Site C of notes/PLAN-jev.md, the code half: source a reported value's read-back
  * WITHOUT asking the model where it is.
  *
  * What the model is asked today (`sourceStragglers` in loop.ts) is "point at
@@ -275,7 +275,7 @@ function sweepFrame(payload: { wants: string[]; max: number }): FrameHits[] {
   // Every element of this frame, shadow roots included, once — and its own
   // text squeezed ONCE. Read per value instead, this would re-squeeze every
   // ancestor's whole subtree for every value: an odoo form is ~3,000 elements
-  // and a megabyte of nested text, and the lesson of PLAN-jev.md's step 3 is
+  // and a megabyte of nested text, and the lesson of notes/PLAN-jev.md's step 3 is
   // that the expensive thing in a recording is never the part anyone budgeted
   // for.
   const nodes: Element[] = [];
@@ -531,7 +531,7 @@ export async function sourceReadBacks(targets: readonly ReadBackTarget[], page: 
   for (const item of ambiguous) {
     const pick = chosen.get(item.name);
     // A pick is only ever one of the elements code put on the ballot: the
-    // decider ORDERS options, it never widens them (PLAN-jev.md §2).
+    // decider ORDERS options, it never widens them (notes/PLAN-jev.md §2).
     const candidate = pick ? item.candidates.find((c) => c.path === pick.path && pick.value === item.value) : undefined;
     if (!candidate) {
       out.remaining.push({ name: item.name, value: item.value });

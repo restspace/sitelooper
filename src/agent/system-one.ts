@@ -7,7 +7,7 @@ import { readGlobalConfig } from './llm.js';
  * it answers typed questions — choice, score, noul (yes/no) — about a `state`,
  * with calibrated probabilities. It cannot drive the agent loop; it can only
  * pick among options that code enumerated, which code then verifies. See
- * PLAN-jev.md for the rule ("code enumerates, Jev picks, code verifies") and
+ * notes/PLAN-jev.md for the rule ("code enumerates, Jev picks, code verifies") and
  * the sites it serves.
  *
  * The contract every caller relies on: Jev absent, Jev slow and Jev failing

@@ -1,5 +1,5 @@
 /**
- * Step 5 of PLAN-jev.md, the measuring half: the shadow actor.
+ * Step 5 of notes/PLAN-jev.md, the measuring half: the shadow actor.
  *
  * Two things are under test, and the second matters more than the first.
  *

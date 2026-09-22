@@ -3,7 +3,7 @@ import { agreement, choice, minConfidence, type ChoiceAnswer, type Entry, type Q
 import type { DisplayCandidate, ReadBackAsk, ReadBackDecider, ReadBackItem, ReadBackPick } from './readback.js';
 
 /**
- * Site C of PLAN-jev.md, the judgement half: WHICH of the elements that show
+ * Site C of notes/PLAN-jev.md, the judgement half: WHICH of the elements that show
  * this value is the one a later run should read.
  *
  * The code decider (readback.ts) answers the whole question whenever the page

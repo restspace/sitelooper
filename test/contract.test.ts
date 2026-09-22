@@ -140,7 +140,7 @@ describe('contractWeakening', () => {
     expect(expectationLoss(v1, { addedContains: [] })).toMatch(/page text/);
   });
   /**
-   * ROBUSTNESS.md finding 5: where a target lives is part of what a step
+   * notes/ROBUSTNESS.md finding 5: where a target lives is part of what a step
    * promises. The same chain resolved from the page instead of the recorded
    * frame can press the page's own identical Save, and a step that no longer
    * follows the popup it opened runs its successors on the opener.

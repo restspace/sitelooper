@@ -166,7 +166,7 @@ describe('runFoldedLoop', () => {
   it('stops when a pass resolved the same elements and the count did not shrink — before acting on them again', async () => {
     // gap 11 / fwrd4l-n3: the per-record locators stopped telling records
     // apart, and the loop was re-acting on one record while counting progress.
-    // ROBUSTNESS.md finding 1: judged after the body, the repeat was noticed
+    // notes/ROBUSTNESS.md finding 1: judged after the body, the repeat was noticed
     // only once its mutation had already run twice.
     const f = fake({ size: 2, mode: 'edit', signature: () => 'same' });
     const out = await runFoldedLoop(f.hooks, opts({ max: 9, scope: 'observed' }));
@@ -189,7 +189,7 @@ describe('runFoldedLoop', () => {
   });
 
   it('a guard count that throws is not an empty collection: the loop stops, unfinished', async () => {
-    // ROBUSTNESS.md finding 1: count().catch(() => 0) read a closed page as
+    // notes/ROBUSTNESS.md finding 1: count().catch(() => 0) read a closed page as
     // zero rows, and zero is the normal exit — {"ok":true,"iterations":0}.
     const f = fake({ size: 3, countThrowsFrom: 1 });
     const out = await runFoldedLoop(f.hooks, opts({ describe: "button 'Remove'" }));
@@ -616,7 +616,7 @@ describe('compile-time diagnostics for what the artifact cannot do', () => {
   });
 });
 
-describe('a recorded tab switch (ROBUSTNESS.md finding 5)', () => {
+describe('a recorded tab switch (notes/ROBUSTNESS.md finding 5)', () => {
   it('is followed, not reported as a capability the artifact lacks', () => {
     const { source, diagnostics } = emitFlowFile(flowOf([{ tool: 'tabs', args: { switch_to: 1 }, locators: {} }]), { tier: 'plain' });
     expect(diagnostics).toEqual([]);

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Offline measurement for site C of PLAN-jev.md — the read-back cascade
+ * Offline measurement for site C of notes/PLAN-jev.md — the read-back cascade
  * (`src/agent/readback.ts`). No browser, no conventional model; `--jev` adds
  * live System One calls for the ambiguous values only.
  *

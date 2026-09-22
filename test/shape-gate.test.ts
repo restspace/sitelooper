@@ -13,11 +13,11 @@ import {
 } from '../src/skills/shape.js';
 
 /**
- * THE GREP GATE (PLAN-evidence-over-shape.md, "How we will know it worked").
+ * THE GREP GATE (notes/PLAN-evidence-over-shape.md, "How we will know it worked").
  *
  * Reading a value's characters to guess whether it is an identifier is a
  * whole-product policy question, not a local one: each of the seven leaks in
- * PLAN-provenance.md was a correct, narrow fix to a rule that had no home, and
+ * notes/PLAN-provenance.md was a correct, narrow fix to a rule that had no home, and
  * the rate of discovery did not fall. So the rule gets a home (src/skills/
  * shape.ts) and this test is its fence.
  *
@@ -256,7 +256,7 @@ const ALLOWLIST: Record<string, { hits: string[]; answers: string }> = {
   'src/agent/actor.ts': {
     hits: ['[A-Z0-9]*'],
     answers:
-      'cuts a reference-shaped literal (RD-1015) out of INSTRUCTION prose as a candidate value for the shadow actor to bind (PLAN-jev.md 4c) — measurement only; it offers a span, it never rules that a string is an id, and nothing it produces reaches a skill, a flow or a replay',
+      'cuts a reference-shaped literal (RD-1015) out of INSTRUCTION prose as a candidate value for the shadow actor to bind (notes/PLAN-jev.md 4c) — measurement only; it offers a span, it never rules that a string is an id, and nothing it produces reaches a skill, a flow or a replay',
   },
   'src/agent/report.ts': {
     hits: ['[A-Za-z0-9._-]*', '[a-z0-9+.-]*'],
@@ -324,7 +324,7 @@ describe('the shape inventory is pinned', () => {
         `${entry.file} now has ${calls} ${entry.fn} call site(s), inventoried at ${entry.calls}.\n` +
           'Before raising the number, ask what evidence could decide this instead — ' +
           'position (idPositionPart), provenance (RunLedger), or cross-run variance ' +
-          `(noteOutputEvidence). See ${HOME} and PLAN-evidence-over-shape.md.\n` +
+          `(noteOutputEvidence). See ${HOME} and notes/PLAN-evidence-over-shape.md.\n` +
           `This site's population: ${entry.note}`,
       ).toBe(entry.calls);
     });

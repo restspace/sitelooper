@@ -686,7 +686,7 @@ describe('test affordances', () => {
     // (same 2, differed 0) and it would have been inlined as app furniture —
     // a record identity, treated as a constant, because our own rig produced
     // it three times. Odoo's sequence advances and gives the correct verdict.
-    // See PLAN-evidence-over-shape.md.
+    // See notes/PLAN-evidence-over-shape.md.
     const cookie = await login()
     const again = await request('POST', '/api/tickets', {
       body: { title: 'After reset' },

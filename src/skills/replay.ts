@@ -97,7 +97,7 @@ export interface ReplayOptions {
    */
   follow?: (page: Page) => void;
   /**
-   * Inline healing for a step whose whole chain missed (site B of PLAN-jev.md).
+   * Inline healing for a step whose whole chain missed (site B of notes/PLAN-jev.md).
    * Per call, so a test supplies its own; the daemon registers one for the
    * process with `setInlineHealer`, because the tool layer that builds these
    * options (src/agent/tools.ts) is neutral about deciders and must stay so.
@@ -145,7 +145,7 @@ export interface HealProposal {
    * The page's interactive elements the proposal was chosen from, bounded.
    * Carried onto the drift ticket so a repair that happened once becomes a
    * replayable case for bench/jev-repair-probe.mjs — the missing half of
-   * site A's corpus (PLAN-jev.md, step-1 status, last bullet).
+   * site A's corpus (notes/PLAN-jev.md, step-1 status, last bullet).
    */
   rows?: SnapshotRow[];
   /**
@@ -653,7 +653,7 @@ export async function replaySkill(
   const healer = opts.heal ?? registeredHealer;
 
   /**
-   * Site B of PLAN-jev.md: the whole chain for `key` missed, so ask the
+   * Site B of notes/PLAN-jev.md: the whole chain for `key` missed, so ask the
    * healer for a live locator instead of failing the step to a model
    * recovery (tens of turns, minutes of wall-clock, for what is usually a
    * renamed control). Returns the locator to act on, or null to fail exactly

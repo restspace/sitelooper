@@ -2,7 +2,7 @@ import type { Page } from 'playwright-core';
 import { estimateTokens } from './system-one.js';
 
 /**
- * Step 5 of PLAN-jev.md, half one: EXECUTABLE CANDIDATE GENERATION.
+ * Step 5 of notes/PLAN-jev.md, half one: EXECUTABLE CANDIDATE GENERATION.
  *
  * §4c's bet is that most routine turns of first-contact authoring are a choice
  * among actions the page mechanically offers, not an act of generation. This
@@ -14,7 +14,7 @@ import { estimateTokens } from './system-one.js';
  *
  * The unit is a CANDIDATE: an executable object with provenance —
  * `{id, observationId, operation, target, valueRef, description}` — exactly as
- * ASTRA_JEV_RECOMMENDATIONS.md specifies. A decider picks an `id`; code holds
+ * notes/ASTRA_JEV_RECOMMENDATIONS.md specifies. A decider picks an `id`; code holds
  * the element identity and the exact string. Nothing a decider says can widen
  * what may happen, which is the whole containment argument of this tier.
  *
@@ -296,7 +296,7 @@ export interface CandidateBudget {
 
 /**
  * One request, not a fan-out. The probe measured one ask at ~0.3s and ANY
- * sharded fan-out at ~1.2s (PLAN-jev.md step 0), and a per-turn decision that
+ * sharded fan-out at ~1.2s (notes/PLAN-jev.md step 0), and a per-turn decision that
  * costs 1.2s has spent most of what it was supposed to save. So the budget is
  * set where an ordinary page fits in one question, and the tournament exists
  * for the dense pages that do not — never as the default shape.

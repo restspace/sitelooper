@@ -5,7 +5,7 @@ import type { Skill, SkillStep, StepExpectation } from './store.js';
 /**
  * What a procedure PROMISES, and whether an edit to it takes any of that back.
  *
- * Invariant 7 of CORRECTNESS_PLAN.md: learning cannot weaken correctness.
+ * Invariant 7 of notes/CORRECTNESS_PLAN.md: learning cannot weaken correctness.
  * Locator repair, pattern generalisation and fallback promotion all exist to
  * make a procedure survive a page that moved, and all of them rewrite a stored
  * procedure in place. None of that is licence to assert less than the

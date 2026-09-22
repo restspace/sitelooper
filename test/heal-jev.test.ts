@@ -1,5 +1,5 @@
 /**
- * Site B of PLAN-jev.md: inline replay healing.
+ * Site B of notes/PLAN-jev.md: inline replay healing.
  *
  * Two halves, deliberately kept apart. `unhealableWhy` and the replay seam are
  * about what the runner will ACT on, and are tested with no System One tier at
