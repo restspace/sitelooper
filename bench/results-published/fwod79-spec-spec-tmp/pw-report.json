@@ -1,0 +1,198 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwod79-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwod79-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwod79-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwod79-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwod79-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwod79.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwod79-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwod79.spec.ts",
+      "file": "fwod79.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwod79",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 59436,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe aria-combobox/set-value (r_21e9e6); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe aria-combobox/set-value (r_21e9e6); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe aria-combobox/set-value (r_21e9e6); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-create\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe aria-combobox/set-value (r_21e9e6); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 07-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 08-open\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:8069/ in the browser and sign in to Odoo with username 'admin' and password 'admin'. Wait for the Odoo home/apps page or dashboard to be fully loaded (wait on a concrete element, NOT network idle since the app long-polls). Report what page you land on and the name of the logged-in user shown.",
+                      "duration": 6646
+                    },
+                    {
+                      "title": "02-create: In Odoo, create a new contact (customer) with the Name exactly '{{runid}} Bench Customer' and City set to 'Benchville'. Use the Contacts app (or Sales app's Customers) — go to the create form, fill Name and the City field (under the address section), save, and verify the saved record shows Name '{{runid}} Bench Customer' and City 'Benchville'. Report the contact's name and city as shown on the saved record.",
+                      "duration": 6694
+                    },
+                    {
+                      "title": "03-create: In Odoo's Sales app, create a new quotation (New Quotation). Set the Customer to '{{runid}} Bench Customer' — this is an autocomplete dropdown, so type the name and actually click the matching option from the dropdown. Then in the Order Lines table add exactly ONE order line: pick any product from the product catalogue by typing in the product cell and clicking an option from the autocomplete dropdown (e.g. a real product like a desk or cabinet). Set the quantity to 3. Do NOT add any other line. Do not confirm the quotation yet — leave it as a draft quotation. Report: (1) the product name you chose, (2) the unit price the app auto-filled for that line, (3) the untaxed amount (Untaxed Amount) the app computes, and (4) the quotation's name/reference shown in the breadcrumb or title.",
+                      "duration": 10741
+                    },
+                    {
+                      "title": "04-open: Open the existing draft quotation {{03-create.quotation_reference}} (customer '{{runid}} Bench Customer') in Odoo Sales. In the Order Lines table, add a SECOND order line below the existing 'Desk Stand with Screen' line: choose a DIFFERENT product from the catalogue by typing in the product cell of the new empty line and clicking an option from the autocomplete dropdown. Set its quantity to 2. Keep the first line (Desk Stand with Screen, qty 3) unchanged. Save the quotation (still a draft, do not confirm). Report: (1) the name of the second product you chose, (2) its unit price, and (3) the new Untaxed Amount the app computes for the whole quotation.",
+                      "duration": 5155
+                    },
+                    {
+                      "title": "05-open: Open the existing draft quotation {{03-create.quotation_reference}} (customer '{{runid}} Bench Customer') in Odoo Sales. In the Order Lines table, change the Quantity of the FIRST line (product 'Desk Stand with Screen') from 3 to 5. Leave the second line ('Cabinet with Doors', qty 2) unchanged. Save the quotation (still a draft, do not confirm). Report: (1) the quantity now shown on the first line, and (2) the new Untaxed Amount the app computes for the whole quotation.",
+                      "duration": 3007
+                    },
+                    {
+                      "title": "06-open: Open the existing draft quotation {{03-create.quotation_reference}} (customer '{{runid}} Bench Customer') in Odoo Sales and CONFIRM it by clicking the 'Confirm' button (or 'Confirm Sale' if a confirmation dialog appears). This should turn it into a sales order. Wait for the page to settle on concrete state (not network idle). Report: (1) the order reference/name shown in the breadcrumb or title (e.g. {{03-create.quotation_reference}}), and (2) the status the app now shows in the status bar (e.g. 'Sales Order' / 'Sale'), and (3) the untaxed amount and total still shown.",
+                      "duration": 1973
+                    },
+                    {
+                      "title": "07-open: Open the confirmed sales order {{03-create.quotation_reference}} (customer '{{runid}} Bench Customer') in Odoo Sales and CANCEL it. Use the 'Cancel' action — if it's under a dropdown/gear menu or an 'Action' menu, find and use it; if a confirmation dialog appears, confirm the cancellation. Wait for the page to settle on concrete state (not network idle). Report: (1) the status the app now shows in the status bar for this order (e.g. 'Cancelled'), and (2) the order reference shown in the breadcrumb/title.",
+                      "duration": 21180
+                    },
+                    {
+                      "title": "08-open: Verification pass in Odoo: (1) Open the contact '{{runid}} Bench Customer' in the Contacts app and confirm its Name and City fields as shown on the saved record. (2) Open the sales order {{03-create.quotation_reference}} in the Sales app and confirm the status shown in its status bar and the order lines/untaxed amount. Report exactly what the page shows for both records.",
+                      "duration": 3153
+                    }
+                  ],
+                  "startTime": "2026-09-22T15:47:23.982Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c768a42062732a5565d8-3b9a60463b7e18c478a0",
+          "file": "fwod79.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-22T15:47:21.405Z",
+    "duration": 62230.778999999995,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
