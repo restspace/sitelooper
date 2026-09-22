@@ -1,0 +1,191 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwvk5-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwvk5-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwvk5-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwvk5-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwvk5-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwvk5.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwvk5-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwvk5.spec.ts",
+      "file": "fwvk5.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwvk5",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 30416,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-find\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-create s_de94c7/8: read 'saved_description' returned a value the skill itself set/selected ('Bench task created for run fwvk5-spec') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-open\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 05-open s_41359e/9: read 'task_title' returned a value the skill itself set/selected ('fwvk5-spec Bench Task') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 05-open s_41359e/11: read 'labels_displayed' returned a value the skill itself set/selected ('Backend') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-open\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 06-open s_25bee0/8: read 'comment_text' returned a value the skill itself set/selected ('Comment for run fwvk5-spec') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 07-open\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in to Vikunja with username 'admin' and password 'bench-admin-pass'. Verify you reach the app's main page (not the login page) and report what page you land on.",
+                      "duration": 3850
+                    },
+                    {
+                      "title": "02-find: Navigate to the project named 'Bench Project' (from the sidebar). On the project's task list, find all tasks whose title starts with 'Seed:'. Report the exact full titles of every such task, exactly as displayed, one per line. Do not modify anything — this is read-only. Also report the total number of tasks visible in the project list.",
+                      "duration": 1783
+                    },
+                    {
+                      "title": "03-create: In the project 'Bench Project' (currently at {{02-find.url}}), create a NEW task with the title exactly '{{runid}} Bench Task' and a description containing the text '{{runid}}' (e.g. 'Bench task created for run {{runid}}'). Use the project's task-creation input/flow. Do NOT touch or edit any task whose title starts with 'Seed:'. After creating it, open the new task's own detail page and verify the title and description are saved, and report the URL of the task page you landed on.",
+                      "duration": 5656
+                    },
+                    {
+                      "title": "04-open: On the task detail page for the task '{{runid}} Bench Task' (currently open at {{03-create.url}}), set the task's DUE DATE to 2026-12-31 (December 31, 2026) and its PRIORITY to 'High'. The page edits fields in place and saves automatically when changed or when you leave the field — there may be no overall Save button. After setting both, verify on the page that the due date shows 2026-12-31 (or Dec 31, 2026) and the priority shows High, and report exactly what the page displays for each field.",
+                      "duration": 7192
+                    },
+                    {
+                      "title": "05-open: On the task detail page for the task '{{runid}} Bench Task' (currently open at {{03-create.url}}), add the EXISTING label named 'Backend' to this task. IMPORTANT: the label field creates a NEW label from whatever text is typed, so you must type 'Backend' and then choose the existing 'Backend' label from the suggestion dropdown that appears (do NOT press Enter to create a new one, and do not create a new label). After adding it, verify the task's labels list shows 'Backend' and report exactly what labels are displayed on the task page.",
+                      "duration": 4362
+                    },
+                    {
+                      "title": "06-open: On the task detail page for the task '{{runid}} Bench Task' (currently open at {{03-create.url}}), add a comment to the task whose text includes '{{runid}}' (e.g. 'Comment for run {{runid}}'). Use the task's comment box and submit it. After submitting, verify the comment appears in the task's comments list and report the exact comment text displayed.",
+                      "duration": 3923
+                    },
+                    {
+                      "title": "07-open: Final verification, read-only, do not modify anything. Two checks: (1) Open the task detail page at {{03-create.url}} and report: the task title, the identifier shown on the task page (displayed like BENCH-<number>), the due date, the priority, the labels shown, the description text, and the text of any comments. (2) Then go to the project 'Bench Project' list view and report the exact titles of all tasks in the list, confirming the tasks whose titles start with 'Seed:' are unchanged. Report all values exactly as displayed.",
+                      "duration": 3044
+                    }
+                  ],
+                  "startTime": "2026-09-22T10:21:53.015Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "cd4e5fb6bf58bd563346-c6e287b171b9819aa144",
+          "file": "fwvk5.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-22T10:21:51.495Z",
+    "duration": 32079.058,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
