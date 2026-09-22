@@ -7,6 +7,7 @@
  */
 import type { Locator, Page } from 'playwright-core';
 import { alertsComplete, capturePage, sweepPage, type LineDialect } from './snapshot.js';
+import { clip, extractFramed } from './text.js';
 
 /** What a recorded read takes off its element. A page url read has no element and is not one of these. */
 export type ReadWhat = 'text' | 'value' | 'attr' | 'count';
@@ -81,6 +82,22 @@ export async function readElements(
 /** A read as the one string a step publishes: every match of a `read_all`, in page order, joined by ` | `. */
 export function flattenRead(value: unknown): string {
   return Array.isArray(value) ? value.map(String).join(' | ') : String(value);
+}
+
+/**
+ * A read as its step publishes it: the whole value, or — for a read recorded
+ * with a FRAME (a read-back pinned by containment, text.ts FRAME_MARK) — only
+ * the text at the frame's mark. A frame the element no longer shows THROWS,
+ * so takeRead turns it into a skipped read: the value goes unpublished and a
+ * reference to it goes to recovery, never out as the element's whole line
+ * (fwvk3 n2 published "fwvk3-n2 Bench Task" for a runid). Both runners call
+ * this inside takeRead, so they publish the same span or skip the same read.
+ */
+export function framedRead(value: unknown, frame: unknown): unknown {
+  if (typeof frame !== 'string' || !frame) return value;
+  const got = extractFramed(flattenRead(value), frame);
+  if (got === null) throw new Error(`the element no longer shows the value where the recording saw it (${JSON.stringify(clip(frame, 80))})`);
+  return got;
 }
 
 /**

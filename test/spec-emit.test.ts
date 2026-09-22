@@ -370,6 +370,17 @@ describe('step bodies', () => {
     expect(one({ tool: 'read_all', args: { target: '@e1', what: 'count' }, locators: loc, label: 'rows' })).toContain("(loc: Locator) => readElements(loc, true, 'count')");
   });
 
+  it('publishes only the framed span of a read-back pinned by containment, as replay does', () => {
+    // fwvk3 / fwgh5 s_5ee393: the runid read pinned to "fwvk3-n1 Bench Task"
+    // published the whole heading. The artifact takes the same shared
+    // framedRead replay calls, with the frame's slots filled from params.
+    const loc = { target: [{ kind: 'css' as const, selector: 'h1' }] };
+    const out = one({ tool: 'read', args: { target: '(read-back)', what: 'text', frame: '{{=}} Bench {{v1}}' }, locators: loc, label: 'ref' });
+    expect(out).toContain("async (loc: Locator) => framedRead(await readElements(loc, false, 'text'), `{{=}} Bench ${p.v1}`)");
+    // An exact read records no frame and reads as before.
+    expect(one({ tool: 'read', args: { target: '(read-back)', what: 'text' }, locators: loc, label: 'ref' })).toContain("(loc: Locator) => readElements(loc, false, 'text')");
+  });
+
   it('leaves an unlabelled read as an observation', () => {
     const out = one({ tool: 'read', args: { target: '@e1', what: 'text' }, locators: { target: [{ kind: 'id', selector: '#t' }] } });
     expect(out).toContain('// observed: read text (unlabelled');

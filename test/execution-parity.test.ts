@@ -2850,6 +2850,28 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
    * the editor's own display of the filled text, and NOT the page heading,
    * which is the control that proves the rule is not "every read".
    */
+  describe('framed reads', () => {
+    it('both runners publish only the span at a contained read-back’s frame, and skip one whose frame is gone', async () => {
+      // fwvk3 / fwgh5 s_5ee393: a runid read-back pinned by containment to its
+      // heading published the whole heading on every replay.
+      const h1 = [{ kind: 'css' as const, selector: 'h1' }];
+      const steps: SkillStep[] = [
+        { tool: 'goto', args: { url: `${origin}/record/rec-77` }, locators: {} },
+        { tool: 'read', args: { target: '(read-back)', what: 'text', frame: 'Record {{=}}' }, label: 'ref', locators: { target: h1 } },
+        { tool: 'read', args: { target: '(read-back)', what: 'text', frame: '{{=}} Bench Task' }, label: 'gone', locators: { target: h1 } },
+      ];
+      const { replay, emitted } = await both(steps, 0);
+
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replay.outputs.ref).toBe('rec-77');
+      expect(emitted.outputs['01-clear.ref']).toBe('rec-77');
+      // A frame the element no longer shows publishes nothing, never the line.
+      expect(replay.outputs.gone ?? '').toBe('');
+      expect(emitted.outputs['01-clear.gone'] ?? '').toBe('');
+    }, 120_000);
+  });
+
   describe('echo reads', () => {
     it('both runners flag a read that echoes the filled value, and only that read', async () => {
       const steps: SkillStep[] = [

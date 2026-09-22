@@ -653,15 +653,82 @@ function statedBeforeShown(entries: readonly RecordedEntry[], producer: Recorded
   // its new-panel default "Panel Title" (fwgr18, stated as "the panel
   // title"), odoo's "Quotation" and "Cancel" — the task's words or the app's
   // own. A value the run made cannot be stated, in any case, before it exists.
+  // The EARLIEST instruction that states it decides: if the run had already
+  // shown the value by then, every later statement came after that too.
+  const k = firstStatedAt(entries, value, end);
+  return k >= 0 && !shownBefore(entries, k, value);
+}
+
+/**
+ * The run's OUTPUT values that are constants of the task, not of the run: an
+ * instruction stated the value (case aside, as a whole token) before any
+ * REPORT had carried it — its own producing instruction included, which
+ * statedBeforeShown (asking about an earlier one) does not reach.
+ *
+ * WHY THE REPORT IS THE EVIDENCE. statedBeforeShown's argument, taken at its
+ * word: whoever writes a flow's instructions learns about the run through one
+ * channel, the `do` report. A value an instruction states that no earlier
+ * report carried was known before the run told anyone anything — the task's
+ * wording, or seed data the app shows identically on every run. snipeit
+ * fwsi4's 04-set was told to check the asset out to 'Bench Assignee', a
+ * seeded user, and reported `assignee = "Bench Assignee"`; espocrm fwec3's
+ * 01-signin was told to sign in as 'admin' and reported `logged_in_user =
+ * "Admin"`. Not shownBefore's page-wide net: that one errs wide because a
+ * wrong literal in a FLOW acts on run 1's record, and here it would condemn
+ * seed data — fwsi4's dashboard listed 'Bench Assignee' in its activity feed
+ * before anything ran.
+ *
+ * WHY IT MATTERS. The ledger banks every reported value as this run's
+ * (server.ts noteMintedIds), and compile deletes any locator candidate naming
+ * one (compile.ts `stranded`). fwsi4 05-open's read of the assignee, scoped by
+ * hasText "Checked out to Bench Assignee for run {{v2}}", lost that anchor,
+ * was left positional, and was stored with an empty chain and no label.
+ *
+ * WHAT IT MUST NOT CATCH. A value a report carried before any instruction
+ * named it — the ticket ref a create reported, then quoted by the next
+ * instruction (fwrd12l, fwrd22l) — is the run's own and stays a run value. So
+ * does anything that embeds a declared var's value (the runid inside a typed
+ * title): the var is the run value, and it goes on stranding by itself. And a
+ * value an earlier run watched change (`runSpecific`) is the run's whatever
+ * the recording says.
+ */
+export function taskConstants(
+  entries: readonly RecordedEntry[],
+  values: Iterable<string>,
+  vars: Iterable<string> = [],
+  runSpecific?: RunSpecific,
+): Set<string> {
+  const varValues = [...vars].map((v) => String(v ?? '').trim()).filter((v) => v.length >= 2);
+  const out = new Set<string>();
+  for (const raw of values) {
+    const value = String(raw ?? '').trim();
+    if (value.length < 2 || out.has(value) || runSpecific?.(value)) continue;
+    if (varValues.some((v) => replaceToken(value, v, ' ') !== value)) continue;
+    const at = firstStatedAt(entries, value, entries.length);
+    if (at >= 0 && !reportedBefore(entries, at, value)) out.add(value);
+  }
+  return out;
+}
+
+/** Whether a report before entry `at` carried `value` (case aside, whole token) in its summary or values. See taskConstants. */
+function reportedBefore(entries: readonly RecordedEntry[], at: number, value: string): boolean {
+  const lower = value.toLowerCase();
+  const hit = (s: unknown): boolean => typeof s === 'string' && replaceToken(s.toLowerCase(), lower, ' ') !== s.toLowerCase();
+  for (let k = 0; k < at; k++) {
+    const e = entries[k];
+    if (e.k === 'report' && (hit(e.summary) || Object.values(e.values ?? {}).some(hit))) return true;
+  }
+  return false;
+}
+
+/** The entry index of the earliest instruction before `end` that states `value` (case aside, whole token), or -1. */
+function firstStatedAt(entries: readonly RecordedEntry[], value: string, end: number): number {
   const lower = value.toLowerCase();
   for (let k = 0; k < end; k++) {
     const e = entries[k];
-    if (e.k !== 'instruction' || replaceToken(e.text.toLowerCase(), lower, ' ') === e.text.toLowerCase()) continue;
-    // The EARLIEST instruction that states it decides: if the run had already
-    // shown the value by then, every later statement came after that too.
-    return !shownBefore(entries, k, value);
+    if (e.k === 'instruction' && replaceToken(e.text.toLowerCase(), lower, ' ') !== e.text.toLowerCase()) return k;
   }
-  return false;
+  return -1;
 }
 
 /** Whether anything recorded before entry `at`, or `at`'s own start page, could have shown `value`. See statedBeforeShown. */

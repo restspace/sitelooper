@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { ElementHandle, Frame, Locator, Page } from 'playwright-core';
 import { ensureSessionDir } from '../shared/paths.js';
-import { escapeRe, fieldByName, hasTextMatcher, roleName, volatileMatcher } from '../shared/text.js';
+import { escapeRe, fieldByName, frameValue, hasTextMatcher, roleName, volatileMatcher } from '../shared/text.js';
 import { pointLocator } from '../execution/point.js';
 import { dispatchesFirstMatch } from '../execution/lifecycle.js';
 import { rootFor, type FramePath, type PageEffect, type Root } from '../execution/context.js';
@@ -1082,7 +1082,18 @@ export async function captureReadBackAt(page: Page, value: string, selector: str
     // value's own rendered LINE; a line that goes on for a document's worth
     // past the value is not showing the value, it is containing it.
     if (got !== want && !onOwnLine(raw, want)) return null;
-    return await readBackFromHandle(page, handle, v);
+    // A contained value is published at its own position, never as the line
+    // around it. fwvk3's runid "fwvk3-n1" was pinned here to the <h1>
+    // "fwvk3-n1 Bench Task" and every replay published "fwvk3-nX Bench Task"
+    // (fwgh5 s_5ee393's `ref` the same with "Bench Post"): the read stored no
+    // record of where in the line the value sat. It stores its FRAME now —
+    // the line with the value cut out (text.ts frameValue) — and both runners
+    // publish only the span at the mark, or nothing (observe.ts framedRead).
+    // An exact element records none and reads as it always did.
+    if (got === want) return await readBackFromHandle(page, handle, v);
+    const frame = frameValue(raw, v);
+    if (!frame) return null;
+    return await readBackFromHandle(page, handle, v, 'text', frame);
   } finally {
     await handle.dispose().catch(() => {});
   }
@@ -1108,7 +1119,7 @@ export function onOwnLine(raw: string, want: string): boolean {
 }
 
 /** Derive a durable, non-circular read step for `value` from a live element. */
-async function readBackFromHandle(page: Page, handle: ElementHandle<Node>, v: string, what: 'text' | 'value' = 'text'): Promise<RecordedStep | null> {
+async function readBackFromHandle(page: Page, handle: ElementHandle<Node>, v: string, what: 'text' | 'value' = 'text', frame?: string): Promise<RecordedStep | null> {
   const info = (await handle.evaluate(describeInPage)) as ElementInfo;
   const chain: LocatorCandidate[] = [];
   let winner: LocatorCandidate | null = null;
@@ -1143,7 +1154,7 @@ async function readBackFromHandle(page: Page, handle: ElementHandle<Node>, v: st
   return {
     k: 'step',
     tool: 'read',
-    args: { target: '(read-back)', what },
+    args: frame ? { target: '(read-back)', what, frame } : { target: '(read-back)', what },
     locators: { target: { expr: candidateExpr(winner), verified: true, raw: '(read-back)', chain } },
     result: JSON.stringify(v),
   };
@@ -1576,14 +1587,32 @@ function describeInPage(node: Node): ElementInfo {
   // a link on or inside the id's element shows it too. Returns the id's prefix
   // when the number is a render counter, else null — '' when the prefix names
   // no view kind (bare `ember` is every component: nothing to root at).
+  // A ONE-digit glued id is a counter only on evidence: the document numbers
+  // the same prefix again. fwgh5 s_8e130d kept `#ember5` as the Sign in
+  // button's second candidate — the counter's early value, which the shape
+  // rule's two digits cannot see — while `h1` or `col2` alone on a page are
+  // names, not numbering. A family (`ember5` beside `ember3`) is what a render
+  // counter leaves; a demoted enumeration (`tab1` beside `tab2`) costs one
+  // candidate and the others still stand, which is the cost direction.
+  const numberedAgain = (id: string, prefix: string): boolean => {
+    const same = new RegExp(`^${prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\d+$`);
+    for (const other of Array.from(document.querySelectorAll(`[id^="${CSS.escape(prefix)}"]`)).slice(0, 200)) {
+      if (other.id !== id && same.test(other.id)) return true;
+    }
+    return false;
+  };
   const counterPrefix = (node: Element): string | null => {
-    const m = /^(?:(.+[-_])(\d{3,})|(.*[A-Za-z])(\d{2,}))$/.exec(node.id);
-    if (!m) return null;
-    const digits = m[2] ?? m[4];
+    let m: (string | undefined)[] | null = /^(?:(.+[-_])(\d{3,})|(.*[A-Za-z])(\d{2,}))$/.exec(node.id);
+    if (!m) {
+      const one = /^(.*[A-Za-z])(\d)$/.exec(node.id);
+      if (!one || !numberedAgain(node.id, one[1])) return null;
+      m = [node.id, undefined, undefined, one[1], one[2]];
+    }
+    const digits = (m[2] ?? m[4])!;
     const shows = (s: string | null) => Boolean(s) && s!.split(/[^0-9]+/).includes(digits);
     if (shows(location.href) || shows(node.getAttribute('href'))) return null;
     for (const a of Array.from(node.querySelectorAll('[href]')).slice(0, 50)) if (shows(a.getAttribute('href'))) return null;
-    const prefix = m[1] ?? m[3];
+    const prefix = (m[1] ?? m[3])!;
     return /[-_]/.test(prefix) ? prefix : '';
   };
   const stableNode = (node: Element): boolean => !minted(node.id) && counterPrefix(node) === null;

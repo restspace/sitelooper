@@ -49,10 +49,12 @@ const root = path.resolve(here, '..');
 
 /** dist/ is imported by URL: a bare Windows path is not a legal ESM specifier. */
 const dist = (rel) => pathToFileURL(path.join(root, 'dist', rel)).href;
-const { buildFlow, lintFlowRefs, staleInstructionIds } = await import(dist('skills/flow.js'));
+const { buildFlow, lintFlowRefs, staleInstructionIds, taskConstants } = await import(dist('skills/flow.js'));
 const { SkillStore } = await import(dist('skills/store.js'));
 const { bindSkill, publishedOutputs } = await import(dist('skills/learn.js'));
-const { compileSkills } = await import(dist('skills/compile.js'));
+const { carryOpener, compileSkills } = await import(dist('skills/compile.js'));
+const { RunLedger, bindingKey } = await import(dist('skills/ledger.js'));
+const { urlParts } = await import(dist('execution/url.js'));
 const { backfillReadValues, flattenComposedValues, promoteLabelledReads, unnamedReadValues } = await import(dist('agent/report.js'));
 
 const argv = process.argv.slice(2);
@@ -185,20 +187,31 @@ function rebuildReport(g, reads) {
 
 function storeFrom(entries, known, valuesByInstruction) {
   const skills = [];
-  // knownValues ACCUMULATES through a session. The daemon compiles each
-  // instruction with `this.ledger.all()`, and the ledger banks every value a
-  // report named (server.ts noteMintedIds), so instruction 6 is compiled
-  // knowing what instructions 1-5 produced. Passing only the runid made later
-  // skills far poorer: s_c995ae bound 1 param here against 4 in the store, and
-  // the rebuilt flow carried 10 cross-step references against the 19 that
-  // shipped. That gap was my reconstruction, not a regression.
-  // The daemon's ledger keys a declared var as `var:<name>` (bindingKey), and
-  // a skill param whose value came from a var binds through that key —
-  // s_a11c2d's v2 carried binding "var:runid" and bound NULL here with only
-  // `runid` known, so 04-open and 05-open exported with no params at all.
-  const known2 = { ...known };
-  for (const [k, v] of Object.entries(known)) known2[`var:${k}`] = v;
-  /** What was known BEFORE each instruction (by its text), for binding as the daemon would have. */
+  // Known values come from a RunLedger fed exactly as the daemon feeds its
+  // own (server.ts seedLedger, noteMintedIds, knownValues), so every key
+  // carries its ORIGIN: `var:runid`, `output:i3:asset_tag`, and — what the
+  // earlier hand-rolled map never banked — `url:i3:p1`, the url position a
+  // later navigation's record id is slotted by. Without those, compile made no
+  // url-origin slot, buildFlow had no origin to thread, and an offline rebuild
+  // under-reported url references (snipeit fwsi4 04-set's
+  // {{03-create.url.p1}}, which the live flow carried).
+  const ledger = new RunLedger();
+  const seed = () => {
+    for (const [name, value] of Object.entries(known)) ledger.add(value, { from: 'var', name }, { vouched: true });
+  };
+  const knownValues = () => Object.fromEntries(ledger.all().map((e) => [bindingKey(e.binding), e.value]));
+  /** server.ts noteMintedIds: url ids first, then reported values (`values` overrides a report's own, see below). */
+  const bank = (group, stepId, values) => {
+    for (const e of group) {
+      const url = e.k === 'step' ? e.diff?.url : e.k === 'instruction' ? e.url : undefined;
+      if (url) ledger.addUrlIds(url, stepId, urlParts(url), { landed: e.k === 'step' && e.tool !== 'goto' && e.tool !== 'back' });
+      if (e.k === 'report') {
+        const vals = e.status === 'success' && values ? values : (e.values ?? {});
+        for (const [name, value] of Object.entries(vals)) ledger.add(String(value), { from: 'output', step: stepId, name });
+      }
+    }
+  };
+  /** What was known BEFORE each instruction (by its text). */
   const knownBefore = new Map();
   let cur = null;
   // A group a non-success report closed: a `resume: true` instruction that
@@ -208,7 +221,15 @@ function storeFrom(entries, known, valuesByInstruction) {
   // 02-create refused it as "not on the page this procedure starts from".
   let pending = null;
   let idx = -1;
-  for (const e of entries) {
+  // The daemon's instruction counter: one per `do`, which a resume continues.
+  let ledgerIndex = 0;
+  /** Where the current `do` began in `entries`, for carryOpener. */
+  let mark = 0;
+  const flushPending = () => {
+    if (pending) bank([...pending.entries, ...(pending.reports ?? [])], `i${pending.ledgerIndex}`, null);
+    pending = null;
+  };
+  for (const [at, e] of entries.entries()) {
     if (e.k === 'instruction') {
       if (e.resume && pending) {
         cur = pending;
@@ -217,33 +238,45 @@ function storeFrom(entries, known, valuesByInstruction) {
         // The daemon compiles the merged attempts under the RETRY's wording —
         // that is the instruction the flow step carries and binds against.
         cur.instruction = e.text ?? cur.instruction;
-        knownBefore.set(cur.instruction, { ...known2 });
+        knownBefore.set(cur.instruction, knownValues());
         idx++; // valuesByInstruction is indexed per instruction ENTRY, resumed ones included
         continue;
       }
-      cur = { instruction: e.text ?? '', entries: [e] };
-      knownBefore.set(cur.instruction, { ...known2 });
+      flushPending();
+      ledgerIndex++;
+      ledger.beginInstruction(ledgerIndex);
+      seed();
+      mark = at;
+      cur = { instruction: e.text ?? '', entries: [e], ledgerIndex, mark };
+      knownBefore.set(cur.instruction, knownValues());
       idx++;
     } else if (!cur) continue;
     else if (e.k === 'report') {
+      cur.reports = [...(cur.reports ?? []), e];
+      // Compile from the RE-DECIDED pipeline output, not the recorded
+      // `e.values` — those were produced by whatever report.ts ran that
+      // sweep, so using them makes a backfill/flatten change invisible to
+      // every flow metric below. Same blind spot as reading the published
+      // skill store, one layer up.
+      const values = valuesByInstruction[idx] ?? e.values ?? {};
       if (e.status === 'success') {
-        // Compile from the RE-DECIDED pipeline output, not the recorded
-        // `e.values` — those were produced by whatever report.ts ran that
-        // sweep, so using them makes a backfill/flatten change invisible to
-        // every flow metric below. Same blind spot as reading the published
-        // skill store, one layer up.
-        const values = valuesByInstruction[idx] ?? e.values ?? {};
         try {
           const compiled = compileSkills({
-            entries: cur.entries,
+            entries: carryOpener(entries.slice(0, cur.mark), cur.entries),
             instruction: cur.instruction,
             report: { status: e.status, summary: e.summary ?? '', evidence: { values } },
             session: 'rebuild',
-            // The daemon compiles with the session's known values (the runid it
-            // was given, values it minted). Without them discoverSlots finds
-            // fewer slots, so fewer step params carry a reference and the
-            // rebuilt flow looks a third emptier than the one that shipped.
-            knownValues: known2,
+            // The daemon's learn call: the ledger so far, and the task's
+            // constants judged over the whole script so far (server.ts
+            // taskConstants).
+            knownValues: knownValues(),
+            taskConstants: [
+              ...taskConstants(
+                entries.slice(0, at + 1),
+                ledger.all().filter((l) => l.binding.from === 'output').map((l) => l.value),
+                Object.values(known),
+              ),
+            ],
           });
           if (compiled.length && e.skill) compiled[0].id = e.skill;
           skills.push(...compiled);
@@ -252,17 +285,19 @@ function storeFrom(entries, known, valuesByInstruction) {
         }
         // Bank this instruction's values for the NEXT compile, exactly as the
         // daemon's ledger does (its report entries are post-pipeline too).
-        for (const [name, value] of Object.entries(values)) known2[name] = String(value);
+        bank([...cur.entries, ...cur.reports], `i${cur.ledgerIndex}`, values);
       }
       if (e.status !== 'success') pending = cur;
       cur = null;
     } else cur.entries.push(e);
   }
+  flushPending();
   return {
     get: (id) => skills.find((s) => s.id === id) ?? null,
     list: (origin) => skills.filter((s) => s.origin === origin),
     all: () => skills,
     knownBefore,
+    knownValues,
   };
 }
 
@@ -351,14 +386,20 @@ for (const { runid, file } of sessions()) {
       startUrl,
       vars: { runid },
       session: runid,
+      // The daemon binds at export against the WHOLE ledger (server.ts
+      // knownValues), and threads each slot by its recorded origin.
       bind: (id, instr) => {
         const sk = store.get(id);
-        const bound = sk ? bindSkill(sk, instr, rebuilt.knownBefore.get(instr) ?? { runid, 'var:runid': runid }) : null;
+        const bound = sk ? bindSkill(sk, instr, rebuilt.knownValues()) : null;
         if (process.env.REBUILD_TRACE) {
           console.error(`  bind ${id}: skill=${sk ? 'found' : 'MISSING'} params=${bound ? JSON.stringify(Object.keys(bound)) : 'NULL'}`);
           if (sk && !bound) console.error(`    template: ${sk.template}\n    params: ${JSON.stringify(sk.params)}\n    instr: ${instr}`);
         }
         return bound;
+      },
+      origins: (id) => {
+        const sk = store.get(id);
+        return sk ? Object.fromEntries(Object.entries(sk.params).flatMap(([k, p]) => (p.binding ? [[k, p.binding]] : []))) : null;
       },
     });
     if (flow) {

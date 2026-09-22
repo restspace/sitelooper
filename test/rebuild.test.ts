@@ -82,4 +82,15 @@ describe('recorded-flow rebuild', () => {
     expect(out).toContain('{{02-create.h1}}');
     expect(out).toMatch(/02-create publishes \[h1,/);
   });
+
+  it('banks url positions and threads slot origins the way the daemon does', () => {
+    // The rebuild once kept a hand-rolled known-values map of report names
+    // only: no `url:iN:pK` entry, no `origins` for buildFlow. A url id a later
+    // navigation carries then never became a url-origin slot, and the offline
+    // flow under-reported url references (snipeit fwsi4 04-set's
+    // {{03-create.url.p1}}, which the live flow carried). fwod25 is the same
+    // shape: 03-open's goto to the order 02-create minted.
+    const out = execFileSync(process.execPath, ['bench/rebuild-flow.mjs', '--tag', 'fwod25', '--dir', 'bench/fixtures/recordings'], { cwd: root, encoding: 'utf8' });
+    expect(out).toContain('{{02-create.url.q.id}}');
+  }, 60_000);
 });

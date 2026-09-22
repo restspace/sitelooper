@@ -2670,8 +2670,15 @@ function readLines(step: SkillStep, ctx: Ctx): string[] {
   // compiled run (fwod41).
   const attr = step.args?.attr;
   const readable = what === 'text' || what === 'value' || what === 'count' || (what === 'attr' && typeof attr === 'string' && attr !== '');
+  const take = `readElements(loc, ${step.tool === 'read_all'}, ${q(what)}${what === 'attr' ? `, { attr: ${q(String(attr))} }` : ''})`;
+  // A read-back pinned by containment publishes only the span at its frame's
+  // mark, through the shared framedRead replay calls (fwvk3, fwgh5 s_5ee393):
+  // the frame's slots filled from this run's params as replay fills its args.
+  const valueFrame = typeof step.args?.frame === 'string' && step.args.frame ? step.args.frame : null;
   const read = readable
-    ? `(loc: Locator) => readElements(loc, ${step.tool === 'read_all'}, ${q(what)}${what === 'attr' ? `, { attr: ${q(String(attr))} }` : ''})`
+    ? valueFrame
+      ? `async (loc: Locator) => framedRead(await ${take}, ${src(valueFrame)})`
+      : `(loc: Locator) => ${take}`
     : null;
   // An unknown kind, or an attribute read that never recorded WHICH attribute:
   // publishing nothing under the label a later step consumes is how an empty

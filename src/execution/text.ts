@@ -218,3 +218,100 @@ export function fieldByName(selector: string): { scope: string | null; role: str
   if (!m || !LABELLED_ROLES.has(m[1])) return null;
   return { scope: cut < 0 ? null : selector.slice(0, cut), role: m[1], name: m[2].replace(/\\(.)/g, '$1') };
 }
+
+/**
+ * WHERE A READ'S VALUE SAT ON ITS LINE.
+ *
+ * A read-back the model pinned to a wrapper is accepted by CONTAINMENT
+ * (recorder.ts captureReadBackAt): the element's line carries the value and a
+ * label or sibling beside it. The read then published the element's whole
+ * text on every replay — fwvk3's runid "fwvk3-n1" was pinned to the <h1>
+ * "fwvk3-n1 Bench Task", and n2 published "fwvk3-n2 Bench Task"; fwgh5
+ * s_5ee393's `ref` published "fwgh5-n2 Bench Post" — and the summary rewrite
+ * that swaps each recorded value for the replayed one garbled the report.
+ *
+ * So a contained read records its FRAME: the value's line with the value cut
+ * out and FRAME_MARK in its place ("{{=}} Bench Task"), and both runners
+ * publish only the text at the mark (extractFramed). Not a `{{vN}}` slot:
+ * compile fills the run's slots into the frame's literal text like any other
+ * arg, and the mark must survive that.
+ */
+export const FRAME_MARK = '{{=}}';
+
+/** One rendered line as a frame compares it: whitespace runs collapsed, trimmed. */
+function frameLine(line: string): string {
+  return line.replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * `text`'s frame for `value` — see FRAME_MARK — or null when no line of
+ * `text` carries the value. The line is the SHORTEST carrying it (the value's
+ * own line, the one captureReadBackAt's own-line rule accepted); within it,
+ * an occurrence bounded by IDENTITY_EDGE is preferred to a bare substring.
+ * A line that IS the value names no position by itself inside a multi-line
+ * element, so the neighbouring line (the one before, else the one after) is
+ * kept with it: "Folder\n{{=}}".
+ */
+export function frameValue(text: string, value: string): string | null {
+  const v = frameLine(value);
+  if (!v) return null;
+  const lines = text.split(/\r?\n/).map(frameLine).filter(Boolean);
+  const body = escapeRe(v).replace(/ /g, '\\s+');
+  const bounded = new RegExp(`(?<!${IDENTITY_EDGE})${body}(?!${IDENTITY_EDGE})`, 'iu');
+  const loose = new RegExp(body, 'iu');
+  let at = -1;
+  for (let i = 0; i < lines.length; i++) {
+    if (loose.test(lines[i]) && (at < 0 || lines[i].length < lines[at].length)) at = i;
+  }
+  if (at < 0) return null;
+  const line = lines[at];
+  const hit = bounded.exec(line) ?? loose.exec(line)!;
+  const framed = line.slice(0, hit.index) + FRAME_MARK + line.slice(hit.index + hit[0].length);
+  if (framed !== FRAME_MARK || lines.length < 2) return framed;
+  return at > 0 ? `${lines[at - 1]}\n${framed}` : `${framed}\n${lines[at + 1]}`;
+}
+
+/** Any `{{…}}` in a frame but the mark: a masked volatile token, or a slot the run left unfilled ("asks for no particular value"). */
+const FRAME_HOLE = /\{\{[^{}]*\}\}/;
+
+/** One frame line as an anchored RegExp: the mark captures, each hole matches anything within the line. */
+function frameLineRe(line: string): RegExp {
+  const lit = (part: string) =>
+    part
+      .split(FRAME_HOLE)
+      .map((p) => escapeRe(p).replace(/ /g, '\\s+'))
+      .join('.*?');
+  const body = maskVolatile(line).split(FRAME_MARK).map(lit).join('(.+?)');
+  return new RegExp(`^${body}$`, 'iu');
+}
+
+/**
+ * The text at `frame`'s mark in `text` (an element's rendered text), or null
+ * when the element no longer shows the frame. Compared the way foldValue
+ * compares a displayed value — whitespace collapsed, case folded — with
+ * clock, date and relative-time tokens wildcarded (maskVolatile), line by
+ * line: the frame's lines must match consecutive lines of `text`, whole.
+ * Every window that matches must capture the same text; two different
+ * captures are two candidates, and a read that has to guess publishes
+ * nothing. Null is a failed read, never a wrong value.
+ */
+export function extractFramed(text: string, frame: string): string | null {
+  const want = frame.split(/\r?\n/).map(frameLine).filter(Boolean);
+  if (want.filter((l) => l.includes(FRAME_MARK)).length !== 1) return null;
+  const res = want.map(frameLineRe);
+  const lines = text.split(/\r?\n/).map(frameLine).filter(Boolean);
+  let got: string | null = null;
+  for (let i = 0; i + want.length <= lines.length; i++) {
+    let captured: string | null = null;
+    let ok = true;
+    for (let j = 0; j < want.length && ok; j++) {
+      const m = res[j].exec(lines[i + j]);
+      if (!m) ok = false;
+      else if (m[1] !== undefined) captured = m[1].trim();
+    }
+    if (!ok || !captured) continue;
+    if (got !== null && got !== captured) return null;
+    got = captured;
+  }
+  return got;
+}

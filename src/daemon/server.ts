@@ -9,7 +9,7 @@ import { urlPattern as compiledUrlPattern, carryOpener, dropAbsentReadLocators, 
 import type { DriftTicket } from '../skills/repair.js';
 import type { Page } from 'playwright-core';
 import { agentGesturesOutsideReplay, bindSkill, canAdoptPin, decideRepin, instructionEntry, learnFromInstruction, matchTemplate, pinStartsElsewhere, pinStatus, publishedOutputs, selectCandidates, synthesizeReport } from '../skills/learn.js';
-import { buildFlow, consumedReportedOutputs, consumedUrlOutputs, ignorableRefs, jsonLeaves, lintFlowRefs, lintUnpublishedOutputs, listFlows, liveReadsFor, liveReadsForRecovery, loadFlow, loadFlowFile, lookupOutput, mutatingIntent, noteOutputEvidence, pruneUnsourcedOutputs, recoveryRoute, remapParams, resolveInstruction, resolveStepParams, softResolveInstruction, saveFlow, staleInstructionIds, unbankedMutations, unreportedOutputs, urlOutputs, varyingValues, type RunSpecific } from '../skills/flow.js';
+import { buildFlow, consumedReportedOutputs, consumedUrlOutputs, ignorableRefs, jsonLeaves, lintFlowRefs, lintUnpublishedOutputs, listFlows, liveReadsFor, liveReadsForRecovery, loadFlow, loadFlowFile, lookupOutput, mutatingIntent, noteOutputEvidence, pruneUnsourcedOutputs, recoveryRoute, remapParams, resolveInstruction, resolveStepParams, softResolveInstruction, saveFlow, staleInstructionIds, taskConstants, unbankedMutations, unreportedOutputs, urlOutputs, varyingValues, type RunSpecific } from '../skills/flow.js';
 import { applyRelabelToEntries, applyRelabelToSkills, relabelCases, requestRelabelPlan } from '../skills/relabel.js';
 import { goalSatisfied, renderChainStop } from '../skills/replay.js';
 import { drainDrift, llmProposer, recordCandidateEvidence } from '../skills/repair.js';
@@ -381,6 +381,19 @@ ${describeLeaks(leaks.slice(0, 6))}`);
     const out: Record<string, string> = {};
     for (const e of this.ledger.all()) out[bindingKey(e.binding)] = e.value;
     return out;
+  }
+
+  /**
+   * The ledger's reported values that the recording shows to be constants of
+   * the task (flow.ts taskConstants) — judged over the WHOLE script, which
+   * compile, seeing one instruction, cannot. Outputs only: a var is the run's
+   * by declaration and a url id by position.
+   */
+  private taskConstants(): string[] {
+    const entries = this.browser.script?.entries ?? [];
+    const outputs = this.ledger.all().filter((e) => e.binding.from === 'output').map((e) => e.value);
+    if (!entries.length || !outputs.length) return [];
+    return [...taskConstants(entries, outputs, Object.values(this.state.vars ?? {}), this.runSpecific)];
   }
 
   /** The exact matcher found nothing: is this instruction a stored procedure in other words? */
@@ -758,6 +771,10 @@ ${describeLeaks(leaks.slice(0, 6))}`);
                 session: this.opts.session,
                 model: provider.model,
                 vars: this.knownValues(),
+                // Reported values an instruction stated before the run showed
+                // them: task constants, which must not strand a locator
+                // (flow.ts taskConstants; snipeit fwsi4 05-open, espocrm fwec3).
+                taskConstants: this.taskConstants(),
               })
             : null;
           this.noteMintedIds(entriesSince, `i${this.instructionIndex}`);

@@ -70,6 +70,25 @@ d('counter-numbered ids', () => {
     expect(described.chain![0]).toMatchObject({ kind: 'role', role: 'link', name: 'New post' });
   }, 30_000);
 
+  // fwgh5 s_8e130d: `#ember5` was the Sign in button's second candidate. One
+  // digit is a counter only when the page numbers the same prefix again.
+  it('treats a one-digit glued id as a counter when the page numbers its prefix again, and only then', async () => {
+    const page = await session.getPage();
+    const exprsOf = async (html: string, find: RegExp) => {
+      await page.setContent(html);
+      const snap = await snapshot(page, { full: true } as any);
+      const described = await describeTarget(page, find.exec(snap)![1]);
+      return described.chain!.map((c: any) => candidateExpr(c)).join('\n');
+    };
+    const family = await exprsOf(`<div id="ember3"><form><button id="ember5" type="submit">Sign in</button></form></div>`, /button "Sign in" \[(@e\d+)\]/);
+    expect(family).not.toMatch(/ember\d/);
+    // Alone on its page, a letter-then-digit id is a name: kept.
+    const alone = await exprsOf(`<div><form><button id="col2" type="submit">Sign in</button></form></div>`, /button "Sign in" \[(@e\d+)\]/);
+    expect(alone).toContain('#col2');
+    const heading = await exprsOf(`<h1 id="h1">Title</h1><h2 id="intro">Intro</h2>`, /heading "Title"[^\n]*?\[(@e\d+)\]/);
+    expect(heading).toContain('#h1');
+  }, 30_000);
+
   // fwgh4 s_17f69b: the row anchor carried "a few seconds ago"; minutes later it must still resolve.
   it('resolves a scoped anchor recorded with a relative time on a row that has aged, in both runners', async () => {
     const { makeLocator } = await import('../src/daemon/recorder.js');

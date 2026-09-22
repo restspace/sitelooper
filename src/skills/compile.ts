@@ -84,6 +84,13 @@ export interface CompileInput {
    * itself minted it, it is derived, never a param (ownUrlMints).
    */
   ownStep?: string;
+  /**
+   * Known values that are constants of the TASK, not of this run: an
+   * instruction stated each one before the run had shown it (flow.ts
+   * taskConstants, which needs the whole recording). They still slot like any
+   * known value; they only never strand a locator (`runValues` below).
+   */
+  taskConstants?: string[];
 }
 
 /**
@@ -327,9 +334,13 @@ export function compileSkills(input: CompileInput): Skill[] {
   /** The url-origin slots written ONLY by position (not in textSlots). */
   const positionalUrlSlots = urlIdSlots.filter((u) => !textSlots.has(u.name));
   /** The caller's values for THIS run — a runid, a record it vouched for. */
+  // Less the task's constants: a seeded user an instruction named before the
+  // run showed it is the same on every run, so a locator naming it is no
+  // stranded anchor (snipeit fwsi4 05-open, espocrm fwec3; see taskConstants).
+  const constants = new Set(input.taskConstants ?? []);
   const runValues = Object.values(input.knownValues ?? {})
     .map((v) => String(v ?? '').trim())
-    .filter((v) => v.length >= 3);
+    .filter((v) => v.length >= 3 && !constants.has(v));
   // …and so it STARTS where its first kept step did, not where the
   // instruction began: the steps dropped ahead of it moved the page. fwop2's
   // 01-signin replayed its chain's sign-in and welcome-dialog segments, the
@@ -1916,6 +1927,28 @@ export function maskPublishedValues(line: string, published: readonly string[]):
   return name === split.name && value === split.value ? line : split.rebuild(name, value);
 }
 
+/**
+ * `text` up to the first whole-token occurrence of a published value, trimmed;
+ * `text` itself when none occurs. The alert's half of maskPublishedValues —
+ * see unfreezeExpectations. Two values are skipped. One under two characters:
+ * a lone digit a read published stands in any sentence, and cutting there
+ * would throw away an alert on a coincidence. And the whole alert: a read OF
+ * the alert (fwsi4 01-open's `login_alert`, "Success: × You have successfully
+ * logged in.") says nothing about a value inside it, and the text every
+ * sign-in raises is exactly what the step should expect.
+ */
+export function cutAtPublishedValue(text: string, published: readonly string[]): string {
+  let at = -1;
+  for (const v of published) {
+    if (v.length < 2 || v === text.trim()) continue;
+    // Where it stands, by the token rule the masking side uses (ledger.ts
+    // replaceAsToken): mark it, then find the mark.
+    const i = occursAsToken(text, v) ? replaceAsToken(text, v, '\u0000').indexOf('\u0000') : -1;
+    if (i >= 0 && (at < 0 || i < at)) at = i;
+  }
+  return at < 0 ? text : text.slice(0, at).trimEnd();
+}
+
 /** The values this recording's own reads published — see maskPublishedValues. */
 export function publishedReadValues(steps: readonly RecordedStep[], reportValues: Record<string, unknown>): string[] {
   const out = new Set<string>();
@@ -2023,6 +2056,27 @@ function unfreezeWatchedNames(steps: readonly SkillStep[]): number {
 export function unfreezeExpectations(steps: SkillStep[], published: readonly string[], notes: TransformNote[]): void {
   const watched = unfreezeWatchedNames(steps);
   steps.forEach((step, si) => {
+    // The alert too: it is the same recorded page change, one channel over.
+    // snipeit fwsi4 03-create's save expected an alert containing "Success: ×
+    // Asset with tag BA-00004 was created successfully." — the tag the create
+    // minted and the procedure's own reads published, so no other run could
+    // raise it. alertVerdict (gates.ts, shared by both runners) matches a
+    // plain substring with no wildcard, so the text is CUT before the first
+    // published value rather than masked: "Success: × Asset with tag" is the
+    // part every run shows. Nothing left before it, no alert expectation.
+    const alert = step.expect?.alertContains;
+    if (alert !== undefined && published.length) {
+      const cut = cutAtPublishedValue(alert, published);
+      if (cut !== alert) {
+        if (cut) step.expect!.alertContains = cut;
+        else {
+          delete step.expect!.alertContains;
+          if (!step.expect!.addedContains?.length && !step.expect!.removedContains) delete step.expect!.lineDialect;
+          if (!Object.keys(step.expect!).length) delete step.expect;
+        }
+        notes.push({ name: 'unfreezeExpectations', at: si + 1, reason: `recorded alert carried a value only the recording run could produce: ${JSON.stringify(alert)} → ${JSON.stringify(cut)}` });
+      }
+    }
     const lines = step.expect?.addedContains;
     if (!lines) return;
     const before = lines.join('\n');

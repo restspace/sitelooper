@@ -88,6 +88,8 @@ export function learnFromInstruction(
     vars?: Record<string, string>;
     /** The ledger step THIS instruction banks under (`i2`), for compile's ownStep. */
     ownStep?: string;
+    /** Known values that are constants of the task (compile.ts CompileInput.taskConstants). */
+    taskConstants?: string[];
     /**
      * The caller watched the recovery and saw the stop cost nothing: the
      * instruction succeeded and nothing changed the page after the replay
@@ -154,6 +156,7 @@ export function learnFromInstruction(
       variantOf: variant,
       knownValues: input.vars,
       ...(input.ownStep ? { ownStep: input.ownStep } : {}),
+      ...(input.taskConstants?.length ? { taskConstants: input.taskConstants } : {}),
     });
   const skills = compile(variantOf);
   // A variant that starts AFTER steps this recording replayed through other

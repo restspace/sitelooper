@@ -1011,7 +1011,13 @@ d('read-back synthesis (fixture page)', () => {
 
       // Containment survives here (it does not on the text path): the model
       // typically points at the enclosing field, whose text carries a label.
-      expect(await captureReadBackAt(page, 'bench', '[data-testid="folder-field"]')).toBeTruthy();
+      const field = await captureReadBackAt(page, 'bench', '[data-testid="folder-field"]');
+      expect(field).toBeTruthy();
+      // A contained value records WHERE on its line it sat, so both runners
+      // publish that span and not the line (fwvk3 runid on "fwvk3-n1 Bench
+      // Task"). An exact element records no frame.
+      expect(field!.args.frame).toBe('Folder: {{=}}');
+      expect(folder!.args.frame).toBeUndefined();
 
       // A selector pointing at the wrong element is still refused.
       expect(await captureReadBackAt(page, 'bench', '#other')).toBeNull();
@@ -1030,6 +1036,7 @@ d('read-back synthesis (fixture page)', () => {
       const cell = await captureReadBackAt(page, '£ 279.00', '#cell');
       expect(cell).toBeTruthy();
       expect(JSON.parse(cell!.result!)).toBe('£ 279.00');
+      expect(cell!.args.frame).toBe('Total: {{=}}');
     } finally {
       await session.close();
     }

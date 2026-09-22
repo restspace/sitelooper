@@ -25,7 +25,7 @@ import {
 import { isRefTarget } from '../daemon/refs.js';
 import { settleDom } from '../daemon/settle.js';
 import { TRANSIENT_LINE, fillParams, fillParamsDeep, urlMatches, urlPart, urlPattern } from './compile.js';
-import { flattenRead, liveAlerts, liveAlertsObserved, observedNothing, resolveForRead, takeRead, type ObservedAlerts } from '../execution/observe.js';
+import { flattenRead, framedRead, liveAlerts, liveAlertsObserved, observedNothing, resolveForRead, takeRead, type ObservedAlerts } from '../execution/observe.js';
 import {
   addedLines,
   alertsComplete,
@@ -1097,11 +1097,13 @@ export async function replaySkill(
         if (absenceMet) return { status: 'completed', value: { result: `condition met: ${String(args.state)} (nothing matched)` } };
         if (isRead) {
           // Taken and flattened by the shared takeRead, as the artifact takes it:
-          // a read that errors is skipped, never a failed step.
+          // a read that errors is skipped, never a failed step. A read recorded
+          // with a frame publishes only the span at its mark (framedRead), and
+          // one whose frame the element no longer shows is skipped the same way.
           let result = '';
           const taken = await takeRead(async () => {
             result = (await opts.exec(step.tool, args, resolved, { skill: skill.id, step: failIndex })).result;
-            return decodeRead(result);
+            return framedRead(decodeRead(result), args.frame);
           });
           if (!taken.ok) {
             if (step.label) readsSkipped++;
