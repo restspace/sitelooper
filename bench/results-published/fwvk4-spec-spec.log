@@ -1,0 +1,50 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-open
+[sitelooper recipe] filled via recipe prosemirror/set-value (r_1ab693); value verified on the component
+  ✘  1 fwvk4.spec.ts:9:1 › fwvk4 (22.0s)
+
+
+  1) fwvk4.spec.ts:9:1 › fwvk4 › 02-create: In the project 'Bench Project', create a new task with the exact title '{{runid}} Bench Task' and a description that includes the text '{{runid}}' (e.g. 'Bench task for run {{runid}}'). Do not touch any task whose title starts with 'Seed:'. After creating it, open the new task's detail page and report the task's identifier as displayed (should look like BENCH-<number>), the title, and the description text shown. 
+
+    Error: 02-create s_76c6ba/2: the recorded page change did not appear
+
+    02-create s_76c6ba/2: the recorded page change did not appear
+
+    expect(received).toBeNull()
+
+    Received: "after step 02-create s_76c6ba/2 none of the 1 recorded page change(s) appeared (e.g. \"- heading \\\"Description Saved!\\\"\") — the step ran but did not have its recorded effect"
+
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+
+       at fwvk4.flow.ts:10982
+
+      10980 |       { timeout: EXPECT_WAIT_MS, message: `${ctx.tag}: the recorded page change did not appear` },
+      10981 |     )
+    > 10982 |     .toBeNull();
+            |      ^
+      10983 |   for (const warning of last.warnings) console.log(`[sitelooper warn] ${warning}`);
+      10984 |   if (last.unobserved) console.log(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);
+      10985 |   return last;
+        at expectChanges (/home/user/sitelooper/bench/results/fwvk4-spec-spec-tmp/fwvk4.flow.ts:10982:6)
+        at Object.verify (/home/user/sitelooper/bench/results/fwvk4-spec-spec-tmp/fwvk4.flow.ts:11899:32)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwvk4-spec-spec-tmp/fwvk4.flow.ts:7879:24)
+        at Object.02-create (/home/user/sitelooper/bench/results/fwvk4-spec-spec-tmp/fwvk4.flow.ts:11869:5)
+        at /home/user/sitelooper/bench/results/fwvk4-spec-spec-tmp/fwvk4.flow.ts:14322:7
+        at runFlow (/home/user/sitelooper/bench/results/fwvk4-spec-spec-tmp/fwvk4.flow.ts:14321:5)
+        at /home/user/sitelooper/bench/results/fwvk4-spec-spec-tmp/fwvk4.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwvk4-fwvk4/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwvk4-fwvk4/error-context.md
+
+  1 failed
+    fwvk4.spec.ts:9:1 › fwvk4 ──────────────────────────────────────────────────────────────────────

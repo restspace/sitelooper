@@ -1,0 +1,253 @@
+{
+  "flow": "fwvk4",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Signed in to http://127.0.0.1:8096/ as admin, opened the project \"Bench Project\" (project id 2), and enumerated its tasks in both List view (/projects/2) and Table view. Exactly three tasks have titles starting with \"Seed:\", confirmed identically across both views.",
+      "values": {
+        "task_titles_with_Seed_prefix_1": "Seed: triage inbox",
+        "task_titles_with_Seed_prefix_2": "Seed: order missing parts",
+        "task_titles_with_Seed_prefix_3": "Seed: ship repaired device",
+        "project_name": "Bench Project"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Resumed from the replayed chain: the task titled \"fwvk4-n2 Bench Task\" already existed, so I did not create another one. I saved its description (\"Bench task for run fwvk4-n2\") via the SAVE button on the description editor (page confirmed \"Description Saved!\"), then reloaded /tasks/6 and re-read the values from the live DOM: identifier BENCH-5, title \"fwvk4-n2 Bench Task\", description \"Bench task for run fwvk4-n2\". No Seed: task was touched — the project's table view (/projects/2, Table) lists exactly four tasks and the three Seed: ones still read \"Seed: triage inbox\" (BENCH-1), \"Seed: order missing parts\" (BENCH-2) and \"Seed: ship repaired device\" (BENCH-4), with only one \"fwvk4-n2 Bench Task\" (BENCH-5) present, i.e. no duplicate.",
+      "values": {
+        "identifier": "BENCH-5",
+        "task_title": "fwvk4-n2 Bench Task",
+        "description_text": "Bench task for run fwvk4-n2",
+        "project_name": "Bench Project",
+        "seed_tasks_unchanged": "BENCH-1 Seed: triage inbox, BENCH-2 Seed: order missing parts, BENCH-4 Seed: ship repaired device",
+        "new_task_href": "/tasks/6",
+        "ref": "fwvk4-n2",
+        "ref_2": "BENCH-1",
+        "ref_3": "BENCH-2"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_76c6ba stopped at step 2 — after step 2 none of the 1 recorded page change(s) appeared (e.g. \"- heading \\\"Description Saved!\\\"\") — the step ran but did not have its recorded effect",
+      "replayed": "1/11",
+      "repaired": false,
+      "turns": 9,
+      "unreported": [
+        "title",
+        "description",
+        "project",
+        "run_reference"
+      ]
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "On the BENCH-5 task detail page (http://127.0.0.1:8096/tasks/4, \"Bench task for run fwvk4-n2 Bench Task\" in Bench Project) I opened the \"Set Due Date\" picker, chose December 2026 → clicked 31, set the time spinbuttons to 00:00, and blurred the field; I then set the priority dropdown from Unset to \"High\" and blurred it. After a full page reload the page shows the due date as \"31 Dec 2026, 00:00:00\" (i.e. 2026-12-31) and the priority dropdown with \"High\" selected — both persisted.",
+      "values": {
+        "title": "fwvk4-n2 Bench Task",
+        "due_date_display": "31 Dec 2026, 00:00:00",
+        "priority_value": "3",
+        "identifier": "BENCH-5",
+        "description": "Bench task for run fwvk4-n2",
+        "run_reference": "Bench task for run fwvk4-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_4f6b4f: step 15: read 'title' returned a value the skill itself set/selected ('fwvk4-n2 Bench Task') — confirms the control, not persistence; dropped from the report's confident values"
+      ]
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_03b8d3; observed identifier=BENCH-5, title=fwvk4-n2 Bench Task, run_reference=fwvk4-n2, labels_page_nav_link_text= Labels, labels_page_heading=Manage labels, labels_existing_in_workspace_1=Backend, labels_existing_in_workspace_2=Docs, labels_existing_in_workspace_3=Frontend, label_chip_text=Backend.",
+      "values": {
+        "identifier": "BENCH-5",
+        "title": "fwvk4-n2 Bench Task",
+        "run_reference": "fwvk4-n2",
+        "labels_page_nav_link_text": " Labels",
+        "labels_page_heading": "Manage labels",
+        "labels_existing_in_workspace_1": "Backend",
+        "labels_existing_in_workspace_2": "Docs",
+        "labels_existing_in_workspace_3": "Frontend",
+        "label_chip_text": "Backend"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_06d790: step 5: read 'labels_on_task' returned a value the skill itself set/selected ('Backend') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "labels_on_task"
+      ]
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_cb262a; observed comment_text=Comment for run fwvk4-n2, description=Bench task for run fwvk4-n2, due_date_display=31 Dec 2026, 00:00:00, identifier=BENCH-5, labels_on_task=Backend, priority_display=High, title=fwvk4-n2 Bench Task, comment_timestamp=less than a minute ago, comment_author=admin, run_reference=fwvk4-n2 Bench Task.",
+      "values": {
+        "comment_text": "Comment for run fwvk4-n2",
+        "description": "Bench task for run fwvk4-n2",
+        "due_date_display": "31 Dec 2026, 00:00:00",
+        "identifier": "BENCH-5",
+        "labels_on_task": "Backend",
+        "priority_display": "High",
+        "title": "fwvk4-n2 Bench Task",
+        "comment_timestamp": "less than a minute ago",
+        "comment_author": "admin",
+        "run_reference": "fwvk4-n2 Bench Task"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_cb262a: step 4: read 'comment_text' returned a value the skill itself set/selected ('Comment for run fwvk4-n2') — confirms the control, not persistence; dropped from the report's confident values"
+      ]
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_07d9d1; observed comments=Comment for run fwvk4-n2 (author: admin), identifier=BENCH-5, title=fwvk4-n2 Bench Task, description=Bench task for run fwvk4-n2, due_date=31 Dec 2026, 00:00:00, priority_display=3, labels_attached=Backend, comment_text=Comment for run fwvk4-n2, comment_author=admin, run_reference=fwvk4-n2 Bench Task.",
+      "values": {
+        "comments": "Comment for run fwvk4-n2 (author: admin)",
+        "identifier": "BENCH-5",
+        "title": "fwvk4-n2 Bench Task",
+        "description": "Bench task for run fwvk4-n2",
+        "due_date": "31 Dec 2026, 00:00:00",
+        "priority_display": "3",
+        "labels_attached": "Backend",
+        "comment_text": "Comment for run fwvk4-n2",
+        "comment_author": "admin",
+        "run_reference": "fwvk4-n2 Bench Task"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_07d9d1: step 1: skipped read — no element matched any known locator for target (tried 2: page.locator('ul > div:nth-of-type(2) > div > div:nth-of-type(2) > span:nth-of-type(1) > a'), elementAt(434, 275) /* link */)",
+        "s_07d9d1: step 2: skipped read — no element matched any known locator for target (tried 2: page.locator('ul > div:nth-of-type(3) > div > div:nth-of-type(2) > span:nth-of-type(1) > a'), elementAt(462, 316) /* link */)",
+        "s_07d9d1: step 3: skipped read — no element matched any known locator for target (tried 2: page.locator('ul > div:nth-of-type(4) > div > div:nth-of-type(2) > span:nth-of-type(1) > a'), elementAt(465, 357) /* link */)",
+        "s_07d9d1: step 4: primary locator did not resolve; used fallback #2 page.getByRole('link', { name: 'fwvk4-n2 Bench Task', exact: true })"
+      ],
+      "unreported": [
+        "seed_task_titles_1",
+        "seed_task_titles_2",
+        "seed_task_titles_3"
+      ]
+    }
+  ],
+  "passed": 6,
+  "total": 6,
+  "repinned": 0,
+  "drift": 5,
+  "driftTickets": [
+    {
+      "flow": "fwvk4",
+      "step": "02-create",
+      "skill": "s_76c6ba",
+      "similarity": 0.999,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_76c6ba stopped at step 2 — after step 2 none of the 1 recorded page change(s) appeared (e.g. \"- heading \\\"Description Saved!\\\"\") — the step ran but did not have its recorded effect",
+      "reason": "after step 2 none of the 1 recorded page change(s) appeared (e.g. \"- heading \\\"Description Saved!\\\"\") — the step ran but did not have its recorded effect",
+      "pageUrlPattern": "http://127.0.0.1:8096/tasks/:id",
+      "pageUrl": "http://127.0.0.1:8096/tasks/6"
+    },
+    {
+      "flow": "fwvk4",
+      "step": "06-open",
+      "skill": "s_07d9d1",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.454,
+      "missedLocator": "page.locator('ul > div:nth-of-type(2) > div > div:nth-of-type(2) > span:nth-of-type(1) > a')",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8096/projects/:id/:id",
+      "pageUrl": "http://127.0.0.1:8096/projects/2/7"
+    },
+    {
+      "flow": "fwvk4",
+      "step": "06-open",
+      "skill": "s_07d9d1",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 0.454,
+      "missedLocator": "page.locator('ul > div:nth-of-type(3) > div > div:nth-of-type(2) > span:nth-of-type(1) > a')",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8096/projects/:id/:id",
+      "pageUrl": "http://127.0.0.1:8096/projects/2/7"
+    },
+    {
+      "flow": "fwvk4",
+      "step": "06-open",
+      "skill": "s_07d9d1",
+      "atStep": "3",
+      "key": "target",
+      "similarity": 0.454,
+      "missedLocator": "page.locator('ul > div:nth-of-type(4) > div > div:nth-of-type(2) > span:nth-of-type(1) > a')",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8096/projects/:id/:id",
+      "pageUrl": "http://127.0.0.1:8096/projects/2/7"
+    },
+    {
+      "flow": "fwvk4",
+      "step": "06-open",
+      "skill": "s_07d9d1",
+      "atStep": "4",
+      "key": "target",
+      "similarity": 0.454,
+      "missedLocator": "page.locator('span', { hasText: 'fwvk4-n2 Bench Task' }).locator('a')",
+      "fallbackUsed": "page.getByRole('link', { name: 'fwvk4-n2 Bench Task', exact: true })",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8096/projects/:id/:id",
+      "pageUrl": "http://127.0.0.1:8096/projects/2/7"
+    }
+  ],
+  "wallMs": 93177,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 130337,
+    "completionTokens": 6149,
+    "cachedTokens": 110208
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 130337,
+      "completionTokens": 6149,
+      "cachedTokens": 110208
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

@@ -1,0 +1,34 @@
+{
+  "arm": "spec",
+  "runid": "fwvk4-spec",
+  "target": "vikunja",
+  "flow": "fwvk4.json",
+  "flowName": "fwvk4",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwvk4-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwvk4-spec-spec-tmp/fwvk4.flow.ts",
+  "specFile": "bench/results/fwvk4-spec-spec-tmp/fwvk4.spec.ts",
+  "wallMs": 24881,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwvk4",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 21955,
+      "error": "Error: 02-create s_76c6ba/2: the recorded page change did not appear\n\n02-create s_76c6ba/2: the recorded page change did not appear\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeNull\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"after step 02-create s_76c6ba/2 none of the 1 recorded page change(s) appeared (e.g. \\\"- heading \\\\\\\"Description Saved!\\\\\\\"\\\") — the step ran but did not have its recorded effect\"\u001b[39m\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "logTail": "\nRunning 1 test using 1 worker\n\n[sitelooper step] 01-open\n[sitelooper recipe] filled via recipe prosemirror/set-value (r_1ab693); value verified on the component\n  ✘  1 fwvk4.spec.ts:9:1 › fwvk4 (22.0s)\n\n\n  1) fwvk4.spec.ts:9:1 › fwvk4 › 02-create: In the project 'Bench Project', create a new task with the exact title '{{runid}} Bench Task' and a description that includes the text '{{runid}}' (e.g. 'Bench task for run {{runid}}'). Do not touch any task whose title starts with 'Seed:'. After creating it, open the new task's detail page and report the task's identifier as displayed (should look like BENCH-<number>), the title, and the description text shown. \n\n    Error: 02-create s_76c6ba/2: the recorded page change did not appear\n\n    02-create s_76c6ba/2: the recorded page change did not appear\n\n    expect(received).toBeNull()\n\n    Received: \"after step 02-create s_76c6ba/2 none of the 1 recorded page change(s) appeared (e.g. \\\"- heading \\\\\\\"Description Saved!\\\\\\\"\\\") — the step ran but did not have its recorded effect\"\n\n    Call Log:\n    - Timeout 5000ms exceeded while waiting on the predicate\n\n       at fwvk4.flow.ts:10982\n\n      10980 |       { timeout: EXPECT_WAIT_MS, message: `${ctx.tag}: the recorded page change did not appear` },\n      10981 |     )\n    > 10982 |     .toBeNull();\n            |      ^\n      10983 |   for (const warning of last.warnings) console.log(`[sitelooper warn] ${warning}`);\n      10984 |   if (last.unobserved) console.log(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);\n      10985 |   return last;\n        at expectChanges (/home/user/sitelooper/bench/results/fwvk4-spec-spec-tmp/fwvk4.flow.ts:10982:6)\n        at Object.verify (/home/user/sitelooper/bench/results/fwvk4-spec-spec-tmp/fwvk4.flow.ts:11899:32)\n        at runStepLifecycle (/home/user/sitelooper/bench/results/fwvk4-spec-spec-tmp/fwvk4.flow.ts:7879:24)\n        at Object.02-create (/home/user/sitelooper/bench/results/fwvk4-spec-spec-tmp/fwvk4.flow.ts:11869:5)\n        at /home/user/sitelooper/bench/results/fwvk4-spec-spec-tmp/fwvk4.flow.ts:14322:7\n        at runFlow (/home/user/sitelooper/bench/results/fwvk4-spec-spec-tmp/fwvk4.flow.ts:14321:5)\n        at /home/user/sitelooper/bench/results/fwvk4-spec-spec-tmp/fwvk4.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/fwvk4-fwvk4/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/fwvk4-fwvk4/error-context.md\n\n  1 failed\n    fwvk4.spec.ts:9:1 › fwvk4 ──────────────────────────────────────────────────────────────────────\n"
+}

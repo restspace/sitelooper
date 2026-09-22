@@ -1,0 +1,127 @@
+
+[sweep] run 1/3: fwvk4-n1 (store: /home/user/sitelooper/bench/results/fwvk4-skills)
+[harness] vikunja: defaulting APP_URL
+[harness] vikunja: defaulting APP_EMAIL
+[harness] vikunja: defaulting APP_PASSWORD
+[reset] vikunja: no leftover bench tasks
+[harness] vikunja responded 200 at http://127.0.0.1:8096/
+stopped: fwvk4-n1
+  flow "fwvk4" saved: 6 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwvk4.json
+  warning: note: dropped 1 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: note: 01-open no longer publishes seed_task_count — no replay reads it from the page and the recording showed no line to read
+  warning: note: 03-open no longer publishes priority_display — no replay reads it from the page and the recording showed no line to read
+  warning: note: 04-open no longer publishes due_date_display, priority_display, labels_page_url — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-open no longer publishes comment_count — no replay reads it from the page and the recording showed no line to read
+  warning: note: 06-open no longer publishes priority, project_list_url — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-open: added a read for label_chip_text to s_03b8d3 (page.getByRole('button', { name: 'Backend', exact: true }); seen on the next instruction's start page)
+  warning: warning: contradicted-step: 06-open read priority_display "3" right after 05-open reported "High"; 05-open's change may not have landed and a later step may be retrying it. Re-record 05-open.
+  warning: warning: 98 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "Bench Project" (output) in "Open http://127.0.0.1:8096/ and sign in with username 'admin' and password 'bench-admin-pass'. Then navigate to the project named 'Bench Project' and list the t"
+  flow.steps[0].instruction: "admin" (output) in "Open http://127.0.0.1:8096/ and sign in with username 'admin' and password 'bench-admin-pass'. Then navigate to the project named 'Bench Project' and list the t"
+  flow.steps[0].params.v2: "admin" (output) in "admin"
+  flow.steps[1].instruction: "Bench Project" (output) in "In the project 'Bench Project', create a new task with the exact title '{{runid}} Bench Task' and a description that includes the text '{{runid}}' (e.g. 'Bench "
+  flow.steps[1].params.v1: "Bench Project" (output) in "Bench Project"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwvk4-n1 stop=completed
+turns=7 wall=256.1s
+commands=6 cmdTime=239.4s cmdBytes=6043 timeouts=0
+orchestrator in=4653 cw=0 cr=21760 out=1797
+inner prompt=1434176 cached=1331840 completion=18041
+spend=$0.0505 maxUsd=3
+learn: A_n=0 replayed=0/6 full=0 repaired=0 compiled=6 variants=0
+-> /home/user/sitelooper/bench/results/fwvk4-n1-sitelooper-result.json
+
+fwvk4-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — project=Bench Project, description includes runid=true
+  obj 3: PASS — due date=2026-12-31T00:00:00Z, want 2026-12-31
+  obj 4: PASS — priority=3 (want 3 = High)
+  obj 5: PASS — labels=Backend#1; seeded Backend is #1
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — identifier BENCH-4 reported
+
+[sweep] run 2/3: fwvk4-n2 (replay flow fwvk4, no orchestrator)
+[reset] vikunja: deleted 1 leftover bench task(s)
+[reset] vikunja: re-created "Seed: ship repaired device" as BENCH-4 so the next task is BENCH-5
+[sweep] fwvk4-n2: 5 drift ticket(s) → fwvk4-n2-drift.json
+
+fwvk4-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — project=Bench Project, description includes runid=true
+  obj 3: PASS — due date=2026-12-31T00:00:00Z, want 2026-12-31
+  obj 4: PASS — priority=3 (want 3 = High)
+  obj 5: PASS — labels=Backend#1; seeded Backend is #1
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — identifier BENCH-5 reported
+
+[sweep] run 3/3: fwvk4-n3 (replay flow fwvk4, no orchestrator)
+[reset] vikunja: deleted 1 leftover bench task(s)
+[reset] vikunja: re-created "Seed: ship repaired device" as BENCH-5 so the next task is BENCH-6
+[sweep] fwvk4-n3: 1 drift ticket(s) → fwvk4-n3-drift.json
+
+fwvk4-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — project=Bench Project, description includes runid=true
+  obj 3: PASS — due date=2026-12-31T00:00:00Z, want 2026-12-31
+  obj 4: PASS — priority=3 (want 3 = High)
+  obj 5: PASS — labels=Backend#1; seeded Backend is #1
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — identifier BENCH-6 reported
+
+Learning sweep fwvk4 (K=3)
+┌─────────┬───┬────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid      │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwvk4-n1' │ '7/7'    │ 'completed' │ 7     │ 6    │ 0.0505    │ 0    │ '0/6'        │ 256    │
+│ 1       │ 2 │ 'fwvk4-n2' │ '7/7'    │ 'success'   │ 9     │ 6    │ 0.007     │ 0.83 │ '6/6 (flow)' │ 93     │
+│ 2       │ 3 │ 'fwvk4-n3' │ '7/7'    │ 'success'   │ 2     │ 6    │ 0.002     │ 0.83 │ '6/6 (flow)' │ 50     │
+└─────────┴───┴────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8096
+  s_03b8d3  validated    6 steps  3/3 (100%)
+           Open the task detail page for the task titled '{{v1}}' (identifier {{v3}}) in project '{{v4}}'. On that page, …
+  s_06d790  validated    7 steps  3/3 (100%)
+           Open the task detail page for the task titled '{{v1}}' (identifier {{v3}}) in project '{{v4}}'. On that page, …
+  s_07d9d1  validated    4 steps  3/3 (100%)
+           Final verification, read-only. Open the task detail page for the task titled '{{v1}}' (identifier {{v3}}) in p…
+  s_31f547  validated    5 steps  3/3 (100%)
+           Open {{v1}} and sign in with username '{{v2}}' and password '{{v3}}'. Then navigate to the project named 'Benc…
+  s_4f6b4f  validated   17 steps  3/3 (100%)
+           Open the task detail page for the task titled '{{v1}}' (identifier {{v3}}) in project '{{v4}}'. On that page, …
+  s_5b600e  validated    9 steps  3/3 (100%)
+           Final verification, read-only. Open the task detail page for the task titled '{{v1}}' (identifier {{v3}}) in p…
+  s_68728f  validated    7 steps  3/3 (100%)
+           In the project '{{v1}}', create a new task with the exact title '{{v3}}' and a description that includes the t…
+  s_76c6ba  provisional 11 steps  1/3 (33%)
+           In the project '{{v1}}', create a new task with the exact title '{{v3}}' and a description that includes the t…
+  s_8183ef  validated    1 steps  3/3 (100%)
+           Open {{v1}} and sign in with username '{{v2}}' and password '{{v3}}'. Then navigate to the project named 'Benc…
+  s_a1d55e  validated    3 steps  3/3 (100%)
+           Open {{v1}} and sign in with username '{{v2}}' and password '{{v3}}'. Then navigate to the project named 'Benc…
+  s_aa7478  validated    1 steps  3/3 (100%)
+           Open the task detail page for the task titled '{{v1}}' (identifier {{v3}}) in project '{{v4}}'. On that page, …
+  s_b52cef  validated    1 steps  3/3 (100%)
+           Open {{v1}} and sign in with username '{{v2}}' and password '{{v3}}'. Then navigate to the project named 'Benc…
+  s_cb262a  validated   13 steps  3/3 (100%)
+           Open the task detail page for the task titled '{{v1}}' (identifier {{v3}}) in project '{{v4}}'. On that page, …
+  s_01b57e  provisional  7 steps  1/1 (100%)
+           In the project '{{v1}}', create a new task with the exact title '{{v3}}' and a description that includes the t…
+  s_17e439  provisional  7 steps  1/1 (100%)
+           In the project '{{v1}}', create a new task with the exact title '{{v3}}' and a description that includes the t…
+  s_1f5f72  provisional  7 steps  1/1 (100%)  variant of s_76c6ba
+           In the project '{{v1}}', create a new task with the exact title '{{v3}}' and a description that includes the t…
+  s_2c933c  provisional  5 steps  1/1 (100%)
+           In the project '{{v1}}', create a new task with the exact title '{{v3}}' and a description that includes the t…
+  s_50ca40  provisional  3 steps  1/1 (100%)  variant of s_76c6ba
+           In the project '{{v1}}', create a new task with the exact title '{{v3}}' and a description that includes the t…
+  s_b76171  provisional  8 steps  1/1 (100%)
+           In the project '{{v1}}', create a new task with the exact title '{{v3}}' and a description that includes the t…
+  s_b93221  provisional  5 steps  1/1 (100%)  variant of s_76c6ba
+           In the project '{{v1}}', create a new task with the exact title '{{v3}}' and a description that includes the t…
+  s_dc1cca  provisional  3 steps  1/1 (100%)
+           In the project '{{v1}}', create a new task with the exact title '{{v3}}' and a description that includes the t…
+  s_ef6db3  provisional  8 steps  1/1 (100%)  variant of s_76c6ba
+           In the project '{{v1}}', create a new task with the exact title '{{v3}}' and a description that includes the t…
+  s_ffc127  provisional  7 steps  1/1 (100%)
+           In the project '{{v1}}', create a new task with the exact title '{{v3}}' and a description that includes the t…
+store: /home/user/sitelooper/bench/results/fwvk4-skills
+
+summary: /home/user/sitelooper/bench/results/fwvk4-sweep.json
