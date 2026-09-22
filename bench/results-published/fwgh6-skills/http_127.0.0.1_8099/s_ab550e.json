@@ -1,0 +1,235 @@
+{
+ "id": "s_ab550e",
+ "origin": "http://127.0.0.1:8099",
+ "template": "On the editor for '{{v1}}', click Publish and complete the full publish confirmation flow so the post is actually PUBLISHED (public visibility), not scheduled and not a draft. Note the publish date is set to {{v3}} — if the flow indicates the post would be scheduled (future date), investigate whether the app treats the date as past and proceed accordingly so the final status is Published. Then verify in the Posts list and post settings that: status is Published, publish date is {{v3}}, only tag is Bench News, excerpt includes {{v2}}, slug is shown. Report all these values.",
+ "params": {
+  "v1": {
+   "example": "fwgh6-n2 Bench Post",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:post_title"
+  },
+  "v2": {
+   "example": "fwgh6-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "2026-09-01",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i3:publish_date"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8099/ghost/#/editor/post/:id"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e599"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "settings-menu-toggle"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Settings"
+     },
+     {
+      "kind": "css",
+      "selector": "#ember-app > div:nth-of-type(1) > div > main > div > button"
+     },
+     {
+      "kind": "point",
+      "x": 1233,
+      "y": 41,
+      "w": 46,
+      "h": 34,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8099/ghost/#/editor/post/:id",
+    "addedContains": [
+     "- heading \"Post settings\"",
+     "- textbox \"Post URL\": {{*}}",
+     "- textbox \"Date Picker\": {{*}}",
+     "- textbox \"Time Picker\": {{*}}",
+     "- button \"Bench News\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_0d9da0",
+    "step": 1
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e606"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Publish"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > section > header > section > button:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 797,
+      "y": 41,
+      "w": 78.5,
+      "h": 34,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8099/ghost/#/editor/post/:id",
+    "addedContains": [
+     "- heading \"Publish\"",
+     "- button \"Close\"",
+     "- button \"Not sent as newsletter\"",
+     "- button \"Right now\"",
+     "- button \"Continue, final review →\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_0d9da0",
+    "step": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1023"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Continue, final review →"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div > div > div:nth-of-type(3) > button"
+     },
+     {
+      "kind": "point",
+      "x": 429,
+      "y": 546,
+      "w": 217.3,
+      "h": 39.9,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8099/ghost/#/editor/post/:id",
+    "addedContains": [
+     "- button \"Publish post, right now\"",
+     "- button \"Back to settings\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_0d9da0",
+    "step": 3
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Publish post, right now\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Publish post, right now"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div > div > div:nth-of-type(2) > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 425,
+      "y": 373,
+      "w": 207.3,
+      "h": 41.5,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8099/ghost/#/posts",
+    "addedContains": [
+     "- button \"Search site Ctrl+K\"",
+     "- link \"Analytics\"",
+     "- link \"Network\"",
+     "- link \"View site\"",
+     "- link \"View site in new tab\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_0d9da0",
+    "step": 4
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-22T09:15:58.733Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_587ff6",
+  "index": 0,
+  "of": 3
+ },
+ "provenance": {
+  "session": "fwgh6-n2",
+  "instruction": "On the editor for 'fwgh6-n2 Bench Post', click Publish and complete the full publish confirmation flow so the post is actually PUBLISHED (public visibility), not scheduled and not a draft. Note the publish date is set to 2026-09-01 — if the flow indicates the post would be scheduled (future date), investigate whether the app treats the date as past and proceed accordingly so the final status is Published. Then verify in the Posts list and post settings that: status is Published, publish date is 2026-09-01, only tag is Bench News, excerpt includes fwgh6-n2, slug is shown. Report all these values.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-22T09:15:58.733Z"
+ },
+ "revision": 1
+}

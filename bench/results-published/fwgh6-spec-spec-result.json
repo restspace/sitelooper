@@ -1,0 +1,34 @@
+{
+  "arm": "spec",
+  "runid": "fwgh6-spec",
+  "target": "ghost",
+  "flow": "fwgh6.json",
+  "flowName": "fwgh6",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwgh6-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwgh6-spec-spec-tmp/fwgh6.flow.ts",
+  "specFile": "bench/results/fwgh6-spec-spec-tmp/fwgh6.spec.ts",
+  "wallMs": 42695,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwgh6",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 39580,
+      "error": "Error: 04-set s_505c6a/2 was recorded on page 1 of the browser, but the procedure is on page 0 of 2 — the page it expects (a popup or tab opened earlier) is not open here",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "logTail": "\nRunning 1 test using 1 worker\n\n[sitelooper step] 01-signin\n[sitelooper recipe] filled via recipe contenteditable/set-value (r_7b1e49); value verified on the component\n[sitelooper warn] 02-create s_254b67/3: read 'body_paragraph' returned a value the skill itself set/selected ('Benchmark post body fwgh6-spec for testing.') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper warn] 02-create s_254b67/5: read 'unique_marker' returned a value the skill itself set/selected ('Benchmark post body fwgh6-spec for testing.') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper step] 02-create\n[sitelooper step] 03-open\n  ✘  1 fwgh6.spec.ts:9:1 › fwgh6 (39.6s)\n\n\n  1) fwgh6.spec.ts:9:1 › fwgh6 › 04-set: On the editor for '{{runid}} Bench Post', click Publish and complete the full publish confirmation flow so the post is actually PUBLISHED (public visibility), not scheduled and not a draft. Note the publish date is set to 2026-09-01 — if the flow indicates the post would be scheduled (future date), investigate whether the app treats the date as past and proceed accordingly so the final status is Published. Then verify in the Posts list and post settings that: status is Published, publish date is 2026-09-01, only tag is Bench News, excerpt includes {{runid}}, slug is shown. Report all these values. \n\n    Error: 04-set s_505c6a/2 was recorded on page 1 of the browser, but the procedure is on page 0 of 2 — the page it expects (a popup or tab opened earlier) is not open here\n\n       at fwgh6.flow.ts:9989\n\n      9987 | function pageGate(page: Page, expected: number, where: string): void {\n      9988 |   const stop = pageIndexVerdict(page, expected, where);\n    > 9989 |   if (stop) throw new Error(stop);\n           |                   ^\n      9990 | }\n      9991 |\n      9992 | const CLICK_TIER_MS = 5000;\n        at pageGate (/home/user/sitelooper/bench/results/fwgh6-spec-spec-tmp/fwgh6.flow.ts:9989:19)\n        at Object.prepare (/home/user/sitelooper/bench/results/fwgh6-spec-spec-tmp/fwgh6.flow.ts:12432:9)\n        at runStepLifecycle (/home/user/sitelooper/bench/results/fwgh6-spec-spec-tmp/fwgh6.flow.ts:7028:3)\n        at Object.04-set (/home/user/sitelooper/bench/results/fwgh6-spec-spec-tmp/fwgh6.flow.ts:12429:5)\n        at /home/user/sitelooper/bench/results/fwgh6-spec-spec-tmp/fwgh6.flow.ts:12877:7\n        at runFlow (/home/user/sitelooper/bench/results/fwgh6-spec-spec-tmp/fwgh6.flow.ts:12876:5)\n        at /home/user/sitelooper/bench/results/fwgh6-spec-spec-tmp/fwgh6.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/fwgh6-fwgh6/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/fwgh6-fwgh6/test-failed-2.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/fwgh6-fwgh6/error-context.md\n\n  1 failed\n    fwgh6.spec.ts:9:1 › fwgh6 ──────────────────────────────────────────────────────────────────────\n"
+}

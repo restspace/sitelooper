@@ -1,0 +1,140 @@
+{
+  "flow": "fwgh6",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Signed in to Ghost admin at http://127.0.0.1:8099/ghost/ with admin@bench.local, navigated to Posts and applied the \"Published\" filter (url .../ghost/#/posts?type=published). The published list contains exactly 3 posts, all of whose titles start with \"Seed:\". Nothing was modified.",
+      "values": {
+        "published_post_count": "3",
+        "seed_titles_1": "Seed: Welcome to the bench",
+        "seed_titles_2": "Seed: Release notes for September",
+        "seed_titles_3": "Seed: House style guide"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_254b67; observed body_paragraph=Benchmark post body fwgh6-n2 for testing., unique_marker=fwgh6-n2, post_title=fwgh6-n2 Bench Post, editor_status=Saving....",
+      "values": {
+        "body_paragraph": "Benchmark post body fwgh6-n2 for testing.",
+        "unique_marker": "fwgh6-n2",
+        "post_title": "fwgh6-n2 Bench Post",
+        "editor_status": "Saving..."
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_254b67: step 3: read 'body_paragraph' returned a value the skill itself set/selected ('Benchmark post body fwgh6-n2 for testing.') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_254b67: step 5: read 'unique_marker' returned a value the skill itself set/selected ('Benchmark post body fwgh6-n2 for testing.') — confirms the control, not persistence; dropped from the report's confident values"
+      ]
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_bef348; observed post_slug=fwgh6-n2-bench-post, post_preview_url=127.0.0.1:8099/fwgh6-n2-bench-post/, excerpt=Excerpt for fwgh6-n2, publish_date=2026-09-01, editor_status=Draft - Saved, post_title=fwgh6-n2 Bench Post, body_paragraph=Benchmark post body fwgh6-n2 for testing., unique_marker=Benchmark post body fwgh6-n2 for testing..",
+      "values": {
+        "post_slug": "fwgh6-n2-bench-post",
+        "post_preview_url": "127.0.0.1:8099/fwgh6-n2-bench-post/",
+        "excerpt": "Excerpt for fwgh6-n2",
+        "publish_date": "2026-09-01",
+        "editor_status": "Draft - Saved",
+        "post_title": "fwgh6-n2 Bench Post",
+        "body_paragraph": "Benchmark post body fwgh6-n2 for testing.",
+        "unique_marker": "Benchmark post body fwgh6-n2 for testing."
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "20/20",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-set",
+      "status": "success",
+      "summary": "The post 'fwgh6-n2 Bench Post' is now PUBLISHED (public visibility, dated 2026-09-01 09:12 UTC — the app treated the date as past/now, so no scheduling occurred). Verified from the post editor's settings panel: Post URL slug \"fwgh6-n2-bench-post\" (full URL 127.0.0.1:8099/fwgh6-n2-bench-post/), Publish date 2026-09-01, Tags = \"Bench News\" only (no \"Bench Newsletter\"), Excerpt \"Excerpt for fwgh6-n2\", Post access \"Public\", body paragraph \"Benchmark post body fwgh6-n2 for testing.\" appearing once. The editor header showed \"Published View post\" with an \"Unpublish\" button (and no pending Update), and the public page renders the post with the BENCH NEWS tag, confirming the live published state. Nothing was modified in this segment; the settings panel was closed afterwards and no save was needed since the Update button is disabled (no pending changes). Note: the earlier replay clicks (Publish + confirmation) are what performed the publish.",
+      "values": {
+        "post_title": "fwgh6-n2 Bench Post",
+        "status": "Published",
+        "post_slug": "fwgh6-n2-bench-post",
+        "post_url": "127.0.0.1:8099/fwgh6-n2-bench-post/",
+        "publish_date": "2026-09-01",
+        "publish_time": "09:12 UTC",
+        "tags": "Bench News (only)",
+        "excerpt": "Excerpt for fwgh6-n2",
+        "post_access": "Public",
+        "body_paragraph": "Benchmark post body fwgh6-n2 for testing.",
+        "ref": "fwgh6-n2",
+        "ref_2": "127.0.0.1"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_67f114 stopped at step 2 — step 2 was recorded on page 1 of the browser, but the procedure is on page 0 of 1 — the page it expects (a popup or tab opened earlier) is not open here",
+      "replayed": "1/5",
+      "repaired": false,
+      "turns": 7,
+      "unreported": [
+        "publish_timezone",
+        "slug",
+        "public_url",
+        "post_access_visibility",
+        "author",
+        "published_post_count",
+        "unique_marker"
+      ]
+    }
+  ],
+  "passed": 4,
+  "total": 4,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwgh6",
+      "step": "04-set",
+      "skill": "s_67f114",
+      "similarity": 1.002,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_67f114 stopped at step 2 — step 2 was recorded on page 1 of the browser, but the procedure is on page 0 of 1 — the page it expects (a popup or tab opened earlier) is not open here",
+      "reason": "step 2 was recorded on page 1 of the browser, but the procedure is on page 0 of 1 — the page it expects (a popup or tab opened earlier) is not open here",
+      "pageUrlPattern": "http://127.0.0.1:8099/ghost/#/posts",
+      "pageUrl": "http://127.0.0.1:8099/ghost/#/posts?type=published"
+    }
+  ],
+  "wallMs": 63572,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 69931,
+    "completionTokens": 1577,
+    "cachedTokens": 61568
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 69931,
+      "completionTokens": 1577,
+      "cachedTokens": 61568
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
