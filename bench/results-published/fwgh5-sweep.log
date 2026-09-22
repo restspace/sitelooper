@@ -1,0 +1,93 @@
+
+[sweep] run 1/3: fwgh5-n1 (store: /home/user/sitelooper/bench/results/fwgh5-skills)
+[harness] ghost: defaulting APP_URL
+[harness] ghost: defaulting APP_EMAIL
+[harness] ghost: defaulting APP_PASSWORD
+[reset] ghost: no posts to delete
+[harness] ghost responded 200 at http://127.0.0.1:8099/
+stopped: fwgh5-n1
+  flow "fwgh5" saved: 3 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwgh5.json
+  warning: note: 01-open no longer publishes count_of_matching_posts, total_rows_in_published_list, row_detail — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-open no longer publishes login_required — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 35 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[1].instruction: "2026-09-01" (output) in "In Ghost admin, create a new post titled exactly '{{runid}} Bench Post'. In the body editor, type a single paragraph of body text that includes the runid '{{run"
+  flow.steps[1].instruction: "12:00" (output) in "In Ghost admin, create a new post titled exactly '{{runid}} Bench Post'. In the body editor, type a single paragraph of body text that includes the runid '{{run"
+  flow.steps[1].params.v5: "12:00" (output) in "12:00"
+  s_004596.template: "2026-09-01" (output) in "In Ghost admin, create a new post titled exactly '{{v2}}'. In the body editor, type a single paragraph of body text that includes the runid '{{v1}}' exactly onc"
+  s_004596.steps[1].locators.target[0].hasText: "01 Sep 2026" (output) in "{{v2}} By Bench Admin in {{v4}} - 01 Sep 2026 Published"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwgh5-n1 stop=completed
+turns=4 wall=138.4s
+commands=3 cmdTime=113.2s cmdBytes=3744 timeouts=0
+orchestrator in=6815 cw=0 cr=6656 out=2854
+inner prompt=457245 cached=411904 completion=7906
+spend=$0.0367 maxUsd=3
+learn: A_n=0 replayed=0/3 full=0 repaired=0 compiled=3 variants=0
+-> /home/user/sitelooper/bench/results/fwgh5-n1-sitelooper-result.json
+
+fwgh5-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — fwgh5-n1-bench-post, body includes runid=true
+  obj 3: PASS — tags=Bench News (bench-news), want only the seeded Bench News (bench-news)
+  obj 4: PASS — custom excerpt="Bench post created under runid fwgh5-n1."
+  obj 5: PASS — status=published, visibility=public
+  obj 6: PASS — published_at=2026-09-01T12:00:00.000Z, want 2026-09-01
+  obj 7: PASS — slug fwgh5-n1-bench-post reported
+
+[sweep] run 2/3: fwgh5-n2 (replay flow fwgh5, no orchestrator)
+[reset] ghost: deleted 1 post(s) (earlier runs' and non-seed)
+
+fwgh5-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — fwgh5-n2-bench-post, body includes runid=true
+  obj 3: PASS — tags=Bench News (bench-news), want only the seeded Bench News (bench-news)
+  obj 4: PASS — custom excerpt="Bench post created under runid fwgh5-n2."
+  obj 5: PASS — status=published, visibility=public
+  obj 6: PASS — published_at=2026-09-01T12:00:00.000Z, want 2026-09-01
+  obj 7: PASS — slug fwgh5-n2-bench-post reported
+
+[sweep] run 3/3: fwgh5-n3 (replay flow fwgh5, no orchestrator)
+[reset] ghost: deleted 1 post(s) (earlier runs' and non-seed)
+
+fwgh5-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — fwgh5-n3-bench-post, body includes runid=true
+  obj 3: PASS — tags=Bench News (bench-news), want only the seeded Bench News (bench-news)
+  obj 4: PASS — custom excerpt="Bench post created under runid fwgh5-n3."
+  obj 5: PASS — status=published, visibility=public
+  obj 6: PASS — published_at=2026-09-01T12:00:00.000Z, want 2026-09-01
+  obj 7: PASS — slug fwgh5-n3-bench-post reported
+
+Learning sweep fwgh5 (K=3)
+┌─────────┬───┬────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid      │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwgh5-n1' │ '7/7'    │ 'completed' │ 4     │ 3    │ 0.0367    │ 0   │ '0/3'        │ 138    │
+│ 1       │ 2 │ 'fwgh5-n2' │ '7/7'    │ 'success'   │ 0     │ 3    │ 0         │ 1   │ '3/3 (flow)' │ 37     │
+│ 2       │ 3 │ 'fwgh5-n3' │ '7/7'    │ 'success'   │ 0     │ 3    │ 0         │ 1   │ '3/3 (flow)' │ 37     │
+└─────────┴───┴────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8099
+  s_004596  validated    2 steps  3/3 (100%)
+           In Ghost admin, create a new post titled exactly '{{v2}}'. In the body editor, type a single paragraph of body…
+  s_26a3e9  validated    1 steps  3/3 (100%)
+           Open {{v1}} and sign in with email {{v2}} and password {{v3}}. After signing in, go to the Posts area and look…
+  s_5ee393  validated    6 steps  3/3 (100%)
+           Open the public page {{v4}} in the browser (not the admin). Verify it loads publicly without any login require…
+  s_6c13a0  validated    8 steps  3/3 (100%)
+           In Ghost admin, create a new post titled exactly '{{v2}}'. In the body editor, type a single paragraph of body…
+  s_75c0ec  validated    3 steps  3/3 (100%)
+           Open {{v1}} and sign in with email {{v2}} and password {{v3}}. After signing in, go to the Posts area and look…
+  s_8e130d  validated    3 steps  3/3 (100%)
+           Open {{v1}} and sign in with email {{v2}} and password {{v3}}. After signing in, go to the Posts area and look…
+  s_b43b6d  validated    2 steps  3/3 (100%)
+           In Ghost admin, create a new post titled exactly '{{v2}}'. In the body editor, type a single paragraph of body…
+  s_c71cef  validated    1 steps  3/3 (100%)
+           Open {{v1}} and sign in with email {{v2}} and password {{v3}}. After signing in, go to the Posts area and look…
+  s_d34e31  validated   17 steps  3/3 (100%)
+           In Ghost admin, create a new post titled exactly '{{v2}}'. In the body editor, type a single paragraph of body…
+  s_ded07d  validated    1 steps  3/3 (100%)
+           Open the public page {{v4}} in the browser (not the admin). Verify it loads publicly without any login require…
+  s_e93847  validated    1 steps  3/3 (100%)
+           In Ghost admin, create a new post titled exactly '{{v2}}'. In the body editor, type a single paragraph of body…
+store: /home/user/sitelooper/bench/results/fwgh5-skills
+
+summary: /home/user/sitelooper/bench/results/fwgh5-sweep.json

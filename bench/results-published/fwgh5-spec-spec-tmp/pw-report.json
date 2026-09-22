@@ -1,0 +1,157 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwgh5-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwgh5-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwgh5-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwgh5-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwgh5-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwgh5.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwgh5-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwgh5.spec.ts",
+      "file": "fwgh5.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwgh5",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 36705,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe contenteditable/set-value (r_7b1e49); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_d34e31/12: read 'custom_excerpt' returned a value the skill itself set/selected ('Bench post created under runid fwgh5-spec.') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-open\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:8099/ghost/ and sign in with email admin@bench.local and password bench-admin-pass. After signing in, go to the Posts area and look at the published posts. Report the exact titles of all posts whose title begins with 'Seed:' that are published (not drafts), exactly as displayed on screen, and state each one's status as shown.",
+                      "duration": 6039
+                    },
+                    {
+                      "title": "02-create: In Ghost admin, create a new post titled exactly '{{runid}} Bench Post'. In the body editor, type a single paragraph of body text that includes the runid '{{runid}}' exactly once (e.g. 'This bench post was created under runid {{runid}}.'). Save it. Then open the post settings panel and: (a) in the tags field, choose the EXISTING tag 'Bench News' from the suggestions — do not type-and-create a new tag, and be careful not to pick 'Bench Newsletter'; (b) set the custom excerpt to text that includes '{{runid}}' exactly once; (c) set the publish date to 2026-09-01 with a past time if a time is needed so it is not scheduled for the future (use 2026-09-01 12:00 if a time is required). Close the settings panel. Then publish the post through Ghost's publish confirmation flow (Publish, then confirm) so its final status is Published, not a draft or scheduled. Finally report: the post title shown, its status, the tag assigned, the custom excerpt text, the publish date shown in settings, and the URL slug exactly as shown in the post settings panel.",
+                      "duration": 28453
+                    },
+                    {
+                      "title": "03-open: Open the public page http://127.0.0.1:8099/{{runid}}-bench-post/ in the browser (not the admin). Verify it loads publicly without any login requirement, and report the post title shown, the body paragraph text, the tag shown, and the publish date displayed on the page.",
+                      "duration": 1184
+                    }
+                  ],
+                  "startTime": "2026-09-22T08:47:57.658Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2bf9ea49063a3be6e08f-188b206c3d2ea1d29b9a",
+          "file": "fwgh5.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-22T08:47:56.146Z",
+    "duration": 38400.216,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

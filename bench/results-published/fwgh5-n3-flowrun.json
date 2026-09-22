@@ -1,0 +1,85 @@
+{
+  "flow": "fwgh5",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Signed in to Ghost admin at http://127.0.0.1:8099/ghost/ as admin@bench.local and opened Posts → Published. The live DOM shows exactly three rows, all with status \"Published\" (no pagination, no additional rows), of which all three titles begin with \"Seed:\": \"Seed: Welcome to the bench\", \"Seed: Release notes for September\", and \"Seed: House style guide\".",
+      "values": {
+        "seed_post_title_welcome": "Seed: Welcome to the bench",
+        "seed_post_title_release_notes": "Seed: Release notes for September",
+        "seed_post_title_style_guide": "Seed: House style guide"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Created the post \"fwgh5-n3 Bench Post\" in Ghost admin with body text \"This bench post was created under runid fwgh5-n3.\" (runid once), saved it, then in Post settings chose the existing tag \"Bench News\" from the suggestions (not \"Bench Newsletter\"), set the excerpt to \"Bench post created under runid fwgh5-n3.\" (runid once) and the publish date to 2026-09-01 12:00 UTC, closed settings, and completed the publish flow (Publish → Continue, final review → Publish post, right now). The post now appears in the Published list with status \"Published\" (\"By Bench Admin in Bench News - 01 Sep 2026\"); all settings values were re-read from the reopened settings panel on the published post.",
+      "values": {
+        "tag_assigned": "Bench News (single tag chip in Tags field; post list shows \"By Bench Admin in Bench News\")",
+        "custom_excerpt": "Bench post created under runid fwgh5-n3.",
+        "publish_date_shown": "2026-09-01, time 12:00 UTC",
+        "published_list_row": "fwgh5-n3 Bench Post | By Bench Admin in Bench News - 01 Sep 2026 | Published | New members | Free | 0 | 0",
+        "ref": "fwgh5-n3",
+        "post_url_slug": "fwgh5-n3-bench-post",
+        "publish_date_value": "2026-09-01",
+        "publish_time_value": "12:00",
+        "post_title": "fwgh5-n3 Bench Post",
+        "post_preview_url": "127.0.0.1:8099/fwgh5-n3-bench-post/",
+        "body_text": "This bench post was created under runid fwgh5-n3."
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "30/30",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_d34e31: step 12: read 'custom_excerpt' returned a value the skill itself set/selected ('Bench post created under runid fwgh5-n3.') — confirms the control, not persistence; dropped from the report's confident values"
+      ]
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "Opened the public URL http://127.0.0.1:8099/fwgh5-n3 Bench Post-bench-post/ in the same browser session (anonymous, no admin). It loaded without any login redirect — the article rendered immediately — showing title \"fwgh5-n3 Bench Post Bench Post\", tag \"BENCH NEWS\", author Bench Admin, publish date \"01 Sep 2026\", the excerpt \"Bench post created under runid fwgh5-n3 Bench Post.\" under the title, and the body paragraph \"This bench post was created under runid fwgh5-n3 Bench Post.\".",
+      "values": {
+        "page_title_tab": "fwgh5-n3 Bench Post",
+        "public_page_title": "fwgh5-n3 Bench Post",
+        "public_body_paragraph": "This bench post was created under runid fwgh5-n3.",
+        "public_tag": "BENCH NEWS",
+        "public_publish_date": "01 Sep 2026",
+        "public_excerpt_shown_under_title": "Bench post created under runid fwgh5-n3.",
+        "ref": "fwgh5-n3 Bench Post"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 3,
+  "total": 3,
+  "repinned": 0,
+  "drift": 0,
+  "wallMs": 36567,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
