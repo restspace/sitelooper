@@ -126,6 +126,10 @@ export interface ProviderConfig {
   fallbackExtraBody?: Record<string, unknown>;
   /** Env vars that were consulted for the key — for error messages. */
   keyEnvVars: string[];
+  /** Why this provider was chosen, in words (for `doctor` and `config`). */
+  providerSource?: string;
+  /** Where `extraBody` came from: the env var, the preset's default pin, or nowhere. */
+  extraBodySource?: 'env' | 'preset' | 'none';
 }
 
 export interface ProviderPreset {
@@ -134,6 +138,13 @@ export interface ProviderPreset {
   /** Preset escalation tier; omit where no obviously stronger sibling exists. */
   fallbackModel?: string;
   keyEnvVars: string[];
+  /**
+   * Extra body the preset sends with its OWN default model on its own base
+   * URL, when SITELOOPER_EXTRA_BODY is unset. It is main-model calibration
+   * like `extraBody`: a different model or endpoint never gets it, and the
+   * fallback tier never inherits it. SITELOOPER_EXTRA_BODY='{}' turns it off.
+   */
+  defaultExtraBody?: Record<string, unknown>;
 }
 
 export const PROVIDER_PRESETS: Record<string, ProviderPreset> = {
@@ -160,11 +171,15 @@ export const PROVIDER_PRESETS: Record<string, ProviderPreset> = {
   // 2026-09-12 for its throughput, latency and price; OpenRouter serves it from
   // several backends whose tool-calling support varies, and the loop only ever
   // sends `tool_choice: 'auto'`, which every one of them supports.
+  // This is the benchmarked pairing (bench/sweep-prompts/*.md), routing pin
+  // included: every sweep pins deepseek-v4.1-flash to DeepSeek's own backend,
+  // the price bench/rates.json quotes.
   openrouter: {
     baseUrl: 'https://openrouter.ai/api/v1',
     defaultModel: 'deepseek/deepseek-v4.1-flash',
     fallbackModel: 'z-ai/glm-5.3',
     keyEnvVars: ['OPENROUTER_API_KEY'],
+    defaultExtraBody: { provider: { only: ['DeepSeek'] } },
   },
   openai: {
     baseUrl: 'https://api.openai.com/v1',
@@ -181,7 +196,45 @@ export const PROVIDER_PRESETS: Record<string, ProviderPreset> = {
   },
 };
 
-export const DEFAULT_PROVIDER = 'zhipu';
+/**
+ * The provider used when nothing names one (no flag, SITELOOPER_PROVIDER or
+ * config-file `provider`) and no API key points elsewhere: the benchmarked
+ * OpenRouter pairing. defaultProviderChoice has the whole rule.
+ */
+export const DEFAULT_PROVIDER = 'openrouter';
+
+/**
+ * The default before 0.4.0. A user who relied on it (a Z.ai key, or a generic
+ * SITELOOPER_API_KEY / config-file apiKey that was always sent to it) keeps it.
+ */
+export const LEGACY_DEFAULT_PROVIDER = 'zhipu';
+
+/**
+ * Which provider to use when none is named explicitly, and why. In order:
+ * 1. a Z.ai key (GLM_API_KEY / ZHIPU_API_KEY) → zhipu, as before 0.4.0;
+ * 2. OPENROUTER_API_KEY → openrouter, the benchmarked pairing;
+ * 3. a generic key (SITELOOPER_API_KEY, or apiKey in the config file) → zhipu,
+ *    where that key has always been sent;
+ * 4. no key at all → openrouter, so the key `doctor` asks for is the one the
+ *    README's quick start sets.
+ * Another provider's own key (OPENAI_API_KEY, NOVITA_API_KEY, …) never picks
+ * that provider by itself; name it with SITELOOPER_PROVIDER.
+ */
+export function defaultProviderChoice(
+  env: NodeJS.ProcessEnv = process.env,
+  file: GlobalConfig = {},
+): { provider: string; source: string } {
+  const zhipuKey = PROVIDER_PRESETS.zhipu.keyEnvVars.find((v) => env[v]);
+  if (zhipuKey) return { provider: LEGACY_DEFAULT_PROVIDER, source: `default: ${zhipuKey} is set` };
+  if (env.OPENROUTER_API_KEY) return { provider: 'openrouter', source: 'default: OPENROUTER_API_KEY is set' };
+  if (env.SITELOOPER_API_KEY) {
+    return { provider: LEGACY_DEFAULT_PROVIDER, source: 'default: SITELOOPER_API_KEY is set and no provider is named (the pre-0.4.0 default)' };
+  }
+  if (file.apiKey) {
+    return { provider: LEGACY_DEFAULT_PROVIDER, source: 'default: the config file has an apiKey and no provider (the pre-0.4.0 default)' };
+  }
+  return { provider: DEFAULT_PROVIDER, source: 'default: no provider named and no API key set' };
+}
 
 export interface GlobalConfig {
   provider?: string;
@@ -241,12 +294,19 @@ export interface ProviderOverrides {
 /**
  * Precedence per field: explicit override (flag) > env > global config file >
  * provider preset. The preset is chosen the same way, then supplies defaults
- * for whatever remains unset.
+ * for whatever remains unset. When nothing names a provider, the keys that are
+ * set decide (defaultProviderChoice).
  */
 export function resolveProviderConfig(overrides: ProviderOverrides = {}): ProviderConfig {
   const file = readGlobalConfig();
-  const provider =
-    overrides.provider || process.env.SITELOOPER_PROVIDER || file.provider || DEFAULT_PROVIDER;
+  const choice = overrides.provider
+    ? { provider: overrides.provider, source: '--provider flag' }
+    : process.env.SITELOOPER_PROVIDER
+      ? { provider: process.env.SITELOOPER_PROVIDER, source: 'SITELOOPER_PROVIDER' }
+      : file.provider
+        ? { provider: file.provider, source: `provider in ${globalConfigPath()}` }
+        : defaultProviderChoice(process.env, file);
+  const provider = choice.provider;
   const preset = PROVIDER_PRESETS[provider];
   if (!preset) {
     throw new Error(
@@ -260,10 +320,20 @@ export function resolveProviderConfig(overrides: ProviderOverrides = {}): Provid
     keyEnvVars.map((v) => process.env[v]).find(Boolean) ||
     file.apiKey ||
     '';
+  const baseUrl = overrides.baseUrl || process.env.SITELOOPER_BASE_URL || file.baseUrl || preset.baseUrl;
+  const model = overrides.model || process.env.SITELOOPER_MODEL || file.model || preset.defaultModel;
+  const envExtraBody = parseExtraBody(process.env.SITELOOPER_EXTRA_BODY, 'SITELOOPER_EXTRA_BODY');
+  // A preset's routing pin is calibrated for its own default model on its own
+  // endpoint; any other model or endpoint gets only what the env var says.
+  const presetExtraBody =
+    preset.defaultExtraBody && model === preset.defaultModel && baseUrl === preset.baseUrl
+      ? structuredClone(preset.defaultExtraBody)
+      : undefined;
   return {
     provider,
-    baseUrl: overrides.baseUrl || process.env.SITELOOPER_BASE_URL || file.baseUrl || preset.baseUrl,
-    model: overrides.model || process.env.SITELOOPER_MODEL || file.model || preset.defaultModel,
+    providerSource: choice.source,
+    baseUrl,
+    model,
     // "none"/"off" is how a caller disables a preset's escalation tier without
     // having to clear a config key it never set.
     fallbackModel: normalizeFallback(
@@ -274,7 +344,8 @@ export function resolveProviderConfig(overrides: ProviderOverrides = {}): Provid
     ),
     apiKey,
     temperature: overrides.temperature ?? 0,
-    extraBody: parseExtraBody(process.env.SITELOOPER_EXTRA_BODY, 'SITELOOPER_EXTRA_BODY'),
+    extraBody: envExtraBody ?? presetExtraBody,
+    extraBodySource: envExtraBody ? 'env' : presetExtraBody ? 'preset' : 'none',
     fallbackExtraBody: parseExtraBody(process.env.SITELOOPER_FALLBACK_EXTRA_BODY, 'SITELOOPER_FALLBACK_EXTRA_BODY'),
     keyEnvVars,
   };

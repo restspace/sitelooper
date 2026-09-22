@@ -118,8 +118,9 @@ node bench/harness.mjs \
   served it in the result's `orBackends`.
 - The `export` is **not optional** for the sitelooper arm (harmless for the
   other). `--provider` configures the harness's orchestrator only; sitelooper's
-  inner agent resolves its own provider from `SITELOOPER_PROVIDER` and
-  defaults to `zhipu`, which has no key on the box. Without it every
+  inner agent resolves its own provider from `SITELOOPER_PROVIDER` and, before
+  0.4.0, defaulted to `zhipu`, which has no key on the box (since 0.4.0
+  `OPENROUTER_API_KEY` alone selects openrouter; keep the export anyway). Without it every
   `sitelooper do` fails instantly with "no API key" and the run turn-caps at
   0/6 — that was c0822bp attempt 1, the first cloud run. `cloud-setup.sh` now
   checks for this and warns.

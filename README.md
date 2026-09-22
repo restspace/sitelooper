@@ -14,8 +14,9 @@ replays a seven-step ticket workflow in 17 seconds for $0.00, verified against w
 database says happened.
 
 > Package and command are both `sitelooper`. State lives under `~/.sitelooper/`, env vars are
-> `SITELOOPER_*`. The project was previously called `sleep-walker`, and `browser-pilot` before
-> that; the old env-var prefixes and home directories still work as aliases, but the old command names do not.
+> `SITELOOPER_*`. The project was previously published on npm as `sleep-walker`, which this
+> package supersedes. The env-var prefixes and home directories of its earlier names still work as
+> aliases, but the old command names do not.
 
 ## Why agent-driven browser automation does not rerun, and what sitelooper does about it
 
@@ -76,18 +77,25 @@ sitelooper's answer is to treat the recording as evidence to compile, not text t
 
 ## Getting started
 
-Requires Node 20+, a browser, and an API key for authoring. The compiled tests need only
-`@playwright/test` and its browser installation; no Sitelooper daemon or model runs in CI.
+Requires Node 20+, a browser, and an [OpenRouter](https://openrouter.ai) API key for authoring.
+The compiled tests need only `@playwright/test` and its browser installation; no Sitelooper
+daemon or model runs in CI.
 
 ```sh
 npm install -g sitelooper
 npm install -D @playwright/test
 npx playwright install chromium
-sitelooper config set provider openai
-# Set OPENAI_API_KEY in your shell, then:
-sitelooper doctor
+export OPENROUTER_API_KEY=sk-or-...   # the only setting needed
+sitelooper doctor                      # prints the provider and models it will use, and why
 sitelooper init
 ```
+
+With only `OPENROUTER_API_KEY` set, sitelooper uses the pairing the benchmarks below ran on:
+`deepseek/deepseek-v4.1-flash` drives the agent loop, pinned to DeepSeek's own backend on
+OpenRouter, and an instruction it reports blocked is retried on `z-ai/glm-5.3`. Other providers
+work too: set `SITELOOPER_PROVIDER` (`openai`, `anthropic`, `zhipu`, `novita`) and that
+provider's key, or point `SITELOOPER_BASE_URL` at any OpenAI-compatible endpoint (see
+[Providers](#providers)).
 
 Record one logical outcome per instruction. App briefings are optional. Use `{{env:NAME}}` for
 credentials, set before starting the session, and declare values that should vary between runs.
@@ -382,17 +390,31 @@ The LLM layer is a generic OpenAI-compatible adapter with presets; any endpoint 
 
 | Preset | Base URL | Default model | Escalation model | Key env var |
 |---|---|---|---|---|
-| `zhipu` (default) | `https://api.z.ai/api/paas/v4` | `glm-5.2` | — | `GLM_API_KEY` / `ZHIPU_API_KEY` |
+| `openrouter` (default) | `https://openrouter.ai/api/v1` | `deepseek/deepseek-v4.1-flash` (DeepSeek backend) | `z-ai/glm-5.3` | `OPENROUTER_API_KEY` |
+| `zhipu` | `https://api.z.ai/api/paas/v4` | `glm-5.2` | — | `GLM_API_KEY` / `ZHIPU_API_KEY` |
 | `novita` | `https://api.novita.ai/openai` | `deepseek/deepseek-v4-flash` | `zai-org/glm-5.3` | `NOVITA_API_KEY` |
-| `openrouter` | `https://openrouter.ai/api/v1` | `z-ai/glm-5.2` | — | `OPENROUTER_API_KEY` |
 | `openai` | `https://api.openai.com/v1` | `gpt-5-mini` | — | `OPENAI_API_KEY` |
+| `anthropic` | `https://api.anthropic.com` (native Messages API) | `claude-sonnet-5` | — | `ANTHROPIC_API_KEY` |
 
 Every field resolves **flag > env > config file > preset**: `--provider`, `--model`,
 `--base-url`, `--fallback-model`; `SITELOOPER_PROVIDER`, `SITELOOPER_MODEL`,
 `SITELOOPER_FALLBACK_MODEL`, `SITELOOPER_BASE_URL`, `SITELOOPER_API_KEY`;
 `sitelooper config set <provider|model|fallbackModel|baseUrl|apiKey> <value>` →
-`~/.sitelooper/config.json`. Prefer env for the key. The benchmark stack is
-`SITELOOPER_PROVIDER=openrouter`, model `deepseek/deepseek-v4-flash`, fallback `z-ai/glm-5.3`.
+`~/.sitelooper/config.json`. Prefer env for the key.
+
+**Which provider, when none is named.** With no `--provider`, `SITELOOPER_PROVIDER` or config-file
+`provider`, the keys decide: a Z.ai key (`GLM_API_KEY` / `ZHIPU_API_KEY`) keeps `zhipu`, the
+default before 0.4.0; otherwise `OPENROUTER_API_KEY` selects `openrouter`; otherwise a generic
+`SITELOOPER_API_KEY` or config-file `apiKey` still goes to `zhipu`; with no key at all the
+default is `openrouter`. Another provider's own key (`OPENAI_API_KEY`, …) does not select that
+provider by itself. `sitelooper doctor` prints the choice and the reason.
+
+**Routing pin.** The `openrouter` preset sends `{"provider":{"only":["DeepSeek"]}}` with its
+default model, the backend the benchmark prices assume. It is not sent with any other model or
+base URL, nor with the escalation model. `SITELOOPER_EXTRA_BODY` (a JSON object) replaces it and
+`SITELOOPER_EXTRA_BODY='{}'` turns it off; `SITELOOPER_FALLBACK_EXTRA_BODY` is the escalation
+model's own. The benchmark sweeps run exactly these defaults (they also set them explicitly), with
+`z-ai/glm-5.3` on OpenRouter as the outer agent that calls sitelooper.
 
 **Escalation on blocked.** An instruction the routine model reports as `blocked` is retried once
 on the escalation model, on the same browser and history, told it is resuming so it re-checks

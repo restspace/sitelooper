@@ -128,9 +128,11 @@ minutes work.
 
 ### Fix the first five minutes
 
-- `npm deprecate browser-pilot` with a message pointing at sitelooper.
+- `npm deprecate sleep-walker` with a message pointing at sitelooper. (The `browser-pilot` npm
+  name has since passed to another owner, so it is no longer ours to deprecate or mention.)
 - Default provider config (OpenRouter or similar): one env var gives the tuned model pairing
-  without reading the env table.
+  without reading the env table. Done in 0.4.0: `OPENROUTER_API_KEY` alone selects the
+  benchmarked pairing, and `doctor` says what it will use and why.
 - Test install and quick start on a Mac before any launch.
 - A demo needing no credentials: quick start against a public target already benched (e.g.
   the Grafana play instance) so a reader sees record then $0 replay in under two minutes.
@@ -170,7 +172,7 @@ commits a flow directory is a reference, a "nothing app-specific" data point, an
 
 | week | do |
 |---|---|
-| 1 | npm deprecation, default provider, Mac test, no-credential demo, telemetry |
+| 1 | npm deprecation (`sleep-walker`), default provider (done in 0.4.0), Mac test, no-credential demo, telemetry |
 | 2 | Claude Code plugin, MCP server, workflow-use bench row |
 | 3 | GitHub Action, bench page, Show HN |
 | 4-8 | ten reference teams, weekly usage number published |

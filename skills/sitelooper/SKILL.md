@@ -11,7 +11,9 @@ issuing several selector-aware, wait-aware calls per logical step. A configured
 LLM provider translates the instruction into Playwright tool calls against a
 persistent browser, verifies the result, and reports back. Use `sitelooper
 doctor` to check the local browser and provider setup, and supply provider
-credentials through environment variables or `sitelooper config`.
+credentials through environment variables or `sitelooper config`. Setting only
+`OPENROUTER_API_KEY` selects the benchmarked pairing (deepseek-v4.1-flash,
+escalating to glm-5.3); choose another provider with `SITELOOPER_PROVIDER`.
 
 ## Core loop
 
@@ -257,5 +259,5 @@ For a single moment, `screenshot` is cheaper and readable immediately.
 `sitelooper` itself has no knowledge of any specific app under test. All app-specific knowledge
 (selectors, class names, gestures, URLs, workflow assumptions) belongs in the `brief` you load or
 the instruction text you write — never assume the tool "knows" an app's UI. See the project README
-(`C:\dev\sitelooper\README.md`) for the full design rationale and the complete tool/provider
+(https://github.com/restspace/sitelooper#readme) for the full design rationale and the complete tool/provider
 reference if you need more than this skill covers.

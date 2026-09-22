@@ -79,7 +79,22 @@ export async function runDoctor(json: boolean): Promise<number> {
     checks.push({
       name: 'provider',
       status: 'ok',
-      detail: `${config.provider} / ${config.model}${config.fallbackModel ? ` (escalation ${config.fallbackModel})` : ''}`,
+      detail: `${config.provider} at ${config.baseUrl} (${config.providerSource ?? 'default'})`,
+    });
+    checks.push({
+      name: 'model',
+      status: 'ok',
+      detail: `${config.model}; escalation ${config.fallbackModel ?? 'off'}`,
+    });
+    checks.push({
+      name: 'routing',
+      status: 'ok',
+      detail:
+        config.extraBodySource === 'env'
+          ? `extra body ${JSON.stringify(config.extraBody)} from SITELOOPER_EXTRA_BODY`
+          : config.extraBodySource === 'preset'
+            ? `extra body ${JSON.stringify(config.extraBody)}: the ${config.provider} preset's pin for ${config.model} (SITELOOPER_EXTRA_BODY='{}' turns it off)`
+            : 'no extra request body',
     });
     checks.push({
       name: 'api key',

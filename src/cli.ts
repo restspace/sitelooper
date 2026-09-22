@@ -113,7 +113,8 @@ Global options:
   --viewport WxH --device "<Playwright device, e.g. iPhone 13>"   # browser a session starts in;
       a saved flow stores it, and run/compiled specs use it (default 1280x900)
   --json emits versioned results for authoring, compilation, checking and repair.
-  Provider presets: zhipu, novita, openrouter, openai, anthropic.
+  Provider presets: openrouter (default with OPENROUTER_API_KEY), zhipu, novita, openai,
+      anthropic; pick one with SITELOOPER_PROVIDER. doctor says which is in use and why.
   Credentials: use {{env:NAME}} in instructions ({{totp:NAME}} for a one-time code from a TOTP seed); set NAME before starting the session.
   Project defaults: sitelooper.config.json (nearest ancestor); CLI flags override them.
 
@@ -1314,7 +1315,9 @@ async function repairCommand(positional: string[], flags: Map<string, string | b
     if (wantsPage) {
       const config = resolveProviderConfig({ model });
       const resolved = model ?? (config.fallbackModel && config.fallbackModel !== 'none' ? config.fallbackModel : config.model);
-      const provider: Provider = config.provider === 'anthropic' ? new AnthropicProvider({ ...config, model: resolved }) : new OpenAICompatProvider({ ...config, model: resolved });
+      // extraBody is main-model calibration (a routing pin); another model takes fallbackExtraBody.
+      const tuned = { ...config, model: resolved, ...(resolved !== config.model ? { extraBody: config.fallbackExtraBody } : {}) };
+      const provider: Provider = config.provider === 'anthropic' ? new AnthropicProvider(tuned) : new OpenAICompatProvider(tuned);
       propose = cascadeProposer(buildSystemOne(resolveSystemOneConfig()), llmProposer(provider));
       const { BrowserSession } = await import('./daemon/browser.js');
       browser = new BrowserSession({ session: 'repair', persist: false });

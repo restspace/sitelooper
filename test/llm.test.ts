@@ -16,6 +16,7 @@ const ENV_VARS = [
   'SITELOOPER_HOME',
   'SITELOOPER_PROVIDER',
   'SITELOOPER_MODEL',
+  'SITELOOPER_FALLBACK_MODEL',
   'SITELOOPER_BASE_URL',
   'SITELOOPER_EXTRA_BODY',
   'SITELOOPER_FALLBACK_EXTRA_BODY',
@@ -46,12 +47,88 @@ afterEach(() => {
 });
 
 describe('provider resolution', () => {
-  it('defaults to the zhipu preset', () => {
+  it('with no provider named and no key, defaults to the benchmarked openrouter pairing', () => {
+    const cfg = resolveProviderConfig();
+    expect(cfg.provider).toBe('openrouter');
+    expect(cfg.providerSource).toMatch(/no API key/);
+    expect(cfg.apiKey).toBe('');
+  });
+
+  it('OPENROUTER_API_KEY alone gets the benchmarked pairing: flash, glm-5.3 escalation, DeepSeek pin', () => {
+    process.env.OPENROUTER_API_KEY = 'sk-or-test';
+    const cfg = resolveProviderConfig();
+    expect(cfg.provider).toBe('openrouter');
+    expect(cfg.providerSource).toBe('default: OPENROUTER_API_KEY is set');
+    expect(cfg.baseUrl).toBe('https://openrouter.ai/api/v1');
+    expect(cfg.model).toBe('deepseek/deepseek-v4.1-flash');
+    expect(cfg.fallbackModel).toBe('z-ai/glm-5.3');
+    expect(cfg.apiKey).toBe('sk-or-test');
+    expect(cfg.extraBody).toEqual({ provider: { only: ['DeepSeek'] } });
+    expect(cfg.extraBodySource).toBe('preset');
+    // The pin is main-model calibration: the escalation tier does not inherit it.
+    expect(cfg.fallbackExtraBody).toBeUndefined();
+  });
+
+  it('the preset pin is dropped for another model or endpoint, and SITELOOPER_EXTRA_BODY replaces it', () => {
+    process.env.OPENROUTER_API_KEY = 'sk-or-test';
+    expect(resolveProviderConfig({ model: 'z-ai/glm-5.3' }).extraBody).toBeUndefined();
+    expect(resolveProviderConfig({ baseUrl: 'http://localhost:9999/v1' }).extraBody).toBeUndefined();
+    process.env.SITELOOPER_EXTRA_BODY = '{}';
+    expect(resolveProviderConfig().extraBody).toEqual({});
+    expect(resolveProviderConfig().extraBodySource).toBe('env');
+    process.env.SITELOOPER_EXTRA_BODY = '{"provider":{"only":["Baidu"]}}';
+    expect(resolveProviderConfig().extraBody).toEqual({ provider: { only: ['Baidu'] } });
+  });
+
+  it('a Z.ai key keeps the pre-0.4.0 zhipu default, even beside OPENROUTER_API_KEY', () => {
+    process.env.GLM_API_KEY = 'glm-key';
+    process.env.OPENROUTER_API_KEY = 'sk-or-test';
     const cfg = resolveProviderConfig();
     expect(cfg.provider).toBe('zhipu');
     expect(cfg.baseUrl).toBe(PROVIDER_PRESETS.zhipu.baseUrl);
     expect(cfg.model).toBe('glm-5.2');
-    expect(cfg.apiKey).toBe('');
+    expect(cfg.apiKey).toBe('glm-key');
+    expect(cfg.extraBody).toBeUndefined();
+  });
+
+  it('a generic key with no provider named keeps going to zhipu, as it always has', () => {
+    process.env.SITELOOPER_API_KEY = 'generic';
+    expect(resolveProviderConfig().provider).toBe('zhipu');
+    delete process.env.SITELOOPER_API_KEY;
+    writeGlobalConfig({ apiKey: 'from-file' });
+    expect(resolveProviderConfig().provider).toBe('zhipu');
+    // ...but OPENROUTER_API_KEY beats a generic key: it names its provider.
+    process.env.OPENROUTER_API_KEY = 'sk-or-test';
+    expect(resolveProviderConfig().provider).toBe('openrouter');
+  });
+
+  it("another provider's own key does not choose it; SITELOOPER_PROVIDER does", () => {
+    process.env.OPENAI_API_KEY = 'sk-openai';
+    process.env.OPENROUTER_API_KEY = 'sk-or-test';
+    expect(resolveProviderConfig().provider).toBe('openrouter');
+    process.env.SITELOOPER_PROVIDER = 'openai';
+    const cfg = resolveProviderConfig();
+    expect(cfg.provider).toBe('openai');
+    expect(cfg.providerSource).toBe('SITELOOPER_PROVIDER');
+    expect(cfg.apiKey).toBe('sk-openai');
+    expect(cfg.extraBody).toBeUndefined();
+  });
+
+  it('an explicit provider (flag, env, config file) wins over the key-based default', () => {
+    process.env.OPENROUTER_API_KEY = 'sk-or-test';
+    writeGlobalConfig({ provider: 'zhipu' });
+    expect(resolveProviderConfig().provider).toBe('zhipu');
+    process.env.SITELOOPER_PROVIDER = 'novita';
+    expect(resolveProviderConfig().provider).toBe('novita');
+    expect(resolveProviderConfig({ provider: 'openai' }).providerSource).toBe('--provider flag');
+  });
+
+  it('SITELOOPER_MODEL still overrides the preset model, and then no pin is sent', () => {
+    process.env.OPENROUTER_API_KEY = 'sk-or-test';
+    process.env.SITELOOPER_MODEL = 'z-ai/glm-5.3';
+    const cfg = resolveProviderConfig();
+    expect(cfg.model).toBe('z-ai/glm-5.3');
+    expect(cfg.extraBody).toBeUndefined();
   });
 
   it('novita preset carries its own base URL, model naming, and key env var', () => {
