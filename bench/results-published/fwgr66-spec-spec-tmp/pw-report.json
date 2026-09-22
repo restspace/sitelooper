@@ -1,0 +1,187 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwgr66-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwgr66-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwgr66-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwgr66-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwgr66-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwgr66.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwgr66-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwgr66.spec.ts",
+      "file": "fwgr66.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwgr66",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 100275,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe monaco/set-value (r_f2510e); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-add s_29d25b/13: read 'new_panel_text_content' returned a value the skill itself set/selected ('Notes for run fwgr66-spec') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-add s_29d25b/14: read 'new_panel_title' returned a value the skill itself set/selected ('fwgr66-spec Notes') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-add\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 04-add s_46f9c4/14: read 'tags_in_dashboard_settings' returned a value the skill itself set/selected ('bench') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 04-add s_46f9c4/20 target: read target not found — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-add\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-set\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-verify\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in to Grafana with username 'admin' and password 'admin' (dismiss the 'Update your password' prompt if it appears by choosing Skip). Then find and open the provisioned dashboard named 'Service health' (use the search / Dashboards page). Report the titles of all panels on that dashboard, exactly as shown on screen.",
+                      "duration": 13157
+                    },
+                    {
+                      "title": "02-create: Create a NEW dashboard in Grafana. Set the dashboard title to exactly '{{runid}} Bench Dashboard' (use Dashboard settings > General to rename it). Add a panel of visualization type 'Stat' titled exactly '{{runid}} Availability', and set its query data source to 'TestData' (the test data source, e.g. choose the 'TestData DB' / 'grafana-testdata-datasource' data source in the query editor; pick a scenario like 'Random Walk' if required). Apply the panel edit, then SAVE the dashboard (Save dashboard button) and confirm the save succeeded. Report the panel title and data source shown after saving.",
+                      "duration": 37098
+                    },
+                    {
+                      "title": "03-add: On the existing dashboard '{{runid}} Bench Dashboard' (URL http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard), add a NEW panel of visualization type 'Text' titled exactly '{{runid}} Notes'. In the Text panel's content editor, write text that includes the runid '{{runid}}' (for example: 'Notes for run {{runid}}'). Apply the edit, then SAVE the dashboard and confirm the save succeeded. Report the panel title and the text content shown on the dashboard after saving.",
+                      "duration": 11277
+                    },
+                    {
+                      "title": "04-add: On the dashboard '{{runid}} Bench Dashboard' (URL http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard): (a) add the tag 'bench' to the dashboard via Dashboard settings > General > Tags (type 'bench' and press Enter, then save the settings). (b) Set the dashboard's time range to the last 6 hours using the top-bar time picker (choose 'Last 6 hours'). (c) Then SAVE the dashboard, and in the save dialog make sure the 'Update default time range' checkbox IS ticked so the 6-hour range is persisted into the saved dashboard. Confirm the save succeeded. Report the tags shown in dashboard settings and the time range shown in the top bar after saving.",
+                      "duration": 25564
+                    },
+                    {
+                      "title": "05-set: On the dashboard '{{runid}} Bench Dashboard' (URL http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard): set the dashboard's auto-refresh interval to '1m' using the top-bar time picker's refresh interval dropdown (the one next to the time range, currently showing 'Off'). Then SAVE the dashboard (Save dashboard button, then Save) and confirm the save succeeded. Report what the refresh dropdown shows after saving.",
+                      "duration": 5353
+                    },
+                    {
+                      "title": "06-verify: Navigate the browser to http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard (fresh load, no editPanel in URL). Then verify and report ALL of the following from the live page: (1) the dashboard title shown in the top bar/breadcrumb, (2) the titles of all panels on the dashboard, (3) the time range shown in the top-bar time picker, (4) the refresh interval shown in the top-bar refresh dropdown, (5) the tag 'bench' visible in Dashboard settings > General > Tags, and (6) the EXACT current page URL as shown in the browser address bar (read it from the browser, not from memory). Report each value.",
+                      "duration": 6622
+                    }
+                  ],
+                  "startTime": "2026-09-22T09:25:05.775Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "315f45f2430edb325eb1-a5212498c4d0253de671",
+          "file": "fwgr66.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-22T09:25:03.849Z",
+    "duration": 102379.118,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

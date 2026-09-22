@@ -1,0 +1,341 @@
+{
+  "name": "fwgr66",
+  "origin": "http://127.0.0.1:3000",
+  "startUrl": "http://127.0.0.1:3000",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to Grafana with username 'admin' and password 'admin' (dismiss the 'Update your password' prompt if it appears by choosing Skip). Then find and open the provisioned dashboard named 'Service health' (use the search / Dashboards page). Report the titles of all panels on that dashboard, exactly as shown on screen.",
+      "skill": "s_1b8c5e",
+      "params": {},
+      "outputs": [
+        "dashboard_name",
+        "panel_title_request_rate",
+        "panel_title_error_count",
+        "panel_title_latency_by_endpoint",
+        "panel_titles_1",
+        "panel_titles_2",
+        "panel_titles_3"
+      ],
+      "recorded": {
+        "dashboard_name": "Service Health",
+        "panel_count": "3",
+        "panel_title_request_rate": "Request rate",
+        "panel_title_error_count": "Error count",
+        "panel_title_latency_by_endpoint": "Latency by endpoint",
+        "panel_titles_1": "Request rate",
+        "panel_titles_2": "Error count",
+        "panel_titles_3": "Latency by endpoint",
+        "url": "http://127.0.0.1:3000/d/bench-service-health/service-health?from=now-6h&to=now&timezone=browser"
+      },
+      "route": "http://127.0.0.1:3000/d/bench-service-health/service-health",
+      "outputEvidence": {
+        "dashboard_name": {
+          "same": 1,
+          "differed": 0
+        },
+        "panel_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "panel_title_request_rate": {
+          "same": 1,
+          "differed": 0
+        },
+        "panel_title_error_count": {
+          "same": 1,
+          "differed": 0
+        },
+        "panel_title_latency_by_endpoint": {
+          "same": 1,
+          "differed": 0
+        },
+        "panel_titles_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "panel_titles_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "panel_titles_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "Create a NEW dashboard in Grafana. Set the dashboard title to exactly '{{runid}} Bench Dashboard' (use Dashboard settings > General to rename it). Add a panel of visualization type 'Stat' titled exactly '{{runid}} Availability', and set its query data source to 'TestData' (the test data source, e.g. choose the 'TestData DB' / 'grafana-testdata-datasource' data source in the query editor; pick a scenario like 'Random Walk' if required). Apply the panel edit, then SAVE the dashboard (Save dashboard button) and confirm the save succeeded. Report the panel title and data source shown after saving.",
+      "skill": "s_8fc5bc",
+      "params": {
+        "v2": "{{runid}} Bench Dashboard",
+        "v3": "{{runid}} Availability",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "dashboard_title",
+        "dashboard_slug",
+        "dashboard_url",
+        "panel_title",
+        "panel_visualization",
+        "query_row",
+        "rendered_value",
+        "panel_count_on_dashboard",
+        "panel_option_text",
+        "panel_title_initial",
+        "change_viz_button_text",
+        "query_row_datasource",
+        "runid"
+      ],
+      "recorded": {
+        "dashboard_title": "fwgr66-n1 Bench Dashboard",
+        "dashboard_uid": "cfz0catayheyob",
+        "dashboard_slug": "fwgr66-n1-bench-dashboard",
+        "dashboard_url": "http://127.0.0.1:3000/d/cfz0catayheyob/fwgr66-n1-bench-dashboard",
+        "panel_title": "fwgr66-n1 Availability",
+        "panel_visualization": "Stat",
+        "panel_data_source": "TestData (grafana-testdata-datasource)",
+        "query_row": "A (TestData)",
+        "scenario": "Random Walk",
+        "rendered_value": "24.5",
+        "panel_count_on_dashboard": "1",
+        "panel_option_text": "Max",
+        "panel_title_initial": "Panel Title",
+        "change_viz_button_text": "Time series",
+        "query_row_datasource": "(TestData)",
+        "runid": "fwgr66-n1",
+        "url": "http://127.0.0.1:3000/d/cfz0catayheyob/fwgr66-n1-bench-dashboard?from=now-6h&to=now&timezone=browser&editPanel=1",
+        "url.p1": "cfz0catayheyob",
+        "url.p2": "fwgr66-n1-bench-dashboard"
+      },
+      "route": "http://127.0.0.1:3000/d/cfz0catayheyob/:id"
+    },
+    {
+      "id": "03-add",
+      "instruction": "On the existing dashboard '{{runid}} Bench Dashboard' (URL http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard), add a NEW panel of visualization type 'Text' titled exactly '{{runid}} Notes'. In the Text panel's content editor, write text that includes the runid '{{runid}}' (for example: 'Notes for run {{runid}}'). Apply the edit, then SAVE the dashboard and confirm the save succeeded. Report the panel title and the text content shown on the dashboard after saving.",
+      "skill": "s_29d25b",
+      "params": {
+        "v1": "{{runid}} Bench Dashboard",
+        "v3": "http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard",
+        "v6": "{{runid}} Notes",
+        "v2": "{{runid}}",
+        "v7": "Notes for run {{runid}}"
+      },
+      "outputs": [
+        "dashboard_title",
+        "dashboard_uid",
+        "new_panel_title",
+        "new_panel_text_content",
+        "other_panel_title",
+        "runid"
+      ],
+      "recorded": {
+        "dashboard_title": "fwgr66-n1 Bench Dashboard",
+        "dashboard_uid": "cfz0catayheyob",
+        "new_panel_title": "fwgr66-n1 Notes",
+        "new_panel_visualization": "Text",
+        "new_panel_text_content": "Notes for run fwgr66-n1",
+        "other_panel_title": "fwgr66-n1 Availability",
+        "panel_count": "2",
+        "save_confirmation": "Dashboard saved",
+        "runid": "fwgr66-n1",
+        "url": "http://127.0.0.1:3000/d/cfz0catayheyob/fwgr66-n1-bench-dashboard?from=now-6h&to=now&timezone=browser"
+      },
+      "route": "http://127.0.0.1:3000/d/cfz0catayheyob/:id",
+      "urlVariance": [
+        "cfz0catayheyob",
+        "ffz0cpvhok4jkb",
+        "fwgr66-n1-bench-dashboard",
+        "fwgr66-n2-bench-dashboard"
+      ]
+    },
+    {
+      "id": "04-add",
+      "instruction": "On the dashboard '{{runid}} Bench Dashboard' (URL http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard): (a) add the tag 'bench' to the dashboard via Dashboard settings > General > Tags (type 'bench' and press Enter, then save the settings). (b) Set the dashboard's time range to the last 6 hours using the top-bar time picker (choose 'Last 6 hours'). (c) Then SAVE the dashboard, and in the save dialog make sure the 'Update default time range' checkbox IS ticked so the 6-hour range is persisted into the saved dashboard. Confirm the save succeeded. Report the tags shown in dashboard settings and the time range shown in the top bar after saving.",
+      "skill": "s_46f9c4",
+      "params": {
+        "v1": "{{runid}} Bench Dashboard",
+        "v3": "http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard",
+        "v6": "Last 6 hours",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "dashboard_title",
+        "dashboard_uid",
+        "tags_in_dashboard_settings",
+        "time_range_top_bar",
+        "save_confirmation",
+        "runid",
+        "panels_1",
+        "panels_2"
+      ],
+      "recorded": {
+        "dashboard_title": "fwgr66-n1 Bench Dashboard",
+        "dashboard_uid": "cfz0catayheyob",
+        "tags_in_dashboard_settings": "bench",
+        "time_range_top_bar": "Last 6 hours",
+        "url_time_range_params": "from=now-6h&to=now",
+        "update_default_time_range_checkbox": "ticked (input#save-timerange checked)",
+        "save_confirmation": "Dashboard saved",
+        "time_range_param": "now-6h",
+        "time_range_hours": "6-hour",
+        "runid": "fwgr66-n1",
+        "panels_1": "fwgr66-n1 Notes",
+        "panels_2": "fwgr66-n1 Availability"
+      },
+      "route": "http://127.0.0.1:3000/d/cfz0catayheyob/:id",
+      "urlVariance": [
+        "cfz0catayheyob",
+        "ffz0cpvhok4jkb",
+        "fwgr66-n1-bench-dashboard",
+        "fwgr66-n2-bench-dashboard"
+      ]
+    },
+    {
+      "id": "05-set",
+      "instruction": "On the dashboard '{{runid}} Bench Dashboard' (URL http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard): set the dashboard's auto-refresh interval to '1m' using the top-bar time picker's refresh interval dropdown (the one next to the time range, currently showing 'Off'). Then SAVE the dashboard (Save dashboard button, then Save) and confirm the save succeeded. Report what the refresh dropdown shows after saving.",
+      "skill": "s_99876c",
+      "params": {
+        "v1": "{{runid}} Bench Dashboard",
+        "v3": "http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "dashboard_title",
+        "dashboard_uid",
+        "refresh_dropdown_after_save",
+        "refresh_button_aria_label",
+        "save_confirmation",
+        "time_range_top_bar",
+        "panels_1",
+        "panels_2"
+      ],
+      "recorded": {
+        "dashboard_title": "fwgr66-n1 Bench Dashboard",
+        "dashboard_uid": "cfz0catayheyob",
+        "refresh_dropdown_after_save": "1m",
+        "refresh_button_aria_label": "Choose refresh time interval with current interval 1 minute selected",
+        "update_default_refresh_value_checkbox": "ticked",
+        "save_confirmation": "Dashboard saved",
+        "time_range_top_bar": "Last 6 hours",
+        "panels_1": "fwgr66-n1 Notes",
+        "panels_2": "fwgr66-n1 Availability",
+        "url": "http://127.0.0.1:3000/d/cfz0catayheyob/fwgr66-n1-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m"
+      },
+      "route": "http://127.0.0.1:3000/d/cfz0catayheyob/:id",
+      "urlVariance": [
+        "cfz0catayheyob",
+        "ffz0cpvhok4jkb",
+        "fwgr66-n1-bench-dashboard",
+        "fwgr66-n2-bench-dashboard"
+      ]
+    },
+    {
+      "id": "06-verify",
+      "instruction": "Navigate the browser to http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard (fresh load, no editPanel in URL). Then verify and report ALL of the following from the live page: (1) the dashboard title shown in the top bar/breadcrumb, (2) the titles of all panels on the dashboard, (3) the time range shown in the top-bar time picker, (4) the refresh interval shown in the top-bar refresh dropdown, (5) the tag 'bench' visible in Dashboard settings > General > Tags, and (6) the EXACT current page URL as shown in the browser address bar (read it from the browser, not from memory). Report each value.",
+      "skill": "s_55d7be",
+      "params": {
+        "v1": "http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard",
+        "v5": "bench",
+        "v4": "{{runid}}"
+      },
+      "outputs": [
+        "exact_page_url",
+        "dashboard_title_breadcrumb",
+        "notes_panel_text",
+        "availability_panel_value",
+        "time_range_top_bar",
+        "refresh_interval",
+        "tags_in_settings",
+        "runid",
+        "panel_titles_1",
+        "panel_titles_2"
+      ],
+      "recorded": {
+        "exact_page_url": "http://127.0.0.1:3000/d/cfz0catayheyob/fwgr66-n1-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m",
+        "dashboard_title_breadcrumb": "fwgr66-n1 Bench Dashboard",
+        "notes_panel_text": "Notes for run fwgr66-n1",
+        "availability_panel_value": "-0.418",
+        "time_range_top_bar": "Last 6 hours",
+        "refresh_interval": "1m",
+        "tags_in_settings": "bench",
+        "runid": "fwgr66-n1",
+        "time_range_param": "now-6h",
+        "panel_titles_1": "fwgr66-n1 Notes",
+        "panel_titles_2": "fwgr66-n1 Availability"
+      },
+      "route": "http://127.0.0.1:3000/d/cfz0catayheyob/:id",
+      "urlVariance": [
+        "cfz0catayheyob",
+        "ffz0cpvhok4jkb",
+        "fwgr66-n1-bench-dashboard",
+        "fwgr66-n2-bench-dashboard"
+      ]
+    }
+  ],
+  "provenance": {
+    "session": "fwgr66-n1",
+    "created": "2026-09-22T09:18:50.875Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "panel_count"
+      ]
+    },
+    {
+      "stepId": "02-create",
+      "outputs": [
+        "dashboard_uid",
+        "panel_data_source",
+        "scenario"
+      ]
+    },
+    {
+      "stepId": "03-add",
+      "outputs": [
+        "new_panel_visualization",
+        "panel_count",
+        "save_confirmation"
+      ]
+    },
+    {
+      "stepId": "04-add",
+      "outputs": [
+        "url_time_range_params",
+        "update_default_time_range_checkbox",
+        "time_range_param",
+        "time_range_hours"
+      ]
+    },
+    {
+      "stepId": "05-set",
+      "outputs": [
+        "update_default_refresh_value_checkbox"
+      ]
+    },
+    {
+      "stepId": "06-verify",
+      "outputs": [
+        "time_range_param"
+      ]
+    }
+  ]
+}
