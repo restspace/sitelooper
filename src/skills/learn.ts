@@ -4,6 +4,7 @@ import type { Report } from '../agent/report.js';
 import type { RecordedEntry, RecordedInstruction } from '../daemon/recorder.js';
 import { compileSkills, escapeRe, fillParams, samePageContexts, sameProcedure, urlMatches, urlPattern, variantStart } from './compile.js';
 import { landedOnRecordedPage } from '../execution/gates.js';
+import { derivesFromParams, templateValue } from '../execution/report.js';
 import { ComponentStore, learnRecipes } from './components.js';
 import { contractOf, isVerified, successRate, type Skill, type SkillStore } from './store.js';
 
@@ -760,7 +761,9 @@ export function synthesizeReport(skill: Skill, params: Record<string, string>, l
   const stale: string[] = [];
   for (const [k, v] of Object.entries(template.values)) {
     if (k in liveValues) continue; // a live read wins outright, below
-    const filled = fillParams(v, params);
+    // The shared rule (src/execution/report.ts templateValue), which a
+    // compiled artifact applies to the same template (fwgh4 03-open).
+    const kept = templateValue(v, params);
     // Kept only if every part of it came from a parameter: no residual literal,
     // and no residual MARKER of any spelling. A param can itself arrive still
     // holding a reference the run never resolved — fwod56's `07-change`
@@ -771,7 +774,8 @@ export function synthesizeReport(skill: Skill, params: Record<string, string>, l
     // elsewhere (src/execution/url.ts `unfilled`, gates.ts `markersBound`).
     // Published, it is a placeholder that any consumer can bank, compare and
     // re-publish as data.
-    if (/\{\{v\d+\}\}/.test(v) && !/\{\{/.test(filled)) values[k] = filled;
+    // An empty fill is unfilled too (round 26's rule J), and so not a value.
+    if (kept !== null) values[k] = kept;
     else stale.push(v);
   }
   for (const [k, live] of Object.entries(liveValues)) values[k] = live;
@@ -883,7 +887,7 @@ export function publishedOutputs(skill: Skill): string[] {
   };
   walk(skill.steps);
   for (const [k, v] of Object.entries(skill.reportTemplate?.values ?? {})) {
-    if (/\{\{v\d+\}\}/.test(v)) out.add(k);
+    if (derivesFromParams(v)) out.add(k);
   }
   return [...out];
 }

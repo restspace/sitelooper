@@ -1111,6 +1111,12 @@ ${describeLeaks(leaks.slice(0, 6))}`);
         const sk = store.get(id);
         return sk ? bindSkill(sk, instr, this.knownValues()) : null;
       },
+      // Each slot's recorded origin, so a url id an earlier step minted is
+      // referenced by origin at any length (flow.ts originRef, fwsi3).
+      origins: (id) => {
+        const sk = store.get(id);
+        return sk ? Object.fromEntries(Object.entries(sk.params).flatMap(([k, p]) => (p.binding ? [[k, p.binding]] : []))) : null;
+      },
       // Empty for a fresh recording. Populated when this export follows a run
       // of an existing flow (runFlow seeds the ledger), which is exactly when
       // there is a second run's worth of evidence to build on.

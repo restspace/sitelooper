@@ -2048,6 +2048,23 @@ describe('record-time contradiction between a mutating step and the read right a
     );
   });
 
+  // snipeit fwsi3: the checkout's instruction does not read as mutating, but
+  // it clicked Checkout (an effective, state-changing action) and the asset's
+  // status moved from "Ready to Deploy" to "Deployed" — its own change.
+  it('does not flag a step that itself made an effective state-changing action', () => {
+    const entries: RecordedEntry[] = [
+      { k: 'step', tool: 'goto', args: { url: `${ORIGIN}/o/1` }, locators: {} },
+      { k: 'instruction', text: 'Create asset A-1 and report its status.', url: `${ORIGIN}/o/1` },
+      { k: 'step', tool: 'click', args: { target: '@e1' }, locators: {}, diff: { url: `${ORIGIN}/o/1`, alerts: [], added: ['- alert "created"'] } },
+      { k: 'report', status: 'success', summary: 'done', values: { status: 'Ready to Deploy' }, skill: 's_i' },
+      { k: 'instruction', text: 'Check asset A-1 out to Bench Assignee and report its status.', url: `${ORIGIN}/o/1` },
+      { k: 'step', tool: 'click', args: { target: '@e2' }, locators: {}, diff: { url: `${ORIGIN}/o/1`, alerts: [], added: ['- status "Asset checked out successfully"'] } },
+      { k: 'report', status: 'success', summary: 'done', values: { status: 'Deployed' }, skill: 's_j' },
+    ];
+    const flow = buildFlow(entries, { name: 'f', origin: ORIGIN, startUrl: `${ORIGIN}/o/1`, vars: {}, session: 's' })!;
+    expect((flow.warnings ?? []).filter((w) => w.startsWith('contradicted-step'))).toEqual([]);
+  });
+
   it('does not check a step that is itself mutating (07/08 shape: the second step is not read-only)', () => {
     const entries: RecordedEntry[] = [
       { k: 'step', tool: 'goto', args: { url: `${ORIGIN}/o/1` }, locators: {} },

@@ -2952,7 +2952,11 @@ describe('flowToSpec: goals reach the segment that can act on one', () => {
     store.put(skill({ steps: [{ tool: 'read', label: 'status', args: { what: 'text' }, locators: { target: [{ kind: 'text', text: 'Cancelled' }] } }] }));
     const seg = flowToSpec(flowFor('s_1'), store).spec.steps[0].segments[0];
     expect(seg.goal).toBeUndefined();
-    expect(seg.report).toBeUndefined();
+    // The report template still travels on the last segment: the daemon's
+    // zero-model report publishes its param-built values on a read-only
+    // procedure too (fwgh4). This one's only value is a recorded literal, so
+    // nothing publishes it.
+    expect(seg.report).toEqual({ summary: 'cancelled {{v1}}', values: { order_status: 'Cancelled' } });
   });
 
   it('puts the goal on the LAST segment of a chain, never an earlier one', () => {
@@ -3055,5 +3059,72 @@ describe('read-only segment that observed nothing', () => {
   it('a segment that sets anything carries no such check', () => {
     const source = emit(specOf([{ tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Save' }] } }, read('.status', 'status')]));
     expect(stepBodies(source)).not.toContain('observedNothing(');
+  });
+});
+
+// fwgh4 03-open: the daemon's zero-model report publishes the last segment's
+// template value "{{v2}}" (synthesizeReport); the artifact carried the
+// template only beside a goal, so it refused the flow over a value it could
+// have published itself.
+describe('report-template values after the last segment', () => {
+  const read = (label: string): SkillStep => ({ tool: 'read', args: { target: '@e9', what: 'text' }, label, locators: { target: [{ kind: 'css', selector: 'h1' }] } });
+  const type: SkillStep = { tool: 'fill', args: { target: '@e1', value: '{{v1}}' }, locators: { target: [{ kind: 'label', label: 'Search' }] } };
+  const flowWith = (value: string, extraRead?: string): SpecFlow => ({
+    version: 1,
+    name: 'chain',
+    origin: 'http://app.test',
+    startUrl: 'http://app.test/',
+    vars: ['runid'],
+    steps: [
+      {
+        id: '02-create',
+        instruction: 'create the post',
+        params: { v2: '{{runid}} Bench Post' },
+        outputs: ['post_title_element_text'],
+        segments: [
+          segment([{ tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'role', role: 'button', name: 'New post' }] } }], { id: 's_head', params: {} }),
+          segment(extraRead ? [read(extraRead)] : [{ tool: 'click', args: { target: '@e2' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Publish' }] } }], {
+            id: 's_17f69b',
+            params: { v2: { example: 'fwgh4-n1 Bench Post', usedIn: [] } },
+            report: { summary: 'Created {{v2}}', values: { post_title_element_text: value } },
+          }),
+        ],
+      },
+      {
+        id: '03-open',
+        instruction: 'open the post',
+        params: { v1: '{{02-create.post_title_element_text}}' },
+        outputs: [],
+        segments: [segment([type], { id: 's_open' })],
+      },
+    ],
+  });
+  const unsourced = (flow: SpecFlow) => emitFlowFile(flow, { tier: 'plain' }).diagnostics.filter((d) => d.code === 'unsourced-ref');
+
+  it('compiles a consumer of a template value built from a param, and the body publishes it through the shared rule', () => {
+    const flow = flowWith('{{v2}}');
+    expect(unsourced(flow)).toEqual([]);
+    const body = emit(flow);
+    expect(body).toContain(
+      "{ const value = templateValue('{{v2}}', p); if (value !== null && outputs['02-create.post_title_element_text'] === undefined) outputs['02-create.post_title_element_text'] = value; }",
+    );
+    // the slot the template names is passed to the step, though no action uses it
+    expect(body).toMatch(/async '02-create'\(page: Page, p: \{[^}]*v2: string/);
+    expect(body).toContain('// Shared execution source: report.ts.');
+  });
+
+  it('still refuses a consumer of a recorded literal, which the daemon drops as stale too', () => {
+    const flow = flowWith('fwgh4-n1 Bench Post');
+    expect(unsourced(flow).map((d) => d.what)).toEqual(['slot v1 is bound to {{02-create.post_title_element_text}}, and nothing has ever published post_title_element_text']);
+    expect(emit(flow)).not.toContain('templateValue(');
+  });
+
+  it('a live read of the same output keeps it: the template only fills in when nothing read it', () => {
+    const body = emit(flowWith('{{v2}}', 'post_title_element_text'));
+    const readAt = body.indexOf("outputs['02-create.post_title_element_text'] = ");
+    const templateAt = body.indexOf("templateValue('{{v2}}', p)");
+    expect(readAt).toBeGreaterThan(-1);
+    expect(templateAt).toBeGreaterThan(readAt);
+    expect(body).toContain("outputs['02-create.post_title_element_text'] === undefined");
   });
 });

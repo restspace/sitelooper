@@ -73,7 +73,9 @@ describe('standalone execution source', () => {
           // fingerprint: its url precondition measures the live page through the
           // shared fingerprint module, reading the vector back out of FLOW.
           id: 's_measured', template: 'confirm on the list',
-          params: {},
+          // The last segment's report template: a value built from the caller's param, published after the step (the shared templateValue).
+          report: { summary: 'confirmed {{v1}}', values: { confirmed_name: '{{v1}}', recorded_id: 'RD-1017' } },
+          params: { v1: { example: 'Widget A', usedIn: [] } },
           preconditions: { urlPattern: 'http://app.test/', fingerprint: Array.from({ length: FINGERPRINT_DIMS }, (_, i) => (i % 9 === 0 ? 0.333 : 0)) },
           // A disclosure toggle (a hide-then-show pair, compiled to one click): the shared toggle rule.
           steps: [{ tool: 'click', args: { target: '@e1' }, locators: { target }, toggle: true, expect: { addedContains: ['- link "More details"'] } }],

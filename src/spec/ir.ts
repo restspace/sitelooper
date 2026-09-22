@@ -118,9 +118,14 @@ export interface SpecSegment {
    */
   goal?: { requireText: string[] };
   /**
-   * The skill's report template, carried ONLY beside a `goal`: when the guard
-   * short-circuits the step, these are the values the step's read-backs would
-   * have published, and the steps after it must still see them.
+   * The skill's report template, carried on the LAST segment of a step's chain
+   * (and beside a `goal`, which only the last segment has). After the step's
+   * last segment the artifact publishes each value built from the caller's own
+   * `{{vN}}` that no live read published — the daemon's synthesizeReport over
+   * the same segment, through the shared templateValue (src/execution/report.ts).
+   * When the goal guard short-circuits the step, these are the values the
+   * step's read-backs would have published, and the steps after it must still
+   * see them.
    */
   report?: { summary: string; values: Record<string, string> };
 }
@@ -153,7 +158,7 @@ export function isFingerprintVector(v: unknown): v is number[] {
 }
 
 /** A skill as the spec carries it: the procedure, none of the bookkeeping. */
-function toSegment(skill: Skill, goalBearing = false): SpecSegment {
+function toSegment(skill: Skill, goalBearing = false, last = false): SpecSegment {
   const seg: SpecSegment = {
     id: skill.id,
     template: skill.template,
@@ -174,6 +179,11 @@ function toSegment(skill: Skill, goalBearing = false): SpecSegment {
     seg.goal = { requireText: [...skill.goal.requireText] };
     if (skill.reportTemplate) seg.report = skill.reportTemplate;
   }
+  // ...and the chain's LAST segment always carries it: its values built from
+  // the caller's own params are what the daemon's zero-model report publishes
+  // after the chain (synthesizeReport, over that same segment), so the
+  // artifact publishes them there too (fwgh4 03-open).
+  if (last && skill.reportTemplate && Object.keys(skill.reportTemplate.values).length) seg.report = skill.reportTemplate;
   return seg;
 }
 
@@ -434,7 +444,7 @@ export function flowToSpec(
     // the one that finishes the work.
     const chain = skill ? chainOf(skill, store) : [];
     const changes = chain.some((member) => mutates(store, member.id));
-    const segments = chain.map((member, i) => toSegment(member, changes && i === chain.length - 1));
+    const segments = chain.map((member, i) => toSegment(member, changes && i === chain.length - 1, i === chain.length - 1));
     if (!segments.length) {
       diagnostics.push({
         code: 'no-procedure',

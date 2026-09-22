@@ -353,6 +353,13 @@ export function buildFlow(
     /** Given a skill id and the raw recorded instruction, return the slot bindings. */
     bind?: (skillId: string, instruction: string) => Record<string, string> | null;
     /**
+     * Given a skill id, each slot's recorded ORIGIN (its binding key,
+     * `url:i3:p1`). A slot whose origin is a url part an earlier step of this
+     * flow minted is written as that step's url reference, at any length —
+     * origin wins over value matching (originRef).
+     */
+    origins?: (skillId: string) => Record<string, string> | null;
+    /**
      * Which values earlier runs demonstrated are run-specific (see
      * `RunSpecific`). Absent on a first recording, which is the point: run 1
      * has nothing to consult and falls back to position and shape.
@@ -372,6 +379,8 @@ export function buildFlow(
 
   let prevId: string | undefined;
   let prevGroup: Group | undefined;
+  /** Which flow step each kept instruction became, by its ledger index. */
+  const byLedger = new Map<string, string>();
   groups.forEach((g, i) => {
     const id = stepId(g.instruction.text, i);
     // Read the RAW instruction, before references go in: a substituted
@@ -400,9 +409,15 @@ export function buildFlow(
       // The template first (it rethreads slots to their origins); else the
       // params the recording actually replayed the skill with.
       const raw = opts.bind(g.report.skill, g.instruction.text) ?? g.report.skillParams ?? null;
+      const origins = opts.origins?.(g.report.skill) ?? {};
       if (raw) {
         params = {};
         for (const [k, v] of Object.entries(raw)) {
+          const byOrigin = origins[k] ? originRef(origins[k], v, byLedger, produced) : null;
+          if (byOrigin) {
+            params[k] = byOrigin;
+            continue;
+          }
           let rv = v;
           for (const [name, value] of varEntries) rv = replaceToken(rv, value, `{{${name}}}`);
           for (const pr of [...produced].sort((a, b) => b.value.length - a.value.length)) {
@@ -421,6 +436,7 @@ export function buildFlow(
         }
       }
     }
+    byLedger.set(`i${g.ledgerIndex}`, id);
     steps.push({
       id,
       instruction: text,
@@ -767,12 +783,20 @@ interface Group {
   diffs: StepDiff[];
   /** This instruction's state-changing steps, in order (reappliedByNext compares them). */
   acts: RecordedStep[];
+  /**
+   * The daemon's ledger index for this instruction (`i3` → 3): one per
+   * recorded instruction, a resume continuing its predecessor's. A skill
+   * slot's origin (`url:i3:p1`) names it — see originRef.
+   */
+  ledgerIndex: number;
 }
 
 function groupByInstruction(entries: RecordedEntry[]): Group[] {
   const groups: Group[] = [];
+  let ledgerIndex = 0;
   for (const e of entries) {
     if (e.k === 'instruction') {
+      if (!e.resume) ledgerIndex += 1;
       // An escalation continuation (recorded under the original wording,
       // marked `resume`) is the same instruction still in flight: keep the
       // predecessor's group open so its clean start context survives and the
@@ -780,7 +804,7 @@ function groupByInstruction(entries: RecordedEntry[]): Group[] {
       // predecessor (truncated recording) stands alone.
       const prev = groups[groups.length - 1];
       if (e.resume && prev?.instruction.text === e.text) continue;
-      groups.push({ instruction: e, mutations: 0, mutationsDiffed: 0, mutationsEffective: 0, diffs: [], acts: [] });
+      groups.push({ instruction: e, mutations: 0, mutationsDiffed: 0, mutationsEffective: 0, diffs: [], acts: [], ledgerIndex: Math.max(1, ledgerIndex) });
     } else if (e.k === 'report' && groups.length) groups[groups.length - 1].report = e;
     else if (e.k === 'step' && groups.length) {
       const g = groups[groups.length - 1];
@@ -1379,6 +1403,11 @@ function contradictionWarning(idI: string, gi: Group, idJ: string, gj: Group): s
   if (gi.report?.status !== 'success') return null;
   if (!mutatingIntent(gi.instruction.text)) return null;
   if (mutatingIntent(gj.instruction.text)) return null;
+  // The later group CHANGED something itself (a state-changing action with a
+  // visible effect): a differing read is its own change, not a sign that the
+  // earlier one did not land. snipeit fwsi3's checkout moved the asset from
+  // "Ready to Deploy" to "Deployed", which is the checkout working.
+  if (gj.mutationsEffective > 0) return null;
   const iValues = gi.report?.values ?? {};
   const jValues = gj.report?.values ?? {};
   for (const [label, jRaw] of Object.entries(jValues)) {
@@ -2186,6 +2215,33 @@ interface Produced {
   value: string;
   /** `/hardware/4`: the url path up to and including the id (pathTo). */
   path?: string;
+}
+
+/**
+ * A slot's recorded origin as a reference to the flow step that minted it, or
+ * null. The origin is the binding key compile gave the slot (`url:i3:p1`, the
+ * ledger's spelling — see remapParams, which spells re-pins the same way);
+ * `byLedger` maps each EARLIER kept instruction's ledger index to its flow
+ * step (buildFlow sets the current step's only after its params, so a step's
+ * own mints never feed its own slots — fwec1), and the reference stands only
+ * if that step minted exactly this value at that url position.
+ *
+ * snipeit fwsi3-n1: 04-create's skills bound v5 = "4" to `url:i3:p1` and
+ * slotted `/hardware/{{v5}}` — but buildFlow saw only the value, and a one-
+ * digit value is referenced only where its path is quoted; the instruction
+ * named the asset by name and tag. The flow param stayed `"4"`, so every
+ * replay and the compiled script expected /hardware/4 and refused. A binding
+ * to an instruction that is not a step (dropped, merged) or that minted
+ * something else falls back to value matching, as before.
+ */
+function originRef(binding: string, value: string, byLedger: ReadonlyMap<string, string>, produced: readonly Produced[]): string | null {
+  const m = /^url:([^:]+):(.+)$/.exec(binding);
+  if (!m) return null;
+  const stepId = byLedger.get(m[1]) ?? ([...byLedger.values()].includes(m[1]) ? m[1] : undefined);
+  if (!stepId) return null;
+  const output = `url.${m[2]}`;
+  const hit = produced.some((p) => p.stepId === stepId && p.output === output && p.value === value.trim());
+  return hit ? `{{${stepId}.${output}}}` : null;
 }
 
 /**

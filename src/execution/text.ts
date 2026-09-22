@@ -128,6 +128,30 @@ export function volatileMatcher(text: string): string | RegExp {
 }
 
 /**
+ * A scoped candidate's `hasText`, as both runners pass it to
+ * `locator(container, { hasText })`: the recorded text itself when it carries
+ * no volatile token — Playwright's own substring match, case- and
+ * whitespace-insensitive, unchanged — else a RegExp keeping those three
+ * properties (unanchored, `i`, any whitespace run) with each volatile token
+ * wildcarded as volatileMatcher does. fwgh4's s_17f69b scoped every read to
+ * `li.gh-list-row` with hasText "{{v2}} By Bench Admin - a few seconds ago
+ * Draft", which only held because the replay came seconds after the
+ * recording. Called on the text with its slots already filled, in both
+ * runners, so they cannot disagree about what a slot value contributes.
+ */
+export function hasTextMatcher(text: string): string | RegExp {
+  const masked = maskVolatile(text);
+  if (masked === text) return text;
+  const body = masked
+    .replace(/\s+/g, ' ')
+    .trim()
+    .split(WILDCARD)
+    .map((part) => escapeRe(part).replace(/ /g, '\\s+'))
+    .join(VOLATILE_TOKEN_SHAPE);
+  return new RegExp(body, 'i');
+}
+
+/**
  * What an ACCESSIBLE NAME may carry that a recorded name never does.
  *
  * A recorded role name comes from this project's own DOM walk (execution/

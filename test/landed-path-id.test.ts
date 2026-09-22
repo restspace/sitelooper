@@ -126,3 +126,79 @@ describe('the flow references a landed path id at its path (fwsi2)', () => {
     expect(staleInstructionIds(e, flow)).toHaveLength(1);
   });
 });
+
+/**
+ * snipeit fwsi3-n1: 04-create's skills bound v5 = "4" to `url:i3:p1` and
+ * slotted `/hardware/{{v5}}`, but its instruction named the asset by name and
+ * tag, so buildFlow — matching by value — left the flow param `"4"` and every
+ * run expected /hardware/4. A slot whose recorded origin is a url part an
+ * earlier step minted is that step's url reference, at any length.
+ */
+describe('a slot bound to an earlier step\'s url part is referenced by origin (fwsi3)', () => {
+  const entries = (): RecordedEntry[] => [
+    { k: 'instruction', text: 'Sign in.', url: `${O}/login` },
+    click('Login', `${O}/`, ['- heading "Dashboard"']),
+    { k: 'report', status: 'success', summary: 'in', values: {}, skill: 's_in' },
+    { k: 'instruction', text: 'Open the asset list.', url: `${O}/` },
+    click('Assets', `${O}/hardware`, ['- heading "Assets"']),
+    { k: 'report', status: 'success', summary: 'listed', values: {}, skill: 's_list' },
+    { k: 'instruction', text: 'Create an asset and report its tag.', url: `${O}/hardware` },
+    click('Save', `${O}/hardware/4`, ['- heading "x Asset"']),
+    { k: 'report', status: 'success', summary: 'created', values: { asset_tag: 'BA-00004' }, skill: 's_create' },
+    { k: 'instruction', text: "Check out the asset tagged 'BA-00004' to Bench Assignee.", url: `${O}/hardware/4` },
+    { k: 'step', tool: 'goto', args: { url: `${O}/hardware/4/checkout` }, locators: {}, diff: { url: `${O}/hardware/4/checkout`, alerts: [], added: [], dialect: 2 } },
+    { k: 'report', status: 'success', summary: 'checked out', values: {}, skill: 's_checkout' },
+  ] as RecordedEntry[];
+  const build = (binding: string) =>
+    buildFlow(entries(), {
+      name: 'f',
+      origin: O,
+      startUrl: `${O}/login`,
+      vars: {},
+      session: 's',
+      bind: (id) => (id === 's_checkout' ? { v3: 'BA-00004', v5: '4' } : {}),
+      origins: (id) => (id === 's_checkout' ? { v5: binding } : null),
+    })!;
+
+  it('writes the minting step\'s url reference, though the instruction never quotes the path', () => {
+    const flow = build('url:i3:p1');
+    expect(flow.steps[3].params).toEqual({ v3: '{{03-create.asset_tag}}', v5: '{{03-create.url.p1}}' });
+  });
+
+  it('keeps the literal when the origin names no step of this flow, or one that minted something else', () => {
+    expect(build('url:i9:p1').steps[3].params?.v5).toBe('4');
+    expect(build('url:i2:p1').steps[3].params?.v5).toBe('4');
+    // …and a step's own mints never feed its own slots (fwec1).
+    expect(build('url:i4:p1').steps[3].params?.v5).toBe('4');
+  });
+});
+
+describe('a position-only url slot is written into an href a selector matches on (fwsi3)', () => {
+  it('slots the href\'s id at its path position, and nothing else in the selector', () => {
+    const instruction = "Check out the asset tagged 'BA-00004'.";
+    const sel = 'tr:nth-of-type(4) a[href$="/hardware/4/checkout"]';
+    const entries: RecordedEntry[] = [
+      { k: 'instruction', text: instruction, url: `${O}/hardware/4` },
+      {
+        k: 'step',
+        tool: 'click',
+        args: { target: sel },
+        locators: { target: { expr: `page.locator('${sel}')`, verified: true, raw: sel, chain: [{ kind: 'css', selector: sel }] } },
+        diff: { url: `${O}/hardware/4/checkout`, alerts: [], added: ['- heading "Checkout"'], dialect: 2 },
+      },
+      { k: 'step', tool: 'goto', args: { url: `${O}/hardware/4` }, locators: {}, diff: { url: `${O}/hardware/4`, alerts: [], added: [], dialect: 2 } },
+    ];
+    const skills = compileSkills({
+      entries,
+      instruction,
+      report: { status: 'success', summary: 'done', evidence: { values: {} } },
+      session: 's',
+      knownValues: { 'url:i3:p1': '4' },
+    });
+    const name = Object.entries(skills[0].params).find(([, p]) => p.example === '4')![0];
+    const click = skills.flatMap((k) => k.steps).find((st) => st.tool === 'click')!;
+    const want = `tr:nth-of-type(4) a[href$="/hardware/{{${name}}}/checkout"]`;
+    expect(click.args.target).toBe(want);
+    expect(click.locators.target[0]).toMatchObject({ kind: 'css', selector: want });
+  });
+});

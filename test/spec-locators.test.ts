@@ -14,8 +14,8 @@ import { BrowserSession } from '../src/daemon/browser.js';
 import { pointLocator } from '../src/execution/point.js';
 import { resolveCandidates, type CandidateObservation } from '../src/execution/resolve.js';
 import { makeLocator, type LocatorCandidate } from '../src/daemon/recorder.js';
-import { VOLATILE_TOKEN_SHAPE, fieldByName, roleName, volatileMatcher } from '../src/shared/text.js';
-import { candidateSource, chainSource, matcherSource, observationSource, observationSources, stringSource } from '../src/spec/locators.js';
+import { VOLATILE_TOKEN_SHAPE, fieldByName, hasTextMatcher, roleName, volatileMatcher } from '../src/shared/text.js';
+import { candidateSource, chainSource, hasTextSource, matcherSource, observationSource, observationSources, stringSource } from '../src/spec/locators.js';
 
 /** What the generated file inlines; the regex tests need it in scope. */
 const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -49,6 +49,30 @@ describe('stringSource', () => {
 
   it('honours a caller slot renderer', () => {
     expect(stringSource('id {{v1}}', { slot: (s) => '${vars.' + s + '}' })).toBe('`id ${vars.v1}`');
+  });
+});
+
+// fwgh4 s_17f69b: a row anchor recorded "a few seconds ago" held only because the replay was seconds later.
+describe('hasTextMatcher / hasTextSource', () => {
+  const RECORDED = '{{v2}} By Bench Admin - a few seconds ago Draft';
+
+  it('keeps a plain hasText the plain string, in both runners', () => {
+    expect(hasTextMatcher('Bench Post By Bench Admin Draft')).toBe('Bench Post By Bench Admin Draft');
+    expect(hasTextSource('{{v2}} By Bench Admin Draft')).toBe('`${p.v2} By Bench Admin Draft`');
+  });
+
+  it('wildcards the relative time, substring, case- and whitespace-insensitive, in both runners', () => {
+    const daemon = hasTextMatcher('Bench Post By Bench Admin - a few seconds ago Draft') as RegExp;
+    const artifact = evaluate(hasTextSource(RECORDED), { v2: 'Bench Post' }) as RegExp;
+    for (const re of [daemon, artifact]) {
+      expect(re).toBeInstanceOf(RegExp);
+      expect(re.test('Bench Post\n  By Bench Admin - 2 minutes ago   Draft  Edit')).toBe(true);
+      expect(re.test('bench post by bench admin - an hour ago draft')).toBe(true);
+      expect(re.test('Other Post By Bench Admin - 2 minutes ago Draft')).toBe(false);
+      expect(re.test('Bench Post By Bench Admin - 2 minutes ago Published')).toBe(false);
+    }
+    // a slot's own value stays data, not pattern
+    expect((evaluate(hasTextSource(RECORDED), { v2: 'a+b' }) as RegExp).test('aab By Bench Admin - just now Draft')).toBe(false);
   });
 });
 

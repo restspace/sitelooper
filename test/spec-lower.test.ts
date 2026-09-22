@@ -131,6 +131,30 @@ const HAND_BUILT_SPECS: SpecFlow[] = [
       }),
     ],
   },
+  // a chain whose LAST segment carries a report template and no goal (fwgh4
+  // 02-create's s_17f69b): the template travels, because the artifact
+  // publishes its param-built values after the step as the daemon's
+  // zero-model report does
+  {
+    version: 1,
+    name: 'report-without-goal',
+    origin: 'http://localhost:5173',
+    startUrl: 'http://localhost:5173/editor',
+    vars: ['runid'],
+    steps: [
+      step('02-create', {
+        params: { v1: '{{runid}} Bench Post' },
+        outputs: ['post_title_element_text'],
+        segments: [
+          segment('02-create-a', { preconditions: { urlPattern: 'http://localhost:5173/editor' } }),
+          segment('02-create-b', {
+            preconditions: { urlPattern: 'http://localhost:5173/editor/post' },
+            report: { summary: 'created {{v1}}', values: { post_title_element_text: '{{v1}}' } },
+          }),
+        ],
+      }),
+    ],
+  },
   // a segment with a recorded page fingerprint: the vector goes back into the
   // skill (so a repair's replay soft-matches as the artifact does) and comes
   // out of flowToSpec again unchanged

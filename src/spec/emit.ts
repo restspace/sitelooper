@@ -3,6 +3,7 @@ import { DEFAULT_BROWSER_PROFILE, isNavigatingAction, type BrowserProfile } from
 import { setsSomething } from '../execution/echo.js';
 import { standingFillRole } from '../execution/refill.js';
 import { toggleEffectLines } from '../execution/toggle.js';
+import { derivesFromParams } from '../execution/report.js';
 import { observedNothing } from '../execution/observe.js';
 import { segmentGate } from '../execution/gates.js';
 /**
@@ -2899,6 +2900,30 @@ function satisfiedGuard(step: SpecStep, ctx: Ctx): string[] {
   return out;
 }
 
+/**
+ * After the step's last segment: every report-template value built from the
+ * caller's own `{{vN}}`, filled for this run and published unless a live read
+ * of the step already published it — the daemon's synthesizeReport over the
+ * same (last) segment, through the one shared rule (templateValue,
+ * src/execution/report.ts): a recorded literal never publishes, nor does a
+ * value that fills to nothing or still holds a `{{` marker — nor one naming a
+ * slot the segment does not bind, which fills to a marker on every run. fwgh4's artifact
+ * refused 03-open over `{{02-create.post_title_element_text}}`, a `"{{v2}}"`
+ * value only the daemon published.
+ */
+function reportTemplateLines(step: SpecStep, ctx: Ctx): string[] {
+  const last = step.segments[step.segments.length - 1];
+  const entries = Object.entries(last?.report?.values ?? {}).filter(([label, template]) => label && derivesFromParams(template) && markerBound(template, last));
+  if (!entries.length) return [];
+  const out = ["// The step's report values built from this run's own parameters, as the daemon reports them (synthesizeReport)."];
+  for (const [label, template] of entries) {
+    noteSlots(template, ctx);
+    const key = q(`${step.id}.${label}`);
+    out.push(`{ const value = templateValue(${q(template)}, p); if (value !== null && outputs[${key}] === undefined) outputs[${key}] = value; }`);
+  }
+  return out;
+}
+
 /** The segment's identity gate: one poll per bound marker, a comment per unbound one. */
 function identityChecks(segment: SpecSegment, ctx: Ctx): string[] {
   const out: string[] = [];
@@ -3467,6 +3492,8 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
         if (i) lines.push('');
         lines.push(...emitSegment(segment, ctx));
       }
+      const templated = reportTemplateLines(step, ctx);
+      if (templated.length) lines.push('', ...templated);
       const published = urlOutputLines(step.id, urlRefs.get(step.id));
       if (published.length) lines.push('', ...published);
       // The one piece of state a body keeps between its steps: a recorded

@@ -57,4 +57,36 @@ d('counter-numbered ids', () => {
     const exprs = described.chain!.map((c: any) => candidateExpr(c));
     expect(exprs.some((e) => e.includes('#issue-4521'))).toBe(true);
   }, 30_000);
+
+  // fwgh4: ember numbers every component per render; `#ember101` was a "New post" link.
+  it('never records a glued ember counter as an id or a css root, and keeps the link by its name', async () => {
+    const page = await session.getPage();
+    await page.setContent(`<div id="ember37"><div><a id="ember101" href="/ghost/#/editor/post">New post</a></div></div>`);
+    const snap = await snapshot(page, { full: true } as any);
+    const ref = /link "New post" \[(@e\d+)\]/.exec(snap)![1];
+    const described = await describeTarget(page, ref);
+    const exprs = described.chain!.map((c: any) => candidateExpr(c));
+    expect(exprs.join('\n')).not.toMatch(/ember\d/);
+    expect(described.chain![0]).toMatchObject({ kind: 'role', role: 'link', name: 'New post' });
+  }, 30_000);
+
+  // fwgh4 s_17f69b: the row anchor carried "a few seconds ago"; minutes later it must still resolve.
+  it('resolves a scoped anchor recorded with a relative time on a row that has aged, in both runners', async () => {
+    const { makeLocator } = await import('../src/daemon/recorder.js');
+    const { candidateSource } = await import('../src/spec/locators.js');
+    const { escapeRe } = await import('../src/shared/text.js');
+    const page = await session.getPage();
+    await page.setContent(`<ul>
+      <li class="gh-list-row"><h3>Other Post</h3> <p>By Bench Admin - 2 minutes ago</p> <span>Draft</span></li>
+      <li class="gh-list-row"><h3>Bench Post</h3>
+        <p>By  Bench Admin -
+        2 minutes ago</p> <span>Draft</span></li></ul>`);
+    const recorded = { kind: 'scoped' as const, container: 'li.gh-list-row', hasText: '{{v2}} By Bench Admin - a few seconds ago Draft', selector: 'h3' };
+    const daemon = makeLocator(page, { ...recorded, hasText: recorded.hasText.replace('{{v2}}', 'Bench Post') });
+    expect(await daemon.count()).toBe(1);
+    expect(await daemon.textContent()).toBe('Bench Post');
+    const artifact = new Function('page', 'p', 'escapeRe', `return ${candidateSource(recorded)}`)(page, { v2: 'Bench Post' }, escapeRe);
+    expect(await artifact.count()).toBe(1);
+    expect(await artifact.textContent()).toBe('Bench Post');
+  }, 30_000);
 });

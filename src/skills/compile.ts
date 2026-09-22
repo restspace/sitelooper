@@ -324,6 +324,8 @@ export function compileSkills(input: CompileInput): Skill[] {
    *  (substituteUrlId) and bound by origin, never matched in prose, a
    *  selector or a page line, where a lone digit stands everywhere. */
   const textSlots = new Map([...slots].filter(([, v]) => v.length >= 2));
+  /** The url-origin slots written ONLY by position (not in textSlots). */
+  const positionalUrlSlots = urlIdSlots.filter((u) => !textSlots.has(u.name));
   /** The caller's values for THIS run — a runid, a record it vouched for. */
   const runValues = Object.values(input.knownValues ?? {})
     .map((v) => String(v ?? '').trim())
@@ -435,9 +437,15 @@ export function compileSkills(input: CompileInput): Skill[] {
       // the RECORDING run's action id. A minted value is rewritten at the
       // url position it was minted from, and nowhere else.
       if (typeof args.url === 'string') args.url = substituteUrlParts(args.url, minted.filter((m) => m.keptIndex < g));
+      // A position-only slot inside an href a selector matches on is at a url
+      // position too (substituteHrefIds, snipeit fwsi3 `a[href$="/hardware/4/checkout"]`).
+      if (typeof args.target === 'string' && positionalUrlSlots.length) args.target = substituteHrefIds(args.target, positionalUrlSlots);
       const locators: Record<string, LocatorCandidate[]> = {};
       for (const [key, loc] of Object.entries(step.locators)) {
-        const filled = (loc.chain ?? []).map((c) => substituteDeep(substituteDeep(c, textSlots), mintedBefore) as LocatorCandidate);
+        const filled = (loc.chain ?? []).map((c) => {
+          const out = substituteDeep(substituteDeep(c, textSlots), mintedBefore) as LocatorCandidate;
+          return out.kind === 'css' && positionalUrlSlots.length ? { ...out, selector: substituteHrefIds(out.selector, positionalUrlSlots) } : out;
+        });
         // An identity anchor still carrying THIS RUN's known value after
         // slotting (the recorded runid, because the value was typed in an
         // earlier instruction and so is not a slot here) can never match
@@ -1295,6 +1303,27 @@ export function substituteUrlId(url: string, slots: UrlPositionSlot[]): string {
     if (at) out = replaceAtUrlPart(out, at, s.value, `{{${s.name}}}`);
   }
   return out;
+}
+
+/**
+ * Position-only url slots written into the href values a selector matches on
+ * (`a[href$="/hardware/4/checkout"]`, `[href="…"]`): each href value is read as
+ * a url path (resolved against a placeholder origin when relative) and
+ * rewritten by substituteUrlId, so the id is replaced only at the path
+ * position the ledger banked it at — never the "4" of `nth-of-type(4)`
+ * elsewhere in the selector. snipeit fwsi3's 04-create clicked
+ * `a[href$="/hardware/4/checkout"]` while its goto was slotted
+ * `/hardware/{{v5}}`, so n2 looked for the recording run's asset link.
+ */
+export function substituteHrefIds(selector: string, slots: UrlPositionSlot[]): string {
+  const BASE = 'http://href.invalid';
+  return selector.replace(/(href[\^$*~|]?=)(["'])([^"']*)\2/g, (whole, op: string, quote: string, value: string) => {
+    const absolute = value.includes('://');
+    if (!absolute && !value.startsWith('/')) return whole;
+    const written = substituteUrlId(absolute ? value : `${BASE}${value}`, slots);
+    const back = absolute ? written : written.slice(BASE.length);
+    return `${op}${quote}${back}${quote}`;
+  });
 }
 
 /**

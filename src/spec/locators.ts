@@ -18,7 +18,7 @@
  */
 import type { LocatorCandidate } from '../daemon/recorder.js';
 import { snapshotRefCandidate, structuralCandidate } from '../execution/resolve.js';
-import { VOLATILE_TOKEN_SHAPE, WILDCARD, fieldByName, volatileMatcher } from '../shared/text.js';
+import { VOLATILE_TOKEN_SHAPE, WILDCARD, fieldByName, hasTextMatcher, volatileMatcher } from '../shared/text.js';
 
 export interface SourceOptions {
   /** expression for the page, default 'page' */
@@ -88,13 +88,13 @@ const SENTINEL_G = /\u0001(\d+)\u0001/g;
  * match in the spec where replay would have wildcarded it. Stricter, never
  * looser - a spec that quietly matched another day's row would be a lie.
  */
-function matcherPieces(text: string): Piece[] | null {
+function matcherPieces(text: string, build: (probe: string) => string | RegExp = volatileMatcher): Piece[] | null {
   const names: string[] = [];
   const probe = text.replace(SLOT_G, (_m, name: string) => {
     names.push(name);
     return SENTINEL(names.length - 1);
   });
-  const matcher = volatileMatcher(probe);
+  const matcher = build(probe);
   if (typeof matcher === 'string') return null;
   const pieces: Piece[] = [];
   let last = 0;
@@ -120,13 +120,31 @@ function slotExpr(name: string, o: SourceOptions): string | null {
 export function matcherSource(text: string, o: SourceOptions = {}): string {
   const pieces = matcherPieces(text);
   if (!pieces) return stringSource(text, o);
+  return piecesSource(pieces, o, '');
+}
+
+/**
+ * Source for a scoped candidate's `hasText`: what hasTextMatcher (text.ts)
+ * builds, judged as matcherSource judges a name — on the recorded text with
+ * its slots unbound, so a slot's own value is matched exactly (stricter, never
+ * looser). Text with no volatile token stays the plain string Playwright
+ * substring-matches. fwgh4 s_17f69b's "… - a few seconds ago Draft".
+ */
+export function hasTextSource(text: string, o: SourceOptions = {}): string {
+  const pieces = matcherPieces(text, hasTextMatcher);
+  if (!pieces) return stringSource(text, o);
+  return piecesSource(pieces, o, 'i');
+}
+
+function piecesSource(pieces: Piece[], o: SourceOptions, flags: string): string {
+  const flagArg = flags ? `, ${quote(flags)}` : '';
   if (!pieces.some((p) => 'slot' in p)) {
     const source = pieces.map((p) => (p as { lit: string }).lit).join('');
     // A literal keeps the generated file readable, and RegExp.source is
     // already literal-safe - it escapes the slashes that would end one, which
     // is why nothing is escaped again here. Only a line terminator has no
     // literal form, so that case goes through new RegExp.
-    return /[\n\r\u2028\u2029]/.test(source) ? `new RegExp(${quote(source)})` : `/${source}/`;
+    return /[\n\r\u2028\u2029]/.test(source) ? `new RegExp(${quote(source)}${flagArg})` : `/${source}/${flags}`;
   }
   // escapeRe is inlined into the generated file: a bound parameter is DATA, so
   // its own regex metacharacters must not become pattern - which is exactly
@@ -141,7 +159,7 @@ export function matcherSource(text: string, o: SourceOptions = {}): string {
       return expr === null ? (o.slot ?? defaultSlot)(p.slot) : '${escapeRe(' + expr + ')}';
     })
     .join('');
-  return `new RegExp(\`${body}\`)`;
+  return `new RegExp(\`${body}\`${flagArg})`;
 }
 
 /** Regex SOURCE for one piece of recorded text: literals escaped, slots spliced in as
@@ -237,9 +255,10 @@ export function candidateSource(c: LocatorCandidate, o: SourceOptions = {}): str
       break;
     }
     case 'scoped':
-      // hasText stays a plain substring match on the container, exactly as
-      // makeLocator passes it: the recorded value names the RECORD.
-      src = `${page}.locator(${stringSource(c.container, o)}, { hasText: ${stringSource(c.hasText, o)} })`;
+      // hasText as makeLocator passes it (hasTextMatcher): the recorded value
+      // names the RECORD, and its relative time or date is wildcarded (fwgh4
+      // s_17f69b). Text with no volatile token stays the plain string.
+      src = `${page}.locator(${stringSource(c.container, o)}, { hasText: ${hasTextSource(c.hasText, o)} })`;
       if (c.selector) src += `.locator(${stringSource(c.selector, o)})`;
       break;
     case 'point':

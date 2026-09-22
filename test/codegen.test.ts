@@ -229,4 +229,19 @@ describe('isStableId', () => {
     expect(isStableId('section-10')).toBe(true);
     expect(isStableId('h2-title')).toBe(true);
   });
+
+  it('demotes a counter glued to letters from two digits, with the same url exemption (fwgh4)', () => {
+    expect(isStableId('ember101')).toBe(false);
+    expect(isStableId('ember37')).toBe(false);
+    expect(isStableId('ember-power-select-options-ember115')).toBe(false);
+    expect(isStableId('ember101', 'http://h/ghost/#/editor/post/101')).toBe(true);
+    // separated keeps its 3-digit rule; one digit is never a counter
+    expect(isStableId('col-12')).toBe(true);
+    expect(isStableId('h2')).toBe(true);
+    expect(isStableId('step-2')).toBe(true);
+    // the framework families already caught by their own rules
+    expect(isStableId('mui-123')).toBe(false);
+    expect(isStableId('radix-:r1:')).toBe(false);
+    expect(isStableId('headlessui-menu-button-5')).toBe(false);
+  });
 });

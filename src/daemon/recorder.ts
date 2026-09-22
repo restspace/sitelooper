@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { ElementHandle, Frame, Locator, Page } from 'playwright-core';
 import { ensureSessionDir } from '../shared/paths.js';
-import { escapeRe, fieldByName, roleName, volatileMatcher } from '../shared/text.js';
+import { escapeRe, fieldByName, hasTextMatcher, roleName, volatileMatcher } from '../shared/text.js';
 import { pointLocator } from '../execution/point.js';
 import { dispatchesFirstMatch } from '../execution/lifecycle.js';
 import { rootFor, type FramePath, type PageEffect, type Root } from '../execution/context.js';
@@ -113,7 +113,9 @@ export function makeLocator(page: Root, c: LocatorCandidate): Locator {
       break;
     }
     case 'scoped': {
-      const within = page.locator(c.container, { hasText: c.hasText });
+      // The record's text with its relative time or date wildcarded — see
+      // hasTextMatcher (fwgh4 s_17f69b); the artifact calls the same function.
+      const within = page.locator(c.container, { hasText: hasTextMatcher(c.hasText) });
       loc = c.selector ? within.locator(c.selector) : within;
       break;
     }
@@ -1516,8 +1518,16 @@ function cand(spec: LocatorCandidate): Candidate {
  * the url, or a link inside the element — and a render counter is shown only
  * in ids. Page-side copy in describeInPage; test/shape-gate.test.ts holds the
  * two literals equal.
+ *
+ * Glued to letters, 2+ digits already count: ember names every component
+ * `ember<N>` per render (`ember101`, `ember-power-select-options-ember115`).
+ * fwgh4 n2 clicked `#ember101` — the recording's "New post" link, another
+ * post's row by then — and 04/05-open's `#ember114`/`#ember123` missed on
+ * every replay. `col-12` and `h2` stay ids: the separated form keeps its
+ * 3-digit rule and one digit is never a counter. Groups: prefix and digits
+ * are 1/2 (separated) or 3/4 (glued).
  */
-const COUNTER_ID = /^(.+[-_])(\d{3,})$/;
+const COUNTER_ID = /^(?:(.+[-_])(\d{3,})|(.*[A-Za-z])(\d{2,}))$/;
 
 /** Whether `digits` stands whole in `url`, between non-digits. */
 function digitsInUrl(url: string | undefined, digits: string): boolean {
@@ -1541,7 +1551,7 @@ export function isStableId(id: string, url?: string): boolean {
   // `[id="_r2u_"]` as primaries and both were dead chains at replay time.
   if (/^_r[0-9a-z]{1,4}_$/i.test(id)) return false;
   const counter = COUNTER_ID.exec(id);
-  if (counter && !digitsInUrl(url, counter[2])) return false;
+  if (counter && !digitsInUrl(url, counter[2] ?? counter[4])) return false;
   return !/^(radix|headlessui|mui|react-aria)[-:]/i.test(id);
 }
 
@@ -1564,14 +1574,17 @@ function describeInPage(node: Node): ElementInfo {
   // COUNTER_ID, page-side (shape-gate holds the literal equal), with more
   // evidence than node-side has: the number names the record when the url or
   // a link on or inside the id's element shows it too. Returns the id's prefix
-  // when the number is a render counter, else null.
+  // when the number is a render counter, else null — '' when the prefix names
+  // no view kind (bare `ember` is every component: nothing to root at).
   const counterPrefix = (node: Element): string | null => {
-    const m = /^(.+[-_])(\d{3,})$/.exec(node.id);
+    const m = /^(?:(.+[-_])(\d{3,})|(.*[A-Za-z])(\d{2,}))$/.exec(node.id);
     if (!m) return null;
-    const shows = (s: string | null) => Boolean(s) && s!.split(/[^0-9]+/).includes(m[2]);
+    const digits = m[2] ?? m[4];
+    const shows = (s: string | null) => Boolean(s) && s!.split(/[^0-9]+/).includes(digits);
     if (shows(location.href) || shows(node.getAttribute('href'))) return null;
     for (const a of Array.from(node.querySelectorAll('[href]')).slice(0, 50)) if (shows(a.getAttribute('href'))) return null;
-    return m[1];
+    const prefix = m[1] ?? m[3];
+    return /[-_]/.test(prefix) ? prefix : '';
   };
   const stableNode = (node: Element): boolean => !minted(node.id) && counterPrefix(node) === null;
   const clean = (s: string | null | undefined) => {
