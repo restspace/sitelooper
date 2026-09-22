@@ -3,7 +3,7 @@
 This is a GOAL, not a list of UI steps. Work out how to achieve it yourself.
 
 The app is Vikunja at {{APP_URL}}.
-Sign in with username `{{APP_EMAIL}}` and password `{{APP_PASSWORD}}`.
+Sign in with username `{{APP_EMAIL}}` and password `{{env:APP_PASSWORD}}`.
 
 ## Objectives
 
