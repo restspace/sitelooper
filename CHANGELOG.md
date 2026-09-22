@@ -2,7 +2,7 @@
 
 ## 0.4.0 — 2026-09-22
 
-### Since 0.3.0: benchmark rounds 33–44
+### Since 0.3.0: benchmark rounds 33–46
 - Five new third-party benchmark targets: OpenProject (from round 33), and Gitea, Vikunja,
   EspoCRM, Snipe-IT and Ghost (from round 36). All ten targets were green on their latest
   sweep as of round 44 (`bench/SWEEPS.md`): every run verified, every replay step
@@ -22,9 +22,24 @@
     nothing before the one that worked, a link click abandoned for a goto.
   - A list read whose elements are each a reported value is split into one read per element.
   - A read-back found inside a longer text publishes only the value, not the whole text.
-- Cloud-verified at 4fa1125 (round 43, the last engine change before this release): 2119 unit
-  tests, 2291 with the browser suites, and 110 execution-parity tests passing; the corpus
-  check of 256 published runs changed status for none.
+  - A page opened by a script is not credited as a popup; report keys that are page text
+    become positional values; a stored `[role=x]` scope resolves as it did live; an
+    image-only link reads as its accessible name; a nameless control gets a candidate from
+    its own stable attributes.
+
+### Credentials and CLI
+- `{{env:NAME}}` sign-in steps now replay without the model: markers resolve at dispatch in
+  the daemon, replay and the compiled script (which reads `process.env` at run time), and a
+  missing variable is refused by name.
+- New `{{totp:NAME}}` marker: `NAME` holds a base32 TOTP seed (or an `otpauth://` URI) and the
+  current RFC 6238 code is typed at dispatch, in every runner; codes are never stored and
+  are scrubbed from results.
+- `sitelooper stop --all` also stops the default session; a running daemon whose skill store
+  differs from the one requested is refused rather than silently reused.
+
+- Cloud-verified at 2623dbf (round 46, the last engine change before this release): 2156 unit
+  tests, 2332 with the browser suites, and 121 execution-parity tests passing; the corpus
+  check changed status for no published run.
 
 ### Default provider
 - Setting only `OPENROUTER_API_KEY` selects the benchmarked pairing:
