@@ -1,0 +1,179 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwec7-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwec7-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwec7-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwec7-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwec7-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwec7.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwec7-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwec7.spec.ts",
+      "file": "fwec7.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwec7",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 45318,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] step 02-create s_3876fd/1: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] step 02-create s_3876fd/2: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] step 02-create s_3876fd/3: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] step 02-create s_3876fd/4: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_3876fd/6: 2 field(s) this procedure filled were empty again before this click (the page rebuilt its form, or dropped the value when the field lost focus, after the fills were checked) — refilled once\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_3876fd/13: 2 field(s) this procedure filled were empty again before this press (the page rebuilt its form, or dropped the value when the field lost focus, after the fills were checked); 1 of them kept only a value typed key by key — refilled once\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-report s_b67d34/4: read 'stream_post_text' returned a value the skill itself set/selected ('Bench stream post for run fwec7-spec') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-report\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-open\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:8097/ and sign in with username admin and password bench-admin-pass. Then navigate to the Opportunities list and report the names of all opportunities whose name starts with 'Seed:', exactly as shown on screen (list them all, verbatim).",
+                      "duration": 5184
+                    },
+                    {
+                      "title": "02-create: In EspoCRM, create a new Opportunity with these exact values: Name = '{{runid}} Bench Opportunity'; Account = the account named exactly 'Bench Account' (it is a link field — you must actually select the record from the suggestions or select dialog, not just type it; other accounts have similar names, so pick the exact one); Stage = 'Negotiation'; Amount = 12500 (default currency); Close Date = 2026-12-31; Assigned User = the user named exactly 'Bench Assignee' (also a link field — select the actual record, other users have similar names); Description = text that includes the runid '{{runid}}' (e.g. 'Bench opportunity for run {{runid}}'). Save the record. Then report the values shown on the opportunity's own page for: name, account, stage, amount, close date, assigned user, and description, plus the record ID visible in the page address (#Opportunity/view/<id>).",
+                      "duration": 34339
+                    },
+                    {
+                      "title": "03-report: On the EspoCRM record page for the opportunity '{{runid}} Bench Opportunity' (at #Opportunity/view/{{02-create.url.h2}}), post a message to its Stream panel: type the text 'Bench stream post for run {{runid}}' into the stream post box and submit it so it appears as a post in the opportunity's Stream. Then report the text of the post as it appears in the Stream panel on that page, and confirm it is visible on the opportunity's own page.",
+                      "duration": 1689
+                    },
+                    {
+                      "title": "04-open: Verification only, no changes: Open the EspoCRM opportunity record page at {{02-create.url}} and report exactly what the page shows for: Name, Account, Stage, Amount, Close Date, Assigned User, Description, and the record ID in the address bar. Also confirm whether the Stream panel contains a post whose text includes '{{runid}}' and quote it. Then go to the Opportunities list view and report the names of all opportunities whose name starts with 'Seed:' exactly as shown, and confirm the opportunity '{{runid}} Bench Opportunity' appears in the list.",
+                      "duration": 2930
+                    }
+                  ],
+                  "startTime": "2026-09-22T12:11:25.167Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2ee47dc98ce9cdc6a251-9427b7601c51dbe163fe",
+          "file": "fwec7.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-22T12:11:22.893Z",
+    "duration": 47809.527,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

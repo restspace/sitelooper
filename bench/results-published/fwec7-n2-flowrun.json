@@ -1,0 +1,139 @@
+{
+  "flow": "fwec7",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Signed in to EspoCRM at http://127.0.0.1:8097/ with admin credentials and opened the Opportunities list (/#Opportunity). The list shows 3 records total (pager \"1–3 / 3\") and all three names start with \"Seed:\": \"Seed: training package\", \"Seed: pilot expansion\", \"Seed: annual support renewal\" (exact live-DOM text).",
+      "values": {
+        "seed_opportunity_1": "Seed: training package",
+        "seed_opportunity_2": "Seed: pilot expansion",
+        "seed_opportunity_3": "Seed: annual support renewal",
+        "pager": "1–3 / 3",
+        "total_records": "3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Created the Opportunity in EspoCRM via the UI (Create on /#Opportunity), picking both link fields from the app's select dialogs: Account = \"Bench Account\" (linked id 6ab26e8f377544a8a, link href #Account/view/6ab26e8f377544a8a) and Assigned User = \"Bench Assignee\" (linked id 6ab26e908df61ffae); Stage selected from the stage dropdown as \"Negotiation\". Saved and landed on the record page http://127.0.0.1:8097/#Opportunity/view/6ab26fe9db784c70d, whose detail panel reads: name \"fwec7-n2 Bench Opportunity\", Account \"Bench Account\", Stage \"Negotiation\", Amount \"$12,500.00\", Close Date \"Dec 31\", Assigned User \"Bench Assignee\", Description \"Bench opportunity for run fwec7-n2\". Re-opening the Edit form confirmed the persisted values (amount \"12,500.00\" USD, closeDate \"2026-12-31\", description with runid fwec7-n2). Only caveat: the detail view renders the close date as \"Dec 31\" (no year shown), so the full value 2026-12-31 was verified in the persisted edit-form field rather than on the read view.",
+      "values": {
+        "name": "fwec7-n2 Bench Opportunity",
+        "account": "Bench Account",
+        "stage": "Negotiation",
+        "amount_detail_view": "$12,500.00",
+        "close_date_detail_view": "Dec 31",
+        "assigned_user": "Bench Assignee",
+        "description": "Bench opportunity for run fwec7-n2",
+        "close_date_full": "Close Date\nDec 31",
+        "account_link_href": "#Account/view/6ab26e8f377544a8a",
+        "record_url": "http://127.0.0.1:8097/#Opportunity/view/6ab26fe9db784c70d",
+        "account_id": "6ab26e8f377544a8a",
+        "amount_persisted_field": "12,500.00",
+        "currency": "USD",
+        "close_date_persisted_field": "2026-12-31",
+        "assigned_user_id": "6ab26e908df61ffae",
+        "ref": "fwec7-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "39/39",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_3876fd: step 1: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here",
+        "s_3876fd: step 2: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here",
+        "s_3876fd: step 3: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here",
+        "s_3876fd: step 4: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here",
+        "s_3876fd: step 6: 2 field(s) this procedure filled were empty again before this click (the page rebuilt its form, or dropped the value when the field lost focus, after the fills were checked) — refilled once",
+        "s_3876fd: step 13: 2 field(s) this procedure filled were empty again before this press (the page rebuilt its form, or dropped the value when the field lost focus, after the fills were checked); 1 of them kept only a value typed key by key — refilled once"
+      ]
+    },
+    {
+      "id": "03-report",
+      "status": "success",
+      "summary": "Replayed stored procedure s_b67d34; observed record_id=6ab26fe9db784c70d, stream_post_text=Bench stream post for run fwec7-n2, stream_panel_text=Stream\nAdmin\n\nBench stream post for run fwec7-n2\n\n12:07\nAdmin created this opportunity assigned to Bench Assignee\nNegotiation\n12:07, screenshot=/root/.sitelooper/sessions/fwec7-n2/screenshots/shot-1790078871809.jpg, ref=fwec7-n2, page_url=http://127.0.0.1:8097/#Opportunity/view/6ab26fe9db784c70d, stream_post_time=12:09.",
+      "values": {
+        "record_id": "6ab26fe9db784c70d",
+        "stream_post_text": "Bench stream post for run fwec7-n2",
+        "stream_panel_text": "Stream\nAdmin\n\nBench stream post for run fwec7-n2\n\n12:07\nAdmin created this opportunity assigned to Bench Assignee\nNegotiation\n12:07",
+        "screenshot": "/root/.sitelooper/sessions/fwec7-n2/screenshots/shot-1790078871809.jpg",
+        "ref": "fwec7-n2",
+        "page_url": "http://127.0.0.1:8097/#Opportunity/view/6ab26fe9db784c70d",
+        "stream_post_time": "12:09"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_b67d34: step 4: read 'stream_post_text' returned a value the skill itself set/selected ('Bench stream post for run fwec7-n2') — confirms the control, not persistence; dropped from the report's confident values"
+      ]
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_ea1ceb; observed record_url=http://127.0.0.1:8097/#Opportunity/view/6ab26fe9db784c70d, description=Bench opportunity for run fwec7-n2, stream_post_text=Bench stream post for run fwec7-n2, screenshots=/root/.sitelooper/sessions/fwec7-n2/screenshots/shot-1790078889992.jpg (record page), /root/.sitelooper/sessions/fwec7-n2/screenshots/shot-1790078895852.jpg (list page), opportunities_list_names_1=fwec7-n2 Bench Opportunity, opportunities_list_url=http://127.0.0.1:8097/#Opportunity, name=fwec7-n2 Bench Opportunity, account=Bench Account, stage=Negotiation, amount=$12,500.00, assigned_user=Bench Assignee, stream_post_author=Admin, opportunities_list_names_2=Seed: training package, opportunities_list_names_3=Seed: pilot expansion, opportunities_list_names_4=Seed: annual support renewal, seed_opportunities_1=Seed: training package, seed_opportunities_2=Seed: pilot expansion, seed_opportunities_3=Seed: annual support renewal, stream_post_time=12:09, opportunities_list_total=1–4 / 4, ref=fwec7-n2.",
+      "values": {
+        "record_url": "http://127.0.0.1:8097/#Opportunity/view/6ab26fe9db784c70d",
+        "description": "Bench opportunity for run fwec7-n2",
+        "stream_post_text": "Bench stream post for run fwec7-n2",
+        "screenshots": "/root/.sitelooper/sessions/fwec7-n2/screenshots/shot-1790078889992.jpg (record page), /root/.sitelooper/sessions/fwec7-n2/screenshots/shot-1790078895852.jpg (list page)",
+        "opportunities_list_names_1": "fwec7-n2 Bench Opportunity",
+        "opportunities_list_url": "http://127.0.0.1:8097/#Opportunity",
+        "name": "fwec7-n2 Bench Opportunity",
+        "account": "Bench Account",
+        "stage": "Negotiation",
+        "amount": "$12,500.00",
+        "assigned_user": "Bench Assignee",
+        "stream_post_author": "Admin",
+        "opportunities_list_names_2": "Seed: training package",
+        "opportunities_list_names_3": "Seed: pilot expansion",
+        "opportunities_list_names_4": "Seed: annual support renewal",
+        "seed_opportunities_1": "Seed: training package",
+        "seed_opportunities_2": "Seed: pilot expansion",
+        "seed_opportunities_3": "Seed: annual support renewal",
+        "stream_post_time": "12:09",
+        "opportunities_list_total": "1–4 / 4",
+        "ref": "fwec7-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "18/18",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_ffce46: step 1: url segment(s) differ from recorded (6ab26f68ad90db6c3→6ab26fe9db784c70d) — treated as volatile"
+      ],
+      "unreported": [
+        "record_id"
+      ]
+    }
+  ],
+  "passed": 4,
+  "total": 4,
+  "repinned": 0,
+  "drift": 0,
+  "wallMs": 47706,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

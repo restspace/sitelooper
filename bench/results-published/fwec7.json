@@ -1,0 +1,492 @@
+{
+  "name": "fwec7",
+  "origin": "http://127.0.0.1:8097",
+  "startUrl": "http://127.0.0.1:8097/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-open",
+      "instruction": "Open http://127.0.0.1:8097/ and sign in with username admin and password bench-admin-pass. Then navigate to the Opportunities list and report the names of all opportunities whose name starts with 'Seed:', exactly as shown on screen (list them all, verbatim).",
+      "skill": "s_1a0ec0",
+      "params": {
+        "v1": "http://127.0.0.1:8097/",
+        "v2": "admin",
+        "v3": "bench-admin-pass"
+      },
+      "outputs": [
+        "total_records",
+        "pager",
+        "seed_opportunity_1",
+        "seed_opportunity_2",
+        "seed_opportunity_3"
+      ],
+      "recorded": {
+        "total_records": "3",
+        "pager": "1–3 / 3",
+        "seed_opportunity_1": "Seed: training package",
+        "seed_opportunity_2": "Seed: pilot expansion",
+        "seed_opportunity_3": "Seed: annual support renewal",
+        "seed_opportunity_count": "3",
+        "url": "http://127.0.0.1:8097/#Opportunity"
+      },
+      "route": "http://127.0.0.1:8097/#Opportunity",
+      "outputEvidence": {
+        "total_records": {
+          "same": 1,
+          "differed": 0
+        },
+        "pager": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_opportunity_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_opportunity_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_opportunity_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_opportunity_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "In EspoCRM, create a new Opportunity with these exact values: Name = '{{runid}} Bench Opportunity'; Account = the account named exactly 'Bench Account' (it is a link field — you must actually select the record from the suggestions or select dialog, not just type it; other accounts have similar names, so pick the exact one); Stage = 'Negotiation'; Amount = 12500 (default currency); Close Date = 2026-12-31; Assigned User = the user named exactly 'Bench Assignee' (also a link field — select the actual record, other users have similar names); Description = text that includes the runid '{{runid}}' (e.g. 'Bench opportunity for run {{runid}}'). Save the record. Then report the values shown on the opportunity's own page for: name, account, stage, amount, close date, assigned user, and description, plus the record ID visible in the page address (#Opportunity/view/<id>).",
+      "skill": "s_26fbab",
+      "params": {
+        "v2": "{{runid}} Bench Opportunity",
+        "v3": "Bench Account",
+        "v4": "12500",
+        "v5": "2026-12-31",
+        "v6": "Bench Assignee",
+        "v1": "{{runid}}",
+        "v7": "Bench opportunity for run {{runid}}"
+      },
+      "outputs": [
+        "record_url",
+        "name",
+        "account",
+        "account_id",
+        "account_link_href",
+        "stage",
+        "amount_detail_view",
+        "amount_persisted_field",
+        "currency",
+        "close_date_detail_view",
+        "close_date_persisted_field",
+        "assigned_user",
+        "assigned_user_id",
+        "description",
+        "close_date_full",
+        "ref"
+      ],
+      "recorded": {
+        "record_id": "6ab26f68ad90db6c3",
+        "record_url": "http://127.0.0.1:8097/#Opportunity/view/6ab26f68ad90db6c3",
+        "name": "fwec7-n1 Bench Opportunity",
+        "account": "Bench Account",
+        "account_id": "6ab26e8f377544a8a",
+        "account_link_href": "#Account/view/6ab26e8f377544a8a",
+        "stage": "Negotiation",
+        "amount_detail_view": "$12,500.00",
+        "amount_persisted_field": "12,500.00",
+        "currency": "USD",
+        "close_date_detail_view": "Dec 31",
+        "close_date_persisted_field": "2026-12-31",
+        "assigned_user": "Bench Assignee",
+        "assigned_user_id": "6ab26e908df61ffae",
+        "description": "Bench opportunity for run fwec7-n1",
+        "close_date_full": "Close Date\nDec 31",
+        "ref": "fwec7-n1",
+        "url": "http://127.0.0.1:8097/#Opportunity/view/6ab26f68ad90db6c3",
+        "url.h2": "6ab26f68ad90db6c3"
+      },
+      "route": "http://127.0.0.1:8097/#Opportunity/view/:id",
+      "outputEvidence": {
+        "record_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "record_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "name": {
+          "same": 0,
+          "differed": 1
+        },
+        "account": {
+          "same": 1,
+          "differed": 0
+        },
+        "account_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "account_link_href": {
+          "same": 1,
+          "differed": 0
+        },
+        "stage": {
+          "same": 1,
+          "differed": 0
+        },
+        "amount_detail_view": {
+          "same": 1,
+          "differed": 0
+        },
+        "amount_persisted_field": {
+          "same": 1,
+          "differed": 0
+        },
+        "currency": {
+          "same": 1,
+          "differed": 0
+        },
+        "close_date_detail_view": {
+          "same": 1,
+          "differed": 0
+        },
+        "close_date_persisted_field": {
+          "same": 1,
+          "differed": 0
+        },
+        "assigned_user": {
+          "same": 1,
+          "differed": 0
+        },
+        "assigned_user_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "description": {
+          "same": 0,
+          "differed": 1
+        },
+        "close_date_full": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.h2": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "03-report",
+      "instruction": "On the EspoCRM record page for the opportunity '{{runid}} Bench Opportunity' (at #Opportunity/view/{{02-create.url.h2}}), post a message to its Stream panel: type the text 'Bench stream post for run {{runid}}' into the stream post box and submit it so it appears as a post in the opportunity's Stream. Then report the text of the post as it appears in the Stream panel on that page, and confirm it is visible on the opportunity's own page.",
+      "skill": "s_b67d34",
+      "params": {
+        "v1": "{{runid}} Bench Opportunity",
+        "v3": "{{02-create.url.h2}}",
+        "v4": "Bench stream post for run {{runid}}",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "record_id",
+        "stream_post_text",
+        "stream_post_time",
+        "stream_panel_text",
+        "screenshot",
+        "page_url",
+        "ref"
+      ],
+      "recorded": {
+        "record_id": "6ab26f68ad90db6c3",
+        "stream_post_text": "Bench stream post for run fwec7-n1",
+        "stream_post_author": "Admin",
+        "stream_post_time": "12:07",
+        "stream_panel_text": "Stream\nAdmin\n\nBench stream post for run fwec7-n1\n\n12:07\nAdmin created this opportunity assigned to Bench Assignee\nNegotiation\n12:07",
+        "screenshot": "/root/.sitelooper/sessions/fwec7-n1/screenshots/shot-1790078871809.jpg",
+        "page_url": "http://127.0.0.1:8097/#Opportunity/view/6ab26f68ad90db6c3",
+        "ref": "fwec7-n1"
+      },
+      "route": "http://127.0.0.1:8097/#Opportunity/view/:id",
+      "outputEvidence": {
+        "record_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "stream_post_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "stream_post_author": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "stream_post_time": {
+          "same": 0,
+          "differed": 1
+        },
+        "stream_panel_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "screenshot": {
+          "same": 0,
+          "differed": 1
+        },
+        "page_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "04-open",
+      "instruction": "Verification only, no changes: Open the EspoCRM opportunity record page at {{02-create.url}} and report exactly what the page shows for: Name, Account, Stage, Amount, Close Date, Assigned User, Description, and the record ID in the address bar. Also confirm whether the Stream panel contains a post whose text includes '{{runid}}' and quote it. Then go to the Opportunities list view and report the names of all opportunities whose name starts with 'Seed:' exactly as shown, and confirm the opportunity '{{runid}} Bench Opportunity' appears in the list.",
+      "skill": "s_ffce46",
+      "params": {
+        "v1": "{{02-create.url}}",
+        "v3": "{{runid}}",
+        "v4": "{{runid}} Bench Opportunity"
+      },
+      "outputs": [
+        "record_id",
+        "record_url",
+        "name",
+        "account",
+        "stage",
+        "amount",
+        "assigned_user",
+        "description",
+        "stream_post_text",
+        "stream_post_author",
+        "stream_post_time",
+        "opportunities_list_url",
+        "opportunities_list_total",
+        "screenshots",
+        "opportunities_list_names_1",
+        "opportunities_list_names_2",
+        "opportunities_list_names_3",
+        "opportunities_list_names_4",
+        "ref",
+        "seed_opportunities_1",
+        "seed_opportunities_2",
+        "seed_opportunities_3"
+      ],
+      "recorded": {
+        "record_id": "6ab26f68ad90db6c3",
+        "record_url": "http://127.0.0.1:8097/#Opportunity/view/6ab26f68ad90db6c3",
+        "name": "fwec7-n1 Bench Opportunity",
+        "account": "Bench Account",
+        "stage": "Negotiation",
+        "amount": "$12,500.00",
+        "probability": "80",
+        "close_date": "Dec 31",
+        "assigned_user": "Bench Assignee",
+        "description": "Bench opportunity for run fwec7-n1",
+        "created": "Today 12:07 Admin",
+        "stream_post_text": "Bench stream post for run fwec7-n1",
+        "stream_post_author": "Admin",
+        "stream_post_time": "12:07",
+        "other_stream_entry": "Admin created this opportunity assigned to Bench Assignee — Negotiation — 12:07",
+        "opportunities_list_url": "http://127.0.0.1:8097/#Opportunity",
+        "opportunities_list_total": "1–4 / 4",
+        "fwec7-n1_present_in_list": "yes, first row",
+        "screenshots": "/root/.sitelooper/sessions/fwec7-n1/screenshots/shot-1790078889992.jpg (record page), /root/.sitelooper/sessions/fwec7-n1/screenshots/shot-1790078895852.jpg (list page)",
+        "opportunities_list_names_1": "fwec7-n1 Bench Opportunity",
+        "opportunities_list_names_2": "Seed: training package",
+        "opportunities_list_names_3": "Seed: pilot expansion",
+        "opportunities_list_names_4": "Seed: annual support renewal",
+        "ref": "fwec7-n1",
+        "seed_opportunities_1": "Seed: training package",
+        "seed_opportunities_2": "Seed: pilot expansion",
+        "seed_opportunities_3": "Seed: annual support renewal"
+      },
+      "route": "http://127.0.0.1:8097/#Opportunity",
+      "urlVariance": [
+        "6ab26f68ad90db6c3",
+        "6ab26fe9db784c70d"
+      ],
+      "outputEvidence": {
+        "record_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "record_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "name": {
+          "same": 0,
+          "differed": 1
+        },
+        "account": {
+          "same": 1,
+          "differed": 0
+        },
+        "stage": {
+          "same": 1,
+          "differed": 0
+        },
+        "amount": {
+          "same": 1,
+          "differed": 0
+        },
+        "probability": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "close_date": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "assigned_user": {
+          "same": 1,
+          "differed": 0
+        },
+        "description": {
+          "same": 0,
+          "differed": 1
+        },
+        "created": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "stream_post_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "stream_post_author": {
+          "same": 1,
+          "differed": 0
+        },
+        "stream_post_time": {
+          "same": 0,
+          "differed": 1
+        },
+        "other_stream_entry": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "opportunities_list_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "opportunities_list_total": {
+          "same": 1,
+          "differed": 0
+        },
+        "fwec7-n1_present_in_list": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "screenshots": {
+          "same": 0,
+          "differed": 1
+        },
+        "opportunities_list_names_1": {
+          "same": 0,
+          "differed": 1
+        },
+        "opportunities_list_names_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "opportunities_list_names_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "opportunities_list_names_4": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "seed_opportunities_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_opportunities_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_opportunities_3": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwec7-n1",
+    "created": "2026-09-22T12:08:29.853Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-open",
+      "outputs": [
+        "seed_opportunity_count"
+      ]
+    },
+    {
+      "stepId": "02-create",
+      "outputs": [
+        "record_id"
+      ]
+    },
+    {
+      "stepId": "03-report",
+      "outputs": [
+        "stream_post_author"
+      ]
+    },
+    {
+      "stepId": "04-open",
+      "outputs": [
+        "probability",
+        "close_date",
+        "created",
+        "other_stream_entry",
+        "fwec7-n1_present_in_list"
+      ]
+    }
+  ]
+}
