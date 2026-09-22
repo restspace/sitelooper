@@ -1,0 +1,99 @@
+{
+ "id": "s_ae3797",
+ "origin": "http://127.0.0.1:8097",
+ "template": "Create a new Opportunity record in EspoCRM with these exact values: Name = '{{v2}}'; Account = 'Bench Account' (this is a link field — you must actually select the record 'Bench Account' from the suggestions dropdown or select dialog, not just type it; other accounts have similar names so pick the exact one named 'Bench Account'); Assigned User = 'Bench Assignee' (also a link field — actually select the user named exactly 'Bench Assignee' from the suggestions/select dialog); Stage = 'Negotiation'; Amount = {{v3}} (leave currency as the default); Close Date = {{v4}}; Description = '{{v5}}'. Save the record. Then verify by reopening the record and report: the name, the linked account shown, the assigned user shown, the stage, the amount, the close date, and the description text.",
+ "params": {
+  "v1": {
+   "example": "fwec5-n3",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "fwec5-n3 Bench Opportunity",
+   "usedIn": [],
+   "known": true
+  },
+  "v3": {
+   "example": "12500",
+   "usedIn": []
+  },
+  "v4": {
+   "example": "2026-12-31",
+   "usedIn": []
+  },
+  "v5": {
+   "example": "Bench opportunity created for run fwec5-n3",
+   "usedIn": [],
+   "known": true
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8097/#Opportunity"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e161"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#main > div:nth-of-type(1) > div > div:nth-of-type(2) > div > a"
+     },
+     {
+      "kind": "point",
+      "x": 1170,
+      "y": 65,
+      "w": 168.2,
+      "h": 36,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8097/#Opportunity/create",
+    "addedContains": [
+     "- heading \"Opportunitiescreate\"",
+     "- link \"Opportunities\"",
+     "- button \"Ctrl+Enter\"",
+     "- button \"Esc\"",
+     "- textbox \"Select\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_accafa",
+    "step": 1
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-22T10:23:19.576Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_dcd4ac",
+  "index": 0,
+  "of": 3
+ },
+ "provenance": {
+  "session": "fwec5-n3",
+  "instruction": "Create a new Opportunity record in EspoCRM with these exact values: Name = 'fwec5-n3 Bench Opportunity'; Account = 'Bench Account' (this is a link field — you must actually select the record 'Bench Account' from the suggestions dropdown or select dialog, not just type it; other accounts have similar names so pick the exact one named 'Bench Account'); Assigned User = 'Bench Assignee' (also a link field — actually select the user named exactly 'Bench Assignee' from the suggestions/select dialog); Stage = 'Negotiation'; Amount = 12500 (leave currency as the default); Close Date = 2026-12-31; Description = 'Bench opportunity created for run fwec5-n3'. Save the record. Then verify by reopening the record and report: the name, the linked account shown, the assigned user shown, the stage, the amount, the close date, and the description text.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-22T10:23:19.576Z"
+ },
+ "revision": 1
+}

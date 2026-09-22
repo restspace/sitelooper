@@ -1,0 +1,238 @@
+{
+  "flow": "fwec5",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_1ddf10; observed logged_in_user=admin, current_url=http://127.0.0.1:8097/, navbar_administration=Administration, navbar_preferences=Preferences, navbar_log_out=Log Out, page_heading_1=Stream, page_heading_2=My Activities.",
+      "values": {
+        "logged_in_user": "admin",
+        "current_url": "http://127.0.0.1:8097/",
+        "navbar_administration": "Administration",
+        "navbar_preferences": "Preferences",
+        "navbar_log_out": "Log Out",
+        "page_heading_1": "Stream",
+        "page_heading_2": "My Activities"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_1ddf10: step 5: read 'logged_in_user' returned a value the skill itself set/selected ('Admin') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_1ddf10: step 6: read 'navbar_admin' returned a value the skill itself set/selected ('Admin') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "navbar_admin"
+      ]
+    },
+    {
+      "id": "02-find",
+      "status": "success",
+      "summary": "Opened the Opportunities list view (Opportunity tab in the navbar) while signed in as admin. The list scope is \"All\" and shows 1–3 / 3 (single page, no further pages), so all opportunities were examined. All three records have names starting with \"Seed:\", read exactly from the list name cells: \"Seed: training package\", \"Seed: pilot expansion\", \"Seed: annual support renewal\". Nothing was modified.",
+      "values": {
+        "seed_opportunity_name_1": "Seed: training package",
+        "seed_opportunity_name_2": "Seed: pilot expansion",
+        "seed_opportunity_name_3": "Seed: annual support renewal",
+        "seed_named_opportunities_1": "Seed: training package",
+        "seed_named_opportunities_2": "Seed: pilot expansion",
+        "seed_named_opportunities_3": "Seed: annual support renewal",
+        "filter_scope": "All",
+        "search_container_filter_": "1–3 / 3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "The opportunity already existed from the replayed create segment (which filled the form and saved, landing on the record view), so I did not create a second one; I reopened/verified the existing record at http://127.0.0.1:8097/#Opportunity/view/6ab256fc92151d448 (ID 6ab256fc92151d448). Verification on the live page: Name \"fwec5-n3 Bench Opportunity\", Account is a real link showing \"Bench Account\" (href #Account/view/6ab25558afee519e8), Assigned User is a real link showing \"Bench Assignee\" (href #User/view/6ab2555a3f946cb3c), Stage \"Negotiation\", Amount \"$12,500.00\", Close Date displayed \"Dec 31\" with the stored field value confirmed as \"2026-12-31\", Description \"Bench opportunity created for run fwec5-n3\". Nothing else was modified.",
+      "values": {
+        "opportunity_name": "fwec5-n3 Bench Opportunity",
+        "opportunity_id": "6ab256fc92151d448",
+        "account_displayed": "Bench Account",
+        "account_link_href": "#Account/view/6ab25558afee519e8",
+        "account_id": "6ab25558afee519e8",
+        "assigned_user_displayed": "Bench Assignee",
+        "assigned_user_link_href": "#User/view/6ab2555a3f946cb3c",
+        "assigned_user_id": "6ab2555a3f946cb3c",
+        "stage": "Negotiation",
+        "amount_including_currency": "$12,500.00",
+        "close_date_displayed": "Dec 31",
+        "close_date_stored_value": "2026-12-31",
+        "description": "Bench opportunity created for run fwec5-n3",
+        "ref": "fwec5-n3"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_b45e41 stopped at step 30 — after step 30 expected url http://127.0.0.1:8097/#Opportunity/create but browser is at http://127.0.0.1:8097/#Opportunity/view/6ab256fc92151d448",
+      "replayed": "29/36",
+      "repaired": false,
+      "turns": 3,
+      "warnings": [
+        "s_b45e41: step 1: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here",
+        "s_b45e41: step 2: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here",
+        "s_b45e41: step 3: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here",
+        "s_b45e41: step 4: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here",
+        "s_b45e41: step 5: read 'close_date_field_value' returned a value the skill itself set/selected ('2026-12-31') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_b45e41: step 6: 2 field(s) this procedure filled were empty again before this press (the page rebuilt its form, or dropped the value when the field lost focus, after the fills were checked); 1 of them kept only a value typed key by key — refilled once",
+        "s_b45e41: step 8: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here",
+        "s_b45e41: step 11: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here",
+        "s_b45e41: step 18: read 'close_date_field_value' returned a value the skill itself set/selected ('2026-12-31') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_b45e41: step 28: read 'amount_value' returned a value the skill itself set/selected ('12500') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_b45e41: step 29: read 'description' returned a value the skill itself set/selected ('Bench opportunity created for run fwec5-n3') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "repinned": "s_ae3797",
+      "repinParams": {
+        "v1": "{{runid}}",
+        "v2": "{{runid}} Bench Opportunity",
+        "v3": "12500",
+        "v4": "2026-12-31",
+        "v5": "Bench opportunity created for run {{runid}}"
+      },
+      "unreported": [
+        "name",
+        "account",
+        "assigned_user",
+        "amount",
+        "amount_field_value",
+        "close_date_display",
+        "close_date_field_value",
+        "close_date_after_enter",
+        "amount_value"
+      ]
+    },
+    {
+      "id": "04-find",
+      "status": "success",
+      "summary": "Replayed stored procedure s_8fb633; observed post_text=Bench stream post for run fwec5-n3, posted_on_record=fwec5-n3 Bench Opportunity (6ab256fc92151d448), ref=fwec5-n3, post_time=10:23.",
+      "values": {
+        "post_text": "Bench stream post for run fwec5-n3",
+        "posted_on_record": "fwec5-n3 Bench Opportunity (6ab256fc92151d448)",
+        "ref": "fwec5-n3",
+        "post_time": "10:23"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_8fb633: step 4: read 'post_text' returned a value the skill itself set/selected ('Bench stream post for run fwec5-n3') — confirms the control, not persistence; dropped from the report's confident values"
+      ]
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_8f1ee3; observed record_id_from_url=6ab256fc92151d448, assigned_user_displayed=Bench Assignee, ref=fwec5-n3, account_link_href=#Account/view/6ab25558afee519e8, assigned_user_link_href=#User/view/6ab2555a3f946cb3c, close_date_stored_value=2026-12-31, account_displayed=Bench Account, stream_post_text=Bench stream post for run fwec5-n3, name=fwec5-n3 Bench Opportunity, amount_including_currency=$12,500.00, close_date_displayed=Dec 31, description=Bench opportunity created for run fwec5-n3.",
+      "values": {
+        "record_id_from_url": "6ab256fc92151d448",
+        "assigned_user_displayed": "Bench Assignee",
+        "ref": "fwec5-n3",
+        "account_link_href": "#Account/view/6ab25558afee519e8",
+        "assigned_user_link_href": "#User/view/6ab2555a3f946cb3c",
+        "close_date_stored_value": "2026-12-31",
+        "account_displayed": "Bench Account",
+        "stream_post_text": "Bench stream post for run fwec5-n3",
+        "name": "fwec5-n3 Bench Opportunity",
+        "amount_including_currency": "$12,500.00",
+        "close_date_displayed": "Dec 31",
+        "description": "Bench opportunity created for run fwec5-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "06-report",
+      "status": "success",
+      "summary": "Went to the Opportunities list view (http://127.0.0.1:8097/#Opportunity) with the \"All\" scope filter; the pager reads \"1–4 / 4\", i.e. a single page showing every opportunity, so no further pages to check. Read-only; nothing was modified. The names starting with \"Seed:\" are exactly \"Seed: training package\", \"Seed: pilot expansion\" and \"Seed: annual support renewal\". The record 'fwec5-n3 Bench Opportunity' does appear in the same list, shown with Stage \"Negotiation\" and Amount \"$12,500.00\".",
+      "values": {
+        "new_record_in_list": "fwec5-n3 Bench Opportunity",
+        "new_record_stage": "Negotiation",
+        "new_record_amount": "$12,500.00",
+        "seed_opportunity_name_1": "Seed: training package",
+        "seed_opportunity_name_2": "Seed: pilot expansion",
+        "seed_opportunity_name_3": "Seed: annual support renewal",
+        "seed_names_1": "Seed: training package",
+        "seed_names_2": "Seed: pilot expansion",
+        "seed_names_3": "Seed: annual support renewal",
+        "all_names_in_order_1": "fwec5-n3 Bench Opportunity",
+        "all_names_in_order_2": "Seed: training package",
+        "all_names_in_order_3": "Seed: pilot expansion",
+        "all_names_in_order_4": "Seed: annual support renewal",
+        "scope": "All",
+        "ref": "fwec5-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 6,
+  "total": 6,
+  "repinned": 1,
+  "drift": 2,
+  "driftTickets": [
+    {
+      "flow": "fwec5",
+      "step": "03-create",
+      "skill": "s_b45e41",
+      "atStep": "7",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.locator('.stream-container p, .panel[data-name=\"stream\"] p')",
+      "fallbackUsed": null,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8097/#Opportunity/view/:id",
+      "pageUrl": "http://127.0.0.1:8097/#Opportunity/view/6ab256fc92151d448"
+    },
+    {
+      "flow": "fwec5",
+      "step": "03-create",
+      "skill": "s_b45e41",
+      "atStep": "12",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.locator('li:nth-of-type(1) > div:nth-of-type(3) > span > div > div > p')",
+      "fallbackUsed": null,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8097/#Opportunity/view/:id",
+      "pageUrl": "http://127.0.0.1:8097/#Opportunity/view/6ab256fc92151d448"
+    }
+  ],
+  "wallMs": 85516,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 50045,
+    "completionTokens": 2151,
+    "cachedTokens": 37504
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 50045,
+      "completionTokens": 2151,
+      "cachedTokens": 37504
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
