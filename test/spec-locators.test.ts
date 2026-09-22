@@ -14,7 +14,7 @@ import { BrowserSession } from '../src/daemon/browser.js';
 import { pointLocator } from '../src/execution/point.js';
 import { resolveCandidates, type CandidateObservation } from '../src/execution/resolve.js';
 import { makeLocator, type LocatorCandidate } from '../src/daemon/recorder.js';
-import { fieldByName, roleName, volatileMatcher } from '../src/shared/text.js';
+import { VOLATILE_TOKEN_SHAPE, fieldByName, roleName, volatileMatcher } from '../src/shared/text.js';
 import { candidateSource, chainSource, matcherSource, observationSource, observationSources, stringSource } from '../src/spec/locators.js';
 
 /** What the generated file inlines; the regex tests need it in scope. */
@@ -85,7 +85,8 @@ describe('matcherSource', () => {
 
   it('routes a slot through escapeRe inside new RegExp, so a parameter stays data', () => {
     const src = matcherSource('Ticket {{v1}} due 12/31/2026');
-    expect(src).toBe('new RegExp(`^Ticket ${escapeRe(p.v1)} due (?:\\\\d{1,2}:\\\\d{2}(?::\\\\d{2})?|\\\\d{1,4}[/.-]\\\\d{1,2}[/.-]\\\\d{1,4})$`)');
+    // the volatile shape itself is text.ts's (VOLATILE_TOKEN_SHAPE), spliced in whole
+    expect(src).toBe('new RegExp(`^Ticket ${escapeRe(p.v1)} due ' + VOLATILE_TOKEN_SHAPE.replace(/\\/g, '\\\\') + '$`)');
     const re = evaluate(src, { v1: 'a+b' }) as RegExp;
     expect(re.test('Ticket a+b due 01/02/2027')).toBe(true);
     expect(re.test('Ticket aab due 01/02/2027')).toBe(false);

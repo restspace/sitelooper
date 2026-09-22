@@ -226,6 +226,9 @@ describe('the shape rule has one home', () => {
     // its literal is held equal to the constant here.
     expect(code(read('src/daemon/recorder.ts'))).toContain(`/${GENERATED_ID_HEX_RUN.source}/i`);
     expect(code(read('src/execution/fingerprint.ts'))).toContain(CLASS_HASH_HEX_RUN.source);
+    // recorder.ts COUNTER_ID and its page-side literal (fwec2): one rule, two copies.
+    const counter = String.raw`/^(.+[-_])(\d{3,})$/`;
+    expect(code(read('src/daemon/recorder.ts')).split(counter).length - 1).toBe(2);
   });
 });
 

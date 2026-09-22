@@ -62,6 +62,12 @@ export interface UrlShape {
   hashState: Map<string, string>;
   /** Whether a path-shaped fragment began with '/', for round-tripping. */
   hashSlash: boolean;
+  /**
+   * The fragment is an in-page ANCHOR, not a route: one bare word, with no
+   * '/' anywhere and no '=' (`#history`, a tab). Still kept as a one-segment
+   * hash path, so a pattern that names it matches it; see urlDiff.
+   */
+  hashAnchor?: boolean;
 }
 
 /** A query key that never identifies a page: campaign tags, click ids, a cache buster. */
@@ -121,6 +127,7 @@ export function urlShapeOf(s: string): UrlShape | null {
     shape.hashKind = 'path';
     shape.hashSlash = body.startsWith('/');
     shape.hashPath = body.split('/').filter(Boolean).map(safeDecode);
+    if (!body.includes('/')) shape.hashAnchor = true;
     return shape;
   }
   shape.hashKind = 'state';
@@ -238,8 +245,13 @@ export function urlDiff(pattern: string, url: string, boundKeys: ReadonlySet<str
       const lv = l.hashState.get(key)!;
       if (!isWildcardSeg(val) && !unfilled(val) && val !== lv) diffs.push({ where: 'hashState', key, expected: val, actual: lv });
     }
-  } else if (l.hashKind === 'path' && l.hashPath.length) {
-    return null; // pattern names no route; the live url is on one
+  } else if (l.hashKind === 'path' && l.hashPath.length && !l.hashAnchor) {
+    // Pattern names no route; the live url is on one. An in-page anchor is
+    // not a route: snipeit fwsi2-n2's 04-create recovery ended on
+    // `/hardware/5#history` (the History tab), and the next step's start gate
+    // refused it against `/hardware/:id`. EspoCRM's `#Opportunity/view/<id>`
+    // and `#/…` routes carry a '/', odoo's state carries '=': both still count.
+    return null;
   }
   return diffs;
 }

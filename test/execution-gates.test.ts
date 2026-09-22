@@ -1184,3 +1184,29 @@ describe('a step that acts on a slot the artifact can never fill', () => {
     expect(codes(flowOf([{ tool: 'wait_for', args: { target: '@e1', state: 'visible' }, locators: { target: marked } }]))).toEqual([]);
   });
 });
+
+/**
+ * snipeit fwsi2-n2: 04-create's recovery ended on `/hardware/5#history` (the
+ * History tab) and the next step's start gate refused it against
+ * `/hardware/:id` — a bare-word fragment was read as a hash route. An in-page
+ * anchor (no '/', no '=') is not a route; `#/…`, `#Entity/view/<id>` and
+ * odoo's `#k=v` state still are.
+ */
+describe('an in-page anchor is not a hash route (fwsi2)', () => {
+  it('passes /x/5#history against /x/:id', async () => {
+    const { urlDiff } = await import('../src/execution/url.js');
+    expect(urlDiff('http://app.test/hardware/:id', 'http://app.test/hardware/5#history')).toEqual([]);
+    expect(preconditionVerdict('http://app.test/hardware/:id', 'http://app.test/hardware/5#history', {}, null).refuse).toBeUndefined();
+  });
+
+  it('still judges #/route and #Entity/view/id as routes', async () => {
+    const { urlDiff } = await import('../src/execution/url.js');
+    expect(urlDiff('http://app.test/hardware/:id', 'http://app.test/hardware/5#/history')).toBeNull();
+    expect(urlDiff('http://app.test/', 'http://app.test/#Opportunity/view/6ab1b0e3c2d9e9f95')).toBeNull();
+    expect(urlDiff('http://app.test/#Opportunity/view/:id', 'http://app.test/#Opportunity/view/6ab1b0e3c2d9e9f95')).toEqual([]);
+    expect(preconditionVerdict('http://app.test/hardware/:id', 'http://app.test/hardware/5#/history', {}, null).refuse).toBeDefined();
+    // A pattern that names the anchor still matches it, and only it.
+    expect(urlDiff('http://app.test/hardware/:id#history', 'http://app.test/hardware/5#history')).toEqual([]);
+    expect(urlDiff('http://app.test/hardware/:id#history', 'http://app.test/hardware/5')).toBeNull();
+  });
+});

@@ -71,6 +71,14 @@ export interface LedgerEntry {
   basis: 'position' | 'var' | 'variance' | 'shape';
   /** Where it first appeared, for ordering and for diagnostics. */
   firstSeen: { instruction: number; step: number };
+  /**
+   * Banked for its URL POSITION only (landedPathDigits below the text floor):
+   * compile may slot it where a later navigation url holds it at a path
+   * position, but it is never looked for as a token in text — a single digit
+   * stands in every page and selector (`(4) Status`, `nth-of-type(4)`), so
+   * the text leak guards (runValuesIn) do not see it.
+   */
+  positional?: true;
 }
 
 /**
@@ -129,6 +137,24 @@ export function idPositionPart(part: { label: string; value: string }): boolean 
  */
 export function pathIdPart(part: { label: string; value: string }): boolean {
   return /^(p|h)\d+$/.test(part.label) && /^\d{2,10}$/.test(part.value);
+}
+
+/**
+ * A digit run at a path (or hash-route) position, at ANY length — the
+ * candidate half of the landed-id rule. What makes it a record id is not the
+ * characters but provenance: a step's own non-navigation action LANDED the url
+ * that carries it (the ledger's `landed`, buildFlow's landedByAction). Below
+ * pathIdPart's two-digit floor such an id is used only at its url position,
+ * never as a token in text.
+ *
+ * snipeit fwsi2-n1: 03-create's save and a click landed `/hardware/4`; the
+ * floor kept `4` out of the ledger and out of the flow's references, so
+ * 04-create's `goto /hardware/4/checkout` and 04/05's prose "at /hardware/4"
+ * stayed literal, and both replays and the compiled script checked out the
+ * deleted asset 4 ("That asset was not found").
+ */
+export function pathDigitPart(part: { label: string; value: string }): boolean {
+  return /^(p|h)\d+$/.test(part.label) && /^\d{1,10}$/.test(part.value);
 }
 
 /**
@@ -294,7 +320,7 @@ export class RunLedger {
   add(
     value: string,
     binding: Binding,
-    opts: { kind?: LedgerEntry['kind']; basis?: LedgerEntry['basis']; vouched?: boolean } = {},
+    opts: { kind?: LedgerEntry['kind']; basis?: LedgerEntry['basis']; vouched?: boolean; positional?: true } = {},
   ): LedgerEntry | null {
     const v = String(value ?? '').trim();
     // The length floor guards against banking junk from shape-guessing
@@ -344,6 +370,7 @@ export class RunLedger {
       // otherwise from the characters.
       basis: opts.basis ?? (binding.from === 'var' ? 'var' : !opts.kind && runSpecific ? 'variance' : 'shape'),
       firstSeen: { instruction: this.instruction, step: this.step },
+      ...(opts.positional ? { positional: true as const } : {}),
     };
     this.seen.add(v);
     this.entries.push(entry);
@@ -351,9 +378,13 @@ export class RunLedger {
   }
 
   /** Bank the identifier-like parts of a url the run just landed on. */
-  addUrlIds(url: string, step: string, parts: { label: string; value: string }[]): LedgerEntry[] {
+  addUrlIds(url: string, step: string, parts: { label: string; value: string }[], opts: { landed?: boolean } = {}): LedgerEntry[] {
     const out: LedgerEntry[] = [];
     for (const part of parts) {
+      // `landed`: the caller saw a step's own non-navigation action land this
+      // url, so a path digit run in it is that step's record id at any length
+      // (pathDigitPart). Below the floor it is banked for its position only.
+      const landedId = Boolean(opts.landed) && pathDigitPart(part);
       // Shape proposes, position decides: idPositionPart is the evidence arm
       // (a param NAMED id holds a record id whatever its characters) and the
       // shape test is the 'first-run' prior beside it, for the parts no
@@ -371,7 +402,9 @@ export class RunLedger {
       // `action=315` stops being banked because runs demonstrated the app
       // reproduces it, not because we hard-coded a rule about digits.
       const runSpecific = this.runSpecific(part.value);
-      if (!runSpecific && !looksLikeId(part.value, 'first-run') && !idPositionPart(part)) continue;
+      if (landedId) {
+        // Admitted on provenance, the landing, before any shape is asked.
+      } else if (!runSpecific && !looksLikeId(part.value, 'first-run') && !idPositionPart(part)) continue;
       // A pure-digit QUERY param the app does not call `id` is routing
       // vocabulary, not a record: fwod29 banked odoo's `action=315` and
       // `action=126` (window-action numbers, identical on every run) and the
@@ -398,7 +431,8 @@ export class RunLedger {
         {
           kind: 'identifier',
           basis: runSpecific ? 'variance' : idPositionPart(part) ? 'position' : 'shape',
-          vouched: runSpecific || idPositionPart(part) || pathIdPart(part),
+          vouched: runSpecific || idPositionPart(part) || pathIdPart(part) || landedId,
+          ...(landedId && !pathIdPart(part) && part.value.length < MIN_ID_LEN ? { positional: true as const } : {}),
         },
       );
       if (entry) out.push(entry);
@@ -451,7 +485,7 @@ export class RunLedger {
   runValuesIn(text: string): LedgerEntry[] {
     const s = String(text ?? '');
     if (!s) return [];
-    return this.entries.filter((e) => occursAsToken(s, e.value)).sort((a, b) => b.value.length - a.value.length);
+    return this.entries.filter((e) => !e.positional && occursAsToken(s, e.value)).sort((a, b) => b.value.length - a.value.length);
   }
 
   /** The values themselves, for callers that only need strings (identity hints). */

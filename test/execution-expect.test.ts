@@ -66,6 +66,16 @@ describe('expectedChangesVerdict', () => {
     expect(await expectedChangesVerdict(recorded, p, ctx({ tool: 'select' }), seen([], ['-   combobox   "Project":   Beta']))).toEqual({ warnings: [] });
   });
 
+  // fwgh3 01-signin: the store kept ghost's relative time, which had aged by the replay.
+  it('passes a recorded relative time that has aged, and does not count a line it empties', async () => {
+    const recorded = ['- link "{{*}} By Bench Admin in Bench Guides - 1 minute ago {{*}}"'];
+    const aged = ['- link "Seed: House style guide By Bench Admin in Bench Guides - 16 minutes ago Published"'];
+    expect(await expectedChangesVerdict(recorded, {}, ctx(), seen(aged, aged))).toEqual({ warnings: [], confirmed: true });
+    expect((await expectedChangesVerdict(recorded, {}, ctx(), seen([], ['- link "Seed: House style guide By Bench Editor"']))).stop).toMatch(/did not/);
+    // a line that was nothing but the time identifies no element: not looked for
+    expect(await expectedChangesVerdict(['- cell "just now"'], {}, ctx(), seen([], []))).toEqual({ warnings: [] });
+  });
+
   it('hard lines are any-of, and a hard miss stops even when the plain group shows', async () => {
     const recorded = ['- heading "{{v1}}"', '- link "{{v1}} details"', '- button "Save"'];
     const p = { v1: 'Widget A' };

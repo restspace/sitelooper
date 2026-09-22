@@ -12,7 +12,7 @@ export function clip(text: string, max: number): string {
 }
 
 /**
- * Clock and calendar tokens are the RECORDING's moment, not part of what a
+ * Clock, calendar and relative-time tokens are the RECORDING's moment, not part of what a
  * page element IS: kanboard names its due-date textbox after the current
  * minute ("09/03/2026 07:22") and labels a summary row "Due date:
  * 12/31/2026 07:40". Recorded verbatim, such a name matches nothing nine
@@ -21,7 +21,31 @@ export function clip(text: string, max: number): string {
  * into a RegExp that treats the same tokens as wildcards.
  */
 export const WILDCARD = '{{*}}';
-const VOLATILE_TOKEN = /\b\d{1,2}:\d{2}(?::\d{2})?\b|\b\d{1,4}[/.-]\d{1,2}[/.-]\d{1,4}\b/g;
+
+/**
+ * The volatile tokens, as regex SOURCE: a clock time, a numeric date, and a
+ * relative time — anything whose value is how much wall-clock time has passed
+ * since the recording, however it is spelled. ghost lists a seed post as
+ * "… Bench Guides - 1 minute ago"; fwgh3's 01-signin stored that phrase in an
+ * expectation, the post had aged by the replays, and n2, n3 and the compiled
+ * spec all stopped on "the recorded page change did not appear".
+ *
+ * Only a leading capital is tolerated ("Just now", "A minute ago"), not a
+ * case-insensitive flag: the same source builds the MATCHER
+ * (VOLATILE_TOKEN_SHAPE, spliced into patterns whose flags it does not
+ * choose), and a mask wider than its matcher turns a recorded name into one
+ * nothing matches. The count may be a slot marker: compile substitutes before
+ * it masks, and a run value "5" must not freeze "5 minutes ago" into
+ * `{{v2}} minutes ago`. `today` is left out: it is a date picker's button as
+ * often as it is a time.
+ */
+const CLOCK = String.raw`\d{1,2}:\d{2}(?::\d{2})?`;
+const NUMERIC_DATE = String.raw`\d{1,4}[/.-]\d{1,2}[/.-]\d{1,4}`;
+const TIME_COUNT = String.raw`(?:\d+|\{\{[vd]\d+\}\}|[Aa] few|[Aa]n?|[Oo]ne|[Ff]ew)`;
+const TIME_UNIT = String.raw`(?:[Ss]ec(?:ond)?|[Mm]in(?:ute)?|[Hh](?:ou)?r|[Dd]ay|[Ww]eek|[Mm]onth|[Yy]ear)s?`;
+const RELATIVE_TIME = String.raw`(?:${TIME_COUNT}\s+${TIME_UNIT}\s+ago|\d+\s?(?:mo|[smhdwy])\s+ago|[Ii]n\s+${TIME_COUNT}\s+${TIME_UNIT}|[Jj]ust now|[Yy]esterday|[Tt]omorrow)`;
+const VOLATILE_SOURCE = `(?:${CLOCK}|${NUMERIC_DATE}|${RELATIVE_TIME})`;
+const VOLATILE_TOKEN = new RegExp(String.raw`(?<!\w)${VOLATILE_SOURCE}(?!\w)`, 'g');
 
 export function maskVolatile(line: string): string {
   return line.replace(VOLATILE_TOKEN, WILDCARD);
@@ -44,7 +68,7 @@ export function escapeRe(s: string): string {
  * masked (see spec/locators.ts, maskedMatcherSource) and a second copy of this
  * shape would be free to drift away from this one.
  */
-export const VOLATILE_TOKEN_SHAPE = '(?:\\d{1,2}:\\d{2}(?::\\d{2})?|\\d{1,4}[/.-]\\d{1,2}[/.-]\\d{1,4})';
+export const VOLATILE_TOKEN_SHAPE = VOLATILE_SOURCE;
 
 /**
  * What may NOT sit against an identity marker: a letter or a digit.

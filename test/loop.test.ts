@@ -707,6 +707,53 @@ describe('escalate-on-blocked', () => {
     expect(result.turns).toBe(4 + 6);
   });
 
+  it('treats a failure reported after the cap warning as a turn-cap bail and escalates with headroom', async () => {
+    // fwec2 n1 03-create: "Call report NOW" answered with failure ("Turn
+    // budget ran out before the save") — out of road, not a checked negative.
+    const snap = { toolCalls: [{ id: 'c1', name: 'snapshot', args: {}, rawArgs: '{}' }] };
+    const late = [snap, snap, { toolCalls: [reportCall({ status: 'failure', summary: 'Turn budget ran out before the save' })] }];
+    const first = await runInstruction(named('cheap', late), browserStub, new SessionState('t-esc-late-one'), 'do it', { ...loopOpts, maxTurns: 4 });
+    expect(first.report.status).toBe('blocked');
+    expect(first.report.summary).toMatch(/Turn budget ran out/);
+    expect(first.bailReason).toBe('turn-cap');
+
+    const result = await runEscalatingInstruction(
+      named('cheap', late),
+      named('smart', [snap]), // never reports → runs to its own cap
+      browserStub,
+      new SessionState('t-esc-late'),
+      'do it',
+      { ...loopOpts, maxTurns: 4 },
+    );
+    expect(result.escalation).toMatchObject({ from: 'cheap', to: 'smart' });
+    expect(result.escalation?.firstAttempt.turns).toBe(3);
+    // fallback got ceil(4 * 1.5) = 6
+    expect(result.turns).toBe(3 + 6);
+  });
+
+  it('keeps a failure reported before the cap warning as a verified negative', async () => {
+    const snap = { toolCalls: [{ id: 'c1', name: 'snapshot', args: {}, rawArgs: '{}' }] };
+    let fallbackCalled = false;
+    const fallback: Provider = {
+      model: 'smart',
+      async complete() {
+        fallbackCalled = true;
+        throw new Error('fallback must not run');
+      },
+    };
+    const result = await runEscalatingInstruction(
+      named('cheap', [snap, snap, { toolCalls: [reportCall({ status: 'failure', summary: 'price was 125, expected 133.33' })] }]),
+      fallback,
+      browserStub,
+      new SessionState('t-esc-early-failure'),
+      'check the price',
+      { ...loopOpts, maxTurns: 10 },
+    );
+    expect(result.report.status).toBe('failure');
+    expect(result.bailReason).toBeUndefined();
+    expect(fallbackCalled).toBe(false);
+  });
+
   it('does not inflate the budget when the agent chose to report blocked', async () => {
     // an agent-declared block is not evidence that more turns would have helped
     const acts = [{ toolCalls: [{ id: 'c1', name: 'snapshot', args: {}, rawArgs: '{}' }] }];

@@ -215,4 +215,18 @@ describe('isStableId', () => {
     expect(isStableId('radix-:r0:')).toBe(false);
     expect(isStableId('x'.repeat(65))).toBe(false);
   });
+
+  it('demotes a render-counter id unless the page url shows its number (fwec2)', () => {
+    // EspoCRM numbers its views per render: dead on every replay
+    expect(isStableId('opportunity-detail-2662')).toBe(false);
+    expect(isStableId('opportunity-edit-3571', 'http://h/#Opportunity/view/6ab1c1f146d221daf')).toBe(false);
+    expect(isStableId('view_1234')).toBe(false);
+    // the same shape naming the record the url is on keeps its primacy
+    expect(isStableId('issue-4521', 'http://h/issues/4521')).toBe(true);
+    expect(isStableId('issue-4521', 'http://h/issues/45210')).toBe(false);
+    // short numbers and words are not counters
+    expect(isStableId('step-2')).toBe(true);
+    expect(isStableId('section-10')).toBe(true);
+    expect(isStableId('h2-title')).toBe(true);
+  });
 });

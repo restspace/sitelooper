@@ -315,8 +315,8 @@ describe('step bodies', () => {
     const select: SkillStep = { tool: 'select', args: { target: '@e3', option: 'A' }, locators: loc };
     const read: SkillStep = { tool: 'read', args: { target: '@e4', what: 'text' }, locators: loc, label: 'r' };
     const body = emit(specOf([fill, read, click, select], { segments: [segment([fill, read, click, select])] }));
-    expect(body).toContain('const filled1: StandingFill[] = [];');
-    expect(body).toContain('noteFill(filled1, hit1.locator, `${p.v1}`, page.url());');
+    expect(body).toContain('const filled1 = standingFills();');
+    expect(body).toContain('await noteFill(filled1, hit1.locator, `${p.v1}`, page);');
     expect(body).toContain("for (const warning of await restoreStandingFills(page, filled1, 'click', '01-do s_test1/3')) logWarning(warning);");
     expect(body).toContain("for (const warning of await restoreStandingFills(page, filled1, 'select', '01-do s_test1/4')) logWarning(warning);");
     expect(body).not.toContain("restoreStandingFills(page, filled1, 'read'");
@@ -326,6 +326,16 @@ describe('step bodies', () => {
     expect(prepare.indexOf('restoreStandingFills(')).toBeLessThan(prepare.indexOf(' = page.url();'));
     // a segment that fills nothing carries no ledger at all
     expect(emit(specOf([click]))).not.toContain('StandingFill');
+    expect(emit(specOf([click]))).not.toContain('standingFills(');
+    // fwvk2 n2: a submit with a url gate is repeated once when its document was replaced under it
+    const submit: SkillStep = { ...click, expect: { urlPattern: 'http://app.test/home' } };
+    const guarded = emit(specOf([fill, submit], { segments: [segment([fill, submit])] }));
+    expect(guarded).toContain('let urlFailed2 = false;');
+    expect(guarded).toMatch(/try \{ await urlEffect\(page, 'http:\/\/app\.test\/home'.*\} catch \(err\) \{ urlFailed2 = true; throw err; \}/);
+    expect(guarded).toContain('if (attempt > 0 || !urlFailed2 || !(await standingFillsLost(page, filled1))) throw err;');
+    expect(guarded).toContain('rearmStandingFills(filled1);');
+    // ...and never a step with no url gate, nor one that is not a submit
+    expect(body).not.toContain('await standingFillsLost(page, filled1)');
   });
 
   it('presses a key on the page when the recording had no target', () => {

@@ -674,6 +674,8 @@ interface ElementInfo {
   tag: string;
   testid: { attr: string; value: string } | null;
   id: string | null;
+  /** isStableId's judgement made in the page, where a counter-shaped id's evidence (url, links) is. */
+  idStable: boolean;
   role: string | null;
   name: string | null;
   label: string | null;
@@ -1253,7 +1255,7 @@ export async function framePathOf(page: Page, frame: Frame): Promise<FramePath |
       const offered: string[] = [];
       if (facts.name) offered.push(attr('name', facts.name));
       if (facts.title) offered.push(attr('title', facts.title));
-      if (facts.id && isStableId(facts.id)) offered.push(/^[A-Za-z][\w-]*$/.test(facts.id) ? `${facts.tag}#${facts.id}` : attr('id', facts.id));
+      if (facts.id && isStableId(facts.id, level.url())) offered.push(/^[A-Za-z][\w-]*$/.test(facts.id) ? `${facts.tag}#${facts.id}` : attr('id', facts.id));
       if (facts.src && facts.src !== '/') offered.push(`${facts.tag}[src*=${JSON.stringify(facts.src)}]`);
       // The position is kept only with the frame's url, which is what makes
       // "the second iframe" the recorded one rather than whichever sits there.
@@ -1435,7 +1437,7 @@ function candidatesFor(info: ElementInfo, noPoint = false): Candidate[] {
   if (info.role && info.name) out.push(cand({ kind: 'role', role: info.role, name: info.name }));
   if (info.label) out.push(cand({ kind: 'label', label: info.label }));
   if (info.placeholder) out.push(cand({ kind: 'placeholder', placeholder: info.placeholder }));
-  if (info.id && isStableId(info.id)) {
+  if (info.id && info.idStable) {
     const sel = /^[A-Za-z][\w-]*$/.test(info.id) ? `#${info.id}` : `[id=${JSON.stringify(info.id)}]`;
     out.push(cand({ kind: 'id', selector: sel }));
   }
@@ -1505,10 +1507,31 @@ function cand(spec: LocatorCandidate): Candidate {
 }
 
 /**
+ * An id whose last `-`/`_` token is a number of 3+ digits: `opportunity-
+ * detail-2662`. Either a render counter (a view numbered per render — fwec2
+ * recorded `#opportunity-edit-3571` as the css root of a Save click and it
+ * missed on every replay, leaving the point fallback to carry the step) or a
+ * record's own id (`issue-4521`). Characters cannot tell them apart;
+ * provenance can: a record id is also shown where the page names its record —
+ * the url, or a link inside the element — and a render counter is shown only
+ * in ids. Page-side copy in describeInPage; test/shape-gate.test.ts holds the
+ * two literals equal.
+ */
+const COUNTER_ID = /^(.+[-_])(\d{3,})$/;
+
+/** Whether `digits` stands whole in `url`, between non-digits. */
+function digitsInUrl(url: string | undefined, digits: string): boolean {
+  return Boolean(url) && url!.split(/[^0-9]+/).includes(digits);
+}
+
+/**
  * Framework-generated ids (React's `:r3:`, hash suffixes, bare counters) are
  * re-minted on the next run, so they are worse than the structural path.
+ * `url`, when known, is the page's: the only evidence node-side has that a
+ * counter-shaped id names the record (see COUNTER_ID). Without it such an id
+ * is demoted — the cost direction: the other candidates still stand.
  */
-export function isStableId(id: string): boolean {
+export function isStableId(id: string, url?: string): boolean {
   if (!id || id.length > 64) return false;
   if (/^[:\d]/.test(id)) return false;
   if (GENERATED_ID_HEX_RUN.test(id)) return false;
@@ -1517,6 +1540,8 @@ export function isStableId(id: string): boolean {
   // on one misses on every replay — fwgr18 recorded `[id="_rgl_"]` and
   // `[id="_r2u_"]` as primaries and both were dead chains at replay time.
   if (/^_r[0-9a-z]{1,4}_$/i.test(id)) return false;
+  const counter = COUNTER_ID.exec(id);
+  if (counter && !digitsInUrl(url, counter[2])) return false;
   return !/^(radix|headlessui|mui|react-aria)[-:]/i.test(id);
 }
 
@@ -1529,13 +1554,26 @@ function describeInPage(node: Node): ElementInfo {
   // the structural path or a row container is dead on the next load. The hex
   // literal is shape.ts GENERATED_ID_HEX_RUN, inlined because this runs in the
   // page; test/shape-gate.test.ts holds the two equal.
-  const stableId = (id: string): boolean =>
-    Boolean(id) &&
-    id.length <= 64 &&
-    !/^[:\d]/.test(id) &&
-    !/[0-9a-f]{8,}/i.test(id) &&
-    !/^_r[0-9a-z]{1,4}_$/i.test(id) &&
-    !/^(radix|headlessui|mui|react-aria)[-:]/i.test(id);
+  const minted = (id: string): boolean =>
+    !id ||
+    id.length > 64 ||
+    /^[:\d]/.test(id) ||
+    /[0-9a-f]{8,}/i.test(id) ||
+    /^_r[0-9a-z]{1,4}_$/i.test(id) ||
+    /^(radix|headlessui|mui|react-aria)[-:]/i.test(id);
+  // COUNTER_ID, page-side (shape-gate holds the literal equal), with more
+  // evidence than node-side has: the number names the record when the url or
+  // a link on or inside the id's element shows it too. Returns the id's prefix
+  // when the number is a render counter, else null.
+  const counterPrefix = (node: Element): string | null => {
+    const m = /^(.+[-_])(\d{3,})$/.exec(node.id);
+    if (!m) return null;
+    const shows = (s: string | null) => Boolean(s) && s!.split(/[^0-9]+/).includes(m[2]);
+    if (shows(location.href) || shows(node.getAttribute('href'))) return null;
+    for (const a of Array.from(node.querySelectorAll('[href]')).slice(0, 50)) if (shows(a.getAttribute('href'))) return null;
+    return m[1];
+  };
+  const stableNode = (node: Element): boolean => !minted(node.id) && counterPrefix(node) === null;
   const clean = (s: string | null | undefined) => {
     const t = (s ?? '').replace(/\s+/g, ' ').trim();
     return t && t.length <= 80 ? t : null;
@@ -1596,8 +1634,15 @@ function describeInPage(node: Node): ElementInfo {
     let cur: Element | null = el;
     while (cur && cur.nodeType === 1 && parts.length < 6) {
       const node: Element = cur;
-      if (stableId(node.id)) {
+      if (stableNode(node)) {
         parts.unshift(`#${CSS.escape(node.id)}`);
+        break;
+      }
+      // A render-counter id still names its view by its prefix: root there,
+      // not at whatever six parts from the element happen to reach.
+      const prefix = minted(node.id) ? null : counterPrefix(node);
+      if (prefix) {
+        parts.unshift(`[id^=${JSON.stringify(prefix)}]`);
         break;
       }
       let part = node.tagName.toLowerCase();
@@ -1640,7 +1685,7 @@ function describeInPage(node: Node): ElementInfo {
     const tagOf = box.tagName.toLowerCase() + (cls && /^[A-Za-z][\w-]*$/.test(cls) ? `.${cls}` : '');
     let container = tagOf;
     for (let p = box.parentElement, hops = 0; p && hops < 3; p = p.parentElement, hops++) {
-      if (stableId(p.id)) {
+      if (stableNode(p)) {
         container = `#${CSS.escape(p.id)} ${tagOf}`;
         break;
       }
@@ -1684,6 +1729,7 @@ function describeInPage(node: Node): ElementInfo {
     tag,
     testid: testidAttr ? { attr: testidAttr, value: el.getAttribute(testidAttr)! } : null,
     id: el.id || null,
+    idStable: stableNode(el),
     role: attr('role') || implicitRole(),
     name,
     label,

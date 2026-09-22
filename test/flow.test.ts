@@ -636,8 +636,11 @@ describe('a short record id in a path position is a flow reference (fwop2 06-ope
     expect(out['url.p4']).toBe('42');
     // Route words stay unpublished.
     expect(out['url.p3']).toBeUndefined();
-    // ...and a lone digit is not a reference.
-    expect(urlOutputs(`${OP}/projects/7`)['url.p1']).toBeUndefined();
+    // A lone path digit IS published: buildFlow mints one a step's own action
+    // landed (snipeit fwsi2's /hardware/4), and a replay cannot tell what
+    // landed its url, so it publishes every part the producer might have
+    // minted. Minting, not publishing, is where the landing is judged.
+    expect(urlOutputs(`${OP}/projects/7`)['url.p1']).toBe('7');
   });
 });
 

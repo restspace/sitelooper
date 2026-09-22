@@ -283,7 +283,7 @@ export function compileSkills(input: CompileInput): Skill[] {
   if (!origin || !startUrl) return [];
 
   const slots = discoverSlots(input.instruction, steps, input.knownValues);
-  const sub = (s: string) => substitute(s, slots);
+  const sub = (s: string) => substitute(s, textSlots);
 
   const reportValues = input.report.evidence?.values ?? {};
   // Inspection-only actions the agent used to ORIENT itself — probe the DOM with
@@ -318,6 +318,12 @@ export function compileSkills(input: CompileInput): Skill[] {
   /** Every slot EXCEPT those, for a navigation url: a url-origin slot is
    *  written by position, never by matching its characters (see below). */
   const nonUrlIdSlots = new Map([...slots].filter(([n]) => !urlIdNames.has(n)));
+  /** Every slot that may be written as a TOKEN in text: all but a url id
+   *  below the text floor (ledger.ts pathDigitPart — snipeit fwsi2's
+   *  `/hardware/4`), which is written only at its url position
+   *  (substituteUrlId) and bound by origin, never matched in prose, a
+   *  selector or a page line, where a lone digit stands everywhere. */
+  const textSlots = new Map([...slots].filter(([, v]) => v.length >= 2));
   /** The caller's values for THIS run — a runid, a record it vouched for. */
   const runValues = Object.values(input.knownValues ?? {})
     .map((v) => String(v ?? '').trim())
@@ -407,7 +413,7 @@ export function compileSkills(input: CompileInput): Skill[] {
       // post-nav url is the first downstream occurrence).
       const mintedBefore = mintedMap((m) => m.keptIndex < g);
       const mintedHere = mintedMap((m) => m.keptIndex <= g);
-      const args = substituteDeep(substituteDeep(step.args, slots), mintedBefore) as Record<string, unknown>;
+      const args = substituteDeep(substituteDeep(step.args, textSlots), mintedBefore) as Record<string, unknown>;
       // A navigation url is rebuilt from the RECORDED string, because a
       // url-origin slot may only be written at the position the ledger banked
       // it at. substitute() is textual and position-blind: it refuses a number
@@ -431,7 +437,7 @@ export function compileSkills(input: CompileInput): Skill[] {
       if (typeof args.url === 'string') args.url = substituteUrlParts(args.url, minted.filter((m) => m.keptIndex < g));
       const locators: Record<string, LocatorCandidate[]> = {};
       for (const [key, loc] of Object.entries(step.locators)) {
-        const filled = (loc.chain ?? []).map((c) => substituteDeep(substituteDeep(c, slots), mintedBefore) as LocatorCandidate);
+        const filled = (loc.chain ?? []).map((c) => substituteDeep(substituteDeep(c, textSlots), mintedBefore) as LocatorCandidate);
         // An identity anchor still carrying THIS RUN's known value after
         // slotting (the recorded runid, because the value was typed in an
         // earlier instruction and so is not a slot here) can never match
@@ -494,7 +500,7 @@ export function compileSkills(input: CompileInput): Skill[] {
       // one (odoo's "44", repair-desk's "t15") is otherwise reduced to `:id`
       // before the {{dN}} marker can land, and the minting step then carries
       // no reference to what it minted — so `derived` could not find it.
-      const expect = expectationFor(step, new Map([...slots, ...mintedHere]));
+      const expect = expectationFor(step, new Map([...textSlots, ...mintedHere]));
       if (expect) out.expect = substituteDeep(expect, mintedHere) as StepExpectation;
       const label = readLabel(step, reportValues);
       // A read with no way to find its element again publishes nothing, so it
@@ -573,7 +579,7 @@ export function compileSkills(input: CompileInput): Skill[] {
   const keptSlots = new Map(
     [...slots].filter(([n, v]) => usedNames.has(n) || (knownVals.has(v) && tentative.includes(`{{${n}}}`)) || varValues.has(v)),
   );
-  const finalTemplate = keptSlots.size === slots.size ? sub(input.instruction) : substitute(input.instruction, keptSlots);
+  const finalTemplate = substitute(input.instruction, new Map([...keptSlots].filter(([n]) => textSlots.has(n))));
   // The mirror hazard: a slot whose marker survives only in STEPS (its every
   // instruction occurrence was swallowed by a longer slot, or the value came
   // from an EARLIER instruction and this one never names it) can never bind
@@ -761,11 +767,11 @@ function deriveGoal(opts: {
 }
 
 /**
- * Every text this instruction's own steps SAW on the page, folded
- * (whitespace collapsed, lower-cased): each line a read or read-back
- * returned, each line a step's diff added (element names and the values
- * they showed) and each alert it raised. A goal marker must stand in one of
- * these (sawOnPage), never be only the report's own wording.
+ * Every text this instruction's own steps saw APPEAR on the page, in the line
+ * dialect the already-satisfied guard reads (goalSatisfied): each line a
+ * step's diff added and each alert it raised, folded (whitespace collapsed,
+ * lower-cased). A goal marker must stand in one of these (sawOnPage), never
+ * be only the report's own wording.
  *
  * gitea fwgt1-n1: 04-set reported `labels_displayed_count: "2 (no other
  * labels, no \"No labels\" placeholder)"` and 05-set `milestone_shown_on_
@@ -773,6 +779,15 @@ function deriveGoal(opts: {
  * start page carried, so both became goal markers. goalSatisfied requires
  * every marker and no page ever shows those sentences, so the already-
  * satisfied guard (fwod34) could never fire for either step.
+ *
+ * Not what a READ returned (fwgt2-n1): 04-open's goal came out
+ * `["yes","No labels","bug","priority-high"]` — "No labels" from the
+ * recording's own labels-BEFORE read (startText, a role-line outline, never
+ * carries a placeholder's plain text, so it looked brought into existence),
+ * "yes" from a read-back pinned to a "Yes" button. A read says what the page
+ * held at some moment, not that the work put it there, and plain text is not
+ * the dialect the guard matches. A goal known only from a read is no goal,
+ * which only means the step runs.
  */
 function seenOnPage(steps: readonly RecordedStep[]): string[] {
   const out = new Set<string>();
@@ -785,13 +800,6 @@ function seenOnPage(steps: readonly RecordedStep[]): string[] {
     }
   };
   for (const s of steps) {
-    if ((s.tool === 'read' || s.tool === 'read_all') && typeof s.result === 'string') {
-      try {
-        add(JSON.parse(s.result));
-      } catch {
-        add(s.result);
-      }
-    }
     add(s.diff?.added ?? []);
     add(s.diff?.alerts ?? []);
   }

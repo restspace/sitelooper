@@ -340,6 +340,24 @@ describe('volatile expectations and whitespace identity (fwkb3, fwod31)', () => 
     expect(maskVolatile('- row "Su Mo Tu We Th Fr Sa"')).toBe('- row "Su Mo Tu We Th Fr Sa"');
     expect(maskVolatile('- link "RD-1015"')).toBe('- link "RD-1015"');
   });
+  // fwgh3 01-signin: ghost's "1 minute ago" had aged by the replays.
+  it('masks relative times, and only them', () => {
+    for (const t of ['1 minute ago', '16 minutes ago', 'a minute ago', 'an hour ago', 'A few seconds ago', '3 days ago', '2 hrs ago', '5m ago', 'just now', 'Just now', 'in 5 minutes', 'Yesterday', 'tomorrow', '{{v2}} minutes ago']) {
+      expect(maskVolatile(`- cell "Updated ${t}"`), t).toBe('- cell "Updated {{*}}"');
+    }
+    expect(maskVolatile('- link "Seed: House style guide By Bench Admin in Bench Guides - 1 minute ago Published"')).toBe(
+      '- link "Seed: House style guide By Bench Admin in Bench Guides - {{*}} Published"',
+    );
+    for (const t of ['5 minutes', 'Signed in', 'Plan a day', 'Today', 'Agoda', 'in Bench Guides', 'last year', 'Minutes ago']) {
+      expect(maskVolatile(`- cell "${t}"`), t).toBe(`- cell "${t}"`);
+    }
+    const m = volatileMatcher('Bench Guides - 1 minute ago');
+    expect(m).toBeInstanceOf(RegExp);
+    expect((m as RegExp).test('Bench Guides - 16 minutes ago')).toBe(true);
+    expect((m as RegExp).test('Bench Guides - an hour ago')).toBe(true);
+    expect((m as RegExp).test('Bench Guides - Draft')).toBe(false);
+    expect(roleName('Published just now').test('Published 2 days ago')).toBe(true);
+  });
   it('volatileMatcher leaves a plain name alone and wildcards clock/date tokens in a recorded one', () => {
     expect(volatileMatcher('Save dashboard')).toBe('Save dashboard');
     const m = volatileMatcher('Due date: 12/31/2026 07:40');

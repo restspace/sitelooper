@@ -2729,6 +2729,73 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(emitted.warnings?.some((w) => /empty again before this click/.test(w)), JSON.stringify(emitted.warnings)).toBe(true);
       expect(JSON.stringify([replay.warnings, emitted.warnings])).not.toContain('pass-x42');
     }, 120_000);
+
+    /**
+     * fwvk2 n2 01-open: the same login, the form lost to a RELOAD (a new
+     * document at the same url) rather than a rebuild. (a) The reload lands
+     * 100ms after the fills, while or before the click's own check looks; (b)
+     * it lands between the click and its answer, so the click submits nothing
+     * and its url gate fails on the empty form. Both runners must sign in
+     * once, with this run's values.
+     */
+    const reloadSteps = (mode: string): SkillStep[] => [
+      { tool: 'goto', args: { url: `${origin}/reload-login/${mode}` }, locators: {} },
+      { tool: 'fill', args: { target: '@e1', value: 'admin' }, locators: { target: [{ kind: 'label', label: 'Username' }] } },
+      { tool: 'fill', args: { target: '@e2', value: 'pass-x43' }, locators: { target: [{ kind: 'css', selector: '#password' }] } },
+      { tool: 'click', args: { target: '@e3' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Sign in' }] }, expect: { urlPattern: `${origin}/signed-in` } },
+    ];
+
+    it('both runners refill a form whose page reloaded itself after the fills, before the click that submits it', async () => {
+      const { replay, emitted, replayLog, emittedLog } = await both(reloadSteps('fill'), 0);
+      expect(replayLog, 'replay must submit the refilled form').toEqual(['commit:login:admin:pass-x43']);
+      expect(emittedLog, 'the artifact must submit the refilled form').toEqual(['commit:login:admin:pass-x43']);
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replay.warnings?.some((w) => /replaced its document after the fills ran/.test(w)), JSON.stringify(replay.warnings)).toBe(true);
+      expect(emitted.warnings?.some((w) => /replaced its document after the fills ran/.test(w)), JSON.stringify(emitted.warnings)).toBe(true);
+    }, 120_000);
+
+    /**
+     * fwec2 n1 03-create: a formatted-number widget keeps its own copy of the
+     * value from key events and rebuilds the field from it at blur, so a
+     * native fill is gone as soon as focus moves. Both runners must save the
+     * amount — typed key by key once the native refill is seen dropped — and
+     * leave the plain field beside it as it was filled.
+     */
+    const amountSteps = (order: 'amount-first' | 'amount-last'): SkillStep[] => {
+      const amount: SkillStep = { tool: 'fill', args: { target: '@e1', value: '12500' }, locators: { target: [{ kind: 'label', label: 'Amount' }] } };
+      const note: SkillStep = { tool: 'fill', args: { target: '@e2', value: 'note x61' }, locators: { target: [{ kind: 'label', label: 'Note' }] } };
+      return [
+        { tool: 'goto', args: { url: `${origin}/amount` }, locators: {} },
+        ...(order === 'amount-first' ? [amount, note] : [note, amount]),
+        { tool: 'click', args: { target: '@e3' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Save' }] } },
+      ];
+    };
+
+    for (const order of ['amount-first', 'amount-last'] as const) {
+      it(`both runners save a value a key-driven widget dropped at blur, typed key by key (${order})`, async () => {
+        const { replay, emitted, replayLog, emittedLog } = await both(amountSteps(order), 0);
+        expect(replayLog).toEqual(['commit:opportunity:12,500.00|note x61']);
+        expect(emittedLog).toEqual(['commit:opportunity:12,500.00|note x61']);
+        expect(replay.ok, replay.reason ?? '').toBe(true);
+        expect(emitted.ok, emitted.reason ?? '').toBe(true);
+        // only the widget was refilled; the plain field kept its native fill
+        for (const warnings of [replay.warnings, emitted.warnings]) {
+          expect(warnings?.some((w) => /1 field\(s\) this procedure filled were empty again .*1 of them kept only a value typed key by key/.test(w)), JSON.stringify(warnings)).toBe(true);
+        }
+      }, 120_000);
+    }
+
+    it('both runners repeat a submit the page reloaded away, once, after refilling its form', async () => {
+      const { replay, emitted, replayLog, emittedLog } = await both(reloadSteps('submit'), 0);
+      expect(replayLog, 'replay must sign in once').toEqual(['commit:login:admin:pass-x43']);
+      expect(emittedLog, 'the artifact must sign in once').toEqual(['commit:login:admin:pass-x43']);
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replay.warnings?.some((w) => /repeated once after a refill/.test(w)), JSON.stringify(replay.warnings)).toBe(true);
+      expect(emitted.warnings?.some((w) => /repeated once after a refill/.test(w)), JSON.stringify(emitted.warnings)).toBe(true);
+      expect(JSON.stringify([replay.warnings, emitted.warnings])).not.toContain('pass-x43');
+    }, 120_000);
   });
 
   /**

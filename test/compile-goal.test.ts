@@ -113,6 +113,30 @@ describe('goal derivation', () => {
     expect(skill.goal).toEqual({ requireText: ['Cancelled'] });
   });
 
+  // gitea fwgt2-n1 04-open: a labels-BEFORE read ("No labels"), a read-back
+  // pinned to a "Yes" button ("yes"), and the labels the picker applied.
+  // Only what the recording saw APPEAR, in the guard's line dialect, counts.
+  it('takes no goal marker from what a read returned — only from lines a step added (fwgt2)', () => {
+    const ISSUE = 'http://127.0.0.1:8095/bench/bench-repo/issues/4';
+    const TEXT = "On issue #4, open the Labels picker and set the labels to exactly 'bug' and 'priority-high'.";
+    const at = (added: string[]) => ({ diff: { url: ISSUE, alerts: [], added, dialect: 2 as const } });
+    const entries: RecordedEntry[] = [
+      { k: 'instruction', text: TEXT, url: ISSUE, startText: '- heading "x Bench Issue #4"\n- combobox "Labels"\n- combobox "Assignees"', startDialect: 2, startTextComplete: true },
+      step('read', { target: '.labels-list', what: 'text', label: 'sidebar_labels_before' }, { result: '"No labels"' }),
+      step('click', { target: 'Labels' }, at(['- combobox "Labels Clear labels bug documentation enhancement priority-high"', '- listbox "Clear labels bug documentation enhancement priority-high"', '- link "bug"', '- link "priority-high"'])),
+      step('click', { target: 'bug' }, at([])),
+      step('click', { target: 'priority-high' }, at([])),
+      step('read_all', { target: '.labels-list', what: 'text', label: 'sidebar_labels_raw' }, { result: '["bug\\npriority-high"]' }),
+      step('read', { target: '(read-back)', what: 'text' }, { label: 'persisted_after_reload', result: '"yes"' }),
+    ];
+    const [skill] = compile(entries, TEXT, {
+      status: 'success',
+      summary: 'labels set',
+      evidence: { values: { sidebar_labels_before: 'No labels', sidebar_labels_raw: 'bug\npriority-high', persisted_after_reload: 'yes' } },
+    } as never);
+    expect(skill.goal).toEqual({ requireText: ['bug', 'priority-high'] });
+  });
+
   it('gives a read-only procedure no goal', () => {
     const entries: RecordedEntry[] = [
       { k: 'instruction', text: 'Read the status of sales order S00021.', url: `${ORIGIN}/odoo/sales/21`, fingerprint: [1, 0, 0], startText: BEFORE },

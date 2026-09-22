@@ -5,9 +5,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { LocatorCandidate, RecordedEntry, RecordedInstruction, RecordedReport, RecordedStep, StepDiff } from '../daemon/recorder.js';
 import { rootDir } from '../shared/paths.js';
+import { escapeRe } from '../shared/text.js';
 import { urlParts, urlPattern } from './compile.js';
 import { mintedShape, urlShapeOf } from '../execution/url.js';
-import { idPositionPart, pathIdPart } from './ledger.js';
+import { idPositionPart, pathDigitPart, pathIdPart } from './ledger.js';
 import { MIN_ID_LEN, looksLikeId, tokenPattern } from './shape.js';
 import { statedPlainly } from '../spec/rethread.js';
 
@@ -364,7 +365,7 @@ export function buildFlow(
 
   const steps: FlowStep[] = [];
   const warnings: string[] = [];
-  const produced: { stepId: string; output: string; value: string }[] = [];
+  const produced: Produced[] = [];
   const seenUrl = new Set(urlParts(opts.startUrl).map((p) => p.value));
   const varEntries = Object.entries(opts.vars).filter(([, v]) => v.length >= 2).sort((a, b) => b[1].length - a[1].length);
   const baseline = baselineOf(entries);
@@ -389,6 +390,7 @@ export function buildFlow(
     // Reference earlier outputs (longest values first so nested ids resolve).
     for (const p of [...produced].sort((a, b) => b.value.length - a.value.length)) {
       if (p.value.length >= 2) text = replaceToken(text, p.value, `{{${p.stepId}.${p.output}}}`);
+      else if (p.path) text = replaceAtPath(text, p.path, `{{${p.stepId}.${p.output}}}`);
     }
     const outputs = Object.keys(g.report?.values ?? {});
     // Capture the skill's slot bindings, referencized like the instruction, so
@@ -404,7 +406,16 @@ export function buildFlow(
           let rv = v;
           for (const [name, value] of varEntries) rv = replaceToken(rv, value, `{{${name}}}`);
           for (const pr of [...produced].sort((a, b) => b.value.length - a.value.length)) {
-            if (pr.value.length >= 2) rv = replaceToken(rv, pr.value, `{{${pr.stepId}.${pr.output}}}`);
+            const marker = `{{${pr.stepId}.${pr.output}}}`;
+            if (pr.value.length >= 2) rv = replaceToken(rv, pr.value, marker);
+            else if (pr.path) {
+              // Below the floor only at its url position: inside a url or
+              // path the param carries, or the WHOLE param when this step's
+              // own instruction names that record by its path — the slot a
+              // navigation to it was bound by (compile's url-origin slot).
+              rv = replaceAtPath(rv, pr.path, marker);
+              if (rv === pr.value && replaceAtPath(g.instruction.text, pr.path, marker) !== g.instruction.text) rv = marker;
+            }
           }
           params[k] = rv;
         }
@@ -435,7 +446,7 @@ export function buildFlow(
     // recorded instructions referenced {{02-create.dashboard_uid}}, the
     // tier-A replay's report legitimately omitted it, and recovery ran with
     // the uid blanked until it turn-capped.
-    const minted: { stepId: string; output: string; value: string }[] = [];
+    const minted: Produced[] = [];
     if (g.endUrl) {
       // The WHOLE url, not only its parts. A step's params often carry it
       // entire ("On ticket {{v1}} (url {{v2}})"), and without provenance that
@@ -456,9 +467,14 @@ export function buildFlow(
         // replay publishes: the two must admit exactly the same parts or the
         // reference minted here resolves to nothing. See it for the arms and
         // their order.
-        if (!fresh || !referencablePart(part, opts.runSpecific)) continue;
+        // A digit run at a path position that this step's own action LANDED
+        // is its record id at any length (ledger.ts pathDigitPart): provenance,
+        // not characters. Below the floor it is referenced only at its path.
+        const landed = !referencablePart(part, opts.runSpecific) && pathDigitPart(part) && landedByAction(g, part);
+        if (!fresh || !(referencablePart(part, opts.runSpecific) || landed)) continue;
         if (produced.some((p) => p.value === part.value) || varEntries.some(([, v]) => v === part.value)) continue;
-        minted.push({ stepId: id, output: `url.${part.label}`, value: part.value });
+        const path = part.value.length < 2 ? pathTo(g.endUrl, part.label) : undefined;
+        minted.push({ stepId: id, output: `url.${part.label}`, value: part.value, ...(path ? { path } : {}) });
       }
     }
     produced.push(...minted);
@@ -1432,15 +1448,33 @@ export function leadingValue(line: string): string {
  */
 export function staleInstructionIds(entries: RecordedEntry[], flow: Flow): string[] {
   const minted = new Set<string>();
+  // And a path id a step's own action landed (pathDigitPart), by its path:
+  // snipeit fwsi2's "at /hardware/4" is the same leak spelled as a route.
+  const paths = new Set<string>();
   for (const e of entries) {
     const url = e.k === 'step' ? e.diff?.url : e.k === 'instruction' ? e.url : undefined;
     if (!url) continue;
-    for (const part of urlParts(url)) if (idPositionPart(part)) minted.add(part.value);
+    for (const part of urlParts(url)) {
+      if (idPositionPart(part)) minted.add(part.value);
+      if (e.k === 'step' && e.tool !== 'goto' && e.tool !== 'back' && pathDigitPart(part)) {
+        const path = pathTo(url, part.label);
+        if (path) paths.add(path);
+      }
+    }
   }
-  if (!minted.size) return [];
+  if (!minted.size && !paths.size) return [];
   const out: string[] = [];
   const seen = new Set<string>();
   for (const step of flow.steps) {
+    for (const path of paths) {
+      if (replaceAtPath(step.instruction, path, '') === step.instruction || seen.has(`${step.id}:${path}`)) continue;
+      seen.add(`${step.id}:${path}`);
+      out.push(
+        `${step.id}'s instruction quotes ${path} — a record path this recording's own action landed on, so every replay ` +
+          `will act on the RECORDING run's record (deleted by the next reset). Re-record with instructions that ` +
+          `name records by what is on screen (a name or reference), never by internal id.`,
+      );
+    }
     for (const m of step.instruction.matchAll(/\bid\s*[:#]?\s*(\d{1,10})\b/gi)) {
       if (!minted.has(m[1]) || seen.has(`${step.id}:${m[1]}`)) continue;
       seen.add(`${step.id}:${m[1]}`);
@@ -2137,9 +2171,57 @@ export function urlOutputs(url: string, runSpecific?: RunSpecific): Record<strin
   const out: Record<string, string> = { url };
   for (const part of urlParts(url)) {
     const key = `url.${part.label}`;
-    if (referencablePart(part, runSpecific) && !(key in out)) out[key] = part.value;
+    // pathDigitPart too: the producer mints a landed path id below the floor
+    // (buildFlow's landedByAction), and a replay cannot tell what landed its
+    // url, so it publishes every candidate the producer might have minted.
+    if ((referencablePart(part, runSpecific) || pathDigitPart(part)) && !(key in out)) out[key] = part.value;
   }
   return out;
+}
+
+/** A value an earlier step produced, and — for a url id below the text floor — the path it may be referenced at. */
+interface Produced {
+  stepId: string;
+  output: string;
+  value: string;
+  /** `/hardware/4`: the url path up to and including the id (pathTo). */
+  path?: string;
+}
+
+/**
+ * Whether one of this group's own NON-navigation actions landed a url holding
+ * `part` at its position: a save, a click on the new row. A `goto` names a
+ * page it was sent to, not a record it made.
+ */
+function landedByAction(g: Group, part: { label: string; value: string }): boolean {
+  return g.acts.some(
+    (s) => s.tool !== 'goto' && s.tool !== 'back' && Boolean(s.diff?.url) && urlParts(s.diff!.url).some((p) => p.label === part.label && p.value === part.value),
+  );
+}
+
+/** The url's path up to and including the path segment `label` names (`p1` of `/hardware/4/x` → `/hardware/4`); none for another position. */
+function pathTo(url: string, label: string): string | undefined {
+  const m = /^p(\d+)$/.exec(label);
+  if (!m) return undefined;
+  try {
+    const segs = new URL(url).pathname.split('/').filter(Boolean);
+    const i = Number(m[1]);
+    return i < segs.length ? `/${segs.slice(0, i + 1).join('/')}` : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * `path`'s last segment replaced by `marker` wherever the whole path stands in
+ * `text` (not continued by another word character): "at /hardware/4" and
+ * `…/hardware/4/checkout`, never "/hardware/42" nor a bare "4".
+ */
+function replaceAtPath(text: string, path: string, marker: string): string {
+  const cut = path.lastIndexOf('/') + 1;
+  const head = path.slice(0, cut);
+  const re = new RegExp(`${escapeRe(path)}(?![\\w-])`, 'g');
+  return text.replace(re, `${head}${marker}`);
 }
 
 /**

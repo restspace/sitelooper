@@ -480,6 +480,72 @@ mount();
 </body></html>`;
 
 /**
+ * A formatted-number widget (fwec2 n1 03-create's Amount box, AutoNumeric-
+ * style): it keeps its OWN copy of the value, updated only from key events,
+ * and rebuilds the field from that copy when focus leaves it — so a value set
+ * through the native setter shows until the blur and is then gone. A plain
+ * Note input beside it is the control. Save posts what both fields show.
+ */
+const AMOUNT = `<!doctype html><html><head><meta charset="utf-8"><title>Opportunity</title></head><body>
+<h1>Opportunity</h1>
+<label for="amount">Amount</label><input id="amount" type="text" inputmode="decimal">
+<label for="note">Note</label><input id="note" type="text">
+<button id="save" type="button">Save</button>
+<script>
+const amount = document.getElementById('amount');
+let own = '';
+amount.addEventListener('keydown', (e) => {
+  if (e.key === 'Backspace') own = '';
+  else if (/^[0-9]$/.test(e.key)) own += e.key;
+  else if (e.key.length === 1 && e.key !== '.' && e.key !== ',') e.preventDefault();
+});
+amount.addEventListener('focus', () => { amount.value = own; });
+amount.addEventListener('blur', () => { amount.value = own ? Number(own).toLocaleString('en-US', { minimumFractionDigits: 2 }) : ''; });
+document.getElementById('save').addEventListener('click', () => {
+  fetch('/commit/opportunity/' + encodeURIComponent(amount.value + '|' + document.getElementById('note').value), { method: 'POST' });
+});
+</script>
+</body></html>`;
+
+/**
+ * A login page whose DOCUMENT is replaced at the same url (fwvk2 n2 01-open:
+ * Vikunja's service worker reloaded /login). `/reload-login/fill`: 100ms after
+ * both fields first hold a value, the page calls location.reload().
+ * `/reload-login/submit`: the FIRST Sign in click reloads the page instead of
+ * submitting (the reload landing between the click and its answer). Once per
+ * tab each (sessionStorage). Sign in posts what the fields hold at the click
+ * and then goes to /signed-in; an empty field posts nothing.
+ */
+const RELOAD_LOGIN = (mode: string) => `<!doctype html><html><head><meta charset="utf-8"><title>Sign in</title></head><body>
+<h1>Sign in</h1>
+<div id="host"></div>
+<p id="status"></p>
+<script>
+const MODE = ${JSON.stringify(mode)};
+const once = (key) => { if (sessionStorage.getItem(key)) return false; sessionStorage.setItem(key, '1'); return true; };
+const build = () => {
+  document.getElementById('host').innerHTML = '<label for="username">Username</label><input id="username">' +
+    '<label for="password">Password</label><input id="password" type="password"><button id="login" type="button">Sign in</button>';
+  const user = document.getElementById('username');
+  const pass = document.getElementById('password');
+  const armed = () => { if (MODE === 'fill' && user.value && pass.value && once('reloaded-fill')) setTimeout(() => location.reload(), 100); };
+  user.addEventListener('input', armed);
+  pass.addEventListener('input', armed);
+  document.getElementById('login').addEventListener('click', async () => {
+    if (MODE === 'submit' && once('reloaded-submit')) { location.reload(); return; }
+    if (!user.value || !pass.value) { document.getElementById('status').textContent = 'Username and password are required'; return; }
+    await fetch('/commit/login/' + encodeURIComponent(user.value + ':' + pass.value), { method: 'POST' });
+    location.href = '/signed-in';
+  });
+};
+// The reloaded document is an app starting up again: it builds its form late,
+// so a look taken soon after the reload finds no field at all.
+if (sessionStorage.getItem('reloaded-fill')) setTimeout(build, 800);
+else build();
+</script>
+</body></html>`;
+
+/**
  * A disclosure (fwsi1 05-change's "Show/Hide More Information"): one button
  * shows and hides a panel of links. `/disclosure/open` starts shown,
  * `/disclosure/closed` hidden. Every click posts the state it left the panel
@@ -1093,6 +1159,21 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
     if (url === '/editor' && req.method === 'GET') {
       res.writeHead(200, { 'content-type': 'text/html' });
       res.end(EDITOR);
+      return;
+    }
+    if (url === '/amount' && req.method === 'GET') {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end(AMOUNT);
+      return;
+    }
+    if (url.startsWith('/reload-login/') && req.method === 'GET') {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end(RELOAD_LOGIN(url.slice('/reload-login/'.length)));
+      return;
+    }
+    if (url === '/signed-in' && req.method === 'GET') {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end('<!doctype html><html><head><meta charset="utf-8"><title>Home</title></head><body><h1>Signed in</h1></body></html>');
       return;
     }
     if (url.startsWith('/disclosure/') && req.method === 'GET') {

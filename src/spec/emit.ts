@@ -2095,8 +2095,15 @@ function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number,
   const role = standingFillRole(step.tool);
   const standing = ctx.standing && (role === 'submit' || role === 'retire') ? ctx.standing : undefined;
   if (standing) ctx.standingUsed = true;
+  // A submit whose url gate fails because the page replaced its document under
+  // it, leaving the form it submitted empty, runs once more after a refill —
+  // replay's runStepBody repeats it on the same shared standingFillsLost, and
+  // only on the url gate (fwvk2 n2 01-open).
+  const urlAt = standing && role === 'submit' ? checks.findIndex((line) => line.startsWith('await urlEffect(')) : -1;
+  const urlFailed = urlAt >= 0 ? `urlFailed${ctx.urls}` : undefined;
+  if (urlFailed) checks[urlAt] = `try { ${checks[urlAt]} } catch (err) { ${urlFailed} = true; throw err; }`;
   const indent = (lines: string[]) => lines.flatMap((line) => line.split('\n').map((part) => part ? `    ${part}` : part));
-  return [
+  const head = [
     `// @step ${where}`,
     `let ${urlBefore} = '';`,
     ...(alerts ? [`let ${alerts}: string[] = [];`, `let ${alertsAfter}: ObservedAlerts | null = null;`] : []),
@@ -2105,6 +2112,8 @@ function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number,
     ...(positional ? [`let ${positional} = false;`] : []),
     ...(landing ? [`let ${landing}: Awaited<ReturnType<typeof armPageEffect>> | null = null;`, `let ${moved}: Page | null = null;`] : []),
     ...(observed ? [`let ${observed}: ActionObservation | null = null;`] : []),
+  ];
+  const lifecycle = [
     'await runStepLifecycle({',
     '  prepare: async () => {',
     '    await settle(page);',
@@ -2138,6 +2147,26 @@ function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number,
     ...indent(checks),
     '  },',
     '});',
+  ];
+  const body = urlFailed
+    ? [
+        `let ${urlFailed} = false;`,
+        'for (let attempt = 0; ; attempt++) {',
+        '  try {',
+        ...lifecycle.map((l) => (l ? `    ${l}` : l)),
+        '    break;',
+        '  } catch (err) {',
+        `    if (attempt > 0 || !${urlFailed} || !(await standingFillsLost(page, ${standing}))) throw err;`,
+        `    ${urlFailed} = false;`,
+        `    rearmStandingFills(${standing});`,
+        `    logWarning(${q(`${where}: `)} + (err instanceof Error ? err.message : String(err)) + ${q(` — the page replaced its document under this ${step.tool} and its form is empty again, so it is repeated once after a refill`)});`,
+        '  }',
+        '}',
+      ]
+    : lifecycle;
+  return [
+    ...head,
+    ...body,
     // Every later step of this body, and every later flow step (run.page), is
     // asked of the page the procedure continued on.
     ...(moved ? [`if (${moved}) page = run.page = ${moved};`] : []),
@@ -2492,7 +2521,7 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
   // (replay notes the same once the step has run).
   if (step.tool === 'fill' && ctx.standing) {
     ctx.standingUsed = true;
-    out.push(`noteFill(${ctx.standing}, ${target}, ${src(str('value'))}, page.url());`);
+    out.push(`await noteFill(${ctx.standing}, ${target}, ${src(str('value'))}, page);`);
   }
   // A recorded popup/close is armed after the target resolved and before the
   // action dispatches, as replay arms it: a target=_blank click can raise its
@@ -2996,7 +3025,7 @@ function emitSegment(segment: SpecSegment, ctx: Ctx): string[] {
     out.splice(2, 0, `// What this segment types, selects or names: a read that returns only that is an echo (see echoRead).`, `const ${ctx.echoes} = new Set<string>();`);
   }
   if (ctx.standingUsed) {
-    out.splice(2, 0, `// What this segment filled, which must still stand when the action that submits it goes (see restoreStandingFills).`, `const ${ctx.standing}: StandingFill[] = [];`);
+    out.splice(2, 0, `// What this segment filled, which must still stand when the action that submits it goes (see restoreStandingFills).`, `const ${ctx.standing} = standingFills();`);
   }
   ctx.echoes = undefined;
   ctx.echoUsed = false;

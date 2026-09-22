@@ -47,7 +47,7 @@ import { dismissalAlreadyInEffect, effectExpectation, expectedChangesVerdict, li
 export { lineShows, type LineShowsOptions } from '../execution/snapshot.js';
 export { consequentialExpectations, isEchoLine } from '../execution/expect.js';
 import { candidateNames, echoVerdict, noteInteraction, setsSomething } from '../execution/echo.js';
-import { noteFill, restoreStandingFills, type StandingFill } from '../execution/refill.js';
+import { noteFill, rearmStandingFills, restoreStandingFills, standingFills, standingFillsLost } from '../execution/refill.js';
 import { toggleAlreadyShown, toggleEffectLines } from '../execution/toggle.js';
 import { mayNavigateToDestination, navigateToDestination, textHeldElsewhere } from '../execution/recover.js';
 import { CONTEXT_CONTRACT, contractOf, contractVerdict, isVerified, originOf, stepsCarryContext, type Skill, type SkillStep } from './store.js';
@@ -443,7 +443,9 @@ export async function replaySkill(
   // submits them goes (the shared src/execution/refill.ts, which the artifact
   // embeds and keeps per segment too): fwvk1 n3 01-open's login form was
   // rebuilt between its checked fills and the Login click.
-  const standing: StandingFill[] = [];
+  const standing = standingFills();
+  // Submit steps already repeated once after a lost submit (standingFillsLost): never twice.
+  const resubmitted = new Set<string>();
   // A recorded dialog that did not open (see StepVerdict.absentDialog): while
   // set, a step whose target cannot be found AND which names one of that
   // dialog's own controls is skipped as belonging to it; cleared by the next
@@ -1067,6 +1069,8 @@ export async function replaySkill(
      * script stopped.
      */
     let navAlerts: StepGateInput['navAlerts'];
+    /** The verification stopped at the url gate (expectedUrl), the one failure a lost submit is repeated on. */
+    let urlStopped = false;
     const navigates = NAV_ALERT_TOOLS.has(step.tool);
     const lifecycle = await runStepLifecycle({
       prepare: async () => {
@@ -1225,6 +1229,7 @@ export async function replaySkill(
           if (verdict.unobserved && !res.unobserved.includes(tag)) res.unobserved.push(tag);
           if (verdict.stop) {
             stop = verdict;
+            urlStopped = gate === expectedUrl;
             break;
           }
         }
@@ -1235,6 +1240,18 @@ export async function replaySkill(
     if (lifecycle.action.status !== 'completed') return lifecycle.action.status === 'skipped' ? 'skipped' : 'stop';
     const outcome = lifecycle.action.value;
     const stop = lifecycle.verification;
+    // A submit whose url gate failed because the document it went out from was
+    // replaced under it, leaving this page's form empty (fwvk2 n2 01-open: the
+    // service worker's reload landed after the Login click): run it again,
+    // once, after its own check refills the form. Only the url gate: a submit
+    // that stayed on its url as recorded (a same-page form) is never repeated.
+    if (stop && urlStopped && !resubmitted.has(tag) && (await standingFillsLost(page, standing))) {
+      resubmitted.add(tag);
+      rearmStandingFills(standing);
+      res.warnings.push(`step ${tag}: ${stop.stop} — the page replaced its document under this ${step.tool} and its form is empty again, so it is repeated once after a refill`);
+      res.lines.push(`${head} → the page reloaded under it and lost the form; repeated once`);
+      return runStepBody(step, tag, failIndex, sink, ambiguousNth);
+    }
     if (stop) {
       // The step took the tab off the app (an error page, another origin):
       // whoever picks up from here — recovery, the next segment — needs the
@@ -1279,7 +1296,7 @@ export async function replaySkill(
       res.lines.push(`${head} → ${key} = ${clip(outcome.result, MAX_LINE)}`);
     } else {
       res.lines.push(`${head} → ${clip(outcome.result.split('\n')[0], MAX_LINE)}`);
-      if (step.tool === 'fill' && resolved.target) noteFill(standing, resolved.target, String(args.value ?? ''), page.url());
+      if (step.tool === 'fill' && resolved.target) await noteFill(standing, resolved.target, String(args.value ?? ''), page);
     }
     return 'ran';
   };

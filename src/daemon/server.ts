@@ -72,6 +72,8 @@ const ADVISORY_DRAIN_MS = 6_000;
  * Refusals (wrong page, unbindable params) are free and do not count.
  */
 const MAX_CANDIDATE_ATTEMPTS = 3;
+/** The most replay warnings a flow run step record carries. */
+const MAX_STEP_WARNINGS = 20;
 
 
 export class Daemon {
@@ -116,7 +118,10 @@ export class Daemon {
   private noteMintedIds(entries: ReturnType<ScriptRecorder['entriesSince']>, stepId: string): void {
     for (const e of entries) {
       const url = e.k === 'step' ? e.diff?.url : e.k === 'instruction' ? e.url : undefined;
-      if (url) this.ledger.addUrlIds(url, stepId, urlParts(url));
+      // `landed`: a step's own non-navigation action put the browser here, so
+      // a path digit run in the url is that step's record id at any length
+      // (ledger.ts pathDigitPart; snipeit fwsi2 `/hardware/4`).
+      if (url) this.ledger.addUrlIds(url, stepId, urlParts(url), { landed: e.k === 'step' && e.tool !== 'goto' && e.tool !== 'back' });
       if (e.k === 'report') {
         for (const [name, value] of Object.entries(e.values ?? {})) {
           // No `basis`: a reported value's KIND is settled by looksLikeId
@@ -2088,6 +2093,9 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
         replayed: sk?.invoked ? `${sk.stepsReplayed}/${sk.stepsTotal}` : null,
         repaired: Boolean(sk?.repaired),
         turns: result.turns,
+        // What the replay noticed on the way (a refill, a skipped toggle, a
+        // fallback locator), quotable from the flow run record.
+        ...(sk?.warnings?.length ? { warnings: sk.warnings.slice(0, MAX_STEP_WARNINGS) } : {}),
         ...(repinned ? { repinned } : {}),
         ...(repinParams ? { repinParams } : {}),
         // A success missing what the step declares it reports: a zero-model
@@ -2335,6 +2343,10 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       stepsTotal: replay.stepsTotal,
       fallthroughs: replay.fallthroughs,
       misses: replay.misses.map((m) => ({ ...m, skill: replay!.skill })),
+      // Every segment's replay warnings, each tagged with its skill: the flow
+      // run's step record carries them (fwvk2 n2 01-open fell back with no
+      // record of whether a refill had been tried).
+      warnings: replay.warnings.map((w) => `${replay!.skill}: ${w}`),
       evidence: replay.candidateEvidence.map((e) => ({ ...e, skill: match!.skill.id })),
       values: { ...replay.values },
       echoed: [...replay.echoedValues],
@@ -2386,6 +2398,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       agg.stepsTotal += r.stepsTotal;
       agg.fallthroughs += r.fallthroughs;
       agg.misses.push(...r.misses.map((m) => ({ ...m, skill: next.id })));
+      agg.warnings.push(...r.warnings.map((w) => `${next.id}: ${w}`));
       agg.evidence.push(...r.candidateEvidence.map((e) => ({ ...e, skill: next.id })));
       Object.assign(agg.values, r.values);
       agg.echoed.push(...r.echoedValues);
@@ -2426,6 +2439,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       fallthroughs: agg.fallthroughs,
       similarity: replay.similarity,
       ...(agg.misses.length ? { misses: agg.misses } : {}),
+      ...(agg.warnings.length ? { warnings: agg.warnings } : {}),
       ...(replay.reason ? { failReason: replay.reason } : {}),
       ...(replay.failedAt !== undefined ? { failedAt: replay.failedAt } : {}),
       replayUrl: replay.url,

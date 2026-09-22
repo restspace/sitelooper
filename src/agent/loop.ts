@@ -275,6 +275,8 @@ export interface SkillRecord {
   unobserved?: string[];
   /** Why the replay stopped, when it did (drift telemetry). */
   failReason?: string;
+  /** The replay's own warnings, per segment, prefixed with the segment's skill id (tier A only). */
+  warnings?: string[];
   /** 1-based skill step the replay failed at, when it did. */
   failedAt?: number;
   /** The url the replay finished (or stopped) on. */
@@ -1039,6 +1041,16 @@ export async function runInstruction(
           }
           state.messages.push({ role: 'tool', tool_call_id: call.id, content: 'report accepted' });
           stubFrom(ci + 1, 'the report closed the instruction');
+          // A non-success report filed after the cap warning answers "Call
+          // report NOW", not the instruction: the model ran out of road, it
+          // did not check a negative. It is a turn-cap bail — blocked, so it
+          // escalates with the headroom a bail earns — keeping the model's
+          // summary and evidence for the escalation brief. fwec2 n1 03-create
+          // reported "Turn budget ran out before the save" as failure; no
+          // fallback tried and n2 spent 48 turns on the adopted step.
+          if (capWarned && validation.report.status !== 'success') {
+            return finish({ ...validation.report, status: 'blocked' }, turn, true, 'turn-cap');
+          }
           return finish(validation.report, turn);
         }
         state.messages.push({
@@ -1160,7 +1172,9 @@ export async function runInstruction(
  * answer twice. `blocked` means the agent could not determine the answer, which
  * is precisely the failure mode a stronger model can rescue, and the one this
  * project measured on a real app (a cheap model abandoned a supplier-autocomplete
- * step after 29 turns that a stronger model then solved).
+ * step after 29 turns that a stronger model then solved). A `failure` filed in
+ * answer to the cap warning is not a checked answer: runInstruction turns it
+ * into a turn-cap bail, so it escalates here (fwec2 n1 03-create).
  *
  * The retry shares the SAME live browser and message history, so the fallback
  * inherits everything the first attempt discovered — and, critically, is told it
@@ -1438,6 +1452,7 @@ function accountActions(skill: SkillRecord, name: string, args: Record<string, u
       if (r.misses.length) skill.misses = r.misses;
       if (r.unobserved.length) skill.unobserved = r.unobserved;
       if (r.reason) skill.failReason = r.reason;
+      if (r.warnings.length) skill.warnings = r.warnings.map((w) => `${r.skill}: ${w}`);
       if (r.failedAt !== undefined) skill.failedAt = r.failedAt;
       skill.replayUrl = r.url;
     }
