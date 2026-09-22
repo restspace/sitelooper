@@ -1,0 +1,453 @@
+{
+  "name": "fwop8",
+  "origin": "http://127.0.0.1:8090",
+  "startUrl": "http://127.0.0.1:8090/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to OpenProject at http://127.0.0.1:8090/ with username admin and password bench-admin-pass. Then open the project named 'Bench Project' and go to its work packages list. Report the subjects of all work packages whose subject starts with 'Seed:', exactly as shown on the page, one per line. Do not modify anything.",
+      "skill": "s_0f2f21",
+      "params": {
+        "v1": "http://127.0.0.1:8090/",
+        "v2": "admin",
+        "v3": "bench-admin-pass"
+      },
+      "outputs": [
+        "seed_work_package_subject_38",
+        "seed_work_package_subject_39",
+        "seed_work_package_subject_40",
+        "work_package_subjects_1",
+        "work_package_subjects_2",
+        "work_package_subjects_3"
+      ],
+      "recorded": {
+        "seed_work_package_subject_38": "Seed: triage inbox",
+        "seed_work_package_subject_39": "Seed: order missing parts",
+        "seed_work_package_subject_40": "Seed: ship repaired device",
+        "work_package_count": "3",
+        "work_package_subjects_1": "Seed: triage inbox",
+        "work_package_subjects_2": "Seed: order missing parts",
+        "work_package_subjects_3": "Seed: ship repaired device",
+        "url": "http://127.0.0.1:8090/projects/bench-project/work_packages"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages",
+      "outputEvidence": {
+        "seed_work_package_subject_38": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_work_package_subject_39": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_work_package_subject_40": {
+          "same": 1,
+          "differed": 0
+        },
+        "work_package_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "work_package_subjects_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "work_package_subjects_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "work_package_subjects_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "In the OpenProject project 'Bench Project', create a new work package of type 'Task' with subject exactly '{{runid}} Bench Work Package' and a description that includes the text '{{runid}}' (e.g. 'Bench work package for run {{runid}}'). Save it. Then report the work package's numeric ID as displayed (OpenProject shows it as #<number>) and confirm the type, subject and description text shown on its page.",
+      "skill": "s_17b231",
+      "params": {
+        "v2": "{{runid}} Bench Work Package",
+        "v1": "{{runid}}",
+        "v3": "Bench work package for run {{runid}}"
+      },
+      "outputs": [
+        "work_package_id",
+        "work_package_id_display",
+        "subject",
+        "description",
+        "page_title",
+        "creation_confirmation",
+        "ref"
+      ],
+      "recorded": {
+        "work_package_id": "41",
+        "work_package_id_display": "#41",
+        "type": "Task (displayed as 'TASK')",
+        "subject": "fwop8-n1 Bench Work Package",
+        "description": "Bench work package for run fwop8-n1",
+        "page_title": "Task: fwop8-n1 Bench Work Package (#41) | Work Packages | Bench Project | OpenProject",
+        "creation_confirmation": "Successful creation.",
+        "ref": "fwop8-n1",
+        "url": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/41/overview?query_props=%7B%22c%22%3A%5B%22id%22%2C%22subject%22%2C%22type%22%2C%22status%22%2C%22assignee%22%2C%22priority%22%5D%2C%22hi%22%3Atrue%2C%22g%22%3A%22%22%2C%22is%22%3Atrue%2C%22tv%22%3Afalse%2C%22hla%22%3A%5B%22status%22%2C%22priority%22%2C%22dueDate%22%5D%2C%22t%22%3A%22id%3Aasc%22%2C%22f%22%3A%5B%5D%2C%22ts%22%3A%22PT0S%22%2C%22pp%22%3A20%2C%22pa%22%3A1%7D",
+        "url.p4": "41"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "outputEvidence": {
+        "work_package_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "work_package_id_display": {
+          "same": 0,
+          "differed": 1
+        },
+        "type": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "subject": {
+          "same": 0,
+          "differed": 1
+        },
+        "description": {
+          "same": 0,
+          "differed": 1
+        },
+        "page_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "creation_confirmation": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.p4": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "03-edit",
+      "instruction": "On the OpenProject work package {{02-create.work_package_id_display}} ('{{runid}} Bench Work Package') details page in Bench Project, make three edits (fields are edited in place — click to edit, they save automatically): 1) set the assignee to the user 'Bench Assignee' — this is an autocomplete, so type the name and actually select the matching option from the dropdown; 2) set the status to 'In progress'; 3) set the finish date to 2026-12-31. Then report the values shown on the page for assignee, status and finish date.",
+      "skill": "s_9b48d4",
+      "params": {
+        "v1": "{{02-create.work_package_id_display}}",
+        "v3": "{{runid}} Bench Work Package",
+        "v5": "Bench Assignee",
+        "v6": "2026-12-31",
+        "v2": "{{02-create.url.p4}}",
+        "v4": "{{runid}}"
+      },
+      "outputs": [
+        "work_package_id",
+        "subject",
+        "assignee",
+        "status",
+        "finish_date",
+        "date_field_display",
+        "title_after_reload",
+        "ref"
+      ],
+      "recorded": {
+        "work_package_id": "41",
+        "subject": "fwop8-n1 Bench Work Package",
+        "assignee": "BA Bench Assignee (Bench Assignee, bench-assignee@example.com)",
+        "status": "In progress",
+        "finish_date": "12/31/2026",
+        "date_field_display": "no start date - 12/31/2026",
+        "title_after_reload": "Task: fwop8-n1 Bench Work Package (#41) | Work Packages | Bench Project | OpenProject",
+        "ref": "fwop8-n1",
+        "url": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/41/overview"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "outputEvidence": {
+        "work_package_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "subject": {
+          "same": 0,
+          "differed": 1
+        },
+        "assignee": {
+          "same": 1,
+          "differed": 0
+        },
+        "status": {
+          "same": 1,
+          "differed": 0
+        },
+        "finish_date": {
+          "same": 1,
+          "differed": 0
+        },
+        "date_field_display": {
+          "same": 1,
+          "differed": 0
+        },
+        "title_after_reload": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "04-add",
+      "instruction": "On the OpenProject work package {{02-create.work_package_id_display}} ('{{runid}} Bench Work Package') details page in Bench Project, add a comment whose text includes '{{runid}}' (e.g. 'Comment for run {{runid}}'). Submit the comment. Then report the comment text as it appears in the activity/comments list on the page, and confirm the work package's assignee, status and finish date are still 'Bench Assignee', 'In progress' and 2026-12-31.",
+      "skill": "s_7e6e39",
+      "params": {
+        "v1": "{{02-create.work_package_id_display}}",
+        "v3": "{{runid}} Bench Work Package",
+        "v4": "{{runid}}",
+        "v6": "Comment for run {{runid}}",
+        "v5": "In progress"
+      },
+      "outputs": [
+        "work_package_id",
+        "comment_text",
+        "comment_activity_entry",
+        "status",
+        "finish_date",
+        "date_field_display",
+        "description",
+        "subject",
+        "work_package_url",
+        "ref"
+      ],
+      "recorded": {
+        "work_package_id": "41",
+        "comment_text": "Comment for run fwop8-n1",
+        "comment_activity_entry": "BA Bench Admin created this on 09/22/2026 11:27 AM Comment for run fwop8-n1",
+        "assignee": "BA Bench Assignee (Bench Assignee)",
+        "assignee_aria_label": "Assignee Bench Assignee: Edit",
+        "status": "In progress",
+        "finish_date": "12/31/2026",
+        "date_field_display": "no start date - 12/31/2026",
+        "description": "Bench work package for run fwop8-n1",
+        "subject": "fwop8-n1 Bench Work Package",
+        "work_package_url": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/41/overview",
+        "ref": "fwop8-n1"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "urlVariance": [
+        "41",
+        "42"
+      ],
+      "outputEvidence": {
+        "work_package_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_activity_entry": {
+          "same": 0,
+          "differed": 1
+        },
+        "assignee": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "assignee_aria_label": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "status": {
+          "same": 1,
+          "differed": 0
+        },
+        "finish_date": {
+          "same": 1,
+          "differed": 0
+        },
+        "date_field_display": {
+          "same": 1,
+          "differed": 0
+        },
+        "description": {
+          "same": 0,
+          "differed": 1
+        },
+        "subject": {
+          "same": 0,
+          "differed": 1
+        },
+        "work_package_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "05-open",
+      "instruction": "Open OpenProject work package {{02-create.work_package_id_display}} in Bench Project ({{03-edit.url}}) and verify, reading from the live page: the subject is exactly '{{runid}} Bench Work Package', the type is Task, the description contains '{{runid}}', the assignee is the user 'Bench Assignee', the status is 'In progress', the finish date is 2026-12-31, and there is a comment containing '{{runid}}' in the activity. Report each of these values exactly as displayed, plus the work package's displayed numeric ID. Do not change anything.",
+      "skill": "s_35de69",
+      "params": {
+        "v1": "{{02-create.work_package_id_display}}",
+        "v3": "{{03-edit.url}}",
+        "v4": "{{runid}} Bench Work Package",
+        "v5": "{{runid}}",
+        "v6": "In progress"
+      },
+      "outputs": [
+        "displayed_numeric_id",
+        "subject",
+        "description",
+        "assignee",
+        "status",
+        "comment",
+        "page_title",
+        "ref"
+      ],
+      "recorded": {
+        "displayed_numeric_id": "#41 (title shows (#41); table id cell renders 41)",
+        "subject": "fwop8-n1 Bench Work Package",
+        "type": "TASK (aria-label \"Type Task: Edit\")",
+        "description": "Bench work package for run fwop8-n1 (contains 'fwop8-n1')",
+        "assignee": "BA Bench Assignee (aria-label \"Assignee Bench Assignee: Edit\")",
+        "status": "In progress",
+        "finish_date": "12/31/2026 (date field: 'no start date - 12/31/2026')",
+        "comment": "Comment for run fwop8-n1 — journal entry: 'BA Bench Admin created this on 09/22/2026 11:27 AM Comment for run fwop8-n1'",
+        "page_title": "Task: fwop8-n1 Bench Work Package (#41) | Work Packages | Bench Project | OpenProject",
+        "breadcrumb_project_name": "Bench Project",
+        "ref": "fwop8-n1",
+        "url": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/41/activity"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/activity",
+      "urlVariance": [
+        "41",
+        "42"
+      ],
+      "outputEvidence": {
+        "displayed_numeric_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "subject": {
+          "same": 0,
+          "differed": 1
+        },
+        "type": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "description": {
+          "same": 0,
+          "differed": 1
+        },
+        "assignee": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "status": {
+          "same": 1,
+          "differed": 0
+        },
+        "finish_date": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "comment": {
+          "same": 0,
+          "differed": 1
+        },
+        "page_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "breadcrumb_project_name": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwop8-n1",
+    "created": "2026-09-22T11:30:03.578Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "work_package_count"
+      ]
+    },
+    {
+      "stepId": "02-create",
+      "outputs": [
+        "type"
+      ]
+    },
+    {
+      "stepId": "04-add",
+      "outputs": [
+        "assignee",
+        "assignee_aria_label"
+      ]
+    },
+    {
+      "stepId": "05-open",
+      "outputs": [
+        "type",
+        "finish_date",
+        "breadcrumb_project_name"
+      ]
+    }
+  ]
+}
