@@ -1,0 +1,48 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-signin
+[sitelooper warn] 02-create s_2f4efc/6: read 'ticket_title' returned a value the skill itself set/selected ('fwrd83-spec RD Bench Ticket') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 02-create s_2f4efc/7: read 'ticket_customer' returned a value the skill itself set/selected ('Marley Street Cafe') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper step] 02-create
+[sitelooper warn] 03-open s_4522c1/6: read 'part_name' returned a value the skill itself set/selected ('fwrd83-spec RD Part A') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper step] 03-open
+[sitelooper warn] 04-add s_a6d616/7: read 'new_part_name' returned a value the skill itself set/selected ('fwrd83-spec RD Part B') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper step] 04-add
+[sitelooper step] 05-edit
+  ✘  1 fwrd83.spec.ts:9:1 › fwrd83 (21.0s)
+
+
+  1) fwrd83.spec.ts:9:1 › fwrd83 › 06-change: On ticket {{02-create.ticket_reference}}'s detail page, try to change the ticket's status to 'Ready' (there should be a status control — a combobox, dropdown, or status buttons). If the app refuses and shows an error or validation message, do NOT work around it yet — just report the exact refusal/error text shown, and any hints the page gives about what is required before the Ready status is accepted. Also report what statuses are available in the status control. 
+
+    Error: 06-change s_3e390a/1 raised an alert the recording never saw: Ticket is not ready Part "fwrd83-spec RD Part A" has no supplier Part "fwrd83-spec RD Part B" has no supplier
+
+       at fwrd83.flow.ts:13132
+
+      13130 |   const verdict = alertVerdict(before, after ? after.alerts : null, ctx, after ? after.complete : true);
+      13131 |   for (const line of verdict.warnings) logWarning(line);
+    > 13132 |   if (verdict.stop) throw new Error(verdict.stop);
+            |                           ^
+      13133 | }
+      13134 |
+      13135 | /**
+        at alertGate (/home/user/sitelooper/bench/results/fwrd83-spec-spec-tmp/fwrd83.flow.ts:13132:27)
+        at Object.verify (/home/user/sitelooper/bench/results/fwrd83-spec-spec-tmp/fwrd83.flow.ts:16413:9)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwrd83-spec-spec-tmp/fwrd83.flow.ts:10532:24)
+        at Object.06-change (/home/user/sitelooper/bench/results/fwrd83-spec-spec-tmp/fwrd83.flow.ts:16384:5)
+        at /home/user/sitelooper/bench/results/fwrd83-spec-spec-tmp/fwrd83.flow.ts:18886:7
+        at runFlow (/home/user/sitelooper/bench/results/fwrd83-spec-spec-tmp/fwrd83.flow.ts:18885:5)
+        at /home/user/sitelooper/bench/results/fwrd83-spec-spec-tmp/fwrd83.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwrd83-fwrd83/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwrd83-fwrd83/error-context.md
+
+  1 failed
+    fwrd83.spec.ts:9:1 › fwrd83 ────────────────────────────────────────────────────────────────────

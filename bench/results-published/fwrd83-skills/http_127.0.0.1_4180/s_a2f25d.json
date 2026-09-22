@@ -1,0 +1,477 @@
+{
+ "id": "s_a2f25d",
+ "origin": "http://127.0.0.1:4180",
+ "template": "On ticket {{v1}}'s detail page, try to change the ticket's status to 'Ready' (there should be a status control — a combobox, dropdown, or status buttons). If the app refuses and shows an error or validation message, do NOT work around it yet — just report the exact refusal/error text shown, and any hints the page gives about what is required before the Ready status is accepted. Also report what statuses are available in the status control.",
+ "params": {
+  "v1": {
+   "example": "RD-1016",
+   "usedIn": [],
+   "known": true,
+   "binding": "02-create.ticket_reference"
+  },
+  "v2": {
+   "example": "fwrd83-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:4180/#/tickets/:id"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e427"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "status-to-Ready"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Mark Ready"
+     },
+     {
+      "kind": "css",
+      "selector": "#view > div > div:nth-of-type(2) > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1002,
+      "y": 145,
+      "w": 105.5,
+      "h": 39,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets/:id"
+   },
+   "via": {
+    "skill": "s_3e390a",
+    "step": 1
+   }
+  },
+  {
+   "tool": "dialog_expect",
+   "args": {
+    "action": "accept"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e202"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "status-to-Ready"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Mark Ready"
+     },
+     {
+      "kind": "css",
+      "selector": "#view > div > div:nth-of-type(2) > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1002,
+      "y": 274,
+      "w": 105.5,
+      "h": 39,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "[role=alert] li, [role=alert] p",
+    "what": "text",
+    "label": "refusal_title"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "[role=alert] li, [role=alert] p",
+      "nth": 0
+     }
+    ]
+   },
+   "label": "refusal_title"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "[role=alert] li, [role=alert] p",
+    "what": "text",
+    "label": "refusal_line_1"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "[role=alert] li, [role=alert] p",
+      "nth": 1
+     }
+    ]
+   },
+   "label": "refusal_line_1"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "[role=alert] li, [role=alert] p",
+    "what": "text",
+    "label": "refusal_line_2"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "[role=alert] li, [role=alert] p",
+      "nth": 2
+     }
+    ]
+   },
+   "label": "refusal_line_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "ticket-ref"
+     },
+     {
+      "kind": "css",
+      "selector": "#view > div > div:nth-of-type(1) > p:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 262,
+      "y": 259,
+      "w": 316.7,
+      "h": 18,
+      "role": null,
+      "tag": "p",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "ticket_reference"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "ticket-title"
+     },
+     {
+      "kind": "css",
+      "selector": "#view > div > div:nth-of-type(1) > h1"
+     },
+     {
+      "kind": "point",
+      "x": 262,
+      "y": 287,
+      "w": 316.7,
+      "h": 30,
+      "role": "heading",
+      "tag": "h1",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "ticket_title"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "ticket-customer"
+     },
+     {
+      "kind": "css",
+      "selector": "#view > div > div:nth-of-type(1) > p:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 231,
+      "y": 318,
+      "w": 116.7,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "ticket_customer"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"ticket-status\"] span"
+     },
+     {
+      "kind": "css",
+      "selector": "#view > div > div:nth-of-type(1) > p:nth-of-type(3) > span:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 176,
+      "y": 354,
+      "w": 48,
+      "h": 25.2,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "status_before_attempt"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "error-message"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"error\"] p"
+     },
+     {
+      "kind": "css",
+      "selector": "#error-region > p"
+     },
+     {
+      "kind": "point",
+      "x": 642,
+      "y": 112,
+      "w": 1035,
+      "h": 22.5,
+      "role": null,
+      "tag": "p",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "refusal_title"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"error-unmet\"] li",
+      "nth": 0
+     },
+     {
+      "kind": "css",
+      "selector": "#error-region > ul > li:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 653,
+      "y": 143,
+      "w": 1013,
+      "h": 22.5,
+      "role": null,
+      "tag": "li",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "refusal_line_1"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"error-unmet\"] li",
+      "nth": 1
+     },
+     {
+      "kind": "css",
+      "selector": "#error-region > ul > li:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 653,
+      "y": 168,
+      "w": 1013,
+      "h": 22.5,
+      "role": null,
+      "tag": "li",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "refusal_line_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "parts-total"
+     },
+     {
+      "kind": "css",
+      "selector": "section > div > table > tfoot > tr > td:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 907,
+      "y": 625,
+      "w": 125.8,
+      "h": 42,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "parts_total"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "On ticket {{v1}}'s detail page (/#/tickets/t15, \"{{v2}} RD Bench Ticket\", Customer: Marley Street Cafe, Status: Draft) the status control is not a combobox/dropdown or a set of status buttons — the only status control present is a single \"Mark Ready\" button (button[data-testid=\"status-to-Ready\"][data-status=\"Ready\"]), alongside an \"Archive ticket\" button; there is no <select> anywhere on the page. Clicking \"Mark Ready\" is refused and the page renders a live [role=alert] region reading exactly: \"Ticket is not ready\" / \"Part \\\"{{v2}} RD Part A\\\" has no supplier\" / \"Part \\\"{{v2}} RD Part B\\\" has no supplier\". Status remains Draft and no other validation message or hint is shown (the only other hint text on the page is \"Price is calculated from cost and markup when the part is saved.\"), so the implied requirement before Ready is accepted is that every part on the ticket has a supplier — both of {{v1}}'s parts currently show \"No supplier\".",
+  "values": {
+   "ticket_reference": "{{v1}}",
+   "ticket_title": "{{v2}} RD Bench Ticket",
+   "ticket_customer": "Marley Street Cafe",
+   "status_before_attempt": "Draft",
+   "status_field_label_and_value": "Status Draft (badge badge-draft)",
+   "status_control": "single button \"Mark Ready\" (data-action=status, data-status=Ready); no select/combobox/radio in DOM",
+   "other_actions_visible": "Archive ticket, Add part, Edit/Delete per part row",
+   "refusal_title": "Ticket is not ready",
+   "refusal_line_1": "Part \"{{v2}} RD Part A\" has no supplier",
+   "refusal_line_2": "Part \"{{v2}} RD Part B\" has no supplier",
+   "required_hint": "each part must have a supplier before Ready is accepted",
+   "part_a_row": "{{v2}} RD Part A — $150.00, 25%, qty 1, No supplier, $187.50",
+   "part_b_row": "{{v2}} RD Part B — $200.00, 25%, qty 1, No supplier, $250.00",
+   "parts_total": "$437.50",
+   "status_after_attempt": "Draft (unchanged)",
+   "ref": "{{v2}}"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 2,
+  "successes": 1,
+  "partial": 1,
+  "created": "2026-09-22T15:41:05.708Z",
+  "failedAtStep": {
+   "1": 1
+  },
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-22T15:42:03.471Z",
+  "recoveredStops": 1,
+  "harmlessStops": 1
+ },
+ "status": "provisional",
+ "variantOf": "s_3e390a",
+ "provenance": {
+  "session": "fwrd83-n2",
+  "instruction": "On ticket RD-1016's detail page, try to change the ticket's status to 'Ready' (there should be a status control — a combobox, dropdown, or status buttons). If the app refuses and shows an error or validation message, do NOT work around it yet — just report the exact refusal/error text shown, and any hints the page gives about what is required before the Ready status is accepted. Also report what statuses are available in the status control.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-22T15:41:05.708Z",
+  "transforms": [
+   {
+    "name": "unfreezeExpectations",
+    "at": 1,
+    "reason": "recorded alert carried a value only the recording run could produce: \"Ticket is not ready Part \\\"{{v2}} RD Part A\\\" has no supplier Part \\\"{{v2}} RD Part B\\\" has no supplier\" → \"\""
+   }
+  ]
+ },
+ "revision": 2
+}

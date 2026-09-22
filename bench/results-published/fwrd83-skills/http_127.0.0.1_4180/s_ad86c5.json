@@ -1,0 +1,664 @@
+{
+ "id": "s_ad86c5",
+ "origin": "http://127.0.0.1:4180",
+ "template": "On ticket {{v1}}'s detail page, try to change the ticket's status to 'Ready' (there should be a status control — a combobox, dropdown, or status buttons). If the app refuses and shows an error or validation message, do NOT work around it yet — just report the exact refusal/error text shown, and any hints the page gives about what is required before the Ready status is accepted. Also report what statuses are available in the status control.",
+ "params": {
+  "v1": {
+   "example": "RD-1017",
+   "usedIn": [],
+   "known": true,
+   "binding": "02-create.ticket_reference"
+  },
+  "v2": {
+   "example": "fwrd83-n3",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:4180/#/tickets/:id"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e427"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "status-to-Ready"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Mark Ready"
+     },
+     {
+      "kind": "css",
+      "selector": "#view > div > div:nth-of-type(2) > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1002,
+      "y": 145,
+      "w": 105.5,
+      "h": 39,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets/:id"
+   },
+   "via": {
+    "skill": "s_a2f25d",
+    "step": 1
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "refusal_message",
+    "target": "@e183",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "error"
+     },
+     {
+      "kind": "id",
+      "selector": "#error-region"
+     },
+     {
+      "kind": "css",
+      "selector": "#error-region"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 140,
+      "w": 1072,
+      "h": 108.5,
+      "role": "alert",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "refusal_message"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "status_before_attempt",
+    "target": "@e200",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"ticket-status\"] span"
+     },
+     {
+      "kind": "css",
+      "selector": "#view > div > div:nth-of-type(1) > p:nth-of-type(3) > span:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 176,
+      "y": 354,
+      "w": 48,
+      "h": 25.2,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "status_before_attempt"
+  },
+  {
+   "tool": "read_all",
+   "args": {
+    "target": "main button",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "main button"
+     }
+    ]
+   },
+   "label": "all_main_buttons"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "ticket-ref"
+     },
+     {
+      "kind": "css",
+      "selector": "#view > div > div:nth-of-type(1) > p:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 262,
+      "y": 259,
+      "w": 316.7,
+      "h": 18,
+      "role": null,
+      "tag": "p",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "ticket_reference"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "ticket-title"
+     },
+     {
+      "kind": "css",
+      "selector": "#view > div > div:nth-of-type(1) > h1"
+     },
+     {
+      "kind": "point",
+      "x": 262,
+      "y": 287,
+      "w": 316.7,
+      "h": 30,
+      "role": "heading",
+      "tag": "h1",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "ticket_title"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "ticket-customer"
+     },
+     {
+      "kind": "css",
+      "selector": "#view > div > div:nth-of-type(1) > p:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 231,
+      "y": 318,
+      "w": 116.7,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "ticket_customer"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "error-message"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"error\"] p"
+     },
+     {
+      "kind": "css",
+      "selector": "#error-region > p"
+     },
+     {
+      "kind": "point",
+      "x": 642,
+      "y": 112,
+      "w": 1035,
+      "h": 22.5,
+      "role": null,
+      "tag": "p",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "refusal_title"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"error-unmet\"] li",
+      "nth": 0
+     },
+     {
+      "kind": "css",
+      "selector": "#error-region > ul > li:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 653,
+      "y": 143,
+      "w": 1013,
+      "h": 22.5,
+      "role": null,
+      "tag": "li",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "refusal_line_1"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"error-unmet\"] li",
+      "nth": 1
+     },
+     {
+      "kind": "css",
+      "selector": "#error-region > ul > li:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 653,
+      "y": 168,
+      "w": 1013,
+      "h": 22.5,
+      "role": null,
+      "tag": "li",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "refusal_line_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "parts-total"
+     },
+     {
+      "kind": "css",
+      "selector": "section > div > table > tfoot > tr > td:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 907,
+      "y": 625,
+      "w": 125.8,
+      "h": 42,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "parts_total"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "status-to-Ready"
+     },
+     {
+      "kind": "css",
+      "selector": "#view > div > div:nth-of-type(2) > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1002,
+      "y": 274,
+      "w": 105.5,
+      "h": 39,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "main_button"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "archive"
+     },
+     {
+      "kind": "css",
+      "selector": "#view > div > div:nth-of-type(2) > button:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 1119,
+      "y": 274,
+      "w": 113.3,
+      "h": 39,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "main_button_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "add-part"
+     },
+     {
+      "kind": "css",
+      "selector": "#view > section > header > button"
+     },
+     {
+      "kind": "point",
+      "x": 1114,
+      "y": 425,
+      "w": 82.9,
+      "h": 39,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "main_button_3"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "status-to-Ready"
+     },
+     {
+      "kind": "css",
+      "selector": "#view > div > div:nth-of-type(2) > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1002,
+      "y": 274,
+      "w": 105.5,
+      "h": 39,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "status_control_buttons_1"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "archive"
+     },
+     {
+      "kind": "css",
+      "selector": "#view > div > div:nth-of-type(2) > button:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 1119,
+      "y": 274,
+      "w": 113.3,
+      "h": 39,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "status_control_buttons_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(1) > td:nth-of-type(7) > button:nth-of-type(1)"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"part-row-p18\"] button",
+      "nth": 0
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "part-edit-p18"
+     },
+     {
+      "kind": "point",
+      "x": 1012,
+      "y": 527,
+      "w": 44.4,
+      "h": 29.5,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "main_button_4"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(1) > td:nth-of-type(7) > button:nth-of-type(2)"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"part-row-p18\"] button",
+      "nth": 1
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "part-delete-p18"
+     },
+     {
+      "kind": "point",
+      "x": 1068,
+      "y": 527,
+      "w": 59.6,
+      "h": 29.5,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "main_button_5"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Attempting to set ticket {{v1}} to Ready was refused, exactly as the instruction anticipated: a banner on the page reads \"Ticket is not ready\" and lists \"Part \"{{v2}} RD Part A\" has no supplier\" and \"Part \"{{v2}} RD Part B\" has no supplier\". No workaround was attempted and the ticket status is Draft. The status control is button-based rather than a combobox: there are 0 <select> elements on the page, and the only status-related control is the \"Mark Ready\" button, alongside \"Archive ticket\"; the full button set on the page is Mark Ready, Archive ticket, Add part, Edit, Delete, Edit, Delete. The page's hint about the precondition is explicit in the refusal — each part must have a supplier assigned before Ready is accepted (both parts currently read \"No supplier\").",
+  "values": {
+   "ticket_reference": "{{v1}}",
+   "ticket_title": "{{v2}} RD Bench Ticket",
+   "ticket_customer": "Marley Street Cafe",
+   "status_before_attempt": "Draft",
+   "refusal_message": "Ticket is not ready\n\nPart \"{{v2}} RD Part A\" has no supplier\nPart \"{{v2}} RD Part B\" has no supplier",
+   "refusal_title": "Ticket is not ready",
+   "refusal_line_1": "Part \"{{v2}} RD Part A\" has no supplier",
+   "refusal_line_2": "Part \"{{v2}} RD Part B\" has no supplier",
+   "status_control_type": "buttons (no combobox/dropdown; 0 <select> elements on page)",
+   "all_main_buttons": "Mark Ready, Archive ticket, Add part, Edit, Delete, Edit, Delete",
+   "parts_supplier_state": "both parts listed as \"No supplier\"",
+   "parts_total": "$437.50",
+   "main_button": "Mark Ready",
+   "main_button_2": "Archive ticket",
+   "main_button_3": "Add part",
+   "main_button_4": "Edit",
+   "main_button_5": "Delete",
+   "ref": "{{v2}}",
+   "status_control_buttons_1": "Mark Ready",
+   "status_control_buttons_2": "Archive ticket"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-22T15:42:03.489Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "variantOf": "s_a2f25d",
+ "provenance": {
+  "session": "fwrd83-n3",
+  "instruction": "On ticket RD-1017's detail page, try to change the ticket's status to 'Ready' (there should be a status control — a combobox, dropdown, or status buttons). If the app refuses and shows an error or validation message, do NOT work around it yet — just report the exact refusal/error text shown, and any hints the page gives about what is required before the Ready status is accepted. Also report what statuses are available in the status control.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-22T15:42:03.489Z",
+  "transforms": [
+   {
+    "name": "unfreezeExpectations",
+    "at": 1,
+    "reason": "recorded alert carried a value only the recording run could produce: \"Ticket is not ready Part \\\"{{v2}} RD Part A\\\" has no supplier Part \\\"{{v2}} RD Part B\\\" has no supplier\" → \"\""
+   }
+  ]
+ },
+ "revision": 1
+}

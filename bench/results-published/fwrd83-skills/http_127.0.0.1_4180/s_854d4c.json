@@ -1,0 +1,904 @@
+{
+ "id": "s_854d4c",
+ "origin": "http://127.0.0.1:4180",
+ "template": "On ticket {{v1}}'s detail page (currently status {{v2}}), remove BOTH parts: '{{v3}}' and '{{v5}}'. Use each part's delete/remove control in the parts table and confirm any confirmation dialog. If the app refuses to delete a part while the ticket is {{v2}}, discover what it requires (e.g. set the status back to {{v6}} first) and do that, then delete the parts. Wait for the parts table to be empty (0 parts, total /bin/sh.00) and report the exact state. Then archive the ticket using the 'Archive ticket' control (if it refuses, satisfy whatever it requires and report it). Finally verify on the tickets list (with 'Show archived' checked if needed) that the ticket {{v1}} is archived and no longer appears in the active list. Report: how many parts remain, the ticket's final status, any confirmation text shown, and whether the ticket is out of the active list.",
+ "params": {
+  "v1": {
+   "example": "RD-1015",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:ticket_reference"
+  },
+  "v2": {
+   "example": "Ready",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i7:final_ticket_status"
+  },
+  "v3": {
+   "example": "fwrd83-n1 RD Part A",
+   "usedIn": [
+    2
+   ],
+   "known": true,
+   "binding": "output:i3:part_name"
+  },
+  "v4": {
+   "example": "fwrd83-n1",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v5": {
+   "example": "fwrd83-n1 RD Part B",
+   "usedIn": [
+    7
+   ],
+   "known": true,
+   "binding": "output:i4:new_part_name"
+  },
+  "v6": {
+   "example": "Draft",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:ticket_status"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+  "fingerprint": [
+   0,
+   0.047,
+   0.024,
+   0,
+   0,
+   0,
+   0.071,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.165,
+   0,
+   0.094,
+   0.047,
+   0,
+   0.047,
+   0.094,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0.094,
+   0,
+   0.094,
+   0,
+   0.024,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0.094,
+   0,
+   0,
+   0,
+   0,
+   0.094,
+   0,
+   0,
+   0,
+   0.094,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.094,
+   0,
+   0.047,
+   0,
+   0.047,
+   0.024,
+   0,
+   0,
+   0,
+   0.047,
+   0.047,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0.024,
+   0,
+   0,
+   0.024,
+   0.024,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0.071,
+   0,
+   0.047,
+   0.094,
+   0.118,
+   0,
+   0.047,
+   0.047,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0,
+   0.235,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0.047,
+   0,
+   0.071,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.141,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.282,
+   0,
+   0.071,
+   0.047,
+   0,
+   0,
+   0,
+   0.235,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0.047,
+   0.047,
+   0.212,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0.047,
+   0.047,
+   0,
+   0.094,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.424,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0.071,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0.071,
+   0,
+   0.118,
+   0,
+   0,
+   0.094,
+   0,
+   0.047,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.071,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0.094,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0.024,
+   0,
+   0.235,
+   0.024,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0.165,
+   0.141,
+   0,
+   0,
+   0,
+   0.094,
+   0.024,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.071,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0.047,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0.141,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.188,
+   0,
+   0.165,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.094,
+   0.047,
+   0,
+   0.047,
+   0,
+   0.094,
+   0,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0.047,
+   0,
+   0,
+   0.047,
+   0.071,
+   0,
+   0.047,
+   0.047,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0.047,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "requireText": [
+   "{{v3}}",
+   "{{v4}}"
+  ]
+ },
+ "steps": [
+  {
+   "tool": "dialog_expect",
+   "args": {
+    "action": "accept"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e521"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "tr",
+      "hasText": "{{v3}}",
+      "selector": "td:nth-of-type(7) > button:nth-of-type(2)"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Delete"
+     },
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(1) > td:nth-of-type(7) > button:nth-of-type(2)"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"part-row-p18\"] button"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "part-delete-p18"
+     },
+     {
+      "kind": "point",
+      "x": 1082,
+      "y": 399,
+      "w": 59.6,
+      "h": 29.5,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+    "addedContains": [
+     "- dialog \"Confirm\"",
+     "- heading \"Confirm\"",
+     "- button \"Cancel\"",
+     "- button \"Delete part\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "dialog_expect",
+   "args": {
+    "action": "accept",
+    "count": 2
+   },
+   "locators": {}
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "[role=dialog] >> role=button[name=\"Delete part\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=dialog >> role=button[name=\"Delete part\"]"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "confirm-yes"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Delete part"
+     },
+     {
+      "kind": "id",
+      "selector": "#confirm-yes"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"confirm-dialog\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "#confirm-yes"
+     },
+     {
+      "kind": "point",
+      "x": 780,
+      "y": 500,
+      "w": 98.5,
+      "h": 39,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+    "addedContains": [
+     "- row \"Total (price × quantity) $250.00\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "dialog_expect",
+   "args": {
+    "action": "accept",
+    "count": 2
+   },
+   "locators": {}
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e557"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "tr",
+      "hasText": "{{v5}}",
+      "selector": "td:nth-of-type(7) > button:nth-of-type(2)"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Delete"
+     },
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr > td:nth-of-type(7) > button:nth-of-type(2)"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"part-row-p19\"] button"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "part-delete-p19"
+     },
+     {
+      "kind": "point",
+      "x": 1082,
+      "y": 399,
+      "w": 59.6,
+      "h": 29.5,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+    "addedContains": [
+     "- dialog \"Confirm\"",
+     "- heading \"Confirm\"",
+     "- button \"Cancel\"",
+     "- button \"Delete part\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "[role=dialog] >> role=button[name=\"Delete part\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=dialog >> role=button[name=\"Delete part\"]"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "confirm-yes"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Delete part"
+     },
+     {
+      "kind": "id",
+      "selector": "#confirm-yes"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"confirm-dialog\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "#confirm-yes"
+     },
+     {
+      "kind": "point",
+      "x": 780,
+      "y": 500,
+      "w": 98.5,
+      "h": 39,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+    "addedContains": [
+     "- row \"No parts on this ticket yet.\"",
+     "- cell \"No parts on this ticket yet.\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "dialog_expect",
+   "args": {
+    "action": "accept",
+    "count": 2
+   },
+   "locators": {}
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Archive ticket\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=button[name=\"Archive ticket\"]"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "archive"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Archive ticket"
+     },
+     {
+      "kind": "css",
+      "selector": "#view > div > div:nth-of-type(2) > button:nth-of-type(3)"
+     },
+     {
+      "kind": "point",
+      "x": 1119,
+      "y": 145,
+      "w": 113.3,
+      "h": 39,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+    "addedContains": [
+     "- button \"Unarchive ticket\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:4180/#/tickets"
+   },
+   "locators": {}
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-22T15:39:45.506Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4,
+  "lastUsed": "2026-09-22T15:42:13.529Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_fd4d38",
+  "index": 0,
+  "of": 2
+ },
+ "provenance": {
+  "session": "fwrd83-n1",
+  "instruction": "On ticket RD-1015's detail page (currently status Ready), remove BOTH parts: 'fwrd83-n1 RD Part A' and 'fwrd83-n1 RD Part B'. Use each part's delete/remove control in the parts table and confirm any confirmation dialog. If the app refuses to delete a part while the ticket is Ready, discover what it requires (e.g. set the status back to Draft first) and do that, then delete the parts. Wait for the parts table to be empty (0 parts, total /bin/sh.00) and report the exact state. Then archive the ticket using the 'Archive ticket' control (if it refuses, satisfy whatever it requires and report it). Finally verify on the tickets list (with 'Show archived' checked if needed) that the ticket RD-1015 is archived and no longer appears in the active list. Report: how many parts remain, the ticket's final status, any confirmation text shown, and whether the ticket is out of the active list.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-22T15:39:45.506Z",
+  "transforms": [
+   {
+    "name": "coalesceControls",
+    "at": 6,
+    "reason": "repeat of the previous dialog_expect with identical args and no target of its own"
+   }
+  ]
+ },
+ "revision": 3
+}

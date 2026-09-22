@@ -1,0 +1,276 @@
+{
+  "flow": "fwrd83",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Signed in on http://127.0.0.1:4180/#/login as bench@example.com / bench-pass-1234; the form was filled and \"Sign in\" submitted. The app redirected to the \"Tickets\" page at http://127.0.0.1:4180/#/tickets, showing the signed-in user \"Bench User\" with a \"Sign out\" button in the header. Visible: heading \"Repair tickets\" with subtitle \"Every job on the bench, newest first. Open a ticket to manage its parts.\", a \"New ticket\" button, a \"Filter tickets\" region (Status combobox set to \"All statuses\", a Search box matching reference/title/customer, a \"Show archived\" checkbox), and a \"Tickets\" table reading \"Showing 1–10 of 13\" with columns Ref, Title, Customer, Status, Parts, Created — first rows RD-1014 (Under-counter fridge door misaligned, Marlow Bakery, Draft, 1 part, 2026-01-23), RD-1012, RD-1011, RD-1010, plus Previous/Next pagination.",
+      "values": {
+        "login_email": "bench@example.com",
+        "login_password": "bench-pass-1234",
+        "other_ticket_ref_rd_1012": "RD-1012",
+        "other_ticket_ref_rd_1011": "RD-1011",
+        "signed_in_user": "Bench User",
+        "landing_page_heading": "Repair tickets",
+        "tickets_shown": "Showing 1–10 of 13",
+        "first_ticket_ref": "RD-1014"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_2f4efc; observed ticket_title=fwrd83-n2 RD Bench Ticket, ticket_reference=RD-1016, ticket_created=2026-09-22, parts_count=0, ticket_total=Showing 1–10 of 14, bench_id=fwrd83-n2, ticket_status=Draft.",
+      "values": {
+        "ticket_title": "fwrd83-n2 RD Bench Ticket",
+        "ticket_reference": "RD-1016",
+        "ticket_created": "2026-09-22",
+        "parts_count": "0",
+        "ticket_total": "Showing 1–10 of 14",
+        "bench_id": "fwrd83-n2",
+        "ticket_status": "Draft"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_2f4efc: step 6: read 'ticket_title' returned a value the skill itself set/selected ('fwrd83-n2 RD Bench Ticket') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_2f4efc: step 7: read 'ticket_customer' returned a value the skill itself set/selected ('Marley Street Cafe') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "ticket_customer"
+      ]
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_4522c1; observed part_name=fwrd83-n2 RD Part A, bench_id=fwrd83-n2, part_cost=$100.00, part_markup=25%, part_quantity=1, part_price=$125.00, part_supplier=No supplier, ticket_reference=RD-1016, ticket_status=Draft, ticket_customer=Marley Street Cafe.",
+      "values": {
+        "part_name": "fwrd83-n2 RD Part A",
+        "bench_id": "fwrd83-n2",
+        "part_cost": "$100.00",
+        "part_markup": "25%",
+        "part_quantity": "1",
+        "part_price": "$125.00",
+        "part_supplier": "No supplier",
+        "ticket_reference": "RD-1016",
+        "ticket_status": "Draft",
+        "ticket_customer": "Marley Street Cafe"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_4522c1: step 6: read 'part_name' returned a value the skill itself set/selected ('fwrd83-n2 RD Part A') — confirms the control, not persistence; dropped from the report's confident values"
+      ]
+    },
+    {
+      "id": "04-add",
+      "status": "success",
+      "summary": "On ticket RD-1016's detail page (/#/tickets/t15, heading \"fwrd83-n2 RD Bench Ticket\", Customer: Marley Street Cafe, Status Draft) clicked \"Add part\", filled the dialog with Part name \"fwrd83-n2 RD Part B\", Cost 200, Markup 25, Quantity 1, and clicked \"Add part\". The dialog closed and the parts table now has two rows: fwrd83-n2 RD Part A ($100.00 / 25% / qty 1 / $125.00) and the new fwrd83-n2 RD Part B ($200.00 / 25% / qty 1 / No supplier / Price $250.00). The table footer Total (price × quantity) now reads $375.00.",
+      "values": {
+        "new_part_name": "fwrd83-n2 RD Part B",
+        "existing_part": "fwrd83-n2 RD Part A — $100.00, 25%, qty 1, price $125.00",
+        "bench_id": "fwrd83-n2",
+        "new_part_cost": "$200.00",
+        "new_part_markup": "25%",
+        "new_part_quantity": "1",
+        "new_part_price": "$250.00",
+        "parts_total_after": "$375.00",
+        "ticket_reference": "RD-1016",
+        "ticket_status": "Draft",
+        "ticket_customer": "Marley Street Cafe"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_a6d616: step 7: read 'new_part_name' returned a value the skill itself set/selected ('fwrd83-n2 RD Part B') — confirms the control, not persistence; dropped from the report's confident values"
+      ]
+    },
+    {
+      "id": "05-edit",
+      "status": "success",
+      "summary": "Replayed stored procedure s_e0c2f7; observed part_b_row_unchanged=fwrd83-n2 RD Part B — $200.00, 25%, qty 1, $250.00, bench_id=fwrd83-n2, part_a_name=fwrd83-n2 RD Part A, part_a_new_cost=$150.00, part_a_markup=25%, part_a_quantity=1, part_a_price=$187.50, parts_total_after_edit=$437.50, ticket_reference=RD-1016, ticket_status=Draft.",
+      "values": {
+        "part_b_row_unchanged": "fwrd83-n2 RD Part B — $200.00, 25%, qty 1, $250.00",
+        "bench_id": "fwrd83-n2",
+        "part_a_name": "fwrd83-n2 RD Part A",
+        "part_a_new_cost": "$150.00",
+        "part_a_markup": "25%",
+        "part_a_quantity": "1",
+        "part_a_price": "$187.50",
+        "parts_total_after_edit": "$437.50",
+        "ticket_reference": "RD-1016",
+        "ticket_status": "Draft"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "06-change",
+      "status": "success",
+      "summary": "On ticket RD-1016's detail page (/#/tickets/t15, \"fwrd83-n2 RD Bench Ticket\", Customer: Marley Street Cafe, Status: Draft) the status control is not a combobox/dropdown or a set of status buttons — the only status control present is a single \"Mark Ready\" button (button[data-testid=\"status-to-Ready\"][data-status=\"Ready\"]), alongside an \"Archive ticket\" button; there is no <select> anywhere on the page. Clicking \"Mark Ready\" is refused and the page renders a live [role=alert] region reading exactly: \"Ticket is not ready\" / \"Part \\\"fwrd83-n2 RD Part A\\\" has no supplier\" / \"Part \\\"fwrd83-n2 RD Part B\\\" has no supplier\". Status remains Draft and no other validation message or hint is shown (the only other hint text on the page is \"Price is calculated from cost and markup when the part is saved.\"), so the implied requirement before Ready is accepted is that every part on the ticket has a supplier — both of RD-1016's parts currently show \"No supplier\".",
+      "values": {
+        "ticket_reference": "RD-1016",
+        "ticket_title": "fwrd83-n2 RD Bench Ticket",
+        "ticket_customer": "Marley Street Cafe",
+        "status_before_attempt": "Draft",
+        "status_field_label_and_value": "Status Draft (badge badge-draft)",
+        "status_control": "single button \"Mark Ready\" (data-action=status, data-status=Ready); no select/combobox/radio in DOM",
+        "other_actions_visible": "Archive ticket, Add part, Edit/Delete per part row",
+        "refusal_title": "Ticket is not ready",
+        "refusal_line_1": "Part \"fwrd83-n2 RD Part A\" has no supplier",
+        "refusal_line_2": "Part \"fwrd83-n2 RD Part B\" has no supplier",
+        "required_hint": "each part must have a supplier before Ready is accepted",
+        "part_a_row": "fwrd83-n2 RD Part A — $150.00, 25%, qty 1, No supplier, $187.50",
+        "part_b_row": "fwrd83-n2 RD Part B — $200.00, 25%, qty 1, No supplier, $250.00",
+        "parts_total": "$437.50",
+        "status_after_attempt": "Draft (unchanged)",
+        "ref": "fwrd83-n2"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_3e390a stopped at step 1 — step 1 raised an alert the recording never saw: Ticket is not ready Part \"fwrd83-n2 RD Part A\" has no supplier Part \"fwrd83-n2 RD Part B\" has no supplier",
+      "replayed": "0/12",
+      "repaired": false,
+      "turns": 7,
+      "unreported": [
+        "bench_id",
+        "refusal_text_1",
+        "refusal_alert_lines_1",
+        "parts_lacking_supplier_1",
+        "parts_lacking_supplier_2"
+      ]
+    },
+    {
+      "id": "07-edit",
+      "status": "success",
+      "summary": "Replayed stored procedure s_3c2736; observed parts_table_after=Part A: fwrd83-n2 RD Part A $150.00 25% 1 Bosch Service Parts $187.50 | Part B: fwrd83-n2 RD Part B $200.00 25% 1 Bosch Service Parts $250.00 | Total (price × quantity) $437.50, supplier_help_text=Optional. Leave blank if the part has not been sourced yet., status_label_ready=Status\nReady, status_field_label=Status, final_ticket_status=Ready, mark_draft_button=Mark Draft, mark_closed_button=Mark Closed, ticket_reference=RD-1016, bench_id=fwrd83-n2.",
+      "values": {
+        "parts_table_after": "Part A: fwrd83-n2 RD Part A $150.00 25% 1 Bosch Service Parts $187.50 | Part B: fwrd83-n2 RD Part B $200.00 25% 1 Bosch Service Parts $250.00 | Total (price × quantity) $437.50",
+        "supplier_help_text": "Optional. Leave blank if the part has not been sourced yet.",
+        "status_label_ready": "Status\nReady",
+        "status_field_label": "Status",
+        "final_ticket_status": "Ready",
+        "mark_draft_button": "Mark Draft",
+        "mark_closed_button": "Mark Closed",
+        "ticket_reference": "RD-1016",
+        "bench_id": "fwrd83-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "24/24",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_3c2736: step 19: read 'supplier_part_a' returned a value the skill itself set/selected ('Bosch Service Parts') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "supplier_part_a"
+      ]
+    },
+    {
+      "id": "08-remove",
+      "status": "success",
+      "summary": "The app did NOT refuse deletion while the ticket was Ready: each part's Delete button opened an in-page \"Confirm\" modal (Cancel / \"Delete part\"), accepting it removed the row immediately. Deleting fwrd83-n2 RD Part A dropped the total to $250.00 and deleting fwrd83-n2 RD Part B left the parts table showing \"No parts on this ticket yet.\" with no total row (0 parts). I then clicked \"Archive ticket\" — it was accepted with no error or requirement (button changed to \"Unarchive ticket\"); no confirmation text was displayed, and no confirm dialog text was captured. Verification on /#/tickets: with \"Show archived\" checked and search RD-1016 the list shows 1 row — RD-1016 | \"fwrd83-n2 RD Bench Ticket\" + Archived badge | Marley Street Cafe | Status Ready | Parts 0 | 2026-09-22; with \"Show archived\" unchecked and the same search the list shows \"No tickets match the current filters.\", i.e. the ticket is out of the active list. Final state: 0 parts remain, ticket status Ready (archived), total $0.00 (no parts row).",
+      "values": {
+        "bench_id": "fwrd83-n2",
+        "ticket_reference": "RD-1016",
+        "active_list_result": "No tickets"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_abe7ca: step 5: read 'ticket_reference' returned a value the skill itself set/selected ('RD-1016') — confirms the control, not persistence; dropped from the report's confident values"
+      ]
+    },
+    {
+      "id": "09-report",
+      "status": "success",
+      "summary": "Verification only, no data changed. On /#/tickets with search \"fwrd83-n2\" and \"Show archived\" UNCHECKED, the table body shows 0 rows — exactly \"No tickets match the current filters.\" (summary above the table: \"No tickets\"; Page 1 of 1). After checking \"Show archived\" (search unchanged), exactly 1 row appears, \"Showing 1–1 of 1\": Ref RD-1016, Title \"fwrd83-n2 RD Bench Ticket\" with an \"Archived\" badge, Customer Marley Street Cafe, Status Ready, Parts 0, Created 2026-09-22. Only filter controls were touched — no data-changing clicks.",
+      "values": {
+        "search_term": "fwrd83-n2",
+        "matched_row": "RD-1015 | fwrd83-n2 RD Bench Ticket Archived | Marley Street Cafe | Ready | Parts 0 | Created 2026-09-22",
+        "unchecked_result": "No tickets",
+        "unchecked_list_message": "No tickets match the current filters.",
+        "unchecked_row_count": "0",
+        "checked_list_summary": "Showing 1–1 of 1",
+        "matching_ticket_ref": "RD-1016",
+        "matching_ticket_title": "fwrd83-n2 RD Bench Ticket Archived",
+        "matching_ticket_customer": "Marley Street Cafe",
+        "matching_ticket_created": "2026-09-22",
+        "matching_ticket_status": "Ready"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_a82bc3: step 5: read 'search_term' returned a value the skill itself set/selected ('fwrd83-n2') — confirms the control, not persistence; dropped from the report's confident values"
+      ]
+    }
+  ],
+  "passed": 9,
+  "total": 9,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwrd83",
+      "step": "06-change",
+      "skill": "s_3e390a",
+      "similarity": 1.002,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_3e390a stopped at step 1 — step 1 raised an alert the recording never saw: Ticket is not ready Part \"fwrd83-n2 RD Part A\" has no supplier Part \"fwrd83-n2 RD Part B\" has no supplier",
+      "reason": "step 1 raised an alert the recording never saw: Ticket is not ready Part \"fwrd83-n2 RD Part A\" has no supplier Part \"fwrd83-n2 RD Part B\" has no supplier",
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    }
+  ],
+  "wallMs": 57120,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 101112,
+    "completionTokens": 3345,
+    "cachedTokens": 87040
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 101112,
+      "completionTokens": 3345,
+      "cachedTokens": 87040
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
