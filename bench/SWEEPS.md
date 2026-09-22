@@ -60,3 +60,8 @@ targets added from round 36 on (see bench/thirdparty/README.md).
 | 40 | fwgr66 | af106d1 | gr | 6/6 ×3 | yes: 6/6 steps tier A 0 turns on n2 and n3 | pass 4/6+2 n/a, drift 0 | **yes** | confirmation |
 | 40 | fwod77 | af106d1 | od | 6/6 ×3 | yes: 7/7 steps tier A 0 turns on n2 and n3 | pass 6/6, drift 0 | **yes** | confirmation |
 | 40 | fwop6 | af106d1 | op | 7/7 ×3 | no: 01-open fell back on both replays (10 and 19 turns) | pass (drift: the artifact navigated where the daemon refused, a parity gap) | no | n1 clicked a link twice with no visible effect, then did a goto; the replayed first click navigates and the repeat is stranded |
+| 42 | fwgh7 | bf26abd | gh | 7/7 ×3 | yes: 5/5 steps tier A 0 turns on n2 and n3 | pass 5/7+2 n/a | **yes** | the popup fix was not exercised; the link-click rule fired |
+| 42 | fwvk5 | bf26abd | vk | 7/7 ×3 | yes: 7/7 steps tier A 0 turns on n2 and n3 | pass 5/7+2 n/a | **yes** | framed read-backs held |
+| 42 | fwgt4 | bf26abd | gt | 7/7 ×3 | yes: 4/4 steps tier A 0 turns on n2 and n3 | pass 5/7+2 n/a, drift 4 | **yes** | a framed read carries the minted "#4", so it is skipped on replay (cosmetic) |
+| 42 | fwec5 | bf26abd | ec | 7/7 ×3 | no: 03-create recovered on n2 and n3 (3 turns each) | pass 5/7+2 n/a | no | n1's first Save recorded no consequence and was retried; compile kept both Saves, and on replay the first one navigates |
+| 42 | fwop7 | bf26abd | op | 7/7, 6/7, 6/7 | yes: 8/8 steps tier A 0 turns, but the seed subjects were never re-read | pass 5/7+2 n/a | no | obj 1: a read_all whose elements are each a reported value was dropped at compile, and export pruned the outputs |
