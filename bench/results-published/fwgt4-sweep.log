@@ -1,0 +1,96 @@
+
+[sweep] run 1/3: fwgt4-n1 (store: /home/user/sitelooper/bench/results/fwgt4-skills)
+[harness] gitea: defaulting APP_URL
+[harness] gitea: defaulting APP_EMAIL
+[harness] gitea: defaulting APP_PASSWORD
+[reset] gitea: no leftover bench issues
+[harness] gitea responded 200 at http://127.0.0.1:8095/
+stopped: fwgt4-n1
+  flow "fwgt4" saved: 4 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwgt4.json
+  warning: note: 02-create no longer publishes labels, sidebar_seen — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-add no longer publishes comment_anchor_id — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-create: added a read for milestone to s_e2152e (page.getByRole('link', { name: 'Bench Milestone', exact: true }); seen on the next instruction's start page)
+  warning: warning: 41 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[1].instruction: "Bench Milestone" (output) in "In the repository bench/bench-repo, create a new issue with title exactly '{{runid}} Bench Issue' and a description (markdown text area) that includes the text "
+  flow.steps[2].instruction: "Bench Milestone" (output) in "On the issue page {{02-create.url}} (titled '{{runid}} Bench Issue'), add a comment using the markdown comment text area with text that includes '{{runid}}' (e."
+  flow.steps[2].params.v4: "Bench Milestone" (output) in "Bench Milestone"
+  s_421037.reportTemplate.summary: "Seed: ship repaired device" (output) in "Signed in to the Gitea instance at {{v1}} as '{{v2}}' and opened the open-issues list for repository bench/bench-repo (URL http://127.0.0.1:8095/bench/bench-rep"
+  s_421037.reportTemplate.summary: "Seed: order missing parts" (output) in "Signed in to the Gitea instance at {{v1}} as '{{v2}}' and opened the open-issues list for repository bench/bench-repo (URL http://127.0.0.1:8095/bench/bench-rep"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwgt4-n1 stop=completed
+turns=5 wall=181.0s
+commands=4 cmdTime=168.9s cmdBytes=3774 timeouts=0
+orchestrator in=3779 cw=0 cr=13056 out=1453
+inner prompt=1074024 cached=1000064 completion=13176
+spend=$0.0372 maxUsd=3
+learn: A_n=0 replayed=0/4 full=0 repaired=0 compiled=4 variants=0
+-> /home/user/sitelooper/bench/results/fwgt4-n1-sitelooper-result.json
+
+fwgt4-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #4, state=open, description includes runid=true
+  obj 3: PASS — labels=[bug, priority-high], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #4 reported
+
+[sweep] run 2/3: fwgt4-n2 (replay flow fwgt4, no orchestrator)
+[reset] gitea: deleted 1 leftover bench issue(s)
+[sweep] fwgt4-n2: 4 drift ticket(s) → fwgt4-n2-drift.json
+
+fwgt4-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #5, state=open, description includes runid=true
+  obj 3: PASS — labels=[bug, priority-high], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #5 reported
+
+[sweep] run 3/3: fwgt4-n3 (replay flow fwgt4, no orchestrator)
+[reset] gitea: deleted 1 leftover bench issue(s)
+[sweep] fwgt4-n3: 4 drift ticket(s) → fwgt4-n3-drift.json
+
+fwgt4-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #6, state=open, description includes runid=true
+  obj 3: PASS — labels=[bug, priority-high], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #6 reported
+
+Learning sweep fwgt4 (K=3)
+┌─────────┬───┬────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid      │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwgt4-n1' │ '7/7'    │ 'completed' │ 5     │ 4    │ 0.0372    │ 0   │ '0/4'        │ 181    │
+│ 1       │ 2 │ 'fwgt4-n2' │ '7/7'    │ 'success'   │ 0     │ 4    │ 0         │ 1   │ '4/4 (flow)' │ 81     │
+│ 2       │ 3 │ 'fwgt4-n3' │ '7/7'    │ 'success'   │ 0     │ 4    │ 0         │ 1   │ '4/4 (flow)' │ 82     │
+└─────────┴───┴────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8095
+  s_15a0bb  validated    2 steps  3/3 (100%)
+           Open {{v1}} and sign in with username '{{v2}}' and password '{{v3}}'. Then go to the repository 'bench/bench-r…
+  s_184d40  validated    1 steps  3/3 (100%)
+           Verify the state of the issue at {{v1}} without changing anything: report its exact title, its issue number as…
+  s_421037  validated   10 steps  3/3 (100%)
+           Open {{v1}} and sign in with username '{{v2}}' and password '{{v3}}'. Then go to the repository 'bench/bench-r…
+  s_4580f2  validated    3 steps  3/3 (100%)
+           On the issue page {{v1}} (titled '{{v2}}'), add a comment using the markdown comment text area with text that …
+  s_5741c0  validated    3 steps  3/3 (100%)
+           Open {{v1}} and sign in with username '{{v2}}' and password '{{v3}}'. Then go to the repository 'bench/bench-r…
+  s_953068  validated    2 steps  3/3 (100%)
+           On the issue page {{v1}} (titled '{{v2}}'), add a comment using the markdown comment text area with text that …
+  s_9921cd  validated    1 steps  3/3 (100%)
+           Open {{v1}} and sign in with username '{{v2}}' and password '{{v3}}'. Then go to the repository 'bench/bench-r…
+  s_a44dc4  validated    1 steps  3/3 (100%)
+           In the repository bench/bench-repo, create a new issue with title exactly '{{v2}}' and a description (markdown…
+  s_cef776  validated    1 steps  3/3 (100%)
+           Verify the state of the issue at {{v1}} without changing anything: report its exact title, its issue number as…
+  s_e2152e  validated    6 steps  3/3 (100%)
+           In the repository bench/bench-repo, create a new issue with title exactly '{{v2}}' and a description (markdown…
+  s_f54bc0  validated   13 steps  3/3 (100%)
+           In the repository bench/bench-repo, create a new issue with title exactly '{{v2}}' and a description (markdown…
+store: /home/user/sitelooper/bench/results/fwgt4-skills
+
+summary: /home/user/sitelooper/bench/results/fwgt4-sweep.json

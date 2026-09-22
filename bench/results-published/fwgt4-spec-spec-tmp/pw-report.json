@@ -1,0 +1,176 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwgt4-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwgt4-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwgt4-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwgt4-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwgt4-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwgt4.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwgt4-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwgt4.spec.ts",
+      "file": "fwgt4.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwgt4",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 53726,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 02-create s_f54bc0/3 target: primary locator('role=link[name=\"bug\"]').first() missed; used #3 locator('#_aria_dropdown_menu_15 > div:nth-of-type(2) > a:nth-of-type(2)') (#2 absent, #1 absent)\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 02-create s_f54bc0/4 target: primary locator('role=link[name=\"priority-high\"]').first() missed; used #3 locator('#_aria_dropdown_menu_15 > div:nth-of-type(2) > a:nth-of-type(5)') (#2 absent, #1 absent)\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] step 02-create s_f54bc0/5: none of the 1 expected page change(s) appeared in the step diff (found on the page instead)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 03-add s_4580f2/1 target: primary locator('#issue-4 > div > div:nth-of-type(2) > div:nth-of-type(1) > p') missed; used #2 locator('[data-sitelooper-point=\"510,316\"]') (#1 absent)\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 03-add s_4580f2/3 target: primary getByRole('heading', { name: /^[\\s\\p{Co}\\p{So}\\p{Cf}]*fwgt4-spec\\s+Bench\\s+Issue\\s+#4[\\s\\p{Co}\\p{So}\\p{Cf}]*$/u }) missed; used #2 locator('#issue-title-display > h1') (#1 absent)\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 03-add s_4580f2/3 target: read errored (the element no longer shows the value where the recording saw it (\"{{=}} Bench Issue #4\")) — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-add\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-verify\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:8095/ and sign in with username 'admin' and password 'bench-admin-pass'. Then go to the repository 'bench/bench-repo' issues list (filter to open issues), and report the titles of all open issues whose title starts with 'Seed:', exactly as shown on the page.",
+                      "duration": 4942
+                    },
+                    {
+                      "title": "02-create: In the repository bench/bench-repo, create a new issue with title exactly '{{runid}} Bench Issue' and a description (markdown text area) that includes the text '{{runid}}' (e.g. 'Issue created for run {{runid}}'). Before submitting, use the issue creation form's sidebar pickers to set: labels 'bug' and 'priority-high' (both), assignee the user 'bench-assignee', and milestone 'Bench Milestone'. Then submit the issue. Verify on the resulting issue page that the title, description, both labels, the assignee and the milestone are all shown, and report the issue number exactly as displayed (Gitea shows it as #<number>), plus the labels, assignee and milestone you see.",
+                      "duration": 40055
+                    },
+                    {
+                      "title": "03-add: On the issue page {{02-create.url}} (titled '{{runid}} Bench Issue'), add a comment using the markdown comment text area with text that includes '{{runid}}' (e.g. 'Comment for run {{runid}}'), submit it, and verify the comment appears on the issue page. Report the comment text you see and confirm the issue still shows labels bug and priority-high, assignee bench-assignee, and milestone Bench Milestone.",
+                      "duration": 7735
+                    },
+                    {
+                      "title": "04-verify: Verify the state of the issue at {{02-create.url}} without changing anything: report its exact title, its issue number as displayed, the complete list of labels shown in the sidebar (confirm there are exactly two: bug and priority-high, and no others), the assignee(s), the milestone, and the text of the description and any comments. Then also open the repository's open issues list and confirm the three 'Seed:' issues are still open and unmodified, reporting their titles.",
+                      "duration": 419
+                    }
+                  ],
+                  "startTime": "2026-09-22T10:23:38.538Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": "W3NpdGVsb29wZXIgZHJpZnRdIDAyLWNyZWF0ZSBzX2Y1NGJjMC8zIHRhcmdldDogcHJpbWFyeSBsb2NhdG9yKCdyb2xlPWxpbmtbbmFtZT0iYnVnIl0nKS5maXJzdCgpIG1pc3NlZDsgdXNlZCAjMyBsb2NhdG9yKCcjX2FyaWFfZHJvcGRvd25fbWVudV8xNSA+IGRpdjpudGgtb2YtdHlwZSgyKSA+IGE6bnRoLW9mLXR5cGUoMiknKSAoIzIgYWJzZW50LCAjMSBhYnNlbnQpCltzaXRlbG9vcGVyIGRyaWZ0XSAwMi1jcmVhdGUgc19mNTRiYzAvNCB0YXJnZXQ6IHByaW1hcnkgbG9jYXRvcigncm9sZT1saW5rW25hbWU9InByaW9yaXR5LWhpZ2giXScpLmZpcnN0KCkgbWlzc2VkOyB1c2VkICMzIGxvY2F0b3IoJyNfYXJpYV9kcm9wZG93bl9tZW51XzE1ID4gZGl2Om50aC1vZi10eXBlKDIpID4gYTpudGgtb2YtdHlwZSg1KScpICgjMiBhYnNlbnQsICMxIGFic2VudCkKW3NpdGVsb29wZXIgZHJpZnRdIDAzLWFkZCBzXzQ1ODBmMi8xIHRhcmdldDogcHJpbWFyeSBsb2NhdG9yKCcjaXNzdWUtNCA+IGRpdiA+IGRpdjpudGgtb2YtdHlwZSgyKSA+IGRpdjpudGgtb2YtdHlwZSgxKSA+IHAnKSBtaXNzZWQ7IHVzZWQgIzIgbG9jYXRvcignW2RhdGEtc2l0ZWxvb3Blci1wb2ludD0iNTEwLDMxNiJdJykgKCMxIGFic2VudCkKW3NpdGVsb29wZXIgZHJpZnRdIDAzLWFkZCBzXzQ1ODBmMi8zIHRhcmdldDogcHJpbWFyeSBnZXRCeVJvbGUoJ2hlYWRpbmcnLCB7IG5hbWU6IC9eW1xzXHB7Q299XHB7U299XHB7Q2Z9XSpmd2d0NC1zcGVjXHMrQmVuY2hccytJc3N1ZVxzKyM0W1xzXHB7Q299XHB7U299XHB7Q2Z9XSokL3UgfSkgbWlzc2VkOyB1c2VkICMyIGxvY2F0b3IoJyNpc3N1ZS10aXRsZS1kaXNwbGF5ID4gaDEnKSAoIzEgYWJzZW50KQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "95ca75aee01972eb5c41-06ce0ea957cf2cad01a2",
+          "file": "fwgt4.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-22T10:23:36.985Z",
+    "duration": 55438.834,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

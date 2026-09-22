@@ -1,0 +1,162 @@
+{
+  "flow": "fwgt4",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Signed in to the Gitea instance at http://127.0.0.1:8095/ as 'admin' and opened the open-issues list for repository bench/bench-repo (URL http://127.0.0.1:8095/bench/bench-repo/issues?state=open). The list shows 3 open issues, and all three titles start with 'Seed:': \"Seed: ship repaired device\", \"Seed: order missing parts\", and \"Seed: triage inbox\".",
+      "values": {
+        "open_issue_count": "3",
+        "seed_issue_title_1": "Seed: ship repaired device",
+        "seed_issue_title_2": "Seed: order missing parts",
+        "seed_issue_title_3": "Seed: triage inbox",
+        "seed_issue_titles_1": "Seed: ship repaired device",
+        "seed_issue_titles_2": "Seed: order missing parts",
+        "seed_issue_titles_3": "Seed: triage inbox",
+        "seed_issue_numbers_1": "#3",
+        "seed_issue_numbers_2": "#2",
+        "seed_issue_numbers_3": "#1"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Created a new issue in bench/bench-repo from the issue creation form with title exactly \"fwgt4-n2 Bench Issue\" and description \"Issue created for run fwgt4-n2\". Using the form's sidebar pickers I set labels 'bug' and 'priority-high', assignee 'bench-assignee' (Bench Assignee) and milestone 'Bench Milestone', then submitted. The resulting issue page at http://127.0.0.1:8095/bench/bench-repo/issues/5 shows heading \"fwgt4-n2 Bench Issue #5\", the description text, both labels bug and priority-high, the Assignees entry \"Bench Assignee bench-assignee\n(Bench Assignee)\", and the Milestone link \"Bench Milestone\".",
+      "values": {
+        "ref": "fwgt4-n2",
+        "issue_url": "http://127.0.0.1:8095/bench/bench-repo/issues/5",
+        "issue_number": "#5",
+        "title": "fwgt4-n2 Bench Issue",
+        "description": "Issue created for run fwgt4-n2",
+        "assignee": "bench-assignee\n(Bench Assignee)",
+        "milestone": "Bench Milestone"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "20/20",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_f54bc0: step 3: primary locator did not resolve; used fallback #3 page.locator('#_aria_dropdown_menu_15 > div:nth-of-type(2) > a:nth-of-type(2)')",
+        "s_f54bc0: step 4: primary locator did not resolve; used fallback #3 page.locator('#_aria_dropdown_menu_15 > div:nth-of-type(2) > a:nth-of-type(5)')",
+        "s_f54bc0: step 5: none of the 1 expected page change(s) appeared in the step diff (found on the page instead)"
+      ]
+    },
+    {
+      "id": "03-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_4580f2; observed ref=fwgt4-n2, issue_description_text=Issue created for run fwgt4-n2, comment_text=Comment for run fwgt4-n2.",
+      "values": {
+        "ref": "fwgt4-n2",
+        "issue_description_text": "Issue created for run fwgt4-n2",
+        "comment_text": "Comment for run fwgt4-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_4580f2: step 1: primary locator did not resolve; used fallback #2 elementAt(510, 316) /* p */",
+        "s_4580f2: step 3: primary locator did not resolve; used fallback #2 page.locator('#issue-title-display > h1')",
+        "s_4580f2: step 3: read errored — the element no longer shows the value where the recording saw it (\"{{=}} Bench Issue #4\")"
+      ]
+    },
+    {
+      "id": "04-verify",
+      "status": "success",
+      "summary": "Read-only verification (no changes made). Issue at http://127.0.0.1:8095/bench/bench-repo/issues/5: exact title \"fwgt4-n2 Bench Issue\", displayed number \"#4\", open (page offers \"Close Issue\", not Reopen). Sidebar labels are exactly two — bug and priority-high — and the label dropdown shows only those two checked out of the repo's bug/documentation/enhancement/priority-high. Assignee: bench-assignee (Bench Assignee); Milestone: Bench Milestone (links to /bench/bench-repo/milestone/1). Description text: \"Issue created for run fwgt4-n2\"; the only comment text is \"Comment for run fwgt4-n2\". On the open-issues list (state=open, \"4 Open\") all three Seed issues remain open with no labels attached: \"Seed: ship repaired device\" #3, \"Seed: order missing parts\" #2, \"Seed: triage inbox\" #1.",
+      "values": {
+        "ref": "fwgt4-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "2/2",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 4,
+  "total": 4,
+  "repinned": 0,
+  "drift": 4,
+  "driftTickets": [
+    {
+      "flow": "fwgt4",
+      "step": "02-create",
+      "skill": "s_f54bc0",
+      "atStep": "3",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.locator('role=link[name=\"bug\"] >> nth=0')",
+      "fallbackUsed": "page.locator('#_aria_dropdown_menu_15 > div:nth-of-type(2) > a:nth-of-type(2)')",
+      "fallbackIndex": 2,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    },
+    {
+      "flow": "fwgt4",
+      "step": "02-create",
+      "skill": "s_f54bc0",
+      "atStep": "4",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.locator('role=link[name=\"priority-high\"] >> nth=0')",
+      "fallbackUsed": "page.locator('#_aria_dropdown_menu_15 > div:nth-of-type(2) > a:nth-of-type(5)')",
+      "fallbackIndex": 2,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    },
+    {
+      "flow": "fwgt4",
+      "step": "03-add",
+      "skill": "s_4580f2",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.locator('#issue-4 > div > div:nth-of-type(2) > div:nth-of-type(1) > p')",
+      "fallbackUsed": "elementAt(510, 316) /* p */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id#:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5#issuecomment-10"
+    },
+    {
+      "flow": "fwgt4",
+      "step": "03-add",
+      "skill": "s_4580f2",
+      "atStep": "3",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.getByRole('heading', { name: 'fwgt4-n2 Bench Issue #4', exact: true })",
+      "fallbackUsed": "page.locator('#issue-title-display > h1')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id#:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5#issuecomment-10"
+    }
+  ],
+  "wallMs": 81428,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
