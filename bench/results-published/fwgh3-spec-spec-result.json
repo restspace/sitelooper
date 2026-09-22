@@ -1,0 +1,34 @@
+{
+  "arm": "spec",
+  "runid": "fwgh3-spec",
+  "target": "ghost",
+  "flow": "fwgh3.json",
+  "flowName": "fwgh3",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwgh3-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwgh3-spec-spec-tmp/fwgh3.flow.ts",
+  "specFile": "bench/results/fwgh3-spec-spec-tmp/fwgh3.spec.ts",
+  "wallMs": 16286,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwgh3",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 12621,
+      "error": "Error: 01-signin s_40eb18/1: the recorded page change did not appear\n\n01-signin s_40eb18/1: the recorded page change did not appear\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeNull\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"after step 01-signin s_40eb18/1 none of the 1 recorded page change(s) appeared (e.g. \\\"- link \\\\\\\"{{*}} By Bench Admin in Bench Guides - 1 minute ago {{*}}\\\\\\\"\\\") — the step ran but did not have its recorded effect\"\u001b[39m\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "logTail": "\nRunning 1 test using 1 worker\n\n  ✘  1 fwgh3.spec.ts:9:1 › fwgh3 (12.6s)\n\n\n  1) fwgh3.spec.ts:9:1 › fwgh3 › 01-signin: In Ghost admin at http://127.0.0.1:8099/ghost/, sign in with admin@bench.local / bench-admin-pass. Then go to the Posts list and report the titles of all published posts whose titles start with 'Seed:' exactly as shown. Do not modify anything. \n\n    Error: 01-signin s_40eb18/1: the recorded page change did not appear\n\n    01-signin s_40eb18/1: the recorded page change did not appear\n\n    expect(received).toBeNull()\n\n    Received: \"after step 01-signin s_40eb18/1 none of the 1 recorded page change(s) appeared (e.g. \\\"- link \\\\\\\"{{*}} By Bench Admin in Bench Guides - 1 minute ago {{*}}\\\\\\\"\\\") — the step ran but did not have its recorded effect\"\n\n    Call Log:\n    - Timeout 5000ms exceeded while waiting on the predicate\n\n       at fwgh3.flow.ts:9106\n\n      9104 |       { timeout: EXPECT_WAIT_MS, message: `${ctx.tag}: the recorded page change did not appear` },\n      9105 |     )\n    > 9106 |     .toBeNull();\n           |      ^\n      9107 |   for (const warning of last.warnings) console.log(`[sitelooper warn] ${warning}`);\n      9108 |   if (last.unobserved) console.log(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);\n      9109 |   return last;\n        at expectChanges (/home/user/sitelooper/bench/results/fwgh3-spec-spec-tmp/fwgh3.flow.ts:9106:6)\n        at Object.verify (/home/user/sitelooper/bench/results/fwgh3-spec-spec-tmp/fwgh3.flow.ts:9424:32)\n        at runStepLifecycle (/home/user/sitelooper/bench/results/fwgh3-spec-spec-tmp/fwgh3.flow.ts:6286:24)\n        at Object.01-signin (/home/user/sitelooper/bench/results/fwgh3-spec-spec-tmp/fwgh3.flow.ts:9392:5)\n        at /home/user/sitelooper/bench/results/fwgh3-spec-spec-tmp/fwgh3.flow.ts:10838:7\n        at runFlow (/home/user/sitelooper/bench/results/fwgh3-spec-spec-tmp/fwgh3.flow.ts:10837:5)\n        at /home/user/sitelooper/bench/results/fwgh3-spec-spec-tmp/fwgh3.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/fwgh3-fwgh3/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/fwgh3-fwgh3/error-context.md\n\n  1 failed\n    fwgh3.spec.ts:9:1 › fwgh3 ──────────────────────────────────────────────────────────────────────\n"
+}

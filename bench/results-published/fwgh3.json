@@ -1,0 +1,153 @@
+{
+  "name": "fwgh3",
+  "origin": "http://127.0.0.1:8099",
+  "startUrl": "http://127.0.0.1:8099/ghost/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "In Ghost admin at http://127.0.0.1:8099/ghost/, sign in with admin@bench.local / bench-admin-pass. Then go to the Posts list and report the titles of all published posts whose titles start with 'Seed:' exactly as shown. Do not modify anything.",
+      "skill": "s_0fdbc9",
+      "params": {
+        "v1": "http://127.0.0.1:8099/ghost/",
+        "v2": "admin@bench.local",
+        "v3": "bench-admin-pass"
+      },
+      "outputs": [
+        "published_post_count",
+        "statuses",
+        "seed_post_title_1",
+        "seed_post_title_2",
+        "seed_post_title_3",
+        "seed_post_status",
+        "published_seed_titles_1",
+        "published_seed_titles_2",
+        "published_seed_titles_3"
+      ],
+      "recorded": {
+        "published_post_count": "3",
+        "statuses": "Published, Published, Published",
+        "seed_post_title_1": "Seed: Welcome to the bench",
+        "seed_post_title_2": "Seed: Release notes for September",
+        "seed_post_title_3": "Seed: House style guide",
+        "seed_post_status": "Published",
+        "published_seed_titles_1": "Seed: Welcome to the bench",
+        "published_seed_titles_2": "Seed: Release notes for September",
+        "published_seed_titles_3": "Seed: House style guide",
+        "url": "http://127.0.0.1:8099/ghost/#/posts?type=published"
+      },
+      "route": "http://127.0.0.1:8099/ghost/#/posts",
+      "outputEvidence": {
+        "published_post_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "statuses": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "seed_post_title_1": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "seed_post_title_2": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "seed_post_title_3": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "seed_post_status": {
+          "same": 1,
+          "differed": 0
+        },
+        "published_seed_titles_1": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "published_seed_titles_2": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "published_seed_titles_3": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "In Ghost admin, create a new post with title '{{runid}} Bench Post'. Type into the rich text body editor a single paragraph containing the text '{{runid}}' (once, not duplicated). Open the post settings panel and: add the EXISTING tag 'Bench News' by choosing it from the tag field's suggestions (NOT typing a new tag, and not 'Bench Newsletter'); set the custom excerpt to include the runid '{{runid}}'; set the publish date to 2026-09-01; report the URL slug shown in the settings. Then complete the publish confirmation flow so the post is actually published (not draft, not scheduled — 2026-09-01 must not be in the future relative to what Ghost treats as now for publishing; if Ghost schedules it, adjust so it publishes). Finally verify: reopen the post and report the title, body paragraph text, tag shown, excerpt, status ({{01-signin.seed_post_status}}) and publish date and slug exactly as shown.",
+      "skill": "s_bfa821",
+      "params": {
+        "v3": "{{runid}} Bench Post",
+        "v1": "{{runid}}",
+        "v2": "{{01-signin.seed_post_status}}"
+      },
+      "outputs": [
+        "post_title",
+        "body_paragraph",
+        "tag",
+        "excerpt",
+        "status",
+        "publish_date",
+        "slug",
+        "post_url",
+        "list_row",
+        "ref"
+      ],
+      "recorded": {
+        "post_title": "fwgh3-n1 Bench Post",
+        "body_paragraph": "fwgh3-n1",
+        "tag": "Bench News",
+        "excerpt": "fwgh3-n1 Bench excerpt",
+        "status": "Published",
+        "publish_date": "2026-09-01",
+        "publish_time": "00:00 UTC",
+        "slug": "fwgh3-n1-bench-post",
+        "post_url": "127.0.0.1:8099/fwgh3-n1-bench-post/",
+        "post_id": "6ab1c5dffa7dae0001de3a86",
+        "list_row": "fwgh3-n1 Bench Post By Bench Admin in Bench News - 01 Sep 2026 Published",
+        "ref": "127.0.0.1",
+        "url": "http://127.0.0.1:8099/ghost/#/editor/post/6ab1c5dffa7dae0001de3a86",
+        "url.h2": "6ab1c5dffa7dae0001de3a86"
+      },
+      "route": "http://127.0.0.1:8099/ghost/#/editor/post/6ab1c5dffa7dae0001de3a86"
+    }
+  ],
+  "provenance": {
+    "session": "fwgh3-n1",
+    "created": "2026-09-22T00:05:04.667Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "02-create",
+      "outputs": [
+        "publish_time",
+        "post_id"
+      ]
+    }
+  ]
+}

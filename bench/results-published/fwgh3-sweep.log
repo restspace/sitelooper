@@ -1,0 +1,118 @@
+
+[sweep] run 1/3: fwgh3-n1 (store: /home/user/sitelooper/bench/results/fwgh3-skills)
+[harness] ghost: defaulting APP_URL
+[harness] ghost: defaulting APP_EMAIL
+[harness] ghost: defaulting APP_PASSWORD
+[reset] ghost: no posts to delete
+[harness] ghost responded 200 at http://127.0.0.1:8099/
+stopped: fwgh3-n1
+  flow "fwgh3" saved: 2 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwgh3.json
+  warning: note: dropped 2 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: note: 02-create no longer publishes publish_time, post_id — no replay reads them from the page and the recording showed no line to read
+  warning: note: 01-signin: added a read for seed_post_status to s_d2f3d2 (page.getByRole('link', { name: 'Published', exact: true }); seen on the next instruction's start page)
+  warning: warning: 92 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.origin: "127.0.0.1" (output) in "http://127.0.0.1:8099"
+  flow.startUrl: "127.0.0.1" (output) in "http://127.0.0.1:8099/ghost/"
+  flow.steps[0].instruction: "127.0.0.1" (output) in "In Ghost admin at http://127.0.0.1:8099/ghost/, sign in with admin@bench.local / bench-admin-pass. Then go to the Posts list and report the titles of all publis"
+  flow.steps[0].params.v1: "127.0.0.1" (output) in "http://127.0.0.1:8099/ghost/"
+  flow.steps[0].route: "127.0.0.1" (output) in "http://127.0.0.1:8099/ghost/#/posts"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwgh3-n1 stop=completed
+turns=3 wall=124.1s
+commands=2 cmdTime=112.0s cmdBytes=10085 timeouts=0
+orchestrator in=5630 cw=0 cr=6592 out=645
+inner prompt=339101 cached=309760 completion=7569
+spend=$0.0224 maxUsd=3
+learn: A_n=0 replayed=0/2 full=0 repaired=0 compiled=2 variants=0
+-> /home/user/sitelooper/bench/results/fwgh3-n1-sitelooper-result.json
+
+fwgh3-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — fwgh3-n1-bench-post, body includes runid=true
+  obj 3: PASS — tags=Bench News (bench-news), want only the seeded Bench News (bench-news)
+  obj 4: PASS — custom excerpt="fwgh3-n1 Bench excerpt"
+  obj 5: PASS — status=published, visibility=public
+  obj 6: PASS — published_at=2026-09-01T00:00:00.000Z, want 2026-09-01
+  obj 7: PASS — slug fwgh3-n1-bench-post reported
+
+[sweep] run 2/3: fwgh3-n2 (replay flow fwgh3, no orchestrator)
+[reset] ghost: deleted 1 post(s) (earlier runs' and non-seed)
+[sweep] fwgh3-n2: 1 drift ticket(s) → fwgh3-n2-drift.json
+
+fwgh3-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — fwgh3-n2-bench-post, body includes runid=true
+  obj 3: PASS — tags=Bench News (bench-news), want only the seeded Bench News (bench-news)
+  obj 4: PASS — custom excerpt="fwgh3-n2 Bench excerpt"
+  obj 5: PASS — status=published, visibility=public
+  obj 6: PASS — published_at=2026-09-01T00:00:00.000Z, want 2026-09-01
+  obj 7: PASS — slug fwgh3-n2-bench-post reported
+
+[sweep] run 3/3: fwgh3-n3 (replay flow fwgh3, no orchestrator)
+[reset] ghost: deleted 1 post(s) (earlier runs' and non-seed)
+[sweep] fwgh3-n3: 1 drift ticket(s) → fwgh3-n3-drift.json
+
+fwgh3-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — fwgh3-n3-bench-post, body includes runid=true
+  obj 3: PASS — tags=Bench News (bench-news), want only the seeded Bench News (bench-news)
+  obj 4: PASS — custom excerpt="fwgh3-n3 Bench excerpt"
+  obj 5: PASS — status=published, visibility=public
+  obj 6: PASS — published_at=2026-09-01T00:00:00.000Z, want 2026-09-01
+  obj 7: PASS — slug fwgh3-n3-bench-post reported
+
+Learning sweep fwgh3 (K=3)
+┌─────────┬───┬────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid      │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwgh3-n1' │ '7/7'    │ 'completed' │ 3     │ 2    │ 0.0224    │ 0   │ '0/2'        │ 124    │
+│ 1       │ 2 │ 'fwgh3-n2' │ '7/7'    │ 'success'   │ 4     │ 2    │ 0.002     │ 0.5 │ '2/2 (flow)' │ 54     │
+│ 2       │ 3 │ 'fwgh3-n3' │ '7/7'    │ 'success'   │ 6     │ 2    │ 0.0042    │ 0.5 │ '2/2 (flow)' │ 69     │
+└─────────┴───┴────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8099
+  s_0f4819  validated    1 steps  3/3 (100%)
+           In Ghost admin at {{v1}}, sign in with {{v2}} / {{v3}}. Then go to the Posts list and report the titles of all…
+  s_0fdbc9  validated    1 steps  3/3 (100%)
+           In Ghost admin at {{v1}}, sign in with {{v2}} / {{v3}}. Then go to the Posts list and report the titles of all…
+  s_24dd2a  validated   10 steps  3/3 (100%)
+           In Ghost admin, create a new post with title '{{v3}}'. Type into the rich text body editor a single paragraph …
+  s_3ba6a7  validated    3 steps  3/3 (100%)
+           In Ghost admin at {{v1}}, sign in with {{v2}} / {{v3}}. Then go to the Posts list and report the titles of all…
+  s_40eb18  provisional  1 steps  1/3 (33%)
+           In Ghost admin at {{v1}}, sign in with {{v2}} / {{v3}}. Then go to the Posts list and report the titles of all…
+  s_bfa821  validated    1 steps  3/3 (100%)
+           In Ghost admin, create a new post with title '{{v3}}'. Type into the rich text body editor a single paragraph …
+  s_f58b4c  validated    2 steps  3/3 (100%)
+           In Ghost admin, create a new post with title '{{v3}}'. Type into the rich text body editor a single paragraph …
+  s_f6f11c  validated    2 steps  3/3 (100%)
+           In Ghost admin, create a new post with title '{{v3}}'. Type into the rich text body editor a single paragraph …
+  s_fa96f6  validated   10 steps  3/3 (100%)
+           In Ghost admin, create a new post with title '{{v3}}'. Type into the rich text body editor a single paragraph …
+  s_01e2d3  provisional  4 steps  1/1 (100%)
+           In Ghost admin at {{v1}}, sign in with {{v2}} / {{v3}}. Then go to the Posts list and report the titles of all…
+  s_2c1349  provisional  1 steps  1/1 (100%)
+           In Ghost admin at {{v1}}, sign in with {{v2}} / {{v3}}. Then go to the Posts list and report the titles of all…
+  s_5e64f4  provisional  1 steps  1/1 (100%)
+           In Ghost admin at {{v1}}, sign in with {{v2}} / {{v3}}. Then go to the Posts list and report the titles of all…
+  s_6e5fc1  provisional 12 steps  1/1 (100%)  variant of s_40eb18
+           In Ghost admin at http://127.0.0.1:8099/ghost/, sign in with admin@bench.local / bench-admin-pass. Then go to …
+  s_7220c7  provisional  7 steps  1/1 (100%)
+           In Ghost admin at {{v1}}, sign in with {{v2}} / {{v3}}. Then go to the Posts list and report the titles of all…
+  s_9c6652  provisional  4 steps  1/1 (100%)
+           In Ghost admin at {{v1}}, sign in with {{v2}} / {{v3}}. Then go to the Posts list and report the titles of all…
+  s_ace6c7  provisional  7 steps  1/1 (100%)  variant of s_40eb18
+           In Ghost admin at http://127.0.0.1:8099/ghost/, sign in with admin@bench.local / bench-admin-pass. Then go to …
+  s_b68d1e  provisional  1 steps  1/1 (100%)  variant of s_40eb18
+           In Ghost admin at http://127.0.0.1:8099/ghost/, sign in with admin@bench.local / bench-admin-pass. Then go to …
+  s_bccdef  provisional  1 steps  1/1 (100%)
+           In Ghost admin at {{v1}}, sign in with {{v2}} / {{v3}}. Then go to the Posts list and report the titles of all…
+  s_d07c61  provisional  1 steps  1/1 (100%)
+           In Ghost admin at {{v1}}, sign in with {{v2}} / {{v3}}. Then go to the Posts list and report the titles of all…
+  s_d2f3d2  provisional  9 steps  1/1 (100%)
+           In Ghost admin at {{v1}}, sign in with {{v2}} / {{v3}}. Then go to the Posts list and report the titles of all…
+  s_e11237  provisional  1 steps  1/1 (100%)  variant of s_40eb18
+           In Ghost admin at http://127.0.0.1:8099/ghost/, sign in with admin@bench.local / bench-admin-pass. Then go to …
+  s_fc2456  provisional 12 steps  1/1 (100%)
+           In Ghost admin at {{v1}}, sign in with {{v2}} / {{v3}}. Then go to the Posts list and report the titles of all…
+store: /home/user/sitelooper/bench/results/fwgh3-skills
+
+summary: /home/user/sitelooper/bench/results/fwgh3-sweep.json

@@ -1,0 +1,48 @@
+
+Running 1 test using 1 worker
+
+  ✘  1 fwgh3.spec.ts:9:1 › fwgh3 (12.6s)
+
+
+  1) fwgh3.spec.ts:9:1 › fwgh3 › 01-signin: In Ghost admin at http://127.0.0.1:8099/ghost/, sign in with admin@bench.local / bench-admin-pass. Then go to the Posts list and report the titles of all published posts whose titles start with 'Seed:' exactly as shown. Do not modify anything. 
+
+    Error: 01-signin s_40eb18/1: the recorded page change did not appear
+
+    01-signin s_40eb18/1: the recorded page change did not appear
+
+    expect(received).toBeNull()
+
+    Received: "after step 01-signin s_40eb18/1 none of the 1 recorded page change(s) appeared (e.g. \"- link \\\"{{*}} By Bench Admin in Bench Guides - 1 minute ago {{*}}\\\"\") — the step ran but did not have its recorded effect"
+
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+
+       at fwgh3.flow.ts:9106
+
+      9104 |       { timeout: EXPECT_WAIT_MS, message: `${ctx.tag}: the recorded page change did not appear` },
+      9105 |     )
+    > 9106 |     .toBeNull();
+           |      ^
+      9107 |   for (const warning of last.warnings) console.log(`[sitelooper warn] ${warning}`);
+      9108 |   if (last.unobserved) console.log(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);
+      9109 |   return last;
+        at expectChanges (/home/user/sitelooper/bench/results/fwgh3-spec-spec-tmp/fwgh3.flow.ts:9106:6)
+        at Object.verify (/home/user/sitelooper/bench/results/fwgh3-spec-spec-tmp/fwgh3.flow.ts:9424:32)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwgh3-spec-spec-tmp/fwgh3.flow.ts:6286:24)
+        at Object.01-signin (/home/user/sitelooper/bench/results/fwgh3-spec-spec-tmp/fwgh3.flow.ts:9392:5)
+        at /home/user/sitelooper/bench/results/fwgh3-spec-spec-tmp/fwgh3.flow.ts:10838:7
+        at runFlow (/home/user/sitelooper/bench/results/fwgh3-spec-spec-tmp/fwgh3.flow.ts:10837:5)
+        at /home/user/sitelooper/bench/results/fwgh3-spec-spec-tmp/fwgh3.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwgh3-fwgh3/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwgh3-fwgh3/error-context.md
+
+  1 failed
+    fwgh3.spec.ts:9:1 › fwgh3 ──────────────────────────────────────────────────────────────────────
