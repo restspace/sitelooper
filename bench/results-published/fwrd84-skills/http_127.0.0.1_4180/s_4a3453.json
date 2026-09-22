@@ -1,0 +1,143 @@
+{
+ "id": "s_4a3453",
+ "origin": "http://127.0.0.1:4180",
+ "template": "On the detail page for ticket {{v1}} titled '{{v2}}' ({{v4}}), add a part using the '{{v5}}' action. Name it exactly '{{v6}}', set its cost to {{v7}} and its markup to {{v8}}, then submit. Wait for the page to refresh and confirm the part appears on the ticket with those values. Report the part's name, cost, markup, and the PRICE the app computes/displays for this part (look for a computed price field or column).",
+ "params": {
+  "v1": {
+   "example": "RD-1017",
+   "usedIn": [
+    1
+   ],
+   "known": true,
+   "binding": "02-create.ticket_reference"
+  },
+  "v2": {
+   "example": "fwrd84-n3 RD Bench Ticket",
+   "usedIn": [
+    1
+   ],
+   "known": true,
+   "binding": "output:i2:ticket_title"
+  },
+  "v3": {
+   "example": "fwrd84-n3",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v4": {
+   "example": "http://127.0.0.1:4180/#/tickets",
+   "usedIn": [],
+   "known": true,
+   "binding": "02-create.url"
+  },
+  "v5": {
+   "example": "Add part",
+   "usedIn": [],
+   "known": true,
+   "binding": "02-create.detail_actions_3"
+  },
+  "v6": {
+   "example": "fwrd84-n3 RD Part A",
+   "usedIn": [],
+   "known": true
+  },
+  "v7": {
+   "example": "100",
+   "usedIn": []
+  },
+  "v8": {
+   "example": "25",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:4180/#/tickets"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e330"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "#ticket-rows tr",
+      "hasText": "{{v2}}",
+      "selector": "td:nth-of-type(1) > a"
+     },
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "{{v1}}"
+     },
+     {
+      "kind": "css",
+      "selector": "#ticket-rows > tr:nth-of-type(1) > td:nth-of-type(1) > a"
+     },
+     {
+      "kind": "point",
+      "x": 152,
+      "y": 423,
+      "w": 54.6,
+      "h": 15,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "mints": {
+    "at": "h1"
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets/{{d1}}",
+    "addedContains": [
+     "- heading \"{{v2}}\"",
+     "- button \"Mark Ready\"",
+     "- button \"Archive ticket\"",
+     "- heading \"Parts\"",
+     "- button \"{{v5}}\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_a07cab",
+    "step": 1
+   }
+  }
+ ],
+ "derived": {
+  "d1": {
+   "step": 1,
+   "at": "h1",
+   "example": "t15"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-22T17:39:59.501Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_d681bf",
+  "index": 0,
+  "of": 2
+ },
+ "provenance": {
+  "session": "fwrd84-n3",
+  "instruction": "On the detail page for ticket RD-1017 titled 'fwrd84-n3 RD Bench Ticket' (http://127.0.0.1:4180/#/tickets), add a part using the 'Add part' action. Name it exactly 'fwrd84-n3 RD Part A', set its cost to 100 and its markup to 25, then submit. Wait for the page to refresh and confirm the part appears on the ticket with those values. Report the part's name, cost, markup, and the PRICE the app computes/displays for this part (look for a computed price field or column).",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-22T17:39:59.501Z"
+ },
+ "revision": 1
+}

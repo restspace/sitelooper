@@ -1,0 +1,312 @@
+{
+  "flow": "fwrd84",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_e93d21; observed main_nav_items=Tickets, repair_tickets_heading=Repair tickets, filter_tickets_heading=Filter tickets, signed_in_user=Bench User, ticket_count_text=Showing 1–10 of 13, first_ticket_reference=RD-1014, first_ticket_title=Under-counter fridge door misaligned, page_headings_1=Repair tickets, page_headings_2=Filter tickets, page_headings_3=Tickets, nav_tickets_link=Tickets, tickets_section_heading=Tickets.",
+      "values": {
+        "main_nav_items": "Tickets",
+        "repair_tickets_heading": "Repair tickets",
+        "filter_tickets_heading": "Filter tickets",
+        "signed_in_user": "Bench User",
+        "ticket_count_text": "Showing 1–10 of 13",
+        "first_ticket_reference": "RD-1014",
+        "first_ticket_title": "Under-counter fridge door misaligned",
+        "page_headings_1": "Repair tickets",
+        "page_headings_2": "Filter tickets",
+        "page_headings_3": "Tickets",
+        "nav_tickets_link": "Tickets",
+        "tickets_section_heading": "Tickets"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "20/20",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "The replay's earlier steps (New ticket opened, Customer \"Bench Customer Ltd\" filled) had left the dialog open with validation \"Title is required\" — the submit click had not created anything, so I only filled the missing Title and submitted, avoiding a duplicate. The ticket was created as reference <b>RD-1016</b>, title \"fwrd84-n2 RD Bench Ticket\", customer \"Bench Customer Ltd\", status <b>Draft</b>; its detail page (opened via its reference link) shows heading \"fwrd84-n2 RD Bench Ticket\" with Customer Bench Customer Ltd, Raised 2026-09-22, Status Draft and action buttons Mark Ready / Archive ticket / Add part. The list at http://127.0.0.1:4180/#/tickets shows exactly one row with that title (no duplicate). The creation form required only one field: Title (labelled \"Title *\", \"A short description of the fault\"); Customer is explicitly optional (\"Optional. The business the equipment belongs to\") — I re-opened the form to read its labels and cancelled it without submitting.",
+      "values": {
+        "current_page_url": "http://127.0.0.1:4180/#/tickets",
+        "ticket_reference": "RD-1016",
+        "ticket_title": "fwrd84-n2 RD Bench Ticket",
+        "ticket_status": "Draft",
+        "ticket_customer": "Bench Customer Ltd",
+        "ticket_list_row": "RD-1016\tfwrd84-n2 RD Bench Ticket\tBench Customer Ltd\tDraft\t0\t2026-09-22",
+        "required_fields": "Title (only; marked \"Title *\")",
+        "optional_fields": "Customer (labelled \"Optional. The business the equipment belongs to.\")",
+        "detail_actions_1": "Mark Ready",
+        "detail_actions_2": "Archive ticket",
+        "detail_actions_3": "Add part",
+        "detail_url": "http://127.0.0.1:4180/#/tickets/RD-1016",
+        "ref": "fwrd84-n2",
+        "ref_2": "detail_actions_1",
+        "ref_3": "ticket_detail_RD-1016.png"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_f89999 stopped at step 3 — after step 3 the page did not show \"- row \\\"{{*}} fwrd84-n2 RD Bench Ticket {{*}} {{*}} 0 {{*}}\\\"\" / \"- cell \\\"fwrd84-n2 RD Bench Ticket\\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "replayed": "2/6",
+      "repaired": false,
+      "turns": 9,
+      "unreported": [
+        "ticket_raised_date",
+        "form_optional_fields",
+        "test_prefix"
+      ]
+    },
+    {
+      "id": "03-add",
+      "status": "success",
+      "summary": "On ticket RD-1016 (\"fwrd84-n2 RD Bench Ticket\") I clicked \"Add part\", filled the dialog's required fields — Part name \"fwrd84-n2 RD Part A\", Cost 100, Markup % 25 (Quantity stayed at its default 1, Supplier blank) — and submitted. The page refreshed and the Parts table on the ticket's detail page now shows the new row: Name \"fwrd84-n2 RD Part A\", Cost $100.00, Markup 25%, Qty 1, Supplier \"No supplier\", Price <b>$125.00</b>, plus an \"Edit\"/\"Delete\" action pair, and a footer row \"Total (price × quantity) $125.00\". The page states \"Price is calculated from cost and markup when the part is saved\", so the app computed 100 + 25% = 125. The form required Part name, Cost and Markup %; Quantity and Supplier did not block submission.",
+      "values": {
+        "ticket_reference": "RD-1016",
+        "part_name": "fwrd84-n2 RD Part A",
+        "part_cost": "$100.00",
+        "part_markup": "25%",
+        "part_price": "$125.00",
+        "part_qty": "1",
+        "part_supplier": "No supplier",
+        "parts_total": "$125.00",
+        "required_form_fields": "Part name *, Cost *, Markup % * (Quantity defaults to 1, Supplier optional)",
+        "price_note": "Price is calculated from cost and markup when the part is saved.",
+        "ref": "fwrd84-n2"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "every candidate refused — s_2d2b06: not on the page this procedure starts from (expects http://127.0.0.1:4180/#/tickets/:id, browser is at http://127.0.0.1:4180/#/tickets) — nothing was run",
+      "replayed": null,
+      "repaired": false,
+      "turns": 11,
+      "unreported": [
+        "part_quantity",
+        "computed_price",
+        "total_row",
+        "ticket_title",
+        "test_prefix",
+        "part_row_text_1",
+        "part_row_text_2",
+        "part_row_text_3",
+        "part_row_text_4",
+        "part_row_text_5",
+        "part_row_text_6",
+        "part_row_text_7"
+      ]
+    },
+    {
+      "id": "04-add",
+      "status": "success",
+      "summary": "The replay's two steps had opened the \"Add part\" dialog and set Markup % to 25, then its submit click failed with \"Name is required\" — nothing was created, so I only filled the missing Part name and Cost (200) and left Markup at 25. Submitting closed the dialog and refreshed the parts table on the ticket detail page, which now lists two rows: part A (fwrd84-n2 RD Part A, $100.00, 25%, $125.00) and the new part B — \"fwrd84-n2 RD Part B\", Cost $200.00, Markup 25%, Qty 1, Supplier \"No supplier\", PRICE <b>$250.00</b>. The ticket total row now reads \"Total (price × quantity) <b>$375.00</b>\" (up from $125.00), and the \"Parts\" heading plus explanatory text \"Price is calculated from cost and markup when the part is saved.\" are still shown. The form required Part name, Cost and Markup %; Quantity defaulted to 1 and Supplier was optional.",
+      "values": {
+        "ticket_reference": "RD-1016",
+        "ticket_title": "fwrd84-n2 RD Bench Ticket",
+        "ticket_status": "Draft",
+        "part_B_name": "fwrd84-n2 RD Part B",
+        "part_B_cost": "$200.00",
+        "part_B_markup": "25%",
+        "part_B_quantity": "1",
+        "part_B_supplier": "No supplier",
+        "part_B_computed_price": "$250.00",
+        "previous_total": "$125.00",
+        "new_ticket_total": "$375.00",
+        "part_A_row_unchanged": "fwrd84-n2 RD Part A $100.00 25% 1 No supplier $125.00 Edit Delete",
+        "total_row_text": "Total (price × quantity) $375.00",
+        "form_fields_required_1": "Part name *",
+        "form_fields_required_2": "Cost *",
+        "form_fields_required_3": "Markup % *",
+        "ref": "fwrd84-n2"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_af0559 stopped at step 3 — after step 3 the page did not show \"- row \\\"fwrd84-n2 RD Part B {{*}} 25% {{*}} {{*}} {{*}} Edit Delete\\\"\" / \"- cell \\\"fwrd84-n2 RD Part B\\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "replayed": "2/18",
+      "repaired": false,
+      "turns": 3,
+      "unreported": [
+        "test_prefix"
+      ]
+    },
+    {
+      "id": "05-edit",
+      "status": "success",
+      "summary": "Replayed stored procedure s_20eebf; observed test_prefix=fwrd84-n2, part_A_name=fwrd84-n2 RD Part A, part_A_cost_after=$100.00, part_A_markup=25%, part_A_quantity=1, part_A_computed_price_after=$125.00, new_ticket_total=$375.00, ticket_reference=RD-1016, ticket_title=fwrd84-n2 RD Bench Ticket, part_B_unchanged_row=fwrd84-n2 RD Part B $200.00 25% 1 No supplier $250.00.",
+      "values": {
+        "test_prefix": "fwrd84-n2",
+        "part_A_name": "fwrd84-n2 RD Part A",
+        "part_A_cost_after": "$100.00",
+        "part_A_markup": "25%",
+        "part_A_quantity": "1",
+        "part_A_computed_price_after": "$125.00",
+        "new_ticket_total": "$375.00",
+        "ticket_reference": "RD-1016",
+        "ticket_title": "fwrd84-n2 RD Bench Ticket",
+        "part_B_unchanged_row": "fwrd84-n2 RD Part B $200.00 25% 1 No supplier $250.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_20eebf: step 3: none of the 1 expected page change(s) appeared in the step diff (found on the page instead)"
+      ]
+    },
+    {
+      "id": "06-set",
+      "status": "success",
+      "summary": "Clicked \"Mark Ready\" on RD-1016 and the app refused: it raised a validation alert titled \"Ticket is not ready\" with the body listing two unmet preconditions — 'Part \"fwrd84-n2 RD Part A\" has no supplier' and 'Part \"fwrd84-n2 RD Part B\" has no supplier'. I did not remediate anything; the ticket's status is still Draft afterwards (re-read from the page), both parts unchanged (A $150.00/25%/$187.50, B $200.00/25%/$250.00, total $437.50).",
+      "values": {
+        "test_prefix": "fwrd84-n2",
+        "status_after_attempt": "Draft",
+        "error_title": "Ticket is not ready",
+        "ticket_reference": "RD-1016",
+        "ticket_title": "fwrd84-n2 RD Bench Ticket",
+        "exact_message_1": "Ticket is not ready",
+        "exact_message_2": "Part \"fwrd84-n2 RD Part A\" has no supplier",
+        "exact_message_3": "Part \"fwrd84-n2 RD Part B\" has no supplier"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "07-edit",
+      "status": "success",
+      "summary": "The replay's two steps had opened the \"Edit part\" dialog for Part A and set markup 25; its save click had not applied anything, so I observed the live state first: Part A was still listed at Cost $100.00 with \"No supplier\", and the ticket was still Draft. I opened Edit for Part A, set its Supplier to <b>Bench Supplies Ltd</b> (the Supplier textbox offers no select/datalist — it is a free-text field, so nothing was \"offered\" to pick) and set Cost to 150 to match the value given in the instruction, then saved; the row became \"fwrd84-n2 RD Part A $150.00 25% 1 Bench Supplies Ltd $187.50\". I then opened Edit for Part B, set Supplier to the same <b>Bench Supplies Ltd</b>, left Cost 200 / Markup 25 / Qty 1, and saved — row now \"fwrd84-n2 RD Part B $200.00 25% 1 Bench Supplies Ltd $250.00\". With no more \"has no supplier\" preconditions, clicking \"Mark Ready\" succeeded: the status line now reads <b>Status Ready</b>, the button became \"Mark Draft\" + \"Mark Closed\", the parts table total reads <b>$437.50</b>, and no error alert is present — however the app displayed <b>no confirmation message/banner</b>, only the status and button change.",
+      "values": {
+        "ticket_reference": "RD-1016",
+        "ticket_title": "fwrd84-n2 RD Bench Ticket",
+        "supplier_assigned_both_parts": "Bench Supplies Ltd",
+        "status_before": "Draft",
+        "final_status": "Ready",
+        "part_A_row_final": "fwrd84-n2 RD Part A\t$150.00\t25%\t1\tBench Supplies Ltd\t$187.50\tEdit Delete",
+        "part_B_row_final": "fwrd84-n2 RD Part B\t$200.00\t25%\t1\tBench Supplies Ltd\t$250.00\tEdit Delete",
+        "ticket_total": "$437.50",
+        "confirmation_message": "none displayed (no banner/toast appeared; only the action buttons changed from \"Mark Ready\" to \"Mark Draft\" + \"Mark Closed\")",
+        "note_on_part_A_cost": "the edit form actually held Cost 100 when opened (this session's earlier cost edit had not persisted), so I set it to 150 to match the value stated in the instruction",
+        "main_p": "Status\nReady",
+        "main_table_tr_last_child": "fwrd84-n2 RD Part B",
+        "main_table_tr_last_child_2": "$200.00",
+        "main_table_tr_last_child_3": "25%",
+        "main_table_tr_last_child_4": "$250.00",
+        "ref": "fwrd84-n2"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_d223dc stopped at step 3 — after step 3 the page did not show \"- row \\\"fwrd84-n2 RD Part A $150.00 25% 1 {{*}} $187.50 Edit Delete\\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "replayed": "2/15",
+      "repaired": false,
+      "turns": 21,
+      "unreported": [
+        "buttons_after"
+      ]
+    },
+    {
+      "id": "08-delete",
+      "status": "success",
+      "summary": "Ran the flow on ticket RD-1016. Part A: clicked Delete → the app opened its own in-page \"Confirm\" dialog (heading \"Confirm\", Cancel / Delete part) → clicked \"Delete part\"; the row left the table and the total dropped from $437.50 to $250.00 (only Part B remained). Part B: Delete → same Confirm dialog → \"Delete part\"; the table then showed only the empty-state row \"No parts on this ticket yet.\" with no total row. Then \"Archive ticket\": no dialog appeared at all — the ticket was archived immediately and the button became \"Unarchive ticket\". Back on the Tickets list with \"Show archived\" checked (Showing 1–10 of 15), the top row is <b>RD-1016 \"fwrd84-n2 RD Bench Ticket\"</b>, customer Bench Customer Ltd, <b>Archived</b> badge, status <b>Ready</b>, Parts <b>0</b>, created 2026-09-22.",
+      "values": {
+        "ticket_reference": "RD-1016",
+        "ticket_title": "fwrd84-n2 RD Bench Ticket",
+        "after_delete_part_A_parts_table": "one row left: fwrd84-n2 RD Part B $200.00 25% 1 Bench Supplies Ltd $250.00 Edit Delete | Total (price × quantity) $250.00",
+        "parts_table_after_both_deletes": "single row: \"No parts on this ticket yet.\" — no total row remains",
+        "archive_confirmation": "app showed an in-page Confirm dialog (heading \"Confirm\", buttons \"Cancel\" / \"Delete part\") for each part delete; no native browser dialog. \"Archive ticket\" produced no dialog at all — the ticket was archived immediately and the button changed to \"Unarchive ticket\"",
+        "list_url_after": "http://127.0.0.1:4180/#/tickets?archived=1 (Show archived checked)",
+        "list_row_RD-1016": "RD-1016 | fwrd84-n2 RD Bench Ticket | (Archived badge) | Bench Customer Ltd | Ready | Parts 0 | 2026-09-22",
+        "show_archived_checkbox": "checked",
+        "tickets_showing": "Showing 1–10 of 15",
+        "final_ticket_status": "Ready (with Archived badge on the list)",
+        "ref": "fwrd84-n2"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 02-create.url.h1",
+      "replayed": null,
+      "repaired": false,
+      "turns": 11,
+      "unreported": [
+        "tickets_list_count_with_archived",
+        "rd1015_list_row_archived",
+        "rd1015_archived_title_cell",
+        "rd1015_parts_count_in_list",
+        "test_prefix"
+      ]
+    }
+  ],
+  "passed": 8,
+  "total": 8,
+  "repinned": 0,
+  "drift": 3,
+  "driftTickets": [
+    {
+      "flow": "fwrd84",
+      "step": "02-create",
+      "skill": "s_f89999",
+      "similarity": 1.001,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_f89999 stopped at step 3 — after step 3 the page did not show \"- row \\\"{{*}} fwrd84-n2 RD Bench Ticket {{*}} {{*}} 0 {{*}}\\\"\" / \"- cell \\\"fwrd84-n2 RD Bench Ticket\\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "reason": "after step 3 the page did not show \"- row \\\"{{*}} fwrd84-n2 RD Bench Ticket {{*}} {{*}} 0 {{*}}\\\"\" / \"- cell \\\"fwrd84-n2 RD Bench Ticket\\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets"
+    },
+    {
+      "flow": "fwrd84",
+      "step": "04-add",
+      "skill": "s_af0559",
+      "similarity": 0.999,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_af0559 stopped at step 3 — after step 3 the page did not show \"- row \\\"fwrd84-n2 RD Part B {{*}} 25% {{*}} {{*}} {{*}} Edit Delete\\\"\" / \"- cell \\\"fwrd84-n2 RD Part B\\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "reason": "after step 3 the page did not show \"- row \\\"fwrd84-n2 RD Part B {{*}} 25% {{*}} {{*}} {{*}} Edit Delete\\\"\" / \"- cell \\\"fwrd84-n2 RD Part B\\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    },
+    {
+      "flow": "fwrd84",
+      "step": "07-edit",
+      "skill": "s_d223dc",
+      "similarity": 0.998,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_d223dc stopped at step 3 — after step 3 the page did not show \"- row \\\"fwrd84-n2 RD Part A $150.00 25% 1 {{*}} $187.50 Edit Delete\\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "reason": "after step 3 the page did not show \"- row \\\"fwrd84-n2 RD Part A $150.00 25% 1 {{*}} $187.50 Edit Delete\\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    }
+  ],
+  "wallMs": 196286,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 1196685,
+    "completionTokens": 16564,
+    "cachedTokens": 1115264
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 1196685,
+      "completionTokens": 16564,
+      "cachedTokens": 1115264
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

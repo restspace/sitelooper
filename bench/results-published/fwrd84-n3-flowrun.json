@@ -1,0 +1,333 @@
+{
+  "flow": "fwrd84",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_e93d21; observed main_nav_items=Tickets, repair_tickets_heading=Repair tickets, filter_tickets_heading=Filter tickets, signed_in_user=Bench User, ticket_count_text=Showing 1–10 of 13, first_ticket_reference=RD-1014, first_ticket_title=Under-counter fridge door misaligned, page_headings_1=Repair tickets, page_headings_2=Filter tickets, page_headings_3=Tickets, nav_tickets_link=Tickets, tickets_section_heading=Tickets.",
+      "values": {
+        "main_nav_items": "Tickets",
+        "repair_tickets_heading": "Repair tickets",
+        "filter_tickets_heading": "Filter tickets",
+        "signed_in_user": "Bench User",
+        "ticket_count_text": "Showing 1–10 of 13",
+        "first_ticket_reference": "RD-1014",
+        "first_ticket_title": "Under-counter fridge door misaligned",
+        "page_headings_1": "Repair tickets",
+        "page_headings_2": "Filter tickets",
+        "page_headings_3": "Tickets",
+        "nav_tickets_link": "Tickets",
+        "tickets_section_heading": "Tickets"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "20/20",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_1dbedc; observed detail_actions_1=Mark Ready, detail_actions_2=Archive ticket, detail_actions_3=Add part, current_page_url=http://127.0.0.1:4180/#/tickets, ticket_reference=RD-1017, ticket_title=fwrd84-n3 RD Bench Ticket, ticket_customer=Bench Customer Ltd, ticket_list_row=RD-1017\tfwrd84-n3 RD Bench Ticket\tBench Customer Ltd\tDraft\t0\t2026-09-22, ref=fwrd84-n3.",
+      "values": {
+        "detail_actions_1": "Mark Ready",
+        "detail_actions_2": "Archive ticket",
+        "detail_actions_3": "Add part",
+        "current_page_url": "http://127.0.0.1:4180/#/tickets",
+        "ticket_reference": "RD-1017",
+        "ticket_title": "fwrd84-n3 RD Bench Ticket",
+        "ticket_customer": "Bench Customer Ltd",
+        "ticket_list_row": "RD-1017\tfwrd84-n3 RD Bench Ticket\tBench Customer Ltd\tDraft\t0\t2026-09-22",
+        "ref": "fwrd84-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "19/19",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "ticket_status",
+        "ticket_raised_date",
+        "form_optional_fields",
+        "test_prefix"
+      ]
+    },
+    {
+      "id": "03-add",
+      "status": "success",
+      "summary": "The interrupted run had already opened the \"Add part\" dialog on ticket RD-1017 and set Markup % = 25; the earlier submit had failed with \"Name is required\" so no duplicate was created. I filled Part name = 'fwrd84-n3 RD Part A' and Cost = 100 and clicked \"Add part\". The dialog closed and the Parts table on /#/tickets/t15 now shows the part: fwrd84-n3 RD Part A | $100.00 | 25% | qty 1 | No supplier | computed Price $125.00, plus a \"Total (price × quantity) $125.00\" row — verified live via the row text and a screenshot. Required fields on the creation form (marked *): Part name, Cost, Markup %; Quantity defaulted to 1 and Supplier was optional.",
+      "values": {
+        "ticket_reference": "RD-1017",
+        "ticket_title": "fwrd84-n3 RD Bench Ticket",
+        "part_name": "fwrd84-n3 RD Part A",
+        "part_cost": "$100.00",
+        "part_markup": "25%",
+        "part_quantity": "1",
+        "part_supplier": "No supplier",
+        "computed_price": "$125.00",
+        "parts_table_rows": "NAME\tCOST\tMARKUP\tQTY\tSUPPLIER\tPRICE\tACTIONS, fwrd84-n3 RD Part A\t$100.00\t25%\t1\tNo supplier\t$125.00\tEdit Delete, Total (price × quantity)\t$125.00\t",
+        "required_form_fields": "Part name *, Cost *, Markup % * (Quantity and Supplier optional)",
+        "screenshot": "/root/.sitelooper/sessions/fwrd84-n3/screenshots/shot-1790098794262.jpg",
+        "ref": "fwrd84-n3",
+        "ticket_total_row_1": "Total (price × quantity)",
+        "ticket_total_row_2": "$125.00"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_ffa622 stopped at step 3 — after step 3 the page did not show \"- row \\\"fwrd84-n3 RD Part A {{*}} 25% {{*}} {{*}} {{*}} Edit Delete\\\"\" / \"- cell \\\"fwrd84-n3 RD Part A\\\"\" / \"- cell \\\"25%\\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "replayed": "2/12",
+      "repaired": false,
+      "turns": 4,
+      "unreported": [
+        "total_row",
+        "test_prefix",
+        "part_row_text_1",
+        "part_row_text_2",
+        "part_row_text_3",
+        "part_row_text_4",
+        "part_row_text_5",
+        "part_row_text_6",
+        "part_row_text_7"
+      ]
+    },
+    {
+      "id": "04-add",
+      "status": "success",
+      "summary": "The interrupted replay had only opened the Add part dialog and set Markup % = 25 (its submit failed with \"Name is required\"), so no duplicate existed. I filled Part name = 'fwrd84-n3 RD Part B', Cost = 200 (Markup already 25, Quantity 1) and clicked \"Add part\". The dialog closed and the Parts table on /#/tickets/t15 immediately gained the row: fwrd84-n3 RD Part B | $200.00 | 25% | 1 | No supplier | computed Price $250.00, and the ticket total row updated from $125.00 to $375.00 (Part A $125.00 + Part B $250.00) — verified in the action's live DOM diff and a screenshot.",
+      "values": {
+        "ticket_reference": "RD-1017",
+        "part_B_name": "fwrd84-n3 RD Part B",
+        "part_B_cost": "$200.00",
+        "part_B_markup": "25%",
+        "part_B_quantity": "1",
+        "part_B_supplier": "No supplier",
+        "part_B_computed_price": "$250.00",
+        "ticket_total": "$375.00",
+        "total_row": "Total (price × quantity) $375.00",
+        "part_A_row": "fwrd84-n3 RD Part A $100.00 25% 1 No supplier $125.00 Edit Delete",
+        "screenshot": "/root/.sitelooper/sessions/fwrd84-n3/screenshots/shot-1790098812550.jpg",
+        "ref": "fwrd84-n3"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_f37dcd stopped at step 5 — after step 5 the page did not show \"- row \\\"fwrd84-n3 RD Part B {{*}} 25% {{*}} No supplier {{*}} Edit Delete\\\"\" / \"- cell \\\"fwrd84-n3 RD Part B\\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "replayed": "4/19",
+      "repaired": false,
+      "turns": 3,
+      "unreported": [
+        "new_ticket_total",
+        "total_row_text",
+        "previous_total",
+        "ticket_title",
+        "ticket_status",
+        "test_prefix",
+        "form_fields_required_1",
+        "form_fields_required_2",
+        "form_fields_required_3"
+      ]
+    },
+    {
+      "id": "05-edit",
+      "status": "success",
+      "summary": "Replayed stored procedure s_20eebf; observed test_prefix=fwrd84-n3, part_A_name=fwrd84-n3 RD Part A, part_A_cost_after=$100.00, part_A_markup=25%, part_A_quantity=1, part_A_computed_price_after=$125.00, new_ticket_total=$375.00, ticket_reference=RD-1017, ticket_title=fwrd84-n3 RD Bench Ticket, part_B_unchanged_row=fwrd84-n3 RD Part B $200.00 25% 1 No supplier $250.00.",
+      "values": {
+        "test_prefix": "fwrd84-n3",
+        "part_A_name": "fwrd84-n3 RD Part A",
+        "part_A_cost_after": "$100.00",
+        "part_A_markup": "25%",
+        "part_A_quantity": "1",
+        "part_A_computed_price_after": "$125.00",
+        "new_ticket_total": "$375.00",
+        "ticket_reference": "RD-1017",
+        "ticket_title": "fwrd84-n3 RD Bench Ticket",
+        "part_B_unchanged_row": "fwrd84-n3 RD Part B $200.00 25% 1 No supplier $250.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_20eebf: step 3: none of the 1 expected page change(s) appeared in the step diff (found on the page instead)"
+      ]
+    },
+    {
+      "id": "06-set",
+      "status": "success",
+      "summary": "Clicked \"Mark Ready\" on RD-1017 and the app refused: it raised a validation alert titled \"Ticket is not ready\" with the body listing two unmet preconditions — 'Part \"fwrd84-n3 RD Part A\" has no supplier' and 'Part \"fwrd84-n3 RD Part B\" has no supplier'. I did not remediate anything; the ticket's status is still Draft afterwards (re-read from the page), both parts unchanged (A $150.00/25%/$187.50, B $200.00/25%/$250.00, total $437.50).",
+      "values": {
+        "test_prefix": "fwrd84-n3",
+        "status_after_attempt": "Draft",
+        "error_title": "Ticket is not ready",
+        "ticket_reference": "RD-1017",
+        "ticket_title": "fwrd84-n3 RD Bench Ticket",
+        "exact_message_1": "Ticket is not ready",
+        "exact_message_2": "Part \"fwrd84-n3 RD Part A\" has no supplier",
+        "exact_message_3": "Part \"fwrd84-n3 RD Part B\" has no supplier"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "07-edit",
+      "status": "success",
+      "summary": "The replayed segment had already saved a supplier onto Part A, so I only had to finish Part B. Note the app's Supplier field is a free-text box — the DOM has no select or datalist and typing produced no suggestion list, so no supplier was \"offered\"; I entered the supplier \"a\" (matching what Part A already carried) and saved both parts. Parts table now: fwrd84-n3 RD Part A $100.00 25% 1 a $125.00; fwrd84-n3 RD Part B $200.00 25% 1 a $250.00; total $375.00. 'Mark Ready' then succeeded with no error: the button disappeared and the status paragraph reads \"Status Ready\" (was Draft); 'Mark Ready' was replaced by 'Mark Draft'/'Mark Closed'. No confirmation toast or banner text was rendered (only an empty role=alert node). Caveat: Part A's cost is $100.00, not the $150 stated in the instruction — the earlier edit-to-150 never persisted, and per \"keep other values unchanged\" I did not alter any cost markups. | part_A_supplier=a, part_B_supplier=a, supplier_field_type=plain text input (id f-supplier), no datalist/select — no options were offered by the app, part_A_row=fwrd84-n3 RD Part A $100.00 25% 1 a $125.00 Edit Delete, part_B_row=fwrd84-n3 RD Part B $200.00 25% 1 a $250.00 Edit Delete, ticket_total=$375.00, status_after_mark_ready=Ready, status_before=Draft, confirmation_message=none — no toast/banner text appeared; only the status and available status buttons changed, ticket_reference=RD-1017, screenshot_after_suppliers=/root/.sitelooper/sessions/fwrd84-n3/screenshots/shot-1790098850687.jpg, screenshot_ready=/root/.sitelooper/sessions/fwrd84-n3/screenshots/shot-1790098859296.jpg, ref=fwrd84-n3",
+      "values": {
+        "ticket_reference": "RD-1017",
+        "part_A_supplier": "a",
+        "part_B_supplier": "a",
+        "supplier_field_type": "plain text input (id f-supplier), no datalist/select — no options were offered by the app",
+        "part_A_row": "fwrd84-n3 RD Part A $100.00 25% 1 a $125.00 Edit Delete",
+        "part_B_row": "fwrd84-n3 RD Part B $200.00 25% 1 a $250.00 Edit Delete",
+        "ticket_total": "$375.00",
+        "status_after_mark_ready": "Ready",
+        "status_before": "Draft",
+        "confirmation_message": "none — no toast/banner text appeared; only the status and available status buttons changed",
+        "screenshot_after_suppliers": "/root/.sitelooper/sessions/fwrd84-n3/screenshots/shot-1790098850687.jpg",
+        "screenshot_ready": "/root/.sitelooper/sessions/fwrd84-n3/screenshots/shot-1790098859296.jpg",
+        "status_after_mark_ready_2": "Status\nReady",
+        "ref": "fwrd84-n3",
+        "ref_2": "edit-to-150",
+        "ref_3": "shot-1790098850687.jpg"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_f30058 stopped at step 7 — after step 7 the page did not show \"- row \\\"fwrd84-n3 RD Part A $150.00 25% 1 {{*}} $187.50 Edit Delete\\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "replayed": "6/25",
+      "repaired": false,
+      "turns": 10,
+      "warnings": [
+        "s_f30058: step 1: primary locator did not resolve; used fallback #4 page.getByTestId('part-edit-p18')",
+        "s_f30058: step 4: primary locator did not resolve; used fallback #4 page.getByTestId('part-edit-p18')"
+      ],
+      "unreported": [
+        "supplier_assigned_both_parts",
+        "final_status",
+        "buttons_after",
+        "ticket_title"
+      ]
+    },
+    {
+      "id": "08-delete",
+      "status": "success",
+      "summary": "Deleted both parts on RD-1017: each Delete opened an in-page \"Confirm\" dialog (buttons Cancel / Delete part — not a native browser dialog) which I accepted; after Part A the total dropped $375.00 → $250.00, and after Part B the Parts table showed the empty state \"No parts on this ticket yet.\" with no total row. 'Archive ticket' archived with no confirmation prompt (the button flipped to \"Unarchive ticket\"); on the detail page status still read Ready. Back on the Tickets list RD-1017 was absent until I checked 'Show archived', then its row read: RD-1017 | fwrd84-n3 RD Bench Ticket | Bench Customer Ltd | Ready | Parts 0 | 2026-09-22, with an \"Archived\" badge beside the title — i.e. archived while its status remains Ready. On the detail page there is no separate archived-status text, only the badge shown in the list.",
+      "values": {
+        "part_A_delete": "Delete → confirm dialog \"Confirm\"/\"Delete part\" accepted; row removed, total went $375.00 → $250.00",
+        "part_B_delete": "Delete → confirm dialog \"Confirm\"/\"Delete part\" accepted; parts table then showed \"No parts on this ticket yet.\" and no total row",
+        "archive_click": "Archive ticket clicked — no dialog appeared; button changed to \"Unarchive ticket\"",
+        "show_archived_filter": "checked",
+        "list_row_RD-1017": "RD-1017 | fwrd84-n3 RD Bench Ticket [Archived] | Bench Customer Ltd | Ready | Parts 0 | 2026-09-22",
+        "list_count_text": "Showing 1–10 of 15",
+        "screenshot_archived_detail": "/root/.sitelooper/sessions/fwrd84-n3/screenshots/s3-archived-detail.jpg",
+        "screenshot_list": "/root/.sitelooper/sessions/fwrd84-n3/screenshots/s3-list-show-archived.jpg",
+        "ticket_reference": "RD-1017",
+        "ticket_title": "fwrd84-n3 RD Bench Ticket",
+        "ref": "fwrd84-n3"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 02-create.url.h1",
+      "replayed": null,
+      "repaired": false,
+      "turns": 10,
+      "unreported": [
+        "after_delete_part_A_parts_table",
+        "parts_table_after_both_deletes",
+        "tickets_list_count_with_archived",
+        "rd1015_list_row_archived",
+        "rd1015_archived_title_cell",
+        "rd1015_parts_count_in_list",
+        "test_prefix"
+      ]
+    }
+  ],
+  "passed": 8,
+  "total": 8,
+  "repinned": 0,
+  "drift": 4,
+  "driftTickets": [
+    {
+      "flow": "fwrd84",
+      "step": "03-add",
+      "skill": "s_ffa622",
+      "similarity": 1.004,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_ffa622 stopped at step 3 — after step 3 the page did not show \"- row \\\"fwrd84-n3 RD Part A {{*}} 25% {{*}} {{*}} {{*}} Edit Delete\\\"\" / \"- cell \\\"fwrd84-n3 RD Part A\\\"\" / \"- cell \\\"25%\\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "reason": "after step 3 the page did not show \"- row \\\"fwrd84-n3 RD Part A {{*}} 25% {{*}} {{*}} {{*}} Edit Delete\\\"\" / \"- cell \\\"fwrd84-n3 RD Part A\\\"\" / \"- cell \\\"25%\\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    },
+    {
+      "flow": "fwrd84",
+      "step": "04-add",
+      "skill": "s_f37dcd",
+      "similarity": null,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_f37dcd stopped at step 5 — after step 5 the page did not show \"- row \\\"fwrd84-n3 RD Part B {{*}} 25% {{*}} No supplier {{*}} Edit Delete\\\"\" / \"- cell \\\"fwrd84-n3 RD Part B\\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "reason": "after step 5 the page did not show \"- row \\\"fwrd84-n3 RD Part B {{*}} 25% {{*}} No supplier {{*}} Edit Delete\\\"\" / \"- cell \\\"fwrd84-n3 RD Part B\\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    },
+    {
+      "flow": "fwrd84",
+      "step": "07-edit",
+      "skill": "s_f30058",
+      "atStep": "1",
+      "key": "target",
+      "similarity": null,
+      "missedLocator": "page.getByRole('button', { name: 'Edit', exact: true })",
+      "fallbackUsed": "page.getByTestId('part-edit-p18')",
+      "fallbackIndex": 3,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    },
+    {
+      "flow": "fwrd84",
+      "step": "07-edit",
+      "skill": "s_f30058",
+      "atStep": "4",
+      "key": "target",
+      "similarity": null,
+      "missedLocator": "page.getByRole('button', { name: 'Edit', exact: true })",
+      "fallbackUsed": "page.getByTestId('part-edit-p18')",
+      "fallbackIndex": 3,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    }
+  ],
+  "wallMs": 134097,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 610242,
+    "completionTokens": 8853,
+    "cachedTokens": 558976
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 610242,
+      "completionTokens": 8853,
+      "cachedTokens": 558976
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

@@ -1,0 +1,967 @@
+{
+  "name": "fwrd84",
+  "origin": "http://127.0.0.1:4180",
+  "startUrl": "http://127.0.0.1:4180/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-open",
+      "instruction": "Open http://127.0.0.1:4180/ in the browser and sign in with email bench@example.com and password {{env:APP_PASSWORD}} (type the password text into the password field exactly as shown, character for character). After signing in, report what page/screen you land on and what main navigation or sections the app offers.",
+      "skill": "s_381dbf",
+      "params": {
+        "v1": "http://127.0.0.1:4180/",
+        "v2": "bench@example.com",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "signed_in_user",
+        "main_nav_items",
+        "nav_tickets_link",
+        "tickets_section_heading",
+        "ticket_count_text",
+        "first_ticket_reference",
+        "first_ticket_title",
+        "repair_tickets_heading",
+        "filter_tickets_heading",
+        "page_headings_1",
+        "page_headings_2",
+        "page_headings_3"
+      ],
+      "recorded": {
+        "landing_page": "Repair tickets (hash route #/tickets)",
+        "signed_in_user": "Bench User",
+        "main_nav_items": "Tickets",
+        "nav_tickets_link": "Tickets",
+        "tickets_section_heading": "Tickets",
+        "ticket_count_text": "Showing 1–10 of 13",
+        "ticket_table_columns": "Ref, Title, Customer, Status, Parts, Created",
+        "first_ticket_reference": "RD-1014",
+        "first_ticket_title": "Under-counter fridge door misaligned",
+        "first_ticket_customer": "Marlow Bakery",
+        "first_ticket_status": "Draft",
+        "filter_controls": "Status select (All statuses, Draft, Ready, Closed), Search box, Show archived checkbox",
+        "actions": "New ticket button, Sign out button, Previous/Next pagination",
+        "first_ticket_row": "RD-1014 | Under-counter fridge door misaligned | Marlow Bakery | Draft | 1 | 2026-01-23",
+        "repair_tickets_heading": "Repair tickets",
+        "filter_tickets_heading": "Filter tickets",
+        "page_headings_1": "Repair tickets",
+        "page_headings_2": "Filter tickets",
+        "page_headings_3": "Tickets",
+        "url": "http://127.0.0.1:4180/#/tickets"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets",
+      "outputEvidence": {
+        "landing_page": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "signed_in_user": {
+          "same": 2,
+          "differed": 0
+        },
+        "main_nav_items": {
+          "same": 2,
+          "differed": 0
+        },
+        "nav_tickets_link": {
+          "same": 2,
+          "differed": 0
+        },
+        "tickets_section_heading": {
+          "same": 2,
+          "differed": 0
+        },
+        "ticket_count_text": {
+          "same": 2,
+          "differed": 0
+        },
+        "ticket_table_columns": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "first_ticket_reference": {
+          "same": 2,
+          "differed": 0
+        },
+        "first_ticket_title": {
+          "same": 2,
+          "differed": 0
+        },
+        "first_ticket_customer": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "first_ticket_status": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "filter_controls": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "actions": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "first_ticket_row": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "repair_tickets_heading": {
+          "same": 2,
+          "differed": 0
+        },
+        "filter_tickets_heading": {
+          "same": 2,
+          "differed": 0
+        },
+        "page_headings_1": {
+          "same": 2,
+          "differed": 0
+        },
+        "page_headings_2": {
+          "same": 2,
+          "differed": 0
+        },
+        "page_headings_3": {
+          "same": 2,
+          "differed": 0
+        },
+        "url": {
+          "same": 2,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "Create a new repair ticket with the title exactly '{{runid}} RD Bench Ticket'. Use the 'New ticket' button, fill in any required fields with sensible values (e.g. a customer name and description if required), and submit. Wait for the list/detail view to refresh and confirm the ticket now exists with that exact title. Report the ticket's reference number (like RD-xxxx), its title, its status, and what fields the creation form required.",
+      "skill": "s_f89999",
+      "params": {
+        "v2": "{{runid}} RD Bench Ticket",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "ticket_reference",
+        "ticket_title",
+        "ticket_status",
+        "ticket_customer",
+        "ticket_raised_date",
+        "form_required_fields",
+        "form_optional_fields",
+        "test_prefix",
+        "detail_actions_1",
+        "detail_actions_2",
+        "detail_actions_3"
+      ],
+      "recorded": {
+        "ticket_reference": "RD-1015",
+        "ticket_title": "fwrd84-n1 RD Bench Ticket",
+        "ticket_status": "Draft",
+        "ticket_customer": "Bench Customer Ltd",
+        "ticket_raised_date": "2026-09-22",
+        "detail_url": "http://127.0.0.1:4180/#/tickets/t15",
+        "list_count_before": "Showing 1–10 of 13",
+        "list_count_after": "Showing 1–10 of 14",
+        "form_required_fields": "Title only (labelled \"Title *\", input has required attribute)",
+        "form_optional_fields": "Customer",
+        "form_fields_present": "f-title (required), f-customer (optional); no textarea/description field",
+        "test_prefix": "fwrd84-n1",
+        "detail_actions_1": "Mark Ready",
+        "detail_actions_2": "Archive ticket",
+        "detail_actions_3": "Add part",
+        "url": "http://127.0.0.1:4180/#/tickets/t15",
+        "url.h1": "t15"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets/:id"
+    },
+    {
+      "id": "03-add",
+      "instruction": "On the detail page for ticket {{02-create.ticket_reference}} titled '{{runid}} RD Bench Ticket' ({{02-create.url}}), add a part using the '{{02-create.detail_actions_3}}' action. Name it exactly '{{runid}} RD Part A', set its cost to 100 and its markup to 25, then submit. Wait for the page to refresh and confirm the part appears on the ticket with those values. Report the part's name, cost, markup, and the PRICE the app computes/displays for this part (look for a computed price field or column).",
+      "skill": "s_2d2b06",
+      "params": {
+        "v1": "{{02-create.ticket_reference}}",
+        "v2": "{{runid}} RD Bench Ticket",
+        "v4": "{{02-create.url}}",
+        "v6": "{{02-create.detail_actions_3}}",
+        "v7": "{{runid}} RD Part A",
+        "v9": "25",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "part_name",
+        "part_cost",
+        "part_markup",
+        "part_quantity",
+        "part_supplier",
+        "computed_price",
+        "total_row",
+        "ticket_reference",
+        "ticket_title",
+        "test_prefix",
+        "part_row_text_1",
+        "part_row_text_2",
+        "part_row_text_3",
+        "part_row_text_4",
+        "part_row_text_5",
+        "part_row_text_6",
+        "part_row_text_7"
+      ],
+      "recorded": {
+        "part_name": "fwrd84-n1 RD Part A",
+        "part_cost": "$100.00",
+        "part_markup": "25%",
+        "part_quantity": "1",
+        "part_supplier": "No supplier",
+        "computed_price": "$125.00",
+        "total_row": "Total (price × quantity) $125.00",
+        "form_fields": "Part name * (required), Cost * (required), Markup % * (required), Quantity (default 1), Supplier (optional)",
+        "ticket_reference": "RD-1015",
+        "ticket_title": "fwrd84-n1 RD Bench Ticket",
+        "test_prefix": "fwrd84-n1",
+        "part_row_text_1": "fwrd84-n1 RD Part A",
+        "part_row_text_2": "$100.00",
+        "part_row_text_3": "25%",
+        "part_row_text_4": "1",
+        "part_row_text_5": "No supplier",
+        "part_row_text_6": "$125.00",
+        "part_row_text_7": "Edit Delete"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets/:id",
+      "outputEvidence": {
+        "part_name": {
+          "same": 0,
+          "differed": 2
+        },
+        "part_cost": {
+          "same": 2,
+          "differed": 0
+        },
+        "part_markup": {
+          "same": 2,
+          "differed": 0
+        },
+        "part_quantity": {
+          "same": 1,
+          "differed": 0,
+          "absent": 1
+        },
+        "part_supplier": {
+          "same": 2,
+          "differed": 0
+        },
+        "computed_price": {
+          "same": 1,
+          "differed": 0,
+          "absent": 1
+        },
+        "total_row": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "form_fields": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "ticket_reference": {
+          "same": 0,
+          "differed": 2
+        },
+        "ticket_title": {
+          "same": 0,
+          "differed": 1,
+          "absent": 1
+        },
+        "test_prefix": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "part_row_text_1": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "part_row_text_2": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "part_row_text_3": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "part_row_text_4": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "part_row_text_5": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "part_row_text_6": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "part_row_text_7": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        }
+      }
+    },
+    {
+      "id": "04-add",
+      "instruction": "On the detail page for ticket {{02-create.ticket_reference}} ({{02-create.url}}), add a second part using '{{02-create.detail_actions_3}}'. Name it exactly '{{runid}} RD Part B', set cost to 200 and markup to 25, then submit. Wait for the parts table to refresh and confirm the part appears. Report the part's name, cost, markup, its computed PRICE, and the new total shown on the ticket.",
+      "skill": "s_af0559",
+      "params": {
+        "v1": "{{02-create.ticket_reference}}",
+        "v2": "{{02-create.url}}",
+        "v4": "{{02-create.detail_actions_3}}",
+        "v6": "{{runid}} RD Part B",
+        "v8": "25",
+        "v5": "{{runid}}"
+      },
+      "outputs": [
+        "part_B_name",
+        "part_B_cost",
+        "part_B_markup",
+        "part_B_quantity",
+        "part_B_supplier",
+        "part_B_computed_price",
+        "new_ticket_total",
+        "total_row_text",
+        "previous_total",
+        "all_parts",
+        "ticket_reference",
+        "ticket_title",
+        "ticket_status",
+        "test_prefix",
+        "form_fields_required_1",
+        "form_fields_required_2",
+        "form_fields_required_3"
+      ],
+      "recorded": {
+        "part_B_name": "fwrd84-n1 RD Part B",
+        "part_B_cost": "$200.00",
+        "part_B_markup": "25%",
+        "part_B_quantity": "1",
+        "part_B_supplier": "No supplier",
+        "part_B_computed_price": "$250.00",
+        "new_ticket_total": "$375.00",
+        "total_row_text": "Total (price × quantity) $375.00",
+        "previous_total": "$125.00",
+        "all_parts": "fwrd84-n1 RD Part A $100.00 25% 1 No supplier $125.00 | fwrd84-n1 RD Part B $200.00 25% 1 No supplier $250.00",
+        "ticket_reference": "RD-1015",
+        "ticket_title": "fwrd84-n1 RD Bench Ticket",
+        "ticket_status": "Draft",
+        "test_prefix": "fwrd84-n1",
+        "form_fields_required_1": "Part name *",
+        "form_fields_required_2": "Cost *",
+        "form_fields_required_3": "Markup % *"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets/:id",
+      "outputEvidence": {
+        "part_B_name": {
+          "same": 0,
+          "differed": 2
+        },
+        "part_B_cost": {
+          "same": 2,
+          "differed": 0
+        },
+        "part_B_markup": {
+          "same": 2,
+          "differed": 0
+        },
+        "part_B_quantity": {
+          "same": 2,
+          "differed": 0
+        },
+        "part_B_supplier": {
+          "same": 2,
+          "differed": 0
+        },
+        "part_B_computed_price": {
+          "same": 2,
+          "differed": 0
+        },
+        "new_ticket_total": {
+          "same": 1,
+          "differed": 0,
+          "absent": 1
+        },
+        "total_row_text": {
+          "same": 1,
+          "differed": 0,
+          "absent": 1
+        },
+        "previous_total": {
+          "same": 1,
+          "differed": 0,
+          "absent": 1
+        },
+        "all_parts": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "ticket_reference": {
+          "same": 0,
+          "differed": 2
+        },
+        "ticket_title": {
+          "same": 0,
+          "differed": 1,
+          "absent": 1
+        },
+        "ticket_status": {
+          "same": 1,
+          "differed": 0,
+          "absent": 1
+        },
+        "test_prefix": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "form_fields_required_1": {
+          "same": 1,
+          "differed": 0,
+          "absent": 1
+        },
+        "form_fields_required_2": {
+          "same": 1,
+          "differed": 0,
+          "absent": 1
+        },
+        "form_fields_required_3": {
+          "same": 1,
+          "differed": 0,
+          "absent": 1
+        }
+      }
+    },
+    {
+      "id": "05-edit",
+      "instruction": "On the detail page for ticket {{02-create.ticket_reference}} ({{02-create.url}}), edit the part named '{{runid}} RD Part A' (use its Edit action), change its cost from 100 to 150, keep the markup at 25, and save. Wait for the parts table to refresh and confirm the change. Report the part's cost, markup, the computed PRICE shown for Part A afterwards, and the new ticket total.",
+      "skill": "s_20eebf",
+      "params": {
+        "v1": "{{02-create.ticket_reference}}",
+        "v2": "{{02-create.url}}",
+        "v4": "{{runid}} RD Part A",
+        "v7": "25",
+        "v5": "{{runid}}"
+      },
+      "outputs": [
+        "part_A_name",
+        "part_A_cost_after",
+        "part_A_markup",
+        "part_A_quantity",
+        "part_A_computed_price_after",
+        "part_B_unchanged_row",
+        "new_ticket_total",
+        "price_formula_check",
+        "ticket_reference",
+        "ticket_title",
+        "test_prefix"
+      ],
+      "recorded": {
+        "part_A_name": "fwrd84-n1 RD Part A",
+        "part_A_cost_after": "$150.00",
+        "part_A_cost_before": "$100.00",
+        "part_A_markup": "25%",
+        "part_A_quantity": "1",
+        "part_A_computed_price_after": "$187.50",
+        "part_A_computed_price_before": "$125.00",
+        "part_B_unchanged_row": "fwrd84-n1 RD Part B $200.00 25% 1 No supplier $250.00",
+        "new_ticket_total": "$437.50",
+        "previous_ticket_total": "$375.00",
+        "price_formula_check": "150 + 25% = 187.50; 187.50 + 250.00 = 437.50",
+        "edit_form_fields": "Part name *, Cost *, Markup % *, Quantity, Supplier; buttons Cancel, Save part",
+        "ticket_reference": "RD-1015",
+        "ticket_title": "fwrd84-n1 RD Bench Ticket",
+        "test_prefix": "fwrd84-n1"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets/:id",
+      "outputEvidence": {
+        "part_A_name": {
+          "same": 0,
+          "differed": 2
+        },
+        "part_A_cost_after": {
+          "same": 0,
+          "differed": 2
+        },
+        "part_A_cost_before": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "part_A_markup": {
+          "same": 2,
+          "differed": 0
+        },
+        "part_A_quantity": {
+          "same": 2,
+          "differed": 0
+        },
+        "part_A_computed_price_after": {
+          "same": 0,
+          "differed": 2
+        },
+        "part_A_computed_price_before": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "part_B_unchanged_row": {
+          "same": 0,
+          "differed": 2
+        },
+        "new_ticket_total": {
+          "same": 0,
+          "differed": 2
+        },
+        "previous_ticket_total": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "price_formula_check": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "edit_form_fields": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "ticket_reference": {
+          "same": 0,
+          "differed": 2
+        },
+        "ticket_title": {
+          "same": 0,
+          "differed": 2
+        },
+        "test_prefix": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "06-set",
+      "instruction": "On the detail page for ticket {{02-create.ticket_reference}} ({{02-create.url}}), click '{{02-create.detail_actions_1}}' to set the ticket's status to Ready. If the app refuses and shows an error or validation message about unmet preconditions, report that exact message and do NOT satisfy the preconditions yet — just report what the app says is required and what the ticket's current status is afterwards.",
+      "skill": "s_0e775e",
+      "params": {
+        "v1": "{{02-create.ticket_reference}}",
+        "v2": "{{02-create.url}}",
+        "v4": "{{02-create.detail_actions_1}}",
+        "v5": "{{runid}}"
+      },
+      "outputs": [
+        "error_title",
+        "preconditions_required",
+        "status_after_attempt",
+        "ticket_reference",
+        "ticket_title",
+        "parts_state_unchanged",
+        "test_prefix",
+        "exact_message_1",
+        "exact_message_2",
+        "exact_message_3"
+      ],
+      "recorded": {
+        "error_title": "Ticket is not ready",
+        "preconditions_required": "Every part must have a supplier (Part A and Part B both show Supplier = \"No supplier\")",
+        "status_after_attempt": "Draft",
+        "ticket_reference": "RD-1015",
+        "ticket_title": "fwrd84-n1 RD Bench Ticket",
+        "parts_state_unchanged": "A: $150.00 25% 1 No supplier $187.50 | B: $200.00 25% 1 No supplier $250.00 | Total $437.50",
+        "test_prefix": "fwrd84-n1",
+        "exact_message_1": "Ticket is not ready",
+        "exact_message_2": "Part \"fwrd84-n1 RD Part A\" has no supplier",
+        "exact_message_3": "Part \"fwrd84-n1 RD Part B\" has no supplier"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets/:id",
+      "outputEvidence": {
+        "error_title": {
+          "same": 2,
+          "differed": 0
+        },
+        "preconditions_required": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "status_after_attempt": {
+          "same": 2,
+          "differed": 0
+        },
+        "ticket_reference": {
+          "same": 0,
+          "differed": 2
+        },
+        "ticket_title": {
+          "same": 0,
+          "differed": 2
+        },
+        "parts_state_unchanged": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "test_prefix": {
+          "same": 0,
+          "differed": 2
+        },
+        "exact_message_1": {
+          "same": 2,
+          "differed": 0
+        },
+        "exact_message_2": {
+          "same": 0,
+          "differed": 2
+        },
+        "exact_message_3": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "07-edit",
+      "instruction": "On the detail page for ticket {{02-create.ticket_reference}} ({{02-create.url}}), satisfy the '{{06-set.error_title}}' preconditions: edit each part (both '{{runid}} RD Part A' and '{{runid}} RD Part B') to assign a supplier (use the Edit action and the Supplier field — pick any supplier offered in the field, e.g. a select/datalist option). Keep each part's other values unchanged (Part A cost 150, markup 25; Part B cost 200, markup 25). Then click '{{02-create.detail_actions_1}}' and wait for the ticket status to change. Report: which supplier(s) you assigned, the final status shown on the ticket detail page, and any confirmation message.",
+      "skill": "s_d223dc",
+      "params": {
+        "v1": "{{02-create.ticket_reference}}",
+        "v2": "{{02-create.url}}",
+        "v4": "{{06-set.error_title}}",
+        "v5": "{{runid}} RD Part A",
+        "v7": "{{runid}} RD Part B",
+        "v8": "{{02-create.detail_actions_1}}",
+        "v6": "{{runid}}"
+      },
+      "outputs": [
+        "supplier_assigned_both_parts",
+        "supplier_field_type",
+        "part_A_row_final",
+        "part_B_row_final",
+        "ticket_total",
+        "final_status",
+        "status_before",
+        "buttons_after",
+        "confirmation_message",
+        "error_before",
+        "ticket_reference",
+        "ticket_title"
+      ],
+      "recorded": {
+        "supplier_assigned_both_parts": "Bench Supplies Ltd",
+        "supplier_field_type": "plain text input (name=supplier, id=f-supplier, no <select>/<datalist> options offered; help text: \"Optional. Leave blank if the part has not been sourced yet.\")",
+        "part_A_row_final": "fwrd84-n1 RD Part A $150.00 25% 1 Bench Supplies Ltd $187.50",
+        "part_B_row_final": "fwrd84-n1 RD Part B $200.00 25% 1 Bench Supplies Ltd $250.00",
+        "ticket_total": "$437.50",
+        "final_status": "Ready",
+        "status_before": "Draft",
+        "buttons_after": "Mark Draft, Mark Closed, Archive ticket (Mark Ready gone)",
+        "confirmation_message": "none — no alert/toast text appeared; only observable evidence of success is the status changing to Ready and the action buttons changing",
+        "error_before": "Ticket is not ready — Part \"fwrd84-n1 RD Part A\" has no supplier; Part \"fwrd84-n1 RD Part B\" has no supplier",
+        "ticket_reference": "RD-1015",
+        "ticket_title": "fwrd84-n1 RD Bench Ticket"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets/:id",
+      "outputEvidence": {
+        "supplier_assigned_both_parts": {
+          "same": 1,
+          "differed": 0,
+          "absent": 1
+        },
+        "supplier_field_type": {
+          "same": 0,
+          "differed": 1,
+          "absent": 1
+        },
+        "part_A_row_final": {
+          "same": 0,
+          "differed": 1,
+          "absent": 1
+        },
+        "part_B_row_final": {
+          "same": 0,
+          "differed": 1,
+          "absent": 1
+        },
+        "ticket_total": {
+          "same": 1,
+          "differed": 1
+        },
+        "final_status": {
+          "same": 1,
+          "differed": 0,
+          "absent": 1
+        },
+        "status_before": {
+          "same": 2,
+          "differed": 0
+        },
+        "buttons_after": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "confirmation_message": {
+          "same": 0,
+          "differed": 2
+        },
+        "error_before": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "ticket_reference": {
+          "same": 0,
+          "differed": 2
+        },
+        "ticket_title": {
+          "same": 0,
+          "differed": 1,
+          "absent": 1
+        }
+      }
+    },
+    {
+      "id": "08-delete",
+      "instruction": "On the detail page for ticket {{02-create.ticket_reference}} ({{02-create.url}}), delete BOTH parts ('{{runid}} RD Part A' and '{{runid}} RD Part B') using each part's Delete action (confirm if a confirm dialog appears). Wait after each deletion for the parts table to refresh so you can confirm it's gone before the next step. Then use '{{02-create.detail_actions_2}}' to archive the ticket (confirm if asked). Finally verify: the parts table is empty (report what it shows, e.g. total or empty-state text), and go back to the {{01-open.main_nav_items}} list, check the 'Show archived' filter if needed, and confirm the ticket {{02-create.ticket_reference}} '{{runid}} RD Bench Ticket' appears as archived (report its status shown). Report exactly what you observed at each point.",
+      "skill": "s_59f182",
+      "params": {
+        "v1": "{{02-create.ticket_reference}}",
+        "v2": "{{02-create.url}}",
+        "v4": "{{runid}} RD Part A",
+        "v6": "{{runid}} RD Part B",
+        "v7": "{{02-create.detail_actions_2}}",
+        "v8": "{{01-open.main_nav_items}}",
+        "v9": "{{runid}} RD Bench Ticket",
+        "v3": "{{02-create.url.h1}}",
+        "v5": "{{runid}}"
+      },
+      "outputs": [
+        "archive_action",
+        "after_delete_part_A_parts_table",
+        "parts_table_after_both_deletes",
+        "parts_empty_state_text",
+        "detail_status_after_archive",
+        "tickets_list_default",
+        "tickets_list_count_with_archived",
+        "rd1015_list_row_archived",
+        "rd1015_archived_title_cell",
+        "rd1015_parts_count_in_list",
+        "ticket_reference",
+        "ticket_title",
+        "after_delete_part_A",
+        "tickets_list_with_archived",
+        "test_prefix"
+      ],
+      "recorded": {
+        "archive_action": "Clicked \"Archive ticket\" on the detail page; button changed to \"Unarchive ticket\"; no confirm dialog text was shown/captured",
+        "after_delete_part_A_parts_table": "fwrd84-n1 RD Part B\t$200.00\t25%\t1\tBench Supplies Ltd\t$250.00\tEdit Delete",
+        "total_after_delete_part_A": "$250.00",
+        "parts_table_after_both_deletes": "NAME\tCOST\tMARKUP\tQTY\tSUPPLIER\tPRICE\tACTIONS\nNo parts on this ticket yet.",
+        "parts_empty_state_text": "No parts on this ticket yet.",
+        "delete_confirm_dialogs": "Yes — each Delete opened an in-page confirm dialog (role=dialog, heading \"Confirm\", buttons \"Cancel\"/\"Delete part\"); not a native browser dialog.",
+        "detail_status_after_archive": "Status Ready + \"Archived\" badge (read: \"Status\\nReady\\nArchived\")",
+        "tickets_list_default": "After archiving, the default Tickets list (Show archived unchecked) shows \"Showing 1–10 of 13\" and RD-1015 is NOT listed",
+        "tickets_list_count_with_archived": "Showing 1–10 of 15",
+        "rd1015_list_row_archived": "RD-1015\tfwrd84-n1 RD Bench Ticket Archived\tBench Customer Ltd\tReady\t0\t2026-09-22",
+        "rd1015_archived_title_cell": "fwrd84-n1 RD Bench Ticket Archived",
+        "rd1015_status_in_list": "Ready (with Archived badge)",
+        "rd1015_parts_count_in_list": "0",
+        "ticket_reference": "RD-1015",
+        "ticket_title": "fwrd84-n1 RD Bench Ticket",
+        "after_delete_part_A": "parts table rows: [\"fwrd84-n1 RD Part B\\t$200.00\\t25%\\t1\\tBench Supplies Ltd\\t$250.00\\tEdit Delete\"]; total row became \"Total (price × quantity) $250.00\"",
+        "tickets_list_with_archived": "\"Showing 1–10 of 15\" with Show archived checked",
+        "test_prefix": "fwrd84-n1",
+        "test_prefix_with_t": "tfwrd84-n1",
+        "raised_date_with_t": "t2026-09-22"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets",
+      "outputEvidence": {
+        "archive_action": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "after_delete_part_A_parts_table": {
+          "same": 0,
+          "differed": 1,
+          "absent": 1
+        },
+        "total_after_delete_part_A": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "parts_table_after_both_deletes": {
+          "same": 0,
+          "differed": 1,
+          "absent": 1
+        },
+        "parts_empty_state_text": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "delete_confirm_dialogs": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "detail_status_after_archive": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "tickets_list_default": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "tickets_list_count_with_archived": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "rd1015_list_row_archived": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "rd1015_archived_title_cell": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "rd1015_status_in_list": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "rd1015_parts_count_in_list": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "ticket_reference": {
+          "same": 0,
+          "differed": 2
+        },
+        "ticket_title": {
+          "same": 0,
+          "differed": 2
+        },
+        "after_delete_part_A": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "tickets_list_with_archived": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "test_prefix": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "test_prefix_with_t": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "raised_date_with_t": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwrd84-n1",
+    "created": "2026-09-22T17:35:57.621Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-open",
+      "outputs": [
+        "landing_page",
+        "ticket_table_columns",
+        "first_ticket_customer",
+        "first_ticket_status",
+        "filter_controls",
+        "actions",
+        "first_ticket_row"
+      ]
+    },
+    {
+      "stepId": "02-create",
+      "outputs": [
+        "detail_url",
+        "list_count_before",
+        "list_count_after",
+        "form_fields_present"
+      ]
+    },
+    {
+      "stepId": "03-add",
+      "outputs": [
+        "form_fields"
+      ]
+    },
+    {
+      "stepId": "05-edit",
+      "outputs": [
+        "part_A_cost_before",
+        "part_A_computed_price_before",
+        "previous_ticket_total",
+        "edit_form_fields"
+      ]
+    },
+    {
+      "stepId": "08-delete",
+      "outputs": [
+        "total_after_delete_part_A",
+        "delete_confirm_dialogs",
+        "rd1015_status_in_list",
+        "test_prefix_with_t",
+        "raised_date_with_t"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,379 @@
+{
+ "id": "s_d7e7d3",
+ "origin": "http://127.0.0.1:4180",
+ "template": "Create a new repair ticket with the title exactly '{{v2}}'. Use the 'New ticket' button, fill in any required fields with sensible values (e.g. a customer name and description if required), and submit. Wait for the list/detail view to refresh and confirm the ticket now exists with that exact title. Report the ticket's reference number (like RD-xxxx), its title, its status, and what fields the creation form required.",
+ "params": {
+  "v1": {
+   "example": "fwrd84-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "fwrd84-n2 RD Bench Ticket",
+   "usedIn": [
+    4,
+    6
+   ],
+   "known": true
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:4180/#/tickets"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e39"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "new-ticket"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "New ticket"
+     },
+     {
+      "kind": "css",
+      "selector": "#view > div > div:nth-of-type(2) > button"
+     },
+     {
+      "kind": "point",
+      "x": 1129,
+      "y": 110,
+      "w": 94.6,
+      "h": 39,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "addedContains": [
+     "- dialog \"New ticket\"",
+     "- heading \"New ticket\"",
+     "- textbox \"Title *\"",
+     "- textbox \"Customer\"",
+     "- button \"Cancel\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_f89999",
+    "step": 1
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e174",
+    "value": "Bench Customer Ltd"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "field-customer"
+     },
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Customer"
+     },
+     {
+      "kind": "label",
+      "label": "Customer"
+     },
+     {
+      "kind": "id",
+      "selector": "#f-customer"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"form-dialog\"] input"
+     },
+     {
+      "kind": "css",
+      "selector": "#f-customer"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 507,
+      "w": 478,
+      "h": 39,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "addedContains": [
+     "- textbox \"Customer\": {{*}}"
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_f89999",
+    "step": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e178"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "modal-save"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Create ticket"
+     },
+     {
+      "kind": "id",
+      "selector": "#modal-save"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"form-dialog\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "#modal-save"
+     },
+     {
+      "kind": "point",
+      "x": 825,
+      "y": 602,
+      "w": 108.6,
+      "h": 39,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "alertContains": "Title is required",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_f89999",
+    "step": 3
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e157",
+    "value": "{{v2}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "field-title"
+     },
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Title *"
+     },
+     {
+      "kind": "label",
+      "label": "Title *"
+     },
+     {
+      "kind": "id",
+      "selector": "#f-title"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"form-dialog\"] input"
+     },
+     {
+      "kind": "css",
+      "selector": "#f-title"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 373,
+      "w": 478,
+      "h": 39,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "addedContains": [
+     "- textbox \"Title *\": {{v2}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e167"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "modal-save"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Create ticket"
+     },
+     {
+      "kind": "id",
+      "selector": "#modal-save"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"form-dialog\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "#modal-save"
+     },
+     {
+      "kind": "point",
+      "x": 825,
+      "y": 634,
+      "w": 108.6,
+      "h": 39,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "addedContains": [
+     "- row \"{{*}} {{v2}} {{*}} Draft 0 {{*}}\"",
+     "- cell \"{{v2}}\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e170"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "#ticket-rows tr",
+      "hasText": "{{v2}}",
+      "selector": "td:nth-of-type(1) > a"
+     },
+     {
+      "kind": "css",
+      "selector": "#ticket-rows > tr:nth-of-type(1) > td:nth-of-type(1) > a"
+     },
+     {
+      "kind": "point",
+      "x": 152,
+      "y": 423,
+      "w": 54.6,
+      "h": 15,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "mints": {
+    "at": "h1"
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets/{{d1}}",
+    "addedContains": [
+     "- heading \"{{v2}}\"",
+     "- heading \"Parts\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "derived": {
+  "d1": {
+   "step": 6,
+   "at": "h1",
+   "example": "t15"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 2,
+  "successes": 2,
+  "partial": 0,
+  "created": "2026-09-22T17:36:46.919Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-22T17:39:34.088Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_2cf6b9",
+  "index": 0,
+  "of": 3
+ },
+ "variantOf": "s_f89999",
+ "provenance": {
+  "session": "fwrd84-n2",
+  "instruction": "Create a new repair ticket with the title exactly 'fwrd84-n2 RD Bench Ticket'. Use the 'New ticket' button, fill in any required fields with sensible values (e.g. a customer name and description if required), and submit. Wait for the list/detail view to refresh and confirm the ticket now exists with that exact title. Report the ticket's reference number (like RD-xxxx), its title, its status, and what fields the creation form required.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-22T17:36:46.919Z",
+  "transforms": [
+   {
+    "name": "unfreezeExpectations",
+    "at": 5,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- row \\\"RD-1016 {{v2}} Bench Customer Ltd Draft 0 {{*}}\\\"\",\"- cell \\\"RD-1016\\\"\",\"- link \\\"RD-1016\\\"\",\"- cell \\\"{{v2}}\\\"\",\"- cell \\\"Bench Customer Ltd\\\"\"] → [\"- row \\\"{{*}} {{v2}} {{*}} Draft 0 {{*}}\\\"\",\"- cell \\\"{{v2}}\\\"\"]"
+   },
+   {
+    "name": "unfreezeExpectations",
+    "at": 6,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- heading \\\"{{v2}}\\\"\",\"- button \\\"Mark Ready\\\"\",\"- button \\\"Archive ticket\\\"\",\"- heading \\\"Parts\\\"\",\"- button \\\"Add part\\\"\"] → [\"- heading \\\"{{v2}}\\\"\",\"- heading \\\"Parts\\\"\"]"
+   }
+  ]
+ },
+ "revision": 3
+}
