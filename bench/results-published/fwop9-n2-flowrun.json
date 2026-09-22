@@ -1,0 +1,172 @@
+{
+  "flow": "fwop9",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Signed in to http://127.0.0.1:8090/ as 'admin' (landed on the Projects list at http://127.0.0.1:8090/projects/bench-project), opened project 'Bench Project' and its Work packages list (default \"All open\" view, url http://127.0.0.1:8090/projects/bench-project/bench-project/work_packages). The project contains exactly 3 work packages in total (pagination \"(1 - 3/3)\", only page), and every one of them has a subject starting with 'Seed:': \"Seed: triage inbox\", \"Seed: order missing parts\", \"Seed: ship repaired device\". No records were created, edited or deleted. To be thorough I briefly removed the status filter (the default view showed \"Filter 1\" active, i.e. Status = Open) to confirm no hidden closed Seed: items — the total stayed at 3 — then restored the default \"All open\" view, so the browser is left on the unmodified default view (the only change is transient view filter state, not data).",
+      "values": {
+        "signed_in_user": "admin (Bench Admin)",
+        "start_page_url": "http://127.0.0.1:8090/projects/bench-project",
+        "seed_work_package_subjects_1": "Seed: triage inbox",
+        "seed_work_package_subjects_2": "Seed: order missing parts",
+        "seed_work_package_subjects_3": "Seed: ship repaired device",
+        "work_package_ids_1": "38",
+        "work_package_ids_2": "39",
+        "work_package_ids_3": "40",
+        "project": "Bench Project"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "22/22",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_6fd6f5: step 1: skipped — it closes the dialog \"Welcome to OpenProject, Bench Admin\" with \"Close\", and that dialog is not open this time: already in effect",
+        "s_7d0a09: step 1: recorded url http://127.0.0.1:8090/projects is the page the clicked link left (captured before its navigation committed); the click went where the link points, http://127.0.0.1:8090/projects/bench-project — accepted",
+        "s_7d0a09: step 3: primary locator did not resolve; used fallback #2 page.locator('h2')"
+      ]
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_2f6444; observed assignee=Bench Assignee, finish_date=12/31/2026 (set as 2026-12-31), project=Bench Project, finish_date_input_value=2026-12-31, ref=fwop9-n2, work_package_url=http://127.0.0.1:8090/projects/bench-project/work_packages/details/42/overview, work_package_id_displayed=#42, work_package_numeric_id=42, subject=fwop9-n2 Bench Work Package, description_text=Bench work package for run fwop9-n2, date_row_display=no start date - 12/31/2026.",
+      "values": {
+        "assignee": "Bench Assignee",
+        "finish_date": "12/31/2026 (set as 2026-12-31)",
+        "project": "Bench Project",
+        "finish_date_input_value": "2026-12-31",
+        "ref": "fwop9-n2",
+        "work_package_url": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/42/overview",
+        "work_package_id_displayed": "#42",
+        "work_package_numeric_id": "42",
+        "subject": "fwop9-n2 Bench Work Package",
+        "description_text": "Bench work package for run fwop9-n2",
+        "date_row_display": "no start date - 12/31/2026"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "22/22",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_c7ec2b: step 2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_6a404b: step 1: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_6a404b: step 2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_2f6444: step 5: expected alert containing \"Successful update.\"",
+        "s_2f6444: step 8: read 'finish_date_input_value' returned a value the skill itself set/selected ('2026-12-31') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_2f6444: step 9: expected alert containing \"Successful update.\"",
+        "s_2f6444: step 15: read 'assignee' returned a value the skill itself set/selected ('Bench Assignee') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_2f6444: step 16: read 'status' returned a value the skill itself set/selected ('In progress') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "status"
+      ]
+    },
+    {
+      "id": "03-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_127dd2; observed comment_text_shown=Comment for run fwop9-n2, finish_date=12/31/2026 (configured as 2026-12-31), project=Bench Project, ref=fwop9-n2, assignee=Bench Assignee, date_row_display=no start date - 12/31/2026, status=In progress, subject=fwop9-n2 Bench Work Package, work_package_id=#42, comment_author=Bench Admin.",
+      "values": {
+        "comment_text_shown": "Comment for run fwop9-n2",
+        "finish_date": "12/31/2026 (configured as 2026-12-31)",
+        "project": "Bench Project",
+        "ref": "fwop9-n2",
+        "assignee": "Bench Assignee",
+        "date_row_display": "no start date - 12/31/2026",
+        "status": "In progress",
+        "subject": "fwop9-n2 Bench Work Package",
+        "work_package_id": "#42",
+        "comment_author": "Bench Admin"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_8e7445: step 1: url segment(s) differ from recorded (41→42) — treated as volatile",
+        "s_81c355: step 1: url segment(s) differ from recorded (41→42) — treated as volatile",
+        "s_81c355: step 2: url segment(s) differ from recorded (41→42) — treated as volatile",
+        "s_81c355: step 3: url segment(s) differ from recorded (41→42) — treated as volatile",
+        "s_81c355: step 4: url segment(s) differ from recorded (41→42) — treated as volatile",
+        "s_81c355: step 5: url segment(s) differ from recorded (41→42) — treated as volatile"
+      ]
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Verification only — nothing was modified. Work package #42 page (Overview tab) shows: ID #42, subject \"fwop9-n2 Bench Work Package\", type TASK, status \"In progress\", assignee \"Bench Assignee\", date row \"no start date - 12/31/2026\" (finish date 2026-12-31), and its description reads \"Bench work package for run fwop9-n2\", i.e. it DOES contain 'fwop9-n2'. The Activity tab renders one comment journal item, text \"Comment for run fwop9-n2\" by Bench Admin (09/22/2026 12:08 PM) — it DOES contain 'fwop9-n2' (the activity list reports 4 total entries, 1 - 4/4, the single comment being the only one with a comment body). The project's work package list (All open, 1 - 4/4) still contains the three untouched Seed: work packages exactly as before: #38 \"Seed: triage inbox\", #39 \"Seed: order missing parts\", #40 \"Seed: ship repaired device\" — all still TASK / New / no assignee — plus the new #42.",
+      "values": {
+        "work_package_id": "#42",
+        "description": "Bench work package for run fwop9-n2 — contains 'fwop9-n2': yes",
+        "comment_with_fwop9": "Comment for run fwop9-n2 (by Bench Admin, 09/22/2026 12:08 PM) — contains 'fwop9-n2': yes",
+        "project": "Bench Project",
+        "seed_wps_38": "Seed: triage inbox — TASK, New, no assignee",
+        "seed_wps_39": "Seed: order missing parts — TASK, New, no assignee",
+        "seed_wps_40": "Seed: ship repaired device — TASK, New, no assignee",
+        "subject": "fwop9-n2 Bench Work Package",
+        "status": "In progress",
+        "assignee": "Bench Assignee",
+        "ref": "fwop9-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_fc857d: step 1: url segment(s) differ from recorded (41→42) — treated as volatile"
+      ]
+    }
+  ],
+  "passed": 4,
+  "total": 4,
+  "repinned": 0,
+  "drift": 2,
+  "driftTickets": [
+    {
+      "flow": "fwop9",
+      "step": "01-open",
+      "skill": "s_6fd6f5",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByRole('button', { name: 'Close', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages"
+    },
+    {
+      "flow": "fwop9",
+      "step": "01-open",
+      "skill": "s_7d0a09",
+      "atStep": "3",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByRole('heading', { name: 'Active projects', exact: true })",
+      "fallbackUsed": "page.locator('h2')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages"
+    }
+  ],
+  "wallMs": 99199,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
