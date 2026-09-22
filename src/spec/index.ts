@@ -6,7 +6,8 @@ import { SkillStore } from '../skills/store.js';
 import { emitFlowFile, emitSpecFile } from './emit.js';
 import { flowToSpec, type SpecFlow } from './ir.js';
 import { hasError, type Diagnostic } from './diagnostics.js';
-import { literalCredentialsIn } from '../shared/secrets.js';
+import { ambiguousCredentialFor, ambiguousCredentialsIn, rewriteLiteralCredentials } from '../shared/secrets.js';
+import type { SkillStep } from '../skills/store.js';
 import {
   BundleSkillStore,
   compilerProvenance,
@@ -48,6 +49,95 @@ export interface CompileResult {
   compilable: boolean;
   /** Reasons the emitted artifact is not ready to execute, independent of diagnostic refusal. */
   compileBlockers: string[];
+}
+
+/**
+ * A recording that carries a credential IN THE CLEAR, repaired rather than
+ * refused (FIX AH, round 48). Round 47's rule refused it, and round 48's
+ * corpus showed what that costs: every store recorded before the bench tasks
+ * passed `{{env:APP_PASSWORD}}` (fwsi1-6, …) stopped compiling the moment the
+ * variable was set — as every existing user flow with a typed password would
+ * on upgrade. The artifact can always be made safe, so it is:
+ *
+ *  - an UNAMBIGUOUS value (only credential-named variables hold it) is
+ *    rewritten to `{{env:NAME}}` wherever it stands as a token — flow params,
+ *    recorded args, expectations, instructions — so the artifact reads
+ *    `process.env['NAME']`, lists NAME in requiredEnvNames, and carries no
+ *    value. A `literal-credential` WARNING names the variable.
+ *  - an AMBIGUOUS value (a non-credential variable holds it too — odoo's
+ *    `admin` is APP_PASSWORD and APP_EMAIL) is rewritten only where a fill
+ *    puts it into a field the recording shows is a password field, as the
+ *    daemon's tool layer does (tools.ts markCredentialArgs): the value in the
+ *    fill's own args, or the flow param its slot is bound to. Anything else
+ *    is left as recorded, with a warning — a bare `admin` is a login as often
+ *    as it is a password.
+ *
+ * Nothing here is an error: there is no case the rewrite cannot make safe.
+ * An ambiguous value left in place is not a secret the artifact leaks beyond
+ * what the non-credential variable already publishes.
+ */
+function withCredentialMarkers(recorded: SpecFlow, diagnostics: Diagnostic[]): SpecFlow {
+  const { value: spec, names } = rewriteLiteralCredentials(recorded);
+  for (const name of names) {
+    diagnostics.push({
+      code: 'literal-credential',
+      what: `the recording carries the value of ${name} in the clear; the artifact reads it from the environment instead`,
+      why:
+        `a flow param, a recorded value or an expectation equals the value of the credential-named environment variable ${name} (typically a shell expanded $${name} inside double quotes at record time, fwrd83), ` +
+        `so compile rewrote it to {{env:${name}}}: the artifact reads process.env['${name}'] and requires ${name} to run`,
+      fix: `re-record the step(s) passing {{env:${name}}} in single quotes (never $${name}) so the flow and its procedures stop carrying the value`,
+      severity: 'warning',
+    });
+  }
+  // Ambiguous values: only a fill into a field the recording shows is a password field.
+  const passwordField = (step: SkillStep): boolean =>
+    (step.locators?.target ?? []).some((c) => {
+      const text = JSON.stringify(c);
+      return /type=\\?["']?password|autocomplete[^,}]*(current|new)-password/i.test(text);
+    });
+  const repaired = new Set<string>();
+  for (const flowStep of spec.steps) {
+    for (const segment of flowStep.segments) {
+      for (const step of segment.steps) {
+        if (step.tool !== 'fill' || typeof step.args?.value !== 'string' || !passwordField(step)) continue;
+        const value = step.args.value;
+        const direct = ambiguousCredentialFor(value);
+        if (direct) {
+          step.args.value = `{{env:${direct}}}`;
+          repaired.add(direct);
+          continue;
+        }
+        const slot = /^\{\{([vd]\d+)\}\}$/.exec(value)?.[1];
+        const bound = slot ? flowStep.params[slot] : undefined;
+        const name = bound !== undefined ? ambiguousCredentialFor(bound) : null;
+        if (slot && name) {
+          flowStep.params[slot] = `{{env:${name}}}`;
+          const param = segment.params[slot];
+          if (param && typeof param.example === 'string' && ambiguousCredentialFor(param.example) === name) param.example = `{{env:${name}}}`;
+          repaired.add(name);
+        }
+      }
+    }
+  }
+  for (const name of repaired) {
+    diagnostics.push({
+      code: 'literal-credential',
+      what: `a password field is filled with the value of ${name} in the clear; the artifact reads it from the environment instead`,
+      why: `the value is also held by a non-credential variable, so compile rewrote it only where the recording shows a password field (the fill's own value, or the flow param its slot is bound to)`,
+      fix: `re-record the sign-in passing {{env:${name}}} in single quotes (never $${name})`,
+      severity: 'warning',
+    });
+  }
+  for (const name of ambiguousCredentialsIn(spec)) {
+    diagnostics.push({
+      code: 'literal-credential',
+      what: `the recording carries a value equal to ${name} that compile left as recorded`,
+      why: `a non-credential environment variable holds the same value, so it may be a login or other copy rather than the secret, and no password field shows it is ${name}`,
+      fix: `if it is the credential, re-record the step passing {{env:${name}}} in single quotes (never $${name})`,
+      severity: 'warning',
+    });
+  }
+  return spec;
 }
 
 function compilationBlockers(spec: SpecFlow, source: string): string[] {
@@ -120,22 +210,8 @@ export function compileFlow(
   if (!source) throw new Error(`no flow named ${JSON.stringify(flowNameOrPath)} (looked in the flows dir, as a path, and in the procedure snapshot)`);
   const { flow, file } = source;
   const store = o.store ?? (snapshot ? new BundleSkillStore(snapshot) : new SkillStore());
-  const { spec, warnings, diagnostics } = flowToSpec(flow, store, { flowFile: file, components: o.components ?? new ComponentStore() });
-  // A credential in the clear refuses the compile (FIX AH): the artifact
-  // would carry the secret and require nothing of the environment. Asked of
-  // the SPEC — every param, step arg and expectation the artifact is built
-  // from. Names only; the value is never printed.
-  for (const name of literalCredentialsIn(spec)) {
-    diagnostics.push({
-      code: 'literal-credential',
-      what: `the procedure carries the value of ${name} in the clear`,
-      why:
-        `a flow param, a recorded value or an expectation equals the value of the credential-named environment variable ${name}, ` +
-        `so the compiled file would contain the secret and never read it from the environment (fwrd83: a shell expanded $${name} inside double quotes at record time)`,
-      fix: `re-record the step(s) passing the marker {{env:${name}}} in single quotes (never $${name}), or replace the value with {{env:${name}}} in the flow`,
-      severity: 'error',
-    });
-  }
+  const { spec: recorded, warnings, diagnostics } = flowToSpec(flow, store, { flowFile: file, components: o.components ?? new ComponentStore() });
+  const spec = withCredentialMarkers(recorded, diagnostics);
   const emitted = emitFlowFile(spec, { tier: o.tier ?? 'plain', diagnostics });
 
   // `--allow-demoted` is about demoted pins and nothing else. It used to

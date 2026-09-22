@@ -422,7 +422,30 @@ function envelope(data: object, stage: string, outcome: string, nextActions: Arr
 
 function emitJson(data: object, stage: string, outcome: string, nextActions: Array<{ command: string; args: string[]; step?: string }> = []): void {
   jsonWritten = true;
-  console.log(JSON.stringify(envelope(data, stage, outcome, nextActions), null, 2));
+  writeStdoutSync(JSON.stringify(envelope(data, stage, outcome, nextActions), null, 2) + '\n');
+}
+
+/**
+ * Write to stdout synchronously, whatever stdout is. `console.log` to a PIPE
+ * is asynchronous on POSIX, and every refusal path exits (`fail` →
+ * `process.exit`) straight after emitting: a `compile --json` result is
+ * ~400 KB (the spec rides in it), so on Linux the tail was dropped, the JSON
+ * did not parse, and round 48's cloud corpus labelled 15 of 17 refusals a
+ * generic `refused` instead of their diagnostic code — while the same run on
+ * Windows, where pipe writes are synchronous, parsed every one. A full pipe
+ * answers EAGAIN; wait a moment and write the rest.
+ */
+function writeStdoutSync(text: string): void {
+  const buf = Buffer.from(text, 'utf8');
+  let off = 0;
+  while (off < buf.length) {
+    try {
+      off += fs.writeSync(1, buf, off, buf.length - off);
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code !== 'EAGAIN') throw err;
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 5);
+    }
+  }
 }
 
 /**

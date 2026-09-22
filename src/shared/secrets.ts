@@ -259,3 +259,57 @@ export function literalCredentialsIn(value: unknown, env: NodeJS.ProcessEnv = pr
   walk(value);
   return [...found].sort();
 }
+
+/**
+ * `value` (any JSON-shaped structure) with every UNAMBIGUOUS credential value
+ * standing as a token rewritten to its `{{env:NAME}}` marker — the compiler's
+ * repair of a flow recorded before its caller used the marker (round 48's
+ * corpus: fwsi1-6 carry `bench-admin-pass` in the clear). Non-mutating; the
+ * names rewritten, never the values. Ambiguous values are left alone: which of
+ * two variables a bare `admin` meant is not a question a string can answer.
+ */
+export function rewriteLiteralCredentials<T>(value: T, env: NodeJS.ProcessEnv = process.env): { value: T; names: string[] } {
+  const vars = credentialVars(env).filter((v) => !v.ambiguous);
+  const names = new Set<string>();
+  if (!vars.length) return { value, names: [] };
+  const map = (v: unknown): unknown => {
+    if (typeof v === 'string') {
+      let out = v;
+      for (const c of vars) {
+        if (!out.includes(c.value)) continue;
+        const next = out.replace(tokenRe(c.value), `{{env:${c.name}}}`);
+        if (next !== out) names.add(c.name);
+        out = next;
+      }
+      return out;
+    }
+    if (Array.isArray(v)) return v.map(map);
+    if (v && typeof v === 'object') return Object.fromEntries(Object.entries(v as Record<string, unknown>).map(([k, x]) => [k, map(x)]));
+    return v;
+  };
+  return { value: map(value) as T, names: [...names].sort() };
+}
+
+/** Credential variables whose AMBIGUOUS value stands as a token somewhere in `value` (names only). */
+export function ambiguousCredentialsIn(value: unknown, env: NodeJS.ProcessEnv = process.env): string[] {
+  const vars = credentialVars(env).filter((v) => v.ambiguous);
+  const found = new Set<string>();
+  const walk = (v: unknown): void => {
+    if (typeof v === 'string') {
+      for (const c of vars) if (v.includes(c.value) && tokenRe(c.value).test(v)) found.add(c.name);
+      return;
+    }
+    if (Array.isArray(v)) {
+      for (const item of v) walk(item);
+      return;
+    }
+    if (v && typeof v === 'object') for (const item of Object.values(v as Record<string, unknown>)) walk(item);
+  };
+  if (vars.length) walk(value);
+  return [...found].sort();
+}
+
+/** The credential variable an AMBIGUOUS value belongs to, when it is one (a password field's fill decides it). */
+export function ambiguousCredentialFor(value: string, env: NodeJS.ProcessEnv = process.env): string | null {
+  return credentialVars(env).find((v) => v.ambiguous && v.value === value)?.name ?? null;
+}

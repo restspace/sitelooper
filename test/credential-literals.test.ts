@@ -6,6 +6,8 @@ import {
   markLiteralCredentialValue,
   markLiteralCredentials,
   scrubSecrets,
+  rewriteLiteralCredentials,
+  ambiguousCredentialsIn,
 } from '../src/shared/secrets.js';
 import { emitFlowFile } from '../src/spec/emit.js';
 import type { SpecFlow } from '../src/spec/ir.js';
@@ -113,5 +115,23 @@ describe('recorded page changes carrying a secret marker (fwgh9)', () => {
     // through a param bound to a marker, too
     expect(liveLines(['- textbox "Password": {{v2}}'], { v2: '{{env:APP_PASSWORD}}' })).toEqual(['- textbox "Password": {{*}}']);
     expect(unfilledSlot(liveLines(['- banner: {{env:APP_PASSWORD}}'], {})[0])).toBe(false);
+  });
+});
+
+describe('the compiler repairs a credential in the clear (round 48)', () => {
+  it('rewrites every unambiguous token to its marker, non-mutating, naming only the variable', () => {
+    const spec = { steps: [{ instruction: 'sign in with s3cret-pass', params: { v2: 's3cret-pass', v3: 's3cret-passage' } }] };
+    const out = rewriteLiteralCredentials(spec, ENV);
+    expect(out.names).toEqual(['APP_PASSWORD']);
+    expect(out.value.steps[0].instruction).toBe('sign in with {{env:APP_PASSWORD}}');
+    expect(out.value.steps[0].params).toEqual({ v2: '{{env:APP_PASSWORD}}', v3: 's3cret-passage' });
+    expect(spec.steps[0].params.v2).toBe('s3cret-pass');
+  });
+
+  it('leaves an ambiguous value, and reports it separately', () => {
+    const env = { APP_PASSWORD: 'admin', APP_EMAIL: 'admin' };
+    const spec = { params: { v1: 'admin' } };
+    expect(rewriteLiteralCredentials(spec, env)).toEqual({ value: spec, names: [] });
+    expect(ambiguousCredentialsIn(spec, env)).toEqual(['APP_PASSWORD']);
   });
 });

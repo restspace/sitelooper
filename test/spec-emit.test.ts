@@ -2072,26 +2072,149 @@ describe('compileFlow', () => {
   });
 
   /**
-   * FIX AH (fwrd83). The published rdflow was recorded from an instruction a
-   * shell had expanded `$APP_PASSWORD` into: the password is in the clear.
-   * With that variable set, compile refuses it by NAME, and the value appears
-   * in no diagnostic and no file.
+   * FIX AH (fwrd83, round 48). The published rdflow was recorded from an
+   * instruction a shell had expanded `$APP_PASSWORD` into: the password is in
+   * the clear. Round 47 refused such a flow; round 48's corpus showed every
+   * store recorded before the marker convention stop compiling the moment the
+   * variable is set. Compile now REPAIRS it: the value becomes its marker, the
+   * artifact reads process.env['APP_PASSWORD'] and requires it, and a
+   * literal-credential WARNING names the variable — never the value.
    */
-  it('refuses a flow that carries a credential-named variable\'s value in the clear, naming only the variable', () => {
+  it('compiles a flow that carries a credential in the clear, reading it from the environment instead', () => {
     const had = process.env.APP_PASSWORD;
     process.env.APP_PASSWORD = 'bench-pass-1234';
     try {
       const out = path.join(dir, 'clear');
       const result = compileFlow(RDFLOW, { store: new SkillStore(FWAT2), outDir: out });
-      expect(result.refused).toBe(true);
-      expect(result.flowFile).toBeNull();
+      expect(result.refused).toBe(false);
+      expect(result.flowFile).not.toBeNull();
       const d = result.diagnostics.find((x) => x.code === 'literal-credential');
-      expect(d?.severity).toBe('error');
+      expect(d?.severity).toBe('warning');
       expect(d?.what).toContain('APP_PASSWORD');
+      const source = fs.readFileSync(result.flowFile!, 'utf8');
+      expect(source).toContain('export const requiredEnvNames = ["APP_PASSWORD"] as const;');
+      expect(source).not.toContain('bench-pass-1234');
       expect(JSON.stringify(result.diagnostics)).not.toContain('bench-pass-1234');
+      expect(JSON.stringify(result.spec)).not.toContain('bench-pass-1234');
     } finally {
       if (had === undefined) delete process.env.APP_PASSWORD;
       else process.env.APP_PASSWORD = had;
+    }
+  });
+
+  /**
+   * The same repair through a procedure that TYPES the password: the flow
+   * param its slot is bound to held the value, and the compiled body reads
+   * process.env['APP_PASSWORD'] where it fills the field.
+   */
+  it('fills a password the recording carried in the clear from process.env in the compiled body', () => {
+    const had = process.env.APP_PASSWORD;
+    process.env.APP_PASSWORD = 's3cret-pass';
+    const home = fs.mkdtempSync(path.join(dir, 'lit-'));
+    try {
+      const store = new SkillStore(path.join(home, 'skills'));
+      store.put({
+        id: 's_login',
+        origin: 'http://app.test',
+        template: 'sign in with password {{v1}}',
+        params: { v1: { example: 's3cret-pass', usedIn: [1], known: true } },
+        preconditions: { urlPattern: 'http://app.test/login' },
+        steps: [
+          { tool: 'fill', args: { target: '@e2', value: '{{v1}}' }, locators: { target: [{ kind: 'css', selector: '#password' }] } },
+          { tool: 'click', args: { target: '@e3' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Sign in' }] } },
+        ],
+        stats: { uses: 3, successes: 3, partial: 0, created: 't', failedAtStep: {}, fallthroughs: 0 },
+        status: 'validated',
+        provenance: { session: 'lit', instruction: 'sign in with password s3cret-pass', created: 't' },
+      } as Skill);
+      const flowFile = path.join(home, 'login.json');
+      fs.writeFileSync(flowFile, JSON.stringify({
+        name: 'login', origin: 'http://app.test', startUrl: 'http://app.test/login', vars: [],
+        provenance: { session: 'lit', created: 't' },
+        steps: [{ id: '01-sign-in', instruction: 'sign in with password s3cret-pass', skill: 's_login', params: { v1: 's3cret-pass' }, outputs: [], recorded: {} }],
+      }));
+      const result = compileFlow(flowFile, { store, outDir: path.join(home, 'out') });
+      expect(result.refused, JSON.stringify(result.diagnostics.map((d) => d.code))).toBe(false);
+      expect(result.diagnostics.some((d) => d.code === 'literal-credential' && d.severity === 'warning' && d.what.includes('APP_PASSWORD'))).toBe(true);
+      const source = fs.readFileSync(result.flowFile!, 'utf8');
+      expect(source).toContain("v1: process.env['APP_PASSWORD'] ?? ''");
+      expect(source).toContain('export const requiredEnvNames = ["APP_PASSWORD"] as const;');
+      expect(source).not.toContain('s3cret-pass');
+    } finally {
+      if (had === undefined) delete process.env.APP_PASSWORD;
+      else process.env.APP_PASSWORD = had;
+    }
+  });
+
+  /**
+   * An AMBIGUOUS value (odoo: `admin` is APP_PASSWORD and APP_EMAIL) is
+   * rewritten only where the recording shows a password field — here the
+   * recorded `input[type="password"]` candidate — and the login slot bound to
+   * the same value is left alone.
+   */
+  it('rewrites an ambiguous value only in the slot a password field is filled from', () => {
+    const had = { pw: process.env.APP_PASSWORD, email: process.env.APP_EMAIL };
+    process.env.APP_PASSWORD = 'admin';
+    process.env.APP_EMAIL = 'admin';
+    const home = fs.mkdtempSync(path.join(dir, 'amb-'));
+    try {
+      const store = new SkillStore(path.join(home, 'skills'));
+      store.put({
+        id: 's_signin',
+        origin: 'http://app.test',
+        template: 'sign in as {{v1}} with password {{v2}}',
+        params: { v1: { example: 'admin', usedIn: [1], known: true }, v2: { example: 'admin', usedIn: [2], known: true } },
+        preconditions: { urlPattern: 'http://app.test/login' },
+        steps: [
+          { tool: 'fill', args: { target: '@e1', value: '{{v1}}' }, locators: { target: [{ kind: 'css', selector: '#login' }] } },
+          { tool: 'fill', args: { target: '@e2', value: '{{v2}}' }, locators: { target: [{ kind: 'css', selector: 'input[type="password"]' }] } },
+          { tool: 'click', args: { target: '@e3' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Log in' }] } },
+        ],
+        stats: { uses: 3, successes: 3, partial: 0, created: 't', failedAtStep: {}, fallthroughs: 0 },
+        status: 'validated',
+        provenance: { session: 'amb', instruction: 'sign in', created: 't' },
+      } as Skill);
+      const flowFile = path.join(home, 'signin.json');
+      fs.writeFileSync(flowFile, JSON.stringify({
+        name: 'signin', origin: 'http://app.test', startUrl: 'http://app.test/login', vars: [],
+        provenance: { session: 'amb', created: 't' },
+        steps: [{ id: '01-sign-in', instruction: 'sign in', skill: 's_signin', params: { v1: 'admin', v2: 'admin' }, outputs: [], recorded: {} }],
+      }));
+      const result = compileFlow(flowFile, { store, outDir: path.join(home, 'out') });
+      expect(result.refused).toBe(false);
+      const source = fs.readFileSync(result.flowFile!, 'utf8');
+      expect(source).toContain("v2: process.env['APP_PASSWORD'] ?? ''");
+      expect(source).toMatch(/v1: 'admin'/);
+      expect(result.diagnostics.some((d) => d.code === 'literal-credential' && /password field/.test(d.what))).toBe(true);
+    } finally {
+      for (const [k, v] of [['APP_PASSWORD', had.pw], ['APP_EMAIL', had.email]] as const) {
+        if (v === undefined) delete process.env[k];
+        else process.env[k] = v;
+      }
+    }
+  });
+
+  /**
+   * The same flow with the value AMBIGUOUS (a non-credential variable holds it
+   * too): nothing proves which variable a bare value meant, so it is left as
+   * recorded — the compile still succeeds, and a warning names the variable.
+   */
+  it('leaves an ambiguous value as recorded and warns, still compiling', () => {
+    const had = { pw: process.env.APP_PASSWORD, other: process.env.APP_LOGIN_HINT };
+    process.env.APP_PASSWORD = 'bench-pass-1234';
+    process.env.APP_LOGIN_HINT = 'bench-pass-1234';
+    try {
+      const result = compileFlow(RDFLOW, { store: new SkillStore(FWAT2), outDir: path.join(dir, 'ambiguous') });
+      expect(result.refused).toBe(false);
+      const d = result.diagnostics.find((x) => x.code === 'literal-credential');
+      expect(d?.severity).toBe('warning');
+      expect(d?.what).toMatch(/value equal to APP_PASSWORD that compile left as recorded/);
+      expect(JSON.stringify(result.diagnostics)).not.toContain('bench-pass-1234');
+    } finally {
+      for (const [k, v] of [['APP_PASSWORD', had.pw], ['APP_LOGIN_HINT', had.other]]) {
+        if (v === undefined) delete process.env[k];
+        else process.env[k] = v;
+      }
     }
   });
 });

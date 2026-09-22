@@ -1285,12 +1285,13 @@ ${describeLeaks(leaks.slice(0, 6))}`);
     // into the flow. WARN for now — the ledger's coverage is what is being
     // measured, and a false alarm must not block an export.
     const leaks = this.leaksIn(flow, store);
-    // A credential in the clear in the flow or its skills (FIX AH): loud, and
-    // compile refuses it (literal-credential). Names only, never the value.
+    // A credential in the clear in the flow or its skills (FIX AH): loud. Compile
+    // rewrites it to its marker (spec/index.ts withCredentialMarkers), but the
+    // flow and its procedures on disk still carry it. Names only, never the value.
     const clear = literalCredentialsIn([flow, this.sessionSkills(flow, store)]);
     if (clear.length) {
       warnings.unshift(
-        `error: the flow or its skills carry the value of ${clear.join(', ')} in the clear — compile will refuse it. Re-record the step(s) passing ${clear.map((n) => `{{env:${n}}}`).join(', ')} in single quotes, never $NAME`,
+        `warning: the flow or its skills carry the value of ${clear.join(', ')} in the clear — compile rewrites it to the marker, but the files on disk hold the value. Re-record the step(s) passing ${clear.map((n) => `{{env:${n}}}`).join(', ')} in single quotes, never $NAME`,
       );
     }
     // Two lists, because one buried the other: the values evidence says are
