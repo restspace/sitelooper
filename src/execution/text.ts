@@ -315,3 +315,23 @@ export function extractFramed(text: string, frame: string): string | null {
   }
   return got;
 }
+
+/**
+ * `frame` with each whole-token occurrence of a value THIS RUN produced in its
+ * literal text replaced by the wildcard, the mark left alone. A frame's
+ * residue is the line around the value as the recording saw it, and whatever
+ * in it the run made is a different value on the next run: fwgt4 s_4580f2
+ * pinned the runid to gitea's heading as "{{=}} Bench Issue #4", and every
+ * replay's "#5" missed the frame, so the read was skipped each time. Whole
+ * tokens only (IDENTITY_EDGE), so a record id "4" frees the "4" of "#4" and
+ * not the one in "x4". extractFramed reads every `{{…}}` as a wildcard.
+ */
+export function unfreezeFrame(frame: string, runValues: readonly string[]): string {
+  const values = [...new Set(runValues.map((v) => v.trim()).filter(Boolean))].sort((a, b) => b.length - a.length);
+  if (!values.length) return frame;
+  const re = new RegExp(`(?<!${IDENTITY_EDGE})(?:${values.map(escapeRe).join('|')})(?!${IDENTITY_EDGE})`, 'gu');
+  return frame
+    .split(FRAME_MARK)
+    .map((part) => part.replace(re, WILDCARD))
+    .join(FRAME_MARK);
+}

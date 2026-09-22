@@ -1037,6 +1037,15 @@ d('read-back synthesis (fixture page)', () => {
       expect(cell).toBeTruthy();
       expect(JSON.parse(cell!.result!)).toBe('£ 279.00');
       expect(cell!.args.frame).toBe('Total: {{=}}');
+
+      // fwgt4 s_4580f2: the heading's "#4" is the record this page's url
+      // names — this run's, not the procedure's — so the frame frees it.
+      await page.route('http://bench.test/**', (route) =>
+        route.fulfill({ contentType: 'text/html', body: '<h1 id="title">fwgt4-n1 Bench Issue #4</h1><p>Issue 4 of the bench repo</p>' }),
+      );
+      await page.goto('http://bench.test/bench/bench-repo/issues/4');
+      const issue = await captureReadBackAt(page, 'fwgt4-n1', '#title');
+      expect(issue!.args.frame).toBe('{{=}} Bench Issue #{{*}}');
     } finally {
       await session.close();
     }

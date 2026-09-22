@@ -2873,6 +2873,35 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     }, 120_000);
   });
 
+  describe('list reads split per element (fwop7 02-open)', () => {
+    it('both runners publish each value a read_all was the one-to-one source of', async () => {
+      // openproject fwop7-n1: the seed subjects were read only through a
+      // read_all, every element one reported value; compile now splits it into
+      // per-element reads (compile.ts expandListReads).
+      const entries: RecordedEntry[] = [
+        { k: 'instruction', text: 'List the items', url: `${origin}/rows` },
+        { k: 'step', tool: 'goto', args: { url: `${origin}/rows` }, locators: {} },
+        {
+          k: 'step',
+          tool: 'read_all',
+          args: { target: 'li.item', what: 'text' },
+          locators: { target: { expr: "page.locator('li.item')", verified: true, raw: 'li.item', chain: [{ kind: 'css', selector: 'li.item' }] } },
+          result: JSON.stringify(['Item 1 Open', 'Item 2 Open', 'Item 3 Open']),
+        },
+      ];
+      const values = { first_item: 'Item 1 Open', second_item: 'Item 2 Open', third_item: 'Item 3 Open' };
+      const [compiled] = compileSkills({ entries, instruction: 'List the items', report: { status: 'success', summary: 'ok', evidence: { values } }, session: 's' });
+      expect(compiled.steps.filter((st) => st.tool === 'read').map((st) => st.label)).toEqual(['first_item', 'second_item', 'third_item']);
+      const { replay, emitted } = await both(compiled.steps, 3);
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      for (const [key, want] of Object.entries(values)) {
+        expect(replay.outputs[key]?.replace(/\s+/g, ' ').trim()).toBe(want);
+        expect(emitted.outputs[`01-clear.${key}`]?.replace(/\s+/g, ' ').trim()).toBe(want);
+      }
+    }, 120_000);
+  });
+
   describe('echo reads', () => {
     it('both runners flag a read that echoes the filled value, and only that read', async () => {
       const steps: SkillStep[] = [

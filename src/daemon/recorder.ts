@@ -2,7 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { ElementHandle, Frame, Locator, Page } from 'playwright-core';
 import { ensureSessionDir } from '../shared/paths.js';
-import { escapeRe, fieldByName, frameValue, hasTextMatcher, roleName, volatileMatcher } from '../shared/text.js';
+import { escapeRe, fieldByName, frameValue, hasTextMatcher, roleName, unfreezeFrame, volatileMatcher } from '../shared/text.js';
+import { urlParts } from '../execution/url.js';
 import { pointLocator } from '../execution/point.js';
 import { dispatchesFirstMatch } from '../execution/lifecycle.js';
 import { rootFor, type FramePath, type PageEffect, type Root } from '../execution/context.js';
@@ -1093,10 +1094,27 @@ export async function captureReadBackAt(page: Page, value: string, selector: str
     if (got === want) return await readBackFromHandle(page, handle, v);
     const frame = frameValue(raw, v);
     if (!frame) return null;
-    return await readBackFromHandle(page, handle, v, 'text', frame);
+    // ...and what else on that line this run made is not the frame's to keep:
+    // fwgt4 s_4580f2's "{{=}} Bench Issue #4" carried the issue the recording
+    // created, and missed "#5" on every replay (recordIdsOf, unfreezeFrame).
+    return await readBackFromHandle(page, handle, v, 'text', unfreezeFrame(frame, recordIdsOf(page.url())));
   } finally {
     await handle.dispose().catch(() => {});
   }
+}
+
+/**
+ * The record identifiers the page's url carries: the parts compile's own
+ * urlPattern turns into `:id` (the one sanctioned reading of "this position
+ * names a record", shape.ts's prior applied there, not a new test here). A
+ * frame is built on this page, so a number it shows that is this page's
+ * record is this run's, not the procedure's.
+ */
+function recordIdsOf(url: string): string[] {
+  const pattern = new Map(urlParts(urlPattern(url)).map((p) => [p.label, p.value]));
+  return urlParts(url)
+    .filter((p) => pattern.get(p.label) === ':id' && p.value !== ':id')
+    .map((p) => p.value);
 }
 
 /**

@@ -6,7 +6,7 @@
  * s_5ee393's `ref` published "fwgh5-n2 Bench Post".
  */
 import { describe, expect, it } from 'vitest';
-import { FRAME_MARK, extractFramed, frameValue } from '../src/execution/text.js';
+import { FRAME_MARK, extractFramed, frameValue, unfreezeFrame } from '../src/execution/text.js';
 import { framedRead } from '../src/execution/observe.js';
 
 describe('frameValue', () => {
@@ -71,5 +71,22 @@ describe('framedRead', () => {
   it('publishes the framed span, and throws (a skipped read) when the frame is gone', () => {
     expect(framedRead('fwvk3-n2 Bench Task', `${FRAME_MARK} Bench Task`)).toBe('fwvk3-n2');
     expect(() => framedRead('Other', `${FRAME_MARK} Bench Task`)).toThrow(/no longer shows/);
+  });
+});
+
+describe('unfreezeFrame', () => {
+  it('frees a value the run made from the frame’s literal text (fwgt4 s_4580f2)', () => {
+    // "#4" was the issue the recording created: its id is the page url's record position.
+    const frame = unfreezeFrame(`${FRAME_MARK} Bench Issue #4`, ['4']);
+    expect(frame).toBe(`${FRAME_MARK} Bench Issue #{{*}}`);
+    expect(extractFramed('fwgt4-n2 Bench Issue #5', frame)).toBe('fwgt4-n2');
+    // the frozen frame is what missed on every replay
+    expect(extractFramed('fwgt4-n2 Bench Issue #5', `${FRAME_MARK} Bench Issue #4`)).toBeNull();
+  });
+
+  it('frees whole tokens only, and never the mark', () => {
+    expect(unfreezeFrame(`${FRAME_MARK} x4 of 4`, ['4'])).toBe(`${FRAME_MARK} x4 of {{*}}`);
+    expect(unfreezeFrame(`Order ${FRAME_MARK} (S00021)`, ['S00021', ''])).toBe(`Order ${FRAME_MARK} ({{*}})`);
+    expect(unfreezeFrame(`${FRAME_MARK} Bench Issue`, [])).toBe(`${FRAME_MARK} Bench Issue`);
   });
 });

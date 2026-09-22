@@ -399,7 +399,7 @@ export function compileSkills(input: CompileInput): Skill[] {
   // fatal, which is exactly what sent the sign-in and archive steps to recovery
   // on every replay. Keep the actions, the synthetic read-backs, and any read
   // whose value the run actually reported; drop the rest.
-  const replayable = dropSupersededSets(collapseTogglePairs(creditUncreditedPopups(steps))).filter((step) => {
+  const replayable = dropSupersededSets(collapseTogglePairs(expandListReads(creditUncreditedPopups(steps), reportValues))).filter((step) => {
     if (step.tool === 'screenshot' || step.tool === 'eval') return false;
     if (step.tool === 'read' || step.tool === 'read_all') {
       return step.args.target === '(read-back)' || Boolean(readLabel(step, reportValues));
@@ -2260,6 +2260,79 @@ function readLabel(step: RecordedStep, values: Record<string, unknown>): string 
   return undefined;
 }
 
+/**
+ * A list read that is the SOURCE of several reported values, split into one
+ * read per element: the read_all's chain with `nth` i, labelled with the value
+ * that element carried, at the read_all's position.
+ *
+ * openproject fwop7-n1 02-open read the seed subjects only through `read_all`
+ * (three elements, each exactly a reported `seed_subject_N_full_cell_text`).
+ * readLabel refuses a list read whose JOINED text matches no value (fwod53,
+ * below), so the replayable filter dropped it; liveReadsFor found no page line
+ * for values carrying "
+"; export pruned them; and every replay then
+ * reported no subjects at all (obj 1 FAIL on n2 and n3).
+ *
+ * Only a one-to-one match qualifies: EVERY non-empty element equals the whole
+ * of a reported value, each a different one, and there are at least two. That
+ * is what separates it from fwod53, where one cell of an order row matched
+ * `product_name` and the rest was junk — that read stays dropped. A read_all
+ * whose joined text is itself a reported value keeps its list label
+ * (readLabel). Empty elements keep their position (nth counts every match)
+ * and publish nothing. A point candidate names one spot, never the ith match,
+ * and a candidate already carrying an nth is not re-indexed; they are left
+ * out of each element's chain.
+ */
+export function expandListReads(steps: readonly RecordedStep[], values: Record<string, unknown>): RecordedStep[] {
+  const out: RecordedStep[] = [];
+  for (const step of steps) {
+    const expanded = step.tool === 'read_all' && step.result !== undefined && readLabel(step, values) === undefined ? listSources(step, values) : null;
+    if (!expanded) {
+      out.push(step);
+      continue;
+    }
+    const chain = (step.locators.target?.chain ?? []).filter((c) => c.kind !== 'point' && c.nth === undefined);
+    if (!chain.length) {
+      out.push(step);
+      continue;
+    }
+    for (const { index, element, key } of expanded) {
+      out.push({
+        ...step,
+        tool: 'read',
+        args: { ...step.args, label: key },
+        locators: { ...step.locators, target: { ...step.locators.target, chain: chain.map((c) => ({ ...c, nth: index })) } },
+        result: JSON.stringify(element),
+        label: key,
+      });
+    }
+  }
+  return out;
+}
+
+/** Each non-empty element of a list read with the distinct reported value it equals, or null unless every one has one (expandListReads). */
+function listSources(step: RecordedStep, values: Record<string, unknown>): { index: number; element: string; key: string }[] | null {
+  let observed: unknown;
+  try {
+    observed = JSON.parse(step.result!);
+  } catch {
+    return null;
+  }
+  if (!Array.isArray(observed)) return null;
+  const used = new Set<string>();
+  const out: { index: number; element: string; key: string }[] = [];
+  for (const [index, raw] of observed.entries()) {
+    if (typeof raw !== 'string') return null;
+    const element = raw.trim();
+    if (!element) continue;
+    const key = Object.keys(values).find((k) => !used.has(k) && String(values[k] ?? '').trim() === element);
+    if (!key) return null;
+    used.add(key);
+    out.push({ index, element: raw, key });
+  }
+  return out.length >= 2 ? out : null;
+}
+
 function firstUrl(steps: RecordedStep[]): string | undefined {
   const goto = steps.find((s) => s.tool === 'goto' && typeof s.args.url === 'string');
   return goto ? String(goto.args.url) : undefined;
@@ -2386,8 +2459,79 @@ export function dropSupersededNavigation(steps: SkillStep[], notes?: TransformNo
       notes?.push({ name: 'dropSupersededNavigation', at: i + 1, reason: `a link click that recorded no consequence, replaced by the goto at step ${replacedBy + 1}` });
       return false;
     }
+    const repeatedBy = abandonedRepeatClick(steps, i);
+    if (repeatedBy !== null) {
+      notes?.push({ name: 'dropSupersededNavigation', at: i + 1, reason: `a click that recorded no consequence, repeated with one at step ${repeatedBy + 1}` });
+      return false;
+    }
     return true;
   });
+}
+
+/** A click's primary locator — the first candidate it was recorded with — as a comparable key. */
+function primaryLocator(step: SkillStep): string | null {
+  const first = step.locators.target?.[0];
+  return first ? JSON.stringify(first) : null;
+}
+
+/** A click that recorded nothing at all: no page change, alert, effect, mint or label, and not a toggle. */
+function consequenceFree(steps: readonly SkillStep[], k: number): boolean {
+  const s = steps[k];
+  if (s.tool !== 'click' || s.effect || s.mints || s.label !== undefined || s.toggle) return false;
+  const e = s.expect;
+  if (e?.addedContains?.length || e?.removedContains?.length || e?.alertContains) return false;
+  const before = steps.slice(0, k).reverse().find((p) => p.expect?.urlPattern)?.expect?.urlPattern;
+  return !before || !e?.urlPattern || e.urlPattern === before;
+}
+
+/**
+ * A click the recording saw do NOTHING that a later click on the same element
+ * then did for real: the index of that later click, else null.
+ *
+ * espocrm fwec5-n1 03-create: the first Save recorded no consequence (still
+ * on /#Opportunity/create, nothing added, no alert); the agent re-entered the
+ * amount and saved again, which navigated and minted the record. s_b45e41
+ * kept both Saves, and on replay the FIRST one worked: it navigated, and its
+ * own recorded url, `…/#Opportunity/create`, stopped the step (n2, n3: three
+ * recovery turns each). The repeat is the gesture the procedure relies on;
+ * the first was a failed attempt at the same thing.
+ *
+ * Narrow on purpose. The later click shares the first one's PRIMARY locator
+ * and recorded a consequence (a different url, a mint, an added line or an
+ * alert). Only field work lies between: fills, types, presses, reads, and
+ * clicks with no consequence on an element a fill, type or press in the same
+ * window acts on (focusing the field it re-entered). A repeat that ALSO
+ * recorded nothing is no evidence either click failed; a toggle, a click with
+ * a page effect, a mint or a label is never dropped (consequenceFree).
+ */
+function abandonedRepeatClick(steps: readonly SkillStep[], i: number): number | null {
+  if (!consequenceFree(steps, i)) return null;
+  const key = primaryLocator(steps[i]);
+  if (!key) return null;
+  const fieldTargets = new Set<string>();
+  for (let j = i + 1; j < steps.length; j++) {
+    const s = steps[j];
+    if (s.tool === 'click' && primaryLocator(s) === key) break;
+    if (s.tool === 'fill' || s.tool === 'type' || s.tool === 'press') {
+      const k = primaryLocator(s);
+      if (k) fieldTargets.add(k);
+    }
+  }
+  for (let j = i + 1; j < steps.length; j++) {
+    const s = steps[j];
+    if (s.tool === 'click' && primaryLocator(s) === key) {
+      if (consequenceFree(steps, j) || s.toggle || s.effect) return null;
+      const e = s.expect;
+      const before = steps.slice(0, j).reverse().find((p) => p.expect?.urlPattern)?.expect?.urlPattern;
+      const moved = Boolean(e?.urlPattern && before && e.urlPattern !== before);
+      return moved || s.mints || e?.addedContains?.length || e?.alertContains ? j : null;
+    }
+    if (['fill', 'type', 'press', 'read', 'read_all', 'wait_for'].includes(s.tool)) continue;
+    const k = primaryLocator(s);
+    if (s.tool === 'click' && consequenceFree(steps, j) && k && fieldTargets.has(k)) continue;
+    return null;
+  }
+  return null;
 }
 
 /**
