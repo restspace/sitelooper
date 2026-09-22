@@ -1,0 +1,182 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwod77-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwod77-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwod77-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwod77-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwod77-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwod77.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwod77-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwod77.spec.ts",
+      "file": "fwod77.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwod77",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 81081,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-open\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] step 04-open s_b5058c/4: 1 recorded page change(s) carry a value this run could not fill (e.g. \"- cell \\\"[{{v5}}] {{v4}}\\\"\") — not checked\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 07-open\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:8069/ and sign in with login 'admin' and password 'admin' (skip the database selector screen if one appears by choosing the default/only database). Then create a new customer contact named exactly '{{runid}} Bench Customer' with the City field set to 'Benchville' (fill the address city; you can do this from the Contacts app or Sales app customers). Save the record and report the customer name and city exactly as shown on the saved form.",
+                      "duration": 11673
+                    },
+                    {
+                      "title": "02-create: In the Odoo Sales app, create a new quotation (Sales > Orders > Quotations > New) for the customer '{{runid}} Bench Customer' — select the customer via the autocomplete dropdown so the option is actually chosen. Add exactly ONE order line: pick any product from the product catalogue using the product autocomplete dropdown (a real product option must be selected, not typed text), with quantity 3. Do NOT confirm the quotation — leave it as a draft quotation. Save it. Report: (a) the exact product name you chose, (b) the unit price the app filled in for that line, and (c) the Untaxed Amount shown in the order's totals.",
+                      "duration": 9236
+                    },
+                    {
+                      "title": "03-open: Open the existing draft quotation {{02-create.quotation_reference}} (customer '{{runid}} Bench Customer') in the Odoo Sales app. Add a SECOND order line below the existing '{{02-create.product_name}}' line: choose a DIFFERENT product from the product catalogue via the product autocomplete dropdown (a real option must be selected), with quantity 2. Keep the first line unchanged ({{02-create.product_name}}, qty 3). Save the quotation and report: (a) the exact product name of the new second line, (b) its unit price, and (c) the new Untaxed Amount shown in the order's totals.",
+                      "duration": 26145
+                    },
+                    {
+                      "title": "04-open: Open the existing draft quotation {{02-create.quotation_reference}} (customer '{{runid}} Bench Customer') in the Odoo Sales app. Change the FIRST order line's quantity from 3 to 5 — the line for product '{{02-create.product_name}}' ([{{02-create.product_internal_reference}}]). Leave the second line (Desk Combination, qty 2) unchanged. Save the quotation and report the new Untaxed Amount shown in the order's totals, plus the first line's quantity and subtotal as displayed.",
+                      "duration": 14918
+                    },
+                    {
+                      "title": "05-open: Open the existing draft quotation {{02-create.quotation_reference}} (customer '{{runid}} Bench Customer') in the Odoo Sales app. First verify the order lines are as expected: line 1 '{{02-create.product_name}}' qty 5, line 2 'Desk Combination' qty 2, Untaxed Amount £2,375.00 — if the second line is missing, re-add it (Desk Combination, qty 2) and save before proceeding. Then CONFIRM the quotation (click the Confirm button) so it becomes a sales order. Report: (a) the order reference/name (e.g. {{02-create.quotation_reference}}), and (b) the status the app now shows on the order form after confirmation.",
+                      "duration": 2963
+                    },
+                    {
+                      "title": "06-open: Open the confirmed sales order {{02-create.quotation_reference}} (customer '{{runid}} Bench Customer') in the Odoo Sales app. Cancel the order using the Cancel action (confirm any dialog that appears). Report the status the app shows on the order form after cancelling, and confirm the order reference is still {{02-create.quotation_reference}}.",
+                      "duration": 12187
+                    },
+                    {
+                      "title": "07-open: Final verification, read-only (do not modify anything): (1) Open the contact '{{runid}} Bench Customer' in Odoo and report its City field value. (2) Open the sales order {{02-create.quotation_reference}} and report its current status and untaxed amount. Report both values exactly as shown.",
+                      "duration": 3250
+                    }
+                  ],
+                  "startTime": "2026-09-22T09:26:28.098Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6517b0e034f68392a891-6cf7461046fe02a17b11",
+          "file": "fwod77.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-22T09:26:26.379Z",
+    "duration": 82965.389,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

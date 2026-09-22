@@ -1,0 +1,172 @@
+{
+  "flow": "fwod77",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_bd5df9 (4 steps).",
+      "values": {
+        "customer_city": "Benchville",
+        "record_url": "http://127.0.0.1:8069/web#cids=1&menu_id=109&action=156&model=res.partner&view_type=form&id=46",
+        "customer_name": "fwod77-n3 Bench Customer",
+        "customer_reference": "fwod77-n3 Bench Customer"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_61a1cf (8 steps).",
+      "values": {
+        "quotation_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=23",
+        "quantity": "3.00",
+        "unit_price": "295.00",
+        "total_with_tax": "£ 1,062.00",
+        "quotation_reference": "S00023",
+        "customer": "fwod77-n3 Bench Customer",
+        "customer_city": "Benchville",
+        "line_tax_rate": "20%"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "18/18",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "product_name",
+        "product_internal_reference"
+      ]
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_8e953e; observed quotation_id=23, quotation_url=http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=23, quotation_reference=S00023, customer=fwod77-n3 Bench Customer, line1_qty=3.00, line1_unit_price=295.00, line1_subtotal=£ 885.00, line2_qty=2.00, line2_unit_price=450.00, line2_subtotal=£ 900.00, new_untaxed_amount=£ 1,785.00, total=£ 2,142.00, line2_product_display=[FURN_7800] Desk Combination.",
+      "values": {
+        "quotation_id": "23",
+        "quotation_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=23",
+        "quotation_reference": "S00023",
+        "customer": "fwod77-n3 Bench Customer",
+        "line1_qty": "3.00",
+        "line1_unit_price": "295.00",
+        "line1_subtotal": "£ 885.00",
+        "line2_qty": "2.00",
+        "line2_unit_price": "450.00",
+        "line2_subtotal": "£ 900.00",
+        "new_untaxed_amount": "£ 1,785.00",
+        "total": "£ 2,142.00",
+        "line2_product_display": "[FURN_7800] Desk Combination"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "20/20",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "line1_product"
+      ]
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_4e2f47; observed quotation_id=23, quotation_url=http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=23, quotation_reference=S00023, new_total=£ 2,850.00.",
+      "values": {
+        "quotation_id": "23",
+        "quotation_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=23",
+        "quotation_reference": "S00023",
+        "new_total": "£ 2,850.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "19/19",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_b5058c: step 4: 1 recorded page change(s) carry a value this run could not fill (e.g. \"- cell \\\"[{{02-create.product_internal_reference}}] {{02-create.product_name}}\\\"\") — not checked"
+      ],
+      "unreported": [
+        "first_line_product",
+        "line1_product_internal_reference"
+      ]
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_c97f0b (8 steps).",
+      "values": {
+        "order_status": "Sales Order\nQuotation Sent\nQuotation",
+        "order_reference": "S00023",
+        "order_url": "http://127.0.0.1:8069/web#id=23&cids=1&menu_id=196&action=316&model=sale.order&view_type=form",
+        "customer": "fwod77-n3 Bench Customer",
+        "untaxed_amount": "£ 2,375.00",
+        "total": "£ 2,850.00",
+        "status_after_confirm": "Sales Order"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "Opened confirmed sales order S00023 (customer 'fwod77-n3 Bench Customer Bench Customer') and used the Cancel action. In this Odoo build that opened a modal confirmation wizard titled \"Cancel Sales Order\" with the message \"Are you sure you want to cancel this order?\" (options: Send and cancel / Cancel / Discard) rather than a native browser dialog; I confirmed it with its \"Cancel\" action (action_cancel), i.e. cancellation without emailing the customer. The order form's statusbar now shows \"Cancelled\" as the active step, and the order reference is unchanged: S00023. Verified again after the change from server data in the Sales > Orders > Quotations list, where the S00023 row reads \"...fwod77-n3 Bench Customer Bench Customer ... £ 2,850.00 Cancelled\".",
+      "values": {
+        "order_id": "23",
+        "status_after_cancel_2": "Sales Order\nQuotation Sent\nQuotation",
+        "status_after_cancel_3": "Cancelled\nSales Order\nQuotation Sent\nQuotation",
+        "order_reference": "S00023",
+        "order_url": "http://127.0.0.1:8069/web#id=23&cids=1&menu_id=196&action=316&model=sale.order&view_type=form",
+        "status_after_cancel": "Cancelled",
+        "customer": "fwod77-n3 Bench Customer",
+        "list_view_total": "£ 2,850.00",
+        "customer_reference": "fwod77-n3 Bench Customer"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "18/18",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "07-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_796f4c (4 steps).",
+      "values": {
+        "customer_city": "Benchville",
+        "customer_name": "fwod77-n3 Bench Customer",
+        "sales_order_reference": "S00023",
+        "customer_reference": "fwod77-n3 Bench Customer"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 7,
+  "total": 7,
+  "repinned": 0,
+  "drift": 0,
+  "wallMs": 93241,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
