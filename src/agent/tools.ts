@@ -662,8 +662,18 @@ async function runStep(
   const onPopup = (p: Page) => {
     opened ??= p;
   };
+  // Every page the CONTEXT gains while this step runs, opener or not: a tab
+  // whose `popup` event lands after the capture, or that never names its
+  // opener, is still a page this step's action opened when it is the only
+  // one (pageContextOf; ghost fwgh6-n1 step 63).
+  const appeared: Page[] = [];
+  const onPage = (p: Page) => {
+    appeared.push(p);
+  };
   const watchPopup = Boolean(pending && page && POPUP_TOOLS.has(name) && typeof page.on === 'function');
+  const pageContext = watchPopup && typeof page!.context === 'function' ? page!.context() : null;
   if (watchPopup) page!.on('popup', onPopup);
+  pageContext?.on('page', onPage);
   // One observation per state-changing action, begun BEFORE it dispatches
   // (src/execution/action.ts): the whole-action deadline the click tiers are
   // cut to, the traffic baseline, and the expected effect when replay has one.
@@ -755,7 +765,11 @@ note: this link points to ${verdict.link.href}, and its navigation had not commi
         captureFailed = true;
       }
     }
-    const context = pending && page ? await pageContextOf(session, page, name, args, pagesBefore, opened) : {};
+    // A click that visibly did nothing on its own page (no line added or
+    // removed, the url unmoved) is the one whose effect may be a tab still
+    // opening: only that step pays pageContextOf's grace wait.
+    const quiet = Boolean(diff && before && !diff.added.length && !(diff.removed ?? []).length && diff.url === before.url);
+    const context = pending && page ? await pageContextOf(session, page, name, args, pagesBefore, opened, { appeared, quiet }) : {};
     // A step that closed its own page left nothing to capture, and that is an
     // observation, not a failed one: the close is what it did.
     if (context.effect?.kind === 'close' && captureFailed) captureFailed = false;
@@ -780,6 +794,7 @@ note: this link points to ${verdict.link.href}, and its navigation had not commi
   } finally {
     obs?.cancel();
     if (watchPopup) page!.off('popup', onPopup);
+    pageContext?.off('page', onPage);
   }
 }
 
@@ -794,18 +809,28 @@ const POPUP_TOOLS = new Set(['click', 'dblclick', 'modifier_click', 'press', 'se
 const CLOSE_GRACE_MS = 500;
 
 /**
+ * How long a step that visibly did nothing on its own page waits for a tab
+ * it may still be opening. ghost fwgh6-n1 step 63 clicked the post-published
+ * card linking to the public post: the tab opened after the step's capture,
+ * so the recording credited no popup, the next steps ran on page 1, and every
+ * replay stopped at "recorded on page 1 … the procedure is on page 0".
+ */
+const LATE_POPUP_GRACE_MS = 1_000;
+
+/**
  * The page facts a recorded step carries (SkillStep.page / effect): which of
  * the open pages it ran on — only when there was more than one — and whether
  * it opened a popup, closed its page, or switched tabs, with the page the
  * procedure continues on.
  */
-async function pageContextOf(
-  session: BrowserSession,
+export async function pageContextOf(
+  session: Pick<BrowserSession, 'listPages' | 'getPage'>,
   page: Page,
   name: string,
   args: Record<string, unknown>,
   pagesBefore: Page[],
   opened: Page | null,
+  late: { appeared: readonly Page[]; quiet: boolean } = { appeared: [], quiet: false },
 ): Promise<{ page?: number; effect?: PageEffect; afterPage?: Page }> {
   const index = pagesBefore.indexOf(page);
   const out: { page?: number; effect?: PageEffect; afterPage?: Page } = pagesBefore.length > 1 && index >= 0 ? { page: index } : {};
@@ -826,6 +851,21 @@ async function pageContextOf(
           break;
         }
       }
+    }
+    // A late tab: none yet, and the action changed nothing here to show for
+    // itself. Give it a moment to arrive (the context listener has seen any
+    // that came since dispatch).
+    if (!opened && late.quiet && typeof page.context === 'function' && !late.appeared.some((p) => !p.isClosed())) {
+      await page.context().waitForEvent('page', { timeout: LATE_POPUP_GRACE_MS }).catch(() => null);
+    }
+    // No opener to name it (rel=noopener, or the event came after the
+    // capture): a page new since this step began is still its popup when it
+    // is the ONLY one — nothing else acted in the meantime, so no other step
+    // could have opened it. Two new pages are ambiguous and credit neither.
+    if (!opened) {
+      const pages = await session.listPages().catch(() => [] as Page[]);
+      const fresh = [...new Set([...pages, ...late.appeared])].filter((p) => !p.isClosed() && !pagesBefore.includes(p));
+      if (fresh.length === 1) opened = fresh[0];
     }
     if (!opened && (await page.opener().catch(() => null))) {
       await page.waitForEvent('close', { timeout: CLOSE_GRACE_MS }).catch(() => {});

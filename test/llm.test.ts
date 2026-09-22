@@ -192,6 +192,34 @@ describe('per-request reasoning effort', () => {
     }
   });
 
+  // fwgt3 n1: DeepSeek 400s "content or tool_calls must be set" on an empty assistant turn.
+  it('never sends an assistant message with neither content nor tool calls, and synthesizes none', async () => {
+    const { bodies, fetchImpl } = stubFetch();
+    const realFetch = globalThis.fetch;
+    globalThis.fetch = fetchImpl as unknown as typeof fetch;
+    try {
+      const p = new OpenAICompatProvider({ ...baseConfig, provider: 'openrouter' } as never);
+      const call = { id: 'c1', type: 'function' as const, function: { name: 'snapshot', arguments: '{}' } };
+      await p.complete(
+        [
+          { role: 'user', content: 'do it' },
+          { role: 'assistant', content: null },
+          { role: 'user', content: 'Reminder' },
+          { role: 'assistant', content: '  ' },
+          { role: 'assistant', content: null, tool_calls: [call] },
+          { role: 'tool', tool_call_id: 'c1', content: 'ok' },
+          { role: 'assistant', content: 'thinking aloud' },
+        ],
+        [],
+      );
+      const sent = bodies[0].messages as Array<{ role: string; content: string | null }>;
+      expect(sent.map((m) => m.role)).toEqual(['user', 'user', 'assistant', 'tool', 'assistant']);
+      expect(sent.filter((m) => m.role === 'assistant').every((m) => (m.content ?? '').trim() || 'tool_calls' in m)).toBe(true);
+    } finally {
+      globalThis.fetch = realFetch;
+    }
+  });
+
   it('other openai-compat hosts never see the field — unknown keys can 400', async () => {
     const { bodies, fetchImpl } = stubFetch();
     const realFetch = globalThis.fetch;

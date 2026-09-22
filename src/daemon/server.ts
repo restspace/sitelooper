@@ -8,7 +8,7 @@ import { executeTool } from '../agent/tools.js';
 import { urlPattern as compiledUrlPattern, carryOpener, dropAbsentReadLocators, dropDeadReadLocators, fillParams, markReadsProven, stranded, urlMatches, urlParts } from '../skills/compile.js';
 import type { DriftTicket } from '../skills/repair.js';
 import type { Page } from 'playwright-core';
-import { agentGesturesOutsideReplay, bindSkill, canAdoptPin, decideRepin, instructionEntry, learnFromInstruction, matchTemplate, pinStartsElsewhere, pinStatus, publishedOutputs, selectCandidates, synthesizeReport } from '../skills/learn.js';
+import { agentGesturesOutsideReplay, bindSkill, canAdoptPin, decideRepin, instructionEntry, learnFromInstruction, matchTemplate, pinEndsElsewhere, pinStartsElsewhere, pinStatus, publishedOutputs, selectCandidates, synthesizeReport } from '../skills/learn.js';
 import { buildFlow, consumedReportedOutputs, consumedUrlOutputs, ignorableRefs, jsonLeaves, lintFlowRefs, lintUnpublishedOutputs, listFlows, liveReadsFor, liveReadsForRecovery, loadFlow, loadFlowFile, lookupOutput, mutatingIntent, noteOutputEvidence, pruneUnsourcedOutputs, recoveryRoute, remapParams, resolveInstruction, resolveStepParams, softResolveInstruction, saveFlow, staleInstructionIds, taskConstants, unbankedMutations, unreportedOutputs, urlOutputs, varyingValues, type RunSpecific } from '../skills/flow.js';
 import { applyRelabelToEntries, applyRelabelToSkills, relabelCases, requestRelabelPlan } from '../skills/relabel.js';
 import { goalSatisfied, renderChainStop } from '../skills/replay.js';
@@ -1903,6 +1903,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
           adoptable,
           mintedLeaks,
           startsElsewhere: candidateId ? pinStartsElsewhere(this.browser.learn, candidateId, instructionEntry(recoveryEntries)?.url) : null,
+          endsElsewhere: candidateId ? pinEndsElsewhere(this.browser.learn, candidateId, flow.steps[flow.steps.findIndex((st) => st.id === step.id) + 1]?.skill) : null,
         });
         // Refusing the pin is not enough: replay selects candidates from the
         // store by track record, not only the pin. fwod46-n2's recovery

@@ -1,13 +1,13 @@
 import { isMutatingAction, mutatesSteps } from '../execution/lifecycle.js';
-import type { LocatorCandidate, RecordedEntry, RecordedInstruction, RecordedStep } from '../daemon/recorder.js';
+import type { LocatorCandidate, RecordedEntry, RecordedInstruction, RecordedStep, StepDiff } from '../daemon/recorder.js';
 import type { Report } from '../agent/report.js';
 import { contractFor, newSkillId, originOf, type Skill, type SkillParam, type SkillStep, type StepExpectation } from './store.js';
 import { MIN_ID_LEN, digitDominant, looksLikeId, skeleton, tokenPattern } from './shape.js';
 import { occursAsToken, replaceAsToken } from './ledger.js';
 import { WILDCARD, escapeRe, identityRe, maskVolatile } from '../shared/text.js';
 import { CREDENTIAL_KEY, fillParamsDeep, queryPairs, safeDecode, urlParts } from '../execution/url.js';
-import { contextsEqual, framesEqual } from '../execution/context.js';
-import { collapseTogglePairs } from './toggles.js';
+import { contextsEqual, framesEqual, stepEffect } from '../execution/context.js';
+import { collapseTogglePairs, dropSupersededSets } from './toggles.js';
 
 /**
  * The url rules live in src/execution/url.ts, where a compiled artifact embeds
@@ -154,10 +154,21 @@ export function carryOpener(before: readonly RecordedEntry[], entries: RecordedE
   // Only the instruction just before this one: what it left open is what
   // this one began in (a line an older instruction added may have been on
   // the page for other reasons ever since).
+  //
+  // Walked past: an instruction that recorded no step and reported no
+  // success. It did nothing to the page, so the one before it is still what
+  // this one began in (gitea fwgt3-n1: 38 opened the Labels menu and died on
+  // a model error, 49 recorded nothing, 50 began inside the menu).
+  let spanHasStep = false;
   for (let k = before.length - 1; k >= 0; k--) {
     const e = before[k];
-    if (e.k === 'instruction') return entries;
+    if (e.k === 'instruction') {
+      const closed = reportAfter(before, k);
+      if (!spanHasStep && closed?.status !== 'success') continue;
+      return entries;
+    }
     if (e.k !== 'step') continue;
+    spanHasStep = true;
     if (e.tool === 'goto' || e.tool === 'back' || e.effect) return entries;
     if (e.diff?.url && pathOf(e.diff.url) !== page) return entries;
     if (!e.diff?.added?.some(names)) continue;
@@ -170,12 +181,100 @@ export function carryOpener(before: readonly RecordedEntry[], entries: RecordedE
     // procedure ends with this click, so its replay leaves the popup open as
     // the recording did; one with no report is the same instruction still
     // in flight, compiled with it.
-    const closed = reportAfter(before, k);
-    if (!closed || closed.status === 'success') return entries;
-    const { via: _via, result: _result, ...opener } = e;
-    return [head, opener, ...entries.slice(1)];
+    if (!endedInFailure(before, k)) return entries;
+    // The opener AND every gesture the dead instruction made after it on this
+    // page: fwgt3-n1's 38 opened the menu and ticked "bug" before it died, so
+    // 50 began with "bug" already ticked, and its own first click on "bug"
+    // UNticked it. Carrying the opener alone left every replay one toggle
+    // out: "succeeded" at tier A with the labels never applied. With the
+    // tick carried too, the toggles net out as they did in the recording.
+    const carried = before
+      .slice(k, instructionEnd(before, k))
+      .filter((s): s is RecordedStep => s.k === 'step' && (s === e || isMutatingAction(s.tool)))
+      .map(({ via: _via, result: _result, ...step }) => step);
+    return [head, ...carried, ...entries.slice(1)];
   }
   return entries;
+}
+
+/** The index just past the last entry of the instruction entries[k] ran under (its next non-resume instruction, or the end). */
+function instructionEnd(entries: readonly RecordedEntry[], k: number): number {
+  for (let j = k + 1; j < entries.length; j++) {
+    const e = entries[j];
+    if (e.k === 'instruction' && !e.resume) return j;
+  }
+  return entries.length;
+}
+
+/**
+ * Whether the instruction entries[k] ran under ENDED without success: it
+ * reported a non-success status, or it reported nothing and a new instruction
+ * (a non-resume one, in `entries` or the one being compiled, which carryOpener
+ * has already required not to be a resume) came after it. The daemon issues
+ * the next instruction only once the previous `do` returned, so a missing
+ * report is a `do` that died — fwgt3-n1's 38, on an LLM 400 — never one still
+ * in flight. A resume continues the same instruction, whose report may follow.
+ */
+function endedInFailure(entries: readonly RecordedEntry[], k: number): boolean {
+  for (let j = k + 1; j < entries.length; j++) {
+    const e = entries[j];
+    if (e.k === 'report') return e.status !== 'success';
+    if (e.k === 'instruction' && !e.resume) return true;
+  }
+  return true;
+}
+
+/** Actions whose gesture can open a tab (agent/tools.ts POPUP_TOOLS). */
+const POPUP_CAPABLE = new Set(['click', 'dblclick', 'modifier_click', 'press', 'select', 'check']);
+
+/**
+ * A step recorded on a page index no earlier step was on, with no recorded
+ * page effect to explain the arrival, credits a popup to the nearest earlier
+ * popup-capable action on the page it came from.
+ *
+ * ghost fwgh6-n1 step 63 clicked the post-published modal's card, which opens
+ * the public post in a new tab. The tab arrived after the step's capture, so
+ * the recording wrote no effect; steps 64 on ran on page 1, compile emitted no
+ * popup, and pageIndexVerdict stopped every replay at 04-set step 2 ("recorded
+ * on page 1 … the procedure is on page 0"). The compiled artifact watched the
+ * tab open and never switched to it. The later steps' page index IS the
+ * evidence of the popup: nothing else in the recording opens a page.
+ *
+ * Pure. The walk back from the first step on the new page stops, crediting
+ * nothing, at a recorded effect (a popup, close or tabs switch already
+ * explains the page change), at a navigation, and at a state-changing action
+ * that cannot open a tab; it steps over observations (reads, screenshots,
+ * evals), which change no page. The credited popup carries no urlPattern:
+ * the url it opened was never recorded, so both runners follow whatever tab
+ * the action raises (context.ts armPageEffect). A step with no `page` was
+ * recorded while one page was open (page 0), except a synthesized read-back,
+ * which records no page at all and is skipped.
+ */
+export function creditUncreditedPopups(steps: readonly RecordedStep[]): RecordedStep[] {
+  const out = [...steps];
+  const pageOf = (s: RecordedStep): number | undefined => (s.page !== undefined ? s.page : s.args.target === '(read-back)' ? undefined : 0);
+  const seen = new Set<number>();
+  for (let i = 0; i < out.length; i++) {
+    const at = pageOf(out[i]);
+    if (at === undefined) continue;
+    if (at > 0 && !seen.has(at)) {
+      for (let j = i - 1; j >= 0; j--) {
+        const s = out[j];
+        const effect = stepEffect(s);
+        if (effect && effect.kind !== 'navigate') break;
+        if (s.tool === 'goto' || s.tool === 'back' || s.tool === 'tabs') break;
+        const from = pageOf(s);
+        if (from === at) break;
+        if (POPUP_CAPABLE.has(s.tool) && from !== undefined) {
+          out[j] = { ...s, effect: { kind: 'popup' } };
+          break;
+        }
+        if (isMutatingAction(s.tool)) break;
+      }
+    }
+    seen.add(at);
+  }
+  return out;
 }
 
 /** Where the browser was just before entries[k] ran: the latest earlier diffed step's url, or its instruction's. */
@@ -300,7 +399,7 @@ export function compileSkills(input: CompileInput): Skill[] {
   // fatal, which is exactly what sent the sign-in and archive steps to recovery
   // on every replay. Keep the actions, the synthetic read-backs, and any read
   // whose value the run actually reported; drop the rest.
-  const replayable = collapseTogglePairs(steps).filter((step) => {
+  const replayable = dropSupersededSets(collapseTogglePairs(creditUncreditedPopups(steps))).filter((step) => {
     if (step.tool === 'screenshot' || step.tool === 'eval') return false;
     if (step.tool === 'read' || step.tool === 'read_all') {
       return step.args.target === '(read-back)' || Boolean(readLabel(step, reportValues));
@@ -418,6 +517,8 @@ export function compileSkills(input: CompileInput): Skill[] {
     segOffset += sg.steps.length;
     const segParams: Record<string, SkillParam> = {};
     for (const [name, value] of slots) segParams[name] = { example: value, usedIn: [] };
+    // What each built step recorded, for transforms that must look past its expectation (dropDismissedDialogs).
+    const recordedDiffs = new WeakMap<SkillStep, StepDiff>();
     const skillSteps: SkillStep[] = sg.steps.map((step, i) => {
       const g = base + i;
       // A minted value is a reference only DOWNSTREAM of its mint: in this
@@ -537,12 +638,13 @@ export function compileSkills(input: CompileInput): Skill[] {
       // model turns). The orphan-marker hazard it was fixing is handled below
       // by re-inlining every dropped slot into the steps, expectations included.
       for (const name of slotsUsed(JSON.stringify({ args, locators }))) segParams[name]?.usedIn.push(i + 1);
+      if (step.diff) recordedDiffs.set(out, step.diff);
       return out;
     });
     const mintedForStart = mintedMap((m) => m.keptIndex < base);
     const notes: TransformNote[] = [];
     const folded = foldLoops(
-      coalesceControls(dropDismissedDialogs(dropSupersededNavigation(skillSteps, notes), notes), notes),
+      coalesceControls(dropDismissedDialogs(dropSupersededNavigation(skillSteps, notes), notes, (s) => recordedDiffs.get(s)), notes),
       input.instruction,
       notes,
     );
@@ -2278,8 +2380,57 @@ export function dropSupersededNavigation(steps: SkillStep[], notes?: TransformNo
   return steps.filter((step, i) => {
     const superseded = step.tool === 'goto' && steps[i + 1]?.tool === 'goto';
     if (superseded) notes?.push({ name: 'dropSupersededNavigation', at: i + 1, reason: `the next step navigates again, to ${JSON.stringify(String(steps[i + 1].args.url ?? ''))}` });
-    return !superseded;
+    if (superseded) return false;
+    const replacedBy = abandonedLinkClick(steps, i);
+    if (replacedBy !== null) {
+      notes?.push({ name: 'dropSupersededNavigation', at: i + 1, reason: `a link click that recorded no consequence, replaced by the goto at step ${replacedBy + 1}` });
+      return false;
+    }
+    return true;
   });
+}
+
+/**
+ * A link click the recording saw do NOTHING, that a goto then replaced: the
+ * index of that goto, else null.
+ *
+ * openproject fwop6 01-signin clicked the Bench Project link twice; neither
+ * click recorded a page change, `read url` still said /projects, and the
+ * agent typed `goto /projects/bench-project`. s_4b8679 kept all three. On
+ * replay the first click DID navigate, and the second was stranded on the
+ * project page: "stopped at step 2 — expected url /projects but browser is
+ * at /projects/bench-project". The goto is the navigation the procedure
+ * relies on; the clicks before it were failed attempts at the same thing.
+ *
+ * Narrow on purpose. A LINK (a link role, or an <a> the recorder pointed
+ * at) — a button click with no visible change can still have done work the
+ * page does not show. No recorded consequence of any kind: no added or
+ * removed line, no alert, no page effect, no mint, no label, and the url
+ * pattern of the page it ran on (the previous step's, where one was
+ * recorded). And the goto comes before any other gesture: only observations
+ * (reads, waits) and further such clicks lie between.
+ */
+function abandonedLinkClick(steps: readonly SkillStep[], i: number): number | null {
+  const inert = (k: number): boolean => {
+    const s = steps[k];
+    if (s.tool !== 'click' || s.effect || s.mints || s.label !== undefined || s.toggle) return false;
+    const chain = s.locators.target ?? [];
+    const link = chain.some((c) => (c.kind === 'role' && c.role === 'link') || (c.kind === 'point' && c.tag === 'a'));
+    if (!link) return false;
+    const e = s.expect;
+    if (e?.addedContains?.length || e?.removedContains?.length || e?.alertContains) return false;
+    const before = steps.slice(0, k).reverse().find((p) => p.expect?.urlPattern)?.expect?.urlPattern;
+    return !before || !e?.urlPattern || e.urlPattern === before;
+  };
+  if (!inert(i)) return null;
+  for (let j = i + 1; j < steps.length; j++) {
+    const s = steps[j];
+    if (s.tool === 'goto') return j;
+    if (s.tool === 'read' || s.tool === 'read_all' || s.tool === 'wait_for') continue;
+    if (inert(j)) continue;
+    return null;
+  }
+  return null;
 }
 
 
@@ -2295,7 +2446,7 @@ export function dropSupersededNavigation(steps: SkillStep[], notes?: TransformNo
  * that button is named as a dismissal, and step N+1 recorded no page change
  * of its own. A confirm ("Discard", "Delete", "Save") never matches.
  */
-export function dropDismissedDialogs(steps: SkillStep[], notes?: TransformNote[]): SkillStep[] {
+export function dropDismissedDialogs(steps: SkillStep[], notes?: TransformNote[], diffOf?: (step: SkillStep) => StepDiff | undefined): SkillStep[] {
   const out: SkillStep[] = [];
   for (let i = 0; i < steps.length; i++) {
     const opener = steps[i];
@@ -2317,7 +2468,8 @@ export function dropDismissedDialogs(steps: SkillStep[], notes?: TransformNote[]
       !closer.mints &&
       !closer.effect &&
       framesEqual(opener.contexts?.target?.frame, closer.contexts?.target?.frame) &&
-      closer.label === undefined;
+      closer.label === undefined &&
+      !takesMoreThanTheDialog(diffOf?.(opener), diffOf?.(closer));
     if (opensDialog && inert) {
       const primary = (closer.locators.target ?? [])[0] as { kind?: string; role?: string; name?: string; text?: string } | undefined;
       const name = primary?.kind === 'role' && primary.role === 'button' ? primary.name : primary?.kind === 'text' ? primary.text : undefined;
@@ -2335,6 +2487,30 @@ export function dropDismissedDialogs(steps: SkillStep[], notes?: TransformNote[]
     out.push(opener);
   }
   return out;
+}
+
+/**
+ * Whether a dialog's closer took away more than the dialog its opener raised.
+ *
+ * A closer's expectation cannot say: expectationFor keeps a removal only when
+ * it was the dialog alone, and a consequential one leaves NO expectation — so
+ * "recorded nothing" read as "did nothing". fwec4 n1 02-create pressed Escape
+ * on a filled form ("Are you sure you want to leave the form?") and clicked
+ * Cancel, whose removals included `- textbox "": 2026-12-31`: the close date
+ * the form had held was gone. The pair was dropped as inert, and the retype
+ * of that date landed on a field still holding the earlier fill, so its
+ * calendar never showed "December 2026" (02-create stopped at s_524fe0 step
+ * 19 on both replays, 26 and 29 recovery turns).
+ *
+ * The recording decides: a removed line the opener did not add, and that is
+ * not a dialog line itself, is the page's own state going with the dialog.
+ * No diffs (a caller with only the compiled steps, or a recorder that kept no
+ * removals) leaves the verdict to the expectation, as before.
+ */
+function takesMoreThanTheDialog(opener: StepDiff | undefined, closer: StepDiff | undefined): boolean {
+  if (!opener || !closer?.removed?.length) return false;
+  const raised = new Set(opener.added.map((l) => l.trim()));
+  return closer.removed.some((l) => !TRANSIENT_LINE.test(l) && !DIALOG_LINE.test(l) && !raised.has(l.trim()));
 }
 
 /** A candidate's identity with per-record ids blanked — its shape AND its name/value. */

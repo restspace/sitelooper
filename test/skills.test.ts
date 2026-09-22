@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { InstructionResult } from '../src/agent/loop.js';
-import type { RecordedEntry, RecordedStep } from '../src/daemon/recorder.js';
+import type { RecordedEntry, RecordedStep, StepDiff } from '../src/daemon/recorder.js';
 import { lineShows, specOf } from '../src/skills/replay.js';
 import { maskVolatile, stranded } from '../src/skills/compile.js';
 import { digitDominant } from '../src/skills/shape.js';
@@ -16,7 +16,7 @@ import { identityMarkerVerdict, markersBound } from '../src/execution/gates.js';
 import { observedChange } from '../src/execution/lifecycle.js';
 import type { LocatorCandidate } from '../src/daemon/recorder.js';
 import type { SkillStep } from '../src/skills/store.js';
-import { bindSkill, canAdoptPin, decideRepin, learnFromInstruction, matchTemplate, pinStartsElsewhere, publishedOutputs, sameChainProcedure, selectCandidates, synthesizeReport } from '../src/skills/learn.js';
+import { bindSkill, canAdoptPin, decideRepin, learnFromInstruction, matchTemplate, pinEndsElsewhere, pinStartsElsewhere, publishedOutputs, sameChainProcedure, selectCandidates, synthesizeReport } from '../src/skills/learn.js';
 import { candidatesFor, renderCandidates } from '../src/skills/replay.js';
 import { SKILL_CONTRACT, SITEMAP_FILE, SkillStore, contractOf, isVerified, originOf, originSlug, type Skill } from '../src/skills/store.js';
 
@@ -3046,5 +3046,85 @@ describe('a repair that starts after replayed segments (fwop2)', () => {
     const learned = learnFromInstruction(store, { result, instruction: SIGNIN, entries: own, session: 's', now: '2026-09-21T11:37:00Z' });
     expect(learned?.compiled).toBeTruthy();
     expect(learned?.whole).toBeUndefined();
+  });
+});
+
+describe('a re-pin that ends on the wrong page (fwec4-n3 02-create)', () => {
+  const EC = 'http://127.0.0.1:8097';
+  const sk = (id: string, urlPattern: string, steps: SkillStep[], seq?: Skill['seq']): Skill => ({
+    id,
+    origin: EC,
+    template: 't',
+    params: {},
+    preconditions: { urlPattern },
+    steps,
+    stats: { uses: 1, successes: 1, partial: 0, created: 't', failedAtStep: {}, fallthroughs: 0 },
+    status: 'provisional',
+    provenance: { session: 's', instruction: 't', created: 't' },
+    ...(seq ? { seq } : {}),
+  });
+  const click = (target: string, urlPattern?: string): SkillStep => ({ tool: 'click', args: { target }, locators: {}, ...(urlPattern ? { expect: { urlPattern } } : {}) });
+  const read: SkillStep = { tool: 'read', args: { target: '(read-back)', what: 'text' }, locators: {} };
+
+  it('refuses a chain whose tail leaves the list when the next pin starts on the view page with no goto', () => {
+    const store = new SkillStore(path.join(tmp, 'fwec4-ends'));
+    // s_6e2e92 → s_e1e58c → s_cad6eb → s_e0d705: the last segment reads on the list
+    store.put(sk('s_head', `${EC}/#Opportunity`, [click('@e1', `${EC}/#Opportunity/create`)], { chain: 's_head', index: 0, of: 3 }));
+    store.put(sk('s_mid', `${EC}/#Opportunity/create`, [click('@e2', `${EC}/#Opportunity/view/{{d1}}`), click('a[href="#Opportunity"]', `${EC}/#Opportunity`)], { chain: 's_head', index: 1, of: 3 }));
+    store.put(sk('s_tail', `${EC}/#Opportunity`, [read], { chain: 's_head', index: 2, of: 3 }));
+    // 03-verify's pin, recorded on the view page, types first: no navigation of its own
+    store.put(sk('s_verify', `${EC}/#Opportunity/view/{{v3}}`, [{ tool: 'type', args: { target: '@e5', text: 'x' }, locators: {} }, read]));
+    // a chain that ends on the record's view page, as 02-create's recording did
+    store.put(sk('s_good', `${EC}/#Opportunity`, [click('@e1', `${EC}/#Opportunity/create`), click('@e2', `${EC}/#Opportunity/view/:id`)]));
+    // a next pin that navigates itself
+    store.put(sk('s_goes', `${EC}/#Opportunity/view/{{v3}}`, [{ tool: 'goto', args: { url: `${EC}/#Opportunity/view/{{v3}}` }, locators: {} }, read]));
+
+    const why = pinEndsElsewhere(store, 's_head', 's_verify');
+    expect(why).toMatch(/ends on http:\/\/127\.0\.0\.1:8097\/#Opportunity \(s_tail\).*starts on .*view/);
+    expect(decideRepin({ step: { id: '02-create', skill: 's_old', adopted: true }, reportStatus: 'success', outcome: undefined, compiled: { skill: 's_head', status: 'provisional' }, incumbent: 'demoted', stray: 0, adoptable: true, endsElsewhere: why })).toEqual({
+      refused: `not re-pinning s_head — ${why}`,
+    });
+    expect(pinEndsElsewhere(store, 's_good', 's_verify')).toBeNull();
+    expect(pinEndsElsewhere(store, 's_head', 's_goes')).toBeNull();
+    expect(pinEndsElsewhere(store, 's_head', undefined)).toBeNull();
+    expect(decideRepin({ step: { id: '02-create', skill: 's_old', adopted: true }, reportStatus: 'success', outcome: undefined, compiled: { skill: 's_good', status: 'provisional' }, incumbent: 'demoted', stray: 0, adoptable: true, endsElsewhere: null })).toEqual({
+      skill: 's_good',
+      graduated: true,
+    });
+  });
+});
+
+describe('a dialog closer that took the form’s value with it is not inert (fwec4 n1 02-create)', () => {
+  const EC = 'http://127.0.0.1:8097/#Opportunity/create';
+  const DATE = [{ kind: 'css', selector: 'div > div:nth-of-type(3) > div:nth-of-type(2) > div > div > input' }] as LocatorCandidate[];
+  const LEAVE = ['- dialog "Are you sure you want to leave the form? Cancel Yes"', '- button "Cancel"', '- button "Yes"'];
+  const recording = (cancelRemoved: string[]): RecordedEntry[] => [
+    { k: 'instruction', text: 'create an opportunity closing 2026-12-31', url: EC } as RecordedEntry,
+    step('fill', { target: '@e339', value: '2026-12-31' }, DATE, { diff: { url: EC, alerts: [], added: ['- textbox "": 2026-12-31', '- row "September 2026"'], dialect: 2 } }),
+    step('press', { key: 'Escape' }, [], { diff: { url: EC, alerts: [], added: LEAVE, dialect: 2 } }),
+    step('click', { target: '@e455' }, [{ kind: 'role', role: 'button', name: 'Cancel' }], { diff: { url: EC, alerts: [], added: [], removed: cancelRemoved, dialect: 2 } }),
+    step('type', { target: '@e339', text: '2026-12-31' }, DATE, { diff: { url: EC, alerts: [], added: ['- textbox "": 2026-12-31', '- row "December 2026"'], dialect: 2 } }),
+    step('click', { target: '@e291' }, [{ kind: 'role', role: 'button', name: 'Save' }], { diff: { url: EC, alerts: [], added: ['- heading "Saved"'], dialect: 2 } }),
+  ];
+  const compiled = (entries: RecordedEntry[]) =>
+    compileSkills({ entries, instruction: 'create an opportunity closing 2026-12-31', report: { status: 'success', summary: 'done', evidence: { values: {} } }, session: 't', now: '2026-09-22T00:00:00.000Z' }).flatMap((s) => s.steps.map((x) => x.tool));
+
+  it('keeps the Escape and its Cancel when the Cancel removed the date the form held', () => {
+    expect(compiled(recording(['- textbox "": 2026-12-31', ...LEAVE]))).toEqual(['fill', 'press', 'click', 'type', 'click']);
+  });
+
+  it('still drops a pair whose Cancel took away only the dialog', () => {
+    expect(compiled(recording(LEAVE))).toEqual(['fill', 'type', 'click']);
+  });
+
+  it('decides from the diffs when a caller supplies them, and from the expectation alone when not', () => {
+    const opener: SkillStep = { tool: 'press', args: { key: 'Escape' }, locators: {}, expect: { urlPattern: EC, addedContains: LEAVE } };
+    const closer: SkillStep = { tool: 'click', args: { target: '@e455' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Cancel' }] }, expect: { urlPattern: EC } };
+    const diffs = new Map<SkillStep, StepDiff>([
+      [opener, { url: EC, alerts: [], added: LEAVE }],
+      [closer, { url: EC, alerts: [], added: [], removed: ['- textbox "": 2026-12-31', ...LEAVE] }],
+    ]);
+    expect(dropDismissedDialogs([opener, closer], undefined, (s) => diffs.get(s))).toHaveLength(2);
+    expect(dropDismissedDialogs([opener, closer])).toHaveLength(0);
   });
 });

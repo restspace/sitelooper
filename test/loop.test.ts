@@ -93,6 +93,30 @@ describe('agent loop', () => {
     expect(JSON.stringify(state.messages.at(-1))).toContain('did the thing');
   });
 
+  // fwgt3 n1 labels: DeepSeek answered with neither text nor tool calls; the
+  // turn went into history and every later request 400'd on it.
+  it('keeps an empty assistant turn out of history, reminds, and goes on', async () => {
+    const state = new SessionState('t-empty-turn');
+    const inner = scriptedProvider([{}, { toolCalls: [reportCall({ status: 'success', summary: 'done after the reminder' })] }]);
+    const seen: ChatMessage[][] = [];
+    const provider: Provider = {
+      model: 'stub',
+      complete: (messages, tools, opts) => {
+        seen.push(messages.map((m) => ({ ...m })) as ChatMessage[]);
+        return inner.complete(messages, tools, opts);
+      },
+    };
+    const result = await runInstruction(provider, browserStub, state, 'add the labels', loopOpts);
+    expect(result.report.status).toBe('success');
+    expect(result.turns).toBe(2);
+    const empty = (m: ChatMessage) => m.role === 'assistant' && !m.content && !('tool_calls' in m && m.tool_calls?.length);
+    expect(state.messages.some(empty)).toBe(false);
+    // the second request carried the reminder and no empty turn, and nothing synthesized in its place
+    expect(seen[1].some(empty)).toBe(false);
+    expect(seen[1].filter((m) => m.role === 'assistant')).toHaveLength(0);
+    expect(String(seen[1].at(-1)?.content)).toMatch(/Reminder: act via tool calls only/);
+  });
+
   it('tells the model which page the browser is on, and flags an error page', async () => {
     const script = () =>
       scriptedProvider([{ toolCalls: [reportCall({ status: 'success', summary: 'ok', evidence: { values: {} } })] }]);

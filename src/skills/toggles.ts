@@ -82,7 +82,7 @@ function showsWhatWasHidden(first: RecordedStep, second: RecordedStep): boolean 
 const norm = (line: string) => line.trim();
 
 /** Whether two clicks name the same control: one identifying (non-positional) candidate in common. */
-function sameControl(a: RecordedStep, b: RecordedStep): boolean {
+export function sameControl(a: RecordedStep, b: RecordedStep): boolean {
   const names = (s: RecordedStep) => new Set((s.locators.target?.chain ?? []).filter(identifying).map(canonical));
   const left = names(a);
   return [...names(b)].some((n) => left.has(n));
@@ -101,4 +101,108 @@ function canonical(c: LocatorCandidate): string {
   // An id candidate and the css candidate carrying the same `#id` name one element.
   if ((c.kind === 'id' || c.kind === 'css') && /^#[\w-]+$/.test(c.selector)) return `sel:${c.selector}`;
   return JSON.stringify(Object.keys(o).sort().map((k) => [k, o[k]]));
+}
+
+
+/**
+ * A SET THE RECORDING DID AGAIN, found before it compiles.
+ *
+ * fwvk4 n1 02-create clicked the task's description editor and typed the
+ * description (recording `- heading "Description Saved!"`), reloaded the
+ * task, read the editor back EMPTY — the first attempt had not persisted —
+ * and did it again: click the editor, type the same text, click Save. Compile
+ * kept both attempts, so s_76c6ba opened on the abandoned click+type, whose
+ * recorded autosave the replayed type never raised; the step's own
+ * expectation stopped it on both replays and the compiled script failed.
+ *
+ * The recording's own evidence says the first attempt is not part of the
+ * procedure: it RELOADED the same url, looked, and set the same value on the
+ * same target again. The later set supersedes the earlier one, so the earlier
+ * set, the focus clicks that led into it and the reload between are dropped;
+ * the second attempt compiles whole.
+ *
+ * Conservative, as a supersession is, pair by pair:
+ *  - the earlier and later step are both sets (`fill` or `type`) of the same
+ *    value (trimmed), on the same url and in the same frame;
+ *  - they name the same target: an identifying candidate in common
+ *    (toggles.ts sameControl), or — across a reload, where the recorder may
+ *    describe one editor through a different element — recorded points on the
+ *    same viewport whose centres each lie inside the other's box;
+ *  - between them the page was RELOADED (a goto to that url) and nothing else
+ *    happened but observations and focus clicks (a click that recorded no
+ *    change and no effect). Anything that acts — a Save, another field's fill
+ *    — ends the search, so a password and its confirmation (two targets, no
+ *    reload) and a form's several fields are never pairs.
+ *
+ * Returns the kept steps in order, the same objects (compile matches kept
+ * steps against the recording by identity).
+ */
+export function dropSupersededSets(steps: readonly RecordedStep[]): RecordedStep[] {
+  const dropped = new Set<number>();
+  for (let i = 0; i < steps.length; i++) {
+    const first = steps[i];
+    const value = setValue(first);
+    if (value === null || dropped.has(i)) continue;
+    const url = first.diff?.url;
+    if (!url) continue;
+    let reload = false;
+    const between: number[] = [];
+    for (let k = i + 1; k < steps.length; k++) {
+      const next = steps[k];
+      if (setValue(next) !== null) {
+        if (reload && setValue(next) === value && next.diff?.url === url && sameTarget(first, next)) {
+          dropped.add(i);
+          // the focus clicks that led into the abandoned set
+          for (let j = i - 1; j >= 0 && focusClick(steps[j]) && sameTarget(steps[j], first); j--) dropped.add(j);
+          for (const b of between) dropped.add(b);
+        }
+        break;
+      }
+      if (next.tool === 'goto' && sameUrl(next, url)) {
+        reload = true;
+        between.push(k);
+        continue;
+      }
+      if (OBSERVATIONS.has(next.tool) || focusClick(next)) continue;
+      break;
+    }
+  }
+  return dropped.size ? steps.filter((_, i) => !dropped.has(i)) : [...steps];
+}
+
+/** The value a `fill` or `type` sets, trimmed; null for any other step or an empty value. */
+function setValue(step: RecordedStep): string | null {
+  const raw = step.tool === 'fill' ? step.args.value : step.tool === 'type' ? step.args.text : undefined;
+  const v = typeof raw === 'string' ? raw.trim() : '';
+  return v ? v : null;
+}
+
+/** A click that recorded no change at all: it put the caret somewhere. */
+function focusClick(step: RecordedStep): boolean {
+  const d = step.diff;
+  if (step.tool !== 'click' || !d || step.effect || step.fingerprintAfter) return false;
+  return !d.added.length && !d.alerts.length && (d.removed?.length ?? 0) === 0;
+}
+
+/** A goto that loaded `url` again: its argument, or where it landed. */
+function sameUrl(step: RecordedStep, url: string): boolean {
+  return step.args.url === url || step.diff?.url === url;
+}
+
+function sameTarget(a: RecordedStep, b: RecordedStep): boolean {
+  if (!framesEqual(a.locators.target?.frame, b.locators.target?.frame)) return false;
+  return sameControl(a, b) || samePlace(pointOf(a), pointOf(b));
+}
+
+type Point = Extract<LocatorCandidate, { kind: 'point' }>;
+
+function pointOf(step: RecordedStep): Point | null {
+  return ((step.locators.target?.chain ?? []).find((c) => c.kind === 'point') as Point | undefined) ?? null;
+}
+
+/** Two recorded boxes on the same viewport, each containing the other's centre. */
+function samePlace(a: Point | null, b: Point | null): boolean {
+  if (!a || !b || a.vw !== b.vw || a.vh !== b.vh) return false;
+  const inside = (p: Point, q: Point) => Math.abs(p.x - q.x) * 2 <= q.w && Math.abs(p.y - q.y) * 2 <= q.h;
+  return inside(a, b) && inside(b, a);
 }

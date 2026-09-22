@@ -36,7 +36,8 @@ import type { SpecFlow } from '../src/spec/ir.js';
 import { goalSatisfied, type ReplayResult } from '../src/skills/replay.js';
 import { ignorableRefs, resolveInstruction, resolveStepParams, type FlowStep } from '../src/skills/flow.js';
 import type { Skill, SkillParam, SkillStep } from '../src/skills/store.js';
-import type { LocatorCandidate } from '../src/daemon/recorder.js';
+import type { LocatorCandidate, RecordedEntry, RecordedStep } from '../src/daemon/recorder.js';
+import { compileSkills } from '../src/skills/compile.js';
 import { createFixtureServer, type FixtureServer } from './fixture/server.js';
 
 const enabled = process.env.BP_PARITY_TESTS === '1';
@@ -3315,6 +3316,38 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
         { tool: 'click', args: { target: '@e3' }, locators: { target: role('After') } },
       ];
       const flow = contextProcedure('s_popup_flow', steps);
+      const { replay, emitted, replayLog, emittedLog } = await bothOf(flow.skill, flow.spec, {});
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      await new Promise((r) => setTimeout(r, 300));
+      expect(replayLog).toEqual(['approve', 'after']);
+      expect(emittedLog).toEqual(['approve', 'after']);
+    }, 240_000);
+
+    /**
+     * ghost fwgh6-n1 step 63: the tab its click opened arrived after the
+     * capture, so the recording wrote no popup effect, only the later steps'
+     * `page: 1`. Compile credits the popup to the click (creditUncreditedPopups),
+     * with no url pattern, and both runners must follow whatever tab it raises.
+     */
+    it('both runners follow a popup compile credited from the page index alone', async () => {
+      const recorded = (tool: string, chain: LocatorCandidate[], extra: Partial<RecordedStep> = {}): RecordedStep => ({
+        k: 'step',
+        tool,
+        args: { target: '@e1' },
+        locators: { target: { expr: 'x', verified: true, raw: '@e1', chain } },
+        ...extra,
+      });
+      const entries: RecordedEntry[] = [
+        { k: 'instruction', text: 'approve the order in its popup, then press After', url: `${origin}/opener` },
+        recorded('click', role('Open approval', 'link')),
+        recorded('click', role('Approve'), { page: 1, effect: { kind: 'close' }, afterUrl: `${origin}/opener` }),
+        recorded('click', role('After')),
+      ];
+      const compiled = compileSkills({ entries, instruction: 'approve the order in its popup, then press After', report: { status: 'success', summary: 'ok' }, session: 's' });
+      const steps = compiled.flatMap((sk) => sk.steps);
+      expect(steps[0].effect).toEqual({ kind: 'popup' });
+      const flow = contextProcedure('s_popup_credited', [{ tool: 'goto', args: { url: `${origin}/opener` }, locators: {} }, ...steps]);
       const { replay, emitted, replayLog, emittedLog } = await bothOf(flow.skill, flow.spec, {});
       expect(replay.ok, replay.reason ?? '').toBe(true);
       expect(emitted.ok, emitted.reason ?? '').toBe(true);

@@ -1035,6 +1035,13 @@ export function decideRepin(input: {
    * step (fwop2 01-signin: a tail recorded after the sign-in it omits).
    */
   startsElsewhere?: string | null;
+  /**
+   * pinEndsElsewhere's verdict: the candidate's chain ends on a route other
+   * than the one the next step's pin starts on, and that pin does not
+   * navigate there itself (fwec4-n3 02-create: a chain ending on the list,
+   * followed by a 03-verify recorded on the record's view page).
+   */
+  endsElsewhere?: string | null;
 }): { skill: string; graduated: boolean } | { refused: string } | null {
   const { step, outcome } = input;
   // A full replay of the incumbent itself leaves nothing to move.
@@ -1049,6 +1056,7 @@ export function decideRepin(input: {
     return { refused: `not re-pinning ${cand.skill} — its navigation carries an identifier this run made (${input.mintedLeaks.slice(0, 3).join(', ')}), so it would replay onto this run's record` };
   }
   if (input.startsElsewhere) return { refused: `not re-pinning ${cand.skill} — ${input.startsElsewhere}` };
+  if (input.endsElsewhere) return { refused: `not re-pinning ${cand.skill} — ${input.endsElsewhere}` };
   if (input.reportStatus !== 'success' || !input.adoptable || cand.status === 'demoted') return null;
   // An adopted step graduates on its first clean recovery whatever the
   // candidate's status: it now owns a skill that completed it, and keeping
@@ -1085,6 +1093,44 @@ export function pinStartsElsewhere(store: SkillStore, candidateId: string, stepS
   const pattern = head.preconditions.urlPattern;
   if (!pattern || landedOnRecordedPage(pattern, stepStartUrl)) return null;
   return `its procedure starts on ${pattern} (${head.id}), and this step began on ${urlPattern(stepStartUrl)}: it covers only what follows something the step had to do first`;
+}
+
+/**
+ * Whether a re-pin candidate ENDS where the next step's procedure begins —
+ * pinStartsElsewhere's other end. A pin hands the page it leaves to the next
+ * step, and a next step whose pin opens with no navigation of its own runs on
+ * exactly that page. fwec4-n3's recovery of 02-create graduated the chain
+ * s_e1e58c → s_cad6eb → s_e0d705, whose last click went back to the
+ * `#Opportunity` list; 03-verify's pin, recorded after 02-create had left
+ * the browser on the record's view page, starts there with no goto, and was
+ * refused on n3 ("expects …#Opportunity/view/:id, browser is at
+ * …#Opportunity") and in the compiled script.
+ *
+ * The evidence is the two stored procedures: where the candidate's chain tail
+ * last recorded the page (its last step's url expectation, else its start
+ * pattern) against the next pin's chain head start pattern, compared as
+ * routes — a slot marker and `:id` are both "some record" (routeOf). Null
+ * when they agree, when the next pin opens with a goto (it goes where it
+ * needs), or when either side is unknown.
+ */
+export function pinEndsElsewhere(store: SkillStore, candidateId: string, nextPinId: string | undefined): string | null {
+  if (!nextPinId || nextPinId === candidateId) return null;
+  const cand = store.get(candidateId);
+  const next = store.get(nextPinId);
+  if (!cand || !next) return null;
+  const members = (s: Skill) => (s.seq ? store.list(s.origin).filter((m) => m.seq?.chain === s.seq!.chain) : [s]);
+  const tail = cand.seq ? members(cand).reduce((a, b) => ((b.seq?.index ?? 0) > (a.seq?.index ?? 0) ? b : a), cand) : cand;
+  const head = next.seq ? (members(next).find((m) => m.seq?.index === 0) ?? next) : next;
+  if (head.steps[0]?.tool === 'goto') return null;
+  const start = head.preconditions.urlPattern;
+  const end = [...tail.steps].reverse().find((s) => s.expect?.urlPattern)?.expect?.urlPattern ?? tail.preconditions.urlPattern;
+  if (!start || !end || routeOf(start) === routeOf(end)) return null;
+  return `its procedure ends on ${end} (${tail.id}), and the next step's procedure (${head.id}) starts on ${start} without navigating there: it would leave the next step on the wrong page`;
+}
+
+/** A url pattern as a route: every slot marker and `:id` read as the same "some record" position. */
+function routeOf(pattern: string): string {
+  return pattern.replace(/\{\{[^{}]*\}\}|:id\b/g, '*');
 }
 
 export function instructionEntry(entries: RecordedEntry[]): RecordedInstruction | undefined {

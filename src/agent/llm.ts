@@ -302,6 +302,28 @@ function normalizeFallback(value: string | undefined): string | undefined {
   return trimmed;
 }
 
+/**
+ * An assistant message with neither text nor tool calls. OpenAI-compatible
+ * hosts refuse a request carrying one (DeepSeek: "Invalid assistant message:
+ * content or tool_calls must be set", a 400 no retry clears), so one such turn
+ * in history kills every later request of the session: fwgt3 n1's labels
+ * instruction died on it, and the next `do` failed the same way with zero
+ * steps until the orchestrator ran `reset`.
+ */
+export function isEmptyAssistant(m: ChatMessage): boolean {
+  return m.role === 'assistant' && !m.content?.trim() && !m.tool_calls?.length;
+}
+
+/**
+ * The history as it may be SENT: empty assistant turns dropped, never filled
+ * in — a synthesized assistant turn is a 400 on DeepSeek too (the Jev lesson).
+ * The loop no longer appends one; this is the guard for any history that
+ * already holds one (a session persisted before the loop stopped).
+ */
+export function sendableMessages(messages: ChatMessage[]): ChatMessage[] {
+  return messages.some(isEmptyAssistant) ? messages.filter((m) => !isEmptyAssistant(m)) : messages;
+}
+
 export class OpenAICompatProvider implements Provider {
   readonly model: string;
 
@@ -319,7 +341,7 @@ export class OpenAICompatProvider implements Provider {
     const body = {
       model: this.config.model,
       temperature: this.config.temperature,
-      messages,
+      messages: sendableMessages(messages),
       tools: tools.map((t) => ({
         type: 'function',
         function: { name: t.name, description: t.description, parameters: t.parameters },

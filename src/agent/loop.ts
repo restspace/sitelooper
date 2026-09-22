@@ -1,6 +1,7 @@
 import type { BrowserSession } from '../daemon/browser.js';
 import type { SessionState } from '../daemon/state.js';
 import type { ChatMessage, Provider, ToolCall, ToolDef } from './llm.js';
+import { isEmptyAssistant } from './llm.js';
 import { captureSignature } from '../daemon/diff.js';
 import { evidenceLiterals, readEvidence, renderEvidence } from './evidence.js';
 import { CURRENT_DIALECT, coverageComplete } from '../execution/snapshot.js';
@@ -975,7 +976,12 @@ export async function runInstruction(
     usage.completionTokens += completion.usage.completionTokens;
     usage.cachedTokens += completion.usage.cachedTokens;
     state.recordServed(provider.model, completion.served);
-    state.messages.push(completion.assistantMessage);
+    // A turn with neither text nor tool calls is never history: an OpenAI-
+    // compatible host 400s on it, and every later request of the session
+    // carries it (fwgt3 n1 labels, then the next `do`). Dropped, not filled
+    // in — a synthesized assistant turn is a 400 too — and the reminder below
+    // asks again.
+    if (!isEmptyAssistant(completion.assistantMessage)) state.messages.push(completion.assistantMessage);
     if (completion.text) transcript.push(`assistant: ${completion.text.slice(0, 300)}`);
 
     if (completion.toolCalls.length === 0) {
