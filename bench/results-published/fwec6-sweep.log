@@ -1,0 +1,90 @@
+
+[sweep] run 1/3: fwec6-n1 (store: /home/user/sitelooper/bench/results/fwec6-skills)
+[harness] espocrm: defaulting APP_URL
+[harness] espocrm: defaulting APP_EMAIL
+[harness] espocrm: defaulting APP_PASSWORD
+[reset] espocrm: no leftover bench opportunities
+[harness] espocrm responded 200 at http://127.0.0.1:8097/
+stopped: fwec6-n1
+  flow "fwec6" saved: 4 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwec6.json
+  warning: note: dropped 1 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: note: 02-create no longer publishes record_id — no replay reads it from the page and the recording showed no line to read
+  warning: note: 03-find no longer publishes stream_entry_author — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 96 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[1].instruction: "Bench Assignee" (output) in "Create a new Opportunity in EspoCRM with these exact values: Name = '{{runid}} Bench Opportunity'; Account = the account named 'Bench Account' (it is a link fie"
+  flow.steps[1].instruction: "Bench Account" (output) in "Create a new Opportunity in EspoCRM with these exact values: Name = '{{runid}} Bench Opportunity'; Account = the account named 'Bench Account' (it is a link fie"
+  flow.steps[1].instruction: "Negotiation" (output) in "Create a new Opportunity in EspoCRM with these exact values: Name = '{{runid}} Bench Opportunity'; Account = the account named 'Bench Account' (it is a link fie"
+  flow.steps[1].instruction: "2026-12-31" (output) in "Create a new Opportunity in EspoCRM with these exact values: Name = '{{runid}} Bench Opportunity'; Account = the account named 'Bench Account' (it is a link fie"
+  flow.steps[1].params.v5: "2026-12-31" (output) in "2026-12-31"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwec6-n1 stop=completed
+turns=6 wall=267.9s
+commands=5 cmdTime=249.7s cmdBytes=4773 timeouts=0
+orchestrator in=9833 cw=0 cr=10624 out=1581
+inner prompt=1202385 cached=1093632 completion=18280
+spend=$0.0542 maxUsd=3
+learn: A_n=0 replayed=0/4 full=0 repaired=0 compiled=4 variants=0
+-> /home/user/sitelooper/bench/results/fwec6-n1-sitelooper-result.json
+
+fwec6-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — id=6ab26575384cea1c1, account=Bench Account, description includes runid=true
+  obj 3: PASS — stage=Negotiation
+  obj 4: PASS — amount=12500 USD, closeDate=2026-12-31
+  obj 5: PASS — assignedUser=Bench Assignee
+  obj 6: PASS — 1 post(s), 1 carrying the runid
+  obj 7: PASS — record id 6ab26575384cea1c1 reported
+
+[sweep] run 2/3: fwec6-n2 (replay flow fwec6, no orchestrator)
+[reset] espocrm: deleted 1 leftover bench opportunit(ies)
+[sweep] fwec6-n2: 1 drift ticket(s) → fwec6-n2-drift.json
+
+fwec6-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — id=6ab265f71cd3bcfc6, account=Bench Account, description includes runid=true
+  obj 3: PASS — stage=Negotiation
+  obj 4: PASS — amount=12500 USD, closeDate=2026-12-31
+  obj 5: PASS — assignedUser=Bench Assignee
+  obj 6: PASS — 1 post(s), 1 carrying the runid
+  obj 7: PASS — record id 6ab265f71cd3bcfc6 reported
+
+[sweep] run 3/3: fwec6-n3 (replay flow fwec6, no orchestrator)
+[reset] espocrm: deleted 1 leftover bench opportunit(ies)
+[sweep] fwec6-n3: 1 drift ticket(s) → fwec6-n3-drift.json
+
+fwec6-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — id=6ab26623a71593a5c, account=Bench Account, description includes runid=true
+  obj 3: PASS — stage=Negotiation
+  obj 4: PASS — amount=12500 USD, closeDate=2026-12-31
+  obj 5: PASS — assignedUser=Bench Assignee
+  obj 6: PASS — 1 post(s), 1 carrying the runid
+  obj 7: PASS — record id 6ab26623a71593a5c reported
+
+Learning sweep fwec6 (K=3)
+┌─────────┬───┬────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid      │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwec6-n1' │ '7/7'    │ 'completed' │ 6     │ 5    │ 0.0542    │ 0   │ '0/4'        │ 268    │
+│ 1       │ 2 │ 'fwec6-n2' │ '7/7'    │ 'success'   │ 0     │ 4    │ 0         │ 1   │ '4/4 (flow)' │ 37     │
+│ 2       │ 3 │ 'fwec6-n3' │ '7/7'    │ 'success'   │ 0     │ 4    │ 0         │ 1   │ '4/4 (flow)' │ 32     │
+└─────────┴───┴────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8097
+  s_0b7471  validated    1 steps  3/3 (100%)
+           Create a new Opportunity in EspoCRM with these exact values: Name = '{{v2}}'; Account = the account named 'Ben…
+  s_0e5dd9  validated    4 steps  3/3 (100%)
+           Sign in to EspoCRM at http://127.0.0.1:8097/ with username {{v1}} and password {{v2}}. After signing in, go to…
+  s_2550c4  validated    9 steps  3/3 (100%)
+           Verification task, read-only (do not change anything). Two parts: (1) Open the Opportunities list view and rep…
+  s_811552  validated   29 steps  3/3 (100%)
+           Create a new Opportunity in EspoCRM with these exact values: Name = '{{v2}}'; Account = the account named 'Ben…
+  s_c02ba1  validated    5 steps  3/3 (100%)
+           On the opportunity record page at {{v1}} (the one named '{{v3}}'), find the Stream panel and post a new messag…
+  s_cd9892  validated    4 steps  3/3 (100%)
+           Verification task, read-only (do not change anything). Two parts: (1) Open the Opportunities list view and rep…
+  s_e1686b  validated    4 steps  3/3 (100%)
+           Sign in to EspoCRM at http://127.0.0.1:8097/ with username {{v1}} and password {{v2}}. After signing in, go to…
+  s_fd2a86  validated   31 steps  3/3 (100%)
+           Create a new Opportunity in EspoCRM with these exact values: Name = '{{v2}}'; Account = the account named 'Ben…
+store: /home/user/sitelooper/bench/results/fwec6-skills
+
+summary: /home/user/sitelooper/bench/results/fwec6-sweep.json

@@ -1,0 +1,395 @@
+{
+  "name": "fwec6",
+  "origin": "http://127.0.0.1:8097",
+  "startUrl": "http://127.0.0.1:8097/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to EspoCRM at http://127.0.0.1:8097/ with username admin and password bench-admin-pass. After signing in, go to the Opportunities list and find every opportunity whose name starts with 'Seed:'. Report the full names of those opportunities exactly as shown on screen, one per line.",
+      "skill": "s_0e5dd9",
+      "params": {
+        "v1": "admin",
+        "v2": "bench-admin-pass"
+      },
+      "outputs": [
+        "total_opportunities",
+        "matching_opportunities_1",
+        "matching_opportunities_2",
+        "matching_opportunities_3"
+      ],
+      "recorded": {
+        "total_opportunities": "1–3 / 3",
+        "matching_opportunities_1": "Seed: training package",
+        "matching_opportunities_2": "Seed: pilot expansion",
+        "matching_opportunities_3": "Seed: annual support renewal",
+        "url": "http://127.0.0.1:8097/#Opportunity"
+      },
+      "route": "http://127.0.0.1:8097/#Opportunity",
+      "outputEvidence": {
+        "total_opportunities": {
+          "same": 2,
+          "differed": 0
+        },
+        "matching_opportunities_1": {
+          "same": 2,
+          "differed": 0
+        },
+        "matching_opportunities_2": {
+          "same": 2,
+          "differed": 0
+        },
+        "matching_opportunities_3": {
+          "same": 2,
+          "differed": 0
+        },
+        "url": {
+          "same": 2,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "Create a new Opportunity in EspoCRM with these exact values: Name = '{{runid}} Bench Opportunity'; Account = the account named 'Bench Account' (it is a link field — you must actually select the record 'Bench Account' from the suggestions or select dialog, not just type text; other accounts have similar names so pick the exact one); Description = 'Bench opportunity created for run {{runid}}'; Stage = 'Negotiation'; Amount = 12500; Close Date = 2026-12-31; Assigned to the user named 'Bench Assignee' (also a link field — actually select the user record 'Bench Assignee', other users have similar names). Save the record. Then open the saved record's own page and report: the name shown, the account shown, the stage, the amount, the close date, the assigned user, and the record ID from the page address (the part after #Opportunity/view/).",
+      "skill": "s_0b7471",
+      "params": {
+        "v2": "{{runid}} Bench Opportunity",
+        "v3": "Bench opportunity created for run {{runid}}",
+        "v4": "12500",
+        "v5": "2026-12-31",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "opportunity_name",
+        "account_shown",
+        "account_id",
+        "stage_shown",
+        "amount_shown",
+        "amount_entered",
+        "amount_stored",
+        "close_date_shown",
+        "close_date_stored",
+        "assigned_user_shown",
+        "assigned_user_id",
+        "probability",
+        "description",
+        "opportunity_name_displayed",
+        "account_displayed",
+        "stage_displayed",
+        "amount_displayed",
+        "close_date_displayed",
+        "assigned_user_displayed",
+        "record_url",
+        "run_reference"
+      ],
+      "recorded": {
+        "record_id": "6ab26575384cea1c1",
+        "opportunity_name": "fwec6-n1 Bench Opportunity",
+        "account_shown": "Bench Account",
+        "account_id": "6ab264a7206c03609",
+        "stage_shown": "Negotiation",
+        "amount_shown": "$12,500.00",
+        "amount_entered": "12,500",
+        "amount_stored": "12,500.00",
+        "close_date_shown": "Dec 31",
+        "close_date_stored": "2026-12-31",
+        "assigned_user_shown": "Bench Assignee",
+        "assigned_user_id": "6ab264a872a69125a",
+        "probability": "80",
+        "description": "Bench opportunity created for run fwec6-n1",
+        "opportunity_name_displayed": "Name\nfwec6-n1 Bench Opportunity",
+        "account_displayed": "Account\n Bench Account",
+        "stage_displayed": "Stage\nNegotiation",
+        "amount_displayed": "Amount\n$12,500.00",
+        "close_date_displayed": "Close Date\nDec 31",
+        "assigned_user_displayed": "Assigned User\nBench Assignee",
+        "record_url": "http://127.0.0.1:8097/#Opportunity/view/6ab26575384cea1c1",
+        "run_reference": "fwec6-n1",
+        "url": "http://127.0.0.1:8097/#Opportunity/view/6ab26575384cea1c1",
+        "url.h2": "6ab26575384cea1c1"
+      },
+      "route": "http://127.0.0.1:8097/#Opportunity/view/:id",
+      "outputEvidence": {
+        "record_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "opportunity_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "account_shown": {
+          "same": 1,
+          "differed": 0
+        },
+        "account_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "stage_shown": {
+          "same": 1,
+          "differed": 0
+        },
+        "amount_shown": {
+          "same": 1,
+          "differed": 0
+        },
+        "amount_entered": {
+          "same": 0,
+          "differed": 1
+        },
+        "amount_stored": {
+          "same": 1,
+          "differed": 0
+        },
+        "close_date_shown": {
+          "same": 1,
+          "differed": 0
+        },
+        "close_date_stored": {
+          "same": 1,
+          "differed": 0
+        },
+        "assigned_user_shown": {
+          "same": 1,
+          "differed": 0
+        },
+        "assigned_user_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "probability": {
+          "same": 1,
+          "differed": 0
+        },
+        "description": {
+          "same": 0,
+          "differed": 1
+        },
+        "opportunity_name_displayed": {
+          "same": 0,
+          "differed": 1
+        },
+        "account_displayed": {
+          "same": 1,
+          "differed": 0
+        },
+        "stage_displayed": {
+          "same": 1,
+          "differed": 0
+        },
+        "amount_displayed": {
+          "same": 1,
+          "differed": 0
+        },
+        "close_date_displayed": {
+          "same": 1,
+          "differed": 0
+        },
+        "assigned_user_displayed": {
+          "same": 1,
+          "differed": 0
+        },
+        "record_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "run_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.h2": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "03-find",
+      "instruction": "On the opportunity record page at {{02-create.url}} (the one named '{{runid}} Bench Opportunity'), find the Stream panel and post a new message with the text: 'Bench stream post for run {{runid}}'. Submit the post. Then verify the post appears in the Stream panel on that record page and report the exact text of the post as displayed.",
+      "skill": "s_c02ba1",
+      "params": {
+        "v1": "{{02-create.url}}",
+        "v3": "{{runid}} Bench Opportunity",
+        "v5": "Bench stream post for run {{runid}}",
+        "v4": "{{runid}}"
+      },
+      "outputs": [
+        "post_text",
+        "stream_entry_as_displayed",
+        "stream_entry_time",
+        "opportunity_record_id",
+        "run_reference"
+      ],
+      "recorded": {
+        "post_text": "Bench stream post for run fwec6-n1",
+        "stream_entry_as_displayed": "Admin\n\nBench stream post for run fwec6-n1\n\n11:25",
+        "stream_entry_author": "Admin",
+        "stream_entry_time": "11:25",
+        "opportunity_record_id": "6ab26575384cea1c1",
+        "run_reference": "fwec6-n1"
+      },
+      "route": "http://127.0.0.1:8097/#Opportunity/view/:id",
+      "urlVariance": [
+        "6ab26575384cea1c1",
+        "6ab265f71cd3bcfc6"
+      ],
+      "outputEvidence": {
+        "post_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "stream_entry_as_displayed": {
+          "same": 0,
+          "differed": 1
+        },
+        "stream_entry_author": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "stream_entry_time": {
+          "same": 0,
+          "differed": 1
+        },
+        "opportunity_record_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "run_reference": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "04-change",
+      "instruction": "Verification task, read-only (do not change anything). Two parts: (1) Open the Opportunities list view and report the full names of all opportunities whose name starts with 'Seed:', exactly as displayed. (2) Open the opportunity record page at {{02-create.url}} and report exactly what the page shows for: Name, Account, Stage, Amount, Close Date, Assigned User, and the text of the most recent post in the Stream panel. Also confirm the page address contains the record ID.",
+      "skill": "s_2550c4",
+      "params": {
+        "v1": "{{02-create.url}}",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "name_shown",
+        "account_shown",
+        "stage_shown",
+        "amount_shown",
+        "close_date_shown",
+        "assigned_user_shown",
+        "latest_stream_post",
+        "page_url",
+        "seed_opportunity_name_1",
+        "seed_opportunity_name_2",
+        "seed_opportunity_name_3",
+        "run_reference",
+        "opportunity_record_id"
+      ],
+      "recorded": {
+        "name_shown": "fwec6-n1 Bench Opportunity",
+        "account_shown": "Bench Account",
+        "stage_shown": "Negotiation",
+        "amount_shown": "$12,500.00",
+        "close_date_shown": "Dec 31",
+        "assigned_user_shown": "Bench Assignee",
+        "latest_stream_post": "Bench stream post for run fwec6-n1",
+        "page_url": "http://127.0.0.1:8097/#Opportunity/view/6ab26575384cea1c1",
+        "seed_opportunity_name_1": "Seed: training package",
+        "seed_opportunity_name_2": "Seed: pilot expansion",
+        "seed_opportunity_name_3": "Seed: annual support renewal",
+        "run_reference": "fwec6-n1",
+        "opportunity_record_id": "6ab26575384cea1c1"
+      },
+      "route": "http://127.0.0.1:8097/#Opportunity",
+      "outputEvidence": {
+        "name_shown": {
+          "same": 0,
+          "differed": 2
+        },
+        "account_shown": {
+          "same": 2,
+          "differed": 0
+        },
+        "stage_shown": {
+          "same": 2,
+          "differed": 0
+        },
+        "amount_shown": {
+          "same": 2,
+          "differed": 0
+        },
+        "close_date_shown": {
+          "same": 2,
+          "differed": 0
+        },
+        "assigned_user_shown": {
+          "same": 2,
+          "differed": 0
+        },
+        "latest_stream_post": {
+          "same": 0,
+          "differed": 2
+        },
+        "page_url": {
+          "same": 0,
+          "differed": 2
+        },
+        "seed_opportunity_name_1": {
+          "same": 2,
+          "differed": 0
+        },
+        "seed_opportunity_name_2": {
+          "same": 2,
+          "differed": 0
+        },
+        "seed_opportunity_name_3": {
+          "same": 2,
+          "differed": 0
+        },
+        "run_reference": {
+          "same": 0,
+          "differed": 2
+        },
+        "opportunity_record_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwec6-n1",
+    "created": "2026-09-22T11:26:17.784Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "02-create",
+      "outputs": [
+        "record_id"
+      ]
+    },
+    {
+      "stepId": "03-find",
+      "outputs": [
+        "stream_entry_author"
+      ]
+    }
+  ]
+}
