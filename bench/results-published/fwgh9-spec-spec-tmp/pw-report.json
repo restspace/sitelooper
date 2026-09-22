@@ -1,0 +1,187 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwgh9-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwgh9-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwgh9-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwgh9-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwgh9-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwgh9.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwgh9-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwgh9.spec.ts",
+      "file": "fwgh9.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwgh9",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 57925,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-report\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe contenteditable/set-value (r_7b1e49); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] step 03-create s_a03359/7: none of the 1 expected page change(s) appeared in the step diff (found on the page instead)\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 03-create s_1b59b9/1 target: primary getByRole('heading', { name: /^[\\s\\p{Co}\\p{So}\\p{Cf}]*fwgh9-spec\\s+Bench\\s+Post[\\s\\p{Co}\\p{So}\\p{Cf}]*$/u }) missed; used #3 locator('div:nth-of-type(1) > div:nth-of-type(4) > li > a > div:nth-of-type(2) > h3') (#1 ambiguous, #2 ambiguous)\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 03-create s_1b59b9/2 target: primary locator('[data-testid=\"posts-list-item\"] a') missed; used #2 locator('section > section > div:nth-of-type(1) > div:nth-of-type(4) > li > a') (#1 ambiguous)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-open\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 06-report s_c87ea1/2 target: primary locator('[data-testid=\"tags-header-tabs\"] a') missed; used #3 locator('[data-sitelooper-point=\"972,45\"]') (#1 ambiguous, #2 ambiguous)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-report\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in to Ghost admin at http://127.0.0.1:8099/ghost/ with email admin@bench.local and password {{env:APP_PASSWORD}} (type the password exactly as given, including any braces or 'env:' text). Submit the form and report whether you are now signed in (what page/screen you see after login).",
+                      "duration": 3855
+                    },
+                    {
+                      "title": "02-report: Go to the Posts section of Ghost admin (http://127.0.0.1:8099/ghost/#/posts). List the posts shown, and report the exact titles of all posts whose title starts with 'Seed:' along with their status (Published/Draft/Scheduled) as shown in the list. Do not modify anything. If the list has filters or tabs, make sure you are seeing all posts including drafts and scheduled ones.",
+                      "duration": 2234
+                    },
+                    {
+                      "title": "03-create: In Ghost admin, create a new post and publish it with these exact requirements: (1) Title exactly: {{runid}} Bench Post . (2) In the rich-text body editor, type one paragraph containing the text {{runid}} , for example: 'This bench post was created by run {{runid}}.' — type it once only, make sure it is actually in the editor (not just typed into the title), and save the post. (3) In the post's settings panel, add the EXISTING tag 'Bench News' — you must pick it from the tag field's suggestion dropdown; do NOT create a new tag, and note a similar tag 'Bench Newsletter' also exists, which must NOT be used. The post's only tag must be Bench News. (4) In the settings panel set a custom excerpt that includes the text {{runid}} , e.g. 'Bench post for run {{runid}}.' (5) In the settings panel set the publish date to 2026-09-01 (this date is in the past, so it should publish immediately, not schedule). (6) Complete the publish confirmation flow so the post ends up Published (not draft, not scheduled). (7) Then report: the post's status as shown, the exact URL slug shown in the post's settings panel, the tag shown, the excerpt shown, the publish date shown, and confirm the body paragraph text. If anything blocks you, report exactly what.",
+                      "duration": 39858
+                    },
+                    {
+                      "title": "04-open: Open the public (non-admin) URL http://{{03-create.host}}:8099/{{runid}}-bench-post/ in the browser and report: whether the page loads publicly (not a 404, not a 'members only' paywall), the post title shown, the full body text shown, the tag(s) shown, and the excerpt/meta description if visible. Also report the published date shown on the page if any. Do not modify anything.",
+                      "duration": 1080
+                    },
+                    {
+                      "title": "05-open: In Ghost admin, open the post titled '{{runid}} Bench Post' from the Posts list ({{02-report.url}}). Open its settings panel and report exactly: (a) the status shown (Published/Draft/Scheduled), (b) the URL slug exactly as displayed in the settings panel, (c) every tag chip shown (list all of them), (d) the custom excerpt text, (e) the publish date shown in the date picker, (f) the visibility/access setting, and (g) count how many times the paragraph text 'This bench post was created by run {{runid}}.' appears in the body editor — it must appear exactly once, not twice. Do not modify anything. Also confirm the three 'Seed:' posts still exist in the Posts list with status Published and are untouched.",
+                      "duration": 3537
+                    },
+                    {
+                      "title": "06-report: In Ghost admin, go to the Tags section (http://{{03-create.host}}:8099/ghost/#/tags) and report the full list of tag names shown, with the number of posts on each tag. Specifically confirm: whether there is exactly one tag named 'Bench News' (no duplicate like 'Bench News ' with a trailing space or a second Bench News), and how many posts are on the 'Bench News' tag. Do not modify anything.",
+                      "duration": 6377
+                    }
+                  ],
+                  "startTime": "2026-09-22T15:43:01.978Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": "W3NpdGVsb29wZXIgZHJpZnRdIDAzLWNyZWF0ZSBzXzFiNTliOS8xIHRhcmdldDogcHJpbWFyeSBnZXRCeVJvbGUoJ2hlYWRpbmcnLCB7IG5hbWU6IC9eW1xzXHB7Q299XHB7U299XHB7Q2Z9XSpmd2doOS1zcGVjXHMrQmVuY2hccytQb3N0W1xzXHB7Q299XHB7U299XHB7Q2Z9XSokL3UgfSkgbWlzc2VkOyB1c2VkICMzIGxvY2F0b3IoJ2RpdjpudGgtb2YtdHlwZSgxKSA+IGRpdjpudGgtb2YtdHlwZSg0KSA+IGxpID4gYSA+IGRpdjpudGgtb2YtdHlwZSgyKSA+IGgzJykgKCMxIGFtYmlndW91cywgIzIgYW1iaWd1b3VzKQpbc2l0ZWxvb3BlciBkcmlmdF0gMDMtY3JlYXRlIHNfMWI1OWI5LzIgdGFyZ2V0OiBwcmltYXJ5IGxvY2F0b3IoJ1tkYXRhLXRlc3RpZD0icG9zdHMtbGlzdC1pdGVtIl0gYScpIG1pc3NlZDsgdXNlZCAjMiBsb2NhdG9yKCdzZWN0aW9uID4gc2VjdGlvbiA+IGRpdjpudGgtb2YtdHlwZSgxKSA+IGRpdjpudGgtb2YtdHlwZSg0KSA+IGxpID4gYScpICgjMSBhbWJpZ3VvdXMpCltzaXRlbG9vcGVyIGRyaWZ0XSAwNi1yZXBvcnQgc19jODdlYTEvMiB0YXJnZXQ6IHByaW1hcnkgbG9jYXRvcignW2RhdGEtdGVzdGlkPSJ0YWdzLWhlYWRlci10YWJzIl0gYScpIG1pc3NlZDsgdXNlZCAjMyBsb2NhdG9yKCdbZGF0YS1zaXRlbG9vcGVyLXBvaW50PSI5NzIsNDUiXScpICgjMSBhbWJpZ3VvdXMsICMyIGFtYmlndW91cyk="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "333d3ed795e7dd48b6ee-0de51f076c1a4180aa99",
+          "file": "fwgh9.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-22T15:43:00.169Z",
+    "duration": 59903.868,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

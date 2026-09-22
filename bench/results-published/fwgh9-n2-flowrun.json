@@ -1,0 +1,193 @@
+{
+  "flow": "fwgh9",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Signed in to Ghost admin successfully. After submitting the sign-in form with admin@bench.local and the APP_PASSWORD secret marker (passed verbatim; the executor resolved it), the app navigated from /ghost/#/signin to http://127.0.0.1:8099/ghost/#/analytics. The live DOM now shows the admin shell — sidebar links (Analytics, Network, View site, Posts, Pages, Tags, Members, Comments, Settings, Help), an \"Analytics\" H1 with Overview/Newsletters/Growth tabs and \"Grow your audience\", and a User menu labelled \"Bench Admin / admin@bench.local\" — i.e. an authenticated session, not the login screen. Screenshot captured.",
+      "values": {
+        "signed_in_user_name": "Bench Admin",
+        "signed_in_user_email": "admin@bench.local"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_43a8b4: step 2: 1 recorded page change(s) carry a value this run could not fill (e.g. \"- textbox \\\"•••••••••••••••\\\": {{env:APP_PASSWORD}}\") — not checked"
+      ]
+    },
+    {
+      "id": "02-report",
+      "status": "success",
+      "summary": "Replayed stored procedure s_76c5e3; observed post_title_1=Seed: Welcome to the bench, post_title_2=Seed: Release notes for September, post_title_3=Seed: House style guide, filter_state_1=All posts, filter_state_2=All access, filter_state_3=All authors, filter_state_4=All tags, filter_state_5=Newest first.",
+      "values": {
+        "post_title_1": "Seed: Welcome to the bench",
+        "post_title_2": "Seed: Release notes for September",
+        "post_title_3": "Seed: House style guide",
+        "filter_state_1": "All posts",
+        "filter_state_2": "All access",
+        "filter_state_3": "All authors",
+        "filter_state_4": "All tags",
+        "filter_state_5": "Newest first"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Created and published the post in Ghost admin. The post is Published: the list row and editor both show \"Published\" with a \"View post\" link and an \"Unpublish\" button, and a \"Boom! It's out there. That's 4 posts published.\" toast appeared. Verified in the post's settings panel: title \"fwgh9-n2 Bench Post\", URL slug fwgh9-n2-bench-post (127.0.0.1:8099/fwgh9-n2-bench-post/), single tag chip \"Bench News\" (picked from the dropdown suggestion; \"Bench Newsletter\" was not used), excerpt \"Bench post for run fwgh9-n2.\", publish date 2026-09-01 00:00 UTC (past date → published immediately, not scheduled), and the body editor contains exactly one paragraph, \"This bench post was created by run fwgh9-n2.\" (9 words, typed once in the body, not the title).",
+      "values": {
+        "publish_date": "2026-09-01 00:00 UTC",
+        "run_id": "fwgh9-n2",
+        "post_status": "Published",
+        "excerpt": "Bench post for run fwgh9-n2.",
+        "post_access": "\n    Public\n",
+        "post_title": "fwgh9-n2 Bench Post",
+        "post_url_full": "127.0.0.1:8099/fwgh9-n2-bench-post/",
+        "slug": "fwgh9-n2-bench-post",
+        "tag": "Bench News",
+        "body_paragraph": "This bench post was created by run fwgh9-n2.",
+        "word_count": "9 words",
+        "host": "127.0.0.1"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "27/27",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_a03359: step 7: none of the 1 expected page change(s) appeared in the step diff (found on the page instead)",
+        "s_1b59b9: step 1: primary locator did not resolve; used fallback #3 page.locator('div:nth-of-type(1) > div:nth-of-type(4) > li > a > div:nth-of-type(2) > h3')",
+        "s_1b59b9: step 2: primary locator did not resolve; used fallback #2 page.locator('section > section > div:nth-of-type(1) > div:nth-of-type(4) > li > a')"
+      ]
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "The public URL http://127.0.0.1:8099/fwgh9-n2-bench-post/ loads publicly — it renders the full post, not a 404 and not a members-only paywall (Sign in/Subscribe appear in the header but the article body is fully readable, with no gating CTA). Title shown: \"fwgh9-n2 Bench Post\" (H1, also the document title). Full body text: \"This bench post was created by run fwgh9-n2.\" Tag shown: \"BENCH NEWS\" (the Bench News tag, linked at the top of the article). Excerpt/meta description: \"Bench post for run fwgh9-n2.\" appears as the dek under the title and as the page's meta description. Published date shown: \"01 Sep 2026\" (datetime 2026-09-01), matching the publish date set in the admin settings.",
+      "values": {
+        "meta_description": "Bench post for run fwgh9-n2.",
+        "post_title_h1": "fwgh9-n2 Bench Post",
+        "screenshot": "/root/.sitelooper/sessions/fwgh9-n2/screenshots/shot-1790091532787.jpg",
+        "body_text": "This bench post was created by run fwgh9-n2.",
+        "document_title": "fwgh9-n2 Bench Post",
+        "excerpt_visible_under_title": "Bench post for run fwgh9-n2.",
+        "run_id": "fwgh9-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Opened \"fwgh9-n2 Bench Post\" from the Posts list and read its settings panel without modifying anything. (a) Status: Published (header shows \"Published\" with a View post link and an \"Unpublish\" button). (b) Slug: fwgh9-n2-bench-post (visible post URL 127.0.0.1:8099/fwgh9-n2-bench-post/). (c) Tags: exactly one chip, \"Bench News\". (d) Excerpt: \"Bench post for run fwgh9-n2.\". (e) Publish date in the picker: 2026-09-01, time 00:00 UTC. (f) Visibility/access: Public. (g) The body paragraph \"This bench post was created by run fwgh9-n2.\" appears exactly once in the visible editor (single paragraph node, 9 words); the only second occurrence in the DOM is a duplicate inside a display:none hidden Lexical instance, which is not stored content — the published page renders one paragraph. The Posts list still shows all three \"Seed:\" posts (Welcome to the bench, Release notes for September, House style guide) with status Published, unchanged.",
+      "values": {
+        "body_paragraph_count_in_editor": "1 (visible editor content: \"This bench post was created by run fwgh9-n2.\", 9 words)",
+        "post_status": "Published (header shows Published + View post link, action button \"Unpublish\")",
+        "seed_posts": "Seed: Welcome to the bench — Published (untouched), Seed: Release notes for September — Published (untouched), Seed: House style guide — Published (untouched)",
+        "run_id": "fwgh9-n2",
+        "excerpt": "Bench post for run fwgh9-n2.",
+        "slug": "fwgh9-n2-bench-post",
+        "tags": "Bench News",
+        "visible_post_url": "127.0.0.1:8099/fwgh9-n2-bench-post/",
+        "host": "127.0.0.1"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "06-report",
+      "status": "success",
+      "summary": "The Tags section (http://127.0.0.1:8099/ghost/#/tags, Public tags tab) shows exactly three tags: \"Bench Guides\" (slug bench-guides, 3 posts), \"Bench News\" (slug bench-news, 1 post), and \"Bench Newsletter\" (slug bench-newsletter, 0 posts). There is exactly one tag named \"Bench News\" — a single table row, read from the cell's exact textContent so a trailing space would have been visible; no \"Bench News \" variant and no second Bench News (the similarly named \"Bench Newsletter\" is a separate, distinct tag with 0 posts). The Bench News tag has 1 post. The Internal tags tab is empty. Nothing was modified.",
+      "values": {
+        "tags_with_post_counts": "Bench Guides — slug bench-guides — 3 posts, Bench News — slug bench-news — 1 post, Bench Newsletter — slug bench-newsletter — 0 posts",
+        "bench_news_exact_name": "Bench News",
+        "bench_news_posts": "1 post"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_c87ea1: step 2: primary locator did not resolve; used fallback #3 elementAt(972, 45) /* radio */"
+      ]
+    }
+  ],
+  "passed": 6,
+  "total": 6,
+  "repinned": 0,
+  "drift": 3,
+  "driftTickets": [
+    {
+      "flow": "fwgh9",
+      "step": "03-create",
+      "skill": "s_1b59b9",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByRole('heading', { name: 'fwgh9-n2 Bench Post', exact: true })",
+      "fallbackUsed": "page.locator('div:nth-of-type(1) > div:nth-of-type(4) > li > a > div:nth-of-type(2) > h3')",
+      "fallbackIndex": 2,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8099/ghost/#/editor/post/:id",
+      "pageUrl": "http://127.0.0.1:8099/ghost/#/editor/post/6ab2a1799b1782000104161a"
+    },
+    {
+      "flow": "fwgh9",
+      "step": "03-create",
+      "skill": "s_1b59b9",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.locator('[data-testid=\"posts-list-item\"] a')",
+      "fallbackUsed": "page.locator('section > section > div:nth-of-type(1) > div:nth-of-type(4) > li > a')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8099/ghost/#/editor/post/:id",
+      "pageUrl": "http://127.0.0.1:8099/ghost/#/editor/post/6ab2a1799b1782000104161a"
+    },
+    {
+      "flow": "fwgh9",
+      "step": "06-report",
+      "skill": "s_c87ea1",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 0.843,
+      "missedLocator": "page.locator('[data-testid=\"tags-header-tabs\"] a')",
+      "fallbackUsed": "elementAt(972, 45) /* radio */",
+      "fallbackIndex": 2,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8099/ghost/#/tags",
+      "pageUrl": "http://127.0.0.1:8099/ghost/#/tags"
+    }
+  ],
+  "wallMs": 66861,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

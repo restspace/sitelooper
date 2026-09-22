@@ -1,0 +1,11 @@
+[spec-replay] resetting ghost
+[reset] ghost: deleted 1 post(s) (earlier runs' and non-seed)
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile bench/results/flows/fwgh9.json --out /home/user/sitelooper/bench/results/fwgh9-spec-spec-tmp --overwrite-spec
+flow: /home/user/sitelooper/bench/results/fwgh9-spec-spec-tmp/fwgh9.flow.ts
+spec: /home/user/sitelooper/bench/results/fwgh9-spec-spec-tmp/fwgh9.spec.ts
+warning 04-open: 04-open read a value that contradicts what the previous step reported
+  why: 04-open read status "loads publicly (HTTP page rendered, not a 404)" right after 03-create reported "Published"; 03-create's change may not have landed and a later step may be retrying it. Re-record 03-create.
+  fix: sitelooper rerecord bench/results/flows/fwgh9.json 03-create
+[spec-replay] running: npx playwright test --config /home/user/sitelooper/bench/results/fwgh9-spec-spec-tmp/playwright.config.mjs
+[spec-replay] fwgh9-spec: 1/1 passed, exit=0, 61s, 3 drift line(s) — result written
+SPEC_REPLAY_EXIT=0
