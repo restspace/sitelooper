@@ -4,6 +4,7 @@ This is a GOAL, not a list of UI steps. Work out how to achieve it yourself.
 
 The app is a project-management tool at {{APP_URL}}.
 Sign in with email `{{APP_EMAIL}}` and password `{{env:APP_PASSWORD}}`.
+Pass the password to the browser exactly as the text `{{env:APP_PASSWORD}}` (it is filled in when typed); never write `$APP_PASSWORD`, never guess or spell out a password.
 
 ## Objectives
 
