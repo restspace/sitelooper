@@ -1,0 +1,1011 @@
+{
+  "name": "fwod78",
+  "origin": "http://127.0.0.1:8069",
+  "startUrl": "http://127.0.0.1:8069/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-open",
+      "instruction": "Open http://127.0.0.1:8069/ and sign in with username admin and password admin. Then go to the Contacts app and create a new contact/customer named exactly '{{runid}} Bench Customer' with the City field set to 'Benchville'. Save the record and verify on the page that the name and city are correct. Important: do not wait for network idle (the app long-polls); wait for concrete page state instead. Any autocomplete fields must have an option actually chosen from the dropdown.",
+      "skill": "s_21e20f",
+      "params": {
+        "v2": "http://127.0.0.1:8069/",
+        "v3": "{{runid}} Bench Customer",
+        "v4": "Benchville",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "contact_name",
+        "contact_city",
+        "ref"
+      ],
+      "recorded": {
+        "contact_name": "fwod78-n1 Bench Customer",
+        "contact_city": "Benchville",
+        "res_partner_id": "44",
+        "ref": "fwod78-n1",
+        "url": "http://127.0.0.1:8069/web#cids=1&menu_id=109&action=156&model=res.partner&view_type=form&id=44",
+        "url.q.menu_id": "109",
+        "url.q.action": "156",
+        "url.q.id": "44"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=res.partner&view_type=form",
+      "outputEvidence": {
+        "contact_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "contact_city": {
+          "same": 1,
+          "differed": 0
+        },
+        "res_partner_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.q.menu_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.q.action": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.q.id": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "Go to the Sales app (quotations) and create a new quotation for the customer '{{runid}} Bench Customer' — the customer field is an autocomplete dropdown, so you must actually select the matching option from the dropdown, not just type the name. Add exactly ONE order line: pick any product from the product catalogue (use the product dropdown and actually select an option), and set the quantity to 3. Let the app fill in the unit price automatically. Then report: (a) the product name you chose, (b) the unit price the app filled in, and (c) the untaxed amount the app computes (shown in the totals section). Keep it as a draft quotation — do not confirm it. Do not wait for network idle (the app long-polls); wait for concrete page state instead.",
+      "skill": "s_2b067f",
+      "params": {
+        "v1": "{{runid}} Bench Customer",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "customer",
+        "customer_city",
+        "line_subtotal",
+        "line_tax",
+        "order_reference",
+        "product_name",
+        "quantity",
+        "tax_20_amount",
+        "total",
+        "unit_price",
+        "unit_price_transient_zero",
+        "line_subtotal_transient_zero",
+        "quotation_url",
+        "quotation_url_after_save",
+        "line_subtotal_table_read",
+        "total_row_text",
+        "ref",
+        "untaxed_amount_label",
+        "untaxed_amount_footer",
+        "tax_label",
+        "tax_amount_footer"
+      ],
+      "recorded": {
+        "breadcrumb_before_save": "Quotations / New",
+        "customer": "fwod78-n1 Bench Customer",
+        "customer_city": "Benchville",
+        "line_subtotal": "£ 885.00",
+        "line_tax": "20%",
+        "order_reference": "S00021",
+        "order_state": "Quotation (draft, not confirmed)",
+        "product_name": "[FURN_6666] Acoustic Bloc Screens",
+        "quantity": "3.00",
+        "sale_order_id": "21",
+        "tax_20_amount": "£ 177.00",
+        "total": "£ 1,062.00",
+        "unit_price": "295.00",
+        "untaxed_amount": "£ 885.00",
+        "unit_price_transient_zero": "0.00",
+        "line_subtotal_transient_zero": "£ 0.00",
+        "quotation_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form",
+        "quotation_url_after_save": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=21",
+        "product_autocomplete_input_value": "Conference Chair",
+        "line_subtotal_table_read": "£ 885.00",
+        "total_row_text": "Total\t£ 1,062.00",
+        "ref": "fwod78-n1",
+        "ref_2": "FURN_6666",
+        "untaxed_amount_label": "Untaxed Amount",
+        "untaxed_amount_footer": "£ 885.00",
+        "tax_label": "TAX 20%",
+        "tax_amount_footer": "£ 177.00",
+        "url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=21",
+        "url.q.menu_id": "194",
+        "url.q.action": "316",
+        "url.q.id": "21"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "breadcrumb_before_save": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "customer": {
+          "same": 0,
+          "differed": 1
+        },
+        "customer_city": {
+          "same": 1,
+          "differed": 0
+        },
+        "line_subtotal": {
+          "same": 0,
+          "differed": 1
+        },
+        "line_tax": {
+          "same": 1,
+          "differed": 0
+        },
+        "order_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "order_state": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "product_name": {
+          "same": 1,
+          "differed": 0
+        },
+        "quantity": {
+          "same": 1,
+          "differed": 0
+        },
+        "sale_order_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "tax_20_amount": {
+          "same": 0,
+          "differed": 1
+        },
+        "total": {
+          "same": 0,
+          "differed": 1
+        },
+        "unit_price": {
+          "same": 1,
+          "differed": 0
+        },
+        "untaxed_amount": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "unit_price_transient_zero": {
+          "same": 1,
+          "differed": 0
+        },
+        "line_subtotal_transient_zero": {
+          "same": 1,
+          "differed": 0
+        },
+        "quotation_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "quotation_url_after_save": {
+          "same": 0,
+          "differed": 1
+        },
+        "product_autocomplete_input_value": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "line_subtotal_table_read": {
+          "same": 1,
+          "differed": 0
+        },
+        "total_row_text": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref_2": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "untaxed_amount_label": {
+          "same": 1,
+          "differed": 0
+        },
+        "untaxed_amount_footer": {
+          "same": 1,
+          "differed": 0
+        },
+        "tax_label": {
+          "same": 1,
+          "differed": 0
+        },
+        "tax_amount_footer": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.q.menu_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.q.action": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.q.id": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "03-open",
+      "instruction": "Open the existing draft quotation {{02-create.order_reference}} (for customer {{runid}} Bench Customer) in the Sales app — find it in the Quotations list and open it. It currently has one order line: {{02-create.product_name}}, quantity 3, unit price {{02-create.unit_price}}. Add a SECOND order line with a DIFFERENT product (use the product dropdown on the new line and actually select an option from the catalogue — do not reuse Acoustic Bloc Screens), and set that line's quantity to 2. Let the app fill in the unit price automatically. Then report: (a) the product name of the new second line, (b) its unit price, and (c) the NEW untaxed amount shown in the totals section after both lines are present. Save the quotation and keep it as a draft (do not confirm). Do not wait for network idle (the app long-polls); wait for concrete page state instead.",
+      "skill": "s_a5e28d",
+      "params": {
+        "v1": "{{02-create.order_reference}}",
+        "v2": "{{runid}} Bench Customer",
+        "v4": "{{02-create.product_name}}",
+        "v6": "{{02-create.unit_price}}",
+        "v3": "{{runid}}",
+        "v7": "{{02-create.url.q.id}}"
+      },
+      "outputs": [
+        "customer",
+        "customer_city",
+        "form_view_class_after_save",
+        "line1_product",
+        "line1_qty",
+        "line1_subtotal",
+        "line1_unit_price",
+        "line2_product",
+        "line2_qty",
+        "line2_subtotal",
+        "line2_tax",
+        "line2_unit_price",
+        "new_untaxed_amount",
+        "quotation_reference",
+        "quotation_url",
+        "sale_order_id",
+        "save_button_class",
+        "tax_20_amount",
+        "total",
+        "quotation_url_after_save",
+        "second_line_row",
+        "line1_subtotal_table_read",
+        "product_dropdown_input_value",
+        "new_line_quantity_input",
+        "line2_subtotal_table_read",
+        "untaxed_amount_row_text",
+        "total_row_text",
+        "ref_2",
+        "quotation_breadcrumb_before_save_1",
+        "quotation_breadcrumb_before_save_2",
+        "tax_label",
+        "tax_amount_footer"
+      ],
+      "recorded": {
+        "customer": "fwod78-n1 Bench Customer",
+        "customer_city": "Benchville",
+        "form_view_class_after_save": "o_form_view o_sale_order o_view_controller o_action",
+        "line1_product": "[FURN_6666] Acoustic Bloc Screens",
+        "line1_qty": "3.00",
+        "line1_subtotal": "£ 885.00",
+        "line1_unit_price": "295.00",
+        "line2_product": "[E-COM11] Cabinet with Doors",
+        "line2_qty": "2.00",
+        "line2_subtotal": "£ 280.00",
+        "line2_tax": "20%",
+        "line2_unit_price": "140.00",
+        "new_untaxed_amount": "£ 1,165.00",
+        "quotation_reference": "S00021",
+        "quotation_state": "Quotation (draft, unconfirmed)",
+        "quotation_url": "http://127.0.0.1:8069/web#id=21&menu_id=194&action=316&model=sale.order&view_type=form",
+        "sale_order_id": "21",
+        "save_button_class": "o_form_button_save btn btn-light border-0 px-1 py-0 lh-sm",
+        "tax_20_amount": "£ 233.00",
+        "total": "£ 1,398.00",
+        "quotation_url_after_save": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=21",
+        "second_line_row": "[E-COM11] Cabinet with Doors\t\n[E-COM11] Cabinet with Doors\n\t2.00\t140.00\t\n20%\n\t£ 280.00",
+        "line1_subtotal_table_read": "£ 885.00",
+        "product_dropdown_input_value": "[FURN_1118] Corner Desk Left Sit",
+        "new_line_quantity_input": "0.00",
+        "line2_subtotal_table_read": "£ 280.00",
+        "untaxed_amount_row_text": "Untaxed Amount\t£ 1,165.00",
+        "total_row_text": "Total\t£ 1,398.00",
+        "ref": "FURN_1118",
+        "ref_2": "fwod78-n1",
+        "quotation_breadcrumb_before_save_1": "Quotations",
+        "quotation_breadcrumb_before_save_2": "S00021",
+        "tax_label": "TAX 20%",
+        "tax_amount_footer": "£ 233.00",
+        "url": "http://127.0.0.1:8069/web#id=21&menu_id=194&action=316&model=sale.order&view_type=form"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "customer": {
+          "same": 0,
+          "differed": 1
+        },
+        "customer_city": {
+          "same": 1,
+          "differed": 0
+        },
+        "form_view_class_after_save": {
+          "same": 1,
+          "differed": 0
+        },
+        "line1_product": {
+          "same": 1,
+          "differed": 0
+        },
+        "line1_qty": {
+          "same": 1,
+          "differed": 0
+        },
+        "line1_subtotal": {
+          "same": 0,
+          "differed": 1
+        },
+        "line1_unit_price": {
+          "same": 1,
+          "differed": 0
+        },
+        "line2_product": {
+          "same": 1,
+          "differed": 0
+        },
+        "line2_qty": {
+          "same": 1,
+          "differed": 0
+        },
+        "line2_subtotal": {
+          "same": 0,
+          "differed": 1
+        },
+        "line2_tax": {
+          "same": 1,
+          "differed": 0
+        },
+        "line2_unit_price": {
+          "same": 1,
+          "differed": 0
+        },
+        "new_untaxed_amount": {
+          "same": 0,
+          "differed": 1
+        },
+        "quotation_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "quotation_state": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "quotation_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "sale_order_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "save_button_class": {
+          "same": 1,
+          "differed": 0
+        },
+        "tax_20_amount": {
+          "same": 0,
+          "differed": 1
+        },
+        "total": {
+          "same": 0,
+          "differed": 1
+        },
+        "quotation_url_after_save": {
+          "same": 0,
+          "differed": 1
+        },
+        "second_line_row": {
+          "same": 1,
+          "differed": 0
+        },
+        "line1_subtotal_table_read": {
+          "same": 1,
+          "differed": 0
+        },
+        "product_dropdown_input_value": {
+          "same": 1,
+          "differed": 0
+        },
+        "new_line_quantity_input": {
+          "same": 1,
+          "differed": 0
+        },
+        "line2_subtotal_table_read": {
+          "same": 1,
+          "differed": 0
+        },
+        "untaxed_amount_row_text": {
+          "same": 1,
+          "differed": 0
+        },
+        "total_row_text": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref_2": {
+          "same": 0,
+          "differed": 1
+        },
+        "quotation_breadcrumb_before_save_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "quotation_breadcrumb_before_save_2": {
+          "same": 0,
+          "differed": 1
+        },
+        "tax_label": {
+          "same": 1,
+          "differed": 0
+        },
+        "tax_amount_footer": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "04-open",
+      "instruction": "Open the existing draft quotation {{02-create.order_reference}} in the Sales app (customer {{runid}} Bench Customer). It has two order lines: line 1 is {{02-create.product_name}} with quantity {{02-create.quantity}} and unit price {{02-create.unit_price}}; line 2 is {{03-open.line2_product}} with quantity {{03-open.line2_qty}} and unit price {{03-open.line2_unit_price}}. Change ONLY the first line's quantity from 3 to 5 (leave the second line untouched). Then report the NEW untaxed amount shown in the totals section after the change, plus the new line 1 subtotal. Save the quotation and keep it as a draft (do not confirm). Do not wait for network idle (the app long-polls); wait for concrete page state instead.",
+      "skill": "s_e0c3ca",
+      "params": {
+        "v1": "{{02-create.order_reference}}",
+        "v2": "{{runid}} Bench Customer",
+        "v4": "{{02-create.product_name}}",
+        "v6": "{{02-create.quantity}}",
+        "v7": "{{02-create.unit_price}}",
+        "v8": "{{03-open.line2_product}}",
+        "v9": "{{03-open.line2_qty}}",
+        "v10": "{{03-open.line2_unit_price}}",
+        "v3": "{{runid}}",
+        "v11": "{{02-create.url.q.id}}"
+      },
+      "outputs": [
+        "change_made",
+        "customer",
+        "line1_product",
+        "line1_qty_new",
+        "line1_qty_old",
+        "line1_subtotal_new",
+        "line1_unit_price",
+        "line2_product",
+        "line2_qty",
+        "line2_subtotal",
+        "line2_unit_price",
+        "new_untaxed_amount",
+        "quotation_reference",
+        "sale_order_id",
+        "tax_20_amount",
+        "total",
+        "line2_row_after_change",
+        "untaxed_amount_row_text",
+        "total_row_text",
+        "ref",
+        "ref_2",
+        "tax_label",
+        "tax_amount_footer"
+      ],
+      "recorded": {
+        "change_made": "line 1 quantity 3 -> 5 only",
+        "customer": "fwod78-n1 Bench Customer",
+        "line1_product": "[FURN_6666] Acoustic Bloc Screens",
+        "line1_qty_new": "5.00",
+        "line1_qty_old": "3.00",
+        "line1_subtotal_new": "£ 1,475.00",
+        "line1_unit_price": "295.00",
+        "line2_product": "[E-COM11] Cabinet with Doors",
+        "line2_qty": "2.00",
+        "line2_subtotal": "£ 280.00",
+        "line2_unit_price": "140.00",
+        "new_untaxed_amount": "£ 1,755.00",
+        "previous_untaxed_amount": "£ 1,165.00",
+        "quotation_reference": "S00021",
+        "quotation_state": "Quotation (draft, unconfirmed)",
+        "sale_order_id": "21",
+        "tax_20_amount": "£ 351.00",
+        "total": "£ 2,106.00",
+        "line2_row_after_change": "[E-COM11] Cabinet with Doors\t\n[E-COM11] Cabinet with Doors\n\t2.00\t140.00\t\n20%\n\t£ 280.00",
+        "untaxed_amount_row_text": "Untaxed Amount\t£ 1,755.00",
+        "total_row_text": "Total\t£ 2,106.00",
+        "ref": "fwod78-n1",
+        "ref_2": "FURN_6666",
+        "session_id": "s_a5e28d",
+        "tax_label": "TAX 20%",
+        "tax_amount_footer": "£ 351.00"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "change_made": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "customer": {
+          "same": 0,
+          "differed": 1
+        },
+        "line1_product": {
+          "same": 1,
+          "differed": 0
+        },
+        "line1_qty_new": {
+          "same": 1,
+          "differed": 0
+        },
+        "line1_qty_old": {
+          "same": 1,
+          "differed": 0
+        },
+        "line1_subtotal_new": {
+          "same": 0,
+          "differed": 1
+        },
+        "line1_unit_price": {
+          "same": 1,
+          "differed": 0
+        },
+        "line2_product": {
+          "same": 1,
+          "differed": 0
+        },
+        "line2_qty": {
+          "same": 1,
+          "differed": 0
+        },
+        "line2_subtotal": {
+          "same": 0,
+          "differed": 1
+        },
+        "line2_unit_price": {
+          "same": 1,
+          "differed": 0
+        },
+        "new_untaxed_amount": {
+          "same": 0,
+          "differed": 1
+        },
+        "previous_untaxed_amount": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "quotation_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "quotation_state": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "sale_order_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "tax_20_amount": {
+          "same": 0,
+          "differed": 1
+        },
+        "total": {
+          "same": 0,
+          "differed": 1
+        },
+        "line2_row_after_change": {
+          "same": 1,
+          "differed": 0
+        },
+        "untaxed_amount_row_text": {
+          "same": 1,
+          "differed": 0
+        },
+        "total_row_text": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref_2": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "session_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "tax_label": {
+          "same": 1,
+          "differed": 0
+        },
+        "tax_amount_footer": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "05-open",
+      "instruction": "Open the existing draft quotation {{02-create.order_reference}} in the Sales app (customer {{runid}} Bench Customer, untaxed amount £1,755.00). Confirm it so it becomes a sales order — click the Confirm button. After confirming, report: (a) the order reference / name shown (e.g. {{02-create.order_reference}}), and (b) the status the app now shows in the status bar (e.g. 'Sales Order' / 'Sales'). Verify the confirmation actually happened (the status bar should no longer show Quotation as the current state, and there should be no Confirm button anymore). Do not wait for network idle (the app long-polls); wait for concrete page state instead.",
+      "skill": "s_dc38c4",
+      "params": {
+        "v1": "{{02-create.order_reference}}",
+        "v2": "{{runid}} Bench Customer",
+        "v3": "{{runid}}",
+        "v4": "{{02-create.url.q.id}}"
+      },
+      "outputs": [
+        "order_reference",
+        "status_after_confirm",
+        "confirm_button_count_after",
+        "customer",
+        "untaxed_amount",
+        "tax_20_amount",
+        "total",
+        "sale_order_id",
+        "verified_after_full_reload",
+        "statusbar_text",
+        "untaxed_amount_row_text",
+        "total_row_text",
+        "ref",
+        "tax_label",
+        "tax_amount_footer"
+      ],
+      "recorded": {
+        "order_reference": "S00021",
+        "status_after_confirm": "Sales Order",
+        "statusbar_after_confirm": "radio 'Sales Order' [checked] [disabled]; radio 'Quotation Sent' [disabled]; radio 'Quotation' [disabled]",
+        "confirm_button_count_after": "0",
+        "buttons_now_visible": "Create Invoice, Send by Email, Preview, Cancel (Confirm is gone)",
+        "customer": "fwod78-n1 Bench Customer (City: Benchville)",
+        "untaxed_amount": "£ 1,755.00",
+        "tax_20_amount": "£ 351.00",
+        "total": "£ 2,106.00",
+        "sale_order_id": "21",
+        "verified_after_full_reload": "yes - reloaded the record from the server and the statusbar still shows 'Sales Order' checked with Quotation disabled",
+        "statusbar_text": "Sales Order\nQuotation Sent\nQuotation",
+        "untaxed_amount_row_text": "Untaxed Amount\t£ 1,755.00",
+        "total_row_text": "Total\t£ 2,106.00",
+        "ref": "fwod78-n1",
+        "tax_label": "TAX 20%",
+        "tax_amount_footer": "£ 351.00"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "order_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "status_after_confirm": {
+          "same": 1,
+          "differed": 0
+        },
+        "statusbar_after_confirm": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "confirm_button_count_after": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "buttons_now_visible": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "customer": {
+          "same": 0,
+          "differed": 1
+        },
+        "untaxed_amount": {
+          "same": 0,
+          "differed": 1
+        },
+        "tax_20_amount": {
+          "same": 0,
+          "differed": 1
+        },
+        "total": {
+          "same": 0,
+          "differed": 1
+        },
+        "sale_order_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "verified_after_full_reload": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "statusbar_text": {
+          "same": 1,
+          "differed": 0
+        },
+        "untaxed_amount_row_text": {
+          "same": 1,
+          "differed": 0
+        },
+        "total_row_text": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "tax_label": {
+          "same": 1,
+          "differed": 0
+        },
+        "tax_amount_footer": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "06-open",
+      "instruction": "Open the confirmed sales order {{02-create.order_reference}} in the Sales app (customer {{runid}} Bench Customer, status 'Sales Order'). Cancel it so nothing stays active — click the Cancel button and confirm any dialog that appears. After cancelling, report the status the app shows in the status bar (e.g. 'Cancelled'). Verify the cancellation actually happened by reloading the record from the server and checking the status bar still shows the cancelled state. Do not wait for network idle (the app long-polls); wait for concrete page state instead.",
+      "skill": "s_03f4d0",
+      "params": {
+        "v1": "{{02-create.order_reference}}",
+        "v2": "{{runid}} Bench Customer",
+        "v4": "Sales Order",
+        "v3": "{{runid}}",
+        "v5": "{{02-create.url.q.id}}"
+      },
+      "outputs": [
+        "order_reference",
+        "statusbar_after_cancel",
+        "customer",
+        "sale_order_id",
+        "verified_after_full_reload",
+        "ref",
+        "buttons_now_visible_1",
+        "buttons_now_visible_2"
+      ],
+      "recorded": {
+        "order_reference": "S00021",
+        "statusbar_after_cancel": "radio 'Cancelled' [checked][disabled]; 'Sales Order' [disabled]; 'Quotation Sent' [disabled]; 'Quotation' [disabled]",
+        "status_after_cancel": "Cancelled",
+        "confirm_button": "absent",
+        "cancel_button": "absent",
+        "customer": "fwod78-n1 Bench Customer (Benchville)",
+        "sale_order_id": "21",
+        "verified_after_full_reload": "yes - re-navigated to the record URL; statusbar renders 'Cancelled' [checked] with Quotation/Sales Order disabled",
+        "ref": "fwod78-n1",
+        "buttons_now_visible_1": "Preview",
+        "buttons_now_visible_2": "Set to Quotation"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "order_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "statusbar_after_cancel": {
+          "same": 1,
+          "differed": 0
+        },
+        "status_after_cancel": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "confirm_button": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "cancel_button": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "customer": {
+          "same": 0,
+          "differed": 1
+        },
+        "sale_order_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "verified_after_full_reload": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "buttons_now_visible_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "buttons_now_visible_2": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "07-open",
+      "instruction": "Final verification, no changes to make: (1) Open the contact '{{runid}} Bench Customer' in the Contacts app and report the exact Name and City values shown on the form. (2) Open the sales order {{02-create.order_reference}} in the Sales app and report the exact status shown in its status bar and its untaxed amount. Do not modify anything. Do not wait for network idle; wait for concrete page state.",
+      "skill": "s_576ed4",
+      "params": {
+        "v1": "{{runid}} Bench Customer",
+        "v3": "{{02-create.order_reference}}",
+        "v2": "{{runid}}",
+        "v4": "{{02-create.url.q.id}}"
+      },
+      "outputs": [
+        "contact_name",
+        "contact_city",
+        "contact_opened_via",
+        "contact_name_value_read",
+        "sales_order_reference",
+        "untaxed_amount",
+        "tax_20_amount",
+        "total",
+        "sales_order_customer_line",
+        "sale_order_id",
+        "read_only",
+        "contact_kanban_card_index",
+        "sales_order_url",
+        "untaxed_amount_row_text",
+        "total_row_text",
+        "ref",
+        "tax_label",
+        "tax_amount_footer"
+      ],
+      "recorded": {
+        "contact_name": "fwod78-n1 Bench Customer",
+        "contact_city": "Benchville",
+        "contact_opened_via": "Contacts app - searched 'fwod78-n1 Bench Customer', one kanban card returned, opened its form",
+        "contact_name_value_read": "fwod78-n1 Bench Customer",
+        "contact_city_value_read": "Benchville",
+        "sales_order_reference": "S00021",
+        "sales_order_status": "Cancelled",
+        "sales_order_statusbar": "radio 'Cancelled' [checked][disabled]; 'Sales Order' [disabled]; 'Quotation Sent' [disabled]; 'Quotation' [disabled]",
+        "untaxed_amount": "£ 1,755.00",
+        "tax_20_amount": "£ 351.00",
+        "total": "£ 2,106.00",
+        "sales_order_customer_line": "fwod78-n1 Bench Customer (City shown under the name: Benchville)",
+        "sale_order_id": "21",
+        "read_only": "no modifications - navigation and reads only",
+        "contact_kanban_card_index": "1",
+        "sales_order_url": "http://127.0.0.1:8069/web#id=21&menu_id=194&action=316&model=sale.order&view_type=form",
+        "untaxed_amount_row_text": "Untaxed Amount\t£ 1,755.00",
+        "total_row_text": "Total\t£ 2,106.00",
+        "ref": "fwod78-n1",
+        "tax_label": "TAX 20%",
+        "tax_amount_footer": "£ 351.00"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&id=:id&menu_id=:id&model=sale.order&view_type=form"
+    }
+  ],
+  "provenance": {
+    "session": "fwod78-n1",
+    "created": "2026-09-22T12:17:21.238Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-open",
+      "outputs": [
+        "res_partner_id"
+      ]
+    },
+    {
+      "stepId": "02-create",
+      "outputs": [
+        "breadcrumb_before_save",
+        "order_state",
+        "sale_order_id",
+        "untaxed_amount",
+        "product_autocomplete_input_value",
+        "ref_2"
+      ]
+    },
+    {
+      "stepId": "03-open",
+      "outputs": [
+        "quotation_state",
+        "ref"
+      ]
+    },
+    {
+      "stepId": "04-open",
+      "outputs": [
+        "previous_untaxed_amount",
+        "quotation_state",
+        "session_id"
+      ]
+    },
+    {
+      "stepId": "05-open",
+      "outputs": [
+        "statusbar_after_confirm",
+        "buttons_now_visible"
+      ]
+    },
+    {
+      "stepId": "06-open",
+      "outputs": [
+        "status_after_cancel",
+        "confirm_button",
+        "cancel_button"
+      ]
+    },
+    {
+      "stepId": "07-open",
+      "outputs": [
+        "contact_city_value_read",
+        "sales_order_status",
+        "sales_order_statusbar"
+      ]
+    }
+  ]
+}
