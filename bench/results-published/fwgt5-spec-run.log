@@ -1,0 +1,13 @@
+[spec-replay] resetting gitea
+[reset] gitea: deleted 1 leftover bench issue(s)
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile bench/results/flows/fwgt5.json --out /home/user/sitelooper/bench/results/fwgt5-spec-spec-tmp --overwrite-spec
+error 02-open: slot v1 is bound to {{01-signin.org_link}}, and nothing has ever published org_link
+  why: 01-signin's only source for org_link is a read the flow export synthesized from the value the recording reported — no run has resolved it or read a value back through it. 02-open types or locates by v1, so the artifact would stop here on every run, part-way through the flow and with everything earlier already done.
+  fix: re-record 01-signin so it reads org_link from an element (`sitelooper rerecord <flow file> 01-signin`), or take {{01-signin.org_link}} out of 02-open's v1
+
+nothing written: the error(s) above are about the RECORDING, not the app — a compiled spec would fail at a locator and read as drift.
+re-record the step(s) with the fix command above.
+  warning: 01-signin: step 18 (read org_link) has no locator left — it publishes nothing, as replay skips it
+  warning: 05-add: step 6 (read comment_header_displayed) has no locator left — it publishes nothing, as replay skips it
+sitelooper: refused: unsourced-ref — see the diagnostics above
+[spec-replay] fwgt5-spec: not compilable — result written (exit 2)
