@@ -1,0 +1,108 @@
+
+[sweep] run 1/3: fwvk6-n1 (store: /home/user/sitelooper/bench/results/fwvk6-skills)
+[harness] vikunja: defaulting APP_URL
+[harness] vikunja: defaulting APP_EMAIL
+[harness] vikunja: defaulting APP_PASSWORD
+[reset] vikunja: no leftover bench tasks
+[harness] vikunja responded 200 at http://127.0.0.1:8096/
+stopped: fwvk6-n1
+  flow "fwvk6" saved: 7 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwvk6.json
+  warning: note: 02-open no longer publishes task_count, task_links — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-create no longer publishes labels_page_labels — no replay reads it from the page and the recording showed no line to read
+  warning: note: 07-open no longer publishes seed_task_1, seed_task_2, seed_task_3, seed_task_timestamps_observed, seed_task_identifier_1, seed_task_identifier_2 — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 100 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "admin" (output) in "Sign in to Vikunja with username 'admin' and password 'bench-admin-pass'. After signing in, confirm you are logged in and report the name of the user shown in t"
+  flow.steps[0].params.v1: "admin" (output) in "admin"
+  flow.steps[1].instruction: "Bench Project" (output) in "Open the project named 'Bench Project' in Vikunja and list the titles of all tasks whose title starts with 'Seed:' exactly as displayed. Do not modify anything."
+  flow.steps[2].instruction: "Bench Project" (output) in "In the project 'Bench Project' in Vikunja, create a new task with the exact title '{{runid}} Bench Task' and a description that includes the text '{{runid}}' (e"
+  flow.steps[2].params.v1: "Bench Project" (output) in "Bench Project"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwvk6-n1 stop=completed
+turns=9 wall=281.9s
+commands=8 cmdTime=243.8s cmdBytes=7880 timeouts=0
+orchestrator in=6207 cw=0 cr=28480 out=2185
+inner prompt=1487815 cached=1387648 completion=23646
+spend=$0.0593 maxUsd=3
+learn: A_n=0 replayed=0/7 full=0 repaired=0 compiled=7 variants=0
+-> /home/user/sitelooper/bench/results/fwvk6-n1-sitelooper-result.json
+
+fwvk6-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — project=Bench Project, description includes runid=true
+  obj 3: PASS — due date=2026-12-31T12:00:00Z, want 2026-12-31
+  obj 4: PASS — priority=3 (want 3 = High)
+  obj 5: PASS — labels=Backend#1; seeded Backend is #1
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — identifier BENCH-4 reported
+
+[sweep] run 2/3: fwvk6-n2 (replay flow fwvk6, no orchestrator)
+[reset] vikunja: deleted 1 leftover bench task(s)
+[reset] vikunja: re-created "Seed: ship repaired device" as BENCH-4 so the next task is BENCH-5
+[sweep] fwvk6-n2: 1 drift ticket(s) → fwvk6-n2-drift.json
+
+fwvk6-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — project=Bench Project, description includes runid=true
+  obj 3: PASS — due date=2026-12-31T12:00:00Z, want 2026-12-31
+  obj 4: PASS — priority=3 (want 3 = High)
+  obj 5: PASS — labels=Backend#1; seeded Backend is #1
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — identifier BENCH-5 reported
+
+[sweep] run 3/3: fwvk6-n3 (replay flow fwvk6, no orchestrator)
+[reset] vikunja: deleted 1 leftover bench task(s)
+[reset] vikunja: re-created "Seed: ship repaired device" as BENCH-5 so the next task is BENCH-6
+[sweep] fwvk6-n3: 1 drift ticket(s) → fwvk6-n3-drift.json
+
+fwvk6-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — project=Bench Project, description includes runid=true
+  obj 3: PASS — due date=2026-12-31T12:00:00Z, want 2026-12-31
+  obj 4: PASS — priority=3 (want 3 = High)
+  obj 5: PASS — labels=Backend#1; seeded Backend is #1
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — identifier BENCH-6 reported
+
+Learning sweep fwvk6 (K=3)
+┌─────────┬───┬────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid      │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwvk6-n1' │ '7/7'    │ 'completed' │ 9     │ 8    │ 0.0593    │ 0   │ '0/7'        │ 282    │
+│ 1       │ 2 │ 'fwvk6-n2' │ '7/7'    │ 'success'   │ 0     │ 7    │ 0         │ 1   │ '7/7 (flow)' │ 43     │
+│ 2       │ 3 │ 'fwvk6-n3' │ '7/7'    │ 'success'   │ 0     │ 7    │ 0         │ 1   │ '7/7 (flow)' │ 43     │
+└─────────┴───┴────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8096
+  s_06032f  validated   16 steps  3/3 (100%)
+           Final verification, read-only, do not modify anything. Open the Vikunja task page at /tasks/4 and report exact…
+  s_07bcad  validated    1 steps  3/3 (100%)
+           Open the project named 'Bench Project' in Vikunja and list the titles of all tasks whose title starts with 'Se…
+  s_34cb4f  validated    8 steps  3/3 (100%)
+           In the project '{{v1}}' in Vikunja, create a new task with the exact title '{{v3}}' and a description that inc…
+  s_446ee5  validated    6 steps  3/3 (100%)
+           On the Vikunja task detail page for the task titled '{{v1}}' (identifier {{v3}}, at /tasks/4), attach the EXIS…
+  s_4a1bb4  validated    3 steps  3/3 (100%)
+           In the project '{{v1}}' in Vikunja, create a new task with the exact title '{{v3}}' and a description that inc…
+  s_4f979b  validated    1 steps  3/3 (100%)
+           Final verification, read-only, do not modify anything. Open the Vikunja task page at /tasks/4 and report exact…
+  s_52092d  validated    1 steps  3/3 (100%)
+           Final verification, read-only, do not modify anything. Open the Vikunja task page at /tasks/4 and report exact…
+  s_5ae044  validated    9 steps  3/3 (100%)
+           On the Vikunja task detail page for the task titled '{{v1}}' (identifier {{v3}}, at /tasks/4), add a comment w…
+  s_7bd2fc  validated    6 steps  3/3 (100%)
+           On the Vikunja task detail page for the task titled '{{v1}}' (identifier {{v3}}, at /tasks/4), attach the EXIS…
+  s_7cd7f0  validated   14 steps  3/3 (100%)
+           On the Vikunja task detail page for the task titled '{{v1}}' (identifier {{v3}}, at /tasks/4), set the task's …
+  s_c4cc94  validated    9 steps  3/3 (100%)
+           Final verification, read-only, do not modify anything. Open the Vikunja task page at /tasks/4 and report exact…
+  s_c8685f  validated    3 steps  3/3 (100%)
+           Sign in to Vikunja with username '{{v1}}' and password '{{v2}}'. After signing in, confirm you are logged in a…
+  s_d95ed4  validated    1 steps  3/3 (100%)
+           On the Vikunja task detail page for the task titled '{{v1}}' (identifier {{v3}}, at /tasks/4), attach the EXIS…
+  s_db9938  validated   10 steps  3/3 (100%)
+           Open the project named 'Bench Project' in Vikunja and list the titles of all tasks whose title starts with 'Se…
+  s_efa84f  validated    1 steps  3/3 (100%)
+           Final verification, read-only, do not modify anything. Open the Vikunja task page at /tasks/4 and report exact…
+  s_f3f649  validated    7 steps  3/3 (100%)
+           Sign in to Vikunja with username '{{v1}}' and password '{{v2}}'. After signing in, confirm you are logged in a…
+store: /home/user/sitelooper/bench/results/fwvk6-skills
+
+summary: /home/user/sitelooper/bench/results/fwvk6-sweep.json

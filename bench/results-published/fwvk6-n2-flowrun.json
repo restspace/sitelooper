@@ -1,0 +1,192 @@
+{
+  "flow": "fwvk6",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Signed in to Vikunja at http://127.0.0.1:8096/login with username 'admin' and the supplied password; the login POST redirected to the app root (\"Current Tasks | Vikunja\", http://127.0.0.1:8096/), which renders the authenticated dashboard (\"Hi admin!\" plus Inbox and Bench Project). I confirmed the logged-in user by reading the top-right user-menu button, whose text is exactly \"admin\"; opening that menu revealed the user_menu_items listed in evidence.values.",
+      "values": {
+        "logged_in_user": "admin",
+        "user_menu_button_text": "admin",
+        "dashboard_heading": "Hi admin!",
+        "user_menu_items_1": "Settings",
+        "user_menu_items_2": "Keyboard Shortcuts",
+        "user_menu_items_3": "About",
+        "user_menu_items_4": "Logout"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_f3f649: step 2: read 'logged_in_user' returned a value the skill itself set/selected ('admin') — confirms the control, not persistence; dropped from the report's confident values"
+      ]
+    },
+    {
+      "id": "02-open",
+      "status": "success",
+      "summary": "Opened Bench Project (http://127.0.0.1:8096/projects/2/5, \"Bench Project | Vikunja\") from the left sidebar. The list view shows exactly 3 tasks, all of which begin with \"Seed:\" — read verbatim from the live DOM via the task links (/tasks/1, /tasks/2, /tasks/3): \"Seed: triage inbox\", \"Seed: order missing parts\", \"Seed: ship repaired device\". No pagination or load-more control is present, and nothing was modified.",
+      "values": {
+        "seed_task_title_1": "Seed: triage inbox",
+        "seed_task_title_2": "Seed: order missing parts",
+        "seed_task_title_3": "Seed: ship repaired device",
+        "seed_task_titles_1": "Seed: triage inbox",
+        "seed_task_titles_2": "Seed: order missing parts",
+        "seed_task_titles_3": "Seed: ship repaired device",
+        "project_name": "Bench Project"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Created the task in Bench Project using the project's quick-add field with the exact title \"fwvk6-n2 Bench Task\", then opened its detail page (/tasks/4) and entered \"Bench task created for run fwvk6-n2\" into the task's Description editor, saving it (page confirmed \"Description Saved!\"). All four requested values were read back from the live DOM on the task detail page: title \"fwvk6-n2 Bench Task\", description \"Bench task created for run fwvk6-n2\", identifier \"BENCH-5\", URL http://127.0.0.1:8096/tasks/6.",
+      "values": {
+        "task_description": "Bench task created for run fwvk6-n2",
+        "ref": "fwvk6-n2",
+        "task_identifier": "BENCH-5",
+        "task_title": "fwvk6-n2 Bench Task",
+        "task_url": "http://127.0.0.1:8096/tasks/6",
+        "project": "Bench Project"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_34cb4f: step 4: primary locator did not resolve; used fallback #2 page.locator('div > div:nth-of-type(1) > div > div > button > h1')",
+        "s_34cb4f: step 7: read 'task_description' returned a value the skill itself set/selected ('Bench task created for run fwvk6-n2') — confirms the control, not persistence; dropped from the report's confident values"
+      ]
+    },
+    {
+      "id": "04-set",
+      "status": "success",
+      "summary": "On /tasks/4 (BENCH-5, \"fwvk6-n2 Bench Task\") I set the due date via the due-date picker (navigated to 31 in December 2026 and confirmed) and set the priority select to \"High\". I then reloaded http://127.0.0.1:8096/tasks/4 and both values persisted: the due date control displays \"31 Dec 2026, 12:00:00\" and the priority select has \"High\" selected (option value 3), read from the live DOM after reload. Nothing else was modified.",
+      "values": {
+        "ref": "fwvk6-n2",
+        "priority_option_value": "3",
+        "due_date_display": "31 Dec 2026, 12:00:00",
+        "task_identifier": "BENCH-5",
+        "task_title": "fwvk6-n2 Bench Task",
+        "priority_display": "High"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-create",
+      "status": "success",
+      "summary": "On /tasks/4 (BENCH-5) I clicked \"Add Labels\", typed \"Backend\" into the 'Type to add a label…' field, the suggestion dropdown appeared with the existing label \"Backend Click or press enter to select\", and I CLICKED that suggestion (no Enter, so no new label was created). After reloading http://127.0.0.1:8096/tasks/4, the task shows exactly one label, displayed as \"Backend\". I also visited the Labels page as a cross-check and it lists just one label named \"Backend\" (alongside Docs and Frontend), confirming no duplicate was created.",
+      "values": {
+        "task_label_section_text_after_save": " Labels\nBackend",
+        "task_labels_shown_after_reload": "Backend",
+        "task_identifier": "BENCH-5",
+        "task_title": "fwvk6-n2 Bench Task",
+        "due_date_display": "31 Dec 2026, 12:00:00",
+        "priority": "High"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "06-add",
+      "status": "success",
+      "summary": "On /tasks/4 (BENCH-5, \"fwvk6-n2 Bench Task\") I typed \"Comment for run fwvk6-n2\" into the comment editor (\"Add your comment, hit '/' for more options…\") and clicked the \"Comment\" button. After reloading http://127.0.0.1:8096/tasks/4, the Comments section shows one comment by \"admin\" (less than a minute ago) whose text is exactly \"Comment for run fwvk6-n2\".",
+      "values": {
+        "comment_displayed": "Comment for run fwvk6-n2",
+        "task_identifier": "BENCH-5",
+        "task_title": "fwvk6-n2 Bench Task",
+        "comment_author": "admin",
+        "comment_timestamp": "less than a minute ago",
+        "ref": "fwvk6-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_5ae044: step 4: read 'comment_displayed' returned a value the skill itself set/selected ('Comment for run fwvk6-n2') — confirms the control, not persistence; dropped from the report's confident values"
+      ]
+    },
+    {
+      "id": "07-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_06032f; observed g_comment=Comment for run fwvk6-n2 (author admin), b_task_identifier=BENCH-5, a_task_title=fwvk6-n2 Bench Task, c_description_text=Bench task created for run fwvk6-n2, d_due_date=31 Dec 2026, 12:00:00, priority_selected=3, f_labels=Backend, comment_text=Comment for run fwvk6-n2, comment_author=admin, project_view_heading= Upcoming, seed_task_title_1=Seed: triage inbox, seed_task_title_2=Seed: order missing parts, seed_task_title_3=Seed: ship repaired device, e_priority=High, project_list_titles_1=fwvk6-n2 Bench Task, project_list_titles_2=Seed: triage inbox, project_list_titles_3=Seed: order missing parts, project_list_titles_4=Seed: ship repaired device, ref=fwvk6-n2.",
+      "values": {
+        "g_comment": "Comment for run fwvk6-n2 (author admin)",
+        "b_task_identifier": "BENCH-5",
+        "a_task_title": "fwvk6-n2 Bench Task",
+        "c_description_text": "Bench task created for run fwvk6-n2",
+        "d_due_date": "31 Dec 2026, 12:00:00",
+        "priority_selected": "3",
+        "f_labels": "Backend",
+        "comment_text": "Comment for run fwvk6-n2",
+        "comment_author": "admin",
+        "project_view_heading": " Upcoming",
+        "seed_task_title_1": "Seed: triage inbox",
+        "seed_task_title_2": "Seed: order missing parts",
+        "seed_task_title_3": "Seed: ship repaired device",
+        "e_priority": "High",
+        "project_list_titles_1": "fwvk6-n2 Bench Task",
+        "project_list_titles_2": "Seed: triage inbox",
+        "project_list_titles_3": "Seed: order missing parts",
+        "project_list_titles_4": "Seed: ship repaired device",
+        "ref": "fwvk6-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "28/28",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 7,
+  "total": 7,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwvk6",
+      "step": "03-create",
+      "skill": "s_34cb4f",
+      "atStep": "4",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByRole('heading', { name: 'BENCH-6', exact: true })",
+      "fallbackUsed": "page.locator('div > div:nth-of-type(1) > div > div > button > h1')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8096/tasks/:id",
+      "pageUrl": "http://127.0.0.1:8096/tasks/6"
+    }
+  ],
+  "wallMs": 43052,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
