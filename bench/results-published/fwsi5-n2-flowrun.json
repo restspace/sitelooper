@@ -1,0 +1,138 @@
+{
+  "flow": "fwsi5",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Signed in to the app as 'admin' and opened the Assets list, which shows \"Showing 1 to 3 of 3 rows\" (3 assets total). All three assets have names starting with 'Seed:', so the full list is: SEED-0001 = \"Seed: Reception Laptop\"; SEED-0002 = \"Seed: Training Laptop\"; SEED-0003 = \"Seed: Spare Laptop\". Values read directly from the live Assets table.",
+      "values": {
+        "total_assets": "3",
+        "asset_1_tag": "SEED-0001",
+        "asset_1_name": "Seed: Reception Laptop",
+        "asset_2_tag": "SEED-0002",
+        "asset_2_name": "Seed: Training Laptop",
+        "asset_3_tag": "SEED-0003",
+        "asset_3_name": "Seed: Spare Laptop"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_8612c5; observed asset_name=fwsi5-n2 Bench Asset, purchase_date=2026-03-15, form_model=×\nBench Laptops - Bench Manufacturer Bench Laptop Model, bench_task_ref=fwsi5-n2, asset_tag=BA-00005, model=Bench Laptop Model, asset_page_title=  Assets  fwsi5-n2 Bench Asset #BA-00005 - Bench Laptop Model, purchase_display= Purchased 2026-03-15 - 6 months 1 week ago.",
+      "values": {
+        "asset_name": "fwsi5-n2 Bench Asset",
+        "purchase_date": "2026-03-15",
+        "form_model": "×\nBench Laptops - Bench Manufacturer Bench Laptop Model",
+        "bench_task_ref": "fwsi5-n2",
+        "asset_tag": "BA-00005",
+        "model": "Bench Laptop Model",
+        "asset_page_title": "  Assets  fwsi5-n2 Bench Asset #BA-00005 - Bench Laptop Model",
+        "purchase_display": " Purchased 2026-03-15 - 6 months 1 week ago"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "25/25",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_7b2d29: step 14: read 'asset_name' returned a value the skill itself set/selected ('fwsi5-n2 Bench Asset') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_7b2d29: step 16: read 'purchase_date' returned a value the skill itself set/selected ('2026-03-15') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_7b2d29: step 17: read 'form_model' returned a value the skill itself set/selected ('×\nBench Laptops - Bench Manufacturer Bench Laptop Model') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_7b2d29: step 18: read 'status' returned a value the skill itself set/selected ('Ready to Deploy') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_7b2d29: step 19: read 'form_default_location' returned a value the skill itself set/selected ('×\nBench Office') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_7b2d29: step 20: expected alert containing \"Success: × Asset with tag BA-00004 was created successfully. Click here to view.\""
+      ],
+      "unreported": [
+        "status",
+        "form_default_location"
+      ]
+    },
+    {
+      "id": "03-verify",
+      "status": "success",
+      "summary": "On asset BA-00005's page (/hardware/4) I opened the Checkout form (/hardware/4/checkout), selected \" Bench Assignee\" from the searchable user dropdown (clicked the option from the opened list so it committed as a chip), added the note \"Checked out for fwsi5-n2 bench task\", and submitted — the app confirmed \"Asset checked out successfully.\" Back on the detail page it now reads \"Ready to Deploy Deployed —  Bench Assignee\" with \"Last Checkout 2026-09-22\" and Checkouts: 1; the History tab shows the checkout row: 2026-09-22 09:17 AM, Bench Admin, checkout, fwsi5-n2 Bench Asset #BA-00005 - Bench Laptop Model,  Bench Assignee, note \"Checked out for fwsi5-n2 bench task\".",
+      "values": {
+        "history_row": "2026-09-22 09:14 AM | Bench Admin | checkout | fwsi5-n2 Bench Asset #BA-00005 - Bench Laptop Model | Bench Assignee | 1 | Checked out for fwsi5-n2 bench task | Current Location: [id: 1] Bench Office",
+        "bench_task_ref": "fwsi5-n2",
+        "asset_tag": "BA-00005",
+        "asset_name": "fwsi5-n2 Bench Asset",
+        "checkout_note": "Checked out for fwsi5-n2 bench task",
+        "status_display": "\n            Ready to Deploy\n        Deployed\n                        Bench Assignee\n",
+        "last_checkout": "2026-09-22 09:17 AM",
+        "assignee": " Bench Assignee"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_822605: step 3: skipped read — no element matched any known locator for target (none recorded)"
+      ]
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Read the live asset detail page at /hardware/4#details for tag BA-00005 (\"fwsi5-n2 Bench Asset\"). All five values match: (1) Model shows \"Bench Laptop Model\"; (2) Status shows \"Ready to Deploy\" with the badge \"Deployed\" and the assignee \"Bench Assignee\" displayed beside it (Last Checkout 2026-09-22); (3) Default Location shows \"Bench Office\"; (4) Purchase Date row displays \" Purchased 2026-03-15 - 6 months 1 week ago\"; (5) the checkout note in the History tab reads \"Checked out for fwsi5-n2 bench task\", which contains \"fwsi5-n2\". No mismatches found.",
+      "values": {
+        "1_model": "Bench Laptop Model (link -> http://127.0.0.1:8098/models/1)",
+        "2_status": "Ready to Deploy [badge: Deployed] Bench Assignee",
+        "history_rows": "2026-09-22 09:13 AM create new; 2026-09-22 09:14 AM checkout -> Bench Assignee",
+        "bench_task_ref": "fwsi5-n2",
+        "asset_tag": "BA-00005",
+        "asset_name": "fwsi5-n2 Bench Asset",
+        "last_checkout": " Last Checkout 2026-09-22 6 seconds ago",
+        "3_default_location": "Bench Office",
+        "4_purchase_date": " Purchased 2026-03-15 - 6 months 1 week ago",
+        "5_checkout_note": "Checked out for fwsi5-n2 bench task",
+        "checkout_note_contains_fwsi5-n1": "true",
+        "2_assignee": "Bench Assignee"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 4,
+  "total": 4,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwsi5",
+      "step": "03-verify",
+      "skill": "s_822605",
+      "atStep": "3",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "(none recorded)",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8098/hardware/:id#history",
+      "pageUrl": "http://127.0.0.1:8098/hardware/5#history"
+    }
+  ],
+  "wallMs": 42420,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

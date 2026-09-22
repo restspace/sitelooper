@@ -1,0 +1,176 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwsi5-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwsi5-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwsi5-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwsi5-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwsi5-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwsi5.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwsi5-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwsi5.spec.ts",
+      "file": "fwsi5.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwsi5",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 37033,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_7b2d29/14: read 'asset_name' returned a value the skill itself set/selected ('fwsi5-spec Bench Asset') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_7b2d29/16: read 'purchase_date' returned a value the skill itself set/selected ('2026-03-15') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_7b2d29/17: read 'form_model' returned a value the skill itself set/selected ('×\nBench Laptops - Bench Manufacturer Bench Laptop Model') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_7b2d29/18: read 'status' returned a value the skill itself set/selected ('Ready to Deploy') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_7b2d29/19: read 'form_default_location' returned a value the skill itself set/selected ('×\nBench Office') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_7b2d29/20: expected alert containing \"Success: × Asset with tag BA-00004 was created successfully. Click here to view.\"\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-verify\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-open\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:8098/ and sign in with username 'admin' and password 'bench-admin-pass'. Then go to the Assets list and report, exactly as displayed on the page, the asset tag and name of every asset whose name starts with 'Seed:'. Give the full list.",
+                      "duration": 8105
+                    },
+                    {
+                      "title": "02-create: Create a new asset in Snipe-IT with these exact values: Asset Name = '{{runid}} Bench Asset', Model = 'Bench Laptop Model' (choose it from the searchable dropdown so it is actually selected), Status = 'Ready to Deploy' (choose from the dropdown), Default Location = 'Bench Office' (choose from the dropdown), Purchase Date = 2026-03-15. Fill any other required fields as needed (e.g. leave asset tag auto-generated if the app allows, or use whatever the app requires). Save the asset, then open the asset's detail page and report the asset tag, name, model, status, location and purchase date exactly as displayed.",
+                      "duration": 17703
+                    },
+                    {
+                      "title": "03-verify: On the asset detail page for asset tag {{02-create.asset_tag}} (named '{{runid}} Bench Asset'), perform a Check Out action: check the asset out to the user 'Bench Assignee' (choose the user from the searchable dropdown so it is actually selected), and include a note whose text contains '{{runid}}' (for example 'Checked out for {{runid}} bench task'). Complete the checkout. Then verify on the asset's detail page that it is checked out to Bench Assignee and report the assignee name, the checkout note text, and the asset tag exactly as displayed.",
+                      "duration": 8621
+                    },
+                    {
+                      "title": "04-open: Open the asset detail page for the asset with tag {{02-create.asset_tag}} (named '{{runid}} Bench Asset') in Snipe-IT and verify, reading the page: (1) its model is 'Bench Laptop Model', (2) its status is 'Ready to Deploy' and it is deployed/checked out to the user 'Bench Assignee', (3) its default location is 'Bench Office', (4) its purchase date is 2026-03-15, (5) the checkout note text contains '{{runid}}'. Report each of these five values exactly as displayed on the page, and state clearly if any of them does not match.",
+                      "duration": 2009
+                    }
+                  ],
+                  "startTime": "2026-09-22T09:19:12.446Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "45271eb16275d8254537-0e427133fc6c0f785799",
+          "file": "fwsi5.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-22T09:19:10.590Z",
+    "duration": 39076.968,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
