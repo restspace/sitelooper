@@ -26,7 +26,7 @@ sitelooper peek [--selector css] [--interactive]
 sitelooper screenshot [path]
 
 # the core verb — anything requiring judgment or multi-part assertions
-sitelooper do "log in as {{env:TEST_USER}} using {{env:TEST_PASSWORD}}"
+sitelooper do 'log in as {{env:TEST_USER}} using {{env:TEST_PASSWORD}}'   # single quotes: see Credentials
 sitelooper do "create a supplier organisation named 'k7x2 MTP Supplies Ltd' and confirm it appears in the Organisations list with the count incremented" --json
 
 # housekeeping — answered immediately, even while a `do` is running
@@ -56,7 +56,7 @@ on another machine, and runs the emitted code under plain Playwright.
 ```sh
 sitelooper init
 sitelooper --session login --learn open http://localhost:5173
-sitelooper --session login do "log in as {{env:TEST_USER}} using {{env:TEST_PASSWORD}} and verify the dashboard opens"
+sitelooper --session login do 'log in as {{env:TEST_USER}} using {{env:TEST_PASSWORD}} and verify the dashboard opens'
 sitelooper --session login stop --save-flow login
 sitelooper flow export login --out .sitelooper/procedures.json
 sitelooper build login --fixture-isolation
@@ -85,7 +85,14 @@ Project defaults live in the nearest `sitelooper.config.json`. Paths are relativ
 ```
 
 Keep passwords, tokens, and other secrets out of this file. Put `{{env:NAME}}` references in
-instructions and set those variables in the environment that authors and CI use. `requiredVars`
+instructions and set those variables in the environment that authors and CI use.
+
+**Credentials: pass the marker, never the value.** Write `{{env:NAME}}` (or `{{totp:NAME}}` for a
+one-time code) exactly as shown, inside SINGLE quotes in a shell. Never write `$NAME` or `${NAME}`:
+inside double quotes the shell expands it, and the secret itself reaches the recording. sitelooper
+rewrites a literal equal to a credential-named variable back to its marker where it can, and
+`compile` refuses a flow that still carries one (`literal-credential`), but the marker is the
+contract. `requiredVars`
 names flow inputs, while generated specs validate their required environment references separately.
 
 `flow export` writes the flow, every pinned procedure segment, and compiler provenance to one
@@ -179,7 +186,7 @@ report shape and every value still read back from the live page.
 
 ```sh
 sitelooper --session t1 --learn open http://localhost:5173
-sitelooper --session t1 do "sign in as {{env:TEST_USER}} using {{env:TEST_PASSWORD}} and create a project named 'k7 Demo'"
+sitelooper --session t1 do 'sign in as {{env:TEST_USER}} using {{env:TEST_PASSWORD}} and create a project named "k7 Demo"'
 sitelooper skills list                    # what has been learned for each site
 sitelooper skills show <id>               # the steps, their fallbacks, what is a parameter
 ```

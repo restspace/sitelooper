@@ -195,9 +195,15 @@ export function maskPopupItem(line: string): string {
  * and calendar tokens masked (a store compiled before masking existed still
  * carries them), the recording's own minted values masked, and this run's
  * params filled in. Both runners fill at run time, from the same map.
+ *
+ * A secret marker (`{{env:NAME}}`, `{{totp:NAME}}`) — recorded where the page
+ * echoed a scrubbed value, or arriving through a param bound to one — is the
+ * wildcard: the value is never written into a line, and a line cannot be
+ * checked against a marker the page never shows (fwgh9: "recorded page change
+ * … {{env:APP_PASSWORD}} … not checked").
  */
 export function liveLines(lines: readonly string[], params: Record<string, string>): string[] {
-  return lines.map((l) => fillParams(maskMinted(maskVolatile(l)), params));
+  return lines.map((l) => fillParams(maskMinted(maskVolatile(l)), params).replace(/\{\{(?:env|totp):\w+\}\}/g, WILDCARD));
 }
 
 /**

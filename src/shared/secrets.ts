@@ -145,3 +145,117 @@ export function scrubSecretsDeep<T>(value: T): T {
 export function clearSecretLedger(): void {
   ledger.clear();
 }
+
+/*
+ * LITERAL credentials, turned back into their markers (FIX AH, round 47).
+ *
+ * Everything above protects a value that arrived as a marker. Nothing
+ * protected one that arrived as itself: fwrd83's caller ran
+ * `sitelooper do "… password $APP_PASSWORD …"`, the shell expanded it, and
+ * `bench-pass-1234` went into the flow, the skills, script.jsonl, the flow
+ * runs and the compiled `v2: 'bench-pass-1234'` (requiredEnvNames []). fwod79's
+ * model typed "password 'admin'" itself. So a literal that EQUALS the value of
+ * a credential-named environment variable is rewritten to `{{env:NAME}}` —
+ * in a `do` instruction (server.ts) and in a fill/type value (tools.ts) —
+ * before any model, recorder or store sees it, and the value joins the scrub
+ * ledger.
+ *
+ * Provenance decides, not shape: the environment says which values are
+ * credentials, by the variable's NAME. A value some OTHER, non-credential
+ * variable holds too (odoo's `admin` is APP_PASSWORD and APP_EMAIL) is
+ * AMBIGUOUS: it is never rewritten in prose and never scrubbed (every "admin"
+ * on the page would go), only in a fill whose field is a password field.
+ */
+
+/** A variable name that says it holds a credential — a name segment, so `APP_PASSWORD`, `GH_TOKEN`, `OPENAI_API_KEY`, `APP_TOTP`, never `PASSENGER_URL` or a bare `SORT_KEY`. */
+const CREDENTIAL_NAME = /(?:^|_)(?:PASSWORD|PASSWD|PASS|PWD|SECRET|TOKEN|(?:API|PRIVATE|ACCESS)_?KEY|OTP|TOTP)(?:_|$)/i;
+
+export interface CredentialVar {
+  name: string;
+  value: string;
+  /** A non-credential variable holds the same value. */
+  ambiguous: boolean;
+}
+
+/** The credential-named variables worth matching (value at least the scrub minimum), longest value first. */
+export function credentialVars(env: NodeJS.ProcessEnv = process.env): CredentialVar[] {
+  const plain = new Set<string>();
+  for (const [name, value] of Object.entries(env)) if (value && !CREDENTIAL_NAME.test(name)) plain.add(value);
+  const seen = new Set<string>();
+  const out: CredentialVar[] = [];
+  for (const name of Object.keys(env).sort()) {
+    const value = env[name];
+    if (!value || value.length < MIN_SCRUB_LEN || !CREDENTIAL_NAME.test(name) || seen.has(value)) continue;
+    seen.add(value);
+    out.push({ name, value, ambiguous: plain.has(value) });
+  }
+  return out.sort((a, b) => b.value.length - a.value.length);
+}
+
+const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+/** `value` standing as a token of its own: not the middle of a longer word or number. */
+const tokenRe = (value: string) => new RegExp(`(?<![\\p{L}\\p{N}])${escapeRe(value)}(?![\\p{L}\\p{N}])`, 'gu');
+
+/**
+ * `text` with every UNAMBIGUOUS credential value that stands as a token
+ * rewritten to its `{{env:NAME}}` marker, and the names that were. Each
+ * rewritten value joins the scrub ledger. The `do` instruction's path.
+ */
+export function markLiteralCredentials(text: string, env: NodeJS.ProcessEnv = process.env): { text: string; names: string[] } {
+  let out = text;
+  const names: string[] = [];
+  for (const v of credentialVars(env)) {
+    if (v.ambiguous || !out.includes(v.value)) continue;
+    const re = tokenRe(v.value);
+    if (!re.test(out)) continue;
+    out = out.replace(tokenRe(v.value), `{{env:${v.name}}}`);
+    ledger.set(v.value, `{{env:${v.name}}}`);
+    names.push(v.name);
+  }
+  return { text: out, names };
+}
+
+/**
+ * A fill/type value as it should be recorded: the whole value equal to a
+ * credential becomes its marker — an ambiguous one only when the field is a
+ * password field — and otherwise unambiguous credentials inside it are
+ * rewritten as in prose.
+ */
+export function markLiteralCredentialValue(value: string, passwordField: boolean, env: NodeJS.ProcessEnv = process.env): { value: string; names: string[] } {
+  const whole = credentialVars(env).find((v) => v.value === value && (!v.ambiguous || passwordField));
+  if (whole) {
+    if (!whole.ambiguous) ledger.set(whole.value, `{{env:${whole.name}}}`);
+    return { value: `{{env:${whole.name}}}`, names: [whole.name] };
+  }
+  const marked = markLiteralCredentials(value, env);
+  return { value: marked.text, names: marked.names };
+}
+
+/** Whether any value in `env` is a credential a literal could equal — the cheap guard in front of the rewrites. */
+export function mayHoldLiteralCredential(text: string, env: NodeJS.ProcessEnv = process.env): boolean {
+  return credentialVars(env).some((v) => text.includes(v.value));
+}
+
+/**
+ * Credential variables whose UNAMBIGUOUS value stands as a token in any
+ * string of `value` — a compiled artifact or an exported flow that would
+ * carry a secret in the clear. Names only, never values.
+ */
+export function literalCredentialsIn(value: unknown, env: NodeJS.ProcessEnv = process.env): string[] {
+  const vars = credentialVars(env).filter((v) => !v.ambiguous);
+  const found = new Set<string>();
+  if (!vars.length) return [];
+  const walk = (v: unknown): void => {
+    if (typeof v === 'string') {
+      for (const c of vars) if (v.includes(c.value) && tokenRe(c.value).test(v)) found.add(c.name);
+      return;
+    }
+    if (Array.isArray(v)) {
+      for (const item of v) walk(item);
+      return;
+    }
+    if (v && typeof v === 'object') for (const item of Object.values(v as Record<string, unknown>)) walk(item);
+  };
+  walk(value);
+  return [...found].sort();
+}

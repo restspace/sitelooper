@@ -1746,6 +1746,57 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     }, 180_000);
 
     /**
+     * G01b. The refusal a step exists to provoke is EXPECTED, once compile
+     * keeps it (repairdesk fwrd83-n1 06-change). The recording saw the toast
+     * and read it back, its first line published on its own; FIX P's cut once
+     * took that line for a value inside the alert, cut the expectation to
+     * nothing, and both runners then stopped on the refusal as an alert the
+     * recording never saw. Compiled from such a recording, the Mark's alert
+     * is expected, and both runners go on to Remove.
+     */
+    it('both runners expect a recorded refusal whose first line the reads published', async () => {
+      const url = `${origin}/`;
+      const alertRead = (label: string | undefined, result: unknown, tool = 'read'): RecordedStep => ({
+        k: 'step',
+        tool,
+        args: { target: '[role=alert]', what: 'text', ...(label ? { label } : {}) },
+        locators: { target: { expr: 'x', verified: true, raw: '[role=alert]', chain: [{ kind: 'css', selector: '[role=alert]' }] } },
+        result: JSON.stringify(result),
+        ...(label ? { label } : {}),
+      });
+      const click = (name: string, alerts: string[] = []): RecordedStep => ({
+        k: 'step',
+        tool: 'click',
+        args: { target: '@e1' },
+        locators: { target: { expr: 'x', verified: true, raw: '@e1', chain: [{ kind: 'role', role: 'button', name }] } },
+        diff: { url, alerts, added: [], dialect: 2 },
+      });
+      const entries: RecordedEntry[] = [
+        { k: 'instruction', text: 'mark the item, report the refusal, then remove it', url },
+        click('Mark', ['Mark rejected: Item 1']),
+        alertRead(undefined, ['Mark rejected:\nItem 1'], 'read_all'),
+        alertRead('refusal_head', 'Mark rejected:'),
+        click('Remove'),
+      ];
+      const compiled = compileSkills({ entries, instruction: 'mark the item, report the refusal, then remove it', report: { status: 'success', summary: 'refused', evidence: { values: { refusal_head: 'Mark rejected:' } } }, session: 's' });
+      const steps = compiled.flatMap((sk) => sk.steps);
+      expect(steps[0].expect?.alertContains).toBe('Mark rejected: Item 1');
+
+      reset(1);
+      fx.faults.rejectWrite(409, { pathPrefix: '/mark/' });
+      const replay = await replayOf(skillOf(steps));
+      const replayLog = [...fx.log];
+      reset(1);
+      fx.faults.rejectWrite(409, { pathPrefix: '/mark/' });
+      const emitted = await emittedOf(specOf(steps));
+      const emittedLog = [...fx.log];
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replayLog).toEqual(['delete:Item 1']);
+      expect(emittedLog).toEqual(['delete:Item 1']);
+    }, 180_000);
+
+    /**
      * G00. A dismissal of a dialog NOTHING in the procedure opened (fwop1:
      * OpenProject's first-login "Welcome" dialog, raised by sign-in, closed by
      * the next segment's first click). Recorded with the removal it made, the

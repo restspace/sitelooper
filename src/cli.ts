@@ -116,6 +116,8 @@ Global options:
   Provider presets: openrouter (default with OPENROUTER_API_KEY), zhipu, novita, openai,
       anthropic; pick one with SITELOOPER_PROVIDER. doctor says which is in use and why.
   Credentials: use {{env:NAME}} in instructions ({{totp:NAME}} for a one-time code from a TOTP seed); set NAME before starting the session.
+      Pass the marker exactly, in SINGLE quotes (do 'sign in with {{env:APP_PASSWORD}}'), never $NAME: a shell
+      expands $NAME inside double quotes and the secret itself is recorded.
   Project defaults: sitelooper.config.json (nearest ancestor); CLI flags override them.
 
 Exit codes: 0 success ? 1 agent/recording failure ? 2 unavailable/invalid input

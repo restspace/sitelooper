@@ -34,6 +34,7 @@ import { snapshot, waitForContent } from './refs.js';
 import { ScriptRecorder, candidateExpr } from './recorder.js';
 import { encodeFrame, LineDecoder, type CommandName, type FlowStepResult, type Frame, type Request } from '../shared/protocol.js';
 import { aliasLegacyEnv, ensureSessionDir, socketPath, validateSessionName } from '../shared/paths.js';
+import { literalCredentialsIn, markLiteralCredentials } from '../shared/secrets.js';
 import { BrowserSession } from './browser.js';
 import { DEFAULT_BROWSER_PROFILE } from '../execution/browser.js';
 import { observedChange } from '../execution/lifecycle.js';
@@ -718,7 +719,14 @@ ${describeLeaks(leaks.slice(0, 6))}`);
         const fallback = a.escalate === false ? null : this.fallbackProvider(overrides, provider);
         const controller = new AbortController();
         this.inflight = controller;
-        const instruction = String(a.instruction);
+        // A credential that arrived as ITSELF (a shell expanded `$APP_PASSWORD`
+        // inside double quotes: fwrd83) is its marker again before the model,
+        // the recorder or any store sees the instruction (FIX AH, secrets.ts).
+        const literal = markLiteralCredentials(String(a.instruction));
+        const instruction = literal.text;
+        if (literal.names.length) {
+          progress(`[secrets] the instruction carried the value of ${literal.names.join(', ')} in the clear; recorded as ${literal.names.map((n) => `{{env:${n}}}`).join(', ')} (pass markers in single quotes, never $NAME)`);
+        }
         const screenshotDir = path.join(ensureSessionDir(this.opts.session), 'screenshots');
         const loopOpts = {
           maxTurns: typeof a.maxTurns === 'number' ? a.maxTurns : 30,
@@ -1277,6 +1285,14 @@ ${describeLeaks(leaks.slice(0, 6))}`);
     // into the flow. WARN for now — the ledger's coverage is what is being
     // measured, and a false alarm must not block an export.
     const leaks = this.leaksIn(flow, store);
+    // A credential in the clear in the flow or its skills (FIX AH): loud, and
+    // compile refuses it (literal-credential). Names only, never the value.
+    const clear = literalCredentialsIn([flow, this.sessionSkills(flow, store)]);
+    if (clear.length) {
+      warnings.unshift(
+        `error: the flow or its skills carry the value of ${clear.join(', ')} in the clear — compile will refuse it. Re-record the step(s) passing ${clear.map((n) => `{{env:${n}}}`).join(', ')} in single quotes, never $NAME`,
+      );
+    }
     // Two lists, because one buried the other: the values evidence says are
     // this run's (a var, an id= position, observed variance) in full, and the
     // shape-only rest — mostly page copy — as a count and a sample.

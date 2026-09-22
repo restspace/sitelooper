@@ -694,7 +694,7 @@ export function compileSkills(input: CompileInput): Skill[] {
       input.instruction,
       notes,
     );
-    return { sg, segParams, mintedForStart, folded, notes };
+    return { sg, segParams, mintedForStart, folded, notes, recordedDiffs };
   });
 
   // A recorded expectation must not freeze a value only THIS run could
@@ -703,7 +703,10 @@ export function compileSkills(input: CompileInput): Skill[] {
   // published (any step may hold the read) and which names the recording
   // watched change (two steps, by definition). See unfreezeExpectations.
   const published = publishedReadValues(kept, reportValues);
-  for (const b of built) unfreezeExpectations(b.folded, published, b.notes);
+  // Every read the recording made, kept or not: the alert read back is
+  // evidence of its lines whether or not the procedure keeps the read.
+  const reads = recordedReadTexts(steps);
+  for (const b of built) unfreezeExpectations(b.folded, published, b.notes, { reads, diffOf: (s) => b.recordedDiffs.get(s) });
   if (built.length) built[0].notes.unshift(...recordingNotes);
 
   // Derived-param metadata lands on the MINTING segment: which post-fold step
@@ -2118,16 +2121,69 @@ export function maskPublishedValues(line: string, published: readonly string[]):
  * logged in.") says nothing about a value inside it, and the text every
  * sign-in raises is exactly what the step should expect.
  */
-export function cutAtPublishedValue(text: string, published: readonly string[]): string {
+export function cutAtPublishedValue(text: string, published: readonly string[], lines: readonly string[] = []): string {
   let at = -1;
   for (const v of published) {
-    if (v.length < 2 || v === text.trim()) continue;
+    if (v.length < 2 || v === text.trim() || lines.includes(v)) continue;
     // Where it stands, by the token rule the masking side uses (ledger.ts
     // replaceAsToken): mark it, then find the mark.
     const i = occursAsToken(text, v) ? replaceAsToken(text, v, '\u0000').indexOf('\u0000') : -1;
     if (i >= 0 && (at < 0 || i < at)) at = i;
   }
   return at < 0 ? text : text.slice(0, at).trimEnd();
+}
+
+/** Whitespace collapsed, as a recorded alert is (renderAlerts). */
+const collapseSpace = (s: string): string => s.replace(/\s+/g, ' ').trim();
+
+/**
+ * Every text the recording's reads returned, multi-line ones included (an
+ * array read's elements each on their own) — what alertLines looks for the
+ * alert read back in.
+ */
+export function recordedReadTexts(steps: readonly RecordedStep[]): string[] {
+  const out: string[] = [];
+  for (const step of steps) {
+    if ((step.tool !== 'read' && step.tool !== 'read_all') || step.result === undefined) continue;
+    let observed: unknown;
+    try {
+      observed = JSON.parse(step.result);
+    } catch {
+      observed = step.result;
+    }
+    for (const v of Array.isArray(observed) ? observed : [observed]) if (typeof v === 'string' && v.trim()) out.push(v);
+  }
+  return out;
+}
+
+/**
+ * The LINES of a recorded alert, where the recording shows them. The alert
+ * itself is stored whitespace-collapsed (renderAlerts), so its line breaks
+ * are gone; two pieces of the recording's own evidence give them back:
+ *  - a read that returned the alert's text with its breaks (collapsed, it
+ *    equals the alert): repairdesk fwrd83-n1 06-change read the refusal
+ *    `"Ticket is not ready\n\nPart … has no supplier\nPart …"`;
+ *  - published values that TILE the alert, one after another, separated by
+ *    whitespace, from its first character to its last: the same refusal
+ *    read back as `refusal_text_1..3`, one line each.
+ * Neither: no lines ([]), and every published value is judged as a value.
+ */
+export function alertLines(rawAlert: string, reads: readonly string[], published: readonly string[]): string[] {
+  const alert = collapseSpace(rawAlert);
+  if (!alert) return [];
+  for (const r of reads) {
+    if (r.includes('\n') && collapseSpace(r) === alert) return r.split('\n').map((l) => l.trim()).filter(Boolean);
+  }
+  const pieces = [...new Set(published.map(collapseSpace).filter(Boolean))].sort((a, b) => b.length - a.length);
+  const lines: string[] = [];
+  let pos = 0;
+  while (pos < alert.length) {
+    const next = pieces.find((v) => alert.startsWith(v, pos) && (pos + v.length === alert.length || alert[pos + v.length] === ' '));
+    if (!next) return [];
+    lines.push(next);
+    pos += next.length + 1;
+  }
+  return lines;
 }
 
 /** The values this recording's own reads published — see maskPublishedValues. */
@@ -2234,7 +2290,12 @@ function unfreezeWatchedNames(steps: readonly SkillStep[]): number {
  * a value only the recording run could produce, so the gate had nothing to
  * check before this ran either, and stopping on it was the bug.
  */
-export function unfreezeExpectations(steps: SkillStep[], published: readonly string[], notes: TransformNote[]): void {
+export function unfreezeExpectations(
+  steps: SkillStep[],
+  published: readonly string[],
+  notes: TransformNote[],
+  alertEvidence: { reads: readonly string[]; diffOf: (step: SkillStep) => StepDiff | undefined } = { reads: [], diffOf: () => undefined },
+): void {
   const watched = unfreezeWatchedNames(steps);
   steps.forEach((step, si) => {
     // The alert too: it is the same recorded page change, one channel over.
@@ -2245,9 +2306,21 @@ export function unfreezeExpectations(steps: SkillStep[], published: readonly str
     // plain substring with no wildcard, so the text is CUT before the first
     // published value rather than masked: "Success: × Asset with tag" is the
     // part every run shows. Nothing left before it, no alert expectation.
+    //
+    // A published value that is a whole LINE of the alert is the alert read
+    // back, not a value inside it, and never cuts — the whole-alert
+    // exemption, per line. repairdesk fwrd83-n1 06-change raised "Ticket is
+    // not ready" over two part lines; its reads published the first line as
+    // `refusal_text_1`, at offset 0, so the cut left "" and deleted the
+    // expectation; alertVerdict then took the refusal the step exists to
+    // provoke for an unexpected alert, and n2, n3 and the compiled script
+    // all failed. The lines come from the recording (alertLines); the
+    // stored alert stays collapsed. fwsi4's BA-00004 is inside a line and
+    // still cuts.
     const alert = step.expect?.alertContains;
     if (alert !== undefined && published.length) {
-      const cut = cutAtPublishedValue(alert, published);
+      const raw = alertEvidence.diffOf(step)?.alerts?.[0] ?? alert;
+      const cut = cutAtPublishedValue(alert, published, alertLines(raw, alertEvidence.reads, published));
       if (cut !== alert) {
         if (cut) step.expect!.alertContains = cut;
         else {

@@ -2070,6 +2070,30 @@ describe('compileFlow', () => {
   it('refuses a flow it cannot find', () => {
     expect(() => compileFlow('no-such-flow', { outDir: dir })).toThrow(/no flow named/);
   });
+
+  /**
+   * FIX AH (fwrd83). The published rdflow was recorded from an instruction a
+   * shell had expanded `$APP_PASSWORD` into: the password is in the clear.
+   * With that variable set, compile refuses it by NAME, and the value appears
+   * in no diagnostic and no file.
+   */
+  it('refuses a flow that carries a credential-named variable\'s value in the clear, naming only the variable', () => {
+    const had = process.env.APP_PASSWORD;
+    process.env.APP_PASSWORD = 'bench-pass-1234';
+    try {
+      const out = path.join(dir, 'clear');
+      const result = compileFlow(RDFLOW, { store: new SkillStore(FWAT2), outDir: out });
+      expect(result.refused).toBe(true);
+      expect(result.flowFile).toBeNull();
+      const d = result.diagnostics.find((x) => x.code === 'literal-credential');
+      expect(d?.severity).toBe('error');
+      expect(d?.what).toContain('APP_PASSWORD');
+      expect(JSON.stringify(result.diagnostics)).not.toContain('bench-pass-1234');
+    } finally {
+      if (had === undefined) delete process.env.APP_PASSWORD;
+      else process.env.APP_PASSWORD = had;
+    }
+  });
 });
 
 /**

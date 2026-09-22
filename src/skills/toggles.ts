@@ -134,6 +134,11 @@ function canonical(c: LocatorCandidate): string {
  *    — ends the search, so a password and its confirmation (two targets, no
  *    reload) and a form's several fields are never pairs.
  *
+ * And the plain REFILL, with no reload: two `fill`s of the same target on the
+ * same url, only observations and focus clicks between, whatever the values —
+ * the later fill replaces the field, so the earlier one is dropped alone
+ * (gitea fwgt6, below).
+ *
  * Returns the kept steps in order, the same objects (compile matches kept
  * steps against the recording by identity).
  */
@@ -150,6 +155,17 @@ export function dropSupersededSets(steps: readonly RecordedStep[]): RecordedStep
     for (let k = i + 1; k < steps.length; k++) {
       const next = steps[k];
       if (setValue(next) !== null) {
+        // A REFILL: `fill` replaces the field's value, so a later fill of the
+        // same field, with nothing between that recorded a consequence, leaves
+        // the earlier one nothing to do — whatever the two values (gitea
+        // fwgt6-n1 01-signin filled #password 'admin', clicked Sign In, which
+        // did nothing, and filled it again with {{env:APP_PASSWORD}};
+        // s_9c4b07 kept both fills once the dead click was dropped). Only
+        // fill after fill: `type` appends, so two types are both needed.
+        if (!reload && first.tool === 'fill' && next.tool === 'fill' && next.diff?.url === url && sameTarget(first, next)) {
+          dropped.add(i);
+          break;
+        }
         if (reload && setValue(next) === value && next.diff?.url === url && sameTarget(first, next)) {
           dropped.add(i);
           // the focus clicks that led into the abandoned set

@@ -120,3 +120,32 @@ describe('compile: a set done again compiles once', () => {
     expect(steps.filter((s) => s.expect?.addedContains?.includes('- heading "Description Saved!"'))).toHaveLength(1);
   });
 });
+
+/**
+ * gitea fwgt6-n1 01-signin (FIX AJ): filled #password with 'admin', clicked
+ * Sign In (which recorded nothing), and filled #password again with the
+ * {{env:APP_PASSWORD}} marker before a Sign In that worked. s_9c4b07 kept
+ * both fills once the dead click was dropped.
+ */
+describe('dropSupersededSets: a refill of the same field', () => {
+  const LOGIN = 'http://127.0.0.1:8095/user/login';
+  const PASSWORD = [{ kind: 'role', role: 'textbox', name: 'Password' }, { kind: 'label', label: 'Password' }] as LocatorCandidate[];
+  const USER = [{ kind: 'label', label: 'Username or Email Address' }, { kind: 'id', selector: '#user_name' }] as LocatorCandidate[];
+  const SIGN_IN = [{ kind: 'role', role: 'button', name: 'Sign In' }] as LocatorCandidate[];
+  const at = (d: Partial<StepDiff> = {}) => diff({ url: LOGIN, ...d });
+  const fill = (loc: LocatorCandidate[], value: string, raw = '@e28') => step('fill', { target: raw, value }, chain(raw, ...loc), at({ added: [`- textbox "x": ${value}`] }));
+
+  it('drops the earlier fill of the fwgt6 shape, whatever the two values', () => {
+    const steps = [fill(USER, 'admin', '@e23'), fill(PASSWORD, 'admin'), step('click', { target: '@e34' }, chain('@e34', ...SIGN_IN), at({ removed: [] })), fill(PASSWORD, '{{env:APP_PASSWORD}}', '@e30'), step('click', { target: '@e36' }, chain('@e36', ...SIGN_IN), at({ url: 'http://127.0.0.1:8095/', added: ['- link "Dashboard"'] }))];
+    expect(dropSupersededSets(steps)).toEqual([steps[0], steps[2], steps[3], steps[4]]);
+  });
+
+  it('keeps both when a step between recorded a consequence, when the fields differ, or when the sets are types', () => {
+    const acted = [fill(PASSWORD, 'a'), step('click', { target: '@e34' }, chain('@e34', ...SIGN_IN), at({ added: ['- alert "Wrong password"'] })), fill(PASSWORD, 'b')];
+    expect(dropSupersededSets(acted)).toEqual(acted);
+    const confirm = [fill(PASSWORD, 'pw'), fill([{ kind: 'label', label: 'Confirm Password' }] as LocatorCandidate[], 'pw', '@e29')];
+    expect(dropSupersededSets(confirm)).toEqual(confirm);
+    const typed = [step('type', { target: '@e28', text: 'ab' }, chain('@e28', ...PASSWORD), at()), step('type', { target: '@e28', text: 'cd' }, chain('@e28', ...PASSWORD), at())];
+    expect(dropSupersededSets(typed)).toEqual(typed);
+  });
+});

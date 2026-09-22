@@ -14,7 +14,7 @@ import { captureSignature, describeChange, type PageSignature } from '../daemon/
 import { html5DragDrop, selectedOption, syntheticHover } from '../daemon/inputs.js';
 import { describeRecipeAttempt, fillWithRecipe, selectWithRecipe, typeWithRecipe } from '../execution/recipes.js';
 import { ComponentStore, storeBook } from '../skills/components.js';
-import { resolveSecretsDeepAsync, scrubSecrets, scrubSecretsDeep } from '../shared/secrets.js';
+import { markLiteralCredentialValue, mayHoldLiteralCredential, resolveSecretsDeepAsync, scrubSecrets, scrubSecretsDeep } from '../shared/secrets.js';
 import { isRefTarget, refHint, resolveTarget, snapshot, truncate } from '../daemon/refs.js';
 import { controlFromTarget, siteModel } from '../skills/sitemap.js';
 import { settleDom, settlePage } from '../daemon/settle.js';
@@ -611,6 +611,42 @@ async function executeSkill(
   };
 }
 
+/**
+ * A fill/type whose value is, or carries, the value of a credential-named
+ * environment variable, with that value rewritten to `{{env:NAME}}` — an
+ * AMBIGUOUS value (a non-credential variable holds it too) only when the
+ * field is a password field. Replay's args are markers already, and are not
+ * asked (the caller passes `resolved`).
+ */
+async function markCredentialArgs(session: BrowserSession, name: string, args: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const key = name === 'fill' ? 'value' : name === 'type' ? 'text' : null;
+  const value = key ? args[key] : undefined;
+  if (!key || typeof value !== 'string' || !mayHoldLiteralCredential(value)) return args;
+  const passwordField = typeof args.target === 'string' ? await isPasswordField(session, args.target) : false;
+  const marked = markLiteralCredentialValue(value, passwordField);
+  return marked.value === value ? args : { ...args, [key]: marked.value };
+}
+
+/** An input the page says holds a password: type=password, or autocomplete current-/new-password. */
+async function isPasswordField(session: BrowserSession, target: string): Promise<boolean> {
+  try {
+    const page = await session.getPage();
+    return await resolveTarget(page, target)
+      .first()
+      .evaluate(
+        (el) => {
+          if (!(el instanceof HTMLInputElement)) return false;
+          const ac = (el.getAttribute('autocomplete') ?? '').toLowerCase();
+          return el.type === 'password' || ac.includes('current-password') || ac.includes('new-password');
+        },
+        undefined,
+        { timeout: 1_000 },
+      );
+  } catch {
+    return false;
+  }
+}
+
 interface StepOptions {
   /** Signature captured by the caller before the action, to avoid a second capture. */
   before?: PageSignature | null;
@@ -638,6 +674,10 @@ async function runStep(
   signal?: AbortSignal,
   opts: StepOptions = {},
 ): Promise<StepRun> {
+  // A credential the caller or the model wrote as ITSELF becomes its marker
+  // before the recorder captures the args (FIX AH, shared/secrets.ts):
+  // fwod79's model filled "admin" into the password field in the clear.
+  if (!opts.resolved) args = await markCredentialArgs(session, name, args);
   // Describe the targets BEFORE acting: a click can navigate or unmount the
   // element, and a recorder that runs afterwards has nothing left to describe.
   // Recording never fails a run — a broken capture just means a missing step.

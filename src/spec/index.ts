@@ -6,6 +6,7 @@ import { SkillStore } from '../skills/store.js';
 import { emitFlowFile, emitSpecFile } from './emit.js';
 import { flowToSpec, type SpecFlow } from './ir.js';
 import { hasError, type Diagnostic } from './diagnostics.js';
+import { literalCredentialsIn } from '../shared/secrets.js';
 import {
   BundleSkillStore,
   compilerProvenance,
@@ -120,6 +121,21 @@ export function compileFlow(
   const { flow, file } = source;
   const store = o.store ?? (snapshot ? new BundleSkillStore(snapshot) : new SkillStore());
   const { spec, warnings, diagnostics } = flowToSpec(flow, store, { flowFile: file, components: o.components ?? new ComponentStore() });
+  // A credential in the clear refuses the compile (FIX AH): the artifact
+  // would carry the secret and require nothing of the environment. Asked of
+  // the SPEC — every param, step arg and expectation the artifact is built
+  // from. Names only; the value is never printed.
+  for (const name of literalCredentialsIn(spec)) {
+    diagnostics.push({
+      code: 'literal-credential',
+      what: `the procedure carries the value of ${name} in the clear`,
+      why:
+        `a flow param, a recorded value or an expectation equals the value of the credential-named environment variable ${name}, ` +
+        `so the compiled file would contain the secret and never read it from the environment (fwrd83: a shell expanded $${name} inside double quotes at record time)`,
+      fix: `re-record the step(s) passing the marker {{env:${name}}} in single quotes (never $${name}), or replace the value with {{env:${name}}} in the flow`,
+      severity: 'error',
+    });
+  }
   const emitted = emitFlowFile(spec, { tier: o.tier ?? 'plain', diagnostics });
 
   // `--allow-demoted` is about demoted pins and nothing else. It used to
