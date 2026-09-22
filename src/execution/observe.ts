@@ -69,6 +69,24 @@ const RENDERED_NAME = (el: Element): string =>
   ).trim();
 
 /**
+ * RENDERED_NAME over every match, for a `read_all`. Its own copy of the rule,
+ * because a function handed to the page is serialised ALONE: calling
+ * RENDERED_NAME from inside an evaluateAll callback threw "RENDERED_NAME is
+ * not defined" in the page and failed every plural text read with a blank
+ * match (test/browser.test.ts, hidden `.ghost` rows).
+ */
+const RENDERED_NAMES = (els: Element[]): string[] =>
+  els.map((el) =>
+    (
+      el.getAttribute('aria-label') ||
+      el.getAttribute('title') ||
+      el.getAttribute('alt') ||
+      el.querySelector('img[alt]')?.getAttribute('alt') ||
+      ''
+    ).trim(),
+  );
+
+/**
  * A recorded `read` (one element) or `read_all` (every match), as the daemon's
  * read tools take it and a compiled artifact replays it. `read_all` reads
  * EVERY match: an artifact that took `inputValue()` threw Playwright's
@@ -91,7 +109,7 @@ export async function readElements(
     if (what === 'text') {
       const texts = await loc.allInnerTexts();
       if (texts.every((t) => t.trim())) return texts;
-      const names = await loc.evaluateAll((els) => els.map(RENDERED_NAME));
+      const names = await loc.evaluateAll(RENDERED_NAMES);
       return texts.map((t, i) => (t.trim() ? t : (names[i] ?? t)));
     }
     if (what === 'value') return await loc.evaluateAll((els) => els.map((e) => (e as HTMLInputElement).value ?? null));

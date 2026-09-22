@@ -75,11 +75,39 @@ d('secret markers (fixture page)', () => {
     if (withDiff.length) expect(JSON.stringify(withDiff)).not.toContain(SECRET);
   });
 
+  it('a {{totp:NAME}} marker types the current code; the recording keeps the marker and results are scrubbed', async () => {
+    process.env.BP_E2E_TOTP = 'JBSWY3DPEHPK3PXP';
+    try {
+      const fill = await run('fill', { target: '#name', value: '{{totp:BP_E2E_TOTP}}' });
+      expect(fill.isError).toBe(false);
+      const page = await session.getPage();
+      const code = await page.locator('#name').inputValue();
+      expect(code).toMatch(/^\d{6}$/);
+      expect(fill.result).not.toContain(code);
+      const steps = session.script!.entries.filter((e): e is RecordedStep => e.k === 'step' && e.tool === 'fill');
+      const last = steps[steps.length - 1];
+      expect(last.args.value).toBe('{{totp:BP_E2E_TOTP}}');
+      expect(JSON.stringify(last)).not.toContain(code);
+      expect(JSON.stringify(last)).not.toContain('JBSWY3DPEHPK3PXP');
+      // The banner echoes the code ("Saved 123456!"): scrubbed back to the marker.
+      const submit = await run('click', { target: '#submit' });
+      expect(submit.result).not.toContain(code);
+      const read = await run('read', { target: '#banner', what: 'text' });
+      expect(read.result).toContain('{{totp:BP_E2E_TOTP}}');
+      expect(read.result).not.toContain(code);
+    } finally {
+      delete process.env.BP_E2E_TOTP;
+    }
+  });
+
   it('an unset variable is a clear tool error, not a literal keystroke', async () => {
     const res = await run('fill', { target: '#name', value: '{{env:BP_E2E_NOT_SET}}' });
     expect(res.isError).toBe(true);
     expect(res.result).toContain('BP_E2E_NOT_SET');
     const page = await session.getPage();
     expect(await page.locator('#name').inputValue()).not.toContain('BP_E2E_NOT_SET');
+    const totp = await run('fill', { target: '#name', value: '{{totp:BP_E2E_TOTP_NOT_SET}}' });
+    expect(totp.isError).toBe(true);
+    expect(totp.result).toContain('BP_E2E_TOTP_NOT_SET is not set');
   });
 });

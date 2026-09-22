@@ -795,7 +795,7 @@ export function unfilledSlots(value: unknown, params: Record<string, string>): s
  * parity suite caught. A shared reading is fine; a shared identifier is not.
  * (`g` here, unlike expect.ts's, because this one is used with `matchAll`.)
  */
-const UNRESOLVED_ARG_MARKER = /\{\{(?!\*\}\}|env:\w+\}\})[^{}]*\}\}/g;
+const UNRESOLVED_ARG_MARKER = /\{\{(?!\*\}\}|(?:env|totp):\w+\}\})[^{}]*\}\}/g;
 
 /**
  * A `{{env:NAME}}` secret marker (shared/secrets.ts's syntax, restated: this
@@ -805,7 +805,10 @@ const UNRESOLVED_ARG_MARKER = /\{\{(?!\*\}\}|env:\w+\}\})[^{}]*\}\}/g;
  * as `{{env:APP_PASSWORD}}`) to the model on every replay. What CAN stop the
  * step is an environment with nothing to resolve it to (`unsetSecrets`).
  */
-const SECRET_ARG_MARKER = /\{\{env:(\w+)\}\}/g;
+// `{{totp:NAME}}` (execution/totp.ts) is the same kind of marker: the one-time
+// code for the seed in NAME, generated at dispatch — exempt, and refused by
+// NAME when the environment has no seed.
+const SECRET_ARG_MARKER = /\{\{(?:env|totp):(\w+)\}\}/g;
 
 /**
  * The secret variables a value names that the environment leaves unset or
@@ -947,9 +950,9 @@ export function unfilledStepVerdict(step: UnfilledStep, params: Record<string, s
   const unset = unsetSecrets(step.args, params);
   if (unset.length) {
     const many = unset.length > 1;
-    return `${where}: the environment variable${many ? 's' : ''} ${unset.join(', ')} ${many ? 'are' : 'is'} not set (the step's ${unset
-      .map((n) => `{{env:${n}}}`)
-      .join(', ')}) — set ${many ? 'them' : 'it'} where this runs (for the daemon, before the session starts)`;
+    return `${where}: the environment variable${many ? 's' : ''} ${unset.join(', ')} ${many ? 'are' : 'is'} not set (the step's secret marker${
+      many ? 's name them' : ' names it'
+    }) — set ${many ? 'them' : 'it'} where this runs (for the daemon, before the session starts)`;
   }
   for (const [key, chain] of Object.entries(step.locators ?? {})) {
     if (!chain?.length || fillableChain(chain, params).length) continue;

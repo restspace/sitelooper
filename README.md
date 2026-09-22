@@ -101,6 +101,23 @@ sitelooper --session ticket stop --save-flow ticket
 sitelooper flow export ticket --out .sitelooper/procedures.json
 ```
 
+**One-time codes.** For an account with two-factor sign-in, put the account's TOTP seed (the
+base32 secret behind its QR code, or the whole `otpauth://` URI) in an environment variable and
+write `{{totp:NAME}}` where the code goes:
+
+```sh
+export TEST_TOTP=JBSWY3DPEHPK3PXP   # the test user's seed, never a real person's
+sitelooper --session ticket do "Enter the authentication code {{totp:TEST_TOTP}} and verify the dashboard opens"
+```
+
+The code is generated when the step types it (RFC 6238, SHA-1, 30 s and 6 digits unless the
+`otpauth://` URI says otherwise). If the current window is about to expire, sitelooper waits for
+the next one. Recordings, flows and the compiled `.flow.ts` keep the marker, never the seed or a
+code, and generated codes are scrubbed from tool results. In CI, store the test user's seed as a
+CI secret and export it like any other `{{env:NAME}}` credential. A compiled flow computes the
+code at run time with Node's built-in WebCrypto, and a run without the variable is refused up
+front by name.
+
 Configure fresh test data in your Playwright fixtures or supply a reset command. Then build the test:
 
 ```sh
@@ -417,7 +434,7 @@ agent's snapshots, retries and tool chatter stay inside the daemon.
 - **Vision**: the agent is text-only; it reads the accessibility tree and DOM. Screenshots are
   for you.
 - **Guessing credentials**: a rejected or missing credential is an immediate blocked report,
-  never a retry loop. `{{env:NAME}}` markers are how you supply them.
+  never a retry loop. `{{env:NAME}}` (and `{{totp:NAME}}` for one-time codes) markers are how you supply them.
 
 ### Claude Code skill
 

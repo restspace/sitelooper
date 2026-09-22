@@ -1393,13 +1393,33 @@ const match = (text: string) => matcherSource(text, { slot: slotAsParam });
  * not dispatched (expectations, echo notes, messages) keeps `src` and the
  * marker, as replay keeps it.
  */
+/**
+ * Whether the flow being emitted names a `{{totp:NAME}}` anywhere. A flow
+ * step's param bound to one reaches an action through a slot, which the
+ * recorded text cannot show, so then every slotted dispatched value is passed
+ * through the shared totpMarkersIn at run time. Set per emitFlowFile call.
+ */
+let flowNamesTotp = false;
+
 const actSrc = (text: string): string => {
-  if (!text.includes('{{env:')) return src(text);
-  const parts = text.split(/\{\{env:(\w+)\}\}/);
-  return parts
-    .map((part, i) => (i % 2 ? `(process.env[${q(part)}] ?? '')` : part ? src(part) : ''))
-    .filter(Boolean)
-    .join(' + ');
+  const expr = actExpr(text);
+  return flowNamesTotp && /\{\{[vd]\d+\}\}/.test(text) ? `(await totpMarkersIn(${expr}))` : expr;
+};
+
+const actExpr = (text: string): string => {
+  if (!text.includes('{{env:') && !text.includes('{{totp:')) return src(text);
+  // A `{{totp:NAME}}` is the code current when the action runs, computed
+  // there by the shared totpCode from the seed in the environment — the
+  // file carries neither the seed nor a code (execution/totp.ts).
+  const parts = text.split(/\{\{(env|totp):(\w+)\}\}/);
+  const out: string[] = [];
+  for (let i = 0; i < parts.length; i += 3) {
+    if (parts[i]) out.push(src(parts[i]));
+    if (i + 2 >= parts.length) break;
+    const name = parts[i + 2];
+    out.push(parts[i + 1] === 'totp' ? `(await totpCode(process.env[${q(name)}], ${q(name)}))` : `(process.env[${q(name)}] ?? '')`);
+  }
+  return out.join(' + ') || q('');
 };
 
 /**
@@ -1843,11 +1863,17 @@ function derivedHere(segment: SpecSegment, index: number): [string, { at: string
  * `toHaveURL` built from them can never match — which is what odoo's
  * `#action=&cids=&menu_id=` did on the first cloud run.
  */
-function derivedLines(segment: SpecSegment, index: number, ctx: Ctx, out: string[], urlBefore = ''): void {
+function derivedLines(segment: SpecSegment, index: number, ctx: Ctx, out: string[], urlBefore = '', gotoFrom?: string): void {
   const here = derivedHere(segment, index);
   for (const [name] of here) ctx.slots.add(name);
   if (!here.length) return;
   const example = (d: { example: string }) => `// recorded example: ${commentSafe(d.example)}`;
+  // A goto's landing may redirect AGAIN on its own (a timer, a client-side
+  // route): bound at once, the value is whichever url the race left, and the
+  // next navigation can be cancelled by the redirect still pending. So the
+  // url is followed until it holds still first — the shared urlHeldStill,
+  // as replay waits (skills/replay.ts bind).
+  if (gotoFrom) out.push(`await urlHeldStill(page, ${gotoFrom}, () => inFlightRequests(page));`);
   // A part the url does not carry is NOT bound — replay's `if (v !== undefined)
   // params[name] = v` — so a later url check reads the unbound `{{dN}}` as the
   // wildcard it is to urlDiff, rather than requiring an empty segment.
@@ -2056,7 +2082,7 @@ function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number,
   if (ctx.positional && !action.some((line) => line.includes(`${ctx.positional} = `))) ctx.positional = undefined;
   const bindings: string[] = [];
   // A goto awaits navigation; other actions may only have started it.
-  derivedLines(segment, index, ctx, bindings, step.tool === 'goto' ? '' : urlBefore);
+  derivedLines(segment, index, ctx, bindings, step.tool === 'goto' ? '' : urlBefore, step.tool === 'goto' ? urlBefore : undefined);
   if (step.mints) {
     bindings.push(`// This step creates a record; expose this run's identifier for teardown.`);
     const alreadyBound = derivedHere(segment, index).find(([, derived]) => derived.at === step.mints!.at);
@@ -2315,7 +2341,8 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
       const action = args.action === 'accept' ? 'accept' : 'dismiss';
       const arg = action === 'accept' && args.prompt_text ? actSrc(str('prompt_text')) : '';
       const count = num('count') ?? 1;
-      out.push(`page.${count > 1 ? 'on' : 'once'}('dialog', (dialog) => dialog.${action}(${arg}));`);
+      // A prompt answered with a one-time code computes it in the handler.
+      out.push(`page.${count > 1 ? 'on' : 'once'}('dialog', ${arg.includes('await ') ? 'async ' : ''}(dialog) => dialog.${action}(${arg}));`);
       return out;
     }
     case 'tabs':
@@ -2540,7 +2567,9 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
   // (replay notes the same once the step has run).
   if (step.tool === 'fill' && ctx.standing) {
     ctx.standingUsed = true;
-    out.push(`await noteFill(${ctx.standing}, ${target}, ${actSrc(str('value'))}, page);`);
+    // A value that makes a one-time code is noted as how to make it, so a refill types a fresh one.
+    const noted = actSrc(str('value'));
+    out.push(`await noteFill(${ctx.standing}, ${target}, ${noted.includes('await ') ? `async () => ${noted}` : noted}, page);`);
   }
   // A recorded popup/close is armed after the target resolved and before the
   // action dispatches, as replay arms it: a target=_blank click can raise its
@@ -3188,6 +3217,11 @@ function refExpr(ref: string, vars: Set<string>, by?: string): string {
   // a plain run var likewise. Only a step-to-step output is a value THIS run
   // had to produce, so only it can go missing mid-flow.
   if (secret) return `process.env[${q(secret[1])}] ?? ''`;
+  // A one-time code travels as its MARKER to the action that types it, and
+  // is generated there (actSrc → totpMarkersIn): a code computed at the call
+  // site would be stale by the time a refill used it.
+  const totp = /^totp:(\w+)$/.exec(ref);
+  if (totp) return q(`{{totp:${totp[1]}}}`);
   if (ref.includes('.')) return by ? `need(outputs, ${q(ref)}, ${q(by)})` : `outputs[${q(ref)}] ?? ''`;
   if (vars.has(ref)) return /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(ref) ? `vars.${ref}` : `vars[${q(ref)}]`;
   // A reference to something the flow never declared: honest at run time
@@ -3474,7 +3508,8 @@ function requiredEnvNames(spec: SpecFlow): string[] {
   const names = new Set<string>();
   const visit = (value: unknown) => {
     if (typeof value === 'string') {
-      for (const match of value.matchAll(/\{\{env:([A-Za-z_][A-Za-z0-9_]*)\}\}/g)) names.add(match[1]);
+      // A `{{totp:NAME}}` seed is an environment input the same way.
+      for (const match of value.matchAll(/\{\{(?:env|totp):([A-Za-z_][A-Za-z0-9_]*)\}\}/g)) names.add(match[1]);
       return;
     }
     if (Array.isArray(value)) {
@@ -3489,6 +3524,7 @@ function requiredEnvNames(spec: SpecFlow): string[] {
 
 export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; warnings: string[]; diagnostics: Diagnostic[] } {
   if (o.tier !== 'plain') throw new Error(`unknown emit tier ${String(o.tier)}`);
+  flowNamesTotp = JSON.stringify(spec).includes('{{totp:');
   const warnings: string[] = [];
   // Problems only emission can find — a capability the artifact cannot carry —
   // travel back to the compile caller as diagnostics, not just as prose.

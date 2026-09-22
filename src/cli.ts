@@ -114,7 +114,7 @@ Global options:
       a saved flow stores it, and run/compiled specs use it (default 1280x900)
   --json emits versioned results for authoring, compilation, checking and repair.
   Provider presets: zhipu, novita, openrouter, openai, anthropic.
-  Credentials: use {{env:NAME}} in instructions; set NAME before starting the session.
+  Credentials: use {{env:NAME}} in instructions ({{totp:NAME}} for a one-time code from a TOTP seed); set NAME before starting the session.
   Project defaults: sitelooper.config.json (nearest ancestor); CLI flags override them.
 
 Exit codes: 0 success ? 1 agent/recording failure ? 2 unavailable/invalid input

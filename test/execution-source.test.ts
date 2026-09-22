@@ -40,7 +40,8 @@ describe('standalone execution source', () => {
             { tool: 'dblclick', args: { target: '@e1' }, locators: { target } },
             // fill, type and select: the three adapters over the shared recipe ladders.
             { tool: 'fill', args: { target: '@e1', value: 'value' }, locators: { target } },
-            { tool: 'type', args: { target: '@e1', text: 'typed', delay_ms: 5 }, locators: { target } },
+            // ...one of them typing a one-time code: the shared totp module, computed where it acts.
+            { tool: 'type', args: { target: '@e1', text: 'typed {{totp:TEST_TOTP}}', delay_ms: 5 }, locators: { target } },
             { tool: 'select', args: { target: '@e1', option: 'Option', optionValue: '17' }, locators: { target } },
             { tool: 'hover', args: { target: '@e1' }, locators: { target } },
             { tool: 'read', args: { target: '@e1', what: 'text' }, locators: { target }, label: 'readback' },
@@ -149,7 +150,7 @@ describe('standalone execution source', () => {
     expect(source).toContain('const recipeBook = snapshotBook(RECIPES);');
     expect(source.indexOf('// Shared execution source: recipes.ts.')).toBeLessThan(source.indexOf('const recipeBook = snapshotBook(RECIPES);'));
     expect(source).toContain('const attempt = await fillWithRecipe(loc.page(), loc, value, recipeBook);');
-    expect(source).toMatch(/await type\(hit\d+\.locator, 'typed', \{ delay: 5 \}\)\.catch\(actionFailed\);/);
+    expect(source).toMatch(/await type\(hit\d+\.locator, 'typed ' \+ \(await totpCode\(process\.env\['TEST_TOTP'\], 'TEST_TOTP'\)\), \{ delay: 5 \}\)\.catch\(actionFailed\);/);
     expect(source).toContain('const attempt = await typeWithRecipe(loc.page(), loc, text, recipeBook, { timeout: TYPE_TIMEOUT_MS, delay: opts.delay ?? TYPE_DELAY_MS });');
     expect(source).toMatch(/await select\(hit\d+\.locator, 'Option', '17'\)\.catch\(actionFailed\);/);
     // ...and every state-changing action observed from just before it dispatches (the shared action module).

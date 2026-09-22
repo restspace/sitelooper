@@ -14,7 +14,7 @@ import { captureSignature, describeChange, type PageSignature } from '../daemon/
 import { html5DragDrop, selectedOption, syntheticHover } from '../daemon/inputs.js';
 import { describeRecipeAttempt, fillWithRecipe, selectWithRecipe, typeWithRecipe } from '../execution/recipes.js';
 import { ComponentStore, storeBook } from '../skills/components.js';
-import { resolveSecretsDeep, scrubSecrets, scrubSecretsDeep } from '../shared/secrets.js';
+import { resolveSecretsDeepAsync, scrubSecrets, scrubSecretsDeep } from '../shared/secrets.js';
 import { isRefTarget, refHint, resolveTarget, snapshot, truncate } from '../daemon/refs.js';
 import { controlFromTarget, siteModel } from '../skills/sitemap.js';
 import { settleDom, settlePage } from '../daemon/settle.js';
@@ -138,7 +138,7 @@ export const TOOL_DEFS: ToolDef[] = [
   {
     name: 'fill',
     description:
-      'Set the full value of an input/textarea. React-safe: works on controlled components and number inputs (clears first). Use for text fields; use select for <select>. A {{env:NAME}} secret marker in value is resolved at execution time — pass it through verbatim.',
+      'Set the full value of an input/textarea. React-safe: works on controlled components and number inputs (clears first). Use for text fields; use select for <select>. A {{env:NAME}} secret marker or a {{totp:NAME}} one-time-code marker in value is resolved at execution time — pass it through verbatim.',
     parameters: {
       type: 'object',
       required: ['target', 'value'],
@@ -147,7 +147,7 @@ export const TOOL_DEFS: ToolDef[] = [
   },
   {
     name: 'type',
-    description: 'Type text key-by-key into an element (triggers per-keystroke handlers, e.g. autocomplete). A {{env:NAME}} secret marker in text is resolved at execution time — pass it through verbatim.',
+    description: 'Type text key-by-key into an element (triggers per-keystroke handlers, e.g. autocomplete). A {{env:NAME}} secret marker or a {{totp:NAME}} one-time-code marker in text is resolved at execution time — pass it through verbatim.',
     parameters: {
       type: 'object',
       required: ['target', 'text'],
@@ -686,6 +686,10 @@ async function runStep(
     // captured the marker-bearing args above, immediately before the browser
     // needs the real value. Everything persisted or shown to the model keeps
     // the marker; scrubbing below catches values the page echoes back.
+    // {{totp:NAME}} too: the code current NOW, generated before the action's
+    // observation begins, so a wait out of a window's last seconds is never
+    // charged to the action's deadline.
+    const live = await resolveSecretsDeepAsync(args);
     obs = actionPage
       ? beginAction(actionPage, {
           deadlineMs: opts.deadlineMs ?? ACTION_DEADLINE_MS,
@@ -694,7 +698,7 @@ async function runStep(
           expect: opts.expect,
         })
       : null;
-    let result = scrubSecrets(await dispatch(session, name, resolveSecretsDeep(args), screenshotDir, signal, opts.resolved, obs));
+    let result = scrubSecrets(await dispatch(session, name, live, screenshotDir, signal, opts.resolved, obs));
     // The action's evidence: the DOM quiet, the requests it started landed, a
     // debounced request given its moment, the url held still after a tool that
     // may navigate, the expected effect polled for.

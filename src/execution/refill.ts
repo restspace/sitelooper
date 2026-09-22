@@ -73,7 +73,12 @@ import { reactSafeFill, settleDom } from './browser.js';
 /** One fill this segment made, as the ledger remembers it. */
 export interface StandingFill {
   locator: Locator;
-  value: string;
+  /**
+   * What the field was given — or, for a value that must not be reused (a
+   * {{totp:NAME}} one-time code), how to produce it again: a refill types the
+   * code current at the REFILL, never the one that went stale in the ledger.
+   */
+  value: string | (() => Promise<string>);
   /** The page url the fill ran on: a refill is only ever asked on the same one. */
   url: string;
   /** The document it ran in (`performance.timeOrigin`); null when it could not be read. */
@@ -124,7 +129,7 @@ export async function documentOf(page: Page): Promise<number | null> {
 }
 
 /** Note a fill that ran: its locator, its value, and the url and document it ran in. An empty fill is a clear — nothing to keep. */
-export async function noteFill(ledger: StandingFills, locator: Locator, value: string, page: Page): Promise<void> {
+export async function noteFill(ledger: StandingFills, locator: Locator, value: string | (() => Promise<string>), page: Page): Promise<void> {
   if (!value) return;
   const key = String(locator);
   const at = ledger.fills.findIndex((f) => String(f.locator) === key);
@@ -246,18 +251,19 @@ export async function restoreStandingFills(page: Page, ledger: StandingFills, to
     const now = gone ? await inputValueOnceBuilt(fill.locator, deadline) : await inputValueNow(fill.locator);
     if (now !== '') continue;
     try {
-      await reactSafeFill(fill.locator, fill.value);
+      const value = typeof fill.value === 'function' ? await fill.value() : fill.value;
+      await reactSafeFill(fill.locator, value);
       await blurIfPlain(fill.locator);
       let held = await inputValueNow(fill.locator);
       // Set, and gone again at the blur: a widget that keeps its own copy of
       // the value, built from key events. Typed, as a person would.
       if (!held) {
-        await typeInto(fill.locator, fill.value);
+        await typeInto(fill.locator, value);
         await blurIfPlain(fill.locator);
         held = await inputValueNow(fill.locator);
         if (held) keyed++;
       }
-      if (held !== null && sameValue(held, fill.value)) refilled++;
+      if (held !== null && sameValue(held, value)) refilled++;
       else failed++;
     } catch {
       failed++;

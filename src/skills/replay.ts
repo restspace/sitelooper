@@ -1,6 +1,6 @@
 import { changedCreation, dispatchesFirstMatch, isMutatingAction, isReadAction, runStepLifecycle, spansEveryMatch, type StepActionResult } from '../execution/lifecycle.js';
-import { outcomeLabel, outcomeOfError, type ActionOutcome } from '../execution/browser.js';
-import type { ActionExpectation } from '../execution/action.js';
+import { outcomeLabel, outcomeOfError, urlHeldStill, type ActionOutcome } from '../execution/browser.js';
+import { inFlightRequests, type ActionExpectation } from '../execution/action.js';
 import { IDENTITY_POLL_MS, IDENTITY_WAIT_MS, SOFT_MATCH_MIN_SIMILARITY, alertVerdict, errorPageVerdict, gotoLandingVerdict, identityMarkerVerdict, isErrorPageUrl, landedOnRecordedPage, markersBound, preconditionVerdict, retargetNavigation, segmentGate, fillableChain, linkLandingWarning, unfilledStepVerdict, urlEffectVerdict, urlRecordParts } from '../execution/gates.js';
 import type { UrlSegDiff } from '../execution/url.js';
 import { LOOP_SHRINK_WAIT_MS, pageReadable, runFoldedLoop, type LoopPass } from '../execution/loop.js';
@@ -48,7 +48,7 @@ export { lineShows, type LineShowsOptions } from '../execution/snapshot.js';
 export { consequentialExpectations, isEchoLine } from '../execution/expect.js';
 import { candidateNames, echoVerdict, noteInteraction, setsSomething } from '../execution/echo.js';
 import { noteFill, rearmStandingFills, restoreStandingFills, standingFills, standingFillsLost } from '../execution/refill.js';
-import { resolveSecrets } from '../shared/secrets.js';
+import { hasTotpMarker, resolveSecrets, resolveSecretsAsync } from '../shared/secrets.js';
 import { toggleAlreadyShown, toggleEffectLines } from '../execution/toggle.js';
 import { mayNavigateToDestination, navigateToDestination, textHeldElsewhere } from '../execution/recover.js';
 import { CONTEXT_CONTRACT, contractOf, contractVerdict, isVerified, originOf, stepsCarryContext, type Skill, type SkillStep } from './store.js';
@@ -1190,6 +1190,15 @@ export async function replaySkill(
         // BEFORE the expectation check: the minting step's own expectation refers
         // to the value it produced, so it must compare against the replay's own.
         if (skill.derived) {
+          // A goto's landing may redirect AGAIN on its own (a timer, a
+          // client-side route), after settleDom has called the page quiet:
+          // follow the url until it holds still before binding, or the value
+          // is whichever url the race left and the next navigation can be
+          // cancelled by the redirect still pending. The artifact waits the
+          // same (spec/emit.ts derivedLines).
+          if (step.tool === 'goto' && Object.values(skill.derived).some((d) => d.step === failIndex)) {
+            await urlHeldStill(page, urlBefore, () => inFlightRequests(page));
+          }
           for (const [name, d] of Object.entries(skill.derived)) {
             if (d.step !== failIndex) continue;
             const v = urlPart(page.url(), d.at);
@@ -1303,7 +1312,12 @@ export async function replaySkill(
       // secret resolved (the fill just dispatched with it, so it resolves), or
       // a rebuilt sign-in form is refilled with the marker text. In memory
       // only; the refill's warning never carries a value.
-      if (step.tool === 'fill' && resolved.target) await noteFill(standing, resolved.target, resolveSecrets(String(args.value ?? '')), page);
+      // A {{totp:NAME}} code is never reused: the ledger holds how to make it,
+      // and a refill types the code current at the refill.
+      if (step.tool === 'fill' && resolved.target) {
+        const filled = String(args.value ?? '');
+        await noteFill(standing, resolved.target, hasTotpMarker(filled) ? () => resolveSecretsAsync(filled) : resolveSecrets(filled), page);
+      }
     }
     return 'ran';
   };

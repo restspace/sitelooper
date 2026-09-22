@@ -13,6 +13,7 @@
  * test case. With nothing armed, the server behaves exactly as it always
  * has.
  */
+import { createHmac } from 'node:crypto';
 import http from 'node:http';
 
 /** Which requests a fault applies to. Omitted fields match anything. */
@@ -446,6 +447,50 @@ document.getElementById('save-choice').addEventListener('click', () => commit('c
  * (`commit:login:<user>:<pass>`), and an empty field posts nothing and says
  * so — the fixture's log is the oracle, not either runner's report.
  */
+/**
+ * A second-factor page: one code field and Verify. The SERVER checks the code
+ * (/totp/verify) against FIXTURE_TOTP_SEED with its own RFC 6238, and logs
+ * only `totp:ok` / `totp:rejected` — the log is the oracle, and it never holds
+ * a code. A good code goes on to /signed-in.
+ */
+export const FIXTURE_TOTP_SEED = 'JBSWY3DPEHPK3PXP';
+
+function fixtureTotp(counter: number): string {
+  const key = Buffer.alloc(10);
+  // base32 decode of the fixed seed, done independently of src/execution/totp.ts
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+  let bits = 0;
+  let acc = 0;
+  let n = 0;
+  for (const ch of FIXTURE_TOTP_SEED) {
+    acc = (acc << 5) | alphabet.indexOf(ch);
+    bits += 5;
+    if (bits >= 8) {
+      bits -= 8;
+      key[n++] = (acc >>> bits) & 0xff;
+    }
+  }
+  const msg = Buffer.alloc(8);
+  msg.writeBigUInt64BE(BigInt(counter));
+  const mac = createHmac('sha1', key.subarray(0, n)).update(msg).digest();
+  const at = mac[mac.length - 1] & 0x0f;
+  return String((mac.readUInt32BE(at) & 0x7fffffff) % 1_000_000).padStart(6, '0');
+}
+
+const TOTP_LOGIN = `<!doctype html><html><head><meta charset="utf-8"><title>Verify</title></head><body>
+<h1>Two-factor authentication</h1>
+<label for="code">Authentication code</label><input id="code" inputmode="numeric" autocomplete="one-time-code">
+<button id="verify" type="button">Verify</button>
+<p id="status"></p>
+<script>
+document.getElementById('verify').addEventListener('click', async () => {
+  const res = await fetch('/totp/verify/' + encodeURIComponent(document.getElementById('code').value), { method: 'POST' });
+  if (res.ok) location.href = '/signed-in';
+  else document.getElementById('status').textContent = 'Invalid code';
+});
+</script>
+</body></html>`;
+
 const RELOGIN = `<!doctype html><html><head><meta charset="utf-8"><title>Sign in</title></head><body>
 <h1>Sign in</h1>
 <div id="host"></div>
@@ -1189,6 +1234,22 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
     if (url.startsWith('/disclosure/') && req.method === 'GET') {
       res.writeHead(200, { 'content-type': 'text/html' });
       res.end(DISCLOSURE(url.slice('/disclosure/'.length)));
+      return;
+    }
+    if (url === '/totp-login' && req.method === 'GET') {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end(TOTP_LOGIN);
+      return;
+    }
+    if (url.startsWith('/totp/verify/') && req.method === 'POST') {
+      // Checked here, against the fixture's own RFC 6238 (node:crypto), never
+      // the runners' code: the current window or the one before it.
+      const code = decodeURIComponent(url.slice('/totp/verify/'.length));
+      const step = Math.floor(Date.now() / 30_000);
+      const ok = code === fixtureTotp(step) || code === fixtureTotp(step - 1);
+      log.push(ok ? 'totp:ok' : 'totp:rejected');
+      res.writeHead(ok ? 200 : 403);
+      res.end(ok ? 'ok' : 'rejected');
       return;
     }
     if (url === '/relogin' && req.method === 'GET') {

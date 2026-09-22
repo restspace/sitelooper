@@ -1676,6 +1676,40 @@ describe('flow-level wiring', () => {
     }
   });
 
+  /**
+   * `{{totp:NAME}}`: the artifact computes the code where the action runs,
+   * from the seed in the environment (the shared totpCode / totpMarkersIn),
+   * whether the marker is in the recorded args or reaches them through a
+   * flow step's param. The file carries neither the seed nor a code, notes a
+   * REGENERATOR for the refill, and refuses a run without the seed up front.
+   */
+  it('computes a {{totp:NAME}} code at run time, in the args or through a slot, never inlining seed or code', () => {
+    const had = process.env.BENCH_TOTP;
+    process.env.BENCH_TOTP = 'JBSWY3DPEHPK3PXP';
+    try {
+      const literal: SkillStep = { tool: 'fill', args: { target: '@e1', value: '{{totp:BENCH_TOTP}}' }, locators: { target: [{ kind: 'id', selector: '#code' }] } };
+      const slotted: SkillStep = { tool: 'type', args: { target: '@e2', text: '{{v1}}' }, locators: { target: [{ kind: 'id', selector: '#code2' }] } };
+      const spec = specOf([literal, slotted], {
+        params: { v1: '{{totp:BENCH_TOTP}}' },
+        segments: [segment([literal, slotted], { params: { v1: { example: 'x', usedIn: [2] } } })],
+      });
+      const source = emit(spec);
+      expect(source).toMatch(/await fill\([^\n]*, \(await totpCode\(process\.env\['BENCH_TOTP'\], 'BENCH_TOTP'\)\)\)/);
+      expect(source).toMatch(/await noteFill\([^\n]*, async \(\) => \(await totpCode\(process\.env\['BENCH_TOTP'\], 'BENCH_TOTP'\)\), page\)/);
+      // Through the slot: the marker is the param, and the action resolves it.
+      expect(source).toContain("v1: '{{totp:BENCH_TOTP}}'");
+      expect(source).toMatch(/await type\([^\n]*\(await totpMarkersIn\(`\$\{p\.v1\}`\)\)/);
+      // The shared module is embedded, and nothing secret is.
+      expect(source).toContain('async function totpCode(');
+      expect(source).not.toContain('JBSWY3DPEHPK3PXP');
+      expect(source).toContain('export const requiredEnvNames = ["BENCH_TOTP"] as const;');
+      expect(syntaxErrors(source)).toEqual([]);
+    } finally {
+      if (had === undefined) delete process.env.BENCH_TOTP;
+      else process.env.BENCH_TOTP = had;
+    }
+  });
+
   it('publishes the end-url outputs a later step refers to (the grafana failure)', () => {
     const step: SkillStep = { tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'id', selector: '#save' }] } };
     const producer: SpecStep = { id: '02-create', instruction: 'create it', params: { v1: 'x' }, outputs: [], segments: [segment([step])] };
@@ -2184,6 +2218,10 @@ describe('a derived value is read after the navigation lands', () => {
     const out = emit(specOf([step], { segments: [segment([step], { derived: { d1: { step: 1, at: 'p1', example: 'x' } } })] }));
     // a part the url does not carry binds as '' (the daemon's urlPart says undefined)
     expect(out).toContain("bindPart(p, 'd1', urlPart(page.url(), 'p1'));");
+    // ...once the landing's url has held still (a redirect still pending would
+    // otherwise be raced by the next navigation; replay waits the same)
+    expect(out).toContain('await urlHeldStill(page, urlBefore1, () => inFlightRequests(page));');
+    expect(out.indexOf('await urlHeldStill(page, urlBefore1')).toBeLessThan(out.indexOf("bindPart(p, 'd1'"));
     // No wait-for-the-url-to-change helper is emitted OR inlined at all: a goto
     // has already awaited its navigation, so the part is there to be read.
     // (`urlBefore1` itself still exists — the lifecycle uses it to decide

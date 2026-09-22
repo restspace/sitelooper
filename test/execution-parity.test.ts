@@ -38,7 +38,8 @@ import { ignorableRefs, resolveInstruction, resolveStepParams, type FlowStep } f
 import type { Skill, SkillParam, SkillStep } from '../src/skills/store.js';
 import type { LocatorCandidate, RecordedEntry, RecordedStep } from '../src/daemon/recorder.js';
 import { compileSkills } from '../src/skills/compile.js';
-import { createFixtureServer, type FixtureServer } from './fixture/server.js';
+import { FIXTURE_TOTP_SEED, createFixtureServer, type FixtureServer } from './fixture/server.js';
+import { hotpCode, totpSeed } from '../src/execution/totp.js';
 
 const enabled = process.env.BP_PARITY_TESTS === '1';
 const d = enabled ? describe : describe.skip;
@@ -2821,6 +2822,130 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
   });
 
   /**
+   * `{{totp:NAME}}` (src/execution/totp.ts): the fixture's second-factor page
+   * checks the code SERVER-side, against its own RFC 6238 over the same seed,
+   * and logs only `totp:ok` / `totp:rejected`. Both runners must pass it with
+   * the code current at dispatch — the marker in the recorded args, or bound
+   * to a slot by the flow step — and the artifact must carry neither the
+   * seed nor a code.
+   */
+  describe('totp codes', () => {
+    const had = process.env.BENCH_TOTP;
+    const restore = () => {
+      if (had === undefined) delete process.env.BENCH_TOTP;
+      else process.env.BENCH_TOTP = had;
+    };
+    const verify = (code: string): SkillStep[] => [
+      { tool: 'goto', args: { url: `${origin}/totp-login` }, locators: {} },
+      { tool: 'fill', args: { target: '@e1', value: code }, locators: { target: [{ kind: 'label', label: 'Authentication code' }] } },
+      { tool: 'click', args: { target: '@e2' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Verify' }] }, expect: { urlPattern: `${origin}/signed-in` } },
+    ];
+    const totpSkill = (): Skill => ({
+      ...skillOf(verify('{{v1}}')),
+      id: 's_totp',
+      template: 'verify with {{v1}}',
+      params: { v1: { example: '{{totp:BENCH_TOTP}}', usedIn: [2], known: true } },
+    });
+    const totpFlow = (): SpecFlow => {
+      const spec = specOf(verify('{{v1}}'));
+      Object.assign(spec.steps[0], { id: '01-verify', params: { v1: '{{totp:BENCH_TOTP}}' } });
+      Object.assign(spec.steps[0].segments[0], { id: 's_totp', params: totpSkill().params });
+      return spec;
+    };
+    const flowStep = (): FlowStep => ({ id: '01-verify', instruction: 'verify with {{totp:BENCH_TOTP}}', params: { v1: '{{totp:BENCH_TOTP}}' }, outputs: [] }) as unknown as FlowStep;
+    /** Every code the seed could have produced around now: none may appear in the artifact. */
+    const codesAroundNow = async (): Promise<string[]> => {
+      const seed = totpSeed(FIXTURE_TOTP_SEED, 'BENCH_TOTP');
+      const step = Math.floor(Date.now() / 30_000);
+      return Promise.all([step - 2, step - 1, step, step + 1].map((c) => hotpCode(seed, c)));
+    };
+
+    it('both runners pass a server-checked code from the marker in the recorded args', async () => {
+      process.env.BENCH_TOTP = FIXTURE_TOTP_SEED;
+      try {
+        const { replay, emitted, replayLog, emittedLog } = await both(verify('{{totp:BENCH_TOTP}}'), 0);
+        expect(replay.ok, replay.reason ?? '').toBe(true);
+        expect(emitted.ok, emitted.reason ?? '').toBe(true);
+        expect(replayLog).toEqual(['totp:ok']);
+        expect(emittedLog).toEqual(['totp:ok']);
+        const { source } = emitFlowFile(specOf(verify('{{totp:BENCH_TOTP}}')), { tier: 'plain' });
+        expect(source).toContain("totpCode(process.env['BENCH_TOTP'], 'BENCH_TOTP')");
+        expect(source).not.toContain(FIXTURE_TOTP_SEED);
+        for (const code of await codesAroundNow()) expect(source).not.toContain(code);
+      } finally {
+        restore();
+      }
+    }, 120_000);
+
+    it('both runners pass it through a slot the flow step binds to {{totp:NAME}}, replay at tier A', async () => {
+      process.env.BENCH_TOTP = FIXTURE_TOTP_SEED;
+      try {
+        const bound = resolveStepParams(flowStep(), {}, {});
+        expect(bound?.params.v1).toBe('{{totp:BENCH_TOTP}}');
+        reset(0);
+        const replay = await replayOf(totpSkill(), bound!.params);
+        const replayLog = [...fx.log];
+        reset(0);
+        const emitted = await emittedFlowOf(totpFlow());
+        const emittedLog = [...fx.log];
+        expect(replay.ok, replay.reason ?? '').toBe(true);
+        expect(emitted.ok, emitted.reason ?? '').toBe(true);
+        expect(replayLog).toEqual(['totp:ok']);
+        expect(emittedLog).toEqual(['totp:ok']);
+        const { source } = emitFlowFile(totpFlow(), { tier: 'plain' });
+        expect(source).not.toContain(FIXTURE_TOTP_SEED);
+        for (const code of await codesAroundNow()) expect(source).not.toContain(code);
+      } finally {
+        restore();
+      }
+    }, 120_000);
+
+    it('both runners refill a rebuilt form with a code made at the refill, never the marker', async () => {
+      process.env.BENCH_TOTP = FIXTURE_TOTP_SEED;
+      try {
+        const steps: SkillStep[] = [
+          { tool: 'goto', args: { url: `${origin}/relogin` }, locators: {} },
+          { tool: 'fill', args: { target: '@e1', value: 'admin' }, locators: { target: [{ kind: 'role', role: 'textbox', name: 'Username' }] } },
+          { tool: 'fill', args: { target: '@e2', value: '{{totp:BENCH_TOTP}}' }, locators: { target: [{ kind: 'css', selector: '#password' }] } },
+          { tool: 'click', args: { target: '@e3' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Sign in' }] } },
+        ];
+        const { replay, emitted, replayLog, emittedLog } = await both(steps, 0);
+        expect(replay.ok, replay.reason ?? '').toBe(true);
+        expect(emitted.ok, emitted.reason ?? '').toBe(true);
+        const valid = await codesAroundNow();
+        for (const log of [replayLog, emittedLog]) {
+          expect(log).toHaveLength(1);
+          const sent = log[0].replace('commit:login:admin:', '');
+          expect(valid, `refilled with ${sent}`).toContain(sent);
+        }
+      } finally {
+        restore();
+      }
+    }, 120_000);
+
+    it('both runners refuse the step when the seed is unset, naming it, and send no code', async () => {
+      delete process.env.BENCH_TOTP;
+      try {
+        const bound = resolveStepParams(flowStep(), {}, {});
+        reset(0);
+        const replay = await replayOf(totpSkill(), bound!.params);
+        const replayLog = [...fx.log];
+        reset(0);
+        const emitted = await emittedFlowOf(totpFlow());
+        const emittedLog = [...fx.log];
+        expect(replay.ok).toBe(false);
+        expect(emitted.ok).toBe(false);
+        expect(replay.reason).toMatch(/BENCH_TOTP/);
+        expect(emitted.reason).toMatch(/BENCH_TOTP/);
+        expect(replayLog.filter((e) => e.startsWith('totp:'))).toEqual([]);
+        expect(emittedLog.filter((e) => e.startsWith('totp:'))).toEqual([]);
+      } finally {
+        restore();
+      }
+    }, 120_000);
+  });
+
+  /**
    * Standing fills (the shared src/execution/refill.ts). fwvk1 n3 01-open:
    * the login fills passed their own checks, the app then rebuilt the form
    * (its service worker reloaded /login), and the Login click submitted it
@@ -2994,12 +3119,16 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       const steps: SkillStep[] = [
         { tool: 'goto', args: { url: `${origin}/imagelink` }, locators: {} },
         { tool: 'read', args: { target: '@e1', what: 'text' }, label: 'org_link', locators: { target: [{ kind: 'role', role: 'link', name: 'bench' }] } },
+        // the plural read takes the same fallback, per match (its page-side function is serialised alone)
+        { tool: 'read_all', args: { target: '#org', what: 'text' }, label: 'org_links', locators: { target: [{ kind: 'css', selector: '#org' }] } },
       ];
       const { replay, emitted } = await both(steps, 0);
       expect(replay.ok, replay.reason ?? '').toBe(true);
       expect(emitted.ok, emitted.reason ?? '').toBe(true);
       expect(replay.outputs.org_link).toBe('bench');
       expect(emitted.outputs['01-clear.org_link']).toBe('bench');
+      expect(replay.outputs.org_links).toBe('bench');
+      expect(emitted.outputs['01-clear.org_links']).toBe('bench');
     }, 120_000);
   });
 
@@ -3943,16 +4072,19 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(entries(emittedLog, 'visit')).toEqual(entries(replayLog, 'visit'));
       expect(entries(replayLog, 'hop')[0]).toBe('hop:start-5');
       expect(entries(emittedLog, 'hop')[0]).toBe('hop:start-5');
-      if (tool === 'click') {
-        // A click is followed until its url holds still (the shared
-        // urlHeldStill, in both runners), so the second hop was served and it
-        // is the final record both went on to. The artifact used to settle the
-        // DOM only, bind start-5 while replay bound final-5, and mark a
-        // different record from the same procedure.
-        expect(replayMarks).toEqual(['mark:final-5']);
-        expect(entries(replayLog, 'hop')).toContain('hop:final-5');
-        expect(entries(emittedLog, 'hop')).toContain('hop:final-5');
-      }
+      // A click is followed until its url holds still (the shared
+      // urlHeldStill, in both runners), so the second hop was served and it
+      // is the final record both went on to. The artifact used to settle the
+      // DOM only, bind start-5 while replay bound final-5, and mark a
+      // different record from the same procedure. A goto whose landing binds
+      // a derived value is followed the same way: it used to bind at once,
+      // and the result was a race with the 300ms redirect — round 46's cloud
+      // run sent the artifact's goto to /record/start-5 just as the redirect
+      // fired, which cancelled it (log: hop:start-5, visit:start-5,
+      // hop:final-5, no mark), while the local runs passed.
+      expect(replayMarks).toEqual(['mark:final-5']);
+      expect(entries(replayLog, 'hop')).toContain('hop:final-5');
+      expect(entries(emittedLog, 'hop')).toContain('hop:final-5');
       expect(emitted.ok, emitted.reason ?? '').toBe(replay.ok);
       expect(replay.ok, replay.reason ?? '').toBe(true);
     }, 120_000);
