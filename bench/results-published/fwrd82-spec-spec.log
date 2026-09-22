@@ -1,0 +1,43 @@
+
+Running 1 test using 1 worker
+
+[sitelooper warn] 01-open s_21f8a4/8: read 'ticket_title' returned a value the skill itself set/selected ('fwrd82-spec RD Bench Ticket') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 01-open s_21f8a4/9: read 'ticket_customer' returned a value the skill itself set/selected ('Bench Test Ltd') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper step] 01-open
+  ✘  1 fwrd82.spec.ts:9:1 › fwrd82 (11.7s)
+
+
+  1) fwrd82.spec.ts:9:1 › fwrd82 › 02-open: On the repair-desk app, open the ticket '{{runid}} RD Bench Ticket' (Ref {{01-open.ticket_ref}}) and add a part to it named exactly '{{runid}} RD Part A' with cost 100 and markup 25. Fill any other required fields the part form demands. Save and wait for the part to appear on the ticket (the view refreshes a short beat after a mutation — wait for the part to actually show). Report the part's name, cost, markup, and the PRICE the app computes for it, exactly as displayed. 
+
+    Error: none of 1 recorded locators resolved at 02-open s_c5adfa/2 target (page is at http://127.0.0.1:4180/#/tickets/t15): locator('[role=dialog]').locator('role=textbox[name="Part name *"]').or(locator('[role=dialog]').getByRole('textbox').and(locator('[role=dialog]').getByLabel('Part name *', { exact: true })))
+
+       at fwrd82.flow.ts:11894
+
+      11892 | /** The stop for a chain that resolved nothing, shared by `pick` and `pickOrNavigate`. */
+      11893 | function pickMiss(page: Page, candidates: CandidateObservation[], where: string, note?: string): Error {
+    > 11894 |   return new Error(
+            |          ^
+      11895 |     // The url and the recorded step are half the answer whenever a chain
+      11896 |     // misses wholesale: a locator that named the control on the day it was
+      11897 |     // recorded usually misses because the page is not the page the step
+        at pickMiss (/home/user/sitelooper/bench/results/fwrd82-spec-spec-tmp/fwrd82.flow.ts:11894:10)
+        at pick (/home/user/sitelooper/bench/results/fwrd82-spec-spec-tmp/fwrd82.flow.ts:11889:9)
+        at Object.act (/home/user/sitelooper/bench/results/fwrd82-spec-spec-tmp/fwrd82.flow.ts:13193:22)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwrd82-spec-spec-tmp/fwrd82.flow.ts:9078:18)
+        at Object.02-open (/home/user/sitelooper/bench/results/fwrd82-spec-spec-tmp/fwrd82.flow.ts:13180:5)
+        at /home/user/sitelooper/bench/results/fwrd82-spec-spec-tmp/fwrd82.flow.ts:16522:7
+        at runFlow (/home/user/sitelooper/bench/results/fwrd82-spec-spec-tmp/fwrd82.flow.ts:16521:5)
+        at /home/user/sitelooper/bench/results/fwrd82-spec-spec-tmp/fwrd82.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwrd82-fwrd82/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwrd82-fwrd82/error-context.md
+
+  1 failed
+    fwrd82.spec.ts:9:1 › fwrd82 ────────────────────────────────────────────────────────────────────
