@@ -307,7 +307,9 @@ ${describeLeaks(leaks.slice(0, 6))}`);
    *  - the read has come back absent on every run that reached the step, so
    *    its candidates are retired (dropAbsentReadLocators). fwkb14 missed in
    *    n2 and again in n3 with nothing recording the fact; fwod52's chain was
-   *    empty from the start.
+   *    empty from the start. A read that resolved and came back "" is not
+   *    absent (noteOutputEvidence tallies it `empty`): its locator found the
+   *    element, and retiring it cost fwgt5 01-signin its only org_link read.
    *
    * Run 1 proposes, run 2 decides, exactly as `retireDeadReadLocators` above:
    * one absent run is a miss, two are a dead locator. Proving needs no second
@@ -646,7 +648,9 @@ ${describeLeaks(leaks.slice(0, 6))}`);
     const a = req.args ?? {};
     switch (req.command) {
       case 'ping':
-        return { pid: process.pid, session: this.opts.session };
+        // The store rides on ping so the CLI can refuse to reuse a daemon
+        // whose store is not the one the command wants (protocol.ts storeMismatch).
+        return { pid: process.pid, session: this.opts.session, learning: Boolean(this.browser.learn), skillsDir: this.browser.learn?.dir ?? null };
 
       case 'open': {
         const page = await this.browser.getPage();

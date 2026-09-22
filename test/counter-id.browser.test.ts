@@ -109,3 +109,69 @@ d('counter-numbered ids', () => {
     expect(await artifact.textContent()).toBe('Bench Post');
   }, 30_000);
 });
+
+// fwod78 07-open: a kanban card's textless anchor, recorded as a path and a
+// point; on replay the path reached the card's other anchor.
+d('attribute rung for nameless controls (fwod78)', () => {
+  let session: BrowserSession;
+  const card = (jitter: boolean) => `<!doctype html><html><head><style>a.x{display:inline-block;width:30px;height:16px;background:#ccc;margin:2px}</style></head><body><div class="o_kanban">
+    <div class="card">${jitter ? '<div class="ribbon"><a href="#" name="ribbon"></a></div>' : ''}
+      <div><span>fwod78-n1 Bench Customer</span></div>
+      <div class="actions">${jitter ? '<a href="#" name="action_b" class="x"><i class="fa"></i></a><a href="#" name="action_a" class="x"><i class="fa"></i></a>' : '<a href="#" name="action_a" class="x"><i class="fa"></i></a><a href="#" name="action_b" class="x"><i class="fa"></i></a>'}</div>
+    </div>
+    <div class="other"><a href="#" data-cid="view-3571" data-rec="45" class="x"><i class="fa"></i></a></div>
+  </div></body></html>`;
+  beforeAll(async () => {
+    session = new BrowserSession({ session: `attrrung-${Date.now()}`, persist: false });
+    const page = await session.getPage();
+    let jitter = false;
+    await page.route('http://app.test/**', (route) => route.fulfill({ contentType: 'text/html', body: card(jitter) }));
+    (session as any).__jitter = (on: boolean) => (jitter = on);
+  });
+  afterAll(async () => {
+    await session?.close();
+  });
+
+  const nameless = async (page: import('playwright-core').Page, selector: string) => {
+    const ref = await page.locator(selector).evaluate((el) => el.getAttribute('name') ?? el.getAttribute('data-cid'));
+    const snap = await snapshot(page, { full: true } as any);
+    // every anchor here is a nameless `link`; pick the one the selector names by its order among links
+    const links = [...snap.matchAll(/link \[(@e\d+)\]/g)].map((m) => m[1]);
+    const index = await page.evaluate((sel) => Array.from(document.querySelectorAll('a')).indexOf(document.querySelector(sel)!), selector);
+    return { ref: links[index], name: ref };
+  };
+
+  it('records a[name="action_b"] above the positional path, and the replay finds it after the card moves things', async () => {
+    const { compileSkill: _unused, stableFirst } = await import('../src/skills/compile.js');
+    const { resolveChain } = await import('../src/skills/replay.js');
+    const page = await session.getPage();
+    (session as any).__jitter(false);
+    await page.goto('http://app.test/web?action=156&id=45');
+    const { ref } = await nameless(page, 'a[name="action_b"]');
+    const described = await describeTarget(page, ref);
+    const exprs = described.chain!.map((c: any) => candidateExpr(c));
+    const attrAt = exprs.findIndex((e) => e.includes('a[name=\\"action_b\\"]') || e.includes('a[name="action_b"]'));
+    const pathAt = exprs.findIndex((e) => /nth-of-type/.test(e));
+    expect(attrAt).toBeGreaterThanOrEqual(0);
+    expect(pathAt).toBeGreaterThan(attrAt);
+    // compile's ordering keeps it ahead of the path
+    const ranked = stableFirst(described.chain as any).map((c: any) => candidateExpr(c));
+    expect(ranked.findIndex((e) => e.includes('action_b'))).toBeLessThan(ranked.findIndex((e) => /nth-of-type/.test(e)));
+    // the card re-renders with a ribbon link and its actions reordered
+    (session as any).__jitter(true);
+    await page.goto('http://app.test/web?action=156&id=45');
+    const hit = await resolveChain(page, described.chain as any, {});
+    expect(await hit!.locator.getAttribute('name')).toBe('action_b');
+  }, 60_000);
+
+  it('never builds the rung from a render counter or a number the url shows', async () => {
+    const page = await session.getPage();
+    (session as any).__jitter(false);
+    await page.goto('http://app.test/web?action=156&id=45');
+    const { ref } = await nameless(page, 'a[data-cid]');
+    const described = await describeTarget(page, ref);
+    const exprs = described.chain!.map((c: any) => candidateExpr(c)).join('\n');
+    expect(exprs).not.toContain('view-3571');
+    expect(exprs).not.toContain('data-rec');
+  }, 60_000);
+});

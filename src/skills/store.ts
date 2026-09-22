@@ -343,7 +343,16 @@ export interface SkillStep {
    * order because the prelude could say which STEPS had run but not that a
    * record already existed.
    */
-  mints?: { at: string };
+  mints?: {
+    at: string;
+    /**
+     * A state key (`q.*`) minted ALONE over the url its step acted on — the
+     * evidence that it names a created record (gates.ts mintedAhead). `false`
+     * for a key that arrived with others (a navigation filling in its state,
+     * odoo fwod78). Absent on stores compiled before it, read as sole.
+     */
+    sole?: boolean;
+  };
   /**
    * `tool: 'loop'` only. The steps to repeat while `while` still matches an
    * element, capped at `max` iterations. Folded from a run of identical action

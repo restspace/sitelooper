@@ -6,8 +6,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { AnthropicProvider, OpenAICompatProvider, globalConfigPath, resolveProviderConfig, writeGlobalConfig, type Provider } from './agent/llm.js';
 import type { Report } from './agent/report.js';
-import { encodeFrame, LineDecoder, type FlowRunResult, type Frame, type Request, type ResultFrame } from './shared/protocol.js';
-import { aliasLegacyEnv, sessionsDir, socketPath, validateSessionName } from './shared/paths.js';
+import { encodeFrame, LineDecoder, storeMismatch, type FlowRunResult, type Frame, type PingInfo, type Request, type ResultFrame } from './shared/protocol.js';
+import { aliasLegacyEnv, sessionNames, sessionsDir, socketPath, validateSessionName } from './shared/paths.js';
 import { candidateExpr } from './daemon/recorder.js';
 import { fillParams } from './skills/compile.js';
 import { SkillStore, skillsDir, successRate, type Skill } from './skills/store.js';
@@ -240,10 +240,15 @@ function connect(sock: string, timeoutMs = 1000): Promise<net.Socket> {
 /** Connect and prove the daemon is alive with a ping round-trip (a pipe can
  * still accept connections while its daemon is shutting down). */
 async function connectValidated(sock: string): Promise<net.Socket> {
+  return (await connectPinged(sock)).conn;
+}
+
+/** connectValidated, keeping what the ping answered (the daemon's store, for storeMismatch). */
+async function connectPinged(sock: string): Promise<{ conn: net.Socket; ping: PingInfo }> {
   const conn = await connect(sock);
   try {
-    await request(conn, 'ping', {}, undefined, 5_000);
-    return conn;
+    const res = await request(conn, 'ping', {}, undefined, 5_000);
+    return { conn, ping: res.data as PingInfo };
   } catch (err) {
     conn.destroy();
     throw err;
@@ -300,10 +305,22 @@ async function connectOrSpawn(
   opts: { headed: boolean; record: boolean; script: boolean; learn: boolean },
 ): Promise<net.Socket> {
   const sock = socketPath(session);
+  let running: { conn: net.Socket; ping: PingInfo } | null = null;
   try {
-    return await connectValidated(sock);
+    running = await connectPinged(sock);
   } catch {
     // not running — spawn the daemon detached and wait for the pipe
+  }
+  if (running) {
+    // A running daemon keeps the store it was started with; one that cannot
+    // serve this command is refused, never silently reused.
+    const learn = opts.learn || process.env.SITELOOPER_SKILLS === '1';
+    const mismatch = storeMismatch({ learn, skillsDir: skillsDir() }, running.ping);
+    if (mismatch) {
+      running.conn.destroy();
+      throw new Error(mismatch);
+    }
+    return running.conn;
   }
   const serverPath = fileURLToPath(new URL('./daemon/server.js', import.meta.url));
   const args = [serverPath, '--session', session];
@@ -559,7 +576,9 @@ async function main(): Promise<void> {
     return;
   }
   if (command === 'stop') {
-    const names = flags.has('all') ? allSessionNames() : [session];
+    // --all includes the default session outright: a daemon that never wrote a
+    // file has no session directory to be found by (sessionNames).
+    const names = flags.has('all') ? sessionNames({ includeDefault: true }) : [session];
     const results: Array<{ session: string; status: string; error?: string; flow?: { path?: string }; [key: string]: unknown }> = [];
     for (const name of names) {
       let conn: net.Socket;
@@ -616,7 +635,9 @@ async function main(): Promise<void> {
     headed: flags.has('headed'),
     record: flags.has('record'),
     script: flags.has('script'),
-    learn: flags.has('learn'),
+    // `run <flow>` replays from the skill store and has nothing to replay
+    // without one (runFlow's "no skill store" on every step), so it asks for one.
+    learn: flags.has('learn') || command === 'run',
   }).catch((err) => fail(err.message));
   if (requestedBrowser) await warnIfSessionBrowserDiffers(conn, session, requestedBrowser);
 
@@ -1233,19 +1254,8 @@ async function buildCommand(positional: string[], flags: Map<string, string | bo
   readinessCommand(result.flowFile, flags, json, onProgress, result);
 }
 
-function allSessionNames(): string[] {
-  try {
-    return fs
-      .readdirSync(sessionsDir(), { withFileTypes: true })
-      .filter((d) => d.isDirectory())
-      .map((d) => d.name);
-  } catch {
-    return [];
-  }
-}
-
 async function listSessions(json: boolean): Promise<void> {
-  const names = allSessionNames();
+  const names = sessionNames();
   const rows: { session: string; running: boolean; pid?: number }[] = [];
   for (const name of names) {
     try {

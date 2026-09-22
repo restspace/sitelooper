@@ -1,5 +1,8 @@
 import type { Locator, Page } from 'playwright-core';
-import { fieldByName } from '../execution/text.js';
+import { fieldByName, implicitRoles } from '../execution/text.js';
+
+/** Moved to the shared execution/text.ts (the artifact embeds it); re-exported for existing callers. */
+export { implicitRoles };
 
 export interface SnapshotOptions {
   /** Keep only lines that carry a ref or look interactive. */
@@ -230,21 +233,6 @@ export function resolveTarget(page: Page, target: string): Locator {
   return primary.or(scope.getByRole(field.role as Parameters<Page['getByRole']>[0]).and(scope.getByLabel(field.name, { exact: true })));
 }
 
-/**
- * `[role=dialog]` as a whole chain segment means "the dialog", and the agent
- * writes it because the snapshot and the diff both SAY `dialog`. But as CSS it
- * matches only an explicit role attribute: a native <dialog>, <nav> or <main>
- * has the role and no attribute, so the scope matched nothing. fxon1-n1 lost
- * five batches (3s each, plus the snapshot turn after) to `[role=dialog] >> …`
- * on an app that uses <dialog>. The role engine matches both kinds, and is a
- * strict superset, so the segment is handed to it instead.
- */
-export function implicitRoles(selector: string): string {
-  return selector
-    .split(' >> ')
-    .map((segment) => segment.trim().replace(/^\[role=["']?([a-z]+)["']?\]$/, 'role=$1'))
-    .join(' >> ');
-}
 
 
 export function isRefTarget(target: string): boolean {

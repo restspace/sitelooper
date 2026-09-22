@@ -104,7 +104,7 @@ export interface FlowStep {
    * reach it — fwkb14's synthesized `column_3` read matched nothing in n2 and
    * nothing again in n3, and the store learned the same nothing both times.
    */
-  outputEvidence?: Record<string, { same: number; differed: number; absent?: number }>;
+  outputEvidence?: Record<string, { same: number; differed: number; absent?: number; empty?: number }>;
   /**
    * The url PATTERN the recording ended this step on (compile.ts urlPattern,
    * so `/orders/1042` and `/orders/1043` are one route).
@@ -245,7 +245,18 @@ export function noteOutputEvidence(step: FlowStep, reported: Record<string, stri
     // it (`varyingValues` and `recordedRef` still read only `differed`); its
     // one reader is the retirement of a read that has never once resolved
     // (server.ts settleUnprovenReads; fwkb14 missed in n2 and again in n3).
-    if (typeof seen !== 'string' || !seen) {
+    //
+    // A value reported EMPTY is not silence: the read resolved an element and
+    // it gave back "". Its locator found something, so it is tallied as
+    // `empty`, never `absent`, and nothing retires it (fwgt5 01-signin's
+    // image-only org link read "" twice and lost its working locator).
+    if (seen === '') {
+      const ev = (step.outputEvidence ??= {})[name] ?? { same: 0, differed: 0 };
+      ev.empty = (ev.empty ?? 0) + 1;
+      step.outputEvidence[name] = ev;
+      continue;
+    }
+    if (typeof seen !== 'string') {
       const ev = (step.outputEvidence ??= {})[name] ?? { same: 0, differed: 0 };
       ev.absent = (ev.absent ?? 0) + 1;
       step.outputEvidence[name] = ev;

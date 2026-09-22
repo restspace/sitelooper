@@ -1385,6 +1385,24 @@ const src = (text: string) => stringSource(text, { slot: slotAsParam });
 const match = (text: string) => matcherSource(text, { slot: slotAsParam });
 
 /**
+ * A value an ACTION dispatches with, as source: `src`, with every
+ * `{{env:NAME}}` secret read from the environment at run time — the twin of
+ * tools.ts, which resolves the same markers in a dispatched tool's args and
+ * only there. The file names the variable, never the value; a missing one is
+ * refused up front by validateInputs (requiredEnvNames). Everything that is
+ * not dispatched (expectations, echo notes, messages) keeps `src` and the
+ * marker, as replay keeps it.
+ */
+const actSrc = (text: string): string => {
+  if (!text.includes('{{env:')) return src(text);
+  const parts = text.split(/\{\{env:(\w+)\}\}/);
+  return parts
+    .map((part, i) => (i % 2 ? `(process.env[${q(part)}] ?? '')` : part ? src(part) : ''))
+    .filter(Boolean)
+    .join(' + ');
+};
+
+/**
  * The recorded page changes a step is judged by, after the compile-time
  * filter both runners apply (TRANSIENT_LINE); empty when the step has none
  * or is a read (replay's expectedChanges runs on reads too, but the compiler
@@ -2272,10 +2290,10 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
       // (see GOTO_TIMEOUT_MS). The daemon's own goto passes exactly this pair.
       if (ctx.navTarget) {
         ctx.volatileUsed = true;
-        out.push(`${ctx.navTarget} = navigationTarget(${src(str('url'))}, page, ${ctx.volatile}, ${q(`${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`)});`);
+        out.push(`${ctx.navTarget} = navigationTarget(${actSrc(str('url'))}, page, ${ctx.volatile}, ${q(`${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`)});`);
         out.push(`await page.goto(${ctx.navTarget}.url, { waitUntil: 'load', timeout: GOTO_TIMEOUT_MS });`);
       } else {
-        out.push(`await page.goto(${src(str('url'))}, { waitUntil: 'load', timeout: GOTO_TIMEOUT_MS });`);
+        out.push(`await page.goto(${actSrc(str('url'))}, { waitUntil: 'load', timeout: GOTO_TIMEOUT_MS });`);
       }
       return out;
     case 'back':
@@ -2288,14 +2306,14 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
       out.push(`await page.context().setOffline(${Boolean(args.offline)});`);
       return out;
     case 'eval':
-      out.push(`await page.evaluate(${src(str('expression'))});`);
+      out.push(`await page.evaluate(${actSrc(str('expression'))});`);
       return out;
     case 'screenshot':
       out.push(`await page.screenshot({ path: ${src(args.path ? str('path') : 'screenshot.jpg')}${args.full_page ? ', fullPage: true' : ''} });`);
       return out;
     case 'dialog_expect': {
       const action = args.action === 'accept' ? 'accept' : 'dismiss';
-      const arg = action === 'accept' && args.prompt_text ? src(str('prompt_text')) : '';
+      const arg = action === 'accept' && args.prompt_text ? actSrc(str('prompt_text')) : '';
       const count = num('count') ?? 1;
       out.push(`page.${count > 1 ? 'on' : 'once'}('dialog', (dialog) => dialog.${action}(${arg}));`);
       return out;
@@ -2312,7 +2330,7 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
     case 'press':
       if (!args.target) {
         if (ctx.landing) out.push(`${ctx.landing} = await armPageEffect(page, ${JSON.stringify(stepEffect(step))}, ${q(`${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`)});`);
-        out.push(`await page.keyboard.press(${src(str('key'))});`);
+        out.push(`await page.keyboard.press(${actSrc(str('key'))});`);
         observeAction(step, ctx, out);
         return out;
       }
@@ -2429,26 +2447,26 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
     }
     case 'fill':
       // Through the inlined helper, never `locator.fill`: see its comment.
-      out.push(`await fill(${target}, ${src(str('value'))});`);
+      out.push(`await fill(${target}, ${actSrc(str('value'))});`);
       break;
     case 'type': {
       // Through the inlined helper, never `pressSequentially` alone: a recorded
       // `type` into an editor or an aria-combobox is recipe-driven in the
       // daemon, and was the one action the artifact drove past the recipe.
       const delay = num('delay_ms');
-      out.push(`await type(${target}, ${src(str('text'))}${delay === undefined ? '' : `, { delay: ${delay} }`});`);
+      out.push(`await type(${target}, ${actSrc(str('text'))}${delay === undefined ? '' : `, { delay: ${delay} }`});`);
       break;
     }
     case 'press':
-      out.push(`await ${target}.press(${src(str('key'))});`);
+      out.push(`await ${target}.press(${actSrc(str('key'))});`);
       break;
     case 'select': {
       // By label first, not value: the recording watched a human pick the
       // option they could read, and an app is free to renumber its values.
       // Through the inlined helper, never `locator.selectOption` alone — the
       // recorded `optionValue` is the last resort replay itself keeps.
-      const fallback = typeof args.optionValue === 'string' && args.optionValue ? `, ${src(str('optionValue'))}` : '';
-      out.push(`await select(${target}, ${src(str('option'))}${fallback});`);
+      const fallback = typeof args.optionValue === 'string' && args.optionValue ? `, ${actSrc(str('optionValue'))}` : '';
+      out.push(`await select(${target}, ${actSrc(str('option'))}${fallback});`);
       break;
     }
     case 'check':
@@ -2471,7 +2489,7 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
       out.push(`const downloadPromise${n} = page.waitForEvent('download');`);
       out.push(`await ${target}.click();`);
       out.push(`const download${n} = await downloadPromise${n};`);
-      out.push(`await download${n}.saveAs(${args.save_path ? src(str('save_path')) : `\`downloads/\${download${n}.suggestedFilename()}\``});`);
+      out.push(`await download${n}.saveAs(${args.save_path ? actSrc(str('save_path')) : `\`downloads/\${download${n}.suggestedFilename()}\``});`);
       break;
     }
     case 'drag': {
@@ -2522,7 +2540,7 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
   // (replay notes the same once the step has run).
   if (step.tool === 'fill' && ctx.standing) {
     ctx.standingUsed = true;
-    out.push(`await noteFill(${ctx.standing}, ${target}, ${src(str('value'))}, page);`);
+    out.push(`await noteFill(${ctx.standing}, ${target}, ${actSrc(str('value'))}, page);`);
   }
   // A recorded popup/close is armed after the target resolved and before the
   // action dispatches, as replay arms it: a target=_blank click can raise its
@@ -3121,7 +3139,7 @@ function segmentGateLines(segment: SpecSegment, ctx: Ctx, afterNavigation: boole
   // The positions this segment mints ride with the gate, as replay hands them
   // to the same verdict: a page already carrying the record the segment would
   // create is past its start (gates.ts mintedAhead, fwod66 04-verify).
-  const mints = segment.steps.flatMap((s, i) => (s.mints ? [{ at: s.mints.at, step: i + 1 }] : []));
+  const mints = segment.steps.flatMap((s, i) => (s.mints ? [{ at: s.mints.at, step: i + 1, ...(s.mints.sole !== undefined ? { sole: s.mints.sole } : {}) }] : []));
   out.push(`await preconditionGate(${q(segment.preconditions.urlPattern)}, page.url(), p, ${q(where)}, ${similarity}${mints.length ? `, ${JSON.stringify(mints)}` : ''});`);
   out.push(...identity);
   return out;
@@ -3169,7 +3187,7 @@ function refExpr(ref: string, vars: Set<string>, by?: string): string {
   // A secret is validated once, up front (validateInputs / requiredEnvNames);
   // a plain run var likewise. Only a step-to-step output is a value THIS run
   // had to produce, so only it can go missing mid-flow.
-  if (secret) return `process.env.${secret[1]} ?? ''`;
+  if (secret) return `process.env[${q(secret[1])}] ?? ''`;
   if (ref.includes('.')) return by ? `need(outputs, ${q(ref)}, ${q(by)})` : `outputs[${q(ref)}] ?? ''`;
   if (vars.has(ref)) return /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(ref) ? `vars.${ref}` : `vars[${q(ref)}]`;
   // A reference to something the flow never declared: honest at run time

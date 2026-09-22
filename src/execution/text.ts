@@ -335,3 +335,26 @@ export function unfreezeFrame(frame: string, runValues: readonly string[]): stri
     .map((part) => part.replace(re, WILDCARD))
     .join(FRAME_MARK);
 }
+
+/**
+ * `[role=dialog]` as a whole chain segment means "the dialog", and the agent
+ * writes it because the snapshot and the diff both SAY `dialog`. But as CSS it
+ * matches only an explicit role attribute: a native <dialog>, <nav> or <main>
+ * has the role and no attribute, so the scope matched nothing. fxon1-n1 lost
+ * five batches (3s each, plus the snapshot turn after) to `[role=dialog] >> …`
+ * on an app that uses <dialog>. The role engine matches both kinds, and is a
+ * strict superset, so the segment is handed to it instead.
+ *
+ * Shared (fwrd82): the live action resolved `[role=dialog] >> role=textbox[…]`
+ * through this rewrite, but the recorder probed the raw text, matched nothing,
+ * and stored the unrewritten selector as the step's only candidate; the daemon
+ * healed it by testid on every replay and the compiled artifact could not.
+ * So describeTarget probes as resolveTarget does, and makeLocator and the
+ * artifact's candidateSource rewrite a stored selector the same way.
+ */
+export function implicitRoles(selector: string): string {
+  return selector
+    .split(' >> ')
+    .map((segment) => segment.trim().replace(/^\[role=["']?([a-z]+)["']?\]$/, 'role=$1'))
+    .join(' >> ');
+}

@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { ElementHandle, Frame, Locator, Page } from 'playwright-core';
 import { ensureSessionDir } from '../shared/paths.js';
-import { escapeRe, fieldByName, frameValue, hasTextMatcher, roleName, unfreezeFrame, volatileMatcher } from '../shared/text.js';
+import { escapeRe, fieldByName, frameValue, hasTextMatcher, implicitRoles, roleName, unfreezeFrame, volatileMatcher } from '../shared/text.js';
 import { urlParts } from '../execution/url.js';
 import { pointLocator } from '../execution/point.js';
 import { dispatchesFirstMatch } from '../execution/lifecycle.js';
@@ -103,10 +103,13 @@ export function makeLocator(page: Root, c: LocatorCandidate): Locator {
       break;
     case 'id':
     case 'css': {
-      loc = page.locator(c.selector);
+      // As the live action resolved it: `[role=dialog]` also names a native
+      // <dialog> (implicitRoles, shared with the artifact; fwrd82).
+      const selector = implicitRoles(c.selector);
+      loc = page.locator(selector);
       // A stored `role=textbox[name="Part name *"]` also finds the field by
       // its label's exact text (fieldByName, shared with the artifact).
-      const field = c.kind === 'css' ? fieldByName(c.selector) : null;
+      const field = c.kind === 'css' ? fieldByName(selector) : null;
       if (field) {
         const scope = field.scope === null ? page : page.locator(field.scope);
         loc = loc.or(scope.getByRole(field.role as Parameters<Page['getByRole']>[0]).and(scope.getByLabel(field.name, { exact: true })));
@@ -702,6 +705,16 @@ interface ElementInfo {
    * input's own attributes churning while still naming a REGION.
    */
   anchor: { attr: string; value: string } | null;
+  /**
+   * A selector from the element's OWN stable attributes (`a[name="action_b"]`,
+   * a `data-*`, `type`, an `aria-*` that is not state, an `href`) that matches
+   * it alone on the page, or null. The naming rung for a control that has
+   * none: fwod78 07-open's kanban-card anchor had no text, no name and no
+   * testid, was recorded as a positional path and a point, and on both
+   * replays the path reached the card's OTHER anchor — the sale.order list
+   * instead of the contact form.
+   */
+  attrs: string | null;
   /** The element's box in document coordinates (viewport rect + scroll), null when it has no layout. */
   box: { x: number; y: number; w: number; h: number } | null;
   viewport: { w: number; h: number };
@@ -762,9 +775,14 @@ export async function describeTarget(
   if (!isRefTarget(raw)) {
     // A raw selector the agent chose: keep it as the primary, but still
     // describe the element it hit so replay has attribute-based fallbacks.
-    const loc = page.locator(raw);
+    // Probed and stored exactly as the action resolved it (resolveTarget:
+    // implicitRoles, the label fallback). fwrd82 n1's `[role=dialog] >> …`
+    // hit a native <dialog> live, matched nothing here, and was stored bare
+    // with no testid or role behind it: 12 inline heals per replay, and the
+    // compiled artifact, which cannot heal, ran 0/1.
+    const loc = resolveTarget(page, raw);
     const count = await loc.count().catch(() => 0);
-    const primary: LocatorCandidate = primaryFor(raw);
+    const primary: LocatorCandidate = primaryFor(implicitRoles(raw.trim()));
     // A step that ACTS ON ONE of several matches is describable: it acted on
     // match 0, and that element has a testid, a role+name and a path like any
     // other. Bailing here — storing the bare plural selector with no index and
@@ -1473,6 +1491,13 @@ function candidatesFor(info: ElementInfo, noPoint = false): Candidate[] {
     out.push(cand({ kind: 'id', selector: sel }));
   }
   if (info.text && !info.role) out.push(cand({ kind: 'text', text: info.text }));
+  // A control no rung above names — no testid, role+name, label, placeholder,
+  // stable id or text — is named by its own attributes before any path: see
+  // ElementInfo.attrs (fwod78 07-open). Only then: it must never displace a
+  // name. A value carrying one of this run's own values (a typed title, a
+  // declared var) is the run's, not the control's.
+  const named = info.testid || (info.role && info.name) || info.label || info.placeholder || (info.id && info.idStable) || info.text;
+  if (!named && info.attrs && !identityHints.some((h) => info.attrs!.includes(h))) out.push(cand({ kind: 'css', selector: info.attrs }));
   // The anchored rung between the element's own semantics and the bare
   // positional path: `[ancestor-testid] input` names a region and then the
   // element's kind within it. The chain walker verifies it against the live
@@ -1619,8 +1644,9 @@ function describeInPage(node: Node): ElementInfo {
     }
     return false;
   };
+  const COUNTER = /^(?:(.+[-_])(\d{3,})|(.*[A-Za-z])(\d{2,}))$/;
   const counterPrefix = (node: Element): string | null => {
-    let m: (string | undefined)[] | null = /^(?:(.+[-_])(\d{3,})|(.*[A-Za-z])(\d{2,}))$/.exec(node.id);
+    let m: (string | undefined)[] | null = COUNTER.exec(node.id);
     if (!m) {
       const one = /^(.*[A-Za-z])(\d)$/.exec(node.id);
       if (!one || !numberedAgain(node.id, one[1])) return null;
@@ -1652,6 +1678,36 @@ function describeInPage(node: Node): ElementInfo {
   };
   const tag = el.tagName.toLowerCase();
   const type = (attr('type') || '').toLowerCase();
+
+  // The element's own non-positional attributes, as one selector that singles
+  // it out on the page — see ElementInfo.attrs. A value is used only when
+  // nothing marks it as the run's: not minted (`minted`, COUNTER: a hash, a
+  // render counter), and no number in it that the page url also shows (the
+  // url-id provenance counterPrefix uses). State (`aria-expanded`) and
+  // references to other elements' ids (`aria-controls`) are never identity.
+  const ownAttributes = (): string | null => {
+    const urlDigits = new Set(location.href.split(/[^0-9]+/).filter(Boolean));
+    const stable = (v: string): boolean =>
+      v.length <= 80 && !/[\n\r]/.test(v) && !minted(v) && !COUNTER.test(v) && !v.split(/[^0-9]+/).some((d) => d && urlDigits.has(d));
+    const state = /^aria-(label|labelledby|describedby|controls|owns|activedescendant|expanded|selected|pressed|checked|current|hidden|disabled|busy|invalid|valuenow|valuetext|valuemin|valuemax|posinset|setsize|sort)$/;
+    const parts: string[] = [];
+    for (const a of Array.from(el.attributes)) {
+      const n = a.name.toLowerCase();
+      const own = n === 'name' || n === 'type' || n === 'href' || (n.startsWith('data-') && !TESTID_ATTRS.includes(n)) || (n.startsWith('aria-') && !state.test(n));
+      if (own && CSS.escape(n) === n && stable(a.value)) parts.push(`[${n}=${JSON.stringify(a.value)}]`);
+    }
+    const unique = (sel: string): boolean => {
+      try {
+        return el.ownerDocument.querySelectorAll(sel).length === 1;
+      } catch {
+        return false;
+      }
+    };
+    const some = parts.slice(0, 8);
+    for (const p of some) if (unique(`${tag}${p}`)) return `${tag}${p}`;
+    for (let i = 0; i < some.length; i++) for (let j = i + 1; j < some.length; j++) if (unique(`${tag}${some[i]}${some[j]}`)) return `${tag}${some[i]}${some[j]}`;
+    return null;
+  };
 
   const implicitRole = (): string | null => {
     if (tag === 'button') return 'button';
@@ -1798,6 +1854,7 @@ function describeInPage(node: Node): ElementInfo {
     cssPath: cssPath(),
     row: rowOf(),
     anchor: anchorOf(),
+    attrs: ownAttributes(),
     box: (() => {
       const r = el.getBoundingClientRect();
       if (!r.width && !r.height) return null;

@@ -1643,8 +1643,37 @@ describe('flow-level wiring', () => {
     // call site takes it through `need` rather than defaulting it to ''.
     expect(source).toContain("v2: need(outputs, '02-b.title', '01-do')");
     expect(source).toContain('v3: `literal-${vars.name}`');
-    expect(source).toContain("v4: process.env.BENCH_PASSWORD ?? ''");
+    expect(source).toContain("v4: process.env['BENCH_PASSWORD'] ?? ''");
     expect(syntaxErrors(source)).toEqual([]);
+  });
+
+  /**
+   * A README-style sign-in: the recorded fill carries `{{env:BENCH_PW}}` in
+   * its own args (not through a slot). Replay resolves it at dispatch
+   * (tools.ts); the artifact typed the marker text into the field. It reads
+   * the environment at run time, names the variable, never inlines the value,
+   * and refuses a run without it up front.
+   */
+  it('reads a secret marker in a recorded action from the environment at run time, never inlining it', () => {
+    const had = process.env.BENCH_PW;
+    process.env.BENCH_PW = 'hunter2-emit';
+    try {
+      const fill: SkillStep = { tool: 'fill', args: { target: '@e1', value: '{{env:BENCH_PW}}' }, locators: { target: [{ kind: 'id', selector: '#password' }] } };
+      const typed: SkillStep = { tool: 'type', args: { target: '@e2', text: 'pin {{env:BENCH_PW}}!' }, locators: { target: [{ kind: 'id', selector: '#pin' }] } };
+      const source = emit(specOf([fill, typed]));
+      expect(source).toMatch(/await fill\([^\n]*, \(process\.env\['BENCH_PW'\] \?\? ''\)\)/);
+      // The standing-fill ledger refills with the value, not the marker.
+      expect(source).toMatch(/await noteFill\([^\n]*, \(process\.env\['BENCH_PW'\] \?\? ''\), page\)/);
+      expect(source).toContain("'pin ' + (process.env['BENCH_PW'] ?? '') + '!'");
+      // Nothing dispatched carries the marker text any more.
+      expect(source).not.toMatch(/await (fill|type)\([^\n]*\{\{env:/);
+      expect(source).not.toContain('hunter2-emit');
+      expect(source).toContain('export const requiredEnvNames = ["BENCH_PW"] as const;');
+      expect(syntaxErrors(source)).toEqual([]);
+    } finally {
+      if (had === undefined) delete process.env.BENCH_PW;
+      else process.env.BENCH_PW = had;
+    }
   });
 
   it('publishes the end-url outputs a later step refers to (the grafana failure)', () => {
@@ -1736,7 +1765,7 @@ describe('flow-level wiring', () => {
         }),
       );
       expect(source).toContain('v1: vars.name');
-      expect(source).toContain("v2: process.env.BENCH_PASSWORD ?? ''");
+      expect(source).toContain("v2: process.env['BENCH_PASSWORD'] ?? ''");
       expect(source).not.toContain('need(outputs, ');
     });
 

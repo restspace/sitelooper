@@ -76,6 +76,45 @@ export function socketPath(session: string): string {
   return path.join(sessionDir(session), 'daemon.sock');
 }
 
+/** The session every command uses without --session. */
+export const DEFAULT_SESSION = 'default';
+
+const PIPE_PREFIX = 'sitelooper-';
+
+/** Names of the live named pipes (Windows); nothing elsewhere, where a socket lives in its session dir. */
+function livePipes(): string[] {
+  if (process.platform !== 'win32') return [];
+  try {
+    return fs.readdirSync('\\\\.\\pipe\\');
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Every session a daemon may be serving: each session directory, each live
+ * daemon pipe (a daemon that never wrote a file has no directory — on Windows
+ * its socket is a pipe, not a file in the dir), and, for `stop --all`, the
+ * default session outright. Directories alone missed the one that matters
+ * most: a default daemon started without a skill store, which then served
+ * every later run.
+ */
+export function sessionNames(o: { includeDefault?: boolean; pipes?: () => string[] } = {}): string[] {
+  const names = new Set<string>();
+  try {
+    for (const d of fs.readdirSync(sessionsDir(), { withFileTypes: true })) if (d.isDirectory()) names.add(d.name);
+  } catch {
+    // no sessions yet
+  }
+  for (const pipe of (o.pipes ?? livePipes)()) {
+    if (!pipe.startsWith(PIPE_PREFIX)) continue;
+    const name = pipe.slice(PIPE_PREFIX.length);
+    if (NAME_RE.test(name)) names.add(name);
+  }
+  if (o.includeDefault) names.add(DEFAULT_SESSION);
+  return [...names].sort();
+}
+
 const NAME_RE = /^[A-Za-z0-9_-]{1,64}$/;
 
 export function validateSessionName(name: string): string {

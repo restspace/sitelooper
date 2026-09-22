@@ -1356,6 +1356,19 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     // sides: the marker the run arrived with, and the one a param resolved to.
     expect(await verdict({ args: { url: '{{02-create.uid}}' } }, {})).toMatch(/still unresolved/);
     expect(await verdict({ args: { url: '{{v2}}' } }, { v2: '{{02-create.uid}}' })).toMatch(/\{\{02-create\.uid\}\} is still unresolved/);
+    // A `{{env:NAME}}` secret is resolved at dispatch, never an unresolved
+    // reference; one the environment cannot resolve is named, on both sides.
+    const hadPw = process.env.BENCH_PW;
+    try {
+      process.env.BENCH_PW = 'pw-parity-1';
+      expect(await verdict({ args: { value: '{{v2}}' } }, { v2: '{{env:BENCH_PW}}' })).toBeNull();
+      expect(await verdict({ args: { value: '{{env:BENCH_PW}}' } }, {})).toBeNull();
+      delete process.env.BENCH_PW;
+      expect(await verdict({ args: { value: '{{v2}}' } }, { v2: '{{env:BENCH_PW}}' })).toMatch(/BENCH_PW is not set/);
+    } finally {
+      if (hadPw === undefined) delete process.env.BENCH_PW;
+      else process.env.BENCH_PW = hadPw;
+    }
     // The price of expect.ts's reading, taken knowingly and identically on
     // both sides: text that legitimately doubles a brace reads as a marker.
     // In replay that is a fallback to the model, and the artifact never calls
@@ -2703,6 +2716,111 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
   });
 
   /**
+   * `{{env:NAME}}` credentials, the README's sign-in (a CLI user's report:
+   * such a flow never replayed). The unresolved-marker guard read the secret
+   * marker as an unpublished reference, so replay fell back to the model on
+   * every run. The fixture's log is the oracle: signed in once, with the
+   * environment's value, by both runners — and a run without the variable
+   * signs in with nothing and names BENCH_PW.
+   */
+  describe('env secrets', () => {
+    const SECRET = 'pw-env-x44';
+    const had = process.env.BENCH_PW;
+    const restore = () => {
+      if (had === undefined) delete process.env.BENCH_PW;
+      else process.env.BENCH_PW = had;
+    };
+    const signIn = (password: string, page = `${origin}/reload-login/plain`): SkillStep[] => [
+      { tool: 'goto', args: { url: page }, locators: {} },
+      { tool: 'fill', args: { target: '@e1', value: '{{v1}}' }, locators: { target: [{ kind: 'label', label: 'Username' }] } },
+      { tool: 'fill', args: { target: '@e2', value: password }, locators: { target: [{ kind: 'css', selector: '#password' }] } },
+      { tool: 'click', args: { target: '@e3' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Sign in' }] } },
+    ];
+    const flowStep = (): FlowStep => ({
+      id: '01-sign-in',
+      instruction: 'Sign in as admin using {{env:BENCH_PW}}',
+      params: { v1: 'admin', v2: '{{env:BENCH_PW}}' },
+      outputs: [],
+    } as unknown as FlowStep);
+    const signInSkill = (): Skill => ({
+      ...skillOf(signIn('{{v2}}')),
+      id: 's_signin',
+      template: 'sign in as {{v1}} using {{v2}}',
+      params: { v1: { example: 'admin', usedIn: [2], known: true }, v2: { example: '{{env:BENCH_PW}}', usedIn: [3], known: true } },
+    });
+    const signInFlow = (): SpecFlow => {
+      const spec = specOf(signIn('{{v2}}'));
+      Object.assign(spec.steps[0], { id: '01-sign-in', params: { v1: 'admin', v2: '{{env:BENCH_PW}}' } });
+      Object.assign(spec.steps[0].segments[0], { id: 's_signin', params: signInSkill().params });
+      return spec;
+    };
+
+    it('both runners sign in with a slot bound to {{env:NAME}}, replay at tier A', async () => {
+      process.env.BENCH_PW = SECRET;
+      try {
+        // The params exactly as the daemon's flow runner binds them.
+        const bound = resolveStepParams(flowStep(), {}, {});
+        expect(bound?.params.v2).toBe('{{env:BENCH_PW}}');
+        expect(bound?.missing).toEqual([]);
+        reset(0);
+        const replay = await replayOf(signInSkill(), bound!.params);
+        const replayLog = [...fx.log];
+        reset(0);
+        const emitted = await emittedFlowOf(signInFlow());
+        const emittedLog = [...fx.log];
+        expect(replay.ok, replay.reason ?? '').toBe(true);
+        expect(emitted.ok, emitted.reason ?? '').toBe(true);
+        expect(replayLog).toEqual([`commit:login:admin:${SECRET}`]);
+        expect(emittedLog).toEqual([`commit:login:admin:${SECRET}`]);
+        expect(JSON.stringify([replay, emitted])).not.toContain(SECRET);
+        const { source } = emitFlowFile(signInFlow(), { tier: 'plain' });
+        expect(source).toContain("process.env['BENCH_PW']");
+        expect(source).not.toContain(SECRET);
+      } finally {
+        restore();
+      }
+    }, 120_000);
+
+    it('both runners refill a rebuilt form with the secret, never with its marker', async () => {
+      process.env.BENCH_PW = SECRET;
+      try {
+        const steps = signIn('{{env:BENCH_PW}}', `${origin}/relogin`).map((s) =>
+          s.tool === 'fill' && s.args.value === '{{v1}}' ? { ...s, args: { ...s.args, value: 'admin' }, locators: { target: [{ kind: 'role' as const, role: 'textbox', name: 'Username' }] } } : s,
+        );
+        const { replay, emitted, replayLog, emittedLog } = await both(steps, 0);
+        expect(replayLog, 'replay must refill with the value').toEqual([`commit:login:admin:${SECRET}`]);
+        expect(emittedLog, 'the artifact must refill with the value').toEqual([`commit:login:admin:${SECRET}`]);
+        expect(replay.ok, replay.reason ?? '').toBe(true);
+        expect(emitted.ok, emitted.reason ?? '').toBe(true);
+        expect(JSON.stringify([replay, emitted])).not.toContain(SECRET);
+      } finally {
+        restore();
+      }
+    }, 120_000);
+
+    it('both runners refuse a sign-in whose variable is unset, naming it, and sign in with nothing', async () => {
+      delete process.env.BENCH_PW;
+      try {
+        const bound = resolveStepParams(flowStep(), {}, {});
+        reset(0);
+        const replay = await replayOf(signInSkill(), bound!.params);
+        const replayLog = [...fx.log];
+        reset(0);
+        const emitted = await emittedFlowOf(signInFlow());
+        const emittedLog = [...fx.log];
+        expect(replay.ok).toBe(false);
+        expect(emitted.ok).toBe(false);
+        expect(replay.reason).toMatch(/BENCH_PW/);
+        expect(emitted.reason).toMatch(/BENCH_PW/);
+        expect(replayLog.filter((e) => e.startsWith('commit:'))).toEqual([]);
+        expect(emittedLog.filter((e) => e.startsWith('commit:'))).toEqual([]);
+      } finally {
+        restore();
+      }
+    }, 120_000);
+  });
+
+  /**
    * Standing fills (the shared src/execution/refill.ts). fwvk1 n3 01-open:
    * the login fills passed their own checks, the app then rebuilt the form
    * (its service worker reloaded /login), and the Login click submitted it
@@ -2851,6 +2969,40 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
    * the editor's own display of the filled text, and NOT the page heading,
    * which is the control that proves the rule is not "every read".
    */
+  describe('a stored [role=…] scope on a native element (fwrd82)', () => {
+    it('both runners resolve an old store’s `[role=dialog] >> …` inside a native <dialog>', async () => {
+      // n1 acted on `[role=dialog] >> …` live (resolveTarget's implicitRoles);
+      // the store kept the selector as written, which as css matches nothing
+      // in a <dialog>. Both runners now rewrite it as the action resolved it.
+      const steps: SkillStep[] = [
+        { tool: 'goto', args: { url: `${origin}/discard/dirty` }, locators: {} },
+        { tool: 'click', args: { target: '#exit' }, locators: { target: [{ kind: 'css', selector: '#exit' }] } },
+        { tool: 'click', args: { target: '[role=dialog] >> #discard' }, locators: { target: [{ kind: 'css', selector: '[role=dialog] >> #discard' }] } },
+      ];
+      const { replay, emitted, replayLog, emittedLog } = await both(steps, 0);
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replayLog.filter((e) => e === 'discard:confirmed')).toHaveLength(1);
+      expect(emittedLog.filter((e) => e === 'discard:confirmed')).toHaveLength(1);
+    }, 120_000);
+  });
+
+  describe('a text read of an element that renders no text (fwgt5)', () => {
+    it('both runners publish an image-only link’s name, not ""', async () => {
+      // gitea's org link: title and img alt "bench", innerText "". The read
+      // resolved, published "", and the empty value retired its locator.
+      const steps: SkillStep[] = [
+        { tool: 'goto', args: { url: `${origin}/imagelink` }, locators: {} },
+        { tool: 'read', args: { target: '@e1', what: 'text' }, label: 'org_link', locators: { target: [{ kind: 'role', role: 'link', name: 'bench' }] } },
+      ];
+      const { replay, emitted } = await both(steps, 0);
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replay.outputs.org_link).toBe('bench');
+      expect(emitted.outputs['01-clear.org_link']).toBe('bench');
+    }, 120_000);
+  });
+
   describe('framed reads', () => {
     it('both runners publish only the span at a contained read-back’s frame, and skip one whose frame is gone', async () => {
       // fwvk3 / fwgh5 s_5ee393: a runid read-back pinned by containment to its
@@ -2870,6 +3022,58 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       // A frame the element no longer shows publishes nothing, never the line.
       expect(replay.outputs.gone ?? '').toBe('');
       expect(emitted.outputs['01-clear.gone'] ?? '').toBe('');
+    }, 120_000);
+  });
+
+  describe('a minted key that arrived with others is no creation (fwod78 01-open)', () => {
+    /**
+     * odoo fwod78: the recording's login landed on `/web#cids=1` before Odoo
+     * wrote its default action into the hash, and the next click coincided
+     * with `action=123&menu_id=81` arriving — compiled as a `q.action` mint,
+     * `sole: false`. Every replay's login landed on the full url, and
+     * mintedAhead refused it as past its start. Here the page carries
+     * `action=9` before the procedure starts; a sole mint (fwod66's shape, or
+     * a store compiled before the flag) still refuses, in both runners.
+     */
+    const withHash: PageHook = async (page) => {
+      await page.addInitScript(() => {
+        if (location.pathname === '/' && !location.hash) history.replaceState(null, '', '/#action=9&cids=1&menu_id=4');
+      });
+    };
+    const procedure = (mints: SkillStep['mints']): { skill: Skill; spec: SpecFlow } => {
+      const steps: SkillStep[] = [{ ...MARK, mints }];
+      const preconditions = { urlPattern: `${origin}/#cids=:id` };
+      const spec = specOf(steps);
+      spec.steps[0].segments[0].preconditions = preconditions;
+      return { skill: { ...skillOf(steps), preconditions }, spec };
+    };
+    const run = async (mints: SkillStep['mints']) => {
+      const { skill, spec } = procedure(mints);
+      reset(1);
+      const replay = await replayOf(skill, {}, withHash);
+      const replayLog = [...fx.log];
+      reset(1);
+      const emitted = await emittedOf(spec, {}, withHash);
+      return { replay, emitted, replayLog, emittedLog: [...fx.log] };
+    };
+
+    it('both runners start a procedure whose q.action mint was not sole on a page already carrying action', async () => {
+      const { replay, emitted, replayLog, emittedLog } = await run({ at: 'q.action', sole: false });
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      await new Promise((r) => setTimeout(r, 300));
+      expect(replayLog).toEqual(['mark:Item 1']);
+      expect(emittedLog).toEqual(['mark:Item 1']);
+    }, 120_000);
+
+    it('both runners still refuse it as past its start when the mint was sole', async () => {
+      const { replay, emitted, replayLog, emittedLog } = await run({ at: 'q.action', sole: true });
+      expect(replay.ok).toBe(false);
+      expect(emitted.ok).toBe(false);
+      expect(replay.reason).toMatch(/already carries action=9/);
+      expect(emitted.reason).toMatch(/already carries action=9/);
+      expect(replayLog).toEqual([]);
+      expect(emittedLog).toEqual([]);
     }, 120_000);
   });
 

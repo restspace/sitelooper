@@ -532,6 +532,46 @@ export function flattenComposedValues(report: Report): string[] {
 }
 
 /**
+ * A reported KEY that is text the instruction read off the page is a datum,
+ * not a name. fwgh8's 01-open reported `{"Seed: House style guide":
+ * "Published", …}`: the seed titles became output names, a replay published
+ * those recorded names whatever the list showed (two of its three reads were
+ * a synthesized `link "Published"` that holds for any title), and 04-open's
+ * v3 bound to `output:i1:Seed: House style guide`.
+ *
+ * Provenance decides, not the key's spelling: a key is a datum when a read of
+ * THIS instruction returned it as a whole value (whitespace-insensitive). Each
+ * such pair becomes two positional values, `item_<n>` = the key's text and
+ * `item_<n>_value` = its value, so both are data — read-back pins each to the
+ * element that shows it, and a replay publishes them only by re-observing
+ * them. Runs before everything else touches the names (splitting, read-back,
+ * the ledger's `output:` bindings), so every consumer sees one naming.
+ * Mutates; returns the datum keys it moved.
+ */
+export function positionDatumKeys(report: Report, reads: ObservedRead[]): string[] {
+  const values = report.evidence?.values;
+  if (report.status !== 'success' || !values) return [];
+  const norm = (s: string) => s.replace(/\s+/g, ' ').trim();
+  const seen = new Set(reads.flatMap((r) => r.values.map(norm)).filter(Boolean));
+  const datum = (k: string) => seen.has(norm(k));
+  const moved = Object.keys(values).filter(datum);
+  if (!moved.length) return [];
+  const out: Record<string, string | number | boolean | null> = {};
+  for (const [k, v] of Object.entries(values)) if (!datum(k)) out[k] = v;
+  let n = 0;
+  for (const [k, v] of Object.entries(values)) {
+    if (!datum(k)) continue;
+    let name: string;
+    do name = `item_${++n}`;
+    while (name in out || `${name}_value` in out);
+    out[name] = norm(k);
+    out[`${name}_value`] = v;
+  }
+  report.evidence!.values = out;
+  return moved;
+}
+
+/**
  * Candidate boundaries inside a value the model JOINED out of several page
  * values. Comma and semicolon are what a model reaches for first; `/` and the
  * en/em dashes are the other separators seen in reports, and a newline or tab

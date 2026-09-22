@@ -678,6 +678,16 @@ const HOPPER = `<!doctype html><html><head><meta charset="utf-8"><title>Hopper</
  *    subtree once something is typed, and whose value is set only by clicking
  *    an option — no native `selectOption` can drive it.
  */
+/**
+ * An image-only link (fwgt5 01-signin: gitea's org avatar link). Its
+ * accessible name comes from its title and the image's alt; it renders no
+ * text, so innerText is "".
+ */
+const IMAGE_LINK = `<!doctype html><html><head><meta charset="utf-8"><title>Org</title></head><body>
+<h1>Dashboard</h1>
+<a id="org" href="/org" title="bench"><img alt="bench" width="16" height="16" src="data:image/gif;base64,R0lGODlhAQABAAAAACw="></a>
+</body></html>`;
+
 const CONTROLS = `<!doctype html><html><head><meta charset="utf-8"><title>Controls</title></head><body>
 <h1>Controls</h1>
 <select id="code" aria-label="Code">
@@ -1234,6 +1244,7 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
         return html(HOP(tail('/hop/')));
       }
       if (url === '/controls') return html(CONTROLS);
+      if (url === '/imagelink') return html(IMAGE_LINK);
       if (url === '/tick') return html(TICK);
       if (url === '/far') return html(FAR);
       if (url.startsWith('/observe/frame/')) return html(OBSERVE_FRAME(tail('/observe/frame/')));

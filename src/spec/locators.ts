@@ -18,7 +18,7 @@
  */
 import type { LocatorCandidate } from '../daemon/recorder.js';
 import { snapshotRefCandidate, structuralCandidate } from '../execution/resolve.js';
-import { VOLATILE_TOKEN_SHAPE, WILDCARD, fieldByName, hasTextMatcher, volatileMatcher } from '../shared/text.js';
+import { VOLATILE_TOKEN_SHAPE, WILDCARD, fieldByName, hasTextMatcher, implicitRoles, volatileMatcher } from '../shared/text.js';
 
 export interface SourceOptions {
   /** expression for the page, default 'page' */
@@ -244,10 +244,13 @@ export function candidateSource(c: LocatorCandidate, o: SourceOptions = {}): str
       break;
     case 'id':
     case 'css': {
-      src = `${page}.locator(${stringSource(c.selector, o)})`;
+      // Rewritten as makeLocator rewrites it (implicitRoles, fwrd82): a stored
+      // `[role=dialog] >> …` names a native <dialog> in both runners.
+      const selector = implicitRoles(c.selector);
+      src = `${page}.locator(${stringSource(selector, o)})`;
       // makeLocator's label fallback for a stored `role=…[name="…"]`
       // (fieldByName, the shared parse): same locator in both runners.
-      const field = c.kind === 'css' ? fieldByName(c.selector) : null;
+      const field = c.kind === 'css' ? fieldByName(selector) : null;
       if (field) {
         const scope = field.scope === null ? page : `${page}.locator(${stringSource(field.scope, o)})`;
         src += `.or(${scope}.getByRole(${JSON.stringify(field.role)}).and(${scope}.getByLabel(${stringSource(field.name, o)}, { exact: true })))`;

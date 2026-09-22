@@ -48,6 +48,7 @@ export { lineShows, type LineShowsOptions } from '../execution/snapshot.js';
 export { consequentialExpectations, isEchoLine } from '../execution/expect.js';
 import { candidateNames, echoVerdict, noteInteraction, setsSomething } from '../execution/echo.js';
 import { noteFill, rearmStandingFills, restoreStandingFills, standingFills, standingFillsLost } from '../execution/refill.js';
+import { resolveSecrets } from '../shared/secrets.js';
 import { toggleAlreadyShown, toggleEffectLines } from '../execution/toggle.js';
 import { mayNavigateToDestination, navigateToDestination, textHeldElsewhere } from '../execution/recover.js';
 import { CONTEXT_CONTRACT, contractOf, contractVerdict, isVerified, originOf, stepsCarryContext, type Skill, type SkillStep } from './store.js';
@@ -614,7 +615,7 @@ export async function replaySkill(
       // supplies the fingerprint similarity it measured and books the result.
       // …and the positions this procedure mints, so a page already carrying
       // the record it would create is refused as past its start (fwod66).
-      const mints = skill.steps.flatMap((s, i) => (s.mints ? [{ at: s.mints.at, step: i + 1 }] : []));
+      const mints = skill.steps.flatMap((s, i) => (s.mints ? [{ at: s.mints.at, step: i + 1, ...(s.mints.sole !== undefined ? { sole: s.mints.sole } : {}) }] : []));
       const verdict = preconditionVerdict(pattern, url, params, res.similarity, mints);
       if (verdict.refuse) {
         res.refused = true;
@@ -1298,7 +1299,11 @@ export async function replaySkill(
       res.lines.push(`${head} → ${key} = ${clip(outcome.result, MAX_LINE)}`);
     } else {
       res.lines.push(`${head} → ${clip(outcome.result.split('\n')[0], MAX_LINE)}`);
-      if (step.tool === 'fill' && resolved.target) await noteFill(standing, resolved.target, String(args.value ?? ''), page);
+      // The ledger refills with what the field was GIVEN: a `{{env:NAME}}`
+      // secret resolved (the fill just dispatched with it, so it resolves), or
+      // a rebuilt sign-in form is refilled with the marker text. In memory
+      // only; the refill's warning never carries a value.
+      if (step.tool === 'fill' && resolved.target) await noteFill(standing, resolved.target, resolveSecrets(String(args.value ?? '')), page);
     }
     return 'ran';
   };

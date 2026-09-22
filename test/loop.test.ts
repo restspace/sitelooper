@@ -117,6 +117,26 @@ describe('agent loop', () => {
     expect(String(seen[1].at(-1)?.content)).toMatch(/Reminder: act via tool calls only/);
   });
 
+  // fwgh8 01-open: the seed titles the model read became its report's keys.
+  it('records a report keyed by page text the instruction read as positional values', async () => {
+    const ended: Array<{ values?: Record<string, string> }> = [];
+    const recording = {
+      dialogs: { drain: () => [] },
+      script: {
+        beginInstruction: () => {},
+        endInstruction: (r: { values?: Record<string, string> }) => ended.push(r),
+        readsThisInstruction: () => [{ target: 'h3', values: ['Seed: House style guide', 'Seed: Welcome to the bench'] }],
+        readResultsThisInstruction: () => new Set<string>(),
+      },
+    } as unknown as BrowserSession;
+    const values = { status_count: '2', 'Seed: House style guide': 'Published', 'Seed: Welcome to the bench': 'Draft' };
+    const provider = scriptedProvider([{ toolCalls: [reportCall({ status: 'success', summary: 'two seed posts', evidence: { values } })] }]);
+    const result = await runInstruction(provider, recording, new SessionState('t-datum-keys'), 'report the seed posts', loopOpts);
+    const want = { status_count: '2', item_1: 'Seed: House style guide', item_1_value: 'Published', item_2: 'Seed: Welcome to the bench', item_2_value: 'Draft' };
+    expect(result.report.evidence?.values).toEqual(want);
+    expect(ended[0].values).toEqual(want);
+  });
+
   it('tells the model which page the browser is on, and flags an error page', async () => {
     const script = () =>
       scriptedProvider([{ toolCalls: [reportCall({ status: 'success', summary: 'ok', evidence: { values: {} } })] }]);

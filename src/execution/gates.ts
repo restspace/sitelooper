@@ -622,6 +622,8 @@ const PRECONDITION_SOFT_DIFFS = 3;
 export interface MintedPosition {
   at: string;
   step: number;
+  /** compile.ts newStateKeys: false when the key arrived with other new state keys (a navigation, not a creation). */
+  sole?: boolean;
 }
 
 /**
@@ -645,6 +647,13 @@ function mintedAhead(pattern: string, url: string, params: Record<string, string
   const l = urlShapeOf(url);
   if (!p || !l) return null;
   for (const m of mints) {
+    // A key that arrived with other new state keys was a navigation filling
+    // in its state, not a record made: odoo fwod78's app-switcher click
+    // coincided with the hash gaining action=123&menu_id=81, and every replay
+    // whose login had already landed on that url was refused as past its
+    // start. Only a key minted ALONE (fwod66's `…&id=44`) is a creation.
+    // Absent (a store compiled before the flag) is read as sole, as before.
+    if (m.sole === false) continue;
     if (!m.at.startsWith('q.')) continue;
     const key = m.at.slice(2);
     if (p.hashState.has(key) || p.query.has(key)) continue;
@@ -786,7 +795,41 @@ export function unfilledSlots(value: unknown, params: Record<string, string>): s
  * parity suite caught. A shared reading is fine; a shared identifier is not.
  * (`g` here, unlike expect.ts's, because this one is used with `matchAll`.)
  */
-const UNRESOLVED_ARG_MARKER = /\{\{(?!\*\}\})[^{}]*\}\}/g;
+const UNRESOLVED_ARG_MARKER = /\{\{(?!\*\}\}|env:\w+\}\})[^{}]*\}\}/g;
+
+/**
+ * A `{{env:NAME}}` secret marker (shared/secrets.ts's syntax, restated: this
+ * module imports siblings only). Not an unresolved reference: the executor
+ * resolves it at dispatch and only there, so it is exempt from the broad
+ * reading above — which is what sent every README-style sign-in (credentials
+ * as `{{env:APP_PASSWORD}}`) to the model on every replay. What CAN stop the
+ * step is an environment with nothing to resolve it to (`unsetSecrets`).
+ */
+const SECRET_ARG_MARKER = /\{\{env:(\w+)\}\}/g;
+
+/**
+ * The secret variables a value names that the environment leaves unset or
+ * empty — resolveSecrets' refusal, asked before anything is dispatched.
+ * Names only: the value is never read into a message.
+ */
+export function unsetSecrets(value: unknown, params: Record<string, string>): string[] {
+  const out: string[] = [];
+  const walk = (v: unknown): void => {
+    if (typeof v === 'string') {
+      for (const m of fillParams(v, params).matchAll(SECRET_ARG_MARKER)) {
+        if (!process.env[m[1]] && !out.includes(m[1])) out.push(m[1]);
+      }
+      return;
+    }
+    if (Array.isArray(v)) {
+      for (const item of v) walk(item);
+      return;
+    }
+    if (v && typeof v === 'object') for (const item of Object.values(v as Record<string, unknown>)) walk(item);
+  };
+  walk(value);
+  return out;
+}
 
 /**
  * Every marker still standing in a value once this run's params are in — the
@@ -898,6 +941,15 @@ export function unfilledStepVerdict(step: UnfilledStep, params: Record<string, s
     return `${where}: ${leftInArgs.join(', ')} ${many ? 'are' : 'is'} still unresolved after this run's params were filled in — ${
       many ? 'those markers name values' : 'that marker names a value'
     } nothing published, and the step would otherwise act on the literal marker text`;
+  }
+  // A secret marker is resolved at dispatch; one the environment cannot
+  // resolve stops here, by NAME, before the step types anything.
+  const unset = unsetSecrets(step.args, params);
+  if (unset.length) {
+    const many = unset.length > 1;
+    return `${where}: the environment variable${many ? 's' : ''} ${unset.join(', ')} ${many ? 'are' : 'is'} not set (the step's ${unset
+      .map((n) => `{{env:${n}}}`)
+      .join(', ')}) — set ${many ? 'them' : 'it'} where this runs (for the daemon, before the session starts)`;
   }
   for (const [key, chain] of Object.entries(step.locators ?? {})) {
     if (!chain?.length || fillableChain(chain, params).length) continue;

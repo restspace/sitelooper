@@ -1076,6 +1076,50 @@ describe('unresolvedArgMarkers', () => {
 });
 
 /**
+ * A CLI user's README-style sign-in flow (`{{env:APP_PASSWORD}}`) never
+ * replayed: the unresolved-marker arm read the documented secret marker as an
+ * unpublished reference, and every replay fell back to the model. A secret is
+ * resolved at dispatch and only there (shared/secrets.ts), so the guard lets
+ * it through — and says, naming the variable and never its value, when the
+ * environment has nothing to resolve it to.
+ */
+describe('{{env:NAME}} secret markers in the args', () => {
+  const had = process.env.BENCH_PW;
+  const restore = () => {
+    if (had === undefined) delete process.env.BENCH_PW;
+    else process.env.BENCH_PW = had;
+  };
+
+  it('are not unresolved references: a set variable lets the step act', () => {
+    process.env.BENCH_PW = 'hunter2-bench';
+    try {
+      expect(unresolvedArgMarkers({ value: '{{env:BENCH_PW}}' }, {})).toEqual([]);
+      // Arrived through a slot, as a flow step's params carry it.
+      expect(unresolvedArgMarkers({ value: '{{v2}}' }, { v2: '{{env:BENCH_PW}}' })).toEqual([]);
+      expect(unfilledStepVerdict({ args: { target: '@e2', value: '{{v2}}' } }, { v2: '{{env:BENCH_PW}}' }, 'step 3')).toBeNull();
+      expect(unfilledStepVerdict({ args: { target: '@e2', value: 'pw {{env:BENCH_PW}}' } }, {}, 'step 3')).toBeNull();
+      // A real reference beside it is still one.
+      expect(unresolvedArgMarkers({ value: '{{env:BENCH_PW}} {{02-a.b}}' }, {})).toEqual(['{{02-a.b}}']);
+    } finally {
+      restore();
+    }
+  });
+
+  it('stops a step whose variable is unset, naming the variable', () => {
+    delete process.env.BENCH_PW;
+    try {
+      const verdict = unfilledStepVerdict({ args: { target: '@e2', value: '{{v2}}' } }, { v2: '{{env:BENCH_PW}}' }, 'step 3');
+      expect(verdict).toMatch(/^step 3: .*BENCH_PW is not set/);
+      // An empty value is no value: resolveSecrets refuses it the same way.
+      process.env.BENCH_PW = '';
+      expect(unfilledStepVerdict({ args: { value: '{{env:BENCH_PW}}' } }, {}, 'step 3')).toMatch(/BENCH_PW is not set/);
+    } finally {
+      restore();
+    }
+  });
+});
+
+/**
  * A locator chain is a PREFERENCE ORDER, not a conjunction. odoo fwod34's
  * s_eee5b1 step 2 is the case: its `id` and `css` rungs are `#name_{{d2}}`,
  * where `d2` is a url-pattern wildcard and never a value, behind a `role` and

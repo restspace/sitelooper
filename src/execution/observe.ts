@@ -52,13 +52,31 @@ export function observedNothing(steps: readonly ObservingStep[], skippedReads: n
 }
 
 /**
+ * What an element that renders NO text is called: its aria-label, its title,
+ * its own alt, else the alt of an image inside it — the accessible name the
+ * recording located it by, where innerText has nothing. fwgt5 01-signin's
+ * `org_link` read found gitea's image-only org link by its name "bench",
+ * read innerText, and published "" on both replays and in the artifact.
+ * Runs in the page, so it names nothing outside itself.
+ */
+const RENDERED_NAME = (el: Element): string =>
+  (
+    el.getAttribute('aria-label') ||
+    el.getAttribute('title') ||
+    el.getAttribute('alt') ||
+    el.querySelector('img[alt]')?.getAttribute('alt') ||
+    ''
+  ).trim();
+
+/**
  * A recorded `read` (one element) or `read_all` (every match), as the daemon's
  * read tools take it and a compiled artifact replays it. `read_all` reads
  * EVERY match: an artifact that took `inputValue()` threw Playwright's
  * strict-mode error on a selector made to match many (odoo's
  * `tr.o_data_row input`, four reads skipped on every compiled run of fwod41
  * while the daemon read them each time). Text is `innerText`, the rendered
- * text the recording saw, never `textContent`. A count is plural by nature,
+ * text the recording saw, never `textContent` — and, for an element that
+ * renders none, its name (RENDERED_NAME). A count is plural by nature,
  * whichever tool asked.
  */
 export async function readElements(
@@ -70,11 +88,19 @@ export async function readElements(
   const { attr = '', timeout } = opts;
   if (what === 'count') return await loc.count();
   if (plural) {
-    if (what === 'text') return await loc.allInnerTexts();
+    if (what === 'text') {
+      const texts = await loc.allInnerTexts();
+      if (texts.every((t) => t.trim())) return texts;
+      const names = await loc.evaluateAll((els) => els.map(RENDERED_NAME));
+      return texts.map((t, i) => (t.trim() ? t : (names[i] ?? t)));
+    }
     if (what === 'value') return await loc.evaluateAll((els) => els.map((e) => (e as HTMLInputElement).value ?? null));
     return await loc.evaluateAll((els, a) => els.map((e) => e.getAttribute(a)), attr);
   }
-  if (what === 'text') return await loc.innerText({ timeout });
+  if (what === 'text') {
+    const text = await loc.innerText({ timeout });
+    return text.trim() ? text : (await loc.evaluate(RENDERED_NAME, undefined, { timeout })) || text;
+  }
   if (what === 'value') return await loc.inputValue({ timeout });
   return await loc.getAttribute(attr, { timeout });
 }

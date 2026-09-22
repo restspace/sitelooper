@@ -5,7 +5,7 @@ import { contractFor, newSkillId, originOf, type Skill, type SkillParam, type Sk
 import { MIN_ID_LEN, digitDominant, looksLikeId, skeleton, tokenPattern } from './shape.js';
 import { occursAsToken, replaceAsToken } from './ledger.js';
 import { WILDCARD, escapeRe, identityRe, maskVolatile } from '../shared/text.js';
-import { CREDENTIAL_KEY, fillParamsDeep, queryPairs, safeDecode, urlParts } from '../execution/url.js';
+import { CREDENTIAL_KEY, fillParamsDeep, queryPairs, safeDecode, urlParts, urlShapeOf } from '../execution/url.js';
 import { contextsEqual, framesEqual, stepEffect } from '../execution/context.js';
 import { collapseTogglePairs, dropSupersededSets } from './toggles.js';
 
@@ -243,21 +243,42 @@ const POPUP_CAPABLE = new Set(['click', 'dblclick', 'modifier_click', 'press', '
  * Pure. The walk back from the first step on the new page stops, crediting
  * nothing, at a recorded effect (a popup, close or tabs switch already
  * explains the page change), at a navigation, and at a state-changing action
- * that cannot open a tab; it steps over observations (reads, screenshots,
- * evals), which change no page. The credited popup carries no urlPattern:
+ * that cannot open a tab; it steps over observations (reads, screenshots),
+ * which change no page.
+ *
+ * An EVAL is not an observation here: script can open a page itself. ghost
+ * fwgh8-n1 03-publish clicked "Publish post, right now" (step 56), read the
+ * url, then ran `eval window.open(publicUrl)`, and steps 59-64 ran on page 1.
+ * The walk stepped over the eval and credited the popup to the Publish click,
+ * so every replay waited for a tab the click never opens ("step 4 was
+ * recorded opening a popup, and none opened"); n2 and n3 fell back and the
+ * compiled script ran 0/1. So the walk stops at an eval and credits nothing,
+ * and the steps that ran on the page only the eval opened — up to and
+ * including the one that switched back — are DROPPED, with a note: compile
+ * drops every eval (it assumes the record-time DOM and is fatal on replay),
+ * so no replay can ever open that page, and a step that needs it can only
+ * stop the procedure. Replaying the eval instead was considered and refused
+ * for the same reason evals are dropped everywhere else; what those steps
+ * did (fwgh8: read the public post) is an observation the procedure's own
+ * reads and the flow's recovery answer, not a gesture it depends on.
+ *
+ * The credited popup carries no urlPattern:
  * the url it opened was never recorded, so both runners follow whatever tab
  * the action raises (context.ts armPageEffect). A step with no `page` was
  * recorded while one page was open (page 0), except a synthesized read-back,
  * which records no page at all and is skipped.
  */
-export function creditUncreditedPopups(steps: readonly RecordedStep[]): RecordedStep[] {
+export function creditUncreditedPopups(steps: readonly RecordedStep[], notes?: TransformNote[]): RecordedStep[] {
   const out = [...steps];
   const pageOf = (s: RecordedStep): number | undefined => (s.page !== undefined ? s.page : s.args.target === '(read-back)' ? undefined : 0);
   const seen = new Set<number>();
+  /** Indices (into `steps`) of steps that ran on a page only an eval opened. */
+  const unreachable = new Set<number>();
   for (let i = 0; i < out.length; i++) {
     const at = pageOf(out[i]);
     if (at === undefined) continue;
     if (at > 0 && !seen.has(at)) {
+      let byEval = false;
       for (let j = i - 1; j >= 0; j--) {
         const s = out[j];
         const effect = stepEffect(s);
@@ -265,16 +286,37 @@ export function creditUncreditedPopups(steps: readonly RecordedStep[]): Recorded
         if (s.tool === 'goto' || s.tool === 'back' || s.tool === 'tabs') break;
         const from = pageOf(s);
         if (from === at) break;
+        if (s.tool === 'eval') {
+          byEval = true;
+          break;
+        }
         if (POPUP_CAPABLE.has(s.tool) && from !== undefined) {
           out[j] = { ...s, effect: { kind: 'popup' } };
           break;
         }
         if (isMutatingAction(s.tool)) break;
       }
+      if (byEval) {
+        // The run on that page: every step recorded on it, and a page-less
+        // read-back only when more of the run follows it.
+        let end = i;
+        for (let k = i; k < out.length; k++) {
+          const p = pageOf(out[k]);
+          if (p === at) end = k;
+          else if (p !== undefined) break;
+        }
+        for (let k = i; k <= end; k++) unreachable.add(k);
+        notes?.push({
+          name: 'creditUncreditedPopups',
+          at: i + 1,
+          reason: `steps ${i + 1}-${end + 1} ran on page ${at}, which only an eval opened; no replay can open it, so they are dropped`,
+        });
+        i = end;
+      }
     }
     seen.add(at);
   }
-  return out;
+  return unreachable.size ? out.filter((_, k) => !unreachable.has(k)) : out;
 }
 
 /** Where the browser was just before entries[k] ran: the latest earlier diffed step's url, or its instruction's. */
@@ -399,7 +441,9 @@ export function compileSkills(input: CompileInput): Skill[] {
   // fatal, which is exactly what sent the sign-in and archive steps to recovery
   // on every replay. Keep the actions, the synthetic read-backs, and any read
   // whose value the run actually reported; drop the rest.
-  const replayable = dropSupersededSets(collapseTogglePairs(expandListReads(creditUncreditedPopups(steps), reportValues))).filter((step) => {
+  /** What the recording-level passes dropped, noted on the first segment (built below). */
+  const recordingNotes: TransformNote[] = [];
+  const replayable = dropSupersededSets(collapseTogglePairs(expandListReads(creditUncreditedPopups(steps, recordingNotes), reportValues))).filter((step) => {
     if (step.tool === 'screenshot' || step.tool === 'eval') return false;
     if (step.tool === 'read' || step.tool === 'read_all') {
       return step.args.target === '(read-back)' || Boolean(readLabel(step, reportValues));
@@ -615,7 +659,9 @@ export function compileSkills(input: CompileInput): Skill[] {
       // before. Stored per step because a replay that stops needs to know
       // whether it is past the point of creation, not merely how far it got.
       const mintedHereOnly = mintedAll.find((m) => m.keptIndex === g);
-      if (mintedHereOnly) out.mints = { at: mintedHereOnly.at };
+      // `sole` rides along for a state key (newStateKeys): mintedAhead reads
+      // only a key minted alone as the record this procedure creates.
+      if (mintedHereOnly) out.mints = { at: mintedHereOnly.at, ...(mintedHereOnly.sole !== undefined ? { sole: mintedHereOnly.sole } : {}) };
       // Minted values go into the url-pattern reduction as slots: an id-like
       // one (odoo's "44", repair-desk's "t15") is otherwise reduced to `:id`
       // before the {{dN}} marker can land, and the minting step then carries
@@ -658,6 +704,7 @@ export function compileSkills(input: CompileInput): Skill[] {
   // watched change (two steps, by definition). See unfreezeExpectations.
   const published = publishedReadValues(kept, reportValues);
   for (const b of built) unfreezeExpectations(b.folded, published, b.notes);
+  if (built.length) built[0].notes.unshift(...recordingNotes);
 
   // Derived-param metadata lands on the MINTING segment: which post-fold step
   // to bind from, and which url part to read there. Replay binds the value
@@ -1084,6 +1131,32 @@ interface MintedValue {
   keptIndex: number;
   /** Which url part carried it (urlParts label), for live re-extraction. */
   at: string;
+  /**
+   * For a state key (`q.*`): whether it was the ONLY state key the minting
+   * step's url gained over the url it acted on. See newStateKeys.
+   */
+  sole?: boolean;
+}
+
+/**
+ * The query and hash-state keys `after` carries that `before` did not.
+ *
+ * A key minted ALONE is the fwod66 save shape: `…view_type=form` became
+ * `…&id=44`, the one thing the step added being the record it made. Several
+ * at once is a navigation filling in its state, not a creation: odoo fwod78's
+ * login landed on `/web#cids=1` before Odoo wrote its default action into the
+ * hash, and the next click (the app switcher) coincided with the hash filling
+ * in `action=123&menu_id=81`. discoverMinted took `q.action` for a mint, and
+ * mintedAhead then refused every replay — whose login had already landed on
+ * the full url — as "past its start" (01-open fell back on n2 and n3; the
+ * compiled script died on the same refusal).
+ */
+function newStateKeys(before: string, after: string): string[] {
+  const b = urlShapeOf(before);
+  const a = urlShapeOf(after);
+  if (!b || !a) return [];
+  const had = new Set([...b.query.keys(), ...b.hashState.keys()]);
+  return [...new Set([...a.query.keys(), ...a.hashState.keys()])].filter((k) => !had.has(k));
 }
 
 /**
@@ -1101,12 +1174,17 @@ function discoverMinted(kept: RecordedStep[], startUrl: string, slots: Map<strin
   const seen = new Set<string>(urlParts(startUrl).map((p) => p.value));
   const slotVals = new Set(slots.values());
   const out: MintedValue[] = [];
+  /** The url each step acted on: the latest diffed url before it, else the start. */
+  let acted = startUrl;
   kept.forEach((step, i) => {
+    const before = acted;
+    if (step.diff?.url) acted = step.diff.url;
     // Values the agent TYPED are inputs, not mints, wherever they surface later.
     for (const v of Object.values(step.args)) if (typeof v === 'string') seen.add(v);
     // A navigation's landing names the page it was SENT to, not a record it
     // made; it was never diffed before, and minting from it is not proposed.
     if (!step.diff?.url || NAVIGATION_TOOLS.has(step.tool)) return;
+    const gained = newStateKeys(before, step.diff.url);
     for (const part of urlParts(step.diff.url)) {
       const v = part.value;
       const fresh = !seen.has(v);
@@ -1131,7 +1209,8 @@ function discoverMinted(kept: RecordedStep[], startUrl: string, slots: Map<strin
       // a digitless minted id), not a dead flow.
       if (!/\d/.test(v)) continue;
       if (out.length >= MAX_MINTED) continue;
-      out.push({ name: `d${out.length + 1}`, value: v, keptIndex: i, at: part.label });
+      const sole = part.label.startsWith('q.') ? gained.length === 1 && gained[0] === part.label.slice(2) : undefined;
+      out.push({ name: `d${out.length + 1}`, value: v, keptIndex: i, at: part.label, ...(sole !== undefined ? { sole } : {}) });
     }
   });
   return out;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addEvidenceValue, backfillReadValues, flattenComposedValues, flattenProvenComposite, promoteLabelledReads, proseIdentifiers, publishProseIdentifiers, unnamedReadValues, validateReport, type Report } from '../src/agent/report.js';
+import { addEvidenceValue, backfillReadValues, flattenComposedValues, flattenProvenComposite, positionDatumKeys, promoteLabelledReads, proseIdentifiers, publishProseIdentifiers, unnamedReadValues, validateReport, type Report } from '../src/agent/report.js';
 
 describe('report validation', () => {
   it('accepts a minimal valid report', () => {
@@ -463,5 +463,41 @@ describe('promoteLabelledReads', () => {
     const report: Report = { status: 'success', summary: 'ok' };
     expect(promoteLabelledReads(report, [{ target: '@e1', values: ['S00021'], label: '@@@' }])).toEqual(['value']);
     expect(report.evidence?.values).toEqual({ value: 'S00021' });
+  });
+});
+
+// fwgh8 01-open: the model keyed its report by the seed titles it had read.
+describe('positionDatumKeys', () => {
+  const reads = [
+    { target: 'h3, .gh-content-entry-title', values: ['Seed: House style guide', 'New members', 'Seed: Welcome to the bench'] },
+    { target: '.gh-badge', values: ['Published', 'Published'] },
+  ];
+
+  it('makes a key the page showed into positional data, keeping its value beside it', () => {
+    const report: Report = {
+      status: 'success',
+      summary: 'two seed posts, both published',
+      evidence: { values: { seed_post_count: '2', 'Seed: House style guide': 'Published', 'Seed:  Welcome to the bench ': 'Published' } },
+    };
+    expect(positionDatumKeys(report, reads)).toEqual(['Seed: House style guide', 'Seed:  Welcome to the bench ']);
+    expect(report.evidence!.values).toEqual({
+      seed_post_count: '2',
+      item_1: 'Seed: House style guide',
+      item_1_value: 'Published',
+      item_2: 'Seed: Welcome to the bench',
+      item_2_value: 'Published',
+    });
+  });
+
+  it('leaves a name alone, however its value was read, and a key no read returned', () => {
+    const report: Report = { status: 'success', summary: 'ok', evidence: { values: { status: 'Published', 'Seed: Never read': 'Draft' } } };
+    expect(positionDatumKeys(report, reads)).toEqual([]);
+    expect(report.evidence!.values).toEqual({ status: 'Published', 'Seed: Never read': 'Draft' });
+  });
+
+  it('never takes a positional name the report already uses', () => {
+    const report: Report = { status: 'success', summary: 'ok', evidence: { values: { item_1: 'x', 'New members': 'Free' } } };
+    positionDatumKeys(report, reads);
+    expect(report.evidence!.values).toEqual({ item_1: 'x', item_2: 'New members', item_2_value: 'Free' });
   });
 });

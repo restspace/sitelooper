@@ -956,6 +956,20 @@ describe('run 1 proposes, run 2 decides', () => {
     expect(create.outputEvidence!.quotation_reference).toEqual({ same: 0, differed: 0, absent: 2 });
   });
 
+  it('a read that resolved and came back "" is tallied empty, never absent, so its locator is kept (fwgt5 01-signin)', () => {
+    // settleUnprovenReads retires a synthesized read's locators on `absent >= 2`.
+    // gitea's image-only org link resolved and read "" on n2 and n3; counted as
+    // absent, the one locator that found it was retired and 02-open's slot went unfilled.
+    const flow = build();
+    const create = flow.steps[0];
+    noteOutputEvidence(create, { order_ref: '' });
+    noteOutputEvidence(create, { order_ref: '' });
+    expect(create.outputEvidence!.order_ref).toEqual({ same: 0, differed: 0, empty: 2 });
+    expect(create.outputEvidence!.order_ref.absent).toBeUndefined();
+    // a value not reported at all is still absent
+    expect(create.outputEvidence!.quotation_reference).toEqual({ same: 0, differed: 0, absent: 2 });
+  });
+
   it('a param binding resolves from this run only, like the instruction', () => {
     const step: FlowStep = {
       id: '02-edit',
@@ -2955,5 +2969,40 @@ describe('liveReadsForRecovery', () => {
     expect(liveReadsForRecovery(flow(), '03-create', 's_new', reported, page, () => null)).toEqual([]);
     // status is reported and on no later step; 02-create's contact_name is referenced by nobody after it
     expect(liveReadsForRecovery(flow(), '02-create', 's_new', { contact_name: 'x Bench Customer' }, ['- link "x Bench Customer"'], () => [])).toEqual([]);
+  });
+});
+
+// fwgh8 01-open: a report keyed by the titles it read. The loop moves such keys
+// into positional values (report.ts positionDatumKeys) before anything records
+// them, so the flow's outputs and a later step's references are positional.
+describe('a report keyed by page text (fwgh8)', () => {
+  it('exports positional outputs carrying the text, and a later step references them by position', async () => {
+    const { positionDatumKeys } = await import('../src/agent/report.js');
+    const report = {
+      status: 'success' as const,
+      summary: 'Two seed posts, both published.',
+      evidence: { values: { 'Seed: House style guide': 'Published', 'Seed: Welcome to the bench': 'Published' } as Record<string, string> },
+    };
+    positionDatumKeys(report, [{ target: 'h3', values: ['Seed: House style guide', 'Seed: Welcome to the bench'] }]);
+    const entries: RecordedEntry[] = [
+      { k: 'instruction', text: 'List the seed posts and their status.', url: `${ORIGIN}/posts` },
+      { k: 'step', tool: 'read_all', args: { target: 'h3', what: 'text' }, result: '["Seed: House style guide","Seed: Welcome to the bench"]', locators: {} },
+      { k: 'report', status: 'success', summary: report.summary, values: report.evidence.values, skill: 's_list' },
+      { k: 'instruction', text: "Open the post titled 'Seed: House style guide' and report its excerpt.", url: `${ORIGIN}/posts` },
+      { k: 'report', status: 'success', summary: 'Opened.', values: {}, skill: 's_open' },
+    ];
+    const flow = buildFlow(entries, { name: 'g', origin: ORIGIN, startUrl: `${ORIGIN}/posts`, vars: {}, session: 's' })!;
+    const [s1, s2] = flow.steps;
+    expect(s1.outputs).toEqual(['item_1', 'item_1_value', 'item_2', 'item_2_value']);
+    expect(s1.recorded).toMatchObject({ item_1: 'Seed: House style guide', item_1_value: 'Published', item_2: 'Seed: Welcome to the bench' });
+    expect(s1.outputs!.some((o) => o.startsWith('Seed:'))).toBe(false);
+    expect(s2.instruction).toContain(`{{${s1.id}.item_1}}`);
+  });
+
+  it('leaves a report keyed by names as it was', async () => {
+    const { positionDatumKeys } = await import('../src/agent/report.js');
+    const report = { status: 'success' as const, summary: 'ok', evidence: { values: { status: 'Published', title: 'Seed: House style guide' } as Record<string, string> } };
+    expect(positionDatumKeys(report, [{ target: 'h3', values: ['Seed: House style guide', 'Published'] }])).toEqual([]);
+    expect(report.evidence.values).toEqual({ status: 'Published', title: 'Seed: House style guide' });
   });
 });

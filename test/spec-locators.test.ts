@@ -13,7 +13,7 @@ import type { Locator } from 'playwright-core';
 import { BrowserSession } from '../src/daemon/browser.js';
 import { pointLocator } from '../src/execution/point.js';
 import { resolveCandidates, type CandidateObservation } from '../src/execution/resolve.js';
-import { makeLocator, type LocatorCandidate } from '../src/daemon/recorder.js';
+import { describeTarget, makeLocator, type LocatorCandidate } from '../src/daemon/recorder.js';
 import { VOLATILE_TOKEN_SHAPE, fieldByName, hasTextMatcher, roleName, volatileMatcher } from '../src/shared/text.js';
 import { candidateSource, chainSource, hasTextSource, matcherSource, observationSource, observationSources, stringSource } from '../src/spec/locators.js';
 
@@ -314,6 +314,14 @@ describe('observationSource / observationSources', () => {
     expect(fieldByName('role=textbox[name="A \\"q\\""]')).toEqual({ scope: null, role: 'textbox', name: 'A "q"' });
   });
 
+  it('rewrites a stored [role=…] scope segment as the live action resolved it (fwrd82)', () => {
+    expect(candidateSource({ kind: 'css', selector: '[role=dialog] >> role=textbox[name="Part name *"]' })).toBe(
+      "page.locator('role=dialog >> role=textbox[name=\"Part name *\"]').or(page.locator('role=dialog').getByRole(\"textbox\").and(page.locator('role=dialog').getByLabel('Part name *', { exact: true })))",
+    );
+    // an attribute test inside a compound selector is left alone
+    expect(candidateSource({ kind: 'css', selector: 'div[role=dialog] button' })).toBe("page.locator('div[role=dialog] button')");
+  });
+
   it('puts the recorded match index on BOTH the locator and the observation', () => {
     const src = observationSource({ kind: 'css', selector: 'button.dup', nth: 1 }, 0);
     expect(src).toContain("locator: page.locator('button.dup').nth(1)");
@@ -416,6 +424,31 @@ d('emitted source resolves what makeLocator resolves (fixture page)', () => {
     const live = makeLocator(page, c);
     expect(await live.evaluate((el) => el.id)).toBe('pn');
     await same(live, new Function('page', 'p', 'roleName', `return ${candidateSource(c)!}`)(page, {}, roleName) as Locator);
+  }, 30_000);
+
+  // fwrd82: n1 acted on `[role=dialog] >> role=textbox[name="Part name *"]`
+  // in a native <dialog>. Stored as written, the css scope matched nothing;
+  // the recorder now describes it as resolved, and an old store resolves too.
+  it('describes and resolves a [role=dialog] scope on a native <dialog>, the same in both runners', async () => {
+    const page = await session.getPage();
+    await page.evaluate(() => {
+      const dlg = document.createElement('dialog');
+      dlg.innerHTML = '<label>Part name <span aria-hidden="true">*</span> <input id="dpn" data-testid="part-name" type="text" /></label>';
+      document.body.append(dlg);
+      dlg.show();
+    });
+    const raw = '[role=dialog] >> role=textbox[name="Part name *"]';
+    expect(await page.locator(raw).count()).toBe(0);
+    const described = await describeTarget(page, raw);
+    expect(described.verified).toBe(true);
+    expect(described.chain![0]).toEqual({ kind: 'css', selector: 'role=dialog >> role=textbox[name="Part name *"]' });
+    expect(described.chain).toEqual(expect.arrayContaining([{ kind: 'testid', attr: 'data-testid', value: 'part-name' }]));
+    // an old store's candidate, stored unrewritten
+    const old: LocatorCandidate = { kind: 'css', selector: raw };
+    const live = makeLocator(page, old);
+    expect(await live.evaluate((el) => el.id)).toBe('dpn');
+    await same(live, new Function('page', 'p', 'roleName', `return ${candidateSource(old)!}`)(page, {}, roleName) as Locator);
+    await page.evaluate(() => document.querySelector('dialog')!.remove());
   }, 30_000);
 
   it('the emitted observations resolve to the identity row, never to the other one', async () => {

@@ -2,7 +2,7 @@ import type { Page } from 'playwright';
 import { describe, expect, it } from 'vitest';
 import { pageContextOf } from '../src/agent/tools.js';
 import type { LocatorCandidate, RecordedEntry, RecordedStep } from '../src/daemon/recorder.js';
-import { compileSkills, creditUncreditedPopups } from '../src/skills/compile.js';
+import { type TransformNote, compileSkills, creditUncreditedPopups } from '../src/skills/compile.js';
 
 /**
  * FIX R, ghost fwgh6-n1 step 63: a click opened the public post in a new tab
@@ -41,6 +41,33 @@ describe('creditUncreditedPopups (compile)', () => {
     const [skill] = compileSkills({ entries, instruction: 'open the post and check it', report: { status: 'success', summary: 'ok' }, session: 's' });
     expect(skill.steps[0].effect).toEqual({ kind: 'popup' });
     expect(skill.steps[1].page).toBe(1);
+  });
+
+  it('fwgh8: a page only an eval opened credits no popup, and the steps that ran on it are dropped with a note', () => {
+    // n1 03-publish: Publish (navigates), read url, `eval window.open(...)`,
+    // then tabs/read on page 1 and a switch back to page 0.
+    const publish = rec('click', role('Publish post, right now'), { diff: { url: 'http://x.test/ghost/#/posts', alerts: [], added: [], dialect: 2 } });
+    const steps = [
+      publish,
+      rec('read', [], {}, { what: 'url', label: 'current_url' }),
+      rec('eval', [], {}, { expression: "window.open('http://x.test/bench-post/', '_blank')" }),
+      rec('tabs', [], { page: 1, effect: { kind: 'switch', to: 1 } }, { switch_to: 1 }),
+      rec('read', [{ kind: 'css', selector: 'h1' }], { page: 1, label: 'public_title' }, { target: 'h1', what: 'text' }),
+      rec('tabs', [], { page: 1, effect: { kind: 'switch', to: 0 } }, { switch_to: 0 }),
+      rec('goto', [], { page: 0 }, { url: 'http://x.test/ghost/#/editor/post/1' }),
+    ];
+    const notes: TransformNote[] = [];
+    const out = creditUncreditedPopups(steps, notes);
+    expect(out.map((s) => s.tool)).toEqual(['click', 'read', 'eval', 'goto']);
+    expect(out[0].effect).toBeUndefined();
+    expect(out.some((s) => s.page === 1)).toBe(false);
+    expect(notes).toEqual([expect.objectContaining({ name: 'creditUncreditedPopups', at: 4, reason: expect.stringMatching(/only an eval opened/) })]);
+
+    const entries: RecordedEntry[] = [{ k: 'instruction', text: 'publish the post and check it', url: 'http://x.test/ghost/#/editor/post/1' }, ...steps];
+    const skills = compileSkills({ entries, instruction: 'publish the post and check it', report: { status: 'success', summary: 'ok' }, session: 's' });
+    const compiled = skills.flatMap((s) => s.steps);
+    expect(compiled.some((s) => s.effect?.kind === 'popup' || s.page === 1 || s.tool === 'tabs')).toBe(false);
+    expect(skills[0].provenance.transforms?.some((t) => t.name === 'creditUncreditedPopups')).toBe(true);
   });
 
   it('credits nothing when a recorded effect, a tabs switch or an intervening action explains the page', () => {

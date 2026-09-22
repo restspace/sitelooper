@@ -3,6 +3,7 @@
  * (Windows) / unix domain socket.
  */
 
+import path from 'node:path';
 import type { DriftTicket } from '../skills/repair.js';
 
 export type CommandName =
@@ -48,6 +49,42 @@ export interface ResultFrame {
 }
 
 export type Frame = ProgressFrame | ResultFrame;
+
+/** A daemon's answer to `ping`. `learning`/`skillsDir` are absent from a daemon built before they were. */
+export interface PingInfo {
+  pid: number;
+  session: string;
+  learning?: boolean;
+  skillsDir?: string | null;
+}
+
+const samePath = (a: string, b: string): boolean => {
+  const norm = (p: string) => (process.platform === 'win32' ? path.resolve(p).toLowerCase() : path.resolve(p));
+  return norm(a) === norm(b);
+};
+
+/**
+ * Why a RUNNING daemon must not serve a command that wants a skill store, or
+ * null when it may. A session's store is fixed when its daemon starts, and
+ * the CLI reuses whatever daemon holds the session's socket: a default daemon
+ * started without one (a plain `do`) then served a later `--learn` run, which
+ * reported "no skill store" on every step. A daemon started with ANOTHER
+ * store would silently replay and write the wrong procedures. Refused rather
+ * than restarted: stopping a daemon ends its signed-in browser, which is the
+ * user's call. A command that wants no store is served by any daemon; a
+ * daemon too old to say is given the benefit of the doubt.
+ */
+export function storeMismatch(want: { learn: boolean; skillsDir: string }, have: PingInfo): string | null {
+  if (!want.learn || have.learning === undefined) return null;
+  const restart = `stop it first (sitelooper --session ${have.session} stop), then re-run`;
+  if (!have.learning || !have.skillsDir) {
+    return `session "${have.session}" is already running WITHOUT a skill store (its daemon was started without --learn / SITELOOPER_SKILLS=1), and this command needs one — ${restart}`;
+  }
+  if (!samePath(have.skillsDir, want.skillsDir)) {
+    return `session "${have.session}" is already running with the skill store ${have.skillsDir}, not ${want.skillsDir} — ${restart}`;
+  }
+  return null;
+}
 
 export function encodeFrame(frame: Frame | Request): string {
   return JSON.stringify(frame) + '\n';

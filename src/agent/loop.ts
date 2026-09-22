@@ -11,7 +11,7 @@ import { componentsOnPage, renderComponents } from '../skills/components.js';
 import { originOf } from '../skills/store.js';
 import { siteModel } from '../skills/sitemap.js';
 import { buildSystemPrompt } from './prompt.js';
-import { admitsIncompletion, backfillReadValues, flattenComposedValues, flattenProvenComposite, mergeReportValues, namingAskMessage, promoteLabelledReads, publishProseIdentifiers, unnamedReadValues, validateReport, type Report } from './report.js';
+import { admitsIncompletion, backfillReadValues, flattenComposedValues, flattenProvenComposite, mergeReportValues, namingAskMessage, positionDatumKeys, promoteLabelledReads, publishProseIdentifiers, unnamedReadValues, validateReport, type Report } from './report.js';
 import { executeTool, toolDefsFor, type ToolExecution } from './tools.js';
 import { captureReadBack, captureReadBackAt, setIdentityHints } from '../daemon/recorder.js';
 import { describeOutcome, sourceReadBacks, type ReadBackDecider, type ReadBackTarget } from './readback.js';
@@ -473,6 +473,11 @@ export async function runInstruction(
       // order line) is unpinnable and unrepublishable as one string. Split it
       // first, so everything below — backfill, read-back synthesis, compile —
       // sees the scalars a real element actually shows.
+      // First of all: a key that is page text the instruction read is a
+      // datum, not a name — positional, before anything mints a name from it
+      // (fwgh8 01-open's seed titles; see positionDatumKeys).
+      const datums = positionDatumKeys(report, browser.script.readsThisInstruction());
+      if (datums.length) opts.onProgress?.(`[report] ${datums.length} reported key(s) were page text, published positionally: ${datums.join(', ')}`);
       const split = flattenComposedValues(report);
       if (split.length) opts.onProgress?.(`[report] split composed value(s) into ${split.join(', ')}`);
       // Read-time labels first: the model named these values in the read call
