@@ -1,0 +1,10 @@
+[spec-replay] resetting gitea
+[reset] gitea: deleted 1 leftover bench issue(s)
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile bench/results/flows/fwgt3.json --out /home/user/sitelooper/bench/results/fwgt3-spec-spec-tmp --overwrite-spec
+flow: /home/user/sitelooper/bench/results/fwgt3-spec-spec-tmp/fwgt3.flow.ts
+spec: /home/user/sitelooper/bench/results/fwgt3-spec-spec-tmp/fwgt3.spec.ts
+warning 07-open: 07-open read a value that contradicts what the previous step reported
+  why: 07-open read screenshot "/home/user/sitelooper/issue4-verify-fresh-load.png" right after 06-add reported "/home/user/sitelooper/issue4-comment-posted.png"; 06-add's change may not have landed and a later step may be retrying it. Re-record 06-add.
+  fix: sitelooper rerecord bench/results/flows/fwgt3.json 06-add
+[spec-replay] running: npx playwright test --config /home/user/sitelooper/bench/results/fwgt3-spec-spec-tmp/playwright.config.mjs
+[spec-replay] fwgt3-spec: 1/1 passed, exit=0, 65s, 6 drift line(s) — result written

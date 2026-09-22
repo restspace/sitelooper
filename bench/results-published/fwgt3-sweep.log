@@ -1,0 +1,107 @@
+
+[sweep] run 1/3: fwgt3-n1 (store: /home/user/sitelooper/bench/results/fwgt3-skills)
+[harness] gitea: defaulting APP_URL
+[harness] gitea: defaulting APP_EMAIL
+[harness] gitea: defaulting APP_PASSWORD
+[reset] gitea: no leftover bench issues
+[harness] gitea responded 200 at http://127.0.0.1:8095/
+stopped: fwgt3-n1
+  flow "fwgt3" saved: 7 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwgt3.json
+  warning: note: 02-create no longer publishes author — no replay reads it from the page and the recording showed no line to read
+  warning: note: 03-set no longer publishes labels_on_issue_page, label_ids — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-report no longer publishes sidebar_assignees_text, assigned_user — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-set no longer publishes sidebar_milestone_text, other_sidebar_state — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-add no longer publishes comment_anchor, comment_author — no replay reads them from the page and the recording showed no line to read
+  warning: note: 07-open no longer publishes 3_sidebar_labels, 4_sidebar_assignee, sidebar_field_text_blob, all_checks_passed, dropdown_option_2, dropdown_option_5, dropdown_option_6, comment_anchor_id — no replay reads them from the page and the recording showed no line to read
+  warning: warning: contradicted-step: 07-open read screenshot "/home/user/sitelooper/issue4-verify-fresh-load.png" right after 06-add reported "/home/user/sitelooper/issue4-comment-posted.png"; 06-add's change may not have landed and a later step may be retrying it. Re-record 06-add.
+  warning: warning: instruction "On the issue page for issue #4 ('fwgt3-n1 Bench Issue') in bench/bench…" ran 2 state-changing step(s) but reported nothing — its work is NOT in the flow
+  warning: warning: 270 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "bench/bench-repo" (output) in "Open http://127.0.0.1:8095/ and sign in with username 'admin' and password 'bench-admin-pass'. Then navigate to the repository 'bench/bench-repo' and go to its "
+  flow.steps[0].instruction: "bench-repo" (output) in "Open http://127.0.0.1:8095/ and sign in with username 'admin' and password 'bench-admin-pass'. Then navigate to the repository 'bench/bench-repo' and go to its "
+  flow.steps[0].instruction: "admin" (output) in "Open http://127.0.0.1:8095/ and sign in with username 'admin' and password 'bench-admin-pass'. Then navigate to the repository 'bench/bench-repo' and go to its "
+  flow.steps[0].instruction: "bench" (output) in "Open http://127.0.0.1:8095/ and sign in with username 'admin' and password 'bench-admin-pass'. Then navigate to the repository 'bench/bench-repo' and go to its "
+  flow.steps[0].params.v2: "admin" (output) in "admin"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwgt3-n1 stop=completed
+turns=11 wall=315.4s
+commands=10 cmdTime=295.8s cmdBytes=11508 timeouts=0
+orchestrator in=8434 cw=0 cr=38656 out=1884
+inner prompt=1406486 cached=1290880 completion=27077
+spend=$0.0679 maxUsd=3
+learn: A_n=0 replayed=0/7 full=0 repaired=0 compiled=7 variants=0
+-> /home/user/sitelooper/bench/results/fwgt3-n1-sitelooper-result.json
+
+fwgt3-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #4, state=open, description includes runid=true
+  obj 3: PASS — labels=[bug, priority-high], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #4 reported
+
+[sweep] run 2/3: fwgt3-n2 (replay flow fwgt3, no orchestrator)
+[reset] gitea: deleted 1 leftover bench issue(s)
+[sweep] fwgt3-n2: 7 drift ticket(s) → fwgt3-n2-drift.json
+
+fwgt3-n2: objectives passed 6/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #5, state=open, description includes runid=true
+  obj 3: FAIL — labels=[], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #5 reported
+
+[sweep] run 3/3: fwgt3-n3 (replay flow fwgt3, no orchestrator)
+[reset] gitea: deleted 1 leftover bench issue(s)
+[sweep] fwgt3-n3: 7 drift ticket(s) → fwgt3-n3-drift.json
+
+fwgt3-n3: objectives passed 6/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #6, state=open, description includes runid=true
+  obj 3: FAIL — labels=[], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #6 reported
+
+Learning sweep fwgt3 (K=3)
+┌─────────┬───┬────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid      │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwgt3-n1' │ '7/7'    │ 'completed' │ 11    │ 10   │ 0.0679    │ 0   │ '0/7'        │ 315    │
+│ 1       │ 2 │ 'fwgt3-n2' │ '6/7'    │ 'success'   │ 0     │ 7    │ 0         │ 1   │ '7/7 (flow)' │ 99     │
+│ 2       │ 3 │ 'fwgt3-n3' │ '6/7'    │ 'success'   │ 0     │ 7    │ 0         │ 1   │ '7/7 (flow)' │ 98     │
+└─────────┴───┴────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8095
+  s_0ac4a1  validated    4 steps  3/3 (100%)
+           On the issue page for issue #4 ('{{v1}}') in {{v3}}, add a comment whose text includes '{{v2}}' (e.g. '{{v6}}'…
+  s_2dc91f  validated    9 steps  3/3 (100%)
+           On the issue page for issue #4 ('{{v1}}') in {{v3}}, use the sidebar Milestone picker to set the milestone to …
+  s_3e13ba  validated    1 steps  3/3 (100%)
+           Open a fresh load of {{v1}} and verify, reading the rendered page: (1) the issue title is exactly '{{v5}}' and…
+  s_49baa2  validated    5 steps  3/3 (100%)
+           In the repository {{v1}}, create a new issue with the exact title '{{v3}}' and a description (markdown text ar…
+  s_585541  validated    1 steps  3/3 (100%)
+           In the repository {{v1}}, create a new issue with the exact title '{{v3}}' and a description (markdown text ar…
+  s_5c318b  validated    3 steps  3/3 (100%)
+           Open {{v1}} and sign in with username '{{v2}}' and password '{{v3}}'. Then navigate to the repository 'bench/b…
+  s_93e0c4  validated    9 steps  3/3 (100%)
+           Open {{v1}} and sign in with username '{{v2}}' and password '{{v3}}'. Then navigate to the repository 'bench/b…
+  s_a49471  validated    6 steps  3/3 (100%)
+           On the issue page for issue #4 ('{{v1}}') in {{v3}}, use the sidebar Assignees picker to assign the user 'benc…
+  s_aeba7f  validated    2 steps  3/3 (100%)
+           Open {{v1}} and sign in with username '{{v2}}' and password '{{v3}}'. Then navigate to the repository 'bench/b…
+  s_b7935f  validated    6 steps  3/3 (100%)
+           In the repository {{v1}}, create a new issue with the exact title '{{v3}}' and a description (markdown text ar…
+  s_cbc1fe  validated    1 steps  3/3 (100%)
+           Open {{v1}} and sign in with username '{{v2}}' and password '{{v3}}'. Then navigate to the repository 'bench/b…
+  s_e40907  validated    2 steps  3/3 (100%)
+           On the issue page for issue #4 ('{{v1}}') in {{v3}}, add a comment whose text includes '{{v2}}' (e.g. '{{v6}}'…
+  s_f2a028  validated    9 steps  3/3 (100%)
+           Navigate to the issue page for issue #4 ('{{v1}}') in the repository {{v3}} at http://127.0.0.1:8095/. Use the…
+  s_ff5d5c  validated    8 steps  3/3 (100%)
+           Open a fresh load of {{v1}} and verify, reading the rendered page: (1) the issue title is exactly '{{v5}}' and…
+store: /home/user/sitelooper/bench/results/fwgt3-skills
+
+summary: /home/user/sitelooper/bench/results/fwgt3-sweep.json
