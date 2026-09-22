@@ -1,0 +1,34 @@
+{
+  "arm": "spec",
+  "runid": "fwec4-spec",
+  "target": "espocrm",
+  "flow": "fwec4.json",
+  "flowName": "fwec4",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwec4-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwec4-spec-spec-tmp/fwec4.flow.ts",
+  "specFile": "bench/results/fwec4-spec-spec-tmp/fwec4.spec.ts",
+  "wallMs": 45037,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwec4",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 40993,
+      "error": "Error: 03-verify s_df28e8: not on the page this procedure starts from (expects http://127.0.0.1:8097/#Opportunity/view/, browser is at http://127.0.0.1:8097/#Opportunity) — nothing of this segment has run",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "logTail": "ere\n[sitelooper warn] step 02-create s_e1e58c/3: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here\n[sitelooper warn] step 02-create s_e1e58c/4: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here\n[sitelooper warn] 02-create s_e1e58c/6: 2 field(s) this procedure filled were empty again before this click (the page rebuilt its form, or dropped the value when the field lost focus, after the fills were checked) — refilled once\n[sitelooper warn] 02-create s_e1e58c/8: read 'description' returned a value the skill itself set/selected ('fwec4-spec bench description') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper warn] 02-create s_e1e58c/9: read 'name' returned a value the skill itself set/selected ('fwec4-spec Bench Opportunity') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper warn] step 02-create s_e1e58c/16: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here\n[sitelooper warn] step 02-create s_e1e58c/20: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here\n[sitelooper warn] step 02-create s_e1e58c/23: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here\n[sitelooper warn] 02-create s_e1e58c/32: read 'close_date_edit_form' returned a value the skill itself set/selected ('2026-12-31') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper step] 02-create\n  ✘  1 fwec4.spec.ts:9:1 › fwec4 (41.0s)\n\n\n  1) fwec4.spec.ts:9:1 › fwec4 › 03-verify: On the Opportunity record page for '{{runid}} Bench Opportunity' (address #Opportunity/view/{{02-create.url.h2}}), post a message to its Stream panel with the text '{{runid}} bench stream post' (must include the text {{runid}}). Submit the post, then verify it appears in the Stream panel and report the exact post text shown and who posted it. \n\n    Error: 03-verify s_df28e8: not on the page this procedure starts from (expects http://127.0.0.1:8097/#Opportunity/view/, browser is at http://127.0.0.1:8097/#Opportunity) — nothing of this segment has run\n\n       at fwec4.flow.ts:10161\n\n      10159 |   const verdict = preconditionVerdict(pattern, url, p, similarity, mints);\n      10160 |   for (const line of verdict.warnings) logWarning(`${where}: ${line}`);\n    > 10161 |   if (verdict.refuse) throw new Error(`${where}: ${verdict.refuse} — nothing of this segment has run`);\n            |                             ^\n      10162 | }\n      10163 |\n      10164 | /**\n        at preconditionGate (/home/user/sitelooper/bench/results/fwec4-spec-spec-tmp/fwec4.flow.ts:10161:29)\n        at Object.03-verify (/home/user/sitelooper/bench/results/fwec4-spec-spec-tmp/fwec4.flow.ts:13134:11)\n        at /home/user/sitelooper/bench/results/fwec4-spec-spec-tmp/fwec4.flow.ts:13727:7\n        at runFlow (/home/user/sitelooper/bench/results/fwec4-spec-spec-tmp/fwec4.flow.ts:13726:5)\n        at /home/user/sitelooper/bench/results/fwec4-spec-spec-tmp/fwec4.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/fwec4-fwec4/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/fwec4-fwec4/error-context.md\n\n  1 failed\n    fwec4.spec.ts:9:1 › fwec4 ──────────────────────────────────────────────────────────────────────\n"
+}

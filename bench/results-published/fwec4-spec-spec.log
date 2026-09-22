@@ -1,0 +1,50 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-signin
+[sitelooper warn] step 02-create s_e1e58c/1: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here
+[sitelooper warn] step 02-create s_e1e58c/2: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here
+[sitelooper warn] step 02-create s_e1e58c/3: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here
+[sitelooper warn] step 02-create s_e1e58c/4: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here
+[sitelooper warn] 02-create s_e1e58c/6: 2 field(s) this procedure filled were empty again before this click (the page rebuilt its form, or dropped the value when the field lost focus, after the fills were checked) — refilled once
+[sitelooper warn] 02-create s_e1e58c/8: read 'description' returned a value the skill itself set/selected ('fwec4-spec bench description') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 02-create s_e1e58c/9: read 'name' returned a value the skill itself set/selected ('fwec4-spec Bench Opportunity') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] step 02-create s_e1e58c/16: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here
+[sitelooper warn] step 02-create s_e1e58c/20: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here
+[sitelooper warn] step 02-create s_e1e58c/23: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here
+[sitelooper warn] 02-create s_e1e58c/32: read 'close_date_edit_form' returned a value the skill itself set/selected ('2026-12-31') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper step] 02-create
+  ✘  1 fwec4.spec.ts:9:1 › fwec4 (41.0s)
+
+
+  1) fwec4.spec.ts:9:1 › fwec4 › 03-verify: On the Opportunity record page for '{{runid}} Bench Opportunity' (address #Opportunity/view/{{02-create.url.h2}}), post a message to its Stream panel with the text '{{runid}} bench stream post' (must include the text {{runid}}). Submit the post, then verify it appears in the Stream panel and report the exact post text shown and who posted it. 
+
+    Error: 03-verify s_df28e8: not on the page this procedure starts from (expects http://127.0.0.1:8097/#Opportunity/view/, browser is at http://127.0.0.1:8097/#Opportunity) — nothing of this segment has run
+
+       at fwec4.flow.ts:10161
+
+      10159 |   const verdict = preconditionVerdict(pattern, url, p, similarity, mints);
+      10160 |   for (const line of verdict.warnings) logWarning(`${where}: ${line}`);
+    > 10161 |   if (verdict.refuse) throw new Error(`${where}: ${verdict.refuse} — nothing of this segment has run`);
+            |                             ^
+      10162 | }
+      10163 |
+      10164 | /**
+        at preconditionGate (/home/user/sitelooper/bench/results/fwec4-spec-spec-tmp/fwec4.flow.ts:10161:29)
+        at Object.03-verify (/home/user/sitelooper/bench/results/fwec4-spec-spec-tmp/fwec4.flow.ts:13134:11)
+        at /home/user/sitelooper/bench/results/fwec4-spec-spec-tmp/fwec4.flow.ts:13727:7
+        at runFlow (/home/user/sitelooper/bench/results/fwec4-spec-spec-tmp/fwec4.flow.ts:13726:5)
+        at /home/user/sitelooper/bench/results/fwec4-spec-spec-tmp/fwec4.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwec4-fwec4/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwec4-fwec4/error-context.md
+
+  1 failed
+    fwec4.spec.ts:9:1 › fwec4 ──────────────────────────────────────────────────────────────────────

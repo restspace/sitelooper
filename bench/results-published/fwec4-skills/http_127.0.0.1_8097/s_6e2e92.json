@@ -1,0 +1,98 @@
+{
+ "id": "s_6e2e92",
+ "origin": "http://127.0.0.1:8097",
+ "template": "In EspoCRM, create a new Opportunity with these exact values: Name = '{{v2}}', Account = '{{v3}}' (choose it from the link field's suggestions/select dialog so it is actually linked, not just typed), Stage = 'Negotiation', Amount = {{v4}}, Close Date = {{v5}}, Assigned To user = 'Bench Assignee' (choose from the suggestions/select dialog so it is actually linked), and Description containing the text '{{v1}}'. Save the record. Then open the saved record's page and report the values shown for Name, Account, Stage, Amount, Close Date, Assigned User, and Description, plus the record ID from the page address (#Opportunity/view/<id>).",
+ "params": {
+  "v1": {
+   "example": "fwec4-n3",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "fwec4-n3 Bench Opportunity",
+   "usedIn": [],
+   "known": true
+  },
+  "v3": {
+   "example": "Bench Account",
+   "usedIn": []
+  },
+  "v4": {
+   "example": "12500",
+   "usedIn": []
+  },
+  "v5": {
+   "example": "2026-12-31",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8097/#Opportunity"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e161"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#main > div:nth-of-type(1) > div > div:nth-of-type(2) > div > a"
+     },
+     {
+      "kind": "point",
+      "x": 1170,
+      "y": 65,
+      "w": 168.2,
+      "h": 36,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8097/#Opportunity/create",
+    "addedContains": [
+     "- heading \"Opportunitiescreate\"",
+     "- link \"Opportunities\"",
+     "- button \"Ctrl+Enter\"",
+     "- button \"Esc\"",
+     "- textbox \"Select\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_9b7e22",
+    "step": 1
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-22T09:21:03.456Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_82bd5d",
+  "index": 0,
+  "of": 4
+ },
+ "provenance": {
+  "session": "fwec4-n3",
+  "instruction": "In EspoCRM, create a new Opportunity with these exact values: Name = 'fwec4-n3 Bench Opportunity', Account = 'Bench Account' (choose it from the link field's suggestions/select dialog so it is actually linked, not just typed), Stage = 'Negotiation', Amount = 12500, Close Date = 2026-12-31, Assigned To user = 'Bench Assignee' (choose from the suggestions/select dialog so it is actually linked), and Description containing the text 'fwec4-n3'. Save the record. Then open the saved record's page and report the values shown for Name, Account, Stage, Amount, Close Date, Assigned User, and Description, plus the record ID from the page address (#Opportunity/view/<id>).",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-22T09:21:03.456Z"
+ },
+ "revision": 1
+}

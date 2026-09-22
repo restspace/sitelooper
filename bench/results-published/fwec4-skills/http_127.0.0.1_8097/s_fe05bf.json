@@ -1,0 +1,105 @@
+{
+ "id": "s_fe05bf",
+ "origin": "http://127.0.0.1:8097",
+ "template": "On the Opportunity record page for '{{v1}}' (address #Opportunity/view/{{02-create.url.h2}}), post a message to its Stream panel with the text '{{v3}}' (must include the text {{v2}}). Submit the post, then verify it appears in the Stream panel and report the exact post text shown and who posted it.",
+ "params": {
+  "v1": {
+   "example": "fwec4-n3 Bench Opportunity",
+   "usedIn": [
+    1
+   ],
+   "known": true,
+   "binding": "output:i2:name"
+  },
+  "v2": {
+   "example": "fwec4-n3",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "fwec4-n3 bench stream post",
+   "usedIn": [],
+   "known": true
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8097/#Opportunity"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e637"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "{{v1}}"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(3) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(2) > a"
+     },
+     {
+      "kind": "point",
+      "x": 196,
+      "y": 257,
+      "w": 196.3,
+      "h": 17,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "mints": {
+    "at": "h2"
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8097/#Opportunity/view/{{d1}}",
+    "addedContains": [
+     "- heading \"Opportunitiesfwec4-n3 Bench Opportunity\"",
+     "- link \"Opportunities\"",
+     "- button \"Follow\"",
+     "- button \"Ctrl+Space\"",
+     "- button \"Previous Entry\" [disabled]"
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "derived": {
+  "d1": {
+   "step": 1,
+   "at": "h2",
+   "example": "6ab2485323ee03204"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-22T09:22:45.889Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_6657df",
+  "index": 0,
+  "of": 2
+ },
+ "provenance": {
+  "session": "fwec4-n3",
+  "instruction": "On the Opportunity record page for 'fwec4-n3 Bench Opportunity' (address #Opportunity/view/{{02-create.url.h2}}), post a message to its Stream panel with the text 'fwec4-n3 bench stream post' (must include the text fwec4-n3). Submit the post, then verify it appears in the Stream panel and report the exact post text shown and who posted it.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-22T09:22:45.889Z"
+ },
+ "revision": 1
+}

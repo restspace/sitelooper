@@ -1,0 +1,202 @@
+{
+  "flow": "fwec4",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Signed in at http://127.0.0.1:8097/ with admin / bench-admin-pass (login form replaced by the EspoCRM Stream dashboard, confirming success), then opened Opportunities via the nav. The list shows 1–1–3 / 3 / 1–3 / 3 records total, and all three opportunity names start with 'Seed:': \"Seed: training package\", \"Seed: pilot expansion\", \"Seed: annual support renewal\" (read from the list's name column in the live DOM).",
+      "values": {
+        "seed_opportunity_name_1": "Seed: training package",
+        "seed_opportunity_name_2": "Seed: pilot expansion",
+        "seed_opportunity_name_3": "Seed: annual support renewal",
+        "seed_opportunities_1": "Seed: training package",
+        "seed_opportunities_2": "Seed: pilot expansion",
+        "seed_opportunities_3": "Seed: annual support renewal",
+        "total_opportunities": "1–3 / 3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Created the Opportunity and opened its detail page. The replayed segment had left the Close Date field corrupted (\"2026-12-312026-12-31\" then reset to 2026-09-22), so I re-picked 31 December 2026 from the date-picker calendar, confirmed Account and Assigned User were set through their select/autocomplete controls, and clicked Save — a single new record was created (no resubmission of the earlier replay steps).",
+      "values": {
+        "record_id": "6ab247b41814e3673",
+        "name": "fwec4-n2 Bench Opportunity",
+        "account": "Bench Account",
+        "account_link_href": "#Account/view/6ab2465bb3c4d480b",
+        "stage": "Negotiation",
+        "amount": "$12,500.00",
+        "close_date_shown": "Dec 31",
+        "close_date_stored": "2026-12-31",
+        "assigned_user": "Bench Assignee",
+        "assigned_user_link_href": "#User/view/6ab2465d1459d2024",
+        "description": "fwec4-n2 bench description",
+        "probability": "80",
+        "created": "Today 09:17  Admin",
+        "close_date_field": "2026-09-22",
+        "assigned_user_cell": "Assigned User\nBench Assignee",
+        "record_url": "http://127.0.0.1:8097/#Opportunity/view/6ab247b41814e3673",
+        "ref": "2026-12-312026-12-31"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_524fe0 stopped at step 19 — after step 19 none of the 4 recorded page change(s) appeared (e.g. \"- row \\\"December 2026\\\"\") — the step ran but did not have its recorded effect",
+      "replayed": "18/21",
+      "repaired": false,
+      "turns": 26,
+      "warnings": [
+        "s_524fe0: step 1: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here",
+        "s_524fe0: step 2: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here",
+        "s_524fe0: step 3: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here",
+        "s_524fe0: step 4: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here",
+        "s_524fe0: step 6: 2 field(s) this procedure filled were empty again before this click (the page rebuilt its form, or dropped the value when the field lost focus, after the fills were checked) — refilled once",
+        "s_524fe0: step 8: read 'description' returned a value the skill itself set/selected ('fwec4-n2 bench description') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_524fe0: step 9: read 'name' returned a value the skill itself set/selected ('fwec4-n2 Bench Opportunity') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_524fe0: step 15: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here",
+        "s_524fe0: step 16: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here"
+      ],
+      "unreported": [
+        "close_date"
+      ]
+    },
+    {
+      "id": "03-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_df28e8; observed post_text=fwec4-n2 bench stream post, record_id=6ab247b41814e3673, ref=fwec4-n2, post_time=09:18.",
+      "values": {
+        "post_text": "fwec4-n2 bench stream post",
+        "record_id": "6ab247b41814e3673",
+        "ref": "fwec4-n2",
+        "post_time": "09:18"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "4/4",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_df28e8: step 3: read 'post_text' returned a value the skill itself set/selected ('fwec4-n2 bench stream post') — confirms the control, not persistence; dropped from the report's confident values"
+      ]
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_fb90cc; observed record_id=6ab247b41814e3673, ref=fwec4-n2, record_url=http://127.0.0.1:8097/#Opportunity/view/6ab247b41814e3673, amount=$12,500.00, close_date_text=Dec 31, stream_post_text=fwec4-n2 bench stream post, name=fwec4-n2 Bench Opportunity, description=fwec4-n2 bench description, stream_post_time=09:18.",
+      "values": {
+        "record_id": "6ab247b41814e3673",
+        "ref": "fwec4-n2",
+        "record_url": "http://127.0.0.1:8097/#Opportunity/view/6ab247b41814e3673",
+        "amount": "$12,500.00",
+        "close_date_text": "Dec 31",
+        "stream_post_text": "fwec4-n2 bench stream post",
+        "name": "fwec4-n2 Bench Opportunity",
+        "description": "fwec4-n2 bench description",
+        "stream_post_time": "09:18"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_fb90cc: step 2: primary locator did not resolve; used fallback #2 elementAt(644, 258) /* div */"
+      ]
+    },
+    {
+      "id": "05-edit",
+      "status": "success",
+      "summary": "Clicked Edit on the Opportunity record; edit mode showed Close Date = \"2026-12-31\" (full date with year, matching the requested value), Amount = \"12,500.00\" in the USD field, and Stage = \"Negotiation\". I then clicked Cancel; the page returned to view mode (Edit button/Save/Cancel gone, links \"Bench Account\"/\"Bench Assignee\" and the Follow button restored) with nothing changed or saved.",
+      "values": {
+        "close_date_edit_mode": "2026-12-31",
+        "amount_edit_mode": "12,500.00",
+        "stage_edit_mode": "Negotiation"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_2ebe24: step 4: primary locator did not resolve; used fallback #2 elementAt(258, 282) /* div */"
+      ]
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "repinned": 0,
+  "drift": 3,
+  "driftTickets": [
+    {
+      "flow": "fwec4",
+      "step": "02-create",
+      "skill": "s_524fe0",
+      "similarity": 1,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_524fe0 stopped at step 19 — after step 19 none of the 4 recorded page change(s) appeared (e.g. \"- row \\\"December 2026\\\"\") — the step ran but did not have its recorded effect",
+      "reason": "after step 19 none of the 4 recorded page change(s) appeared (e.g. \"- row \\\"December 2026\\\"\") — the step ran but did not have its recorded effect",
+      "pageUrlPattern": "http://127.0.0.1:8097/#Opportunity/create",
+      "pageUrl": "http://127.0.0.1:8097/#Opportunity/create"
+    },
+    {
+      "flow": "fwec4",
+      "step": "04-open",
+      "skill": "s_fb90cc",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 0.998,
+      "missedLocator": "page.locator('div:nth-of-type(1) > div > div > div:nth-of-type(2) > div:nth-of-type(2) > div')",
+      "fallbackUsed": "elementAt(644, 258) /* div */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8097/#Opportunity/view/:id",
+      "pageUrl": "http://127.0.0.1:8097/#Opportunity/view/6ab247b41814e3673"
+    },
+    {
+      "flow": "fwec4",
+      "step": "05-edit",
+      "skill": "s_2ebe24",
+      "atStep": "4",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.locator('div:nth-of-type(2) > div:nth-of-type(1) > div > div > div:nth-of-type(1) > div')",
+      "fallbackUsed": "elementAt(258, 282) /* div */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8097/#Opportunity/view/:id",
+      "pageUrl": "http://127.0.0.1:8097/#Opportunity/view/6ab247b41814e3673"
+    }
+  ],
+  "wallMs": 120656,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 430891,
+    "completionTokens": 10235,
+    "cachedTokens": 399616
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 430891,
+      "completionTokens": 10235,
+      "cachedTokens": 399616
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

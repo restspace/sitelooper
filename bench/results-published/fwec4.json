@@ -1,0 +1,301 @@
+{
+  "name": "fwec4",
+  "origin": "http://127.0.0.1:8097",
+  "startUrl": "http://127.0.0.1:8097/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in at http://127.0.0.1:8097/ with username admin and password bench-admin-pass. Then go to Opportunities, list all opportunities whose name starts with 'Seed:' and report their names exactly as shown.",
+      "skill": "s_b97f22",
+      "params": {
+        "v1": "admin",
+        "v2": "bench-admin-pass"
+      },
+      "outputs": [
+        "total_opportunities",
+        "seed_opportunity_name_1",
+        "seed_opportunity_name_2",
+        "seed_opportunity_name_3",
+        "seed_opportunities_1",
+        "seed_opportunities_2",
+        "seed_opportunities_3"
+      ],
+      "recorded": {
+        "total_opportunities": "3",
+        "seed_opportunity_name_1": "Seed: training package",
+        "seed_opportunity_name_2": "Seed: pilot expansion",
+        "seed_opportunity_name_3": "Seed: annual support renewal",
+        "seed_opportunities_1": "Seed: training package",
+        "seed_opportunities_2": "Seed: pilot expansion",
+        "seed_opportunities_3": "Seed: annual support renewal",
+        "url": "http://127.0.0.1:8097/#Opportunity"
+      },
+      "route": "http://127.0.0.1:8097/#Opportunity",
+      "outputEvidence": {
+        "total_opportunities": {
+          "same": 0,
+          "differed": 2
+        },
+        "seed_opportunity_name_1": {
+          "same": 2,
+          "differed": 0
+        },
+        "seed_opportunity_name_2": {
+          "same": 2,
+          "differed": 0
+        },
+        "seed_opportunity_name_3": {
+          "same": 2,
+          "differed": 0
+        },
+        "seed_opportunities_1": {
+          "same": 2,
+          "differed": 0
+        },
+        "seed_opportunities_2": {
+          "same": 2,
+          "differed": 0
+        },
+        "seed_opportunities_3": {
+          "same": 2,
+          "differed": 0
+        },
+        "url": {
+          "same": 2,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "In EspoCRM, create a new Opportunity with these exact values: Name = '{{runid}} Bench Opportunity', Account = 'Bench Account' (choose it from the link field's suggestions/select dialog so it is actually linked, not just typed), Stage = 'Negotiation', Amount = 12500, Close Date = 2026-12-31, Assigned To user = 'Bench Assignee' (choose from the suggestions/select dialog so it is actually linked), and Description containing the text '{{runid}}'. Save the record. Then open the saved record's page and report the values shown for Name, Account, Stage, Amount, Close Date, Assigned User, and Description, plus the record ID from the page address (#Opportunity/view/<id>).",
+      "skill": "s_6e2e92",
+      "params": {
+        "v1": "{{runid}}",
+        "v2": "{{runid}} Bench Opportunity",
+        "v3": "Bench Account",
+        "v4": "12500",
+        "v5": "2026-12-31"
+      },
+      "outputs": [
+        "name",
+        "account",
+        "stage",
+        "amount",
+        "close_date",
+        "description",
+        "ref"
+      ],
+      "recorded": {
+        "record_id": "6ab246ffdcfd08d6f",
+        "name": "fwec4-n1 Bench Opportunity",
+        "account": "Bench Account",
+        "stage": "Negotiation",
+        "amount": "$12,500.00",
+        "close_date": "Dec 31 (server value 2026-12-31)",
+        "assigned_user": "Bench Assignee",
+        "description": "fwec4-n1 bench description",
+        "ref": "fwec4-n1",
+        "url": "http://127.0.0.1:8097/#Opportunity/view/6ab246ffdcfd08d6f",
+        "url.h2": "6ab246ffdcfd08d6f"
+      },
+      "route": "http://127.0.0.1:8097/#Opportunity/view/6ab246ffdcfd08d6f"
+    },
+    {
+      "id": "03-verify",
+      "instruction": "On the Opportunity record page for '{{runid}} Bench Opportunity' (address #Opportunity/view/{{02-create.url.h2}}), post a message to its Stream panel with the text '{{runid}} bench stream post' (must include the text {{runid}}). Submit the post, then verify it appears in the Stream panel and report the exact post text shown and who posted it.",
+      "skill": "s_df28e8",
+      "params": {
+        "v1": "{{runid}} Bench Opportunity",
+        "v3": "{{02-create.url.h2}}",
+        "v4": "{{runid}} bench stream post",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "post_text",
+        "post_time",
+        "record_id",
+        "ref"
+      ],
+      "recorded": {
+        "post_text": "fwec4-n1 bench stream post",
+        "posted_by": "Admin",
+        "post_time": "09:15",
+        "record_id": "6ab246ffdcfd08d6f",
+        "ref": "fwec4-n1"
+      },
+      "route": "http://127.0.0.1:8097/#Opportunity/view/6ab246ffdcfd08d6f"
+    },
+    {
+      "id": "04-open",
+      "instruction": "Open the Opportunity record '{{runid}} Bench Opportunity' at #Opportunity/view/{{02-create.url.h2}} and verify the final saved state. Report exactly what the page shows for: Name, Account, Stage, Amount (with currency), Close Date (full date including year), Assigned User, Description, and the record ID in the address bar. Also confirm the Stream panel shows a post containing '{{runid}}' and quote its text. Do not change anything.",
+      "skill": "s_fb90cc",
+      "params": {
+        "v1": "{{runid}} Bench Opportunity",
+        "v3": "{{02-create.url.h2}}",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "record_id",
+        "record_url",
+        "name",
+        "amount",
+        "close_date_shown",
+        "description",
+        "stream_post_text",
+        "stream_post_time",
+        "close_date_text",
+        "ref"
+      ],
+      "recorded": {
+        "record_id": "6ab246ffdcfd08d6f",
+        "record_url": "http://127.0.0.1:8097/#Opportunity/view/6ab246ffdcfd08d6f",
+        "name": "fwec4-n1 Bench Opportunity",
+        "account": "Bench Account (link)",
+        "stage": "Negotiation",
+        "amount": "$12,500.00",
+        "close_date_shown": "Dec 31 (page shows no year; no title attribute or tooltip with the year)",
+        "assigned_user": "Bench Assignee (link)",
+        "description": "fwec4-n1 bench description",
+        "stream_post_text": "fwec4-n1 bench stream post",
+        "stream_post_author": "Admin",
+        "stream_post_time": "09:15",
+        "close_date_text": "Dec 31",
+        "ref": "fwec4-n1"
+      },
+      "outputEvidence": {
+        "record_id": {
+          "same": 0,
+          "differed": 1,
+          "absent": 1
+        },
+        "record_url": {
+          "same": 0,
+          "differed": 2
+        },
+        "name": {
+          "same": 0,
+          "differed": 2
+        },
+        "account": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "stage": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "amount": {
+          "same": 2,
+          "differed": 0
+        },
+        "close_date_shown": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "assigned_user": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "description": {
+          "same": 0,
+          "differed": 2
+        },
+        "stream_post_text": {
+          "same": 0,
+          "differed": 2
+        },
+        "stream_post_author": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "stream_post_time": {
+          "same": 0,
+          "differed": 2
+        },
+        "close_date_text": {
+          "same": 2,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "05-edit",
+      "instruction": "On the Opportunity record '{{runid}} Bench Opportunity' at #Opportunity/view/{{02-create.url.h2}}, click the Edit button to open the record in edit mode, and report the exact value shown in the Close Date field (it should show the full date with year, e.g. 2026-12-31). Also report the value in the Amount field and the Stage field while in edit mode. Then click Cancel (do not save, do not change anything).",
+      "skill": "s_2ebe24",
+      "params": {
+        "v1": "{{runid}} Bench Opportunity",
+        "v3": "{{02-create.url.h2}}",
+        "v4": "2026-12-31",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "close_date_edit_mode",
+        "amount_edit_mode",
+        "stage_edit_mode",
+        "cancel_result"
+      ],
+      "recorded": {
+        "close_date_edit_mode": "2026-12-31",
+        "amount_edit_mode": "12,500.00",
+        "amount_currency": "USD",
+        "stage_edit_mode": "Negotiation",
+        "cancel_result": "returned to view mode, no save"
+      },
+      "route": "http://127.0.0.1:8097/#Opportunity/view/6ab246ffdcfd08d6f"
+    }
+  ],
+  "provenance": {
+    "session": "fwec4-n1",
+    "created": "2026-09-22T09:16:11.793Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "02-create",
+      "outputs": [
+        "record_id",
+        "assigned_user"
+      ]
+    },
+    {
+      "stepId": "03-verify",
+      "outputs": [
+        "posted_by"
+      ]
+    },
+    {
+      "stepId": "04-open",
+      "outputs": [
+        "account",
+        "stage",
+        "assigned_user",
+        "stream_post_author"
+      ]
+    },
+    {
+      "stepId": "05-edit",
+      "outputs": [
+        "amount_currency"
+      ]
+    }
+  ]
+}
