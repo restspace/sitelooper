@@ -1,0 +1,108 @@
+
+[sweep] run 1/3: fwsi3-n1 (store: /home/user/sitelooper/bench/results/fwsi3-skills)
+[harness] snipeit: defaulting APP_URL
+[harness] snipeit: defaulting APP_EMAIL
+[harness] snipeit: defaulting APP_PASSWORD
+[reset] snipeit: no leftover bench assets
+[harness] snipeit responded 302 at http://127.0.0.1:8098/
+stopped: fwsi3-n1
+  flow "fwsi3" saved: 5 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwsi3.json
+  warning: note: dropped 3 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: note: 02-find no longer publishes total_rows — no replay reads it from the page and the recording showed no line to read
+  warning: note: 03-create no longer publishes serial_column_header, select2_selection_render_2 — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-create no longer publishes status, success_alert — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-open no longer publishes page_title — no replay reads it from the page and the recording showed no line to read
+  warning: note: 04-create: added a read for checked_out_to to s_e94fea (page.getByRole('link', { name: 'Bench Assignee', exact: true }); seen on the next instruction's start page)
+  warning: warning: contradicted-step: 04-create read status "Deployed" right after 03-create reported "Ready to Deploy"; 03-create's change may not have landed and a later step may be retrying it. Re-record 03-create.
+  warning: warning: 135 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[1].instruction: "Seed:" (output) in "Go to the Assets list (the app's asset inventory page). Find all assets whose NAME starts with 'Seed:' (use the search/filter on the list page). For each such a"
+  flow.steps[1].params.v1: "Seed:" (output) in "Seed:"
+  flow.steps[2].instruction: "Bench Laptop Model" (output) in "Create a new asset in Snipe-IT with these exact values: Name = '{{runid}} Bench Asset'; Asset Model = 'Bench Laptop Model' (a searchable dropdown — type and act"
+  flow.steps[2].instruction: "Ready to Deploy" (output) in "Create a new asset in Snipe-IT with these exact values: Name = '{{runid}} Bench Asset'; Asset Model = 'Bench Laptop Model' (a searchable dropdown — type and act"
+  flow.steps[2].instruction: "Bench Office" (output) in "Create a new asset in Snipe-IT with these exact values: Name = '{{runid}} Bench Asset'; Asset Model = 'Bench Laptop Model' (a searchable dropdown — type and act"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwsi3-n1 stop=completed
+turns=6 wall=276.7s
+commands=5 cmdTime=244.0s cmdBytes=7155 timeouts=0
+orchestrator in=4553 cw=0 cr=17728 out=3583
+inner prompt=1602982 cached=1473408 completion=18812
+spend=$0.0622 maxUsd=3
+learn: A_n=0 replayed=0/5 full=0 repaired=0 compiled=5 variants=0
+-> /home/user/sitelooper/bench/results/fwsi3-n1-sitelooper-result.json
+
+fwsi3-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed tags and names reported
+  obj 2: PASS — BA-00004, model=Bench Laptop Model, status=Ready to Deploy
+  obj 3: PASS — default location=Bench Office
+  obj 4: PASS — purchase date=2026-03-15
+  obj 5: PASS — assigned to=Bench Assignee (user bench-assignee)
+  obj 6: PASS — 1 checkout(s), 1 with a note carrying the runid
+  obj 7: PASS — asset tag BA-00004 reported
+
+[sweep] run 2/3: fwsi3-n2 (replay flow fwsi3, no orchestrator)
+[reset] snipeit: deleted 1 leftover bench asset(s)
+[sweep] fwsi3-n2: 1 drift ticket(s) → fwsi3-n2-drift.json
+
+fwsi3-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed tags and names reported
+  obj 2: PASS — BA-00005, model=Bench Laptop Model, status=Ready to Deploy
+  obj 3: PASS — default location=Bench Office
+  obj 4: PASS — purchase date=2026-03-15
+  obj 5: PASS — assigned to=Bench Assignee (user bench-assignee)
+  obj 6: PASS — 1 checkout(s), 1 with a note carrying the runid
+  obj 7: PASS — asset tag BA-00005 reported
+
+[sweep] run 3/3: fwsi3-n3 (replay flow fwsi3, no orchestrator)
+[reset] snipeit: deleted 1 leftover bench asset(s)
+[sweep] fwsi3-n3: 1 drift ticket(s) → fwsi3-n3-drift.json
+
+fwsi3-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed tags and names reported
+  obj 2: PASS — BA-00006, model=Bench Laptop Model, status=Ready to Deploy
+  obj 3: PASS — default location=Bench Office
+  obj 4: PASS — purchase date=2026-03-15
+  obj 5: PASS — assigned to=Bench Assignee (user bench-assignee)
+  obj 6: PASS — 1 checkout(s), 1 with a note carrying the runid
+  obj 7: PASS — asset tag BA-00006 reported
+
+Learning sweep fwsi3 (K=3)
+┌─────────┬───┬────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid      │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwsi3-n1' │ '7/7'    │ 'completed' │ 6     │ 5    │ 0.0622    │ 0   │ '0/5'        │ 277    │
+│ 1       │ 2 │ 'fwsi3-n2' │ '7/7'    │ 'success'   │ 24    │ 5    │ 0.0099    │ 0.8 │ '5/5 (flow)' │ 115    │
+│ 2       │ 3 │ 'fwsi3-n3' │ '7/7'    │ 'success'   │ 21    │ 5    │ 0.0075    │ 0.8 │ '5/5 (flow)' │ 96     │
+└─────────┴───┴────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8098
+  s_01f61d  validated    1 steps  3/3 (100%)
+           Open {{v1}} and sign in with username admin and password {{v2}}. Verify you are signed in (e.g. the dashboard …
+  s_2c5106  validated    1 steps  3/3 (100%)
+           Create a new asset in Snipe-IT with these exact values: Name = '{{v2}}'; Asset Model = 'Bench Laptop Model' (a…
+  s_33133b  validated    1 steps  3/3 (100%)
+           Go to the Assets list (the app's asset inventory page). Find all assets whose NAME starts with '{{v1}}' (use t…
+  s_38557d  validated    7 steps  3/3 (100%)
+           Open the Edit page for the asset with tag {{v1}} (name '{{v2}}') and report the exact values currently shown i…
+  s_41c27b  validated    3 steps  3/3 (100%)
+           Open {{v1}} and sign in with username admin and password {{v2}}. Verify you are signed in (e.g. the dashboard …
+  s_5e9f05  validated   14 steps  3/3 (100%)
+           Create a new asset in Snipe-IT with these exact values: Name = '{{v2}}'; Asset Model = 'Bench Laptop Model' (a…
+  s_a7315b  validated   11 steps  3/3 (100%)
+           Go to the Assets list (the app's asset inventory page). Find all assets whose NAME starts with '{{v1}}' (use t…
+  s_bf1d1d  validated    7 steps  3/3 (100%)
+           Create a new asset in Snipe-IT with these exact values: Name = '{{v2}}'; Asset Model = 'Bench Laptop Model' (a…
+  s_c524d3  validated    1 steps  3/3 (100%)
+           On the asset '{{v1}}' (asset tag {{v3}}), perform a Checkout: check the asset out to the USER named 'Bench Ass…
+  s_ca2a3d  validated    1 steps  3/3 (100%)
+           Create a new asset in Snipe-IT with these exact values: Name = '{{v2}}'; Asset Model = 'Bench Laptop Model' (a…
+  s_d8404c  validated    1 steps  3/3 (100%)
+           Open the Edit page for the asset with tag {{v1}} (name '{{v2}}') and report the exact values currently shown i…
+  s_e9ccb2  validated    4 steps  3/3 (100%)
+           Open {{v1}} and sign in with username admin and password {{v2}}. Verify you are signed in (e.g. the dashboard …
+  s_3d1698  provisional  5 steps  1/1 (100%)
+           On the asset '{{v1}}' (asset tag {{v3}}), perform a Checkout: check the asset out to the USER named 'Bench Ass…
+  s_925038  provisional  1 steps  1/1 (100%)
+           On the asset '{{v1}}' (asset tag {{v3}}), perform a Checkout: check the asset out to the USER named 'Bench Ass…
+  s_e94fea  provisional  5 steps  1/1 (100%)
+           On the asset '{{v1}}' (asset tag {{v3}}), perform a Checkout: check the asset out to the USER named 'Bench Ass…
+store: /home/user/sitelooper/bench/results/fwsi3-skills
+
+summary: /home/user/sitelooper/bench/results/fwsi3-sweep.json

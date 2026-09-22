@@ -1,0 +1,165 @@
+{
+  "flow": "fwsi3",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Sign-in succeeded. After submitting admin / bench-admin-pass on http://127.0.0.1:8098/ the app redirected to the Dashboard (title \"\n        Dashboard\n                :: Bench Assets\n    \") and showed the success alert \" Success: \n×\nYou have successfully logged in.\" The page displays the Dashboard heading with summary cards (Recent Activity, totals 3/0/0/0/3) and the nav bar shows the signed-in user \"Bench Admin \" plus \"Admin Settings\".",
+      "values": {
+        "alert_text": " Success: \n×\nYou have successfully logged in.",
+        "dashboard_heading": "Dashboard",
+        "signed_in_user": "Bench Admin ",
+        "page_title": "\n        Dashboard\n                :: Bench Assets\n    "
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-find",
+      "status": "success",
+      "summary": "Opened the Assets list at http://127.0.0.1:8098/hardware (All Assets) and filtered with the list's Search box using \"Seed:\". The page reports \"Showing 1 to 3 of 3 rows\" and all three assets shown have names starting with \"Seed:\". I sanity-checked that the filter really filters (searching \"Spare\" narrowed the table to the single Seed: Spare Laptop row, then I restored \"Seed:\"). Nothing was modified — only the search box was typed in. Matches: SEED-0001 → \"Seed: Reception Laptop\"; SEED-0002 → \"Seed: Training Laptop\"; SEED-0003 → \"Seed: Spare Laptop\" (all Bench Laptop Model / Bench Laptops / Ready to Deploy, context only).",
+      "values": {
+        "filter_query": "Seed:",
+        "asset_row_3_text": "SEED-0003\tSeed: Spare Laptop\t\t\tBench Laptop Model\tBench Laptops\t Ready to Deploy\t\tBench Warehouse\t\t\tCheckout\t\nClone Item\n \nAudit\n \nUpdate\n \nDelete",
+        "asset_row_1_text": "SEED-0001\tSeed: Reception Laptop\t\t\tBench Laptop Model\tBench Laptops\t Ready to Deploy\t\tBench Warehouse\t\t\tCheckout\t\nClone Item\n \nAudit\n \nUpdate\n \nDelete",
+        "asset_row_2_text": "SEED-0002\tSeed: Training Laptop\t\t\tBench Laptop Model\tBench Laptops\t Ready to Deploy\t\tBench Warehouse\t\t\tCheckout\t\nClone Item\n \nAudit\n \nUpdate\n \nDelete",
+        "asset_tag_1": "SEED-0001",
+        "asset_name_1": "Seed: Reception Laptop",
+        "asset_name_2": "Seed: Training Laptop",
+        "asset_name_3": "Seed: Spare Laptop",
+        "asset_tag_2": "SEED-0002",
+        "asset_tag_3": "SEED-0003",
+        "rows_matched": "3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_a7315b: step 10: read 'filter_query' returned a value the skill itself set/selected ('Seed:') — confirms the control, not persistence; dropped from the report's confident values"
+      ]
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_bf1d1d; observed purchase_date_entered=2026-03-15, run_reference=fwsi3-n2, asset_name=fwsi3-n2 Bench Asset, asset_tag=BA-00005, page_heading=  Assets  fwsi3-n2 Bench Asset #BA-00005 - Bench Laptop Model, model=Bench Laptop Model, model_category=Bench Laptops, status=Ready to Deploy, default_location=Bench Office.",
+      "values": {
+        "purchase_date_entered": "2026-03-15",
+        "run_reference": "fwsi3-n2",
+        "asset_name": "fwsi3-n2 Bench Asset",
+        "asset_tag": "BA-00005",
+        "page_heading": "  Assets  fwsi3-n2 Bench Asset #BA-00005 - Bench Laptop Model",
+        "model": "Bench Laptop Model",
+        "model_category": "Bench Laptops",
+        "status": "Ready to Deploy",
+        "default_location": "Bench Office"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "23/23",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_5e9f05: step 12: read 'purchase_date_entered' returned a value the skill itself set/selected ('2026-03-15') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_5e9f05: step 14: expected alert containing \"Success: × Asset with tag BA-00004 was created successfully. Click here to view.\""
+      ]
+    },
+    {
+      "id": "04-create",
+      "status": "success",
+      "summary": "Checkout completed on asset BA-00005 ('fwsi3-n2 Bench Asset'). On /hardware/5 I opened Checkout, left the target type as User, opened the \"Select a User\" searchable dropdown and actually selected the option \"Bench Assignee (bench-assignee)\" (no new user created), entered the note \"Checked out for bench run fwsi3-n2\" in the Notes field and submitted; the app returned \"Success: Asset checked out successfully.\" Re-reading the asset page (/hardware/5, Details tab) confirms Status \"Ready to Deploy Deployed\" with \"Bench Assignee\" as the assigned user (link to /users/2), Last Checkout 2026-09-22, and the History tab row reads: 2026-09-22 07:20 AM, Bench Admin, checkout, fwsi3-n2 Bench Asset #BA-00005 - Bench Laptop Model, Bench Assignee, note \"Checked out for bench run fwsi3-n2\", Current Location: [id: 1] Bench Office. No other changes were made.",
+      "values": {
+        "asset_tag": "BA-00005",
+        "asset_name": "fwsi3-n2 Bench Asset",
+        "checked_out_to_user": "Bench Assignee",
+        "checked_out_to_user_id": "2 (/users/2)",
+        "checkout_note_text": "Checked out for bench run fwsi3-n2",
+        "checkout_target_type": "User",
+        "status": "Ready to Deploy Deployed",
+        "last_checkout": "2026-09-22",
+        "history_row": "2026-09-22 07:20 AM | Bench Admin | checkout | fwsi3-n2 Bench Asset #BA-00005 - Bench Laptop Model | Bench Assignee | Checked out for bench run fwsi3-n2 | Current Location: [id: 1] Bench Office",
+        "success_alert": "Success: Asset checked out successfully.",
+        "purchase_date": "2026-03-15",
+        "ref": "fwsi3-n2"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "every candidate refused — s_c524d3: not on the page this procedure starts from (expects http://127.0.0.1:8098/hardware/4, browser is at http://127.0.0.1:8098/hardware/5) — nothing was run",
+      "replayed": "1/1",
+      "repaired": false,
+      "turns": 24,
+      "unreported": [
+        "checked_out_to",
+        "run_reference"
+      ]
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_38557d; observed run_reference=fwsi3-n2, edit_name_field=fwsi3-n2 Bench Asset, edit_purchase_date=2026-03-15, asset_tag=BA-00005, edit_asset_model=\n                    Bench Laptop Model\n                , edit_default_location=\n                        Bench Office\n                    , banner_notice= This asset can be checked out., edit_status=Ready to Deploy.",
+      "values": {
+        "run_reference": "fwsi3-n2",
+        "edit_name_field": "fwsi3-n2 Bench Asset",
+        "edit_purchase_date": "2026-03-15",
+        "asset_tag": "BA-00005",
+        "edit_asset_model": "\n                    Bench Laptop Model\n                ",
+        "edit_default_location": "\n                        Bench Office\n                    ",
+        "banner_notice": " This asset can be checked out.",
+        "edit_status": "Ready to Deploy"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwsi3",
+      "step": "04-create",
+      "skill": "s_c524d3",
+      "similarity": 1.001,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "every candidate refused — s_c524d3: not on the page this procedure starts from (expects http://127.0.0.1:8098/hardware/4, browser is at http://127.0.0.1:8098/hardware/5) — nothing was run",
+      "pageUrlPattern": "http://127.0.0.1:8098/hardware/:id/checkout",
+      "pageUrl": "http://127.0.0.1:8098/hardware/5/checkout"
+    }
+  ],
+  "wallMs": 114761,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 321148,
+    "completionTokens": 5916,
+    "cachedTokens": 284288
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 321148,
+      "completionTokens": 5916,
+      "cachedTokens": 284288
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

@@ -1,0 +1,43 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-open
+[sitelooper warn] 02-find s_a7315b/10: read 'filter_query' returned a value the skill itself set/selected ('Seed:') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper step] 02-find
+[sitelooper warn] 03-create s_5e9f05/12: read 'purchase_date_entered' returned a value the skill itself set/selected ('2026-03-15') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 03-create s_5e9f05/14: expected alert containing "Success: × Asset with tag BA-00004 was created successfully. Click here to view."
+[sitelooper step] 03-create
+  ✘  1 fwsi3.spec.ts:9:1 › fwsi3 (26.7s)
+
+
+  1) fwsi3.spec.ts:9:1 › fwsi3 › 04-create: On the asset '{{runid}} Bench Asset' (asset tag {{03-create.asset_tag}}), perform a Checkout: check the asset out to the USER named 'Bench Assignee' (choose 'User' as the checkout target type if asked, and select 'Bench Assignee' from the searchable user dropdown — actually select the option, do not create a new user). In the Notes field of the checkout, enter the text: 'Checked out for bench run {{runid}}'. Submit the checkout and verify it succeeded. Report which user the asset is now checked out to and the note text as displayed on the asset page. 
+
+    Error: 04-create s_c524d3: not on the page this procedure starts from (expects http://127.0.0.1:8098/hardware/4, browser is at http://127.0.0.1:8098/hardware/7) — nothing of this segment has run
+
+       at fwsi3.flow.ts:9848
+
+      9846 |   const verdict = preconditionVerdict(pattern, url, p, similarity, mints);
+      9847 |   for (const line of verdict.warnings) logWarning(`${where}: ${line}`);
+    > 9848 |   if (verdict.refuse) throw new Error(`${where}: ${verdict.refuse} — nothing of this segment has run`);
+           |                             ^
+      9849 | }
+      9850 |
+      9851 | /**
+        at preconditionGate (/home/user/sitelooper/bench/results/fwsi3-spec-spec-tmp/fwsi3.flow.ts:9848:29)
+        at Object.04-create (/home/user/sitelooper/bench/results/fwsi3-spec-spec-tmp/fwsi3.flow.ts:12169:11)
+        at /home/user/sitelooper/bench/results/fwsi3-spec-spec-tmp/fwsi3.flow.ts:13118:7
+        at runFlow (/home/user/sitelooper/bench/results/fwsi3-spec-spec-tmp/fwsi3.flow.ts:13117:5)
+        at /home/user/sitelooper/bench/results/fwsi3-spec-spec-tmp/fwsi3.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwsi3-fwsi3/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwsi3-fwsi3/error-context.md
+
+  1 failed
+    fwsi3.spec.ts:9:1 › fwsi3 ──────────────────────────────────────────────────────────────────────
