@@ -17,7 +17,7 @@ Verify the code on branch `fix/round39` in the cloud (the dev box is short of me
    - for a-c: the "Test Files" and "Tests" summary lines, plus the name and the first 30 lines of the error for every failing test;
    - for d/e: the row count, the number changed, and each change;
    - an overall PASS or FAIL (PASS only if a-c have 0 failures and no runid in e went from compiled to refused/error).
-   Copy /tmp/v/corpus.json to bench/corpus-snapshots/r38-<short sha>.json.
+   Copy /tmp/v/corpus.json to bench/corpus-snapshots/r39-<short sha>.json.
 4. Publish on a new branch, never main and never fix/round39:
    git checkout -b results/verify-round39 && git add bench/verify-reports bench/corpus-snapshots && git commit -m "verify round39" && git push -u origin results/verify-round39
 5. Your final message: the overall PASS/FAIL and the report's contents.
