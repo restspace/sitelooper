@@ -1,0 +1,103 @@
+{
+ "id": "s_4e5255",
+ "origin": "http://127.0.0.1:8069",
+ "template": "Final verification, no changes to make: (1) Open the contact '{{v1}}' in the Contacts app and report the exact Name and City values shown on the form. (2) Open the sales order {{v3}} in the Sales app and report the exact status shown in its status bar and its untaxed amount. Do not modify anything. Do not wait for network idle; wait for concrete page state.",
+ "params": {
+  "v1": {
+   "example": "fwod78-n2 Bench Customer",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i1:contact_name"
+  },
+  "v2": {
+   "example": "fwod78-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "S00022",
+   "usedIn": [],
+   "known": true,
+   "binding": "02-create.order_reference"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8069/web#action=:id&id=:id&menu_id=:id&model=sale.order&view_type=form"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e2620"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div > a"
+     },
+     {
+      "kind": "point",
+      "x": 265,
+      "y": 256,
+      "w": 173.5,
+      "h": 45,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "mints": {
+    "at": "q.id"
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#id={{d1}}&menu_id=:id&model=res.partner&view_type=form",
+    "addedContains": [
+     "- link \"{{v3}}\"",
+     "- button \"1 Sales\"",
+     "- button \"£ 0.00 Invoiced\"",
+     "- button \"Previous\" [disabled]",
+     "- button \"Next\" [disabled]"
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_576ed4",
+    "step": 1
+   }
+  }
+ ],
+ "derived": {
+  "d1": {
+   "step": 1,
+   "at": "q.id",
+   "example": "45"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-22T12:21:52.147Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_fe35c7",
+  "index": 0,
+  "of": 9
+ },
+ "provenance": {
+  "session": "fwod78-n2",
+  "instruction": "Final verification, no changes to make: (1) Open the contact 'fwod78-n2 Bench Customer' in the Contacts app and report the exact Name and City values shown on the form. (2) Open the sales order S00022 in the Sales app and report the exact status shown in its status bar and its untaxed amount. Do not modify anything. Do not wait for network idle; wait for concrete page state.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-22T12:21:52.147Z"
+ },
+ "revision": 1
+}

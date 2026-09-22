@@ -1,0 +1,949 @@
+{
+ "id": "s_03f4d0",
+ "origin": "http://127.0.0.1:8069",
+ "template": "Open the confirmed sales order {{v1}} in the Sales app (customer {{v2}}, status '{{v4}}'). Cancel it so nothing stays active — click the Cancel button and confirm any dialog that appears. After cancelling, report the status the app shows in the status bar (e.g. 'Cancelled'). Verify the cancellation actually happened by reloading the record from the server and checking the status bar still shows the cancelled state. Do not wait for network idle (the app long-polls); wait for concrete page state instead.",
+ "params": {
+  "v1": {
+   "example": "S00021",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:order_reference"
+  },
+  "v2": {
+   "example": "fwod78-n1 Bench Customer",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i1:contact_name"
+  },
+  "v3": {
+   "example": "fwod78-n1",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v4": {
+   "example": "Sales Order",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i5:status_after_confirm"
+  },
+  "v5": {
+   "example": "21",
+   "usedIn": [
+    10
+   ],
+   "known": true,
+   "binding": "url:i2:q.id"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8069/web#action=:id&id={{v5}}&menu_id=:id&model=sale.order&view_type=form",
+  "fingerprint": [
+   0.009,
+   0.003,
+   0.003,
+   0,
+   0.006,
+   0.088,
+   0.006,
+   0.006,
+   0.003,
+   0.012,
+   0.012,
+   0,
+   0.009,
+   0.05,
+   0.029,
+   0.006,
+   0.021,
+   0.003,
+   0.023,
+   0.015,
+   0,
+   0.023,
+   0.029,
+   0.018,
+   0.012,
+   0.006,
+   0.006,
+   0.021,
+   0,
+   0.047,
+   0.006,
+   0.047,
+   0.094,
+   0.029,
+   0.006,
+   0,
+   0.015,
+   0,
+   0,
+   0.006,
+   0.012,
+   0.029,
+   0.041,
+   0.038,
+   0.012,
+   0.026,
+   0.012,
+   0.065,
+   0.047,
+   0.023,
+   0.012,
+   0.003,
+   0,
+   0.082,
+   0.006,
+   0.006,
+   0.003,
+   0.035,
+   0.026,
+   0.003,
+   0,
+   0,
+   0.012,
+   0.188,
+   0,
+   0.012,
+   0.012,
+   0.035,
+   0.018,
+   0.006,
+   0,
+   0,
+   0.012,
+   0.012,
+   0.065,
+   0.012,
+   0.015,
+   0.012,
+   0.015,
+   0,
+   0.009,
+   0.035,
+   0.065,
+   0,
+   0.026,
+   0,
+   0.029,
+   0.1,
+   0.029,
+   0.018,
+   0.047,
+   0,
+   0.012,
+   0.012,
+   0.07,
+   0.009,
+   0,
+   0.041,
+   0.009,
+   0,
+   0.041,
+   0.026,
+   0.009,
+   0.026,
+   0.035,
+   0,
+   0.029,
+   0.006,
+   0.006,
+   0.012,
+   0.003,
+   0.018,
+   0,
+   0.006,
+   0.053,
+   0.006,
+   0,
+   0,
+   0,
+   0.106,
+   0,
+   0.006,
+   0.006,
+   0.009,
+   0.021,
+   0.003,
+   0.012,
+   0.006,
+   0.018,
+   0.006,
+   0.009,
+   0.006,
+   0.026,
+   0.009,
+   0.006,
+   0.012,
+   0.003,
+   0.003,
+   0,
+   0.015,
+   0.006,
+   0.053,
+   0.018,
+   0.021,
+   0.006,
+   0.003,
+   0.006,
+   0.006,
+   0.032,
+   0.059,
+   0.047,
+   0,
+   0.059,
+   0.012,
+   0.012,
+   0.006,
+   0.012,
+   0.021,
+   0.029,
+   0.003,
+   0.012,
+   0.029,
+   0.018,
+   0.012,
+   0.012,
+   0.012,
+   0,
+   0,
+   0.012,
+   0,
+   0.006,
+   0.015,
+   0.032,
+   0.006,
+   0.003,
+   0.065,
+   0,
+   0,
+   0.006,
+   0.123,
+   0,
+   0.018,
+   0.05,
+   0.018,
+   0.009,
+   0.009,
+   0.023,
+   0,
+   0.018,
+   0.038,
+   0.006,
+   0.006,
+   0.009,
+   0.006,
+   0.015,
+   0.012,
+   0.094,
+   0.009,
+   0.023,
+   0.006,
+   0,
+   0.029,
+   0,
+   0.047,
+   0.006,
+   0,
+   0.015,
+   0.009,
+   0.012,
+   0,
+   0.006,
+   0.015,
+   0,
+   0.006,
+   0,
+   0,
+   0.109,
+   0.003,
+   0.012,
+   0.032,
+   0,
+   0.003,
+   0.015,
+   0.012,
+   0,
+   0.006,
+   0.012,
+   0,
+   0.012,
+   0.012,
+   0.003,
+   0.012,
+   0.006,
+   0.006,
+   0.006,
+   0.023,
+   0.012,
+   0.006,
+   0.018,
+   0.018,
+   0.018,
+   0,
+   0.067,
+   0.006,
+   0.018,
+   0.009,
+   0,
+   0.006,
+   0.003,
+   0.012,
+   0.012,
+   0.006,
+   0,
+   0.173,
+   0.135,
+   0.07,
+   0.006,
+   0,
+   0.021,
+   0.032,
+   0.012,
+   0.009,
+   0.003,
+   0.003,
+   0.018,
+   0.141,
+   0.041,
+   0.079,
+   0.015,
+   0.012,
+   0.006,
+   0.009,
+   0.003,
+   0,
+   0.041,
+   0.012,
+   0.018,
+   0.006,
+   0.006,
+   0.018,
+   0.006,
+   0.029,
+   0.003,
+   0.059,
+   0.012,
+   0.006,
+   0.009,
+   0.009,
+   0.015,
+   0.018,
+   0,
+   0.012,
+   0.012,
+   0.006,
+   0.006,
+   0.009,
+   0,
+   0.012,
+   0.003,
+   0.07,
+   0.032,
+   0.003,
+   0,
+   0.026,
+   0.012,
+   0,
+   0.009,
+   0.006,
+   0.018,
+   0.003,
+   0.018,
+   0.012,
+   0.088,
+   0.003,
+   0.015,
+   0,
+   0,
+   0.015,
+   0.067,
+   0,
+   0.018,
+   0.003,
+   0.038,
+   0.05,
+   0,
+   0.015,
+   0,
+   0.006,
+   0.009,
+   0,
+   0.003,
+   0,
+   0.009,
+   0.012,
+   0,
+   0.026,
+   0.026,
+   0,
+   0.026,
+   0.059,
+   0,
+   0.012,
+   0,
+   0.006,
+   0,
+   0.012,
+   0.029,
+   0,
+   0.006,
+   0.012,
+   0.029,
+   0.038,
+   0.062,
+   0.003,
+   0.006,
+   0,
+   0.032,
+   0.003,
+   0.015,
+   0.032,
+   0.044,
+   0.047,
+   0.003,
+   0.006,
+   0.015,
+   0.047,
+   0.006,
+   0,
+   0.012,
+   0,
+   0.026,
+   0.003,
+   0.006,
+   0.012,
+   0,
+   0.009,
+   0,
+   0.003,
+   0.006,
+   0.035,
+   0.012,
+   0.006,
+   0.006,
+   0,
+   0.021,
+   0.012,
+   0.003,
+   0.041,
+   0.012,
+   0.006,
+   0.015,
+   0.029,
+   0.009,
+   0.009,
+   0.003,
+   0.009,
+   0.091,
+   0.003,
+   0.006,
+   0,
+   0.006,
+   0.015,
+   0.012,
+   0.012,
+   0.018,
+   0.009,
+   0.006,
+   0.021,
+   0,
+   0.018,
+   0.056,
+   0.015,
+   0.018,
+   0.006,
+   0,
+   0.047,
+   0.041,
+   0.035,
+   0.006,
+   0.012,
+   0.023,
+   0.012,
+   0,
+   0,
+   0.012,
+   0.044,
+   0.009,
+   0.015,
+   0.006,
+   0.003,
+   0.009,
+   0.006,
+   0.006,
+   0.003,
+   0.006,
+   0,
+   0.006,
+   0.003,
+   0.026,
+   0.003,
+   0.012,
+   0.044,
+   0,
+   0.006,
+   0.006,
+   0,
+   0.015,
+   0.038,
+   0.009,
+   0.003,
+   0,
+   0.026,
+   0.053,
+   0.109,
+   0.006,
+   0.003,
+   0.012,
+   0.012,
+   0,
+   0.003,
+   0.085,
+   0.018,
+   0,
+   0,
+   0.018,
+   0.012,
+   0,
+   0.114,
+   0.006,
+   0.657,
+   0.05,
+   0,
+   0.035,
+   0.015,
+   0.044,
+   0.009,
+   0,
+   0,
+   0.006,
+   0.006,
+   0.041,
+   0.003,
+   0,
+   0.006,
+   0.006,
+   0.032,
+   0.006,
+   0.006,
+   0.009,
+   0.032,
+   0.006,
+   0.003,
+   0.009,
+   0,
+   0,
+   0.009,
+   0.018,
+   0.067,
+   0.003,
+   0.018,
+   0.006,
+   0.015,
+   0.026,
+   0.006,
+   0.346,
+   0.006,
+   0.018,
+   0.029,
+   0.026,
+   0.006,
+   0.015,
+   0
+  ],
+  "requireText": [
+   "{{v1}}",
+   "{{v2}}"
+  ]
+ },
+ "goal": {
+  "requireText": [
+   "Cancelled",
+   "Set to Quotation"
+  ]
+ },
+ "steps": [
+  {
+   "tool": "dialog_expect",
+   "args": {
+    "action": "accept"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e2326"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Cancel"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 357,
+      "y": 129,
+      "w": 65.6,
+      "h": 33,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&id={{v5}}&menu_id=:id&model=sale.order&view_type=form",
+    "alertContains": "Are you sure you want to cancel this order?",
+    "addedContains": [
+     "- dialog \"\"",
+     "- heading \"Cancel {{v4}}\"",
+     "- button \"Close\"",
+     "- button \"Send and cancel\"",
+     "- button \"Discard\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e2716"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Send and cancel"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div > footer > footer > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 230,
+      "y": 661,
+      "w": 126.3,
+      "h": 33,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&id={{v5}}&menu_id=:id&model=sale.order&view_type=form",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e2716"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Send and cancel"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div > footer > footer > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 230,
+      "y": 661,
+      "w": 126.3,
+      "h": 33,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&id={{v5}}&menu_id=:id&model=sale.order&view_type=form",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "dialog_expect",
+   "args": {
+    "action": "accept",
+    "count": 2
+   },
+   "locators": {}
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": ".modal .modal-footer button:has-text(\"Send and cancel\") >> nth=0"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".modal .modal-footer button:has-text(\"Send and cancel\") >> nth=0"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Send and cancel"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div > footer > footer > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 230,
+      "y": 661,
+      "w": 126.3,
+      "h": 33,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&id={{v5}}&menu_id=:id&model=sale.order&view_type=form",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "dialog_expect",
+   "args": {
+    "action": "accept"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": ".o_dialog:not(.o_inactive_modal) .modal-header .btn-close"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_dialog:not(.o_inactive_modal) .modal-header .btn-close"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Close",
+      "nth": 1
+     },
+     {
+      "kind": "css",
+      "selector": "#dialog_3 > div > div > div > header > button"
+     },
+     {
+      "kind": "point",
+      "x": 1106,
+      "y": 307,
+      "w": 30,
+      "h": 30,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&id={{v5}}&menu_id=:id&model=sale.order&view_type=form",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e2716"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Send and cancel"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div > footer > footer > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 230,
+      "y": 661,
+      "w": 126.3,
+      "h": 33,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&id={{v5}}&menu_id=:id&model=sale.order&view_type=form",
+    "addedContains": [
+     "- menu \"7 3 YourCompany\"",
+     "- button \"7\"",
+     "- radio \"Cancelled\" [disabled]",
+     "- row \"Product Description Quantity Unit Price Taxes Tax excl.\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:8069/web#id={{v5}}&menu_id=194&action=316&model=sale.order&view_type=form"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > h1 > div > span"
+     },
+     {
+      "kind": "point",
+      "x": 89,
+      "y": 195,
+      "w": 96.5,
+      "h": 31,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "order_reference"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(1) > span",
+      "nth": 0
+     },
+     {
+      "kind": "point",
+      "x": 52,
+      "y": 129,
+      "w": 49.8,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "buttons_now_visible_1"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(2) > span",
+      "nth": 1
+     },
+     {
+      "kind": "point",
+      "x": 153,
+      "y": 129,
+      "w": 101.2,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "buttons_now_visible_2"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "On confirmed order {{v1}} I clicked Cancel; the app opened a \"Cancel {{v4}}\" modal (\"Are you sure you want to cancel this order?\", with a Recipients field and Send and cancel / Cancel / Discard buttons). An unrelated leftover \"Edit: {{v2}}\" dialog was stacked on top and intercepting the clicks, so I closed it (header X, no changes saved), then clicked the wizard's \"Send and cancel\" — the order cancelled in place. The status bar now shows radio \"Cancelled\" as the [checked] state with {{v4}} / Quotation Sent / Quotation all [disabled], the Confirm and Cancel buttons are gone (control panel offers only Preview and Set to Quotation), and the heading/breadcrumb still read {{v1}} with customer {{v2}} (Benchville). I verified the cancellation really happened by navigating back to the record URL from the server: the reloaded page still renders \"Cancelled\" [checked] in the status bar, so it is a genuine server-side state change, not a stale client view. This was the deliberately requested cancellation; the three stored skills did not match it (add second line / edit quantity / confirm) so none was run.",
+  "values": {
+   "order_reference": "{{v1}}",
+   "statusbar_after_cancel": "radio 'Cancelled' [checked][disabled]; '{{v4}}' [disabled]; 'Quotation Sent' [disabled]; 'Quotation' [disabled]",
+   "status_after_cancel": "Cancelled",
+   "confirm_button": "absent",
+   "cancel_button": "absent",
+   "customer": "{{v2}} (Benchville)",
+   "sale_order_id": "{{v5}}",
+   "verified_after_full_reload": "yes - re-navigated to the record URL; statusbar renders 'Cancelled' [checked] with Quotation/{{v4}} disabled",
+   "ref": "{{v3}}",
+   "buttons_now_visible_1": "Preview",
+   "buttons_now_visible_2": "Set to Quotation"
+  }
+ },
+ "contract": 4,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-22T12:16:19.912Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4,
+  "lastUsed": "2026-09-22T12:25:16.776Z"
+ },
+ "status": "validated",
+ "provenance": {
+  "session": "fwod78-n1",
+  "instruction": "Open the confirmed sales order S00021 in the Sales app (customer fwod78-n1 Bench Customer, status 'Sales Order'). Cancel it so nothing stays active — click the Cancel button and confirm any dialog that appears. After cancelling, report the status the app shows in the status bar (e.g. 'Cancelled'). Verify the cancellation actually happened by reloading the record from the server and checking the status bar still shows the cancelled state. Do not wait for network idle (the app long-polls); wait for concrete page state instead.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-22T12:16:19.912Z",
+  "transforms": [
+   {
+    "name": "unfreezeExpectations",
+    "at": 9,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- menu \\\"7 3 YourCompany\\\"\",\"- button \\\"7\\\"\",\"- button \\\"Set to Quotation\\\"\",\"- radio \\\"Cancelled\\\" [disabled]\",\"- row \\\"Product Description Quantity Unit Price Taxes Tax excl.\\\"\"] → [\"- menu \\\"7 3 YourCompany\\\"\",\"- button \\\"7\\\"\",\"- radio \\\"Cancelled\\\" [disabled]\",\"- row \\\"Product Description Quantity Unit Price Taxes Tax excl.\\\"\"]"
+   }
+  ]
+ },
+ "revision": 3
+}

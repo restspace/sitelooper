@@ -1,0 +1,203 @@
+
+[sweep] run 1/3: fwod78-n1 (store: /home/user/sitelooper/bench/results/fwod78-skills)
+[harness] odoo: defaulting APP_URL
+[harness] odoo: defaulting APP_EMAIL
+[harness] odoo: defaulting APP_PASSWORD
+[reset] odoo: no leftover bench customers
+[harness] odoo responded 303 at http://127.0.0.1:8069/
+stopped: fwod78-n1
+  flow "fwod78" saved: 7 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwod78.json
+  warning: note: dropped 10 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: note: 8 goal/report value(s) carrying a value this run made were slotted or dropped:
+  s_164d3a.reportTemplate.values.sales_order_url slotted "21" → {{v4}}
+  s_20b098.reportTemplate.values.quotation_url slotted "21" → {{v7}}
+  s_20b098.reportTemplate.values.quotation_url_after_save slotted "21" → {{v7}}
+  s_bdaf1f.reportTemplate.values.sale_order_id dropped (recorded literal of a value this run made)
+  s_bdaf1f.reportTemplate.values.quotation_url_after_save dropped (recorded literal of a value this run made)
+  s_bdaf1f.reportTemplate.summary dropped (narrates a value this run made)
+  s_f42adf.reportTemplate.values.res_partner_id dropped (recorded literal of a value this run made)
+  s_f42adf.reportTemplate.summary dropped (narrates a value this run made)
+  warning: note: 01-open no longer publishes res_partner_id — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-create no longer publishes breadcrumb_before_save, order_state, sale_order_id, untaxed_amount, product_autocomplete_input_value, ref_2 — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-open no longer publishes quotation_state, ref — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-open no longer publishes previous_untaxed_amount, quotation_state, session_id — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-open no longer publishes statusbar_after_confirm, buttons_now_visible — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-open no longer publishes status_after_cancel, confirm_button, cancel_button — no replay reads them from the page and the recording showed no line to read
+  warning: note: 07-open no longer publishes contact_city_value_read, sales_order_status, sales_order_statusbar — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 200 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "Benchville" (output) in "Open http://127.0.0.1:8069/ and sign in with username admin and password admin. Then go to the Contacts app and create a new contact/customer named exactly '{{r"
+  flow.steps[0].params.v4: "Benchville" (output) in "Benchville"
+  flow.steps[2].instruction: "Quotations" (output) in "Open the existing draft quotation {{02-create.order_reference}} (for customer {{runid}} Bench Customer) in the Sales app — find it in the Quotations list and op"
+  flow.steps[2].skill: "s_a5e28d" (output) in "s_a5e28d"
+  flow.steps[4].instruction: "Sales Order" (output) in "Open the existing draft quotation {{02-create.order_reference}} in the Sales app (customer {{runid}} Bench Customer, untaxed amount £1,755.00). Confirm it so it"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwod78-n1 stop=completed
+turns=9 wall=689.7s
+commands=7 cmdTime=641.6s cmdBytes=14166 timeouts=0
+orchestrator in=32447 cw=0 cr=14656 out=3230
+inner prompt=3661621 cached=3428608 completion=47341
+spend=$0.1376 maxUsd=3
+learn: A_n=0 replayed=0/7 full=0 repaired=0 compiled=7 variants=0
+-> /home/user/sitelooper/bench/results/fwod78-n1-sitelooper-result.json
+
+fwod78-n1: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00021
+
+[sweep] run 2/3: fwod78-n2 (replay flow fwod78, no orchestrator)
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+[sweep] fwod78-n2: 3 drift ticket(s) → fwod78-n2-drift.json
+
+fwod78-n2: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00022
+
+[sweep] run 3/3: fwod78-n3 (replay flow fwod78, no orchestrator)
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+[sweep] fwod78-n3: 3 drift ticket(s) → fwod78-n3-drift.json
+
+fwod78-n3: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00023
+
+Learning sweep fwod78 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwod78-n1' │ '6/6'    │ 'completed' │ 9     │ 7    │ 0.1376    │ 0    │ '0/7'        │ 690    │
+│ 1       │ 2 │ 'fwod78-n2' │ '6/6'    │ 'success'   │ 24    │ 7    │ 0.0142    │ 0.71 │ '7/7 (flow)' │ 264    │
+│ 2       │ 3 │ 'fwod78-n3' │ '6/6'    │ 'success'   │ 19    │ 7    │ 0.0092    │ 0.71 │ '7/7 (flow)' │ 230    │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8069
+  s_03f4d0  validated   13 steps  3/3 (100%)
+           Open the confirmed sales order {{v1}} in the Sales app (customer {{v2}}, status '{{v4}}'). Cancel it so nothin…
+  s_20b098  validated   22 steps  3/3 (100%)
+           Open the existing draft quotation {{v1}} (for customer {{v2}}) in the Sales app — find it in the Quotations li…
+  s_21e20f  validated    1 steps  3/3 (100%)
+           Open {{v2}} and sign in with username admin and password admin. Then go to the Contacts app and create a new c…
+  s_29df9f  provisional  3 steps  1/3 (33%)
+           Final verification, no changes to make: (1) Open the contact '{{v1}}' in the Contacts app and report the exact…
+  s_2b067f  validated    2 steps  3/3 (100%)
+           Go to the Sales app (quotations) and create a new quotation for the customer '{{v1}}' — the customer field is …
+  s_567e10  validated    4 steps  3/3 (100%)
+           Final verification, no changes to make: (1) Open the contact '{{v1}}' in the Contacts app and report the exact…
+  s_576ed4  validated    1 steps  3/3 (100%)
+           Final verification, no changes to make: (1) Open the contact '{{v1}}' in the Contacts app and report the exact…
+  s_6e2257  validated   25 steps  3/3 (100%)
+           Go to the Sales app (quotations) and create a new quotation for the customer '{{v1}}' — the customer field is …
+  s_a5e28d  validated   25 steps  3/3 (100%)
+           Open the existing draft quotation {{v1}} (for customer {{v2}}) in the Sales app — find it in the Quotations li…
+  s_bdaf1f  validated   16 steps  3/3 (100%)
+           Go to the Sales app (quotations) and create a new quotation for the customer '{{v1}}' — the customer field is …
+  s_c2a3c1  validated    1 steps  3/3 (100%)
+           Open the existing draft quotation {{v1}} (for customer {{v2}}) in the Sales app — find it in the Quotations li…
+  s_c40444  validated    1 steps  3/3 (100%)
+           Go to the Sales app (quotations) and create a new quotation for the customer '{{v1}}' — the customer field is …
+  s_dc38c4  validated   16 steps  3/3 (100%)
+           Open the existing draft quotation {{v1}} in the Sales app (customer {{v2}}, untaxed amount £1,755.00). Confirm…
+  s_df1611  validated    3 steps  3/3 (100%)
+           Open {{v2}} and sign in with username admin and password admin. Then go to the Contacts app and create a new c…
+  s_e0c3ca  validated   21 steps  3/3 (100%)
+           Open the existing draft quotation {{v1}} in the Sales app (customer {{v2}}). It has two order lines: line 1 is…
+  s_0619c2  provisional  5 steps  1/1 (100%)
+           Final verification, no changes to make: (1) Open the contact '{{v1}}' in the Contacts app and report the exact…
+  s_144095  provisional 11 steps  1/1 (100%)  variant of s_29df9f
+           Final verification, no changes to make: (1) Open the contact '{{v1}}' in the Contacts app and report the exact…
+  s_158f7e  provisional  4 steps  1/1 (100%)  variant of s_29df9f
+           Final verification, no changes to make: (1) Open the contact '{{v1}}' in the Contacts app and report the exact…
+  s_164d3a  provisional  9 steps  1/1 (100%)
+           Final verification, no changes to make: (1) Open the contact '{{v1}}' in the Contacts app and report the exact…
+  s_1ebd69  provisional  1 steps  1/1 (100%)  variant of s_29df9f
+           Final verification, no changes to make: (1) Open the contact '{{v1}}' in the {{v3}} app and report the exact N…
+  s_26955c  provisional  3 steps  1/1 (100%)
+           Open {{v2}} and sign in with username admin and password admin. Then go to the Contacts app and create a new c…
+  s_2dcbd8  provisional  5 steps  1/1 (100%)  variant of s_29df9f
+           Final verification, no changes to make: (1) Open the contact '{{v1}}' in the Contacts app and report the exact…
+  s_2fa0db  provisional 11 steps  1/1 (100%)
+           Final verification, no changes to make: (1) Open the contact '{{v1}}' in the Contacts app and report the exact…
+  s_306f7c  provisional  1 steps  1/1 (100%)
+           Open {{v2}} and sign in with username admin and password admin. Then go to the Contacts app and create a new c…
+  s_379824  provisional  3 steps  1/1 (100%)
+           Final verification, no changes to make: (1) Open the contact '{{v1}}' in the Contacts app and report the exact…
+  s_39e45c  provisional  2 steps  1/1 (100%)  variant of s_29df9f
+           Final verification, no changes to make: (1) Open the contact '{{v1}}' in the Contacts app and report the exact…
+  s_4666d7  provisional  3 steps  1/1 (100%)  variant of s_29df9f
+           Final verification, no changes to make: (1) Open the contact '{{v1}}' in the {{v3}} app and report the exact N…
+  s_4dfc03  provisional  1 steps  1/1 (100%)
+           Final verification, no changes to make: (1) Open the contact '{{v1}}' in the Contacts app and report the exact…
+  s_4e5255  provisional  1 steps  1/1 (100%)
+           Final verification, no changes to make: (1) Open the contact '{{v1}}' in the Contacts app and report the exact…
+  s_55ac4a  provisional  3 steps  1/1 (100%)
+           Open {{v2}} and sign in with username admin and password admin. Then go to the Contacts app and create a new c…
+  s_58c816  provisional  2 steps  1/1 (100%)
+           Open {{v2}} and sign in with username admin and password admin. Then go to the Contacts app and create a new c…
+  s_6070e2  provisional  1 steps  1/1 (100%)
+           Final verification, no changes to make: (1) Open the contact '{{v1}}' in the {{v3}} app and report the exact N…
+  s_698933  provisional  1 steps  1/1 (100%)  variant of s_29df9f
+           Final verification, no changes to make: (1) Open the contact '{{v1}}' in the {{v3}} app and report the exact N…
+  s_73a5e3  provisional  1 steps  1/1 (100%)
+           Open {{v2}} and sign in with username admin and password admin. Then go to the Contacts app and create a new c…
+  s_74250a  provisional  4 steps  1/1 (100%)
+           Open {{v2}} and sign in with username admin and password admin. Then go to the Contacts app and create a new c…
+  s_770dc7  provisional  5 steps  1/1 (100%)
+           Open {{v2}} and sign in with username admin and password admin. Then go to the Contacts app and create a new c…
+  s_7dd14a  provisional  1 steps  1/1 (100%)
+           Open {{v2}} and sign in with username admin and password admin. Then go to the Contacts app and create a new c…
+  s_871509  provisional  1 steps  1/1 (100%)
+           Open {{v2}} and sign in with username admin and password admin. Then go to the Contacts app and create a new c…
+  s_87e2ad  provisional  2 steps  1/1 (100%)
+           Final verification, no changes to make: (1) Open the contact '{{v1}}' in the Contacts app and report the exact…
+  s_98a3f4  provisional  3 steps  1/1 (100%)
+           Final verification, no changes to make: (1) Open the contact '{{v1}}' in the {{v3}} app and report the exact N…
+  s_9eb70a  provisional  3 steps  1/1 (100%)  variant of s_29df9f
+           Final verification, no changes to make: (1) Open the contact '{{v1}}' in the {{v3}} app and report the exact N…
+  s_a78348  provisional  4 steps  1/1 (100%)
+           Final verification, no changes to make: (1) Open the contact '{{v1}}' in the Contacts app and report the exact…
+  s_ab6a6f  provisional  4 steps  1/1 (100%)
+           Final verification, no changes to make: (1) Open the contact '{{v1}}' in the {{v3}} app and report the exact N…
+  s_ad8fd3  provisional  1 steps  1/1 (100%)
+           Final verification, no changes to make: (1) Open the contact '{{v1}}' in the {{v3}} app and report the exact N…
+  s_b37d1e  provisional  1 steps  1/1 (100%)
+           Open {{v2}} and sign in with username admin and password admin. Then go to the Contacts app and create a new c…
+  s_b9c9c0  provisional  4 steps  1/1 (100%)
+           Final verification, no changes to make: (1) Open the contact '{{v1}}' in the Contacts app and report the exact…
+  s_c9b25f  provisional  3 steps  1/1 (100%)
+           Final verification, no changes to make: (1) Open the contact '{{v1}}' in the {{v3}} app and report the exact N…
+  s_d26143  provisional  4 steps  1/1 (100%)
+           Open {{v2}} and sign in with username admin and password admin. Then go to the Contacts app and create a new c…
+  s_d34eff  provisional  4 steps  1/1 (100%)
+           Final verification, no changes to make: (1) Open the contact '{{v1}}' in the Contacts app and report the exact…
+  s_dc0ff6  provisional  3 steps  1/1 (100%)
+           Open {{v2}} and sign in with username admin and password admin. Then go to the Contacts app and create a new c…
+  s_dd2654  provisional  1 steps  1/1 (100%)
+           Final verification, no changes to make: (1) Open the contact '{{v1}}' in the {{v3}} app and report the exact N…
+  s_deab5e  provisional  5 steps  1/1 (100%)
+           Final verification, no changes to make: (1) Open the contact '{{v1}}' in the Contacts app and report the exact…
+  s_e5af17  provisional  5 steps  1/1 (100%)  variant of s_29df9f
+           Final verification, no changes to make: (1) Open the contact '{{v1}}' in the Contacts app and report the exact…
+  s_e97af0  provisional  4 steps  1/1 (100%)
+           Open {{v2}} and sign in with username admin and password admin. Then go to the Contacts app and create a new c…
+  s_eb891c  provisional  1 steps  1/1 (100%)  variant of s_29df9f
+           Final verification, no changes to make: (1) Open the contact '{{v1}}' in the Contacts app and report the exact…
+  s_f12565  provisional  3 steps  1/1 (100%)  variant of s_29df9f
+           Final verification, no changes to make: (1) Open the contact '{{v1}}' in the Contacts app and report the exact…
+  s_f42adf  provisional  3 steps  1/1 (100%)
+           Open {{v2}} and sign in with username admin and password admin. Then go to the Contacts app and create a new c…
+  s_faffa7  provisional  2 steps  1/1 (100%)
+           Open {{v2}} and sign in with username admin and password admin. Then go to the Contacts app and create a new c…
+store: /home/user/sitelooper/bench/results/fwod78-skills
+
+summary: /home/user/sitelooper/bench/results/fwod78-sweep.json

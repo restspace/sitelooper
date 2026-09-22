@@ -1,0 +1,64 @@
+{
+ "id": "s_21e20f",
+ "origin": "http://127.0.0.1:8069",
+ "template": "Open {{v2}} and sign in with username admin and password admin. Then go to the Contacts app and create a new contact/customer named exactly '{{v3}}' with the City field set to '{{v4}}'. Save the record and verify on the page that the name and city are correct. Important: do not wait for network idle (the app long-polls); wait for concrete page state instead. Any autocomplete fields must have an option actually chosen from the dropdown.",
+ "params": {
+  "v1": {
+   "example": "fwod78-n1",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "http://127.0.0.1:8069/",
+   "usedIn": [
+    1
+   ]
+  },
+  "v3": {
+   "example": "fwod78-n1 Bench Customer",
+   "usedIn": [],
+   "known": true
+  },
+  "v4": {
+   "example": "Benchville",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8069/"
+ },
+ "steps": [
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v2}}"
+   },
+   "locators": {}
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-22T12:06:49.158Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4,
+  "lastUsed": "2026-09-22T12:22:01.718Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_65c893",
+  "index": 0,
+  "of": 7
+ },
+ "provenance": {
+  "session": "fwod78-n1",
+  "instruction": "Open http://127.0.0.1:8069/ and sign in with username admin and password admin. Then go to the Contacts app and create a new contact/customer named exactly 'fwod78-n1 Bench Customer' with the City field set to 'Benchville'. Save the record and verify on the page that the name and city are correct. Important: do not wait for network idle (the app long-polls); wait for concrete page state instead. Any autocomplete fields must have an option actually chosen from the dropdown.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-22T12:06:49.158Z"
+ },
+ "revision": 3
+}

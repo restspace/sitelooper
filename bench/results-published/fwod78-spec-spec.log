@@ -1,0 +1,37 @@
+
+Running 1 test using 1 worker
+
+  ✘  1 fwod78.spec.ts:9:1 › fwod78 (6.0s)
+
+
+  1) fwod78.spec.ts:9:1 › fwod78 › 01-open: Open http://127.0.0.1:8069/ and sign in with username admin and password admin. Then go to the Contacts app and create a new contact/customer named exactly '{{runid}} Bench Customer' with the City field set to 'Benchville'. Save the record and verify on the page that the name and city are correct. Important: do not wait for network idle (the app long-polls); wait for concrete page state instead. Any autocomplete fields must have an option actually chosen from the dropdown. 
+
+    Error: 01-open s_b37d1e: not on the page this procedure starts from (expects http://127.0.0.1:8069/web#cids=1, browser is at http://127.0.0.1:8069/web#action=123&cids=1&menu_id=81; the url already carries action=123, the record this procedure creates at its step 1 — the page is past where the procedure starts) — nothing of this segment has run
+
+       at fwod78.flow.ts:13893
+
+      13891 |   const verdict = preconditionVerdict(pattern, url, p, similarity, mints);
+      13892 |   for (const line of verdict.warnings) logWarning(`${where}: ${line}`);
+    > 13893 |   if (verdict.refuse) throw new Error(`${where}: ${verdict.refuse} — nothing of this segment has run`);
+            |                             ^
+      13894 | }
+      13895 |
+      13896 | /**
+        at preconditionGate (/home/user/sitelooper/bench/results/fwod78-spec-spec-tmp/fwod78.flow.ts:13893:29)
+        at Object.01-open (/home/user/sitelooper/bench/results/fwod78-spec-spec-tmp/fwod78.flow.ts:14642:11)
+        at /home/user/sitelooper/bench/results/fwod78-spec-spec-tmp/fwod78.flow.ts:21322:7
+        at runFlow (/home/user/sitelooper/bench/results/fwod78-spec-spec-tmp/fwod78.flow.ts:21321:5)
+        at /home/user/sitelooper/bench/results/fwod78-spec-spec-tmp/fwod78.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwod78-fwod78/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwod78-fwod78/error-context.md
+
+  1 failed
+    fwod78.spec.ts:9:1 › fwod78 ────────────────────────────────────────────────────────────────────
