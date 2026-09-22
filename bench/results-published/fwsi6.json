@@ -1,0 +1,271 @@
+{
+  "name": "fwsi6",
+  "origin": "http://127.0.0.1:8098",
+  "startUrl": "http://127.0.0.1:8098/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-open",
+      "instruction": "Open http://127.0.0.1:8098/ and sign in with username 'admin' and password 'bench-admin-pass'. Then go to the Assets list and find every asset whose name starts with 'Seed:'. Report each one's asset tag and its name exactly as displayed on the page (one per line, format: tag - name). Do not modify anything.",
+      "skill": "s_e39909",
+      "params": {
+        "v1": "http://127.0.0.1:8098/",
+        "v2": "admin",
+        "v3": "bench-admin-pass",
+        "v4": "Seed:"
+      },
+      "outputs": [
+        "matching_assets",
+        "total_rows",
+        "search_no_match_text",
+        "assets_url"
+      ],
+      "recorded": {
+        "matching_assets": "SEED-0001 - Seed: Reception Laptop\nSEED-0002 - Seed: Training Laptop\nSEED-0003 - Seed: Spare Laptop",
+        "total_rows": "3",
+        "search_no_match_text": "No matching records found",
+        "assets_url": "http://127.0.0.1:8098/hardware?page=1&size=20&order=asc&sort=created_at&search=",
+        "url": "http://127.0.0.1:8098/hardware?page=1&size=20&order=asc&sort=created_at&search=xyz"
+      },
+      "route": "http://127.0.0.1:8098/hardware",
+      "outputEvidence": {
+        "matching_assets": {
+          "same": 1,
+          "differed": 0
+        },
+        "total_rows": {
+          "same": 1,
+          "differed": 0
+        },
+        "search_no_match_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "assets_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "In Snipe-IT, create a new Asset (hardware) named '{{runid}} Bench Asset' with model 'Bench Laptop Model', status label 'Ready to Deploy', default location 'Bench Office', and purchase date 2026-03-15. Use the searchable dropdowns and actually select the existing options (do not create new model/location/status). Create the asset, then report its asset tag exactly as Snipe-IT displays it (e.g. BA-00012).",
+      "skill": "s_607fa9",
+      "params": {
+        "v2": "{{runid}} Bench Asset",
+        "v3": "2026-03-15",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "asset_tag",
+        "asset_name",
+        "model",
+        "status",
+        "purchase_date",
+        "success_message",
+        "create_new_nav_link",
+        "asset_nav_link",
+        "model_dropdown_option",
+        "category_dropdown_option",
+        "a_6",
+        "asset_tag_field_label",
+        "run_reference"
+      ],
+      "recorded": {
+        "asset_tag": "BA-00004",
+        "asset_name": "fwsi6-n1 Bench Asset",
+        "model": "Bench Laptop Model (Bench Laptops / Bench Manufacturer)",
+        "status": "Ready to Deploy",
+        "default_location": "Bench Office",
+        "purchase_date": "2026-03-15",
+        "success_message": "Success: Asset with tag BA-00004 was created successfully.",
+        "assets_nav_link": "Assets",
+        "create_new_nav_link": "Create New",
+        "asset_nav_link": "Asset",
+        "model_dropdown_option": "Bench Laptop Model",
+        "category_dropdown_option": "Bench Laptops",
+        "a_6": "Snipe-IT",
+        "asset_tag_field_label": "Asset Tag",
+        "model_field_label": "Model",
+        "run_reference": "fwsi6-n1",
+        "url": "http://127.0.0.1:8098/hardware/4",
+        "url.p1": "4"
+      },
+      "route": "http://127.0.0.1:8098/hardware/:id",
+      "outputEvidence": {
+        "asset_tag": {
+          "same": 0,
+          "differed": 1
+        },
+        "asset_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "model": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "status": {
+          "same": 1,
+          "differed": 0
+        },
+        "default_location": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "purchase_date": {
+          "same": 1,
+          "differed": 0
+        },
+        "success_message": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "assets_nav_link": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "create_new_nav_link": {
+          "same": 1,
+          "differed": 0
+        },
+        "asset_nav_link": {
+          "same": 1,
+          "differed": 0
+        },
+        "model_dropdown_option": {
+          "same": 1,
+          "differed": 0
+        },
+        "category_dropdown_option": {
+          "same": 1,
+          "differed": 0
+        },
+        "a_6": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "asset_tag_field_label": {
+          "same": 1,
+          "differed": 0
+        },
+        "model_field_label": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "run_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.p1": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "03-open",
+      "instruction": "On the asset '{{runid}} Bench Asset' (tag {{02-create.asset_tag}}) in Snipe-IT, check the asset out to user 'Bench Assignee' with a note in the checkout that includes the text '{{runid}}'. Open the asset, use its CheckOut action, select user Bench Assignee from the searchable dropdown (do not create a new user), enter a note containing '{{runid}}' (e.g. 'Checked out for {{runid}} bench flow'), and confirm. Then report the asset tag, who it is checked out to, and the checkout note text exactly as shown on the asset's detail page.",
+      "skill": "s_ddd877",
+      "params": {
+        "v1": "{{runid}} Bench Asset",
+        "v4": "{{02-create.asset_tag}}",
+        "v5": "Snipe-IT",
+        "v2": "{{runid}}",
+        "v6": "Checked out for {{runid}} bench flow",
+        "v7": "{{02-create.url.p1}}"
+      },
+      "outputs": [
+        "asset_tag",
+        "asset_name",
+        "checked_out_to",
+        "checkout_note",
+        "history_checkout_row",
+        "status",
+        "run_reference"
+      ],
+      "recorded": {
+        "asset_tag": "BA-00004",
+        "asset_name": "fwsi6-n1 Bench Asset",
+        "checked_out_to": "Bench Assignee",
+        "checkout_note": "Checked out for fwsi6-n1 bench flow",
+        "history_checkout_row": "2026-09-22 12:13 PM | Bench Admin | checkout | fwsi6-n1 Bench Asset #BA-00004 - Bench Laptop Model | Bench Assignee | 1 | Checked out for fwsi6-n1 bench flow",
+        "status": "Deployed",
+        "run_reference": "fwsi6-n1",
+        "url": "http://127.0.0.1:8098/hardware/4#history"
+      },
+      "route": "http://127.0.0.1:8098/hardware/:id#history",
+      "outputEvidence": {
+        "asset_tag": {
+          "same": 0,
+          "differed": 1
+        },
+        "asset_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "checked_out_to": {
+          "same": 1,
+          "differed": 0
+        },
+        "checkout_note": {
+          "same": 0,
+          "differed": 1
+        },
+        "history_checkout_row": {
+          "same": 0,
+          "differed": 1
+        },
+        "status": {
+          "same": 1,
+          "differed": 0
+        },
+        "run_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwsi6-n1",
+    "created": "2026-09-22T12:14:16.035Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "02-create",
+      "outputs": [
+        "default_location",
+        "assets_nav_link",
+        "model_field_label"
+      ]
+    }
+  ]
+}
