@@ -1,15 +1,47 @@
 # Changelog
 
-## Unreleased
+## 0.4.0 — 2026-09-22
+
+### Since 0.3.0: benchmark rounds 33–44
+- Five new third-party benchmark targets: OpenProject (from round 33), and Gitea, Vikunja,
+  EspoCRM, Snipe-IT and Ghost (from round 36). All ten targets were green on their latest
+  sweep as of round 44 (`bench/SWEEPS.md`): every run verified, every replay step
+  model-free, and the compiled Playwright script passing.
+- Robustness fixes, each found by a sweep and fixed at its cause rather than per app:
+  - A tab a click opens is credited to that click, even when it arrives late or has no opener.
+  - Form fields a page reload empties are filled again before the submit, and a submit the
+    reload swallowed is retried once.
+  - A masked or formatted input that drops its value when it loses focus is typed key by key.
+  - A recording that hits its turn cap and reports failure escalates to the fallback model.
+  - Render-counter element ids (`#ember123`) are not trusted as stable locators.
+  - A one-digit record id is referenced by where it came from, not matched by its value.
+  - Relative times ("1 minute ago") are treated as volatile text.
+  - A hide-then-show pair on one control compiles to a single toggle, skipped when the
+    content is already showing.
+  - Superseded attempts are dropped: a value set again after a reload, a click that did
+    nothing before the one that worked, a link click abandoned for a goto.
+  - A list read whose elements are each a reported value is split into one read per element.
+  - A read-back found inside a longer text publishes only the value, not the whole text.
+- Cloud-verified at 4fa1125 (round 43, the last engine change before this release): 2119 unit
+  tests, 2291 with the browser suites, and 110 execution-parity tests passing; the corpus
+  check of 256 published runs changed status for none.
+
+### Default provider
+- Setting only `OPENROUTER_API_KEY` selects the benchmarked pairing:
+  `deepseek/deepseek-v4.1-flash` pinned to OpenRouter's DeepSeek backend, escalating to
+  `z-ai/glm-5.3`. A Z.ai key, or a generic key with no provider named, still selects
+  `zhipu` as before; `SITELOOPER_PROVIDER` picks any other provider. `sitelooper doctor`
+  reports which provider and models it will use, and why.
 
 ### Renamed to sitelooper
 - The project, package, CLI and skill are now `sitelooper` (previously
-  `sleep-walker`, and `browser-pilot` before that).
+  `sleep-walker`, which this package supersedes on npm).
 - Env vars are `SITELOOPER_*`; state lives under `~/.sitelooper/`.
-- Nothing breaks: `sleep-walker` and `browser-pilot` remain bin aliases, both
-  legacy env prefixes are still honoured (most recent wins), and an existing
-  `~/.sleep-walker` or `~/.browser-pilot` home keeps being used until a
-  `~/.sitelooper` exists.
+- Only the `sitelooper` command is installed; the old command names were
+  removed. The legacy `SLEEP_WALKER_*` and `BROWSER_PILOT_*` env prefixes are
+  still honoured (most recent wins), and an existing `~/.sleep-walker` or
+  `~/.browser-pilot` home keeps being used until a `~/.sitelooper` exists.
+- The package homepage is the GitHub repository.
 - The bench arm id is now `sitelooper`; the verifiers still read results
   published under the old `sleep-walker` arm id, and published run artefacts
   keep the names they were recorded under.
