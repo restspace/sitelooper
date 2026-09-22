@@ -1,0 +1,11 @@
+[spec-replay] resetting vikunja
+[reset] vikunja: deleted 1 leftover bench task(s)
+[reset] vikunja: re-created "Seed: ship repaired device" as BENCH-6 so the next task is BENCH-7
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile bench/results/flows/fwvk3.json --out /home/user/sitelooper/bench/results/fwvk3-spec-spec-tmp --overwrite-spec
+flow: /home/user/sitelooper/bench/results/fwvk3-spec-spec-tmp/fwvk3.flow.ts
+spec: /home/user/sitelooper/bench/results/fwvk3-spec-spec-tmp/fwvk3.spec.ts
+warning 06-report: 06-report read a value that contradicts what the previous step reported
+  why: 06-report read verified_by "full page reload of both URLs before reading" right after 05-open reported "full page reload before re-reading"; 05-open's change may not have landed and a later step may be retrying it. Re-record 05-open.
+  fix: sitelooper rerecord bench/results/flows/fwvk3.json 05-open
+[spec-replay] running: npx playwright test --config /home/user/sitelooper/bench/results/fwvk3-spec-spec-tmp/playwright.config.mjs
+[spec-replay] fwvk3-spec: 1/1 passed, exit=0, 33s, 1 drift line(s) — result written
