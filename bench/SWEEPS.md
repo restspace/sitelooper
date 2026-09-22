@@ -81,3 +81,22 @@ targets added from round 36 on (see bench/thirdparty/README.md).
 | 47 | fwgh9 | 30b6f4a | gh | 7/7 ×3 | yes: 6/6 steps tier A 0 turns on n2 and n3 | pass 5/7+2 n/a | **yes** | `{{env:APP_PASSWORD}}` end to end; the compiled script reads process.env |
 | 47 | fwgt6 | 30b6f4a | gt | 7/7 ×3 | yes: 7/7 steps tier A 0 turns on n2 and n3 | pass 5/7+2 n/a | **yes** | the outer model first guessed admin/admin (wrong), then used the marker; a dead `fill 'admin'` is kept in the sign-in skill |
 | 47 | fwod79 | 30b6f4a | od | 6/6 ×3 | yes: 8/8 steps tier A 0 turns on n2 and n3 | pass 6/6 | yes* | *the outer model typed the password literally (`admin`), so it is hard-coded in the flow, skills and compiled script; sole mints held |
+
+## Round 48 (27c9c61, merged to main)
+
+Fixes, all cloud-verified (verify-round48b: suites/browser/parity 0 failures; corpus 272 rows,
+0 status changes against r47 with APP_PASSWORD set):
+
+- **AH literal credentials.** A credential-named env var's value typed in the clear is rewritten
+  to `{{env:NAME}}` at dispatch (daemon `do`, agent fills into a password field) and, at compile,
+  anywhere it survives in a spec. The artifact reads `process.env['NAME']`; the warning names the
+  variable, never the value. An ambiguous value (also held by a non-credential var, e.g. odoo's
+  `admin`) is rewritten only into a password field. Old stores record no input type, so they get
+  the warning and keep the literal until re-recorded — fwod79's leak needs a re-sweep, not a fix.
+- **Alert lines (fwrd83).** A published value that is a whole recorded alert line no longer cuts
+  the expectation to nothing.
+- **Superseded sets (fwgt6).** A later fill of the same field supersedes an earlier
+  no-consequence fill, so the dead `fill 'admin'` is dropped.
+- **`compile --json` survived exit.** 400 KB of JSON was truncated on Linux when the process
+  exited after `console.log`; stdout is now written synchronously. This is why round 48's first
+  verify reported 15 refusals as a generic `refused` with no diagnostic code.
