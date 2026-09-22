@@ -1,0 +1,154 @@
+{
+  "flow": "fwgr67",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Signed in to Grafana at http://127.0.0.1:3000/ as admin (skipped the change-password screen), then opened the provisioned dashboard \"Service Health\" via the search/command palette. The dashboard renders exactly 3 panels: \"Request rate\", \"Error count\", and \"Latency by endpoint\".",
+      "values": {
+        "panel_title_request_rate": "Request rate",
+        "panel_title_error_count": "Error count",
+        "panel_title_latency_by_endpoint": "Latency by endpoint",
+        "dashboard_url": "http://127.0.0.1:3000/d/bench-service-health/service-health?from=now-6h&to=now&timezone=browser",
+        "panel_titles_1": "Request rate",
+        "panel_titles_2": "Error count",
+        "panel_titles_3": "Latency by endpoint"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "21/21",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Created a new Grafana dashboard titled \"fwgr67-n3 Bench Dashboard\" containing one Stat panel titled \"fwgr67-n3 Availability\" wired to the TestData data source (default Random Walk scenario), then saved it via Save dashboard (the save drawer's title field was set to the required name and the Save button confirmed). The save is verified: the URL changed to the app-assigned dashboard uid and, after a full page reload, the breadcrumb still reads \"fwgr67-n3 Bench Dashboard\" with the panel headed \"fwgr67-n3 Availability\" rendering a live value.",
+      "values": {
+        "panel_visualization": "Stat",
+        "runid": "fwgr67-n3",
+        "dashboard_url": "http://127.0.0.1:3000/d/efz0salplu8lca/fwgr67-n3-bench-dashboard?from=now-6h&to=now&timezone=browser",
+        "dashboard_title": "fwgr67-n3 Bench Dashboard",
+        "panel_title": "fwgr67-n3 Availability",
+        "panel_value_after_reload": "29.1"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-add",
+      "status": "success",
+      "summary": "On dashboard 'fwgr67-n3 Bench Dashboard' (uid efz0salplu8lca) I entered edit mode, added a new panel, switched its visualization to Text, set its title to 'fwgr67-n3 Notes' and its markdown content to 'Notes for run fwgr67-n3', then saved via Save dashboard (drawer confirmed with Save). After editing I hit Back to dashboard and performed a full page reload: both panels are present in the reloaded DOM — a Text panel headed 'fwgr67-n3 Notes' rendering the paragraph 'Notes for run fwgr67-n3', and the Stat panel 'fwgr67-n3 Availability' showing a live value (53.9). Save is therefore confirmed as persisted.",
+      "values": {
+        "dashboard_uid": "efz0salplu8lca",
+        "dashboard_url": "http://127.0.0.1:3000/d/efz0salplu8lca/fwgr67-n3-bench-dashboard?from=now-6h&to=now&timezone=browser",
+        "text_panel_title": "fwgr67-n3 Notes",
+        "text_panel_content": "Notes for run fwgr67-n3",
+        "text_panel_content_2": "fwgr67-n3 Notes\n\nNotes for run fwgr67-n3",
+        "stat_panel_content": "fwgr67-n3 Availability\n53.9",
+        "stat_panel_title": "fwgr67-n3 Availability",
+        "stat_panel_live_value": "53.9",
+        "runid": "fwgr67-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "22/22",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_17d269: step 9: read 'text_panel_title' returned a value the skill itself set/selected ('fwgr67-n3 Notes') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_17d269: step 19: read 'text_panel_content' returned a value the skill itself set/selected ('Notes for run fwgr67-n3') — confirms the control, not persistence; dropped from the report's confident values"
+      ]
+    },
+    {
+      "id": "04-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_dc41d5; observed dashboard_base_url=http://127.0.0.1:3000/d/efz0salplu8lca/fwgr67-n3-bench-dashboard, panels_present_after_reload=fwgr67-n3 Availability (Stat), fwgr67-n3 Notes (Text), dashboard_title=fwgr67-n3 Bench Dashboard, runid=fwgr67-n3.",
+      "values": {
+        "dashboard_base_url": "http://127.0.0.1:3000/d/efz0salplu8lca/fwgr67-n3-bench-dashboard",
+        "panels_present_after_reload": "fwgr67-n3 Availability (Stat), fwgr67-n3 Notes (Text)",
+        "dashboard_title": "fwgr67-n3 Bench Dashboard",
+        "runid": "fwgr67-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "19/19",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_dc41d5: step 18: read 'tag_added' returned a value the skill itself set/selected ('bench') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "dashboard_uid",
+        "tag_added"
+      ]
+    },
+    {
+      "id": "05-set",
+      "status": "success",
+      "summary": "Replayed stored procedure s_8dfa80; observed refresh_picker_after_reload=1m (aria-label: 'Choose refresh time interval with current interval 1 minute selected'), panels_present_after_reload=fwgr67-n3 Notes (Text): 'Notes for run fwgr67-n3', fwgr67-n3 Availability (Stat): 33.3, json_model_refresh_field=1m, json_model_tags_1=Bench, runid=fwgr67-n3.",
+      "values": {
+        "refresh_picker_after_reload": "1m (aria-label: 'Choose refresh time interval with current interval 1 minute selected')",
+        "panels_present_after_reload": "fwgr67-n3 Notes (Text): 'Notes for run fwgr67-n3', fwgr67-n3 Availability (Stat): 33.3",
+        "json_model_refresh_field": "1m",
+        "json_model_tags_1": "Bench",
+        "runid": "fwgr67-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "dashboard_uid"
+      ]
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "Loaded the bare URL; Grafana immediately rewrote the address bar with the persisted defaults to http://127.0.0.1:3000/d/efz0salplu8lca/fwgr67-n3-Bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m. Observed on that load: breadcrumb title \"fwgr67-n3 Bench Dashboard\"; two panels — \"fwgr67-n3 Notes\" (Text, body \"Notes for run fwgr67-n3\") and \"fwgr67-n3 Availability\" (Stat, value 24.8); top-bar time range \"Last 6 hours\"; top-bar refresh picker \"1m\" (aria-label \"Choose refresh time interval with current interval 1 minute selected\"); and Dashboard settings > General lists the tag \"Bench\". Nothing was changed (I only entered and exited edit/settings views read-only).",
+      "values": {
+        "runid": "fwgr67-n3",
+        "a_current_page_url": "http://127.0.0.1:3000/d/efz0salplu8lca/fwgr67-n3-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m",
+        "time_range_topbar": "Time range selected: Last 6 hours",
+        "refresh_interval_topbar": "Refresh",
+        "b_breadcrumb_title": "fwgr67-n3 Bench Dashboard",
+        "c_text_panel_body": "Notes for run fwgr67-n3",
+        "c_stat_panel_value": "24.8",
+        "d_time_range_topbar": "Last 6 hours",
+        "e_refresh_interval_topbar": "1m",
+        "c_panel_titles_1": "fwgr67-n3 Notes",
+        "c_panel_titles_2": "fwgr67-n3 Availability",
+        "f_tags_general": "Bench"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "25/25",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 6,
+  "total": 6,
+  "repinned": 0,
+  "drift": 0,
+  "wallMs": 97578,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
