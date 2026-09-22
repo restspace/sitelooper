@@ -1,0 +1,47 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-open
+[sitelooper recipe] filled via recipe contenteditable/set-value (r_7b1e49); value verified on the component
+[sitelooper warn] 02-create s_fa5e2b/4: read 'body' returned a value the skill itself set/selected ('This bench post was created by run fwgh8-spec.') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper step] 02-create
+[sitelooper warn] 03-open s_ac4abe/12: read 'tag' returned a value the skill itself set/selected ('Bench News') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 03-open s_ac4abe/13: read 'excerpt' returned a value the skill itself set/selected ('Excerpt for bench post fwgh8-spec') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 03-open s_ac4abe/14: read 'publish_date' returned a value the skill itself set/selected ('2026-09-01') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper step] 03-open
+  ✘  1 fwgh8.spec.ts:9:1 › fwgh8 (48.4s)
+
+
+  1) fwgh8.spec.ts:9:1 › fwgh8 › 04-open: In the Ghost admin, open the post titled '{{runid}} Bench Post' in the editor and PUBLISH it using the Publish button and its confirmation flow (confirm/continue in the publish dialog). It must end up actually published — not a draft and not scheduled. If Ghost warns that the publish date is in the future and would schedule it, adjust the time so it is not in the future and publish anyway. After publishing, verify: the post status shows Published, and then open the post's public URL http://127.0.0.1:8099/{{runid}}-bench-post/ in a new tab and confirm the page loads publicly showing the title '{{runid}} Bench Post' and the body paragraph containing '{{runid}}'. Report the final status shown in the editor, the publish date shown, and whether the public URL loaded successfully. 
+
+    Error: 04-open s_bf6775/4 was recorded opening a popup, and none opened within 5000ms
+
+       at fwgh8.flow.ts:10485
+
+      10483 |   if (!landing) return null;
+      10484 |   const result = await landing();
+    > 10485 |   if (result && 'error' in result) throw new Error(result.error);
+            |                                          ^
+      10486 |   return result ? result.page : null;
+      10487 | }
+      10488 |
+        at landed (/home/user/sitelooper/bench/results/fwgh8-spec-spec-tmp/fwgh8.flow.ts:10485:42)
+        at Object.act (/home/user/sitelooper/bench/results/fwgh8-spec-spec-tmp/fwgh8.flow.ts:12585:18)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwgh8-spec-spec-tmp/fwgh8.flow.ts:7513:18)
+        at Object.04-open (/home/user/sitelooper/bench/results/fwgh8-spec-spec-tmp/fwgh8.flow.ts:12563:5)
+        at /home/user/sitelooper/bench/results/fwgh8-spec-spec-tmp/fwgh8.flow.ts:13543:7
+        at runFlow (/home/user/sitelooper/bench/results/fwgh8-spec-spec-tmp/fwgh8.flow.ts:13542:5)
+        at /home/user/sitelooper/bench/results/fwgh8-spec-spec-tmp/fwgh8.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwgh8-fwgh8/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwgh8-fwgh8/error-context.md
+
+  1 failed
+    fwgh8.spec.ts:9:1 › fwgh8 ──────────────────────────────────────────────────────────────────────

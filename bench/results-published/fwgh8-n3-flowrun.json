@@ -1,0 +1,165 @@
+{
+  "flow": "fwgh8",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Signed in to Ghost at http://127.0.0.1:8099/ghost/ with the provided admin credentials, then opened the Posts list (/#/posts). The list contains exactly three posts, all with titles beginning \"Seed:\", and each displays the status \"Published\" in the list. Read-only; nothing was created or modified.",
+      "values": {
+        "seed_post_count": "3",
+        "Seed: House style guide": "Published",
+        "Seed: Welcome to the bench": "Published",
+        "Seed: Release notes for September": "Published"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_fa5e2b; observed body=This bench post was created by run fwgh8-n3., status=Draft, title=fwgh8-n3 Bench Post, runid=fwgh8-n3, word_count=9.",
+      "values": {
+        "body": "This bench post was created by run fwgh8-n3.",
+        "status": "Draft",
+        "title": "fwgh8-n3 Bench Post",
+        "runid": "fwgh8-n3",
+        "word_count": "9"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_fa5e2b: step 4: read 'body' returned a value the skill itself set/selected ('This bench post was created by run fwgh8-n3.') — confirms the control, not persistence; dropped from the report's confident values"
+      ]
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_ac4abe; observed excerpt=Excerpt for bench post fwgh8-n3, publish_date=2026-09-01, runid=fwgh8-n3, status=Draft - Saved, slug=fwgh8-n3-bench-post, host=127.0.0.1.",
+      "values": {
+        "excerpt": "Excerpt for bench post fwgh8-n3",
+        "publish_date": "2026-09-01",
+        "runid": "fwgh8-n3",
+        "status": "Draft - Saved",
+        "slug": "fwgh8-n3-bench-post",
+        "host": "127.0.0.1"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_ac4abe: step 12: read 'tag' returned a value the skill itself set/selected ('Bench News') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_ac4abe: step 13: read 'excerpt' returned a value the skill itself set/selected ('Excerpt for bench post fwgh8-n3') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_ac4abe: step 14: read 'publish_date' returned a value the skill itself set/selected ('2026-09-01') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "tag"
+      ]
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "The publish flow had already completed when I resumed (steps 1–3 of the stored procedure ran). I verified the post 'fwgh8-n3 Bench Post' is Published: the editor header for post id 6ab27013048138000183ade8 shows the \"Published / View post\" status with Update (disabled) + Unpublish buttons, the Posts list row shows the \"Published\" status line, and its settings panel shows slug fwgh8-n3-bench-post, publish date 2026-09-01 00:00 (not in the future — no scheduling warning), one tag \"Bench News\", excerpt \"Excerpt for bench post fwgh8-n3\". The public URL http://127.0.0.1:8099/fwgh8-n3-bench-post/ loaded successfully and displayed the title \"fwgh8-n3 Bench Post\", the \"Bench News\" tag, date 01 Sep 2026, and the body paragraph \"This bench post was created by run fwgh8-n3.\" No further edits were made.",
+      "values": {
+        "final_status_in_editor": "Published",
+        "publish_date": "2026-09-01",
+        "publish_time": "00:00",
+        "slug": "fwgh8-n3-bench-post",
+        "tags": "Bench News",
+        "excerpt": "Excerpt for bench post fwgh8-n3",
+        "public_url": "http://127.0.0.1:8099/fwgh8-n3-bench-post/",
+        "public_url_loaded": "yes - title 'fwgh8-n3 Bench Post' and body paragraph containing 'fwgh8-n3' shown",
+        "post_id": "6ab27013048138000183ade8",
+        "posts_list_row": "fwgh8-n3 Bench Post — By Bench Admin in Bench News - 01 Sep 2026 — Published",
+        "post_count_published_banner": "Boom! It's out there. That's 4 posts published.",
+        "gh_content_entry_title_g": "fwgh8-n3 Bench Post",
+        "ref": "fwgh8-n3"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_3488f1 stopped at step 4 — step 4 was recorded opening a popup, and none opened within 5000ms",
+      "replayed": "3/4",
+      "repaired": false,
+      "turns": 10,
+      "unreported": [
+        "editor_status",
+        "tag",
+        "public_title",
+        "current_url",
+        "runid"
+      ]
+    },
+    {
+      "id": "05-report",
+      "status": "success",
+      "summary": "Replayed stored procedure s_189bfe; observed post_title=fwgh8-n3 Bench Post, tag=Bench News, excerpt=Excerpt for bench post fwgh8-n3, publish_date=2026-09-01, slug=fwgh8-n3-bench-post, post_list_status=Published, host=127.0.0.1, runid=fwgh8-n3.",
+      "values": {
+        "post_title": "fwgh8-n3 Bench Post",
+        "tag": "Bench News",
+        "excerpt": "Excerpt for bench post fwgh8-n3",
+        "publish_date": "2026-09-01",
+        "slug": "fwgh8-n3-bench-post",
+        "post_list_status": "Published",
+        "host": "127.0.0.1",
+        "runid": "fwgh8-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwgh8",
+      "step": "04-open",
+      "skill": "s_3488f1",
+      "similarity": null,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_3488f1 stopped at step 4 — step 4 was recorded opening a popup, and none opened within 5000ms",
+      "reason": "step 4 was recorded opening a popup, and none opened within 5000ms",
+      "pageUrlPattern": "http://127.0.0.1:8099/ghost/#/posts",
+      "pageUrl": "http://127.0.0.1:8099/ghost/#/posts"
+    }
+  ],
+  "wallMs": 91746,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 125249,
+    "completionTokens": 4238,
+    "cachedTokens": 108928
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 125249,
+      "completionTokens": 4238,
+      "cachedTokens": 108928
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

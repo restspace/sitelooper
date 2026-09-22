@@ -1,0 +1,34 @@
+{
+  "arm": "spec",
+  "runid": "fwgh8-spec",
+  "target": "ghost",
+  "flow": "fwgh8.json",
+  "flowName": "fwgh8",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwgh8-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwgh8-spec-spec-tmp/fwgh8.flow.ts",
+  "specFile": "bench/results/fwgh8-spec-spec-tmp/fwgh8.spec.ts",
+  "wallMs": 51589,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwgh8",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 48361,
+      "error": "Error: 04-open s_bf6775/4 was recorded opening a popup, and none opened within 5000ms",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "logTail": "\nRunning 1 test using 1 worker\n\n[sitelooper step] 01-open\n[sitelooper recipe] filled via recipe contenteditable/set-value (r_7b1e49); value verified on the component\n[sitelooper warn] 02-create s_fa5e2b/4: read 'body' returned a value the skill itself set/selected ('This bench post was created by run fwgh8-spec.') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper step] 02-create\n[sitelooper warn] 03-open s_ac4abe/12: read 'tag' returned a value the skill itself set/selected ('Bench News') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper warn] 03-open s_ac4abe/13: read 'excerpt' returned a value the skill itself set/selected ('Excerpt for bench post fwgh8-spec') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper warn] 03-open s_ac4abe/14: read 'publish_date' returned a value the skill itself set/selected ('2026-09-01') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper step] 03-open\n  ✘  1 fwgh8.spec.ts:9:1 › fwgh8 (48.4s)\n\n\n  1) fwgh8.spec.ts:9:1 › fwgh8 › 04-open: In the Ghost admin, open the post titled '{{runid}} Bench Post' in the editor and PUBLISH it using the Publish button and its confirmation flow (confirm/continue in the publish dialog). It must end up actually published — not a draft and not scheduled. If Ghost warns that the publish date is in the future and would schedule it, adjust the time so it is not in the future and publish anyway. After publishing, verify: the post status shows Published, and then open the post's public URL http://127.0.0.1:8099/{{runid}}-bench-post/ in a new tab and confirm the page loads publicly showing the title '{{runid}} Bench Post' and the body paragraph containing '{{runid}}'. Report the final status shown in the editor, the publish date shown, and whether the public URL loaded successfully. \n\n    Error: 04-open s_bf6775/4 was recorded opening a popup, and none opened within 5000ms\n\n       at fwgh8.flow.ts:10485\n\n      10483 |   if (!landing) return null;\n      10484 |   const result = await landing();\n    > 10485 |   if (result && 'error' in result) throw new Error(result.error);\n            |                                          ^\n      10486 |   return result ? result.page : null;\n      10487 | }\n      10488 |\n        at landed (/home/user/sitelooper/bench/results/fwgh8-spec-spec-tmp/fwgh8.flow.ts:10485:42)\n        at Object.act (/home/user/sitelooper/bench/results/fwgh8-spec-spec-tmp/fwgh8.flow.ts:12585:18)\n        at runStepLifecycle (/home/user/sitelooper/bench/results/fwgh8-spec-spec-tmp/fwgh8.flow.ts:7513:18)\n        at Object.04-open (/home/user/sitelooper/bench/results/fwgh8-spec-spec-tmp/fwgh8.flow.ts:12563:5)\n        at /home/user/sitelooper/bench/results/fwgh8-spec-spec-tmp/fwgh8.flow.ts:13543:7\n        at runFlow (/home/user/sitelooper/bench/results/fwgh8-spec-spec-tmp/fwgh8.flow.ts:13542:5)\n        at /home/user/sitelooper/bench/results/fwgh8-spec-spec-tmp/fwgh8.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/fwgh8-fwgh8/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/fwgh8-fwgh8/error-context.md\n\n  1 failed\n    fwgh8.spec.ts:9:1 › fwgh8 ──────────────────────────────────────────────────────────────────────\n"
+}
