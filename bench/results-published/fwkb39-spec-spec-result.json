@@ -1,0 +1,34 @@
+{
+  "arm": "spec",
+  "runid": "fwkb39-spec",
+  "target": "kanboard",
+  "flow": "fwkb39.json",
+  "flowName": "fwkb39",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwkb39-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwkb39-spec-spec-tmp/fwkb39.flow.ts",
+  "specFile": "bench/results/fwkb39-spec-spec-tmp/fwkb39.spec.ts",
+  "wallMs": 28398,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwkb39",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 25347,
+      "error": "Error: 04-open s_eeb29f/1: the recorded page change did not appear\n\n04-open s_eeb29f/1: the recorded page change did not appear\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeNull\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"after step 04-open s_eeb29f/1 the page did not show \\\"- link \\\\\\\"Backlog \\\\\\\"\\\" / \\\"- cell \\\\\\\"Ready \\\\\\\"\\\" / \\\"- link \\\\\\\"Ready \\\\\\\"\\\" as it did when recorded — the step ran but probably acted on the wrong element\"\u001b[39m\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "logTail": "\nRunning 1 test using 1 worker\n\n[sitelooper warn] 01-open s_036736/11: read 'project_name' returned a value the skill itself set/selected ('Bench Board') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper step] 01-open\n[sitelooper warn] 02-create s_dcfbba/8: read 'title' returned a value the skill itself set/selected ('fwkb39-spec Bench Task') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper warn] 02-create s_dcfbba/13: read 'title' returned a value the skill itself set/selected ('fwkb39-spec Bench Task') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper warn] 02-create s_dcfbba/14: read 'description' returned a value the skill itself set/selected ('fwkb39-spec') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper step] 02-create\n[sitelooper warn] 03-add s_822969/14: read 'comment_text' returned a value the skill itself set/selected ('fwkb39-spec comment') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper step] 03-add\n  ✘  1 fwkb39.spec.ts:9:1 › fwkb39 (25.3s)\n\n\n  1) fwkb39.spec.ts:9:1 › fwkb39 › 04-open: Open the Bench Board project board view and confirm the card titled '{{runid}} Bench Task' appears inside the '{{01-open.column_3}}' column (not {{01-open.column_1}}/{{01-open.column_2}}/{{01-open.column_4}}), and that the Seed: tasks are still in their original columns. Report the numeric ID shown on the card (#number) and which column it appears in. \n\n    Error: 04-open s_eeb29f/1: the recorded page change did not appear\n\n    04-open s_eeb29f/1: the recorded page change did not appear\n\n    expect(received).toBeNull()\n\n    Received: \"after step 04-open s_eeb29f/1 the page did not show \\\"- link \\\\\\\"Backlog \\\\\\\"\\\" / \\\"- cell \\\\\\\"Ready \\\\\\\"\\\" / \\\"- link \\\\\\\"Ready \\\\\\\"\\\" as it did when recorded — the step ran but probably acted on the wrong element\"\n\n    Call Log:\n    - Timeout 5000ms exceeded while waiting on the predicate\n\n       at fwkb39.flow.ts:10159\n\n      10157 |       { timeout: EXPECT_WAIT_MS, message: `${ctx.tag}: the recorded page change did not appear` },\n      10158 |     )\n    > 10159 |     .toBeNull();\n            |      ^\n      10160 |   for (const warning of last.warnings) console.log(`[sitelooper warn] ${warning}`);\n      10161 |   if (last.unobserved) console.log(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);\n      10162 |   return last;\n        at expectChanges (/home/user/sitelooper/bench/results/fwkb39-spec-spec-tmp/fwkb39.flow.ts:10159:6)\n        at Object.verify (/home/user/sitelooper/bench/results/fwkb39-spec-spec-tmp/fwkb39.flow.ts:12151:32)\n        at runStepLifecycle (/home/user/sitelooper/bench/results/fwkb39-spec-spec-tmp/fwkb39.flow.ts:6877:24)\n        at Object.04-open (/home/user/sitelooper/bench/results/fwkb39-spec-spec-tmp/fwkb39.flow.ts:12118:5)\n        at /home/user/sitelooper/bench/results/fwkb39-spec-spec-tmp/fwkb39.flow.ts:12349:7\n        at runFlow (/home/user/sitelooper/bench/results/fwkb39-spec-spec-tmp/fwkb39.flow.ts:12348:5)\n        at /home/user/sitelooper/bench/results/fwkb39-spec-spec-tmp/fwkb39.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/fwkb39-fwkb39/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/fwkb39-fwkb39/error-context.md\n\n  1 failed\n    fwkb39.spec.ts:9:1 › fwkb39 ────────────────────────────────────────────────────────────────────\n"
+}

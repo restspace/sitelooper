@@ -1,0 +1,56 @@
+
+Running 1 test using 1 worker
+
+[sitelooper warn] 01-open s_036736/11: read 'project_name' returned a value the skill itself set/selected ('Bench Board') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper step] 01-open
+[sitelooper warn] 02-create s_dcfbba/8: read 'title' returned a value the skill itself set/selected ('fwkb39-spec Bench Task') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 02-create s_dcfbba/13: read 'title' returned a value the skill itself set/selected ('fwkb39-spec Bench Task') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 02-create s_dcfbba/14: read 'description' returned a value the skill itself set/selected ('fwkb39-spec') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper step] 02-create
+[sitelooper warn] 03-add s_822969/14: read 'comment_text' returned a value the skill itself set/selected ('fwkb39-spec comment') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper step] 03-add
+  ✘  1 fwkb39.spec.ts:9:1 › fwkb39 (25.3s)
+
+
+  1) fwkb39.spec.ts:9:1 › fwkb39 › 04-open: Open the Bench Board project board view and confirm the card titled '{{runid}} Bench Task' appears inside the '{{01-open.column_3}}' column (not {{01-open.column_1}}/{{01-open.column_2}}/{{01-open.column_4}}), and that the Seed: tasks are still in their original columns. Report the numeric ID shown on the card (#number) and which column it appears in. 
+
+    Error: 04-open s_eeb29f/1: the recorded page change did not appear
+
+    04-open s_eeb29f/1: the recorded page change did not appear
+
+    expect(received).toBeNull()
+
+    Received: "after step 04-open s_eeb29f/1 the page did not show \"- link \\\"Backlog \\\"\" / \"- cell \\\"Ready \\\"\" / \"- link \\\"Ready \\\"\" as it did when recorded — the step ran but probably acted on the wrong element"
+
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+
+       at fwkb39.flow.ts:10159
+
+      10157 |       { timeout: EXPECT_WAIT_MS, message: `${ctx.tag}: the recorded page change did not appear` },
+      10158 |     )
+    > 10159 |     .toBeNull();
+            |      ^
+      10160 |   for (const warning of last.warnings) console.log(`[sitelooper warn] ${warning}`);
+      10161 |   if (last.unobserved) console.log(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);
+      10162 |   return last;
+        at expectChanges (/home/user/sitelooper/bench/results/fwkb39-spec-spec-tmp/fwkb39.flow.ts:10159:6)
+        at Object.verify (/home/user/sitelooper/bench/results/fwkb39-spec-spec-tmp/fwkb39.flow.ts:12151:32)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwkb39-spec-spec-tmp/fwkb39.flow.ts:6877:24)
+        at Object.04-open (/home/user/sitelooper/bench/results/fwkb39-spec-spec-tmp/fwkb39.flow.ts:12118:5)
+        at /home/user/sitelooper/bench/results/fwkb39-spec-spec-tmp/fwkb39.flow.ts:12349:7
+        at runFlow (/home/user/sitelooper/bench/results/fwkb39-spec-spec-tmp/fwkb39.flow.ts:12348:5)
+        at /home/user/sitelooper/bench/results/fwkb39-spec-spec-tmp/fwkb39.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwkb39-fwkb39/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwkb39-fwkb39/error-context.md
+
+  1 failed
+    fwkb39.spec.ts:9:1 › fwkb39 ────────────────────────────────────────────────────────────────────
