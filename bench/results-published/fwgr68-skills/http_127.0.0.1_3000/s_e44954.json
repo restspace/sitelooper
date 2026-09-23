@@ -1,0 +1,57 @@
+{
+ "id": "s_e44954",
+ "origin": "http://127.0.0.1:3000",
+ "template": "Open {{v1}} in the browser. If a login page appears, sign in with username admin and the password entered exactly as the text {{v2}} (the environment fills in the real password when it is typed - type it exactly like that, do not alter or guess it). If Grafana prompts to change/skip updating the admin password after login, skip that step. Then find and open the provisioned dashboard named '{{v3}}' (use the Dashboards search/home page). Once it is open, report the exact titles of all the panels shown on that dashboard, in the order they appear.",
+ "params": {
+  "v1": {
+   "example": "http://127.0.0.1:3000/",
+   "usedIn": [
+    1
+   ]
+  },
+  "v2": {
+   "example": "{{env:APP_PASSWORD}}",
+   "usedIn": []
+  },
+  "v3": {
+   "example": "Service health",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:3000/"
+ },
+ "steps": [
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {}
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-23T15:03:42.848Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4,
+  "lastUsed": "2026-09-23T15:12:38.385Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_c753e8",
+  "index": 0,
+  "of": 5
+ },
+ "provenance": {
+  "session": "fwgr68-n1",
+  "instruction": "Open http://127.0.0.1:3000/ in the browser. If a login page appears, sign in with username admin and the password entered exactly as the text {{env:APP_PASSWORD}} (the environment fills in the real password when it is typed - type it exactly like that, do not alter or guess it). If Grafana prompts to change/skip updating the admin password after login, skip that step. Then find and open the provisioned dashboard named 'Service health' (use the Dashboards search/home page). Once it is open, report the exact titles of all the panels shown on that dashboard, in the order they appear.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-23T15:03:42.848Z"
+ },
+ "revision": 3
+}
