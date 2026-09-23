@@ -1,0 +1,136 @@
+{
+  "flow": "fwkb40",
+  "status": "partial",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_9fd901; observed column_1_name=Backlog, column_2_name=Ready, column_3_name=Work in progress, column_4_name=Done, board_url=http://127.0.0.1:8085/?controller=BoardViewController&action=show&project_id=1, project_id=1.",
+      "values": {
+        "column_1_name": "Backlog",
+        "column_2_name": "Ready",
+        "column_3_name": "Work in progress",
+        "column_4_name": "Done",
+        "board_url": "http://127.0.0.1:8085/?controller=BoardViewController&action=show&project_id=1",
+        "project_id": "1"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "21/21",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_9fd901: step 16: read 'project_name' returned a value the skill itself set/selected ('Bench Board') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "project_name"
+      ]
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "The app assigned it numeric ID 4.",
+      "values": {
+        "ref": "fwkb40-n3",
+        "seed_task_1_title": "Seed: triage inbox",
+        "seed_task_2_title": "Seed: order missing parts",
+        "seed_task_3_title": "Seed: ship repaired device",
+        "task_id": "4",
+        "column": "Backlog",
+        "status": "open",
+        "project_name": "Bench Board",
+        "task_column_label": "Column: Backlog"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_654062: step 8: read 'task_title' returned a value the skill itself set/selected ('fwkb40-n3 Bench Task') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_654062: step 11: read 'task_title' returned a value the skill itself set/selected ('fwkb40-n3 Bench Task') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_654062: step 12: read 'task_description' returned a value the skill itself set/selected ('Bench task for run fwkb40-n3') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "task_id_displayed",
+        "task_title",
+        "task_description"
+      ]
+    },
+    {
+      "id": "03-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_049a1c; observed task_column_label=Column: Work in progress, ref=fwkb40-n3.",
+      "values": {
+        "task_column_label": "Column: Work in progress",
+        "ref": "fwkb40-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-add",
+      "status": "partial",
+      "summary": "Replayed stored procedure s_a3f839; observed ref=fwkb40-n3, due_date_displayed=Due date: 12/31/2026 19:57, sidebar_action_edit=Edit.",
+      "partial": [
+        "the procedure's read of sidebar_action_add_comment, an output this step reports, was skipped (nothing matched on the page), so sidebar_action_add_comment went unreported"
+      ],
+      "values": {
+        "ref": "fwkb40-n3",
+        "due_date_displayed": "Due date: 12/31/2026 19:57",
+        "sidebar_action_edit": "Edit"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_a3f839: step 8: read 'sidebar_action_edit_task' returned a value the skill itself set/selected ('Edit the task') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_a3f839: step 11: the target chain is dead and was not healed inline — the step is a synthesized read no run has ever resolved, so nothing about it has drifted",
+        "s_a3f839: step 11: skipped read — no element matched any known locator for target (tried 2: page.getByRole('heading', { name: 'Add a comment', exact: true }), page.getByRole('link', { name: 'Add a comment', exact: true }))"
+      ],
+      "unreported": [
+        "sidebar_action_edit_task",
+        "sidebar_action_add_comment"
+      ]
+    }
+  ],
+  "passed": 3,
+  "total": 4,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwkb40",
+      "step": "04-add",
+      "skill": "s_a3f839",
+      "atStep": "11",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.getByRole('heading', { name: 'Add a comment', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8085/?action=show&controller=TaskViewController&task_id=:id",
+      "pageUrl": "http://127.0.0.1:8085/?controller=TaskViewController&action=show&task_id=4"
+    }
+  ],
+  "wallMs": 20770,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "partial",
+  "nextActions": []
+}
