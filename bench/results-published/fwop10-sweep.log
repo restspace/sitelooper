@@ -1,0 +1,126 @@
+
+[sweep] run 1/3: fwop10-n1 (store: /home/user/sitelooper/bench/results/fwop10-skills)
+[harness] openproject: defaulting APP_URL
+[harness] openproject: defaulting APP_EMAIL
+[harness] openproject: defaulting APP_PASSWORD
+[reset] openproject: no leftover bench work packages
+[harness] openproject responded 302 at http://127.0.0.1:8090/
+stopped: fwop10-n1
+  flow "fwop10" saved: 2 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwop10.json
+  warning: note: 01-open no longer publishes total_work_packages_in_project — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 53 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "Bench Project" (output) in "Open http://127.0.0.1:8090/ and sign in with username admin and the literal password text {{env:APP_PASSWORD}} (type it exactly like that). Then navigate to the"
+  flow.steps[0].instruction: "Project" (output) in "Open http://127.0.0.1:8090/ and sign in with username admin and the literal password text {{env:APP_PASSWORD}} (type it exactly like that). Then navigate to the"
+  flow.steps[1].instruction: "Bench Assignee" (output) in "In Bench Project, create a new work package of type Task titled '{{runid}} Bench Work Package' with a description containing the text '{{runid}}'. Set its assig"
+  flow.steps[1].instruction: "Bench Project" (output) in "In Bench Project, create a new work package of type Task titled '{{runid}} Bench Work Package' with a description containing the text '{{runid}}'. Set its assig"
+  flow.steps[1].instruction: "In progress" (output) in "In Bench Project, create a new work package of type Task titled '{{runid}} Bench Work Package' with a description containing the text '{{runid}}'. Set its assig"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwop10-n1 stop=completed
+turns=3 wall=337.9s
+commands=2 cmdTime=329.0s cmdBytes=2894 timeouts=0
+orchestrator in=2889 cw=0 cr=6208 out=457
+inner prompt=2357488 cached=2214848 completion=22954
+spend=$0.4926 maxUsd=3
+learn: A_n=0 replayed=0/2 full=0 repaired=0 compiled=2 variants=0
+-> /home/user/sitelooper/bench/results/fwop10-n1-sitelooper-result.json
+
+fwop10-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — work package id 41 reported
+
+[sweep] run 2/3: fwop10-n2 (replay flow fwop10, no orchestrator)
+[reset] openproject: deleted 1 leftover bench work package(s)
+[sweep] fwop10-n2: 2 drift ticket(s) → fwop10-n2-drift.json
+
+fwop10-n2: objectives passed 6/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: FAIL — 0 comment(s), 0 carrying the runid
+  obj 7: PASS — work package id 42 reported
+
+[sweep] run 3/3: fwop10-n3 (replay flow fwop10, no orchestrator)
+[reset] openproject: deleted 1 leftover bench work package(s)
+[sweep] fwop10-n3: 2 drift ticket(s) → fwop10-n3-drift.json
+
+fwop10-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — work package id 43 reported
+
+Learning sweep fwop10 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwop10-n1' │ '7/7'    │ 'completed' │ 3     │ 2    │ 0.4926    │ 0   │ '0/2'        │ 338    │
+│ 1       │ 2 │ 'fwop10-n2' │ '6/7'    │ 'success'   │ 30    │ 2    │ 0.0156    │ 0.5 │ '2/2 (flow)' │ 154    │
+│ 2       │ 3 │ 'fwop10-n3' │ '7/7'    │ 'success'   │ 61    │ 2    │ 0.2479    │ 0.5 │ '2/2 (flow)' │ 231    │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8090
+  s_1eb50d  validated    1 steps  3/3 (100%)
+           Open {{v2}} and sign in with username {{v3}} and the literal password text {{v4}} (type it exactly like that).…
+  s_258ea6  validated    2 steps  3/3 (100%)
+           Open {{v2}} and sign in with username {{v3}} and the literal password text {{v4}} (type it exactly like that).…
+  s_266ab4  validated    1 steps  3/3 (100%)
+           Open {{v2}} and sign in with username {{v3}} and the literal password text {{v4}} (type it exactly like that).…
+  s_550f0a  validated    3 steps  3/3 (100%)
+           Open {{v2}} and sign in with username {{v3}} and the literal password text {{v4}} (type it exactly like that).…
+  s_8966a1  demoted     10 steps  1/3 (33%)
+           In {{v1}}, create a new work package of type Task titled '{{v4}}' with a description containing the text '{{v3…
+  s_b08e24  validated    1 steps  3/3 (100%)
+           Open {{v2}} and sign in with username {{v3}} and the literal password text {{v4}} (type it exactly like that).…
+  s_c42da0  validated    2 steps  3/3 (100%)
+           In {{v1}}, create a new work package of type Task titled '{{v4}}' with a description containing the text '{{v3…
+  s_e7b34a  validated   13 steps  3/3 (100%)
+           Open {{v2}} and sign in with username {{v3}} and the literal password text {{v4}} (type it exactly like that).…
+  s_00b29a  provisional  1 steps  1/1 (100%)
+           In {{v1}}, create a new work package of type Task titled '{{v4}}' with a description containing the text '{{v3…
+  s_090be8  provisional  1 steps  1/1 (100%)  variant of s_8966a1
+           In {{v1}}, create a new work package of type Task titled '{{v4}}' with a description containing the text '{{v3…
+  s_100d8d  provisional  1 steps  1/1 (100%)
+           In {{v1}}, create a new work package of type Task titled '{{v4}}' with a description containing the text '{{v3…
+  s_1fff69  provisional  1 steps  1/1 (100%)  variant of s_8966a1
+           In {{v1}}, create a new work package of type Task titled '{{v4}}' with a description containing the text '{{v3…
+  s_28fc91  provisional  4 steps  1/1 (100%)
+           In {{v1}}, create a new work package of type Task titled '{{v4}}' with a description containing the text '{{v3…
+  s_2eb385  provisional  5 steps  1/1 (100%)  variant of s_8966a1
+           In {{v1}}, create a new work package of type Task titled '{{v4}}' with a description containing the text '{{v3…
+  s_3f601d  provisional  8 steps  1/1 (100%)
+           In {{v1}}, create a new work package of type Task titled '{{v4}}' with a description containing the text '{{v3…
+  s_3f9feb  provisional  1 steps  1/1 (100%)
+           In {{v1}}, create a new work package of type Task titled '{{v4}}' with a description containing the text '{{v3…
+  s_4d58bf  provisional 11 steps  1/1 (100%)
+           In {{v1}}, create a new work package of type Task titled '{{v4}}' with a description containing the text '{{v3…
+  s_54ca55  provisional 11 steps  1/1 (100%)  variant of s_8966a1
+           In {{v1}}, create a new work package of type Task titled '{{v4}}' with a description containing the text '{{v3…
+  s_568d8b  provisional 11 steps  1/1 (100%)
+           In {{v1}}, create a new work package of type Task titled '{{v4}}' with a description containing the text '{{v3…
+  s_735862  provisional  2 steps  1/1 (100%)
+           In {{v1}}, create a new work package of type Task titled '{{v4}}' with a description containing the text '{{v3…
+  s_7b4c9e  provisional  6 steps  1/1 (100%)  variant of s_8966a1
+           In {{v1}}, create a new work package of type Task titled '{{v4}}' with a description containing the text '{{v3…
+  s_862886  provisional  1 steps  1/1 (100%)  variant of s_8966a1
+           In {{v1}}, create a new work package of type Task titled '{{v4}}' with a description containing the text '{{v3…
+  s_8bac35  provisional  2 steps  1/1 (100%)
+           In {{v1}}, create a new work package of type Task titled '{{v4}}' with a description containing the text '{{v3…
+  s_927773  provisional  1 steps  1/1 (100%)
+           In {{v1}}, create a new work package of type Task titled '{{v4}}' with a description containing the text '{{v3…
+  s_9d57f1  provisional 11 steps  1/1 (100%)  variant of s_8966a1
+           In {{v1}}, create a new work package of type Task titled '{{v4}}' with a description containing the text '{{v3…
+  s_a575e9  provisional  6 steps  1/1 (100%)
+           In {{v1}}, create a new work package of type Task titled '{{v4}}' with a description containing the text '{{v3…
+  s_d1f053  provisional  5 steps  1/1 (100%)
+           In {{v1}}, create a new work package of type Task titled '{{v4}}' with a description containing the text '{{v3…
+store: /home/user/sitelooper/bench/results/fwop10-skills
+
+summary: /home/user/sitelooper/bench/results/fwop10-sweep.json

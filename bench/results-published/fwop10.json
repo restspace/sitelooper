@@ -1,0 +1,142 @@
+{
+  "name": "fwop10",
+  "origin": "http://127.0.0.1:8090",
+  "startUrl": "http://127.0.0.1:8090/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-open",
+      "instruction": "Open http://127.0.0.1:8090/ and sign in with username admin and the literal password text {{env:APP_PASSWORD}} (type it exactly like that). Then navigate to the project named 'Bench Project' and report the subjects of all work packages whose subject starts with 'Seed:', exactly as displayed.",
+      "skill": "s_1eb50d",
+      "params": {
+        "v2": "http://127.0.0.1:8090/",
+        "v3": "admin",
+        "v4": "{{env:APP_PASSWORD}}",
+        "v5": "Seed:",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "projects_nav_link",
+        "bench_project_link",
+        "seed_work_package_subjects_1",
+        "seed_work_package_subjects_2",
+        "seed_work_package_subjects_3",
+        "work_package_ids_1",
+        "work_package_ids_2",
+        "work_package_ids_3"
+      ],
+      "recorded": {
+        "total_work_packages_in_project": "3 (pagination 1 - 3/3)",
+        "projects_nav_link": "Project",
+        "bench_project_link": "Bench Project",
+        "seed_work_package_subjects_1": "Seed: triage inbox",
+        "seed_work_package_subjects_2": "Seed: order missing parts",
+        "seed_work_package_subjects_3": "Seed: ship repaired device",
+        "work_package_ids_1": "38",
+        "work_package_ids_2": "39",
+        "work_package_ids_3": "40",
+        "url": "http://127.0.0.1:8090/projects/bench-project/work_packages"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages",
+      "outputEvidence": {
+        "total_work_packages_in_project": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "projects_nav_link": {
+          "same": 2,
+          "differed": 0
+        },
+        "bench_project_link": {
+          "same": 2,
+          "differed": 0
+        },
+        "seed_work_package_subjects_1": {
+          "same": 2,
+          "differed": 0
+        },
+        "seed_work_package_subjects_2": {
+          "same": 2,
+          "differed": 0
+        },
+        "seed_work_package_subjects_3": {
+          "same": 2,
+          "differed": 0
+        },
+        "work_package_ids_1": {
+          "same": 2,
+          "differed": 0
+        },
+        "work_package_ids_2": {
+          "same": 2,
+          "differed": 0
+        },
+        "work_package_ids_3": {
+          "same": 2,
+          "differed": 0
+        },
+        "url": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "In Bench Project, create a new work package of type Task titled '{{runid}} Bench Work Package' with a description containing the text '{{runid}}'. Set its assignee to the user 'Bench Assignee' — this is an autocomplete: type it and actually select the matching option from the dropdown. Set status to 'In progress'. Set finish date to 2026-12-31. Then add a comment to the work package whose text includes '{{runid}}'. Finally report the work package's numeric ID exactly as the app displays it (as #<number>), and the values shown on the page for assignee, status, and finish date.",
+      "skill": "s_735862",
+      "params": {
+        "v1": "{{01-open.bench_project_link}}",
+        "v3": "{{runid}}",
+        "v4": "{{runid}} Bench Work Package",
+        "v5": "Bench Assignee",
+        "v6": "2026-12-31"
+      },
+      "outputs": [
+        "assignee",
+        "comment_text",
+        "description",
+        "finish_date",
+        "status",
+        "subject",
+        "type",
+        "work_package_id"
+      ],
+      "recorded": {
+        "assignee": "Bench Assignee",
+        "comment_text": "fwop10-n1 comment",
+        "description": "fwop10-n1",
+        "finish_date": "12/31/2026",
+        "status": "In progress",
+        "subject": "fwop10-n1 Bench Work Package",
+        "type": "Task",
+        "work_package_id": "#41",
+        "url": "http://127.0.0.1:8090/projects/bench-project/work_packages/41/activity?query_props=%7B%22c%22%3A%5B%22id%22%2C%22subject%22%2C%22type%22%2C%22status%22%2C%22assignee%22%2C%22priority%22%5D%2C%22hi%22%3Atrue%2C%22g%22%3A%22%22%2C%22is%22%3Atrue%2C%22tv%22%3Afalse%2C%22hla%22%3A%5B%22status%22%2C%22priority%22%2C%22dueDate%22%5D%2C%22t%22%3A%22id%3Aasc%22%2C%22f%22%3A%5B%5D%2C%22ts%22%3A%22PT0S%22%2C%22pp%22%3A20%2C%22pa%22%3A1%7D",
+        "url.p3": "41"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages/:id/activity"
+    }
+  ],
+  "provenance": {
+    "session": "fwop10-n1",
+    "created": "2026-09-23T15:11:21.622Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-open",
+      "outputs": [
+        "total_work_packages_in_project"
+      ]
+    }
+  ]
+}
