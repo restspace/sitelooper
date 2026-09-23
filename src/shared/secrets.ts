@@ -26,6 +26,9 @@
  * scrubbed for the rest of the session — a 6-digit code outlives its window
  * in a transcript.
  */
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { totpCode, type TotpClock } from '../execution/totp.js';
 
 const SECRET_RE = /\{\{env:([A-Za-z_][A-Za-z0-9_]*)\}\}/g;
@@ -179,16 +182,27 @@ export function clearSecretLedger(): void {
 const CREDENTIAL_NAME = /(?:(?:^|_)(?:PASSWORD|PASSWD|SECRET|TOKEN|(?:API|PRIVATE|ACCESS|SECRET)_?KEY|OTP|TOTP)|_(?:PASS|PWD))$/i;
 
 /**
- * A value that is a filesystem path: absolute POSIX (`/…`), home-relative
- * (`~/…`), a Windows drive (`C:\…`, `C:/…`) or UNC (`\\host\…`) path, or the
- * working directory itself. Whatever its variable is called, a path is where
- * something lives, not the secret — and inlined as a marker it would tie a
- * recording to one machine's layout. A value-shape rule, so a new
- * `*_PASSWORD_FILE`-style name needs no entry in any list.
+ * A value that is a path ON THIS FILESYSTEM: the working directory, or a
+ * path-shaped value (absolute POSIX `/…`, home-relative `~/…`, a Windows
+ * drive `C:\…`/`C:/…` or UNC `\\host\…`) that EXISTS here. Whatever its
+ * variable is called, a directory or file that exists is where something
+ * lives, not the secret — and inlined as a marker it would tie a recording to
+ * one machine's layout. A value-shape rule, so a new `*_PASSWORD_FILE`-style
+ * name needs no entry in any list.
+ *
+ * Existence, not shape alone: `/Xy9!abc` is shaped like a path and is almost
+ * certainly a password. Excluding every path-SHAPED value would leak such a
+ * password silently, and silence is the one failure this feature must not
+ * have; a path-shaped value that does not exist is kept as a possible secret.
  */
 function isPathValue(value: string): boolean {
   if (value === process.cwd()) return true;
-  return /^(?:\/|~\/|[A-Za-z]:[\\/]|\\\\)/.test(value) && !/\s/.test(value);
+  if (!/^(?:\/|~\/|[A-Za-z]:[\\/]|\\\\)/.test(value)) return false;
+  try {
+    return fs.existsSync(value.startsWith('~/') ? path.join(os.homedir(), value.slice(2)) : value);
+  } catch {
+    return false;
+  }
 }
 
 export interface CredentialVar {
@@ -206,7 +220,8 @@ export function credentialVars(env: NodeJS.ProcessEnv = process.env): Credential
   const out: CredentialVar[] = [];
   for (const name of Object.keys(env).sort()) {
     const value = env[name];
-    if (!value || value.length < MIN_SCRUB_LEN || !CREDENTIAL_NAME.test(name) || isPathValue(value) || seen.has(value)) continue;
+    // The existence check last, once per distinct value: it touches the filesystem.
+    if (!value || value.length < MIN_SCRUB_LEN || !CREDENTIAL_NAME.test(name) || seen.has(value) || isPathValue(value)) continue;
     seen.add(value);
     out.push({ name, value, ambiguous: plain.has(value) });
   }

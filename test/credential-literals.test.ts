@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import os from 'node:os';
+import path from 'node:path';
 import {
   clearSecretLedger,
   credentialVars,
@@ -47,7 +49,7 @@ describe('which variables are credentials', () => {
       PWD: '/home/user/sitelooper', OLDPWD: '/home/user', PASS: 'bare-pass-1', DB_PWD: 'db-secret-1',
       GITHUB_TOKEN_URL: 'https://example.test/token', GPG_TTY: '/dev/pts/0', XDG_RUNTIME_DIR: '/run/user/1000',
       PASSWORD_STORE_DIR: '/home/user/.password-store', SSH_KEY_FILE: '/home/user/.ssh/id', GPG_PRIVATE_KEYFILE: 'keys.asc',
-      SSH_AUTH_SOCK: '/tmp/ssh-agent.sock', APP_PASSWORD: '/secrets/app-password', WIN_PASSWORD: 'C:\\Users\\me\\pw.txt',
+      SSH_AUTH_SOCK: '/tmp/ssh-agent.sock', APP_PASSWORD: os.tmpdir(), WIN_PASSWORD: path.join(os.tmpdir(), '.'),
       SECRET_KEY: 'django-secret-1',
     }).map((v) => v.name);
     expect(names.sort()).toEqual(['DB_PWD', 'SECRET_KEY']);
@@ -55,6 +57,28 @@ describe('which variables are credentials', () => {
 
   it('a value equal to the working directory is never a credential', () => {
     expect(credentialVars({ APP_TOKEN: process.cwd() })).toEqual([]);
+  });
+
+  /**
+   * A path is excluded only when it EXISTS here. `/Xy9!abc` is shaped like a
+   * path and is almost certainly a password: excluding every path-SHAPED
+   * value would leak it silently.
+   */
+  it('a path-shaped value that does not exist IS a credential, and is rewritten', () => {
+    for (const value of ['/Xy9!abc', '~/Xy9!abc-no-such', 'C:\\Xy9!abc-no-such', '\\\\nohost-xy9\\share']) {
+      const env = { APP_PASSWORD: value };
+      expect(credentialVars(env).map((v) => v.name), value).toEqual(['APP_PASSWORD']);
+      expect(markLiteralCredentialValue(value, false, env).value).toBe('{{env:APP_PASSWORD}}');
+    }
+    const env = { APP_PASSWORD: '/Xy9!abc' };
+    expect(rewriteLiteralCredentials({ params: { v2: '/Xy9!abc' } }, env)).toEqual({ value: { params: { v2: '{{env:APP_PASSWORD}}' } }, names: ['APP_PASSWORD'] });
+  });
+
+  it('a password variable set to a directory that exists here is not a credential', () => {
+    const env = { APP_PASSWORD: os.tmpdir() };
+    expect(credentialVars(env)).toEqual([]);
+    expect(markLiteralCredentialValue(os.tmpdir(), true, env).value).toBe(os.tmpdir());
+    expect(rewriteLiteralCredentials({ path: `${os.tmpdir()}` }, env).names).toEqual([]);
   });
 });
 
