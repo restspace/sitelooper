@@ -34,6 +34,73 @@ describe('which variables are credentials', () => {
     }).map((v) => v.name);
     expect(names.sort()).toEqual(['APP_PASSWORD', 'APP_TOTP', 'CLIENT_SECRET', 'DB_PASS', 'GH_TOKEN', 'OPENAI_API_KEY']);
   });
+
+  /**
+   * fwrd85: the shell's PWD (`/home/user/sitelooper`) was read as a password,
+   * the cwd inside recorded screenshot paths became `{{env:PWD}}`, and the
+   * artifact required PWD — unset under PowerShell and on many CI runners.
+   * The credential word must END the name, and the short forms need a
+   * prefix (DB_PWD, DB_PASS); a value that is a filesystem path is never one.
+   */
+  it('never takes the shell, a pointer to a secret, or a path for the secret itself', () => {
+    const names = credentialVars({
+      PWD: '/home/user/sitelooper', OLDPWD: '/home/user', PASS: 'bare-pass-1', DB_PWD: 'db-secret-1',
+      GITHUB_TOKEN_URL: 'https://example.test/token', GPG_TTY: '/dev/pts/0', XDG_RUNTIME_DIR: '/run/user/1000',
+      PASSWORD_STORE_DIR: '/home/user/.password-store', SSH_KEY_FILE: '/home/user/.ssh/id', GPG_PRIVATE_KEYFILE: 'keys.asc',
+      SSH_AUTH_SOCK: '/tmp/ssh-agent.sock', APP_PASSWORD: '/secrets/app-password', WIN_PASSWORD: 'C:\\Users\\me\\pw.txt',
+      SECRET_KEY: 'django-secret-1',
+    }).map((v) => v.name);
+    expect(names.sort()).toEqual(['DB_PWD', 'SECRET_KEY']);
+  });
+
+  it('a value equal to the working directory is never a credential', () => {
+    expect(credentialVars({ APP_TOKEN: process.cwd() })).toEqual([]);
+  });
+});
+
+describe('PWD in a recorded screenshot path (fwrd85)', () => {
+  const env = { PWD: '/home/user/sitelooper', APP_PASSWORD: 'bench-pass-1234', DB_PWD: 'db-secret-1' };
+  const spec = {
+    steps: [{
+      instruction: 'sign in, then screenshot to /home/user/sitelooper/shots/a.png',
+      params: { v1: 'bench-pass-1234', v2: 'db-secret-1' },
+      segments: [{ steps: [{ tool: 'screenshot', args: { path: '/home/user/sitelooper/shots/a.png' } }] }],
+    }],
+  };
+
+  it('rewrites the passwords, never the path, and never names PWD', () => {
+    const out = rewriteLiteralCredentials(spec, env);
+    expect(out.names).toEqual(['APP_PASSWORD', 'DB_PWD']);
+    expect(JSON.stringify(out.value)).toContain('/home/user/sitelooper/shots/a.png');
+    expect(JSON.stringify(out.value)).not.toContain('{{env:PWD}}');
+    expect(literalCredentialsIn(spec, env)).not.toContain('PWD');
+    expect(markLiteralCredentials('save to /home/user/sitelooper/out', env).text).toBe('save to /home/user/sitelooper/out');
+  });
+
+  it('never puts the path on the scrub ledger', () => {
+    markLiteralCredentials('password bench-pass-1234 in /home/user/sitelooper', env);
+    expect(scrubSecrets('wrote /home/user/sitelooper/shots/a.png')).toBe('wrote /home/user/sitelooper/shots/a.png');
+  });
+
+  it('the compiled script does not require PWD', () => {
+    const flow: SpecFlow = {
+      version: 1, name: 'shots', origin: 'http://app.test', startUrl: 'http://app.test/', vars: [],
+      steps: [{
+        id: '01-shot', instruction: 'screenshot', params: {}, outputs: [],
+        segments: [{ id: 's_shot', template: 'screenshot', params: {}, preconditions: { urlPattern: 'http://app.test/' }, steps: [{ tool: 'screenshot', args: { path: '/home/user/sitelooper/shots/a.png' }, locators: {} }] }],
+      }],
+    };
+    const had = process.env.PWD;
+    process.env.PWD = '/home/user/sitelooper';
+    try {
+      const { value } = rewriteLiteralCredentials(flow, env);
+      const { source } = emitFlowFile(value, { tier: 'plain' });
+      expect(source).toContain('export const requiredEnvNames = [] as const;');
+    } finally {
+      if (had === undefined) delete process.env.PWD;
+      else process.env.PWD = had;
+    }
+  });
 });
 
 describe('a `do` instruction', () => {

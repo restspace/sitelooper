@@ -168,7 +168,28 @@ export function clearSecretLedger(): void {
  */
 
 /** A variable name that says it holds a credential — a name segment, so `APP_PASSWORD`, `GH_TOKEN`, `OPENAI_API_KEY`, `APP_TOTP`, never `PASSENGER_URL` or a bare `SORT_KEY`. */
-const CREDENTIAL_NAME = /(?:^|_)(?:PASSWORD|PASSWD|PASS|PWD|SECRET|TOKEN|(?:API|PRIVATE|ACCESS)_?KEY|OTP|TOTP)(?:_|$)/i;
+//
+// The credential word must END the name: APP_PASSWORD holds a password,
+// PASSWORD_STORE_DIR, GITHUB_TOKEN_URL and SSH_KEY_FILE hold where one is or
+// how to get one — never the secret. The short forms PWD and PASS need a
+// prefix (DB_PWD, DB_PASS): bare `PWD` is the shell's working directory, and
+// fwrd85 read `/home/user/sitelooper` as a password — compile rewrote the cwd
+// inside recorded screenshot paths to `{{env:PWD}}` and the artifact required
+// a variable PowerShell and many CI runners never set.
+const CREDENTIAL_NAME = /(?:(?:^|_)(?:PASSWORD|PASSWD|SECRET|TOKEN|(?:API|PRIVATE|ACCESS|SECRET)_?KEY|OTP|TOTP)|_(?:PASS|PWD))$/i;
+
+/**
+ * A value that is a filesystem path: absolute POSIX (`/…`), home-relative
+ * (`~/…`), a Windows drive (`C:\…`, `C:/…`) or UNC (`\\host\…`) path, or the
+ * working directory itself. Whatever its variable is called, a path is where
+ * something lives, not the secret — and inlined as a marker it would tie a
+ * recording to one machine's layout. A value-shape rule, so a new
+ * `*_PASSWORD_FILE`-style name needs no entry in any list.
+ */
+function isPathValue(value: string): boolean {
+  if (value === process.cwd()) return true;
+  return /^(?:\/|~\/|[A-Za-z]:[\\/]|\\\\)/.test(value) && !/\s/.test(value);
+}
 
 export interface CredentialVar {
   name: string;
@@ -185,7 +206,7 @@ export function credentialVars(env: NodeJS.ProcessEnv = process.env): Credential
   const out: CredentialVar[] = [];
   for (const name of Object.keys(env).sort()) {
     const value = env[name];
-    if (!value || value.length < MIN_SCRUB_LEN || !CREDENTIAL_NAME.test(name) || seen.has(value)) continue;
+    if (!value || value.length < MIN_SCRUB_LEN || !CREDENTIAL_NAME.test(name) || isPathValue(value) || seen.has(value)) continue;
     seen.add(value);
     out.push({ name, value, ambiguous: plain.has(value) });
   }
