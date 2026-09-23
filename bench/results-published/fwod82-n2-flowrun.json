@@ -1,0 +1,195 @@
+{
+  "flow": "fwod82",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_25b80c; observed customer_id=45, customer_name=fwod82-n2 Bench Customer, city=Benchville, customer_ref=fwod82-n2.",
+      "values": {
+        "customer_id": "45",
+        "customer_name": "fwod82-n2 Bench Customer",
+        "city": "Benchville",
+        "customer_ref": "fwod82-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_62ea08; observed sale_order_id=22, customer_ref=fwod82-n2, quotation_reference=S00022, customer=fwod82-n2 Bench Customer, customer_city=Benchville, quantity=3.00, unit_price=85.00, taxes=20%, status=Quotation.",
+      "values": {
+        "sale_order_id": "22",
+        "customer_ref": "fwod82-n2",
+        "quotation_reference": "S00022",
+        "customer": "fwod82-n2 Bench Customer",
+        "customer_city": "Benchville",
+        "quantity": "3.00",
+        "unit_price": "85.00",
+        "taxes": "20%",
+        "status": "Quotation"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "18/18",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "product"
+      ]
+    },
+    {
+      "id": "03-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_435c68; observed sale_order_id=22, second_line_quantity=2.00, second_line_unit_price=70.00, second_line_subtotal_table=£ 140.00, untaxed_amount_label=Untaxed Amount, untaxed_amount_table=£ 395.00, status=Quotation.",
+      "values": {
+        "sale_order_id": "22",
+        "second_line_quantity": "2.00",
+        "second_line_unit_price": "70.00",
+        "second_line_subtotal_table": "£ 140.00",
+        "untaxed_amount_label": "Untaxed Amount",
+        "untaxed_amount_table": "£ 395.00",
+        "status": "Quotation"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_435c68: step 11: primary locator did not resolve; used fallback #2 page.locator('div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > h1 > div > span')",
+        "s_435c68: step 11: read 'quotation_reference' returned a value the skill itself set/selected ('S00022') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "quotation_reference"
+      ]
+    },
+    {
+      "id": "04-change",
+      "status": "success",
+      "summary": "On quotation S00022 I changed the first order line ('[FURN_1118] Corner Desk Left Sit') quantity from 3 to 5 and saved. The live page now shows line 1 = 5.00 × £85.00 = £425.00 (second line unchanged at 2.00 × £70.00 = £140.00) and the Untaxed Amount is £565.00 (Tax 20% £113.00, Total £678.00).",
+      "values": {
+        "quotation_reference": "S00022",
+        "first_line_product": "[FURN_1118] Corner Desk Left Sit",
+        "line1_quantity": "5.00",
+        "line1_unit_price": "85.00",
+        "line1_subtotal": "£ 425.00",
+        "line2_quantity": "2.00",
+        "line2_unit_price": "70.00",
+        "untaxed_amount_after": "£ 565.00",
+        "tax_20": "£ 113.00",
+        "total": "£ 678.00",
+        "untaxed_amount_after_2": "£ 565.00",
+        "ref": "FURN_1118"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 02-create.product, 02-create.product",
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 3,
+      "unreported": [
+        "sale_order_id",
+        "line1_product",
+        "total_label",
+        "total_footer"
+      ]
+    },
+    {
+      "id": "05-report",
+      "status": "success",
+      "summary": "Replayed stored procedure s_f5ac52; observed statusbar_text=Sales Order\nQuotation Sent\nQuotation, order_reference=S00022, breadcrumb_1=Sales Orders, breadcrumb_2=S00022, status=Sales Order.",
+      "values": {
+        "statusbar_text": "Sales Order\nQuotation Sent\nQuotation",
+        "order_reference": "S00022",
+        "breadcrumb_1": "Sales Orders",
+        "breadcrumb_2": "S00022",
+        "status": "Sales Order"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "06-report",
+      "status": "success",
+      "summary": "Cancelled the confirmed sales order S00022.",
+      "values": {
+        "statusbar_text_before_cancel": "Sales Order\nQuotation Sent\nQuotation",
+        "statusbar_text": "Cancelled\nSales Order\nQuotation Sent\nQuotation",
+        "order_reference": "S00022",
+        "breadcrumb_1": "Sales Orders",
+        "breadcrumb_2": "S00022",
+        "status_after_cancel": "Cancelled"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 6,
+  "total": 6,
+  "repinned": 0,
+  "drift": 2,
+  "driftTickets": [
+    {
+      "flow": "fwod82",
+      "step": "03-add",
+      "skill": "s_435c68",
+      "atStep": "11",
+      "key": "target",
+      "similarity": 1.002,
+      "missedLocator": "page.getByText('S00022', { exact: true })",
+      "fallbackUsed": "page.locator('div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > h1 > div > span')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=197&action=315&model=sale.order&view_type=form&id=22"
+    },
+    {
+      "flow": "fwod82",
+      "step": "04-change",
+      "skill": "s_1dc29d",
+      "similarity": 1.001,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 02-create.product, 02-create.product",
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=197&action=315&model=sale.order&view_type=form&id=22"
+    }
+  ],
+  "wallMs": 67544,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 44802,
+    "completionTokens": 1307,
+    "cachedTokens": 34176
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 44802,
+      "completionTokens": 1307,
+      "cachedTokens": 34176
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

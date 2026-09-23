@@ -1,0 +1,72 @@
+{
+ "id": "s_08a4ec",
+ "origin": "http://127.0.0.1:8069",
+ "template": "Sign in at {{v2}} with login {{v3}} and password {{v4}} (type it exactly as that placeholder text). Then go to Sales app and create a new customer named '{{v5}}' with City set to {{v6}}, and verify the contact appears.",
+ "params": {
+  "v1": {
+   "example": "fwod82-n1",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "http://127.0.0.1:8069/",
+   "usedIn": [
+    1
+   ]
+  },
+  "v3": {
+   "example": "admin",
+   "usedIn": []
+  },
+  "v4": {
+   "example": "{{env:APP_PASSWORD}}",
+   "usedIn": []
+  },
+  "v5": {
+   "example": "fwod82-n1 Bench Customer",
+   "usedIn": [],
+   "known": true
+  },
+  "v6": {
+   "example": "Benchville",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8069/"
+ },
+ "steps": [
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v2}}"
+   },
+   "locators": {}
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-23T17:55:38.890Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4,
+  "lastUsed": "2026-09-23T18:01:30.129Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_3ee278",
+  "index": 0,
+  "of": 8
+ },
+ "provenance": {
+  "session": "fwod82-n1",
+  "instruction": "Sign in at http://127.0.0.1:8069/ with login admin and password {{env:APP_PASSWORD}} (type it exactly as that placeholder text). Then go to Sales app and create a new customer named 'fwod82-n1 Bench Customer' with City set to Benchville, and verify the contact appears.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-23T17:55:38.890Z"
+ },
+ "revision": 3
+}
