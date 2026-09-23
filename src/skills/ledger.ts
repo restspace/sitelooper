@@ -19,7 +19,8 @@
  */
 
 /** How a later run obtains its own value for a slot. */
-import type { UrlSegDiff } from '../execution/url.js';
+import type { RecordedEntry } from '../daemon/recorder.js';
+import { urlParts as urlPartsOf, type UrlSegDiff } from '../execution/url.js';
 import { MIN_ID_LEN, looksLikeId, tokenPattern } from './shape.js';
 import type { Skill } from './store.js';
 
@@ -155,6 +156,55 @@ export function pathIdPart(part: { label: string; value: string }): boolean {
  */
 export function pathDigitPart(part: { label: string; value: string }): boolean {
   return /^(p|h)\d+$/.test(part.label) && /^\d{1,10}$/.test(part.value);
+}
+
+/**
+ * The record-position parts of a `goto` target that nothing before it in the
+ * run ever showed: no earlier url (an instruction's, a landing's, a goto's), no
+ * step argument, no page line a step recorded (added, alert, read result), no
+ * instruction or report text. Such a goto was not SENT to a known page; the
+ * run read the address off the page by some route the recording cannot
+ * replay, so its landing is where the record was first reached — a landing,
+ * like a click's (`landed`).
+ *
+ * snipeit fwsi7: n1 saved the asset, ran an `eval` for the "Click here to view"
+ * link's href (its result is not recorded), and went `goto /hardware/4`. fwsi6
+ * had clicked the link instead, and there `4` was banked as 02-create's landed
+ * id. Here goto/back were excluded from landings in three places (server.ts
+ * noteMintedIds, flow.ts landedByAction, flow.ts staleInstructionIds), so `4`
+ * was never banked, never minted, and 04-report's param stayed literal "4".
+ *
+ * Record POSITION only — a digit run in a path segment (pathDigitPart) or an
+ * `id=` value (idPositionPart) — never a route word or a shaped token: a goto
+ * to `/admin/settings` names a page, and a first visit to a page is not a
+ * landing. And only a value the run had NOT shown: a goto to `/hardware/4`
+ * after a click, a row, or an instruction had shown 4 is a navigation to a
+ * known record, which stays what it was.
+ */
+export function unseenGotoParts(url: string, before: readonly RecordedEntry[]): { label: string; value: string }[] {
+  const parts = urlPartsOf(url).filter((p) => pathDigitPart(p) || idPositionPart(p));
+  if (!parts.length) return [];
+  const urlValues = new Set<string>();
+  const texts: string[] = [];
+  const addUrl = (u: unknown): void => {
+    if (typeof u !== 'string' || !u) return;
+    for (const p of urlPartsOf(u)) urlValues.add(p.value);
+  };
+  for (const e of before) {
+    if (e.k === 'instruction') {
+      addUrl(e.url);
+      texts.push(e.text ?? '', e.startText ?? '');
+    } else if (e.k === 'report') {
+      texts.push(e.summary ?? '', JSON.stringify(e.values ?? {}));
+    } else {
+      addUrl(e.diff?.url);
+      addUrl(e.afterUrl);
+      for (const v of Object.values(e.args ?? {})) addUrl(v);
+      texts.push(JSON.stringify(e.args ?? {}), ...(e.diff?.added ?? []), ...(e.diff?.alerts ?? []), e.result ?? '');
+    }
+  }
+  const text = texts.join('\n');
+  return parts.filter((p) => !urlValues.has(p.value) && !occursAsToken(text, p.value));
 }
 
 /**
@@ -378,13 +428,19 @@ export class RunLedger {
   }
 
   /** Bank the identifier-like parts of a url the run just landed on. */
-  addUrlIds(url: string, step: string, parts: { label: string; value: string }[], opts: { landed?: boolean } = {}): LedgerEntry[] {
+  addUrlIds(
+    url: string,
+    step: string,
+    parts: { label: string; value: string }[],
+    /** `landedLabels`: the parts a goto LANDED (unseenGotoParts) — landed at those positions only. */
+    opts: { landed?: boolean; landedLabels?: readonly string[] } = {},
+  ): LedgerEntry[] {
     const out: LedgerEntry[] = [];
     for (const part of parts) {
       // `landed`: the caller saw a step's own non-navigation action land this
       // url, so a path digit run in it is that step's record id at any length
       // (pathDigitPart). Below the floor it is banked for its position only.
-      const landedId = Boolean(opts.landed) && pathDigitPart(part);
+      const landedId = (Boolean(opts.landed) || Boolean(opts.landedLabels?.includes(part.label))) && pathDigitPart(part);
       // Shape proposes, position decides: idPositionPart is the evidence arm
       // (a param NAMED id holds a record id whatever its characters) and the
       // shape test is the 'first-run' prior beside it, for the parts no

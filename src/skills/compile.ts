@@ -3,7 +3,7 @@ import type { LocatorCandidate, RecordedEntry, RecordedInstruction, RecordedStep
 import type { Report } from '../agent/report.js';
 import { contractFor, newSkillId, originOf, type Skill, type SkillParam, type SkillStep, type StepExpectation } from './store.js';
 import { MIN_ID_LEN, digitDominant, looksLikeId, skeleton, tokenPattern } from './shape.js';
-import { occursAsToken, replaceAsToken } from './ledger.js';
+import { occursAsToken, replaceAsToken, unseenGotoParts } from './ledger.js';
 import { WILDCARD, escapeRe, identityRe, maskVolatile } from '../shared/text.js';
 import { CREDENTIAL_KEY, fillParamsDeep, queryPairs, safeDecode, urlParts, urlShapeOf } from '../execution/url.js';
 import { contextsEqual, framesEqual, stepEffect } from '../execution/context.js';
@@ -99,6 +99,13 @@ export interface CompileInput {
    * where no known value says which output that was. See textMintSlots.
    */
   mintedValues?: string[];
+  /**
+   * Everything the run recorded BEFORE this instruction, for the one question
+   * this instruction's own entries cannot answer: had the run already shown a
+   * value a goto navigates to (sourcelessGoto)? Absent means only this
+   * instruction's entries and the known values are consulted.
+   */
+  before?: readonly RecordedEntry[];
 }
 
 /**
@@ -464,6 +471,7 @@ export function compileSkills(input: CompileInput): Skill[] {
   // via a DIFFERENT stored skill (an earlier segment completing cleanly) are
   // that skill's procedure, not this variant's.
   if (input.variantOf) kept = kept.filter((s) => !s.via || s.via.skill === input.variantOf);
+  kept = sourcelessGoto(kept, input, recordingNotes);
   if (!kept.length) return [];
   // A url id this span minted is its OUTPUT: derived ({{dN}}, discoverMinted),
   // never a param — even when the ledger, which banked it before this compile,
@@ -1281,6 +1289,78 @@ function textMintSlots(input: CompileInput, steps: readonly RecordedStep[], slot
     slotted.add(value);
   }
   return { slotted, wildcard };
+}
+
+/**
+ * A kept `goto` to a record the run had never shown (ledger.ts unseenGotoParts,
+ * less the known values) has no source in the procedure: the model read the
+ * address off the page by a step compile drops, so the literal url aims every
+ * replay at the RECORDING's record.
+ *
+ * snipeit fwsi7: 02-create saved the asset, ran an `eval` for the "Click here
+ * to view" link's href, and went `goto /hardware/4`. Compile dropped the eval
+ * and stored s_5dcb48 = `goto /hardware/4`; n2 and n3 stopped on it (their
+ * assets were 5 and 6), and n3's re-pin copied it into the artifact, which died
+ * there. fwsi6 had clicked the link, which replays.
+ *
+ * So, in order:
+ *  - the click it stands for, when the recorder saw exactly one visible link
+ *    on the page carrying that href (RecordedStep.linkedFrom). The click lands
+ *    the live record, as fwsi6's did; its candidates that spell the recorded
+ *    address go, since they name the recording's record;
+ *  - otherwise the procedure ENDS before it: nothing in the recording says how
+ *    to reach the record, and a stopped replay costs a recovery turn where a
+ *    literal costs the wrong record. The goto is not slotted from its own
+ *    landing — the value is only known once the navigation it would supply
+ *    has happened.
+ */
+function sourcelessGoto(kept: RecordedStep[], input: CompileInput, notes: TransformNote[]): RecordedStep[] {
+  const known = new Set(Object.values(input.knownValues ?? {}).map((v) => String(v ?? '').trim()));
+  for (let i = 0; i < kept.length; i++) {
+    const s = kept[i];
+    if (s.tool !== 'goto' || typeof s.args.url !== 'string') continue;
+    const before = [...(input.before ?? []), ...input.entries.slice(0, Math.max(0, input.entries.indexOf(s)))];
+    const unseen = unseenGotoParts(s.args.url, before).filter((p) => !known.has(p.value));
+    if (!unseen.length) continue;
+    const click = linkClick(s);
+    if (click) {
+      notes.push({ name: 'sourcelessGoto', at: i + 1, reason: `goto ${s.args.url} reached a record nothing had shown; replayed as a click on the link that carried it` });
+      kept = [...kept.slice(0, i), click, ...kept.slice(i + 1)];
+      continue;
+    }
+    notes.push({
+      name: 'sourcelessGoto',
+      at: i + 1,
+      reason: `goto ${s.args.url} reached a record nothing had shown (${unseen.map((p) => `${p.label}=${p.value}`).join(', ')}) and no step supplies it; the procedure ends before it`,
+    });
+    return kept.slice(0, i);
+  }
+  return kept;
+}
+
+/** A goto recorded with the link that carried its href, as a click on that link (see sourcelessGoto). */
+function linkClick(s: RecordedStep): RecordedStep | null {
+  const url = String(s.args.url);
+  let path = '';
+  try {
+    path = new URL(url).pathname;
+  } catch {
+    return null;
+  }
+  const spells = (c: LocatorCandidate): boolean => {
+    const t = JSON.stringify(c);
+    return t.includes(url) || (path.length > 1 && occursAsToken(t, path));
+  };
+  const chain = (s.linkedFrom?.chain ?? []).filter((c) => !spells(c));
+  const named = chain.find((c): c is Extract<LocatorCandidate, { kind: 'role' }> => c.kind === 'role' && Boolean(c.name));
+  if (!named) return null;
+  const { linkedFrom: _link, ...rest } = s;
+  return {
+    ...rest,
+    tool: 'click',
+    args: { target: `role=${named.role}[name=${JSON.stringify(named.name)}]` },
+    locators: { target: { expr: s.linkedFrom?.expr ?? '', verified: Boolean(s.linkedFrom?.verified), raw: '', chain } },
+  };
 }
 
 /**

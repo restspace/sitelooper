@@ -24,7 +24,7 @@ import { jevMatchSkill, jevPickLiteral } from '../skills/paraphrase-jev.js';
 import { readBackDecider } from '../agent/readback-jev.js';
 import type { ReadBackDecider } from '../agent/readback.js';
 import { setInlineHealer } from '../skills/replay.js';
-import { RunLedger, bindingKey, describeLeaks, evidenced, fatal, navigationLeaks, scanForLeaks, slotKnownRunValues, urlVarianceValues, withoutOwnOutputs, type Leak } from '../skills/ledger.js';
+import { RunLedger, bindingKey, unseenGotoParts, describeLeaks, evidenced, fatal, navigationLeaks, scanForLeaks, slotKnownRunValues, urlVarianceValues, withoutOwnOutputs, type Leak } from '../skills/ledger.js';
 import { quarantineLeakedSteps } from '../spec/rerecord.js';
 import { rerecordFix } from '../spec/diagnostics.js';
 import { originOf, type Skill } from '../skills/store.js';
@@ -123,7 +123,13 @@ export class Daemon {
       // `landed`: a step's own non-navigation action put the browser here, so
       // a path digit run in the url is that step's record id at any length
       // (ledger.ts pathDigitPart; snipeit fwsi2 `/hardware/4`).
-      if (url) this.ledger.addUrlIds(url, stepId, urlParts(url), { landed: e.k === 'step' && e.tool !== 'goto' && e.tool !== 'back' });
+      // A goto is a landing for the record parts nothing earlier in the run
+      // showed (ledger.ts unseenGotoParts; snipeit fwsi7's `goto /hardware/4`
+      // after an eval read the new asset's link).
+      const all = this.browser.script?.entries ?? [];
+      const landedLabels =
+        url && e.k === 'step' && e.tool === 'goto' ? unseenGotoParts(url, all.slice(0, Math.max(0, all.indexOf(e)))).map((p) => p.label) : [];
+      if (url) this.ledger.addUrlIds(url, stepId, urlParts(url), { landed: e.k === 'step' && e.tool !== 'goto' && e.tool !== 'back', landedLabels });
       if (e.k === 'report') {
         for (const [name, value] of Object.entries(e.values ?? {})) {
           // No `basis`: a reported value's KIND is settled by looksLikeId
@@ -809,10 +815,17 @@ ${describeLeaks(leaks.slice(0, 6))}`);
             );
             if (direct.partial && result.skill) result.skill = { ...result.skill, ...direct.partial, listed: result.skill.listed };
           }
-          // Bank the ids this instruction minted BEFORE compiling it: a value
-          // first seen in this instruction's own url is already known to the
-          // caller by the time the next instruction names it, and compile
-          // must treat it as a run value rather than app furniture.
+          // Bank the ids this instruction minted AFTER compiling it (below,
+          // noteMintedIds), before the NEXT instruction compiles: a value first
+          // seen in this instruction's own url is known by the time a later
+          // instruction names it, and that compile treats it as a run value
+          // rather than app furniture. Not before: this compile would then see
+          // its own reported values as known and slot them as params bound to
+          // itself — the output-as-input the flow runner filters out with
+          // withoutOwnOutputs (fwod60 02-create). Its own url mints are
+          // compile's to find in the recording (discoverMinted, and the
+          // sourceless-goto rule in compileSkills; snipeit fwsi7). The comment
+          // said "BEFORE" while the code has always banked after.
           const entriesSince = this.browser.script?.entriesSince(mark) ?? [];
           this.instructionIndex += 1;
           this.ledger.beginInstruction(this.instructionIndex);
@@ -825,6 +838,9 @@ ${describeLeaks(leaks.slice(0, 6))}`);
                 // this one's first gesture acts in, is carried in front of its
                 // procedure (compile.ts carryOpener, gitea fwgt1-n1 04-set).
                 entries: carryOpener(this.browser.script?.entries.slice(0, mark) ?? [], entriesSince),
+                // What the run showed before this instruction, for compile's
+                // sourceless-goto rule (snipeit fwsi7).
+                before: this.browser.script?.entries.slice(0, mark) ?? [],
                 session: this.opts.session,
                 model: provider.model,
                 vars: this.knownValues(),
@@ -1870,6 +1886,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
           // ever match. The soft-resolved text is what actually drove the run.
           instruction: unresolved ? recoveryText : text,
           entries: recoveryEntries,
+          before: this.browser.script?.entries.slice(0, mark) ?? [],
           session: this.opts.session,
           model: opts.provider.model,
           harmlessStop,

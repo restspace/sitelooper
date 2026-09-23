@@ -274,6 +274,16 @@ export interface RecordedStep {
    * the page it continues on. Compile starts the next segment there.
    */
   afterUrl?: string;
+  /**
+   * For a `goto`: the one visible link on the page it LEFT whose href is the
+   * goto's target, described like a click target. The model sometimes reads a
+   * link's address with an eval (unrecorded) and navigates to it; the address
+   * then carries a record id nothing in the recording shows, and a goto to it
+   * is a literal every replay aims at the recording's record. With this, compile
+   * can replay the goto as the click it stands for (snipeit fwsi7's `goto
+   * /hardware/4` was the saved asset's "Click here to view" link).
+   */
+  linkedFrom?: LocatorExpr;
   /** Set by compile (collapseTogglePairs), never by the recorder: see SkillStep.toggle. */
   toggle?: true;
   /** The recognized component the target sits inside, for recipe compilation. */
@@ -639,7 +649,16 @@ export class ScriptRecorder {
       const target = resolved?.target ?? resolveTarget(page, args.target);
       component = (await tagComponent(target).catch(() => null)) ?? undefined;
     }
-    return { k: 'step', tool, args, locators, ...(component ? { component } : {}) };
+    // A goto's target as a link on the page it leaves (RecordedStep.linkedFrom).
+    let linkedFrom: LocatorExpr | undefined;
+    if (tool === 'goto' && typeof args.url === 'string' && args.url) {
+      const link = await linkTo(page, args.url).catch(() => null);
+      if (link) {
+        const described = await describeLocator(page, link, '', true).catch(() => null);
+        if (described?.chain?.length) linkedFrom = described;
+      }
+    }
+    return { k: 'step', tool, args, locators, ...(component ? { component } : {}), ...(linkedFrom ? { linkedFrom } : {}) };
   }
 
   /** Commit a prepared step once the action succeeded. Failed actions are dropped. */
@@ -1197,6 +1216,33 @@ async function readBackFromHandle(page: Page, handle: ElementHandle<Node>, v: st
 }
 
 /** Describe the element a live Locator resolves to (replay path). */
+/**
+ * The one visible `a[href]` on the page whose resolved href is `url`, or null
+ * when there is none or more than one (an ambiguous link is no evidence of
+ * which element the address was read from). See RecordedStep.linkedFrom.
+ */
+async function linkTo(page: Page, url: string): Promise<Locator | null> {
+  let want: string;
+  try {
+    want = new URL(url, page.url()).href;
+  } catch {
+    return null;
+  }
+  const anchors = page.locator('a[href]');
+  const hits = await anchors.evaluateAll(
+    (els, target) =>
+      els
+        .map((el, i) => {
+          const a = el as HTMLAnchorElement;
+          const r = a.getBoundingClientRect();
+          return a.href === target && r.width > 0 && r.height > 0 ? i : -1;
+        })
+        .filter((i) => i >= 0),
+    want,
+  );
+  return hits.length === 1 ? anchors.nth(hits[0]) : null;
+}
+
 export async function describeLocator(page: Page, locator: Locator, raw: string, retarget = false): Promise<LocatorExpr> {
   const handle = await locator.elementHandle({ timeout: 2_000 }).catch(() => null);
   if (!handle) return { expr: '', verified: false, raw };
