@@ -1,0 +1,296 @@
+{
+  "name": "fwvk7",
+  "origin": "http://127.0.0.1:8096",
+  "startUrl": "http://127.0.0.1:8096/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to Vikunja at http://127.0.0.1:8096/ with username admin and password {{env:APP_PASSWORD}} (type it exactly like that, it gets filled in). Then open the project 'Bench Project' and list the titles of the tasks whose titles start with 'Seed:' exactly as shown. Report those titles.",
+      "skill": "s_2e8c4f",
+      "params": {
+        "v1": "http://127.0.0.1:8096/",
+        "v2": "admin",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "project",
+        "initial_page_url",
+        "seed_task_title_link_1",
+        "seed_task_title_link_2",
+        "seed_task_title_link_3",
+        "seed_task_titles_1",
+        "seed_task_titles_2",
+        "seed_task_titles_3"
+      ],
+      "recorded": {
+        "project": "Bench Project",
+        "seed_task_count": "3",
+        "initial_page_url": "about:blank",
+        "seed_task_title_link_1": "Seed: triage inbox",
+        "seed_task_title_link_2": "Seed: order missing parts",
+        "seed_task_title_link_3": "Seed: ship repaired device",
+        "seed_task_titles_1": "Seed: triage inbox",
+        "seed_task_titles_2": "Seed: order missing parts",
+        "seed_task_titles_3": "Seed: ship repaired device",
+        "url": "http://127.0.0.1:8096/projects/2/5",
+        "url.p1": "2",
+        "url.p2": "5"
+      },
+      "route": "http://127.0.0.1:8096/projects/:id/:id",
+      "outputEvidence": {
+        "project": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_task_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "initial_page_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "seed_task_title_link_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_task_title_link_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_task_title_link_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_task_titles_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_task_titles_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_task_titles_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.p1": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.p2": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "In the project 'Bench Project', create a new task titled '{{runid}} Bench Task' with description containing '{{runid}}', due date 2026-12-31, priority High, and assign the EXISTING label 'Backend' (pick it from suggestions; do not create a new one). Then add a comment on that task whose text contains '{{runid}}'. Verify the task page shows due date 2026-12-31, priority High, label Backend, the comment, and report the task's displayed identifier like 'BENCH-<number>'.",
+      "skill": "s_299e7d",
+      "params": {
+        "v1": "Bench Project",
+        "v3": "{{runid}} Bench Task",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "task_identifier",
+        "task_title",
+        "due_date_display",
+        "label",
+        "comment",
+        "description",
+        "ref"
+      ],
+      "recorded": {
+        "task_identifier": "BENCH-4",
+        "task_title": "fwvk7-n1 Bench Task",
+        "due_date_display": "31 Dec 2026, 12:00:00",
+        "priority": "High (option selected in combobox)",
+        "label": "Backend",
+        "comment": "fwvk7-n1 comment on this bench task",
+        "description": "fwvk7-n1 description",
+        "ref": "fwvk7-n1",
+        "url": "http://127.0.0.1:8096/tasks/4",
+        "url.p1": "4"
+      },
+      "route": "http://127.0.0.1:8096/tasks/:id",
+      "outputEvidence": {
+        "task_identifier": {
+          "same": 0,
+          "differed": 1
+        },
+        "task_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "due_date_display": {
+          "same": 1,
+          "differed": 0
+        },
+        "priority": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "label": {
+          "same": 1,
+          "differed": 0
+        },
+        "comment": {
+          "same": 0,
+          "differed": 1
+        },
+        "description": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.p1": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "03-open",
+      "instruction": "Open the task '{{runid}} Bench Task' ({{02-create.task_identifier}}) in project 'Bench Project' and verify, reading from the task page: (a) the title, (b) the description contains '{{runid}}', (c) the due date shows 2026-12-31, (d) the priority is High, (e) the label 'Backend' is attached (exactly one, not a duplicate), (f) a comment containing '{{runid}}' exists, (g) the displayed identifier. Report each value exactly as shown on the page. Do not change anything.",
+      "skill": "s_dcc176",
+      "params": {
+        "v1": "{{runid}} Bench Task",
+        "v3": "{{02-create.task_identifier}}",
+        "v4": "Bench Project",
+        "v2": "{{runid}}",
+        "v5": "Backend"
+      },
+      "outputs": [
+        "a_task_title",
+        "b_description",
+        "c_due_date",
+        "d_priority",
+        "e_label",
+        "f_comment",
+        "g_displayed_identifier",
+        "project",
+        "description_text",
+        "comment_text",
+        "label_text",
+        "priority_value",
+        "ref"
+      ],
+      "recorded": {
+        "a_task_title": "fwvk7-n1 Bench Task",
+        "b_description": "fwvk7-n1 description (contains 'fwvk7-n1')",
+        "c_due_date": "31 Dec 2026, 12:00:00",
+        "d_priority": "High (combobox option \"High\" selected; raw value \"3\")",
+        "e_label": "Backend — exactly 1 label chip (count of .tag elements = 1, texts: [\"Backend\"])",
+        "f_comment": "fwvk7-n1 comment on this bench task — posted by admin, less than a minute ago (contains 'fwvk7-n1')",
+        "g_displayed_identifier": "BENCH-4",
+        "project": "Bench Project",
+        "description_text": "fwvk7-n1 description",
+        "comment_text": "fwvk7-n1 comment on this bench task",
+        "label_text": "Backend",
+        "priority_value": "3",
+        "ref": "fwvk7-n1"
+      },
+      "outputEvidence": {
+        "a_task_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "b_description": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "c_due_date": {
+          "same": 1,
+          "differed": 0
+        },
+        "d_priority": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "e_label": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "f_comment": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "g_displayed_identifier": {
+          "same": 0,
+          "differed": 1
+        },
+        "project": {
+          "same": 1,
+          "differed": 0
+        },
+        "description_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "label_text": {
+          "same": 1,
+          "differed": 0
+        },
+        "priority_value": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwvk7-n1",
+    "created": "2026-09-23T15:06:14.271Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "seed_task_count"
+      ]
+    },
+    {
+      "stepId": "02-create",
+      "outputs": [
+        "priority"
+      ]
+    }
+  ]
+}
