@@ -173,7 +173,14 @@ export function dropSupersededSets(steps: readonly RecordedStep[]): RecordedStep
         // reported tier A; 02-create lost its Title and hit "Title is
         // required"). The reload arm above is not exposed to it: it also
         // demands the same VALUE and a reload between.
-        if (!reload && first.tool === 'fill' && next.tool === 'fill' && next.diff?.url === url && samePrimaryControl(first, next)) {
+        //
+        // And only a fill that did NOTHING but set its field: its own recorded
+        // diff holds its value line and no other change. odoo fwod81-n1
+        // 03-add filled "2" into the product combobox by mistake — its diff
+        // opened the autocomplete menu and its options — then filled
+        // "Cabinet" into the same field; dropping the "2" left a replay that
+        // could not reproduce the page the recording reached (quietFill).
+        if (!reload && first.tool === 'fill' && next.tool === 'fill' && next.diff?.url === url && samePrimaryControl(first, next) && quietFill(first)) {
           dropped.add(i);
           break;
         }
@@ -195,6 +202,25 @@ export function dropSupersededSets(steps: readonly RecordedStep[]): RecordedStep
     }
   }
   return dropped.size ? steps.filter((_, i) => !dropped.has(i)) : [...steps];
+}
+
+/**
+ * A fill whose own recorded diff shows nothing beyond its field's value line:
+ * no line removed, no alert, and at most one added line, which carries the
+ * value this fill typed (`- textbox "Password": admin`). A menu, a listbox,
+ * an option, a "Loading…" row, a recomputed total — anything else the fill
+ * changed — is a consequence a later refill of the field does not undo
+ * (fwod81). A fill recorded with no diff at all shows nothing and is judged
+ * quiet, as the refill rule always judged it.
+ */
+function quietFill(step: RecordedStep): boolean {
+  const d = step.diff;
+  if (!d) return true;
+  if (d.alerts.length || (d.removed?.length ?? 0) > 0 || d.added.length > 1) return false;
+  if (!d.added.length) return true;
+  const value = typeof step.args.value === 'string' ? step.args.value.trim() : '';
+  const m = /^-\s*\w+(?:\s+"(?:[^"\\]|\\.)*")?(?:\s+\[[^\]]*\])*:\s*(.*)$/.exec(d.added[0].trim());
+  return Boolean(m && value && m[1].trim() === value);
 }
 
 /** The value a `fill` or `type` sets, trimmed; null for any other step or an empty value. */

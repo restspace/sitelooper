@@ -85,6 +85,13 @@ export interface CompileInput {
    */
   ownStep?: string;
   /**
+   * The replayed step that STOPPED this very replay: the skill that stopped
+   * and its 1-based step. The recording holds that step (`via` it), because
+   * it ran before its gate refused it, and it is exactly what the procedure
+   * must not keep (see the `kept` filter).
+   */
+  stoppedAt?: { skill: string; step: number };
+  /**
    * Known values that are constants of the TASK, not of this run: an
    * instruction stated each one before the run had shown it (flow.ts
    * taskConstants, which needs the whole recording). They still slot like any
@@ -327,6 +334,82 @@ export function creditUncreditedPopups(steps: readonly RecordedStep[], notes?: T
   return unreachable.size ? out.filter((_, k) => !unreachable.has(k)) : out;
 }
 
+/**
+ * The identifiers (an element's id, name or data-* value) that a recorded
+ * `eval` in this recording ASSIGNED, read off the eval's own text: the string
+ * literals on the right of `.id =` / `.name =`, of `.dataset.x =`, and the
+ * value of `setAttribute('id' | 'name' | 'data-…', …)`. Provenance, not
+ * shape: the recording says it set them.
+ */
+export function evalAssignedIdentifiers(steps: readonly RecordedStep[]): Set<string> {
+  const out = new Set<string>();
+  const literals = (rhs: string) => {
+    for (const m of rhs.matchAll(/(['"`])((?:(?!\1)[^\\\n])+)\1/g)) out.add(m[2]);
+  };
+  for (const step of steps) {
+    if (step.tool !== 'eval' || typeof step.args.expression !== 'string') continue;
+    const src = step.args.expression;
+    for (const m of src.matchAll(/\.(?:id|name|dataset\.[A-Za-z_$][\w$]*)\s*=(?!=)([^;\n]*)/g)) literals(m[1]);
+    for (const m of src.matchAll(/setAttribute\(\s*(['"])(?:id|name|data-[\w-]+)\1\s*,([^)]*)\)/g)) literals(m[2]);
+  }
+  return out;
+}
+
+/** Whether a locator candidate names an element by one of `ids` (as `#id`, `[attr="id"]`, or a data-* test id). */
+function namesIdentifier(c: LocatorCandidate, ids: ReadonlySet<string>): boolean {
+  const texts: string[] = [];
+  if (c.kind === 'id' || c.kind === 'css') texts.push(c.selector);
+  else if (c.kind === 'scoped') texts.push(c.container, c.selector ?? '');
+  else if (c.kind === 'testid') {
+    if (ids.has(c.value)) return true;
+  }
+  for (const t of texts) {
+    for (const id of ids) {
+      const e = escapeRe(id);
+      if (new RegExp(`#${e}(?![\\w-])`).test(t) || new RegExp(`\\[[\\w-]+\\s*[~|^$*]?=\\s*(['"]?)${e}\\1\\s*\\]`).test(t)) return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * A candidate naming an identifier a recorded eval ASSIGNED is not a locator:
+ * compile drops every eval (it assumes the record-time DOM and is fatal on
+ * replay), so on replay nothing ever gives the element that id. openproject
+ * fwop10-n1 03-create ran `inp.id = inp.id || 'wp-new-inline-edit--field-
+ * combinedDate'` and `ce.id='journal-editor-2'`, then filled `#wp-new-…` and
+ * `#journal-editor-2`; both fills led with a selector no replay's page can
+ * match. The candidate is removed and the rest of the chain (role, label,
+ * attribute) leads. A step left with NO candidate keeps the empty chain — the
+ * compiled artifact then refuses it (unsupported-capability: no locator), and
+ * replay recovers — and the removal is noted on the first segment either way.
+ * Only this instruction's own evals are seen: an id an earlier instruction's
+ * eval assigned is out of reach here.
+ */
+export function dropEvalAssignedCandidates(steps: readonly RecordedStep[], notes?: TransformNote[]): RecordedStep[] {
+  const ids = evalAssignedIdentifiers(steps);
+  if (!ids.size) return [...steps];
+  return steps.map((step, i) => {
+    let changed = false;
+    const locators: RecordedStep['locators'] = {};
+    for (const [key, loc] of Object.entries(step.locators)) {
+      const chain = loc.chain ?? [];
+      const kept = chain.filter((c) => !namesIdentifier(c, ids));
+      if (kept.length !== chain.length) {
+        changed = true;
+        const gone = chain.filter((c) => !kept.includes(c)).map((c) => ('selector' in c ? c.selector : 'value' in c ? String(c.value) : c.kind));
+        notes?.push({
+          name: 'dropEvalAssignedCandidates',
+          at: i + 1,
+          reason: `${key} candidate(s) ${gone.map((g) => JSON.stringify(g)).join(', ')} name an id the recording's own eval assigned; no replay runs that eval${kept.length ? '' : ' — no candidate is left, so the step cannot be located'}`,
+        });
+      }
+      locators[key] = kept.length === chain.length ? loc : { ...loc, chain: kept };
+    }
+    return changed ? { ...step, locators } : step;
+  });
+}
+
 /** Where the browser was just before entries[k] ran: the latest earlier diffed step's url, or its instruction's. */
 function urlBefore(entries: readonly RecordedEntry[], k: number): string | undefined {
   for (let j = k - 1; j >= 0; j--) {
@@ -452,7 +535,7 @@ export function compileSkills(input: CompileInput): Skill[] {
   // whose value the run actually reported; drop the rest.
   /** What the recording-level passes dropped, noted on the first segment (built below). */
   const recordingNotes: TransformNote[] = [];
-  const replayable = dropSupersededSets(collapseTogglePairs(expandListReads(creditUncreditedPopups(steps, recordingNotes), reportValues))).filter((step) => {
+  const replayable = dropSupersededSets(collapseTogglePairs(expandListReads(dropEvalAssignedCandidates(creditUncreditedPopups(steps, recordingNotes), recordingNotes), reportValues))).filter((step) => {
     if (step.tool === 'screenshot' || step.tool === 'eval') return false;
     if (step.tool === 'read' || step.tool === 'read_all') {
       return step.args.target === '(read-back)' || Boolean(readLabel(step, reportValues));
@@ -464,6 +547,13 @@ export function compileSkills(input: CompileInput): Skill[] {
   // via a DIFFERENT stored skill (an earlier segment completing cleanly) are
   // that skill's procedure, not this variant's.
   if (input.variantOf) kept = kept.filter((s) => !s.via || s.via.skill === input.variantOf);
+  // ...and never the replayed step that stopped this replay. snipeit fwsi7-n3
+  // 02-create: s_5dcb48's step 1 (`goto /hardware/4`, the recording's record)
+  // ran and failed its gate, the recovery finished the step, and the re-pinned
+  // chain s_9a4939 → s_19095e → s_0aa6d6 kept that goto as its third segment
+  // (`via: {skill: s_5dcb48, step: 1}`) — the compiled script died on it.
+  const stopped = input.stoppedAt;
+  if (stopped) kept = kept.filter((s) => !(s.via?.skill === stopped.skill && s.via.step === stopped.step));
   if (!kept.length) return [];
   // A url id this span minted is its OUTPUT: derived ({{dN}}, discoverMinted),
   // never a param — even when the ledger, which banked it before this compile,

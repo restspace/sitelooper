@@ -8,7 +8,7 @@ import { executeTool } from '../agent/tools.js';
 import { urlPattern as compiledUrlPattern, carryOpener, dropAbsentReadLocators, dropDeadReadLocators, fillParams, markReadsProven, stranded, urlMatches, urlParts } from '../skills/compile.js';
 import type { DriftTicket } from '../skills/repair.js';
 import type { Page } from 'playwright-core';
-import { agentGesturesOutsideReplay, bindSkill, canAdoptPin, decideRepin, instructionEntry, learnFromInstruction, matchTemplate, pinEndsElsewhere, pinStartsElsewhere, pinStatus, publishedOutputs, replayReport, selectCandidates } from '../skills/learn.js';
+import { agentGesturesOutsideReplay, bindSkill, canAdoptPin, decideRepin, instructionEntry, learnFromInstruction, matchTemplate, pinCarriesFailedStep, pinEndsElsewhere, pinStartsElsewhere, pinStatus, publishedOutputs, replayReport, selectCandidates } from '../skills/learn.js';
 import { buildFlow, consumedReportedOutputs, consumedUrlOutputs, ignorableRefs, jsonLeaves, lintFlowRefs, lintUnpublishedOutputs, listFlows, liveReadsFor, liveReadsForRecovery, loadFlow, loadFlowFile, lookupOutput, mutatingIntent, noteOutputEvidence, pruneUnsourcedOutputs, recoveryRoute, remapParams, resolveInstruction, resolveStepParams, softResolveInstruction, saveFlow, staleInstructionIds, taskConstants, textMints, unbankedMutations, unreportedOutputs, urlOutputs, varyingValues, type RunSpecific } from '../skills/flow.js';
 import { applyRelabelToEntries, applyRelabelToSkills, relabelCases, requestRelabelPlan, runValueKeyRenames } from '../skills/relabel.js';
 import { goalSatisfied, renderChainStop } from '../skills/replay.js';
@@ -1873,6 +1873,9 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
           session: this.opts.session,
           model: opts.provider.model,
           harmlessStop,
+          // The recovery's compile drops the replayed step that stopped it
+          // (fwsi7-n3 02-create kept s_5dcb48's failed goto).
+          recovery: true,
           // The ledger step this recovery banked its own url ids under: one
           // it minted inside the compiled span is derived, not a param bound
           // to this very step (compile.ts ownUrlMints, espocrm fwec1-n2).
@@ -1985,6 +1988,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
           mintedLeaks,
           startsElsewhere: candidateId ? pinStartsElsewhere(this.browser.learn, candidateId, instructionEntry(recoveryEntries)?.url) : null,
           endsElsewhere: candidateId ? pinEndsElsewhere(this.browser.learn, candidateId, flow.steps[flow.steps.findIndex((st) => st.id === step.id) + 1]?.skill) : null,
+          failedStep: candidateId ? pinCarriesFailedStep(this.browser.learn, candidateId) : null,
         });
         // Refusing the pin is not enough: replay selects candidates from the
         // store by track record, not only the pin. fwod46-n2's recovery

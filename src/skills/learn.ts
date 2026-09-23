@@ -102,6 +102,13 @@ export function learnFromInstruction(
      * replay's resume point can establish it — see the flow runner.
      */
     harmlessStop?: boolean;
+    /**
+     * A flow step's RECOVERY: its compile drops the replayed step that
+     * stopped this very replay (compile.ts CompileInput.stoppedAt). Only the
+     * recovery says so — a `do` that repaired its own replay keeps the
+     * step, as before.
+     */
+    recovery?: boolean;
   },
 ): LearnedRecord | null {
   const out: LearnedRecord = {};
@@ -148,6 +155,10 @@ export function learnFromInstruction(
   if (fullReplay) return Object.keys(out).length ? out : null;
   const variantOf = sk?.invoked && !sk.refused && sk.stepsReplayed < sk.stepsTotal ? sk.invoked : undefined;
 
+  // The replayed step that stopped this replay, when it stopped part-way: the
+  // segment `invoked` names on a stop, and its 1-based step (compile.ts
+  // CompileInput.stoppedAt; fwsi7-n3 02-create).
+  const stoppedAt = input.recovery && sk?.invoked && !sk.refused && sk.stepsReplayed < sk.stepsTotal && sk.failedAt !== undefined ? { skill: sk.invoked, step: sk.failedAt } : undefined;
   const compile = (variant: string | undefined) =>
     compileSkills({
       entries: input.entries,
@@ -161,6 +172,7 @@ export function learnFromInstruction(
       ...(input.ownStep ? { ownStep: input.ownStep } : {}),
       ...(input.taskConstants?.length ? { taskConstants: input.taskConstants } : {}),
       ...(input.mintedValues?.length ? { mintedValues: input.mintedValues } : {}),
+      ...(stoppedAt ? { stoppedAt } : {}),
     });
   const skills = compile(variantOf);
   // A variant that starts AFTER steps this recording replayed through other
@@ -1167,6 +1179,11 @@ export function decideRepin(input: {
    * followed by a 03-verify recorded on the record's view page).
    */
   endsElsewhere?: string | null;
+  /**
+   * pinCarriesFailedStep's verdict: the candidate's chain replays a step a
+   * DEMOTED skill failed at (fwsi7-n3 02-create).
+   */
+  failedStep?: string | null;
 }): { skill: string; graduated: boolean } | { refused: string } | null {
   const { step, outcome } = input;
   // A full replay of the incumbent itself leaves nothing to move.
@@ -1182,6 +1199,7 @@ export function decideRepin(input: {
   }
   if (input.startsElsewhere) return { refused: `not re-pinning ${cand.skill} — ${input.startsElsewhere}` };
   if (input.endsElsewhere) return { refused: `not re-pinning ${cand.skill} — ${input.endsElsewhere}` };
+  if (input.failedStep) return { refused: `not re-pinning ${cand.skill} — ${input.failedStep}` };
   if (input.reportStatus !== 'success' || !input.adoptable || cand.status === 'demoted') return null;
   // An adopted step graduates on its first clean recovery whatever the
   // candidate's status: it now owns a skill that completed it, and keeping
@@ -1191,6 +1209,30 @@ export function decideRepin(input: {
   if (step.adopted) return { skill: cand.skill, graduated: true };
   const nothingToKeep = !step.skill || input.incumbent === 'missing' || input.incumbent === 'demoted';
   if (nothingToKeep) return { skill: cand.skill, graduated: false };
+  return null;
+}
+
+/**
+ * Whether a re-pin candidate's chain carries a step that a DEMOTED skill
+ * failed at: a segment step recorded `via` that skill and step, where the
+ * skill's own record says it failed there. snipeit fwsi7-n3 02-create
+ * re-pinned the chain s_9a4939 → s_19095e → s_0aa6d6, and s_0aa6d6 was
+ * `goto /hardware/4` via {skill: s_5dcb48, step: 1} — the step s_5dcb48 had
+ * just stopped at (failedAtStep {1: 2}, demoted). The artifact died on it.
+ * Evidence from the store, not the step's shape. Null when none does.
+ */
+export function pinCarriesFailedStep(store: SkillStore, candidateId: string): string | null {
+  const cand = store.get(candidateId);
+  if (!cand) return null;
+  const chain = cand.seq ? store.list(cand.origin).filter((s) => s.seq?.chain === cand.seq!.chain) : [cand];
+  for (const seg of chain) {
+    for (const step of seg.steps) {
+      if (!step.via) continue;
+      const src = store.get(step.via.skill);
+      if (!src || src.status !== 'demoted' || !(src.stats.failedAtStep?.[step.via.step] ?? 0)) continue;
+      return `its segment ${seg.id} replays step ${step.via.step} of ${src.id}, a demoted procedure that failed there`;
+    }
+  }
   return null;
 }
 

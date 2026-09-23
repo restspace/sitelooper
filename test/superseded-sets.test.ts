@@ -203,3 +203,35 @@ describe('dropSupersededSets: two fields of one dialog are not a refill (fwrd84)
     expect(fills.map((f) => example(f.args.value))).toEqual(['150', '25']);
   });
 });
+
+/**
+ * odoo fwod81-n1 03-add (round 54, entries 76-81): the agent filled "2" into
+ * the PRODUCT combobox by mistake — its own diff opened the autocomplete menu
+ * with options — then filled "Cabinet" into the same field and picked the
+ * option. The refill arm dropped the "2" fill as superseded, so the replay
+ * could not reproduce the page the recording had reached. A fill whose own
+ * recorded diff shows more than its field's value line had consequences.
+ */
+describe('dropSupersededSets: a refill does not drop a fill with consequences (fwod81)', () => {
+  const FORM = 'http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=21';
+  const product = (css: string) => [
+    { kind: 'css', selector: css },
+    { kind: 'role', role: 'combobox', name: 'Type to find a product...' },
+    { kind: 'placeholder', placeholder: '' },
+    { kind: 'css', selector: 'td:nth-of-type(2) > div > div:nth-of-type(1) > div > div > input' },
+  ] as LocatorCandidate[];
+  const at = (d: Partial<StepDiff> = {}) => diff({ url: FORM, ...d });
+  const two = step('fill', { target: '.o_list_renderer tbody tr:nth-child(2) input.o_input >> nth=0', value: '2' }, chain('a', ...product('.o_list_renderer tbody tr:nth-child(2) input.o_input >> nth=0')), at({ added: ['- combobox "Type to find a product...": 2', '- menu ""', '- option "Conference Chair"', '- option "[FURN_8220] Four Person Desk"', '- option "Create \\"2\\""'] }));
+  const cabinet = step('fill', { target: '.o_list_renderer tbody tr:nth-child(2) td[name="product_template_id"] input', value: 'Cabinet' }, chain('b', ...product('.o_list_renderer tbody tr:nth-child(2) td[name="product_template_id"] input')), at({ added: ['- row "Loading... 20% £ 140.00"', '- cell "Loading..."', '- combobox "Type to find a product...": Cabinet', '- menu "Loading..."', '- option "Loading..."'] }));
+  const pick = step('click', { target: 'role=option[name="[E-COM11] Cabinet with Doors"]' }, chain('c', { kind: 'css', selector: 'role=option[name="[E-COM11] Cabinet with Doors"]' } as LocatorCandidate), at({ added: ['- cell "[E-COM11] Cabinet with Doors"'] }));
+
+  it('keeps the fill whose own diff opened a menu', () => {
+    const steps = [two, step('eval', { expression: 'x' }), cabinet, pick];
+    expect(dropSupersededSets(steps)).toEqual(steps);
+  });
+
+  it('still drops an earlier fill whose diff shows only its own value line', () => {
+    const quiet = step('fill', { target: 'a', value: '2' }, chain('a', ...product('.o_list_renderer tbody tr:nth-child(2) input.o_input >> nth=0')), at({ added: ['- combobox "Type to find a product...": 2'] }));
+    expect(dropSupersededSets([quiet, cabinet, pick])).toEqual([cabinet, pick]);
+  });
+});
