@@ -176,3 +176,29 @@ r51; the first browser attempt hit a Chromium version mismatch on the box, reins
 
 None of rounds 50–53 caused a failure. Round 48/49's superseded-fill rule caused Odoo's; round 53's
 literal rule wrongly withheld one observed value (EspoCRM close_date) without failing an objective.
+
+## Round 55 (4212295, merged to main)
+
+Cloud-verified on the second run (2285 main / 2469 browser / 131 parity, 0 failures; corpus 0 status
+changes against r53, the ten round-54 runs all compile). The first run failed 6 rebuild tests: two
+bench scripts passed `publishedOutputs` to `flatMap` by reference, so its new `chain` parameter
+received the array index. With that fixed, fwgr14's rebuild gained one cross-step ref (17 → 18):
+07-report's dashboard uid is now kept bound to 02-create.url.p1 (the same output its url slot already
+embeds) instead of being dropped; reverting the report group alone restores the baseline exactly.
+
+Seventeen defects from round 54, in five parallel groups (contract: bench/sweep-prompts/round55-contract.md):
+- **ids** — eval-assigned ids removed from locator chains; a recovery re-pin drops the step that
+  stopped its own replay and refuses a chain holding a demoted skill's failed step; the superseded-fill
+  rule keeps a fill whose own diff changed more than its value (fwod81).
+- **landing** — a goto to a record nothing earlier showed is a landing (fires on exactly one of 414
+  published gotos: fwsi7's); mint at first landing, not first sighting; a sourceless goto becomes a
+  click on the recorded link, or the procedure ends before it.
+- **report** — minted ids become live references in report templates (fwec8's record id); a template
+  value counts as published only if every marker is bound; words, not punctuation, decide "observed";
+  skill ids and screenshot paths are never published; enumeration labels go with their clause.
+- **honesty** — a recovery whose last gesture failed, or a tier-A replay that skipped a declared read,
+  is PARTIAL: not banked, no repin, flow status "partial". On all 74 round-54 replay steps it flags
+  exactly fwop10 n2 02-create and fwsi7 n2/n3 05-open, and no step of the five green apps. A password
+  equal to a username is scrubbed only in the password field.
+- **runners** — text waits compare innerText in every tier (CSS text-transform); values trimmed before
+  filling snapshot lines and when read; a read scoped by a record slot never publishes another record's value.
