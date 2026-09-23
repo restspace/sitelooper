@@ -54,6 +54,39 @@ describe('a click whose whole recorded effect is a removal checks it (fwvk8)', (
   });
 });
 
+describe('a removal the segment itself requires is never skipped', () => {
+  const url = 'http://x.test/p';
+  const step = (tool: string, args: Record<string, unknown>, added: string[], removed?: string[], name = 'x'): RecordedStep => ({
+    k: 'step',
+    tool,
+    args,
+    locators: { target: { expr: 'x', verified: true, raw: '@e', chain: [{ kind: 'role', role: tool === 'click' ? 'button' : 'textbox', name }] } },
+    diff: { url, alerts: [], added, ...(removed ? { removed } : {}), dialect: 2 },
+  });
+  const compileAll = (steps: RecordedStep[]) =>
+    compileSkills({ entries: [{ k: 'instruction', text: 'do it', url }, ...steps], instruction: 'do it', report: { status: 'success', summary: 'ok' }, session: 't' }).flatMap((s) => s.steps);
+
+  it('a Save after a fill into the form it closes submits that work', () => {
+    const steps = compileAll([
+      step('fill', { target: '@e1', value: 'Bench' }, ['- textbox "Title": Bench'], undefined, 'Title'),
+      step('click', { target: '@e2' }, [], ['- heading "Edit task"', '- textbox "Title": Bench'], 'Save'),
+    ]);
+    expect(steps.find((s) => s.tool === 'click')?.expect?.removalRequired).toBe(true);
+  });
+
+  it('a click closing what an earlier step of the segment opened is required', () => {
+    const steps = compileAll([
+      step('click', { target: '@e1' }, ['- button "Today Tue"', '- button "Tomorrow Wed"'], undefined, 'Due date'),
+      step('click', { target: '@e2' }, [], ['- button "Today Tue"', '- button "Tomorrow Wed"'], 'Set Priority'),
+    ]);
+    expect(steps[1].expect?.removalRequired).toBe(true);
+  });
+
+  it('fwvk8: the FILTERS popup another instruction opened stays a skippable hide', () => {
+    expect(filters(compiled()).expect?.removalRequired).toBeUndefined();
+  });
+});
+
 describe('what a removal does NOT make a hide', () => {
   const url = 'http://x.test/p';
   const click = (removed: string[], added: string[] = []): RecordedStep => ({

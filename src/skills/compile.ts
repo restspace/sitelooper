@@ -7,6 +7,7 @@ import { occursAsToken, replaceAsToken, unseenGotoParts } from './ledger.js';
 import { WILDCARD, escapeRe, identityRe, maskVolatile } from '../shared/text.js';
 import { CREDENTIAL_KEY, fillParamsDeep, queryPairs, safeDecode, urlParts, urlShapeOf } from '../execution/url.js';
 import { contextsEqual, framesEqual, stepEffect } from '../execution/context.js';
+import { hideEffectLines } from '../execution/toggle.js';
 import { collapseTogglePairs, dropSupersededSets } from './toggles.js';
 import { locatingSlots, scopeReadBySlot } from './readscope.js';
 
@@ -812,7 +813,7 @@ export function compileSkills(input: CompileInput): Skill[] {
     const mintedForStart = mintedMap((m) => m.keptIndex < base);
     const notes: TransformNote[] = [];
     const folded = foldLoops(
-      coalesceControls(dropDismissedDialogs(dropSupersededNavigation(skillSteps, notes, (s) => recordedDiffs.get(s)), notes, (s) => recordedDiffs.get(s)), notes),
+      coalesceControls(dropDismissedDialogs(dropSupersededNavigation(markRequiredRemovals(skillSteps, (s) => recordedDiffs.get(s)), notes, (s) => recordedDiffs.get(s)), notes, (s) => recordedDiffs.get(s)), notes),
       input.instruction,
       notes,
     );
@@ -3001,6 +3002,39 @@ export function dropSupersededNavigation(steps: SkillStep[], notes?: TransformNo
     }
     return true;
   });
+}
+
+/**
+ * Marks a hide (a click whose whole recorded effect was a removal, compiled
+ * with `removedContains`) whose removal the procedure itself REQUIRES, by
+ * provenance within the segment:
+ *  - an earlier fill, type or select put a value into an element its removed
+ *    lines list (the same role and name): the click submits that work.
+ *    kanboard fwkb37-n1's modal Save removed `- textbox "Title": …` after the
+ *    step typed the title — a data write whose only recorded effect was the
+ *    modal closing. Skipped as "already in effect" when the modal was not
+ *    open, it would pass with nothing written;
+ *  - an earlier step's recorded additions include one of its removed lines:
+ *    the procedure opened what the click closes, so it must be open, and if
+ *    it is not that is a failure, not a state already reached (vikunja
+ *    fwvk5-n1's "Set Priority" closed the datepicker step 49 had opened).
+ * Such a step is never skipped (execution/toggle.ts hideBefore). Marked in
+ * place, before any step is dropped. Judged from the recording (`diffOf`).
+ */
+function markRequiredRemovals(steps: SkillStep[], diffOf: (step: SkillStep) => StepDiff | undefined): SkillStep[] {
+  const element = (line: string) => /^-\s*([\w-]+)(\s+"(?:[^"\\]|\\.)*")?/.exec(line.trim())?.slice(1, 3).join('') ?? line.trim();
+  steps.forEach((step, i) => {
+    if (!hideEffectLines(step).length) return;
+    const removed = diffOf(step)?.removed ?? [];
+    if (!removed.length) return;
+    const lines = new Set(removed.map((l) => l.trim()));
+    const elements = new Set(removed.map(element));
+    const earlier = steps.slice(0, i);
+    const opened = earlier.some((s) => (diffOf(s)?.added ?? []).some((l) => lines.has(l.trim())));
+    const filled = earlier.some((s) => (s.tool === 'fill' || s.tool === 'type' || s.tool === 'select') && (diffOf(s)?.added ?? []).some((l) => elements.has(element(l))));
+    if (opened || filled) step.expect = { ...step.expect, removalRequired: true };
+  });
+  return steps;
 }
 
 /** A click's primary locator — the first candidate it was recorded with — as a comparable key. */

@@ -79,6 +79,29 @@ export async function hideAlreadyInEffect(page: Page, lines: readonly string[], 
 }
 
 /**
+ * What both runners do with a hide BEFORE its click: `skip` when it is
+ * already in effect (hideAlreadyInEffect), unless its removal is REQUIRED
+ * (StepExpectation.removalRequired: the segment filled into what it removes,
+ * or opened it itself — a modal Save is a data write, not a state to reach).
+ * A required hide whose lines a covered look does not show at all is a
+ * `stop`: what the procedure put on the page, or the form it filled, is not
+ * there, so an earlier step did not do what it recorded. Nothing otherwise:
+ * the click runs and hideVerdict judges it after.
+ */
+export async function hideBefore(
+  page: Page,
+  lines: readonly string[],
+  required: boolean,
+  params: Record<string, string>,
+  tag: string,
+  d: LineDialect = 1,
+): Promise<{ skip?: true; stop?: string }> {
+  if (!(await hideAlreadyInEffect(page, lines, params, d))) return {};
+  if (!required) return { skip: true };
+  return { stop: `before step ${tag} the page shows none of what it was recorded closing (e.g. ${JSON.stringify(liveLines(lines, params)[0])}) — the form this procedure filled or opened is not there, so an earlier step did not do what it recorded` };
+}
+
+/**
  * The gate after a hide: every line it was recorded removing still showing on
  * the page is a stop — the click did not have its recorded effect. One gone is
  * enough to pass (a line can stand elsewhere on the page for reasons of its

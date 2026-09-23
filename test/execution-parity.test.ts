@@ -3632,6 +3632,53 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(stuck.replayLog).toEqual(['commit:filters:toggle']);
       expect(stuck.emittedLog).toEqual(['commit:filters:toggle']);
     }, 240_000);
+
+    it('a Save whose only recorded effect was its form closing is a write: clicked when open, a stop when the form is not there', async () => {
+      // The segment filled the form, so the Save's removal is REQUIRED
+      // (compile.ts markRequiredRemovals): never "already in effect". Before
+      // this, with the fill gone wrong, the Save was skipped and the step
+      // passed with nothing written.
+      const url = `${origin}/modal?open=1`;
+      const entries: RecordedEntry[] = [
+        { k: 'instruction', text: 'fill in the task form and save it', url },
+        { k: 'step', tool: 'goto', args: { url }, locators: {}, diff: { url, alerts: [], added: [], dialect: 2 } },
+        {
+          k: 'step',
+          tool: 'fill',
+          args: { target: '@e1', value: 'Bench' },
+          locators: { target: { expr: 'x', verified: true, raw: '@e1', chain: [{ kind: 'role', role: 'textbox', name: 'Title' }] } },
+          diff: { url, alerts: [], added: ['- textbox "Title": Bench'], dialect: 2 },
+        },
+        {
+          k: 'step',
+          tool: 'click',
+          args: { target: '@e2' },
+          locators: { target: { expr: 'x', verified: true, raw: '@e2', chain: [{ kind: 'role', role: 'button', name: 'Save' }] } },
+          diff: { url, alerts: [], added: [], removed: ['- heading "Edit task"', '- textbox "Title": Bench'], dialect: 2 },
+        },
+      ];
+      const compiled = compileSkills({ entries, instruction: 'fill in the task form and save it', report: { status: 'success', summary: 'ok' }, session: 's' }).flatMap((sk) => sk.steps);
+      const save = compiled.find((st) => st.tool === 'click')!;
+      expect(save.expect?.removalRequired).toBe(true);
+
+      const open = await both(compiled, 0);
+      expect(open.replay.ok, open.replay.reason ?? '').toBe(true);
+      expect(open.emitted.ok, open.emitted.reason ?? '').toBe(true);
+      await new Promise((r) => setTimeout(r, 300));
+      expect(open.replayLog).toEqual(['commit:save:Bench']);
+      expect(open.emittedLog).toEqual(['commit:save:Bench']);
+
+      // The form not open when the Save comes (an earlier step went wrong): a stop, never a skip.
+      const missing = compiled.filter((st) => st.tool !== 'fill').map((st) => (st.tool === 'goto' ? { ...st, args: { url: `${origin}/modal` } } : st));
+      const shut = await both(missing, 0);
+      expect(shut.replay.ok, 'replay passed a Save whose form was not there').toBe(false);
+      expect(shut.emitted.ok, 'the artifact passed a Save whose form was not there').toBe(false);
+      expect(shut.replay.reason).toMatch(/shows none of what it was recorded closing/);
+      expect(shut.emitted.reason).toMatch(/shows none of what it was recorded closing/);
+      await new Promise((r) => setTimeout(r, 300));
+      expect(shut.replayLog).toEqual([]);
+      expect(shut.emittedLog).toEqual([]);
+    }, 240_000);
   });
 
   describe('list reads split per element (fwop7 02-open)', () => {
