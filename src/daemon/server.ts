@@ -10,7 +10,7 @@ import type { DriftTicket } from '../skills/repair.js';
 import type { Page } from 'playwright-core';
 import { agentGesturesOutsideReplay, bindSkill, canAdoptPin, decideRepin, instructionEntry, learnFromInstruction, matchTemplate, pinEndsElsewhere, pinStartsElsewhere, pinStatus, publishedOutputs, replayReport, selectCandidates } from '../skills/learn.js';
 import { buildFlow, consumedReportedOutputs, consumedUrlOutputs, ignorableRefs, jsonLeaves, lintFlowRefs, lintUnpublishedOutputs, listFlows, liveReadsFor, liveReadsForRecovery, loadFlow, loadFlowFile, lookupOutput, mutatingIntent, noteOutputEvidence, pruneUnsourcedOutputs, recoveryRoute, remapParams, resolveInstruction, resolveStepParams, softResolveInstruction, saveFlow, staleInstructionIds, taskConstants, textMints, unbankedMutations, unreportedOutputs, urlOutputs, varyingValues, type RunSpecific } from '../skills/flow.js';
-import { applyRelabelToEntries, applyRelabelToSkills, relabelCases, requestRelabelPlan } from '../skills/relabel.js';
+import { applyRelabelToEntries, applyRelabelToSkills, relabelCases, requestRelabelPlan, runValueKeyRenames } from '../skills/relabel.js';
 import { goalSatisfied, renderChainStop } from '../skills/replay.js';
 import { drainDrift, llmProposer, recordCandidateEvidence } from '../skills/repair.js';
 import { cascadeProposer } from '../skills/repair-jev.js';
@@ -378,6 +378,50 @@ ${describeLeaks(leaks.slice(0, 6))}`);
       if (sk) out.set(sk.id, sk);
     }
     return [...out.values()];
+  }
+
+  /**
+   * Apply a report-key rename plan everywhere a name lives: the recorded
+   * entries, the ledger's `output:` bindings, and every compiled skill of the
+   * renamed instructions (read labels, reportTemplate keys, bindings). Returns
+   * how many report keys moved. Shared by the model's relabel and the
+   * deterministic run-value-key pass (relabel.ts runValueKeyRenames).
+   */
+  private applyRenamePlan(plan: import('../skills/relabel.js').RelabelPlan, entries: import('./recorder.js').RecordedEntry[], store: NonNullable<typeof this.browser.learn>): number {
+    const applied = applyRelabelToEntries(entries, plan);
+    // The ledger takes the same renames, or every renamed `output:`
+    // origin stops resolving: buildFlow binds pinned skills against
+    // knownValues(), and fwgr64's 07-report exported with no params because
+    // its v3 origin said `grafana_host` while the ledger still said `ref`
+    // (ledger.ts renameOutputs).
+    for (const [index, renames] of plan) this.ledger.renameOutputs(`i${index}`, renames);
+    // A skill may be the head of a segment chain whose LATER segment holds
+    // the labelled read, so the whole chain takes the rename.
+    const skillIndex = new Map<string, number>();
+    for (const c of relabelCases(entries)) {
+      if (!c.skill) continue;
+      const sk = store.get(c.skill);
+      if (!sk) continue;
+      const chain = sk.seq ? store.list(sk.origin).filter((s) => s.seq?.chain === sk.seq!.chain) : [sk];
+      for (const s of chain) skillIndex.set(s.id, c.index);
+    }
+    const skills = [...skillIndex.keys()].map((id) => store.get(id)).filter((s): s is NonNullable<typeof s> => Boolean(s));
+    // Persist the objects applyRelabelToSkills MUTATED. The first cut
+    // re-fetched with store.get(id) here — but get() re-reads from disk every
+    // call, so it handed back pristine copies and the put was a no-op. The
+    // skill-side rename silently never persisted on ANY run: fwkb1's flow said
+    // {{01-open.column_3}} while its skill kept publishing
+    // table_tr_first_child_th_2, both replays hit unresolved refs, and n3's
+    // recovery — destination blanked — invented "Ready" and reported success.
+    // One dead-reference bug in a new costume, exactly as relabel.ts's doc
+    // comment warned.
+    const byId = new Map(skills.map((s) => [s.id, s]));
+    for (const id of applyRelabelToSkills(skills, plan, skillIndex)) {
+      const sk = byId.get(id);
+      if (sk) store.put(sk);
+    }
+    this.browser.script?.persist();
+    return applied;
   }
 
   /** The run's values keyed by their ORIGIN, so a param can bind to where a value comes from. */
@@ -1086,39 +1130,7 @@ ${describeLeaks(leaks.slice(0, 6))}`);
         };
         if (!plan.size) emptyTrace();
         if (plan.size) {
-          const applied = applyRelabelToEntries(entries, plan);
-          // The ledger takes the same renames, or every renamed `output:`
-          // origin stops resolving: buildFlow below binds pinned skills
-          // against knownValues(), and fwgr64's 07-report exported with no
-          // params because its v3 origin said `grafana_host` while the ledger
-          // still said `ref` (ledger.ts renameOutputs).
-          for (const [index, renames] of plan) this.ledger.renameOutputs(`i${index}`, renames);
-          // A skill may be the head of a segment chain whose LATER segment
-          // holds the labelled read, so the whole chain takes the rename.
-          const skillIndex = new Map<string, number>();
-          for (const c of cases) {
-            if (!c.skill) continue;
-            const sk = store.get(c.skill);
-            if (!sk) continue;
-            const chain = sk.seq ? store.list(sk.origin).filter((s) => s.seq?.chain === sk.seq!.chain) : [sk];
-            for (const s of chain) skillIndex.set(s.id, c.index);
-          }
-          const skills = [...skillIndex.keys()].map((id) => store.get(id)).filter((s): s is NonNullable<typeof s> => Boolean(s));
-          // Persist the objects applyRelabelToSkills MUTATED. The first cut
-          // re-fetched with store.get(id) here — but get() re-reads from disk
-          // every call, so it handed back pristine copies and the put was a
-          // no-op. The skill-side rename silently never persisted on ANY run:
-          // fwkb1's flow said {{01-open.column_3}} while its skill kept
-          // publishing table_tr_first_child_th_2, both replays hit unresolved
-          // refs, and n3's recovery — destination blanked — invented "Ready"
-          // and reported success. One dead-reference bug in a new costume,
-          // exactly as relabel.ts's doc comment warned.
-          const byId = new Map(skills.map((s) => [s.id, s]));
-          for (const id of applyRelabelToSkills(skills, plan, skillIndex)) {
-            const sk = byId.get(id);
-            if (sk) store.put(sk);
-          }
-          this.browser.script.persist();
+          const applied = this.applyRenamePlan(plan, entries, store);
           console.error(`[relabel] renamed ${applied} value(s) across ${plan.size} instruction(s)`);
           // A plan whose every rename missed its report (validator survivors
           // that matched no existing key) writes no per-report trace at all —
@@ -1134,6 +1146,23 @@ ${describeLeaks(leaks.slice(0, 6))}`);
         last.relabel = { '(error)': message.slice(0, 120) };
         this.browser.script.persist();
       }
+    }
+    // A report KEY carrying this run's own value is renamed, not warned about
+    // (relabel.ts runValueKeyRenames, repairdesk fwrd86 `list_row_RD-1015`).
+    // Deterministic, after the model's pass so it sees the final names, and
+    // before buildFlow so every reference is minted under the new one. The
+    // run's values by provenance: text mints, url ids the ledger banked from
+    // a url position, and the declared vars.
+    const runValueKeys = runValueKeyRenames(entries, [
+      ...textMints(entries),
+      ...this.ledger
+        .all()
+        .filter((e) => (e.binding.from === 'url' && e.kind === 'identifier' && !e.positional) || e.binding.from === 'var')
+        .map((e) => e.value),
+    ]);
+    if (runValueKeys.size) {
+      const renamed = this.applyRenamePlan(runValueKeys, entries, store);
+      console.error(`[relabel] renamed ${renamed} report key(s) carrying a value this run made`);
     }
     let flow = buildFlow(entries, {
       name,

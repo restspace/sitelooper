@@ -408,8 +408,12 @@ export function buildFlow(
     prevGroup = g;
     let text = g.instruction.text;
     for (const [name, value] of varEntries) text = replaceToken(text, value, `{{${name}}}`);
-    // Reference earlier outputs (longest values first so nested ids resolve).
+    // Reference earlier outputs (longest values first so nested ids resolve),
+    // except one this instruction names only as an alternative its procedure
+    // never acts on (namedAsAlternative, fwrd86 "a Draft or Closed status").
+    const alternative = (value: string): boolean => namedAsAlternative(g.instruction.text, value) && !usedByProcedure(g, value);
     for (const p of [...produced].sort((a, b) => b.value.length - a.value.length)) {
+      if (alternative(p.value)) continue;
       if (p.value.length >= 2) text = replaceToken(text, p.value, `{{${p.stepId}.${p.output}}}`);
       else if (p.path) text = replaceAtPath(text, p.path, `{{${p.stepId}.${p.output}}}`);
     }
@@ -434,6 +438,7 @@ export function buildFlow(
           for (const [name, value] of varEntries) rv = replaceToken(rv, value, `{{${name}}}`);
           for (const pr of [...produced].sort((a, b) => b.value.length - a.value.length)) {
             const marker = `{{${pr.stepId}.${pr.output}}}`;
+            if (alternative(pr.value)) continue;
             if (pr.value.length >= 2) rv = replaceToken(rv, pr.value, marker);
             else if (pr.path) {
               // Below the floor only at its url position: inside a url or
@@ -963,6 +968,8 @@ interface Group {
   diffs: StepDiff[];
   /** This instruction's state-changing steps, in order (reappliedByNext compares them). */
   acts: RecordedStep[];
+  /** Every step this instruction recorded, reads included (usedByProcedure). */
+  steps: RecordedStep[];
   /**
    * The daemon's ledger index for this instruction (`i3` → 3): one per
    * recorded instruction, a resume continuing its predecessor's. A skill
@@ -984,10 +991,11 @@ function groupByInstruction(entries: RecordedEntry[]): Group[] {
       // predecessor (truncated recording) stands alone.
       const prev = groups[groups.length - 1];
       if (e.resume && prev?.instruction.text === e.text) continue;
-      groups.push({ instruction: e, mutations: 0, mutationsDiffed: 0, mutationsEffective: 0, diffs: [], acts: [], ledgerIndex: Math.max(1, ledgerIndex) });
+      groups.push({ instruction: e, mutations: 0, mutationsDiffed: 0, mutationsEffective: 0, diffs: [], acts: [], steps: [], ledgerIndex: Math.max(1, ledgerIndex) });
     } else if (e.k === 'report' && groups.length) groups[groups.length - 1].report = e;
     else if (e.k === 'step' && groups.length) {
       const g = groups[groups.length - 1];
+      g.steps.push(e);
       if (e.diff?.url) g.endUrl = e.diff.url;
       if (e.diff) g.diffs.push(e.diff);
       if (!g.firstTool) g.firstTool = e.tool;
@@ -1121,6 +1129,7 @@ function resolveGroups(groups: Group[]): Group[] {
       g.endUrl = next.endUrl ?? g.endUrl;
       g.diffs.push(...next.diffs);
       g.acts.push(...next.acts);
+      g.steps.push(...next.steps);
       g.mutations += next.mutations;
       g.mutationsDiffed += next.mutationsDiffed;
       g.mutationsEffective += next.mutationsEffective;
@@ -1728,6 +1737,53 @@ function stepId(text: string, i: number): string {
     .toLowerCase()
     .replace(/\s+/g, '');
   return `${String(i + 1).padStart(2, '0')}-${verb}`;
+}
+
+/**
+ * Whether `text` names `value` ONLY as one of a set of alternatives: every
+ * whole-token occurrence (replaceToken's rule, case and all) stands directly
+ * beside a disjunction — `X or Y`, `X nor Y`, `X and/or Y`, `either X` —
+ * with nothing but a quote between. False when the text never names it.
+ *
+ * repairdesk fwrd86: 06-delete was told to archive "satisfying any
+ * preconditions such as requiring a Draft or Closed status first". 01-signin
+ * had reported `ticket_status = "Draft"`, so the export threaded the word to
+ * `{{01-signin.ticket_status}}`, in the instruction and as param v6. The
+ * sentence names the statuses the app accepts, not this ticket's status: had
+ * 01-signin's ticket been created Ready, the instruction would have read
+ * "requiring a Ready or Closed status".
+ *
+ * The wording decides, never the value's characters. It is only a veto on
+ * threading, and usedByProcedure lifts it: a step that typed the value or
+ * found an element by it took the value as data, alternative or not.
+ */
+function namedAsAlternative(text: string, value: string): boolean {
+  if (value.length < 2) return false;
+  const marked = replaceToken(text, value, '\u0000');
+  if (marked === text) return false;
+  const parts = marked.split('\u0000');
+  for (let i = 0; i < parts.length - 1; i++) {
+    const before = parts[i];
+    const after = parts[i + 1];
+    const orAfter = /^['"‘’“”]?\s+(or|nor|and\/or)\s/i.test(after);
+    const orBefore = /\s(or|nor|and\/or|either)\s+['"‘’“”]?$/i.test(before) || /^(either)\s+['"‘’“”]?$/i.test(before);
+    if (!orAfter && !orBefore) return false;
+  }
+  return true;
+}
+
+/**
+ * Whether this instruction's recorded procedure took `value` as data: a step
+ * typed it (any string arg) or found an element by it (a locator candidate
+ * carrying it). What a page change or a read merely showed does not count —
+ * fwrd86 06-delete's return to the list showed seed rows in status "Draft"
+ * without the procedure touching one.
+ */
+function usedByProcedure(g: Group, value: string): boolean {
+  return g.steps.some((s) => {
+    const used = JSON.stringify([s.args, Object.values(s.locators ?? {}).map((l) => l.chain ?? [])]);
+    return replaceToken(used, value, '\u0000') !== used;
+  });
 }
 
 /**
