@@ -1,0 +1,167 @@
+{
+  "flow": "fwod80",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-login",
+      "status": "success",
+      "summary": "Replayed stored procedure s_1ea017 (3 steps).",
+      "values": {
+        "initial_page_url": "http://127.0.0.1:8069/web/login",
+        "customer_name": "fwod80-n2 Bench Customer",
+        "city": "Benchville",
+        "ref": "fwod80-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_cc634b (12 steps).",
+      "values": {
+        "ref": "fwod80-n2",
+        "first_line_product": "20%",
+        "first_line_amount": "£ 885.00",
+        "product_name": "[FURN_6666] Acoustic Bloc Screens",
+        "quantity": "3.00",
+        "unit_price": "295.00",
+        "customer": "fwod80-n2 Bench Customer",
+        "customer_city": "Benchville",
+        "tax_20": "£ 177.00",
+        "total": "£ 1,062.00",
+        "quotation_reference": "S00022",
+        "tax_label": "TAX 20%",
+        "tax_amount": "£ 177.00",
+        "untaxed_amount_row": "Untaxed Amount\t£ 885.00",
+        "total_amount": "Total\t£ 1,062.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "27/27",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_e5897d; observed ref_2=fwod80-n2, second_line_unit_price=2.00, second_line_quantity=0.00, second_line_product_name=[FURN_7777] Office Chair, second_line_amount=70.00, ref=S00022, oe_subtotal_footer_tr_1=TAX 20%, tax_amount=£ 205.00, total_row=Total\t£ 1,230.00.",
+      "values": {
+        "ref_2": "fwod80-n2",
+        "second_line_unit_price": "2.00",
+        "second_line_quantity": "0.00",
+        "second_line_product_name": "[FURN_7777] Office Chair",
+        "second_line_amount": "70.00",
+        "ref": "S00022",
+        "oe_subtotal_footer_tr_1": "TAX 20%",
+        "tax_amount": "£ 205.00",
+        "total_row": "Total\t£ 1,230.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "30/30",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_e5897d: step 6: read 'second_line_product' returned a value the skill itself set/selected ('[FURN_1118] Corner Desk Left Sit') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_e5897d: step 25: read 'second_line_product' returned a value the skill itself set/selected ('[FURN_1118] Corner Desk Left Sit') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "second_line_product"
+      ]
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_93ce88 (27 steps).",
+      "values": {
+        "first_line_product": "[FURN_6666] Acoustic Bloc Screens",
+        "first_line_quantity": "5.00",
+        "first_line_unit_price": "295.00",
+        "line2_text_reloaded": "\t[FURN_7777] Office Chair\t\n[FURN_7777] Office Chair\n\t2.00\t70.00\t\n20%\n\t£ 140.00\t",
+        "ref": "S00022",
+        "second_line_unit_price": "70.00",
+        "oe_subtotal_footer_tr_1": "TAX 20%",
+        "tax_amount": "£ 323.00",
+        "total_row": "Total\t£ 1,938.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "27/27",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_42758d; observed ref=S00022, order_reference=Quotations\nS00022.",
+      "values": {
+        "ref": "S00022",
+        "order_reference": "Quotations\nS00022"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "4/4",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "Opened sales order S00022 and clicked Cancel; accepted the native confirm dialog and then confirmed Odoo's \"Cancel Sales Order\" wizard via its \"Send and cancel\" button. The form's statusbar now reads \"Cancelled\" as the checked state (rendered options: Cancelled / Sales Order / Quotation Sent / Quotation), heading still \"S00022\", customer \"fwod80-n2 Bench Customer / Benchville\". Verified after a full page reload that \"Cancelled\" persisted.",
+      "values": {
+        "screenshot_filename": "fwod80_S00022_cancelled.png",
+        "statusbar_before_cancel": "Sales Order\nQuotation Sent\nQuotation",
+        "order_status": "Cancelled\nSales Order\nQuotation Sent\nQuotation",
+        "ref": "S00022",
+        "ref_2": "fwod80-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "07-verify",
+      "status": "success",
+      "summary": "Verified both records read-only from their live Odoo forms. (1) Contact (res.partner id=45, its saved form heading and Name field both read exactly \"fwod80-n2 Bench Customer\"; the City field reads exactly \"Benchville\"). (2) Sales order (form heading/reference \"S00022\", statusbar shows \"Cancelled\" as the checked state — rendered options Cancelled / Sales Order / Quotation Sent / Quotation —, Customer \"fwod80-n2 Bench Customer\" with City \"Benchville\" beneath it, and Untaxed Amount £ 1,615.00).",
+      "values": {
+        "s00021_status": "Cancelled\nSales Order\nQuotation Sent\nQuotation",
+        "s00021_reference": "S00022",
+        "s00021_customer": "fwod80-n2 Bench Customer\nBenchville",
+        "s00021_untaxed_amount": "£ 1,615.00",
+        "contact_name": "fwod80-n2 Bench Customer",
+        "contact_city": "Benchville",
+        "ref": "fwod80-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 7,
+  "total": 7,
+  "repinned": 0,
+  "drift": 0,
+  "wallMs": 101099,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

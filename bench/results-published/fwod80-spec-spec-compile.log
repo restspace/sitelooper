@@ -1,0 +1,6 @@
+flow: /home/user/sitelooper/bench/results/fwod80-spec-spec-tmp/fwod80.flow.ts
+spec: /home/user/sitelooper/bench/results/fwod80-spec-spec-tmp/fwod80.spec.ts
+warning 07-verify: 07-verify read a value that contradicts what the previous step reported
+  why: 07-verify read s00021_status "Cancelled" right after 06-open reported "Sales Order"; 06-open's change may not have landed and a later step may be retrying it. Re-record 06-open.
+  fix: sitelooper rerecord bench/results/flows/fwod80.json 06-open
+
