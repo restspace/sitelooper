@@ -568,7 +568,16 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     const session = new BrowserSession({ session: `parity-standin-${Date.now()}`, persist: false });
     try {
       const page = await session.getPage();
+      // The list page renders its rows from `fetch('/items')` AFTER `load`,
+      // so a look taken the moment goto resolves can precede them: the first
+      // cloud run of round 51 failed exactly so (both refs unresolved). The
+      // runners never ask that early — runFlow's stand-in pass and the
+      // artifact's needShown run on a page the previous step already settled
+      // — so the harness waits for the fixture's own rows first, not for the
+      // value under test. The delay makes the late render certain here.
+      fx.faults.delay(1500, { pathPrefix: '/items' });
       await page.goto(`${origin}/`);
+      await page.locator('#items li').first().waitFor({ timeout: 10_000 });
       if (await recordedValueShown(page, standIn!, [])) outputs['01-read'] = { ...outputs['01-read'], x: standIn! };
     } finally {
       await session.close();
