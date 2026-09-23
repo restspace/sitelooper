@@ -1,0 +1,92 @@
+
+[sweep] run 1/3: fwgh10-n1 (store: /home/user/sitelooper/bench/results/fwgh10-skills)
+[harness] ghost: defaulting APP_URL
+[harness] ghost: defaulting APP_EMAIL
+[harness] ghost: defaulting APP_PASSWORD
+[reset] ghost: no posts to delete
+[harness] ghost responded 200 at http://127.0.0.1:8099/
+stopped: fwgh10-n1
+  flow "fwgh10" saved: 2 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwgh10.json
+  warning: note: 01-signin no longer publishes published_seed_post_count — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-create no longer publishes post_id — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 29 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[1].instruction: "Bench News" (output) in "In Ghost admin, create a new post titled '{{runid}} Bench Post'. In the body editor type a single paragraph containing the runid, e.g. 'This is the {{runid}} be"
+  flow.steps[1].instruction: "2026-09-01" (output) in "In Ghost admin, create a new post titled '{{runid}} Bench Post'. In the body editor type a single paragraph containing the runid, e.g. 'This is the {{runid}} be"
+  flow.steps[1].instruction: "Published" (output) in "In Ghost admin, create a new post titled '{{runid}} Bench Post'. In the body editor type a single paragraph containing the runid, e.g. 'This is the {{runid}} be"
+  flow.steps[1].params.v4: "Bench News" (output) in "Bench News"
+  flow.steps[1].params.v5: "2026-09-01" (output) in "2026-09-01"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwgh10-n1 stop=completed
+turns=3 wall=118.6s
+commands=2 cmdTime=108.9s cmdBytes=2103 timeouts=0
+orchestrator in=3489 cw=0 cr=5696 out=682
+inner prompt=376860 cached=342912 completion=6921
+spend=$0.0197 maxUsd=3
+learn: A_n=0 replayed=0/2 full=0 repaired=0 compiled=2 variants=0
+-> /home/user/sitelooper/bench/results/fwgh10-n1-sitelooper-result.json
+
+fwgh10-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — fwgh10-n1-bench-post, body includes runid=true
+  obj 3: PASS — tags=Bench News (bench-news), want only the seeded Bench News (bench-news)
+  obj 4: PASS — custom excerpt="Excerpt for fwgh10-n1 bench post."
+  obj 5: PASS — status=published, visibility=public
+  obj 6: PASS — published_at=2026-09-01T12:00:00.000Z, want 2026-09-01
+  obj 7: PASS — slug fwgh10-n1-bench-post reported
+
+[sweep] run 2/3: fwgh10-n2 (replay flow fwgh10, no orchestrator)
+[reset] ghost: deleted 1 post(s) (earlier runs' and non-seed)
+
+fwgh10-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — fwgh10-n2-bench-post, body includes runid=true
+  obj 3: PASS — tags=Bench News (bench-news), want only the seeded Bench News (bench-news)
+  obj 4: PASS — custom excerpt="Excerpt for fwgh10-n2 bench post."
+  obj 5: PASS — status=published, visibility=public
+  obj 6: PASS — published_at=2026-09-01T12:00:00.000Z, want 2026-09-01
+  obj 7: PASS — slug fwgh10-n2-bench-post reported
+
+[sweep] run 3/3: fwgh10-n3 (replay flow fwgh10, no orchestrator)
+[reset] ghost: deleted 1 post(s) (earlier runs' and non-seed)
+
+fwgh10-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — fwgh10-n3-bench-post, body includes runid=true
+  obj 3: PASS — tags=Bench News (bench-news), want only the seeded Bench News (bench-news)
+  obj 4: PASS — custom excerpt="Excerpt for fwgh10-n3 bench post."
+  obj 5: PASS — status=published, visibility=public
+  obj 6: PASS — published_at=2026-09-01T12:00:00.000Z, want 2026-09-01
+  obj 7: PASS — slug fwgh10-n3-bench-post reported
+
+Learning sweep fwgh10 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwgh10-n1' │ '7/7'    │ 'completed' │ 3     │ 2    │ 0.0197    │ 0   │ '0/2'        │ 119    │
+│ 1       │ 2 │ 'fwgh10-n2' │ '7/7'    │ 'success'   │ 0     │ 2    │ 0         │ 1   │ '2/2 (flow)' │ 54     │
+│ 2       │ 3 │ 'fwgh10-n3' │ '7/7'    │ 'success'   │ 0     │ 2    │ 0         │ 1   │ '2/2 (flow)' │ 53     │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8099
+  s_290226  validated    2 steps  3/3 (100%)
+           In Ghost admin, create a new post titled '{{v2}}'. In the body editor type a single paragraph containing the r…
+  s_2c8ab6  validated    1 steps  3/3 (100%)
+           Sign in to Ghost admin at {{v1}} with email {{v2}} and password {{v3}} (type the password text exactly as show…
+  s_496a1b  validated   15 steps  3/3 (100%)
+           In Ghost admin, create a new post titled '{{v2}}'. In the body editor type a single paragraph containing the r…
+  s_4a25cb  validated    3 steps  3/3 (100%)
+           Sign in to Ghost admin at {{v1}} with email {{v2}} and password {{v3}} (type the password text exactly as show…
+  s_5b4695  validated    2 steps  3/3 (100%)
+           In Ghost admin, create a new post titled '{{v2}}'. In the body editor type a single paragraph containing the r…
+  s_a49174  validated    1 steps  3/3 (100%)
+           In Ghost admin, create a new post titled '{{v2}}'. In the body editor type a single paragraph containing the r…
+  s_be4752  validated    6 steps  3/3 (100%)
+           Sign in to Ghost admin at {{v1}} with email {{v2}} and password {{v3}} (type the password text exactly as show…
+  s_cb210d  validated    2 steps  3/3 (100%)
+           Sign in to Ghost admin at {{v1}} with email {{v2}} and password {{v3}} (type the password text exactly as show…
+  s_d838d2  validated    9 steps  3/3 (100%)
+           In Ghost admin, create a new post titled '{{v2}}'. In the body editor type a single paragraph containing the r…
+  s_fa2137  validated    1 steps  3/3 (100%)
+           Sign in to Ghost admin at {{v1}} with email {{v2}} and password {{v3}} (type the password text exactly as show…
+store: /home/user/sitelooper/bench/results/fwgh10-skills
+
+summary: /home/user/sitelooper/bench/results/fwgh10-sweep.json
+SWEEP_EXIT:0

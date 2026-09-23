@@ -1,0 +1,207 @@
+{
+  "name": "fwgh10",
+  "origin": "http://127.0.0.1:8099",
+  "startUrl": "http://127.0.0.1:8099/ghost/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to Ghost admin at http://127.0.0.1:8099/ghost/ with email admin@bench.local and password {{env:APP_PASSWORD}} (type the password text exactly as shown including braces, it auto-fills). Then go to the Posts list and report the titles of all published posts whose title starts with 'Seed:', exactly as shown.",
+      "skill": "s_cb210d",
+      "params": {
+        "v1": "http://127.0.0.1:8099/ghost/",
+        "v2": "admin@bench.local",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "initial_page_url",
+        "seed_post_title_1",
+        "seed_post_title_2",
+        "seed_post_title_3",
+        "published_seed_post_titles_1",
+        "published_seed_post_titles_2",
+        "published_seed_post_titles_3"
+      ],
+      "recorded": {
+        "initial_page_url": "about:blank",
+        "published_seed_post_count": "3",
+        "seed_post_title_1": "Seed: Welcome to the bench",
+        "seed_post_title_2": "Seed: Release notes for September",
+        "seed_post_title_3": "Seed: House style guide",
+        "published_seed_post_titles_1": "Seed: Welcome to the bench",
+        "published_seed_post_titles_2": "Seed: Release notes for September",
+        "published_seed_post_titles_3": "Seed: House style guide",
+        "url": "http://127.0.0.1:8099/ghost/#/posts?type=published"
+      },
+      "route": "http://127.0.0.1:8099/ghost/#/posts",
+      "outputEvidence": {
+        "initial_page_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "published_seed_post_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "seed_post_title_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_post_title_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_post_title_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "published_seed_post_titles_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "published_seed_post_titles_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "published_seed_post_titles_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "In Ghost admin, create a new post titled '{{runid}} Bench Post'. In the body editor type a single paragraph containing the runid, e.g. 'This is the {{runid}} bench post.' (once only). In the post settings panel: add the EXISTING tag 'Bench News' (choose it from the suggestions — do NOT create a new tag; note a similar tag 'Bench Newsletter' also exists and must not be used); set the custom excerpt to a text that includes '{{runid}}'; set the publish date to 2026-09-01 with a time (e.g. 12:00). Then complete the Publish flow: click Publish and confirm, verifying the post is Published (not scheduled, not draft). Note: a future date would schedule it — ensure the post ends up published. Save and report the resulting tag, excerpt, publish date, status, and the URL slug exactly as shown in the post's settings panel.",
+      "skill": "s_a49174",
+      "params": {
+        "v2": "{{runid}} Bench Post",
+        "v3": "This is the {{runid}} bench post.",
+        "v4": "Bench News",
+        "v1": "{{runid}}",
+        "v5": "2026-09-01",
+        "v6": "12:00"
+      },
+      "outputs": [
+        "post_title",
+        "tag",
+        "excerpt",
+        "publish_date",
+        "publish_time",
+        "status",
+        "slug",
+        "public_url",
+        "body_text",
+        "author",
+        "runid"
+      ],
+      "recorded": {
+        "post_id": "6ab3ea69c95df90001fc55da",
+        "post_title": "fwgh10-n1 Bench Post",
+        "tag": "Bench News",
+        "excerpt": "Excerpt for fwgh10-n1 bench post.",
+        "publish_date": "2026-09-01",
+        "publish_time": "12:00 UTC",
+        "status": "Published",
+        "slug": "fwgh10-n1-bench-post",
+        "public_url": "http://127.0.0.1:8099/fwgh10-n1-bench-post/",
+        "body_text": "This is the fwgh10-n1 bench post.",
+        "author": "Bench Admin",
+        "runid": "fwgh10-n1",
+        "url": "http://127.0.0.1:8099/ghost/#/editor/post/6ab3ea69c95df90001fc55da",
+        "url.h2": "6ab3ea69c95df90001fc55da"
+      },
+      "route": "http://127.0.0.1:8099/ghost/#/editor/post/:id",
+      "outputEvidence": {
+        "post_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "post_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "tag": {
+          "same": 1,
+          "differed": 0
+        },
+        "excerpt": {
+          "same": 0,
+          "differed": 1
+        },
+        "publish_date": {
+          "same": 1,
+          "differed": 0
+        },
+        "publish_time": {
+          "same": 1,
+          "differed": 0
+        },
+        "status": {
+          "same": 1,
+          "differed": 0
+        },
+        "slug": {
+          "same": 0,
+          "differed": 1
+        },
+        "public_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "body_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "author": {
+          "same": 1,
+          "differed": 0
+        },
+        "runid": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.h2": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwgh10-n1",
+    "created": "2026-09-23T15:05:26.152Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "published_seed_post_count"
+      ]
+    },
+    {
+      "stepId": "02-create",
+      "outputs": [
+        "post_id"
+      ]
+    }
+  ]
+}
