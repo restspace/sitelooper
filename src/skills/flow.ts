@@ -1,5 +1,6 @@
 import type { BrowserProfile } from '../execution/browser.js';
 import { isMutatingAction } from '../execution/lifecycle.js';
+import { popupItem } from '../execution/expect.js';
 import type { Skill, SkillStep } from './store.js';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -717,6 +718,107 @@ export function taskConstants(
     if (varValues.some((v) => replaceToken(value, v, ' ') !== value)) continue;
     const at = firstStatedAt(entries, value, entries.length);
     if (at >= 0 && !reportedBefore(entries, at, value)) out.add(value);
+  }
+  return out;
+}
+
+/**
+ * The reported values the recording shows the run MINTED as page text, and
+ * then addressed its record by — the text half of compile's url mints
+ * (compile.ts discoverMinted), which only ever looks at urls.
+ *
+ * repairdesk fwrd85: 02-create's save put the ticket's number on the page
+ * (`- cell "RD-1015"`, the list's url unchanged at `#/tickets`), its read-back
+ * reported it as `ticket_reference`, and every later instruction named the
+ * ticket by it. No url carried it, so nothing marked it minted: the ledger
+ * banked it on shape alone, which slotKnownRunValues leaves alone, and
+ * compile slots a known value only where an instruction names it. 02-create's
+ * goal kept `requireText "RD-1015"`, 09-report (which never names it) kept it
+ * in its expectation lines, and its report template published
+ * `archived_search_result = "… single row: RD-1015 | fwrd85-n2 …"` on n2 and
+ * n3, whose tickets were RD-1016 and RD-1017. The compiled flow hard-coded it
+ * too.
+ *
+ * Provenance, three facts the recording holds, never the value's characters:
+ *  - MINTED: the first thing in the recording to show the value is a
+ *    state-changing step's change to the page it acted on (its url
+ *    unchanged), naming an element that is no popup item by exactly it
+ *    (valueLineCandidates' whole-name parse). No instruction stated it, no
+ *    start page, url, earlier step, read or report showed it, and the step did
+ *    not type it (shownBefore, firstStatedAt);
+ *  - CAPTURED: a report after that step carries it as a whole value, so it has
+ *    an origin a later run resolves its own from;
+ *  - ADDRESSED: an instruction after that report names it — the run used it as
+ *    the record's handle, and buildFlow threads it as a reference.
+ * The third is what separates a record's number from what a save computes: a
+ * part's price also first appears after its save and is read back, but no
+ * instruction names a record by it, and a goal or an expectation keeps it. A
+ * value only ever minted and read — never addressed — is left as before.
+ */
+export function textMints(entries: readonly RecordedEntry[]): string[] {
+  const out: string[] = [];
+  // Where each element name first appeared, in one pass: the daemon asks this
+  // of the whole script before every instruction it compiles.
+  const firstNamed = new Map<string, number>();
+  entries.forEach((e, k) => {
+    if (e.k === 'step') for (const name of addedNames(e)) if (!firstNamed.has(name)) firstNamed.set(name, k);
+  });
+  entries.forEach((report, ri) => {
+    if (report.k !== 'report') return;
+    for (const raw of Object.values(report.values ?? {})) {
+      if (typeof raw !== 'string') continue;
+      const value = raw.replace(/\s+/g, ' ').trim();
+      if (value.length < 2 || value.length > 200 || value.includes('{{') || out.includes(value)) continue;
+      const at = firstNamed.get(foldValue(value)) ?? -1;
+      if (at < 0 || at > ri) continue;
+      const step = entries[at] as RecordedStep;
+      if (!isMutatingAction(step.tool) || replaceToken(JSON.stringify(step.args).toLowerCase(), value.toLowerCase(), ' ') !== JSON.stringify(step.args).toLowerCase()) continue;
+      // On the page it acted on, its url unchanged. A step that moved the
+      // browser showed the records of the page it reached, not one it made:
+      // fwrd85's sign-in click landed on the ticket list, where the seed
+      // ticket RD-1014 appeared for the first time, and kanboard fwkb1's
+      // click into the board (a query-string route, so no path changed)
+      // showed the default columns "Backlog" and "Work in progress". A save
+      // that navigates to its record is compile's url mint already.
+      if (!step.diff?.url || step.diff.url !== actedUrl(entries, at)) continue;
+      if (shownBefore(entries, at, value) || firstStatedAt(entries, value, at) >= 0) continue;
+      // By buildFlow's own rule, case and all, so the reference this implies is
+      // one the flow really threads: fwrd85's 07-edit said "both parts have
+      // no supplier", which never made `{{03-open.supplier}}` of "No supplier".
+      if (!entries.slice(ri + 1).some((e) => e.k === 'instruction' && replaceToken(e.text, value, ' ') !== e.text)) continue;
+      out.push(value);
+    }
+  });
+  return out;
+}
+
+/** The url the step at `at` acted on: the latest diffed or instruction url before it. */
+function actedUrl(entries: readonly RecordedEntry[], at: number): string | undefined {
+  for (let k = at - 1; k >= 0; k--) {
+    const e = entries[k];
+    if (e.k === 'step' && e.diff?.url) return e.diff.url;
+    if (e.k === 'instruction' && e.url) return e.url;
+  }
+  return undefined;
+}
+
+/**
+ * The folded element names a step's page change added (baselineOf's parse),
+ * less an open popup's items: a listbox answering what was typed lists the
+ * app's records, it makes none (odoo fwod28's `- option "[FURN_6666] Acoustic
+ * Bloc Screens"`; execution/expect.ts popupItem).
+ */
+function addedNames(step: RecordedStep): string[] {
+  const out: string[] = [];
+  for (const line of step.diff?.added ?? []) {
+    const m = /^- ([\w-]+) ("(?:[^"\\]|\\.)*")/.exec(line.trim());
+    if (!m || popupItem(line)) continue;
+    try {
+      const name = foldValue(String(JSON.parse(m[2])));
+      if (name) out.push(name);
+    } catch {
+      // an unparseable name is no evidence
+    }
   }
   return out;
 }

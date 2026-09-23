@@ -754,10 +754,14 @@ export function inLocator(leak: Leak): boolean {
  * no marker is removed, which goalSatisfied already reads as "never done".
  *
  * Shape-only values are left alone: those are usually page copy, and dropping
- * a marker over a guess would weaken skills that were right. Pure; returns
- * null when nothing changed.
+ * a marker over a guess would weaken skills that were right — except a value
+ * in `minted` (flow.ts textMints), which the recording shows the run minted
+ * as page text and then named its record by. The ledger banks those on shape
+ * (no url position carried them), and fwrd85 exported 02-create's goal as
+ * `requireText ["RD-1015", …]`: a marker no later run's ticket shows. Pure;
+ * returns null when nothing changed.
  */
-export function slotKnownRunValues(skill: Skill, ledger: RunLedger): { skill: Skill; changes: string[] } | null {
+export function slotKnownRunValues(skill: Skill, ledger: RunLedger, minted: ReadonlySet<string> = new Set()): { skill: Skill; changes: string[] } | null {
   const changes: string[] = [];
   const params = Object.entries(skill.params ?? {});
   // One string: every evidenced value in it slotted, or null when one has no origin.
@@ -765,7 +769,7 @@ export function slotKnownRunValues(skill: Skill, ledger: RunLedger): { skill: Sk
     let out = text;
     const slotted: string[] = [];
     for (const entry of ledger.runValuesIn(text)) {
-      if (entry.basis === 'shape' || !occursAsToken(out, entry.value)) continue;
+      if ((entry.basis === 'shape' && !minted.has(entry.value)) || !occursAsToken(out, entry.value)) continue;
       const param = params.find(([, p]) => p.binding && String(p.example ?? '').trim() === entry.value);
       if (!param) return null;
       out = replaceAsToken(out, entry.value, `{{${param[0]}}}`);
