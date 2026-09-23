@@ -228,7 +228,7 @@ const publishes = new Map(
     // the read, so union the whole chain — the same rule the daemon's own
     // lintFlowRefs applies.
     const chain = sk.seq?.chain ? store.filter((o) => o.seq?.chain === sk.seq.chain) : [sk];
-    return [s.id, new Set(chain.flatMap(publishedOutputs))];
+    return [s.id, new Set(chain.flatMap((seg) => publishedOutputs(seg, chain)))];
   }),
 );
 // There is no "demonstrated stable" exemption any more: agreement between runs

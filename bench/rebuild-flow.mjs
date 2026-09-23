@@ -378,7 +378,7 @@ for (const { runid, file } of sessions()) {
       const sk = store.get(id);
       if (!sk) return null;
       const chain = sk.seq ? store.list(sk.origin).filter((s) => s.seq?.chain === sk.seq.chain) : [sk];
-      return chain.flatMap(publishedOutputs);
+      return chain.flatMap((s) => publishedOutputs(s, chain));
     };
     const flow = buildFlow(entries, {
       name: tag,
