@@ -38,6 +38,46 @@ const ANY_SECRET_RE = /\{\{(env|totp):([A-Za-z_]\w*)\}\}/g;
 /** Values resolved this session, value → the marker it came from (a totp marker keeps every code it produced). */
 const ledger = new Map<string, string>();
 
+/**
+ * Resolved values that are AMBIGUOUS — another, non-credential variable holds
+ * the same value — value → marker. Scrubbed only inside a password field's own
+ * line (passwordLines), never in page text. fwkb39: kanboard's password is its
+ * username ("admin" is APP_PASSWORD and APP_EMAIL); on the main ledger every
+ * line naming the user was rewritten, and the recorded post-login heading
+ * became `- heading "KB Dashboard for {{env:APP_PASSWORD}}"`, a check that
+ * matched anything.
+ */
+const ambiguousLedger = new Map<string, string>();
+
+/** Snapshot lines of password fields a secret was typed into this session (`textbox "Password": admin`). */
+const passwordLines = new Set<string>();
+
+/** Whether a variable OTHER than `name`, and not itself credential-named, holds `value`. */
+function heldByPlainVariable(name: string, value: string, env: NodeJS.ProcessEnv = process.env): boolean {
+  for (const [k, v] of Object.entries(env)) if (k !== name && v === value && !CREDENTIAL_NAME.test(k)) return true;
+  return false;
+}
+
+/**
+ * File a resolved env value on the ledger its ambiguity decides. Only a
+ * CREDENTIAL's value can be ambiguous: a non-credential marker ({{env:TEST_USER}})
+ * is scrubbed everywhere, as it always was, whatever else holds its value.
+ */
+function bankResolved(name: string, value: string): void {
+  if (CREDENTIAL_NAME.test(name) && heldByPlainVariable(name, value)) ambiguousLedger.set(value, `{{env:${name}}}`);
+  else ledger.set(value, `{{env:${name}}}`);
+}
+
+/**
+ * The snapshot line of a password field a secret was just typed into, as the
+ * page shows it (`textbox "Password": admin`). An AMBIGUOUS secret is scrubbed
+ * inside this line, and only there. tools.ts calls this after a fill or type
+ * whose value carried a marker lands in a password field.
+ */
+export function notePasswordFieldLine(line: string): void {
+  if (line.trim()) passwordLines.add(line.trim());
+}
+
 /** Minimum value length the scrubber will replace: shorter values would
  * false-positive on ordinary page text ("1234" in a price). A secret this
  * short is unsafe for unrelated reasons; the resolver still resolves it. */
@@ -68,7 +108,7 @@ export function resolveSecrets(text: string): string {
           `Set it and restart the session (sitelooper stop, then re-run with ${name} exported).`,
       );
     }
-    ledger.set(value, `{{env:${name}}}`);
+    bankResolved(name, value);
     return value;
   });
 }
@@ -131,6 +171,13 @@ export function scrubSecrets(text: string): string {
     if (value.length < MIN_SCRUB_LEN) continue;
     if (out.includes(value)) out = out.split(value).join(marker);
   }
+  // An ambiguous value: only as the VALUE of a password field's own line.
+  for (const line of passwordLines) {
+    for (const [value, marker] of ambiguousLedger) {
+      if (value.length < MIN_SCRUB_LEN || !line.endsWith(`: ${value}`) || !out.includes(line)) continue;
+      out = out.split(line).join(line.slice(0, -value.length) + marker);
+    }
+  }
   return out;
 }
 
@@ -147,6 +194,8 @@ export function scrubSecretsDeep<T>(value: T): T {
 /** Test seam: forget resolved values (a daemon process never needs this). */
 export function clearSecretLedger(): void {
   ledger.clear();
+  ambiguousLedger.clear();
+  passwordLines.clear();
 }
 
 /*

@@ -14,7 +14,7 @@ import { captureSignature, describeChange, type PageSignature } from '../daemon/
 import { html5DragDrop, selectedOption, syntheticHover } from '../daemon/inputs.js';
 import { describeRecipeAttempt, fillWithRecipe, selectWithRecipe, typeWithRecipe } from '../execution/recipes.js';
 import { ComponentStore, storeBook } from '../skills/components.js';
-import { markLiteralCredentialValue, mayHoldLiteralCredential, resolveSecretsDeepAsync, scrubSecrets, scrubSecretsDeep } from '../shared/secrets.js';
+import { hasSecretMarker, markLiteralCredentialValue, mayHoldLiteralCredential, notePasswordFieldLine, resolveSecretsDeepAsync, scrubSecrets, scrubSecretsDeep } from '../shared/secrets.js';
 import { isRefTarget, refHint, resolveTarget, snapshot, truncate } from '../daemon/refs.js';
 import { controlFromTarget, siteModel } from '../skills/sitemap.js';
 import { settleDom, settlePage } from '../daemon/settle.js';
@@ -631,7 +631,16 @@ async function markCredentialArgs(session: BrowserSession, name: string, args: R
 async function isPasswordField(session: BrowserSession, target: string): Promise<boolean> {
   try {
     const page = await session.getPage();
-    return await resolveTarget(page, target)
+    return await isPasswordInput(resolveTarget(page, target));
+  } catch {
+    return false;
+  }
+}
+
+/** isPasswordField over a locator the caller already holds. */
+async function isPasswordInput(locator: Locator): Promise<boolean> {
+  try {
+    return await locator
       .first()
       .evaluate(
         (el) => {
@@ -739,6 +748,17 @@ async function runStep(
         })
       : null;
     let result = scrubSecrets(await dispatch(session, name, live, screenshotDir, signal, opts.resolved, obs));
+    // A secret typed into a PASSWORD field: that field's own line is where an
+    // ambiguous secret (a value some non-credential variable holds too) may be
+    // scrubbed, and nowhere else (secrets.ts notePasswordFieldLine; fwkb39's
+    // "KB Dashboard for admin" heading). Before the diff below is captured.
+    if ((name === 'fill' || name === 'type') && hasSecretMarker(String(name === 'fill' ? (args.value ?? '') : (args.text ?? ''))) && page) {
+      const field = opts.resolved?.target ?? (typeof args.target === 'string' ? resolveTarget(page, args.target) : null);
+      if (field && (await isPasswordInput(field))) {
+        const line = await field.first().ariaSnapshot({ timeout: 1_000 }).catch(() => '');
+        notePasswordFieldLine(line.split('\n')[0].replace(/^\s*-\s*/, ''));
+      }
+    }
     // The action's evidence: the DOM quiet, the requests it started landed, a
     // debounced request given its moment, the url held still after a tool that
     // may navigate, the expected effect polled for.

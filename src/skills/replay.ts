@@ -297,6 +297,14 @@ export interface ReplayResult {
    * values so a replay never claims a persist it only echoed.
    */
   echoedValues: string[];
+  /**
+   * Labels of labelled reads this replay SKIPPED — no element matched, or the
+   * read errored — so their values were never observed. Unlike an echo (a
+   * value seen, only not confident), nothing was read at all: the flow runner
+   * does not call a step clean that skipped the read of an output it declares
+   * (src/daemon/step-verdict.ts; fwsi7 05-open's checked_out_to_user).
+   */
+  skippedReads?: string[];
   /** Per-step lines for the tool result. */
   lines: string[];
   /** Soft-expectation misses: logged, never fatal in Stage 1. */
@@ -942,7 +950,10 @@ export async function replaySkill(
     if (!resolveError) absentDialog = null;
     if (resolveError) {
       if (isRead) {
-        if (step.label && step.locators.target?.length) readsSkipped++;
+        if (step.label && step.locators.target?.length) {
+          readsSkipped++;
+          (res.skippedReads ??= []).push(step.label);
+        }
         res.warnings.push(`step ${tag}: skipped read — ${resolveError}`);
         res.lines.push(`${head} → skipped (${resolveError})`);
         return 'skipped';
@@ -1107,7 +1118,10 @@ export async function replaySkill(
             return framedRead(decodeRead(result), args.frame);
           });
           if (!taken.ok) {
-            if (step.label) readsSkipped++;
+            if (step.label) {
+              readsSkipped++;
+              (res.skippedReads ??= []).push(step.label);
+            }
             res.warnings.push(`step ${tag}: read errored — ${clip(taken.message, 120)}`);
             res.lines.push(`${head} → skipped (${clip(taken.message, 120)})`);
             return { status: 'skipped' };

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import os from 'node:os';
 import path from 'node:path';
 import {
@@ -10,6 +10,8 @@ import {
   scrubSecrets,
   rewriteLiteralCredentials,
   ambiguousCredentialsIn,
+  notePasswordFieldLine,
+  resolveSecrets,
 } from '../src/shared/secrets.js';
 import { emitFlowFile } from '../src/spec/emit.js';
 import type { SpecFlow } from '../src/spec/ir.js';
@@ -224,5 +226,52 @@ describe('the compiler repairs a credential in the clear (round 48)', () => {
     const spec = { params: { v1: 'admin' } };
     expect(rewriteLiteralCredentials(spec, env)).toEqual({ value: spec, names: [] });
     expect(ambiguousCredentialsIn(spec, env)).toEqual(['APP_PASSWORD']);
+  });
+});
+
+/**
+ * fwkb39 (round 54): kanboard's password equals its username ("admin",
+ * APP_PASSWORD = APP_EMAIL). Resolving {{env:APP_PASSWORD}} put "admin" on the
+ * scrub ledger, and every page line naming the user was rewritten — the
+ * recorded post-login heading became `- heading "KB Dashboard for
+ * {{env:APP_PASSWORD}}"`, a check that no longer checks anything. An AMBIGUOUS
+ * value (a non-credential variable holds it too) is scrubbed only where it is
+ * the value of a password field; an unambiguous one everywhere, as before.
+ */
+describe('the scrub of an ambiguous secret (fwkb39)', () => {
+  const saved: Record<string, string | undefined> = {};
+  const set = (vars: Record<string, string>) => {
+    for (const [k, v] of Object.entries(vars)) {
+      saved[k] = process.env[k];
+      process.env[k] = v;
+    }
+  };
+  afterEach(() => {
+    for (const [k, v] of Object.entries(saved)) {
+      if (v === undefined) delete process.env[k];
+      else process.env[k] = v;
+    }
+    clearSecretLedger();
+  });
+
+  it('never rewrites page text naming the user', () => {
+    set({ BP_KB_PASSWORD: 'admin', BP_KB_EMAIL: 'admin' });
+    expect(resolveSecrets('{{env:BP_KB_PASSWORD}}')).toBe('admin');
+    const page = '- heading "KB Dashboard for admin" [level=1]\nCreator: admin';
+    expect(scrubSecrets(page)).toBe(page);
+  });
+
+  it('scrubs it in the password field that holds it, and only there', () => {
+    set({ BP_KB_PASSWORD: 'admin', BP_KB_EMAIL: 'admin' });
+    resolveSecrets('{{env:BP_KB_PASSWORD}}');
+    notePasswordFieldLine('textbox "Password": admin');
+    const diff = '- heading "KB Dashboard for admin"\n- textbox "Username": admin\n- textbox "Password": admin';
+    expect(scrubSecrets(diff)).toBe('- heading "KB Dashboard for admin"\n- textbox "Username": admin\n- textbox "Password": {{env:BP_KB_PASSWORD}}');
+  });
+
+  it('an unambiguous secret is still scrubbed everywhere', () => {
+    set({ BP_KB_PASSWORD: 'kb-secret-9', BP_KB_EMAIL: 'admin' });
+    resolveSecrets('{{env:BP_KB_PASSWORD}}');
+    expect(scrubSecrets('- heading "Hello kb-secret-9"')).toBe('- heading "Hello {{env:BP_KB_PASSWORD}}"');
   });
 });

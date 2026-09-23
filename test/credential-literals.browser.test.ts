@@ -115,3 +115,70 @@ d('literal credentials at the tool layer', () => {
     expect(recordedFills().at(-1)!.args.value).toBe('http://localhost:3000');
   });
 });
+
+/**
+ * fwkb39 (round 54) through the real tool layer: kanboard's password is its
+ * username. The secret typed into the password field is scrubbed in THAT
+ * field's line of the recorded diff; the post-login heading naming the user
+ * is recorded as the page shows it, so its expectation still checks it.
+ */
+const KB = `<!doctype html><html><head><title>Sign in</title></head><body>
+<label for="user">Username</label><input id="user">
+<label for="pw">Password</label><input id="pw" type="password">
+<button id="go" type="button" onclick="document.getElementById('home').innerHTML = '<h1>KB Dashboard for ' + document.getElementById('user').value + '</h1>'">Sign in</button>
+<div id="home"></div>
+</body></html>`;
+
+d('an ambiguous secret is scrubbed only in its password field (fwkb39)', () => {
+  let home: string;
+  let session: BrowserSession;
+  const saved: Record<string, string | undefined> = {};
+  const run = (name: string, args: Record<string, unknown>) => executeTool(session, name, args, os.tmpdir());
+  const steps = () => session.script!.entries.filter((e): e is RecordedStep => e.k === 'step');
+
+  beforeAll(async () => {
+    home = fs.mkdtempSync(path.join(os.tmpdir(), 'bp-kb-scrub-'));
+    process.env.SITELOOPER_HOME = home;
+    for (const [k, v] of Object.entries({ BP_KB_PASSWORD: 'admin', BP_KB_EMAIL: 'admin' })) {
+      saved[k] = process.env[k];
+      process.env[k] = v;
+    }
+    clearSecretLedger();
+    session = new BrowserSession({ session: 'kb-scrub', persist: false, learn: true });
+    const page = await session.getPage();
+    const file = path.join(home, 'kb.html');
+    fs.writeFileSync(file, KB);
+    await page.goto(pathToFileURL(file).href);
+  }, 60_000);
+
+  afterAll(async () => {
+    await session?.close();
+    for (const [k, v] of Object.entries(saved)) {
+      if (v === undefined) delete process.env[k];
+      else process.env[k] = v;
+    }
+    delete process.env.SITELOOPER_HOME;
+    clearSecretLedger();
+    fs.rmSync(home, { recursive: true, force: true });
+  });
+
+  it('keeps the heading naming the user, and scrubs the password field line', async () => {
+    await run('fill', { target: '#user', value: 'admin' });
+    await run('fill', { target: '#pw', value: '{{env:BP_KB_PASSWORD}}' });
+    const page = await session.getPage();
+    expect(await page.inputValue('#pw')).toBe('admin');
+    const pwFill = steps().at(-1)!;
+    expect(pwFill.args.value).toBe('{{env:BP_KB_PASSWORD}}');
+    const pwDiff = JSON.stringify(pwFill.diff ?? {});
+    expect(pwDiff).toContain('textbox \\"Password\\": {{env:BP_KB_PASSWORD}}');
+    expect(pwDiff).not.toContain('textbox \\"Password\\": admin');
+
+    await run('click', { target: '#go' });
+    const click = steps().at(-1)!;
+    const clickDiff = JSON.stringify(click.diff ?? {});
+    expect(clickDiff).toContain('KB Dashboard for admin');
+    expect(clickDiff).not.toContain('KB Dashboard for {{env:');
+    const read = await run('read', { target: 'h1', what: 'text' });
+    expect(read.result).toContain('KB Dashboard for admin');
+  }, 60_000);
+});
