@@ -1,5 +1,6 @@
 import type { RecordedEntry } from '../daemon/recorder.js';
 import type { ChatMessage, Provider, ToolDef } from '../agent/llm.js';
+import { replaceAsToken } from './ledger.js';
 import type { Skill, SkillStep } from './store.js';
 
 /**
@@ -42,6 +43,57 @@ export interface RelabelCase {
 
 /** old name -> new name, per instruction index. */
 export type RelabelPlan = Map<number, Record<string, string>>;
+
+/**
+ * Renames for report KEYS that embed one of this run's own values: a record
+ * number the run minted (flow.ts textMints), a url id it banked, its runid.
+ * The key is the name every replay publishes under and every later reference
+ * spells, so a key carrying the recording's value is a frozen literal as
+ * surely as a value would be.
+ *
+ * repairdesk fwrd86: 06-delete reported the archived row as
+ * `list_row_RD-1015`. The VALUE was republished live on every replay
+ * (`"list_row_RD-1015": "RD-1016 | …"` on n2), but the key kept n1's ticket, in
+ * s_6532a2's reportTemplate, in the flow's outputs and in the compiled typed
+ * output `06-delete.list_row_RD-1015`. The export's leak scan saw it
+ * (`flow.steps[5].outputs[6]: "RD-1015" (output) in "list_row_RD-1015"`) and
+ * only warned.
+ *
+ * Provenance decides, never the key's characters: `runValues` are values the
+ * caller established this run made. The value comes out of the key as a whole
+ * token (either case: model-chosen keys are usually lower-cased), with the
+ * separators it leaves collapsed — `list_row_RD-1015` becomes `list_row`. A
+ * name taken by another key of the same report gets `_2`, `_3`, …; a key that
+ * WAS the value becomes `value`. Applied through the same machinery as the
+ * model's relabel (entries, ledger, compiled skills), before buildFlow mints
+ * any reference, so a later step's reference, the flow's outputs and the
+ * compiled typed output all spell the new name.
+ */
+export function runValueKeyRenames(entries: readonly RecordedEntry[], runValues: readonly string[]): RelabelPlan {
+  const plan: RelabelPlan = new Map();
+  const values = [...new Set(runValues.map((v) => String(v ?? '').trim()).filter((v) => v.length >= 2))].sort((a, b) => b.length - a.length);
+  if (!values.length) return plan;
+  let index = 0;
+  for (const e of entries) {
+    if (e.k === 'instruction') index++;
+    if (e.k !== 'report' || !e.values) continue;
+    const keys = Object.keys(e.values);
+    const renames: Record<string, string> = {};
+    const taken = new Set(keys);
+    for (const key of keys) {
+      let stripped = key;
+      for (const v of values) for (const spelling of new Set([v, v.toLowerCase()])) stripped = replaceAsToken(stripped, spelling, '\u0000');
+      if (stripped === key) continue;
+      const base = stripped.replace(/[_\-.\s]*\u0000[_\-.\s]*/g, '_').replace(/^_+|_+$/g, '') || 'value';
+      let name = base;
+      for (let n = 2; taken.has(name); n++) name = `${base}_${n}`;
+      taken.add(name);
+      renames[key] = name;
+    }
+    if (Object.keys(renames).length) plan.set(index, { ...(plan.get(index) ?? {}), ...renames });
+  }
+  return plan;
+}
 
 export function relabelCases(entries: RecordedEntry[]): RelabelCase[] {
   const out: RelabelCase[] = [];
@@ -199,7 +251,9 @@ export function applyRelabelToEntries(entries: RecordedEntry[], plan: RelabelPla
         values[nk] = v;
       }
       e.values = values;
-      if (Object.keys(done).length) e.relabel = done;
+      // Merged: a second pass (runValueKeyRenames after the model's) must not
+      // erase the first one's trace.
+      if (Object.keys(done).length) e.relabel = { ...(e.relabel ?? {}), ...done };
     }
   }
   return applied;
