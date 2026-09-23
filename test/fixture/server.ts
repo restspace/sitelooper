@@ -802,6 +802,46 @@ document.getElementById('save').addEventListener('click', async () => {
 </script>
 </body></html>`;
 
+/**
+ * A filter popup toggled by one button (round 56, vikunja fwvk8 02-create):
+ * FILTERS opens and closes it, each click posting `/commit/filters/toggle`;
+ * Add posts `/commit/add/task`. `/filters` starts with the popup shut,
+ * `/filters?open=1` with it open, and `/filters?open=1&stuck=1` open with a
+ * FILTERS button that no longer closes it.
+ */
+const FILTERS = (open: boolean, stuck: boolean) => `<!doctype html><html><head><meta charset="utf-8"><title>Filters</title></head><body>
+<h1>Bench Project</h1>
+<button id="filters" type="button">Filters</button>
+<div id="popup" ${open ? '' : 'hidden'}><input aria-label="Type a search or filter query…"><button type="button">Custom</button></div>
+<button id="add" type="button">Add</button>
+<script>
+document.getElementById('filters').addEventListener('click', async () => {
+  await fetch('/commit/filters/toggle', { method: 'POST' });
+  ${stuck ? '' : "const p = document.getElementById('popup'); p.hidden = !p.hidden;"}
+});
+document.getElementById('add').addEventListener('click', () => fetch('/commit/add/task', { method: 'POST' }));
+</script>
+</body></html>`;
+
+/**
+ * A modal form (round 56): its Save posts `/commit/save/<title>` and closes
+ * the form, recording nothing but the form going. The Save button stands
+ * OUTSIDE the form container, so it resolves whether the form is open or
+ * not. `/modal?open=1` starts with the form open; `/modal` with it shut.
+ */
+const MODAL = (open: boolean) => `<!doctype html><html><head><meta charset="utf-8"><title>Modal</title></head><body>
+<h1>Tasks</h1>
+<div id="form" ${open ? '' : 'hidden'}><h2>Edit task</h2><input aria-label="Title"></div>
+<button id="save" type="button">Save</button>
+<script>
+document.getElementById('save').addEventListener('click', async () => {
+  const title = document.querySelector('#form input').value;
+  await fetch('/commit/save/' + encodeURIComponent(title), { method: 'POST' });
+  document.getElementById('form').hidden = true;
+});
+</script>
+</body></html>`;
+
 const CONTROLS = `<!doctype html><html><head><meta charset="utf-8"><title>Controls</title></head><body>
 <h1>Controls</h1>
 <select id="code" aria-label="Code">
@@ -1382,6 +1422,8 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
         return html(HOP(tail('/hop/')));
       }
       if (url === '/controls') return html(CONTROLS);
+      if (url === '/modal' || url === '/modal?open=1') return html(MODAL(url.endsWith('open=1')));
+      if (url === '/filters' || url.startsWith('/filters?')) return html(FILTERS(url.includes('open=1'), url.includes('stuck=1')));
       if (url === '/price' || url === '/price?stuck=1') return html(PRICE(url.endsWith('stuck=1')));
       if (url === '/imagelink') return html(IMAGE_LINK);
       if (url === '/transform') return html(TRANSFORM);

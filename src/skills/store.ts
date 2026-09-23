@@ -409,6 +409,16 @@ export interface StepExpectation {
    */
   removedContains?: string[];
   /**
+   * The removal is the step's REQUIRED precondition, never "already in
+   * effect" (execution/toggle.ts hideBefore): the same segment filled, typed
+   * or selected into an element these removed lines list — the click submits
+   * that work (a modal Save whose only recorded effect was the modal
+   * closing) — or an earlier step of the segment put one of these lines on
+   * the page itself. Such a click is never skipped: its lines absent before
+   * it is a stop. Compile sets it (compile.ts markRequiredRemovals).
+   */
+  removalRequired?: true;
+  /**
    * The line dialect `addedContains` and `alertContains` are written in
    * (src/execution/snapshot.ts LineDialect); absent = 1, every expectation
    * compiled before dialects existed. Per step, not per skill: a repair can

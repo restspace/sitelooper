@@ -49,7 +49,7 @@ export { consequentialExpectations, isEchoLine } from '../execution/expect.js';
 import { candidateNames, echoVerdict, noteInteraction, setsSomething } from '../execution/echo.js';
 import { noteFill, rearmStandingFills, restoreStandingFills, standingFills, standingFillsLost } from '../execution/refill.js';
 import { hasTotpMarker, resolveSecrets, resolveSecretsAsync } from '../shared/secrets.js';
-import { toggleAlreadyShown, toggleEffectLines } from '../execution/toggle.js';
+import { hideBefore, hideEffectLines, hideVerdict, toggleAlreadyShown, toggleEffectLines } from '../execution/toggle.js';
 import { mayNavigateToDestination, navigateToDestination, textHeldElsewhere } from '../execution/recover.js';
 import { CONTEXT_CONTRACT, contractOf, contractVerdict, isVerified, originOf, stepsCarryContext, type Skill, type SkillStep } from './store.js';
 import { armPageEffect, describeFramePath, pageIndexVerdict, rootFor, stepEffect, type Root } from '../execution/context.js';
@@ -1067,6 +1067,26 @@ export async function replaySkill(
       res.lines.push(`${head} → skipped (already in effect)`);
       return 'skipped';
     }
+    // A HIDE — a click whose whole recorded effect was taking lines off the
+    // page (vikunja fwvk8-n1 02-create's FILTERS click closing the filter
+    // popup) — is already in effect when a look that covered the page shows
+    // none of them: clicking would OPEN what it was recorded closing. The
+    // shared hideAlreadyInEffect, which the artifact asks too.
+    // ...unless the removal is REQUIRED (a submit of what the segment filled,
+    // or what it opened itself): then its lines absent is a stop (hideBefore).
+    const hidden = hideEffectLines(step);
+    const before = hidden.length ? await hideBefore(page, hidden, Boolean(step.expect?.removalRequired), params, tag, dialectOf(step)) : {};
+    if (before.skip) {
+      res.warnings.push(`step ${tag}: what this click was recorded removing (${clip(hidden[0], 60)}) is not on the page — a click would bring it back; skipped as already in effect`);
+      res.lines.push(`${head} → skipped (already in effect)`);
+      return 'skipped';
+    }
+    if (before.stop) {
+      res.failedAt = failIndex;
+      res.reason = before.stop;
+      res.lines.push(`${head} → FAILED: ${before.stop}`);
+      return 'stop';
+    }
 
     const warnings: string[] = [];
     /** Where a recorded page effect left the procedure, once the action has run. */
@@ -1670,6 +1690,20 @@ const expectedChanges: StepGate = async ({ outcome, step, params, tag, args, pag
   return verdict.stop || verdict.unobserved || verdict.absentDialog || verdict.confirmed || verdict.warnings.length ? verdict : null;
 };
 
+/**
+ * A hide's own gate (execution/toggle.ts hideVerdict): every line the click
+ * was recorded removing still on the page afterwards is a stop — fwvk8's
+ * FILTERS click opening the popup it was recorded closing passed silently,
+ * with no line to check.
+ */
+const expectedRemovals: StepGate = async ({ step, params, tag, page }) => {
+  const lines = hideEffectLines(step);
+  if (!lines.length) return null;
+  const verdict = hideVerdict(lines, params, await captureLines(page, dialectOf(step)), tag);
+  if (verdict.stop) return { stop: verdict.stop };
+  return verdict.warnings.length ? { warnings: verdict.warnings, ...(verdict.unobserved ? { unobserved: verdict.unobserved } : {}) } : null;
+};
+
 /** The effect gates a step passes through after its action, in order. */
 /**
  * The tab is on a browser error page (a crashed renderer, a navigation the
@@ -1693,7 +1727,7 @@ const gotoLanding: StepGate = ({ page, step, args, tag }) => {
   return stop ? { stop } : null;
 };
 
-const STEP_GATES: StepGate[] = [errorPage, gotoLanding, expectedUrl, expectedChanges, alerts];
+const STEP_GATES: StepGate[] = [errorPage, gotoLanding, expectedUrl, expectedChanges, expectedRemovals, alerts];
 
 /** The line dialect a step's recorded lines are in: absent is dialect 1, every expectation compiled before dialects existed. */
 function dialectOf(step: SkillStep): LineDialect {

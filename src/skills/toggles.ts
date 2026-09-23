@@ -71,7 +71,19 @@ function showsWhatWasHidden(first: RecordedStep, second: RecordedStep): boolean 
   const a = first.diff!;
   const b = second.diff;
   if (!b || !b.added.length || b.alerts.length || second.effect || second.fingerprintAfter) return false;
-  if (b.url !== a.url) return false;
+  // The same PAGE, not the same url: a disclosure may write its view state
+  // into the query. grafana fwgr69-n1's heading "Panel options" collapsed on
+  // `…&editPanel=1` and re-expanded onto `…&editPanel=1&showCategory=Panel%20
+  // options`; compared whole, the pair broke and compile dropped the collapse
+  // alone (compile.ts abandonedRepeatClick). The query is dropped, as the
+  // segment splitter drops it (urlPattern with `query: false`) — but only
+  // when the first click's own removals are recorded, so the lines-shared
+  // test below is the evidence. A recording from before add-less removals
+  // were kept has only "the first added nothing" to go on, and there a query
+  // change is the one thing that says the second click DID something:
+  // fwgr18-25 opened the auto-refresh picker (added [], no removals kept) and
+  // chose "1 minute" (`&refresh=1m`), and those two clicks are no toggle.
+  if (b.url !== a.url && (!a.removed?.length || withoutQuery(b.url) !== withoutQuery(a.url))) return false;
   if (!framesEqual(first.locators.target?.frame, second.locators.target?.frame)) return false;
   if (a.removed === undefined) return true;
   const hidden = new Set(a.removed.map(norm));
@@ -80,6 +92,18 @@ function showsWhatWasHidden(first: RecordedStep, second: RecordedStep): boolean 
 }
 
 const norm = (line: string) => line.trim();
+
+/** A url with its query removed (origin, path and hash kept), or the url itself when it does not parse. */
+function withoutQuery(url: string | undefined): string | undefined {
+  if (url === undefined) return undefined;
+  try {
+    const u = new URL(url);
+    u.search = '';
+    return u.toString();
+  } catch {
+    return url;
+  }
+}
 
 /** Whether two clicks name the same control: one identifying (non-positional) candidate in common. */
 export function sameControl(a: RecordedStep, b: RecordedStep): boolean {

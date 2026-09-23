@@ -7,6 +7,7 @@ import { occursAsToken, replaceAsToken, unseenGotoParts } from './ledger.js';
 import { WILDCARD, escapeRe, identityRe, maskVolatile } from '../shared/text.js';
 import { CREDENTIAL_KEY, fillParamsDeep, queryPairs, safeDecode, urlParts, urlShapeOf } from '../execution/url.js';
 import { contextsEqual, framesEqual, stepEffect } from '../execution/context.js';
+import { hideEffectLines } from '../execution/toggle.js';
 import { collapseTogglePairs, dropSupersededSets } from './toggles.js';
 import { locatingSlots, scopeReadBySlot } from './readscope.js';
 
@@ -812,7 +813,7 @@ export function compileSkills(input: CompileInput): Skill[] {
     const mintedForStart = mintedMap((m) => m.keptIndex < base);
     const notes: TransformNote[] = [];
     const folded = foldLoops(
-      coalesceControls(dropDismissedDialogs(dropSupersededNavigation(skillSteps, notes), notes, (s) => recordedDiffs.get(s)), notes),
+      coalesceControls(dropDismissedDialogs(dropSupersededNavigation(markRequiredRemovals(skillSteps, (s) => recordedDiffs.get(s)), notes, (s) => recordedDiffs.get(s)), notes, (s) => recordedDiffs.get(s)), notes),
       input.instruction,
       notes,
     );
@@ -2322,7 +2323,15 @@ function expectationFor(step: RecordedStep, slots: Map<string, string>): StepExp
   // dialog AND the order line it had half-added (`- row "£ 0.00"`, the product
   // combobox showing {{v4}}): that step undid work, it did not merely dismiss.
   const consequential = removed.some((l) => RECORD_LINE.test(l) || SLOT_LINE.test(l));
-  if (!consequential && removed.some((l) => DIALOG_LINE.test(l))) out.removedContains = removed.slice(0, MAX_ADDED_LINES).map((l) => l.slice(0, 120));
+  // ...and, since round 56, what a CLICK took off the page when that was its
+  // whole effect, dialog or not: vikunja fwvk8-n1 02-create's FILTERS click
+  // closed the filter popup (added [], removed its search box and buttons),
+  // and with no line to check it opened the popup on every replay whose page
+  // had it shut, and passed. Both runners now skip such a click when none of
+  // its lines is on the page, and stop when all of them survive it
+  // (execution/toggle.ts hideEffectLines).
+  const hides = step.tool === 'click' && removed.length > 0;
+  if (!consequential && (hides || removed.some((l) => DIALOG_LINE.test(l)))) out.removedContains = removed.slice(0, MAX_ADDED_LINES).map((l) => l.slice(0, 120));
   if (!Object.keys(out).length) return undefined;
   // The recording's dialect travels with its lines, so replay and the artifact
   // render the live page the way these lines were written.
@@ -2976,7 +2985,7 @@ export function coalesceControls(steps: SkillStep[], notes?: TransformNote[]): S
  * intermediate page may have been load-bearing (a session bootstrap, a
  * redirect that set a cookie), and this cannot tell from the outside.
  */
-export function dropSupersededNavigation(steps: SkillStep[], notes?: TransformNote[]): SkillStep[] {
+export function dropSupersededNavigation(steps: SkillStep[], notes?: TransformNote[], diffOf?: (step: SkillStep) => StepDiff | undefined): SkillStep[] {
   return steps.filter((step, i) => {
     const superseded = step.tool === 'goto' && steps[i + 1]?.tool === 'goto';
     if (superseded) notes?.push({ name: 'dropSupersededNavigation', at: i + 1, reason: `the next step navigates again, to ${JSON.stringify(String(steps[i + 1].args.url ?? ''))}` });
@@ -2986,7 +2995,7 @@ export function dropSupersededNavigation(steps: SkillStep[], notes?: TransformNo
       notes?.push({ name: 'dropSupersededNavigation', at: i + 1, reason: `a link click that recorded no consequence, replaced by the goto at step ${replacedBy + 1}` });
       return false;
     }
-    const repeatedBy = abandonedRepeatClick(steps, i);
+    const repeatedBy = abandonedRepeatClick(steps, i, diffOf);
     if (repeatedBy !== null) {
       notes?.push({ name: 'dropSupersededNavigation', at: i + 1, reason: `a click that recorded no consequence, repeated with one at step ${repeatedBy + 1}` });
       return false;
@@ -2995,18 +3004,66 @@ export function dropSupersededNavigation(steps: SkillStep[], notes?: TransformNo
   });
 }
 
+/**
+ * Marks a hide (a click whose whole recorded effect was a removal, compiled
+ * with `removedContains`) whose removal the procedure itself REQUIRES, by
+ * provenance within the segment:
+ *  - an earlier fill, type or select put a value into an element its removed
+ *    lines list (the same role and name): the click submits that work.
+ *    kanboard fwkb37-n1's modal Save removed `- textbox "Title": …` after the
+ *    step typed the title — a data write whose only recorded effect was the
+ *    modal closing. Skipped as "already in effect" when the modal was not
+ *    open, it would pass with nothing written;
+ *  - an earlier step's recorded additions include one of its removed lines:
+ *    the procedure opened what the click closes, so it must be open, and if
+ *    it is not that is a failure, not a state already reached (vikunja
+ *    fwvk5-n1's "Set Priority" closed the datepicker step 49 had opened).
+ * Such a step is never skipped (execution/toggle.ts hideBefore). Marked in
+ * place, before any step is dropped. Judged from the recording (`diffOf`).
+ */
+function markRequiredRemovals(steps: SkillStep[], diffOf: (step: SkillStep) => StepDiff | undefined): SkillStep[] {
+  const element = (line: string) => /^-\s*([\w-]+)(\s+"(?:[^"\\]|\\.)*")?/.exec(line.trim())?.slice(1, 3).join('') ?? line.trim();
+  steps.forEach((step, i) => {
+    if (!hideEffectLines(step).length) return;
+    const removed = diffOf(step)?.removed ?? [];
+    if (!removed.length) return;
+    const lines = new Set(removed.map((l) => l.trim()));
+    const elements = new Set(removed.map(element));
+    const earlier = steps.slice(0, i);
+    const opened = earlier.some((s) => (diffOf(s)?.added ?? []).some((l) => lines.has(l.trim())));
+    const filled = earlier.some((s) => (s.tool === 'fill' || s.tool === 'type' || s.tool === 'select') && (diffOf(s)?.added ?? []).some((l) => elements.has(element(l))));
+    if (opened || filled) step.expect = { ...step.expect, removalRequired: true };
+  });
+  return steps;
+}
+
 /** A click's primary locator — the first candidate it was recorded with — as a comparable key. */
 function primaryLocator(step: SkillStep): string | null {
   const first = step.locators.target?.[0];
   return first ? JSON.stringify(first) : null;
 }
 
-/** A click that recorded nothing at all: no page change, alert, effect, mint or label, and not a toggle. */
-function consequenceFree(steps: readonly SkillStep[], k: number): boolean {
+/**
+ * A click that recorded nothing at all: no page change, alert, effect, mint or
+ * label, and not a toggle.
+ *
+ * Judged from the RECORDING where it is at hand (`diffOf`), not only from the
+ * compiled expectation, which keeps a removal only when a dialog went and
+ * drops lines that identify nothing. grafana fwgr69-n1 02-create's click on
+ * heading "Panel options" COLLAPSED the section — added [], removed its four
+ * lines — and its compiled expect held no line, so it read as a click that did
+ * nothing: dropped, while its re-expanding twin stayed as a plain click that
+ * collapsed the open section on every replay (s_3af38e step 5; 132 and 58
+ * turns). A recorded added line or alert is a consequence; a recorded REMOVAL
+ * is weighed by abandonedRepeatClick, which alone knows what came after it.
+ */
+function consequenceFree(steps: readonly SkillStep[], k: number, diffOf?: (step: SkillStep) => StepDiff | undefined): boolean {
   const s = steps[k];
   if (s.tool !== 'click' || s.effect || s.mints || s.label !== undefined || s.toggle) return false;
   const e = s.expect;
   if (e?.addedContains?.length || e?.removedContains?.length || e?.alertContains) return false;
+  const d = diffOf?.(s);
+  if (d && (d.added.length || d.alerts.length)) return false;
   const before = steps.slice(0, k).reverse().find((p) => p.expect?.urlPattern)?.expect?.urlPattern;
   return !before || !e?.urlPattern || e.urlPattern === before;
 }
@@ -3031,8 +3088,8 @@ function consequenceFree(steps: readonly SkillStep[], k: number): boolean {
  * recorded nothing is no evidence either click failed; a toggle, a click with
  * a page effect, a mint or a label is never dropped (consequenceFree).
  */
-function abandonedRepeatClick(steps: readonly SkillStep[], i: number): number | null {
-  if (!consequenceFree(steps, i)) return null;
+function abandonedRepeatClick(steps: readonly SkillStep[], i: number, diffOf?: (step: SkillStep) => StepDiff | undefined): number | null {
+  if (!consequenceFree(steps, i, diffOf)) return null;
   const key = primaryLocator(steps[i]);
   if (!key) return null;
   const fieldTargets = new Set<string>();
@@ -3047,18 +3104,49 @@ function abandonedRepeatClick(steps: readonly SkillStep[], i: number): number | 
   for (let j = i + 1; j < steps.length; j++) {
     const s = steps[j];
     if (s.tool === 'click' && primaryLocator(s) === key) {
-      if (consequenceFree(steps, j) || s.toggle || s.effect) return null;
+      if (consequenceFree(steps, j, diffOf) || s.toggle || s.effect) return null;
       const e = s.expect;
       const before = steps.slice(0, j).reverse().find((p) => p.expect?.urlPattern)?.expect?.urlPattern;
       const moved = Boolean(e?.urlPattern && before && e.urlPattern !== before);
-      return moved || s.mints || e?.addedContains?.length || e?.alertContains ? j : null;
+      if (!(moved || s.mints || e?.addedContains?.length || e?.alertContains)) return null;
+      return removalUndoneBetween(steps, i, j, diffOf) ? j : null;
     }
     if (['fill', 'type', 'press', 'read', 'read_all', 'wait_for'].includes(s.tool)) continue;
     const k = primaryLocator(s);
-    if (s.tool === 'click' && consequenceFree(steps, j) && k && fieldTargets.has(k)) continue;
+    if (s.tool === 'click' && consequenceFree(steps, j, diffOf) && k && fieldTargets.has(k)) continue;
     return null;
   }
   return null;
+}
+
+/**
+ * What the first click of a repeat TOOK OFF the page, as recorded, must have
+ * been put back by the field work between the two clicks — never by the
+ * repeat itself. The two outcomes the recording can show:
+ *
+ *  - an UNDO PAIR: the repeat's recorded additions give back what the first
+ *    removed. fwgr69's heading "Panel options" collapsed its section, then the
+ *    same click re-expanded it. Dropping one click of such a pair leaves the
+ *    other to undo the state the replay starts in, so both stay (or the
+ *    toggle rule, collapseTogglePairs, which runs first, takes the pair).
+ *  - a removal the field work restored: espocrm fwec5's first Save cleared
+ *    the amount (`- textbox "": 12500` removed), the agent typed it back
+ *    (`- textbox "": 12,500` added — the same element, re-formatted), and
+ *    the second Save did the work. The first Save's only consequence was
+ *    undone before the repeat, so it is still a failed attempt.
+ *
+ * Lines are matched as elements (role and name), not whole lines, because a
+ * restored value can come back formatted. No recorded diff: nothing to weigh,
+ * as before.
+ */
+function removalUndoneBetween(steps: readonly SkillStep[], i: number, j: number, diffOf?: (step: SkillStep) => StepDiff | undefined): boolean {
+  const removed = diffOf?.(steps[i])?.removed ?? [];
+  if (!removed.length) return true;
+  const element = (line: string) => /^-\s*([\w-]+)(\s+"(?:[^"\\]|\\.)*")?/.exec(line.trim())?.slice(1, 3).join('') ?? line.trim();
+  const repeatAdded = new Set((diffOf?.(steps[j])?.added ?? []).map((l) => l.trim()));
+  if (removed.some((l) => repeatAdded.has(l.trim()))) return false;
+  const restored = new Set(steps.slice(i + 1, j).flatMap((s) => diffOf?.(s)?.added ?? []).map(element));
+  return removed.every((l) => restored.has(element(l)));
 }
 
 /**
