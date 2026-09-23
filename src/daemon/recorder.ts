@@ -537,6 +537,33 @@ export class ScriptRecorder {
     this.append(step);
   }
 
+  /**
+   * Insert a synthetic step right after `anchor`, a step of this take: a
+   * read-back that must run where the recording could still see its element
+   * (selectionReadBack — the combobox a selection filled is gone once the
+   * line is confirmed). Appended instead when the anchor is not found.
+   */
+  insertStepAfter(anchor: RecordedStep, step: RecordedStep): void {
+    const at = this.entries.lastIndexOf(anchor);
+    if (at < this.priorEntries) {
+      this.append(step);
+      return;
+    }
+    this.entries.splice(at + 1, 0, step);
+    this.rewrite();
+  }
+
+  /** The steps recorded since the current instruction began, in order. */
+  stepsThisInstruction(): RecordedStep[] {
+    const out: RecordedStep[] = [];
+    for (let i = this.entries.length - 1; i >= 0; i--) {
+      const e = this.entries[i];
+      if (e.k === 'instruction') break;
+      if (e.k === 'step') out.unshift(e);
+    }
+    return out;
+  }
+
   /** Values already read via a read step since the last instruction began. */
   readResultsThisInstruction(): Set<string> {
     const out = new Set<string>();
@@ -956,6 +983,33 @@ export async function captureReadBack(page: Page, value: string, label?: string)
       }
     }
   }
+  // Ambiguous by text, but every match inside ONE record: the same row
+  // showing one value twice. An Odoo order line shows its product in the
+  // product AND the description column, so odoo fwod82 04-change's
+  // `line1_product` counted 2, had no row anchor that was not the value
+  // itself, and was refused — the one value a later step keyed on. One row is
+  // one record: this is the count === 1 case, pinned to the first match in
+  // that row. The fwod9 hazard was matches across DIFFERENT records (an
+  // earlier run's customer and this run's), which this does not admit.
+  if (count > 1) {
+    const oneRecord = await loc
+      .evaluateAll((els) => {
+        const rows = els.map((el) => (el as Element).closest('tr, [role="row"]'));
+        return rows[0] !== null && rows.every((r) => r === rows[0]);
+      })
+      .catch(() => false);
+    if (oneRecord) {
+      const handle = await loc.first().elementHandle({ timeout: 1_000 }).catch(() => null);
+      if (handle) {
+        try {
+          const step = await readBackFromHandle(page, handle, v);
+          if (step) return label ? { ...step, label } : step;
+        } finally {
+          await handle.dispose().catch(() => {});
+        }
+      }
+    }
+  }
   // Ambiguous by text, but shown in exactly one HEADING. The row-anchor rule
   // above guards against LIST pages, where a matching string may belong to an
   // EARLIER run's record (fwod9 republished n1's customer as n2's
@@ -1067,6 +1121,111 @@ async function captureFormValue(page: Page, v: string): Promise<RecordedStep | n
  * element whose text actually IS the value; otherwise null and the value stays
  * un-threadable.
  */
+/**
+ * THE PROCEDURE'S OWN SELECTION IS A SOURCE. When a reported value is the
+ * accessible name of an option this instruction CLICKED, and that click's own
+ * recorded diff shows a control now holding it (`- combobox "…": <value>`),
+ * the value was put there by the selection and the control shows it: a value
+ * read of that control, right after the click, re-reads it on every replay.
+ *
+ * odoo fwod82 02-create clicked `role=option[name="[FURN_1118] Corner Desk
+ * Left Sit"]`; its diff shows `- combobox "Type to find a product...":
+ * [FURN_1118] Corner Desk Left Sit`. The saved row shows the name twice
+ * (product and description), captureReadBack refused it as ambiguous, nothing
+ * read `product`, and the compile refused 04-change, whose v2 is bound to
+ * {{02-create.product}}. Placed right after the click because the combobox is
+ * gone once the line is confirmed.
+ *
+ * It reads back what the step selected, so replay's echo guard keeps it out
+ * of the step's confident values — and publishes it for a later step's
+ * reference all the same (InstructionResult.published; the artifact's
+ * echoRead), which is what 04-change needs.
+ *
+ * Provenance only: the recorded click, its option name, and the line its own
+ * diff added. Located by the control the procedure itself typed into (the
+ * latest earlier step naming that role and name), else by that role and name.
+ * Pure; null when the recording shows no such selection.
+ */
+export function selectionReadBack(steps: readonly RecordedStep[], value: string, label: string): { after: RecordedStep; read: RecordedStep } | null {
+  const want = value.replace(/\s+/g, ' ').trim();
+  if (!want) return null;
+  const holding = /^- (\S+) ("(?:[^"\\]|\\.)*")(?: \[[^\]]*\])*: (.*)$/;
+  for (let i = steps.length - 1; i >= 0; i--) {
+    const click = steps[i];
+    if (click.tool !== 'click') continue;
+    const chain = click.locators.target?.chain ?? [];
+    if (!chain.some((c) => c.kind === 'role' && c.role === 'option' && (c.name ?? '').replace(/\s+/g, ' ').trim() === want)) continue;
+    for (const line of click.diff?.added ?? []) {
+      const m = holding.exec(line);
+      if (!m || m[3].replace(/\s+/g, ' ').trim() !== want) continue;
+      const role = m[1];
+      let name: string;
+      try {
+        name = JSON.parse(m[2]) as string;
+      } catch {
+        continue;
+      }
+      if (role === 'option') continue;
+      const control = steps
+        .slice(0, i)
+        .reverse()
+        .find((s) => (s.locators.target?.chain ?? []).some((c) => c.kind === 'role' && c.role === role && c.name === name));
+      const own: LocatorCandidate = { kind: 'role', role, name };
+      const rest = (control?.locators.target?.chain ?? []).filter((c) => !(c.kind === 'role' && c.role === role && c.name === name));
+      const candidates = [own, ...rest];
+      return {
+        after: click,
+        read: {
+          k: 'step',
+          tool: 'read',
+          args: { target: '(read-back)', what: 'value' },
+          locators: { target: { expr: candidateExpr(own), verified: true, raw: '(read-back)', chain: candidates } },
+          result: JSON.stringify(want),
+          label,
+        },
+      };
+    }
+  }
+  return null;
+}
+
+/**
+ * The full visible texts of the page's elements that stand inside `value`
+ * (whitespace collapsed), for planContainedParts (src/agent/report.ts): the
+ * element texts a composite report value may be made of. Only rendered
+ * elements count — a hidden template row or an off-screen tooltip is not what
+ * the page showed. Includes an element showing the value WHOLE, so the planner
+ * can refuse to split it. [] when the page cannot be read.
+ */
+export async function visibleTextsWithin(page: Page, value: string): Promise<string[]> {
+  // Never a reason for the read-back pass to stop: a page that cannot answer
+  // shows nothing, and the value goes on to the cascade as before.
+  try {
+    return await visibleTextsIn(page, value);
+  } catch {
+    return [];
+  }
+}
+
+function visibleTextsIn(page: Page, value: string): Promise<string[]> {
+  return page
+    .evaluate((wanted: string) => {
+      const norm = (s: string) => s.replace(/\s+/g, ' ').trim();
+      const whole = norm(wanted);
+      const out = new Set<string>();
+      for (const el of Array.from(document.body?.querySelectorAll('*') ?? [])) {
+        const h = el as HTMLElement;
+        if (!h.getClientRects().length) continue;
+        const style = getComputedStyle(h);
+        if (style.visibility === 'hidden' || style.display === 'none') continue;
+        const text = norm(h.innerText ?? '');
+        if (text && text.length <= whole.length && whole.includes(text)) out.add(text);
+      }
+      return [...out];
+    }, value)
+    .catch(() => []);
+}
+
 export async function captureReadBackAt(page: Page, value: string, selector: string): Promise<RecordedStep | null> {
   const v = value.trim();
   // Same floor and same fold as captureReadBack/captureFormValue: one rule for

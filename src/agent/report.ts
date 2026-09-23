@@ -645,6 +645,121 @@ export async function flattenProvenComposite<T>(
   return { names, pinned };
 }
 
+/** Case-folded letter/digit runs of a text, with where each starts. */
+function wordRuns(text: string): { word: string; at: number }[] {
+  return Array.from(text.matchAll(/[\p{L}\p{N}]+/gu), (m) => ({ word: m[0].toLowerCase(), at: m.index ?? 0 }));
+}
+
+/** Whitespace collapsed and trimmed: the unit a visible text is compared in. */
+const collapse = (s: string): string => s.replace(/\s+/g, ' ').trim();
+
+/**
+ * The element texts a reported value is MADE OF, in order — or null when the
+ * page does not account for it.
+ *
+ * Round 56. fwgt8-n1 reported `seed_issue_1: "Seed: triage inbox (#1)"` and
+ * fwsi8-n1 `asset_1: "Asset Tag SEED-0001 / Name Seed: Reception Laptop"`.
+ * No element shows either whole, so captureReadBack pinned nothing; neither
+ * holds a list separator between two values the page shows, so the list
+ * splitter (flattenProvenComposite) had nothing either. Both stayed recorded
+ * literals, no replay re-read them, and both apps' replays scored obj 1 FAIL
+ * with the titles and tags on the page they stood on. fwgt7 and fwsi7 had
+ * passed because their n1 reported the same facts one per value.
+ *
+ * `texts` are the full visible texts of elements on the page the read-back
+ * runs against (visibleTextsWithin). The value is carved by PROVENANCE:
+ *  - an element text that stands inside the value, at word boundaries, is a
+ *    part. Longest first, and a span once claimed is not claimed again, so
+ *    `#1` (the issue's own number element) wins over the bare `1` a
+ *    pagination link also shows, and the two are never both taken;
+ *  - an element text made only of the instruction's own words (less its
+ *    addresses and markers) is the model
+ *    LABELLING the value ("Asset Tag", "Name" — the table's headers, and the
+ *    words the caller asked for) and is never a part;
+ *  - every letter/digit run of the value must then lie inside a part or be one
+ *    of those instruction words. Anything else — "assigned to nobody" — is
+ *    something no element showed, and the value is left whole: no partial
+ *    guess;
+ *  - a value some element shows WHOLE is never split (captureReadBack may have
+ *    refused it for ambiguity; that is not this function's to overrule);
+ *  - and at least one part must be more than one word: a lone "1" or "#3" is
+ *    too common a text to be a read on its own, so a bare part is admitted only
+ *    beside a substantive one, the way `#1` rides with its title.
+ * Each part still has to pin on its own (captureReadBack's uniqueness and row
+ * rules) before anything is committed — see flattenContainedComposite.
+ */
+export function planContainedParts(value: string, texts: readonly string[], instruction: string): string[] | null {
+  const whole = collapse(value);
+  if (!whole) return null;
+  const candidates = [...new Set(texts.map(collapse))].filter(Boolean);
+  if (candidates.includes(whole)) return null;
+  // The instruction's WORDS: its addresses and markers are not how anyone
+  // labels a value (fwgt8's `127.0.0.1` would otherwise make `#1` a label).
+  const labels = new Set(wordRuns(instruction.replace(/\S+:\/\/\S+|\{\{[^}]*\}\}/g, ' ')).map((w) => w.word));
+  const isWord = (ch: string | undefined): boolean => ch !== undefined && /[\p{L}\p{N}]/u.test(ch);
+  const claimed: { start: number; end: number; text: string }[] = [];
+  const usable = candidates
+    .filter((t) => t.length < whole.length)
+    .filter((t) => {
+      const words = wordRuns(t);
+      return words.length > 0 && !words.every((w) => labels.has(w.word));
+    })
+    .sort((a, b) => b.length - a.length);
+  for (const text of usable) {
+    for (let at = whole.indexOf(text); at >= 0; at = whole.indexOf(text, at + 1)) {
+      const end = at + text.length;
+      // Word boundaries on the value's side, wherever the part's own edge is a word character.
+      if (isWord(text[0]) && isWord(whole[at - 1])) continue;
+      if (isWord(text[text.length - 1]) && isWord(whole[end])) continue;
+      if (claimed.some((c) => at < c.end && end > c.start)) continue;
+      claimed.push({ start: at, end, text });
+    }
+  }
+  if (!claimed.length || claimed.length > MAX_LEAVES) return null;
+  const covered = (at: number): boolean => claimed.some((c) => at >= c.start && at < c.end);
+  for (const w of wordRuns(whole)) if (!covered(w.at) && !labels.has(w.word)) return null;
+  if (!claimed.some((c) => wordRuns(c.text).length > 1)) return null;
+  return claimed.sort((a, b) => a.start - b.start).map((c) => c.text);
+}
+
+/**
+ * planContainedParts, committed the way flattenProvenComposite commits a list:
+ * every part must pin on the live page (the caller's `pin`, captureReadBack),
+ * or nothing changes; on commit the composite is replaced by its parts —
+ * `seed_issue_1` by `seed_issue_1_1` ("Seed: triage inbox") and
+ * `seed_issue_1_2` ("#1") — so a replay re-reads each. One part (a single
+ * labelled value, "Name: Seed: Spare Laptop") keeps the key.
+ */
+export async function flattenContainedComposite<T>(
+  report: Report,
+  key: string,
+  texts: readonly string[],
+  instruction: string,
+  pin: (value: string, name: string) => Promise<T | null>,
+): Promise<{ names: string[]; pinned: T[] }> {
+  const empty = { names: [] as string[], pinned: [] as T[] };
+  const values = report.evidence?.values;
+  const raw = values?.[key];
+  if (!values || typeof raw !== 'string') return empty;
+  const parts = planContainedParts(raw, texts, instruction);
+  if (!parts) return empty;
+  const rest = Object.fromEntries(Object.entries(values).filter(([k]) => k !== key));
+  const pending: Record<string, string> = {};
+  const names: string[] = [];
+  const pinned: T[] = [];
+  for (const [i, part] of parts.entries()) {
+    const name = parts.length === 1 ? key : uniqueName(`${key}_${i + 1}`, { ...rest, ...pending });
+    const got = await pin(part, name);
+    if (!got) return empty;
+    pending[name] = part;
+    names.push(name);
+    pinned.push(got);
+  }
+  delete values[key];
+  Object.assign(values, pending);
+  return { names, pinned };
+}
+
 /** Scalar leaves of a parsed value, two levels deep, as [path, text] pairs. */
 function leavesOf(node: unknown, prefix = '', depth = 0): [string, string][] {
   if (node === null || typeof node !== 'object') {

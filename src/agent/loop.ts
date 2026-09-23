@@ -11,9 +11,9 @@ import { componentsOnPage, renderComponents } from '../skills/components.js';
 import { originOf } from '../skills/store.js';
 import { siteModel } from '../skills/sitemap.js';
 import { buildSystemPrompt } from './prompt.js';
-import { admitsIncompletion, artefactKeys, backfillReadValues, flattenComposedValues, flattenProvenComposite, mergeReportValues, namingAskMessage, positionDatumKeys, promoteLabelledReads, publishProseIdentifiers, unnamedReadValues, validateReport, type Report } from './report.js';
+import { admitsIncompletion, artefactKeys, backfillReadValues, flattenComposedValues, flattenContainedComposite, flattenProvenComposite, mergeReportValues, namingAskMessage, positionDatumKeys, promoteLabelledReads, publishProseIdentifiers, unnamedReadValues, validateReport, type Report } from './report.js';
 import { executeTool, toolDefsFor, type ToolExecution } from './tools.js';
-import { captureReadBack, captureReadBackAt, setIdentityHints } from '../daemon/recorder.js';
+import { captureReadBack, captureReadBackAt, selectionReadBack, setIdentityHints, visibleTextsWithin } from '../daemon/recorder.js';
 import { describeOutcome, sourceReadBacks, type ReadBackDecider, type ReadBackTarget } from './readback.js';
 
 /** Tools that change the page URL, staleing every existing snapshot's refs. */
@@ -613,8 +613,21 @@ export async function runInstruction(
             if (!value || alreadyRead.has(value) || seenValue.has(value)) continue;
             seenValue.add(value);
             const step = await captureReadBack(page, value, name);
-            if (step) browser.script.addStep(step);
-            else composites.push({ name, value }); // maybe several values — try splitting, then the model
+            if (step) {
+              browser.script.addStep(step);
+              continue;
+            }
+            // The procedure's own selection (odoo fwod82's product): the
+            // option this instruction clicked, whose diff shows the control
+            // holding it — read there, right after the click. See
+            // selectionReadBack.
+            const selected = selectionReadBack(browser.script.stepsThisInstruction?.() ?? [], value, name);
+            if (selected && browser.script.insertStepAfter) {
+              browser.script.insertStepAfter(selected.after, selected.read);
+              opts.onProgress?.(`[report] ${name} is the option this instruction selected: read back from its control after the selection`);
+              continue;
+            }
+            composites.push({ name, value }); // maybe several values — try splitting, then the model
           }
           // A value the page refuses AS ONE STRING may be several values the
           // page vouches for individually: kanboard fwkb17 reported
@@ -632,6 +645,19 @@ export async function runInstruction(
               captureReadBack(page, part, partName),
             );
             if (!names.length) {
+              // Not a list of values the page shows — perhaps the page's
+              // element texts wrapped in the model's labels and punctuation
+              // (fwgt8 "Seed: triage inbox (#1)", fwsi8 "Asset Tag SEED-0001 /
+              // Name Seed: Reception Laptop"). Carved only where the visible
+              // elements account for every word of it; see planContainedParts.
+              const contained = await flattenContainedComposite(report, name, await visibleTextsWithin(page, value), opts.recordAs?.text ?? instruction, (part, partName) =>
+                captureReadBack(page, part, partName),
+              );
+              if (contained.names.length) {
+                for (const step of contained.pinned) browser.script.addStep(step);
+                opts.onProgress?.(`[report] ${name} is element texts the page shows, labelled: split into ${contained.names.join(', ')} (read-back)`);
+                continue;
+              }
               stragglers.push({ name, value }); // not pinnable, whole or in parts — try the cascade next
               continue;
             }

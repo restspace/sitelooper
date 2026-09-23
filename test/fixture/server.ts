@@ -115,6 +115,36 @@ const TICKETS = (total: number, date: string) => `<!doctype html><html><head><me
 </body></html>`;
 
 /**
+ * An issue list the way Gitea renders one (fwgt8): the title and the `#n`
+ * number are separate elements, a pagination link shows a bare "1", and a
+ * hidden row carries text no visitor sees.
+ */
+const ISSUE_LIST = `<!doctype html><html><head><meta charset="utf-8"><title>Issues</title></head><body>
+<h1>Issues</h1>
+<div class="counts"><a href="#">3 Open</a> <a href="#">0 Closed</a></div>
+<div id="issue-list">
+${[3, 2, 1].map((n) => {
+  const title = { 3: 'Seed: ship repaired device', 2: 'Seed: order missing parts', 1: 'Seed: triage inbox' }[n];
+  return `<div class="flex-item"><div class="flex-item-title"><a class="issue-title" href="/issues/${n}">${title}</a></div><div class="flex-item-body"><a class="index" href="/issues/${n}">#${n}</a> opened by <a href="#">admin</a></div></div>`;
+}).join('\n')}
+</div>
+<div style="display:none">assigned to nobody</div>
+<nav class="pagination"><a href="#">1</a></nav>
+</body></html>`;
+
+/** An assets table the way Snipe-IT renders one (fwsi8): headers, then tag and name cells. */
+const ASSET_TABLE = `<!doctype html><html><head><meta charset="utf-8"><title>Assets</title></head><body>
+<h1>Assets</h1>
+<table><thead><tr><th>Asset Tag</th><th>Name</th><th>Model</th></tr></thead><tbody>
+${[
+  ['SEED-0001', 'Seed: Reception Laptop'],
+  ['SEED-0002', 'Seed: Training Laptop'],
+  ['SEED-0003', 'Seed: Spare Laptop'],
+].map(([tag, name]) => `<tr><td><a href="#">${tag}</a></td><td><a href="#">${name}</a></td><td>Bench Laptop Model</td></tr>`).join('\n')}
+</tbody></table>
+</body></html>`;
+
+/**
  * The same record page, not yet ARRIVED: a placeholder first, then a moment
  * later the record's own name and a url the app normalises for itself. That is
  * what Grafana does to a bare dashboard address (fwgr47-n2 07-verify judged
@@ -1214,6 +1244,11 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
     if (url === '/') {
       res.writeHead(200, { 'content-type': 'text/html' });
       res.end(PAGE);
+      return;
+    }
+    if (url === '/issue-list' || url === '/asset-table') {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end(url === '/issue-list' ? ISSUE_LIST : ASSET_TABLE);
       return;
     }
     if (url === '/tickets') {
