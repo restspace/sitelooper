@@ -2,7 +2,7 @@ import { dispatchesFirstMatch, isMutatingAction, isReadAction, spansEveryMatch }
 import { DEFAULT_BROWSER_PROFILE, isNavigatingAction, type BrowserProfile } from '../execution/browser.js';
 import { setsSomething } from '../execution/echo.js';
 import { standingFillRole } from '../execution/refill.js';
-import { toggleEffectLines } from '../execution/toggle.js';
+import { hideEffectLines, toggleEffectLines } from '../execution/toggle.js';
 import { derivesFromParams, reportNeedsPage, templateMarkers, templateSource } from '../execution/report.js';
 import { observedNothing } from '../execution/observe.js';
 import { segmentGate } from '../execution/gates.js';
@@ -1631,7 +1631,10 @@ function wrapAlreadyInEffect(step: SkillStep, ctx: Ctx, out: string[], actionAt:
  */
 function wrapToggle(step: SkillStep, ctx: Ctx, out: string[], actionAt: number): void {
   const lines = step.tool === 'click' && step.toggle ? toggleEffectLines(step.expect?.addedContains) : [];
-  if (!lines.length) return;
+  if (!lines.length) {
+    wrapHide(step, ctx, out, actionAt);
+    return;
+  }
   noteSlots(lines, ctx);
   const where = `${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`;
   const acted = out
@@ -1645,6 +1648,35 @@ function wrapToggle(step: SkillStep, ctx: Ctx, out: string[], actionAt: number):
     ...lines.map((l) => `//   ${commentSafe(l)}`),
     `if (await toggleAlreadyShown(page, [${lines.map(q).join(', ')}], p${step.expect?.lineDialect === 2 ? ', 2' : ''})) {`,
     `  console.log(${q(`[sitelooper skip] ${where}: toggled panel already showing — click skipped`)});`,
+    "  return { status: 'skipped' };",
+    '} else {',
+    ...acted,
+    '}',
+  );
+}
+
+/**
+ * The HIDE's twin of the guard above: replay's runStepBody skips a click whose
+ * whole recorded effect was taking lines off the page (vikunja fwvk8-n1
+ * 02-create's FILTERS click) when a look that covered the page shows none of
+ * them — the shared hideAlreadyInEffect over the shared hideEffectLines,
+ * asked after the target resolved, as replay asks it.
+ */
+function wrapHide(step: SkillStep, ctx: Ctx, out: string[], actionAt: number): void {
+  const lines = hideEffectLines(step);
+  if (!lines.length) return;
+  noteSlots(lines, ctx);
+  const where = `${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`;
+  const acted = out
+    .splice(actionAt)
+    .flatMap((l) => l.split('\n'))
+    .map((l) => (l ? '  ' + l : l));
+  out.push(
+    '// A hide: the recording\'s click took these lines off the page, and did nothing else.',
+    '// When none of them is on the page it is already in effect (as replay skips it):',
+    ...lines.map((l) => `//   ${commentSafe(l)}`),
+    `if (await hideAlreadyInEffect(page, [${lines.map(q).join(', ')}], p${step.expect?.lineDialect === 2 ? ', 2' : ''})) {`,
+    `  console.log(${q(`[sitelooper skip] ${where}: what this click removes is not on the page — click skipped`)});`,
     "  return { status: 'skipped' };",
     '} else {',
     ...acted,
@@ -2120,6 +2152,16 @@ function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number,
   // in `prepare`, after the settle, in the same dialect it will judge by.
   const linesBefore = recordedChanges(step).length ? `linesBefore${ctx.urls}` : null;
   const changes = linesBefore ? expectationLines(step, ctx, checks, linesBefore) : null;
+  // Replay's expectedRemovals gate, after the page changes and before the
+  // alerts: a hide whose lines all survive the click did not have its effect.
+  const hidden = hideEffectLines(step);
+  if (hidden.length) {
+    noteSlots(hidden, ctx);
+    checks.push(
+      `{ const hidden = hideVerdict([${hidden.map(q).join(', ')}], p, await captureLines(page${dialectArg(step)}), ${q(where)}); ` +
+        "for (const w of hidden.warnings) console.log(`[sitelooper warn] ${w}`); if (hidden.stop) throw new Error(hidden.stop); }",
+    );
+  }
   if (alerts) {
     if (step.expect?.alertContains) noteSlots(step.expect.alertContains, ctx);
     const expected = step.expect?.alertContains ? `, expectedContains: ${q(step.expect.alertContains)}` : '';

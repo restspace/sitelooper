@@ -2322,7 +2322,15 @@ function expectationFor(step: RecordedStep, slots: Map<string, string>): StepExp
   // dialog AND the order line it had half-added (`- row "£ 0.00"`, the product
   // combobox showing {{v4}}): that step undid work, it did not merely dismiss.
   const consequential = removed.some((l) => RECORD_LINE.test(l) || SLOT_LINE.test(l));
-  if (!consequential && removed.some((l) => DIALOG_LINE.test(l))) out.removedContains = removed.slice(0, MAX_ADDED_LINES).map((l) => l.slice(0, 120));
+  // ...and, since round 56, what a CLICK took off the page when that was its
+  // whole effect, dialog or not: vikunja fwvk8-n1 02-create's FILTERS click
+  // closed the filter popup (added [], removed its search box and buttons),
+  // and with no line to check it opened the popup on every replay whose page
+  // had it shut, and passed. Both runners now skip such a click when none of
+  // its lines is on the page, and stop when all of them survive it
+  // (execution/toggle.ts hideEffectLines).
+  const hides = step.tool === 'click' && removed.length > 0;
+  if (!consequential && (hides || removed.some((l) => DIALOG_LINE.test(l)))) out.removedContains = removed.slice(0, MAX_ADDED_LINES).map((l) => l.slice(0, 120));
   if (!Object.keys(out).length) return undefined;
   // The recording's dialect travels with its lines, so replay and the artifact
   // render the live page the way these lines were written.

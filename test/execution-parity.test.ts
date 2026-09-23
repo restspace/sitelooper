@@ -3573,6 +3573,67 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     }, 240_000);
   });
 
+  describe('a click whose whole recorded effect was a removal (round 56, fwvk8 02-create)', () => {
+    /**
+     * vikunja fwvk8-n1 02-create's FILTERS click closed the filter popup
+     * 01-open had left open (added [], removed its lines). With no line to
+     * check it opened the popup on replays that started with it shut, and
+     * passed. Compiled from such a recording, both runners now skip it when
+     * the popup is shut, click it (and pass) when it is open, and stop when
+     * the click leaves every recorded line on the page.
+     */
+    const hideSteps = (url: string): SkillStep[] => {
+      const entries: RecordedEntry[] = [
+        { k: 'instruction', text: 'close the filters and add a task', url },
+        { k: 'step', tool: 'goto', args: { url }, locators: {}, diff: { url, alerts: [], added: [], dialect: 2 } },
+        {
+          k: 'step',
+          tool: 'click',
+          args: { target: '@e1' },
+          locators: { target: { expr: 'x', verified: true, raw: '@e1', chain: [{ kind: 'role', role: 'button', name: 'Filters' }] } },
+          diff: { url, alerts: [], added: [], removed: ['- textbox "Type a search or filter query…"', '- button "Custom"'], dialect: 2 },
+        },
+        {
+          k: 'step',
+          tool: 'click',
+          args: { target: '@e2' },
+          locators: { target: { expr: 'x', verified: true, raw: '@e2', chain: [{ kind: 'role', role: 'button', name: 'Add' }] } },
+          diff: { url, alerts: [], added: [], removed: [], dialect: 2 },
+        },
+      ];
+      return compileSkills({ entries, instruction: 'close the filters and add a task', report: { status: 'success', summary: 'ok' }, session: 's' }).flatMap((sk) => sk.steps);
+    };
+
+    it('both runners skip the hide when it is in effect, click it when not, and stop when the click leaves the lines', async () => {
+      const compiled = hideSteps(`${origin}/filters?open=1`);
+      expect(compiled.find((st) => st.args.target === '@e1')?.expect?.removedContains).toEqual(['- textbox "Type a search or filter query…"', '- button "Custom"']);
+      const at = (url: string) => compiled.map((st) => (st.tool === 'goto' ? { ...st, args: { url } } : st));
+
+      const shut = await both(at(`${origin}/filters`), 0);
+      expect(shut.replay.ok, shut.replay.reason ?? '').toBe(true);
+      expect(shut.emitted.ok, shut.emitted.reason ?? '').toBe(true);
+      await new Promise((r) => setTimeout(r, 300));
+      expect(shut.replayLog, 'replay clicked a hide already in effect').toEqual(['commit:add:task']);
+      expect(shut.emittedLog, 'the artifact clicked a hide already in effect').toEqual(['commit:add:task']);
+
+      const open = await both(at(`${origin}/filters?open=1`), 0);
+      expect(open.replay.ok, open.replay.reason ?? '').toBe(true);
+      expect(open.emitted.ok, open.emitted.reason ?? '').toBe(true);
+      await new Promise((r) => setTimeout(r, 300));
+      expect(open.replayLog).toEqual(['commit:filters:toggle', 'commit:add:task']);
+      expect(open.emittedLog).toEqual(['commit:filters:toggle', 'commit:add:task']);
+
+      const stuck = await both(at(`${origin}/filters?open=1&stuck=1`), 0);
+      expect(stuck.replay.ok, 'replay passed a hide that left every line').toBe(false);
+      expect(stuck.emitted.ok, 'the artifact passed a hide that left every line').toBe(false);
+      expect(stuck.replay.reason).toMatch(/still shows/);
+      expect(stuck.emitted.reason).toMatch(/still shows/);
+      await new Promise((r) => setTimeout(r, 300));
+      expect(stuck.replayLog).toEqual(['commit:filters:toggle']);
+      expect(stuck.emittedLog).toEqual(['commit:filters:toggle']);
+    }, 240_000);
+  });
+
   describe('list reads split per element (fwop7 02-open)', () => {
     it('both runners publish each value a read_all was the one-to-one source of', async () => {
       // openproject fwop7-n1: the seed subjects were read only through a
