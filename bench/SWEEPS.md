@@ -202,3 +202,30 @@ Seventeen defects from round 54, in five parallel groups (contract: bench/sweep-
   equal to a username is scrubbed only in the password field.
 - **runners** — text waits compare innerText in every tier (CSS text-transform); values trimmed before
   filling snapshot lines and when read; a read scoped by a record slot never publishes another record's value.
+
+## Round 56 (e48d1a1): second ten-app confirmation — 2/10 green
+
+Kanboard, Vikunja and EspoCRM first stalled on Docker Hub's anonymous pull limit (100/hour on the
+shared egress IP, exhausted by ten concurrent setups); re-fired two hours later. Future confirmations
+launch in two batches of five. **No failure below was caused by round 55**: each diagnosis rebuilt the
+recording at c923af6 and e48d1a1 and got identical procedures (or compiled the store to the same
+verdict at both), except the fwop11/fwkb40 partial verdicts, a false positive of round 55's own rule.
+
+| round | runid | commit | app | verified | replay model-free | compiled | green | notes |
+|---|---|---|---|---|---|---|---|---|
+| 56 | fwgh11 | e48d1a1 | gh | 7/7 ×3 | yes | pass 5/7+2 n/a | **yes** | |
+| 56 | fwec9 | e48d1a1 | ec | 7/7 ×3 | yes | pass 5/7+2 n/a | **yes** | round 55 item 7 held live: the record id the instruction asked for is published |
+| 56 | fwrd88 | e48d1a1 | rd | 6/6 ×3 | yes, 0 turns | pass 6/6 | no (partial) | a `read_all role=alert` count read found no alerts and was SKIPPED instead of publishing "0" (both runners) |
+| 56 | fwop11 | e48d1a1 | op | 7/7 ×3 | yes, 0 turns | pass 5/7+2 n/a | no (partial) | false positive of round 55's honesty rule: a synthesized, never-resolved read of a transient toast (fixed 3c60f6c: unproven reads don't count) |
+| 56 | fwkb40 | e48d1a1 | kb | 6/6 ×3 | yes, 0 turns | pass 4/6+2 n/a | no (partial) | same false positive (unproven sidebar-link read) |
+| 56 | fwgt8 | e48d1a1 | gt | 7/7, 6/7, 6/7 | yes, 0 turns | pass 5/7+2 n/a | no | n1 reported titles fused with numbers ("Seed: triage inbox (#1)"); no element shows that, so no read was captured and replays publish no titles (obj 1) |
+| 56 | fwsi8 | e48d1a1 | si | 7/7, 6/7, 6/7 | yes, 0 turns (was 45/50) | pass 5/7+2 n/a | no | same class: "Asset Tag SEED-0001 / Name Seed: Reception Laptop" |
+| 56 | fwod82 | e48d1a1 | od | 6/6 ×3 | no: 04-change 3 turns ×2 | refused (unsourced-ref) | no | the product name was read only in a row showing it twice (ambiguous read-back refused); 04-change's instruction named it, so it referenced an output nothing publishes. Export warned "will REFUSE"; the sweep ignored it |
+| 56 | fwgr69 | e48d1a1 | gr | 6/6 ×3 | no: 132 / 58 turns | refused (demoted-pin) | no | a collapse/expand "Panel options" pair split by a query-string change; abandonedRepeatClick (round 43) judged the collapse consequence-free from the compiled expect and dropped it, keeping a plain expand that collapses the section on replay |
+| 56 | fwvk8 | e48d1a1 | vk | 7/7 ×3 | no: 48 / 42 turns | FAIL | no | a FILTERS popup opened in 01-open and closed by the same click in 02-create; the hide-only click has no check, so on replay it OPENS the popup, passes silently, and the popup swallows Add. Also a login-page reload emptied a fill whose echo check has no refill |
+
+Honesty finding: a rule making "the instruction asked to report X and nothing publishes X" a PARTIAL
+verdict would flip steps of GREEN apps (Ghost tags/publish date, Grafana time range after reload,
+Gitea labels, RepairDesk parts total). Those apps pass because verifiers read the app database, not
+the report. Shipped as a per-step warning (4dc62d6), not a verdict; to be reported as a separate
+benchmark measure, "asked facts published", beside green.
