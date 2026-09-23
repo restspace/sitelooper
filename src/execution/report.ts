@@ -1,5 +1,5 @@
 import type { Page } from 'playwright-core';
-import { captureLines, lineShows } from './snapshot.js';
+import { captureLines } from './snapshot.js';
 import { fillParams } from './url.js';
 
 /**
@@ -32,9 +32,18 @@ import { fillParams } from './url.js';
  * Self-contained: sibling shared modules and Playwright types only.
  */
 
-/** Whether a template value is built from the caller's parameters at all (a recorded literal is not). */
+/**
+ * Whether a template value is built from this run's parameters at all (a
+ * recorded literal is not): a caller's slot `{{vN}}`, or a value the run
+ * minted and bound from its own url `{{dN}}` (fwec8 02-create's record id).
+ */
 export function derivesFromParams(template: string): boolean {
-  return /\{\{v\d+\}\}/.test(template);
+  return /\{\{[vd]\d+\}\}/.test(template);
+}
+
+/** The `{{vN}}`/`{{dN}}` markers a template value names. */
+export function templateMarkers(template: string): string[] {
+  return [...new Set(Array.from(template.matchAll(/\{\{([vd]\d+)\}\}/g), (m) => m[1]))];
 }
 
 /**
@@ -54,15 +63,25 @@ export function templateLiterals(template: string): string[] {
  * The literals of `template` this run's page does not show. `shown` is the
  * page as shownForReport captured it once the step's work was done; null (the
  * page could not be read) observed nothing, so every literal is unshown. A
- * whole-page substring question, the goal half of goalSatisfied: the text is
- * on the page or it is not, and a look that could not cover the page only
- * ever withholds.
+ * look that could not cover the page only ever withholds.
+ *
+ * Compared by WORDS — the literal's runs of letters and digits, whole and in
+ * order, within one line — not by its characters. A literal is the text
+ * BETWEEN slots, so its edges are whatever joined it to them: fwec8
+ * 02-create's close_date `"Dec 31 ({{v5}})"` looked for `"Dec 31 ("`, the
+ * page showed "Dec 31", and an observed value was withheld. The punctuation
+ * is the report's joinery; the words are what the page has to show.
  */
 export function unshownLiterals(template: string, shown: readonly string[] | null | undefined): string[] {
   const literals = templateLiterals(template);
   if (!shown) return literals;
-  const lines = [...shown];
-  return literals.filter((literal) => !lineShows(lines, [literal]));
+  const lines = shown.map((line) => ` ${wordRun(line)} `);
+  return literals.filter((literal) => !lines.some((line) => line.includes(` ${wordRun(literal)} `)));
+}
+
+/** A text's words, case-folded and joined by single spaces. */
+function wordRun(text: string): string {
+  return words(text).join(' ');
 }
 
 /**
@@ -88,8 +107,8 @@ export function templateValue(template: string, params: Record<string, string>, 
 
 /** The one slot a template value is built from, or null when it names none or several. */
 export function templateSlot(template: string): string | null {
-  const slots = new Set(Array.from(template.matchAll(/\{\{(v\d+)\}\}/g), (m) => m[1]));
-  return slots.size === 1 ? [...slots][0] : null;
+  const slots = templateMarkers(template);
+  return slots.length === 1 ? slots[0] : null;
 }
 
 /**
@@ -122,9 +141,19 @@ export function referenceValue(template: string, params: Record<string, string>,
  * publishes only on a run whose page shows that text, so it is no source a
  * compile can promise — the question publishedOutputs and the artifact's
  * unsourcedRef both ask, so compile and replay agree.
+ *
+ * And only if every marker in it is BOUND (`bound`): a declared param of the
+ * procedure or a value its chain derives. fwec8 03-verify's s_55d615 carried
+ * `record_id: "{{v2}}"` with no v2 among its params — the whole-url v1 had
+ * swallowed it — and this still counted it, so compile and export promised
+ * an output no replay could ever fill.
  */
-export function templateSource(template: string): boolean {
-  return derivesFromParams(template) && (templateLiterals(template).length === 0 || templateSlot(template) !== null);
+export function templateSource(template: string, bound: (name: string) => boolean = () => true): boolean {
+  return (
+    derivesFromParams(template) &&
+    templateMarkers(template).every(bound) &&
+    (templateLiterals(template).length === 0 || templateSlot(template) !== null)
+  );
 }
 
 /** Does any of these template values need the page to decide it — a value with recorded text to observe? */
@@ -154,6 +183,7 @@ export async function shownForReport(page: Page): Promise<string[] | null> {
 }
 
 
+
 /**
  * THE SUMMARY, under the same provenance rule as the values. Recorded prose
  * is published only where every word of it was observed on this run: shown
@@ -164,15 +194,18 @@ export async function shownForReport(page: Page): Promise<string[] | null> {
  * "(previously $375.00)", a figure 04-edit never read. Neither is a value, so
  * the value rule never reached them.
  *
- * By clause, not all or nothing. A sentence stands or falls on its main
- * clause; inside a sentence that stands, each parenthetical, `;`-part and
- * ` — `-part stands or falls on its own, so "(previously $375.00)" goes and
- * the sentence around it stays. A part of a fallen sentence goes with it —
- * "(Parts = 0)" alone says nothing. Quoted text is never cut. A clause
- * holding an unresolved `{{` goes too. Nothing left is '' (the caller then
- * says what it replayed and observed instead). Words are compared whole and
- * case-folded, and the page is one bag of words: the accepted whole-page
- * caveat.
+ * By clause, not all or nothing. A sentence stands or falls on its lead
+ * clause; inside a sentence that stands, each `;`-part and ` — `-part stands
+ * or falls on its own text, and takes its parentheticals with it — an
+ * enumeration label included. fwvk7 03-open, n2, published "2026-12-31; (d);
+ * (e); (f) one comment …": the clauses had gone and their labels had not,
+ * because a label was judged as a clause of its own. Inside a part that
+ * stands, each parenthetical stands or falls alone, so "(previously
+ * $375.00)" goes and the sentence around it stays. The sentence's own stop
+ * is kept with the sentence. Quoted text is never cut. A clause holding an
+ * unresolved `{{` goes too. Nothing left is '' (the caller then says what it
+ * replayed and observed instead). Words are compared whole and case-folded,
+ * and the page is one bag of words: the accepted whole-page caveat.
  */
 export function observedSummary(
   summary: string,
@@ -184,18 +217,33 @@ export function observedSummary(
   const bag = new Set<string>();
   for (const t of [...observed, ...(shown ?? [])]) for (const w of words(t)) bag.add(w);
   const ok = (clause: string): boolean => !clause.includes('{{') && words(clause).every((w) => bag.has(w)) && keep(clause);
+  const whole = (part: SummaryPart): string => part.pieces.map((p) => p.text).join('');
+  // A part is judged on its own words; one that has none but its
+  // parentheticals (a bare "(d)") on those.
+  const stands = (part: SummaryPart): boolean => {
+    const own = part.pieces.filter((p) => !p.paren).map((p) => p.text).join('');
+    return ok(words(own).length ? own : whole(part));
+  };
   const dropped: string[] = [];
   const out: string[] = [];
   for (const sentence of summarySentences(summary)) {
-    const main = sentence.filter((p) => p.main).map((p) => p.text).join('');
-    if (!ok(main)) {
-      if (sentence.some((p) => p.text.trim())) dropped.push(sentence.map((p) => p.text).join('').trim());
+    const [lead, ...rest] = sentence.parts;
+    if (!lead || !stands(lead)) {
+      const text = (sentence.parts.map(whole).join('') + sentence.end).trim();
+      if (text) dropped.push(text);
       continue;
     }
-    for (const part of sentence) {
-      if (part.main || ok(part.text)) out.push(part.text);
-      else dropped.push(part.text.trim());
+    for (const part of [lead, ...rest]) {
+      if (part !== lead && !stands(part)) {
+        dropped.push(whole(part).trim());
+        continue;
+      }
+      for (const piece of part.pieces) {
+        if (!piece.paren || ok(piece.text)) out.push(piece.text);
+        else dropped.push(piece.text.trim());
+      }
     }
+    out.push(sentence.end);
   }
   const text = out
     .join('')
@@ -212,31 +260,35 @@ function words(text: string): string[] {
   return Array.from(text.toLowerCase().matchAll(/[\p{L}\p{N}]+/gu), (m) => m[0]);
 }
 
-/** A piece of a sentence: its main clause's text, or a droppable part. */
+/** A clause of a sentence: its own text and its parentheticals, in order. */
 interface SummaryPart {
-  text: string;
-  main: boolean;
+  pieces: { text: string; paren: boolean }[];
 }
 
 /**
- * The prose as sentences of parts, every character kept so the kept parts
- * rejoin as written. A sentence ends at `.`, `!` or `?` before whitespace or
- * the end. Within it, a parenthetical is a part, and a `;` or ` — ` starts a
- * part that runs to the next one or the sentence's end; everything else is
- * main clause. Nothing is cut inside quotes (straight or curly).
+ * The prose as sentences of clauses, every character kept so the kept ones
+ * rejoin as written. A sentence ends at `.`, `!` or `?` followed by
+ * whitespace and then a capital, a quote or an opening bracket — or by the
+ * end — so "i.e. 2026-12-31" (fwvk7) does not end one. Its stop is held
+ * apart (`end`). Within it, a `;` or ` — ` starts a new clause that runs to
+ * the next one; the first clause is the lead. A parenthetical is a piece of
+ * the clause it stands in. Nothing is cut inside quotes, straight or curly.
  */
-function summarySentences(text: string): SummaryPart[][] {
-  const sentences: SummaryPart[][] = [];
-  let parts: SummaryPart[] = [];
+function summarySentences(text: string): { parts: SummaryPart[]; end: string }[] {
+  const sentences: { parts: SummaryPart[]; end: string }[] = [];
+  let parts: SummaryPart[] = [{ pieces: [] }];
   let cur = '';
-  let main = true;
   let depth = 0;
   let quoted = false;
   let curly = 0;
-  const flush = (nextMain: boolean): void => {
-    if (cur) parts.push({ text: cur, main: depth > 0 ? false : main });
+  const piece = (paren: boolean): void => {
+    if (cur) parts[parts.length - 1].pieces.push({ text: cur, paren });
     cur = '';
-    main = nextMain;
+  };
+  const clause = (lead: string): void => {
+    piece(false);
+    parts.push({ pieces: [] });
+    cur = lead;
   };
   for (let i = 0; i < text.length; i++) {
     const ch = text[i];
@@ -245,42 +297,42 @@ function summarySentences(text: string): SummaryPart[][] {
     else if (ch === '”') curly = Math.max(0, curly - 1);
     const inQuote = quoted || curly > 0;
     if (!inQuote && ch === '(') {
-      if (depth === 0) {
-        if (cur) parts.push({ text: cur, main });
-        cur = '';
-      }
+      if (depth === 0) piece(false);
       depth += 1;
       cur += ch;
       continue;
     }
-    cur += ch;
     if (!inQuote && ch === ')' && depth > 0) {
+      cur += ch;
       depth -= 1;
-      if (depth === 0) {
-        parts.push({ text: cur, main: false });
-        cur = '';
-      }
+      if (depth === 0) piece(true);
       continue;
     }
-    if (inQuote || depth) continue;
-    const next = text[i + 1];
-    if ((ch === '.' || ch === '!' || ch === '?') && (next === undefined || /\s/.test(next))) {
-      flush(true);
-      sentences.push(parts);
-      parts = [];
-      main = true;
-    } else if (ch === ';') {
-      // What follows a `;` is a part of its own, and the `;` goes with it.
-      cur = cur.slice(0, -1);
-      flush(false);
-      cur = ';';
-    } else if (ch === '—' && text[i - 1] === ' ') {
-      cur = cur.slice(0, -2);
-      flush(false);
-      cur = ' —';
+    if (inQuote || depth) {
+      cur += ch;
+      continue;
     }
+    if ((ch === '.' || ch === '!' || ch === '?') && endsSentence(text, i)) {
+      piece(false);
+      sentences.push({ parts, end: ch });
+      parts = [{ pieces: [] }];
+    } else if (ch === ';') {
+      // What follows a `;` is a clause of its own, and the `;` goes with it.
+      clause(ch);
+    } else if (ch === '—' && cur.endsWith(' ')) {
+      cur = cur.slice(0, -1);
+      clause(' —');
+    } else cur += ch;
   }
-  flush(true);
-  if (parts.length) sentences.push(parts);
+  piece(false);
+  if (parts.some((p) => p.pieces.length)) sentences.push({ parts, end: '' });
   return sentences;
+}
+
+/** Whether the stop at `i` ends its sentence: at the end, or before whitespace and a capital, quote or bracket. */
+function endsSentence(text: string, i: number): boolean {
+  const rest = text.slice(i + 1);
+  if (!rest.trim()) return true;
+  if (!/^\s/.test(rest)) return false;
+  return /^\s+[\p{Lu}"“'‘(]/u.test(rest);
 }

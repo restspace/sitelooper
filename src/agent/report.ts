@@ -742,3 +742,37 @@ export function addEvidenceValue(report: Report, base: string, value: string): s
   (report.evidence ??= {}).values = values;
   return name;
 }
+
+/** What this run itself produced: the screenshots it saved, and the stored skills it knows. */
+export interface RunArtefacts {
+  /** Paths of screenshots this instruction saved (the screenshot tool's "screenshot saved: <path>"). */
+  screenshots: readonly string[];
+  /** Whether an id names a stored skill (the skill store, or a skill this run listed or invoked). */
+  skills: (id: string) => boolean;
+}
+
+/**
+ * The report keys whose value names one of sitelooper's OWN artefacts: a
+ * screenshot this run saved (its path, or its file name), or a stored skill's
+ * id. None of that is page data, and a value that is not page data is never a
+ * finding. fwsi7 04-report's recovery published `ref: "s_d5098a"` — the skill
+ * it had just run — and `ref_3: "ba00005_view.png"`, `screenshot_view:
+ * "/tmp/ba00005_view.png"`: its own screenshots, which the flow then declared
+ * as outputs of every step and a compiled artifact could never produce.
+ *
+ * Provenance, not shape: a value is an artefact because THIS run made or
+ * knows the thing it names, never because it looks like a path or an id — a
+ * page that shows "invoice.png" or a code "s_abc123" is reporting data.
+ */
+export function artefactKeys(values: Record<string, unknown>, run: RunArtefacts): string[] {
+  const files = run.screenshots.map((p) => p.trim()).filter(Boolean);
+  const names = files.map((p) => p.split(/[\\/]/).pop() ?? p).filter(Boolean);
+  return Object.entries(values)
+    .filter(([, raw]) => {
+      const v = String(raw ?? '').trim();
+      if (!v) return false;
+      if (run.skills(v)) return true;
+      return files.some((f) => v === f || v.includes(f)) || names.some((n) => v === n);
+    })
+    .map(([k]) => k);
+}

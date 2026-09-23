@@ -3,7 +3,7 @@ import { DEFAULT_BROWSER_PROFILE, isNavigatingAction, type BrowserProfile } from
 import { setsSomething } from '../execution/echo.js';
 import { standingFillRole } from '../execution/refill.js';
 import { toggleEffectLines } from '../execution/toggle.js';
-import { derivesFromParams, reportNeedsPage, templateSource } from '../execution/report.js';
+import { derivesFromParams, reportNeedsPage, templateMarkers, templateSource } from '../execution/report.js';
 import { observedNothing } from '../execution/observe.js';
 import { segmentGate } from '../execution/gates.js';
 /**
@@ -2962,7 +2962,11 @@ function satisfiedGuard(step: SpecStep, ctx: Ctx, consumed: ReadonlySet<string> 
  */
 function reportTemplateLines(step: SpecStep, ctx: Ctx, consumed: ReadonlySet<string> = new Set()): string[] {
   const last = step.segments[step.segments.length - 1];
-  const entries = Object.entries(last?.report?.values ?? {}).filter(([label, template]) => label && derivesFromParams(template) && markerBound(template, last));
+  // A marker is bound by the segment's params, or by a {{dN}} an earlier
+  // segment of this body minted (Ctx.minted): fwec8 02-create's record id,
+  // minted by the save segment and reported by the tail.
+  const bound = (template: string) => markerBound(template, last) || templateMarkers(template).every((m) => m in last.params || (ctx.minted?.has(m) ?? false));
+  const entries = Object.entries(last?.report?.values ?? {}).filter(([label, template]) => label && derivesFromParams(template) && bound(template));
   if (!entries.length) return [];
   const out = ["// The step's report values built from this run's own parameters, as the daemon reports them (synthesizeReport)."];
   // Recorded text around a slot publishes only where this page shows it
@@ -3323,13 +3327,17 @@ function unsourcedRef(spec: SpecFlow, ref: string): { sid: string; output: strin
       if (s.body) walk(s.body);
     }
   };
+  // A {{dN}} any segment of the step derives is on `p` once that segment has
+  // run (Ctx.minted): the tail may publish what the head minted (fwec8).
+  const derivedHere = new Set(producer.segments.flatMap((s) => Object.keys(s.derived ?? {})));
   for (const segment of producer.segments) {
     walk(segment.steps);
     const templated = segment.report?.values?.[output];
     // Only a value that publishes for a reference on every run (templateSource,
     // the rule publishedOutputs shares): one from several slots with recorded
-    // text between them publishes only where the page shows that text.
-    if (typeof templated === 'string' && templateSource(templated)) proven += 1;
+    // text between them publishes only where the page shows that text, and
+    // one naming a marker nothing binds never publishes (fwec8 03-verify).
+    if (typeof templated === 'string' && templateSource(templated, (name) => name in segment.params || derivedHere.has(name))) proven += 1;
   }
   return proven === 0 ? { sid, output, kind: reads > 0 ? 'unproven' : 'none' } : null;
 }

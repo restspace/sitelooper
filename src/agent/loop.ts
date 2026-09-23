@@ -11,7 +11,7 @@ import { componentsOnPage, renderComponents } from '../skills/components.js';
 import { originOf } from '../skills/store.js';
 import { siteModel } from '../skills/sitemap.js';
 import { buildSystemPrompt } from './prompt.js';
-import { admitsIncompletion, backfillReadValues, flattenComposedValues, flattenProvenComposite, mergeReportValues, namingAskMessage, positionDatumKeys, promoteLabelledReads, publishProseIdentifiers, unnamedReadValues, validateReport, type Report } from './report.js';
+import { admitsIncompletion, artefactKeys, backfillReadValues, flattenComposedValues, flattenProvenComposite, mergeReportValues, namingAskMessage, positionDatumKeys, promoteLabelledReads, publishProseIdentifiers, unnamedReadValues, validateReport, type Report } from './report.js';
 import { executeTool, toolDefsFor, type ToolExecution } from './tools.js';
 import { captureReadBack, captureReadBackAt, setIdentityHints } from '../daemon/recorder.js';
 import { describeOutcome, sourceReadBacks, type ReadBackDecider, type ReadBackTarget } from './readback.js';
@@ -472,6 +472,20 @@ export async function runInstruction(
     blockedTail = false,
     bailReason?: BailReason,
   ): Promise<InstructionResult> => {
+    // Sitelooper's own artefacts are never findings: a screenshot this
+    // instruction saved, a stored skill's id (fwsi7 04-report published
+    // `ref: "s_d5098a"` and `/tmp/ba00005_view.png`). Out before anything
+    // below can pin, split or record them, and again after the prose pass,
+    // which can mint a `ref` from the summary's own words. See artefactKeys.
+    const dropArtefacts = (): void => {
+      const values = report.evidence?.values;
+      if (!values) return;
+      const listed = new Set([...(skill.listed ?? []), ...(skill.invoked ? [skill.invoked] : [])]);
+      const keys = artefactKeys(values, { screenshots, skills: (id) => listed.has(id) || Boolean(browser.learn?.get(id)) });
+      for (const k of keys) delete values[k];
+      if (keys.length) opts.onProgress?.(`[report] dropped ${keys.length} value(s) naming sitelooper's own artefacts (a screenshot or a skill id), not the page: ${keys.join(', ')}`);
+    };
+    dropArtefacts();
     // Deterministic evidence backfill: a read value the model cited in prose
     // but left out of evidence.values would drop the read at compile time and
     // leave the step with no skill. Runs before the facts line and before
@@ -520,6 +534,7 @@ export async function runInstruction(
       if (pinned.length) opts.onProgress?.(`[report] pinned ${pinned.length} prose-cited identifier(s) to the page: ${pinned.join(', ')}`);
       if (unpinned.length) opts.onProgress?.(`[report] published ${unpinned.length} prose-cited identifier(s) no single element shows (a replay re-reads them through recovery): ${unpinned.join(', ')}`);
     }
+    dropArtefacts();
     // This line is what survives once the instruction's tool results are
     // elided at the next boundary, so the facts the caller asked for ride
     // along with the prose — otherwise a value read in step 3 would be gone

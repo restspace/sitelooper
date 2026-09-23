@@ -615,6 +615,74 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
    * The daemon half is the flow runner's own assembly (replayReport, after
    * run_skill's replay), run against the page the replay ended on.
    */
+  /**
+   * fwec8 02-create: the save segment minted the record id into the url
+   * (derived d1), the TAIL segment reported it — and stored the recording's
+   * id as a literal, so no replay ever published the one value the
+   * instruction asked for. Now the tail's template says `{{d1}}`, and both
+   * runners fill it with THIS run's id: the daemon threads derived values
+   * across segments ({ ...match.params, ...derived }), the artifact keeps one
+   * `p` per step. `"Mark ({{d1}})"` carries round 53's punctuation case too
+   * (fwec8 close_date "Dec 31 ({{v5}})"): the page shows the word "Mark",
+   * never "Mark (".
+   */
+  it('both runners publish a minted id the chain derived, in the tail’s report, with the live value', async () => {
+    const derived = { d1: { step: 1, at: 'p1', example: 'rec-42' } };
+    const values = { record_id: '{{d1}}', record_url: `${origin}/record/{{d1}}`, action: 'Mark ({{d1}})' };
+    const head: Skill = { ...skillOf([{ tool: 'goto', args: { url: `${origin}/record/current-run` }, locators: {} }]), id: 's_mint0', template: 'create a record', derived, contract: 4 };
+    const tail: Skill = { ...skillOf([MARK]), id: 's_mint1', template: 'create a record', preconditions: { urlPattern: `${origin}/record/{{d1}}` }, reportTemplate: { summary: '', values } };
+    const spec: SpecFlow = {
+      version: 1,
+      name: 'parity-mint',
+      origin,
+      startUrl: `${origin}/`,
+      vars: [],
+      steps: [
+        {
+          id: '02-create',
+          instruction: 'create a record',
+          params: {},
+          outputs: Object.keys(values),
+          segments: [
+            { id: head.id, template: head.template, params: {}, preconditions: head.preconditions, steps: head.steps, derived },
+            { id: tail.id, template: tail.template, params: {}, preconditions: tail.preconditions, steps: tail.steps, report: { summary: '', values } },
+          ],
+        },
+      ],
+    };
+
+    // The daemon: the chain as replayDirect walks it, then its report.
+    reset(0);
+    const session = new BrowserSession({ session: `parity-mint-${Date.now()}`, persist: false, learn: true });
+    let daemon: Record<string, string> = {};
+    try {
+      const page = await session.getPage();
+      await page.goto(`${origin}/`);
+      session.learn!.put(head);
+      session.learn!.put(tail);
+      const threaded: Record<string, string> = {};
+      let last: ReplayResult | undefined;
+      for (const skill of [head, tail]) {
+        const out = await executeTool(session, 'run_skill', { id: skill.id, params: { ...threaded } }, os.tmpdir());
+        last = out.replay as ReplayResult;
+        expect(last?.ok, last?.reason ?? String(out.result)).toBe(true);
+        Object.assign(threaded, last.derivedValues ?? {});
+      }
+      const r = await replayReport(() => session.getPage(), tail, threaded, last!.values);
+      daemon = r.report.evidence?.values as Record<string, string>;
+    } finally {
+      await session.close();
+    }
+    reset(0);
+    const emitted = await emittedOf(spec, {});
+    expect(emitted.ok, emitted.reason ?? '').toBe(true);
+    const artifact = Object.fromEntries(Object.entries(emitted.outputs).filter(([k]) => k.startsWith('02-create.')).map(([k, v]) => [k.slice('02-create.'.length), v]));
+
+    const want = { record_id: 'current-run', record_url: `${origin}/record/current-run`, action: 'Mark (current-run)' };
+    expect(daemon).toEqual(want);
+    expect(artifact).toEqual(want);
+  }, 120_000);
+
   describe('report values (fwrd86)', () => {
     const READ_REF: SkillStep = { tool: 'read', args: { target: '(read-back)', what: 'text' }, locators: { target: [{ kind: 'id', selector: '#ref' }] }, label: 'ticket_reference' };
     const values = {
