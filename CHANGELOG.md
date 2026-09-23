@@ -1,5 +1,47 @@
 # Changelog
 
+## 0.4.1 — 2026-09-23
+
+### Credentials
+- A credential typed in the clear is no longer stored. When the value of a credential-named
+  environment variable (`APP_PASSWORD`, `GH_TOKEN`, `DB_PWD`, `OPENAI_API_KEY`, …) appears in
+  an instruction or a typed value, it is rewritten to its `{{env:NAME}}` marker before any
+  model, recording or skill store sees it. A value that is also held by a non-credential
+  variable (a password that is also the login) is rewritten only where it goes into a
+  password field.
+- `compile` repairs a flow recorded with 0.4.0 that still carries a credential: the compiled
+  script reads `process.env['NAME']` instead, and a warning names the variable, never the value.
+- The shell's `PWD`, and any variable that points to a secret rather than holding one
+  (`PASSWORD_STORE_DIR`, `SSH_KEY_FILE`), is never treated as a credential; nor is a value that
+  is an existing path on this machine.
+
+### Replays that report success only when the work was done
+- A step whose job is to set a value now checks that the value shows after its save. Before, a
+  save that changed nothing could still replay as a model-free success when the step's own
+  read-backs had wildcarded the value its check should confirm.
+- A record number the app shows as page text after a save (a ticket number, an order
+  reference) is recognised as created by the recording and is referenced, never frozen: later
+  steps and reports use the number the current run created, not the recording's.
+- A fill is dropped as superseded only when a later fill targets the same field by its primary
+  locator. Two fields of one dialog sharing a generic fallback locator are no longer merged.
+- An alert's expectation is no longer emptied by a read of its own first line.
+
+### CLI
+- `compile --json` writes its whole output before exiting (it was truncated on Linux pipes).
+
+### Package
+- The package homepage is https://rapiderit.com/tech/sitelooper/.
+
+### Verification
+- Benchmark rounds 47–52. The last engine change (round 51) is cloud-verified: 2209 unit
+  tests, 2388 with the browser suites and 123 execution-parity tests passing, and no
+  published run's compile status changed. Live sweeps: RepairDesk (fwrd86) and Odoo (fwod80)
+  green on every arm: every run verified, every replay step model-free, and the compiled
+  Playwright script passing, with no password in any published artefact.
+- Known and not yet fixed: some report values are filled from the recording's text rather
+  than read from the page on every replay (a created date among them), so they are right
+  only while the app's state matches the recording's.
+
 ## 0.4.0 — 2026-09-22
 
 ### Since 0.3.0: benchmark rounds 33–46
