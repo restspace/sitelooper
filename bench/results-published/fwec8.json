@@ -1,0 +1,280 @@
+{
+  "name": "fwec8",
+  "origin": "http://127.0.0.1:8097",
+  "startUrl": "http://127.0.0.1:8097/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in at http://127.0.0.1:8097/ with username admin and password {{env:APP_PASSWORD}} (type the password text exactly as {{env:APP_PASSWORD}}). Then go to Opportunities list view and report the names of all opportunities whose name starts with 'Seed:', exactly as shown.",
+      "skill": "s_7c4f39",
+      "params": {
+        "v1": "http://127.0.0.1:8097/",
+        "v2": "admin"
+      },
+      "outputs": [
+        "seed_opportunity_name_1",
+        "seed_opportunity_name_2",
+        "seed_opportunity_name_3",
+        "seed_opportunity_names_1",
+        "seed_opportunity_names_2",
+        "seed_opportunity_names_3"
+      ],
+      "recorded": {
+        "opportunity_count": "3 (all shown, 1–3 / 3)",
+        "seed_opportunity_name_1": "Seed: training package",
+        "seed_opportunity_name_2": "Seed: pilot expansion",
+        "seed_opportunity_name_3": "Seed: annual support renewal",
+        "seed_opportunity_names_1": "Seed: training package",
+        "seed_opportunity_names_2": "Seed: pilot expansion",
+        "seed_opportunity_names_3": "Seed: annual support renewal",
+        "url": "http://127.0.0.1:8097/#Opportunity"
+      },
+      "route": "http://127.0.0.1:8097/#Opportunity",
+      "outputEvidence": {
+        "opportunity_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "seed_opportunity_name_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_opportunity_name_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_opportunity_name_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_opportunity_names_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_opportunity_names_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_opportunity_names_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "Create a new Opportunity named '{{runid}} Bench Opportunity', linked to account 'Bench Account' (choose it via suggestions/dialog so it's actually linked), stage 'Negotiation', amount 12500, close date 2026-12-31, assigned to user 'Bench Assignee' (choose via suggestions), and a description that includes the text '{{runid}}'. Save it. Then open its record page and verify all these values are displayed, and report the record ID from the URL (#Opportunity/view/<id>).",
+      "skill": "s_a24da4",
+      "params": {
+        "v2": "{{runid}} Bench Opportunity",
+        "v3": "Bench Account",
+        "v4": "12500",
+        "v5": "2026-12-31",
+        "v6": "Bench Assignee",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "name",
+        "account",
+        "stage",
+        "amount",
+        "close_date",
+        "description",
+        "assigned_user",
+        "benchmark_tag"
+      ],
+      "recorded": {
+        "record_id": "6ab3eab5991a42617",
+        "name": "fwec8-n1 Bench Opportunity",
+        "account": "Bench Account",
+        "stage": "Negotiation",
+        "amount": "$12,500.00",
+        "close_date": "Dec 31 (2026-12-31)",
+        "description": "Created for fwec8-n1 benchmark verification.",
+        "assigned_user": "Bench Assignee",
+        "record_url": "http://127.0.0.1:8097/#Opportunity/view/6ab3eab5991a42617",
+        "benchmark_tag": "fwec8-n1",
+        "url": "http://127.0.0.1:8097/#Opportunity/view/6ab3eab5991a42617",
+        "url.h2": "6ab3eab5991a42617"
+      },
+      "route": "http://127.0.0.1:8097/#Opportunity/view/:id",
+      "outputEvidence": {
+        "record_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "name": {
+          "same": 0,
+          "differed": 1
+        },
+        "account": {
+          "same": 1,
+          "differed": 0
+        },
+        "stage": {
+          "same": 1,
+          "differed": 0
+        },
+        "amount": {
+          "same": 1,
+          "differed": 0
+        },
+        "close_date": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "description": {
+          "same": 0,
+          "differed": 1
+        },
+        "assigned_user": {
+          "same": 1,
+          "differed": 0
+        },
+        "record_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "benchmark_tag": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.h2": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "03-verify",
+      "instruction": "On the opportunity record page {{02-create.url}}, verify the Close Date shows year 2026 (if it displays only 'Dec 31', edit the field or check its stored value to confirm it is 2026-12-31; fix it if not). Then post on the record's Stream a post whose text includes '{{runid}}', and verify the post appears in the stream. Report the close date as finally displayed/stored and the post text.",
+      "skill": "s_55d615",
+      "params": {
+        "v1": "{{02-create.url}}",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "record_id",
+        "close_date_displayed_on_detail",
+        "close_date_stored_value",
+        "close_date_year_confirmed",
+        "stream_post_text",
+        "stream_post_time",
+        "follow_button_after_post",
+        "benchmark_tag"
+      ],
+      "recorded": {
+        "record_id": "6ab3eab5991a42617",
+        "close_date_displayed_on_detail": "Dec 31",
+        "close_date_stored_value": "2026-12-31",
+        "close_date_year_confirmed": "2026 (verified via edit form input value, not fixed because it was already correct)",
+        "stream_post_text": "fwec8-n1 benchmark stream post: opportunity values verified.",
+        "stream_post_author": "Admin",
+        "stream_post_time": "15:05",
+        "post_visible_in_stream": "yes",
+        "follow_button_after_post": "Followed (was Follow before posting — app side effect)",
+        "benchmark_tag": "fwec8-n1"
+      },
+      "route": "http://127.0.0.1:8097/#Opportunity/view/:id",
+      "urlVariance": [
+        "6ab3eab5991a42617",
+        "6ab3eb287d9453992"
+      ],
+      "outputEvidence": {
+        "record_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "close_date_displayed_on_detail": {
+          "same": 1,
+          "differed": 0
+        },
+        "close_date_stored_value": {
+          "same": 1,
+          "differed": 0
+        },
+        "close_date_year_confirmed": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "stream_post_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "stream_post_author": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "stream_post_time": {
+          "same": 0,
+          "differed": 1
+        },
+        "post_visible_in_stream": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "follow_button_after_post": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "benchmark_tag": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwec8-n1",
+    "created": "2026-09-23T15:06:22.783Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "opportunity_count"
+      ]
+    },
+    {
+      "stepId": "02-create",
+      "outputs": [
+        "record_id",
+        "record_url"
+      ]
+    },
+    {
+      "stepId": "03-verify",
+      "outputs": [
+        "stream_post_author",
+        "post_visible_in_stream"
+      ]
+    }
+  ]
+}
