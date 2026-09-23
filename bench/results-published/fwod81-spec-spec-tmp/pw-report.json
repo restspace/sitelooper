@@ -1,0 +1,165 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwod81-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwod81-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwod81-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwod81-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwod81-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwod81.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwod81-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwod81.spec.ts",
+      "file": "fwod81.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwod81",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 70007,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-report\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in to Odoo 17 at http://127.0.0.1:8069/ with login admin and password {{env:APP_PASSWORD}} (type that literal text), then in Contacts create a new customer named '{{runid}} Bench Customer' with City set to Benchville, save, and report the saved contact's name and city.",
+                      "duration": 11311
+                    },
+                    {
+                      "title": "02-create: In Odoo, go to Sales and create a new quotation for customer '{{runid}} Bench Customer' (choose from the autocomplete dropdown). Add ONE order line: pick any product from the catalogue via the dropdown, quantity 3. Save the quotation and report: the product name chosen, the unit price the app filled in, and the Untaxed Amount the app computes.",
+                      "duration": 36586
+                    },
+                    {
+                      "title": "03-open: In Odoo, open quotation {{02-create.quotation_reference}} for customer {{runid}} Bench Customer and add a SECOND order line: a product DIFFERENT from Acoustic Bloc Screens, chosen from the dropdown, quantity 2. Save and report the product name chosen and the new total Untaxed Amount the app computes (verify footer after save).",
+                      "duration": 7697
+                    },
+                    {
+                      "title": "04-open: In Odoo, open quotation {{02-create.quotation_reference}} and change the first order line's (Acoustic Bloc Screens) quantity from 3 to 5. Save and report the new Untaxed Amount the app computes (verify footer after save).",
+                      "duration": 3125
+                    },
+                    {
+                      "title": "05-report: In Odoo, confirm quotation {{02-create.quotation_reference}} so it becomes a sales order. Report the order reference (e.g. {{02-create.quotation_reference}}) and the status the app now shows. Then CANCEL the sales order so nothing stays active, and report the status shown after cancelling.",
+                      "duration": 10477
+                    }
+                  ],
+                  "startTime": "2026-09-23T15:15:21.039Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "46929619b7e518a4e62e-96a03bc43941e483c772",
+          "file": "fwod81.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-23T15:15:19.022Z",
+    "duration": 72213.971,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

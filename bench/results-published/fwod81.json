@@ -1,0 +1,604 @@
+{
+  "name": "fwod81",
+  "origin": "http://127.0.0.1:8069",
+  "startUrl": "http://127.0.0.1:8069/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to Odoo 17 at http://127.0.0.1:8069/ with login admin and password {{env:APP_PASSWORD}} (type that literal text), then in Contacts create a new customer named '{{runid}} Bench Customer' with City set to Benchville, save, and report the saved contact's name and city.",
+      "skill": "s_eae12d",
+      "params": {
+        "v2": "http://127.0.0.1:8069/",
+        "v3": "admin",
+        "v4": "{{env:APP_PASSWORD}}",
+        "v5": "{{runid}} Bench Customer",
+        "v6": "Benchville",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "city",
+        "contact_name",
+        "contact_url",
+        "initial_page_before_login",
+        "login_page",
+        "system_notification",
+        "ref"
+      ],
+      "recorded": {
+        "city": "Benchville",
+        "contact_id": "44",
+        "contact_name": "fwod81-n1 Bench Customer",
+        "contact_url": "http://127.0.0.1:8069/web#cids=1&menu_id=109&action=156&model=res.partner&view_type=form&id=44",
+        "model": "res.partner",
+        "initial_page_before_login": "about:blank",
+        "login_page": "http://127.0.0.1:8069/",
+        "system_notification": "Mitchell Admin\n- now\n\nContact created",
+        "ref": "fwod81-n1",
+        "url": "http://127.0.0.1:8069/web#cids=1&menu_id=109&action=156&model=res.partner&view_type=form&id=44",
+        "url.q.menu_id": "109",
+        "url.q.action": "156",
+        "url.q.id": "44"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=res.partner&view_type=form",
+      "outputEvidence": {
+        "city": {
+          "same": 2,
+          "differed": 0
+        },
+        "contact_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "contact_name": {
+          "same": 0,
+          "differed": 2
+        },
+        "contact_url": {
+          "same": 0,
+          "differed": 2
+        },
+        "model": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "initial_page_before_login": {
+          "same": 0,
+          "differed": 2
+        },
+        "login_page": {
+          "same": 2,
+          "differed": 0
+        },
+        "system_notification": {
+          "same": 2,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 2
+        },
+        "url": {
+          "same": 0,
+          "differed": 2
+        },
+        "url.q.menu_id": {
+          "same": 2,
+          "differed": 0
+        },
+        "url.q.action": {
+          "same": 2,
+          "differed": 0
+        },
+        "url.q.id": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "In Odoo, go to Sales and create a new quotation for customer '{{runid}} Bench Customer' (choose from the autocomplete dropdown). Add ONE order line: pick any product from the catalogue via the dropdown, quantity 3. Save the quotation and report: the product name chosen, the unit price the app filled in, and the Untaxed Amount the app computes.",
+      "skill": "s_f96c04",
+      "params": {
+        "v1": "{{runid}} Bench Customer",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "customer",
+        "customer_city_shown",
+        "quantity",
+        "unit_price",
+        "untaxed_amount",
+        "tax_20",
+        "total",
+        "quotation_reference",
+        "url",
+        "subtotal_footer_text",
+        "empty_line_unit_price",
+        "order_lines",
+        "subtotal_footer",
+        "ref"
+      ],
+      "recorded": {
+        "customer": "fwod81-n1 Bench Customer",
+        "customer_city_shown": "Benchville",
+        "product_name": "[FURN_6666] Acoustic Bloc Screens",
+        "quantity": "3",
+        "unit_price": "295.00",
+        "untaxed_amount": "£ 885.00",
+        "tax_20": "£ 177.00",
+        "total": "£ 1,062.00",
+        "quotation_reference": "S00021",
+        "sale_order_id": "21",
+        "url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=21",
+        "product_catalog_dropdown_options": "[\"[FURN_6666] Acoustic Bloc Screens\",\"[E-COM11] Cabinet with Doors\",\"Chair floor protection\",\"Conference Chair\",\"[FURN_1118] Corner Desk Left Sit\",\"[E-COM06] Corner Desk Right Sit\",\"Customizable Desk\",\"Deposit\",\"Search More...\",\"Start typing...\"]",
+        "subtotal_footer_text": "Untaxed Amount\t£ 885.00\nTAX 20%\t\n£ 177.00\n\nTotal\t£ 1,062.00",
+        "empty_line_unit_price": "0.00",
+        "order_lines": "Product\n\t\nDescription\n\t\nQuantity\n\t\nUnit Price\n\t\nTaxes\n\t\nTax excl.\n\t\n\n\tAdd a productAdd a sectionAdd a noteCatalog\n​\n​\n​",
+        "subtotal_footer": "Untaxed Amount\t£ 885.00\nTAX 20%\t\n£ 177.00\n\nTotal\t£ 1,062.00",
+        "ref": "fwod81-n1",
+        "product_reference": "FURN_6666",
+        "url.q.menu_id": "194",
+        "url.q.action": "316",
+        "url.q.id": "21"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "customer": {
+          "same": 0,
+          "differed": 2
+        },
+        "customer_city_shown": {
+          "same": 2,
+          "differed": 0
+        },
+        "product_name": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "quantity": {
+          "same": 2,
+          "differed": 0
+        },
+        "unit_price": {
+          "same": 2,
+          "differed": 0
+        },
+        "untaxed_amount": {
+          "same": 0,
+          "differed": 2
+        },
+        "tax_20": {
+          "same": 0,
+          "differed": 2
+        },
+        "total": {
+          "same": 0,
+          "differed": 2
+        },
+        "quotation_reference": {
+          "same": 0,
+          "differed": 2
+        },
+        "sale_order_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "url": {
+          "same": 0,
+          "differed": 2
+        },
+        "product_catalog_dropdown_options": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "subtotal_footer_text": {
+          "same": 0,
+          "differed": 2
+        },
+        "empty_line_unit_price": {
+          "same": 2,
+          "differed": 0
+        },
+        "order_lines": {
+          "same": 2,
+          "differed": 0
+        },
+        "subtotal_footer": {
+          "same": 2,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 2
+        },
+        "product_reference": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "url.q.menu_id": {
+          "same": 2,
+          "differed": 0
+        },
+        "url.q.action": {
+          "same": 2,
+          "differed": 0
+        },
+        "url.q.id": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "03-open",
+      "instruction": "In Odoo, open quotation {{02-create.quotation_reference}} for customer {{runid}} Bench Customer and add a SECOND order line: a product DIFFERENT from Acoustic Bloc Screens, chosen from the dropdown, quantity 2. Save and report the product name chosen and the new total Untaxed Amount the app computes (verify footer after save).",
+      "skill": "s_15fe78",
+      "params": {
+        "v1": "{{02-create.quotation_reference}}",
+        "v2": "{{01-signin.contact_name}}",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "quotation_reference",
+        "customer",
+        "second_line_quantity",
+        "second_line_unit_price",
+        "second_line_subtotal",
+        "first_line_quantity",
+        "first_line_unit_price",
+        "footer_untaxed_amount_after_save",
+        "footer_tax_20_after_save",
+        "footer_total_after_save",
+        "footer_before_save",
+        "order_lines_after_save_2",
+        "ref"
+      ],
+      "recorded": {
+        "quotation_reference": "S00021",
+        "customer": "fwod81-n1 Bench Customer",
+        "second_line_product": "[E-COM11] Cabinet with Doors",
+        "second_line_quantity": "2.00",
+        "second_line_unit_price": "140.00",
+        "second_line_subtotal": "£ 280.00",
+        "first_line_product": "[FURN_6666] Acoustic Bloc Screens",
+        "first_line_quantity": "3.00",
+        "first_line_unit_price": "295.00",
+        "footer_untaxed_amount_after_save": "£ 1,165.00",
+        "footer_tax_20_after_save": "£ 233.00",
+        "footer_total_after_save": "£ 1,398.00",
+        "order_lines_after_save": "\t[FURN_6666] Acoustic Bloc Screens\t\n[FURN_6666] Acoustic Bloc Screens\n\t3.00\t295.00\t\n20%\n\t£ 885.00\t\n\t[E-COM11] Cabinet with Doors\t\n[E-COM11] Cabinet with Doors\n\t2.00\t140.00\t\n20%\n\t£ 280.00\t",
+        "tax": "20%",
+        "footer_before_save": "Untaxed Amount\t£ 1,165.00\nTAX 20%\t\n£ 233.00\n\nTotal\t£ 1,398.00",
+        "order_lines_after_save_2": "[FURN_6666] Acoustic Bloc Screens\t\n[FURN_6666] Acoustic Bloc Screens\n\t3.00\t295.00\t\n20%\n\t£ 885.00\t\n\t[E-COM11] Cabinet with Doors\t\n[E-COM11] Cabinet with Doors\n\t2.00\t140.00\t\n20%\n\t£ 280.00\t\n\tAdd a productAdd a sectionAdd a noteCatalog\n​",
+        "ref": "fwod81-n1"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "quotation_reference": {
+          "same": 0,
+          "differed": 2
+        },
+        "customer": {
+          "same": 0,
+          "differed": 2
+        },
+        "second_line_product": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "second_line_quantity": {
+          "same": 2,
+          "differed": 0
+        },
+        "second_line_unit_price": {
+          "same": 2,
+          "differed": 0
+        },
+        "second_line_subtotal": {
+          "same": 1,
+          "differed": 1
+        },
+        "first_line_product": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "first_line_quantity": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "first_line_unit_price": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "footer_untaxed_amount_after_save": {
+          "same": 1,
+          "differed": 1
+        },
+        "footer_tax_20_after_save": {
+          "same": 1,
+          "differed": 1
+        },
+        "footer_total_after_save": {
+          "same": 1,
+          "differed": 1
+        },
+        "order_lines_after_save": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "tax": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "footer_before_save": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "order_lines_after_save_2": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "ref": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "04-open",
+      "instruction": "In Odoo, open quotation {{02-create.quotation_reference}} and change the first order line's (Acoustic Bloc Screens) quantity from 3 to 5. Save and report the new Untaxed Amount the app computes (verify footer after save).",
+      "skill": "s_a2f642",
+      "params": {
+        "v1": "{{02-create.quotation_reference}}"
+      },
+      "outputs": [
+        "quotation_reference",
+        "customer",
+        "line1_quantity",
+        "line1_unit_price",
+        "line1_subtotal",
+        "line2_quantity",
+        "line2_unit_price",
+        "footer_untaxed_amount_after_save",
+        "footer_tax_20_after_save",
+        "footer_total_after_save",
+        "status",
+        "footer_after_save_qty5",
+        "order_lines_after_qty5"
+      ],
+      "recorded": {
+        "quotation_reference": "S00021",
+        "customer": "fwod81-n1 Bench Customer",
+        "line1_product": "[FURN_6666] Acoustic Bloc Screens",
+        "line1_quantity": "5.00",
+        "line1_unit_price": "295.00",
+        "line1_subtotal": "£ 1,475.00",
+        "line2_product": "[E-COM11] Cabinet with Doors",
+        "line2_quantity": "2.00",
+        "line2_unit_price": "140.00",
+        "footer_untaxed_amount_after_save": "£ 1,755.00",
+        "footer_tax_20_after_save": "£ 351.00",
+        "footer_total_after_save": "£ 2,106.00",
+        "status": "Quotation (S00021)",
+        "footer_after_save_qty5": "Untaxed Amount\t£ 1,755.00\nTAX 20%\t\n£ 351.00\n\nTotal\t£ 2,106.00",
+        "order_lines_after_qty5": "[FURN_6666] Acoustic Bloc Screens\t\n[FURN_6666] Acoustic Bloc Screens\n\t5.00\t295.00\t\n20%\n\t£ 1,475.00\t\n\t[E-COM11] Cabinet with Doors\t\n[E-COM11] Cabinet with Doors\n\t2.00\t140.00\t\n20%\n\t£ 280.00\t\n\tAdd a productAdd a sectionAdd a noteCatalog\n​",
+        "product_reference": "FURN_6666"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "quotation_reference": {
+          "same": 0,
+          "differed": 2
+        },
+        "customer": {
+          "same": 0,
+          "differed": 2
+        },
+        "line1_product": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "line1_quantity": {
+          "same": 2,
+          "differed": 0
+        },
+        "line1_unit_price": {
+          "same": 2,
+          "differed": 0
+        },
+        "line1_subtotal": {
+          "same": 0,
+          "differed": 2
+        },
+        "line2_product": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "line2_quantity": {
+          "same": 2,
+          "differed": 0
+        },
+        "line2_unit_price": {
+          "same": 2,
+          "differed": 0
+        },
+        "footer_untaxed_amount_after_save": {
+          "same": 0,
+          "differed": 2
+        },
+        "footer_tax_20_after_save": {
+          "same": 0,
+          "differed": 2
+        },
+        "footer_total_after_save": {
+          "same": 0,
+          "differed": 2
+        },
+        "status": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "footer_after_save_qty5": {
+          "same": 2,
+          "differed": 0
+        },
+        "order_lines_after_qty5": {
+          "same": 2,
+          "differed": 0
+        },
+        "product_reference": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        }
+      }
+    },
+    {
+      "id": "05-report",
+      "instruction": "In Odoo, confirm quotation {{02-create.quotation_reference}} so it becomes a sales order. Report the order reference (e.g. {{02-create.quotation_reference}}) and the status the app now shows. Then CANCEL the sales order so nothing stays active, and report the status shown after cancelling.",
+      "skill": "s_12edd7",
+      "params": {
+        "v1": "{{02-create.quotation_reference}}",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "order_reference",
+        "status_after_confirm",
+        "status_after_cancel",
+        "cancellation_dialog",
+        "url",
+        "statusbar_after_cancel",
+        "ref"
+      ],
+      "recorded": {
+        "order_reference": "S00021",
+        "status_after_confirm": "Sales Order (statusbar radio 'Sales Order' checked/current)",
+        "status_after_cancel": "Cancelled (statusbar radio 'Cancelled' checked; 'Set to Quotation' button offered)",
+        "statusbar_text_after_cancel": "Cancelled / Sales Order / Quotation Sent / Quotation",
+        "order_id": "21",
+        "cancellation_dialog": "Cancel Sales Order — \"Are you sure you want to cancel this order?\", buttons 'Send and cancel' (action_send_mail_and_cancel) and 'Cancel' (action_cancel)",
+        "url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=21",
+        "statusbar_after_cancel": "Cancelled\nSales Order\nQuotation Sent\nQuotation",
+        "ref": "fwod81-n1"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "order_reference": {
+          "same": 0,
+          "differed": 2
+        },
+        "status_after_confirm": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "status_after_cancel": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "statusbar_text_after_cancel": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "order_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "cancellation_dialog": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "url": {
+          "same": 0,
+          "differed": 2
+        },
+        "statusbar_after_cancel": {
+          "same": 2,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwod81-n1",
+    "created": "2026-09-23T15:10:41.022Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "contact_id",
+        "model"
+      ]
+    },
+    {
+      "stepId": "02-create",
+      "outputs": [
+        "product_name",
+        "sale_order_id",
+        "product_catalog_dropdown_options",
+        "product_reference"
+      ]
+    },
+    {
+      "stepId": "03-open",
+      "outputs": [
+        "second_line_product",
+        "first_line_product",
+        "order_lines_after_save",
+        "tax"
+      ]
+    },
+    {
+      "stepId": "04-open",
+      "outputs": [
+        "line1_product",
+        "line2_product",
+        "product_reference"
+      ]
+    },
+    {
+      "stepId": "05-report",
+      "outputs": [
+        "statusbar_text_after_cancel",
+        "order_id"
+      ]
+    }
+  ]
+}
