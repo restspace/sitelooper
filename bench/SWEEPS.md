@@ -158,3 +158,21 @@ r51; the first browser attempt hit a Chromium version mismatch on the box, reins
   {{01-signin.ticket_status}}; 602 → 600 refs across 54 rebuilt flows, both removals the wrong one.
 - **Flaky parity test** was the test's own race (the fixture list renders after load); now made
   deterministic with a 1.5s delay and a wait for the list. Not a product bug.
+
+## Round 54 (c923af6): ten-app confirmation — 5/10 green
+
+| round | runid | commit | app | verified | replay model-free | compiled | green | notes |
+|---|---|---|---|---|---|---|---|---|
+| 54 | fwrd87 | c923af6 | rd | 6/6 ×3 | yes: 8/8 tier A 0 turns | pass 6/6, drift 2 | **yes** | DEFECT: 04-add (Part B) publishes Part A's name — unscoped reads fall back to recorded row id part-row-p18, and a read frame hard-codes "RD Part A" |
+| 54 | fwgr68 | c923af6 | gr | 6/6 ×3 | yes: 6/6 | pass 4/6+2 n/a | **yes** | password = username; 63 hits are all the username |
+| 54 | fwgt7 | c923af6 | gt | 7/7 ×3 | yes: 4/4 | pass 5/7+2 n/a | **yes** | |
+| 54 | fwvk7 | c923af6 | vk | 7/7 ×3 | yes: 3/3 | pass 5/7+2 n/a | **yes** | cosmetic: 03-open summary keeps orphan "(d); (e);" after dropped clauses |
+| 54 | fwgh10 | c923af6 | gh | 7/7 ×3 | yes: 2/2 | pass 5/7+2 n/a | **yes** | |
+| 54 | fwod81 | c923af6 | od | 6/6 ×3 | no: n2 03-open 7 turns; n3 0 (repinned variant) | pass 6/6 | no | round 48/49's dropSupersededSets refill arm dropped a mistaken product fill (#79) whose OWN diff opened a menu; replay re-selects on an undisturbed row and its effect never appears |
+| 54 | fwec8 | c923af6 | ec | 7/7, 6/7, 6/7 | yes: 0 turns | pass 5/7+2 n/a | no | obj 7 "record id NOT in finalText": the instruction asked for the record id; 02-create froze it as a literal (derived d1 never substituted into reportTemplate) and export pruned it; 03-verify's {{v2}} slot was dropped from params, and templateSource still counted it. Success reported with `unreported: ["record_id"]`. Also round 53's templateLiterals keeps punctuation ("Dec 31 (") and withholds an observed value |
+| 54 | fwkb39 | c923af6 | kb | 6/6 ×3 | no: n2 04-open 6 turns; n3 0 (repinned) | FAIL: same | no | a read publishes "Backlog " (trailing space); a slotted expectation line `- link "{{v5}}"` becomes `- link "Backlog "`, which a trimmed snapshot name never matches. Latent since fwkb38. Also: the credential scrub rewrote "KB Dashboard for admin" (password = username) to the marker, weakening that check |
+| 54 | fwop10 | c923af6 | op | 7/7, 6/7, 7/7 | no: 02-create 30 / 61 turns | FAIL | no | n1's model gave inputs ids of its own via eval (`inp.id='wp-new-…combinedDate'`, `ce.id='journal-editor-2'`) and filled them; compile drops evals, so the ids never exist. n2's recovery reported SUCCESS while saying the comment was "NOT confirmed as posted" and banked a no-submit comment procedure as 1/1. Compiled: innerText ("OVERVIEW", CSS upper-case) vs textContent ("Overview") in text_contains |
+| 54 | fwsi7 | c923af6 | si | 7/7 ×3 | no: 45 / 50 turns | FAIL 1/7 | no | Snipe-IT. n1 reached the new asset by eval + `goto /hardware/4` (fwsi6 clicked the link): a goto isn't a landing, so id 4 was never banked and stayed literal; seenUrl then blocked 03-edit's landed mint. n3's re-pin copied the very goto that stopped it into the artifact. 05-open reported success with its reads skipped; 04-report published a skill id and a screenshot filename as values |
+
+None of rounds 50–53 caused a failure. Round 48/49's superseded-fill rule caused Odoo's; round 53's
+literal rule wrongly withheld one observed value (EspoCRM close_date) without failing an objective.
