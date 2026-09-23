@@ -783,6 +783,18 @@ const PARTS = `<!doctype html><html><head><meta charset="utf-8"><title>Ticket</t
 </body></html>`;
 
 /**
+ * A status change that raised no alert (round 56, repairdesk fwrd88
+ * 05-change: `read_all role=alert what:count` recorded "0"). `#list` is the
+ * container a count of its rows scopes to; `?nolist=1` is the same page with
+ * that container never rendered, where a count of its rows proves nothing.
+ */
+const COUNTS = (list: boolean) => `<!doctype html><html><head><meta charset="utf-8"><title>Ticket</title></head><body>
+<h1>Ticket</h1>
+<p id="status">Status Ready</p>
+${list ? '<section id="panel"><ul id="list"></ul></section>' : ''}
+</body></html>`;
+
+/**
  * A part row and its cost field (round 51, repairdesk fwrd84 05-edit): Save
  * posts `/commit/cost/<value>` and redraws the row with the saved cost and
  * its price (cost × 1.25). `/price?stuck=1` is the same form whose Save
@@ -1384,6 +1396,7 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
       if (url === '/controls') return html(CONTROLS);
       if (url === '/price' || url === '/price?stuck=1') return html(PRICE(url.endsWith('stuck=1')));
       if (url === '/imagelink') return html(IMAGE_LINK);
+      if (url === '/counts' || url === '/counts?nolist=1') return html(COUNTS(!url.endsWith('nolist=1')));
       if (url === '/transform') return html(TRANSFORM);
       if (url === '/board') return html(BOARD);
       if (url === '/parts') return html(PARTS);

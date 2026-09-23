@@ -4863,4 +4863,65 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(emitted.outputs['01-clear.part_cost']).toBe('$200.00');
     }, 120_000);
   });
+
+  /**
+   * Round 56, repairdesk fwrd88 05-change: s_4b0e31 step 11 is `read_all
+   * role=alert what:count`, recorded "0" after a status change that raised no
+   * alert. On replay nothing matched after the full wait and a sweep, and both
+   * runners SKIPPED the read, so a correctly observed "0" went unpublished.
+   * A count read whose scope is on the settled page and whose every candidate
+   * matches nothing publishes "0"; a count whose container never rendered, or
+   * a text read, still skips.
+   */
+  describe('a count of nothing (round 56, fwrd88)', () => {
+    const count = (label: string, target: LocatorCandidate[], what = 'count'): SkillStep => ({
+      tool: 'read_all',
+      args: { target: '@e1', what },
+      label,
+      locators: { target },
+    });
+    const alerts = [{ kind: 'css' as const, selector: 'role=alert' }];
+    const rows = [{ kind: 'css' as const, selector: '#list > li' }];
+    const scopedRows = [{ kind: 'scoped' as const, container: 'section', hasText: 'Parts', selector: 'li' }];
+    const status = { tool: 'read', args: { target: '@e2', what: 'text' }, label: 'status', locators: { target: [{ kind: 'css' as const, selector: '#status' }] } } as SkillStep;
+
+    it('both runners publish "0" for a count whose scope is on the page and matches nothing', async () => {
+      const steps: SkillStep[] = [
+        { tool: 'goto', args: { url: `${origin}/counts` }, locators: {} },
+        status,
+        count('alerts', alerts),
+        count('rows', rows),
+        // a text read of nothing is still no observation
+        count('row_texts', rows, 'text'),
+      ];
+      const { replay, emitted } = await both(steps, 0);
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replay.outputs.alerts).toBe('0');
+      expect(emitted.outputs['01-clear.alerts']).toBe('0');
+      expect(replay.outputs.rows).toBe('0');
+      expect(emitted.outputs['01-clear.rows']).toBe('0');
+      expect(replay.outputs.row_texts ?? '').toBe('');
+      expect(emitted.outputs['01-clear.row_texts'] ?? '').toBe('');
+    }, 120_000);
+
+    it('both runners still skip a count whose container never rendered', async () => {
+      const steps: SkillStep[] = [
+        { tool: 'goto', args: { url: `${origin}/counts?nolist=1` }, locators: {} },
+        status,
+        count('alerts', alerts),
+        count('rows', rows),
+        count('scoped_rows', scopedRows),
+      ];
+      const { replay, emitted } = await both(steps, 0);
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replay.outputs.alerts).toBe('0');
+      expect(emitted.outputs['01-clear.alerts']).toBe('0');
+      expect(replay.outputs.rows ?? '').toBe('');
+      expect(emitted.outputs['01-clear.rows'] ?? '').toBe('');
+      expect(replay.outputs.scoped_rows ?? '').toBe('');
+      expect(emitted.outputs['01-clear.scoped_rows'] ?? '').toBe('');
+    }, 120_000);
+  });
 });

@@ -843,9 +843,17 @@ const HELPERS: { token: string; source: string[] }[] = [
       '  where: string,',
       '  policy: ResolvePolicy,',
       '  read: (loc: Locator) => Promise<unknown>,',
-      '  opts: { drift?: string[]; resolved?: { into: string[]; key: string; check?: () => void } } = {},',
+      '  opts: {',
+      '    drift?: string[];',
+      '    resolved?: { into: string[]; key: string; check?: () => void };',
+      '    count?: { root: { locator(selector: string, options?: { hasText?: string | RegExp }): Locator }; scopes: CountScope[] | null };',
+      '  } = {},',
       '): Promise<string> {',
       '  const hit = await resolveForRead(page, (again) => resolveTarget(page, candidates, where, again ? { ...policy, waitMs: 0 } : policy, opts));',
+      '  // A COUNT read (opts.count) that resolved nothing on a settled page with',
+      '  // its scope on it observed "0", as replay publishes it (the shared',
+      '  // countedNothing, fwrd88 05-change); anything else still skips.',
+      "  if (!hit && opts.count && (await countedNothing(page, opts.count.root, candidates, opts.count.scopes))) return '0';",
       '  if (!hit) {',
       '    skippedReads.push(where);',
       '    console.log(`[sitelooper skip] ${where}: read target not found — value left empty`);',
@@ -2786,12 +2794,28 @@ function readLines(step: SkillStep, ctx: Ctx): string[] {
       `}`,
       `${out} = 'root' in ${framed} ? await readOptional(page, [`,
       ...r.open,
-      `], ${r.where}, ${r.policy}, ${read}, ${r.opts}) : '';`,
+      `], ${r.where}, ${r.policy}, ${read}, ${countOpts(step, chain, r.opts, `${framed}.root`)}) : '';`,
       ...echoReadLines(step, ctx),
     ];
   }
   const { open, where, policy, opts } = resolutionLines(chain, step, 'target', ctx, { allowMultiple: spansEveryMatch(step.tool, step.args ?? {}), waitMs: 'RESOLVE_WAIT_MS' });
-  return [`${out} = await readOptional(page, [`, ...open, `], ${where}, ${policy}, ${read}, ${opts});`, ...echoReadLines(step, ctx)];
+  return [`${out} = await readOptional(page, [`, ...open, `], ${where}, ${policy}, ${read}, ${countOpts(step, chain, opts, 'page')});`, ...echoReadLines(step, ctx)];
+}
+
+/**
+ * readOptional's options for a COUNT read: the root its scopes are looked for
+ * in, and the scopes themselves, derived at run time by the shared countScopes
+ * from the chain with this run's params filled — replay's own derivation
+ * (runOneStep), so both publish "0" or skip on the same page (fwrd88).
+ */
+function countOpts(step: SkillStep, chain: LocatorCandidate[], opts: string, root: string): string {
+  if (step.args?.what !== 'count') return opts;
+  const scopeData = chain.map((c) => {
+    const { kind, selector, container, hasText } = c as { kind: string; selector?: string; container?: string; hasText?: string };
+    return { kind, ...(selector !== undefined && { selector }), ...(container !== undefined && { container }), ...(hasText !== undefined && { hasText }) };
+  });
+  const count = `count: { root: ${root}, scopes: countScopes(fillParamsDeep(${JSON.stringify(scopeData)}, p) as { kind: string }[]) }`;
+  return opts.replace(/ \}$/, `, ${count} }`);
 }
 
 /**

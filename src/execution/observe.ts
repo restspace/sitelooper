@@ -7,7 +7,8 @@
  */
 import type { Locator, Page } from 'playwright-core';
 import { alertsComplete, capturePage, sweepPage, type LineDialect } from './snapshot.js';
-import { clip, extractFramed, markFrame } from './text.js';
+import { clip, extractFramed, hasTextMatcher, implicitRoles, markFrame } from './text.js';
+import { settleDom } from './browser.js';
 
 /** What a recorded read takes off its element. A page url read has no element and is not one of these. */
 export type ReadWhat = 'text' | 'value' | 'attr' | 'count';
@@ -225,6 +226,132 @@ export async function takeRead(read: () => Promise<unknown>): Promise<ReadTaken>
     return { ok: true, value: flattenRead(await read()) };
   } catch (err) {
     return { ok: false, message: (err instanceof Error ? err.message : String(err)).split('\nCall log:')[0] };
+  }
+}
+
+/**
+ * Where a count read looks: the container its candidate counts INSIDE, as a
+ * locator both runners build from the root (`selector`, with the scoped
+ * candidate's `hasText`), or `'root'` when the candidate counts across the
+ * whole page or recorded frame.
+ */
+export type CountScope = 'root' | { selector: string; hasText?: string };
+
+/**
+ * One css selector's container: everything before its last top-level
+ * combinator (`>`, `+`, `~` or a descendant space), outside brackets,
+ * parentheses and quotes. `'root'` for a single compound (`#list`, `li.row`),
+ * null for a selector list — a `,` at top level scopes nothing in particular.
+ */
+function cssContainer(selector: string): CountScope | null {
+  let depth = 0;
+  let quote = '';
+  let cut = -1;
+  for (let i = 0; i < selector.length; i++) {
+    const ch = selector[i];
+    if (quote) {
+      if (ch === '\\') i++;
+      else if (ch === quote) quote = '';
+      continue;
+    }
+    if (ch === '"' || ch === "'") quote = ch;
+    else if (ch === '[' || ch === '(') depth++;
+    else if (ch === ']' || ch === ')') depth--;
+    else if (depth === 0 && ch === ',') return null;
+    else if (depth === 0 && (ch === '>' || ch === '+' || ch === '~' || /\s/.test(ch))) cut = i;
+  }
+  if (cut < 0) return 'root';
+  const prefix = selector.slice(0, cut).replace(/[\s>+~]+$/, '').trim();
+  return prefix ? { selector: prefix } : 'root';
+}
+
+/**
+ * The scope of each candidate of a COUNT read's chain (its params filled), or
+ * null when one of them has a scope this rule cannot name — then a miss is
+ * never read as a count of nothing. Points are left out: a place on the
+ * page counts nothing.
+ *
+ *  - `scoped`: its container with its text (hasTextMatcher, as makeLocator
+ *    builds it).
+ *  - `css` / `id`: a Playwright chain (`a >> b`) is scoped by everything
+ *    before its last segment (a trailing `nth=` is the element, not a scope);
+ *    a single segment that is an engine selector (`role=alert`, `text=…`,
+ *    an xpath) counts across the root; a css selector is scoped by what comes
+ *    before its last combinator (`#list > li` by `#list`).
+ *  - `role`, `testid`, `text`, `label`, `placeholder`: across the root.
+ */
+export function countScopes(chain: readonly { kind: string; selector?: string; container?: string; hasText?: string }[]): CountScope[] | null {
+  const out: CountScope[] = [];
+  for (const c of chain) {
+    if (c.kind === 'point') continue;
+    if (c.kind === 'scoped') {
+      if (!c.container) return null;
+      out.push({ selector: implicitRoles(c.container), hasText: c.hasText ?? '' });
+      continue;
+    }
+    if (c.kind === 'css' || c.kind === 'id') {
+      if (!c.selector) return null;
+      const segments = implicitRoles(c.selector).split(' >> ').map((s) => s.trim());
+      while (segments.length > 1 && /^nth=-?\d+$/.test(segments[segments.length - 1])) segments.pop();
+      if (segments.length > 1) {
+        out.push({ selector: segments.slice(0, -1).join(' >> ') });
+        continue;
+      }
+      const only = segments[0];
+      if (/^[a-z][\w-]*=/i.test(only) || only.startsWith('/') || only.startsWith('(')) {
+        out.push('root');
+        continue;
+      }
+      const scope = cssContainer(only);
+      if (!scope) return null;
+      out.push(scope);
+      continue;
+    }
+    if (['role', 'testid', 'text', 'label', 'placeholder'].includes(c.kind)) out.push('root');
+    else return null;
+  }
+  return out;
+}
+
+/**
+ * Whether a COUNT read that resolved nothing observed a count of nothing —
+ * "0", a value — rather than failing to look. repairdesk fwrd88 05-change:
+ * s_4b0e31 counted `role=alert` after a status change and recorded "0"; on
+ * replay nothing matched, and both runners skipped the read, so a correct,
+ * observed answer went unpublished and the step read as partial.
+ *
+ * Asked only after the runner's full resolve wait and the page sweep
+ * (resolveForRead). "Nothing" must be the page's answer, not a page that has
+ * not drawn its list yet, so, once the DOM has gone quiet:
+ *  - every candidate (points aside) matches no element at all — a miss for
+ *    any other reason (identity, a thrown selector) is not a count;
+ *  - every candidate's SCOPE (countScopes) is there: the whole root, or its
+ *    container matching at least one element. A count of `#list > li`
+ *    whose `#list` never rendered is a page that did not arrive, and the read
+ *    is skipped as before.
+ * Both runners call this with their own candidate locators and root, so they
+ * publish "0" or skip on the same page.
+ */
+export async function countedNothing(
+  page: Page,
+  root: { locator(selector: string, options?: { hasText?: string | RegExp }): Locator },
+  candidates: readonly { kind: string; locator: Locator }[],
+  scopes: readonly CountScope[] | null,
+): Promise<boolean> {
+  if (!scopes) return false;
+  const counted = candidates.filter((c) => c.kind !== 'point');
+  if (!counted.length) return false;
+  try {
+    await settleDom(page);
+    for (const c of counted) if ((await c.locator.count()) !== 0) return false;
+    for (const scope of scopes) {
+      if (scope === 'root') continue;
+      const within = root.locator(scope.selector, scope.hasText !== undefined ? { hasText: hasTextMatcher(scope.hasText) } : undefined);
+      if ((await within.count()) < 1) return false;
+    }
+    return true;
+  } catch {
+    return false;
   }
 }
 

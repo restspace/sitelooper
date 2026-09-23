@@ -25,7 +25,7 @@ import {
 import { isRefTarget } from '../daemon/refs.js';
 import { settleDom } from '../daemon/settle.js';
 import { TRANSIENT_LINE, fillParams, fillParamsDeep, urlMatches, urlPart, urlPattern } from './compile.js';
-import { flattenRead, liveAlerts, liveAlertsObserved, observedNothing, resolveForRead, scopedRead, takeRead, type ObservedAlerts } from '../execution/observe.js';
+import { countScopes, countedNothing, flattenRead, liveAlerts, liveAlertsObserved, observedNothing, resolveForRead, scopedRead, takeRead, type ObservedAlerts } from '../execution/observe.js';
 import {
   addedLines,
   alertsComplete,
@@ -830,6 +830,9 @@ export async function replaySkill(
     // owes its postconditions (url, recorded effects), so it goes through the
     // lifecycle with an empty action rather than returning here.
     let absenceMet = false;
+    // A count read whose chain resolved nothing on a settled page with its
+    // scope present: "0" is what it observed (shared countedNothing, fwrd88).
+    let countedNone = false;
     // The roots each target resolved against (src/execution/context.ts): the
     // page, or the recorded frame. A frame that is not there is a stop of its
     // own — never a search of the main page — and none of the recovery rungs
@@ -904,6 +907,23 @@ export async function replaySkill(
         if (absence) {
           absenceMet = true;
           break;
+        }
+        // A COUNT of nothing is an observation, not a miss — once the page has
+        // settled with the count's scope on it (observe.ts countedNothing, as
+        // the artifact's readOptional asks). fwrd88 05-change's `read_all
+        // role=alert what:count` recorded "0" and was skipped on every replay.
+        if (isRead && key === 'target' && args.what === 'count') {
+          const observations = chain.flatMap((candidate) => {
+            try {
+              return [{ kind: candidate.kind, locator: makeLocator(root, candidate) }];
+            } catch {
+              return [];
+            }
+          });
+          if (observations.length === chain.length && (await countedNothing(page, root, observations, countScopes(chain)))) {
+            countedNone = true;
+            break;
+          }
         }
         const dead = `no element matched any known locator for ${key}${chain.length ? ` (tried ${chain.length}: ${chain.slice(0, 3).map(candidateExpr).join(', ')}${chain.length > 3 ? ', …' : ''})` : ' (none recorded)'}`;
         // One rung BELOW the recorded chain and one ABOVE model recovery: a
@@ -1107,6 +1127,7 @@ export async function replaySkill(
         // only ever safe with proof the action did not fire, and nothing here has
         // that proof.
         if (absenceMet) return { status: 'completed', value: { result: `condition met: ${String(args.state)} (nothing matched)` } };
+        if (countedNone) return { status: 'completed', value: { result: '0', read: '0' } };
         if (isRead) {
           // Taken and flattened by the shared takeRead, as the artifact takes it:
           // a read that errors is skipped, never a failed step. A read recorded
