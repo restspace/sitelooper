@@ -1,0 +1,915 @@
+{
+  "name": "fwod75",
+  "origin": "http://127.0.0.1:8069",
+  "startUrl": "http://127.0.0.1:8069/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Navigate to http://127.0.0.1:8069/ and sign in with login 'admin' and password 'admin'. Note: this Odoo app long-polls, so never wait for network idle; wait for concrete page elements instead. After signing in, report which page or app you land on.",
+      "skill": "s_dfc7bb",
+      "params": {
+        "v1": "http://127.0.0.1:8069/"
+      },
+      "outputs": [
+        "landing_url",
+        "landed_on",
+        "menu_item",
+        "message_count",
+        "activity_count"
+      ],
+      "recorded": {
+        "landing_url": "http://127.0.0.1:8069/web#action=123&cids=1&menu_id=81",
+        "landed_on": "Discuss app (page title 'Odoo - Discuss')",
+        "menu_item": "Discuss",
+        "action_id": "123",
+        "menu_id": "81",
+        "message_count": "6",
+        "activity_count": "3",
+        "url": "http://127.0.0.1:8069/web#action=123&cids=1&menu_id=81",
+        "url.q.action": "123"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&menu_id=:id",
+      "outputEvidence": {
+        "landing_url": {
+          "same": 2,
+          "differed": 0
+        },
+        "landed_on": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "menu_item": {
+          "same": 2,
+          "differed": 0
+        },
+        "action_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "menu_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "message_count": {
+          "same": 2,
+          "differed": 0
+        },
+        "activity_count": {
+          "same": 2,
+          "differed": 0
+        },
+        "url": {
+          "same": 2,
+          "differed": 0
+        },
+        "url.q.action": {
+          "same": 2,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "In this Odoo 17 app, create a new customer (contact) with Name exactly '{{runid}} Bench Customer' and City set to 'Benchville'. Go through the Sales or Contacts app as appropriate: open the Contacts app (or Sales > Orders > Customers), click New/Create, fill the Name field with '{{runid}} Bench Customer', fill the City field with 'Benchville' (City is under the Address section on the contact form), then Save. Do not wait for network idle (the app long-polls); wait for concrete page state. After saving, verify the record shows Name '{{runid}} Bench Customer' and City 'Benchville' on the form, and report those two values as read back from the page.",
+      "skill": "s_b5b995",
+      "params": {
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "contact_name",
+        "contact_city",
+        "save_notification",
+        "save_notification_2",
+        "customer_name_prefix"
+      ],
+      "recorded": {
+        "contact_name": "fwod75-n1 Bench Customer",
+        "contact_city": "Benchville",
+        "record_id": "44",
+        "model": "res.partner",
+        "action_id": "156",
+        "menu_id": "109",
+        "save_notification": "Mitchell Admin - now - Contact created",
+        "page_title": "Odoo - Contacts",
+        "save_notification_2": "Mitchell Admin\n- now\n\nContact created",
+        "customer_name_prefix": "fwod75-n1",
+        "url": "http://127.0.0.1:8069/web#cids=1&menu_id=109&action=156&model=res.partner&view_type=form&id=44",
+        "url.q.menu_id": "109",
+        "url.q.action": "156",
+        "url.q.id": "44"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=res.partner&view_type=form",
+      "outputEvidence": {
+        "contact_name": {
+          "same": 0,
+          "differed": 2
+        },
+        "contact_city": {
+          "same": 2,
+          "differed": 0
+        },
+        "record_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "model": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "action_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "menu_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "save_notification": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "page_title": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "save_notification_2": {
+          "same": 2,
+          "differed": 0
+        },
+        "customer_name_prefix": {
+          "same": 0,
+          "differed": 2
+        },
+        "url": {
+          "same": 0,
+          "differed": 2
+        },
+        "url.q.menu_id": {
+          "same": 2,
+          "differed": 0
+        },
+        "url.q.action": {
+          "same": 2,
+          "differed": 0
+        },
+        "url.q.id": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "03-create",
+      "instruction": "In this Odoo 17 app, create a new quotation (sales order) in the Sales app for the customer '{{runid}} Bench Customer'. Steps: open the Sales app, go to Orders > Quotations, click New. In the quotation form, set the Customer field to '{{runid}} Bench Customer' — it is an autocomplete dropdown, so type the name and actually select the matching option from the dropdown that appears (a value only counts when an option was chosen). Then in the Order Lines table, add ONE order line: pick any product from the product catalogue (click into the product cell, type or search, and select an actual product option from the autocomplete dropdown), and set the quantity to 3. Let the app fill the unit price automatically. Do not wait for network idle (the app long-polls); wait for concrete page state. Then report: (a) the product name you chose, (b) the unit price the app filled in for that line, and (c) the untaxed amount shown in the quotation's totals. Do NOT confirm the quotation yet — leave it as a draft quotation.",
+      "outputs": [
+        "customer_field_value",
+        "product_name",
+        "product_code",
+        "unit_price",
+        "quantity",
+        "taxes",
+        "line_tax_excl",
+        "untaxed_amount",
+        "order_saved",
+        "blocking_overlay",
+        "quotation_reference",
+        "record_id",
+        "saved",
+        "status",
+        "customer",
+        "customer_city",
+        "product_description",
+        "order_line_count",
+        "configurator_total",
+        "order_line_row_text",
+        "untaxed_amount_2",
+        "final_url",
+        "configurator_product_code",
+        "desk_product_code",
+        "desk_dimensions"
+      ],
+      "recorded": {
+        "customer_field_value": "fwod75-n1 Bench Customer",
+        "product_name": "Customizable Desk",
+        "product_code": "[FURN_0096] Customizable Desk (Steel, White) 160x80cm, with large legs.",
+        "unit_price": "750.00",
+        "quantity": "3.00",
+        "taxes": "20%",
+        "line_tax_excl": "£ 2,250.00",
+        "untaxed_amount": "£ 2,250.00",
+        "order_saved": "NO - no record id assigned, form still dirty (.o_form_dirty)",
+        "blocking_overlay": "'Configure your product' modal (o_dialog / .modal.d-block.o_technical_modal) for [FURN_1118] Corner Desk Left Sit, z-index 1049, covers viewport",
+        "quotation_reference": "S00021",
+        "record_id": "21",
+        "saved": "YES - URL gained id=21, heading changed from 'New' to 'S00021', pager enabled",
+        "status": "Quotation (draft) - statusbar radio 'Quotation' checked, not confirmed",
+        "customer": "fwod75-n1 Bench Customer",
+        "customer_city": "Benchville",
+        "product_description": "[FURN_0096] Customizable Desk (Steel, White) 160x80cm, with large legs.",
+        "order_line_count": "1",
+        "configurator_total": "Total: £ 2,250.00",
+        "order_line_row_text": "Customizable Desk\t\n[FURN_0096] Customizable Desk (Steel, White)\n160x80cm, with large legs.\n\t3.00\t750.00\t\n20%\n\t£ 2,250.00",
+        "untaxed_amount_2": "Untaxed Amount\t£ 2,250.00",
+        "final_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=21",
+        "configurator_product_code": "FURN_1118",
+        "desk_product_code": "FURN_0096",
+        "desk_dimensions": "160x80cm",
+        "url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=21",
+        "url.q.menu_id": "194",
+        "url.q.action": "316",
+        "url.q.id": "21"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "customer_field_value": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "product_name": {
+          "same": 0,
+          "differed": 1,
+          "absent": 1
+        },
+        "product_code": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "unit_price": {
+          "same": 0,
+          "differed": 2
+        },
+        "quantity": {
+          "same": 2,
+          "differed": 0
+        },
+        "taxes": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "line_tax_excl": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "untaxed_amount": {
+          "same": 0,
+          "differed": 2
+        },
+        "order_saved": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "blocking_overlay": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "quotation_reference": {
+          "same": 0,
+          "differed": 2
+        },
+        "record_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "saved": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "status": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "customer": {
+          "same": 0,
+          "differed": 2
+        },
+        "customer_city": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "product_description": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "order_line_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "configurator_total": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "order_line_row_text": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "untaxed_amount_2": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "final_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "configurator_product_code": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "desk_product_code": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "desk_dimensions": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "url": {
+          "same": 0,
+          "differed": 2
+        },
+        "url.q.menu_id": {
+          "same": 2,
+          "differed": 0
+        },
+        "url.q.action": {
+          "same": 2,
+          "differed": 0
+        },
+        "url.q.id": {
+          "same": 0,
+          "differed": 2
+        }
+      },
+      "skill": "s_1bc73e",
+      "params": {
+        "v1": "{{02-create.contact_name}}",
+        "v2": "{{runid}}"
+      }
+    },
+    {
+      "id": "04-open",
+      "instruction": "On the currently open Odoo 17 quotation form {{03-create.quotation_reference}} (draft, customer '{{runid}} Bench Customer', one existing order line: '{{03-create.product_name}}' qty 3, unit price {{03-create.unit_price}}, untaxed amount £2,250.00), add a SECOND order line with a DIFFERENT product and quantity 2. Click 'Add a product' (or click into the empty product cell of a new row), type a product name in the autocomplete, and select an actual option from the dropdown (a value only counts when an option was chosen). IMPORTANT: choose a simple product that does NOT open a 'Configure your product' configurator modal — if a configurator modal appears, cancel it and pick a different product instead. Set the quantity of the new line to 2. Then click Save and verify the form is saved (no longer dirty, no error). Do not wait for network idle (the app long-polls); wait for concrete page state. Do NOT confirm the quotation — leave it as a draft. Report: (a) the product name of the second line you added, (b) its unit price, (c) the number of order lines now on the quotation, and (d) the new Untaxed Amount shown in the totals.",
+      "skill": "s_5fff97",
+      "params": {
+        "v1": "{{03-create.quotation_reference}}",
+        "v2": "{{runid}} Bench Customer",
+        "v4": "{{03-create.product_name}}",
+        "v5": "{{03-create.unit_price}}",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "quotation_reference",
+        "second_line_product",
+        "second_line_description",
+        "second_line_unit_price",
+        "second_line_quantity",
+        "second_line_tax_excl",
+        "line_1",
+        "untaxed_amount",
+        "status",
+        "url_after_save",
+        "untaxed_amount_2",
+        "statusbar_state"
+      ],
+      "recorded": {
+        "quotation_reference": "S00021",
+        "order_id": "21",
+        "second_line_product": "Chair floor protection",
+        "second_line_description": "Chair floor protection Office chairs can harm your floor: protect it.",
+        "second_line_unit_price": "12.00",
+        "second_line_quantity": "2.00",
+        "second_line_tax_excl": "£ 24.00",
+        "order_line_count": "2",
+        "line_1": "Customizable Desk / [FURN_0096] (Steel, White) 160x80cm, with large legs. — 3.00 @ 750.00 — £ 2,250.00",
+        "line_2": "Chair floor protection — 2.00 @ 12.00 — £ 24.00",
+        "untaxed_amount": "£ 2,274.00",
+        "form_dirty": "no (.o_form_dirty count = 0)",
+        "saved": "yes — no validation error, no dialogs, form not dirty",
+        "status": "Quotation (draft) — deliberately left unconfirmed per instruction",
+        "configurator_opened": "none for 'Chair floor protection'",
+        "url_after_save": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=21",
+        "untaxed_amount_2": "Untaxed Amount\t£ 2,274.00",
+        "statusbar_state": "Sales Order\nQuotation Sent\nQuotation"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "quotation_reference": {
+          "same": 0,
+          "differed": 2
+        },
+        "order_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "second_line_product": {
+          "same": 2,
+          "differed": 0
+        },
+        "second_line_description": {
+          "same": 0,
+          "differed": 2
+        },
+        "second_line_unit_price": {
+          "same": 2,
+          "differed": 0
+        },
+        "second_line_quantity": {
+          "same": 2,
+          "differed": 0
+        },
+        "second_line_tax_excl": {
+          "same": 0,
+          "differed": 2
+        },
+        "order_line_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "line_1": {
+          "same": 0,
+          "differed": 1,
+          "absent": 1
+        },
+        "line_2": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "untaxed_amount": {
+          "same": 0,
+          "differed": 2
+        },
+        "form_dirty": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "saved": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "status": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "configurator_opened": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "url_after_save": {
+          "same": 0,
+          "differed": 2
+        },
+        "untaxed_amount_2": {
+          "same": 0,
+          "differed": 2
+        },
+        "statusbar_state": {
+          "same": 2,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "05-open",
+      "instruction": "On the currently open Odoo 17 quotation form {{03-create.quotation_reference}} (draft, customer '{{runid}} Bench Customer', two order lines: line 1 '{{03-create.product_name}}' qty {{03-create.quantity}} unit price {{03-create.unit_price}}, line 2 '{{04-open.second_line_product}}' qty {{04-open.second_line_quantity}} unit price {{04-open.second_line_unit_price}}, Untaxed Amount £2,274.00), change the FIRST line's quantity from 3 to 5. Click into the Quantity cell of the '{{03-create.product_name}}' row, clear it, type 5, and press Tab/Enter or click elsewhere so the value is applied and the totals recompute. Then click Save and verify the form is saved (no longer dirty, no error). Do not wait for network idle (the app long-polls); wait for concrete page state. Do NOT confirm the quotation — leave it as a draft. Report: (a) the quantity now shown on the '{{03-create.product_name}}' line, (b) the quantity still shown on the '{{04-open.second_line_product}}' line, and (c) the Untaxed Amount shown in the totals after the change.",
+      "skill": "s_835226",
+      "params": {
+        "v1": "{{03-create.quotation_reference}}",
+        "v2": "{{02-create.contact_name}}",
+        "v3": "{{runid}}",
+        "v4": "{{03-create.product_name}}",
+        "v5": "{{03-create.quantity}}",
+        "v6": "{{03-create.unit_price}}",
+        "v7": "{{04-open.second_line_product}}",
+        "v8": "{{04-open.second_line_quantity}}",
+        "v9": "{{04-open.second_line_unit_price}}",
+        "v10": "Untaxed Amount"
+      },
+      "outputs": [
+        "quotation_reference",
+        "line1_product",
+        "line1_quantity",
+        "line1_unit_price",
+        "line1_tax_excl",
+        "line2_product",
+        "line2_quantity",
+        "line2_unit_price",
+        "line2_tax_excl",
+        "untaxed_amount",
+        "total_incl_tax",
+        "untaxed_amount_after_qty",
+        "final_url"
+      ],
+      "recorded": {
+        "quotation_reference": "S00021",
+        "order_id": "21",
+        "line1_product": "Customizable Desk",
+        "line1_quantity": "5.00",
+        "line1_unit_price": "750.00",
+        "line1_tax_excl": "£ 3,750.00",
+        "line2_product": "Chair floor protection",
+        "line2_quantity": "2.00",
+        "line2_unit_price": "12.00",
+        "line2_tax_excl": "£ 24.00",
+        "order_line_count": "2",
+        "untaxed_amount": "£ 3,774.00",
+        "total_incl_tax": "£ 4,528.80",
+        "form_dirty": "no (.o_form_dirty count = 0)",
+        "saved": "yes — no error, no dialogs, record at id=21",
+        "status": "Quotation (draft) — not confirmed",
+        "untaxed_amount_after_qty": "Untaxed Amount\t£ 3,774.00",
+        "final_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=21"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "quotation_reference": {
+          "same": 0,
+          "differed": 2
+        },
+        "order_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "line1_product": {
+          "same": 0,
+          "differed": 1,
+          "absent": 1
+        },
+        "line1_quantity": {
+          "same": 2,
+          "differed": 0
+        },
+        "line1_unit_price": {
+          "same": 0,
+          "differed": 2
+        },
+        "line1_tax_excl": {
+          "same": 0,
+          "differed": 2
+        },
+        "line2_product": {
+          "same": 2,
+          "differed": 0
+        },
+        "line2_quantity": {
+          "same": 2,
+          "differed": 0
+        },
+        "line2_unit_price": {
+          "same": 2,
+          "differed": 0
+        },
+        "line2_tax_excl": {
+          "same": 1,
+          "differed": 1
+        },
+        "order_line_count": {
+          "same": 1,
+          "differed": 0,
+          "absent": 1
+        },
+        "untaxed_amount": {
+          "same": 0,
+          "differed": 2
+        },
+        "total_incl_tax": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "form_dirty": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "saved": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "status": {
+          "same": 0,
+          "differed": 1,
+          "absent": 1
+        },
+        "untaxed_amount_after_qty": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "final_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        }
+      }
+    },
+    {
+      "id": "06-open",
+      "instruction": "On the currently open Odoo 17 quotation form {{03-create.quotation_reference}} (draft, customer '{{runid}} Bench Customer', two order lines: '{{03-create.product_name}}' qty {{05-open.line1_quantity}} @ {{03-create.unit_price}} and '{{04-open.second_line_product}}' qty {{04-open.second_line_quantity}} @ {{04-open.second_line_unit_price}}, Untaxed Amount £3,774.00), confirm the quotation so it becomes a sales order. Click the 'Confirm' button (it may be labeled 'Confirm' or 'Confirm Sale'). If a confirmation dialog appears, accept it. Wait for the status to change — do not wait for network idle (the app long-polls); wait for concrete page state such as the statusbar changing or the button changing to 'Cancel'/'Lock'. Then report: (a) the order reference/name shown on the form (e.g. {{03-create.quotation_reference}}), (b) the status the app now shows (read the statusbar / status field on the form), and (c) whether the Untaxed Amount is still £3,774.00.",
+      "skill": "s_d2e8c4",
+      "params": {
+        "v1": "{{03-create.quotation_reference}}",
+        "v2": "{{runid}} Bench Customer",
+        "v4": "{{03-create.product_name}}",
+        "v5": "{{05-open.line1_quantity}}",
+        "v6": "{{03-create.unit_price}}",
+        "v7": "{{04-open.second_line_product}}",
+        "v8": "{{04-open.second_line_quantity}}",
+        "v9": "{{04-open.second_line_unit_price}}",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "order_reference",
+        "status_now",
+        "previous_status",
+        "untaxed_amount",
+        "tax_20",
+        "line1",
+        "line2",
+        "order_line_count",
+        "statusbar_state",
+        "untaxed_amount_2",
+        "url"
+      ],
+      "recorded": {
+        "order_reference": "S00021",
+        "order_id": "21",
+        "status_now": "Sales Order (statusbar 'Sales Order' step is the current/checked one)",
+        "previous_status": "Quotation",
+        "untaxed_amount": "£ 3,774.00",
+        "tax_20": "£ 754.80",
+        "buttons_now_visible": "New, Create Invoice, Send by Email, Preview, Cancel (Confirm button gone)",
+        "confirm_button_present": "no - removed after confirming",
+        "confirmed": "yes",
+        "line1": "Customizable Desk 5.00 @ 750.00 — £ 3,750.00",
+        "line2": "Chair floor protection 2.00 @ 12.00 — £ 24.00",
+        "order_line_count": "2",
+        "statusbar_state": "Sales Order\nQuotation Sent\nQuotation",
+        "untaxed_amount_2": "Untaxed Amount\t£ 3,774.00",
+        "url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=21"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "order_reference": {
+          "same": 0,
+          "differed": 2
+        },
+        "order_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "status_now": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "previous_status": {
+          "same": 2,
+          "differed": 0
+        },
+        "untaxed_amount": {
+          "same": 0,
+          "differed": 2
+        },
+        "tax_20": {
+          "same": 0,
+          "differed": 2
+        },
+        "buttons_now_visible": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "confirm_button_present": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "confirmed": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "line1": {
+          "same": 0,
+          "differed": 1,
+          "absent": 1
+        },
+        "line2": {
+          "same": 2,
+          "differed": 0
+        },
+        "order_line_count": {
+          "same": 2,
+          "differed": 0
+        },
+        "statusbar_state": {
+          "same": 2,
+          "differed": 0
+        },
+        "untaxed_amount_2": {
+          "same": 0,
+          "differed": 2
+        },
+        "url": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "07-open",
+      "instruction": "On the currently open Odoo 17 sales order form {{03-create.quotation_reference}} (status 'Sales Order', customer '{{runid}} Bench Customer', two order lines, Untaxed Amount £3,774.00), cancel the order so nothing stays active. Click the 'Cancel' button on the form. If a confirmation dialog appears asking to confirm cancellation, accept it. Wait for the status to change — do not wait for network idle (the app long-polls); wait for concrete page state such as the statusbar changing or the Cancel button disappearing. Then report: (a) the status the app now shows on the form (read the statusbar / status field), (b) the order reference still shown, and (c) whether the Untaxed Amount is still £3,774.00.",
+      "skill": "s_6a6672",
+      "params": {
+        "v1": "{{03-create.quotation_reference}}",
+        "v2": "{{runid}} Bench Customer",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "order_reference",
+        "untaxed_amount",
+        "tax_20",
+        "total",
+        "confirm_dialog_seen",
+        "order_lines"
+      ],
+      "recorded": {
+        "order_reference": "S00021",
+        "order_id": "21",
+        "status_now": "Cancelled",
+        "previous_status": "Sales Order",
+        "untaxed_amount": "£ 3,774.00",
+        "tax_20": "£ 754.80",
+        "total": "£ 4,528.80",
+        "form_dirty": "no (.o_form_dirty count = 0)",
+        "control_buttons_now": "New, Preview, Set to Quotation (no Confirm, no Cancel, no Create Invoice)",
+        "confirm_dialog_seen": "Cancel Sales Order wizard — 'Are you sure you want to cancel this order?' with buttons Send and cancel / Cancel(name=action_cancel) / Discard; accepted via the action_cancel confirmation button",
+        "order_lines": "Customizable Desk 5.00 @ 750.00; Chair floor protection 2.00 @ 12.00"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "order_reference": {
+          "same": 0,
+          "differed": 2
+        },
+        "order_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "status_now": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "previous_status": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "untaxed_amount": {
+          "same": 0,
+          "differed": 2
+        },
+        "tax_20": {
+          "same": 0,
+          "differed": 2
+        },
+        "total": {
+          "same": 0,
+          "differed": 2
+        },
+        "form_dirty": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "control_buttons_now": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "confirm_dialog_seen": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "order_lines": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwod75-n1",
+    "created": "2026-09-23T03:54:10.194Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "action_id",
+        "menu_id"
+      ]
+    },
+    {
+      "stepId": "02-create",
+      "outputs": [
+        "record_id",
+        "model",
+        "action_id",
+        "menu_id",
+        "page_title"
+      ]
+    },
+    {
+      "stepId": "04-open",
+      "outputs": [
+        "order_id",
+        "order_line_count",
+        "line_2",
+        "form_dirty",
+        "saved",
+        "configurator_opened"
+      ]
+    },
+    {
+      "stepId": "05-open",
+      "outputs": [
+        "order_id",
+        "order_line_count",
+        "form_dirty",
+        "saved",
+        "status"
+      ]
+    },
+    {
+      "stepId": "06-open",
+      "outputs": [
+        "order_id",
+        "buttons_now_visible",
+        "confirm_button_present",
+        "confirmed"
+      ]
+    },
+    {
+      "stepId": "07-open",
+      "outputs": [
+        "order_id",
+        "status_now",
+        "previous_status",
+        "form_dirty",
+        "control_buttons_now"
+      ]
+    }
+  ]
+}

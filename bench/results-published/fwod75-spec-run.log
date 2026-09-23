@@ -1,0 +1,10 @@
+[spec-replay] resetting odoo
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile bench/results/flows/fwod75.json --out /home/user/sitelooper/bench/results/fwod75-spec-spec-tmp --overwrite-spec
+error 05-open: slot v4 is bound to {{03-create.product_name}}, and nothing has ever published product_name
+  why: nothing in 03-create's procedure reads product_name from the page, and no report value derives it from a parameter, so no run can publish it. The recording's own value is not a substitute: passing it would make every replay work run 1's record. 05-open types or locates by v4, so the artifact would stop here on every run, part-way through the flow and with everything earlier already done.
+  fix: re-record 03-create so it reads product_name from an element (`sitelooper rerecord <flow file> 03-create`), or take {{03-create.product_name}} out of 05-open's v4
+
+nothing written: the error(s) above are about the RECORDING, not the app — a compiled spec would fail at a locator and read as drift.
+re-record the step(s) with the fix command above.
+sitelooper: refused: unsourced-ref — see the diagnostics above
+[spec-replay] fwod75-spec: not compilable — result written (exit 2)

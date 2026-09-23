@@ -1,0 +1,1162 @@
+{
+ "id": "s_5fff97",
+ "origin": "http://127.0.0.1:8069",
+ "template": "On the currently open Odoo 17 quotation form {{v1}} (draft, customer '{{v2}}', one existing order line: '{{v4}}' qty 3, unit price {{v5}}, untaxed amount £2,250.00), add a SECOND order line with a DIFFERENT product and quantity 2. Click 'Add a product' (or click into the empty product cell of a new row), type a product name in the autocomplete, and select an actual option from the dropdown (a value only counts when an option was chosen). IMPORTANT: choose a simple product that does NOT open a 'Configure your product' configurator modal — if a configurator modal appears, cancel it and pick a different product instead. Set the quantity of the new line to 2. Then click Save and verify the form is saved (no longer dirty, no error). Do not wait for network idle (the app long-polls); wait for concrete page state. Do NOT confirm the quotation — leave it as a draft. Report: (a) the product name of the second line you added, (b) its unit price, (c) the number of order lines now on the quotation, and (d) the new Untaxed Amount shown in the totals.",
+ "params": {
+  "v1": {
+   "example": "S00021",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i4:quotation_reference"
+  },
+  "v2": {
+   "example": "fwod75-n1 Bench Customer",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:contact_name"
+  },
+  "v3": {
+   "example": "fwod75-n1",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v4": {
+   "example": "Customizable Desk",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i3:product_name"
+  },
+  "v5": {
+   "example": "750.00",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i3:unit_price"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+  "fingerprint": [
+   0.009,
+   0.012,
+   0.003,
+   0,
+   0.006,
+   0.09,
+   0.003,
+   0.006,
+   0.009,
+   0.012,
+   0.006,
+   0,
+   0.009,
+   0.045,
+   0.03,
+   0.006,
+   0.021,
+   0.003,
+   0.024,
+   0.015,
+   0,
+   0.024,
+   0.03,
+   0.018,
+   0.006,
+   0.006,
+   0,
+   0.021,
+   0.006,
+   0.048,
+   0.012,
+   0.048,
+   0.09,
+   0.03,
+   0.006,
+   0,
+   0.015,
+   0,
+   0,
+   0.003,
+   0.006,
+   0.018,
+   0.042,
+   0.039,
+   0.012,
+   0.033,
+   0.012,
+   0.066,
+   0.042,
+   0.024,
+   0.021,
+   0.003,
+   0,
+   0.09,
+   0.006,
+   0.006,
+   0.003,
+   0.036,
+   0.021,
+   0.003,
+   0,
+   0,
+   0.012,
+   0.191,
+   0,
+   0.012,
+   0.006,
+   0.03,
+   0.012,
+   0.006,
+   0,
+   0,
+   0.012,
+   0.012,
+   0.066,
+   0.012,
+   0.015,
+   0.012,
+   0.015,
+   0,
+   0.009,
+   0.036,
+   0.066,
+   0,
+   0.024,
+   0,
+   0.018,
+   0.102,
+   0.036,
+   0.012,
+   0.048,
+   0,
+   0.009,
+   0,
+   0.072,
+   0.012,
+   0.006,
+   0.042,
+   0.009,
+   0,
+   0.039,
+   0.027,
+   0.009,
+   0.027,
+   0.036,
+   0,
+   0.033,
+   0.012,
+   0.006,
+   0.012,
+   0.003,
+   0.015,
+   0,
+   0.012,
+   0.045,
+   0.009,
+   0,
+   0,
+   0,
+   0.099,
+   0,
+   0.006,
+   0.006,
+   0.009,
+   0.021,
+   0.009,
+   0.012,
+   0.006,
+   0.006,
+   0.006,
+   0.009,
+   0.006,
+   0.051,
+   0.009,
+   0.012,
+   0.003,
+   0.003,
+   0.003,
+   0,
+   0.015,
+   0.006,
+   0.054,
+   0.024,
+   0.021,
+   0.006,
+   0.003,
+   0.006,
+   0.006,
+   0.03,
+   0.06,
+   0.048,
+   0,
+   0.06,
+   0.012,
+   0.003,
+   0.012,
+   0.006,
+   0.015,
+   0.027,
+   0.003,
+   0.006,
+   0.03,
+   0.015,
+   0.012,
+   0.012,
+   0.012,
+   0,
+   0,
+   0.012,
+   0,
+   0.006,
+   0.012,
+   0.033,
+   0.006,
+   0.003,
+   0.066,
+   0,
+   0,
+   0.006,
+   0.123,
+   0,
+   0.036,
+   0.039,
+   0.009,
+   0.006,
+   0.009,
+   0.021,
+   0.006,
+   0.018,
+   0.033,
+   0.006,
+   0.006,
+   0.009,
+   0.006,
+   0,
+   0.006,
+   0.096,
+   0.009,
+   0.024,
+   0.018,
+   0,
+   0.03,
+   0,
+   0.042,
+   0,
+   0,
+   0.003,
+   0.009,
+   0.018,
+   0,
+   0.006,
+   0.015,
+   0,
+   0.006,
+   0,
+   0,
+   0.003,
+   0.003,
+   0.006,
+   0.03,
+   0,
+   0.003,
+   0.018,
+   0.012,
+   0,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0.003,
+   0,
+   0.006,
+   0.006,
+   0.006,
+   0.018,
+   0.006,
+   0.006,
+   0.018,
+   0.015,
+   0.018,
+   0,
+   0.069,
+   0.006,
+   0.018,
+   0.009,
+   0,
+   0.006,
+   0.003,
+   0.012,
+   0.012,
+   0.006,
+   0,
+   0.176,
+   0.138,
+   0.057,
+   0.006,
+   0,
+   0.015,
+   0.033,
+   0.006,
+   0.006,
+   0.003,
+   0.003,
+   0.006,
+   0.144,
+   0.03,
+   0.081,
+   0.009,
+   0.012,
+   0.009,
+   0.009,
+   0.003,
+   0,
+   0.036,
+   0.012,
+   0.018,
+   0.006,
+   0.006,
+   0.009,
+   0.006,
+   0.024,
+   0.003,
+   0.06,
+   0.012,
+   0.006,
+   0.009,
+   0.015,
+   0.015,
+   0.015,
+   0,
+   0,
+   0.006,
+   0.006,
+   0.006,
+   0.009,
+   0,
+   0.009,
+   0.003,
+   0.06,
+   0.033,
+   0.003,
+   0,
+   0.021,
+   0.006,
+   0,
+   0.015,
+   0.006,
+   0.018,
+   0.009,
+   0.012,
+   0.012,
+   0.09,
+   0,
+   0.009,
+   0.003,
+   0,
+   0.021,
+   0.075,
+   0,
+   0.018,
+   0.009,
+   0.039,
+   0.051,
+   0,
+   0.015,
+   0,
+   0.006,
+   0.015,
+   0,
+   0.003,
+   0,
+   0.006,
+   0.012,
+   0,
+   0.021,
+   0.018,
+   0,
+   0.027,
+   0.06,
+   0,
+   0.012,
+   0,
+   0,
+   0.018,
+   0.012,
+   0.024,
+   0,
+   0.006,
+   0.012,
+   0.03,
+   0.039,
+   0.063,
+   0.003,
+   0.006,
+   0,
+   0.033,
+   0,
+   0.009,
+   0.03,
+   0.045,
+   0.045,
+   0.003,
+   0.006,
+   0.021,
+   0.054,
+   0.012,
+   0,
+   0.012,
+   0,
+   0.015,
+   0.003,
+   0.012,
+   0.003,
+   0,
+   0.006,
+   0,
+   0.003,
+   0.006,
+   0.033,
+   0.012,
+   0.006,
+   0.012,
+   0,
+   0.027,
+   0.012,
+   0.003,
+   0.048,
+   0.012,
+   0.006,
+   0.021,
+   0.03,
+   0.009,
+   0.015,
+   0.015,
+   0.009,
+   0.081,
+   0.003,
+   0.006,
+   0,
+   0.006,
+   0.003,
+   0.012,
+   0.012,
+   0.006,
+   0.009,
+   0.006,
+   0.015,
+   0,
+   0.018,
+   0.057,
+   0.012,
+   0.018,
+   0.003,
+   0,
+   0.054,
+   0.03,
+   0.03,
+   0.006,
+   0.006,
+   0.024,
+   0.012,
+   0,
+   0,
+   0.012,
+   0.045,
+   0.003,
+   0.015,
+   0.006,
+   0.003,
+   0.009,
+   0.006,
+   0.006,
+   0.003,
+   0.006,
+   0,
+   0.012,
+   0.003,
+   0.027,
+   0.003,
+   0.012,
+   0.045,
+   0,
+   0.006,
+   0.006,
+   0,
+   0.009,
+   0.039,
+   0.009,
+   0.003,
+   0,
+   0.027,
+   0.042,
+   0.078,
+   0.006,
+   0.003,
+   0.012,
+   0.012,
+   0,
+   0.003,
+   0.09,
+   0.018,
+   0,
+   0,
+   0.018,
+   0.009,
+   0,
+   0.117,
+   0.012,
+   0.67,
+   0.039,
+   0,
+   0.036,
+   0.015,
+   0.045,
+   0.003,
+   0,
+   0,
+   0.006,
+   0.006,
+   0.042,
+   0.003,
+   0,
+   0.012,
+   0.006,
+   0.033,
+   0.006,
+   0.006,
+   0.009,
+   0.033,
+   0.006,
+   0.006,
+   0.051,
+   0,
+   0,
+   0.009,
+   0.018,
+   0.069,
+   0.003,
+   0.015,
+   0.012,
+   0.015,
+   0.027,
+   0.006,
+   0.347,
+   0,
+   0.018,
+   0.018,
+   0.021,
+   0.006,
+   0.015,
+   0
+  ],
+  "requireText": [
+   "{{v1}}",
+   "{{v2}}"
+  ]
+ },
+ "goal": {
+  "requireText": [
+   "Chair floor protection",
+   "Chair floor protection Office chairs can harm your floor: protect it.",
+   "Chair floor protection — 2.00 @ 12.00 — £ 24.00",
+   "no (.o_form_dirty count = 0)"
+  ]
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1583"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Add a product"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > table > tbody > tr:nth-of-type(2) > td:nth-of-type(2) > a:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 98,
+      "y": 521,
+      "w": 87.2,
+      "h": 16,
+      "role": "button",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+    "addedContains": [
+     "- row \"£ 0.00\"",
+     "- combobox \"Type to find a product...\"",
+     "- cell \"£ 0.00\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "type",
+   "args": {
+    "delay_ms": 40,
+    "target": "@e2110",
+    "text": "Chair floor protection"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "combobox",
+      "name": "Type to find a product..."
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Type to find a product..."
+     },
+     {
+      "kind": "css",
+      "selector": "td:nth-of-type(2) > div > div:nth-of-type(1) > div > div > input"
+     },
+     {
+      "kind": "point",
+      "x": 199,
+      "y": 520,
+      "w": 288.1,
+      "h": 21,
+      "role": "combobox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+    "addedContains": [
+     "- combobox \"Type to find a product...\": {{*}}",
+     "- menu \"\"",
+     "- option \"Create \\\"{{*}}\\\"\"",
+     "- option \"Search More...\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=option[name=\"Chair floor protection\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=option[name=\"Chair floor protection\"]"
+     },
+     {
+      "kind": "role",
+      "role": "option",
+      "name": "Chair floor protection"
+     },
+     {
+      "kind": "css",
+      "selector": "#autocomplete_0_0"
+     },
+     {
+      "kind": "id",
+      "selector": "#autocomplete_0_0"
+     },
+     {
+      "kind": "point",
+      "x": 174,
+      "y": 553,
+      "w": 235.8,
+      "h": 27,
+      "role": "option",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+    "addedContains": [
+     "- row \"20% £ {{*}}\"",
+     "- link \"Delete\"",
+     "- cell \"£ {{*}}\"",
+     "- row \"Untaxed Amount £ 2,262.00\"",
+     "- cell \"£ 2,262.00\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "table.o_list_table tbody tr.o_data_row >> nth=1 >> td[name=\"product_uom_qty\"] input",
+    "value": "2"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "table.o_list_table tbody tr.o_data_row >> nth=1 >> td[name=\"product_uom_qty\"] input"
+     },
+     {
+      "kind": "css",
+      "selector": "table > tbody > tr:nth-of-type(2) > td:nth-of-type(4) > div > input"
+     },
+     {
+      "kind": "point",
+      "x": 691,
+      "y": 520,
+      "w": 82.4,
+      "h": 21,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+    "addedContains": [
+     "- row \"20% {{*}}\"",
+     "- row \"Untaxed Amount {{*}}\"",
+     "- row \"TAX 20% £ 454.80\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "press",
+   "args": {
+    "key": "Tab",
+    "target": "table.o_list_table tbody tr.o_data_row >> nth=1 >> td[name=\"product_uom_qty\"] input"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "table.o_list_table tbody tr.o_data_row >> nth=1 >> td[name=\"product_uom_qty\"] input"
+     },
+     {
+      "kind": "css",
+      "selector": "table > tbody > tr:nth-of-type(2) > td:nth-of-type(4) > div > input"
+     },
+     {
+      "kind": "point",
+      "x": 691,
+      "y": 520,
+      "w": 82.4,
+      "h": 21,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1474"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Save manually"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 163,
+      "y": 79,
+      "w": 26,
+      "h": 17.5,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form"
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "url_after_save",
+    "what": "url"
+   },
+   "locators": {},
+   "label": "url_after_save"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "untaxed_amount",
+    "target": "tr:has-text(\"Untaxed Amount\")",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "tr:has-text(\"Untaxed Amount\")"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div > table > tbody > tr:nth-of-type(1)",
+      "nth": 1
+     },
+     {
+      "kind": "point",
+      "x": 1130,
+      "y": 679,
+      "w": 217.4,
+      "h": 23,
+      "role": null,
+      "tag": "tr",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "untaxed_amount_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "statusbar_state",
+    "target": ".o_statusbar_status",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_statusbar_status"
+     },
+     {
+      "kind": "role",
+      "role": "radiogroup",
+      "name": "Statusbar"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div"
+     },
+     {
+      "kind": "point",
+      "x": 1100,
+      "y": 129,
+      "w": 328.8,
+      "h": 33,
+      "role": "radiogroup",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "statusbar_state"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > h1 > div > span"
+     },
+     {
+      "kind": "point",
+      "x": 89,
+      "y": 195,
+      "w": 96.5,
+      "h": 31,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "quotation_reference"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "tbody > tr:nth-of-type(2) > td:nth-of-type(2) > div > span > span"
+     },
+     {
+      "kind": "point",
+      "x": 120,
+      "y": 520,
+      "w": 130,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "second_line_product"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "tr.o_data_row",
+      "hasText": "Chair floor protection",
+      "selector": "td:nth-of-type(3) > div > span"
+     },
+     {
+      "kind": "css",
+      "selector": "table > tbody > tr:nth-of-type(2) > td:nth-of-type(3) > div > span"
+     },
+     {
+      "kind": "point",
+      "x": 486,
+      "y": 530,
+      "w": 267.4,
+      "h": 37,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "second_line_description"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "tr.o_data_row",
+      "hasText": "Chair floor protection",
+      "selector": "td:nth-of-type(5)"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(2) > td:nth-of-type(5)"
+     },
+     {
+      "kind": "point",
+      "x": 783,
+      "y": 531,
+      "w": 92,
+      "h": 59,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "second_line_unit_price"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "tr.o_data_row",
+      "hasText": "Chair floor protection",
+      "selector": "td:nth-of-type(4)"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(2) > td:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 691,
+      "y": 531,
+      "w": 92,
+      "h": 59,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "second_line_quantity"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "tr.o_data_row",
+      "hasText": "Chair floor protection",
+      "selector": "td:nth-of-type(7)"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(2) > td:nth-of-type(7)"
+     },
+     {
+      "kind": "point",
+      "x": 1179,
+      "y": 531,
+      "w": 104,
+      "h": 59,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "second_line_tax_excl"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(1) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1205,
+      "y": 679,
+      "w": 66.2,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "untaxed_amount"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "",
+  "values": {
+   "quotation_reference": "{{v1}}",
+   "second_line_product": "Chair floor protection",
+   "second_line_description": "Chair floor protection Office chairs can harm your floor: protect it.",
+   "second_line_unit_price": "12.00",
+   "second_line_quantity": "2.00",
+   "second_line_tax_excl": "£ 24.00",
+   "order_line_count": "2",
+   "line_1": "{{v4}} / [FURN_0096] (Steel, White) 160x80cm, with large legs. — 3.00 @ {{v5}} — £ 2,250.00",
+   "line_2": "Chair floor protection — 2.00 @ 12.00 — £ 24.00",
+   "untaxed_amount": "£ 2,274.00",
+   "form_dirty": "no (.o_form_dirty count = 0)",
+   "saved": "yes — no validation error, no dialogs, form not dirty",
+   "status": "Quotation (draft) — deliberately left unconfirmed per instruction",
+   "configurator_opened": "none for 'Chair floor protection'",
+   "untaxed_amount_2": "Untaxed Amount\t£ 2,274.00",
+   "statusbar_state": "Sales Order\nQuotation Sent\nQuotation"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-23T03:52:18.766Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-23T03:59:36.463Z"
+ },
+ "status": "validated",
+ "provenance": {
+  "session": "fwod75-n1",
+  "instruction": "On the currently open Odoo 17 quotation form S00021 (draft, customer 'fwod75-n1 Bench Customer', one existing order line: 'Customizable Desk' qty 3, unit price 750.00, untaxed amount £2,250.00), add a SECOND order line with a DIFFERENT product and quantity 2. Click 'Add a product' (or click into the empty product cell of a new row), type a product name in the autocomplete, and select an actual option from the dropdown (a value only counts when an option was chosen). IMPORTANT: choose a simple product that does NOT open a 'Configure your product' configurator modal — if a configurator modal appears, cancel it and pick a different product instead. Set the quantity of the new line to 2. Then click Save and verify the form is saved (no longer dirty, no error). Do not wait for network idle (the app long-polls); wait for concrete page state. Do NOT confirm the quotation — leave it as a draft. Report: (a) the product name of the second line you added, (b) its unit price, (c) the number of order lines now on the quotation, and (d) the new Untaxed Amount shown in the totals.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-23T03:52:18.766Z",
+  "transforms": [
+   {
+    "name": "unfreezeExpectations",
+    "at": 2,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- combobox \\\"Type to find a product...\\\": {{*}}\",\"- menu \\\"\\\"\",\"- option \\\"Chair floor protection\\\"\",\"- option \\\"Create \\\\\\\"Chair floor protection\\\\\\\"\\\"\",\"- option \\\"Search More...\\\"\"] → [\"- combobox \\\"Type to find a product...\\\": {{*}}\",\"- menu \\\"\\\"\",\"- option \\\"Create \\\\\\\"{{*}}\\\\\\\"\\\"\",\"- option \\\"Search More...\\\"\"]"
+   },
+   {
+    "name": "unfreezeExpectations",
+    "at": 3,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- row \\\"20% £ 12.00\\\"\",\"- link \\\"Delete\\\"\",\"- cell \\\"£ 12.00\\\"\",\"- row \\\"Untaxed Amount £ 2,262.00\\\"\",\"- cell \\\"£ 2,262.00\\\"\"] → [\"- row \\\"20% £ {{*}}\\\"\",\"- link \\\"Delete\\\"\",\"- cell \\\"£ {{*}}\\\"\",\"- row \\\"Untaxed Amount £ 2,262.00\\\"\",\"- cell \\\"£ 2,262.00\\\"\"]"
+   },
+   {
+    "name": "unfreezeExpectations",
+    "at": 4,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- row \\\"20% £ 24.00\\\"\",\"- cell \\\"£ 24.00\\\"\",\"- row \\\"Untaxed Amount £ 2,274.00\\\"\",\"- cell \\\"£ 2,274.00\\\"\",\"- row \\\"TAX 20% £ 454.80\\\"\"] → [\"- row \\\"20% {{*}}\\\"\",\"- row \\\"Untaxed Amount {{*}}\\\"\",\"- row \\\"TAX 20% £ 454.80\\\"\"]"
+   },
+   {
+    "name": "unfreezeExpectations",
+    "at": 6,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- cell \\\"Chair floor protection\\\"\",\"- cell \\\"Chair floor protection Office chairs can harm your floor: protect it.\\\"\",\"- cell \\\"2.00\\\"\",\"- cell \\\"12.00\\\"\"] → []"
+   }
+  ]
+ },
+ "revision": 4
+}

@@ -1,0 +1,959 @@
+{
+ "id": "s_69631c",
+ "origin": "http://127.0.0.1:8069",
+ "template": "On the currently open Odoo 17 quotation form (draft, unsaved, customer '{{v1}}'), there is a 'Configure your product' modal dialog overlaying the page (for product [FURN_1118] Corner Desk Left Sit) that is blocking the Save button. Dismiss that modal (click its Cancel/X/Close button — do NOT confirm it). If dismissing it removes or alters order lines, ensure the quotation ends up with exactly ONE order line: product '{{v3}}' with quantity 3 (if that line is missing, re-add it by selecting the product from the autocomplete dropdown and setting qty 3). Then click Save and verify the quotation is actually persisted: the URL should gain an id, the form should no longer be dirty, and/or a 'Quotation created' notification appears. Do not wait for network idle (the app long-polls); wait for concrete page state. Do NOT confirm the quotation — leave it as a draft. Report: (a) whether the quotation is now saved and its reference/name if shown, (b) the product name on the single order line, (c) the unit price on that line, and (d) the untaxed amount in the totals.",
+ "params": {
+  "v1": {
+   "example": "fwod75-n1 Bench Customer",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:contact_name"
+  },
+  "v2": {
+   "example": "fwod75-n1",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "Customizable Desk",
+   "usedIn": [
+    3,
+    4
+   ],
+   "known": true,
+   "binding": "output:i3:product_name"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&menu_id=:id&model=sale.order&view_type=form",
+  "fingerprint": [
+   0.009,
+   0.012,
+   0.006,
+   0,
+   0.012,
+   0,
+   0.009,
+   0.006,
+   0.009,
+   0.012,
+   0.006,
+   0,
+   0.009,
+   0.038,
+   0.029,
+   0.006,
+   0.032,
+   0.003,
+   0.023,
+   0.003,
+   0,
+   0.018,
+   0.023,
+   0.018,
+   0.006,
+   0.1,
+   0,
+   0.038,
+   0.006,
+   0.047,
+   0.012,
+   0.053,
+   0.094,
+   0.029,
+   0.006,
+   0,
+   0.015,
+   0,
+   0.012,
+   0.006,
+   0.006,
+   0.018,
+   0.041,
+   0.038,
+   0.006,
+   0.032,
+   0.012,
+   0.065,
+   0.047,
+   0.041,
+   0.026,
+   0.003,
+   0.012,
+   0.088,
+   0.009,
+   0,
+   0.009,
+   0.029,
+   0.032,
+   0.003,
+   0,
+   0,
+   0.012,
+   0.194,
+   0.015,
+   0.012,
+   0,
+   0.029,
+   0.023,
+   0.006,
+   0.006,
+   0.012,
+   0.012,
+   0.012,
+   0.065,
+   0.018,
+   0.003,
+   0.012,
+   0.015,
+   0,
+   0.015,
+   0.038,
+   0.065,
+   0,
+   0.023,
+   0,
+   0.018,
+   0.1,
+   0.035,
+   0.012,
+   0.041,
+   0,
+   0.009,
+   0,
+   0.07,
+   0.015,
+   0.012,
+   0.047,
+   0.012,
+   0,
+   0.038,
+   0.026,
+   0.015,
+   0.032,
+   0.006,
+   0,
+   0.032,
+   0.012,
+   0,
+   0.018,
+   0.009,
+   0.015,
+   0.006,
+   0.012,
+   0.038,
+   0.012,
+   0.018,
+   0,
+   0,
+   0.109,
+   0,
+   0.006,
+   0.006,
+   0.009,
+   0.021,
+   0.009,
+   0.018,
+   0.006,
+   0,
+   0.006,
+   0.009,
+   0.012,
+   0.05,
+   0.009,
+   0.012,
+   0.006,
+   0.003,
+   0.009,
+   0,
+   0.015,
+   0.006,
+   0.047,
+   0.023,
+   0.018,
+   0.012,
+   0.003,
+   0.006,
+   0.006,
+   0.023,
+   0.059,
+   0.047,
+   0,
+   0.059,
+   0.012,
+   0.003,
+   0.012,
+   0.012,
+   0.021,
+   0.026,
+   0.003,
+   0.006,
+   0.029,
+   0.015,
+   0.021,
+   0.006,
+   0.012,
+   0,
+   0,
+   0.006,
+   0,
+   0.006,
+   0.012,
+   0.032,
+   0.006,
+   0.006,
+   0.065,
+   0,
+   0,
+   0.006,
+   0.114,
+   0,
+   0.029,
+   0.026,
+   0.009,
+   0.006,
+   0.009,
+   0.021,
+   0.006,
+   0.018,
+   0.041,
+   0.012,
+   0.006,
+   0.009,
+   0.012,
+   0,
+   0.006,
+   0.094,
+   0.003,
+   0.018,
+   0.018,
+   0,
+   0.029,
+   0,
+   0.041,
+   0.012,
+   0,
+   0.003,
+   0.003,
+   0.018,
+   0,
+   0.006,
+   0.009,
+   0.003,
+   0.006,
+   0,
+   0.006,
+   0.009,
+   0.003,
+   0.006,
+   0.032,
+   0,
+   0.003,
+   0.018,
+   0.012,
+   0,
+   0.015,
+   0.006,
+   0.006,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0.006,
+   0.006,
+   0.006,
+   0.006,
+   0.018,
+   0.018,
+   0.003,
+   0.023,
+   0,
+   0.059,
+   0,
+   0.006,
+   0.012,
+   0,
+   0.006,
+   0.003,
+   0.012,
+   0.012,
+   0.012,
+   0.009,
+   0.179,
+   0.135,
+   0.056,
+   0.006,
+   0,
+   0.015,
+   0.032,
+   0.009,
+   0.006,
+   0.003,
+   0.003,
+   0.012,
+   0.153,
+   0.029,
+   0.079,
+   0.009,
+   0.018,
+   0.009,
+   0.009,
+   0.003,
+   0,
+   0.029,
+   0.012,
+   0.018,
+   0,
+   0.006,
+   0.009,
+   0.012,
+   0.018,
+   0.003,
+   0.059,
+   0.029,
+   0.006,
+   0.009,
+   0.015,
+   0.009,
+   0.012,
+   0,
+   0.006,
+   0.006,
+   0,
+   0.006,
+   0.006,
+   0,
+   0.003,
+   0.003,
+   0.059,
+   0.029,
+   0.003,
+   0,
+   0.015,
+   0.006,
+   0,
+   0.015,
+   0.006,
+   0.023,
+   0.009,
+   0.012,
+   0.012,
+   0.088,
+   0.006,
+   0.009,
+   0.003,
+   0,
+   0.032,
+   0.073,
+   0,
+   0.012,
+   0.009,
+   0.035,
+   0.006,
+   0,
+   0.015,
+   0,
+   0.018,
+   0.021,
+   0.006,
+   0.003,
+   0,
+   0.006,
+   0.012,
+   0,
+   0.026,
+   0.015,
+   0,
+   0.026,
+   0.059,
+   0,
+   0.006,
+   0,
+   0.006,
+   0.018,
+   0.012,
+   0.023,
+   0,
+   0,
+   0.012,
+   0.029,
+   0.038,
+   0.068,
+   0.026,
+   0,
+   0,
+   0.032,
+   0,
+   0.009,
+   0.029,
+   0.05,
+   0.041,
+   0.003,
+   0.012,
+   0.021,
+   0.05,
+   0.018,
+   0.012,
+   0.012,
+   0,
+   0.009,
+   0.003,
+   0.012,
+   0.003,
+   0.006,
+   0.006,
+   0,
+   0.003,
+   0.006,
+   0.044,
+   0.012,
+   0.006,
+   0.012,
+   0.041,
+   0.026,
+   0.018,
+   0.003,
+   0.012,
+   0.006,
+   0.006,
+   0.021,
+   0.041,
+   0.009,
+   0.021,
+   0.015,
+   0.009,
+   0.094,
+   0,
+   0.006,
+   0,
+   0.006,
+   0.003,
+   0.012,
+   0.018,
+   0.006,
+   0.009,
+   0.003,
+   0.009,
+   0,
+   0.018,
+   0.056,
+   0.012,
+   0.018,
+   0.003,
+   0,
+   0.059,
+   0.047,
+   0.029,
+   0.006,
+   0.006,
+   0.023,
+   0.012,
+   0,
+   0.006,
+   0.018,
+   0.044,
+   0.003,
+   0.015,
+   0.006,
+   0,
+   0.015,
+   0,
+   0.006,
+   0.003,
+   0.006,
+   0,
+   0.012,
+   0.003,
+   0.044,
+   0.003,
+   0.012,
+   0.044,
+   0,
+   0.015,
+   0,
+   0,
+   0.009,
+   0.038,
+   0.009,
+   0.009,
+   0,
+   0.026,
+   0.047,
+   0.076,
+   0.006,
+   0.003,
+   0.018,
+   0.012,
+   0.006,
+   0.003,
+   0.094,
+   0.023,
+   0,
+   0,
+   0.018,
+   0.009,
+   0.012,
+   0.12,
+   0.012,
+   0.66,
+   0.047,
+   0.044,
+   0.047,
+   0.015,
+   0.044,
+   0.003,
+   0,
+   0,
+   0.018,
+   0.006,
+   0.029,
+   0.003,
+   0,
+   0.012,
+   0.006,
+   0.032,
+   0.006,
+   0.012,
+   0.009,
+   0.032,
+   0.006,
+   0.018,
+   0.05,
+   0,
+   0,
+   0.006,
+   0,
+   0.062,
+   0.003,
+   0.015,
+   0.012,
+   0.015,
+   0.026,
+   0.006,
+   0.346,
+   0,
+   0.012,
+   0.018,
+   0.021,
+   0.006,
+   0.015,
+   0.006
+  ],
+  "requireText": [
+   "{{v1}}",
+   "{{v2}}"
+  ]
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1701"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Cancel"
+     },
+     {
+      "kind": "css",
+      "selector": "#dialog_0 > div > div > div > footer > button:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 274,
+      "y": 734,
+      "w": 65.6,
+      "h": 33,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&menu_id=:id&model=sale.order&view_type=form",
+    "addedContains": [
+     "- row \"Total £ 0.00\"",
+     "- cell \"£ 0.00\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1583"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Add a product"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(2) > a:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 98,
+      "y": 441,
+      "w": 87.2,
+      "h": 16,
+      "role": "button",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&menu_id=:id&model=sale.order&view_type=form",
+    "addedContains": [
+     "- row \"£ 0.00\"",
+     "- combobox \"Type to find a product...\"",
+     "- button \"Delete row\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "type",
+   "args": {
+    "delay_ms": 40,
+    "target": "@e1901",
+    "text": "{{v3}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "combobox",
+      "name": "Type to find a product..."
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Type to find a product..."
+     },
+     {
+      "kind": "css",
+      "selector": "td:nth-of-type(2) > div > div:nth-of-type(1) > div > div > input"
+     },
+     {
+      "kind": "point",
+      "x": 199,
+      "y": 440,
+      "w": 288.1,
+      "h": 21,
+      "role": "combobox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&menu_id=:id&model=sale.order&view_type=form",
+    "addedContains": [
+     "- cell \"{{v3}} Create \\\"{{v3}}\\\" Search More... Create and edit...\"",
+     "- combobox \"Type to find a product...\": {{v3}}",
+     "- menu \"{{v3}} Create \\\"{{v3}}\\\" Search More... Create and edit...\"",
+     "- option \"Create \\\"{{*}}\\\"\"",
+     "- option \"Search More...\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=option[name=\"{{v3}}\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=option[name=\"{{v3}}\"]"
+     },
+     {
+      "kind": "role",
+      "role": "option",
+      "name": "{{v3}}"
+     },
+     {
+      "kind": "css",
+      "selector": "#autocomplete_0_0"
+     },
+     {
+      "kind": "id",
+      "selector": "#autocomplete_0_0"
+     },
+     {
+      "kind": "point",
+      "x": 169,
+      "y": 473,
+      "w": 226.5,
+      "h": 27,
+      "role": "option",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&menu_id=:id&model=sale.order&view_type=form",
+    "addedContains": [
+     "- row \"£ 0.00\"",
+     "- dialog \"\"",
+     "- heading \"Configure your product\"",
+     "- button \"Close\"",
+     "- button \"Cancel\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1984"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Add one"
+     },
+     {
+      "kind": "css",
+      "selector": "table:nth-of-type(1) > tbody > tr:nth-of-type(1) > td:nth-of-type(3) > div > button:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 937,
+      "y": 262,
+      "w": 33,
+      "h": 33,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&menu_id=:id&model=sale.order&view_type=form",
+    "addedContains": [
+     "- row \"Total: £ 1,500.00\"",
+     "- cell \"Total: £ 1,500.00\"",
+     "- heading \"Total: £ 1,500.00\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1984"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Add one"
+     },
+     {
+      "kind": "css",
+      "selector": "table:nth-of-type(1) > tbody > tr:nth-of-type(1) > td:nth-of-type(3) > div > button:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 937,
+      "y": 262,
+      "w": 33,
+      "h": 33,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&menu_id=:id&model=sale.order&view_type=form",
+    "addedContains": [
+     "- row \"Total: {{*}}\"",
+     "- cell \"Total: {{*}}\"",
+     "- heading \"Total: {{*}}\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "configurator_total",
+    "target": "@e1991",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "main > table:nth-of-type(1) > tbody > tr:nth-of-type(2) > td > h4"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 493,
+      "w": 936.4,
+      "h": 20.2,
+      "role": "heading",
+      "tag": "h4",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "configurator_total"
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1932"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Confirm",
+      "nth": 1
+     },
+     {
+      "kind": "css",
+      "selector": "#dialog_2 > div > div > div > footer > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 202,
+      "y": 734,
+      "w": 71,
+      "h": 33,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&menu_id=:id&model=sale.order&view_type=form",
+    "addedContains": [
+     "- cell \"{{v3}}\"",
+     "- cell \"[{{*}}] {{v3}} (Steel, White) {{*}}, with large legs.\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1474"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Save manually"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 150,
+      "y": 79,
+      "w": 26,
+      "h": 17.5,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "mints": {
+    "at": "q.id"
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id={{d1}}&menu_id=:id&model=sale.order&view_type=form",
+    "addedContains": [
+     "- button \"Previous\" [disabled]",
+     "- button \"Next\" [disabled]",
+     "- button \"Cancel\"",
+     "- button \"Attach files\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "derived": {
+  "d1": {
+   "step": 9,
+   "at": "q.id",
+   "example": "21"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-23T03:51:40.706Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_d64ffa",
+  "index": 0,
+  "of": 2
+ },
+ "provenance": {
+  "session": "fwod75-n1",
+  "instruction": "On the currently open Odoo 17 quotation form (draft, unsaved, customer 'fwod75-n1 Bench Customer'), there is a 'Configure your product' modal dialog overlaying the page (for product [FURN_1118] Corner Desk Left Sit) that is blocking the Save button. Dismiss that modal (click its Cancel/X/Close button — do NOT confirm it). If dismissing it removes or alters order lines, ensure the quotation ends up with exactly ONE order line: product 'Customizable Desk' with quantity 3 (if that line is missing, re-add it by selecting the product from the autocomplete dropdown and setting qty 3). Then click Save and verify the quotation is actually persisted: the URL should gain an id, the form should no longer be dirty, and/or a 'Quotation created' notification appears. Do not wait for network idle (the app long-polls); wait for concrete page state. Do NOT confirm the quotation — leave it as a draft. Report: (a) whether the quotation is now saved and its reference/name if shown, (b) the product name on the single order line, (c) the unit price on that line, and (d) the untaxed amount in the totals.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-23T03:51:40.706Z",
+  "transforms": [
+   {
+    "name": "unfreezeExpectations",
+    "at": 6,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- row \\\"Total: £ 2,250.00\\\"\",\"- cell \\\"Total: £ 2,250.00\\\"\",\"- heading \\\"Total: £ 2,250.00\\\"\"] → [\"- row \\\"Total: {{*}}\\\"\",\"- cell \\\"Total: {{*}}\\\"\",\"- heading \\\"Total: {{*}}\\\"\"]"
+   },
+   {
+    "name": "unfreezeExpectations",
+    "at": 8,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- cell \\\"{{v3}}\\\"\",\"- cell \\\"[FURN_0096] {{v3}} (Steel, White) 160x80cm, with large legs.\\\"\",\"- cell \\\"3.00\\\"\",\"- cell \\\"750.00\\\"\",\"- cell \\\"20%\\\"\"] → [\"- cell \\\"{{v3}}\\\"\",\"- cell \\\"[{{*}}] {{v3}} (Steel, White) {{*}}, with large legs.\\\"\"]"
+   },
+   {
+    "name": "unfreezeExpectations",
+    "at": 9,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- button \\\"Previous\\\" [disabled]\",\"- button \\\"Next\\\" [disabled]\",\"- button \\\"Cancel\\\"\",\"- heading \\\"S00021\\\"\",\"- button \\\"Attach files\\\"\"] → [\"- button \\\"Previous\\\" [disabled]\",\"- button \\\"Next\\\" [disabled]\",\"- button \\\"Cancel\\\"\",\"- button \\\"Attach files\\\"\"]"
+   }
+  ]
+ },
+ "revision": 1
+}
