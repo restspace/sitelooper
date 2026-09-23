@@ -600,8 +600,12 @@ document.getElementById('save').addEventListener('click', () => {
  * Vikunja's service worker reloaded /login). `/reload-login/fill`: 100ms after
  * both fields first hold a value, the page calls location.reload().
  * `/reload-login/submit`: the FIRST Sign in click reloads the page instead of
- * submitting (the reload landing between the click and its answer). Once per
- * tab each (sessionStorage). Sign in posts what the fields hold at the click
+ * submitting (the reload landing between the click and its answer).
+ * `/reload-login/echo` (round 56, fwvk8 01-open): 100ms after the USERNAME
+ * first holds a value — before the fill's own check has looked — the page
+ * reloads, so that check finds the field empty. `/reload-login/reject`: no
+ * reload; the page empties the username 100ms after every input (a value that
+ * did not take). Once per tab each (sessionStorage). Sign in posts what the fields hold at the click
  * and then goes to /signed-in; an empty field posts nothing.
  */
 const RELOAD_LOGIN = (mode: string) => `<!doctype html><html><head><meta charset="utf-8"><title>Sign in</title></head><body>
@@ -617,6 +621,10 @@ const build = () => {
   const user = document.getElementById('username');
   const pass = document.getElementById('password');
   const armed = () => { if (MODE === 'fill' && user.value && pass.value && once('reloaded-fill')) setTimeout(() => location.reload(), 100); };
+  user.addEventListener('input', () => {
+    if (MODE === 'echo' && user.value && once('reloaded-echo')) setTimeout(() => location.reload(), 100);
+    if (MODE === 'reject') setTimeout(() => { user.value = ''; }, 100);
+  });
   user.addEventListener('input', armed);
   pass.addEventListener('input', armed);
   document.getElementById('login').addEventListener('click', async () => {
@@ -628,7 +636,7 @@ const build = () => {
 };
 // The reloaded document is an app starting up again: it builds its form late,
 // so a look taken soon after the reload finds no field at all.
-if (sessionStorage.getItem('reloaded-fill')) setTimeout(build, 800);
+if (sessionStorage.getItem('reloaded-fill') || sessionStorage.getItem('reloaded-echo')) setTimeout(build, 800);
 else build();
 </script>
 </body></html>`;
@@ -810,6 +818,18 @@ const PARTS = `<!doctype html><html><head><meta charset="utf-8"><title>Ticket</t
 <tr data-testid="part-row-p18"><td>run-2 RD Part A</td><td>$100.00</td></tr>
 <tr data-testid="part-row-p19"><td>run-2 RD Part B</td><td>$200.00</td></tr>
 </tbody></table></div></section>
+</body></html>`;
+
+/**
+ * A status change that raised no alert (round 56, repairdesk fwrd88
+ * 05-change: `read_all role=alert what:count` recorded "0"). `#list` is the
+ * container a count of its rows scopes to; `?nolist=1` is the same page with
+ * that container never rendered, where a count of its rows proves nothing.
+ */
+const COUNTS = (list: boolean) => `<!doctype html><html><head><meta charset="utf-8"><title>Ticket</title></head><body>
+<h1>Ticket</h1>
+<p id="status">Status Ready</p>
+${list ? '<section id="panel"><ul id="list"></ul></section>' : ''}
 </body></html>`;
 
 /**
@@ -1461,6 +1481,7 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
       if (url === '/filters' || url.startsWith('/filters?')) return html(FILTERS(url.includes('open=1'), url.includes('stuck=1')));
       if (url === '/price' || url === '/price?stuck=1') return html(PRICE(url.endsWith('stuck=1')));
       if (url === '/imagelink') return html(IMAGE_LINK);
+      if (url === '/counts' || url === '/counts?nolist=1') return html(COUNTS(!url.endsWith('nolist=1')));
       if (url === '/transform') return html(TRANSFORM);
       if (url === '/board') return html(BOARD);
       if (url === '/parts') return html(PARTS);

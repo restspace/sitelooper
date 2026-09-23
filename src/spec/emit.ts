@@ -843,9 +843,17 @@ const HELPERS: { token: string; source: string[] }[] = [
       '  where: string,',
       '  policy: ResolvePolicy,',
       '  read: (loc: Locator) => Promise<unknown>,',
-      '  opts: { drift?: string[]; resolved?: { into: string[]; key: string; check?: () => void } } = {},',
+      '  opts: {',
+      '    drift?: string[];',
+      '    resolved?: { into: string[]; key: string; check?: () => void };',
+      '    count?: { root: { locator(selector: string, options?: { hasText?: string | RegExp }): Locator }; scopes: CountScope[] | null };',
+      '  } = {},',
       '): Promise<string> {',
       '  const hit = await resolveForRead(page, (again) => resolveTarget(page, candidates, where, again ? { ...policy, waitMs: 0 } : policy, opts));',
+      '  // A COUNT read (opts.count) that resolved nothing on a settled page with',
+      '  // its scope on it observed "0", as replay publishes it (the shared',
+      '  // countedNothing, fwrd88 05-change); anything else still skips.',
+      "  if (!hit && opts.count && (await countedNothing(page, opts.count.root, candidates, opts.count.scopes))) return '0';",
       '  if (!hit) {',
       '    skippedReads.push(where);',
       '    console.log(`[sitelooper skip] ${where}: read target not found — value left empty`);',
@@ -2191,6 +2199,11 @@ function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number,
   const urlAt = standing && role === 'submit' ? checks.findIndex((line) => line.startsWith('await urlEffect(')) : -1;
   const urlFailed = urlAt >= 0 ? `urlFailed${ctx.urls}` : undefined;
   if (urlFailed) checks[urlAt] = `try { ${checks[urlAt]} } catch (err) { ${urlFailed} = true; throw err; }`;
+  // A fill whose own check fails because the page replaced its document under
+  // it at the same url runs once more on the rebuilt field — replay's
+  // runStepBody repeats it on the same shared fillLost (vikunja fwvk8 01-open).
+  // Only a failure of the VERIFICATION: the action's own failure throws as before.
+  const refill = step.tool === 'fill' && checks.length > 1 ? { doc: `docBefore${ctx.urls}`, verifying: `verifying${ctx.urls}` } : undefined;
   const indent = (lines: string[]) => lines.flatMap((line) => line.split('\n').map((part) => part ? `    ${part}` : part));
   const head = [
     `// @step ${where}`,
@@ -2199,6 +2212,7 @@ function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number,
     ...(linesBefore ? [`let ${linesBefore}: string[] | null = null;`] : []),
     ...(nav ? [`let ${nav}: NavigationTarget = { url: '' };`] : []),
     ...(positional ? [`let ${positional} = false;`] : []),
+    ...(refill ? [`let ${refill.doc}: number | null = null;`] : []),
     ...(landing ? [`let ${landing}: Awaited<ReturnType<typeof armPageEffect>> | null = null;`, `let ${moved}: Page | null = null;`] : []),
     ...(observed ? [`let ${observed}: ActionObservation | null = null;`] : []),
   ];
@@ -2210,6 +2224,7 @@ function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number,
     ...(step.page !== undefined ? [`    pageGate(page, ${step.page}, ${q(where)});`] : []),
     ...(standing ? [`    for (const warning of await restoreStandingFills(page, ${standing}, ${q(step.tool)}, ${q(where)})) logWarning(warning);`] : []),
     `    ${urlBefore} = page.url();`,
+    ...(refill ? [`    ${refill.doc} = await documentOf(page);`] : []),
     ...(alerts ? [`    ${alerts} = (await liveAlerts(page${dialectArg(step)})) ?? [];`] : []),
     ...(linesBefore ? [`    ${linesBefore} = await capturePageLines(page${dialectArg(step)});`] : []),
     '  },',
@@ -2233,6 +2248,7 @@ function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number,
     ...indent(bindings),
     '  },',
     '  verify: async () => {',
+    ...(refill ? [`    ${refill.verifying} = true;`] : []),
     ...indent(checks),
     '  },',
     '});',
@@ -2252,7 +2268,21 @@ function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number,
         '  }',
         '}',
       ]
-    : lifecycle;
+    : refill
+      ? [
+          `let ${refill.verifying} = false;`,
+          'for (let attempt = 0; ; attempt++) {',
+          '  try {',
+          ...lifecycle.map((l) => (l ? `    ${l}` : l)),
+          '    break;',
+          '  } catch (err) {',
+          `    if (attempt > 0 || !${refill.verifying} || !(await fillLost(page, ${refill.doc}, ${urlBefore}))) throw err;`,
+          `    ${refill.verifying} = false;`,
+          `    logWarning(${q(`${where}: `)} + (err instanceof Error ? err.message : String(err)) + ${q(' — the page replaced its document under this fill, so it is repeated once on the rebuilt field')});`,
+          '  }',
+          '}',
+        ]
+      : lifecycle;
   return [
     ...head,
     ...body,
@@ -2830,12 +2860,28 @@ function readLines(step: SkillStep, ctx: Ctx): string[] {
       `}`,
       `${out} = 'root' in ${framed} ? await readOptional(page, [`,
       ...r.open,
-      `], ${r.where}, ${r.policy}, ${read}, ${r.opts}) : '';`,
+      `], ${r.where}, ${r.policy}, ${read}, ${countOpts(step, chain, r.opts, `${framed}.root`)}) : '';`,
       ...echoReadLines(step, ctx),
     ];
   }
   const { open, where, policy, opts } = resolutionLines(chain, step, 'target', ctx, { allowMultiple: spansEveryMatch(step.tool, step.args ?? {}), waitMs: 'RESOLVE_WAIT_MS' });
-  return [`${out} = await readOptional(page, [`, ...open, `], ${where}, ${policy}, ${read}, ${opts});`, ...echoReadLines(step, ctx)];
+  return [`${out} = await readOptional(page, [`, ...open, `], ${where}, ${policy}, ${read}, ${countOpts(step, chain, opts, 'page')});`, ...echoReadLines(step, ctx)];
+}
+
+/**
+ * readOptional's options for a COUNT read: the root its scopes are looked for
+ * in, and the scopes themselves, derived at run time by the shared countScopes
+ * from the chain with this run's params filled — replay's own derivation
+ * (runOneStep), so both publish "0" or skip on the same page (fwrd88).
+ */
+function countOpts(step: SkillStep, chain: LocatorCandidate[], opts: string, root: string): string {
+  if (step.args?.what !== 'count') return opts;
+  const scopeData = chain.map((c) => {
+    const { kind, selector, container, hasText } = c as { kind: string; selector?: string; container?: string; hasText?: string };
+    return { kind, ...(selector !== undefined && { selector }), ...(container !== undefined && { container }), ...(hasText !== undefined && { hasText }) };
+  });
+  const count = `count: { root: ${root}, scopes: countScopes(fillParamsDeep(${JSON.stringify(scopeData)}, p) as { kind: string }[]) }`;
+  return opts.replace(/ \}$/, `, ${count} }`);
 }
 
 /**

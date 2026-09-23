@@ -304,3 +304,24 @@ export function rearmStandingFills(ledger: StandingFills): void {
   ledger.fills = ledger.submitted.fills;
   ledger.submitted = undefined;
 }
+
+/**
+ * A FILL LOST TO A REPLACED DOCUMENT (round 56, vikunja fwvk8 01-open). The
+ * ledger above protects a submit; a fill's own check is asked earlier. On
+ * fwvk8's login the page replaced its document after the username fill
+ * dispatched and before that fill's echo check looked, so the check found
+ * the rebuilt field empty ("did not show textbox …: admin") and the step
+ * stopped, one step before the submit's refill would have put it back.
+ *
+ * After a fill whose own verification failed: true only when the document
+ * it ran in (`before`, read ahead of the dispatch) is gone and the page is
+ * still on the url it ran on — a reload, not a navigation. The runner then
+ * runs the fill once more, whose resolution waits for the field to be built
+ * again and whose check judges it anew. A fill whose value simply did not
+ * take on an unchanged document is never repeated: its check's stop stands.
+ */
+export async function fillLost(page: Page, before: number | null, url: string): Promise<boolean> {
+  if (before === null || page.url() !== url) return false;
+  const doc = await documentOf(page);
+  return doc !== null && doc !== before && page.url() === url;
+}
