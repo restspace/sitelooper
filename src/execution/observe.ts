@@ -275,7 +275,7 @@ function cssContainer(selector: string): CountScope | null {
  *    builds it).
  *  - `css` / `id`: a Playwright chain (`a >> b`) is scoped by everything
  *    before its last segment (a trailing `nth=` is the element, not a scope);
- *    a single segment that is an engine selector (`role=alert`, `text=…`,
+ *    a single segment that is an engine selector (`role=…`, `text=…`,
  *    an xpath) counts across the root; a css selector is scoped by what comes
  *    before its last combinator (`#list > li` by `#list`).
  *  - `role`, `testid`, `text`, `label`, `placeholder`: across the root.
@@ -316,7 +316,7 @@ export function countScopes(chain: readonly { kind: string; selector?: string; c
 /**
  * Whether a COUNT read that resolved nothing observed a count of nothing —
  * "0", a value — rather than failing to look. repairdesk fwrd88 05-change:
- * s_4b0e31 counted `role=alert` after a status change and recorded "0"; on
+ * s_4b0e31 counted the page's alerts (by role) after a status change and recorded "0"; on
  * replay nothing matched, and both runners skipped the read, so a correct,
  * observed answer went unpublished and the step read as partial.
  *
