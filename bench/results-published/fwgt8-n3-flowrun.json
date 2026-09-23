@@ -1,0 +1,170 @@
+{
+  "flow": "fwgt8",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_c291a6; observed open_issue_count=3, closed_issue_count=0.",
+      "values": {
+        "open_issue_count": "3",
+        "closed_issue_count": "0"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_8c4d87; observed issue_url=http://127.0.0.1:8095/bench/bench-repo/issues/6, issue_number=#6, issue_title=fwgt8-n3 Bench Issue, repo_issue_total_after=4, body_text=Bench issue for run fwgt8-n3., ref=fwgt8-n3.",
+      "values": {
+        "issue_url": "http://127.0.0.1:8095/bench/bench-repo/issues/6",
+        "issue_number": "#6",
+        "issue_title": "fwgt8-n3 Bench Issue",
+        "repo_issue_total_after": "4",
+        "body_text": "Bench issue for run fwgt8-n3.",
+        "ref": "fwgt8-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-set",
+      "status": "success",
+      "summary": "Replayed stored procedure s_747732; observed current_url=http://127.0.0.1:8095/bench/bench-repo/issues/6, label_ids_local_after_se=1,2, assignee_ids_local=3, assignee_shown_2=bench-assignee\n(Bench Assignee), label_1=bug, issue_number=#6, issue_title_unchanged=fwgt8-n3 Bench Issue #6, ref=fwgt8-n3.",
+      "values": {
+        "current_url": "http://127.0.0.1:8095/bench/bench-repo/issues/6",
+        "label_ids_local_after_se": "1,2",
+        "assignee_ids_local": "3",
+        "assignee_shown_2": "bench-assignee\n(Bench Assignee)",
+        "label_1": "bug",
+        "issue_number": "#6",
+        "issue_title_unchanged": "fwgt8-n3 Bench Issue #6",
+        "ref": "fwgt8-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "23/23",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_747732: step 17: read 'milestone_shown' returned a value the skill itself set/selected ('Bench Milestone') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_747732: step 20: read 'label_2' returned a value the skill itself set/selected ('priority-high') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_747732: step 22: primary locator did not resolve; used fallback #2 page.locator('h1')",
+        "s_747732: step 23: primary locator did not resolve; used fallback #2 page.locator('#issue-title-display > h1')"
+      ],
+      "unreported": [
+        "label_2",
+        "milestone_shown"
+      ]
+    },
+    {
+      "id": "04-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_0b4489; observed comments_on_issue=Bench issue for run fwgt8-n3. | Comment for run fwgt8-n3., ref=fwgt8-n3, issue_heading=fwgt8-n3 Bench Issue #6, issue_number=#6, issue_title=fwgt8-n3 Bench Issue, projects_shown=No projects, issue_state=Open, comment_text=Comment for run fwgt8-n3., assignee_shown=bench-assignee\n(Bench Assignee).",
+      "values": {
+        "comments_on_issue": "Bench issue for run fwgt8-n3. | Comment for run fwgt8-n3.",
+        "ref": "fwgt8-n3",
+        "issue_heading": "fwgt8-n3 Bench Issue #6",
+        "issue_number": "#6",
+        "issue_title": "fwgt8-n3 Bench Issue",
+        "projects_shown": "No projects",
+        "issue_state": "Open",
+        "comment_text": "Comment for run fwgt8-n3.",
+        "assignee_shown": "bench-assignee\n(Bench Assignee)"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_5b29f0: step 1: primary locator did not resolve; used fallback #2 page.locator('h1')",
+        "s_0b4489: step 1: primary locator did not resolve; used fallback #2 page.locator('h1')"
+      ]
+    }
+  ],
+  "passed": 4,
+  "total": 4,
+  "repinned": 0,
+  "drift": 4,
+  "driftTickets": [
+    {
+      "flow": "fwgt8",
+      "step": "03-set",
+      "skill": "s_747732",
+      "atStep": "22",
+      "key": "target",
+      "similarity": 1.002,
+      "missedLocator": "page.getByRole('heading', { name: 'fwgt8-n3 Bench Issue #4', exact: true })",
+      "fallbackUsed": "page.locator('h1')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/6"
+    },
+    {
+      "flow": "fwgt8",
+      "step": "03-set",
+      "skill": "s_747732",
+      "atStep": "23",
+      "key": "target",
+      "similarity": 1.002,
+      "missedLocator": "page.getByRole('heading', { name: 'fwgt8-n3 Bench Issue #4', exact: true })",
+      "fallbackUsed": "page.locator('#issue-title-display > h1')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/6"
+    },
+    {
+      "flow": "fwgt8",
+      "step": "04-add",
+      "skill": "s_5b29f0",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.998,
+      "missedLocator": "page.getByRole('heading', { name: 'fwgt8-n3 Bench Issue #4', exact: true })",
+      "fallbackUsed": "page.locator('h1')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/6"
+    },
+    {
+      "flow": "fwgt8",
+      "step": "04-add",
+      "skill": "s_0b4489",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.998,
+      "missedLocator": "page.getByRole('heading', { name: 'fwgt8-n3 Bench Issue #4', exact: true })",
+      "fallbackUsed": "page.locator('h1')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/6"
+    }
+  ],
+  "wallMs": 42366,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
