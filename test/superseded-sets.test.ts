@@ -149,3 +149,57 @@ describe('dropSupersededSets: a refill of the same field', () => {
     expect(dropSupersededSets(typed)).toEqual(typed);
   });
 });
+
+/**
+ * repairdesk fwrd84-n1 (round 49): TWO DIFFERENT FIELDS of one form dialog,
+ * not a refill. 05-edit filled Cost = 150 then Markup = 25 and saved; 02-create
+ * filled Title then Customer and saved. Every field in that dialog carries the
+ * recorder's ambient `[data-testid="form-dialog"] input` candidate — one
+ * selector that matches all of them — so sameControl found a candidate in
+ * common and the round-48 refill rule dropped the FIRST fill of each pair.
+ * The exported 05-edit then saved an unchanged form and still reported tier A
+ * (n3's verifier failed: no update setting p18 to cost 150), and 02-create hit
+ * the app's own "Title is required".
+ */
+describe('dropSupersededSets: two fields of one dialog are not a refill (fwrd84)', () => {
+  const TICKET = 'http://127.0.0.1:4180/#/tickets/t15';
+  const AMBIENT = { kind: 'css', selector: '[data-testid="form-dialog"] input' } as LocatorCandidate;
+  const field = (name: string, testid: string, id: string, y: number): LocatorCandidate[] => [
+    { kind: 'css', selector: `role=dialog >> role=spinbutton[name="${name}"]` },
+    { kind: 'testid', attr: 'data-testid', value: testid },
+    { kind: 'role', role: 'spinbutton', name },
+    { kind: 'label', label: name },
+    { kind: 'id', selector: `#${id}` },
+    AMBIENT,
+    { kind: 'css', selector: `#${id}` },
+    { kind: 'point', x: 640, y, w: 478, h: 39, role: 'spinbutton', tag: 'input', vw: 1280, vh: 900 },
+  ] as LocatorCandidate[];
+  const COST = field('Cost *', 'field-cost', 'f-cost', 354);
+  const MARKUP = field('Markup % *', 'field-markup', 'f-markup', 456);
+  const at = (d: Partial<StepDiff> = {}) => diff({ url: TICKET, ...d });
+
+  /** fwrd84 n1 102-106, as recorded. */
+  const fwrd84 = (): RecordedStep[] => [
+    step('click', { target: '@e396' }, chain('@e396', { kind: 'scoped', container: 'tr', hasText: 'fwrd84-n1 RD Part A', selector: 'td:nth-of-type(7) > button:nth-of-type(1)' } as LocatorCandidate), at({ added: ['- dialog "Edit part"', '- spinbutton "Cost *": 100'] })),
+    step('fill', { target: 'role=dialog >> role=spinbutton[name="Cost *"]', value: '150' }, chain('c', ...COST), at({ added: ['- spinbutton "Cost *": 150'] })),
+    step('fill', { target: 'role=dialog >> role=spinbutton[name="Markup % *"]', value: '25' }, chain('m', ...MARKUP), at({ added: [], removed: [] })),
+    step('screenshot', { path: 'a.png' }),
+    step('click', { target: 'role=dialog >> role=button[name="Save part"]' }, chain('s', { kind: 'css', selector: 'role=dialog >> role=button[name="Save part"]' } as LocatorCandidate), at({ added: ['- row "fwrd84-n1 RD Part A $150.00 25% 1 No supplier $187.50 Edit Delete"'] })),
+  ];
+
+  it('keeps the cost fill: the two fills name different fields', () => {
+    const steps = fwrd84();
+    expect(dropSupersededSets(steps)).toEqual(steps);
+  });
+
+  it('compiles the recorded edit with both fills', () => {
+    const instruction = "edit the part named 'fwrd84-n1 RD Part A', change its cost from 100 to 150, keep the markup at 25, and save";
+    const entries: RecordedEntry[] = [{ k: 'instruction', text: instruction, url: TICKET }, ...fwrd84()];
+    const skills = compileSkills({ entries, instruction, report: { status: 'success', summary: 'saved', evidence: { values: { part_A_cost_after: '$150.00' } } }, session: 't' });
+    const [skill] = skills;
+    const fills = skills.flatMap((s) => s.steps).filter((s) => s.tool === 'fill');
+    // both fills survive; the instruction names both numbers, so each is a slot
+    const example = (v: unknown) => (typeof v === 'string' && /^\{\{(\w+)\}\}$/.test(v) ? skill.params[v.slice(2, -2)]?.example : v);
+    expect(fills.map((f) => example(f.args.value))).toEqual(['150', '25']);
+  });
+});
