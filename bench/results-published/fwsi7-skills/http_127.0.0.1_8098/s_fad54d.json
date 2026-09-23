@@ -1,0 +1,98 @@
+{
+ "id": "s_fad54d",
+ "origin": "http://127.0.0.1:8098",
+ "template": "Create a new asset named '{{v2}}' with model '{{v3}}' (choose from the searchable model dropdown) and status '{{v4}}' (choose from dropdown). Do NOT set location, purchase date or checkout yet. Save and confirm the asset is created, and report the asset tag Snipe-IT assigned (e.g. BA-00012) and the asset's URL.",
+ "params": {
+  "v1": {
+   "example": "fwsi7-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "fwsi7-n2 Bench Asset",
+   "usedIn": [],
+   "known": true
+  },
+  "v3": {
+   "example": "Bench Laptop Model",
+   "usedIn": []
+  },
+  "v4": {
+   "example": "Ready to Deploy",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8098/hardware?order=asc&page=:id&search=Seed&size=:id&sort=created_at"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e138"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "button[name=\"btnAdd\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 915,
+      "y": 206,
+      "w": 38.3,
+      "h": 34,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8098/hardware/create",
+    "addedContains": [
+     "- heading \"Assets Create New\"",
+     "- button \"Save\"",
+     "- combobox \"Company\"",
+     "- combobox \"Select Company\"",
+     "- textbox \"Select Company\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_f62ebb",
+    "step": 1
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-23T15:10:04.038Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_ff17ac",
+  "index": 0,
+  "of": 6
+ },
+ "provenance": {
+  "session": "fwsi7-n2",
+  "instruction": "Create a new asset named 'fwsi7-n2 Bench Asset' with model 'Bench Laptop Model' (choose from the searchable model dropdown) and status 'Ready to Deploy' (choose from dropdown). Do NOT set location, purchase date or checkout yet. Save and confirm the asset is created, and report the asset tag Snipe-IT assigned (e.g. BA-00012) and the asset's URL.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-23T15:10:04.038Z"
+ },
+ "revision": 1
+}

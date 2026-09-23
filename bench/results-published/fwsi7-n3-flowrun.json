@@ -1,0 +1,234 @@
+{
+  "flow": "fwsi7",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_20894b; observed asset_1_name=Seed: Reception Laptop, asset_1_tag=SEED-0001, asset_2_name=Seed: Training Laptop, asset_2_tag=SEED-0002, asset_3_name=Seed: Spare Laptop, asset_3_tag=SEED-0003.",
+      "values": {
+        "asset_1_name": "Seed: Reception Laptop",
+        "asset_1_tag": "SEED-0001",
+        "asset_2_name": "Seed: Training Laptop",
+        "asset_2_tag": "SEED-0002",
+        "asset_3_name": "Seed: Spare Laptop",
+        "asset_3_tag": "SEED-0003"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "The asset was created and verified on its view page. The earlier replayed form-fill segments did land: the asset exists in the list (search \"fwsi7-n3\") as BA-00006 with name \"fwsi7-n3 Bench Asset\", model \"Bench Laptop Model\" and status \"Ready to Deploy\". I opened it at http://127.0.0.1:8098/hardware/6, where the header reads \"fwsi7-n3 Bench Asset #BA-00006 - Bench Laptop Model\", status shows \"Ready to Deploy deployable\", and Default Location / Purchase Cost / Last Audit / Next Audit Date all show \"No value\" — i.e. location, purchase date and checkout were left unset, as instructed. The list's leftover \"Seed\" search filter (which had hidden this asset) was replaced with \"fwsi7-n3\" to locate it; no new save was issued, so there is no duplicate.",
+      "values": {
+        "asset_tag": "BA-00006",
+        "asset_name": "fwsi7-n3 Bench Asset",
+        "asset_model": "Bench Laptop Model",
+        "status": "Ready to Deploy (deployable)",
+        "default_location": "No value",
+        "purchase_cost": "No value",
+        "checked_out_to": "none (Last Checkout N/A, no user shown)",
+        "asset_page_url": "http://127.0.0.1:8098/hardware/6",
+        "created": "2026-09-23 03:13 PM",
+        "assets_list_row_for_new_asset": "BA-00006\tfwsi7-n3 Bench Asset\t\t\tBench Laptop Model\tBench Laptops\t Ready to Deploy\t\t\t\t\tCheckout",
+        "asset_tag_2": "Assets  fwsi7-n3 Bench Asset #BA-00006 - Bench Laptop Model",
+        "ref": "fwsi7-n3"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_5dcb48 stopped at step 1 — step 1 raised an alert the recording never saw: This asset has been deleted. You must restore it before you can assign it to someone.",
+      "replayed": "0/1",
+      "repaired": false,
+      "turns": 21,
+      "warnings": [
+        "s_b2d9d5: step 4 raised an alert the recording never saw: This asset can be checked out. — reported, not stopped: the step's recorded page changes appeared"
+      ],
+      "repinned": "s_9a4939",
+      "repinParams": {
+        "v1": "{{runid}}",
+        "v2": "{{runid}} Bench Asset",
+        "v3": "Bench Laptop Model",
+        "v4": "Ready to Deploy"
+      },
+      "unreported": [
+        "model_name"
+      ]
+    },
+    {
+      "id": "03-edit",
+      "status": "success",
+      "summary": "The replayed edit segments had already been saved against the correct asset (BA-00006), so no second save was issued. On the live view page http://127.0.0.1:8098/hardware/6 (\"View Asset BA-00006 :: Bench Assets\") the Details panel now reads Default Location = \"Bench Office\" and, in the expanded model/date block, \"Purchased 2026-03-15\" — with Created 2026-09-23 03:13 PM and Updated 2026-09-23 03:14 PM confirming the edit was persisted after creation. The only thing that failed in the chain was the final verification goto to a stale recorded URL /hardware/4 (which raised \"This asset has been deleted\"), unrelated to this asset.",
+      "values": {
+        "asset_tag": "BA-00006",
+        "asset_name": "fwsi7-n3 Bench Asset",
+        "location_shown_on_view_page": "Bench Office",
+        "purchase_date_shown_on_view_page": "Purchased 2026-03-15 (6 months 1 week ago)",
+        "updated_timestamp": "2026-09-23 03:14 PM",
+        "created_timestamp": "2026-09-23 03:13 PM",
+        "status": "Ready to Deploy deployable"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_be0767 stopped at step 1 — step 1 raised an alert the recording never saw: This asset has been deleted. You must restore it before you can assign it to someone.",
+      "replayed": "0/1",
+      "repaired": false,
+      "turns": 5,
+      "warnings": [
+        "s_5df49b: step 4: read 'purchase_date_field_value' returned a value the skill itself set/selected ('2026-03-15') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_5df49b: step 5: read 'default_location_field_value' returned a value the skill itself set/selected ('×\nBench Office') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "view_page_default_location",
+        "purchase_date_field_value",
+        "default_location_field_value",
+        "ref"
+      ]
+    },
+    {
+      "id": "04-report",
+      "status": "success",
+      "summary": "The checkout completed: on the checkout form I opened the user dropdown (select2), chose \"Bench Assignee (bench-assignee)\", filled the Notes field with \"Checkout note fwsi7-n3 Bench Asset\" and clicked Checkout, which returned the flash \"Success: Asset checked out successfully.\" Back on the asset view page http://127.0.0.1:8098/hardware/6 the header shows the status \"Ready to Deploy\" with a \"Deployed\" label and, after the arrow, the checked-out-to user \"Bench Assignee\" (linking to /users/2); the sidebar shows Last Checkout 2026-09-23 (1 minute ago), and the History table row (2026-09-23 03:15 PM, Bench Admin, action \"checkout\", target \"Bench Assignee 1\") displays the note \"Checkout note fwsi7-n3 Bench Asset\". The status name was confirmed on the edit page's status dropdown, which reads \"Ready to Deploy\".",
+      "values": {
+        "asset_tag": "BA-00006",
+        "asset_name": "fwsi7-n3 Bench Asset",
+        "checked_out_to_user_shown_on_view_page": "Bench Assignee (link http://127.0.0.1:8098/users/2)",
+        "status_shown_on_view_page": "Ready to Deploy  [label: Deployed]",
+        "status_value_in_edit_dropdown": "Ready to Deploy (status_id=2)",
+        "checkout_note_shown_on_view_page": "Checkout note fwsi7-n3 Bench Asset (History table, Notes column)",
+        "history_row": "2026-09-23 03:15 PM | Bench Admin | checkout | fwsi7-n3 Bench Asset #BA-00006 - Bench Laptop Model | Bench Assignee 1 | Checkout note fwsi7-n3 Bench Asset",
+        "last_checkout": "2026-09-23 (1 minute ago)",
+        "asset_page_url": "http://127.0.0.1:8098/hardware/6",
+        "success_flash": "Success: Asset checked out successfully.",
+        "user_selection_text": "×\nBench Assignee (bench-assignee)",
+        "ref": "fwsi7-n3",
+        "ref_2": "s_d5098a"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "every candidate refused — s_d5098a: not on the page this procedure starts from (expects http://127.0.0.1:8098/hardware/4, browser is at http://127.0.0.1:8098/hardware/6) — nothing was run",
+      "replayed": "1/1",
+      "repaired": false,
+      "turns": 24,
+      "unreported": [
+        "checked_out_to_user",
+        "checkout_note",
+        "checkouts_count",
+        "checkout_date_field",
+        "checkout_user_field",
+        "checkout_form_heading"
+      ]
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_55082c; observed ref=fwsi7-n3, asset_tag=BA-00006, asset_name=fwsi7-n3 Bench Asset, default_location=Bench Office, purchase_date_as_displayed= Purchased 2026-03-15 - 6 months 1 week ago, asset_tag_label=Asset Tag, default_location_label=Default Location.",
+      "values": {
+        "ref": "fwsi7-n3",
+        "asset_tag": "BA-00006",
+        "asset_name": "fwsi7-n3 Bench Asset",
+        "default_location": "Bench Office",
+        "purchase_date_as_displayed": " Purchased 2026-03-15 - 6 months 1 week ago",
+        "asset_tag_label": "Asset Tag",
+        "default_location_label": "Default Location"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_55082c: step 5: skipped read — no element matched any known locator for target (tried 3: page.locator('#historyListingTable tr', { hasText: 'fwsi7-n3 checkout note' }).locator('td:nth-of-type(6) > nobr > a'), page.locator('#historyListingTable > tbody > tr:nth-of-type(3) > td:nth-of-type(6) > nobr > a'), elementAt(852, 614) /* link */)"
+      ],
+      "unreported": [
+        "checked_out_to_user",
+        "history_rows_total"
+      ]
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "repinned": 1,
+  "drift": 4,
+  "driftTickets": [
+    {
+      "flow": "fwsi7",
+      "step": "02-create",
+      "skill": "s_5dcb48",
+      "similarity": 1,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_5dcb48 stopped at step 1 — step 1 raised an alert the recording never saw: This asset has been deleted. You must restore it before you can assign it to someone.",
+      "reason": "step 1 raised an alert the recording never saw: This asset has been deleted. You must restore it before you can assign it to someone.",
+      "pageUrlPattern": "http://127.0.0.1:8098/hardware/:id",
+      "pageUrl": "http://127.0.0.1:8098/hardware/4"
+    },
+    {
+      "flow": "fwsi7",
+      "step": "03-edit",
+      "skill": "s_be0767",
+      "similarity": 0.981,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_be0767 stopped at step 1 — step 1 raised an alert the recording never saw: This asset has been deleted. You must restore it before you can assign it to someone.",
+      "reason": "step 1 raised an alert the recording never saw: This asset has been deleted. You must restore it before you can assign it to someone.",
+      "pageUrlPattern": "http://127.0.0.1:8098/hardware/:id",
+      "pageUrl": "http://127.0.0.1:8098/hardware/4"
+    },
+    {
+      "flow": "fwsi7",
+      "step": "04-report",
+      "skill": "s_d5098a",
+      "similarity": 1,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "every candidate refused — s_d5098a: not on the page this procedure starts from (expects http://127.0.0.1:8098/hardware/4, browser is at http://127.0.0.1:8098/hardware/6) — nothing was run",
+      "pageUrlPattern": "http://127.0.0.1:8098/hardware/:id/checkout",
+      "pageUrl": "http://127.0.0.1:8098/hardware/6/checkout"
+    },
+    {
+      "flow": "fwsi7",
+      "step": "05-open",
+      "skill": "s_55082c",
+      "atStep": "5",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.locator('#historyListingTable tr', { hasText: 'fwsi7-n3 checkout note' }).locator('td:nth-of-type(6) > nobr > a')",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8098/hardware/:id#history",
+      "pageUrl": "http://127.0.0.1:8098/hardware/6#history"
+    }
+  ],
+  "wallMs": 224782,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 934998,
+    "completionTokens": 18036,
+    "cachedTokens": 869760
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 934998,
+      "completionTokens": 18036,
+      "cachedTokens": 869760
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

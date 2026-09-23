@@ -1,0 +1,40 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-signin
+  ✘  1 fwsi7.spec.ts:9:1 › fwsi7 (25.4s)
+
+
+  1) fwsi7.spec.ts:9:1 › fwsi7 › 02-create: Create a new asset named '{{runid}} Bench Asset' with model 'Bench Laptop Model' (choose from the searchable model dropdown) and status 'Ready to Deploy' (choose from dropdown). Do NOT set location, purchase date or checkout yet. Save and confirm the asset is created, and report the asset tag Snipe-IT assigned (e.g. BA-00012) and the asset's URL. 
+
+    Error: 02-create s_0aa6d6/1 raised an alert the recording never saw: This asset has been deleted. You must restore it before you can assign it to someone.
+
+       at fwsi7.flow.ts:10867
+
+      10865 |   const verdict = alertVerdict(before, after ? after.alerts : null, ctx, after ? after.complete : true);
+      10866 |   for (const line of verdict.warnings) logWarning(line);
+    > 10867 |   if (verdict.stop) throw new Error(verdict.stop);
+            |                           ^
+      10868 | }
+      10869 |
+      10870 | /**
+        at alertGate (/home/user/sitelooper/bench/results/fwsi7-spec-spec-tmp/fwsi7.flow.ts:10867:27)
+        at Object.verify (/home/user/sitelooper/bench/results/fwsi7-spec-spec-tmp/fwsi7.flow.ts:12362:9)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwsi7-spec-spec-tmp/fwsi7.flow.ts:8015:37)
+        at Object.02-create (/home/user/sitelooper/bench/results/fwsi7-spec-spec-tmp/fwsi7.flow.ts:12342:5)
+        at /home/user/sitelooper/bench/results/fwsi7-spec-spec-tmp/fwsi7.flow.ts:14491:7
+        at runFlow (/home/user/sitelooper/bench/results/fwsi7-spec-spec-tmp/fwsi7.flow.ts:14490:5)
+        at /home/user/sitelooper/bench/results/fwsi7-spec-spec-tmp/fwsi7.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwsi7-fwsi7/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwsi7-fwsi7/error-context.md
+
+  1 failed
+    fwsi7.spec.ts:9:1 › fwsi7 ──────────────────────────────────────────────────────────────────────

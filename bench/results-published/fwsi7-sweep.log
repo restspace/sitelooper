@@ -1,0 +1,172 @@
+
+[sweep] run 1/3: fwsi7-n1 (store: /home/user/sitelooper/bench/results/fwsi7-skills)
+[harness] snipeit: defaulting APP_URL
+[harness] snipeit: defaulting APP_EMAIL
+[harness] snipeit: defaulting APP_PASSWORD
+[reset] snipeit: no leftover bench assets
+[harness] snipeit responded 302 at http://127.0.0.1:8098/
+stopped: fwsi7-n1
+  flow "fwsi7" saved: 5 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwsi7.json
+  warning: note: 02-create no longer publishes asset_url, location, purchase_date, last_checkout — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-report no longer publishes checkins_count — no replay reads it from the page and the recording showed no line to read
+  warning: note: 05-open no longer publishes status, last_checkout, checkouts_checkins, asset_name_label, checkouts_label, checkins_label — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 140 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[1].instruction: "Bench Laptop Model" (output) in "Create a new asset named '{{runid}} Bench Asset' with model 'Bench Laptop Model' (choose from the searchable model dropdown) and status 'Ready to Deploy' (choos"
+  flow.steps[1].instruction: "Ready to Deploy" (output) in "Create a new asset named '{{runid}} Bench Asset' with model 'Bench Laptop Model' (choose from the searchable model dropdown) and status 'Ready to Deploy' (choos"
+  flow.steps[1].instruction: "checkout" (output) in "Create a new asset named '{{runid}} Bench Asset' with model 'Bench Laptop Model' (choose from the searchable model dropdown) and status 'Ready to Deploy' (choos"
+  flow.steps[1].params.v3: "Bench Laptop Model" (output) in "Bench Laptop Model"
+  flow.steps[1].params.v4: "Ready to Deploy" (output) in "Ready to Deploy"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwsi7-n1 stop=completed
+turns=7 wall=242.3s
+commands=6 cmdTime=202.4s cmdBytes=6628 timeouts=0
+orchestrator in=16964 cw=0 cr=7936 out=1051
+inner prompt=1043940 cached=933248 completion=14944
+spend=$0.059 maxUsd=3
+learn: A_n=0 replayed=0/5 full=0 repaired=0 compiled=5 variants=0
+-> /home/user/sitelooper/bench/results/fwsi7-n1-sitelooper-result.json
+
+fwsi7-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed tags and names reported
+  obj 2: PASS — BA-00004, model=Bench Laptop Model, status=Ready to Deploy
+  obj 3: PASS — default location=Bench Office
+  obj 4: PASS — purchase date=2026-03-15
+  obj 5: PASS — assigned to=Bench Assignee (user bench-assignee)
+  obj 6: PASS — 1 checkout(s), 1 with a note carrying the runid
+  obj 7: PASS — asset tag BA-00004 reported
+
+[sweep] run 2/3: fwsi7-n2 (replay flow fwsi7, no orchestrator)
+[reset] snipeit: deleted 1 leftover bench asset(s)
+[sweep] fwsi7-n2: 4 drift ticket(s) → fwsi7-n2-drift.json
+
+fwsi7-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed tags and names reported
+  obj 2: PASS — BA-00005, model=Bench Laptop Model, status=Ready to Deploy
+  obj 3: PASS — default location=Bench Office
+  obj 4: PASS — purchase date=2026-03-15
+  obj 5: PASS — assigned to=Bench Assignee (user bench-assignee)
+  obj 6: PASS — 1 checkout(s), 1 with a note carrying the runid
+  obj 7: PASS — asset tag BA-00005 reported
+
+[sweep] run 3/3: fwsi7-n3 (replay flow fwsi7, no orchestrator)
+[reset] snipeit: deleted 1 leftover bench asset(s)
+[sweep] fwsi7-n3: 4 drift ticket(s) → fwsi7-n3-drift.json
+
+fwsi7-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed tags and names reported
+  obj 2: PASS — BA-00006, model=Bench Laptop Model, status=Ready to Deploy
+  obj 3: PASS — default location=Bench Office
+  obj 4: PASS — purchase date=2026-03-15
+  obj 5: PASS — assigned to=Bench Assignee (user bench-assignee)
+  obj 6: PASS — 1 checkout(s), 1 with a note carrying the runid
+  obj 7: PASS — asset tag BA-00006 reported
+
+Learning sweep fwsi7 (K=3)
+┌─────────┬───┬────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid      │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwsi7-n1' │ '7/7'    │ 'completed' │ 7     │ 6    │ 0.059     │ 0   │ '0/5'        │ 242    │
+│ 1       │ 2 │ 'fwsi7-n2' │ '7/7'    │ 'success'   │ 45    │ 5    │ 0.0251    │ 0.4 │ '5/5 (flow)' │ 230    │
+│ 2       │ 3 │ 'fwsi7-n3' │ '7/7'    │ 'success'   │ 50    │ 5    │ 0.0232    │ 0.4 │ '5/5 (flow)' │ 225    │
+└─────────┴───┴────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8098
+  s_20894b  validated    8 steps  3/3 (100%)
+           Sign in with username {{v1}} and password {{v2}}, then list all assets whose name starts with '{{v3}}' and rep…
+  s_37e014  validated    1 steps  3/3 (100%)
+           Sign in with username {{v1}} and password {{v2}}, then list all assets whose name starts with '{{v3}}' and rep…
+  s_55082c  validated    7 steps  3/3 (100%)
+           Open the asset view page for asset tag {{v1}} and report exactly what it displays for: asset tag, asset name, …
+  s_5dcb48  demoted      1 steps  1/3 (33%)
+           Create a new asset named '{{v2}}' with model '{{v3}}' (choose from the searchable model dropdown) and status '…
+  s_5df49b  validated    6 steps  3/3 (100%)
+           Edit the asset '{{v1}}' (asset tag {{v3}}) to set its default location to 'Bench Office' (choose from the sear…
+  s_9e29b0  validated    1 steps  3/3 (100%)
+           Open the asset view page for asset tag {{v1}} and report exactly what it displays for: asset tag, asset name, …
+  s_b2d9d5  validated    8 steps  3/3 (100%)
+           Create a new asset named '{{v2}}' with model '{{v3}}' (choose from the searchable model dropdown) and status '…
+  s_be0767  provisional  1 steps  1/3 (33%)
+           Edit the asset '{{v1}}' (asset tag {{v3}}) to set its default location to 'Bench Office' (choose from the sear…
+  s_d5098a  validated    1 steps  3/3 (100%)
+           Check out the asset '{{v1}}' (asset tag {{v3}}) to the user 'Bench Assignee' (choose from the searchable user …
+  s_f089ce  validated    1 steps  3/3 (100%)
+           Edit the asset '{{v1}}' (asset tag {{v3}}) to set its default location to 'Bench Office' (choose from the sear…
+  s_f13406  validated    3 steps  3/3 (100%)
+           Sign in with username {{v1}} and password {{v2}}, then list all assets whose name starts with '{{v3}}' and rep…
+  s_f62ebb  validated    1 steps  3/3 (100%)
+           Create a new asset named '{{v2}}' with model '{{v3}}' (choose from the searchable model dropdown) and status '…
+  s_0281d9  provisional  4 steps  1/1 (100%)
+           Edit the asset '{{v1}}' (asset tag {{v3}}) to set its default location to 'Bench Office' (choose from the sear…
+  s_09ed0b  provisional  1 steps  1/1 (100%)
+           Create a new asset named '{{v2}}' with model '{{v3}}' (choose from the searchable model dropdown) and status '…
+  s_0aa6d6  provisional  1 steps  1/1 (100%)
+           Create a new asset named '{{v2}}' with model '{{v3}}' (choose from the searchable model dropdown) and status '…
+  s_19095e  provisional  8 steps  1/1 (100%)
+           Create a new asset named '{{v2}}' with model '{{v3}}' (choose from the searchable model dropdown) and status '…
+  s_20cb26  provisional  5 steps  1/1 (100%)
+           Create a new asset named '{{v2}}' with model '{{v3}}' (choose from the searchable model dropdown) and status '…
+  s_26e6f3  provisional  1 steps  1/1 (100%)
+           Check out the asset '{{v1}}' (asset tag {{v3}}) to the user 'Bench Assignee' (choose from the searchable user …
+  s_2eca10  provisional  5 steps  1/1 (100%)  variant of s_5dcb48
+           Create a new asset named '{{v2}}' with model 'Bench Laptop Model' (choose from the searchable model dropdown) …
+  s_3c1537  provisional  3 steps  1/1 (100%)  variant of s_5dcb48
+           Create a new asset named '{{v2}}' with model '{{v3}}' (choose from the searchable model dropdown) and status '…
+  s_4049f1  provisional  1 steps  1/1 (100%)
+           Edit the asset '{{v1}}' (asset tag {{v3}}) to set its default location to 'Bench Office' (choose from the sear…
+  s_450f86  provisional  6 steps  1/1 (100%)
+           Check out the asset '{{v1}}' (asset tag {{v3}}) to the user 'Bench Assignee' (choose from the searchable user …
+  s_53abbb  provisional  1 steps  1/1 (100%)
+           Edit the asset '{{v1}}' (asset tag {{v3}}) to set its default location to 'Bench Office' (choose from the sear…
+  s_5af0bc  provisional  1 steps  1/1 (100%)  variant of s_5dcb48
+           Create a new asset named '{{v2}}' with model 'Bench Laptop Model' (choose from the searchable model dropdown) …
+  s_5fbe71  provisional  4 steps  1/1 (100%)
+           Edit the asset '{{v1}}' (asset tag {{v3}}) to set its default location to 'Bench Office' (choose from the sear…
+  s_6260f4  provisional  1 steps  1/1 (100%)  variant of s_be0767
+           Edit the asset '{{v1}}' (asset tag {{v3}}) to set its default location to 'Bench Office' (choose from the sear…
+  s_723124  provisional  1 steps  1/1 (100%)
+           Edit the asset '{{v1}}' (asset tag {{v3}}) to set its default location to 'Bench Office' (choose from the sear…
+  s_875e37  provisional  1 steps  1/1 (100%)
+           Create a new asset named '{{v2}}' with model '{{v3}}' (choose from the searchable model dropdown) and status '…
+  s_94d327  provisional  8 steps  1/1 (100%)  variant of s_5dcb48
+           Create a new asset named '{{v2}}' with model 'Bench Laptop Model' (choose from the searchable model dropdown) …
+  s_959bc6  provisional  9 steps  1/1 (100%)  variant of s_5dcb48
+           Create a new asset named '{{v2}}' with model '{{v3}}' (choose from the searchable model dropdown) and status '…
+  s_97adfb  provisional  1 steps  1/1 (100%)
+           Create a new asset named '{{v2}}' with model '{{v3}}' (choose from the searchable model dropdown) and status '…
+  s_9a4939  provisional  1 steps  1/1 (100%)
+           Create a new asset named '{{v2}}' with model '{{v3}}' (choose from the searchable model dropdown) and status '…
+  s_9a7806  provisional  9 steps  1/1 (100%)
+           Create a new asset named '{{v2}}' with model '{{v3}}' (choose from the searchable model dropdown) and status '…
+  s_9faa65  provisional  8 steps  1/1 (100%)
+           Create a new asset named '{{v2}}' with model '{{v3}}' (choose from the searchable model dropdown) and status '…
+  s_a0f5e4  provisional  1 steps  1/1 (100%)  variant of s_5dcb48
+           Create a new asset named '{{v2}}' with model '{{v3}}' (choose from the searchable model dropdown) and status '…
+  s_a26525  provisional  1 steps  1/1 (100%)  variant of s_be0767
+           Edit the asset '{{v1}}' (asset tag {{v3}}) to set its default location to 'Bench Office' (choose from the sear…
+  s_aa0ba4  provisional  7 steps  1/1 (100%)
+           Check out the asset '{{v1}}' (asset tag {{v3}}) to the user 'Bench Assignee' (choose from the searchable user …
+  s_c9693a  provisional  4 steps  1/1 (100%)
+           Create a new asset named '{{v2}}' with model '{{v3}}' (choose from the searchable model dropdown) and status '…
+  s_cba7ca  provisional  1 steps  1/1 (100%)  variant of s_5dcb48
+           Create a new asset named '{{v2}}' with model 'Bench Laptop Model' (choose from the searchable model dropdown) …
+  s_cc1086  provisional 12 steps  1/1 (100%)
+           Edit the asset '{{v1}}' (asset tag {{v3}}) to set its default location to 'Bench Office' (choose from the sear…
+  s_cdeb49  provisional  6 steps  1/1 (100%)  variant of s_be0767
+           Edit the asset '{{v1}}' (asset tag {{v3}}) to set its default location to 'Bench Office' (choose from the sear…
+  s_d267ce  provisional  5 steps  1/1 (100%)
+           Edit the asset '{{v1}}' (asset tag {{v3}}) to set its default location to 'Bench Office' (choose from the sear…
+  s_db1d94  provisional  1 steps  1/1 (100%)  variant of s_5dcb48
+           Create a new asset named '{{v2}}' with model '{{v3}}' (choose from the searchable model dropdown) and status '…
+  s_dbd25d  provisional  8 steps  1/1 (100%)
+           Create a new asset named '{{v2}}' with model '{{v3}}' (choose from the searchable model dropdown) and status '…
+  s_e0510f  provisional 12 steps  1/1 (100%)  variant of s_be0767
+           Edit the asset '{{v1}}' (asset tag {{v3}}) to set its default location to 'Bench Office' (choose from the sear…
+  s_eb9a98  provisional  6 steps  1/1 (100%)
+           Edit the asset '{{v1}}' (asset tag {{v3}}) to set its default location to 'Bench Office' (choose from the sear…
+  s_fa8d3d  provisional  1 steps  1/1 (100%)
+           Edit the asset '{{v1}}' (asset tag {{v3}}) to set its default location to 'Bench Office' (choose from the sear…
+  s_fad54d  provisional  1 steps  1/1 (100%)
+           Create a new asset named '{{v2}}' with model '{{v3}}' (choose from the searchable model dropdown) and status '…
+  s_fb556f  provisional  3 steps  1/1 (100%)
+           Create a new asset named '{{v2}}' with model '{{v3}}' (choose from the searchable model dropdown) and status '…
+store: /home/user/sitelooper/bench/results/fwsi7-skills
+
+summary: /home/user/sitelooper/bench/results/fwsi7-sweep.json

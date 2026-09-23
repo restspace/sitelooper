@@ -1,0 +1,231 @@
+{
+  "flow": "fwsi7",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_20894b; observed asset_1_name=Seed: Reception Laptop, asset_1_tag=SEED-0001, asset_2_name=Seed: Training Laptop, asset_2_tag=SEED-0002, asset_3_name=Seed: Spare Laptop, asset_3_tag=SEED-0003.",
+      "values": {
+        "asset_1_name": "Seed: Reception Laptop",
+        "asset_1_tag": "SEED-0001",
+        "asset_2_name": "Seed: Training Laptop",
+        "asset_2_tag": "SEED-0002",
+        "asset_3_name": "Seed: Spare Laptop",
+        "asset_3_tag": "SEED-0003"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Asset 'fwsi7-n2 Bench Asset' is created and verified. The create steps had already run in earlier segments of this chain, so I did not re-submit; I searched the asset list for \"fwsi7-n2\" (exactly one row returned) and opened its view page, which renders the heading \"Assets fwsi7-n2 Bench Asset #BA-00005 - Bench Laptop Model\" with status \"Ready to Deploy\" — confirming the name, the model chosen from the searchable dropdown, and the status. Snipe-IT assigned asset tag BA-00005 and the asset URL is http://127.0.0.1:8098/hardware/5. Default Location and Purchase Date are blank (\"No value\") exactly as requested, and no checkout was performed.",
+      "values": {
+        "asset_tag": "BA-00005",
+        "asset_name": "fwsi7-n2 Bench Asset",
+        "asset_url": "http://127.0.0.1:8098/hardware/5",
+        "model": "Bench Laptop Model",
+        "status": "Ready to Deploy",
+        "default_location": "No value",
+        "purchase_date": "No value",
+        "asset_tag_cell": "Copy to Clipboard\nBA-00005",
+        "asset_name_cell": "Copy to Clipboard\nfwsi7-n2 Bench Asset",
+        "ref": "fwsi7-n2"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_5dcb48 stopped at step 1 — step 1 raised an alert the recording never saw: This asset has been deleted. You must restore it before you can assign it to someone.",
+      "replayed": "0/1",
+      "repaired": false,
+      "turns": 11,
+      "warnings": [
+        "s_b2d9d5: step 4 raised an alert the recording never saw: This asset can be checked out. — reported, not stopped: the step's recorded page changes appeared"
+      ],
+      "unreported": [
+        "model_name"
+      ]
+    },
+    {
+      "id": "03-edit",
+      "status": "success",
+      "summary": "The edit was already applied by the replayed chain segments, so I did not re-save (avoiding a duplicate). I instead verified on the live page: I navigated to BA-00005's view page (http://127.0.0.1:8098/hardware/5), whose heading reads \"Assets  fwsi7-n2 Bench Asset #BA-00005 - Bench Laptop Model\". The view page shows Default Location as the link \"Bench Office\" (→ /locations/1) and the purchase date as \"Purchased 2026-03-15 - 6 months 1 week ago\". No re-entry was needed; both requested values are present on the asset.",
+      "values": {
+        "asset_heading": "Assets  fwsi7-n2 Bench Asset #BA-00005 - Bench Laptop Model",
+        "asset_name": "fwsi7-n2 Bench Asset",
+        "asset_tag": "BA-00005",
+        "asset_url": "http://127.0.0.1:8098/hardware/5",
+        "default_location": "Bench Office",
+        "model": "Bench Laptop Model",
+        "page_heading": "Assets  fwsi7-n2 Bench Asset #BA-00005 - Bench Laptop Model",
+        "purchase_date": "2026-03-15",
+        "purchase_date_shown": "Purchased 2026-03-15 - 6 months 1 week ago",
+        "location_shown": "Bench Office",
+        "screenshot": "/tmp/ba00005_after_edit.png",
+        "ref": "fwsi7-n2"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_be0767 stopped at step 1 — step 1 raised an alert the recording never saw: This asset has been deleted. You must restore it before you can assign it to someone.",
+      "replayed": "0/1",
+      "repaired": false,
+      "turns": 12,
+      "warnings": [
+        "s_5df49b: step 4: read 'purchase_date_field_value' returned a value the skill itself set/selected ('2026-03-15') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_5df49b: step 5: read 'default_location_field_value' returned a value the skill itself set/selected ('×\nBench Office') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "view_page_default_location",
+        "purchase_date_field_value",
+        "default_location_field_value"
+      ]
+    },
+    {
+      "id": "04-report",
+      "status": "success",
+      "summary": "Ran the listed matching skill (s_d5098a) for BA-00005, which opened the checkout form; I selected \"Bench Assignee (bench-assignee)\" in the searchable User combobox (the listbox opened with the three Bench users, I clicked the option, and both the option list and the combobox expansion closed, leaving the chip \"×Bench Assignee (bench-assignee)\"), left Status at \"Ready to Deploy\", filled the Notes field with \"fwsi7-n2 checkout\" and clicked Checkout. The app returned the alert \"Asset checked out successfully\" and redirected to the asset list. Back on the asset's view page (http://127.0.0.1:8098/hardware/5) the status row now reads \"Ready to Deploy\" with a \"Deployed\" label and an arrow to the user link \"Bench Assignee\" (/users/2), and the History tab (asset URL #history) records the entry: 2026-09-23 03:11 PM, Bench Admin, checkout, fwsi7-n2 Bench Asset #BA-00005 - Bench Laptop Model, target Bench Assignee, note \"fwsi7-n2 checkout\". Notes tab itself is empty — the checkout note is only in History. Values verified by reading the live DOM; screenshots saved at /tmp/ba00005_view.png and /tmp/ba00005_history.png.",
+      "values": {
+        "asset_tag": "BA-00005",
+        "asset_url": "http://127.0.0.1:8098/hardware/5",
+        "checked_out_to_user": "Bench Assignee",
+        "status": "Ready to Deploy",
+        "status_badge": "Deployed",
+        "checkout_note": "fwsi7-n2 checkout",
+        "history_checkout_row": "2026-09-23 03:11 PM | Bench Admin | checkout | fwsi7-n2 Bench Asset #BA-00005 - Bench Laptop Model | Bench Assignee | fwsi7-n2 checkout",
+        "checked_out_to_link": "http://127.0.0.1:8098/users/2",
+        "screenshot_view": "/tmp/ba00005_view.png",
+        "screenshot_history": "/tmp/ba00005_history.png",
+        "sidebar_text": "Show/Hide More Information",
+        "notes_tab_text": "Notes\n \n \nIcon\n\t\nCreated At\n\t\nCreated By\n\t\nNotes\n\nNo matching records found",
+        "ref": "s_d5098a",
+        "ref_2": "fwsi7-n2",
+        "ref_3": "ba00005_view.png"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "every candidate refused — s_d5098a: not on the page this procedure starts from (expects http://127.0.0.1:8098/hardware/4, browser is at http://127.0.0.1:8098/hardware/5) — nothing was run",
+      "replayed": "1/1",
+      "repaired": false,
+      "turns": 22,
+      "unreported": [
+        "last_checkout",
+        "checkouts_count",
+        "checkout_date_field",
+        "checkout_user_field",
+        "checkout_form_heading"
+      ]
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_55082c; observed ref=fwsi7-n2, asset_tag=BA-00005, asset_name=fwsi7-n2 Bench Asset, default_location=Bench Office, purchase_date_as_displayed= Purchased 2026-03-15 - 6 months 1 week ago, asset_tag_label=Asset Tag, default_location_label=Default Location.",
+      "values": {
+        "ref": "fwsi7-n2",
+        "asset_tag": "BA-00005",
+        "asset_name": "fwsi7-n2 Bench Asset",
+        "default_location": "Bench Office",
+        "purchase_date_as_displayed": " Purchased 2026-03-15 - 6 months 1 week ago",
+        "asset_tag_label": "Asset Tag",
+        "default_location_label": "Default Location"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_9e29b0: step 1: none of the 5 expected page change(s) appeared in the step diff (found on the page instead)",
+        "s_55082c: step 5: skipped read — no element matched any known locator for target (tried 3: page.locator('#historyListingTable tr', { hasText: 'fwsi7-n2 checkout note' }).locator('td:nth-of-type(6) > nobr > a'), page.locator('#historyListingTable > tbody > tr:nth-of-type(3) > td:nth-of-type(6) > nobr > a'), elementAt(852, 614) /* link */)"
+      ],
+      "unreported": [
+        "checked_out_to_user",
+        "history_rows_total"
+      ]
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "repinned": 0,
+  "drift": 4,
+  "driftTickets": [
+    {
+      "flow": "fwsi7",
+      "step": "02-create",
+      "skill": "s_5dcb48",
+      "similarity": 1,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_5dcb48 stopped at step 1 — step 1 raised an alert the recording never saw: This asset has been deleted. You must restore it before you can assign it to someone.",
+      "reason": "step 1 raised an alert the recording never saw: This asset has been deleted. You must restore it before you can assign it to someone.",
+      "pageUrlPattern": "http://127.0.0.1:8098/hardware/:id",
+      "pageUrl": "http://127.0.0.1:8098/hardware/4"
+    },
+    {
+      "flow": "fwsi7",
+      "step": "03-edit",
+      "skill": "s_be0767",
+      "similarity": 0.981,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_be0767 stopped at step 1 — step 1 raised an alert the recording never saw: This asset has been deleted. You must restore it before you can assign it to someone.",
+      "reason": "step 1 raised an alert the recording never saw: This asset has been deleted. You must restore it before you can assign it to someone.",
+      "pageUrlPattern": "http://127.0.0.1:8098/hardware/:id",
+      "pageUrl": "http://127.0.0.1:8098/hardware/4"
+    },
+    {
+      "flow": "fwsi7",
+      "step": "04-report",
+      "skill": "s_d5098a",
+      "similarity": 1,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "every candidate refused — s_d5098a: not on the page this procedure starts from (expects http://127.0.0.1:8098/hardware/4, browser is at http://127.0.0.1:8098/hardware/5) — nothing was run",
+      "pageUrlPattern": "http://127.0.0.1:8098/hardware/:id/checkout",
+      "pageUrl": "http://127.0.0.1:8098/hardware/5/checkout"
+    },
+    {
+      "flow": "fwsi7",
+      "step": "05-open",
+      "skill": "s_55082c",
+      "atStep": "5",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.locator('#historyListingTable tr', { hasText: 'fwsi7-n2 checkout note' }).locator('td:nth-of-type(6) > nobr > a')",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8098/hardware/:id#history",
+      "pageUrl": "http://127.0.0.1:8098/hardware/5#history"
+    }
+  ],
+  "wallMs": 230174,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 787122,
+    "completionTokens": 17644,
+    "cachedTokens": 704256
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 787122,
+      "completionTokens": 17644,
+      "cachedTokens": 704256
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
