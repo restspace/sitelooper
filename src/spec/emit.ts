@@ -2155,6 +2155,11 @@ function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number,
   const urlAt = standing && role === 'submit' ? checks.findIndex((line) => line.startsWith('await urlEffect(')) : -1;
   const urlFailed = urlAt >= 0 ? `urlFailed${ctx.urls}` : undefined;
   if (urlFailed) checks[urlAt] = `try { ${checks[urlAt]} } catch (err) { ${urlFailed} = true; throw err; }`;
+  // A fill whose own check fails because the page replaced its document under
+  // it at the same url runs once more on the rebuilt field — replay's
+  // runStepBody repeats it on the same shared fillLost (vikunja fwvk8 01-open).
+  // Only a failure of the VERIFICATION: the action's own failure throws as before.
+  const refill = step.tool === 'fill' && checks.length > 1 ? { doc: `docBefore${ctx.urls}`, verifying: `verifying${ctx.urls}` } : undefined;
   const indent = (lines: string[]) => lines.flatMap((line) => line.split('\n').map((part) => part ? `    ${part}` : part));
   const head = [
     `// @step ${where}`,
@@ -2163,6 +2168,7 @@ function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number,
     ...(linesBefore ? [`let ${linesBefore}: string[] | null = null;`] : []),
     ...(nav ? [`let ${nav}: NavigationTarget = { url: '' };`] : []),
     ...(positional ? [`let ${positional} = false;`] : []),
+    ...(refill ? [`let ${refill.doc}: number | null = null;`] : []),
     ...(landing ? [`let ${landing}: Awaited<ReturnType<typeof armPageEffect>> | null = null;`, `let ${moved}: Page | null = null;`] : []),
     ...(observed ? [`let ${observed}: ActionObservation | null = null;`] : []),
   ];
@@ -2174,6 +2180,7 @@ function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number,
     ...(step.page !== undefined ? [`    pageGate(page, ${step.page}, ${q(where)});`] : []),
     ...(standing ? [`    for (const warning of await restoreStandingFills(page, ${standing}, ${q(step.tool)}, ${q(where)})) logWarning(warning);`] : []),
     `    ${urlBefore} = page.url();`,
+    ...(refill ? [`    ${refill.doc} = await documentOf(page);`] : []),
     ...(alerts ? [`    ${alerts} = (await liveAlerts(page${dialectArg(step)})) ?? [];`] : []),
     ...(linesBefore ? [`    ${linesBefore} = await capturePageLines(page${dialectArg(step)});`] : []),
     '  },',
@@ -2197,6 +2204,7 @@ function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number,
     ...indent(bindings),
     '  },',
     '  verify: async () => {',
+    ...(refill ? [`    ${refill.verifying} = true;`] : []),
     ...indent(checks),
     '  },',
     '});',
@@ -2216,7 +2224,21 @@ function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number,
         '  }',
         '}',
       ]
-    : lifecycle;
+    : refill
+      ? [
+          `let ${refill.verifying} = false;`,
+          'for (let attempt = 0; ; attempt++) {',
+          '  try {',
+          ...lifecycle.map((l) => (l ? `    ${l}` : l)),
+          '    break;',
+          '  } catch (err) {',
+          `    if (attempt > 0 || !${refill.verifying} || !(await fillLost(page, ${refill.doc}, ${urlBefore}))) throw err;`,
+          `    ${refill.verifying} = false;`,
+          `    logWarning(${q(`${where}: `)} + (err instanceof Error ? err.message : String(err)) + ${q(' — the page replaced its document under this fill, so it is repeated once on the rebuilt field')});`,
+          '  }',
+          '}',
+        ]
+      : lifecycle;
   return [
     ...head,
     ...body,

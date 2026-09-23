@@ -47,7 +47,7 @@ import { dismissalAlreadyInEffect, effectExpectation, expectedChangesVerdict, li
 export { lineShows, type LineShowsOptions } from '../execution/snapshot.js';
 export { consequentialExpectations, isEchoLine } from '../execution/expect.js';
 import { candidateNames, echoVerdict, noteInteraction, setsSomething } from '../execution/echo.js';
-import { noteFill, rearmStandingFills, restoreStandingFills, standingFills, standingFillsLost } from '../execution/refill.js';
+import { documentOf, fillLost, noteFill, rearmStandingFills, restoreStandingFills, standingFills, standingFillsLost } from '../execution/refill.js';
 import { hasTotpMarker, resolveSecrets, resolveSecretsAsync } from '../shared/secrets.js';
 import { toggleAlreadyShown, toggleEffectLines } from '../execution/toggle.js';
 import { mayNavigateToDestination, navigateToDestination, textHeldElsewhere } from '../execution/recover.js';
@@ -455,6 +455,8 @@ export async function replaySkill(
   const standing = standingFills();
   // Submit steps already repeated once after a lost submit (standingFillsLost): never twice.
   const resubmitted = new Set<string>();
+  // Fill steps already repeated once after their document was replaced under their own check (fillLost): never twice.
+  const refilled = new Set<string>();
   // A recorded dialog that did not open (see StepVerdict.absentDialog): while
   // set, a step whose target cannot be found AND which names one of that
   // dialog's own controls is skipped as belonging to it; cleared by the next
@@ -1103,6 +1105,8 @@ export async function replaySkill(
     let navAlerts: StepGateInput['navAlerts'];
     /** The verification stopped at the url gate (expectedUrl), the one failure a lost submit is repeated on. */
     let urlStopped = false;
+    /** The document a fill ran in, read ahead of its dispatch (refill.ts fillLost). */
+    let docBefore: number | null = null;
     const navigates = NAV_ALERT_TOOLS.has(step.tool);
     const lifecycle = await runStepLifecycle({
       prepare: async () => {
@@ -1116,6 +1120,7 @@ export async function replaySkill(
         actedBefore = res.acted;
         if (!isRead) res.acted = true;
         urlBefore = page.url();
+        if (step.tool === 'fill') docBefore = await documentOf(page);
         if (navigates) navAlerts = { before: (await liveAlerts(page, dialectOf(step))) ?? [], after: null };
       },
       act: async (): Promise<StepActionResult<StepRunResult & { read?: string }>> => {
@@ -1300,6 +1305,16 @@ export async function replaySkill(
       rearmStandingFills(standing);
       res.warnings.push(`step ${tag}: ${stop.stop} — the page replaced its document under this ${step.tool} and its form is empty again, so it is repeated once after a refill`);
       res.lines.push(`${head} → the page reloaded under it and lost the form; repeated once`);
+      return runStepBody(step, tag, failIndex, sink, ambiguousNth);
+    }
+    // A fill whose own check failed because the page replaced its document
+    // under it at the same url, emptying the field (vikunja fwvk8 01-open):
+    // run it once more, on the rebuilt field. A value refused on an unchanged
+    // document is never repeated (the shared fillLost, which the artifact asks).
+    if (stop && step.tool === 'fill' && !refilled.has(tag) && (await fillLost(page, docBefore, urlBefore))) {
+      refilled.add(tag);
+      res.warnings.push(`step ${tag}: ${stop.stop} — the page replaced its document under this fill, so it is repeated once on the rebuilt field`);
+      res.lines.push(`${head} → the page reloaded under it and emptied the field; repeated once`);
       return runStepBody(step, tag, failIndex, sink, ambiguousNth);
     }
     if (stop) {

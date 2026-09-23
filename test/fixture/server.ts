@@ -570,8 +570,12 @@ document.getElementById('save').addEventListener('click', () => {
  * Vikunja's service worker reloaded /login). `/reload-login/fill`: 100ms after
  * both fields first hold a value, the page calls location.reload().
  * `/reload-login/submit`: the FIRST Sign in click reloads the page instead of
- * submitting (the reload landing between the click and its answer). Once per
- * tab each (sessionStorage). Sign in posts what the fields hold at the click
+ * submitting (the reload landing between the click and its answer).
+ * `/reload-login/echo` (round 56, fwvk8 01-open): 100ms after the USERNAME
+ * first holds a value — before the fill's own check has looked — the page
+ * reloads, so that check finds the field empty. `/reload-login/reject`: no
+ * reload; the page empties the username 100ms after every input (a value that
+ * did not take). Once per tab each (sessionStorage). Sign in posts what the fields hold at the click
  * and then goes to /signed-in; an empty field posts nothing.
  */
 const RELOAD_LOGIN = (mode: string) => `<!doctype html><html><head><meta charset="utf-8"><title>Sign in</title></head><body>
@@ -587,6 +591,10 @@ const build = () => {
   const user = document.getElementById('username');
   const pass = document.getElementById('password');
   const armed = () => { if (MODE === 'fill' && user.value && pass.value && once('reloaded-fill')) setTimeout(() => location.reload(), 100); };
+  user.addEventListener('input', () => {
+    if (MODE === 'echo' && user.value && once('reloaded-echo')) setTimeout(() => location.reload(), 100);
+    if (MODE === 'reject') setTimeout(() => { user.value = ''; }, 100);
+  });
   user.addEventListener('input', armed);
   pass.addEventListener('input', armed);
   document.getElementById('login').addEventListener('click', async () => {
@@ -598,7 +606,7 @@ const build = () => {
 };
 // The reloaded document is an app starting up again: it builds its form late,
 // so a look taken soon after the reload finds no field at all.
-if (sessionStorage.getItem('reloaded-fill')) setTimeout(build, 800);
+if (sessionStorage.getItem('reloaded-fill') || sessionStorage.getItem('reloaded-echo')) setTimeout(build, 800);
 else build();
 </script>
 </body></html>`;
