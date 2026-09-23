@@ -1,0 +1,98 @@
+{
+ "id": "s_21a9ec",
+ "origin": "http://127.0.0.1:8095",
+ "template": "Open {{v1}} and sign in with username {{v2}} and password {{v3}}. Then go to the repository bench/bench-repo issues list (open issues only) and report the titles of all open issues whose title starts with 'Seed:', exactly as shown.",
+ "params": {
+  "v1": {
+   "example": "http://127.0.0.1:8095/",
+   "usedIn": [
+    1
+   ]
+  },
+  "v2": {
+   "example": "admin",
+   "usedIn": []
+  },
+  "v3": {
+   "example": "{{env:APP_PASSWORD}}",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8095/"
+ },
+ "steps": [
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e10"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "Sign In"
+     },
+     {
+      "kind": "css",
+      "selector": "#navbar > div:nth-of-type(2) > a"
+     },
+     {
+      "kind": "point",
+      "x": 1223,
+      "y": 25,
+      "w": 93.5,
+      "h": 36,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/user/login",
+    "addedContains": [
+     "- heading \"Sign In\"",
+     "- textbox \"Username or Email Address\"",
+     "- link \"Forgot password?\"",
+     "- textbox \"Password\"",
+     "- checkbox \"Remember This Device\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-23T15:02:41.509Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4,
+  "lastUsed": "2026-09-23T15:06:31.498Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_559499",
+  "index": 0,
+  "of": 4
+ },
+ "provenance": {
+  "session": "fwgt7-n1",
+  "instruction": "Open http://127.0.0.1:8095/ and sign in with username admin and password {{env:APP_PASSWORD}}. Then go to the repository bench/bench-repo issues list (open issues only) and report the titles of all open issues whose title starts with 'Seed:', exactly as shown.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-23T15:02:41.509Z"
+ },
+ "revision": 3
+}

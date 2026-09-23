@@ -1,0 +1,158 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwgt7-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwgt7-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwgt7-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwgt7-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwgt7-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwgt7.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwgt7-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwgt7.spec.ts",
+      "file": "fwgt7.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwgt7",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 28045,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-add\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:8095/ and sign in with username admin and password {{env:APP_PASSWORD}}. Then go to the repository bench/bench-repo issues list (open issues only) and report the titles of all open issues whose title starts with 'Seed:', exactly as shown.",
+                      "duration": 4686
+                    },
+                    {
+                      "title": "02-open: In the Gitea repository bench/bench-repo, search the issues (all states, open and closed) for an issue titled '{{runid}} Bench Issue'. Report whether such an issue exists and, if it does, its issue number as displayed (e.g. #4) and its current state. Do not create or modify anything.",
+                      "duration": 623
+                    },
+                    {
+                      "title": "03-create: In the Gitea repository bench/bench-repo, create a new issue with title '{{runid}} Bench Issue' and a description body that contains the text '{{runid}}'. If the new-issue page's sidebar lets you set labels, assignees and milestone at creation, set labels 'bug' and 'priority-high' (exactly those two), assignee user 'bench-assignee', and milestone 'Bench Milestone'; if those sidebar pickers can't be set at creation, create the issue first and then set them from the issue page. After submitting, verify and report: the issue number as displayed (e.g. #4), its title, the labels actually shown on the issue, the assignee shown, and the milestone shown.",
+                      "duration": 17957
+                    },
+                    {
+                      "title": "04-add: On the Gitea issue page {{03-create.url}} ('{{runid}} Bench Issue'): First check the applied/applied state shown on the issue page itself (not the picker menu): the label chips shown under the issue title (should be exactly 'bug' and 'priority-high'), the assignee shown in the sidebar (should be bench-assignee), and the milestone shown (should be Bench Milestone). If any of these is NOT actually applied on the issue (e.g. no label chips visible, 'No Milestone', 'No Assignees'), apply it properly so it shows on the issue. Then add a comment to the issue whose text contains '{{runid}}' and confirm the comment is posted and visible. Report exactly what is displayed on the issue page for labels, assignee, milestone, and the comment text.",
+                      "duration": 4231
+                    }
+                  ],
+                  "startTime": "2026-09-23T15:07:40.293Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "cc030a7b18ee13ba41ab-51b03b7f6beafdb3e997",
+          "file": "fwgt7.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-23T15:07:38.556Z",
+    "duration": 29952.847,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

@@ -1,0 +1,341 @@
+{
+  "name": "fwgt7",
+  "origin": "http://127.0.0.1:8095",
+  "startUrl": "http://127.0.0.1:8095/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-open",
+      "instruction": "Open http://127.0.0.1:8095/ and sign in with username admin and password {{env:APP_PASSWORD}}. Then go to the repository bench/bench-repo issues list (open issues only) and report the titles of all open issues whose title starts with 'Seed:', exactly as shown.",
+      "skill": "s_21a9ec",
+      "params": {
+        "v1": "http://127.0.0.1:8095/",
+        "v2": "admin",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "open_issues_count",
+        "issue_1_title",
+        "issue_1_number",
+        "issue_2_title",
+        "issue_3_title"
+      ],
+      "recorded": {
+        "open_issues_count": "3",
+        "issue_1_title": "Seed: triage inbox",
+        "issue_1_number": "1",
+        "issue_2_title": "Seed: order missing parts",
+        "issue_2_number": "2",
+        "issue_3_title": "Seed: ship repaired device",
+        "issue_3_number": "3",
+        "url": "http://127.0.0.1:8095/bench/bench-repo/issues?state=open"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues",
+      "outputEvidence": {
+        "open_issues_count": {
+          "same": 1,
+          "differed": 0
+        },
+        "issue_1_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "issue_1_number": {
+          "same": 1,
+          "differed": 0
+        },
+        "issue_2_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "issue_2_number": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "issue_3_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "issue_3_number": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-open",
+      "instruction": "In the Gitea repository bench/bench-repo, search the issues (all states, open and closed) for an issue titled '{{runid}} Bench Issue'. Report whether such an issue exists and, if it does, its issue number as displayed (e.g. #4) and its current state. Do not create or modify anything.",
+      "skill": "s_46833c",
+      "params": {
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "total_issues",
+        "all_issue_titles",
+        "search_keyword",
+        "search_result_1",
+        "search_result_2"
+      ],
+      "recorded": {
+        "issue_exists": "false",
+        "total_issues": "3",
+        "all_issue_titles": "Seed: triage inbox (#1), Seed: order missing parts (#2), Seed: ship repaired device (#3)",
+        "issue_3_title_link": "Seed: ship repaired device",
+        "issue_2_title_link": "Seed: order missing parts",
+        "issue_1_title_link": "Seed: triage inbox",
+        "search_keyword": "fwgt7-n1",
+        "search_result_1": "No results",
+        "search_result_2": "Try adjusting your search filters.",
+        "url": "http://127.0.0.1:8095/bench/bench-repo/issues?q=fwgt7-n1+Bench+Issue&state=all"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues",
+      "outputEvidence": {
+        "issue_exists": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "total_issues": {
+          "same": 1,
+          "differed": 0
+        },
+        "all_issue_titles": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "issue_3_title_link": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "issue_2_title_link": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "issue_1_title_link": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "search_keyword": {
+          "same": 0,
+          "differed": 1
+        },
+        "search_result_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "search_result_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "03-create",
+      "instruction": "In the Gitea repository bench/bench-repo, create a new issue with title '{{runid}} Bench Issue' and a description body that contains the text '{{runid}}'. If the new-issue page's sidebar lets you set labels, assignees and milestone at creation, set labels 'bug' and 'priority-high' (exactly those two), assignee user 'bench-assignee', and milestone 'Bench Milestone'; if those sidebar pickers can't be set at creation, create the issue first and then set them from the issue page. After submitting, verify and report: the issue number as displayed (e.g. #4), its title, the labels actually shown on the issue, the assignee shown, and the milestone shown.",
+      "skill": "s_7c86cd",
+      "params": {
+        "v2": "{{runid}} Bench Issue",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "assignee_shown",
+        "issue_number",
+        "issue_state",
+        "milestone_shown",
+        "title",
+        "issue_ref"
+      ],
+      "recorded": {
+        "assignee_shown": "bench-assignee (Bench Assignee)",
+        "issue_number": "#4",
+        "issue_state": "Open (open-issue page; no closed marker shown)",
+        "labels_shown": "bug, priority-high",
+        "milestone_shown": "Bench Milestone",
+        "title": "fwgt7-n1 Bench Issue",
+        "issue_ref": "fwgt7-n1",
+        "url": "http://127.0.0.1:8095/bench/bench-repo/issues/4",
+        "url.p3": "4"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "outputEvidence": {
+        "assignee_shown": {
+          "same": 0,
+          "differed": 1
+        },
+        "issue_number": {
+          "same": 0,
+          "differed": 1
+        },
+        "issue_state": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "labels_shown": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "milestone_shown": {
+          "same": 1,
+          "differed": 0
+        },
+        "title": {
+          "same": 0,
+          "differed": 1
+        },
+        "issue_ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.p3": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "04-add",
+      "instruction": "On the Gitea issue page {{03-create.url}} ('{{runid}} Bench Issue'): First check the applied/applied state shown on the issue page itself (not the picker menu): the label chips shown under the issue title (should be exactly 'bug' and 'priority-high'), the assignee shown in the sidebar (should be bench-assignee), and the milestone shown (should be Bench Milestone). If any of these is NOT actually applied on the issue (e.g. no label chips visible, 'No Milestone', 'No Assignees'), apply it properly so it shows on the issue. Then add a comment to the issue whose text contains '{{runid}}' and confirm the comment is posted and visible. Report exactly what is displayed on the issue page for labels, assignee, milestone, and the comment text.",
+      "skill": "s_b7277c",
+      "params": {
+        "v1": "{{runid}} Bench Issue",
+        "v3": "Bench Milestone",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "assignee_displayed",
+        "comment_text",
+        "issue_number",
+        "milestone_displayed",
+        "projects_displayed",
+        "title",
+        "issue_ref"
+      ],
+      "recorded": {
+        "assignee_displayed": "bench-assignee (Bench Assignee)",
+        "comment_text": "Comment for fwgt7-n1 verification: this comment contains fwgt7-n1.",
+        "issue_number": "#4",
+        "labels_displayed": "bug, priority-high",
+        "milestone_displayed": "Bench Milestone",
+        "projects_displayed": "No projects",
+        "title": "fwgt7-n1 Bench Issue",
+        "issue_ref": "fwgt7-n1",
+        "comment_anchor": "issuecomment-5",
+        "url": "http://127.0.0.1:8095/bench/bench-repo/issues/4#issuecomment-5",
+        "url.h0": "issuecomment-5"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues/:id#:id",
+      "outputEvidence": {
+        "assignee_displayed": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "issue_number": {
+          "same": 0,
+          "differed": 1
+        },
+        "labels_displayed": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "milestone_displayed": {
+          "same": 1,
+          "differed": 0
+        },
+        "projects_displayed": {
+          "same": 1,
+          "differed": 0
+        },
+        "title": {
+          "same": 0,
+          "differed": 1
+        },
+        "issue_ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_anchor": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.h0": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwgt7-n1",
+    "created": "2026-09-23T15:05:39.327Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-open",
+      "outputs": [
+        "issue_2_number",
+        "issue_3_number"
+      ]
+    },
+    {
+      "stepId": "02-open",
+      "outputs": [
+        "issue_exists",
+        "issue_3_title_link",
+        "issue_2_title_link",
+        "issue_1_title_link"
+      ]
+    },
+    {
+      "stepId": "03-create",
+      "outputs": [
+        "labels_shown"
+      ]
+    },
+    {
+      "stepId": "04-add",
+      "outputs": [
+        "labels_displayed",
+        "comment_anchor"
+      ]
+    }
+  ]
+}

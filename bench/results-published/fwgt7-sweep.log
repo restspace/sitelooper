@@ -1,0 +1,94 @@
+
+[sweep] run 1/3: fwgt7-n1 (store: /home/user/sitelooper/bench/results/fwgt7-skills)
+[harness] gitea: defaulting APP_URL
+[harness] gitea: defaulting APP_EMAIL
+[harness] gitea: defaulting APP_PASSWORD
+[reset] gitea: no leftover bench issues
+[harness] gitea responded 200 at http://127.0.0.1:8095/
+stopped: fwgt7-n1
+  flow "fwgt7" saved: 4 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwgt7.json
+  warning: note: 01-open no longer publishes issue_2_number, issue_3_number — no replay reads them from the page and the recording showed no line to read
+  warning: note: 02-open no longer publishes issue_exists, issue_3_title_link, issue_2_title_link, issue_1_title_link — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-create no longer publishes labels_shown — no replay reads it from the page and the recording showed no line to read
+  warning: note: 04-add no longer publishes labels_displayed, comment_anchor — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-create: added a read for milestone_shown to s_3d714a (page.getByRole('link', { name: 'Bench Milestone', exact: true }); seen on the next instruction's start page)
+  warning: warning: 42 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[2].instruction: "Bench Milestone" (output) in "In the Gitea repository bench/bench-repo, create a new issue with title '{{runid}} Bench Issue' and a description body that contains the text '{{runid}}'. If th"
+  flow.steps[3].instruction: "Bench Milestone" (output) in "On the Gitea issue page {{03-create.url}} ('{{runid}} Bench Issue'): First check the applied/applied state shown on the issue page itself (not the picker menu):"
+  flow.steps[3].params.v3: "Bench Milestone" (output) in "Bench Milestone"
+  s_1959a3.reportTemplate.summary: "bench-assignee (Bench Assignee)" (output) in "On issue #4 ('{{v1}}') everything was already applied, so only a comment was added. Reading the issue page's own sidebar (not the picker menus): Labels shows ex"
+  s_1959a3.reportTemplate.summary: "issuecomment-5" (url) in "On issue #4 ('{{v1}}') everything was already applied, so only a comment was added. Reading the issue page's own sidebar (not the picker menus): Labels shows ex"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwgt7-n1 stop=completed
+turns=5 wall=199.1s
+commands=4 cmdTime=183.5s cmdBytes=4575 timeouts=0
+orchestrator in=7340 cw=0 cr=9728 out=1106
+inner prompt=991833 cached=901632 completion=11747
+spend=$0.0411 maxUsd=3
+learn: A_n=0 replayed=0/4 full=0 repaired=0 compiled=4 variants=0
+-> /home/user/sitelooper/bench/results/fwgt7-n1-sitelooper-result.json
+
+fwgt7-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #4, state=open, description includes runid=true
+  obj 3: PASS — labels=[bug, priority-high], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #4 reported
+
+[sweep] run 2/3: fwgt7-n2 (replay flow fwgt7, no orchestrator)
+[reset] gitea: deleted 1 leftover bench issue(s)
+
+fwgt7-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #5, state=open, description includes runid=true
+  obj 3: PASS — labels=[bug, priority-high], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #5 reported
+
+[sweep] run 3/3: fwgt7-n3 (replay flow fwgt7, no orchestrator)
+[reset] gitea: deleted 1 leftover bench issue(s)
+
+fwgt7-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #6, state=open, description includes runid=true
+  obj 3: PASS — labels=[bug, priority-high], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #6 reported
+
+Learning sweep fwgt7 (K=3)
+┌─────────┬───┬────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid      │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwgt7-n1' │ '7/7'    │ 'completed' │ 5     │ 4    │ 0.0411    │ 0   │ '0/4'        │ 199    │
+│ 1       │ 2 │ 'fwgt7-n2' │ '7/7'    │ 'success'   │ 0     │ 4    │ 0         │ 1   │ '4/4 (flow)' │ 40     │
+│ 2       │ 3 │ 'fwgt7-n3' │ '7/7'    │ 'success'   │ 0     │ 4    │ 0         │ 1   │ '4/4 (flow)' │ 40     │
+└─────────┴───┴────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8095
+  s_1959a3  validated    5 steps  3/3 (100%)
+           On the Gitea issue page http://127.0.0.1:8095/bench/bench-repo/issues/4 ('{{v1}}'): First check the applied/ap…
+  s_21a9ec  validated    2 steps  3/3 (100%)
+           Open {{v1}} and sign in with username {{v2}} and password {{v3}}. Then go to the repository bench/bench-repo i…
+  s_3d714a  validated    5 steps  3/3 (100%)
+           In the Gitea repository bench/bench-repo, create a new issue with title '{{v2}}' and a description body that c…
+  s_46833c  validated    4 steps  3/3 (100%)
+           In the Gitea repository bench/bench-repo, search the issues (all states, open and closed) for an issue titled …
+  s_7c86cd  validated    1 steps  3/3 (100%)
+           In the Gitea repository bench/bench-repo, create a new issue with title '{{v2}}' and a description body that c…
+  s_7ef420  validated    3 steps  3/3 (100%)
+           Open {{v1}} and sign in with username {{v2}} and password {{v3}}. Then go to the repository bench/bench-repo i…
+  s_85ca83  validated    5 steps  3/3 (100%)
+           Open {{v1}} and sign in with username {{v2}} and password {{v3}}. Then go to the repository bench/bench-repo i…
+  s_b7277c  validated    2 steps  3/3 (100%)
+           On the Gitea issue page http://127.0.0.1:8095/bench/bench-repo/issues/4 ('{{v1}}'): First check the applied/ap…
+  s_c6e293  validated   12 steps  3/3 (100%)
+           In the Gitea repository bench/bench-repo, create a new issue with title '{{v2}}' and a description body that c…
+  s_f99841  validated    1 steps  3/3 (100%)
+           Open {{v1}} and sign in with username {{v2}} and password {{v3}}. Then go to the repository bench/bench-repo i…
+store: /home/user/sitelooper/bench/results/fwgt7-skills
+
+summary: /home/user/sitelooper/bench/results/fwgt7-sweep.json
