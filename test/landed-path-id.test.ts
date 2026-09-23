@@ -112,8 +112,18 @@ describe('the flow references a landed path id at its path (fwsi2)', () => {
     expect(staleInstructionIds(entries(), flow)).toEqual([]);
   });
 
-  it('does not mint it from a url a navigation was sent to, and says the prose quotes it', () => {
+  // Round 55 (snipeit fwsi7) reversed half of this: a goto to a record id
+  // nothing in the run had shown was read off the page, so it IS a landing.
+  it('mints it from a goto to a record the run never showed (fwsi7)', () => {
+    const flow = build(entries('goto'));
+    expect(flow.steps[0].recorded['url.p1']).toBe('4');
+    expect(flow.steps[1].params?.v1).toBe('{{01-create.url.p1}}');
+  });
+
+  it('does not mint it from a goto to a record the run had shown', () => {
     const e = entries('goto');
+    // The page listed it before the goto was sent there.
+    e.splice(2, 0, click('Refresh', `${O}/things/create`, ['- link "Thing 4"']));
     const flow = build(e);
     expect(flow.steps[1].instruction).toContain('at /things/4 ');
     expect(flow.steps[1].params?.v1).toBe('4');

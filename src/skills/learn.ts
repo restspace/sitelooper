@@ -93,6 +93,8 @@ export function learnFromInstruction(
     taskConstants?: string[];
     /** Text mints of earlier instructions (compile.ts CompileInput.mintedValues). */
     mintedValues?: string[];
+    /** What the run recorded before this instruction (compile.ts CompileInput.before). */
+    before?: RecordedEntry[];
     /**
      * The caller watched the recovery and saw the stop cost nothing: the
      * instruction succeeded and nothing changed the page after the replay
@@ -173,6 +175,7 @@ export function learnFromInstruction(
       ...(input.taskConstants?.length ? { taskConstants: input.taskConstants } : {}),
       ...(input.mintedValues?.length ? { mintedValues: input.mintedValues } : {}),
       ...(stoppedAt ? { stoppedAt } : {}),
+      ...(input.before?.length ? { before: input.before } : {}),
     });
   const skills = compile(variantOf);
   // A variant that starts AFTER steps this recording replayed through other

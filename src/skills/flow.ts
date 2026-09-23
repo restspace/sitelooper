@@ -9,7 +9,7 @@ import { rootDir } from '../shared/paths.js';
 import { escapeRe } from '../shared/text.js';
 import { urlParts, urlPattern } from './compile.js';
 import { mintedShape, urlShapeOf } from '../execution/url.js';
-import { idPositionPart, pathDigitPart, pathIdPart } from './ledger.js';
+import { idPositionPart, pathDigitPart, pathIdPart, unseenGotoParts } from './ledger.js';
 import { MIN_ID_LEN, looksLikeId, tokenPattern } from './shape.js';
 import { statedPlainly } from '../spec/rethread.js';
 
@@ -385,7 +385,8 @@ export function buildFlow(
   const steps: FlowStep[] = [];
   const warnings: string[] = [];
   const produced: Produced[] = [];
-  const seenUrl = new Set(urlParts(opts.startUrl).map((p) => p.value));
+  /** The flow's own start url: a given, never minted by a step. */
+  const startParts = new Set(urlParts(opts.startUrl).map((p) => p.value));
   const varEntries = Object.entries(opts.vars).filter(([, v]) => v.length >= 2).sort((a, b) => b[1].length - a[1].length);
   const baseline = baselineOf(entries);
 
@@ -494,8 +495,16 @@ export function buildFlow(
         minted.push({ stepId: id, output: 'url', value: g.endUrl });
       }
       for (const part of urlParts(g.endUrl)) {
-        const fresh = !seenUrl.has(part.value);
-        seenUrl.add(part.value);
+        // Fresh = no earlier step MINTED it (and it is not the start url's).
+        // It used to mean "no earlier step's final url carried it", and a
+        // sighting is not a mint: snipeit fwsi7's 02-create ended on
+        // /hardware/4 by a goto, which minted nothing, and that sighting then
+        // refused 03-edit's LANDED mint of the same 4 (its Update click landed
+        // /hardware/4/edit), so 04-report's param bound to `url:i3:p1` found
+        // no {{03-edit.url.p1}} and stayed the literal "4". Mint at the first
+        // landing, not the first sighting. A value an earlier step minted or
+        // reported is still refused just below (`produced`).
+        const fresh = !startParts.has(part.value) && !produced.some((p) => p.output.startsWith('url.') && p.value === part.value);
         // `referencablePart` is shared with urlOutputs, which is what a
         // replay publishes: the two must admit exactly the same parts or the
         // reference minted here resolves to nothing. See it for the arms and
@@ -503,7 +512,7 @@ export function buildFlow(
         // A digit run at a path position that this step's own action LANDED
         // is its record id at any length (ledger.ts pathDigitPart): provenance,
         // not characters. Below the floor it is referenced only at its path.
-        const landed = !referencablePart(part, opts.runSpecific) && pathDigitPart(part) && landedByAction(g, part);
+        const landed = !referencablePart(part, opts.runSpecific) && pathDigitPart(part) && landedByAction(g, part, entries);
         if (!fresh || !(referencablePart(part, opts.runSpecific) || landed)) continue;
         if (produced.some((p) => p.value === part.value) || varEntries.some(([, v]) => v === part.value)) continue;
         const path = part.value.length < 2 ? pathTo(g.endUrl, part.label) : undefined;
@@ -1674,7 +1683,10 @@ export function staleInstructionIds(entries: RecordedEntry[], flow: Flow): strin
     if (!url) continue;
     for (const part of urlParts(url)) {
       if (idPositionPart(part)) minted.add(part.value);
-      if (e.k === 'step' && e.tool !== 'goto' && e.tool !== 'back' && pathDigitPart(part)) {
+      // A goto counts where it LANDED an unseen record (unseenGotoParts,
+      // snipeit fwsi7).
+      const landedGoto = (): boolean => e.k === 'step' && e.tool === 'goto' && unseenGotoParts(url, entries.slice(0, entries.indexOf(e))).some((p) => p.label === part.label);
+      if (e.k === 'step' && ((e.tool !== 'goto' && e.tool !== 'back') || landedGoto()) && pathDigitPart(part)) {
         const path = pathTo(url, part.label);
         if (path) paths.add(path);
       }
@@ -2485,9 +2497,13 @@ function originRef(binding: string, value: string, byLedger: ReadonlyMap<string,
  * `part` at its position: a save, a click on the new row. A `goto` names a
  * page it was sent to, not a record it made.
  */
-function landedByAction(g: Group, part: { label: string; value: string }): boolean {
-  return g.acts.some(
-    (s) => s.tool !== 'goto' && s.tool !== 'back' && Boolean(s.diff?.url) && urlParts(s.diff!.url).some((p) => p.label === part.label && p.value === part.value),
+function landedByAction(g: Group, part: { label: string; value: string }, entries: readonly RecordedEntry[]): boolean {
+  const at = (s: RecordedStep): boolean => Boolean(s.diff?.url) && urlParts(s.diff!.url).some((p) => p.label === part.label && p.value === part.value);
+  if (g.acts.some((s) => s.tool !== 'goto' && s.tool !== 'back' && at(s))) return true;
+  // …or a goto to a record the run had never shown (ledger.ts
+  // unseenGotoParts): the address was read off the page, snipeit fwsi7.
+  return g.steps.some(
+    (s) => s.tool === 'goto' && at(s) && unseenGotoParts(s.diff!.url, entries.slice(0, Math.max(0, entries.indexOf(s)))).some((p) => p.label === part.label),
   );
 }
 
