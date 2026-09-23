@@ -1,0 +1,351 @@
+{
+  "flow": "fwgr69",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_8ccae1; observed signed_in_user=admin, landing_page_heading=Welcome to Grafana, breadcrumb=Home.",
+      "values": {
+        "signed_in_user": "admin",
+        "landing_page_heading": "Welcome to Grafana",
+        "breadcrumb": "Home"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-find",
+      "status": "success",
+      "summary": "Replayed stored procedure s_a770d3; observed panel_title_1=Request rate, panel_title_2=Error count, panel_title_3=Latency by endpoint, dashboard_title=Service Health, panel_titles_in_order_1=Request rate, panel_titles_in_order_2=Error count, panel_titles_in_order_3=Latency by endpoint.",
+      "values": {
+        "panel_title_1": "Request rate",
+        "panel_title_2": "Error count",
+        "panel_title_3": "Latency by endpoint",
+        "dashboard_title": "Service Health",
+        "panel_titles_in_order_1": "Request rate",
+        "panel_titles_in_order_2": "Error count",
+        "panel_titles_in_order_3": "Latency by endpoint"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Resumed on the new panel's editor, expanded the collapsed \"Panel options\" section and set the panel title to exactly \"fwgr69-n2 Availability\" (Change Visualization button showed Stat and the query editor held TestData DB Random Walk fields; this Grafana build has no \"Apply\" button, so the panel was committed by the dashboard save). Opened \"Save dashboard\", replaced the default title \"New dashboard\" with \"fwgr69-n2 Bench Dashboard\" and saved; the URL changed to /d/efz57htq0v4e8d/fwgr69-n2-bench-dashboard, showing the server assigned UID efz57htq0v4e8d. I then reloaded that URL: the server-rendered dashboard came back with breadcrumb \"fwgr69-n2 Bench Dashboard\" and panel heading \"fwgr69-n2 Availability\" (Stat, A-series 75.7), no unsaved-changes indicator anywhere in the page (document.title \"fwgr69-n2 Bench Dashboard - Dashboards - Grafana\"). Dashboard left open.",
+      "values": {
+        "dashboard_uid": "efz57htq0v4e8d",
+        "dashboard_title_top_bar": "fwgr69-n2 Bench Dashboard",
+        "dashboard_url": "http://127.0.0.1:3000/d/efz57htq0v4e8d/fwgr69-n2-bench-dashboard?from=now-6h&to=now&timezone=browser",
+        "panel_title": "fwgr69-n2 Availability",
+        "visualization_type": "Stat",
+        "data_source": "TestData",
+        "unsaved_changes_indicator": "none present (verified after reloading the saved dashboard)",
+        "ref": "fwgr69-n2",
+        "ref_2": "fwgr69-n2-bench-dashboard"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_3af38e stopped at step 5 — after step 5 none of the 2 recorded page change(s) appeared (e.g. \"- heading \\\"Panel links\\\"\") — the step ran but did not have its recorded effect",
+      "replayed": "4/11",
+      "repaired": false,
+      "turns": 24,
+      "unreported": [
+        "dashboard_title",
+        "panel_type_from_json_inspector",
+        "run_id"
+      ]
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Opened the panel editor for \"fwgr69-n2 Availability\" via the panel menu (hover panel header → \"Menu for panel with title…\" → Edit). In the query editor the data source picker was ALREADY pointing at the TestData data source: its selector box rendered the TestData logo image (alt=\"TestData logo\", src public/app/plugins/datasource/grafana-testdata-datasource/img/testdata.svg) with placeholder \"TestData\", and opening the picker listed \"TestData default TestData\" alongside the special \"-- Dashboard --\", \"-- Grafana --\", \"-- Mixed --\" entries (the live-DOM check of the open list returned listText \"TestData / default / TestData / -- Dashboard -- …\"). No other real datasource exists, so no change was necessary; selecting the TestData entry left the picker showing the same TestData logo (list closed, no visible change). I then returned to the dashboard (Back to dashboard) and clicked \"Save dashboard\" → \"Save\" in the drawer, which produced the page alert/status \"Dashboard saved\", and exited edit mode (URL back to /d/efz57htq0v4e8d/fwgr69-n2-bench-dashboard, top-bar actions back to Share/Edit/favorite, no unsaved-changes indicator). I then reopened the panel editor for that panel to re-check persistence: the picker again shows the TestData logo/placeholder \"TestData\", i.e. the TestData data source is the one stored for the query.",
+      "values": {
+        "dashboard_uid": "efz57htq0v4e8d",
+        "dashboard_title_top_bar": "fwgr69-n2 Bench Dashboard",
+        "panel_title": "fwgr69-n2 Availability",
+        "data_source_in_picker": "TestData (rendered as logo alt=\"TestData logo\"; picker placeholder \"TestData\")",
+        "data_source_picker_list_entries": "TestData default TestData | -- Dashboard -- | -- Grafana -- | -- Mixed --",
+        "datasource_changed": "no change needed - it was already TestData",
+        "save_result": "page alert/status \"Dashboard saved\"",
+        "save_indicator": "no unsaved-changes indicator; Discard panel changes button disabled after save",
+        "datasource_picker_text": "TestData logo",
+        "dashboard_url_after_save": "http://127.0.0.1:3000/d/efz57htq0v4e8d/fwgr69-n2-bench-dashboard?from=now-6h&to=now&timezone=browser",
+        "ref": "fwgr69-n2",
+        "ref_2": "fwgr69-n2-bench-dashboard"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "every candidate refused — s_a52e87: not on the page this procedure starts from (expects http://127.0.0.1:3000/d/ffz56npaza1a8a/fwgr69-n2-bench-dashboard?from=:id&inspect=:id&inspectTab=json&showCategory=Panel options&timezone=browser&to=now, browser is at http://127.0.0.1:3000/d/efz57htq0v4e8d/fwgr69-n2-bench-dashboard?from=now-6h&timezone=browser&to=now; the url shape is close but the page structure is not — similarity 0.478) — nothing was run",
+      "replayed": null,
+      "repaired": false,
+      "turns": 29,
+      "unreported": [
+        "final_url",
+        "run_id"
+      ]
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "On the open dashboard \"fwgr69-n2 Bench Dashboard\" (d/efz57htq0v4e8d) I used the breadcrumb \"Add\" → Visualization, then in the visualization picker selected the \"Text\" plugin card, which opened a new panel editor. I set the panel Title field to exactly \"fwgr69-n2 Notes\" and set the markdown editor content to \"Notes for run fwgr69-n2\" (the monaco editor tool verified the value on the component; panel header updated to \"fwgr69-n2 Notes\" immediately). There is no \"Apply\" button in this Grafana build, so I clicked \"Save dashboard\" → \"Save\" in the drawer, which produced the page alert \"Dashboard saved\". Then \"Back to dashboard\": the dashboard now shows two panels, region \"fwgr69-n2 Notes\" containing the paragraph \"Notes for run fwgr69-n2\", plus the original \"fwgr69-n2 Availability\" stat. Breadcrumb/top bar still reads \"fwgr69-n2 Bench Dashboard\" and the URL is /d/efz57htq0v4e8d/fwgr69-n2-bench-dashboard.",
+      "values": {
+        "dashboard_uid": "efz57htq0v4e8d",
+        "dashboard_title_top_bar": "fwgr69-n2 Bench Dashboard",
+        "text_panel_title": "fwgr69-n2 Notes",
+        "text_panel_content_displayed": "Notes for run fwgr69-n2",
+        "panel_count_visible": "2 (fwgr69-n2 Notes text panel + fwgr69-n2 Availability stat)",
+        "save_alert": "Dashboard saved",
+        "dashboard_url_after_text_panel_save": "http://127.0.0.1:3000/d/efz57htq0v4e8d/fwgr69-n2-bench-dashboard?from=now-6h&to=now&timezone=browser",
+        "dashboard_url_after_text": "http://127.0.0.1:3000/d/efz57htq0v4e8d/fwgr69-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&editPanel=2",
+        "ref": "fwgr69-n2",
+        "ref_2": "fwgr69-n2-bench-dashboard"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_14c4d7 stopped at step 2 — after step 2 none of the 5 recorded page change(s) appeared (e.g. \"- menu \\\"Visualization Import from library Row Paste panel\\\"\") — the step ran but did not have its recorded effect",
+      "replayed": "1/14",
+      "repaired": false,
+      "turns": 20,
+      "warnings": [
+        "s_14c4d7: start url differs from the recorded pattern in 1 segment(s) (ffz56npaza1a8a→efz57htq0v4e8d) — proceeding optimistically",
+        "s_14c4d7: step 1: primary locator did not resolve; used fallback #5 elementAt(1198, 60) /* button */",
+        "s_14c4d7: step 1: url segment(s) differ from recorded (ffz56npaza1a8a→efz57htq0v4e8d) — treated as volatile",
+        "s_14c4d7: step 1: none of the 5 expected page change(s) appeared in the step diff (found on the page instead)",
+        "s_14c4d7: step 2: primary locator did not resolve; used fallback #5 page.locator('div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(1) > button')",
+        "s_14c4d7: step 2: url segment(s) differ from recorded (ffz56npaza1a8a→efz57htq0v4e8d) — treated as volatile"
+      ],
+      "unreported": [
+        "final_dashboard_url",
+        "aria_label_plugin_visual",
+        "run_id"
+      ]
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "On the open dashboard \"fwgr69-n2 Bench Dashboard\" (/d/efz57htq0v4e8d) the top bar was already on \"Last 6 hours\" (URL carried refresh=1m) from the replayed steps, which I verified rather than re-clicking. I added the tag \"bench\" via dashboard Settings → Tags (Settings showed a chip `Remove \"bench\" tag`), clicked Save dashboard, ticked \"Update default time range\" and saved — the page showed the alert/status \"Dashboard saved\". Because a fresh reload renders the dashboard's SAVED defaults, I reloaded and found auto-refresh had reverted to \"turned off\" (session-only), so I re-selected 1m, saved again with \"Update default refresh value\" ticked (\"Dashboard saved\" again) and exited edit mode. Final observed state on a fresh load: time range \"Last 6 hours\" (persisted), auto-refresh button \"1m\" (\"current interval 1 minute selected\"), title \"fwgr69-n2 Bench Dashboard\", both panels present (fwgr69-n2 Notes → \"Notes for run fwgr69-n2\"; fwgr69-n2 Availability stat).",
+      "values": {
+        "auto_refresh_top_bar": "1m (button \"Choose refresh time interval with current interval 1 minute selected\", label \"1m\")",
+        "dashboard_tag_chip_after_add": "Remove \"bench\" tag",
+        "dashboard_tags": "bench",
+        "dashboard_title_top_bar": "fwgr69-n2 Bench Dashboard",
+        "dashboard_uid": "efz57htq0v4e8d",
+        "save_checkboxes_ticked": "Update default time range (1st save); Update default refresh value (2nd save)",
+        "save_succeeded": "yes - alert/status \"Dashboard saved\" after both saves",
+        "time_range_top_bar": "Last 6 hours (button aria-label \"Time range selected: Last 6 hours\")",
+        "topbar_auto_refresh_after_reload": "1m (current interval 1 minute selected)",
+        "topbar_time_range_after_reload": "Last 6 hours",
+        "tags_shown": "bench (chip 'Remove \"bench\" tag' in dashboard Settings → Tags)",
+        "final_url": "http://127.0.0.1:3000/d/efz57htq0v4e8d/fwgr69-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m",
+        "topbar_time_range": "Time range selected: Last 6 hours",
+        "ref": "fwgr69-n2",
+        "ref_2": "6-hour"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_a20207 stopped at step 6 — after step 6 the page did not show \"- link \\\"fwgr69-n2 Bench Dashboard\\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "replayed": "5/18",
+      "repaired": false,
+      "turns": 30,
+      "warnings": [
+        "s_a20207: start url differs from the recorded pattern in 1 segment(s) (ffz56npaza1a8a→efz57htq0v4e8d) — proceeding optimistically",
+        "s_a20207: step 1: url segment(s) differ from recorded (ffz56npaza1a8a→efz57htq0v4e8d) — treated as volatile",
+        "s_a20207: step 2: url segment(s) differ from recorded (ffz56npaza1a8a→efz57htq0v4e8d) — treated as volatile",
+        "s_a20207: step 3: url segment(s) differ from recorded (ffz56npaza1a8a→efz57htq0v4e8d) — treated as volatile",
+        "s_a20207: step 4: url segment(s) differ from recorded (ffz56npaza1a8a→efz57htq0v4e8d) — treated as volatile",
+        "s_a20207: step 5: primary locator did not resolve; used fallback #4 page.locator('div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(5) > button')",
+        "s_a20207: step 5: url segment(s) differ from recorded (ffz56npaza1a8a→efz57htq0v4e8d) — treated as volatile",
+        "s_a20207: step 5: none of the 5 expected page change(s) appeared in the step diff (found on the page instead)",
+        "s_a20207: step 6: url segment(s) differ from recorded (ffz56npaza1a8a→efz57htq0v4e8d) — treated as volatile"
+      ],
+      "unreported": [
+        "run_id"
+      ]
+    },
+    {
+      "id": "07-open",
+      "status": "success",
+      "summary": "Completed on the Grafana dashboard \"fwgr69-n2 Bench Dashboard\" (uid efz57htq0v4e8d). I entered edit mode, confirmed the top bar read \"Time range selected: Last 6 hours\" and auto-refresh \"1m\", then opened Save dashboard. Finding: this build's save drawer renders the two \"Update default ...\" checkboxes only when the current pickers differ from the dashboard's stored defaults — with everything already matching it presented just \"No changes to save\" and a disabled Save with no checkbox elements in the DOM (live-DOM verified). So that the tick could be performed on a real save, I first set the pickers apart (12h/5m), which surfaced both checkboxes; I ticked BOTH, saw the \"Changes (2)\" tab and an enabled Save, and saved (page status \"Dashboard saved\"). I then restored the pickers to Last 6 hours + 1m, reopened Save dashboard, ticked BOTH checkboxes again (\"Changes2\" tab), and clicked Save — page status/alert \"Dashboard saved\". I exited edit mode (toolbar now Mark as favorite / Share / Edit, no unsaved-changes marker). Verified afterwards: top bar \"Last 6 hours\" and \"1m\", URL .../fwgr69-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m, tag 'bench' present as a removable chip in Dashboard settings → General, and both panels rendered (fwgr69-n2 Notes → \"Notes for run fwgr69-n2\"; fwgr69-n2 Availability → 16.5).",
+      "values": {
+        "checkboxes_ticked": "BOTH - Update default time range AND Update default refresh value",
+        "dashboard_tag_chip_verified": "Remove \"bench\" tag",
+        "dashboard_title_top_bar": "fwgr69-n2 Bench Dashboard",
+        "dashboard_uid": "efz57htq0v4e8d",
+        "final_auto_refresh_top_bar": "1m (button \"Choose refresh time interval with current interval 1 minute selected\")",
+        "final_time_range_top_bar": "Last 6 hours (button \"Time range selected: Last 6 hours\")",
+        "save_succeeded": "yes - page status/alert \"Dashboard saved\" after the final ticked save",
+        "toolbar_state": "view mode (Mark as favorite / Share / Edit)",
+        "topbar_auto_refresh": "Choose refresh time interval with current interval 1 minute selected",
+        "topbar_time_range": "Time range selected: Last 6 hours",
+        "settings_time_options_co": "Time options",
+        "final_url": "http://127.0.0.1:3000/d/efz57htq0v4e8d/fwgr69-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m",
+        "ref": "fwgr69-n2",
+        "ref_2": "fwgr69-n2-bench-dashboard",
+        "ref_3": "now-6h"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_53a393 stopped at step 2 — no element matched any known locator for target (tried 6: page.getByTestId('Dashboard settings Save Dashboard Modal Save refresh checkbox'), page.getByRole('checkbox', { name: 'Update default refresh valueWill make the current refresh the new default', exact: true }), page.getByLabel('Update default refresh valueWill make the current refresh the new default'), …)",
+      "replayed": "1/6",
+      "repaired": false,
+      "turns": 29,
+      "warnings": [
+        "s_53a393: step 1: primary locator did not resolve; used fallback #5 elementAt(1140, 60) /* button */",
+        "s_53a393: step 1: url segment(s) differ from recorded (fwgr69-n1-bench-dashboard→fwgr69-n2-bench-dashboard) — treated as volatile"
+      ],
+      "unreported": [
+        "run_id"
+      ]
+    },
+    {
+      "id": "08-open",
+      "status": "success",
+      "summary": "(a) Title in the top bar breadcrumb: \"fwgr69-n2 Bench Dashboard\". (g) Tags in Dashboard settings > General: \"bench\".",
+      "values": {
+        "run_id": "fwgr69-n2",
+        "clean_url": "http://127.0.0.1:3000/d/efz57htq0v4e8d/fwgr69-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "18/18",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_695589: step 4: url segment(s) differ from recorded (ffz56npaza1a8a→efz57htq0v4e8d, fwgr69-n1-bench-dashboard→fwgr69-n2-bench-dashboard) — treated as volatile",
+        "s_695589: step 5: url segment(s) differ from recorded (ffz56npaza1a8a→efz57htq0v4e8d, fwgr69-n1-bench-dashboard→fwgr69-n2-bench-dashboard) — treated as volatile",
+        "s_695589: step 6: url segment(s) differ from recorded (ffz56npaza1a8a→efz57htq0v4e8d, fwgr69-n1-bench-dashboard→fwgr69-n2-bench-dashboard) — treated as volatile",
+        "s_695589: step 7: url segment(s) differ from recorded (ffz56npaza1a8a→efz57htq0v4e8d, fwgr69-n1-bench-dashboard→fwgr69-n2-bench-dashboard) — treated as volatile",
+        "s_695589: step 8: url segment(s) differ from recorded (ffz56npaza1a8a→efz57htq0v4e8d, fwgr69-n1-bench-dashboard→fwgr69-n2-bench-dashboard) — treated as volatile",
+        "s_695589: step 10: url segment(s) differ from recorded (ffz56npaza1a8a→efz57htq0v4e8d, fwgr69-n1-bench-dashboard→fwgr69-n2-bench-dashboard) — treated as volatile",
+        "s_695589: step 11: url segment(s) differ from recorded (ffz56npaza1a8a→efz57htq0v4e8d, fwgr69-n1-bench-dashboard→fwgr69-n2-bench-dashboard) — treated as volatile",
+        "s_695589: step 12: url segment(s) differ from recorded (ffz56npaza1a8a→efz57htq0v4e8d, fwgr69-n1-bench-dashboard→fwgr69-n2-bench-dashboard) — treated as volatile",
+        "s_695589: step 13: url segment(s) differ from recorded (ffz56npaza1a8a→efz57htq0v4e8d, fwgr69-n1-bench-dashboard→fwgr69-n2-bench-dashboard) — treated as volatile",
+        "s_695589: step 14: url segment(s) differ from recorded (ffz56npaza1a8a→efz57htq0v4e8d, fwgr69-n1-bench-dashboard→fwgr69-n2-bench-dashboard) — treated as volatile",
+        "s_695589: step 15: url segment(s) differ from recorded (ffz56npaza1a8a→efz57htq0v4e8d, fwgr69-n1-bench-dashboard→fwgr69-n2-bench-dashboard) — treated as volatile",
+        "s_695589: step 16: url segment(s) differ from recorded (ffz56npaza1a8a→efz57htq0v4e8d, fwgr69-n1-bench-dashboard→fwgr69-n2-bench-dashboard) — treated as volatile",
+        "s_695589: step 18: url segment(s) differ from recorded (ffz56npaza1a8a→efz57htq0v4e8d, fwgr69-n1-bench-dashboard→fwgr69-n2-bench-dashboard) — treated as volatile"
+      ]
+    }
+  ],
+  "passed": 8,
+  "total": 8,
+  "repinned": 0,
+  "drift": 6,
+  "driftTickets": [
+    {
+      "flow": "fwgr69",
+      "step": "03-create",
+      "skill": "s_3af38e",
+      "similarity": 1.001,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_3af38e stopped at step 5 — after step 5 none of the 2 recorded page change(s) appeared (e.g. \"- heading \\\"Panel links\\\"\") — the step ran but did not have its recorded effect",
+      "reason": "after step 5 none of the 2 recorded page change(s) appeared (e.g. \"- heading \\\"Panel links\\\"\") — the step ran but did not have its recorded effect",
+      "pageUrlPattern": "http://127.0.0.1:3000/dashboard/new?editPanel=:id&from=:id&timezone=browser&to=now",
+      "pageUrl": "http://127.0.0.1:3000/dashboard/new?from=now-6h&to=now&timezone=browser&editPanel=1"
+    },
+    {
+      "flow": "fwgr69",
+      "step": "05-open",
+      "skill": "s_14c4d7",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.89,
+      "missedLocator": "page.getByTestId('data-testid Edit dashboard button')",
+      "fallbackUsed": "elementAt(1198, 60) /* button */",
+      "fallbackIndex": 4,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:3000/d/efz57htq0v4e8d/:id?from=:id&timezone=browser&to=now",
+      "pageUrl": "http://127.0.0.1:3000/d/efz57htq0v4e8d/fwgr69-n2-bench-dashboard?from=now-6h&to=now&timezone=browser"
+    },
+    {
+      "flow": "fwgr69",
+      "step": "05-open",
+      "skill": "s_14c4d7",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 0.89,
+      "missedLocator": "page.locator('role=button[name=\"Add\"]')",
+      "fallbackUsed": "page.locator('div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(1) > button')",
+      "fallbackIndex": 4,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:3000/d/efz57htq0v4e8d/:id?from=:id&timezone=browser&to=now",
+      "pageUrl": "http://127.0.0.1:3000/d/efz57htq0v4e8d/fwgr69-n2-bench-dashboard?from=now-6h&to=now&timezone=browser"
+    },
+    {
+      "flow": "fwgr69",
+      "step": "06-open",
+      "skill": "s_a20207",
+      "atStep": "5",
+      "key": "target",
+      "similarity": 0.987,
+      "missedLocator": "page.getByTestId('data-testid Edit dashboard button')",
+      "fallbackUsed": "page.locator('div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(5) > button')",
+      "fallbackIndex": 3,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:3000/d/efz57htq0v4e8d/:id?from=:id&refresh=:id&timezone=browser&to=now",
+      "pageUrl": "http://127.0.0.1:3000/d/efz57htq0v4e8d/fwgr69-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m"
+    },
+    {
+      "flow": "fwgr69",
+      "step": "07-open",
+      "skill": "s_53a393",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.991,
+      "missedLocator": "page.getByTestId('data-testid Save dashboard button')",
+      "fallbackUsed": "elementAt(1140, 60) /* button */",
+      "fallbackIndex": 4,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:3000/d/efz57htq0v4e8d/:id?from=:id&refresh=:id&shareView=link&timezone=browser&to=now",
+      "pageUrl": "http://127.0.0.1:3000/d/efz57htq0v4e8d/fwgr69-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m&shareView=link"
+    },
+    {
+      "flow": "fwgr69",
+      "step": "07-open",
+      "skill": "s_53a393",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 0.991,
+      "missedLocator": "page.getByTestId('Dashboard settings Save Dashboard Modal Save refresh checkbox')",
+      "fallbackUsed": null,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:3000/d/efz57htq0v4e8d/:id?from=:id&refresh=:id&shareView=link&timezone=browser&to=now",
+      "pageUrl": "http://127.0.0.1:3000/d/efz57htq0v4e8d/fwgr69-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m&shareView=link"
+    }
+  ],
+  "wallMs": 706304,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 3824663,
+    "completionTokens": 52797,
+    "cachedTokens": 3568384
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 3824663,
+      "completionTokens": 52797,
+      "cachedTokens": 3568384
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
