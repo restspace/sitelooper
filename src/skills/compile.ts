@@ -812,7 +812,7 @@ export function compileSkills(input: CompileInput): Skill[] {
     const mintedForStart = mintedMap((m) => m.keptIndex < base);
     const notes: TransformNote[] = [];
     const folded = foldLoops(
-      coalesceControls(dropDismissedDialogs(dropSupersededNavigation(skillSteps, notes), notes, (s) => recordedDiffs.get(s)), notes),
+      coalesceControls(dropDismissedDialogs(dropSupersededNavigation(skillSteps, notes, (s) => recordedDiffs.get(s)), notes, (s) => recordedDiffs.get(s)), notes),
       input.instruction,
       notes,
     );
@@ -2976,7 +2976,7 @@ export function coalesceControls(steps: SkillStep[], notes?: TransformNote[]): S
  * intermediate page may have been load-bearing (a session bootstrap, a
  * redirect that set a cookie), and this cannot tell from the outside.
  */
-export function dropSupersededNavigation(steps: SkillStep[], notes?: TransformNote[]): SkillStep[] {
+export function dropSupersededNavigation(steps: SkillStep[], notes?: TransformNote[], diffOf?: (step: SkillStep) => StepDiff | undefined): SkillStep[] {
   return steps.filter((step, i) => {
     const superseded = step.tool === 'goto' && steps[i + 1]?.tool === 'goto';
     if (superseded) notes?.push({ name: 'dropSupersededNavigation', at: i + 1, reason: `the next step navigates again, to ${JSON.stringify(String(steps[i + 1].args.url ?? ''))}` });
@@ -2986,7 +2986,7 @@ export function dropSupersededNavigation(steps: SkillStep[], notes?: TransformNo
       notes?.push({ name: 'dropSupersededNavigation', at: i + 1, reason: `a link click that recorded no consequence, replaced by the goto at step ${replacedBy + 1}` });
       return false;
     }
-    const repeatedBy = abandonedRepeatClick(steps, i);
+    const repeatedBy = abandonedRepeatClick(steps, i, diffOf);
     if (repeatedBy !== null) {
       notes?.push({ name: 'dropSupersededNavigation', at: i + 1, reason: `a click that recorded no consequence, repeated with one at step ${repeatedBy + 1}` });
       return false;
@@ -3001,12 +3001,27 @@ function primaryLocator(step: SkillStep): string | null {
   return first ? JSON.stringify(first) : null;
 }
 
-/** A click that recorded nothing at all: no page change, alert, effect, mint or label, and not a toggle. */
-function consequenceFree(steps: readonly SkillStep[], k: number): boolean {
+/**
+ * A click that recorded nothing at all: no page change, alert, effect, mint or
+ * label, and not a toggle.
+ *
+ * Judged from the RECORDING where it is at hand (`diffOf`), not only from the
+ * compiled expectation, which keeps a removal only when a dialog went and
+ * drops lines that identify nothing. grafana fwgr69-n1 02-create's click on
+ * heading "Panel options" COLLAPSED the section — added [], removed its four
+ * lines — and its compiled expect held no line, so it read as a click that did
+ * nothing: dropped, while its re-expanding twin stayed as a plain click that
+ * collapsed the open section on every replay (s_3af38e step 5; 132 and 58
+ * turns). A recorded added line or alert is a consequence; a recorded REMOVAL
+ * is weighed by abandonedRepeatClick, which alone knows what came after it.
+ */
+function consequenceFree(steps: readonly SkillStep[], k: number, diffOf?: (step: SkillStep) => StepDiff | undefined): boolean {
   const s = steps[k];
   if (s.tool !== 'click' || s.effect || s.mints || s.label !== undefined || s.toggle) return false;
   const e = s.expect;
   if (e?.addedContains?.length || e?.removedContains?.length || e?.alertContains) return false;
+  const d = diffOf?.(s);
+  if (d && (d.added.length || d.alerts.length)) return false;
   const before = steps.slice(0, k).reverse().find((p) => p.expect?.urlPattern)?.expect?.urlPattern;
   return !before || !e?.urlPattern || e.urlPattern === before;
 }
@@ -3031,8 +3046,8 @@ function consequenceFree(steps: readonly SkillStep[], k: number): boolean {
  * recorded nothing is no evidence either click failed; a toggle, a click with
  * a page effect, a mint or a label is never dropped (consequenceFree).
  */
-function abandonedRepeatClick(steps: readonly SkillStep[], i: number): number | null {
-  if (!consequenceFree(steps, i)) return null;
+function abandonedRepeatClick(steps: readonly SkillStep[], i: number, diffOf?: (step: SkillStep) => StepDiff | undefined): number | null {
+  if (!consequenceFree(steps, i, diffOf)) return null;
   const key = primaryLocator(steps[i]);
   if (!key) return null;
   const fieldTargets = new Set<string>();
@@ -3047,18 +3062,49 @@ function abandonedRepeatClick(steps: readonly SkillStep[], i: number): number | 
   for (let j = i + 1; j < steps.length; j++) {
     const s = steps[j];
     if (s.tool === 'click' && primaryLocator(s) === key) {
-      if (consequenceFree(steps, j) || s.toggle || s.effect) return null;
+      if (consequenceFree(steps, j, diffOf) || s.toggle || s.effect) return null;
       const e = s.expect;
       const before = steps.slice(0, j).reverse().find((p) => p.expect?.urlPattern)?.expect?.urlPattern;
       const moved = Boolean(e?.urlPattern && before && e.urlPattern !== before);
-      return moved || s.mints || e?.addedContains?.length || e?.alertContains ? j : null;
+      if (!(moved || s.mints || e?.addedContains?.length || e?.alertContains)) return null;
+      return removalUndoneBetween(steps, i, j, diffOf) ? j : null;
     }
     if (['fill', 'type', 'press', 'read', 'read_all', 'wait_for'].includes(s.tool)) continue;
     const k = primaryLocator(s);
-    if (s.tool === 'click' && consequenceFree(steps, j) && k && fieldTargets.has(k)) continue;
+    if (s.tool === 'click' && consequenceFree(steps, j, diffOf) && k && fieldTargets.has(k)) continue;
     return null;
   }
   return null;
+}
+
+/**
+ * What the first click of a repeat TOOK OFF the page, as recorded, must have
+ * been put back by the field work between the two clicks — never by the
+ * repeat itself. The two outcomes the recording can show:
+ *
+ *  - an UNDO PAIR: the repeat's recorded additions give back what the first
+ *    removed. fwgr69's heading "Panel options" collapsed its section, then the
+ *    same click re-expanded it. Dropping one click of such a pair leaves the
+ *    other to undo the state the replay starts in, so both stay (or the
+ *    toggle rule, collapseTogglePairs, which runs first, takes the pair).
+ *  - a removal the field work restored: espocrm fwec5's first Save cleared
+ *    the amount (`- textbox "": 12500` removed), the agent typed it back
+ *    (`- textbox "": 12,500` added — the same element, re-formatted), and
+ *    the second Save did the work. The first Save's only consequence was
+ *    undone before the repeat, so it is still a failed attempt.
+ *
+ * Lines are matched as elements (role and name), not whole lines, because a
+ * restored value can come back formatted. No recorded diff: nothing to weigh,
+ * as before.
+ */
+function removalUndoneBetween(steps: readonly SkillStep[], i: number, j: number, diffOf?: (step: SkillStep) => StepDiff | undefined): boolean {
+  const removed = diffOf?.(steps[i])?.removed ?? [];
+  if (!removed.length) return true;
+  const element = (line: string) => /^-\s*([\w-]+)(\s+"(?:[^"\\]|\\.)*")?/.exec(line.trim())?.slice(1, 3).join('') ?? line.trim();
+  const repeatAdded = new Set((diffOf?.(steps[j])?.added ?? []).map((l) => l.trim()));
+  if (removed.some((l) => repeatAdded.has(l.trim()))) return false;
+  const restored = new Set(steps.slice(i + 1, j).flatMap((s) => diffOf?.(s)?.added ?? []).map(element));
+  return removed.every((l) => restored.has(element(l)));
 }
 
 /**
