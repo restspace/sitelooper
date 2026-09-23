@@ -130,6 +130,12 @@ export interface FlowStepResult {
   recovered?: boolean;
   /** Why the zero-model path did not run it (only meaningful when `recovered`). */
   fellBack?: string;
+  /**
+   * Why a step that reported success is only PARTIAL (status 'partial'): its
+   * recovery's last gesture never went through, or its replay skipped the read
+   * of an output it declares. See src/daemon/step-verdict.ts.
+   */
+  partial?: string[];
   /** The step's goal was already showing for this record, so nothing ran. */
   satisfied?: true;
   values?: Record<string, string>;

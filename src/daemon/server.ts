@@ -4,6 +4,7 @@ import path from 'node:path';
 import { AnthropicProvider, OpenAICompatProvider, resolveProviderConfig, type Provider } from '../agent/llm.js';
 import { buildSystemOne, resolveSystemOneConfig, type SystemOne } from '../agent/system-one.js';
 import { runEscalatingInstruction, type InstructionResult, type LoopActor, type SkillRecord } from '../agent/loop.js';
+import { partialReasons } from './step-verdict.js';
 import { executeTool } from '../agent/tools.js';
 import { urlPattern as compiledUrlPattern, carryOpener, dropAbsentReadLocators, dropDeadReadLocators, fillParams, markReadsProven, stranded, urlMatches, urlParts } from '../skills/compile.js';
 import type { DriftTicket } from '../skills/repair.js';
@@ -1841,6 +1842,23 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
         }
         if (direct.partial && result.skill) result.skill = { ...result.skill, ...direct.partial, listed: result.skill.listed };
       }
+      // Success means the step did what it was asked (src/daemon/step-verdict.ts):
+      // a recovery whose last gesture never went through (fwop10-n2 02-create),
+      // or a zero-model replay that skipped the read of an output it declares
+      // (fwsi7 05-open), is PARTIAL. Everything that TRUSTS a success — the
+      // learning below (banking, the pin), the cross-run evidence, the passed
+      // count — is handed `judged`, whose report says it failed; the step's
+      // record keeps what the model reported, marked partial.
+      const partial = partialReasons({
+        reportStatus: result.report.status,
+        recovered,
+        unfinishedGesture: result.unfinishedGesture,
+        skippedReads: result.skill?.skippedReads,
+        declaredOutputs: step.outputs,
+        values: result.report.evidence?.values ?? {},
+      });
+      const judged: InstructionResult = partial.length ? { ...result, report: { ...result.report, status: 'failure' } } : result;
+      for (const why of partial) opts.progress(`[flow ${flow.name}] ${step.id}: PARTIAL — ${why}`);
       // Learn from a repair so the flow's steps get cheaper over successive runs.
       let repinned;
       let repinParams: Record<string, string> | undefined;
@@ -1876,14 +1894,14 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
           if (i >= judgeFrom && observedChange(e, urlWas)) costlyRepair = true;
           urlWas = e.diff?.url ?? urlWas;
         }
-        const harmlessStop = recovered && result.report.status === 'success' && !costlyRepair;
+        const harmlessStop = recovered && judged.report.status === 'success' && !costlyRepair;
         if (harmlessStop && result.skill?.invoked && !result.skill.refused && result.skill.stepsReplayed < result.skill.stepsTotal) {
           opts.progress(
             `[flow ${flow.name}] ${step.id}: ${result.skill.invoked} stopped at step ${result.skill.stepsReplayed + 1}, but the step finished with nothing further changed — recorded as inconclusive, not a strike`,
           );
         }
         const learned = learnFromInstruction(this.browser.learn, {
-          result,
+          result: judged,
           // Never hand compile an instruction with unresolved {{ref}} markers:
           // they leak verbatim into the skill template (s_166633 carried a
           // literal "{{01-open.ticket_ref}}"), which no live instruction can
@@ -2000,7 +2018,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
         const mintedLeaks = candidate ? navigationLeaks(scanForLeaks(candidate, this.ledger, candidate.id), ledgerStep) : [];
         const decision = decideRepin({
           step,
-          reportStatus: result.report.status,
+          reportStatus: judged.report.status,
           outcome,
           compiled,
           incumbent,
@@ -2169,8 +2187,8 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       // what decides whether a reference to one of them is a record pointer or
       // app furniture — the question run 1 could not answer. Only on success:
       // a blocked step's values describe how far it got, not what the app
-      // shows.
-      if (result.report.status === 'success') {
+      // shows. Nor on a partial one.
+      if (judged.report.status === 'success') {
         // A read-back that is a JSON body publishes its scalar leaves under
         // `<output>#<path>`, the same names buildFlow recorded them by. Without
         // this expansion the replay reports only `body`, so a per-leaf verdict
@@ -2218,8 +2236,9 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       }
       stepResults.push({
         id: step.id,
-        status: result.report.status,
+        status: partial.length ? 'partial' : result.report.status,
         summary: result.report.summary,
+        ...(partial.length ? { partial } : {}),
         values,
         tier: sk?.tier ?? null,
         // Why the model was needed, on the STEP — a ticket is only filed when
@@ -2285,7 +2304,8 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
     const passed = stepResults.filter((r) => r.status === 'success').length;
     return {
       flow: flow.name,
-      status: halted && passed < flow.steps.length ? 'halted' : 'success',
+      // A partial step (step-verdict.ts) did not halt the run, and does not let it call itself a success either.
+      status: halted && passed < flow.steps.length ? 'halted' : stepResults.some((r) => r.status === 'partial') ? 'partial' : 'success',
       steps: stepResults,
       passed,
       total: flow.steps.length,
@@ -2487,6 +2507,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       evidence: replay.candidateEvidence.map((e) => ({ ...e, skill: match!.skill.id })),
       values: { ...replay.values },
       echoed: [...replay.echoedValues],
+      skipped: [...(replay.skippedReads ?? [])],
       segmentsDone: 0,
     };
     // Values the replay itself minted ({{dN}}): bound in the segment that
@@ -2539,6 +2560,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       agg.evidence.push(...r.candidateEvidence.map((e) => ({ ...e, skill: next.id })));
       Object.assign(agg.values, r.values);
       agg.echoed.push(...r.echoedValues);
+      agg.skipped.push(...(r.skippedReads ?? []));
     }
     // The walk records each segment when it advances PAST it, and the
     // instruction-level learning records the head (record.invoked). A chain's
@@ -2577,6 +2599,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       similarity: replay.similarity,
       ...(agg.misses.length ? { misses: agg.misses } : {}),
       ...(agg.warnings.length ? { warnings: agg.warnings } : {}),
+      ...(agg.skipped.length ? { skippedReads: [...new Set(agg.skipped)] } : {}),
       ...(replay.reason ? { failReason: replay.reason } : {}),
       ...(replay.failedAt !== undefined ? { failedAt: replay.failedAt } : {}),
       replayUrl: replay.url,

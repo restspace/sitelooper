@@ -63,6 +63,8 @@ export function loopingCycle(acts: string[]): number {
 const ESCALATION_BUDGET_MULTIPLIER = 1.5;
 
 /** Tools that observe, arm or wait: nothing they do changes what the page shows. */
+/** Browser gestures: the actions whose failure leaves the page short of what the instruction asked (see InstructionResult.unfinishedGesture). */
+const GESTURE_TOOLS = new Set(['click', 'dblclick', 'modifier_click', 'right_click', 'fill', 'type', 'press', 'select', 'check', 'drag', 'upload', 'goto', 'back']);
 const NOT_A_MUTATION = new Set(['snapshot', 'read', 'read_all', 'eval', 'screenshot', 'wait_for', 'fetch_source', 'dialog_expect', 'report', 'hover', 'scroll_into_view']);
 
 /** How much of a tool result trace.jsonl keeps: enough to see the [state: …] note and the top of a [page: …] block. */
@@ -226,6 +228,18 @@ export interface InstructionResult {
    */
   bailReason?: BailReason;
   /**
+   * Present only on a SUCCESS report whose last attempted browser gesture
+   * (click, fill, goto, … — alone or as a batch's last step) FAILED: nothing
+   * after it changed the page, so the instruction's final act never landed,
+   * whatever the report says. fwop10-n2 02-create: the "Submit comment" click
+   * was not dispatched (the button was still disabled), the model reported
+   * success with the comment "NOT confirmed as posted", and the recovery
+   * banked a comment procedure with no submit as 1/1. Read off the executor's
+   * own outcomes, never the model's prose; the flow runner decides what it
+   * costs (src/daemon/step-verdict.ts).
+   */
+  unfinishedGesture?: { tool: string; args: string };
+  /**
    * Learning-mode accounting: which stored skills were offered, which one
    * (if any) the agent replayed and how far it got, and what fraction of the
    * instruction's browser actions ran deterministically.
@@ -286,6 +300,8 @@ export interface SkillRecord {
   failReason?: string;
   /** The replay's own warnings, per segment, prefixed with the segment's skill id (tier A only). */
   warnings?: string[];
+  /** Labels of the replay's labelled reads that were skipped — nothing observed (ReplayResult.skippedReads; tier A only). */
+  skippedReads?: string[];
   /** 1-based skill step the replay failed at, when it did. */
   failedAt?: number;
   /** The url the replay finished (or stopped) on. */
@@ -353,6 +369,21 @@ export async function runInstruction(
   const timing: InstructionTiming = { totalMs: 0, modelMs: 0, toolMs: 0, modelCalls: 0, turns: [] };
   const transcript: string[] = [];
   const actions: ActionRecord[] = [];
+  /** The last browser gesture this instruction attempted, and whether it went through (see unfinishedGesture). */
+  let lastGesture: { tool: string; args: string; ok: boolean } | null = null;
+  const noteGesture = (tool: string, args: string, execution: { isError: boolean; stepMs?: Array<{ tool: string; ok: boolean }> }): void => {
+    if (tool === 'batch') {
+      for (const step of execution.stepMs ?? []) if (GESTURE_TOOLS.has(step.tool)) lastGesture = { tool: step.tool, args: '(in a batch)', ok: step.ok };
+      return;
+    }
+    // A stored procedure's replay answers for itself (its gates); what the
+    // agent attempted before it is no longer the last word on the page.
+    if (tool === 'run_skill') {
+      if (!execution.isError) lastGesture = null;
+      return;
+    }
+    if (GESTURE_TOOLS.has(tool)) lastGesture = { tool, args, ok: !execution.isError };
+  };
   const screenshots: string[] = [];
   let reportRetried = false;
   /** evidence.values from the report held for naming, so the retry cannot lose them. */
@@ -685,6 +716,7 @@ export async function runInstruction(
       ...(includeTail ? { transcriptTail: transcript.slice(-12), actions: actions.slice(-40) } : {}),
       ...(finalState ? { finalState } : {}),
       ...(bailReason ? { bailReason } : {}),
+      ...(report.status === 'success' && lastGesture && !lastGesture.ok ? { unfinishedGesture: { tool: lastGesture.tool, args: lastGesture.args } } : {}),
       ...(browser.learn ? { skill } : {}),
     };
   };
@@ -886,6 +918,7 @@ export async function runInstruction(
       (turnTiming.actorTools ??= []).push(call.name);
       timing.actorActs = (timing.actorActs ?? 0) + 1;
       actions.push({ tool: call.name, args: summary, ok: !execution.isError });
+      noteGesture(call.name, summary, execution);
       state.recordTrace({ turn: ctx.turn, tool: call.name, args: call.args, ok: !execution.isError, result: execution.result.slice(0, TRACE_RESULT_CHARS), by: 'jev' });
       // Told as a USER message, never as an assistant tool call the model did
       // not write: DeepSeek in thinking mode answers a synthetic assistant turn
@@ -1128,6 +1161,7 @@ export async function runInstruction(
       turnTiming.tools.push(call.name);
       if (execution.stepMs) (turnTiming.steps ??= []).push(...execution.stepMs);
       actions.push({ tool: call.name, args: summary, ok: !execution.isError });
+      noteGesture(call.name, summary, execution);
       state.recordTrace({ turn, tool: call.name, args: call.args, ok: !execution.isError, result: execution.result.slice(0, TRACE_RESULT_CHARS) });
       // After the recorder has filed this step: its locator chain is the exact
       // identity of the element the agent acted on, which is what an observer
