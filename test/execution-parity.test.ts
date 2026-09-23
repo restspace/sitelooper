@@ -38,7 +38,7 @@ import { replayReport } from '../src/skills/learn.js';
 import { consumedReportedOutputs, ignorableRefs, resolveInstruction, resolveStepParams, type FlowStep } from '../src/skills/flow.js';
 import type { Skill, SkillParam, SkillStep } from '../src/skills/store.js';
 import type { LocatorCandidate, RecordedEntry, RecordedStep } from '../src/daemon/recorder.js';
-import { captureReadBack, visibleTextsWithin } from '../src/daemon/recorder.js';
+import { captureReadBack, selectionReadBack, visibleTextsWithin } from '../src/daemon/recorder.js';
 import { flattenContainedComposite, planContainedParts, type Report } from '../src/agent/report.js';
 import { compileSkills } from '../src/skills/compile.js';
 import { FIXTURE_TOTP_SEED, createFixtureServer, type FixtureServer } from './fixture/server.js';
@@ -4648,6 +4648,50 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(emittedLog, 'the artifact must commit 7, not the quantity the app last saw a change for').toEqual(['commit:qty:7']);
       expect(replay.ok, replay.reason ?? '').toBe(true);
       expect(emitted.ok, emitted.reason ?? '').toBe(true);
+    }, 120_000);
+
+    /**
+     * Round 56, odoo fwod82 02-create: the product was the option the step
+     * clicked, and the click's own diff showed the combobox holding it — the
+     * one place the page named it once. selectionReadBack reads it there,
+     * right after the click. It echoes what the step selected, so both runners
+     * keep it out of the confident values (echoed) and still publish it for a
+     * later step's reference (fwod82's 04-change binds v2 to it).
+     */
+    it('both runners re-read the option a step selected from the control it filled, as an echo that still publishes', async () => {
+      const combobox = { kind: 'role' as const, role: 'combobox', name: 'Fruit' };
+      const recorded: RecordedStep[] = [
+        { k: 'step', tool: 'goto', args: { url: `${origin}/controls` }, locators: {} },
+        { k: 'step', tool: 'type', args: { target: '@e1', text: 'ban' }, locators: { target: { expr: 'x', verified: true, raw: '@e1', chain: [combobox] } } },
+        {
+          k: 'step',
+          tool: 'click',
+          args: { target: 'role=option[name="banana x2"]' },
+          locators: { target: { expr: 'x', verified: true, raw: 'x', chain: [{ kind: 'role', role: 'option', name: 'banana x2' }] } },
+          diff: { url: `${origin}/controls`, alerts: [], added: ['- combobox "Fruit": banana x2'] },
+        },
+        { k: 'step', tool: 'click', args: { target: '@e2' }, locators: { target: { expr: 'x', verified: true, raw: '@e2', chain: [{ kind: 'role', role: 'button', name: 'Save fruit' }] } } },
+      ];
+      const selected = selectionReadBack(recorded, 'banana x2', 'fruit');
+      expect(selected).not.toBeNull();
+      const withRead = [...recorded];
+      withRead.splice(withRead.indexOf(selected!.after) + 1, 0, selected!.read);
+      const steps: SkillStep[] = withRead.map((s) => ({
+        tool: s.tool,
+        args: s.args,
+        locators: s.locators.target ? { target: s.locators.target.chain ?? [] } : {},
+        ...(s.label ? { label: s.label } : {}),
+      }));
+      const { replay, emitted, replayLog, emittedLog } = await both(steps, 0);
+
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replayLog).toEqual(['commit:fruit:banana x2']);
+      expect(emittedLog).toEqual(['commit:fruit:banana x2']);
+      expect(replay.outputs.fruit).toBe('banana x2');
+      expect(emitted.outputs['01-clear.fruit']).toBe('banana x2');
+      expect(replay.echoed).toContain('fruit');
+      expect(emitted.echoed).toContain('fruit');
     }, 120_000);
 
     it('both runners select on a portal-rendered ARIA combobox through the recipe, and the app commits the option', async () => {

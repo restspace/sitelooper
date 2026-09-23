@@ -56,6 +56,7 @@ const { carryOpener, compileSkills } = await import(dist('skills/compile.js'));
 const { RunLedger, bindingKey } = await import(dist('skills/ledger.js'));
 const { urlParts } = await import(dist('execution/url.js'));
 const { backfillReadValues, flattenComposedValues, promoteLabelledReads, unnamedReadValues } = await import(dist('agent/report.js'));
+const { selectionReadBack } = await import(dist('daemon/recorder.js'));
 
 const argv = process.argv.slice(2);
 const arg = (name, dflt) => (argv.includes(name) ? argv[argv.indexOf(name) + 1] : dflt);
@@ -137,6 +138,39 @@ function groups(entries) {
     else cur.steps.push(e);
   }
   return out;
+}
+
+/** Insert selectionReadBack's reads into each successful instruction of `entries`, in place. */
+function withSelectionReads(entries) {
+  let start = -1;
+  for (let i = 0; i < entries.length; i++) {
+    const e = entries[i];
+    if (e.k === 'instruction') start = i;
+    if (e.k !== 'report' || start < 0) continue;
+    if (e.status === 'success') {
+      const steps = entries.slice(start + 1, i).filter((x) => x.k === 'step');
+      const seen = new Set();
+      for (const st of steps) {
+        if ((st.tool !== 'read' && st.tool !== 'read_all') || typeof st.result !== 'string') continue;
+        try {
+          const v = JSON.parse(st.result);
+          for (const x of Array.isArray(v) ? v : [v]) if (typeof x === 'string') seen.add(x.trim());
+        } catch {
+          seen.add(st.result.trim());
+        }
+      }
+      for (const [k, raw] of Object.entries(e.values ?? {})) {
+        const v = String(raw ?? '').trim();
+        if (!v || seen.has(v)) continue;
+        const got = selectionReadBack(steps, v, k);
+        if (!got) continue;
+        entries.splice(entries.indexOf(got.after) + 1, 0, got.read);
+        seen.add(v);
+        i += 1; // the report moved one place on
+      }
+    }
+    start = -1;
+  }
 }
 
 function startUrlOf(entries) {
@@ -318,6 +352,14 @@ for (const { runid, file } of sessions()) {
     for (const d of dropped) console.log(`    dropped: ${d}`);
     applyRelabelToEntries(entries, plan);
   }
+  // The record-time read-back pass the loop runs once captureReadBack refuses
+  // (src/agent/loop.ts finish): a reported value this instruction SELECTED as
+  // an option, whose click's own diff shows the control holding it, is read
+  // back from that control right after the click (selectionReadBack — odoo
+  // fwod82 02-create's product). Offline, "refused" is "no read of this
+  // instruction returned the value": a value the live pass pinned left its
+  // read in the recording.
+  withSelectionReads(entries);
   const gs = groups(entries);
   const run = { runid, instructions: [], flow: null };
 
