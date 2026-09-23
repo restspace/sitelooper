@@ -38,6 +38,8 @@ import { replayReport } from '../src/skills/learn.js';
 import { consumedReportedOutputs, ignorableRefs, resolveInstruction, resolveStepParams, type FlowStep } from '../src/skills/flow.js';
 import type { Skill, SkillParam, SkillStep } from '../src/skills/store.js';
 import type { LocatorCandidate, RecordedEntry, RecordedStep } from '../src/daemon/recorder.js';
+import { captureReadBack, visibleTextsWithin } from '../src/daemon/recorder.js';
+import { flattenContainedComposite, planContainedParts, type Report } from '../src/agent/report.js';
 import { compileSkills } from '../src/skills/compile.js';
 import { FIXTURE_TOTP_SEED, createFixtureServer, type FixtureServer } from './fixture/server.js';
 import { hotpCode, totpSeed } from '../src/execution/totp.js';
@@ -682,6 +684,98 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     expect(daemon).toEqual(want);
     expect(artifact).toEqual(want);
   }, 120_000);
+
+  /**
+   * Round 56: fwgt8-n1 reported `seed_issue_1: "Seed: triage inbox (#1)"` and
+   * fwsi8-n1 `asset_1: "Asset Tag SEED-0001 / Name Seed: Reception Laptop"`;
+   * no element shows either whole, so no read was recorded and both apps'
+   * replays published neither the titles nor the tags. Recorded against
+   * fixture pages of the same markup, each composite now becomes one read per
+   * element text it is made of (planContainedParts), compile keeps them, and
+   * both runners re-read the same values from the page.
+   */
+  describe('composite report values carved into element reads (fwgt8, fwsi8)', () => {
+    const cases = [
+      {
+        page: 'issue-list',
+        instruction: "Navigate to the issues list of the repository bench/bench-repo and report the titles of all OPEN issues whose title starts with 'Seed:', exactly as displayed on the page, one per line.",
+        values: { seed_issue_1: 'Seed: triage inbox (#1)', seed_issue_2: 'Seed: order missing parts (#2)', seed_issue_3: 'Seed: ship repaired device (#3)' },
+        want: {
+          seed_issue_1_1: 'Seed: triage inbox',
+          seed_issue_1_2: '#1',
+          seed_issue_2_1: 'Seed: order missing parts',
+          seed_issue_2_2: '#2',
+          seed_issue_3_1: 'Seed: ship repaired device',
+          seed_issue_3_2: '#3',
+        },
+      },
+      {
+        page: 'asset-table',
+        instruction: "List all assets whose name starts with 'Seed:' and report each asset's name and asset tag exactly as shown.",
+        values: { asset_1: 'Asset Tag SEED-0001 / Name Seed: Reception Laptop', asset_2: 'Asset Tag SEED-0002 / Name Seed: Training Laptop', asset_3: 'Asset Tag SEED-0003 / Name Seed: Spare Laptop' },
+        want: {
+          asset_1_1: 'SEED-0001',
+          asset_1_2: 'Seed: Reception Laptop',
+          asset_2_1: 'SEED-0002',
+          asset_2_2: 'Seed: Training Laptop',
+          asset_3_1: 'SEED-0003',
+          asset_3_2: 'Seed: Spare Laptop',
+        },
+      },
+    ];
+
+    for (const c of cases) {
+      it(`both runners re-read each element a composite was made of (${c.page})`, async () => {
+        const url = `${origin}/${c.page}`;
+        // Record time: the loop's read-back pass, as finish() runs it.
+        const session = new BrowserSession({ session: `parity-carve-${Date.now()}`, persist: false });
+        const report: Report = { status: 'success', summary: 'reported', evidence: { values: { ...c.values } } };
+        const reads: RecordedStep[] = [];
+        try {
+          const page = await session.getPage();
+          await page.goto(url);
+          for (const [key, value] of Object.entries(c.values)) {
+            expect(await captureReadBack(page, value, key)).toBeNull(); // no element shows it whole
+            const got = await flattenContainedComposite(report, key, await visibleTextsWithin(page, value), c.instruction, (part, name) => captureReadBack(page, part, name));
+            expect(got.names.length, key).toBe(2);
+            reads.push(...got.pinned);
+          }
+          // The hidden row is not something the page showed: it cannot complete a value.
+          expect(planContainedParts('Seed: triage inbox (#1) assigned to nobody', await visibleTextsWithin(page, 'Seed: triage inbox (#1) assigned to nobody'), c.instruction)).toBeNull();
+        } finally {
+          await session.close();
+        }
+        expect(report.evidence?.values).toEqual(c.want);
+
+        const entries: RecordedEntry[] = [
+          { k: 'instruction', text: c.instruction, url },
+          { k: 'step', tool: 'goto', args: { url }, locators: {}, diff: { url, alerts: [], added: [] } },
+          ...reads,
+        ];
+        const [skill] = compileSkills({ entries, instruction: c.instruction, report, session: 'parity', knownValues: {} });
+        expect(skill.steps.filter((s) => s.tool === 'read').map((s) => s.label).sort()).toEqual(Object.keys(c.want).sort());
+        const spec: SpecFlow = {
+          version: 1,
+          name: 'parity-carve',
+          origin,
+          startUrl: `${origin}/`,
+          vars: [],
+          steps: [{ id: '01-open', instruction: c.instruction, params: {}, outputs: Object.keys(c.want), segments: [{ id: skill.id, template: skill.template, params: skill.params, preconditions: skill.preconditions, steps: skill.steps, ...(skill.reportTemplate ? { report: skill.reportTemplate } : {}) }] }],
+        };
+
+        reset(0);
+        const replay = await replayOf(skill);
+        reset(0);
+        const emitted = await emittedOf(spec);
+        expect(replay.ok, replay.reason ?? '').toBe(true);
+        expect(emitted.ok, emitted.reason ?? '').toBe(true);
+        for (const [key, value] of Object.entries(c.want)) {
+          expect(replay.outputs[key], key).toBe(value);
+          expect(emitted.outputs[`01-open.${key}`], key).toBe(value);
+        }
+      }, 120_000);
+    }
+  });
 
   describe('report values (fwrd86)', () => {
     const READ_REF: SkillStep = { tool: 'read', args: { target: '(read-back)', what: 'text' }, locators: { target: [{ kind: 'id', selector: '#ref' }] }, label: 'ticket_reference' };

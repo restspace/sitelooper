@@ -1067,6 +1067,43 @@ async function captureFormValue(page: Page, v: string): Promise<RecordedStep | n
  * element whose text actually IS the value; otherwise null and the value stays
  * un-threadable.
  */
+/**
+ * The full visible texts of the page's elements that stand inside `value`
+ * (whitespace collapsed), for planContainedParts (src/agent/report.ts): the
+ * element texts a composite report value may be made of. Only rendered
+ * elements count — a hidden template row or an off-screen tooltip is not what
+ * the page showed. Includes an element showing the value WHOLE, so the planner
+ * can refuse to split it. [] when the page cannot be read.
+ */
+export async function visibleTextsWithin(page: Page, value: string): Promise<string[]> {
+  // Never a reason for the read-back pass to stop: a page that cannot answer
+  // shows nothing, and the value goes on to the cascade as before.
+  try {
+    return await visibleTextsIn(page, value);
+  } catch {
+    return [];
+  }
+}
+
+function visibleTextsIn(page: Page, value: string): Promise<string[]> {
+  return page
+    .evaluate((wanted: string) => {
+      const norm = (s: string) => s.replace(/\s+/g, ' ').trim();
+      const whole = norm(wanted);
+      const out = new Set<string>();
+      for (const el of Array.from(document.body?.querySelectorAll('*') ?? [])) {
+        const h = el as HTMLElement;
+        if (!h.getClientRects().length) continue;
+        const style = getComputedStyle(h);
+        if (style.visibility === 'hidden' || style.display === 'none') continue;
+        const text = norm(h.innerText ?? '');
+        if (text && text.length <= whole.length && whole.includes(text)) out.add(text);
+      }
+      return [...out];
+    }, value)
+    .catch(() => []);
+}
+
 export async function captureReadBackAt(page: Page, value: string, selector: string): Promise<RecordedStep | null> {
   const v = value.trim();
   // Same floor and same fold as captureReadBack/captureFormValue: one rule for
