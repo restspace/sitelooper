@@ -1,0 +1,72 @@
+{
+ "id": "s_665f77",
+ "origin": "http://127.0.0.1:4180",
+ "template": "Sign in at {{v2}} with email {{v3}} and password {{env:APP_PASSWORD}} (type the password exactly as {{env:APP_PASSWORD}}), then create a repair ticket titled '{{v4}}' with any required fields, and report the confirmation/what appeared.",
+ "params": {
+  "v1": {
+   "example": "fwrd86-n1",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "http://127.0.0.1:4180/",
+   "usedIn": [
+    2
+   ]
+  },
+  "v3": {
+   "example": "bench@example.com",
+   "usedIn": []
+  },
+  "v4": {
+   "example": "fwrd86-n1 RD Bench Ticket",
+   "usedIn": [],
+   "known": true
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:4180/"
+ },
+ "steps": [
+  {
+   "tool": "read",
+   "args": {
+    "what": "url"
+   },
+   "locators": {},
+   "label": "initial_blank_page_url"
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v2}}"
+   },
+   "locators": {}
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-23T11:13:55.194Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4,
+  "lastUsed": "2026-09-23T11:17:15.968Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_deae37",
+  "index": 0,
+  "of": 3
+ },
+ "provenance": {
+  "session": "fwrd86-n1",
+  "instruction": "Sign in at http://127.0.0.1:4180/ with email bench@example.com and password {{env:APP_PASSWORD}} (type the password exactly as {{env:APP_PASSWORD}}), then create a repair ticket titled 'fwrd86-n1 RD Bench Ticket' with any required fields, and report the confirmation/what appeared.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-23T11:13:55.194Z"
+ },
+ "revision": 3
+}

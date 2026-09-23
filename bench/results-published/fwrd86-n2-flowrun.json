@@ -1,0 +1,172 @@
+{
+  "flow": "fwrd86",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_93ead3 (11 steps).",
+      "values": {
+        "ticket_title": "fwrd86-n2 RD Bench Ticket",
+        "initial_blank_page_url": "http://127.0.0.1:4180/#/login",
+        "signed_in_user": "Bench User",
+        "ticket_created": "2026-09-23",
+        "ticket_customer": "Not recorded",
+        "ticket_parts": "0",
+        "ticket_reference": "RD-1016",
+        "ref": "fwrd86-n2",
+        "ticket_status": "Draft"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_93ead3: step 9: read 'ticket_title' returned a value the skill itself set/selected ('fwrd86-n2 RD Bench Ticket') — confirms the control, not persistence; dropped from the report's confident values"
+      ]
+    },
+    {
+      "id": "02-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_0af5a4; observed part_name=fwrd86-n2 RD Part A, ref=fwrd86-n2, part_row=fwrd86-n2 RD Part A\t$100.00\t25%\t1\tNo supplier\t$125.00\tEdit Delete, ticket_reference=RD-1016, ticket_title=fwrd86-n2 RD Bench Ticket, part_cost=$100.00, part_markup=25%, part_qty=1, part_supplier=No supplier, part_price=$125.00.",
+      "values": {
+        "part_name": "fwrd86-n2 RD Part A",
+        "ref": "fwrd86-n2",
+        "part_row": "fwrd86-n2 RD Part A\t$100.00\t25%\t1\tNo supplier\t$125.00\tEdit Delete",
+        "ticket_reference": "RD-1016",
+        "ticket_title": "fwrd86-n2 RD Bench Ticket",
+        "part_cost": "$100.00",
+        "part_markup": "25%",
+        "part_qty": "1",
+        "part_supplier": "No supplier",
+        "part_price": "$125.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_0af5a4: step 10: read 'part_name' returned a value the skill itself set/selected ('fwrd86-n2 RD Part A') — confirms the control, not persistence; dropped from the report's confident values"
+      ]
+    },
+    {
+      "id": "03-add",
+      "status": "success",
+      "summary": "On the RD-1016 detail I opened \"Add part\" and added a second part \"fwrd86-n2 RD Part B\" with Cost 200, Markup 25% and Quantity 1. After the refresh the Parts table shows both rows: Part A $100.00 / 25% / qty 1 → $125.00, and Part B $200.00 / 25% / qty 1 → $250.00. The app-computed price for the new part is exactly $250.00, and the \"Total (price × quantity)\" row now reads $375.00.",
+      "values": {
+        "part_b_name": "fwrd86-n2 RD Part B",
+        "ref": "fwrd86-n2",
+        "part_b_row": "fwrd86-n2 RD Part B\t$200.00\t25%\t1\tNo supplier\t$250.00\tEdit Delete",
+        "part_a_price": "$125.00",
+        "part_b_cost": "$200.00",
+        "part_b_markup": "25%",
+        "part_b_price": "$250.00",
+        "part_b_qty": "1",
+        "part_b_supplier": "No supplier",
+        "parts_total": "$375.00",
+        "ticket_reference": "RD-1016",
+        "ticket_title": "fwrd86-n2 RD Bench Ticket"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "18/18",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_5ea500: step 12: read 'part_b_name' returned a value the skill itself set/selected ('fwrd86-n2 RD Part B') — confirms the control, not persistence; dropped from the report's confident values"
+      ]
+    },
+    {
+      "id": "04-edit",
+      "status": "success",
+      "summary": "On the RD-1016 detail I clicked \"Edit\" on the Part A row (\"fwrd86-n2 RD Part A\"), which opened the Edit part dialog pre-filled with Cost 100 / Markup 25 / Qty 1. I changed Cost to 150 (leaving Markup 25% and Qty 1 untouched) and clicked \"Save part\". The dialog closed and the Parts table refreshed: Part A now shows Cost $150.00, Markup 25%, Qty 1 and an app-computed Price of exactly $187.50; Part B is unchanged at $250.00, and the \"Total (price × quantity)\" line is now $437.50 (previously $375.00).",
+      "values": {
+        "ref": "fwrd86-n2",
+        "part_a_price_after_edit": "$187.50",
+        "part_a_cost_after_edit": "$150.00",
+        "part_a_markup": "25%",
+        "part_a_qty": "1",
+        "part_b_price": "$250.00",
+        "ticket_reference": "RD-1016",
+        "ticket_title": "fwrd86-n2 RD Bench Ticket",
+        "part_a_row_name": "fwrd86-n2 RD Part A",
+        "part_a_row_cost": "$150.00",
+        "part_a_row_markup": "25%",
+        "part_a_row_qty": "1",
+        "part_a_row_supplier": "No supplier",
+        "part_a_row_price": "$187.50",
+        "part_a_row_actions": "Edit Delete",
+        "updated_total_label": "Total (price × quantity)",
+        "updated_total_amount": "$437.50"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "19/19",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-set",
+      "status": "success",
+      "summary": "Clicking \"Mark Ready\" on RD-1016 was first blocked by an alert reading: \"Ticket is not ready — Part \\\"fwrd86-n2 RD Part A\\\" has no supplier; Part \\\"fwrd86-n2 RD Part B\\\" has no supplier\". So the enforced precondition is that every part must have a supplier (note: the Add/Edit part dialog labels Supplier as \"Optional\"). I satisfied it by opening the Edit part dialog for each part and setting Supplier = \"fwrd86-n2 Supplier Co\" on both Part A and Part B, saving each. Clicking \"Mark Ready\" then succeeded with no alert: the status badge now reads \"Ready\" and the action buttons changed from \"Mark Ready\" to \"Mark Draft\" / \"Mark Closed\". Parts and total were unaffected ($187.50 + $250.00 = $437.50).",
+      "values": {
+        "blocking_validation_message": "Ticket is not ready — Part \"fwrd86-n2 RD Part A\" has no supplier; Part \"fwrd86-n2 RD Part B\" has no supplier",
+        "precondition_action_taken": "Set Supplier = \"fwrd86-n2 Supplier Co\" on both Part A and Part B via the Edit part dialog",
+        "ref_2": "fwrd86-n2",
+        "ref": "RD-1016",
+        "final_status": "Ready",
+        "total": "$437.50",
+        "part_a_row": "fwrd86-n2 RD Part A $150.00 25% 1 fwrd86-n2 Supplier Co $187.50",
+        "part_b_row": "fwrd86-n2 RD Part B $200.00 25% 1 fwrd86-n2 Supplier Co $250.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "06-delete",
+      "status": "success",
+      "summary": "Deleted both parts on RD-1016 via their Delete buttons, each time confirming the app's \"Confirm\" dialog with \"Delete part\"; after each delete the Parts table refreshed, and it now reads \"No parts on this ticket yet.\" (Parts = 0). I then clicked \"Archive ticket\" — it did not require a status change (the ticket stayed Ready) and no confirm dialog appeared; the button flipped to \"Unarchive ticket\". Final state: RD-1016, title \"fwrd86-n2 RD Bench Ticket\", status Ready plus an \"Archived\" badge, 0 parts. In the list view RD-1016 is gone from the default listing (Showing 1–10 of 13) and, with \"Show archived\" ticked, it appears as the first row — \"RD-1016 | fwrd86-n2 RD Bench Ticket Archived | Not recorded | Ready | 0 | 2026-09-23\", total 15 (RD-1016 plus the pre-existing archived RD-1013) — so nothing from this run is left active.",
+      "values": {
+        "deleted_part_a": "fwrd86-n2 RD Part A (confirmed via 'Delete part' dialog)",
+        "deleted_part_b": "fwrd86-n2 RD Part B (confirmed via 'Delete part' dialog)",
+        "list_row_RD-1015": "RD-1016 | fwrd86-n2 RD Bench Ticket [Archived] | Customer: Not recorded | Status: Ready | Parts: 0 | Created: 2026-09-23",
+        "list_default_count": "Showing 1–10 of 13 (RD-1016 hidden while 'Show archived' unchecked)",
+        "list_with_archived_count": "Showing 1–10 of 15 (RD-1016 first row, archived)",
+        "ticket_detail_url": "http://127.0.0.1:4180/#/tickets/t15",
+        "ref_2": "RD-1013",
+        "ticket_reference": "RD-1016",
+        "ref": "fwrd86-n2",
+        "detail_status": "Ready"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 6,
+  "total": 6,
+  "repinned": 0,
+  "drift": 0,
+  "wallMs": 27542,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

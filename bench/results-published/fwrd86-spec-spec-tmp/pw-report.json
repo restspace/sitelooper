@@ -1,0 +1,181 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwrd86-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwrd86-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwrd86-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwrd86-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwrd86-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwrd86.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwrd86-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwrd86.spec.ts",
+      "file": "fwrd86.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwrd86",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 29680,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper warn] 01-signin s_93ead3/9: read 'ticket_title' returned a value the skill itself set/selected ('fwrd86-spec RD Bench Ticket') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-open s_0af5a4/10: read 'part_name' returned a value the skill itself set/selected ('fwrd86-spec RD Part A') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-open\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-add s_5ea500/12: read 'part_b_name' returned a value the skill itself set/selected ('fwrd86-spec RD Part B') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-add\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-edit\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-set\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-delete\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in at http://127.0.0.1:4180/ with email bench@example.com and password {{env:APP_PASSWORD}} (type the password exactly as {{env:APP_PASSWORD}}), then create a repair ticket titled '{{runid}} RD Bench Ticket' with any required fields, and report the confirmation/what appeared.",
+                      "duration": 5418
+                    },
+                    {
+                      "title": "02-open: On the repair ticket '{{runid}} RD Bench Ticket' (reference {{01-signin.ticket_reference}}), open the ticket detail and add a part named '{{runid}} RD Part A' with cost 100 and markup 25. Wait for the page to reflect the new part after saving (the list refreshes a short beat after the mutation). Report the price the app computes for this part exactly as shown on the page.",
+                      "duration": 4895
+                    },
+                    {
+                      "title": "03-add: On ticket {{01-signin.ticket_reference}} detail, add a second part named '{{runid}} RD Part B' with cost 200 and markup 25 (qty 1). Wait for the refresh and report the price the app computes for this part, plus the updated totals.",
+                      "duration": 4499
+                    },
+                    {
+                      "title": "04-edit: On ticket {{01-signin.ticket_reference}} detail, edit the part '{{runid}} RD Part A' to change its cost from 100 to 150, keeping markup 25 and qty 1. Wait for the refresh and report the price the app computes for Part A afterwards and the updated totals.",
+                      "duration": 2484
+                    },
+                    {
+                      "title": "05-set: On ticket {{01-signin.ticket_reference}}, attempt to set its status to 'Ready'. The app likely enforces preconditions before accepting the Ready status — if it blocks, read any validation message shown, discover exactly what is required (and satisfy each precondition), then set the status to Ready. Report exactly what preconditions were required and the final status shown.",
+                      "duration": 6050
+                    },
+                    {
+                      "title": "06-delete: On ticket {{01-signin.ticket_reference}} (currently Ready): delete both parts ('{{runid}} RD Part A' and '{{runid}} RD Part B') via their Delete buttons, confirming any dialog, and waiting for the refresh after each delete so both are gone. Then archive the ticket so nothing from this run is left active (find and use whatever archive control or status the app provides, satisfying any preconditions such as requiring a {{01-signin.ticket_status}} or Closed status first). Report the final state of the ticket (parts remaining, status/archived flag) and the list view.",
+                      "duration": 5287
+                    }
+                  ],
+                  "startTime": "2026-09-23T11:18:53.934Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "355834623046230391ea-7f7fe814f27144c29d07",
+          "file": "fwrd86.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-23T11:18:51.886Z",
+    "duration": 31987.302,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
