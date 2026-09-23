@@ -162,7 +162,18 @@ export function dropSupersededSets(steps: readonly RecordedStep[]): RecordedStep
         // did nothing, and filled it again with {{env:APP_PASSWORD}};
         // s_9c4b07 kept both fills once the dead click was dropped). Only
         // fill after fill: `type` appends, so two types are both needed.
-        if (!reload && first.tool === 'fill' && next.tool === 'fill' && next.diff?.url === url && sameTarget(first, next)) {
+        //
+        // The SAME FIELD is `samePrimaryControl`, not sameTarget: with no
+        // reload between, two fields of one form are adjacent in the
+        // recording, and every field of a dialog shares the recorder's
+        // ambient fallbacks — repairdesk fwrd84-n1 gave Cost and Markup the
+        // same `[data-testid="form-dialog"] input` candidate, so sameControl
+        // found one in common and this rule dropped the fill that carried the
+        // whole point of the step (05-edit saved an unchanged form and still
+        // reported tier A; 02-create lost its Title and hit "Title is
+        // required"). The reload arm above is not exposed to it: it also
+        // demands the same VALUE and a reload between.
+        if (!reload && first.tool === 'fill' && next.tool === 'fill' && next.diff?.url === url && samePrimaryControl(first, next)) {
           dropped.add(i);
           break;
         }
@@ -203,6 +214,21 @@ function focusClick(step: RecordedStep): boolean {
 /** A goto that loaded `url` again: its argument, or where it landed. */
 function sameUrl(step: RecordedStep, url: string): boolean {
   return step.args.url === url || step.diff?.url === url;
+}
+
+/**
+ * The two steps' BEST identification of their element — the first identifying
+ * candidate the recorder wrote down — is the same. Narrower than sameTarget
+ * on purpose: the tail of a chain holds ambient fallbacks that match every
+ * control of a form (fwrd84's `[data-testid="form-dialog"] input`), and a
+ * rule with nothing else to lean on must not take those for identity.
+ */
+function samePrimaryControl(a: RecordedStep, b: RecordedStep): boolean {
+  if (!framesEqual(a.locators.target?.frame, b.locators.target?.frame)) return false;
+  const primary = (s: RecordedStep) => (s.locators.target?.chain ?? []).find(identifying);
+  const left = primary(a);
+  const right = primary(b);
+  return Boolean(left && right && canonical(left) === canonical(right));
 }
 
 function sameTarget(a: RecordedStep, b: RecordedStep): boolean {
