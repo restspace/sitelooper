@@ -1,0 +1,963 @@
+{
+ "id": "s_ee6254",
+ "origin": "http://127.0.0.1:4180",
+ "template": "On the ticket detail page for '{{v1}}' ({{v3}}, currently status {{v4}}), delete both parts: '{{v5}}' and '{{v6}}', confirming any delete dialogs if they appear. After each delete, wait for the parts table to refresh (it lags a beat — don't assume the first render is final) and confirm each part is gone. Then archive the ticket so it no longer appears as an active ticket (look for an Archive action; the app may require going through another status like Closed first — satisfy any precondition it enforces and report any message the app shows). Finally verify: the parts table on this ticket is empty, the ticket shows as archived (report the exact status/label shown), and the ticket does not appear in the active tickets list. Report what you observed at each point, including the ticket's final status and whether it still appears in the active list.",
+ "params": {
+  "v1": {
+   "example": "fwrd88-n1 RD Bench Ticket",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i1:ticket_title"
+  },
+  "v2": {
+   "example": "fwrd88-n1",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "RD-1015",
+   "usedIn": [
+    5
+   ],
+   "known": true,
+   "binding": "output:i1:ticket_reference"
+  },
+  "v4": {
+   "example": "Ready",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i5:final_status"
+  },
+  "v5": {
+   "example": "fwrd88-n1 RD Part A",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:part_name"
+  },
+  "v6": {
+   "example": "fwrd88-n1 RD Part B",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i3:new_part_name"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:4180/#/tickets",
+  "fingerprint": [
+   0,
+   0.018,
+   0.009,
+   0.018,
+   0,
+   0,
+   0.028,
+   0,
+   0,
+   0.009,
+   0,
+   0,
+   0.018,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0.092,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0.046,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.028,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0.018,
+   0.028,
+   0,
+   0,
+   0,
+   0,
+   0.183,
+   0,
+   0.037,
+   0,
+   0.009,
+   0,
+   0,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.037,
+   0,
+   0.018,
+   0,
+   0.073,
+   0,
+   0,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.009,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0.037,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.009,
+   0.028,
+   0,
+   0,
+   0,
+   0.018,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.009,
+   0.009,
+   0,
+   0,
+   0.009,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0.009,
+   0,
+   0.018,
+   0.202,
+   0.028,
+   0,
+   0.018,
+   0.018,
+   0.009,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.009,
+   0,
+   0.734,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0.018,
+   0,
+   0.028,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.092,
+   0,
+   0,
+   0,
+   0.009,
+   0,
+   0.092,
+   0.009,
+   0.028,
+   0.018,
+   0,
+   0,
+   0,
+   0.092,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.092,
+   0.037,
+   0,
+   0.018,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0.018,
+   0,
+   0.009,
+   0,
+   0,
+   0,
+   0.037,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.009,
+   0,
+   0.037,
+   0,
+   0,
+   0,
+   0.018,
+   0.018,
+   0,
+   0.055,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.183,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0.018,
+   0.028,
+   0,
+   0,
+   0,
+   0,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.028,
+   0,
+   0.073,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.028,
+   0,
+   0,
+   0,
+   0.009,
+   0,
+   0,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0.009,
+   0.183,
+   0,
+   0.037,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0.073,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.009,
+   0.009,
+   0,
+   0.092,
+   0.009,
+   0,
+   0.018,
+   0.018,
+   0,
+   0,
+   0,
+   0.046,
+   0.055,
+   0,
+   0,
+   0,
+   0.009,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0.037,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.028,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0.009,
+   0,
+   0,
+   0,
+   0.092,
+   0,
+   0,
+   0.055,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0.385,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.101,
+   0.018,
+   0,
+   0.018,
+   0,
+   0.037,
+   0,
+   0,
+   0.147,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0.018,
+   0.028,
+   0,
+   0,
+   0.101,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0.018,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ]
+ },
+ "steps": [
+  {
+   "tool": "check",
+   "args": {
+    "target": "@e636"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "show-archived"
+     },
+     {
+      "kind": "role",
+      "role": "checkbox",
+      "name": "Show archived"
+     },
+     {
+      "kind": "label",
+      "label": "Show archived"
+     },
+     {
+      "kind": "id",
+      "selector": "#show-archived"
+     },
+     {
+      "kind": "css",
+      "selector": "#show-archived"
+     },
+     {
+      "kind": "point",
+      "x": 1054,
+      "y": 216,
+      "w": 16,
+      "h": 16,
+      "role": "checkbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "addedContains": [
+     "- checkbox \"Show archived\" [checked]",
+     "- row \"{{v3}} {{v1}} Archived Not recorded {{v4}} 0 {{*}}\"",
+     "- cell \"{{v3}}\"",
+     "- link \"{{v3}}\"",
+     "- cell \"{{v1}} Archived\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "check",
+   "args": {
+    "target": "@e636"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "show-archived"
+     },
+     {
+      "kind": "role",
+      "role": "checkbox",
+      "name": "Show archived"
+     },
+     {
+      "kind": "label",
+      "label": "Show archived"
+     },
+     {
+      "kind": "id",
+      "selector": "#show-archived"
+     },
+     {
+      "kind": "css",
+      "selector": "#show-archived"
+     },
+     {
+      "kind": "point",
+      "x": 1054,
+      "y": 216,
+      "w": 16,
+      "h": 16,
+      "role": "checkbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "role=checkbox[name=\"Show archived\"]",
+    "what": "value",
+    "label": "show_archived_state"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=checkbox[name=\"Show archived\"]"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "show-archived"
+     },
+     {
+      "kind": "role",
+      "role": "checkbox",
+      "name": "Show archived"
+     },
+     {
+      "kind": "label",
+      "label": "Show archived"
+     },
+     {
+      "kind": "id",
+      "selector": "#show-archived"
+     },
+     {
+      "kind": "css",
+      "selector": "#show-archived"
+     },
+     {
+      "kind": "point",
+      "x": 1054,
+      "y": 216,
+      "w": 16,
+      "h": 16,
+      "role": "checkbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "show_archived_state"
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=checkbox[name=\"Show archived\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=checkbox[name=\"Show archived\"]"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "show-archived"
+     },
+     {
+      "kind": "role",
+      "role": "checkbox",
+      "name": "Show archived"
+     },
+     {
+      "kind": "label",
+      "label": "Show archived"
+     },
+     {
+      "kind": "id",
+      "selector": "#show-archived"
+     },
+     {
+      "kind": "css",
+      "selector": "#show-archived"
+     },
+     {
+      "kind": "point",
+      "x": 1054,
+      "y": 216,
+      "w": 16,
+      "h": 16,
+      "role": "checkbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "addedContains": [
+     "- checkbox \"Show archived\"",
+     "- row \"RD-1005 Till printer jams {{*}} receipts Blue Fox Cafe Draft 2 {{*}}\"",
+     "- cell \"RD-1005\"",
+     "- link \"RD-1005\"",
+     "- cell \"Till printer jams {{*}} receipts\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e633",
+    "value": "{{v3}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "search"
+     },
+     {
+      "kind": "role",
+      "role": "searchbox",
+      "name": "Search"
+     },
+     {
+      "kind": "label",
+      "label": "Search"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Reference, title or customer"
+     },
+     {
+      "kind": "id",
+      "selector": "#search"
+     },
+     {
+      "kind": "css",
+      "selector": "#search"
+     },
+     {
+      "kind": "point",
+      "x": 670,
+      "y": 224,
+      "w": 710.7,
+      "h": 39,
+      "role": "searchbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "addedContains": [
+     "- searchbox \"Reference, title or customer\": {{v3}}",
+     "- button \"Next\" [disabled]"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "value"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "search"
+     },
+     {
+      "kind": "role",
+      "role": "searchbox",
+      "name": "Search"
+     },
+     {
+      "kind": "label",
+      "label": "Search"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Reference, title or customer"
+     },
+     {
+      "kind": "id",
+      "selector": "#search"
+     },
+     {
+      "kind": "css",
+      "selector": "#search"
+     },
+     {
+      "kind": "point",
+      "x": 670,
+      "y": 224,
+      "w": 710.7,
+      "h": 39,
+      "role": "searchbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "ticket_reference"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"empty-row\"] td"
+     },
+     {
+      "kind": "css",
+      "selector": "#ticket-rows > tr > td"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 420,
+      "w": 1070,
+      "h": 41.5,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "search_active_list_for"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Deleted both parts on {{v3}}: each \"Delete\" click raised an in-page Confirm dialog (\"Cancel\" / \"Delete part\"); I confirmed each, and after each the table refreshed (Part A removed → total $250.00, then Part B removed → parts table now reads \"No parts on this ticket yet.\"). I then clicked \"Archive ticket\" directly — the app imposed NO precondition (no message, no forced Closed step); it succeeded immediately and the button became \"Unarchive ticket\". Verified the three end states: (1) parts table empty; (2) ticket still displays Status \"{{v4}}\" now accompanied by an \"Archived\" badge; (3) it is gone from the active list — the list count fell from 14 to 13, searching \"{{v3}}\" with Show archived unticked returns \"No tickets match the current filters.\", and ticking \"Show archived\" brings the row back tagged \"Archived\" with 0 parts.",
+  "values": {
+   "ticket_reference": "{{v3}}",
+   "ticket_title": "{{v1}}",
+   "delete_dialog_buttons": "Cancel / Delete part",
+   "parts_table_after_deletes": "NAME\tCOST\tMARKUP\tQTY\tSUPPLIER\tPRICE\tACTIONS\nNo parts on this ticket yet.",
+   "archive_precondition_message": "none — no message or rejection was shown; archive succeeded on the first click",
+   "detail_status_block_text": "Status\n{{v4}}\nArchived",
+   "final_status_label": "{{v4}} (with an \"Archived\" badge)",
+   "archived_action_after": "Unarchive ticket (previously \"Archive ticket\")",
+   "active_list_count_before": "Showing 1–10 of 14",
+   "active_list_count_after": "Showing 1–10 of 13",
+   "search_active_list_for": "No tickets match the current filters.",
+   "list_row_with_show_archived_checked": "{{v3}} | {{v1}} [Archived] | Not recorded | {{v4}} | 0 parts | 2026-09-23",
+   "show_archived_state": "on"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-23T17:48:35.337Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-23T17:50:00.981Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_a69365",
+  "index": 1,
+  "of": 2
+ },
+ "provenance": {
+  "session": "fwrd88-n1",
+  "instruction": "On the ticket detail page for 'fwrd88-n1 RD Bench Ticket' (RD-1015, currently status Ready), delete both parts: 'fwrd88-n1 RD Part A' and 'fwrd88-n1 RD Part B', confirming any delete dialogs if they appear. After each delete, wait for the parts table to refresh (it lags a beat — don't assume the first render is final) and confirm each part is gone. Then archive the ticket so it no longer appears as an active ticket (look for an Archive action; the app may require going through another status like Closed first — satisfy any precondition it enforces and report any message the app shows). Finally verify: the parts table on this ticket is empty, the ticket shows as archived (report the exact status/label shown), and the ticket does not appear in the active tickets list. Report what you observed at each point, including the ticket's final status and whether it still appears in the active list.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-23T17:48:35.337Z",
+  "transforms": [
+   {
+    "name": "unfreezeExpectations",
+    "at": 4,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- checkbox \\\"Show archived\\\"\",\"- row \\\"RD-1005 Till printer jams on receipts Blue Fox Cafe Draft 2 {{*}}\\\"\",\"- cell \\\"RD-1005\\\"\",\"- link \\\"RD-1005\\\"\",\"- cell \\\"Till printer jams on receipts\\\"\"] → [\"- checkbox \\\"Show archived\\\"\",\"- row \\\"RD-1005 Till printer jams {{*}} receipts Blue Fox Cafe Draft 2 {{*}}\\\"\",\"- cell \\\"RD-1005\\\"\",\"- link \\\"RD-1005\\\"\",\"- cell \\\"Till printer jams {{*}} receipts\\\"\"]"
+   },
+   {
+    "name": "unfreezeExpectations",
+    "at": 5,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- searchbox \\\"Reference, title or customer\\\": {{v3}}\",\"- row \\\"No tickets match the current filters.\\\"\",\"- cell \\\"No tickets match the current filters.\\\"\",\"- button \\\"Next\\\" [disabled]\"] → [\"- searchbox \\\"Reference, title or customer\\\": {{v3}}\",\"- button \\\"Next\\\" [disabled]\"]"
+   }
+  ]
+ },
+ "revision": 4
+}
