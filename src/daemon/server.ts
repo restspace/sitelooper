@@ -8,7 +8,7 @@ import { executeTool } from '../agent/tools.js';
 import { urlPattern as compiledUrlPattern, carryOpener, dropAbsentReadLocators, dropDeadReadLocators, fillParams, markReadsProven, stranded, urlMatches, urlParts } from '../skills/compile.js';
 import type { DriftTicket } from '../skills/repair.js';
 import type { Page } from 'playwright-core';
-import { agentGesturesOutsideReplay, bindSkill, canAdoptPin, decideRepin, instructionEntry, learnFromInstruction, matchTemplate, pinEndsElsewhere, pinStartsElsewhere, pinStatus, publishedOutputs, selectCandidates, synthesizeReport } from '../skills/learn.js';
+import { agentGesturesOutsideReplay, bindSkill, canAdoptPin, decideRepin, instructionEntry, learnFromInstruction, matchTemplate, pinEndsElsewhere, pinStartsElsewhere, pinStatus, publishedOutputs, replayReport, selectCandidates } from '../skills/learn.js';
 import { buildFlow, consumedReportedOutputs, consumedUrlOutputs, ignorableRefs, jsonLeaves, lintFlowRefs, lintUnpublishedOutputs, listFlows, liveReadsFor, liveReadsForRecovery, loadFlow, loadFlowFile, lookupOutput, mutatingIntent, noteOutputEvidence, pruneUnsourcedOutputs, recoveryRoute, remapParams, resolveInstruction, resolveStepParams, softResolveInstruction, saveFlow, staleInstructionIds, taskConstants, textMints, unbankedMutations, unreportedOutputs, urlOutputs, varyingValues, type RunSpecific } from '../skills/flow.js';
 import { applyRelabelToEntries, applyRelabelToSkills, relabelCases, requestRelabelPlan } from '../skills/relabel.js';
 import { goalSatisfied, renderChainStop } from '../skills/replay.js';
@@ -38,6 +38,7 @@ import { literalCredentialsIn, markLiteralCredentials } from '../shared/secrets.
 import { BrowserSession } from './browser.js';
 import { DEFAULT_BROWSER_PROFILE } from '../execution/browser.js';
 import { observedChange } from '../execution/lifecycle.js';
+import { shownForReport, templateValue } from '../execution/report.js';
 import { startPageSettled } from '../execution/action.js';
 import { coverageComplete, recordedValueShown } from '../execution/snapshot.js';
 import { captureSignature } from './diff.js';
@@ -1588,9 +1589,22 @@ ${describeLeaks(certain.slice(0, 30))}${certain.length > 30 ? `\n  … and ${cer
         if (done.satisfied) {
           const idTexts = (pinned.preconditions.requireText ?? []).map((m) => fillParams(m, bound.params));
           const values: Record<string, string> = {};
+          // The read-backs never run, so the template stands in for them —
+          // through the shared rule, on the page just judged satisfied. A
+          // recorded literal counts here (`literal`: the goal's own "Cancelled"
+          // is what later steps expect), but only where this page shows it:
+          // filled blind, it published the recording's figures and dates as
+          // this run's (fwrd86's "Created: 2026-09-23" is the replay-path twin).
+          // The artifact's satisfiedGuard asks the same.
+          let pageShown: string[] | null = null;
+          try {
+            pageShown = await shownForReport(await this.browser.getPage());
+          } catch {
+            /* browser gone — nothing observed, nothing published */
+          }
           for (const [k, v] of Object.entries(tail.reportTemplate?.values ?? {})) {
-            const filled = fillParams(v, bound.params);
-            if (!/\{\{/.test(filled)) values[k] = filled;
+            const kept = templateValue(v, bound.params, pageShown, { literal: true });
+            if (kept !== null) values[k] = kept;
           }
           const shown = done.shown.map((s) => JSON.stringify(s)).join(', ');
           opts.progress(`[flow ${flow.name}] ${step.id}: already satisfied — page shows ${shown} for ${idTexts.join(', ')}; nothing to do`);
@@ -2527,7 +2541,11 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       delete confidentValues[key];
     }
     if (agg.echoed.length) progress(`[replay] dropped ${agg.echoed.length} echo read(s) from confident values: ${[...new Set(agg.echoed)].join(', ')}`);
-    const report = synthesizeReport(last, match.params, confidentValues);
+    // The report's recorded text is checked against the page the chain ends
+    // on (replayReport): fwrd86 06-delete published "Created: 2026-09-23"
+    // around this run's ticket id, on every replay, on any day.
+    const { report, withheld } = await replayReport(() => this.browser.getPage(), last, match.params, confidentValues);
+    if (withheld.length) progress(`[replay] withheld ${withheld.length} report value(s) whose recorded text this run's page did not show: ${withheld.join(', ')}`);
     // Keep the conversation coherent for later instructions: the same one-line
     // entry the loop would have written.
     this.state.messages.push({ role: 'user', content: instruction });

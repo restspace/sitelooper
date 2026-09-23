@@ -3,7 +3,7 @@ import { DEFAULT_BROWSER_PROFILE, isNavigatingAction, type BrowserProfile } from
 import { setsSomething } from '../execution/echo.js';
 import { standingFillRole } from '../execution/refill.js';
 import { toggleEffectLines } from '../execution/toggle.js';
-import { derivesFromParams } from '../execution/report.js';
+import { derivesFromParams, reportNeedsPage } from '../execution/report.js';
 import { observedNothing } from '../execution/observe.js';
 import { segmentGate } from '../execution/gates.js';
 /**
@@ -2884,15 +2884,6 @@ function markerBound(marker: string, segment: SpecSegment): boolean {
 }
 
 /**
- * A flow-step param value as it renders in the emitted body: a lone slot is the
- * param itself (`p.v1`), anything else is recorded text with its slots filled.
- */
-function valueSource(text: string): string {
-  const only = /^\{\{([vd]\d+)\}\}$/.exec(text);
-  return only ? `p.${only[1]}` : src(text);
-}
-
-/**
  * The "already satisfied" guard at the top of a step body, when the step's
  * procedure carries one.
  *
@@ -2944,11 +2935,14 @@ function satisfiedGuard(step: SpecStep, ctx: Ctx): string[] {
     `  console.log(${src(say)});`,
   ];
   // The read-backs never run, so the report template stands in for them: the
-  // same output keys, filled from this run's own params.
-  for (const [label, value] of Object.entries(last.report?.values ?? {})) {
-    if (!label || !value || !markerBound(value, last)) continue;
+  // same output keys, filled from this run's own params — through the shared
+  // rule, on the page just judged, as the daemon's already-satisfied path
+  // does: recorded text publishes only where this page shows it (fwrd86).
+  const templated = Object.entries(last.report?.values ?? {}).filter(([label, value]) => label && value && markerBound(value, last));
+  if (templated.length) out.push('  const satisfiedShown = await shownForReport(page).catch(() => null);');
+  for (const [label, value] of templated) {
     noteSlots(value, ctx);
-    out.push(`  outputs[${q(`${step.id}.${label}`)}] = ${valueSource(value)};`);
+    out.push(`  { const value = templateValue(${q(value)}, p, satisfiedShown, { literal: true }); if (value !== null) outputs[${q(`${step.id}.${label}`)}] = value; }`);
   }
   out.push('  return;', '}');
   return out;
@@ -2970,10 +2964,15 @@ function reportTemplateLines(step: SpecStep, ctx: Ctx): string[] {
   const entries = Object.entries(last?.report?.values ?? {}).filter(([label, template]) => label && derivesFromParams(template) && markerBound(template, last));
   if (!entries.length) return [];
   const out = ["// The step's report values built from this run's own parameters, as the daemon reports them (synthesizeReport)."];
+  // Recorded text around a slot publishes only where this page shows it
+  // (fwrd86 06-delete: "Created: 2026-09-23"), so the page is looked at once,
+  // after the last segment — where the daemon looks, after the chain.
+  const needsPage = reportNeedsPage(entries.map(([, template]) => template));
+  if (needsPage) out.push('const reportShown = await shownForReport(page).catch(() => null);');
   for (const [label, template] of entries) {
     noteSlots(template, ctx);
     const key = q(`${step.id}.${label}`);
-    out.push(`{ const value = templateValue(${q(template)}, p); if (value !== null && outputs[${key}] === undefined) outputs[${key}] = value; }`);
+    out.push(`{ const value = templateValue(${q(template)}, p, ${needsPage ? 'reportShown' : 'null'}); if (value !== null && outputs[${key}] === undefined) outputs[${key}] = value; }`);
   }
   return out;
 }

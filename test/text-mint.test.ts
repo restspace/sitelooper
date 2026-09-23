@@ -231,7 +231,10 @@ describe('09-report (fwrd85 s_a0fc7c)', () => {
     // n2: its own runid, and 02-create's live read-back of its own ticket.
     const report = synthesizeReport(skill, { v1: 'fwrd85-n2', [minted![0]]: 'RD-1016' }, { active_search_result_count: 'No tickets' });
     const published = report.evidence?.values ?? {};
-    expect(published.archived_search_result).toContain('single row: RD-1016 | fwrd85-n2 RD Bench Ticket');
+    // The slots fill with n2's own values, but the text between them — "Showing
+    // 1–1 of 1", "2026-09-23" — is the recording's, and this run observed no
+    // page showing it (fwrd86: src/execution/report.ts), so it is withheld.
+    expect(published.archived_search_result).toBeUndefined();
     expect(JSON.stringify(published)).not.toContain('RD-1015');
   });
 

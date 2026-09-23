@@ -3003,7 +3003,7 @@ describe('emitFlowFile: the already-satisfied guard', () => {
   it('opens the step body with the guard, its log line and the report values', () => {
     const source = emit(cancelStep());
     const body = source.slice(source.indexOf("async '08-open'"));
-    const lines = body.split('\n').slice(1, 9).map((l) => l.trim());
+    const lines = body.split('\n').slice(1, 10).map((l) => l.trim());
     expect(lines).toEqual([
       '// goal: the page already showing "Cancelled" for this record means the step\'s work is done —',
       '// the same check replay makes before it acts (goalSatisfied, src/skills/replay.ts).',
@@ -3013,8 +3013,11 @@ describe('emitFlowFile: the already-satisfied guard', () => {
       // urlMatches, unconditionally), then the page itself.
       "if (markersBound(['{{v1}}', '{{v3}}', 'Cancelled'], p) && urlMatches('http://app.test/odoo/sales/21', page.url(), p) && await satisfied(page, [`${p.v1}`, `${p.v3}`], ['Cancelled'])) {",
       "console.log('[sitelooper satisfied] 08-open — page shows \"Cancelled\"; nothing to do');",
-      "outputs['08-open.order_status'] = 'Cancelled';",
-      "outputs['08-open.order_reference'] = p.v1;",
+      // The template stands in for the read-backs through the shared rule, on
+      // the page just judged: recorded text publishes only where it shows (fwrd86).
+      'const satisfiedShown = await shownForReport(page).catch(() => null);',
+      "{ const value = templateValue('Cancelled', p, satisfiedShown, { literal: true }); if (value !== null) outputs['08-open.order_status'] = value; }",
+      "{ const value = templateValue('{{v1}}', p, satisfiedShown, { literal: true }); if (value !== null) outputs['08-open.order_reference'] = value; }",
       'return;',
       '}',
     ]);
@@ -3081,7 +3084,7 @@ describe('emitFlowFile: the already-satisfied guard', () => {
 
   it('skips a report value it cannot fill, and publishes the rest', () => {
     const source = emit(cancelStep({ report: { summary: 's', values: { order_status: 'Cancelled', stray: '{{v9}}' } } }));
-    expect(source).toContain("outputs['08-open.order_status'] = 'Cancelled';");
+    expect(source).toContain("templateValue('Cancelled', p, satisfiedShown, { literal: true }); if (value !== null) outputs['08-open.order_status'] = value;");
     expect(source).not.toContain("outputs['08-open.stray'] =");
   });
 
@@ -3331,11 +3334,23 @@ describe('report-template values after the last segment', () => {
     expect(unsourced(flow)).toEqual([]);
     const body = emit(flow);
     expect(body).toContain(
-      "{ const value = templateValue('{{v2}}', p); if (value !== null && outputs['02-create.post_title_element_text'] === undefined) outputs['02-create.post_title_element_text'] = value; }",
+      "{ const value = templateValue('{{v2}}', p, null); if (value !== null && outputs['02-create.post_title_element_text'] === undefined) outputs['02-create.post_title_element_text'] = value; }",
     );
     // the slot the template names is passed to the step, though no action uses it
     expect(body).toMatch(/async '02-create'\(page: Page, p: \{[^}]*v2: string/);
     expect(body).toContain('// Shared execution source: report.ts.');
+  });
+
+  // fwrd86 06-delete: "{{v1}} | … | Created: 2026-09-23". The text around the
+  // slot is the recording's, so the body looks at the page once, after the
+  // last segment, and the shared rule publishes only what that page shows.
+  it('checks recorded text around a slot against the page the step ends on', () => {
+    const body = emit(flowWith('Created {{v2}} on 2026-09-23'));
+    expect(body).toContain('const reportShown = await shownForReport(page).catch(() => null);');
+    expect(body).toContain("templateValue('Created {{v2}} on 2026-09-23', p, reportShown)");
+    expect(body.indexOf('const reportShown')).toBeLessThan(body.indexOf("templateValue('Created {{v2}}"));
+    expect(body).toContain('async function shownForReport(page: Page): Promise<string[] | null> {');
+    expect(syntaxErrors(body)).toEqual([]);
   });
 
   it('still refuses a consumer of a recorded literal, which the daemon drops as stale too', () => {
@@ -3347,7 +3362,7 @@ describe('report-template values after the last segment', () => {
   it('a live read of the same output keeps it: the template only fills in when nothing read it', () => {
     const body = emit(flowWith('{{v2}}', 'post_title_element_text'));
     const readAt = body.indexOf("outputs['02-create.post_title_element_text'] = ");
-    const templateAt = body.indexOf("templateValue('{{v2}}', p)");
+    const templateAt = body.indexOf("templateValue('{{v2}}', p, null)");
     expect(readAt).toBeGreaterThan(-1);
     expect(templateAt).toBeGreaterThan(readAt);
     expect(body).toContain("outputs['02-create.post_title_element_text'] === undefined");

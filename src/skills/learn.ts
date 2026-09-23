@@ -4,7 +4,8 @@ import type { Report } from '../agent/report.js';
 import type { RecordedEntry, RecordedInstruction } from '../daemon/recorder.js';
 import { compileSkills, escapeRe, fillParams, samePageContexts, sameProcedure, urlMatches, urlPattern, variantStart } from './compile.js';
 import { landedOnRecordedPage } from '../execution/gates.js';
-import { derivesFromParams, templateValue } from '../execution/report.js';
+import type { Page } from 'playwright-core';
+import { derivesFromParams, reportNeedsPage, shownForReport, templateValue, unshownLiterals } from '../execution/report.js';
 import { ComponentStore, learnRecipes } from './components.js';
 import { contractOf, isVerified, successRate, type Skill, type SkillStore } from './store.js';
 
@@ -761,15 +762,43 @@ function squash(text: string): string {
  */
 const MIN_STALE_LEN = 4;
 
-export function synthesizeReport(skill: Skill, params: Record<string, string>, liveValues: Record<string, string>): Report {
+export function synthesizeReport(
+  skill: Skill,
+  params: Record<string, string>,
+  liveValues: Record<string, string>,
+  /**
+   * The page once the replay's work is done (shownForReport), which a filled
+   * value's recorded text must stand on to be published; null observed
+   * nothing. fwrd86 06-delete published "Created: 2026-09-23" around this
+   * run's ticket id on every replay.
+   */
+  shown: readonly string[] | null = null,
+): Report {
+  return synthesize(skill, params, liveValues, shown).report;
+}
+
+/** synthesizeReport, with the keys it withheld for text the page did not show. */
+function synthesize(skill: Skill, params: Record<string, string>, liveValues: Record<string, string>, shown: readonly string[] | null): { report: Report; withheld: string[] } {
   const template = skill.reportTemplate ?? { summary: '', values: {} };
   const values: Record<string, string> = {};
   const stale: string[] = [];
+  /** Values withheld because this run's page did not show their recorded text. */
+  const unshown: string[] = [];
+  let omitted = 0;
   for (const [k, v] of Object.entries(template.values)) {
     if (k in liveValues) continue; // a live read wins outright, below
     // The shared rule (src/execution/report.ts templateValue), which a
     // compiled artifact applies to the same template (fwgh4 03-open).
-    const kept = templateValue(v, params);
+    const kept = templateValue(v, params, shown);
+    // Withheld for text the page does not show: THAT text is what is stale,
+    // so it is what the prose below must not keep stating. The whole value
+    // would never match the prose — the slots in it are this run's.
+    const filled = fillParams(v, params);
+    if (kept === null && derivesFromParams(v) && filled && !filled.includes('{{')) {
+      stale.push(...unshownLiterals(v, shown));
+      unshown.push(k);
+      continue;
+    }
     // Kept only if every part of it came from a parameter: no residual literal,
     // and no residual MARKER of any spelling. A param can itself arrive still
     // holding a reference the run never resolved — fwod56's `07-change`
@@ -782,7 +811,10 @@ export function synthesizeReport(skill: Skill, params: Record<string, string>, l
     // re-publish as data.
     // An empty fill is unfilled too (round 26's rule J), and so not a value.
     if (kept !== null) values[k] = kept;
-    else stale.push(v);
+    else {
+      stale.push(v);
+      omitted += 1;
+    }
   }
   for (const [k, live] of Object.entries(liveValues)) values[k] = live;
 
@@ -867,12 +899,41 @@ export function synthesizeReport(skill: Skill, params: Record<string, string>, l
     ? `Replayed stored procedure ${skill.id}${Object.keys(values).length ? `; observed ${Object.entries(values).map(([k, v]) => `${k}=${v}`).join(', ')}` : ''}.`
     : summary;
 
-  return {
+  const report: Report = {
     status: 'success',
     summary: clean || `Replayed stored procedure ${skill.id} (${skill.steps.length} steps).`,
-    details: `Replayed stored procedure ${skill.id} without the model. Reported values are live read-backs or your own parameters; ${stale.length ? `${stale.length} recorded value(s) that could not be re-observed were omitted` : 'no stale values were carried over'}.`,
+    details: `Replayed stored procedure ${skill.id} without the model. Reported values are live read-backs or your own parameters; ${omitted ? `${omitted} recorded value(s) that could not be re-observed were omitted` : 'no stale values were carried over'}${unshown.length ? `; withheld ${unshown.join(', ')}, whose recorded text this run's page did not show` : ''}.`,
     evidence: { values },
   };
+  return { report, withheld: unshown };
+}
+
+/**
+ * The daemon's zero-model report once a replayed chain has finished: the
+ * page looked at once, after the last segment — where the artifact looks,
+ * after the step's last segment (spec/emit.ts reportTemplateLines) — and only
+ * when a value no live read covers has recorded text to check. `withheld`
+ * names what the page did not show (fwrd86 06-delete: "Created: 2026-09-23",
+ * "Showing 1–10 of 13"), the way the echo guard names what it dropped.
+ */
+export async function replayReport(
+  getPage: () => Promise<Page>,
+  skill: Skill,
+  params: Record<string, string>,
+  liveValues: Record<string, string>,
+): Promise<{ report: Report; withheld: string[] }> {
+  const pending = Object.entries(skill.reportTemplate?.values ?? {})
+    .filter(([k]) => !(k in liveValues))
+    .map(([, v]) => v);
+  let shown: string[] | null = null;
+  if (reportNeedsPage(pending)) {
+    try {
+      shown = await shownForReport(await getPage());
+    } catch {
+      /* browser gone — nothing observed, so nothing recorded is published */
+    }
+  }
+  return synthesize(skill, params, liveValues, shown);
 }
 
 /**
@@ -882,6 +943,10 @@ export function synthesizeReport(skill: Skill, params: Record<string, string>, l
  * (synthesizeReport keeps exactly those; recorded literals are dropped as
  * stale). Used by the flow export lint to flag {{step.output}} references
  * that only model recovery could re-observe.
+ *
+ * "Can publish", not "will": since fwrd86 a template value with recorded
+ * text around its slots publishes only on a run whose page shows that text,
+ * so it is counted here as a source that can, on the right page.
  */
 export function publishedOutputs(skill: Skill): string[] {
   const out = new Set<string>();

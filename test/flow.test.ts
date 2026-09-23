@@ -2832,9 +2832,12 @@ describe('the recorded stand-in reaches every unresolved reference (fwod49)', as
    */
   it('neither banking path publishes a value that still holds an unfilled marker', () => {
     const source = fs.readFileSync(path.resolve(__dirname, '../src/daemon/server.ts'), 'utf8');
-    const satisfied = source.indexOf('const filled = fillParams(v, bound.params);');
+    // The satisfied path goes through the shared templateValue, which refuses
+    // a fill still holding `{{` (and, since fwrd86, recorded text the page
+    // does not show).
+    const satisfied = source.indexOf('const kept = templateValue(v, bound.params, pageShown, { literal: true });');
     expect(satisfied).toBeGreaterThan(0);
-    expect(source.slice(satisfied, satisfied + 200)).toMatch(/if \(!\/\\\{\\\{\/\.test\(filled\)\)/);
+    expect(fs.readFileSync(path.resolve(__dirname, '../src/execution/report.ts'), 'utf8')).toMatch(/if \(!filled \|\| \/\\\{\\\{\/\.test\(filled\)\) return null;/);
     const normal = source.indexOf("Object.entries(result.report.evidence?.values ?? {})");
     expect(normal).toBeGreaterThan(0);
     expect(source.slice(normal, normal + 200)).toMatch(/if \(!\/\\\{\\\{\/\.test\(s\)\)/);

@@ -102,6 +102,19 @@ document.querySelector('.mark').addEventListener('click', async (e) => {
 </body></html>`;
 
 /**
+ * A ticket list whose figures are the app's STATE, not the procedure's: the
+ * count is the item collection's size (reset(n)) and the created date is
+ * `listing.date`. fwrd86 06-delete's report template recorded "Showing 1–10 of
+ * 13" and "Created: 2026-09-23" around its slots; a replay on another day, or
+ * after the list grew, must not publish them.
+ */
+const TICKETS = (total: number, date: string) => `<!doctype html><html><head><meta charset="utf-8"><title>Tickets</title></head><body>
+<h1>Tickets</h1>
+<p id="summary">Showing 1–${Math.min(10, total)} of ${total} tickets, RD-1016 first</p>
+<table><tbody id="rows"><tr><td><a id="ref" href="#">RD-1016</a></td><td>RD-1016 Bench Ticket created ${date}</td></tr></tbody></table>
+</body></html>`;
+
+/**
  * The same record page, not yet ARRIVED: a placeholder first, then a moment
  * later the record's own name and a url the app normalises for itself. That is
  * what Grafana does to a bare dashboard address (fwgr47-n2 07-verify judged
@@ -1068,6 +1081,8 @@ export interface FixtureServer {
   readonly log: string[];
   /** Current item collection. */
   readonly items: string[];
+  /** The ticket list's created date (/tickets); reset() restores the recording's, 2026-09-23. */
+  listing: { date: string };
   /** Reset state for a new test/case: `n` fresh items, empty log, faults cleared. */
   reset(n: number): void;
   faults: {
@@ -1093,6 +1108,7 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
   let items: string[] = Array.from({ length: initialCount }, (_, i) => `Item ${i + 1}`);
   let log: string[] = [];
   const pending: Fault[] = [];
+  const listing = { date: '2026-09-23' };
 
   function take<K extends Fault['kind']>(kind: K, req?: http.IncomingMessage): Extract<Fault, { kind: K }> | undefined {
     for (const f of pending) {
@@ -1122,6 +1138,11 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
     if (url === '/') {
       res.writeHead(200, { 'content-type': 'text/html' });
       res.end(PAGE);
+      return;
+    }
+    if (url === '/tickets') {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end(TICKETS(items.length, listing.date));
       return;
     }
     if (url.startsWith('/record/')) {
@@ -1437,10 +1458,12 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
     origin,
     get log() { return log; },
     get items() { return items; },
+    listing,
     reset(n: number) {
       items = Array.from({ length: n }, (_, i) => `Item ${i + 1}`);
       log = [];
       pending.length = 0;
+      listing.date = '2026-09-23';
     },
     faults: {
       delay(ms, opts = {}) {

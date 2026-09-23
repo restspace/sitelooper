@@ -34,6 +34,7 @@ import { SOFT_MATCH_MIN_SIMILARITY, fillableChain, unfilledStepVerdict } from '.
 import { emitFlowFile } from '../src/spec/emit.js';
 import type { SpecFlow } from '../src/spec/ir.js';
 import { goalSatisfied, type ReplayResult } from '../src/skills/replay.js';
+import { replayReport } from '../src/skills/learn.js';
 import { ignorableRefs, resolveInstruction, resolveStepParams, type FlowStep } from '../src/skills/flow.js';
 import type { Skill, SkillParam, SkillStep } from '../src/skills/store.js';
 import type { LocatorCandidate, RecordedEntry, RecordedStep } from '../src/daemon/recorder.js';
@@ -590,6 +591,114 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     expect(outputs['01-read'].x).toBe('Remove');
     expect(emitted.outputs['01-read.x']).toBe('Remove');
   }, 120_000);
+
+  /**
+   * fwrd86 06-delete. The report template filled this run's ticket id into
+   * text the RECORDING saw — "Showing 1–10 of 13", "Created: 2026-09-23" — and
+   * both replays published it as their own finding. Here the list is the
+   * app's state (fixture /tickets: the count is the collection's size, the
+   * date `listing.date`), and the template carries the recording's figures
+   * around `{{v1}}`. When the page shows them both runners publish them; when
+   * the app has moved on (a day later, three more tickets) both decline them,
+   * and neither ever publishes the recording's text. The live read publishes
+   * on both either way.
+   *
+   * The daemon half is the flow runner's own assembly (replayReport, after
+   * run_skill's replay), run against the page the replay ended on.
+   */
+  describe('report values (fwrd86)', () => {
+    const READ_REF: SkillStep = { tool: 'read', args: { target: '(read-back)', what: 'text' }, locators: { target: [{ kind: 'id', selector: '#ref' }] }, label: 'ticket_reference' };
+    const values = {
+      ticket_reference: '{{v1}}',
+      ticket_title: '{{v1}} Bench Ticket',
+      list_row: '{{v1}} Bench Ticket created 2026-09-23',
+      list_count: 'Showing 1–10 of 13 tickets, {{v1}} first',
+    };
+    const params = { v1: 'RD-1016' };
+    const skillParams = (): Record<string, SkillParam> => ({ v1: { example: 'RD-1015', usedIn: [] } });
+    const ticketSkill = (): Skill => ({
+      ...skillOf([READ_REF]),
+      id: 's_tickets',
+      template: 'report the list for {{v1}}',
+      params: skillParams(),
+      preconditions: { urlPattern: `${origin}/tickets` },
+      reportTemplate: { summary: '', values },
+    });
+    const ticketFlow = (): SpecFlow => ({
+      version: 1,
+      name: 'parity-report',
+      origin,
+      startUrl: `${origin}/tickets`,
+      vars: [],
+      steps: [
+        {
+          id: '06-delete',
+          instruction: 'report the list for {{v1}}',
+          params: { v1: 'RD-1016' },
+          outputs: Object.keys(values),
+          segments: [{ id: 's_tickets', template: 'report the list for {{v1}}', params: skillParams(), preconditions: { urlPattern: `${origin}/tickets` }, steps: [READ_REF], report: { summary: '', values } }],
+        },
+      ],
+    });
+
+    /** Daemon replay, then the report the flow runner publishes from it. */
+    async function replayReportOf(skill: Skill): Promise<{ ok: boolean; reason: string | null; values: Record<string, string> }> {
+      const session = new BrowserSession({ session: `parity-report-${Date.now()}`, persist: false, learn: true });
+      try {
+        const page = await session.getPage();
+        await page.goto(`${origin}/tickets`);
+        session.learn!.put(skill);
+        const out = await executeTool(session, 'run_skill', { id: skill.id, params }, os.tmpdir());
+        const replay = out.replay as ReplayResult | undefined;
+        if (!replay?.ok) return { ok: false, reason: replay?.reason ?? String(out.result), values: {} };
+        const { report } = await replayReport(() => session.getPage(), skill, params, replay.values);
+        return { ok: true, reason: null, values: Object.fromEntries(Object.entries(report.evidence?.values ?? {}).map(([k, v]) => [k, String(v)])) };
+      } finally {
+        await session.close();
+      }
+    }
+
+    /** The artifact's published values for the step, keys without the step prefix. */
+    const published = (o: Outcome): Record<string, string> =>
+      Object.fromEntries(Object.entries(o.outputs).filter(([k, v]) => k.startsWith('06-delete.') && v !== undefined).map(([k, v]) => [k.slice('06-delete.'.length), v]));
+
+    it('both runners publish the recorded text where the page shows it', async () => {
+      reset(13);
+      const replay = await replayReportOf(ticketSkill());
+      reset(13);
+      const emitted = await emittedOf(ticketFlow(), params);
+
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      const want = {
+        ticket_reference: 'RD-1016',
+        ticket_title: 'RD-1016 Bench Ticket',
+        list_row: 'RD-1016 Bench Ticket created 2026-09-23',
+        list_count: 'Showing 1–10 of 13 tickets, RD-1016 first',
+      };
+      expect(replay.values).toEqual(want);
+      expect(published(emitted)).toEqual(want);
+    }, 120_000);
+
+    it("neither runner publishes the recording's date or count once the app has moved on", async () => {
+      reset(16);
+      fx.listing.date = '2026-09-24';
+      const replay = await replayReportOf(ticketSkill());
+      reset(16);
+      fx.listing.date = '2026-09-24';
+      const emitted = await emittedOf(ticketFlow(), params);
+
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      const want = { ticket_reference: 'RD-1016', ticket_title: 'RD-1016 Bench Ticket' };
+      expect(replay.values).toEqual(want);
+      expect(published(emitted)).toEqual(want);
+      for (const stale of ['2026-09-23', 'of 13']) {
+        expect(JSON.stringify(replay.values)).not.toContain(stale);
+        expect(JSON.stringify(published(emitted))).not.toContain(stale);
+      }
+    }, 120_000);
+  });
 
   /** Run one loop contract through both runners against separately reset state. */
   async function both(steps: SkillStep[], startWith = 10) {
