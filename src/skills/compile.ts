@@ -91,6 +91,14 @@ export interface CompileInput {
    * known value; they only never strand a locator (`runValues` below).
    */
   taskConstants?: string[];
+  /**
+   * Values the run minted as page text under an EARLIER instruction and has
+   * addressed its record by since (flow.ts textMints, which needs the whole
+   * recording). Wherever this recording carries one its instruction does not
+   * name, it is a slot bound to the output that captured it — or a wildcard,
+   * where no known value says which output that was. See textMintSlots.
+   */
+  mintedValues?: string[];
 }
 
 /**
@@ -431,6 +439,7 @@ export function compileSkills(input: CompileInput): Skill[] {
   if (!origin || !startUrl) return [];
 
   const slots = discoverSlots(input.instruction, steps, input.knownValues);
+  const textMinted = textMintSlots(input, steps, slots);
   const sub = (s: string) => substitute(s, textSlots);
 
   const reportValues = input.report.evidence?.values ?? {};
@@ -668,6 +677,11 @@ export function compileSkills(input: CompileInput): Skill[] {
       // no reference to what it minted — so `derived` could not find it.
       const expect = expectationFor(step, new Map([...textSlots, ...mintedHere]));
       if (expect) out.expect = substituteDeep(expect, mintedHere) as StepExpectation;
+      // A text mint with no origin to bind is the recording's record all the
+      // same: a wildcard, never its literal (textMintSlots).
+      if (out.expect?.addedContains && textMinted.wildcard.length) {
+        out.expect.addedContains = out.expect.addedContains.map((l) => maskPublishedValues(l, textMinted.wildcard));
+      }
       const label = readLabel(step, reportValues);
       // A read with no way to find its element again publishes nothing, so it
       // must not advertise the value either — publishedOutputs reads `label`,
@@ -748,7 +762,7 @@ export function compileSkills(input: CompileInput): Skill[] {
       .map(([, v]) => String(v ?? '').trim()),
   );
   const keptSlots = new Map(
-    [...slots].filter(([n, v]) => usedNames.has(n) || (knownVals.has(v) && tentative.includes(`{{${n}}}`)) || varValues.has(v)),
+    [...slots].filter(([n, v]) => usedNames.has(n) || (knownVals.has(v) && tentative.includes(`{{${n}}}`)) || varValues.has(v) || textMinted.slotted.has(v)),
   );
   const finalTemplate = substitute(input.instruction, new Map([...keptSlots].filter(([n]) => textSlots.has(n))));
   // The mirror hazard: a slot whose marker survives only in STEPS (its every
@@ -809,7 +823,7 @@ export function compileSkills(input: CompileInput): Skill[] {
     // run minted, and every slot's recorded value. "S00021" appearing in the
     // report is the record's NAME — it was equally true before the work.
     identities: new Set(
-      [...knownVals, ...minted.map((m) => m.value), ...slots.values()].map((v) => String(v ?? '').replace(/\s+/g, ' ').trim()).filter(Boolean),
+      [...knownVals, ...minted.map((m) => m.value), ...(input.mintedValues ?? []), ...slots.values()].map((v) => String(v ?? '').replace(/\s+/g, ' ').trim()).filter(Boolean),
     ),
   });
   const of = built.length;
@@ -1217,6 +1231,56 @@ function discoverMinted(kept: RecordedStep[], startUrl: string, slots: Map<strin
     }
   });
   return out;
+}
+
+/**
+ * Text mints (flow.ts textMints) this recording CARRIES without its
+ * instruction naming them: in what a step typed or located by, a page change
+ * or alert it recorded, or what the report said. Each one with an origin in
+ * the known values becomes a slot here, appended after discoverSlots' own
+ * (their names do not move), bound to that origin by the usual `bindings`
+ * pass and kept however it is used (`slotted`). One with no origin is
+ * returned for the wildcard (`wildcard`).
+ *
+ * fwrd85 09-report is the case: its instruction names only the runid, yet
+ * showing archived tickets recorded `- cell "RD-1015"`, and the report quoted
+ * the row, so the expectation and the published `archived_search_result` both
+ * froze the recording's ticket. As a slot bound to
+ * `output:i2:ticket_reference` the flow binds it to
+ * `{{02-create.ticket_reference}}`, which every replay's 02-create reads live
+ * (RD-1016 on n2, RD-1017 on n3), and the report template fills from it.
+ *
+ * This is the output-bound slot that discoverSlots' varOnly refuses to mint
+ * from expectations (fwgr23, fwkb3-n3: bindSkill refuses the whole skill when
+ * the output goes unpublished). A text mint is different by construction: an
+ * instruction since its mint has named it, so the flow already depends on that
+ * output being published for an earlier step, and this adds no new way to
+ * fail. A value only a report or expectation carried with no known origin
+ * still gets the wildcard, never the literal.
+ */
+function textMintSlots(input: CompileInput, steps: readonly RecordedStep[], slots: Map<string, string>): { slotted: Set<string>; wildcard: string[] } {
+  const slotted = new Set<string>();
+  const wildcard: string[] = [];
+  if (!input.mintedValues?.length) return { slotted, wildcard };
+  const known = new Set(Object.values(input.knownValues ?? {}).map((v) => String(v ?? '').trim()));
+  const carried = JSON.stringify([
+    steps.map((s) => [s.args, s.locators, s.diff?.added ?? [], s.diff?.alerts ?? [], s.diff?.url ?? '']),
+    input.report.summary,
+    input.report.evidence?.values ?? {},
+  ]);
+  const taken = new Set(slots.values());
+  for (const raw of input.mintedValues) {
+    const value = String(raw ?? '').trim();
+    if (value.length < 2 || taken.has(value) || occursAsToken(input.instruction, value) || !occursAsToken(carried, value)) continue;
+    taken.add(value);
+    if (!known.has(value)) {
+      wildcard.push(value);
+      continue;
+    }
+    slots.set(`v${slots.size + 1}`, value);
+    slotted.add(value);
+  }
+  return { slotted, wildcard };
 }
 
 /**

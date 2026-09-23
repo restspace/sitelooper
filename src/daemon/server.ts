@@ -9,7 +9,7 @@ import { urlPattern as compiledUrlPattern, carryOpener, dropAbsentReadLocators, 
 import type { DriftTicket } from '../skills/repair.js';
 import type { Page } from 'playwright-core';
 import { agentGesturesOutsideReplay, bindSkill, canAdoptPin, decideRepin, instructionEntry, learnFromInstruction, matchTemplate, pinEndsElsewhere, pinStartsElsewhere, pinStatus, publishedOutputs, selectCandidates, synthesizeReport } from '../skills/learn.js';
-import { buildFlow, consumedReportedOutputs, consumedUrlOutputs, ignorableRefs, jsonLeaves, lintFlowRefs, lintUnpublishedOutputs, listFlows, liveReadsFor, liveReadsForRecovery, loadFlow, loadFlowFile, lookupOutput, mutatingIntent, noteOutputEvidence, pruneUnsourcedOutputs, recoveryRoute, remapParams, resolveInstruction, resolveStepParams, softResolveInstruction, saveFlow, staleInstructionIds, taskConstants, unbankedMutations, unreportedOutputs, urlOutputs, varyingValues, type RunSpecific } from '../skills/flow.js';
+import { buildFlow, consumedReportedOutputs, consumedUrlOutputs, ignorableRefs, jsonLeaves, lintFlowRefs, lintUnpublishedOutputs, listFlows, liveReadsFor, liveReadsForRecovery, loadFlow, loadFlowFile, lookupOutput, mutatingIntent, noteOutputEvidence, pruneUnsourcedOutputs, recoveryRoute, remapParams, resolveInstruction, resolveStepParams, softResolveInstruction, saveFlow, staleInstructionIds, taskConstants, textMints, unbankedMutations, unreportedOutputs, urlOutputs, varyingValues, type RunSpecific } from '../skills/flow.js';
 import { applyRelabelToEntries, applyRelabelToSkills, relabelCases, requestRelabelPlan } from '../skills/relabel.js';
 import { goalSatisfied, renderChainStop } from '../skills/replay.js';
 import { drainDrift, llmProposer, recordCandidateEvidence } from '../skills/repair.js';
@@ -787,6 +787,9 @@ ${describeLeaks(leaks.slice(0, 6))}`);
                 // them: task constants, which must not strand a locator
                 // (flow.ts taskConstants; snipeit fwsi4 05-open, espocrm fwec3).
                 taskConstants: this.taskConstants(),
+                // Record numbers an earlier instruction minted as page text and
+                // the run has named since (flow.ts textMints, repairdesk fwrd85).
+                mintedValues: textMints(this.browser.script?.entries ?? []),
               })
             : null;
           this.noteMintedIds(entriesSince, `i${this.instructionIndex}`);
@@ -1177,11 +1180,15 @@ ${describeLeaks(leaks.slice(0, 6))}`);
     // `&id=21` and report templates quoting `id=44`, all listed as KNOWN run
     // values and left in place. Slotted where a bound param carries the value,
     // dropped otherwise.
+    // …and a record number the run minted as page text and then named the
+    // record by, which the ledger banked on shape alone (flow.ts textMints,
+    // repairdesk fwrd85 02-create's goal marker "RD-1015").
+    const mintedText = new Set(textMints(entries));
     const slotted: string[] = [];
     for (const sk of this.sessionSkills(flow, store)) {
       let changes: string[] = [];
       store.update(sk.id, (cur) => {
-        const r = slotKnownRunValues(cur, this.ledger);
+        const r = slotKnownRunValues(cur, this.ledger, mintedText);
         changes = r?.changes ?? [];
         return r ? r.skill : null;
       });
