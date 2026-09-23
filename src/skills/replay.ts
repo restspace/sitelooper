@@ -303,6 +303,12 @@ export interface ReplayResult {
    * value seen, only not confident), nothing was read at all: the flow runner
    * does not call a step clean that skipped the read of an output it declares
    * (src/daemon/step-verdict.ts; fwsi7 05-open's checked_out_to_user).
+   *
+   * Never an UNPROVEN read (SkillStep.unproven): a read synthesized from a
+   * report that no run has ever resolved is a guess, not an observation the
+   * procedure was built on, and skipping it loses nothing. fwop11 02-create
+   * (round 56): its synthesized read of the vanished "Successful creation."
+   * toast made both fully verified tier-A replays "partial".
    */
   skippedReads?: string[];
   /** Per-step lines for the tool result. */
@@ -952,7 +958,7 @@ export async function replaySkill(
       if (isRead) {
         if (step.label && step.locators.target?.length) {
           readsSkipped++;
-          (res.skippedReads ??= []).push(step.label);
+          if (!step.unproven) (res.skippedReads ??= []).push(step.label);
         }
         res.warnings.push(`step ${tag}: skipped read — ${resolveError}`);
         res.lines.push(`${head} → skipped (${resolveError})`);
@@ -1143,7 +1149,7 @@ export async function replaySkill(
           if (!taken.ok) {
             if (step.label) {
               readsSkipped++;
-              (res.skippedReads ??= []).push(step.label);
+              if (!step.unproven) (res.skippedReads ??= []).push(step.label);
             }
             res.warnings.push(`step ${tag}: read errored — ${clip(taken.message, 120)}`);
             res.lines.push(`${head} → skipped (${clip(taken.message, 120)})`);

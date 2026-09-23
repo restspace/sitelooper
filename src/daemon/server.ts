@@ -4,7 +4,7 @@ import path from 'node:path';
 import { AnthropicProvider, OpenAICompatProvider, resolveProviderConfig, type Provider } from '../agent/llm.js';
 import { buildSystemOne, resolveSystemOneConfig, type SystemOne } from '../agent/system-one.js';
 import { runEscalatingInstruction, type InstructionResult, type LoopActor, type SkillRecord } from '../agent/loop.js';
-import { partialReasons } from './step-verdict.js';
+import { askedOutputs, partialReasons, unansweredAsks } from './step-verdict.js';
 import { executeTool } from '../agent/tools.js';
 import { urlPattern as compiledUrlPattern, carryOpener, dropAbsentReadLocators, dropDeadReadLocators, fillParams, markReadsProven, stranded, urlMatches, urlParts } from '../skills/compile.js';
 import type { DriftTicket } from '../skills/repair.js';
@@ -1387,7 +1387,19 @@ ${describeLeaks(certain.slice(0, 30))}${certain.length > 30 ? `\n  … and ${cer
     }
     for (const line of readsAdded.slice().reverse()) warnings.unshift(`note: ${line}`);
     for (const d of pruned.dropped.slice().reverse()) {
-      warnings.unshift(`note: ${d.stepId} no longer publishes ${d.outputs.join(', ')} — no replay reads ${d.outputs.length === 1 ? 'it' : 'them'} from the page and the recording showed no line to read`);
+      // An output the instruction explicitly asked to report is never pruned
+      // quietly (fwod82 02-create's untaxed_amount): a warning names it,
+      // because every replay will now claim the step without the fact.
+      const instruction = flow.steps.find((st) => st.id === d.stepId)?.instruction ?? '';
+      const asked = askedOutputs(instruction, d.outputs);
+      const rest = d.outputs.filter((o) => !asked.includes(o));
+      if (rest.length) warnings.unshift(`note: ${d.stepId} no longer publishes ${rest.join(', ')} — no replay reads ${rest.length === 1 ? 'it' : 'them'} from the page and the recording showed no line to read`);
+      if (asked.length) {
+        warnings.unshift(
+          `warning: ${d.stepId}'s instruction asks to report ${asked.join(', ')}, and no replay can publish ${asked.length === 1 ? 'it' : 'them'}: ` +
+            `nothing in its procedure reads ${asked.length === 1 ? 'it' : 'them'} from the page, so export dropped ${asked.length === 1 ? 'it' : 'them'} — re-record the step so the value is read, not only reported`,
+        );
+      }
     }
     if (slotted.length) warnings.unshift(`note: ${slotted.length} goal/report value(s) carrying a value this run made were slotted or dropped:\n${slotted.map((s) => `  ${s}`).join('\n')}`);
     if (stripped) warnings.unshift(`note: dropped ${stripped} locator candidate(s) carrying a value this run minted (known only by export time)`);
@@ -2234,11 +2246,28 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
         this.retireDeadReadLocators(flow, step, opts.progress);
         this.settleUnprovenReads(flow, step, opts.progress);
       }
+      // A zero-model success that published nothing for a fact its instruction
+      // explicitly asked to report (step-verdict.ts unansweredAsks: fwod82
+      // 02-create's product and untaxed amount, fwgt8 01-open's issue titles,
+      // fwsi8 01-signin's asset names). Said on the step, not a verdict: see
+      // step-verdict.ts for the green steps a verdict would fail. Echo-reads
+      // (result.published) answer; an output export pruned is still asked.
+      const unanswered =
+        !recovered && result.report.status === 'success'
+          ? unansweredAsks(
+              step.instruction,
+              [...step.outputs, ...((flow.pruned ?? []).find((p) => p.stepId === step.id)?.outputs ?? [])],
+              [...Object.keys(values), ...Object.keys(result.published ?? {})],
+              step.recorded ?? {},
+            )
+          : [];
+      if (unanswered.length) opts.progress(`[flow ${flow.name}] ${step.id}: its instruction asks to report ${unanswered.join(', ')}, and this replay published no value for ${unanswered.length === 1 ? 'it' : 'them'}`);
       stepResults.push({
         id: step.id,
         status: partial.length ? 'partial' : result.report.status,
         summary: result.report.summary,
         ...(partial.length ? { partial } : {}),
+        ...(unanswered.length ? { unanswered } : {}),
         values,
         tier: sk?.tier ?? null,
         // Why the model was needed, on the STEP — a ticket is only filed when
