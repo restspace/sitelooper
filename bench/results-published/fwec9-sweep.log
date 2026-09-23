@@ -1,0 +1,86 @@
+
+[sweep] run 1/3: fwec9-n1 (store: /home/user/sitelooper/bench/results/fwec9-skills)
+[harness] espocrm: defaulting APP_URL
+[harness] espocrm: defaulting APP_EMAIL
+[harness] espocrm: defaulting APP_PASSWORD
+[reset] espocrm: no leftover bench opportunities
+[harness] espocrm responded 200 at http://127.0.0.1:8097/
+stopped: fwec9-n1
+  flow "fwec9" saved: 4 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwec9.json
+  warning: note: dropped 1 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: note: 03-open no longer publishes record_id — no replay reads it from the page and the recording showed no line to read
+  warning: note: 04-find no longer publishes posted_as — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 65 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[1].instruction: "Bench Assignee" (output) in "In EspoCRM, create a new Opportunity (Opportunities list -> Create Opportunity). Fill it with: Name exactly '{{runid}} Bench Opportunity'; Account linked to the"
+  flow.steps[1].instruction: "Bench Account" (output) in "In EspoCRM, create a new Opportunity (Opportunities list -> Create Opportunity). Fill it with: Name exactly '{{runid}} Bench Opportunity'; Account linked to the"
+  flow.steps[1].instruction: "Negotiation" (output) in "In EspoCRM, create a new Opportunity (Opportunities list -> Create Opportunity). Fill it with: Name exactly '{{runid}} Bench Opportunity'; Account linked to the"
+  flow.steps[1].instruction: "2026-12-31" (output) in "In EspoCRM, create a new Opportunity (Opportunities list -> Create Opportunity). Fill it with: Name exactly '{{runid}} Bench Opportunity'; Account linked to the"
+  flow.steps[1].params.v4: "2026-12-31" (output) in "2026-12-31"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwec9-n1 stop=completed
+turns=5 wall=260.6s
+commands=4 cmdTime=193.9s cmdBytes=5784 timeouts=0
+orchestrator in=8393 cw=0 cr=10816 out=2358
+inner prompt=1082209 cached=962944 completion=13693
+spend=$0.133 maxUsd=3
+learn: A_n=0 replayed=0/4 full=0 repaired=0 compiled=4 variants=0
+-> /home/user/sitelooper/bench/results/fwec9-n1-sitelooper-result.json
+
+fwec9-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — id=6ab42f3401c84db8f, account=Bench Account, description includes runid=true
+  obj 3: PASS — stage=Negotiation
+  obj 4: PASS — amount=12500 USD, closeDate=2026-12-31
+  obj 5: PASS — assignedUser=Bench Assignee
+  obj 6: PASS — 1 post(s), 1 carrying the runid
+  obj 7: PASS — record id 6ab42f3401c84db8f reported
+
+[sweep] run 2/3: fwec9-n2 (replay flow fwec9, no orchestrator)
+[reset] espocrm: deleted 1 leftover bench opportunit(ies)
+
+fwec9-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — id=6ab42fe4c5e850826, account=Bench Account, description includes runid=true
+  obj 3: PASS — stage=Negotiation
+  obj 4: PASS — amount=12500 USD, closeDate=2026-12-31
+  obj 5: PASS — assignedUser=Bench Assignee
+  obj 6: PASS — 1 post(s), 1 carrying the runid
+  obj 7: PASS — record id 6ab42fe4c5e850826 reported
+
+[sweep] run 3/3: fwec9-n3 (replay flow fwec9, no orchestrator)
+[reset] espocrm: deleted 1 leftover bench opportunit(ies)
+
+fwec9-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — id=6ab430210b5ed2072, account=Bench Account, description includes runid=true
+  obj 3: PASS — stage=Negotiation
+  obj 4: PASS — amount=12500 USD, closeDate=2026-12-31
+  obj 5: PASS — assignedUser=Bench Assignee
+  obj 6: PASS — 1 post(s), 1 carrying the runid
+  obj 7: PASS — record id 6ab430210b5ed2072 reported
+
+Learning sweep fwec9 (K=3)
+┌─────────┬───┬────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid      │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwec9-n1' │ '7/7'    │ 'completed' │ 5     │ 4    │ 0.133     │ 0   │ '0/4'        │ 261    │
+│ 1       │ 2 │ 'fwec9-n2' │ '7/7'    │ 'success'   │ 0     │ 4    │ 0         │ 1   │ '4/4 (flow)' │ 53     │
+│ 2       │ 3 │ 'fwec9-n3' │ '7/7'    │ 'success'   │ 0     │ 4    │ 0         │ 1   │ '4/4 (flow)' │ 53     │
+└─────────┴───┴────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8097
+  s_6963d1  validated    1 steps  3/3 (100%)
+           In EspoCRM, create a new Opportunity (Opportunities list -> Create Opportunity). Fill it with: Name exactly '{…
+  s_788776  validated    5 steps  3/3 (100%)
+           In EspoCRM, create a new Opportunity (Opportunities list -> Create Opportunity). Fill it with: Name exactly '{…
+  s_7a72b3  validated    7 steps  3/3 (100%)
+           Open {{v1}} and sign in with username {{v2}} and password {{v3}} (type the password text exactly as given). Af…
+  s_aa3b78  validated   40 steps  3/3 (100%)
+           In EspoCRM, create a new Opportunity (Opportunities list -> Create Opportunity). Fill it with: Name exactly '{…
+  s_db0eeb  validated    5 steps  3/3 (100%)
+           Open {{v1}} and sign in with username {{v2}} and password {{v3}} (type the password text exactly as given). Af…
+  s_fb9f03  validated    6 steps  3/3 (100%)
+           On the opportunity record '{{v1}}' (URL #Opportunity/view/{{v3}}) in EspoCRM, find the Stream panel. Use the p…
+  s_fea1bc  validated    6 steps  3/3 (100%)
+           Open the opportunity record named '{{v1}}' in EspoCRM. Click its Edit button to open the edit form, and report…
+store: /home/user/sitelooper/bench/results/fwec9-skills
+
+summary: /home/user/sitelooper/bench/results/fwec9-sweep.json
