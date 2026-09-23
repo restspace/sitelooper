@@ -63,6 +63,47 @@ describe('which round-54 steps are PARTIAL', () => {
   });
 });
 
+/**
+ * Round 56: RepairDesk fwrd88 and OpenProject fwop11 replayed every step at
+ * tier A, verified every objective on n1-n3, and still ended "partial".
+ * test/fixture/round56-steps.json holds their 18 n2/n3 steps, built like the
+ * round-54 fixture — with an UNPROVEN read's skip left out, as replay now
+ * reports it.
+ */
+const STEPS56 = JSON.parse(fs.readFileSync(path.join(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1')), 'fixture', 'round56-steps.json'), 'utf8')) as Round54Step[];
+
+describe('round 56: fwop11 and fwrd88', () => {
+  it('fwop11 02-create is clean: its only skip was a synthesized read no run has ever resolved (the vanished success toast)', () => {
+    const create = STEPS56.filter((s) => s.run === 'fwop11' && s.step === '02-create');
+    expect(create.map((s) => s.replay)).toEqual(['n2', 'n3']);
+    for (const s of create) {
+      expect(s.declaredOutputs).toContain('confirmation_alert');
+      expect(s.skippedReads).toEqual([]);
+      expect(verdict(s)).toEqual([]);
+    }
+  });
+
+  it('fwrd88 05-change stays partial — deservedly: replay skipped a COUNT read that matched nothing instead of observing 0', () => {
+    // s_4b0e31 step 11: read_all role=alert what:count, recorded "0". Nothing
+    // matching IS the observation (count 0); the replay's resolve-miss branch
+    // skips it instead, and the artifact does the same. The rule reports that
+    // defect; it is fixed in the runners, not by excusing the skip here.
+    const change = STEPS56.filter((s) => s.run === 'fwrd88' && s.step === '05-change');
+    expect(change.map((s) => s.replay)).toEqual(['n2', 'n3']);
+    for (const s of change) expect(verdict(s)).toEqual([
+      "the procedure's read of alerts_present_after_success, an output this step reports, was skipped (nothing matched on the page), so alerts_present_after_success went unreported",
+    ]);
+  });
+
+  it('nothing else in either app is partial', () => {
+    expect(STEPS56.filter((s) => verdict(s).length).map((s) => `${s.run} ${s.replay} ${s.step}`)).toEqual(['fwrd88 n2 05-change', 'fwrd88 n3 05-change']);
+  });
+
+  it('round 54 is unchanged: exactly fwop10-n2 02-create and fwsi7 05-open', () => {
+    expect(STEPS.filter((s) => verdict(s).length).map((s) => `${s.run} ${s.replay} ${s.step}`)).toEqual(['fwop10 n2 02-create', 'fwsi7 n2 05-open', 'fwsi7 n3 05-open']);
+  });
+});
+
 describe('item 12: a recovery whose last gesture never went through (fwop10-n2 02-create)', () => {
   const step = () => STEPS.find((s) => s.run === 'fwop10' && s.replay === 'n2' && s.step === '02-create')!;
 
@@ -199,6 +240,19 @@ const browserEnabled = process.env.BP_BROWSER_TESTS === '1';
       const out = await executeTool(learning, 'run_skill', { id: 's_reads', params: {} }, os.tmpdir());
       expect(out.replay?.values.asset_name).toBe('Bench Asset');
       expect(out.replay?.skippedReads).toEqual(['checked_out_to_user']);
+      // fwop11 02-create (round 56): a SYNTHESIZED read no run has ever
+      // resolved (SkillStep.unproven — a guess at the success toast) is not
+      // an observation the procedure was built on. Skipping it loses nothing,
+      // so it is not a skipped read.
+      learning.learn!.update('s_reads', (sk) => ({
+        ...sk,
+        steps: [
+          ...sk.steps,
+          { tool: 'read', args: { target: '@synth', what: 'text' }, locators: { target: [{ kind: 'role', role: 'alert', name: 'Successful creation.' }] }, label: 'confirmation_alert', unproven: true },
+        ],
+      }));
+      const again = await executeTool(learning, 'run_skill', { id: 's_reads', params: {} }, os.tmpdir());
+      expect(again.replay?.skippedReads).toEqual(['checked_out_to_user']);
     } finally {
       await learning.close();
     }

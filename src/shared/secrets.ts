@@ -247,6 +247,11 @@ const CREDENTIAL_NAME = /(?:(?:^|_)(?:PASSWORD|PASSWD|SECRET|TOKEN|(?:API|PRIVAT
 function isPathValue(value: string): boolean {
   if (value === process.cwd()) return true;
   if (!/^(?:\/|~\/|[A-Za-z]:[\\/]|\\\\)/.test(value)) return false;
+  // A network (UNC) path is never probed: existsSync on `\\host\share` waits on
+  // a network lookup — seconds, on every credential scan (round 56: the unit
+  // test for it timed out at 5s). Unproven, it stays a possible secret, the
+  // side this rule errs on.
+  if (value.startsWith('\\\\')) return false;
   try {
     return fs.existsSync(value.startsWith('~/') ? path.join(os.homedir(), value.slice(2)) : value);
   } catch {
