@@ -733,6 +733,26 @@ const IMAGE_LINK = `<!doctype html><html><head><meta charset="utf-8"><title>Org<
 <a id="org" href="/org" title="bench"><img alt="bench" width="16" height="16" src="data:image/gif;base64,R0lGODlhAQABAAAAACw="></a>
 </body></html>`;
 
+/**
+ * A part row and its cost field (round 51, repairdesk fwrd84 05-edit): Save
+ * posts `/commit/cost/<value>` and redraws the row with the saved cost and
+ * its price (cost × 1.25). `/price?stuck=1` is the same form whose Save
+ * posts and redraws NOTHING: the save a replay must not report as done.
+ */
+const PRICE = (stuck: boolean) => `<!doctype html><html><head><meta charset="utf-8"><title>Part</title></head><body>
+<h1>Part</h1>
+<table><tbody><tr id="row"><td>Part A</td><td id="cost">$100.00</td><td id="price">$125.00</td></tr></tbody></table>
+<input id="f-cost" type="number" aria-label="Cost" value="100">
+<button id="save" type="button">Save part</button>
+<script>
+document.getElementById('save').addEventListener('click', async () => {
+  const v = document.getElementById('f-cost').value;
+  ${stuck ? '' : "await fetch('/commit/cost/' + encodeURIComponent(v), { method: 'POST' });"}
+  ${stuck ? '' : "document.getElementById('cost').textContent = '$' + Number(v).toFixed(2); document.getElementById('price').textContent = '$' + (Number(v) * 1.25).toFixed(2);"}
+});
+</script>
+</body></html>`;
+
 const CONTROLS = `<!doctype html><html><head><meta charset="utf-8"><title>Controls</title></head><body>
 <h1>Controls</h1>
 <select id="code" aria-label="Code">
@@ -1305,6 +1325,7 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
         return html(HOP(tail('/hop/')));
       }
       if (url === '/controls') return html(CONTROLS);
+      if (url === '/price' || url === '/price?stuck=1') return html(PRICE(url.endsWith('stuck=1')));
       if (url === '/imagelink') return html(IMAGE_LINK);
       if (url === '/tick') return html(TICK);
       if (url === '/far') return html(FAR);

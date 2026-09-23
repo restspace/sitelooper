@@ -706,7 +706,7 @@ export function compileSkills(input: CompileInput): Skill[] {
   // Every read the recording made, kept or not: the alert read back is
   // evidence of its lines whether or not the procedure keeps the read.
   const reads = recordedReadTexts(steps);
-  for (const b of built) unfreezeExpectations(b.folded, published, b.notes, { reads, diffOf: (s) => b.recordedDiffs.get(s) });
+  for (const b of built) unfreezeExpectations(b.folded, published, b.notes, { reads, diffOf: (s) => b.recordedDiffs.get(s), slots });
   if (built.length) built[0].notes.unshift(...recordingNotes);
 
   // Derived-param metadata lands on the MINTING segment: which post-fold step
@@ -2100,15 +2100,101 @@ function splitExpectLine(line: string): SplitLine | null {
  * Applied to the NAME and the VALUE of a line, never to its role: a read that
  * published the word "row" must not turn `- row "…"` into `- {{*}} "…"`.
  */
-export function maskPublishedValues(line: string, published: readonly string[]): string {
+export function maskPublishedValues(line: string, published: readonly string[], sets: readonly SetValue[] = []): string {
   const split = splitExpectLine(line);
   if (!split) return line;
   let { name, value } = split;
   for (const v of published) {
-    if (name && occursAsToken(name, v)) name = replaceAsToken(name, v, WILDCARD);
-    if (value && occursAsToken(value, v)) value = replaceAsToken(value, v, WILDCARD);
+    const replacement = keepSetValues(v, sets) ?? WILDCARD;
+    if (name && occursAsToken(name, v)) name = replaceAsToken(name, v, replacement);
+    if (value && occursAsToken(value, v)) value = replaceAsToken(value, v, replacement);
   }
   return name === split.name && value === split.value ? line : split.rebuild(name, value);
+}
+
+/** A value the procedure itself set: what it typed (`value`, slots filled with their examples) and how the step wrote it (`template`). */
+export interface SetValue {
+  value: string;
+  template: string;
+}
+
+/**
+ * Every value a `fill`, `type` or `select` among `steps[0..upTo]` set: the
+ * procedure's own work so far in this segment. A slotted value keeps its
+ * marker as the template, so a later run's value replaces the recording's.
+ */
+export function setValuesUpTo(steps: readonly SkillStep[], upTo: number, slots: ReadonlyMap<string, string> = new Map()): SetValue[] {
+  const out = new Map<string, SetValue>();
+  for (const step of steps.slice(0, upTo + 1)) {
+    const raw = step.tool === 'fill' ? step.args.value : step.tool === 'type' ? step.args.text : step.tool === 'select' ? step.args.option : undefined;
+    if (typeof raw !== 'string') continue;
+    const value = raw.replace(/\{\{(v\d+)\}\}/g, (m, n: string) => slots.get(n) ?? m).trim();
+    if (!value || value.includes('{{')) continue;
+    out.set(value, { value, template: raw.trim() });
+  }
+  return [...out.values()].sort((a, b) => b.value.length - a.value.length);
+}
+
+/**
+ * A published value that CARRIES a value the procedure set, masked around it:
+ * the set value stays (as its slot, or literally), every other part of the
+ * published value that has a letter or a digit is wildcarded, and punctuation
+ * stays. Null when no set value is in it.
+ *
+ * WHY. maskPublishedValues exists because a value the procedure's reads
+ * published is one only the recording run could produce. A value the
+ * procedure SET is the opposite: it is the step's work, and the one thing its
+ * expectation must still check. repairdesk fwrd84-n1 05-edit filled Cost 150
+ * and saved; the Save's recorded row read `… $150.00 25% 1 No supplier
+ * $187.50 …`, its reads published "$150.00" and "$187.50", and both became
+ * `{{*}}`, so the unchanged row, $100.00, matched too, and n3 saved an
+ * unchanged form at tier A, 0 turns, reporting success. Kept around the set
+ * value, "$150.00" becomes `${{v6}}{{*}}`: a replay whose cost never took
+ * shows `$100.00`, which does not match it, and the line is a slot line, so
+ * it is HARD (expect.ts expectedChangesVerdict). "$187.50", a figure the app
+ * computed, stays masked. Provenance, not shape: what decides is that a fill
+ * of this procedure typed the value.
+ */
+function keepSetValues(published: string, sets: readonly SetValue[]): string | null {
+  const used: SetValue[] = [];
+  let marked = published;
+  for (const s of sets) {
+    if (!occursAsToken(marked, s.value)) continue;
+    marked = replaceAsToken(marked, s.value, `\u0000${used.length}\u0000`);
+    used.push(s);
+  }
+  if (!used.length) return null;
+  return marked
+    .split(/\u0000(\d+)\u0000/)
+    .map((part, i) => {
+      if (i % 2) return used[Number(part)].template;
+      if (!/[\p{L}\p{N}]/u.test(part)) return part;
+      const lead = /^\s*/.exec(part)![0];
+      const trail = /\s*$/.exec(part)![0];
+      return `${lead}${WILDCARD}${trail}`;
+    })
+    .join('');
+}
+
+/**
+ * identifiesNothing's rule, extended to a line the MASKING left
+ * indistinguishable from what the page showed before the step: the masked
+ * line, slots filled with their recorded examples and `{{*}}` matching
+ * anything, matches one of the step's own recorded removals, the element as
+ * it was before the action. Every token that made it this step's change was
+ * wildcarded, so it proves nothing about the step: fwrd84's
+ * `- row "Total (price × quantity) {{*}}"` matches the removed
+ * `- row "Total (price × quantity) $375.00"` as well as the new $437.50, and
+ * the runner counted it as found ("found on the page instead") whether or not
+ * the save did anything. Whole-line and anchored: never a substring of a
+ * longer line. Compile-time only, so both runners see the same expectation.
+ */
+function identifiesNothingNew(line: string, shownBefore: readonly string[], slots: ReadonlyMap<string, string> = new Map()): boolean {
+  if (!shownBefore.length) return false;
+  const filled = line.replace(/\{\{(v\d+)\}\}/g, (m, n: string) => slots.get(n) ?? m).replace(/\s+/g, ' ').trim();
+  if (/\{\{(?!\*\}\})/.test(filled)) return false;
+  const re = new RegExp(`^${filled.split(WILDCARD).map(escapeRe).join('.*?')}$`);
+  return shownBefore.some((b) => re.test(b.replace(/\s+/g, ' ').trim()));
 }
 
 /**
@@ -2294,7 +2380,7 @@ export function unfreezeExpectations(
   steps: SkillStep[],
   published: readonly string[],
   notes: TransformNote[],
-  alertEvidence: { reads: readonly string[]; diffOf: (step: SkillStep) => StepDiff | undefined } = { reads: [], diffOf: () => undefined },
+  alertEvidence: { reads: readonly string[]; diffOf: (step: SkillStep) => StepDiff | undefined; slots?: ReadonlyMap<string, string> } = { reads: [], diffOf: () => undefined },
 ): void {
   const watched = unfreezeWatchedNames(steps);
   steps.forEach((step, si) => {
@@ -2335,9 +2421,15 @@ export function unfreezeExpectations(
     if (!lines) return;
     const before = lines.join('\n');
     const kept: string[] = [];
+    // What the procedure SET up to and including this step (setValuesUpTo),
+    // and what this step's page showed before it acted (its recorded
+    // removals) — see keepSetValues and identifiesNothingNew.
+    const sets = setValuesUpTo(steps, si, alertEvidence.slots);
+    const shownBefore = alertEvidence.diffOf(step)?.removed ?? [];
     for (const line of lines) {
-      const masked = published.length ? maskPublishedValues(line, published) : line;
+      const masked = published.length ? maskPublishedValues(line, published, sets) : line;
       if (identifiesNothing(masked) || kept.includes(masked)) continue;
+      if (masked !== line && identifiesNothingNew(masked, shownBefore, alertEvidence.slots)) continue;
       kept.push(masked);
     }
     if (kept.join('\n') === before) return;

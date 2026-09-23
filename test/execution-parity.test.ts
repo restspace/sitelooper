@@ -3257,6 +3257,80 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     }, 120_000);
   });
 
+  describe('a set value the save never showed (round 51, fwrd84 05-edit)', () => {
+    /**
+     * repairdesk fwrd84-n1 05-edit filled Cost 150 and saved; its reads
+     * published "$150.00" and "$187.50", compile wildcarded both in the Save's
+     * expected row, and n3 saved an unchanged form at tier A, 0 turns. The
+     * same shape on `/price`: compiled from a recording, the Save's row keeps
+     * the cost the procedure SET (`${{v1}}{{*}}`). On `/price?stuck=1` the
+     * Save posts and redraws nothing, and both runners must stop there; on
+     * `/price` both must pass.
+     */
+    const compiledPrice = (): { steps: SkillStep[]; params: Record<string, SkillParam> } => {
+      const url = `${origin}/price`;
+      const target = (name: string, role: string) => ({ target: { expr: 'x', verified: true, raw: '@e1', chain: [{ kind: 'role' as const, role, name }] } });
+      const cell = (label: string, result: string, id: string): RecordedStep => ({
+        k: 'step',
+        tool: 'read',
+        args: { target: '(read-back)', what: 'text' },
+        locators: { target: { expr: 'x', verified: true, raw: '(read-back)', chain: [{ kind: 'css', selector: `#${id}` }] } },
+        result: JSON.stringify(result),
+        label,
+      });
+      const entries: RecordedEntry[] = [
+        { k: 'instruction', text: "set Part A's cost to 150 and save", url },
+        { k: 'step', tool: 'goto', args: { url }, locators: {}, diff: { url, alerts: [], added: [], dialect: 2 } },
+        { k: 'step', tool: 'fill', args: { target: '@e1', value: '150' }, locators: target('Cost', 'spinbutton'), diff: { url, alerts: [], added: ['- spinbutton "Cost": 150'], dialect: 2 } },
+        {
+          k: 'step',
+          tool: 'click',
+          args: { target: '@e2' },
+          locators: target('Save part', 'button'),
+          diff: { url, alerts: [], added: ['- row "Part A $150.00 $187.50"', '- cell "$150.00"', '- cell "$187.50"'], removed: ['- row "Part A $100.00 $125.00"', '- cell "$100.00"', '- cell "$125.00"'], dialect: 2 },
+        },
+        cell('part_cost', '$150.00', 'cost'),
+        cell('part_price', '$187.50', 'price'),
+      ];
+      const [skill] = compileSkills({ entries, instruction: "set Part A's cost to 150 and save", report: { status: 'success', summary: 'saved', evidence: { values: { part_cost: '$150.00', part_price: '$187.50' } } }, session: 's' });
+      return { steps: skill.steps, params: skill.params };
+    };
+    const procedure = (stuck: boolean): { skill: Skill; spec: SpecFlow; values: Record<string, string> } => {
+      const { steps: compiled, params } = compiledPrice();
+      const steps = compiled.map((st) => (st.tool === 'goto' && stuck ? { ...st, args: { ...st.args, url: `${origin}/price?stuck=1` } } : st));
+      const values = Object.fromEntries(Object.entries(params).map(([k, p]) => [k, p.example]));
+      const skill: Skill = { ...skillOf(steps), id: 's_price', template: "set Part A's cost to {{v1}} and save", params };
+      const spec: SpecFlow = {
+        version: 1,
+        name: 'parity-price',
+        origin,
+        startUrl: `${origin}/`,
+        vars: [],
+        steps: [{ id: '01-price', instruction: "set Part A's cost to {{v1}} and save", params: values, outputs: [], segments: [{ id: 's_price', template: "set Part A's cost to {{v1}} and save", params, preconditions: { urlPattern: `${origin}/` }, steps }] }],
+      };
+      return { skill, spec, values };
+    };
+
+    it('both runners stop a save that never showed the cost the procedure set, and pass one that did', async () => {
+      const { steps } = compiledPrice();
+      const save = steps.find((st) => st.tool === 'click')!;
+      expect(save.expect?.addedContains?.some((l) => /\$\{\{v1\}\}/.test(l)), JSON.stringify(save.expect)).toBe(true);
+
+      const stuck = procedure(true);
+      const bad = await bothOf(stuck.skill, stuck.spec, stuck.values);
+      expect(bad.replay.ok, 'replay passed a save that never showed the cost').toBe(false);
+      expect(bad.emitted.ok, 'the artifact passed a save that never showed the cost').toBe(false);
+      expect(bad.replay.reason).toMatch(/Part A \$150/);
+
+      const good = procedure(false);
+      const ok = await bothOf(good.skill, good.spec, good.values);
+      expect(ok.replay.ok, ok.replay.reason ?? '').toBe(true);
+      expect(ok.emitted.ok, ok.emitted.reason ?? '').toBe(true);
+      expect(ok.replayLog).toEqual(['commit:cost:150']);
+      expect(ok.emittedLog).toEqual(['commit:cost:150']);
+    }, 240_000);
+  });
+
   describe('list reads split per element (fwop7 02-open)', () => {
     it('both runners publish each value a read_all was the one-to-one source of', async () => {
       // openproject fwop7-n1: the seed subjects were read only through a
