@@ -1019,8 +1019,15 @@ export async function replayReport(
  * the one slot's own value (referenceValue). A value from several slots with
  * text between them has no such fallback, so it is no source — the same
  * answer the artifact's unsourcedRef gives, and what replay does.
+ *
+ * Every marker must be bound, too: a declared param of this skill, or a
+ * {{dN}} the chain (`chain`, this skill's segments in order) derives — the
+ * replay threads those across segments ({ ...match.params, ...derived }),
+ * which is how fwec8 02-create's tail can publish the record id its SAVE
+ * segment minted. A marker naming neither never fills (fwec8 03-verify's
+ * orphan {{v2}}).
  */
-export function publishedOutputs(skill: Skill): string[] {
+export function publishedOutputs(skill: Skill, chain: readonly Skill[] = [skill]): string[] {
   const out = new Set<string>();
   const walk = (steps: Skill['steps']): void => {
     for (const s of steps) {
@@ -1029,8 +1036,9 @@ export function publishedOutputs(skill: Skill): string[] {
     }
   };
   walk(skill.steps);
+  const bound = new Set([...Object.keys(skill.params ?? {}), ...chain.flatMap((s) => Object.keys(s.derived ?? {}))]);
   for (const [k, v] of Object.entries(skill.reportTemplate?.values ?? {})) {
-    if (templateSource(v)) out.add(k);
+    if (templateSource(v, (name) => bound.has(name))) out.add(k);
   }
   return [...out];
 }

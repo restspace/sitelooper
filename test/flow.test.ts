@@ -2528,6 +2528,11 @@ describe('an unproven read is a candidate source, not a source (fwkb14, fwod52)'
     expect(codes(literal)).toEqual(['unsourced-ref']);
     const derived = spec(null, [1]);
     derived.steps[0].segments[0].report = { values: { column_3: '{{v1}}' } } as never;
+    // Only when {{v1}} is the producer's own param (fwec8 03-verify: an
+    // orphan marker no param fills sources nothing either).
+    expect(codes(derived)).toEqual(['unsourced-ref']);
+    derived.steps[0].params = { v1: 'Work in progress' };
+    derived.steps[0].segments[0].params = { v1: { example: 'Work in progress', usedIn: [] } };
     expect(codes(derived)).toEqual([]);
   });
 

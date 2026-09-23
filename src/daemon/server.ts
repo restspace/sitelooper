@@ -242,7 +242,7 @@ ${describeLeaks(leaks.slice(0, 6))}`);
       const sk = store.get(id);
       if (!sk) return null;
       const chain = sk.seq ? store.list(sk.origin).filter((s) => s.seq?.chain === sk.seq!.chain) : [sk];
-      return chain.flatMap(publishedOutputs);
+      return chain.flatMap((s) => publishedOutputs(s, chain));
     };
     const runIds = this.ledger.all().filter((e) => e.kind === 'identifier').map((e) => e.value);
     const runValue = (value: string): boolean => this.runSpecific(value) || stranded({ kind: 'text', text: value }, runIds);
@@ -254,7 +254,9 @@ ${describeLeaks(leaks.slice(0, 6))}`);
         : head;
       if (tail.provenance?.session !== this.opts.session) continue;
       const updated = store.update(tail.id, (sk) => {
-        if (sk.status === 'demoted' || publishedOutputs(sk).includes(live.output)) return null;
+        // The whole chain: the tail may publish a {{dN}} its head minted (fwec8).
+        const chain = head.seq ? store.list(head.origin).filter((s) => s.seq?.chain === head.seq!.chain) : [sk];
+        if (sk.status === 'demoted' || publishedOutputs(sk, chain).includes(live.output)) return null;
         return { ...sk, steps: [...sk.steps, live.read] };
       });
       if (!updated) continue;
@@ -1105,7 +1107,7 @@ ${describeLeaks(leaks.slice(0, 6))}`);
       const sk = store.get(id);
       if (!sk) return null;
       const chain = sk.seq ? store.list(sk.origin).filter((s) => s.seq?.chain === sk.seq!.chain) : [sk];
-      return chain.flatMap(publishedOutputs);
+      return chain.flatMap((s) => publishedOutputs(s, chain));
     };
     // Post-session relabel: one smart-model pass over the finished session's
     // value names, BEFORE buildFlow mints any {{step.name}} reference. Session
@@ -1284,7 +1286,9 @@ ${describeLeaks(leaks.slice(0, 6))}`);
         : head;
       if (tail.provenance?.session !== this.opts.session) continue;
       const updated = store.update(tail.id, (sk) => {
-        if (sk.status === 'demoted' || publishedOutputs(sk).includes(live.output)) return null;
+        // The whole chain: the tail may publish a {{dN}} its head minted (fwec8).
+        const chain = head.seq ? store.list(head.origin).filter((s) => s.seq?.chain === head.seq!.chain) : [sk];
+        if (sk.status === 'demoted' || publishedOutputs(sk, chain).includes(live.output)) return null;
         return { ...sk, steps: [...sk.steps, live.read] };
       });
       if (!updated) continue;
@@ -2609,10 +2613,12 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
     // The report's recorded text is checked against the page the chain ends
     // on (replayReport): fwrd86 06-delete published "Created: 2026-09-23"
     // around this run's ticket id, on every replay, on any day.
+    // The params carry what the chain derived ({{dN}}): fwec8 02-create's
+    // tail reports the record id its save segment minted from the live url.
     // Echoed keys are withheld from the template too: the guard dropped them
     // from the confident values, and refilling them from "{{v4}}" put them
     // straight back (fwrd86 01-signin ticket_title) — the artifact never did.
-    const { report, withheld, unobservedProse, references } = await replayReport(() => this.browser.getPage(), last, match.params, confidentValues, {
+    const { report, withheld, unobservedProse, references } = await replayReport(() => this.browser.getPage(), last, { ...match.params, ...derived }, confidentValues, {
       withhold: agg.echoed,
       instruction,
     });

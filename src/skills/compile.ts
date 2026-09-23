@@ -652,10 +652,15 @@ export function compileSkills(input: CompileInput): Skill[] {
   // segment's start url mentions the value — otherwise the marker would just
   // blunt the minting step's own expectation for nothing.
   const mintedAll = discoverMinted(kept, beginsAt.url, slots);
+  // A value the REPORT names pays too: fwec8 02-create was asked for "the
+  // record ID from the URL", and its report is the only place the minted id
+  // stood (see reportTemplate below).
+  const reportText = JSON.stringify([input.report.summary, ...Object.values(reportValues)]);
   const minted = mintedAll.filter(
     (m) =>
       JSON.stringify(kept.slice(m.keptIndex + 1).map((s) => [s.args, s.locators, s.diff ?? null])).includes(m.value) ||
-      segments.some((sg, si) => si > 0 && urlParts(sg.startUrl).some((p) => p.value === m.value)),
+      segments.some((sg, si) => si > 0 && urlParts(sg.startUrl).some((p) => p.value === m.value)) ||
+      reportText.includes(m.value),
   );
   const mintedMap = (pred: (m: MintedValue) => boolean) => new Map(minted.filter(pred).map((m) => [m.name, m.value] as const));
 
@@ -859,8 +864,26 @@ export function compileSkills(input: CompileInput): Skill[] {
       .filter(([key]) => isVarOrigin(key))
       .map(([, v]) => String(v ?? '').trim()),
   );
+  // …and a known value the REPORT names, where its only other marker was
+  // swallowed, when it names the RECORD the page is about: a part of a url
+  // this recording stood on. fwec8 03-verify's record id sat inside the
+  // whole-url slot v1, so v2 was dropped while `record_id: "{{v2}}"` stayed in
+  // the template — a marker no param could fill. Kept here, it survives below
+  // only with an origin to bind from (the flow threads the record's identity
+  // from where it was made); without one the report keeps the literal, which
+  // no replay publishes. Only a url part, by position: a price the report
+  // names (fwgr23's 125.00 inside '£125.00') is this page's finding for a
+  // read to make, never an earlier step's value to bind.
+  const tentativeReport = substitute(reportText, textSlots);
+  const urlStood = new Set([beginsAt.url, ...kept.map((s) => s.diff?.url ?? '')].filter(Boolean).flatMap((u) => urlParts(u).map((p) => p.value)));
   const keptSlots = new Map(
-    [...slots].filter(([n, v]) => usedNames.has(n) || (knownVals.has(v) && tentative.includes(`{{${n}}}`)) || varValues.has(v) || textMinted.slotted.has(v)),
+    [...slots].filter(
+      ([n, v]) =>
+        usedNames.has(n) ||
+        (knownVals.has(v) && (tentative.includes(`{{${n}}}`) || (urlStood.has(v) && tentativeReport.includes(`{{${n}}}`)))) ||
+        varValues.has(v) ||
+        textMinted.slotted.has(v),
+    ),
   );
   const finalTemplate = substitute(input.instruction, new Map([...keptSlots].filter(([n]) => textSlots.has(n))));
   // The mirror hazard: a slot whose marker survives only in STEPS (its every
@@ -898,9 +921,30 @@ export function compileSkills(input: CompileInput): Skill[] {
   }
 
   const now = input.now ?? new Date().toISOString();
+  // THE REPORT TEMPLATE names only what a replay can fill: a slot that
+  // survived as a param (keptSlots — fwec8 03-verify's orphan `{{v2}}` was a
+  // dropped slot's marker), and a value this run MINTED and a later replay
+  // re-derives from its own url ({{dN}}, segDerived). fwec8 02-create stored
+  // `record_id: "6ab3eab5991a42617"`, the recording's id, although its chain
+  // derived d1 from exactly that url part; the export then pruned record_id as
+  // unpublishable, and the one value the instruction asked for was never
+  // reported on any replay. A dropped slot's value is left as recorded text,
+  // which no replay publishes.
+  const reportSlots = new Map([...textSlots].filter(([n]) => keptSlots.has(n)));
+  const derivedBound = minted.filter((m) => Object.values(segDerived).some((d) => m.name in d));
+  const reportSub = (text: string): string => {
+    const slotted = substitute(text, reportSlots);
+    const whole = derivedBound.find((m) => m.value === slotted.trim());
+    if (whole) return `{{${whole.name}}}`;
+    // In a url, at the position it was minted from (substituteUrlId); in
+    // prose, as a whole token of the text floor, as textSlots are.
+    const urlSlots = derivedBound.map((m) => ({ name: m.name, value: m.value, at: m.at }));
+    const inUrls = slotted.replace(/\bhttps?:\/\/[^\s"'<>()]+/g, (u) => substituteUrlId(u, urlSlots));
+    return substitute(inUrls, new Map(derivedBound.filter((m) => m.value.length >= 2).map((m) => [m.name, m.value] as const)));
+  };
   const reportTemplate = {
-    summary: sub(input.report.summary),
-    values: Object.fromEntries(Object.entries(reportValues).map(([k, v]) => [k, sub(String(v))])),
+    summary: reportSub(input.report.summary),
+    values: Object.fromEntries(Object.entries(reportValues).map(([k, v]) => [k, reportSub(String(v))])),
   };
   // What the page shows once this procedure's work is done. Derived from the
   // recording's own before/after pair: report text that was NOT on the page
