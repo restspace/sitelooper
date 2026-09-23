@@ -115,3 +115,24 @@ Cloud-verified (verify-round50: 2195 main / 2374 browser / 122 parity, 0 failure
   credential word to END its name (PASSWORD_STORE_DIR, SSH_KEY_FILE do not count), PWD/PASS need a
   prefix (DB_PWD counts, the shell's PWD does not), and a path-shaped value is excluded only when it
   is the cwd or EXISTS on this filesystem — a non-existent `/Xy9!abc` is still a credential.
+
+## Round 51 (a441a86, merged to main)
+
+Cloud-verified on the second run (2209 main / 2388 browser / 123 parity, 0 failures; corpus 275
+rows, 0 status changes against r50). The FIRST run on the same commit failed one parity test, "both
+runners resolve an unpublished control label to its recorded value when the page shows it"
+(resolveStepParams saw `01-read.x` missing: recordedValueShown did not find "Remove" on the start
+page). It passes alone on either fix branch and on the merge, and passed in the full file on the
+rerun: FLAKY, not caused by round 51. Worth hardening (the live page check has no settle wait).
+
+- **Silent set (fwrd84 05-edit).** A step's expectation no longer masks a value the step itself
+  set: "$150.00" compiles to `${{v3}}{{*}}`, a hard check in both runners, so a save that never
+  took stops instead of passing tier A. A masked line that still matches the step's own recorded
+  removals (the page as it was before) identifies nothing new and is dropped. Parity case on a
+  fixture whose save does nothing: both runners stop; with the fix reverted, replay passes it.
+- **Text mints (fwrd85 RD-1015).** Mint provenance only watched urls; a record number that appears
+  as page text after a save (url unchanged) is now marked minted by provenance, and becomes a slot
+  bound to the capturing output (or a wildcard) in goals, expectations and published reads.
+  09-report now publishes the replay's own ticket, not the recording's. Not yet covered: the
+  created DATE (a literal in 09-report's report), the run-id prefix typed as literal text, recovery
+  compiles in flow runs, and skills compiled before the mint was first named.
