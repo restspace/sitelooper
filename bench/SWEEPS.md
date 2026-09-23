@@ -137,3 +137,24 @@ rerun: FLAKY, not caused by round 51. Worth hardening (the live page check has n
   created DATE (a literal in 09-report's report), the run-id prefix typed as literal text, recovery
   compiles in flow runs, and skills compiled before the mint was first named.
 | 52 | fwrd86 | a441a86 | rd | 6/6 ×3 | yes: 6/6 steps tier A 0 turns on n2 and n3 | pass 6/6, exit 0, drift 0 | **yes** | round 51 HELD live: 04-edit's Save expects `- cell "${{v4}}{{*}}"` (cost kept as a slot, not masked); no update with before == after; every published RD- value is the run's OWN ticket (n1 1015, n2 1016, n3 1017, spec 1018) and the ticket is bound to {{01-signin.ticket_reference}} downstream; no goal, expectation or report value holds n1's number. Password 0 hits; requiredEnvNames ["APP_PASSWORD"]. Remaining, none failing an objective: (1) n1's ticket frozen in an output KEY, `list_row_RD-1015`, on every replay and in the compiled typed outputs; (2) the created date is still frozen in two report templates (invisible here: every run was the same day); (3) report summaries and some values ("$437.50", "Showing 1–10 of 13") are replayed template text, not observations — correct only because every run's state is identical; (4) instruction wording "Draft or Closed" slotted to {{01-signin.ticket_status}} |
+
+## Round 53 (c923af6, merged to main)
+
+Cloud-verified (2227 main / 2408 browser / 127 parity, 0 failures; corpus 0 status changes against
+r51; the first browser attempt hit a Chromium version mismatch on the box, reinstalled and reran clean).
+
+- **Unobserved report values (fwrd86).** A replay published a template value whenever it carried a
+  slot, never checking the recording's literal text around it: "Created: 2026-09-23" and "Showing
+  1–10 of 13" went out as findings, and n2 reported "total 15" after archiving a second ticket. Now
+  every literal with a letter or digit must be shown on this run's page (rendered text, a11y lines
+  or the url), or the value is withheld, in both runners. A LATER step that consumes a withheld value
+  gets its single slot's value; compile counts sources by the same rule (compile/runtime mismatch
+  4 → 0 across 224 flows). Summary prose keeps only clauses whose words this run observed, else the
+  plain replay sentence. Echoed values stay out of the confident report in both runners (parity gap
+  closed).
+- **Run values in output keys.** `list_row_RD-1015` → `list_row`, renamed through the recorded
+  report, ledger, skills, flow and compiled typed outputs, at export.
+- **Named alternatives.** "requiring a Draft or Closed status" is no longer threaded to
+  {{01-signin.ticket_status}}; 602 → 600 refs across 54 rebuilt flows, both removals the wrong one.
+- **Flaky parity test** was the test's own race (the fixture list renders after load); now made
+  deterministic with a 1.5s delay and a wait for the list. Not a product bug.
