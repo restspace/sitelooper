@@ -38,7 +38,7 @@ import { literalCredentialsIn, markLiteralCredentials } from '../shared/secrets.
 import { BrowserSession } from './browser.js';
 import { DEFAULT_BROWSER_PROFILE } from '../execution/browser.js';
 import { observedChange } from '../execution/lifecycle.js';
-import { shownForReport, templateValue } from '../execution/report.js';
+import { referenceValue, shownForReport, templateValue } from '../execution/report.js';
 import { startPageSettled } from '../execution/action.js';
 import { coverageComplete, recordedValueShown } from '../execution/snapshot.js';
 import { captureSignature } from './diff.js';
@@ -1602,15 +1602,23 @@ ${describeLeaks(certain.slice(0, 30))}${certain.length > 30 ? `\n  … and ${cer
           } catch {
             /* browser gone — nothing observed, nothing published */
           }
+          const consumed = new Set(consumedReportedOutputs(flow.steps, step.id));
+          const referenced: Record<string, string> = {};
           for (const [k, v] of Object.entries(tail.reportTemplate?.values ?? {})) {
             const kept = templateValue(v, bound.params, pageShown, { literal: true });
             if (kept !== null) values[k] = kept;
+            // A consumed value the page does not show still gives a later
+            // step its one slot (referenceValue), as on the replay path.
+            else if (consumed.has(k)) {
+              const ref = referenceValue(v, bound.params, pageShown, { literal: true });
+              if (ref !== null) referenced[k] = ref;
+            }
           }
           const shown = done.shown.map((s) => JSON.stringify(s)).join(', ');
           opts.progress(`[flow ${flow.name}] ${step.id}: already satisfied — page shows ${shown} for ${idTexts.join(', ')}; nothing to do`);
           // Bank outputs exactly as a replayed step does, so a later step's
           // {{step.output}} reference threads through a step that ran nothing.
-          const stepOutputs: Record<string, string> = { ...values };
+          const stepOutputs: Record<string, string> = { ...referenced, ...values };
           try {
             const urlOuts = await captureUrlOutputs(await this.browser.getPage(), wantedUrlOuts.get(step.id), step.id, this.runSpecific);
             for (const [key, value] of Object.entries(urlOuts)) if (!(key in stepOutputs)) stepOutputs[key] = value;
@@ -2045,6 +2053,13 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       // resolves the same references from them. Banked for references only —
       // `values`, the step's reported findings, keeps the confident set.
       const stepOutputs: Record<string, string> = referencableOutputs(values, result.published);
+      // A consumed template value the report withheld: its one slot, this
+      // run's own (InstructionResult.references) — only where a later step
+      // consumes it, as the artifact publishes it (reportTemplateLines).
+      for (const key of consumedReportedOutputs(flow.steps, step.id)) {
+        const ref = result.references?.[key];
+        if (ref !== undefined && !(key in stepOutputs)) stepOutputs[key] = ref;
+      }
       try {
         // A model-driven end state has no reason to carry the recorded url
         // shape, so a recovered step does not wait for the consumed parts.
@@ -2544,8 +2559,15 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
     // The report's recorded text is checked against the page the chain ends
     // on (replayReport): fwrd86 06-delete published "Created: 2026-09-23"
     // around this run's ticket id, on every replay, on any day.
-    const { report, withheld } = await replayReport(() => this.browser.getPage(), last, match.params, confidentValues);
+    // Echoed keys are withheld from the template too: the guard dropped them
+    // from the confident values, and refilling them from "{{v4}}" put them
+    // straight back (fwrd86 01-signin ticket_title) — the artifact never did.
+    const { report, withheld, unobservedProse, references } = await replayReport(() => this.browser.getPage(), last, match.params, confidentValues, {
+      withhold: agg.echoed,
+      instruction,
+    });
     if (withheld.length) progress(`[replay] withheld ${withheld.length} report value(s) whose recorded text this run's page did not show: ${withheld.join(', ')}`);
+    if (unobservedProse.length) progress(`[replay] dropped ${unobservedProse.length} summary clause(s) this run did not observe`);
     // Keep the conversation coherent for later instructions: the same one-line
     // entry the loop would have written.
     this.state.messages.push({ role: 'user', content: instruction });
@@ -2574,6 +2596,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
         screenshots: [],
         skill: { listed: [match.skill.id], repaired: false, ...record } as SkillRecord,
         published: { ...agg.values },
+        ...(Object.keys(references).length ? { references } : {}),
       },
       ...(pinPast ? { pinPast } : {}),
     });

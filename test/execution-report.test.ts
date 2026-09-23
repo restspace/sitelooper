@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { derivesFromParams, templateValue } from '../src/execution/report.js';
+import { derivesFromParams, observedSummary, referenceValue, templateSource, templateValue } from '../src/execution/report.js';
 import { synthesizeReport } from '../src/skills/learn.js';
 import type { Skill } from '../src/skills/store.js';
 
@@ -126,5 +126,82 @@ describe('fwrd86: a template value publishes only the text this run observed', (
     const p = { v4: 'fwrd86-n2 RD Bench Ticket' };
     expect(synthesizeReport(signin, p, { ticket_created: '2026-09-24' }, nextDay).evidence?.values).toEqual({ ticket_created: '2026-09-24', ticket_title: 'fwrd86-n2 RD Bench Ticket' });
     expect(synthesizeReport(signin, p, {}, nextDay).evidence?.values).toEqual({ ticket_title: 'fwrd86-n2 RD Bench Ticket' });
+  });
+
+  // The summary under the same rule. n2's published 06-delete summary still
+  // said "(Showing 1–10 of 13)", "| 2026-09-23", "total 15 (… plus the
+  // pre-existing archived RD-1013)" — the recording's list, not n2's.
+  it("drops the summary's unobserved clauses and keeps the ones this run's page shows", () => {
+    // The detail page's words, as a replay would see them after the archive.
+    const page = [...nextDay, 'Final state title status plus an Archived badge 0 parts', 'Ready'];
+    const report = synthesizeReport(deleteSkill, params, live, page, { instruction: 'Report the final state of the ticket' });
+    for (const stale of ['2026-09-23', 'of 13', 'total 15', 'RD-1015']) expect(report.summary).not.toContain(stale);
+    expect(report.summary).toContain('Final state: RD-1016, title "fwrd86-n2 RD Bench Ticket", status Ready plus an "Archived" badge, 0 parts.');
+    // No page at all: nothing but the params and reads vouch, and the plain sentence stands.
+    expect(synthesizeReport(deleteSkill, params, live).summary).toMatch(/^Replayed stored procedure s_6532a2; observed /);
+  });
+
+  // s_6a0a0a (04-edit): "…the "Total (price × quantity)" line is now {{live}}
+  // (previously $375.00)." 04-edit never read $375.00 — it is 03-add's total.
+  it('drops a parenthetical figure no read or page vouches for, and keeps the sentence around it', () => {
+    const edit = {
+      id: 's_6a0a0a',
+      params: {},
+      steps: [],
+      reportTemplate: { summary: 'The Total (price × quantity) line is now $437.50 (previously $375.00).', values: { updated_total_amount: '$437.50' } },
+    } as unknown as Skill;
+    const report = synthesizeReport(edit, {}, { updated_total_amount: '$437.50' }, ['The Total (price × quantity) line', '- cell "$437.50"', 'is now']);
+    expect(report.summary).toBe('The Total (price × quantity) line is now $437.50.');
+  });
+
+  // fwrd86 01-signin: "read 'ticket_title' returned a value the skill itself
+  // set … dropped from the report's confident values" — and the report then
+  // carried ticket_title from the template's "{{v4}}". The artifact never did.
+  it('keeps an echo out of the report: the template does not refill what the guard dropped', () => {
+    const signin = { id: 's_93ead3', params: {}, steps: [], reportTemplate: { summary: '', values: { ticket_title: '{{v4}}', ticket_status: '{{v5}}' } } } as unknown as Skill;
+    const r = synthesizeReport(signin, { v4: 'fwrd86-n2 RD Bench Ticket', v5: 'Draft' }, {}, null, { withhold: ['ticket_title'] });
+    expect(r.evidence?.values).toEqual({ ticket_status: 'Draft' });
+  });
+});
+
+/**
+ * A later step's reference to a template value (fwod74 06-open ←
+ * 05-open.second_product_name, `"[FURN_6666] {{v7}}"`; fwrd72 09-report ←
+ * 01-open.landing_page, `"{{v1}}#/tickets"`). The whole value where the page
+ * shows its recorded text; else the one slot, which this run supplied; never
+ * the recording's text. Compile's question (templateSource) is the same one.
+ */
+describe('observedSummary', () => {
+  const page = ['Ticket RD-1016 archived', '- button "Unarchive ticket"', 'Parts 0'];
+  it('drops a sentence whose main clause was not observed, and its parts with it', () => {
+    const r = observedSummary('Ticket RD-1016 archived (Parts 0). Deleted both parts (Parts 0).', [], page);
+    expect(r.text).toBe('Ticket RD-1016 archived (Parts 0).');
+    expect(r.dropped).toEqual(['Deleted both parts (Parts 0).']);
+  });
+
+  it('keeps a standing sentence and drops only its unobserved parts', () => {
+    const r = observedSummary('Ticket RD-1016 archived; total 15 — Parts 0 (previously 2).', [], page);
+    expect(r.text).toBe('Ticket RD-1016 archived — Parts 0.');
+  });
+
+  it('never cuts inside quotes, and drops a clause that still holds a marker', () => {
+    expect(observedSummary('Ticket "RD-1016; archived" archived.', [], page).text).toBe('Ticket "RD-1016; archived" archived.');
+    expect(observedSummary('Ticket {{v1}} archived.', [], page).text).toBe('');
+  });
+});
+
+describe('a consumed template value', () => {
+  it('resolves to the whole value where the page shows it, else to its one slot', () => {
+    expect(referenceValue('[FURN_6666] {{v7}}', { v7: 'Acoustic Bloc Screens' }, ['- cell "[FURN_6666] Acoustic Bloc Screens"'])).toBe('[FURN_6666] Acoustic Bloc Screens');
+    expect(referenceValue('[FURN_6666] {{v7}}', { v7: 'Acoustic Bloc Screens' }, ['- heading "Quotations"'])).toBe('Acoustic Bloc Screens');
+    expect(referenceValue('{{v1}}#/tickets', { v1: 'http://127.0.0.1:4180/' }, ['http://127.0.0.1:4180/#/tickets'])).toBe('http://127.0.0.1:4180/#/tickets');
+  });
+
+  it('resolves to nothing from two slots whose recorded text the page does not show, as compile says', () => {
+    expect(referenceValue('{{v1}} created on 2026-09-23 by {{v2}}', { v1: 'RD-1016', v2: 'Bench' }, ['- cell "RD-1016"'])).toBeNull();
+    expect(templateSource('{{v1}} created on 2026-09-23 by {{v2}}')).toBe(false);
+    expect(templateSource('{{v1}} | {{v2}}')).toBe(true);
+    expect(templateSource('[FURN_6666] {{v7}}')).toBe(true);
+    expect(templateSource('RD-1017')).toBe(false);
   });
 });

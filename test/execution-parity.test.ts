@@ -35,7 +35,7 @@ import { emitFlowFile } from '../src/spec/emit.js';
 import type { SpecFlow } from '../src/spec/ir.js';
 import { goalSatisfied, type ReplayResult } from '../src/skills/replay.js';
 import { replayReport } from '../src/skills/learn.js';
-import { ignorableRefs, resolveInstruction, resolveStepParams, type FlowStep } from '../src/skills/flow.js';
+import { consumedReportedOutputs, ignorableRefs, resolveInstruction, resolveStepParams, type FlowStep } from '../src/skills/flow.js';
 import type { Skill, SkillParam, SkillStep } from '../src/skills/store.js';
 import type { LocatorCandidate, RecordedEntry, RecordedStep } from '../src/daemon/recorder.js';
 import { compileSkills } from '../src/skills/compile.js';
@@ -697,6 +697,62 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
         expect(JSON.stringify(replay.values)).not.toContain(stale);
         expect(JSON.stringify(published(emitted))).not.toContain(stale);
       }
+    }, 120_000);
+
+    /**
+     * A later step CONSUMES the withheld value (fwod74 06-open ←
+     * `"[FURN_6666] {{v7}}"`). Compile counts a one-slot template value as a
+     * source (templateSource), so replay must give the consumer something on
+     * every run — and never the recording's text. Both runners hand the
+     * reference the slot's own value; the unconsumed list_row stays withheld
+     * on both, and neither puts either into the report.
+     */
+    it('both runners give a consumer the one slot of a withheld value, and nothing of the recording', async () => {
+      const heading: SkillStep = { tool: 'read', args: { target: '(read-back)', what: 'text' }, locators: { target: [{ kind: 'css', selector: 'h1' }] }, label: 'heading' };
+      const flow = ticketFlow();
+      flow.steps.push({
+        id: '07-verify',
+        instruction: 'verify {{06-delete.list_count}} is listed',
+        params: {},
+        outputs: ['heading'],
+        segments: [{ id: 's_verify', template: 'verify the list', params: {}, preconditions: { urlPattern: `${origin}/tickets` }, steps: [heading] }],
+      });
+      const consumed = consumedReportedOutputs(
+        flow.steps.map((s) => ({ id: s.id, instruction: s.instruction, params: s.params })),
+        '06-delete',
+      );
+      expect(consumed).toEqual(['list_count']);
+
+      reset(16);
+      fx.listing.date = '2026-09-24';
+      const session = new BrowserSession({ session: `parity-ref-${Date.now()}`, persist: false, learn: true });
+      let daemonRefs: Record<string, string> = {};
+      let daemonReport: Record<string, string> = {};
+      try {
+        const page = await session.getPage();
+        await page.goto(`${origin}/tickets`);
+        const skill = ticketSkill();
+        session.learn!.put(skill);
+        const out = await executeTool(session, 'run_skill', { id: skill.id, params }, os.tmpdir());
+        const replay = out.replay as ReplayResult;
+        expect(replay?.ok, replay?.reason ?? String(out.result)).toBe(true);
+        const r = await replayReport(() => session.getPage(), skill, params, replay.values);
+        daemonReport = r.report.evidence?.values as Record<string, string>;
+        // The flow runner's banking: the report, then a consumed key's reference.
+        daemonRefs = { ...daemonReport };
+        for (const key of consumed) if (r.references[key] !== undefined && !(key in daemonRefs)) daemonRefs[key] = r.references[key];
+      } finally {
+        await session.close();
+      }
+      reset(16);
+      fx.listing.date = '2026-09-24';
+      const emitted = await emittedOf(flow, params);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+
+      const want = { ticket_reference: 'RD-1016', ticket_title: 'RD-1016 Bench Ticket', list_count: 'RD-1016' };
+      expect(daemonRefs).toEqual(want);
+      expect(published(emitted)).toEqual(want);
+      expect(daemonReport.list_count).toBeUndefined();
     }, 120_000);
   });
 
@@ -3486,6 +3542,64 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(emitted.outputs['01-clear.shown']?.replace(/ /g, ' ')).toBe('echoed notes x61');
       expect(replay.echoed).toEqual(['shown']);
       expect(emitted.echoed).toEqual(['shown']);
+    }, 120_000);
+
+    /**
+     * fwrd86 01-signin: "read 'ticket_title' returned a value the skill itself
+     * set … dropped from the report's confident values" — and the daemon's
+     * report then carried ticket_title all the same, refilled from the
+     * template's "{{v4}}". The artifact never did: the echoed read sets the
+     * key, the template only fills an unset one, and run.echoed marks it. So
+     * the confident report differed by one key. Both now withhold the echo
+     * from the confident report and both still give it to a later reference.
+     */
+    it('neither runner reports an echo as confident, though the template carries it; both still publish it for references', async () => {
+      const steps: SkillStep[] = [
+        { tool: 'goto', args: { url: `${origin}/editor` }, locators: {} },
+        { tool: 'fill', args: { target: '@e1', value: '{{v1}}' }, locators: { target: [{ kind: 'css', selector: '#mon textarea' }] } },
+        { tool: 'read', args: { target: '@e2', what: 'text', label: 'shown' }, label: 'shown', locators: { target: [{ kind: 'css', selector: '#mon .view-lines' }] } },
+        { tool: 'read', args: { target: '@e3', what: 'text', label: 'heading' }, label: 'heading', locators: { target: [{ kind: 'css', selector: 'h1' }] } },
+      ];
+      const params = { v1: 'echoed notes x62' };
+      const skillParams = (): Record<string, SkillParam> => ({ v1: { example: 'echoed notes x61', usedIn: [2] } });
+      const report = { summary: '', values: { shown: '{{v1}}' } };
+      const skill: Skill = { ...skillOf(steps), params: skillParams(), reportTemplate: report };
+      const spec = specOf(steps);
+      spec.steps[0].params = { v1: 'echoed notes x62' };
+      spec.steps[0].segments[0] = { ...spec.steps[0].segments[0], params: skillParams(), report };
+
+      // The daemon: run_skill, then the flow runner's own report assembly
+      // (replayDirect: the confident values without the echoes, then replayReport).
+      reset(0);
+      const session = new BrowserSession({ session: `parity-echo-${Date.now()}`, persist: false, learn: true });
+      let replay: ReplayResult;
+      let confident: Record<string, string>;
+      try {
+        const page = await session.getPage();
+        await page.goto(`${origin}/`);
+        session.learn!.put(skill);
+        const out = await executeTool(session, 'run_skill', { id: skill.id, params }, os.tmpdir());
+        replay = out.replay as ReplayResult;
+        expect(replay?.ok, replay?.reason ?? String(out.result)).toBe(true);
+        const live = Object.fromEntries(Object.entries(replay.values).filter(([k]) => !replay.echoedValues.includes(k)));
+        confident = (await replayReport(() => session.getPage(), skill, params, live, { withhold: replay.echoedValues })).report.evidence?.values as Record<string, string>;
+      } finally {
+        await session.close();
+      }
+      reset(0);
+      const emitted = await emittedOf(spec, params);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      const emittedConfident = Object.keys(emitted.outputs)
+        .filter((k) => k.startsWith('01-clear.') && !emitted.echoed!.includes(k.slice('01-clear.'.length)))
+        .map((k) => k.slice('01-clear.'.length));
+
+      expect(replay.echoedValues).toEqual(['shown']);
+      expect(emitted.echoed).toEqual(['shown']);
+      expect(Object.keys(confident).sort()).toEqual(['heading']);
+      expect(emittedConfident.sort()).toEqual(['heading']);
+      // For a later step's reference, both still carry the read.
+      expect(replay.values.shown?.replace(/\s/g, ' ')).toBe('echoed notes x62');
+      expect(emitted.outputs['01-clear.shown']?.replace(/\s/g, ' ')).toBe('echoed notes x62');
     }, 120_000);
   });
 

@@ -716,10 +716,17 @@ describe('a replay that observed nothing cannot narrate', () => {
     expect(r.summary).toMatch(/Replayed stored procedure/);
   });
 
+  // Since fwrd86 every word of a kept clause must be observed on this run —
+  // on the page, or supplied by it (observedSummary). The instruction and the
+  // page carry the wording here; the param carries the record.
+  const renamedPage = ['The record was renamed', "- textbox \"Name\": n2 Widget"];
+
   it('keeps prose whose specifics all came from the run own parameters', () => {
     const skill = stepless("Renamed the record to '{{v1}}'.", { v1: { example: 'n1 Widget', usedIn: [1] } });
-    const r = synthesizeReport(skill, { v1: 'n2 Widget' }, {});
+    const r = synthesizeReport(skill, { v1: 'n2 Widget' }, {}, renamedPage, { instruction: "Rename the record to 'n2 Widget'." });
     expect(r.summary).toBe("Renamed the record to 'n2 Widget'.");
+    // Nothing observed the wording: the plain sentence, not the recording's.
+    expect(synthesizeReport(skill, { v1: 'n2 Widget' }, {}).summary).toMatch(/^Replayed stored procedure/);
   });
 
   it('drops even harmless prose when nothing in the run vouches for it', () => {
@@ -743,13 +750,17 @@ describe('a replay that observed nothing cannot narrate', () => {
     // The other half of the rule: a param that actually reached the prose is
     // this run's own value, so the sentence describes this run.
     const skill = stepless("Renamed the record to '{{v1}}'.", { v1: { example: 'n1 Widget', usedIn: [1] } });
-    expect(synthesizeReport(skill, { v1: 'n2 Widget' }, {}).summary).toBe("Renamed the record to 'n2 Widget'.");
+    expect(synthesizeReport(skill, { v1: 'n2 Widget' }, {}, renamedPage, { instruction: "Rename the record to 'n2 Widget'." }).summary).toBe("Renamed the record to 'n2 Widget'.");
   });
 
-  it('still narrates when the replay DID observe something', () => {
+  it('narrates what the replay observed, and never a figure it did not', () => {
+    // A live read was made, so the "observed nothing" rule does not apply —
+    // but the recording's £141.00 is on neither the page nor any value. It
+    // used to survive here; it is fwrd86 04-edit's "(previously $375.00)".
     const skill = stepless('The order total is £141.00.');
-    const r = synthesizeReport(skill, {}, { total: '£207.00' });
-    expect(r.summary).toContain('141.00'); // a live read was made; the older rules govern
+    expect(synthesizeReport(skill, {}, { total: '£207.00' }, ['Order total £207.00']).summary).not.toContain('141.00');
+    // The same sentence where the page does show it is this run's finding.
+    expect(synthesizeReport(skill, {}, { total: '£141.00' }, ['The order total is £141.00']).summary).toBe('The order total is £141.00.');
   });
 });
 

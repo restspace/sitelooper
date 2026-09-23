@@ -3334,7 +3334,7 @@ describe('report-template values after the last segment', () => {
     expect(unsourced(flow)).toEqual([]);
     const body = emit(flow);
     expect(body).toContain(
-      "{ const value = templateValue('{{v2}}', p, null); if (value !== null && outputs['02-create.post_title_element_text'] === undefined) outputs['02-create.post_title_element_text'] = value; }",
+      "{ const value = referenceValue('{{v2}}', p, null); if (value !== null && outputs['02-create.post_title_element_text'] === undefined) outputs['02-create.post_title_element_text'] = value; }",
     );
     // the slot the template names is passed to the step, though no action uses it
     expect(body).toMatch(/async '02-create'\(page: Page, p: \{[^}]*v2: string/);
@@ -3347,10 +3347,24 @@ describe('report-template values after the last segment', () => {
   it('checks recorded text around a slot against the page the step ends on', () => {
     const body = emit(flowWith('Created {{v2}} on 2026-09-23'));
     expect(body).toContain('const reportShown = await shownForReport(page).catch(() => null);');
-    expect(body).toContain("templateValue('Created {{v2}} on 2026-09-23', p, reportShown)");
-    expect(body.indexOf('const reportShown')).toBeLessThan(body.indexOf("templateValue('Created {{v2}}"));
+    expect(body).toContain("referenceValue('Created {{v2}} on 2026-09-23', p, reportShown)");
+    expect(body.indexOf('const reportShown')).toBeLessThan(body.indexOf("referenceValue('Created {{v2}}"));
     expect(body).toContain('async function shownForReport(page: Page): Promise<string[] | null> {');
     expect(syntaxErrors(body)).toEqual([]);
+  });
+
+  // A consumer is owed a value on EVERY run (templateSource, shared with the
+  // daemon's publishedOutputs): a one-slot value always gives its slot
+  // (referenceValue); one from two slots with recorded text between them
+  // publishes only where the page shows that text, so it sources nothing.
+  it('sources a consumer from one slot with recorded text around it, never from two', () => {
+    const one = flowWith('[FURN_6666] {{v2}}');
+    expect(unsourced(one)).toEqual([]);
+    expect(emit(one)).toContain("referenceValue('[FURN_6666] {{v2}}', p, reportShown)");
+    const two = flowWith('{{v2}} created on {{v3}}');
+    two.steps[0].params.v3 = '2026-09-23';
+    two.steps[0].segments[1].params.v3 = { example: '2026-09-23', usedIn: [] };
+    expect(unsourced(two).map((d) => d.what)).toEqual(['slot v1 is bound to {{02-create.post_title_element_text}}, and nothing has ever published post_title_element_text']);
   });
 
   it('still refuses a consumer of a recorded literal, which the daemon drops as stale too', () => {
@@ -3362,7 +3376,7 @@ describe('report-template values after the last segment', () => {
   it('a live read of the same output keeps it: the template only fills in when nothing read it', () => {
     const body = emit(flowWith('{{v2}}', 'post_title_element_text'));
     const readAt = body.indexOf("outputs['02-create.post_title_element_text'] = ");
-    const templateAt = body.indexOf("templateValue('{{v2}}', p, null)");
+    const templateAt = body.indexOf("referenceValue('{{v2}}', p, null)");
     expect(readAt).toBeGreaterThan(-1);
     expect(templateAt).toBeGreaterThan(readAt);
     expect(body).toContain("outputs['02-create.post_title_element_text'] === undefined");

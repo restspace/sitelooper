@@ -245,6 +245,14 @@ export interface InstructionResult {
    * reference went unresolved on a page that was showing the link.
    */
   published?: Record<string, string>;
+  /**
+   * Present for a zero-model replay: report-template keys it could not report
+   * (their recorded text was not on the page) but whose one slot this run
+   * supplied — referenceValue, src/execution/report.ts. For a later step's
+   * reference only, and only where one consumes the key, as the artifact
+   * publishes it; never a finding. fwod74's `second_product_name`.
+   */
+  references?: Record<string, string>;
 }
 
 export interface SkillRecord {

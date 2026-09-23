@@ -5,7 +5,7 @@ import type { RecordedEntry, RecordedInstruction } from '../daemon/recorder.js';
 import { compileSkills, escapeRe, fillParams, samePageContexts, sameProcedure, urlMatches, urlPattern, variantStart } from './compile.js';
 import { landedOnRecordedPage } from '../execution/gates.js';
 import type { Page } from 'playwright-core';
-import { derivesFromParams, reportNeedsPage, shownForReport, templateValue, unshownLiterals } from '../execution/report.js';
+import { derivesFromParams, observedSummary, referenceValue, reportNeedsPage, shownForReport, templateSource, templateValue, unshownLiterals } from '../execution/report.js';
 import { ComponentStore, learnRecipes } from './components.js';
 import { contractOf, isVerified, successRate, type Skill, type SkillStore } from './store.js';
 
@@ -773,13 +773,44 @@ export function synthesizeReport(
    * run's ticket id on every replay.
    */
   shown: readonly string[] | null = null,
+  opts: ReportOptions = {},
 ): Report {
-  return synthesize(skill, params, liveValues, shown).report;
+  return synthesize(skill, params, liveValues, shown, opts).report;
 }
 
-/** synthesizeReport, with the keys it withheld for text the page did not show. */
-function synthesize(skill: Skill, params: Record<string, string>, liveValues: Record<string, string>, shown: readonly string[] | null): { report: Report; withheld: string[] } {
+export interface ReportOptions {
+  /**
+   * Keys the echo guard dropped from the confident values. Withheld outright:
+   * the template must not put back what the guard took out. fwrd86 01-signin
+   * warned "read 'ticket_title' … dropped from the report's confident values"
+   * and then reported ticket_title all the same, from the template's
+   * "{{v4}}" — while the artifact, whose echoed read sets the key, never
+   * filled it from the template and lists it in run.echoed.
+   */
+  withhold?: readonly string[];
+  /** This run's instruction: the caller's own words, observed for the summary (observedSummary). */
+  instruction?: string;
+}
+
+/** What a zero-model replay reports, and what a later step's reference may use beyond it. */
+export interface ReplayReport {
+  report: Report;
+  /** Template keys withheld because this run's page did not show their recorded text. */
+  withheld: string[];
+  /** Summary clauses dropped as unobserved or stale (observedSummary). */
+  unobservedProse: string[];
+  /**
+   * For a later step's REFERENCE only, never the report: each template key
+   * not reported whose referenceValue this run can supply (a one-slot value's
+   * slot). The flow runner banks the ones a later step consumes.
+   */
+  references: Record<string, string>;
+}
+
+/** synthesizeReport, with what it withheld and what references may still use. */
+function synthesize(skill: Skill, params: Record<string, string>, liveValues: Record<string, string>, shown: readonly string[] | null, opts: ReportOptions = {}): ReplayReport {
   const template = skill.reportTemplate ?? { summary: '', values: {} };
+  const withhold = new Set(opts.withhold ?? []);
   const values: Record<string, string> = {};
   const stale: string[] = [];
   /** Values withheld because this run's page did not show their recorded text. */
@@ -787,6 +818,7 @@ function synthesize(skill: Skill, params: Record<string, string>, liveValues: Re
   let omitted = 0;
   for (const [k, v] of Object.entries(template.values)) {
     if (k in liveValues) continue; // a live read wins outright, below
+    if (withhold.has(k)) continue; // the echo guard's to drop, not the template's to refill
     // The shared rule (src/execution/report.ts templateValue), which a
     // compiled artifact applies to the same template (fwgh4 03-open).
     const kept = templateValue(v, params, shown);
@@ -839,7 +871,8 @@ function synthesize(skill: Skill, params: Record<string, string>, liveValues: Re
     summary = summary.replace(re, (hit) => swaps.find(([old]) => old === hit)?.[1] ?? hit);
   }
   // Strip stale recorded literals from the prose so the summary cannot state a
-  // value this run did not observe.
+  // value this run did not observe — clause by clause (observedSummary's cut),
+  // so one stale figure costs its clause, not the whole summary.
   //
   // Containment is compared LOOSELY. fwrd19l stored the same validation
   // message twice — once in the summary keeping the app's "-" bullets, once
@@ -847,17 +880,27 @@ function synthesize(skill: Skill, params: Record<string, string>, liveValues: Re
   // substring test missed by that one character, publishing the recording
   // run's part names as this run's finding.
   const loose = (t: string): string => t.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-  const hay = loose(summary);
-  const fromParams = Object.values(params).map(loose).join(' ');
+  const fresh = (clause: string): boolean => {
+    const hay = loose(clause);
+    return !(
+      stale.some((v) => loose(v).length >= MIN_STALE_LEN && hay.includes(loose(v))) ||
+      // A param's `example` IS the recording run's value. If one survives in
+      // the prose while this run bound something else to that param, the
+      // clause is describing the wrong record however well the rest filled.
+      Object.entries(skill.params).some(([n, p]) => {
+        const example = String(p.example ?? '');
+        return example.length >= MIN_STALE_LEN && params[n] !== example && hay.includes(loose(example));
+      })
+    );
+  };
+  // And every word left must have been observed on THIS run: on the page, or
+  // supplied by it — the instruction, a slot's value, a live read, a value it
+  // kept. fwrd86 06-delete's "total 15 ({{v1}} plus the pre-existing archived
+  // RD-1013)" and 04-edit's "(previously $375.00)" name no value, so the
+  // stale rule never saw them; n2 had archived a third ticket.
+  const prose = observedSummary(summary, [opts.instruction ?? '', ...Object.values(params), ...Object.values(values)], shown, fresh);
   const dropped =
-    stale.some((v) => loose(v).length >= MIN_STALE_LEN && hay.includes(loose(v))) ||
-    // A param's `example` IS the recording run's value. If one survives in the
-    // prose while this run bound something else to that param, the sentence is
-    // describing the wrong record however well the rest of it filled.
-    Object.entries(skill.params).some(([n, p]) => {
-      const example = String(p.example ?? '');
-      return example.length >= MIN_STALE_LEN && params[n] !== example && hay.includes(loose(example));
-    }) ||
+    !prose.text ||
     // A replay that re-observed NOTHING cannot vouch for a sentence naming
     // specifics. Both rules above need something to compare against — a stale
     // template value, or a param whose example survived — and fwod12's steps
@@ -890,14 +933,22 @@ function synthesize(skill: Skill, params: Record<string, string>, liveValues: Re
     // procedure s_x"). The values the replay did observe are listed either
     // way, and the step's status still says the procedure ran. That is a
     // worse report, never a wrong one.
-    (!Object.keys(liveValues).length && summary === template.summary) ||
-    // The same rule for the prose: a sentence still carrying an unresolved
-    // marker states a placeholder as a finding. Falling back to the plain
-    // replay sentence loses nothing this run could vouch for.
-    /\{\{/.test(summary);
+    // (A clause still carrying an unresolved marker states a placeholder as a
+    // finding; observedSummary drops it with the unobserved ones.)
+    (!Object.keys(liveValues).length && summary === template.summary);
   const clean = dropped
     ? `Replayed stored procedure ${skill.id}${Object.keys(values).length ? `; observed ${Object.entries(values).map(([k, v]) => `${k}=${v}`).join(', ')}` : ''}.`
-    : summary;
+    : prose.text;
+
+  // What a later step may still reference: a one-slot value's slot, where the
+  // whole value could not be reported (referenceValue). Never an echo key: the
+  // echoed read itself is what references get (InstructionResult.published).
+  const references: Record<string, string> = {};
+  for (const [k, v] of Object.entries(template.values)) {
+    if (k in values || k in liveValues || withhold.has(k)) continue;
+    const ref = referenceValue(v, params, shown);
+    if (ref !== null) references[k] = ref;
+  }
 
   const report: Report = {
     status: 'success',
@@ -905,7 +956,7 @@ function synthesize(skill: Skill, params: Record<string, string>, liveValues: Re
     details: `Replayed stored procedure ${skill.id} without the model. Reported values are live read-backs or your own parameters; ${omitted ? `${omitted} recorded value(s) that could not be re-observed were omitted` : 'no stale values were carried over'}${unshown.length ? `; withheld ${unshown.join(', ')}, whose recorded text this run's page did not show` : ''}.`,
     evidence: { values },
   };
-  return { report, withheld: unshown };
+  return { report, withheld: unshown, unobservedProse: prose.dropped, references };
 }
 
 /**
@@ -921,19 +972,22 @@ export async function replayReport(
   skill: Skill,
   params: Record<string, string>,
   liveValues: Record<string, string>,
-): Promise<{ report: Report; withheld: string[] }> {
+  opts: ReportOptions = {},
+): Promise<ReplayReport> {
   const pending = Object.entries(skill.reportTemplate?.values ?? {})
-    .filter(([k]) => !(k in liveValues))
+    .filter(([k]) => !(k in liveValues) && !(opts.withhold ?? []).includes(k))
     .map(([, v]) => v);
   let shown: string[] | null = null;
-  if (reportNeedsPage(pending)) {
+  // The summary's words are observed on the page too (observedSummary), so
+  // prose is reason enough to look.
+  if (reportNeedsPage(pending) || reportNeedsPage([skill.reportTemplate?.summary ?? ''])) {
     try {
       shown = await shownForReport(await getPage());
     } catch {
       /* browser gone — nothing observed, so nothing recorded is published */
     }
   }
-  return synthesize(skill, params, liveValues, shown);
+  return synthesize(skill, params, liveValues, shown, opts);
 }
 
 /**
@@ -944,9 +998,12 @@ export async function replayReport(
  * stale). Used by the flow export lint to flag {{step.output}} references
  * that only model recovery could re-observe.
  *
- * "Can publish", not "will": since fwrd86 a template value with recorded
- * text around its slots publishes only on a run whose page shows that text,
- * so it is counted here as a source that can, on the right page.
+ * Only a value that publishes for a reference on EVERY run counts
+ * (templateSource): since fwrd86 a template value's recorded text publishes
+ * only where the page shows it, and a later step's reference falls back to
+ * the one slot's own value (referenceValue). A value from several slots with
+ * text between them has no such fallback, so it is no source — the same
+ * answer the artifact's unsourcedRef gives, and what replay does.
  */
 export function publishedOutputs(skill: Skill): string[] {
   const out = new Set<string>();
@@ -958,7 +1015,7 @@ export function publishedOutputs(skill: Skill): string[] {
   };
   walk(skill.steps);
   for (const [k, v] of Object.entries(skill.reportTemplate?.values ?? {})) {
-    if (derivesFromParams(v)) out.add(k);
+    if (templateSource(v)) out.add(k);
   }
   return [...out];
 }

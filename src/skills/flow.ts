@@ -2497,7 +2497,7 @@ export function consumedUrlOutputs(steps: FlowStep[]): Map<string, Set<string>> 
  * Url parts are excluded: they are captured from the browser, not reported. A
  * `#path` suffix names a leaf of the output, so the output itself is listed.
  */
-export function consumedReportedOutputs(steps: FlowStep[], stepId: string): string[] {
+export function consumedReportedOutputs(steps: readonly Pick<FlowStep, 'id' | 'instruction' | 'params'>[], stepId: string): string[] {
   const out = new Set<string>();
   const at = steps.findIndex((s) => s.id === stepId);
   for (const s of steps.slice(at + 1)) {

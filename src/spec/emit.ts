@@ -3,7 +3,7 @@ import { DEFAULT_BROWSER_PROFILE, isNavigatingAction, type BrowserProfile } from
 import { setsSomething } from '../execution/echo.js';
 import { standingFillRole } from '../execution/refill.js';
 import { toggleEffectLines } from '../execution/toggle.js';
-import { derivesFromParams, reportNeedsPage } from '../execution/report.js';
+import { derivesFromParams, reportNeedsPage, templateSource } from '../execution/report.js';
 import { observedNothing } from '../execution/observe.js';
 import { segmentGate } from '../execution/gates.js';
 /**
@@ -35,7 +35,7 @@ import { describeFramePath, stepEffect } from '../execution/context.js';
 import { OPENER_LINE, recordMarkers, waitsForAbsence } from '../skills/replay.js';
 import { seedRecipes, snapshotRecipes } from '../skills/components.js';
 import type { SkillStep } from '../skills/store.js';
-import { recordedStandIn } from '../skills/flow.js';
+import { consumedReportedOutputs, recordedStandIn } from '../skills/flow.js';
 import { candidateSources, matcherSource, observationSources, stringSource } from './locators.js';
 import { unmeasuredPreconditionDiagnostic, type SpecFlow, type SpecSegment, type SpecStep } from './ir.js';
 import { diagnosticNote, formatDiagnostic, type Diagnostic } from './diagnostics.js';
@@ -2902,7 +2902,7 @@ function markerBound(marker: string, segment: SpecSegment): boolean {
  * nothing, and a guard that cannot be sure is not emitted at all, which
  * simply leaves the step running exactly as it does today.
  */
-function satisfiedGuard(step: SpecStep, ctx: Ctx): string[] {
+function satisfiedGuard(step: SpecStep, ctx: Ctx, consumed: ReadonlySet<string> = new Set()): string[] {
   const head = step.segments[0];
   const last = step.segments[step.segments.length - 1];
   const goal = last?.goal?.requireText ?? [];
@@ -2942,7 +2942,8 @@ function satisfiedGuard(step: SpecStep, ctx: Ctx): string[] {
   if (templated.length) out.push('  const satisfiedShown = await shownForReport(page).catch(() => null);');
   for (const [label, value] of templated) {
     noteSlots(value, ctx);
-    out.push(`  { const value = templateValue(${q(value)}, p, satisfiedShown, { literal: true }); if (value !== null) outputs[${q(`${step.id}.${label}`)}] = value; }`);
+    const fn = consumed.has(label) ? 'referenceValue' : 'templateValue';
+    out.push(`  { const value = ${fn}(${q(value)}, p, satisfiedShown, { literal: true }); if (value !== null) outputs[${q(`${step.id}.${label}`)}] = value; }`);
   }
   out.push('  return;', '}');
   return out;
@@ -2959,7 +2960,7 @@ function satisfiedGuard(step: SpecStep, ctx: Ctx): string[] {
  * refused 03-open over `{{02-create.post_title_element_text}}`, a `"{{v2}}"`
  * value only the daemon published.
  */
-function reportTemplateLines(step: SpecStep, ctx: Ctx): string[] {
+function reportTemplateLines(step: SpecStep, ctx: Ctx, consumed: ReadonlySet<string> = new Set()): string[] {
   const last = step.segments[step.segments.length - 1];
   const entries = Object.entries(last?.report?.values ?? {}).filter(([label, template]) => label && derivesFromParams(template) && markerBound(template, last));
   if (!entries.length) return [];
@@ -2972,7 +2973,10 @@ function reportTemplateLines(step: SpecStep, ctx: Ctx): string[] {
   for (const [label, template] of entries) {
     noteSlots(template, ctx);
     const key = q(`${step.id}.${label}`);
-    out.push(`{ const value = templateValue(${q(template)}, p, ${needsPage ? 'reportShown' : 'null'}); if (value !== null && outputs[${key}] === undefined) outputs[${key}] = value; }`);
+    // A consumed key falls back to its one slot (referenceValue): a later
+    // step's reference, never a finding — the daemon banks the same.
+    const fn = consumed.has(label) ? 'referenceValue' : 'templateValue';
+    out.push(`{ const value = ${fn}(${q(template)}, p, ${needsPage ? 'reportShown' : 'null'}); if (value !== null && outputs[${key}] === undefined) outputs[${key}] = value; }`);
   }
   return out;
 }
@@ -3322,7 +3326,10 @@ function unsourcedRef(spec: SpecFlow, ref: string): { sid: string; output: strin
   for (const segment of producer.segments) {
     walk(segment.steps);
     const templated = segment.report?.values?.[output];
-    if (typeof templated === 'string' && /\{\{v\d+\}\}/.test(templated)) proven += 1;
+    // Only a value that publishes for a reference on every run (templateSource,
+    // the rule publishedOutputs shares): one from several slots with recorded
+    // text between them publishes only where the page shows that text.
+    if (typeof templated === 'string' && templateSource(templated)) proven += 1;
   }
   return proven === 0 ? { sid, output, kind: reads > 0 ? 'unproven' : 'none' } : null;
 }
@@ -3546,13 +3553,17 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
       lines.push(`// TODO: no converged procedure for ${JSON.stringify(commentSafe(step.instruction))}`);
       lines.push(`throw new Error(${q(`step ${step.id} has no converged procedure — record it with sitelooper, then compile again`)});`);
     } else {
-      const guard = satisfiedGuard(step, ctx);
+      // What later steps reference of this one: a withheld template value
+      // still gives them its one slot (referenceValue), as the daemon's flow
+      // runner banks it — the same set, the same function.
+      const consumed = new Set(consumedReportedOutputs(spec.steps, step.id));
+      const guard = satisfiedGuard(step, ctx, consumed);
       if (guard.length) lines.push(...guard, '');
       for (const [i, segment] of step.segments.entries()) {
         if (i) lines.push('');
         lines.push(...emitSegment(segment, ctx));
       }
-      const templated = reportTemplateLines(step, ctx);
+      const templated = reportTemplateLines(step, ctx, consumed);
       if (templated.length) lines.push('', ...templated);
       const published = urlOutputLines(step.id, urlRefs.get(step.id));
       if (published.length) lines.push('', ...published);
