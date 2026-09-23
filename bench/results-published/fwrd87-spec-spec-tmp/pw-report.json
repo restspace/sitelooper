@@ -1,0 +1,201 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwrd87-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwrd87-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwrd87-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwrd87-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwrd87-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwrd87.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwrd87-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwrd87.spec.ts",
+      "file": "fwrd87.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwrd87",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 32740,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-add s_9e190d/7: read 'part_name' returned a value the skill itself set/selected ('fwrd87-spec RD Part A') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-add s_9e190d/12: read 'parts_table_row_1' returned a value the skill itself set/selected ('fwrd87-spec RD Part A') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-add\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 04-add s_9e190d/7 target: primary locator('section > div > table > tbody > tr > td:nth-of-type(1)') missed; used #2 locator('[data-testid=\"part-row-p18\"] td').first() (#1 ambiguous)\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 04-add s_9e190d/12 target: primary locator('section > div > table > tbody > tr > td:nth-of-type(1)') missed; used #2 locator('[data-testid=\"part-row-p18\"] td').first() (#1 ambiguous)\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 04-add s_9e190d/18 target: read errored (the element no longer shows the value where the recording saw it (\"{{=}} RD Part A\")) — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-add\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-edit\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-change\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 07-remove\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 08-archive\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:4180/ and sign in with email bench@example.com and password {{env:APP_PASSWORD}} — type the password exactly as that literal text, it will be filled in for you. Report whether login succeeded and what page/view you land on afterwards.",
+                      "duration": 3166
+                    },
+                    {
+                      "title": "02-create: Create a new repair ticket titled '{{runid}} RD Bench Ticket'. Find the create/new ticket control in the Repair tickets view, fill in any required fields (choose sensible values for optional ones, e.g. any available customer), submit, and wait for the ticket to actually appear in the list or detail view (the list refreshes a short beat after creation — wait for the new ticket to show rather than assuming the first render is final). Report the ticket's reference/ID, its title as shown, and its status.",
+                      "duration": 4719
+                    },
+                    {
+                      "title": "03-add: On the ticket detail page for ticket {{02-create.ticket_reference}} ({{runid}} RD Bench Ticket), add a part named '{{runid}} RD Part A' with cost 100 and markup 25. Wait for the mutation to be reflected (the view refreshes a short beat after). Report the part's name, cost, markup, and the price the app computes for it.",
+                      "duration": 4282
+                    },
+                    {
+                      "title": "04-add: On the ticket detail page for ticket {{02-create.ticket_reference}} ({{runid}} RD Bench Ticket), add a second part named '{{runid}} RD Part B' with cost 200 and markup 25. Wait for the mutation to be reflected. Report the part's name, cost, markup, and the price the app computes for it, plus the new parts total.",
+                      "duration": 4266
+                    },
+                    {
+                      "title": "05-edit: On the ticket detail page for ticket {{02-create.ticket_reference}} ({{runid}} RD Bench Ticket), edit the part named '{{runid}} RD Part A' to change its cost from 100 to 150, keeping markup 25. Wait for the change to be reflected. Report the part's updated cost, markup, the price the app computes afterwards, and the new parts total.",
+                      "duration": 2031
+                    },
+                    {
+                      "title": "06-change: On the ticket detail page for ticket {{02-create.ticket_reference}} ({{runid}} RD Bench Ticket), change the ticket status to 'Ready'. The app enforces preconditions before it will accept that status — attempt the change, read any error/validation message the app shows, satisfy whatever preconditions it requires (e.g. filling missing fields, doing intermediate status steps, etc.), and retry until the ticket status is actually 'Ready' as displayed on the page. Report exactly what preconditions were required (the exact error/validation text you saw) and what you did to satisfy them, and confirm the final displayed status.",
+                      "duration": 6898
+                    },
+                    {
+                      "title": "07-remove: On the ticket detail page for ticket {{02-create.ticket_reference}} ({{runid}} RD Bench Ticket), remove/delete both parts: '{{runid}} RD Part A' and '{{runid}} RD Part B'. Confirm any deletion dialogs. Wait for the mutations to be reflected (the view refreshes a short beat after each delete — wait until the parts table shows no rows / no parts rather than assuming the first render is final). Report what the parts table shows afterwards.",
+                      "duration": 3270
+                    },
+                    {
+                      "title": "08-archive: Archive the ticket {{02-create.ticket_reference}} ({{runid}} RD Bench Ticket) so it is no longer active. Look for an archive control/action on the ticket detail page (there may be an Archive button or similar in a menu of actions), use it, and confirm any dialogs. Verify afterwards — e.g. the ticket shows as archived in the detail view or no longer appears in the default active tickets list — and report exactly what you did and the concrete confirmation you observed on the page (text shown, whether the ticket still appears in the default list).",
+                      "duration": 2858
+                    }
+                  ],
+                  "startTime": "2026-09-23T15:08:16.041Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": "W3NpdGVsb29wZXIgZHJpZnRdIDA0LWFkZCBzXzllMTkwZC83IHRhcmdldDogcHJpbWFyeSBsb2NhdG9yKCdzZWN0aW9uID4gZGl2ID4gdGFibGUgPiB0Ym9keSA+IHRyID4gdGQ6bnRoLW9mLXR5cGUoMSknKSBtaXNzZWQ7IHVzZWQgIzIgbG9jYXRvcignW2RhdGEtdGVzdGlkPSJwYXJ0LXJvdy1wMTgiXSB0ZCcpLmZpcnN0KCkgKCMxIGFtYmlndW91cykKW3NpdGVsb29wZXIgZHJpZnRdIDA0LWFkZCBzXzllMTkwZC8xMiB0YXJnZXQ6IHByaW1hcnkgbG9jYXRvcignc2VjdGlvbiA+IGRpdiA+IHRhYmxlID4gdGJvZHkgPiB0ciA+IHRkOm50aC1vZi10eXBlKDEpJykgbWlzc2VkOyB1c2VkICMyIGxvY2F0b3IoJ1tkYXRhLXRlc3RpZD0icGFydC1yb3ctcDE4Il0gdGQnKS5maXJzdCgpICgjMSBhbWJpZ3VvdXMp"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6acb3ceebbb751e5fa38-42fe075ad850d5e83d61",
+          "file": "fwrd87.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-23T15:08:13.237Z",
+    "duration": 35902.714,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
