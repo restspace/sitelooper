@@ -43,14 +43,18 @@ const recovery = (): RecordedEntry[] => [
 const report = { status: 'success' as const, summary: 'created', evidence: { values: {} } };
 const hasStoppedGoto = (skills: Skill[]) => skills.flatMap((s) => s.steps).some((s) => s.tool === 'goto' && String(s.args.url).endsWith('/hardware/4'));
 
+// /hardware/4 already shown earlier in the run, so round 55's sourceless-goto
+// rule (group landing) leaves the goto alone and only stoppedAt is under test.
+const seen: RecordedEntry[] = [{ k: 'instruction', text: 'open asset 4', url: `${ORIGIN}/hardware/4` }];
+
 describe('a recovery compile drops the replayed step that stopped it', () => {
   it('compileSkills with stoppedAt keeps every other step but not that one', () => {
     const entries = recovery();
-    const withStop = compileSkills({ entries, instruction: (entries[0] as { text: string }).text, report, session: 't', stoppedAt: { skill: 's_5dcb48', step: 1 } });
+    const withStop = compileSkills({ entries, instruction: (entries[0] as { text: string }).text, report, session: 't', before: seen, stoppedAt: { skill: 's_5dcb48', step: 1 } });
     expect(hasStoppedGoto(withStop)).toBe(false);
     expect(withStop.flatMap((s) => s.steps).some((s) => s.tool === 'click' && JSON.stringify(s.locators).includes('Click here to view'))).toBe(true);
     // without the stop, the recording's step is the procedure's, as before
-    expect(hasStoppedGoto(compileSkills({ entries, instruction: (entries[0] as { text: string }).text, report, session: 't' }))).toBe(true);
+    expect(hasStoppedGoto(compileSkills({ entries, instruction: (entries[0] as { text: string }).text, report, session: 't', before: seen }))).toBe(true);
   });
 
   it('learnFromInstruction passes the stop for a recovery, from the replay record', () => {

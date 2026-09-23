@@ -1733,7 +1733,7 @@ describe('runFlow decides a harmless stop from the recovery it watched (fwod49)'
   it('marks the resume point before recovery and asks what the repair cost', () => {
     expect(source).toMatch(/const replayMark = this\.browser\.script\?\.mark\(\) \?\? mark;/);
     const region = source.slice(source.indexOf('const judgeFrom ='), source.indexOf('const learned = learnFromInstruction'));
-    expect(region).toMatch(/result\.report\.status === 'success'/);
+    expect(region).toMatch(/(?:result|judged)\.report\.status === 'success'/);
     // Judged from the resume point, over the entries of the whole step: a
     // gesture is judged against the url it STARTED on, which only the
     // replay's own entries before the stop can establish (fwod51).
