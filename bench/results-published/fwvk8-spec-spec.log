@@ -1,0 +1,51 @@
+
+Running 1 test using 1 worker
+
+[sitelooper warn] step 01-open s_efd62a/5: none of the 1 expected page change(s) appeared in the step diff (found on the page instead)
+[sitelooper warn] 01-open s_efd62a/6: 2 field(s) this procedure filled were empty again before this click (the page replaced its document after the fills ran) — refilled once
+[sitelooper step] 01-open
+  ✘  1 fwvk8.spec.ts:9:1 › fwvk8 (26.6s)
+
+
+  1) fwvk8.spec.ts:9:1 › fwvk8 › 02-create: In the Bench Project at {{01-open.project_url}}, create a new task titled '{{runid}} Bench Task'. Open that task's page and set: a description that includes the text '{{runid}}', due date 2026-12-31, priority High, attach the EXISTING label named 'Backend' (choose it from the suggestions, do not create a new one), and add a comment whose text includes '{{runid}}'. Most fields save automatically. Then report the task's displayed identifier (shown as BENCH-<number>), and confirm the due date, priority, label, description and comment as displayed on the task page. 
+
+    Error: 02-create s_7f135a/4: the recorded page change did not appear
+
+    02-create s_7f135a/4: the recorded page change did not appear
+
+    expect(received).toBeNull()
+
+    Received: "after step 02-create s_7f135a/4 the page did not show \"- link \\\"fwvk8-spec Bench Task\\\"\" as it did when recorded — the step ran but probably acted on the wrong element"
+
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+
+       at fwvk8.flow.ts:10254
+
+      10252 |       { timeout: EXPECT_WAIT_MS, message: `${ctx.tag}: the recorded page change did not appear` },
+      10253 |     )
+    > 10254 |     .toBeNull();
+            |      ^
+      10255 |   for (const warning of last.warnings) console.log(`[sitelooper warn] ${warning}`);
+      10256 |   if (last.unobserved) console.log(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);
+      10257 |   return last;
+        at expectChanges (/home/user/sitelooper/bench/results/fwvk8-spec-spec-tmp/fwvk8.flow.ts:10254:6)
+        at Object.verify (/home/user/sitelooper/bench/results/fwvk8-spec-spec-tmp/fwvk8.flow.ts:11030:36)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwvk8-spec-spec-tmp/fwvk8.flow.ts:6884:24)
+        at Object.02-create (/home/user/sitelooper/bench/results/fwvk8-spec-spec-tmp/fwvk8.flow.ts:10995:9)
+        at /home/user/sitelooper/bench/results/fwvk8-spec-spec-tmp/fwvk8.flow.ts:12501:7
+        at runFlow (/home/user/sitelooper/bench/results/fwvk8-spec-spec-tmp/fwvk8.flow.ts:12500:5)
+        at /home/user/sitelooper/bench/results/fwvk8-spec-spec-tmp/fwvk8.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwvk8-fwvk8/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwvk8-fwvk8/error-context.md
+
+  1 failed
+    fwvk8.spec.ts:9:1 › fwvk8 ──────────────────────────────────────────────────────────────────────

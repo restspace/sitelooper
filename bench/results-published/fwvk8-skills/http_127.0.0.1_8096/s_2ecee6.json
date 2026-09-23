@@ -1,0 +1,275 @@
+{
+ "id": "s_2ecee6",
+ "origin": "http://127.0.0.1:8096",
+ "template": "In the {{v1}} at {{v2}}, create a new task titled '{{v4}}'. Open that task's page and set: a description that includes the text '{{v3}}', due date 2026-12-{{v5}}, priority {{v6}}, attach the EXISTING label named '{{v7}}' (choose it from the suggestions, do not create a new one), and add a comment whose text includes '{{v3}}'. Most fields save automatically. Then report the task's displayed identifier (shown as BENCH-<number>), and confirm the due date, priority, label, description and comment as displayed on the task page.",
+ "params": {
+  "v1": {
+   "example": "Bench Project",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i1:project_name"
+  },
+  "v2": {
+   "example": "http://127.0.0.1:8096/projects/2/5",
+   "usedIn": [],
+   "known": true,
+   "binding": "01-open.project_url"
+  },
+  "v3": {
+   "example": "fwvk8-n3",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v4": {
+   "example": "fwvk8-n3 Bench Task",
+   "usedIn": [
+    3,
+    5
+   ],
+   "known": true
+  },
+  "v5": {
+   "example": "31",
+   "usedIn": []
+  },
+  "v6": {
+   "example": "High",
+   "usedIn": []
+  },
+  "v7": {
+   "example": "Backend",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8096/projects/:id/:id"
+ },
+ "steps": [
+  {
+   "tool": "press",
+   "args": {
+    "key": "Escape"
+   },
+   "locators": {},
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/projects/:id/:id",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_e04a9d",
+    "step": 1
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e233"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > main > div > div:nth-of-type(1) > div:nth-of-type(2) > button"
+     },
+     {
+      "kind": "point",
+      "x": 1210,
+      "y": 110,
+      "w": 92.2,
+      "h": 34,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/projects/:id/:id",
+    "addedContains": [
+     "- textbox \"Type a search or filter query…\"",
+     "- button \"Custom\"",
+     "- button \"Now\"",
+     "- button \"Start of today\"",
+     "- button \"End of today\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_e04a9d",
+    "step": 2
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e244",
+    "value": "{{v4}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Add a task…"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Add a task…"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div > div > p:nth-of-type(1) > textarea"
+     },
+     {
+      "kind": "point",
+      "x": 749,
+      "y": 183,
+      "w": 815.9,
+      "h": 38,
+      "role": "textbox",
+      "tag": "textarea",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/projects/:id/:id",
+    "addedContains": [
+     "- textbox \"Add a task…\": {{v4}}",
+     "- button \"Add\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_e04a9d",
+    "step": 3
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e248"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Add"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div > div > p:nth-of-type(2) > button"
+     },
+     {
+      "kind": "point",
+      "x": 1204,
+      "y": 183,
+      "w": 70.1,
+      "h": 38,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/projects/:id/:id",
+    "addedContains": [
+     "- textbox \"Add a task…\"",
+     "- button \"Add\" [disabled]",
+     "- link \"{{v4}}\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=link[name=\"{{v4}}\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=link[name=\"{{v4}}\"]"
+     },
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "{{v4}}"
+     },
+     {
+      "kind": "css",
+      "selector": "ul > div:nth-of-type(1) > div > div:nth-of-type(2) > span:nth-of-type(1) > a"
+     },
+     {
+      "kind": "point",
+      "x": 445,
+      "y": 230,
+      "w": 156.1,
+      "h": 22,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "mints": {
+    "at": "p1"
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/tasks/{{d1}}",
+    "addedContains": [
+     "- heading \"{{v4}}\"",
+     "- heading \"Description\"",
+     "- button \"1\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "derived": {
+  "d1": {
+   "step": 5,
+   "at": "p1",
+   "example": "8"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-23T20:02:30.104Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_671744",
+  "index": 0,
+  "of": 2
+ },
+ "variantOf": "s_e04a9d",
+ "provenance": {
+  "session": "fwvk8-n3",
+  "instruction": "In the Bench Project at http://127.0.0.1:8096/projects/2/5, create a new task titled 'fwvk8-n3 Bench Task'. Open that task's page and set: a description that includes the text 'fwvk8-n3', due date 2026-12-31, priority High, attach the EXISTING label named 'Backend' (choose it from the suggestions, do not create a new one), and add a comment whose text includes 'fwvk8-n3'. Most fields save automatically. Then report the task's displayed identifier (shown as BENCH-<number>), and confirm the due date, priority, label, description and comment as displayed on the task page.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-23T20:02:30.104Z",
+  "transforms": [
+   {
+    "name": "unfreezeExpectations",
+    "at": 5,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- button \\\"BENCH-6\\\"\",\"- heading \\\"BENCH-6\\\"\",\"- heading \\\"{{v4}}\\\"\",\"- heading \\\"Description\\\"\",\"- button \\\"1\\\"\"] → [\"- heading \\\"{{v4}}\\\"\",\"- heading \\\"Description\\\"\",\"- button \\\"1\\\"\"]"
+   }
+  ]
+ },
+ "revision": 1
+}

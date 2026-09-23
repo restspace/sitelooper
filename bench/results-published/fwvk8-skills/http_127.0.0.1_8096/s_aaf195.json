@@ -1,0 +1,303 @@
+{
+ "id": "s_aaf195",
+ "origin": "http://127.0.0.1:8096",
+ "template": "Open {{v1}}, sign in with username {{v2}} and password {{env:APP_PASSWORD}} (type the literal text {{env:APP_PASSWORD}} as the password - it will be replaced by the actual password). Then open the project named 'Bench Project' and list the titles of all tasks whose titles start with 'Seed:'. Report those titles exactly.",
+ "params": {
+  "v1": {
+   "example": "http://127.0.0.1:8096/",
+   "usedIn": [
+    1
+   ]
+  },
+  "v2": {
+   "example": "admin",
+   "usedIn": [
+    2,
+    4
+   ]
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8096/login"
+ },
+ "steps": [
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {},
+   "via": {
+    "skill": "s_f84499",
+    "step": 1
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e32",
+    "value": "{{v2}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Username Or Email Address"
+     },
+     {
+      "kind": "label",
+      "label": "Username Or Email Address"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "e.g. frederick"
+     },
+     {
+      "kind": "id",
+      "selector": "#username"
+     },
+     {
+      "kind": "css",
+      "selector": "#username"
+     },
+     {
+      "kind": "point",
+      "x": 896,
+      "y": 275,
+      "w": 448,
+      "h": 40,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/login",
+    "addedContains": [
+     "- textbox \"e.g. frederick\": {{v2}}"
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_f454b1",
+    "step": 1
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e38",
+    "value": "{{env:APP_PASSWORD}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Password"
+     },
+     {
+      "kind": "label",
+      "label": "Password"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "e.g. •••••••••••"
+     },
+     {
+      "kind": "id",
+      "selector": "#password"
+     },
+     {
+      "kind": "css",
+      "selector": "#password"
+     },
+     {
+      "kind": "point",
+      "x": 896,
+      "y": 359,
+      "w": 448,
+      "h": 40,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/login",
+    "addedContains": [
+     "- textbox \"e.g. •••••••••••\": {{env:APP_PASSWORD}}"
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_f454b1",
+    "step": 2
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e32",
+    "value": "{{v2}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Username Or Email Address"
+     },
+     {
+      "kind": "label",
+      "label": "Username Or Email Address"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "e.g. frederick"
+     },
+     {
+      "kind": "id",
+      "selector": "#username"
+     },
+     {
+      "kind": "css",
+      "selector": "#username"
+     },
+     {
+      "kind": "point",
+      "x": 896,
+      "y": 275,
+      "w": 448,
+      "h": 40,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/login",
+    "addedContains": [
+     "- textbox \"e.g. frederick\": {{v2}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e38",
+    "value": "{{env:APP_PASSWORD}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Password"
+     },
+     {
+      "kind": "label",
+      "label": "Password"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "e.g. •••••••••••"
+     },
+     {
+      "kind": "id",
+      "selector": "#password"
+     },
+     {
+      "kind": "css",
+      "selector": "#password"
+     },
+     {
+      "kind": "point",
+      "x": 896,
+      "y": 359,
+      "w": 448,
+      "h": 40,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/login",
+    "addedContains": [
+     "- textbox \"e.g. •••••••••••\": {{env:APP_PASSWORD}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e45"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#loginform > button"
+     },
+     {
+      "kind": "point",
+      "x": 708,
+      "y": 444,
+      "w": 71.1,
+      "h": 34,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/",
+    "addedContains": [
+     "- button \"Hide the menu\"",
+     "- button \"Open the search/quick action bar\"",
+     "- button \"{{v2}}\"",
+     "- link \"Overview\"",
+     "- link \"Upcoming\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-23T19:58:02.906Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_6472a6",
+  "index": 0,
+  "of": 3
+ },
+ "provenance": {
+  "session": "fwvk8-n2",
+  "instruction": "Open http://127.0.0.1:8096/, sign in with username admin and password {{env:APP_PASSWORD}} (type the literal text {{env:APP_PASSWORD}} as the password - it will be replaced by the actual password). Then open the project named 'Bench Project' and list the titles of all tasks whose titles start with 'Seed:'. Report those titles exactly.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-23T19:58:02.906Z"
+ },
+ "revision": 1
+}
