@@ -64,15 +64,15 @@ describe('which round-54 steps are PARTIAL', () => {
 });
 
 /**
- * Round 56: RepairDesk fwrd88 and OpenProject fwop11 replayed every step at
+ * Round 56: RepairDesk fwrd88, OpenProject fwop11 and Kanboard fwkb40 replayed every step at
  * tier A, verified every objective on n1-n3, and still ended "partial".
- * test/fixture/round56-steps.json holds their 18 n2/n3 steps, built like the
+ * test/fixture/round56-steps.json holds their 26 n2/n3 steps, built like the
  * round-54 fixture — with an UNPROVEN read's skip left out, as replay now
  * reports it.
  */
 const STEPS56 = JSON.parse(fs.readFileSync(path.join(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1')), 'fixture', 'round56-steps.json'), 'utf8')) as Round54Step[];
 
-describe('round 56: fwop11 and fwrd88', () => {
+describe('round 56: fwop11, fwrd88 and fwkb40', () => {
   it('fwop11 02-create is clean: its only skip was a synthesized read no run has ever resolved (the vanished success toast)', () => {
     const create = STEPS56.filter((s) => s.run === 'fwop11' && s.step === '02-create');
     expect(create.map((s) => s.replay)).toEqual(['n2', 'n3']);
@@ -95,7 +95,21 @@ describe('round 56: fwop11 and fwrd88', () => {
     ]);
   });
 
-  it('nothing else in either app is partial', () => {
+  it('fwkb40 04-add is clean: the same kind of skip — a synthesized sidebar-link read no run has ever resolved', () => {
+    // s_a3f839 step 11: read sidebar_action_add_comment, target @synth,
+    // unproven — a guess at the "Add a comment" link the recording's report
+    // named, never an observation (and never asked for by the instruction).
+    // fwkb40 ran on e48d1a1, before this exemption.
+    const add = STEPS56.filter((s) => s.run === 'fwkb40' && s.step === '04-add');
+    expect(add.map((s) => s.replay)).toEqual(['n2', 'n3']);
+    for (const s of add) {
+      expect(s.declaredOutputs).toContain('sidebar_action_add_comment');
+      expect(s.skippedReads).toEqual([]);
+      expect(verdict(s)).toEqual([]);
+    }
+  });
+
+  it('nothing else in the three apps is partial', () => {
     expect(STEPS56.filter((s) => verdict(s).length).map((s) => `${s.run} ${s.replay} ${s.step}`)).toEqual(['fwrd88 n2 05-change', 'fwrd88 n3 05-change']);
   });
 

@@ -136,6 +136,8 @@ export interface FlowStepResult {
    * of an output it declares. See src/daemon/step-verdict.ts.
    */
   partial?: string[];
+  /** Outputs the step's instruction explicitly asked to report that this zero-model replay published no value for (step-verdict.ts unansweredAsks). */
+  unanswered?: string[];
   /** The step's goal was already showing for this record, so nothing ran. */
   satisfied?: true;
   values?: Record<string, string>;
