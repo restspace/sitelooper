@@ -1,0 +1,123 @@
+
+[sweep] run 1/3: fwrd85-n1 (store: /home/user/sitelooper/bench/results/fwrd85-skills)
+[harness] repairdesk: defaulting APP_URL
+[harness] repairdesk: defaulting APP_EMAIL
+[harness] repairdesk: defaulting APP_PASSWORD
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+[harness] repairdesk responded 200 at http://127.0.0.1:4180/
+stopped: fwrd85-n1
+  flow "fwrd85" saved: 9 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwrd85.json
+  warning: note: dropped 10 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: note: 01-open no longer publishes sections — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-create no longer publishes form_fields_present — no replay reads it from the page and the recording showed no line to read
+  warning: note: 03-open no longer publishes part_form_fields — no replay reads it from the page and the recording showed no line to read
+  warning: note: 06-change no longer publishes mark_ready_result — no replay reads it from the page and the recording showed no line to read
+  warning: note: 07-edit no longer publishes part_b_supplier — no replay reads it from the page and the recording showed no line to read
+  warning: note: 08-remove no longer publishes parts_table_empty — no replay reads it from the page and the recording showed no line to read
+  warning: note: 09-report no longer publishes active_list_show_archived, active_list_total, active_list_count_text, active_list_row_ref_1, active_list_row_ref_2, active_list_row_ref_3 — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 254 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[5].instruction: "Ready" (output) in "On the ticket detail page for {{02-create.ticket_reference}} in the Repair Desk app, attempt to change the ticket's status to 'Ready'. The app enforces precondi"
+  flow.steps[6].instruction: "Acme Parts" (output) in "On the ticket detail page for {{02-create.ticket_reference}} in the Repair Desk app: the 'Mark Ready' action was refused because both parts have no supplier. Sa"
+  flow.steps[6].instruction: "Ready" (output) in "On the ticket detail page for {{02-create.ticket_reference}} in the Repair Desk app: the 'Mark Ready' action was refused because both parts have no supplier. Sa"
+  flow.steps[7].instruction: "Ready" (output) in "On the ticket detail page for {{02-create.ticket_reference}} in the Repair Desk app (currently status Ready), remove both parts: delete '{{runid}} RD Part A' an"
+  flow.steps[7].params.v2: "Ready" (output) in "Ready"
+  warning: warning: the flow or its skills carry the value of PWD in the clear — compile rewrites it to the marker, but the files on disk hold the value. Re-record the step(s) passing {{env:PWD}} in single quotes, never $NAME
+arm=sitelooper model=z-ai/glm-5.3 runid=fwrd85-n1 stop=completed
+turns=10 wall=201.9s
+commands=9 cmdTime=173.2s cmdBytes=14679 timeouts=0
+orchestrator in=10892 cw=0 cr=41984 out=2572
+inner prompt=1284838 cached=1190784 completion=16375
+spend=$0.0654 maxUsd=3
+learn: A_n=0 replayed=0/9 full=0 repaired=0 compiled=9 variants=0
+-> /home/user/sitelooper/bench/results/fwrd85-n1-sitelooper-result.json
+
+=== fwrd85-n1 === (run self-reported: completed)
+  obj 1  PASS  seq 1: ticket t15 (RD-1015) "fwrd85-n1 RD Bench Ticket"
+  obj 2  PASS  seq 2 p18 cost=100 markup=25 price=125.00
+  obj 3  PASS  seq 3 p19 cost=200 markup=25 price=250.00
+  obj 4  PASS  seq 4: cost 100 -> 150, price 125.00 -> 187.50 (want 187.50), after the create at seq 2
+  obj 5  PASS  seq 7: status Draft -> Ready
+  obj 6  PASS  part A deleted, part B deleted, archive entry at seq 10; state: 0 part(s) surviving, ticket t15 archived=true
+  claim 2  ok — run reported 125.00, app recorded 125.00
+  claim 3  ok — run reported 250.00, app recorded 250.00
+  claim 4  ok — run reported 187.50, app recorded 187.50
+  summary: 6/6 objectives PASS, 0 price claim mismatch(es), 0 duplicate ticket(s)
+
+App state: 15 tickets total, 1 left by benchmark runs (0 still active), 17 parts total, 10 mutation log entries.
+
+[sweep] run 2/3: fwrd85-n2 (replay flow fwrd85, no orchestrator)
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+
+=== fwrd85-n2 === (run self-reported: no result file)
+  note: no result file in /home/user/sitelooper/bench/results — objectives are still scored from the log,
+        but the run's claimed prices cannot be cross-checked.
+  obj 1  PASS  seq 1: ticket t15 (RD-1016) "fwrd85-n2 RD Bench Ticket"
+  obj 2  PASS  seq 2 p18 cost=100 markup=25 price=125.00
+  obj 3  PASS  seq 3 p19 cost=200 markup=25 price=250.00
+  obj 4  PASS  seq 4: cost 100 -> 150, price 125.00 -> 187.50 (want 187.50), after the create at seq 2
+  obj 5  PASS  seq 7: status Draft -> Ready
+  obj 6  PASS  part A deleted, part B deleted, archive entry at seq 10; state: 0 part(s) surviving, ticket t15 archived=true
+  claim 2  no claim parsed from the run's final report
+  claim 3  no claim parsed from the run's final report
+  claim 4  no claim parsed from the run's final report
+  summary: 6/6 objectives PASS, 0 price claim mismatch(es), 0 duplicate ticket(s)
+
+App state: 15 tickets total, 1 left by benchmark runs (0 still active), 17 parts total, 10 mutation log entries.
+
+[sweep] run 3/3: fwrd85-n3 (replay flow fwrd85, no orchestrator)
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+
+=== fwrd85-n3 === (run self-reported: no result file)
+  note: no result file in /home/user/sitelooper/bench/results — objectives are still scored from the log,
+        but the run's claimed prices cannot be cross-checked.
+  obj 1  PASS  seq 1: ticket t15 (RD-1017) "fwrd85-n3 RD Bench Ticket"
+  obj 2  PASS  seq 2 p18 cost=100 markup=25 price=125.00
+  obj 3  PASS  seq 3 p19 cost=200 markup=25 price=250.00
+  obj 4  PASS  seq 4: cost 100 -> 150, price 125.00 -> 187.50 (want 187.50), after the create at seq 2
+  obj 5  PASS  seq 7: status Draft -> Ready
+  obj 6  PASS  part A deleted, part B deleted, archive entry at seq 10; state: 0 part(s) surviving, ticket t15 archived=true
+  claim 2  no claim parsed from the run's final report
+  claim 3  no claim parsed from the run's final report
+  claim 4  no claim parsed from the run's final report
+  summary: 6/6 objectives PASS, 0 price claim mismatch(es), 0 duplicate ticket(s)
+
+App state: 15 tickets total, 1 left by benchmark runs (0 still active), 17 parts total, 10 mutation log entries.
+
+Learning sweep fwrd85 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwrd85-n1' │ '6/6'    │ 'completed' │ 10    │ 9    │ 0.0654    │ 0   │ '0/9'        │ 202    │
+│ 1       │ 2 │ 'fwrd85-n2' │ '6/6'    │ 'success'   │ 0     │ 9    │ 0         │ 1   │ '9/9 (flow)' │ 37     │
+│ 2       │ 3 │ 'fwrd85-n3' │ '6/6'    │ 'success'   │ 0     │ 9    │ 0         │ 1   │ '9/9 (flow)' │ 37     │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:4180
+  s_3d059b  validated   13 steps  3/3 (100%)
+           On the Repair Desk app, create a new ticket titled exactly '{{v2}}'. Click 'New ticket', fill in the title and…
+  s_43eed8  validated    9 steps  3/3 (100%)
+           On the ticket detail page for {{v1}} in the Repair Desk app (currently status {{v2}}), remove both parts: dele…
+  s_660ce2  validated    1 steps  3/3 (100%)
+           Open the ticket {{v1}} titled '{{v2}}' in the Repair Desk app (click its row in the tickets list). On the tick…
+  s_8880d6  validated   15 steps  3/3 (100%)
+           On the ticket detail page for {{v1}} ({{v2}}) in the Repair Desk app, add a second part named exactly '{{v3}} …
+  s_89228c  validated    8 steps  3/3 (100%)
+           Open {{v1}} and sign in with email {{v2}} and password {{env:APP_PASSWORD}} — type the password exactly as the…
+  s_8f8e41  validated   11 steps  3/3 (100%)
+           On the ticket detail page for {{v1}} in the Repair Desk app, edit the part named '{{v2}}' (use its Edit action…
+  s_977d75  validated   13 steps  3/3 (100%)
+           On the ticket detail page for {{v1}} in the Repair Desk app: the 'Mark Ready' action was refused because both …
+  s_a0fc7c  validated   10 steps  3/3 (100%)
+           Final verification in the Repair Desk app: go to the tickets list at http://127.0.0.1:4180/#/tickets with 'Sho…
+  s_c59e2f  validated   11 steps  3/3 (100%)
+           On the ticket detail page for {{v1}} in the Repair Desk app, attempt to change the ticket's status to 'Ready'.…
+  s_dc2722  validated    1 steps  3/3 (100%)
+           Open {{v1}} and sign in with email {{v2}} and password {{env:APP_PASSWORD}} — type the password exactly as the…
+  s_de046c  validated    5 steps  3/3 (100%)
+           On the ticket detail page for {{v1}} in the Repair Desk app (currently status {{v2}}), remove both parts: dele…
+  s_e22136  validated    3 steps  3/3 (100%)
+           Open {{v1}} and sign in with email {{v2}} and password {{env:APP_PASSWORD}} — type the password exactly as the…
+  s_f0b474  validated   15 steps  3/3 (100%)
+           Open the ticket {{v1}} titled '{{v2}}' in the Repair Desk app (click its row in the tickets list). On the tick…
+store: /home/user/sitelooper/bench/results/fwrd85-skills
+
+summary: /home/user/sitelooper/bench/results/fwrd85-sweep.json

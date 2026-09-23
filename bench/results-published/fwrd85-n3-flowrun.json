@@ -1,0 +1,231 @@
+{
+  "flow": "fwrd85",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Signed in at http://127.0.0.1:4180/ with bench@example.com and the password marker; the app accepted the credentials and redirected to http://127.0.0.1:4180/#/tickets, the \"Repair tickets\" list page. The header shows the app brand \"Repair Desk\", a Main navigation containing a single \"Tickets\" link, the signed-in user \"Bench User\" and a \"Sign out\" button. The main area has a \"New ticket\" button, a \"Filter tickets\" region (Status combobox with All statuses/Draft/Ready/Closed, a Search box, and a \"Show archived\" checkbox), and a \"Tickets\" table showing \"Showing 1–10 of 13\" with columns Ref, Title, Customer, Status, Parts, Created plus Previous/Next paging (e.g. RD-1014 Marlow Bakery Draft, RD-1012 The Anchor Inn Draft).",
+      "values": {
+        "landing_page": "Repair tickets list at http://127.0.0.1:4180/#/tickets",
+        "first_ticket_ref": "RD-1014",
+        "second_ticket_ref": "RD-1012",
+        "signed_in_user": "Bench User",
+        "tickets_shown": "Showing 1–10 of 13",
+        "example_ticket_refs_1": "RD-1014",
+        "example_ticket_refs_2": "RD-1012",
+        "example_ticket_refs_3": "RD-1011",
+        "example_ticket_refs_4": "RD-1010"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_3d059b; observed title=fwrd85-n3 RD Bench Ticket, ticket_reference=RD-1017, parts_count=0, created_date=2026-09-23, list_total_after=Showing 1–10 of 14, test_run_prefix=fwrd85-n3, status=Draft.",
+      "values": {
+        "title": "fwrd85-n3 RD Bench Ticket",
+        "ticket_reference": "RD-1017",
+        "parts_count": "0",
+        "created_date": "2026-09-23",
+        "list_total_after": "Showing 1–10 of 14",
+        "test_run_prefix": "fwrd85-n3",
+        "status": "Draft"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_3d059b: step 7: read 'title' returned a value the skill itself set/selected ('fwrd85-n3 RD Bench Ticket') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_3d059b: step 8: read 'customer' returned a value the skill itself set/selected ('Bench Works Ltd') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "customer"
+      ]
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "Opened RD-1017 by clicking its row link (http://127.0.0.1:4180/#/tickets/t15) and clicked \"Add part\", which opened an \"Add part\" dialog with fields Part name *, Cost *, Markup % *, Quantity (prefilled 1) and Supplier. The three starred fields were required, so I filled Part name = \"fwrd85-n3 RD Part A\", Cost = 100, Markup % = 25 and submitted; the dialog closed and the parts table refreshed with the new row \"fwrd85-n3 RD Part A $100.00 25% 1 No supplier $125.00\". The table's Price column shows the computed price $125.00 (100 + 25% markup), and the ticket total row reads \"Total (price × quantity)\t$125.00\t\".",
+      "values": {
+        "part_name": "fwrd85-n3 RD Part A",
+        "test_run_prefix": "fwrd85-n3",
+        "ref": "RD-1017",
+        "cost": "$100.00",
+        "markup": "25%",
+        "quantity": "1",
+        "supplier": "No supplier",
+        "part_price": "$125.00",
+        "ticket_status": "Draft",
+        "ticket_total": "Total (price × quantity)\t$125.00\t",
+        "part_row_text": "fwrd85-n3 RD Part A $100.00 25% 1 No supplier $125.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_f0b474: step 7: read 'part_name' returned a value the skill itself set/selected ('fwrd85-n3 RD Part A') — confirms the control, not persistence; dropped from the report's confident values"
+      ]
+    },
+    {
+      "id": "04-add",
+      "status": "success",
+      "summary": "On RD-1017's detail page (http://127.0.0.1:4180/#/tickets/t15) I clicked \"Add part\" and submitted the dialog with Part name = \"fwrd85-n3 RD Part B\", Cost = 200, Markup % = 25, Quantity left at 1 and Supplier blank. The dialog closed and the parts table refreshed to two rows: \"fwrd85-n3 RD Part A $100.00 25% 1 No supplier $125.00\" and \"fwrd85-n3 RD Part B $200.00 25% 1 No supplier $250.00\" (read back from the live table), and the total row changed from $125.00 to \"Total (price × quantity) $375.00\". The computed PRICE for fwrd85-n3 RD Part B is $250.00 (200 + 25% markup).",
+      "values": {
+        "part_b_name": "fwrd85-n3 RD Part B",
+        "parts_table_live": "['NAME\\tCOST\\tMARKUP\\tQTY\\tSUPPLIER\\tPRICE\\tACTIONS', 'fwrd85-n3 RD Part A\\t$100.00\\t25%\\t1\\tNo supplier\\t$125.00\\tEdit Delete', 'fwrd85-n3 RD Part B\\t$200.00\\t25%\\t1\\tNo supplier\\t$250.00\\tEdit Delete', 'Total (price × quantity)\\t$375.00\\t']",
+        "test_run_prefix": "fwrd85-n3",
+        "ref": "RD-1017",
+        "part_b_cost": "$200.00",
+        "part_b_markup": "25%",
+        "part_b_qty": "1",
+        "part_b_supplier": "No supplier",
+        "part_b_price": "$250.00",
+        "ticket_total": "$375.00",
+        "total_row_label": "Total (price × quantity)",
+        "total_row_value": "$375.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_8880d6: step 7: read 'part_b_name' returned a value the skill itself set/selected ('fwrd85-n3 RD Part B') — confirms the control, not persistence; dropped from the report's confident values"
+      ]
+    },
+    {
+      "id": "05-edit",
+      "status": "success",
+      "summary": "On RD-1017's detail page I clicked Edit on the \"fwrd85-n3 RD Part A\" row; the \"Edit part\" dialog opened pre-filled with Part name \"fwrd85-n3 RD Part A\", Cost 100, Markup % 25, Quantity 1. I changed Cost to 150 (leaving markup 25 and qty 1) and clicked \"Save part\". The dialog closed and the parts table refreshed: the row is now \"fwrd85-n3 RD Part A $150.00 25% 1 No supplier $187.50\" (an action diff showed the old $100.00/$125.00 row replaced), the second row is unchanged at \"fwrd85-n3 RD Part B $200.00 25% 1 No supplier $250.00\", and the total row changed from $375.00 to \"Total (price × quantity) $437.50\". New computed price for Part A is $187.50 (150 + 25%).",
+      "values": {
+        "test_run_prefix": "fwrd85-n3",
+        "ref": "RD-1017",
+        "part_a_name": "fwrd85-n3 RD Part A",
+        "part_a_new_cost": "$150.00",
+        "part_a_markup": "25%",
+        "part_a_qty": "1",
+        "part_a_new_price": "$187.50",
+        "new_ticket_total": "$437.50",
+        "part_b_unchanged": "fwrd85-n3 RD Part B $200.00 25% 1 No supplier $250.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "06-change",
+      "status": "success",
+      "summary": "Replayed stored procedure s_c59e2f; observed parts_unchanged=fwrd85-n3 RD Part A $150.00 25% 1 No supplier $187.50 ; fwrd85-n3 RD Part B $200.00 25% 1 No supplier $250.00, test_run_prefix=fwrd85-n3, status_after=Draft, ref=RD-1017, alert_heading=Ticket is not ready, ticket_total_after=$437.50, exact_alert_text_1=Ticket is not ready, exact_alert_text_2=Part \"fwrd85-n3 RD Part A\" has no supplier, exact_alert_text_3=Part \"fwrd85-n3 RD Part B\" has no supplier, alert_reasons_1=Part \"fwrd85-n3 RD Part A\" has no supplier, alert_reasons_2=Part \"fwrd85-n3 RD Part B\" has no supplier.",
+      "values": {
+        "parts_unchanged": "fwrd85-n3 RD Part A $150.00 25% 1 No supplier $187.50 ; fwrd85-n3 RD Part B $200.00 25% 1 No supplier $250.00",
+        "test_run_prefix": "fwrd85-n3",
+        "status_after": "Draft",
+        "ref": "RD-1017",
+        "alert_heading": "Ticket is not ready",
+        "ticket_total_after": "$437.50",
+        "exact_alert_text_1": "Ticket is not ready",
+        "exact_alert_text_2": "Part \"fwrd85-n3 RD Part A\" has no supplier",
+        "exact_alert_text_3": "Part \"fwrd85-n3 RD Part B\" has no supplier",
+        "alert_reasons_1": "Part \"fwrd85-n3 RD Part A\" has no supplier",
+        "alert_reasons_2": "Part \"fwrd85-n3 RD Part B\" has no supplier"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "07-edit",
+      "status": "success",
+      "summary": "Replayed stored procedure s_977d75; observed parts_table_full=NAME | COST | MARKUP | QTY | SUPPLIER | PRICE | ACTIONS ; fwrd85-n3 RD Part A | $150.00 | 25% | 1 | Acme Parts | $187.50 | Edit Delete ; fwrd85-n3 RD Part B | $200.00 | 25% | 1 | Acme Parts | $250.00 | Edit Delete ; Total (price × quantity) | $437.50, test_run_prefix=fwrd85-n3, parts_table_full_2=NAME\tCOST\tMARKUP\tQTY\tSUPPLIER\tPRICE\tACTIONS\nfwrd85-n3 RD Part A\t$150.00\t25%\t1\tAcme Parts\t$187.50\tEdit Delete\nfwrd85-n3 RD Part B\t$200.00\t25%\t1\tAcme Parts\t$250.00\tEdit Delete\nTotal (price × quantity)\t$437.50\t, ref=RD-1017, final_status=Ready, ticket_total=$437.50.",
+      "values": {
+        "parts_table_full": "NAME | COST | MARKUP | QTY | SUPPLIER | PRICE | ACTIONS ; fwrd85-n3 RD Part A | $150.00 | 25% | 1 | Acme Parts | $187.50 | Edit Delete ; fwrd85-n3 RD Part B | $200.00 | 25% | 1 | Acme Parts | $250.00 | Edit Delete ; Total (price × quantity) | $437.50",
+        "test_run_prefix": "fwrd85-n3",
+        "parts_table_full_2": "NAME\tCOST\tMARKUP\tQTY\tSUPPLIER\tPRICE\tACTIONS\nfwrd85-n3 RD Part A\t$150.00\t25%\t1\tAcme Parts\t$187.50\tEdit Delete\nfwrd85-n3 RD Part B\t$200.00\t25%\t1\tAcme Parts\t$250.00\tEdit Delete\nTotal (price × quantity)\t$437.50\t",
+        "ref": "RD-1017",
+        "final_status": "Ready",
+        "ticket_total": "$437.50"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_977d75: step 13: read 'part_a_supplier' returned a value the skill itself set/selected ('Acme Parts') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "part_a_supplier"
+      ]
+    },
+    {
+      "id": "08-remove",
+      "status": "success",
+      "summary": "On RD-1017 I deleted both parts via each row's Delete action; each opened a custom \"Confirm\" dialog which I accepted with its \"Delete part\" button. After the first delete the total dropped from $437.50 to $250.00, and after the second the parts table read only its header plus \"No parts on this ticket yet.\" (the table's total row disappears entirely when empty, so no \"$0.00\" is shown anywhere). I then clicked \"Archive ticket\" on the detail page — no confirmation dialog appeared — and the page changed: Status now reads \"Ready\" with an added \"Archived\" badge and the button became \"Unarchive ticket\". On the tickets list RD-1017 is absent from the active list (still showing 13 rows, top row RD-1014) and appears as the first row only once \"Show archived\" is checked: \"RD-1017 fwrd85-n3 RD Bench Ticket Archived Bench Works Ltd Ready 0 2026-09-23\". The only confirmation for archiving was that \"Archived\" badge/button swap — I found no confirmation message text or native dialog.",
+      "values": {
+        "archiving_confirmation_text": "No confirmation message/toast or dialog text was shown. Observable confirmation was the 'Archived' status badge on the detail page (Status: Ready · Archived) and the button swapping to 'Unarchive ticket'",
+        "detail_page_status_line": "Status Ready Archived (read from live main after archiving)",
+        "ticket_absent_from_active_list": "Active list (Show archived unchecked) shows 'Showing 1–10 of 13' with top row RD-1014; RD-1017 absent",
+        "ticket_present_when_show_archived": "RD-1017\tfwrd85-n3 RD Bench Ticket Archived\tBench Works Ltd\tReady\t0\t2026-09-23 (first row when Show archived is checked)",
+        "final_ticket_state": "RD-1017 — status Ready, archived = yes, 0 parts",
+        "parts_table_empty_2": "NAME\tCOST\tMARKUP\tQTY\tSUPPLIER\tPRICE\tACTIONS\nNo parts on this ticket yet.",
+        "ref": "RD-1017",
+        "top_active_ticket_ref": "RD-1014",
+        "archived_ticket_row": "RD-1017\tfwrd85-n3 RD Bench Ticket Archived\tBench Works Ltd\tReady\t0\t2026-09-23",
+        "test_run_prefix": "fwrd85-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "09-report",
+      "status": "success",
+      "summary": "Replayed stored procedure s_a0fc7c; observed archived_search_query=fwrd85-n3, archived_search_result=Showing 1–1 of 1, Page 1 of 1 — single row: RD-1015 | fwrd85-n3 RD Bench Ticket (Archived badge) | Bench Works Ltd | Ready | 0 parts | 2026-09-23, active_search_result_count=No tickets, active_fwrd85_search_row=REF\tTITLE\tCUSTOMER\tSTATUS\tPARTS\tCREATED\nNo tickets match the current filters..",
+      "values": {
+        "archived_search_query": "fwrd85-n3",
+        "archived_search_result": "Showing 1–1 of 1, Page 1 of 1 — single row: RD-1015 | fwrd85-n3 RD Bench Ticket (Archived badge) | Bench Works Ltd | Ready | 0 parts | 2026-09-23",
+        "active_search_result_count": "No tickets",
+        "active_fwrd85_search_row": "REF\tTITLE\tCUSTOMER\tSTATUS\tPARTS\tCREATED\nNo tickets match the current filters."
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 9,
+  "total": 9,
+  "repinned": 0,
+  "drift": 0,
+  "wallMs": 36534,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

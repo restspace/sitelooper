@@ -1,0 +1,933 @@
+{
+  "name": "fwrd85",
+  "origin": "http://127.0.0.1:4180",
+  "startUrl": "http://127.0.0.1:4180/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-open",
+      "instruction": "Open http://127.0.0.1:4180/ and sign in with email bench@example.com and password {{env:APP_PASSWORD}} — type the password exactly as the literal text {{env:APP_PASSWORD}} (it gets filled in when typed). After signing in, report what page you land on and what main navigation/sections the app shows.",
+      "skill": "s_dc2722",
+      "params": {
+        "v1": "http://127.0.0.1:4180/",
+        "v2": "bench@example.com"
+      },
+      "outputs": [
+        "landing_page",
+        "signed_in_user",
+        "tickets_shown",
+        "screenshots",
+        "first_ticket_ref",
+        "second_ticket_ref",
+        "example_ticket_refs_1",
+        "example_ticket_refs_2",
+        "example_ticket_refs_3",
+        "example_ticket_refs_4"
+      ],
+      "recorded": {
+        "landing_page": "Repair tickets list at http://127.0.0.1:4180/#/tickets",
+        "signed_in_user": "Bench User",
+        "sections": "Header: Repair Desk brand, Main nav (Tickets), Bench User, Sign out; Main: New ticket button, Filter tickets region (Status, Search, Show archived), Tickets table (Ref, Title, Customer, Status, Parts, Created) with paging",
+        "tickets_shown": "Showing 1–10 of 13",
+        "screenshots": "/home/user/sitelooper/signin-filled.png, /home/user/sitelooper/tickets-page.png",
+        "first_ticket_ref": "RD-1014",
+        "second_ticket_ref": "RD-1012",
+        "example_ticket_refs_1": "RD-1014",
+        "example_ticket_refs_2": "RD-1012",
+        "example_ticket_refs_3": "RD-1011",
+        "example_ticket_refs_4": "RD-1010",
+        "url": "http://127.0.0.1:4180/#/tickets"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets",
+      "outputEvidence": {
+        "landing_page": {
+          "same": 1,
+          "differed": 0
+        },
+        "signed_in_user": {
+          "same": 1,
+          "differed": 0
+        },
+        "sections": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "tickets_shown": {
+          "same": 1,
+          "differed": 0
+        },
+        "screenshots": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "first_ticket_ref": {
+          "same": 1,
+          "differed": 0
+        },
+        "second_ticket_ref": {
+          "same": 1,
+          "differed": 0
+        },
+        "example_ticket_refs_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "example_ticket_refs_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "example_ticket_refs_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "example_ticket_refs_4": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "On the Repair Desk app, create a new ticket titled exactly '{{runid}} RD Bench Ticket'. Click 'New ticket', fill in the title and any other required fields the form demands (discover what they are — e.g. customer, description — and fill them with sensible values), and submit. Wait for the list/detail to refresh and confirm the ticket appears. Report the ticket's reference code (like RD-xxxx), its status, and exactly which fields were required.",
+      "skill": "s_3d059b",
+      "params": {
+        "v2": "{{runid}} RD Bench Ticket",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "ticket_reference",
+        "title",
+        "customer",
+        "status",
+        "parts_count",
+        "created_date",
+        "required_fields",
+        "list_total_after",
+        "screenshots",
+        "test_run_prefix"
+      ],
+      "recorded": {
+        "ticket_reference": "RD-1015",
+        "title": "fwrd85-n1 RD Bench Ticket",
+        "customer": "Bench Works Ltd",
+        "status": "Draft",
+        "parts_count": "0",
+        "created_date": "2026-09-23",
+        "required_fields": "Title only (marked 'Title *' and enforced by validation alert \"Title is required\"); Customer is optional (no asterisk)",
+        "form_fields_present": "Title (required), Customer (optional) — no description/notes field exists in the New ticket dialog",
+        "list_total_after": "Showing 1–10 of 14",
+        "screenshots": "/home/user/sitelooper/new-ticket-filled.png, /home/user/sitelooper/tickets-after-create.png",
+        "test_run_prefix": "fwrd85-n1"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets",
+      "outputEvidence": {
+        "ticket_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "title": {
+          "same": 0,
+          "differed": 1
+        },
+        "customer": {
+          "same": 1,
+          "differed": 0
+        },
+        "status": {
+          "same": 1,
+          "differed": 0
+        },
+        "parts_count": {
+          "same": 1,
+          "differed": 0
+        },
+        "created_date": {
+          "same": 1,
+          "differed": 0
+        },
+        "required_fields": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "form_fields_present": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "list_total_after": {
+          "same": 1,
+          "differed": 0
+        },
+        "screenshots": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "test_run_prefix": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "03-open",
+      "instruction": "Open the ticket {{02-create.ticket_reference}} titled '{{runid}} RD Bench Ticket' in the Repair Desk app (click its row in the tickets list). On the ticket detail page, add a part named exactly '{{runid}} RD Part A' with cost 100 and markup 25. Discover the form fields for adding a part (there may be name, cost, markup fields) and submit. Wait for the page to refresh and confirm the part appears in the ticket's parts list. Report the part's name, cost, markup, and the PRICE the app computes/displays for that part (look for a computed price or total column), plus any ticket total shown.",
+      "skill": "s_660ce2",
+      "params": {
+        "v1": "{{02-create.ticket_reference}}",
+        "v2": "{{runid}} RD Bench Ticket",
+        "v4": "{{runid}} RD Part A",
+        "v5": "100",
+        "v6": "25",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "part_name",
+        "cost",
+        "markup",
+        "quantity",
+        "supplier",
+        "part_price",
+        "ticket_total",
+        "part_row_text",
+        "ticket_status",
+        "screenshots",
+        "ref",
+        "test_run_prefix"
+      ],
+      "recorded": {
+        "part_name": "fwrd85-n1 RD Part A",
+        "cost": "$100.00",
+        "markup": "25%",
+        "quantity": "1",
+        "supplier": "No supplier",
+        "part_price": "$125.00",
+        "ticket_total": "Total (price × quantity) $125.00",
+        "part_row_text": "fwrd85-n1 RD Part A $100.00 25% 1 No supplier $125.00",
+        "part_form_fields": "Part name * (required), Cost * (required), Markup % * (required), Quantity (default 1), Supplier (optional)",
+        "ticket_status": "Draft",
+        "screenshots": "/home/user/sitelooper/add-part-filled.png, /home/user/sitelooper/ticket-detail-with-part.png",
+        "ref": "RD-1015",
+        "test_run_prefix": "fwrd85-n1",
+        "url": "http://127.0.0.1:4180/#/tickets/t15",
+        "url.h1": "t15"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets/:id",
+      "outputEvidence": {
+        "part_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "cost": {
+          "same": 1,
+          "differed": 0
+        },
+        "markup": {
+          "same": 1,
+          "differed": 0
+        },
+        "quantity": {
+          "same": 1,
+          "differed": 0
+        },
+        "supplier": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_price": {
+          "same": 1,
+          "differed": 0
+        },
+        "ticket_total": {
+          "same": 0,
+          "differed": 1
+        },
+        "part_row_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "part_form_fields": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ticket_status": {
+          "same": 1,
+          "differed": 0
+        },
+        "screenshots": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "test_run_prefix": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.h1": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "04-add",
+      "instruction": "On the ticket detail page for {{02-create.ticket_reference}} ({{runid}} RD Bench Ticket) in the Repair Desk app, add a second part named exactly '{{runid}} RD Part B' with cost 200 and markup 25 (quantity 1, leave supplier blank). Submit the add-part form, wait for the parts table to refresh, and confirm both parts are listed. Report the full parts table contents including the PRICE column value for '{{runid}} RD Part B' and the new ticket total.",
+      "skill": "s_8880d6",
+      "params": {
+        "v1": "{{02-create.ticket_reference}}",
+        "v2": "{{runid}} RD Bench Ticket",
+        "v3": "{{runid}}",
+        "v4": "200",
+        "v5": "25"
+      },
+      "outputs": [
+        "part_b_name",
+        "part_b_cost",
+        "part_b_markup",
+        "part_b_qty",
+        "part_b_supplier",
+        "part_b_price",
+        "ticket_total",
+        "parts_table_live",
+        "screenshots",
+        "ref",
+        "test_run_prefix",
+        "total_row_label",
+        "total_row_value"
+      ],
+      "recorded": {
+        "part_b_name": "fwrd85-n1 RD Part B",
+        "part_b_cost": "$200.00",
+        "part_b_markup": "25%",
+        "part_b_qty": "1",
+        "part_b_supplier": "No supplier",
+        "part_b_price": "$250.00",
+        "ticket_total": "$375.00",
+        "parts_table_live": "['NAME\\tCOST\\tMARKUP\\tQTY\\tSUPPLIER\\tPRICE\\tACTIONS', 'fwrd85-n1 RD Part A\\t$100.00\\t25%\\t1\\tNo supplier\\t$125.00\\tEdit Delete', 'fwrd85-n1 RD Part B\\t$200.00\\t25%\\t1\\tNo supplier\\t$250.00\\tEdit Delete', 'Total (price × quantity)\\t$375.00\\t']",
+        "screenshots": "/home/user/sitelooper/add-part-b-filled.png, /home/user/sitelooper/ticket-detail-both-parts.png",
+        "ref": "RD-1015",
+        "test_run_prefix": "fwrd85-n1",
+        "total_row_label": "Total (price × quantity)",
+        "total_row_value": "$375.00"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets/:id",
+      "outputEvidence": {
+        "part_b_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "part_b_cost": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_b_markup": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_b_qty": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_b_supplier": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_b_price": {
+          "same": 1,
+          "differed": 0
+        },
+        "ticket_total": {
+          "same": 1,
+          "differed": 0
+        },
+        "parts_table_live": {
+          "same": 0,
+          "differed": 1
+        },
+        "screenshots": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "test_run_prefix": {
+          "same": 0,
+          "differed": 1
+        },
+        "total_row_label": {
+          "same": 1,
+          "differed": 0
+        },
+        "total_row_value": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "05-edit",
+      "instruction": "On the ticket detail page for {{02-create.ticket_reference}} in the Repair Desk app, edit the part named '{{runid}} RD Part A' (use its Edit action) and change its Cost from 100 to 150, keeping markup 25 and quantity 1. Submit the edit, wait for the parts table to refresh, and confirm the change. Report the part's new cost, the PRICE the app now computes for '{{runid}} RD Part A', and the new ticket total.",
+      "skill": "s_8f8e41",
+      "params": {
+        "v1": "{{02-create.ticket_reference}}",
+        "v2": "{{runid}} RD Part A",
+        "v4": "150",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "part_a_name",
+        "part_a_new_cost",
+        "part_a_markup",
+        "part_a_qty",
+        "part_a_new_price",
+        "part_b_unchanged",
+        "new_ticket_total",
+        "screenshots",
+        "ref",
+        "test_run_prefix"
+      ],
+      "recorded": {
+        "part_a_name": "fwrd85-n1 RD Part A",
+        "part_a_new_cost": "$150.00",
+        "part_a_markup": "25%",
+        "part_a_qty": "1",
+        "part_a_new_price": "$187.50",
+        "part_b_unchanged": "fwrd85-n1 RD Part B $200.00 25% 1 No supplier $250.00",
+        "new_ticket_total": "$437.50",
+        "screenshots": "/home/user/sitelooper/edit-part-a-filled.png, /home/user/sitelooper/ticket-detail-part-a-edited.png",
+        "ref": "RD-1015",
+        "test_run_prefix": "fwrd85-n1"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets/:id",
+      "outputEvidence": {
+        "part_a_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "part_a_new_cost": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_a_markup": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_a_qty": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_a_new_price": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_b_unchanged": {
+          "same": 0,
+          "differed": 1
+        },
+        "new_ticket_total": {
+          "same": 1,
+          "differed": 0
+        },
+        "screenshots": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "test_run_prefix": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "06-change",
+      "instruction": "On the ticket detail page for {{02-create.ticket_reference}} in the Repair Desk app, attempt to change the ticket's status to 'Ready'. The app enforces preconditions before it will accept that status — try it, and if it refuses, read the exact error/validation message it shows. Report the exact message text and what the app says is required. Do NOT try to satisfy the preconditions yet — just discover and report them, and leave the ticket in its current state.",
+      "skill": "s_c59e2f",
+      "params": {
+        "v1": "{{02-create.ticket_reference}}",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "alert_heading",
+        "precondition_stated",
+        "status_after",
+        "ticket_total_after",
+        "parts_unchanged",
+        "screenshots",
+        "ref",
+        "test_run_prefix",
+        "exact_alert_text_1",
+        "exact_alert_text_2",
+        "exact_alert_text_3",
+        "alert_reasons_1",
+        "alert_reasons_2"
+      ],
+      "recorded": {
+        "mark_ready_result": "Refused — alert shown, status stayed Draft",
+        "alert_heading": "Ticket is not ready",
+        "precondition_stated": "Every part on the ticket must have a supplier",
+        "status_after": "Draft",
+        "ticket_total_after": "$437.50",
+        "parts_unchanged": "fwrd85-n1 RD Part A $150.00 25% 1 No supplier $187.50 ; fwrd85-n1 RD Part B $200.00 25% 1 No supplier $250.00",
+        "screenshots": "/home/user/sitelooper/mark-ready-refused.png",
+        "ref": "RD-1015",
+        "test_run_prefix": "fwrd85-n1",
+        "exact_alert_text_1": "Ticket is not ready",
+        "exact_alert_text_2": "Part \"fwrd85-n1 RD Part A\" has no supplier",
+        "exact_alert_text_3": "Part \"fwrd85-n1 RD Part B\" has no supplier",
+        "alert_reasons_1": "Part \"fwrd85-n1 RD Part A\" has no supplier",
+        "alert_reasons_2": "Part \"fwrd85-n1 RD Part B\" has no supplier"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets/:id",
+      "outputEvidence": {
+        "mark_ready_result": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "alert_heading": {
+          "same": 1,
+          "differed": 0
+        },
+        "precondition_stated": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "status_after": {
+          "same": 1,
+          "differed": 0
+        },
+        "ticket_total_after": {
+          "same": 1,
+          "differed": 0
+        },
+        "parts_unchanged": {
+          "same": 0,
+          "differed": 1
+        },
+        "screenshots": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "test_run_prefix": {
+          "same": 0,
+          "differed": 1
+        },
+        "exact_alert_text_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "exact_alert_text_2": {
+          "same": 0,
+          "differed": 1
+        },
+        "exact_alert_text_3": {
+          "same": 0,
+          "differed": 1
+        },
+        "alert_reasons_1": {
+          "same": 0,
+          "differed": 1
+        },
+        "alert_reasons_2": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "07-edit",
+      "instruction": "On the ticket detail page for {{02-create.ticket_reference}} in the Repair Desk app: the 'Mark Ready' action was refused because both parts have no supplier. Satisfy that precondition — edit the part '{{runid}} RD Part A' and set its Supplier to 'Acme Parts', then edit the part '{{runid}} RD Part B' and set its Supplier to 'Acme Parts' (keep all other values unchanged: Part A cost 150 markup 25, Part B cost 200 markup 25). Then click 'Mark Ready' again and confirm the ticket's status becomes 'Ready'. Report the final status shown on the page, the parts table contents, and any confirmation message.",
+      "skill": "s_977d75",
+      "params": {
+        "v1": "{{02-create.ticket_reference}}",
+        "v2": "{{runid}} RD Part A",
+        "v4": "{{runid}} RD Part B",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "final_status",
+        "status_buttons_after",
+        "parts_table_full",
+        "ticket_total",
+        "part_a_supplier",
+        "confirmation_message",
+        "screenshots",
+        "parts_table_full_2",
+        "ref",
+        "test_run_prefix"
+      ],
+      "recorded": {
+        "final_status": "Ready",
+        "status_buttons_after": "Mark Draft, Mark Closed (the Mark Ready button is gone)",
+        "parts_table_full": "NAME | COST | MARKUP | QTY | SUPPLIER | PRICE | ACTIONS ; fwrd85-n1 RD Part A | $150.00 | 25% | 1 | Acme Parts | $187.50 | Edit Delete ; fwrd85-n1 RD Part B | $200.00 | 25% | 1 | Acme Parts | $250.00 | Edit Delete ; Total (price × quantity) | $437.50",
+        "ticket_total": "$437.50",
+        "part_a_supplier": "Acme Parts",
+        "part_b_supplier": "Acme Parts",
+        "confirmation_message": "none observed — the 'Ticket is not ready' alert was removed and the action buttons changed; no separate success banner/toast text was found in main",
+        "screenshots": "/home/user/sitelooper/ticket-ready.png",
+        "parts_table_full_2": "NAME\tCOST\tMARKUP\tQTY\tSUPPLIER\tPRICE\tACTIONS\nfwrd85-n1 RD Part A\t$150.00\t25%\t1\tAcme Parts\t$187.50\tEdit Delete\nfwrd85-n1 RD Part B\t$200.00\t25%\t1\tAcme Parts\t$250.00\tEdit Delete\nTotal (price × quantity)\t$437.50",
+        "ref": "RD-1015",
+        "test_run_prefix": "fwrd85-n1"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets/:id",
+      "outputEvidence": {
+        "final_status": {
+          "same": 1,
+          "differed": 0
+        },
+        "status_buttons_after": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "parts_table_full": {
+          "same": 0,
+          "differed": 1
+        },
+        "ticket_total": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_a_supplier": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_b_supplier": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "confirmation_message": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "screenshots": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "parts_table_full_2": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "test_run_prefix": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "08-remove",
+      "instruction": "On the ticket detail page for {{02-create.ticket_reference}} in the Repair Desk app (currently status Ready), remove both parts: delete '{{runid}} RD Part A' and '{{runid}} RD Part B' using their Delete actions (confirm any confirmation dialog that appears). Wait for the parts table to refresh after each delete and confirm both rows are gone and the parts table is empty with total /bin/sh.00. Then archive the ticket — look for an Archive action/button on the ticket detail page or in the tickets list, and use it (confirm any dialog). Then verify the ticket no longer appears in the active tickets list (you may need to check the 'Show archived' checkbox to confirm it is archived). Report the final state: parts table contents, ticket status, whether the ticket is archived, and the exact confirmation text shown for archiving.",
+      "skill": "s_43eed8",
+      "params": {
+        "v1": "{{02-create.ticket_reference}}",
+        "v2": "Ready",
+        "v3": "{{runid}} RD Part A",
+        "v5": "{{runid}} RD Part B",
+        "v4": "{{runid}}"
+      },
+      "outputs": [
+        "part_a_delete",
+        "part_b_delete",
+        "empty_table_total_row",
+        "archive_action",
+        "archiving_confirmation_text",
+        "detail_page_status_line",
+        "ticket_absent_from_active_list",
+        "ticket_present_when_show_archived",
+        "final_ticket_state",
+        "screenshots",
+        "parts_table_empty_2",
+        "archived_ticket_row",
+        "ref",
+        "top_active_ticket_ref",
+        "test_run_prefix"
+      ],
+      "recorded": {
+        "part_a_delete": "Deleted via Confirm dialog → 'Delete part'; row removed, total changed $437.50 → $250.00",
+        "part_b_delete": "Deleted via Confirm dialog → 'Delete part'; row removed",
+        "parts_table_empty": "NAME\tCOST\tMARKUP\tQTY\tSUPPLIER\tPRICE\tACTIONS / No parts on this ticket yet.",
+        "empty_table_total_row": "No total row rendered when the table is empty (the 'Total (price × quantity)' row disappeared; the page does not display $0.00)",
+        "archive_action": "Detail-page button 'Archive ticket' → no dialog appeared; button changed to 'Unarchive ticket'",
+        "archiving_confirmation_text": "No confirmation message/toast or dialog text was shown. Observable confirmation was the 'Archived' status badge on the detail page (Status: Ready · Archived) and the button swapping to 'Unarchive ticket'",
+        "detail_page_status_line": "Status Ready Archived (read from live main after archiving)",
+        "ticket_absent_from_active_list": "Active list (Show archived unchecked) shows 'Showing 1–10 of 13' with top row RD-1014; RD-1015 absent",
+        "ticket_present_when_show_archived": "RD-1015\tfwrd85-n1 RD Bench Ticket Archived\tBench Works Ltd\tReady\t0\t2026-09-23 (first row when Show archived is checked)",
+        "final_ticket_state": "RD-1015 — status Ready, archived = yes, 0 parts",
+        "screenshots": "/home/user/sitelooper/no-parts-ready.png, /home/user/sitelooper/tickets-with-archived.png",
+        "parts_table_empty_2": "NAME\tCOST\tMARKUP\tQTY\tSUPPLIER\tPRICE\tACTIONS\nNo parts on this ticket yet.",
+        "archived_ticket_row": "RD-1015\tfwrd85-n1 RD Bench Ticket Archived\tBench Works Ltd\tReady\t0\t2026-09-23",
+        "ref": "RD-1015",
+        "top_active_ticket_ref": "RD-1014",
+        "test_run_prefix": "fwrd85-n1"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets",
+      "outputEvidence": {
+        "part_a_delete": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "part_b_delete": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "parts_table_empty": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "empty_table_total_row": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "archive_action": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "archiving_confirmation_text": {
+          "same": 1,
+          "differed": 0
+        },
+        "detail_page_status_line": {
+          "same": 1,
+          "differed": 0
+        },
+        "ticket_absent_from_active_list": {
+          "same": 0,
+          "differed": 1
+        },
+        "ticket_present_when_show_archived": {
+          "same": 0,
+          "differed": 1
+        },
+        "final_ticket_state": {
+          "same": 0,
+          "differed": 1
+        },
+        "screenshots": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "parts_table_empty_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "archived_ticket_row": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "top_active_ticket_ref": {
+          "same": 1,
+          "differed": 0
+        },
+        "test_run_prefix": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "09-report",
+      "instruction": "Final verification in the Repair Desk app: go to the tickets list at {{01-open.url}} with 'Show archived' UNCHECKED and confirm that no ticket whose title contains '{{runid}}' appears in the active list. Also search for '{{runid}}' in the search box (with Show archived checked) and report every row found, including its Ref, Title, Status, and whether it shows the Archived badge. Report exactly what you find.",
+      "skill": "s_a0fc7c",
+      "params": {
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "active_search_fwrd85_result",
+        "archived_search_query",
+        "archived_search_result",
+        "archived_badge_shown",
+        "screenshots",
+        "active_search_result_count",
+        "active_fwrd85_search_row"
+      ],
+      "recorded": {
+        "active_list_show_archived": "unchecked",
+        "active_list_total": "Showing 1–10 of 13 across 2 pages (page 1 rows read: RD-1014, RD-1012, RD-1011, RD-1010, …; page 2 rows: RD-1003, RD-1002, RD-1001)",
+        "active_search_fwrd85_result": "No tickets — table body text 'No tickets match the current filters.' (search fwrd85 with Show archived UNCHECKED)",
+        "archived_search_query": "fwrd85-n1",
+        "archived_search_result": "Showing 1–1 of 1, Page 1 of 1 — single row: RD-1015 | fwrd85-n1 RD Bench Ticket (Archived badge) | Bench Works Ltd | Ready | 0 parts | 2026-09-23",
+        "archived_badge_shown": "yes — 'Archived' badge rendered inside the Title cell of RD-1015",
+        "screenshots": "/home/user/sitelooper/active-list-no-archived.png, /home/user/sitelooper/search-archived.png, /home/user/sitelooper/active-search-fwrd85.png",
+        "active_search_result_count": "No tickets",
+        "active_fwrd85_search_row": "REF\tTITLE\tCUSTOMER\tSTATUS\tPARTS\tCREATED\nNo tickets match the current filters.",
+        "active_list_count_text": "Showing 1–10 of 13",
+        "active_list_row_ref_1": "RD-1014",
+        "active_list_row_ref_2": "RD-1012",
+        "active_list_row_ref_3": "RD-1011"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets",
+      "outputEvidence": {
+        "active_list_show_archived": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "active_list_total": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "active_search_fwrd85_result": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "archived_search_query": {
+          "same": 0,
+          "differed": 1
+        },
+        "archived_search_result": {
+          "same": 0,
+          "differed": 1
+        },
+        "archived_badge_shown": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "screenshots": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "active_search_result_count": {
+          "same": 1,
+          "differed": 0
+        },
+        "active_fwrd85_search_row": {
+          "same": 1,
+          "differed": 0
+        },
+        "active_list_count_text": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "active_list_row_ref_1": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "active_list_row_ref_2": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "active_list_row_ref_3": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwrd85-n1",
+    "created": "2026-09-23T08:06:01.645Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-open",
+      "outputs": [
+        "sections"
+      ]
+    },
+    {
+      "stepId": "02-create",
+      "outputs": [
+        "form_fields_present"
+      ]
+    },
+    {
+      "stepId": "03-open",
+      "outputs": [
+        "part_form_fields"
+      ]
+    },
+    {
+      "stepId": "06-change",
+      "outputs": [
+        "mark_ready_result"
+      ]
+    },
+    {
+      "stepId": "07-edit",
+      "outputs": [
+        "part_b_supplier"
+      ]
+    },
+    {
+      "stepId": "08-remove",
+      "outputs": [
+        "parts_table_empty"
+      ]
+    },
+    {
+      "stepId": "09-report",
+      "outputs": [
+        "active_list_show_archived",
+        "active_list_total",
+        "active_list_count_text",
+        "active_list_row_ref_1",
+        "active_list_row_ref_2",
+        "active_list_row_ref_3"
+      ]
+    }
+  ]
+}

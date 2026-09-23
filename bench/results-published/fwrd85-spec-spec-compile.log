@@ -1,0 +1,6 @@
+flow: /home/user/sitelooper/bench/results/fwrd85-spec-spec-tmp/fwrd85.flow.ts
+spec: /home/user/sitelooper/bench/results/fwrd85-spec-spec-tmp/fwrd85.spec.ts
+warning the recording carries the value of PWD in the clear; the artifact reads it from the environment instead
+  why: a flow param, a recorded value or an expectation equals the value of the credential-named environment variable PWD (typically a shell expanded $PWD inside double quotes at record time, fwrd83), so compile rewrote it to {{env:PWD}}: the artifact reads process.env['PWD'] and requires PWD to run
+  fix: re-record the step(s) passing {{env:PWD}} in single quotes (never $PWD) so the flow and its procedures stop carrying the value
+

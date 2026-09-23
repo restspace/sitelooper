@@ -1,0 +1,208 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwrd85-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwrd85-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwrd85-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwrd85-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwrd85-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwrd85.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwrd85-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwrd85.spec.ts",
+      "file": "fwrd85.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwrd85",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 38008,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_3d059b/7: read 'title' returned a value the skill itself set/selected ('fwrd85-spec RD Bench Ticket') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_3d059b/8: read 'customer' returned a value the skill itself set/selected ('Bench Works Ltd') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-open s_f0b474/7: read 'part_name' returned a value the skill itself set/selected ('fwrd85-spec RD Part A') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-open\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 04-add s_8880d6/7: read 'part_b_name' returned a value the skill itself set/selected ('fwrd85-spec RD Part B') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-add\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-edit\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-change\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 07-edit s_977d75/13: read 'part_a_supplier' returned a value the skill itself set/selected ('Acme Parts') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 07-edit\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 08-remove\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 09-report\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:4180/ and sign in with email bench@example.com and password {{env:APP_PASSWORD}} — type the password exactly as the literal text {{env:APP_PASSWORD}} (it gets filled in when typed). After signing in, report what page you land on and what main navigation/sections the app shows.",
+                      "duration": 3471
+                    },
+                    {
+                      "title": "02-create: On the Repair Desk app, create a new ticket titled exactly '{{runid}} RD Bench Ticket'. Click 'New ticket', fill in the title and any other required fields the form demands (discover what they are — e.g. customer, description — and fill them with sensible values), and submit. Wait for the list/detail to refresh and confirm the ticket appears. Report the ticket's reference code (like RD-xxxx), its status, and exactly which fields were required.",
+                      "duration": 5798
+                    },
+                    {
+                      "title": "03-open: Open the ticket {{02-create.ticket_reference}} titled '{{runid}} RD Bench Ticket' in the Repair Desk app (click its row in the tickets list). On the ticket detail page, add a part named exactly '{{runid}} RD Part A' with cost 100 and markup 25. Discover the form fields for adding a part (there may be name, cost, markup fields) and submit. Wait for the page to refresh and confirm the part appears in the ticket's parts list. Report the part's name, cost, markup, and the PRICE the app computes/displays for that part (look for a computed price or total column), plus any ticket total shown.",
+                      "duration": 4985
+                    },
+                    {
+                      "title": "04-add: On the ticket detail page for {{02-create.ticket_reference}} ({{runid}} RD Bench Ticket) in the Repair Desk app, add a second part named exactly '{{runid}} RD Part B' with cost 200 and markup 25 (quantity 1, leave supplier blank). Submit the add-part form, wait for the parts table to refresh, and confirm both parts are listed. Report the full parts table contents including the PRICE column value for '{{runid}} RD Part B' and the new ticket total.",
+                      "duration": 3916
+                    },
+                    {
+                      "title": "05-edit: On the ticket detail page for {{02-create.ticket_reference}} in the Repair Desk app, edit the part named '{{runid}} RD Part A' (use its Edit action) and change its Cost from 100 to 150, keeping markup 25 and quantity 1. Submit the edit, wait for the parts table to refresh, and confirm the change. Report the part's new cost, the PRICE the app now computes for '{{runid}} RD Part A', and the new ticket total.",
+                      "duration": 2029
+                    },
+                    {
+                      "title": "06-change: On the ticket detail page for {{02-create.ticket_reference}} in the Repair Desk app, attempt to change the ticket's status to 'Ready'. The app enforces preconditions before it will accept that status — try it, and if it refuses, read the exact error/validation message it shows. Report the exact message text and what the app says is required. Do NOT try to satisfy the preconditions yet — just discover and report them, and leave the ticket in its current state.",
+                      "duration": 3415
+                    },
+                    {
+                      "title": "07-edit: On the ticket detail page for {{02-create.ticket_reference}} in the Repair Desk app: the 'Mark Ready' action was refused because both parts have no supplier. Satisfy that precondition — edit the part '{{runid}} RD Part A' and set its Supplier to 'Acme Parts', then edit the part '{{runid}} RD Part B' and set its Supplier to 'Acme Parts' (keep all other values unchanged: Part A cost 150 markup 25, Part B cost 200 markup 25). Then click 'Mark Ready' again and confirm the ticket's status becomes 'Ready'. Report the final status shown on the page, the parts table contents, and any confirmation message.",
+                      "duration": 3820
+                    },
+                    {
+                      "title": "08-remove: On the ticket detail page for {{02-create.ticket_reference}} in the Repair Desk app (currently status Ready), remove both parts: delete '{{runid}} RD Part A' and '{{runid}} RD Part B' using their Delete actions (confirm any confirmation dialog that appears). Wait for the parts table to refresh after each delete and confirm both rows are gone and the parts table is empty with total /bin/sh.00. Then archive the ticket — look for an Archive action/button on the ticket detail page or in the tickets list, and use it (confirm any dialog). Then verify the ticket no longer appears in the active tickets list (you may need to check the 'Show archived' checkbox to confirm it is archived). Report the final state: parts table contents, ticket status, whether the ticket is archived, and the exact confirmation text shown for archiving.",
+                      "duration": 5379
+                    },
+                    {
+                      "title": "09-report: Final verification in the Repair Desk app: go to the tickets list at {{01-open.url}} with 'Show archived' UNCHECKED and confirm that no ticket whose title contains '{{runid}}' appears in the active list. Also search for '{{runid}}' in the search box (with Show archived checked) and report every row found, including its Ref, Title, Status, and whether it shows the Archived badge. Report exactly what you find.",
+                      "duration": 4105
+                    }
+                  ],
+                  "startTime": "2026-09-23T08:11:31.125Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "67890ad42bb8f7336df8-66f8e8d9db7172a75970",
+          "file": "fwrd85.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-23T08:11:29.212Z",
+    "duration": 40216.348,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
