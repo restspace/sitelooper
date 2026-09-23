@@ -1,0 +1,170 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwsi8-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwsi8-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwsi8-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwsi8-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwsi8-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwsi8.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwsi8-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwsi8.spec.ts",
+      "file": "fwsi8.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwsi8",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 42208,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_f7f050/10: read 'purchase_date' returned a value the skill itself set/selected ('2026-03-15') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_f7f050/17: read 'purchase_date' returned a value the skill itself set/selected ('2026-03-15') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_f7f050/22: read 'asset_name' returned a value the skill itself set/selected ('fwsi8-spec Bench Asset') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-create s_534053/5: read 'note_text_as_displayed' returned a value the skill itself set/selected ('Checked out for fwsi8-spec bench task') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-open\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in to Snipe-IT at http://127.0.0.1:8098/ with username admin and password {{env:APP_PASSWORD}} (type the password exactly as the text {{env:APP_PASSWORD}}). Then list all assets whose name starts with 'Seed:' and report each asset's name and asset tag exactly as shown.",
+                      "duration": 8918
+                    },
+                    {
+                      "title": "02-create: In Snipe-IT, create a new asset with the name '{{runid}} Bench Asset'. Set its model to 'Bench Laptop Model' (choose it from the searchable model dropdown so it is actually selected), its status to 'Ready to Deploy' (choose from the status dropdown), its default location to 'Bench Office' (choose from the location dropdown), and its purchase date to 2026-03-15. Fill any other required fields as needed but do not create new models, locations, or users. Save the asset, then report the asset's name, model, status, location, purchase date, and the asset tag Snipe-IT assigned it, exactly as displayed.",
+                      "duration": 21311
+                    },
+                    {
+                      "title": "03-create: In Snipe-IT, check out the asset named '{{runid}} Bench Asset' (asset tag {{02-create.asset_tag}}) to the user 'Bench Assignee' (choose the user from the searchable dropdown so it is actually selected; do not create a new user). In the checkout form, add a note whose text includes '{{runid}}' (for example: 'Checked out for {{runid}} bench task'). Complete the checkout, then report the assignee shown on the asset page and the note text as displayed.",
+                      "duration": 9241
+                    },
+                    {
+                      "title": "04-open: Open the asset page for '{{runid}} Bench Asset' (asset tag {{02-create.asset_tag}}) in Snipe-IT and verify, reading from the live page: its name, its model, its status label, its default location, its purchase date, the user it is currently checked out to, and the checkout note in its history. Report each of these values exactly as displayed on the page.",
+                      "duration": 1887
+                    }
+                  ],
+                  "startTime": "2026-09-23T18:07:36.942Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "deee75005b5b19da81e9-4675131620319d87def4",
+          "file": "fwsi8.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-23T18:07:35.168Z",
+    "duration": 44360.219,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
