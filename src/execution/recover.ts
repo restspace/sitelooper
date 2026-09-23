@@ -13,6 +13,7 @@
 import type { Locator, Page } from 'playwright-core';
 import { outcomeLabel, outcomeOfError, settleDom } from './browser.js';
 import { fillParams, urlMatches } from './url.js';
+import { textHolds } from './text.js';
 
 /** Tools whose miss can be substituted by navigating to the step's recorded destination: plain navigation clicks. */
 const NAV_FALLBACK_TOOLS = new Set(['click', 'dblclick']);
@@ -150,14 +151,15 @@ export async function textHeldElsewhere(
 ): Promise<{ index: number; locator: Locator } | null> {
   if (typeof text !== 'string' || !text.trim()) return null;
   if (state !== 'text_contains' && state !== 'text_equals') return null;
-  const want = text.replace(/\s+/g, ' ').trim();
   const ordered = [...candidates].filter((c) => c.index >= 1).sort((a, b) => a.index - b.index);
   for (const candidate of ordered) {
     if (candidate.kind === 'point') continue;
     try {
       if ((await candidate.locator.count()) !== 1) continue;
-      const shown = ((await candidate.locator.textContent({ timeout: HELD_TEXT_READ_MS })) ?? '').replace(/\s+/g, ' ').trim();
-      if (state === 'text_equals' ? shown === want : shown.includes(want)) return { index: candidate.index, locator: candidate.locator };
+      // Rendered text, compared as the wait itself compares it (text.ts
+      // textHolds): textContent missed "OVERVIEW" under text-transform (fwop10).
+      const shown = await candidate.locator.innerText({ timeout: HELD_TEXT_READ_MS });
+      if (textHolds(shown, state, text)) return { index: candidate.index, locator: candidate.locator };
     } catch {
       continue;
     }

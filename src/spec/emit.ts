@@ -2673,15 +2673,18 @@ function unsupportedCapability(
 function waitForLine(target: string, args: Record<string, unknown>, timeout: number | undefined, ctx: Ctx, index: number): string {
   const only = timeout && timeout !== DEFAULT_WAIT_MS ? `{ timeout: ${timeout} }` : '';
   const opt = only ? `, ${only}` : '';
+  // Rendered text, as the daemon's wait compares it (execution/text.ts
+  // textHolds): textContent misses CSS text-transform (fwop10 "OVERVIEW").
+  const rendered = `{ useInnerText: true${timeout && timeout !== DEFAULT_WAIT_MS ? `, timeout: ${timeout}` : ''} }`;
   switch (String(args.state)) {
     case 'visible':
       return `await expect(${target}).toBeVisible(${only});`;
     case 'hidden':
       return `await expect(${target}).toBeHidden(${only});`;
     case 'text_equals':
-      return `await expect(${target}).toHaveText(${src(String(args.text ?? ''))}${opt});`;
+      return `await expect(${target}).toHaveText(${src(String(args.text ?? ''))}, ${rendered});`;
     case 'text_contains':
-      return `await expect(${target}).toContainText(${src(String(args.text ?? ''))}${opt});`;
+      return `await expect(${target}).toContainText(${src(String(args.text ?? ''))}, ${rendered});`;
     case 'count':
       return `await expect(${target}).toHaveCount(${Number(args.count ?? 0)}${opt});`;
     default:
@@ -2722,10 +2725,24 @@ function readLines(step: SkillStep, ctx: Ctx): string[] {
   // mark, through the shared framedRead replay calls (fwvk3, fwgh5 s_5ee393):
   // the frame's slots filled from this run's params as replay fills its args.
   const valueFrame = typeof step.args?.frame === 'string' && step.args.frame ? step.args.frame : null;
+  // A read scoped by a slot (skills/readscope.ts) goes through the shared
+  // scopedRead replay calls, with the same slots' values (fwrd87).
+  const slotName = (v: unknown) => (typeof v === 'string' && /^[vd]\d+$/.test(v) ? v : null);
+  const slotFrame = typeof step.args?.slotFrame === 'string' && step.args.slotFrame ? step.args.slotFrame : null;
+  const frameMark = slotName(step.args?.frameMark);
+  const scopedBy = slotName(step.args?.scopedBy);
+  const scope = [
+    ...(valueFrame ? [`frame: ${src(valueFrame)}`] : []),
+    ...(slotFrame ? [`slotFrame: ${src(slotFrame)}`] : []),
+    ...(frameMark ? [`mark: p[${q(frameMark)}]`] : []),
+    ...(scopedBy ? [`within: p[${q(scopedBy)}]`] : []),
+  ];
   const read = readable
-    ? valueFrame
-      ? `async (loc: Locator) => framedRead(await ${take}, ${src(valueFrame)})`
-      : `(loc: Locator) => ${take}`
+    ? slotFrame || frameMark || scopedBy
+      ? `async (loc: Locator) => scopedRead(await ${take}, { ${scope.join(', ')} })`
+      : valueFrame
+        ? `async (loc: Locator) => framedRead(await ${take}, ${src(valueFrame)})`
+        : `(loc: Locator) => ${take}`
     : null;
   // An unknown kind, or an attribute read that never recorded WHICH attribute:
   // publishing nothing under the label a later step consumes is how an empty

@@ -12,6 +12,22 @@ export function clip(text: string, max: number): string {
 }
 
 /**
+ * Whether an element's RENDERED text (`innerText`) satisfies a recorded text
+ * wait — `text_equals` or `text_contains` — with whitespace runs collapsed and
+ * trimmed on both sides, as Playwright's toHaveText / toContainText compare.
+ * One definition for every tier: the daemon's wait_for, the held-elsewhere
+ * rung (recover.ts textHeldElsewhere) and the artifact's assertions, which
+ * are emitted with `useInnerText: true`. openproject fwop10: the daemon
+ * compared innerText ("OVERVIEW", CSS text-transform: uppercase) and the
+ * artifact textContent ("Overview"), so the compiled run failed a wait
+ * replay passed.
+ */
+export function textHolds(shown: string, state: unknown, want: string): boolean {
+  const norm = (s: string) => s.replace(/\s+/g, ' ').trim();
+  return state === 'text_equals' ? norm(shown) === norm(want) : norm(shown).includes(norm(want));
+}
+
+/**
  * Clock, calendar and relative-time tokens are the RECORDING's moment, not part of what a
  * page element IS: kanboard names its due-date textbox after the current
  * minute ("09/03/2026 07:22") and labels a summary row "Due date:
@@ -269,6 +285,25 @@ export function frameValue(text: string, value: string): string | null {
   const framed = line.slice(0, hit.index) + FRAME_MARK + line.slice(hit.index + hit[0].length);
   if (framed !== FRAME_MARK || lines.length < 2) return framed;
   return at > 0 ? `${lines[at - 1]}\n${framed}` : `${framed}\n${lines[at + 1]}`;
+}
+
+/**
+ * `frame` — a mark-less frame, its slots already filled with this run's
+ * values — with FRAME_MARK put where `value` sits in it, or null when the
+ * value is not there exactly once (bounded by IDENTITY_EDGE, whitespace runs
+ * matching any whitespace). The run-time half of a slot-scoped frame
+ * (skills/readscope.ts): repairdesk fwrd87 s_9e190d pinned the runid to Part
+ * A's name cell as "{{=}} RD Part A", and replaying for Part B the element no
+ * longer showed that line; the frame stored as `{{v4}}`, marked at `{{v3}}`,
+ * is this run's line.
+ */
+export function markFrame(frame: string, value: string): string | null {
+  const v = frameLine(value);
+  if (!v || frame.includes(FRAME_MARK)) return null;
+  const re = new RegExp(`(?<!${IDENTITY_EDGE})${escapeRe(v).replace(/ /g, '\\s+')}(?!${IDENTITY_EDGE})`, 'giu');
+  const hits = [...frame.matchAll(re)];
+  if (hits.length !== 1 || hits[0].index === undefined) return null;
+  return frame.slice(0, hits[0].index) + FRAME_MARK + frame.slice(hits[0].index + hits[0][0].length);
 }
 
 /** Any `{{…}}` in a frame but the mark: a masked volatile token, or a slot the run left unfilled ("asks for no particular value"). */

@@ -25,7 +25,7 @@ import {
 import { isRefTarget } from '../daemon/refs.js';
 import { settleDom } from '../daemon/settle.js';
 import { TRANSIENT_LINE, fillParams, fillParamsDeep, urlMatches, urlPart, urlPattern } from './compile.js';
-import { flattenRead, framedRead, liveAlerts, liveAlertsObserved, observedNothing, resolveForRead, takeRead, type ObservedAlerts } from '../execution/observe.js';
+import { flattenRead, liveAlerts, liveAlertsObserved, observedNothing, resolveForRead, scopedRead, takeRead, type ObservedAlerts } from '../execution/observe.js';
 import {
   addedLines,
   alertsComplete,
@@ -1104,7 +1104,10 @@ export async function replaySkill(
           let result = '';
           const taken = await takeRead(async () => {
             result = (await opts.exec(step.tool, args, resolved, { skill: skill.id, step: failIndex })).result;
-            return framedRead(decodeRead(result), args.frame);
+            // …and a read scoped by a slot (skills/readscope.ts) publishes only
+            // what this run's record shows (observe.ts scopedRead, fwrd87).
+            const slot = (name: unknown) => (typeof name === 'string' ? params[name] : undefined);
+            return scopedRead(decodeRead(result), { frame: args.frame, slotFrame: args.slotFrame, mark: slot(args.frameMark), within: slot(args.scopedBy) });
           });
           if (!taken.ok) {
             if (step.label) readsSkipped++;

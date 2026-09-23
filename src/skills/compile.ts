@@ -8,6 +8,7 @@ import { WILDCARD, escapeRe, identityRe, maskVolatile } from '../shared/text.js'
 import { CREDENTIAL_KEY, fillParamsDeep, queryPairs, safeDecode, urlParts, urlShapeOf } from '../execution/url.js';
 import { contextsEqual, framesEqual, stepEffect } from '../execution/context.js';
 import { collapseTogglePairs, dropSupersededSets } from './toggles.js';
+import { locatingSlots, scopeReadBySlot } from './readscope.js';
 
 /**
  * The url rules live in src/execution/url.ts, where a compiled artifact embeds
@@ -565,6 +566,8 @@ export function compileSkills(input: CompileInput): Skill[] {
   // WHOLE chain (a slot used only by segment 2 must stay in the shared
   // template, or binding an instruction to segment 1 would fail).
   let segOffset = 0;
+  /** Slots some recorded candidate locates by: the reads scoped by a slot are scoped by these (readscope.ts, fwrd87). */
+  const locating = locatingSlots(segments.map((sg) => sg.steps.map((st) => substituteDeep(Object.values(st.locators).map((l) => l.chain ?? []), textSlots))));
   const built = segments.map((sg) => {
     const base = segOffset;
     segOffset += sg.steps.length;
@@ -646,6 +649,8 @@ export function compileSkills(input: CompileInput): Skill[] {
         const isRead = step.tool === 'read' || step.tool === 'read_all';
         locators[key] = isRead && lostAnchor && kept.every(positional) ? [] : kept;
       }
+      // A read whose recorded value carries a locating slot's value is scoped by that slot (readscope.ts, fwrd87).
+      scopeReadBySlot(step.result, step.tool, args, locators, textSlots, locating);
       const out: SkillStep = { tool: step.tool, args, locators };
       // Where each target lives and what the step did to its page travel
       // verbatim: a frame path names an iframe, not a record, so nothing in

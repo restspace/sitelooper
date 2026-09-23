@@ -203,7 +203,12 @@ export function maskPopupItem(line: string): string {
  * … {{env:APP_PASSWORD}} … not checked").
  */
 export function liveLines(lines: readonly string[], params: Record<string, string>): string[] {
-  return lines.map((l) => fillParams(maskMinted(maskVolatile(l)), params).replace(/\{\{(?:env|totp):\w+\}\}/g, WILDCARD));
+  // A value goes into a line as a snapshot would render it — whitespace runs
+  // collapsed, edges trimmed (snapshot.ts `clean`) — never as it was read:
+  // kanboard fwkb39's read published "Backlog ", and `- link "{{v5}}"` became
+  // `- link "Backlog "`, which no snapshot name ever shows.
+  const rendered = Object.fromEntries(Object.entries(params).map(([k, v]) => [k, typeof v === 'string' ? v.replace(/\s+/g, ' ').trim() : v]));
+  return lines.map((l) => fillParams(maskMinted(maskVolatile(l)), rendered).replace(/\{\{(?:env|totp):\w+\}\}/g, WILDCARD));
 }
 
 /**

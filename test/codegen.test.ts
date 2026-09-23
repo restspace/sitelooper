@@ -104,8 +104,8 @@ describe('generateScript', () => {
       { session: 's' },
     );
     expect(src).toContain('await expect(page.getByTestId(\'t\')).toBeHidden();');
-    expect(src).toContain("await expect(page.getByTestId('t')).toHaveText('Saved');");
-    expect(src).toContain("await expect(page.getByTestId('t')).toContainText('Sav', { timeout: 30000 });");
+    expect(src).toContain("await expect(page.getByTestId('t')).toHaveText('Saved', { useInnerText: true });");
+    expect(src).toContain("await expect(page.getByTestId('t')).toContainText('Sav', { useInnerText: true, timeout: 30000 });");
     expect(src).toContain("await expect(page.getByTestId('t')).toHaveCount(3);");
   });
 
