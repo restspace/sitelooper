@@ -639,7 +639,7 @@ describe('emitted step lifecycle', () => {
     // dispatch is (dispatchesFirstMatch).
     expect(acts[2].body).toContain("], '01-step s_emit/3 target', { allowMultiple: true, stayOnOrigin: originOf(page.url()) ?? undefined, waitMs: RESOLVE_WAIT_MS }, { drift: run.drift });");
     expect(acts[2].body).toContain('await expect(hit3.locator.first()).toBeVisible();');
-    expect(acts[3].body).toContain("await expect(hit4.locator.first()).toContainText('Saved');");
+    expect(acts[3].body).toContain("await expect(hit4.locator.first()).toContainText('Saved', { useInnerText: true });");
     for (const act of acts) expect(act.body).not.toMatch(/\bthrow\b/);
   });
 

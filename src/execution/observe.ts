@@ -7,7 +7,7 @@
  */
 import type { Locator, Page } from 'playwright-core';
 import { alertsComplete, capturePage, sweepPage, type LineDialect } from './snapshot.js';
-import { clip, extractFramed } from './text.js';
+import { clip, extractFramed, markFrame } from './text.js';
 
 /** What a recorded read takes off its element. A page url read has no element and is not one of these. */
 export type ReadWhat = 'text' | 'value' | 'attr' | 'count';
@@ -93,8 +93,8 @@ const RENDERED_NAMES = (els: Element[]): string[] =>
  * strict-mode error on a selector made to match many (odoo's
  * `tr.o_data_row input`, four reads skipped on every compiled run of fwod41
  * while the daemon read them each time). Text is `innerText`, the rendered
- * text the recording saw, never `textContent` — and, for an element that
- * renders none, its name (RENDERED_NAME). A count is plural by nature,
+ * text the recording saw, never `textContent`, edges trimmed — and, for an
+ * element that renders none, its name (RENDERED_NAME). A count is plural by nature,
  * whichever tool asked.
  */
 export async function readElements(
@@ -107,17 +107,22 @@ export async function readElements(
   if (what === 'count') return await loc.count();
   if (plural) {
     if (what === 'text') {
-      const texts = await loc.allInnerTexts();
-      if (texts.every((t) => t.trim())) return texts;
+      // Edges trimmed, as the singular read below (fwkb39).
+      const texts = (await loc.allInnerTexts()).map((t) => t.trim());
+      if (texts.every((t) => t)) return texts;
       const names = await loc.evaluateAll(RENDERED_NAMES);
-      return texts.map((t, i) => (t.trim() ? t : (names[i] ?? t)));
+      return texts.map((t, i) => (t ? t : (names[i] ?? t)));
     }
     if (what === 'value') return await loc.evaluateAll((els) => els.map((e) => (e as HTMLInputElement).value ?? null));
     return await loc.evaluateAll((els, a) => els.map((e) => e.getAttribute(a)), attr);
   }
   if (what === 'text') {
-    const text = await loc.innerText({ timeout });
-    return text.trim() ? text : (await loc.evaluate(RENDERED_NAME, undefined, { timeout })) || text;
+    // A text read is banked with its edge whitespace trimmed: kanboard fwkb39
+    // published innerText "Backlog " (a trailing space inside the link), and
+    // the value then travelled into an expectation line no snapshot matches.
+    // Inner line breaks are the element's own and stay.
+    const text = (await loc.innerText({ timeout })).trim();
+    return text ? text : (await loc.evaluate(RENDERED_NAME, undefined, { timeout })) || text;
   }
   if (what === 'value') return await loc.inputValue({ timeout });
   return await loc.getAttribute(attr, { timeout });
@@ -141,6 +146,47 @@ export function framedRead(value: unknown, frame: unknown): unknown {
   if (typeof frame !== 'string' || !frame) return value;
   const got = extractFramed(flattenRead(value), frame);
   if (got === null) throw new Error(`the element no longer shows the value where the recording saw it (${JSON.stringify(clip(frame, 80))})`);
+  return got;
+}
+
+/**
+ * What a slot-scoped read (skills/readscope.ts) carries, its slots already
+ * resolved to this run's values: the recorded `frame`; `slotFrame`, the same
+ * frame with its line written in a slot's value and no mark; `mark`, the value
+ * of the slot the mark stands for; `within`, the value of the slot the read's
+ * recorded value contained.
+ */
+export interface ReadScope {
+  frame?: unknown;
+  slotFrame?: unknown;
+  mark?: unknown;
+  within?: unknown;
+}
+
+/**
+ * A read as its step publishes it once its SCOPE is applied — framedRead,
+ * with the frame taken from this run's slot values when they place the mark
+ * (text.ts markFrame; the recorded frame otherwise), and then the record check:
+ * a read whose recorded value contained a slot's value must show THIS run's
+ * value for that slot, or it resolved onto another record and THROWS, which
+ * takeRead turns into a skipped read — absent, never another record's value.
+ *
+ * repairdesk fwrd87 04-add: s_9e190d, recorded adding Part A, replayed for
+ * Part B. Its part_name reads had no candidate scoped by the part-name slot;
+ * the positional primary matched both rows and the fallback was Part A's own
+ * test hook, so both replays published Part A's name beside Part B's cost.
+ * Both runners call this inside takeRead, so they publish the same value or
+ * skip the same read. A slot this run did not bind asks nothing.
+ */
+export function scopedRead(value: unknown, scope: ReadScope): unknown {
+  const placed =
+    typeof scope.slotFrame === 'string' && scope.slotFrame && typeof scope.mark === 'string' ? markFrame(scope.slotFrame, scope.mark) : null;
+  const got = framedRead(value, placed ?? scope.frame);
+  const fold = (s: string) => s.replace(/\s+/g, ' ').trim().toLowerCase();
+  const within = typeof scope.within === 'string' ? fold(scope.within) : '';
+  if (within && !fold(flattenRead(got)).includes(within)) {
+    throw new Error(`the element shows another record than ${JSON.stringify(clip(String(scope.within), 80))} — not published`);
+  }
   return got;
 }
 

@@ -378,7 +378,7 @@ d('script recording (fixture page)', () => {
     const src = generateScript(recorder.entries, { session: 'rec' });
     expect(src).toContain("await test.step('fill the form and submit it', async () => {");
     expect(src).toContain("await page.getByRole('button', { name: 'Submit', exact: true }).click();");
-    expect(src).toContain("await expect(page.locator('#banner')).toContainText('Saved Ada');");
+    expect(src).toContain("await expect(page.locator('#banner')).toContainText('Saved Ada', { useInnerText: true });");
     // no @ref survived into the generated script — they are meaningless outside the session
     expect(src).not.toMatch(/aria-ref|@e\d+(?![^\n]*TODO)/);
     expect(src).not.toContain('TODO');

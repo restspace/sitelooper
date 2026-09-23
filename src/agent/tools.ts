@@ -7,6 +7,7 @@ import { CURRENT_DIALECT, addedLines, removedLines, type PageObservation } from 
 import { DIALOG_LINE } from '../execution/expect.js';
 import { POPUP_WAIT_MS, type PageEffect } from '../execution/context.js';
 import { isElementRead, readElements } from '../execution/observe.js';
+import { textHolds } from '../execution/text.js';
 export { fireWhenAttached, urlHeldStill } from '../execution/browser.js';
 import { ACTION_DEADLINE_MS, type BrowserSession } from '../daemon/browser.js';
 import { clip } from '../shared/text.js';
@@ -1624,8 +1625,10 @@ async function waitFor(
     } else {
       const text = (await loc.first().innerText({ timeout: 1000 }).catch(() => null)) ?? '';
       last = `text=${JSON.stringify(text.slice(0, 200))}`;
-      if (state === 'text_equals' && text.trim() === String(args.text).trim()) return `condition met: ${last}`;
-      if (state === 'text_contains' && text.includes(String(args.text))) return `condition met: ${last}`;
+      // One definition of "shows the text" in every tier (execution/text.ts
+      // textHolds): rendered text, whitespace collapsed — what the artifact's
+      // useInnerText assertions and the held-elsewhere rung compare (fwop10).
+      if ((state === 'text_equals' || state === 'text_contains') && textHolds(text, state, String(args.text))) return `condition met: ${last}`;
     }
     if (firstObserved === null) firstObserved = last;
     // Wake early on cancellation so an abandoned wait stops polling the page

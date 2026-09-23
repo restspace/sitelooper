@@ -747,6 +747,42 @@ const IMAGE_LINK = `<!doctype html><html><head><meta charset="utf-8"><title>Org<
 </body></html>`;
 
 /**
+ * A tab whose label is styled upper-case (round 55, openproject fwop10): the
+ * DOM holds "Overview", innerText — what the recording's wait saw — is
+ * "OVERVIEW". `#blank` is an element with no text, for a wait whose primary
+ * candidate resolves somewhere that never shows it.
+ */
+const TRANSFORM = `<!doctype html><html><head><meta charset="utf-8"><title>Work package</title></head><body>
+<h1>Work package</h1>
+<nav><a id="tab" href="#overview" style="text-transform: uppercase">Overview</a> <span id="blank"></span></nav>
+</body></html>`;
+
+/**
+ * A column link whose rendered text ends in a non-breaking space (round 55,
+ * kanboard fwkb39: a read published "Backlog "), and a button that shows the
+ * next column's link.
+ */
+const BOARD = `<!doctype html><html><head><meta charset="utf-8"><title>Board</title></head><body>
+<h1>Board</h1>
+<a id="col" href="#backlog">Backlog&nbsp;</a>
+<button id="more" onclick="document.getElementById('cols').innerHTML = '<a href=&quot;#ready&quot;>Ready</a>'">Show more</button>
+<div id="cols"></div>
+</body></html>`;
+
+/**
+ * Two part rows of one ticket (round 55, repairdesk fwrd87 04-add): the
+ * recording read Part A's row, whose test hook names its id; this run's part
+ * is Part B.
+ */
+const PARTS = `<!doctype html><html><head><meta charset="utf-8"><title>Ticket</title></head><body>
+<h1>Ticket</h1>
+<section><div><table><tbody>
+<tr data-testid="part-row-p18"><td>run-2 RD Part A</td><td>$100.00</td></tr>
+<tr data-testid="part-row-p19"><td>run-2 RD Part B</td><td>$200.00</td></tr>
+</tbody></table></div></section>
+</body></html>`;
+
+/**
  * A part row and its cost field (round 51, repairdesk fwrd84 05-edit): Save
  * posts `/commit/cost/<value>` and redraws the row with the saved cost and
  * its price (cost × 1.25). `/price?stuck=1` is the same form whose Save
@@ -1348,6 +1384,9 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
       if (url === '/controls') return html(CONTROLS);
       if (url === '/price' || url === '/price?stuck=1') return html(PRICE(url.endsWith('stuck=1')));
       if (url === '/imagelink') return html(IMAGE_LINK);
+      if (url === '/transform') return html(TRANSFORM);
+      if (url === '/board') return html(BOARD);
+      if (url === '/parts') return html(PARTS);
       if (url === '/tick') return html(TICK);
       if (url === '/far') return html(FAR);
       if (url.startsWith('/observe/frame/')) return html(OBSERVE_FRAME(tail('/observe/frame/')));

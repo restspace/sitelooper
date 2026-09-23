@@ -4755,4 +4755,112 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(measuredReplay.similarity!).toBeLessThan(SOFT_MATCH_MIN_SIMILARITY);
     }, 240_000);
   });
+
+  /**
+   * Round 55, group runners: the daemon and the artifact read the same page
+   * the same way. Each procedure carries its own params, given to both.
+   */
+  describe('round 55: one page, one reading', () => {
+    const withParams = (steps: SkillStep[], params: Record<string, SkillParam>): { skill: Skill; spec: SpecFlow } => {
+      const skill: Skill = { ...skillOf(steps), params };
+      const base = specOf(steps);
+      const spec: SpecFlow = { ...base, steps: [{ ...base.steps[0], segments: [{ ...base.steps[0].segments[0], params }] }] };
+      return { skill, spec };
+    };
+
+    it('both runners compare a text wait against rendered text, CSS text-transform included (fwop10)', async () => {
+      // openproject fwop10: the recording's wait saw innerText "OVERVIEW"
+      // (text-transform: uppercase over "Overview"); the artifact compared
+      // textContent and failed where the daemon passed.
+      const tab = [{ kind: 'css' as const, selector: '#tab' }];
+      const steps: SkillStep[] = [
+        { tool: 'goto', args: { url: `${origin}/transform` }, locators: {} },
+        { tool: 'wait_for', args: { target: '@e1', state: 'text_contains', text: 'OVERVIEW', timeout_ms: 2000 }, locators: { target: tab } },
+        { tool: 'wait_for', args: { target: '@e1', state: 'text_equals', text: 'OVERVIEW', timeout_ms: 2000 }, locators: { target: tab } },
+        // the held-elsewhere rung reads its fallback the same way (recover.ts textHeldElsewhere)
+        {
+          tool: 'wait_for',
+          args: { target: '@e2', state: 'text_contains', text: 'OVERVIEW', timeout_ms: 1500 },
+          locators: { target: [{ kind: 'css', selector: '#blank' }, ...tab] },
+        },
+      ];
+      const { replay, emitted } = await both(steps, 0);
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+    }, 120_000);
+
+    it('both runners trim a text read, and fill a slotted line with the value normalised (fwkb39)', async () => {
+      // kanboard fwkb39: a read published "Backlog " and the slotted line
+      // `- link "{{v5}}"` became `- link "Backlog "`, which no snapshot name
+      // (whitespace collapsed and trimmed) ever shows.
+      const steps: SkillStep[] = [
+        { tool: 'goto', args: { url: `${origin}/board` }, locators: {} },
+        { tool: 'read', args: { target: '@e1', what: 'text' }, label: 'column', locators: { target: [{ kind: 'css', selector: '#col' }] } },
+        {
+          tool: 'click',
+          args: { target: '@e2' },
+          locators: { target: [{ kind: 'role', role: 'button', name: 'Show more' }] },
+          expect: { addedContains: ['- link "{{v1}}"'] },
+        },
+      ];
+      const { skill, spec } = withParams(steps, { v1: { example: 'Ready', usedIn: [], known: true } });
+      const { replay, emitted } = await bothOf(skill, spec, { v1: 'Ready ' });
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replay.outputs.column).toBe('Backlog');
+      expect(emitted.outputs['01-clear.column']).toBe('Backlog');
+    }, 120_000);
+
+    it('neither runner publishes a read that fell back onto another record than its slot names (fwrd87)', async () => {
+      // repairdesk fwrd87 04-add: s_9e190d was recorded adding Part A and
+      // replayed for Part B. Its part_name read had no candidate scoped by
+      // {{v4}}: the positional primary matched both rows, the fallback was
+      // Part A's own test hook, and both runners published Part A's name.
+      const positional = { kind: 'css' as const, selector: 'section > div > table > tbody > tr > td:nth-of-type(1)' };
+      const bookmark = { kind: 'css' as const, selector: '[data-testid="part-row-p18"] td', nth: 0 };
+      const steps: SkillStep[] = [
+        { tool: 'goto', args: { url: `${origin}/parts` }, locators: {} },
+        // compiled before round 55: no slot-scoped candidate, scoped by v1 all the same
+        { tool: 'read', args: { target: '(read-back)', what: 'text', scopedBy: 'v1' }, label: 'part_name', locators: { target: [positional, bookmark] } },
+        // compiled since: the recorded value IS the slot's, so the slot finds it
+        {
+          tool: 'read',
+          args: { target: '(read-back)', what: 'text', scopedBy: 'v1' },
+          label: 'part_name_2',
+          locators: { target: [{ kind: 'text', text: '{{v1}}' }, positional, bookmark] },
+        },
+        // a frame whose line is the slot's value, marked where the runid slot sits
+        {
+          tool: 'read',
+          args: { target: '(read-back)', what: 'text', frame: '{{=}} RD Part A', slotFrame: '{{v1}}', frameMark: 'v2' },
+          label: 'bench_run_tag',
+          locators: { target: [{ kind: 'scoped', container: 'tr', hasText: '{{v1}}', selector: 'td:nth-of-type(1)' }, positional, bookmark] },
+        },
+        {
+          tool: 'read',
+          args: { target: '(read-back)', what: 'text' },
+          label: 'part_cost',
+          locators: { target: [{ kind: 'scoped', container: 'tr', hasText: '{{v1}}', selector: 'td:nth-of-type(2)' }] },
+        },
+      ];
+      const { skill, spec } = withParams(steps, {
+        v1: { example: 'run-1 RD Part A', usedIn: [3, 4, 5], known: true },
+        v2: { example: 'run-1', usedIn: [], known: true },
+      });
+      const { replay, emitted } = await bothOf(skill, spec, { v1: 'run-2 RD Part B', v2: 'run-2' });
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      // Part A's name is never published beside Part B's cost…
+      expect(replay.outputs.part_name ?? '').toBe('');
+      expect(emitted.outputs['01-clear.part_name'] ?? '').toBe('');
+      // …the slot-scoped read finds Part B…
+      expect(replay.outputs.part_name_2).toBe('run-2 RD Part B');
+      expect(emitted.outputs['01-clear.part_name_2']).toBe('run-2 RD Part B');
+      // …and the frame is this run's line, marked at this run's runid.
+      expect(replay.outputs.bench_run_tag).toBe('run-2');
+      expect(emitted.outputs['01-clear.bench_run_tag']).toBe('run-2');
+      expect(replay.outputs.part_cost).toBe('$200.00');
+      expect(emitted.outputs['01-clear.part_cost']).toBe('$200.00');
+    }, 120_000);
+  });
 });

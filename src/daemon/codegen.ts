@@ -210,15 +210,18 @@ function waitForLine(target: string, args: Record<string, unknown>, timeout?: nu
   // applies otherwise.
   const only = timeout && timeout !== 10_000 ? `{ timeout: ${timeout} }` : '';
   const opt = only ? `, ${only}` : '';
+  // Rendered text, as the daemon's wait compares it (execution/text.ts
+  // textHolds): textContent misses CSS text-transform (fwop10 "OVERVIEW").
+  const rendered = `{ useInnerText: true${timeout && timeout !== 10_000 ? `, timeout: ${timeout}` : ''} }`;
   switch (String(args.state)) {
     case 'visible':
       return `await expect(${target}).toBeVisible(${only});`;
     case 'hidden':
       return `await expect(${target}).toBeHidden(${only});`;
     case 'text_equals':
-      return `await expect(${target}).toHaveText(${q(String(args.text ?? ''))}${opt});`;
+      return `await expect(${target}).toHaveText(${q(String(args.text ?? ''))}, ${rendered});`;
     case 'text_contains':
-      return `await expect(${target}).toContainText(${q(String(args.text ?? ''))}${opt});`;
+      return `await expect(${target}).toContainText(${q(String(args.text ?? ''))}, ${rendered});`;
     case 'count':
       return `await expect(${target}).toHaveCount(${Number(args.count ?? 0)}${opt});`;
     default:

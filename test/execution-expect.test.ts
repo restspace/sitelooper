@@ -24,6 +24,7 @@ import {
   type ChangeObservation,
 } from '../src/execution/expect.js';
 import { addedLines, isInteractiveLine, lineShows } from '../src/execution/snapshot.js';
+import { textHolds } from '../src/execution/text.js';
 import { emitFlowFile } from '../src/spec/emit.js';
 import type { SpecFlow } from '../src/spec/ir.js';
 import type { SkillStep } from '../src/skills/store.js';
@@ -357,6 +358,19 @@ describe('the rules the verdict is built from', () => {
 
   it('liveLines masks, then fills, as both runners do at run time', () => {
     expect(liveLines(['- textbox "09/03/2026 07:22": {{v1}}', '- combobox "X": abc'], { v1: 'v' })).toEqual(['- textbox "{{*}} {{*}}": v', '- combobox "X": {{*}}']);
+  });
+
+  it('liveLines fills a value as a snapshot renders it, whitespace collapsed and trimmed (fwkb39)', () => {
+    // kanboard fwkb39: a read published "Backlog " and `- link "{{v5}}"` became `- link "Backlog "`.
+    expect(liveLines(['- link "{{v5}}"', '- cell "{{v6}}"'], { v5: 'Backlog ', v6: ' Work \n in  progress ' })).toEqual(['- link "Backlog"', '- cell "Work in progress"']);
+  });
+
+  it('textHolds: one definition of "shows the text" for every tier (fwop10)', () => {
+    expect(textHolds('OVERVIEW', 'text_contains', 'OVERVIEW')).toBe(true);
+    expect(textHolds('Overview', 'text_contains', 'OVERVIEW')).toBe(false);
+    expect(textHolds('  Saved\n  Ada ', 'text_equals', 'Saved Ada')).toBe(true);
+    expect(textHolds('Saved Ada!', 'text_equals', 'Saved Ada')).toBe(false);
+    expect(textHolds('Saved  Ada!', 'text_contains', 'Saved Ada')).toBe(true);
   });
 
   it('isEchoLine and consequentialExpectations: a fill echoed in a same-role element is no evidence', () => {
