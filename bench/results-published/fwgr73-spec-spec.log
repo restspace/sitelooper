@@ -1,0 +1,49 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-open
+[sitelooper step] 02-create
+[sitelooper warn] 03-verify s_61998b/11: read 'notes_panel_text' returned a value the skill itself set/selected ('Notes for run fwgr73-spec') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 03-verify s_61998b/27: read 'availability_panel_title' returned a value the skill itself set/selected ('fwgr73-spec Availability') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 03-verify s_61998b/33: read 'availability_panel_title' returned a value the skill itself set/selected ('fwgr73-spec Availability') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 03-verify s_61998b/35: read 'panel_titles_on_saved_dashboard_2' returned a value the skill itself set/selected ('fwgr73-spec Availability') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper skip] 03-verify s_61998b/36 target: read target not found — value left empty
+[sitelooper warn] 03-verify: report value availability_panel_data_source is given, not observed: it is built only from the step's own parameters, and neither this run's page nor any of its reads shows it — withheld
+[sitelooper step] 03-verify
+[sitelooper warn] 04-open s_5c7c3d/18: url segment(s) differ from recorded (fwgr73-n1-bench-dashboard→fwgr73-spec-bench-dashboard) — treated as volatile
+  ✘  1 fwgr73.spec.ts:9:1 › fwgr73 (1.4m)
+
+
+  1) fwgr73.spec.ts:9:1 › fwgr73 › 04-open: In Grafana, open the dashboard at http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard. Do two things and make sure both are PERSISTED by explicitly saving: (1) Add the tag 'bench' to the dashboard (via Dashboard settings > General > Tags, add 'bench', then save the settings). (2) Set the dashboard's time range to 'Last 6 hours' using the time picker in the top bar, then click Save and in the save dialog TICK the 'Update default time range' checkbox before confirming the save, so the 6-hour range is stored in the saved dashboard. Then verify persistence: hard-reload the page and check Dashboard settings > General (or the JSON model) to confirm the tag 'bench' and the default time range of last 6 hours are actually stored in the saved dashboard. Report exactly what you observed for the tag and the stored default time range. 
+
+    Error: the field holds the value it was given twice over ("\"tags\"\"tags\"\"" for "\"tags\"") — it was typed onto a copy already there, and is not saved [outcome: unknown]
+
+       at fwgr73.flow.ts:14819
+
+      14817 |   if (comparable && (tool === 'type' || tool === 'fill')) {
+      14818 |     const doubled = await valueDoubled(locator, value);
+    > 14819 |     if (doubled) throw new Error(doubled);
+            |                        ^
+      14820 |   }
+      14821 |   return result;
+      14822 | }
+        at guardedTyping (/home/user/sitelooper/bench/results/fwgr73-spec-spec-tmp/fwgr73.flow.ts:14819:24)
+        at Object.act (/home/user/sitelooper/bench/results/fwgr73-spec-spec-tmp/fwgr73.flow.ts:21160:9)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwgr73-spec-spec-tmp/fwgr73.flow.ts:11688:18)
+        at Object.04-open (/home/user/sitelooper/bench/results/fwgr73-spec-spec-tmp/fwgr73.flow.ts:21136:5)
+        at /home/user/sitelooper/bench/results/fwgr73-spec-spec-tmp/fwgr73.flow.ts:23903:7
+        at runFlow (/home/user/sitelooper/bench/results/fwgr73-spec-spec-tmp/fwgr73.flow.ts:23902:5)
+        at /home/user/sitelooper/bench/results/fwgr73-spec-spec-tmp/fwgr73.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwgr73-fwgr73/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwgr73-fwgr73/error-context.md
+
+  1 failed
+    fwgr73.spec.ts:9:1 › fwgr73 ────────────────────────────────────────────────────────────────────

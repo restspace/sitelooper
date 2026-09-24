@@ -1,0 +1,1320 @@
+{
+ "id": "s_deb1ef",
+ "origin": "http://127.0.0.1:3000",
+ "template": "In Grafana, open the dashboard at {{v1}}. Set the dashboard's auto-refresh interval to '1m' using the time picker in the top bar (open the time picker, find the 'Auto refresh' / refresh interval dropdown, select '1m'). Then click Save and in the save dialog TICK the 'Update default time range' checkbox before confirming the save, so the 1m auto-refresh interval is stored in the saved dashboard. Then verify persistence: hard-reload the page with no query parameters, open Edit > Settings > JSON Model and confirm the stored timepicker/refresh settings include 1m (e.g. \"timepicker\": { \"refresh\": \"1m\" } or similar), and also check the top-bar refresh control shows 1m. Report exactly what you observed in the JSON model and the top bar.",
+ "params": {
+  "v1": {
+   "example": "http://127.0.0.1:3000/d/dfz99nx6wshkwb/fwgr73-n3-bench-dashboard",
+   "usedIn": [
+    7,
+    18,
+    24
+   ],
+   "known": true,
+   "binding": "output:i2:dashboard_url"
+  },
+  "v2": {
+   "example": "dfz99nx6wshkwb",
+   "usedIn": [],
+   "known": true,
+   "binding": "04-open.url.p1"
+  },
+  "v4": {
+   "example": "fwgr73-n3",
+   "usedIn": [
+    28
+   ],
+   "known": true,
+   "binding": "var:runid"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:3000/d/{{v2}}/{{v4}}-bench-dashboard?editview=json-model&from=:id&timezone=browser&to=now"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1005"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Back to dashboard button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Back to dashboard"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(1) > button"
+     },
+     {
+      "kind": "point",
+      "x": 993,
+      "y": 60,
+      "w": 143.5,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v2}}/fwgr73-n3-bench-dashboard?from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- button \"Add\"",
+     "- button \"Settings\"",
+     "- button \"Exit edit\"",
+     "- button \"Time range selected: {{*}}\"",
+     "- button \"Zoom out time range\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1548"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid RefreshPicker interval button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Auto refresh turned off. Choose refresh time interval"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid dashboard controls\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div:nth-of-type(2) > div:nth-of-type(2) > div > button"
+     },
+     {
+      "kind": "point",
+      "x": 1247,
+      "y": 112,
+      "w": 34,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v2}}/fwgr73-n3-bench-dashboard?from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- menu \"Off Auto 5s 10s 30s {{*}} 5m 15m 30m 1h 2h 1d\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1613"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "menuitemradio",
+      "name": "1 minute"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid dashboard controls\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div > div > div > button:nth-of-type(6)"
+     },
+     {
+      "kind": "point",
+      "x": 1229,
+      "y": 308,
+      "w": 71.4,
+      "h": 32,
+      "role": "menuitemradio",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v2}}/fwgr73-n3-bench-dashboard?from=:id&refresh=:id&timezone=browser&to=now"
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1520"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Save dashboard button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Save dashboard"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(6) > div > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1140,
+      "y": 60,
+      "w": 109.4,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v2}}/fwgr73-n3-bench-dashboard?from=:id&refresh=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- dialog \"\"",
+     "- dialog \"Drawer title Save dashboard\"",
+     "- button \"Close\"",
+     "- heading \"Save dashboard\"",
+     "- tab \"Details\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "check",
+   "args": {
+    "target": "@e1662"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "Dashboard settings Save Dashboard Modal Save refresh checkbox"
+     },
+     {
+      "kind": "role",
+      "role": "checkbox",
+      "name": "Update default refresh valueWill make the current refresh the new default"
+     },
+     {
+      "kind": "label",
+      "label": "Update default refresh valueWill make the current refresh the new default"
+     },
+     {
+      "kind": "id",
+      "selector": "#save-refresh"
+     },
+     {
+      "kind": "css",
+      "selector": "#save-refresh"
+     },
+     {
+      "kind": "point",
+      "x": 799,
+      "y": 155,
+      "w": 286.1,
+      "h": 36,
+      "role": "checkbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v2}}/fwgr73-n3-bench-dashboard?from=:id&refresh=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- tab \"Changes1\"",
+     "- checkbox \"Update default {{*}} valueWill make the current {{*}} the new default\" [checked]",
+     "- button \"Save\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1676"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Save dashboard drawer button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Save"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(3) > div:nth-of-type(1) > div > div > div:nth-of-type(3) > button:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 776,
+      "y": 372,
+      "w": 65.4,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v2}}/fwgr73-n3-bench-dashboard?from=:id&refresh=:id&timezone=browser&to=now",
+    "alertContains": "Dashboard saved",
+    "addedContains": [
+     "- button \"Add\"",
+     "- button \"Settings\"",
+     "- button \"Exit edit\"",
+     "- button \"Save dashboard\"",
+     "- button \"More save options\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e67"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Edit dashboard button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Edit"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(5) > button"
+     },
+     {
+      "kind": "point",
+      "x": 1198,
+      "y": 60,
+      "w": 38.3,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v2}}/fwgr73-n3-bench-dashboard?from=:id&refresh=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- button \"Add\"",
+     "- button \"Settings\"",
+     "- button \"Exit edit\"",
+     "- button \"Save dashboard\"",
+     "- button \"More save options\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Settings\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=button[name=\"Settings\"]"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Dashboard settings"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Settings"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(3) > button"
+     },
+     {
+      "kind": "point",
+      "x": 962,
+      "y": 60,
+      "w": 63.8,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v2}}/fwgr73-n3-bench-dashboard?editview=settings&from=:id&refresh=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- link \"{{v4}} Bench Dashboard\"",
+     "- button \"Back to dashboard\"",
+     "- heading \"Settings\"",
+     "- tab \"General\"",
+     "- tab \"Annotations\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e188"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Tab JSON Model"
+     },
+     {
+      "kind": "role",
+      "role": "tab",
+      "name": "JSON Model"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div > div > div:nth-of-type(7) > a"
+     },
+     {
+      "kind": "point",
+      "x": 654,
+      "y": 181,
+      "w": 108.8,
+      "h": 34,
+      "role": "tab",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v2}}/fwgr73-n3-bench-dashboard?editview=json-model&from=:id&refresh=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- link \"Settings\"",
+     "- textbox \"Editor content;Press Alt+F1 for Accessibility Options.\": {{*}}",
+     "- button \"Save changes\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "textarea[aria-label=\"Editor content;Press Alt+F1 for Accessibility Options.\"]",
+    "what": "value",
+    "label": "json_model_after_reload"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Editor content;Press Alt+F1 for Accessibility Options."
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid ReactMonacoEditor editorLazy\"] textarea"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > section > div > div > div:nth-of-type(1) > textarea"
+     },
+     {
+      "kind": "css",
+      "selector": "textarea[aria-label=\"Editor content;Press Alt+F1 for Accessibility Options.\"]"
+     },
+     {
+      "kind": "point",
+      "x": 91,
+      "y": 270,
+      "w": 1,
+      "h": 1,
+      "role": "textbox",
+      "tag": "textarea",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "json_model_after_reload"
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": ".view-lines"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".view-lines"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(5)"
+     },
+     {
+      "kind": "point",
+      "x": 609,
+      "y": 1753,
+      "w": 1038,
+      "h": 2975,
+      "role": "presentation",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v2}}/fwgr73-n3-bench-dashboard?editview=json-model&from=:id&refresh=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- textbox \"Editor content;Press Alt+F1 for Accessibility Options.\": {{*}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "press",
+   "args": {
+    "key": "Control+f",
+    "target": ".view-lines"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".view-lines"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(5)"
+     },
+     {
+      "kind": "point",
+      "x": 609,
+      "y": 1753,
+      "w": 1038,
+      "h": 2975,
+      "role": "presentation",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v2}}/fwgr73-n3-bench-dashboard?editview=json-model&from=:id&refresh=:id&timezone=browser&to=now",
+    "alertContains": "No results found",
+    "addedContains": [
+     "- button \"Toggle Replace\"",
+     "- textbox \"Find\"",
+     "- checkbox \"Match Case (Alt+C)\"",
+     "- checkbox \"Match Whole Word (Alt+W)\"",
+     "- checkbox \"Use Regular Expression (Alt+R)\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "role=textbox[name=\"Find\"]",
+    "value": "timepicker"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=textbox[name=\"Find\"]"
+     },
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Find"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Find"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div > textarea"
+     },
+     {
+      "kind": "point",
+      "x": 790,
+      "y": 282,
+      "w": 173,
+      "h": 23,
+      "role": "textbox",
+      "tag": "textarea",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v2}}/fwgr73-n3-bench-dashboard",
+    "addedContains": [
+     "- textbox \"Editor content;Press Alt+F1 for Accessibility Options.\": {{*}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "press",
+   "args": {
+    "key": "Enter",
+    "target": "role=textbox[name=\"Find\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=textbox[name=\"Find\"]"
+     },
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Find"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Find"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div > textarea"
+     },
+     {
+      "kind": "point",
+      "x": 790,
+      "y": 282,
+      "w": 173,
+      "h": 23,
+      "role": "textbox",
+      "tag": "textarea",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v2}}/fwgr73-n3-bench-dashboard?editview=json-model&from=:id&refresh=:id&timezone=browser&to=now",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read_all",
+   "args": {
+    "target": ".view-line",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".view-line"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(5) > div"
+     },
+     {
+      "kind": "point",
+      "x": 669,
+      "y": 279,
+      "w": 1158,
+      "h": 19,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "json_model_timepicker_key"
+  },
+  {
+   "tool": "press",
+   "args": {
+    "key": "Escape",
+    "target": ".view-lines"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".view-lines"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(5)"
+     },
+     {
+      "kind": "point",
+      "x": 669,
+      "y": 520,
+      "w": 1158,
+      "h": 576,
+      "role": "presentation",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v2}}/fwgr73-n3-bench-dashboard?editview=json-model&from=:id&refresh=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- textbox \"Find\" [disabled]",
+     "- checkbox \"Match Case (Alt+C)\" [disabled]",
+     "- checkbox \"Match Whole Word (Alt+W)\" [disabled]",
+     "- checkbox \"Use Regular Expression (Alt+R)\" [disabled]",
+     "- button \"Close (Escape)\" [disabled]"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Edit\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=button[name=\"Edit\"]"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Edit dashboard button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Edit"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(5) > button"
+     },
+     {
+      "kind": "point",
+      "x": 1198,
+      "y": 60,
+      "w": 38.3,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v2}}/fwgr73-n3-bench-dashboard?from=:id&refresh=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- button \"Add\"",
+     "- button \"Settings\"",
+     "- button \"Exit edit\"",
+     "- button \"Save dashboard\"",
+     "- button \"More save options\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Settings\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=button[name=\"Settings\"]"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Dashboard settings"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Settings"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(3) > button"
+     },
+     {
+      "kind": "point",
+      "x": 962,
+      "y": 60,
+      "w": 63.8,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v2}}/fwgr73-n3-bench-dashboard?editview=settings&from=:id&refresh=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- link \"{{v4}} Bench Dashboard\"",
+     "- button \"Back to dashboard\"",
+     "- heading \"Settings\"",
+     "- tab \"General\"",
+     "- tab \"Annotations\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=tab[name=\"JSON Model\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=tab[name=\"JSON Model\"]"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Tab JSON Model"
+     },
+     {
+      "kind": "role",
+      "role": "tab",
+      "name": "JSON Model"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div > div > div:nth-of-type(7) > a"
+     },
+     {
+      "kind": "point",
+      "x": 654,
+      "y": 181,
+      "w": 108.8,
+      "h": 34,
+      "role": "tab",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v2}}/fwgr73-n3-bench-dashboard?editview=json-model&from=:id&refresh=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- link \"Settings\"",
+     "- textbox \"Editor content;Press Alt+F1 for Accessibility Options.\": {{*}}",
+     "- button \"Save changes\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": ".view-lines"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".view-lines"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(5)"
+     },
+     {
+      "kind": "point",
+      "x": 609,
+      "y": 1753,
+      "w": 1038,
+      "h": 2975,
+      "role": "presentation",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v2}}/fwgr73-n3-bench-dashboard?editview=json-model&from=:id&refresh=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- textbox \"Editor content;Press Alt+F1 for Accessibility Options.\": {{*}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "press",
+   "args": {
+    "key": "Control+End",
+    "target": ".view-lines"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".view-lines"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(5)"
+     },
+     {
+      "kind": "point",
+      "x": 609,
+      "y": 1753,
+      "w": 1038,
+      "h": 2975,
+      "role": "presentation",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v2}}/fwgr73-n3-bench-dashboard?editview=json-model&from=:id&refresh=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- textbox \"Editor content;Press Alt+F1 for Accessibility Options.\": {{*}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "@e101",
+    "what": "text",
+    "label": "topbar_refresh_text_after_reload"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid RefreshPicker interval button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Choose refresh time interval with current interval 1 minute selected"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid dashboard controls\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div:nth-of-type(2) > div:nth-of-type(2) > div > button"
+     },
+     {
+      "kind": "point",
+      "x": 1236,
+      "y": 112,
+      "w": 56.5,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "topbar_refresh_text_after_reload"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "@e101",
+    "what": "attr",
+    "attr": "aria-label",
+    "label": "topbar_refresh_aria_after_reload"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid RefreshPicker interval button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Choose refresh time interval with current interval 1 minute selected"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid dashboard controls\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div:nth-of-type(2) > div:nth-of-type(2) > div > button"
+     },
+     {
+      "kind": "point",
+      "x": 1236,
+      "y": 112,
+      "w": 56.5,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "topbar_refresh_aria_after_reload"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "@e84",
+    "what": "text",
+    "label": "topbar_time_range_after_reload"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid TimePicker Open Button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Time range selected: Last 6 hours"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid dashboard controls\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div > div:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 991,
+      "y": 112,
+      "w": 153.5,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "topbar_time_range_after_reload"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text",
+    "scopedBy": "v4"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid {{v4}} Bench Dashboard breadcrumb"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] span",
+      "nth": 0
+     },
+     {
+      "kind": "css",
+      "selector": "header > div:nth-of-type(2) > nav > ol > li:nth-of-type(3) > span"
+     },
+     {
+      "kind": "point",
+      "x": 323,
+      "y": 60,
+      "w": 195.9,
+      "h": 22,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "dashboard_title"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid RefreshPicker run button\"] div"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div:nth-of-type(2) > div:nth-of-type(2) > button > div"
+     },
+     {
+      "kind": "point",
+      "x": 1169,
+      "y": 112,
+      "w": 61,
+      "h": 30,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "json_model_refresh_key"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text",
+    "scopedBy": "v4"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"header-container\"] h2",
+      "nth": 1
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > section > div:nth-of-type(2) > div:nth-of-type(1) > h2",
+      "nth": 1
+     },
+     {
+      "kind": "point",
+      "x": 100,
+      "y": 469,
+      "w": 150.5,
+      "h": 22,
+      "role": "heading",
+      "tag": "h2",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "panel_titles_on_dashboard_1"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text",
+    "scopedBy": "v4"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"header-container\"] h2",
+      "nth": 0
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > section > div:nth-of-type(2) > div:nth-of-type(1) > h2",
+      "nth": 0
+     },
+     {
+      "kind": "point",
+      "x": 83,
+      "y": 165,
+      "w": 116.7,
+      "h": 22,
+      "role": "heading",
+      "tag": "h2",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "panel_titles_on_dashboard_2"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "On the dashboard {{v1}} I opened the top-bar refresh-interval picker (the button showing \"1m\" / \"Choose refresh time interval…\") and selected 1m, then clicked Save; the save dialog offered the checkbox \"Update default refresh value — Will make the current refresh the new default\", which I ticked before confirming Save. The stored procedure s_a30ea8 failed at its very first step (its refresh-button locator no longer matched), so this was done by hand. Persistence was then verified twice on a bare-URL hard reload with no query parameters: the JSON Model showed the top-level key \"refresh\" with value \"1m\" (alongside \"timepicker\": {}), and the live top bar showed the refresh control as \"1m\" (aria-label \"Choose refresh time interval with current interval 1 minute selected\") with time range \"Last 6 hours\". Caveat: the checkbox in the save dialog was labelled \"Update default refresh value\", not literally \"Update default time range\" — I ticked the refresh one; the 6-hour default range was already stored from the earlier session.",
+  "values": {
+   "dashboard_uid": "{{v2}}",
+   "dashboard_title": "{{v4}} Bench Dashboard",
+   "json_model_timepicker_item": "\"timepicker\": {},",
+   "json_model_refresh_item": "\"refresh\": \"1m\",",
+   "json_model_timepicker_key": "timepicker",
+   "json_model_refresh_key": "refresh",
+   "topbar_refresh_text_after_reload": "1m",
+   "topbar_refresh_aria_after_reload": "Choose refresh time interval with current interval 1 minute selected",
+   "topbar_time_range_after_reload": "Last 6 hours",
+   "save_dialog_checkbox_used": "Update default refresh value — Will make the current refresh the new default (checked)",
+   "json_model_after_reload": "{\n  \"annotations\": {\n    \"list\": [\n      {\n        \"builtIn\": 1,\n        \"datasource\": {\n          \"type\": \"grafana\",\n          \"uid\": \"-- Grafana --\"\n        },\n        \"enable\": true,",
+   "ref_2": "6-hour",
+   "panel_titles_on_dashboard_1": "{{v4}} Availability",
+   "panel_titles_on_dashboard_2": "{{v4}} Notes"
+  }
+ },
+ "contract": 4,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-24T21:23:48.594Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4
+ },
+ "status": "provisional",
+ "variantOf": "s_a30ea8",
+ "provenance": {
+  "session": "fwgr73-n3",
+  "instruction": "In Grafana, open the dashboard at http://127.0.0.1:3000/d/dfz99nx6wshkwb/fwgr73-n3-bench-dashboard. Set the dashboard's auto-refresh interval to '1m' using the time picker in the top bar (open the time picker, find the 'Auto refresh' / refresh interval dropdown, select '1m'). Then click Save and in the save dialog TICK the 'Update default time range' checkbox before confirming the save, so the 1m auto-refresh interval is stored in the saved dashboard. Then verify persistence: hard-reload the page with no query parameters, open Edit > Settings > JSON Model and confirm the stored timepicker/refresh settings include 1m (e.g. \"timepicker\": { \"refresh\": \"1m\" } or similar), and also check the top-bar refresh control shows 1m. Report exactly what you observed in the JSON model and the top bar.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-24T21:23:48.594Z",
+  "transforms": [
+   {
+    "name": "unfreezeExpectations",
+    "at": 1,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- button \\\"Add\\\"\",\"- button \\\"Settings\\\"\",\"- button \\\"Exit edit\\\"\",\"- button \\\"Time range selected: Last 6 hours\\\"\",\"- button \\\"Zoom out time range\\\"\"] → [\"- button \\\"Add\\\"\",\"- button \\\"Settings\\\"\",\"- button \\\"Exit edit\\\"\",\"- button \\\"Time range selected: {{*}}\\\"\",\"- button \\\"Zoom out time range\\\"\"]"
+   },
+   {
+    "name": "unfreezeExpectations",
+    "at": 2,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- menu \\\"Off Auto 5s 10s 30s 1m 5m 15m 30m 1h 2h 1d\\\"\"] → [\"- menu \\\"Off Auto 5s 10s 30s {{*}} 5m 15m 30m 1h 2h 1d\\\"\"]"
+   },
+   {
+    "name": "unfreezeExpectations",
+    "at": 3,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- button \\\"Choose refresh time interval with current interval 1 minute selected\\\"\"] → []"
+   },
+   {
+    "name": "unfreezeExpectations",
+    "at": 5,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- tab \\\"Changes1\\\"\",\"- checkbox \\\"Update default refresh valueWill make the current refresh the new default\\\" [checked]\",\"- button \\\"Save\\\"\"] → [\"- tab \\\"Changes1\\\"\",\"- checkbox \\\"Update default {{*}} valueWill make the current {{*}} the new default\\\" [checked]\",\"- button \\\"Save\\\"\"]"
+   }
+  ]
+ },
+ "revision": 1
+}

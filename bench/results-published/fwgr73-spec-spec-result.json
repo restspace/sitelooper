@@ -1,0 +1,38 @@
+{
+  "arm": "spec",
+  "runid": "fwgr73-spec",
+  "target": "grafana",
+  "flow": "fwgr73.json",
+  "flowName": "fwgr73",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwgr73-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwgr73-spec-spec-tmp/fwgr73.flow.ts",
+  "specFile": "bench/results/fwgr73-spec-spec-tmp/fwgr73.spec.ts",
+  "wallMs": 89437,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwgr73",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 85738,
+      "error": "Error: the field holds the value it was given twice over (\"\\\"tags\\\"\\\"tags\\\"\\\"\" for \"\\\"tags\\\"\") — it was typed onto a copy already there, and is not saved [outcome: unknown]",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "evidence": [
+    "fwgr73-spec-spec-failure.png",
+    "fwgr73-spec-spec-error-context.md"
+  ],
+  "logTail": "[sitelooper warn] 03-verify s_61998b/27: read 'availability_panel_title' returned a value the skill itself set/selected ('fwgr73-spec Availability') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper warn] 03-verify s_61998b/33: read 'availability_panel_title' returned a value the skill itself set/selected ('fwgr73-spec Availability') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper warn] 03-verify s_61998b/35: read 'panel_titles_on_saved_dashboard_2' returned a value the skill itself set/selected ('fwgr73-spec Availability') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper skip] 03-verify s_61998b/36 target: read target not found — value left empty\n[sitelooper warn] 03-verify: report value availability_panel_data_source is given, not observed: it is built only from the step's own parameters, and neither this run's page nor any of its reads shows it — withheld\n[sitelooper step] 03-verify\n[sitelooper warn] 04-open s_5c7c3d/18: url segment(s) differ from recorded (fwgr73-n1-bench-dashboard→fwgr73-spec-bench-dashboard) — treated as volatile\n  ✘  1 fwgr73.spec.ts:9:1 › fwgr73 (1.4m)\n\n\n  1) fwgr73.spec.ts:9:1 › fwgr73 › 04-open: In Grafana, open the dashboard at http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard. Do two things and make sure both are PERSISTED by explicitly saving: (1) Add the tag 'bench' to the dashboard (via Dashboard settings > General > Tags, add 'bench', then save the settings). (2) Set the dashboard's time range to 'Last 6 hours' using the time picker in the top bar, then click Save and in the save dialog TICK the 'Update default time range' checkbox before confirming the save, so the 6-hour range is stored in the saved dashboard. Then verify persistence: hard-reload the page and check Dashboard settings > General (or the JSON model) to confirm the tag 'bench' and the default time range of last 6 hours are actually stored in the saved dashboard. Report exactly what you observed for the tag and the stored default time range. \n\n    Error: the field holds the value it was given twice over (\"\\\"tags\\\"\\\"tags\\\"\\\"\" for \"\\\"tags\\\"\") — it was typed onto a copy already there, and is not saved [outcome: unknown]\n\n       at fwgr73.flow.ts:14819\n\n      14817 |   if (comparable && (tool === 'type' || tool === 'fill')) {\n      14818 |     const doubled = await valueDoubled(locator, value);\n    > 14819 |     if (doubled) throw new Error(doubled);\n            |                        ^\n      14820 |   }\n      14821 |   return result;\n      14822 | }\n        at guardedTyping (/home/user/sitelooper/bench/results/fwgr73-spec-spec-tmp/fwgr73.flow.ts:14819:24)\n        at Object.act (/home/user/sitelooper/bench/results/fwgr73-spec-spec-tmp/fwgr73.flow.ts:21160:9)\n        at runStepLifecycle (/home/user/sitelooper/bench/results/fwgr73-spec-spec-tmp/fwgr73.flow.ts:11688:18)\n        at Object.04-open (/home/user/sitelooper/bench/results/fwgr73-spec-spec-tmp/fwgr73.flow.ts:21136:5)\n        at /home/user/sitelooper/bench/results/fwgr73-spec-spec-tmp/fwgr73.flow.ts:23903:7\n        at runFlow (/home/user/sitelooper/bench/results/fwgr73-spec-spec-tmp/fwgr73.flow.ts:23902:5)\n        at /home/user/sitelooper/bench/results/fwgr73-spec-spec-tmp/fwgr73.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/fwgr73-fwgr73/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/fwgr73-fwgr73/error-context.md\n\n  1 failed\n    fwgr73.spec.ts:9:1 › fwgr73 ────────────────────────────────────────────────────────────────────\n"
+}

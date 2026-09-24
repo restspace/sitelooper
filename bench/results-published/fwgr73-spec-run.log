@@ -1,0 +1,17 @@
+[spec-replay] resetting grafana
+[reset] grafana: deleted leftover dashboard "fwgr73-n3 Bench Dashboard" (200)
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile bench/results/flows/fwgr73.json --out /home/user/sitelooper/bench/results/fwgr73-spec-spec-tmp --overwrite-spec
+flow: /home/user/sitelooper/bench/results/fwgr73-spec-spec-tmp/fwgr73.flow.ts
+spec: /home/user/sitelooper/bench/results/fwgr73-spec-spec-tmp/fwgr73.spec.ts
+warning a component recipe is demoted in the store, and the compiled artifact omits it for good
+  why: monaco/set-value: seed recipe r_f2510e is demoted in the component store (2 consecutive verification failures); the snapshot omits it. The snapshot is compile-time state: the daemon keeps validating, learning and demoting after this file is written; the artifact runs what it was given.
+  fix: record the widget again with the daemon to learn a working recipe, then recompile
+warning a learned component recipe travels in the compiled artifact as data
+  why: monaco/set-value: uses learned recipe r_ae86ca learned in session fwgr73-n1 (provisional) rather than the shipped seed; the artifact carries it as data. The snapshot is compile-time state: the daemon keeps validating, learning and demoting after this file is written; the artifact runs what it was given.
+
+  warning: 04-open: step 8 (wait_for hidden) acts on one element through a single unindexed candidate, page.locator('role=dialog[name="Drawer title Save dashboard"]') — never proved to identify one element on the page that produced it, so this run acts on whatever it matches first; re-record the step (sitelooper rerecord) to derive a full chain for it
+[spec-replay] running: npx playwright test --config /home/user/sitelooper/bench/results/fwgr73-spec-spec-tmp/playwright.config.mjs
+[spec-replay] failure evidence: fwgr73-spec-spec-failure.png
+[spec-replay] failure evidence: fwgr73-spec-spec-error-context.md
+[spec-replay] fwgr73-spec: 0/1 passed, exit=1, 89s, 0 drift line(s) — result written

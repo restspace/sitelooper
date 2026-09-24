@@ -1,0 +1,297 @@
+{
+  "flow": "fwgr73",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_db0f89; observed panel_titles_1=Request rate, panel_titles_2=Error count, panel_titles_3=Latency by endpoint, dashboard_name=Service Health.",
+      "values": {
+        "panel_titles_1": "Request rate",
+        "panel_titles_2": "Error count",
+        "panel_titles_3": "Latency by endpoint",
+        "dashboard_name": "Service Health"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_7e5d12; observed dashboard_uid=ffz98yptulukga, dashboard_url=http://127.0.0.1:3000/d/ffz98yptulukga/fwgr73-n2-bench-dashboard, run_id=fwgr73-n2, dashboard_slug=fwgr73-n2-bench-dashboard, query_letter_label=A, data_source_picker_logo_text=TestData logo, dashboard_url_after_save=http://127.0.0.1:3000/d/ffz98yptulukga/fwgr73-n2-bench-dashboard?from=now-6h&to=now&timezone=browser, dashboard_title=fwgr73-n2 Bench Dashboard, panel_title=fwgr73-n2 Availability.",
+      "values": {
+        "dashboard_uid": "ffz98yptulukga",
+        "dashboard_url": "http://127.0.0.1:3000/d/ffz98yptulukga/fwgr73-n2-bench-dashboard",
+        "run_id": "fwgr73-n2",
+        "dashboard_slug": "fwgr73-n2-bench-dashboard",
+        "query_letter_label": "A",
+        "data_source_picker_logo_text": "TestData logo",
+        "dashboard_url_after_save": "http://127.0.0.1:3000/d/ffz98yptulukga/fwgr73-n2-bench-dashboard?from=now-6h&to=now&timezone=browser",
+        "dashboard_title": "fwgr73-n2 Bench Dashboard",
+        "panel_title": "fwgr73-n2 Availability"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "20/20",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_61998b; observed dashboard_uid=ffz98yptulukga, dashboard_slug=fwgr73-n2-bench-dashboard, run_id=fwgr73-n2, availability_panel_type=Stat, notes_panel_title=fwgr73-n2 Notes, final_dashboard_url=http://127.0.0.1:3000/d/ffz98yptulukga/fwgr73-n2-bench-dashboard?from=now-6h&to=now&timezone=browser, dashboard_title=fwgr73-n2 Bench Dashboard, panel_titles_on_saved_dashboard_1=fwgr73-n2 Notes.",
+      "values": {
+        "dashboard_uid": "ffz98yptulukga",
+        "dashboard_slug": "fwgr73-n2-bench-dashboard",
+        "run_id": "fwgr73-n2",
+        "availability_panel_type": "Stat",
+        "notes_panel_title": "fwgr73-n2 Notes",
+        "final_dashboard_url": "http://127.0.0.1:3000/d/ffz98yptulukga/fwgr73-n2-bench-dashboard?from=now-6h&to=now&timezone=browser",
+        "dashboard_title": "fwgr73-n2 Bench Dashboard",
+        "panel_titles_on_saved_dashboard_1": "fwgr73-n2 Notes"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "36/36",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_61998b: step 11: read 'notes_panel_text' returned a value the skill itself set/selected ('Notes for run fwgr73-n2') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_61998b: step 27: read 'availability_panel_title' returned a value the skill itself set/selected ('fwgr73-n2 Availability') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_61998b: step 33: read 'availability_panel_title' returned a value the skill itself set/selected ('fwgr73-n2 Availability') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_61998b: step 35: read 'panel_titles_on_saved_dashboard_2' returned a value the skill itself set/selected ('fwgr73-n2 Availability') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_61998b: step 36: the target chain is dead and was not healed inline — the step is a synthesized read no run has ever resolved, so nothing about it has drifted",
+        "s_61998b: step 36: skipped read — no element matched any known locator for target (tried 1: page.getByRole('status', { name: 'Dashboard saved', exact: true }))",
+        "s_61998b: report value availability_panel_data_source is given, not observed: it is built only from the step's own parameters, and neither this run's page nor any of its reads shows it — withheld"
+      ],
+      "unreported": [
+        "notes_panel_text",
+        "availability_panel_data_source",
+        "save_confirmation_message",
+        "availability_panel_title",
+        "panel_titles_on_saved_dashboard_2"
+      ]
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Both changes are persisted on the saved dashboard (uid ffz98yptulukga, version 3). After a hard reload of http://127.0.0.1:3000/d/ffz98yptulukga/fwgr73-n2-bench-dashboard, Dashboard settings > General shows the tag 'bench' as a tag chip, and the JSON Model tab (loaded fresh from the server on this page load) contains \"tags\": [\"bench\"] and \"time\": { \"from\": \"now-6h\", \"to\": \"now\" }, i.e. the stored default time range is Last 6 hours (timepicker is empty, timezone \"browser\"). The top-bar picker reads \"Last 6 hours\" and a bare-URL load redirects to ?from=now-6h&to=now&timezone=browser. Opening the save drawer now reports \"No changes to save\" with the Save button disabled, confirming the live dashboard state already equals the persisted version — no further save was needed or possible. The replayed procedure had left a stray text (\"\\\"tags\\\"\\\"tags\\\"\") in the Monaco find widget, so I reloaded the dashboard before reading the JSON model; the server-loaded JSON shown is intact and contains both panels (\"fwgr73-n2 Notes\" with text \"Notes for run fwgr73-n2\", and \"fwgr73-n2 Availability\").",
+      "values": {
+        "dashboard_uid": "ffz98yptulukga",
+        "dashboard_title": "fwgr73-n2 Bench Dashboard",
+        "stored_dashboard_version": "3",
+        "dashboard_tag_chip": "bench",
+        "json_timepicker": "{}",
+        "json_timezone": "browser",
+        "topbar_time_range": "Last 6 hours",
+        "save_drawer_state": "heading \"Save dashboard\", message \"No changes to save\", Save button disabled",
+        "panels_after_reload": "fwgr73-n2 Notes (paragraph: Notes for run fwgr73-n2), fwgr73-n2 Availability (value 39.0)",
+        "dashboard_url_after_reload": "http://127.0.0.1:3000/d/ffz98yptulukga/fwgr73-n2-bench-dashboard?from=now-6h&to=now&timezone=browser",
+        "json_tags_1": "bench",
+        "stored_default_time_range_from": "now-6h",
+        "stored_default_time_range_to": "now",
+        "json_model_current": "\"tags\"\"tags\"\"",
+        "monaco_editor_view_lines": "\"tags\": [",
+        "monaco_editor_view_lines_2": "\"bench\"",
+        "monaco_editor_view_lines_3": "\"time\": {",
+        "monaco_editor_view_lines_4": "\"from\": \"now-6h\",",
+        "monaco_editor_view_lines_5": "\"to\": \"now\"",
+        "ref": "fwgr73-n2"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_5c7c3d stopped at step 19 — type failed: the field holds the value it was given twice over (\"\\\"tags\\\"\\\"tags\\\"\\\"\" for \"\\\"tags\\\"\") — it was typed onto a copy already there, and is not saved [outcome: unknown]",
+      "replayed": "18/38",
+      "repaired": false,
+      "turns": 28,
+      "warnings": [
+        "s_5c7c3d: step 1: url segment(s) differ from recorded (fwgr73-n1-bench-dashboard→fwgr73-n2-bench-dashboard) — treated as volatile",
+        "s_5c7c3d: step 2: url segment(s) differ from recorded (fwgr73-n1-bench-dashboard→fwgr73-n2-bench-dashboard) — treated as volatile",
+        "s_5c7c3d: step 3: url segment(s) differ from recorded (fwgr73-n1-bench-dashboard→fwgr73-n2-bench-dashboard) — treated as volatile",
+        "s_5c7c3d: step 4: url segment(s) differ from recorded (fwgr73-n1-bench-dashboard→fwgr73-n2-bench-dashboard) — treated as volatile",
+        "s_5c7c3d: step 5: url segment(s) differ from recorded (fwgr73-n1-bench-dashboard→fwgr73-n2-bench-dashboard) — treated as volatile",
+        "s_5c7c3d: step 6: url segment(s) differ from recorded (fwgr73-n1-bench-dashboard→fwgr73-n2-bench-dashboard) — treated as volatile",
+        "s_5c7c3d: step 7: url segment(s) differ from recorded (fwgr73-n1-bench-dashboard→fwgr73-n2-bench-dashboard) — treated as volatile",
+        "s_5c7c3d: step 10: url segment(s) differ from recorded (fwgr73-n1-bench-dashboard→fwgr73-n2-bench-dashboard) — treated as volatile",
+        "s_5c7c3d: step 11: url segment(s) differ from recorded (fwgr73-n1-bench-dashboard→fwgr73-n2-bench-dashboard) — treated as volatile",
+        "s_5c7c3d: step 12: url segment(s) differ from recorded (fwgr73-n1-bench-dashboard→fwgr73-n2-bench-dashboard) — treated as volatile",
+        "s_5c7c3d: step 13: url segment(s) differ from recorded (fwgr73-n1-bench-dashboard→fwgr73-n2-bench-dashboard) — treated as volatile",
+        "s_5c7c3d: step 14: url segment(s) differ from recorded (fwgr73-n1-bench-dashboard→fwgr73-n2-bench-dashboard) — treated as volatile",
+        "s_5c7c3d: step 16: url segment(s) differ from recorded (fwgr73-n1-bench-dashboard→fwgr73-n2-bench-dashboard) — treated as volatile",
+        "s_5c7c3d: step 18: url segment(s) differ from recorded (fwgr73-n1-bench-dashboard→fwgr73-n2-bench-dashboard) — treated as volatile"
+      ],
+      "unreported": [
+        "tag_stored",
+        "time_range_after_hard_reload",
+        "notes_panel_text",
+        "dashboard_json_model",
+        "json_model_top",
+        "json_tags_search_context",
+        "run_id",
+        "panel_titles_after_reload_1",
+        "panel_titles_after_reload_2"
+      ]
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Auto-refresh 1m was set via the top-bar refresh dropdown, then saved with the save dialog's 'Update default refresh value' checkbox ticked (it enabled the disabled Save button; drawer confirmed \"Dashboard saved\"). After a hard reload of the bare URL (no query params) the top bar shows refresh \"1m\" (aria-label \"...current interval 1 minute selected\") and time range \"Last 6 hours\", and the URL picks up &refresh=1m. Edit > Settings > JSON Model on that fresh load stores \"refresh\": \"1m\" at the dashboard top level, alongside \"tags\": [\"bench\"] and \"time\": {\"from\": \"now-6h\", \"to\": \"now\"} — note it is NOT inside \"timepicker\", which is {} and \"timezone\": \"browser\"; Grafana writes refresh at the top level, so the instruction's example form \"timepicker\": {\"refresh\": \"1m\"} does not match what this instance stores. Both panels remain (\"fwgr73-n2 Notes\" with text \"Notes for run fwgr73-n2\"; \"fwgr73-n2 Availability\" stat showing 64.0), and the save drawer reported \"No changes to save\" afterwards, confirming the persisted version matches.",
+      "values": {
+        "dashboard_uid": "ffz98yptulukga",
+        "dashboard_title": "fwgr73-n2 Bench Dashboard",
+        "stored_dashboard_version": "4",
+        "stored_refresh_interval": "1m",
+        "json_model_refresh": "\"refresh\": \"1m\" (top-level key, read from stored model)",
+        "topbar_refresh_interval": "1m",
+        "topbar_refresh_aria_label": "Choose refresh time interval with current interval 1 minute selected",
+        "topbar_time_range": "Last 6 hours",
+        "save_dialog_option_ticked": "Update default refresh value",
+        "save_confirmation": "Dashboard saved",
+        "url_after_bare_reload": "http://127.0.0.1:3000/d/ffz98yptulukga/fwgr73-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m",
+        "stored_tags": "bench",
+        "stored_default_time_range_from": "now-6h",
+        "stored_default_time_range_to": "now",
+        "json_model_timepicker": "{}",
+        "json_model_timezone": "browser",
+        "panels_on_saved_dashboard": "fwgr73-n2 Notes (paragraph: Notes for run fwgr73-n2); fwgr73-n2 Availability (stat, value 64.0)",
+        "save_drawer_after_settings": "No changes to save",
+        "json_model_tags_1": "bench",
+        "json_model_time_from": "now-6h",
+        "json_model_time_to": "now",
+        "json_model_full_value": "\"to\": \"now\"\n  },\n  \"timepicker\": {},\n  \"timezone\": \"browser\",\n  \"title\": \"fwgr73-n2 Bench Dashboard\",\n  \"uid\": \"ffz98yptulukga\",\n  \"version\": 4,\n  \"weekStart\": \"\"\n}",
+        "json_model_refresh_match": "refresh",
+        "json_model_refresh_tags_": "\"refresh\": \"1m\",\n  \"schemaVersion\": 40,\n  \"tags\": [\n    \"bench\"\n  ],\n  \"templating\": {\n    \"list\": []\n  },\n  \"time\": {\n    \"from\": \"now-6h\",",
+        "ref": "fwgr73-n2"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_c49ccb stopped at step 3 — after step 3 none of the 5 recorded page change(s) appeared (e.g. \"- button \\\"Add\\\"\") — the step ran but did not have its recorded effect",
+      "replayed": "2/23",
+      "repaired": false,
+      "turns": 30,
+      "warnings": [
+        "s_c49ccb: step 1: url segment(s) differ from recorded (fwgr73-n1-bench-dashboard→fwgr73-n2-bench-dashboard) — treated as volatile",
+        "s_c49ccb: step 2: url segment(s) differ from recorded (fwgr73-n1-bench-dashboard→fwgr73-n2-bench-dashboard) — treated as volatile",
+        "s_c49ccb: step 3: primary locator did not resolve; used fallback #4 page.locator('div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(5) > button')",
+        "s_c49ccb: step 3: url segment(s) differ from recorded (fwgr73-n1-bench-dashboard→fwgr73-n2-bench-dashboard) — treated as volatile"
+      ],
+      "unreported": [
+        "topbar_refresh_button_text",
+        "url_after_bare_load",
+        "run_id"
+      ]
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "(4) Top bar: time range \"Last 6 hours\" and refresh interval \"1m\".",
+      "unanswered": [
+        "settings_page_url"
+      ],
+      "values": {
+        "bare_url_requested": "http://127.0.0.1:3000/d/ffz98yptulukga/fwgr73-n2-bench-dashboard",
+        "address_bar_url": "http://127.0.0.1:3000/d/ffz98yptulukga/fwgr73-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m",
+        "header_dashboard_title": "fwgr73-n2 Bench Dashboard",
+        "notes_panel_title": "fwgr73-n2 Notes",
+        "availability_panel_title": "fwgr73-n2 Availability",
+        "topbar_refresh_interval": "1m",
+        "topbar_refresh_aria_label": "Choose refresh time interval with current interval 1 minute selected",
+        "topbar_time_range": "Last 6 hours",
+        "notes_panel_body": "Notes for run fwgr73-n2",
+        "availability_panel_value": "56.2",
+        "panel_titles_1": "fwgr73-n2 Notes",
+        "panel_titles_2": "fwgr73-n2 Availability",
+        "tags_in_settings_general": "Bench",
+        "run_id": "fwgr73-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "22/22",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_e987ad: step 6: url segment(s) differ from recorded (fwgr73-n1-bench-dashboard→fwgr73-n2-bench-dashboard) — treated as volatile",
+        "s_e987ad: step 7: url segment(s) differ from recorded (fwgr73-n1-bench-dashboard→fwgr73-n2-bench-dashboard) — treated as volatile",
+        "s_e987ad: step 8: url segment(s) differ from recorded (fwgr73-n1-bench-dashboard→fwgr73-n2-bench-dashboard) — treated as volatile",
+        "s_e987ad: step 13: url segment(s) differ from recorded (fwgr73-n1-bench-dashboard→fwgr73-n2-bench-dashboard) — treated as volatile"
+      ],
+      "unreported": [
+        "settings_page_url"
+      ]
+    }
+  ],
+  "passed": 6,
+  "total": 6,
+  "repinned": 0,
+  "drift": 3,
+  "driftTickets": [
+    {
+      "flow": "fwgr73",
+      "step": "03-verify",
+      "skill": "s_61998b",
+      "atStep": "36",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByRole('status', { name: 'Dashboard saved', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:3000/d/ffz98yptulukga/:id?from=:id&timezone=browser&to=now",
+      "pageUrl": "http://127.0.0.1:3000/d/ffz98yptulukga/fwgr73-n2-bench-dashboard?from=now-6h&to=now&timezone=browser"
+    },
+    {
+      "flow": "fwgr73",
+      "step": "04-open",
+      "skill": "s_5c7c3d",
+      "similarity": 1,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_5c7c3d stopped at step 19 — type failed: the field holds the value it was given twice over (\"\\\"tags\\\"\\\"tags\\\"\\\"\" for \"\\\"tags\\\"\") — it was typed onto a copy already there, and is not saved [outcome: unknown]",
+      "reason": "type failed: the field holds the value it was given twice over (\"\\\"tags\\\"\\\"tags\\\"\\\"\" for \"\\\"tags\\\"\") — it was typed onto a copy already there, and is not saved [outcome: unknown]",
+      "pageUrlPattern": "http://127.0.0.1:3000/d/ffz98yptulukga/:id?editview=json-model&from=:id&timezone=browser&to=now",
+      "pageUrl": "http://127.0.0.1:3000/d/ffz98yptulukga/fwgr73-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&editview=json-model"
+    },
+    {
+      "flow": "fwgr73",
+      "step": "05-open",
+      "skill": "s_c49ccb",
+      "atStep": "3",
+      "key": "target",
+      "similarity": 0.994,
+      "missedLocator": "page.getByTestId('data-testid Edit dashboard button')",
+      "fallbackUsed": "page.locator('div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(5) > button')",
+      "fallbackIndex": 3,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:3000/d/ffz98yptulukga/:id?from=:id&timezone=browser&to=now",
+      "pageUrl": "http://127.0.0.1:3000/d/ffz98yptulukga/fwgr73-n2-bench-dashboard?from=now-6h&to=now&timezone=browser"
+    }
+  ],
+  "wallMs": 468187,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 1480938,
+    "completionTokens": 40174,
+    "cachedTokens": 1362432
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 1480938,
+      "completionTokens": 40174,
+      "cachedTokens": 1362432
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
