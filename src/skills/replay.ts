@@ -50,6 +50,7 @@ import { candidateNames, echoAt, echoVerdict, markActed, noteCommit, noteInterac
 import { documentOf, fillLost, guardedTyping, noteFill, rearmStandingFills, restoreStandingFills, standingFills, standingFillsLost } from '../execution/refill.js';
 import { hasTotpMarker, resolveSecrets, resolveSecretsAsync } from '../shared/secrets.js';
 import { closeBeforeReopen, hideBefore, hideEffectLines, hideVerdict, pressHadNoEffect, toggleAlreadyShown, toggleEffectLines } from '../execution/toggle.js';
+import { alreadyAddedLines, positionalClickVerdict, recordedAccessibleName } from '../execution/positional.js';
 import { mayNavigateToDestination, navigateToDestination, textHeldElsewhere } from '../execution/recover.js';
 import { CONTEXT_CONTRACT, contractOf, contractVerdict, isVerified, originOf, stepsCarryContext, type Skill, type SkillStep } from './store.js';
 import { armPageEffect, describeFramePath, pageIndexVerdict, rootFor, stepEffect, type Root } from '../execution/context.js';
@@ -877,6 +878,10 @@ export async function replaySkill(
     // below apply to it: they act on the page.
     const roots: Record<string, Root> = {};
     let frameMissed = false;
+    // The target's resolution and the chain it was resolved from, for the
+    // positional-click rule (R2) asked once every target is resolved.
+    let targetHit: { locator: Locator; index: number; candidate: LocatorCandidate; missed: number[] } | null = null;
+    let targetChain: LocatorCandidate[] = [];
     for (const key of ['target', 'source'] as const) {
       if (!(key in args)) continue;
       // A chain is a PREFERENCE ORDER, not a conjunction (shared fillableChain):
@@ -931,6 +936,7 @@ export async function replaySkill(
         break;
       }
       const root = (roots[key] = framed.root);
+      if (key === 'target') targetChain = chain;
       // A read is an observation: the shared resolveForRead sweeps the page
       // and asks once more before giving up on it, exactly as the artifact does.
       const hit = isRead
@@ -981,6 +987,7 @@ export async function replaySkill(
         break;
       }
       resolved[key] = hit.locator;
+      if (key === 'target') targetHit = hit;
       if (structural(hit.candidate)) positionalResolution = true;
       // Evidence ONLY from a pass whose winner names something. When a
       // structural path won, that is precisely the resolution we distrust —
@@ -1013,6 +1020,38 @@ export async function replaySkill(
     }
     // A typed/filled value is likewise something the skill put on the page.
     if (setsSomething(step.tool)) noteInteraction(interacted, [args.value, args.text]);
+    // RULE R2 (round 61, grafana fwgr73 05-open step 3), the shared
+    // positionalClickVerdict: a click whose identifying rungs ALL missed is
+    // (a) skipped as already in effect when everything it was recorded adding
+    // already shows (never one that submits the segment's work — the shared
+    // alreadyAddedLines), else (b) stopped when a positional rung took it onto
+    // an element without the recorded accessible name — never a different
+    // button. Top-level steps on the page only: a loop pass's cursor makes
+    // position its normal shape, and a frame step is judged in its frame.
+    const clickAt = step.tool === 'click' && !tag.includes('.') && !frameMissed && !step.contexts?.target?.frame?.length ? skill.steps.indexOf(step) : -1;
+    if (clickAt >= 0 && (targetHit || (resolveError && !resolved.target))) {
+      const identifying = targetChain.flatMap((c, i) => (structural(c) || snapshotRefCandidate(c) ? [] : [i]));
+      const verdict = await positionalClickVerdict(
+        page,
+        targetHit ? { locator: targetHit.locator, index: targetHit.index, structural: structural(targetHit.candidate), missed: targetHit.missed } : null,
+        identifying,
+        alreadyAddedLines(skill.steps, clickAt),
+        recordedAccessibleName(targetChain),
+        params,
+        dialectOf(step),
+      );
+      if (verdict && 'skip' in verdict) {
+        res.warnings.push(`step ${tag}: ${verdict.skip}`);
+        res.lines.push(`${head} → skipped (already in effect)`);
+        return 'skipped';
+      }
+      if (verdict && 'stop' in verdict) {
+        res.failedAt = failIndex;
+        res.reason = verdict.stop;
+        res.lines.push(`${head} → FAILED: ${verdict.stop}`);
+        return 'stop';
+      }
+    }
     if (!resolveError) absentDialog = null;
     if (resolveError) {
       if (isRead) {
@@ -1268,7 +1307,7 @@ export async function replaySkill(
           const typed = step.tool === 'type' ? args.text : step.tool === 'fill' ? args.value : undefined;
           let value =
             typeof typed === 'string' && resolved.target
-              ? await guardedTyping(standing, resolved.target, typed, step.tool, (w) => res.warnings.push(`step ${tag}: ${w}`), dispatch)
+              ? await guardedTyping(standing, resolved.target, typed, step.tool, (w) => res.warnings.push(`step ${tag}: ${w}`), dispatch, step.doubledAsRecorded ? { doubledAsRecorded: true } : {})
               : await dispatch();
           // A click the app ignored once in the recording (SkillStep.
           // repeatIfNoEffect, ghost fwgh12-n1's link "Published"): pressed

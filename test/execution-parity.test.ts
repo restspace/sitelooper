@@ -6270,6 +6270,102 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
   });
 
   /**
+   * Round 61, grafana fwgr73 04-open line 125: the recording typed `"tags"`
+   * into monaco and its own diff shows the field then held it twice over. The
+   * doubled-value stop (fwec10, above) fired on every replay on a state the
+   * recording itself produced. Compile flags such a step (doubledAsRecorded):
+   * both runners then go on, saying so. Without the flag — fwec10's case,
+   * whose recording saw the value once — both still stop.
+   */
+  describe('a field the recording itself left holding its value twice (round 61, fwgr73)', () => {
+    const code = [{ kind: 'label' as const, label: 'Code' }];
+    const steps = (flag: boolean): SkillStep[] => [
+      { tool: 'goto', args: { url: `${origin}/code-editor` }, locators: {} },
+      { tool: 'type', args: { target: '@e1', text: 'tags' }, locators: { target: code }, ...(flag ? { doubledAsRecorded: true as const } : {}) },
+      { tool: 'click', args: { target: '@e2' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Save' }] } },
+    ];
+
+    it('both runners go on past the doubled field when the recording saw it doubled, and warn', async () => {
+      const { replay, emitted, replayLog, emittedLog } = await bothOf(skillOf(steps(true)), specOf(steps(true)), {});
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replayLog).toEqual(['commit:code:tagstags']);
+      expect(emittedLog).toEqual(['commit:code:tagstags']);
+      for (const warnings of [replay.warnings, emitted.warnings]) {
+        expect(warnings?.some((w) => /twice over .* as the recording's own field did after this step/.test(w)), JSON.stringify(warnings)).toBe(true);
+      }
+    }, 120_000);
+
+    it('both runners still stop, saving nothing, when the recording did not (the fwec10 control)', async () => {
+      const { replay, emitted, replayLog, emittedLog } = await bothOf(skillOf(steps(false)), specOf(steps(false)), {});
+      expect(replay.ok).toBe(false);
+      expect(emitted.ok).toBe(false);
+      expect(replay.reason).toMatch(/holds the value it was given twice over/);
+      expect(emitted.reason).toMatch(/holds the value it was given twice over/);
+      expect(replayLog).toEqual([]);
+      expect(emittedLog).toEqual([]);
+    }, 120_000);
+  });
+
+  /**
+   * Round 61, grafana fwgr73 05-open step 3 (s_c49ccb): the Edit click, on a
+   * dashboard 04-open's recovery had left IN edit mode. The testid and the
+   * role rung missed; the positional `…div:nth-of-type(5) > button` fallback
+   * hit another toolbar button, and none of the recorded additions appeared.
+   * (a) every line the click was recorded adding is already on the page and
+   * only positional rungs are left: already in effect, skipped — never for a
+   * click that submits the segment's work (an earlier fill). (b) otherwise a
+   * positional hit must carry the recorded accessible name, else stop.
+   */
+  describe('a click whose identifying rungs all miss (round 61, fwgr73 05-open)', () => {
+    const editChain = [
+      { kind: 'testid' as const, attr: 'data-testid', value: 'edit-btn' },
+      { kind: 'role' as const, role: 'button', name: 'Edit' },
+      { kind: 'css' as const, selector: '#bar > button:nth-of-type(1)' },
+    ];
+    const steps = (mode: string, fillFirst = false): SkillStep[] => [
+      { tool: 'goto', args: { url: `${origin}/edit-mode/${mode}` }, locators: {} },
+      ...(fillFirst ? [{ tool: 'fill', args: { target: '@e0', value: 'Bench' }, locators: { target: [{ kind: 'label' as const, label: 'Title' }] } }] : []),
+      {
+        tool: 'click',
+        args: { target: '@e1' },
+        locators: { target: editChain },
+        expect: { addedContains: ['- button "Exit edit"', '- button "Add"', '- button "Settings"', '- button "Save dashboard"'] },
+      },
+      { tool: 'click', args: { target: '@e2' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Save dashboard' }] } },
+    ];
+
+    it('(a) both runners skip the click as already in effect when everything it adds is showing, and save', async () => {
+      const { replay, emitted, replayLog, emittedLog } = await bothOf(skillOf(steps('edit')), specOf(steps('edit')), {});
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replayLog).toEqual(['commit:dashboard:saved']);
+      expect(emittedLog).toEqual(['commit:dashboard:saved']);
+      for (const warnings of [replay.warnings, emitted.warnings]) {
+        expect(warnings?.some((w) => /everything this click was recorded adding is already showing/.test(w)), JSON.stringify(warnings)).toBe(true);
+      }
+    }, 120_000);
+
+    it('(a) control, (b) refusal: after a fill the click is never skipped, and neither runner clicks a button of another name', async () => {
+      const { replay, emitted, replayLog, emittedLog } = await bothOf(skillOf(steps('edit', true)), specOf(steps('edit', true)), {});
+      expect(replay.ok).toBe(false);
+      expect(emitted.ok).toBe(false);
+      expect(replay.reason).toMatch(/positional fallback .* is not the recorded "Edit"/);
+      expect(emitted.reason).toMatch(/positional fallback .* is not the recorded "Edit"/);
+      expect(replayLog).toEqual([]);
+      expect(emittedLog).toEqual([]);
+    }, 120_000);
+
+    it('(b) both runners take a positional fallback whose element carries the recorded name', async () => {
+      const { replay, emitted, replayLog, emittedLog } = await bothOf(skillOf(steps('twin')), specOf(steps('twin')), {});
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replayLog).toEqual(['commit:dashboard:saved']);
+      expect(emittedLog).toEqual(['commit:dashboard:saved']);
+    }, 120_000);
+  });
+
+  /**
    * Round 60, openproject fwop14 02-create s_459e98/3: the Save's recorded
    * effect is the new record's row, `- row "{{d1}} … {{v3}} TASK New - Normal"`
    * (hard). The daemon judges the diff between its action's before capture and

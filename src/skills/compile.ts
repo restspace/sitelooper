@@ -9,6 +9,7 @@ import { CREDENTIAL_KEY, fillParamsDeep, queryPairs, safeDecode, urlParts, urlSh
 import { contextsEqual, framesEqual, stepEffect } from '../execution/context.js';
 import { MAX_ADDED_LINES as MAX_DIFF_LINES } from '../execution/snapshot.js';
 import { hideEffectLines } from '../execution/toggle.js';
+import { recordedDoubled } from '../execution/refill.js';
 import { collapseTogglePairs, dropSupersededSets, sameControl } from './toggles.js';
 import { locatingSlots, scopeReadBySlot } from './readscope.js';
 
@@ -956,6 +957,14 @@ export function compileSkills(input: CompileInput): Skill[] {
       if (step.page !== undefined) out.page = step.page;
       if (step.toggle) out.toggle = true;
       if (step.closedBefore && step.tool === 'click') out.closedBefore = true;
+      // The recording's own field held the typed value twice over right after
+      // this step (grafana fwgr73 04-open, monaco's auto-closing): judged on
+      // the RAW recorded diff, before any masking, so both runners' doubled-
+      // value stop defers to what the recording saw (refill.ts guardedTyping).
+      if (step.tool === 'type' || step.tool === 'fill') {
+        const typed = step.tool === 'type' ? step.args.text : step.args.value;
+        if (typeof typed === 'string' && recordedDoubled(step.diff?.added ?? [], step.locators.target?.chain ?? [], typed)) out.doubledAsRecorded = true;
+      }
       if (pressedAgain.has(step)) out.repeatIfNoEffect = true;
       if (step.effect) {
         out.effect =

@@ -354,6 +354,7 @@ export async function guardedTyping<T>(
   tool: string,
   warn: (warning: string) => void,
   dispatch: () => Promise<T>,
+  opts: { doubledAsRecorded?: boolean } = {},
 ): Promise<T> {
   const comparable = value !== '' && !value.includes('{{');
   if (tool === 'type' && comparable) {
@@ -374,7 +375,12 @@ export async function guardedTyping<T>(
   const result = await dispatch();
   if (comparable && (tool === 'type' || tool === 'fill')) {
     const doubled = await valueDoubled(locator, value);
-    if (doubled) throw new Error(doubled);
+    // The recording's own field held it twice over after this very step
+    // (SkillStep.doubledAsRecorded, grafana fwgr73 04-open): this is the
+    // state the recording produced and went on from, not a stale copy typed
+    // onto. Said, never silent.
+    if (doubled && opts.doubledAsRecorded) warn(`${doubled.replace(/ — it was typed onto a copy already there, and is not saved$/, '')} — as the recording's own field did after this step, so it is not stopped`);
+    else if (doubled) throw new Error(doubled);
   }
   return result;
 }
@@ -397,6 +403,50 @@ async function filledBy(ledger: StandingFills, locator: Locator): Promise<boolea
   return false;
 }
 
+/** Whether `held` carries the letters and digits of `value` twice over, where `value` holds them once. */
+export function heldTwice(held: string, value: string): boolean {
+  const alnum = (t: string) => t.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '');
+  const want = alnum(value);
+  if (!want) return false;
+  const text = alnum(held);
+  let n = 0;
+  for (let at = text.indexOf(want); at >= 0; at = text.indexOf(want, at + want.length)) n++;
+  return n >= 2;
+}
+
+/**
+ * Did the RECORDING's own field hold the value it was given twice over,
+ * right after the step? Asked by compile over the step's raw recorded
+ * additions (before any masking), of the line naming the step's own target —
+ * the same role and name as a `role` rung, or a `label` rung's label — and
+ * never of a value carrying a `{{…}}` marker. grafana fwgr73-n1 04-open line
+ * 125: `- textbox "Editor content;…": "tags""tags""` after typing `"tags"`.
+ * fwec10's recording saw its amount once, so its step is not flagged and its
+ * replay still stops. Sets SkillStep.doubledAsRecorded.
+ */
+export function recordedDoubled(
+  added: readonly string[],
+  chain: readonly unknown[],
+  value: string,
+): boolean {
+  if (!value || value.includes('{{')) return false;
+  const names: { role: string | null; name: string }[] = [];
+  for (const rung of chain as { kind?: string; role?: string; name?: string; label?: string }[]) {
+    if (rung.kind === 'role' && rung.role && rung.name) names.push({ role: rung.role, name: rung.name });
+    else if (rung.kind === 'label' && rung.label) names.push({ role: null, name: rung.label });
+  }
+  if (!names.length) return false;
+  for (const line of added) {
+    const m = /^-?\s*([A-Za-z][\w-]*)\s+"((?:[^"\\]|\\.)*)"(?:\s+\[[^\]]*\])*:\s?(.*)$/.exec(line.trim());
+    if (!m) continue;
+    const [, role, rawName, held] = m;
+    const name = rawName.replace(/\\(.)/g, '$1');
+    if (!names.some((n) => n.name === name && (n.role === null || n.role === role))) continue;
+    if (heldTwice(held, value)) return true;
+  }
+  return false;
+}
+
 /**
  * The stop for a field that holds the value it was given TWICE over: the
  * value's letters and digits occur twice in what the field shows, where the
@@ -405,9 +455,7 @@ async function filledBy(ledger: StandingFills, locator: Locator): Promise<boolea
  * value once, in whatever formatting the page gives it.
  */
 export async function valueDoubled(locator: Locator, value: string): Promise<string | null> {
-  const alnum = (t: string) => t.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '');
-  const want = alnum(value);
-  if (!want) return null;
+  if (!value.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '')) return null;
   let held: string | null;
   try {
     if ((await locator.count()) !== 1) return null;
@@ -419,13 +467,7 @@ export async function valueDoubled(locator: Locator, value: string): Promise<str
   } catch {
     return null;
   }
-  if (!held) return null;
-  const count = (text: string) => {
-    let n = 0;
-    for (let at = text.indexOf(want); at >= 0; at = text.indexOf(want, at + want.length)) n++;
-    return n;
-  };
-  if (count(alnum(held)) < 2) return null;
+  if (!held || !heldTwice(held, value)) return null;
   const show = (t: string) => (t.length > 40 ? `${t.slice(0, 40)}…` : t);
   return `the field holds the value it was given twice over (${JSON.stringify(show(held))} for ${JSON.stringify(show(value))}) — it was typed onto a copy already there, and is not saved`;
 }

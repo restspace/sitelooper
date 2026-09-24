@@ -4,6 +4,7 @@ import { setsSomething } from '../execution/echo.js';
 import { standingFillRole } from '../execution/refill.js';
 import { DEFAULT_ACTION_TIMEOUT_MS } from '../execution/browser.js';
 import { hideEffectLines, toggleEffectLines } from '../execution/toggle.js';
+import { alreadyAddedLines, recordedAccessibleName } from '../execution/positional.js';
 import { derivesFromParams, givenPartialReason, givenWarning, reportNeedsPage, templateMarkers, templateSource, typedSlots, typedWarning } from '../execution/report.js';
 import { askedOutputs } from '../daemon/step-verdict.js';
 import { observedNothing } from '../execution/observe.js';
@@ -31,7 +32,7 @@ import { segmentGate } from '../execution/gates.js';
 import { EXECUTION_MODULES, executionClosure } from './runtime-source.js';
 import { candidateExpr, type LocatorCandidate } from '../daemon/recorder.js';
 import { DIALOG_LINE, SLOT_LINE, TRANSIENT_LINE, slotActs } from '../execution/expect.js';
-import { identityFields } from '../execution/resolve.js';
+import { identityFields, snapshotRefCandidate, structuralCandidate } from '../execution/resolve.js';
 import { originOf } from '../execution/url.js';
 import { describeFramePath, stepEffect } from '../execution/context.js';
 import { OPENER_LINE, recordMarkers, waitsForAbsence } from '../skills/replay.js';
@@ -1182,6 +1183,47 @@ const HELPERS: { token: string; source: string[] }[] = [
     ],
   },
   {
+    token: 'await positionalClick(',
+    source: [
+      '/**',
+      " * RULE R2 (round 61, grafana fwgr73 05-open step 3), replay's runOneStep",
+      ' * after its targets resolve: a click whose identifying rungs ALL missed',
+      ' * (`hit` positional, or null when nothing resolved) is — the shared',
+      ' * positionalClickVerdict decides — (a) skipped, its effect in place, when',
+      ' * every line it was recorded adding already shows (`lines`, the shared',
+      ' * alreadyAddedLines: never one that submits the segment\'s work), or (b)',
+      ' * stopped when a positional rung took it onto an element without the',
+      ' * recorded accessible name. True means skipped; a stop throws.',
+      ' */',
+      'async function positionalClick(',
+      '  page: Page,',
+      '  hit: Resolution | null,',
+      '  identifying: number[],',
+      '  lines: string[],',
+      "  want: { by: 'role' | 'label' | 'text'; role?: string; name: string } | null,",
+      '  p: Record<string, string>,',
+      '  where: string,',
+      '  dialect: LineDialect = 1,',
+      '): Promise<boolean> {',
+      '  const verdict = await positionalClickVerdict(',
+      '    page,',
+      '    hit ? { locator: hit.locator, index: hit.index, structural: hit.structural, missed: hit.missed.map((m) => m.index) } : null,',
+      '    identifying,',
+      '    lines,',
+      '    want,',
+      '    p,',
+      '    dialect,',
+      '  );',
+      "  if (verdict && 'skip' in verdict) {",
+      '    logWarning(`${where}: ${verdict.skip}`);',
+      '    return true;',
+      '  }',
+      "  if (verdict && 'stop' in verdict) throw new Error(`${where}: ${verdict.stop}`);",
+      '  return false;',
+      '}',
+    ],
+  },
+  {
     token: 'await hideGoneSkip(',
     source: [
       '/**',
@@ -1340,6 +1382,8 @@ interface Ctx {
   picks: number;
   /** The segment and within-segment step index currently emitting — for `@step` and `pick`'s `where`. */
   segmentId: string;
+  /** The steps of the segment being emitted: what the positional-click rule reads (alreadyAddedLines). */
+  segmentSteps?: readonly SkillStep[];
   stepIndex: number;
   /** Hoisted loop guards, so each loop names its own. */
   loops: number;
@@ -1863,6 +1907,42 @@ function hideGoneLines(step: SkillStep, chain: LocatorCandidate[], ctx: Ctx): st
   ];
 }
 
+/**
+ * RULE R2's call sites (positionalClick, over the shared
+ * positionalClickVerdict), for a top-level click on the page whose chain has
+ * identifying rungs — replay's exclusions: no loop pass, no frame. `miss` is
+ * appended to the pick: a chain that resolved nothing is still skipped as
+ * already in effect when every line the click adds shows (else the pick's
+ * own miss stands). `hit` is the guard over what the pick resolved. Null for
+ * every other step, which emits exactly as before.
+ */
+function positionalClickLines(
+  step: SkillStep,
+  chain: LocatorCandidate[],
+  key: 'target' | 'source',
+  root: string,
+  ctx: Ctx,
+): { miss: string; hit: (name: string) => string } | null {
+  if (key !== 'target' || root !== 'page' || ctx.loopSink || step.tool !== 'click' || !ctx.segmentSteps) return null;
+  const identifying = chain.flatMap((c, i) => (structuralCandidate(c) || snapshotRefCandidate(c) ? [] : [i]));
+  if (!identifying.length) return null;
+  const lines = alreadyAddedLines(ctx.segmentSteps, ctx.stepIndex - 1);
+  const want = recordedAccessibleName(chain);
+  // Nothing to decide unless the click may be skipped (a) or a positional
+  // rung could take it with a name to hold it to (b): every other click
+  // emits exactly as before.
+  if (!lines.length && !(want && chain.some((c) => structuralCandidate(c)))) return null;
+  noteSlots(lines, ctx);
+  if (want) noteSlots(want.name, ctx);
+  const where = q(`${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`);
+  const dialect = step.expect?.lineDialect === 2 ? ', 2' : '';
+  const args = `[${identifying.join(', ')}], [${lines.map(q).join(', ')}], ${want ? JSON.stringify(want) : 'null'}, p, ${where}${dialect}`;
+  return {
+    miss: lines.length ? `.catch(async (error: unknown) => { if (await positionalClick(page, null, ${args})) return null; throw error; })` : '',
+    hit: (name: string) => `if (await positionalClick(page, ${name}, ${args})) return { status: 'skipped' };`,
+  };
+}
+
 function actionTarget(step: SkillStep, key: 'target' | 'source', ctx: Ctx, out: string[], hoist?: string): string | null {
   const chain = step.locators?.[key] ?? [];
   if (!chain.length) return null;
@@ -1898,12 +1978,17 @@ function actionTarget(step: SkillStep, key: 'target' | 'source', ctx: Ctx, out: 
     // done, and its gates are not asked, as replay returns before them.
     noteSlots(destPattern, ctx);
     const head = list(`const ${name} = await pickOrNavigate(page, `);
-    head[head.length - 1] += `${policy}, ${q(destPattern)}, p, ${opts}${note});`;
+    const guard = positionalClickLines(step, chain, key, root, ctx);
+    head[head.length - 1] += `${policy}, ${q(destPattern)}, p, ${opts}${note})${guard ? guard.miss : ''};`;
     out.push(...head, `if (!${name}) return { status: 'skipped' };`);
+    if (guard) out.push(guard.hit(name));
   } else {
     const head = list(`const ${name} = await pick(page, `);
-    head[head.length - 1] += `${policy}, ${opts}${note});`;
+    const guard = positionalClickLines(step, chain, key, root, ctx);
+    head[head.length - 1] += `${policy}, ${opts}${note})${guard ? guard.miss : ''};`;
     out.push(...head);
+    if (guard?.miss) out.push(`if (!${name}) return { status: 'skipped' };`);
+    if (guard) out.push(guard.hit(name));
   }
   // Replay's per-step flag: a resolution through a positional candidate, or
   // one narrowed to the loop cursor (an index into several matches), is what
@@ -2169,6 +2254,7 @@ function withLiveRungs(step: SkillStep, segment: SpecSegment, index: number, min
 function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number, ctx: Ctx, first = false): string[] {
   ctx.segmentId = segment.id;
   ctx.stepIndex = index;
+  ctx.segmentSteps = segment.steps;
   const minted: ReadonlySet<string> = ctx.minted ?? new Set<string>();
   const unfillable = unfillableStep(recorded, segment, index, minted);
   if (unfillable) {
@@ -2689,7 +2775,10 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
           : `type(${target}, ${actSrc(str('text'))}${delay === undefined ? '' : `, { delay: ${delay} }`})`;
       if (ctx.standing) ctx.standingUsed = true;
       const where = `${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}: `;
-      out.push(`await guardedTyping(${ctx.standing ?? 'null'}, ${target}, ${src(str(key))}, ${q(step.tool)}, (w) => logWarning(${q(where)} + w), async () => await ${call});`);
+      // …and a field the recording's own diff showed doubled after this very
+      // step is not stopped (SkillStep.doubledAsRecorded, grafana fwgr73).
+      const asRecorded = step.doubledAsRecorded ? ', { doubledAsRecorded: true }' : '';
+      out.push(`await guardedTyping(${ctx.standing ?? 'null'}, ${target}, ${src(str(key))}, ${q(step.tool)}, (w) => logWarning(${q(where)} + w), async () => await ${call}${asRecorded});`);
       break;
     }
     case 'press':
