@@ -318,6 +318,9 @@ export class SessionState {
     for (let i = Math.max(0, fromIndex); i < this.messages.length; i++) {
       const m = this.messages[i];
       if (m.role !== 'tool') continue;
+      // A stubbed result's screenshot goes with it (vision.ts): the page it
+      // showed has moved on, and the escalation model may take no images.
+      if (m.images) delete m.images;
       // Never restub an existing stub: a later, blunter pass would otherwise
       // overwrite a more specific explanation with a vaguer one.
       if (STUBS.has(m.content)) continue;
