@@ -1032,6 +1032,8 @@ export function compileSkills(input: CompileInput): Skill[] {
   // evidence of its lines whether or not the procedure keeps the read.
   const reads = recordedReadTexts(steps);
   for (const b of built) unfreezeExpectations(b.folded, published, b.notes, { reads, diffOf: (s) => b.recordedDiffs.get(s), slots });
+  // A flash is not a step's effect (vikunja fwvk12): see dropFlashedLines.
+  for (const b of built) dropFlashedLines(b.folded, steps, (s) => b.recordedDiffs.get(s), b.notes);
   if (built.length) built[0].notes.unshift(...recordingNotes);
 
   // Derived-param metadata lands on the MINTING segment: which post-fold step
@@ -3410,6 +3412,152 @@ const entryPopupHides = new WeakSet<SkillStep>();
 export function observesOnly(step: SkillStep): boolean {
   if (step.tool === 'read' || step.tool === 'read_all' || step.tool === 'wait_for') return true;
   return step.tool === 'tabs' && typeof step.args?.switch_to !== 'number';
+}
+
+/**
+ * A FLASH IS NOT A STEP'S EFFECT (round 61).
+ *
+ * vikunja fwvk12-n1 02-create: #24 clicked the empty description's
+ * placeholder, and its diff caught `- heading "Description Saved!"` (the
+ * heading "Description" renamed) — a timed save indicator that happened to
+ * land in that click's settle window. It reverted by itself: nothing recorded
+ * removing it, yet #35, the description's Save, recorded it appearing AGAIN
+ * (and "Description" going). s_329439 step 1 expected the flash as its only
+ * line, and n2 and n3 both stopped there ("none of the 1 recorded page
+ * change(s) appeared"); fwvk11-n1 made the same click and recorded nothing.
+ *
+ * So a line a step added is not that step's evidence when a LATER step of the
+ * same recording adds the identical line again with no step in between
+ * recording its removal: it must have gone by itself, so it was a flash, and
+ * it is dropped from the earlier step's expectation. The later step keeps it.
+ * The recording decides, never the line's words.
+ *
+ * Never dropped from:
+ *  - a step that commits the segment's work (commitsWork): two Saves that
+ *    each flash "Saved!" keep both lines, or a Save that never happened would
+ *    pass silently (repairdesk fwrd84's class, round 51);
+ *  - a minting step, and a line carrying this run's own value (SLOT_LINE);
+ *  - a step whose later re-add is the SAME control (a repeat of itself).
+ * Where phase A's `obs` is recorded, the later step's before-state (its own
+ * recorded removals) not listing the line confirms it; it is not required.
+ */
+function dropFlashedLines(
+  folded: SkillStep[],
+  recording: readonly RecordedStep[],
+  diffOf: (step: SkillStep) => StepDiff | undefined,
+  notes: TransformNote[],
+): void {
+  const at = (s: SkillStep): number => {
+    const d = diffOf(s);
+    return d ? recording.findIndex((r) => r.diff === d) : -1;
+  };
+  const trim = (l: string) => l.trim();
+  folded.forEach((step, si) => {
+    const lines = step.expect?.addedContains;
+    const i = at(step);
+    if (!lines?.length || i < 0 || step.mints || commitsWork(recording, i)) return;
+    const added = (recording[i].diff?.added ?? []).map(trim);
+    const flashed = new Set<string>();
+    /** The later steps that re-added a flashed line (their recorded indices). */
+    const readdedAt = new Set<number>();
+    for (const line of added) {
+      for (let j = i + 1; j < recording.length; j++) {
+        const later = recording[j];
+        if ((later.diff?.added ?? []).some((l) => trim(l) === line)) {
+          if (primaryOfRecorded(later) !== primaryOfRecorded(recording[i])) {
+            flashed.add(line);
+            readdedAt.add(j);
+          }
+          break;
+        }
+        // "Nothing recorded removing it" is evidence only where every step in
+        // between has a COMPLETE record of what it removed (removalRecord): a
+        // recorder before round 56 kept removals only for a dialog or an empty
+        // add, and a step without one proves nothing gone. The sizing scan
+        // over the published recordings fired on 60+ dialog openings
+        // (repairdesk "Edit part") without this.
+        const removed = removalRecord(later);
+        if (removed === null || removed.some((l) => trim(l) === line)) break;
+      }
+    }
+    if (!flashed.size) return;
+    // A compiled line stands for its recorded one after slotting and masking:
+    // it is the flash's when it IS the recorded line, or when the step that
+    // re-added the flash compiled the very same line.
+    const again = new Set(folded.filter((s) => readdedAt.has(at(s))).flatMap((s) => s.expect?.addedContains ?? []));
+    const drop = lines.filter((l) => !SLOT_LINE.test(l) && (flashed.has(trim(l)) || (again.has(l) && !added.includes(trim(l)))));
+    if (!drop.length) return;
+    const kept = lines.filter((l) => !drop.includes(l));
+    if (kept.length) step.expect!.addedContains = kept;
+    else {
+      delete step.expect!.addedContains;
+      if (!step.expect!.alertContains && !step.expect!.removedContains) delete step.expect!.lineDialect;
+      if (!Object.keys(step.expect!).length) delete step.expect;
+    }
+    notes.push({ name: 'dropFlashedLines', at: si + 1, reason: `line(s) a later step recorded appearing again, never recorded going: a flash, not this step's effect: ${JSON.stringify(drop)}` });
+  });
+}
+
+/**
+ * Whether the recorded step at `i` may be committing work, so that its lines
+ * are what proves the work landed and are never dropped as a flash. Any step
+ * that is not a click or press; and a click or press that
+ *  - follows a value ENTERED (fill, type, select) on the same page (no url
+ *    change since): the Save of what was typed, as markRequiredRemovals
+ *    (round 56) reads a hide that removes what the segment filled;
+ *  - acts on a control the step right before it ADDED, unless it is a
+ *    dismissal: the confirm a first click raised — ghost fwgh6 02's "Publish
+ *    post, right now", raised by its Publish click, which the sizing scan
+ *    otherwise flagged; repairdesk's "Delete part" behind "Delete";
+ *  - is already a required removal.
+ * Only what is left — fwvk12's placeholder click, right after the task page
+ * opened — can lose a flashed line.
+ */
+function commitsWork(recording: readonly RecordedStep[], i: number): boolean {
+  const s = recording[i];
+  if (s.tool !== 'click' && s.tool !== 'dblclick' && s.tool !== 'press') return true;
+  const page = (k: number): string | undefined => {
+    for (let m = k; m >= 0; m--) if (recording[m].diff?.url) return recording[m].diff!.url;
+    return undefined;
+  };
+  const here = page(i - 1);
+  for (let k = i - 1; k >= 0; k--) {
+    const t = recording[k].tool;
+    if (t === 'goto' || t === 'back' || (here !== undefined && recording[k].diff?.url !== undefined && recording[k].diff!.url !== here)) break;
+    if (t === 'fill' || t === 'type' || t === 'select') return true;
+  }
+  const prev = recording[i - 1];
+  const role = s.locators?.target?.chain?.find((c): c is Extract<LocatorCandidate, { kind: 'role' }> => c.kind === 'role' && Boolean(c.name));
+  const name = role?.name ?? /\[name="([^"]+)"\]/.exec(String(s.args.target ?? ''))?.[1];
+  if (prev && name && !DISMISSAL.test(name.trim()) && (prev.diff?.added ?? []).some((l) => l.includes(`"${name}"`))) return true;
+  return false;
+}
+
+/**
+ * Everything a recorded step took off the page, or null when the recording
+ * cannot say. Complete when phase A's `obs` holds the removals and they number
+ * `obs.totals.removed`, or when the diff's own removals were kept below the
+ * recorder's cap; a step that looked and did not act (read, screenshot, wait)
+ * removed nothing. Anything else — an eval, an action whose removals were not
+ * kept — is unknown.
+ */
+function removalRecord(s: RecordedStep): string[] | null {
+  const all = s.diff?.removed ?? s.obs?.removed;
+  const total = s.obs?.totals?.removed;
+  if (all && total !== undefined) return all.length === total ? all : null;
+  if (total === 0) return [];
+  if (s.diff?.removed) return s.diff.removed.length < MAX_DIFF_LINES ? s.diff.removed : null;
+  if (!s.diff && (s.tool === 'read' || s.tool === 'read_all' || s.tool === 'screenshot' || s.tool === 'wait_for')) return [];
+  // Phase A's recorder refuses an eval that changes the page and stores the
+  // result of one it kept (`evalResult`): such an eval removed nothing.
+  if (s.tool === 'eval' && s.evalResult !== undefined) return [];
+  return null;
+}
+
+/** A recorded step's primary locator (or raw target), as a comparable key. */
+function primaryOfRecorded(s: RecordedStep): string {
+  const c = s.locators?.target?.chain?.[0];
+  return c ? JSON.stringify(c) : String(s.args?.target ?? '');
 }
 
 /** A click's primary locator — the first candidate it was recorded with — as a comparable key. */
