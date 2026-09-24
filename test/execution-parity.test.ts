@@ -30,6 +30,8 @@ import { presentOnPage } from '../src/execution/snapshot.js';
 import { recordedValueShown } from '../src/execution/snapshot.js';
 import { recordedStandIn } from '../src/skills/flow.js';
 import { fingerprintPage } from '../src/execution/fingerprint.js';
+import { urlTrail } from '../src/execution/browser.js';
+import { routeAt, visitedUrlPart } from '../src/execution/url.js';
 import { SOFT_MATCH_MIN_SIMILARITY, fillableChain, unfilledStepVerdict } from '../src/execution/gates.js';
 import { emitFlowFile } from '../src/spec/emit.js';
 import type { SpecFlow } from '../src/spec/ir.js';
@@ -6045,5 +6047,87 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(replay.reason).toMatch(said);
       expect(emitted.reason ?? '').toMatch(/the recorded page change did not appear|did not show "- row/);
     }, 120_000);
+  });
+
+  /**
+   * Round 60, ghost fwgh14 rule A: 02-create's editor autosave routed the page
+   * to `#/editor/post/<id>` and the step went back to the posts list, so its
+   * end url carried no id and 03-open was handed n1's. A step publishes a url
+   * part it VISITED (FlowStep/SpecStep.urlRoutes) from its url trail, through
+   * the shared visitedUrlPart: the daemon's flow runner (server.ts
+   * captureUrlOutputs, whose publishing this leg calls as it does) and the
+   * artifact's step body. `/hashposts`: New post mints an id and routes to it.
+   */
+  describe('a url part the producing step visited but did not end on (round 60, fwgh14)', () => {
+    const newPost: SkillStep = { tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'role', role: 'button', name: 'New post' }] } };
+    const backToPosts: SkillStep = { tool: 'click', args: { target: '@e2' }, locators: { target: [{ kind: 'role', role: 'link', name: 'Posts' }] } };
+    const create = (twice: boolean): SkillStep[] => [
+      { tool: 'goto', args: { url: `${origin}/hashposts#/posts` }, locators: {} },
+      newPost,
+      backToPosts,
+      ...(twice ? [newPost, backToPosts] : []),
+    ];
+    const open = (): SkillStep[] => [
+      { tool: 'goto', args: { url: `${origin}/hashposts#/editor/post/{{v1}}` }, locators: {} },
+      { tool: 'click', args: { target: '@e3' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Publish' }] } },
+    ];
+    const V1: Record<string, SkillParam> = { v1: { example: '0011223344556677', usedIn: [1] } };
+    const ROUTE = () => routeAt(`${origin}/hashposts#/editor/post/0011223344556677`, 'h2')!;
+
+    async function run(twice: boolean) {
+      // Daemon: each flow step replayed, the producer's url outputs published
+      // from its trail exactly as server.ts captureUrlOutputs publishes them.
+      reset(0);
+      let trail: ReturnType<typeof urlTrail> | null = null;
+      const first = await replayOf({ ...skillOf(create(twice)), id: 's_hash_create' }, {}, async (page) => {
+        trail = urlTrail(page);
+      });
+      const urls = trail ? [...(trail as ReturnType<typeof urlTrail>).urls] : [];
+      const end = urls[urls.length - 1] ?? '';
+      const published = visitedUrlPart(urls, end, 'h2', ROUTE());
+      const second = await replayOf({ ...skillOf(open()), id: 's_hash_open', params: V1 }, { v1: published ?? '' });
+      const replayLog = [...fx.log];
+      // Artifact: the whole flow through its own runFlow.
+      reset(0);
+      const spec: SpecFlow = {
+        version: 1,
+        name: 'parity-hash-posts',
+        origin,
+        startUrl: `${origin}/`,
+        vars: [],
+        steps: [
+          { id: '01-create', instruction: 'create a post', params: {}, outputs: [], urlRoutes: { 'url.h2': ROUTE() }, segments: [{ id: 's_hash_create', template: 'create a post', params: {}, preconditions: { urlPattern: `${origin}/` }, steps: create(twice) }] },
+          { id: '02-open', instruction: 'publish {{01-create.url.h2}}', params: { v1: '{{01-create.url.h2}}' }, outputs: [], segments: [{ id: 's_hash_open', template: 'publish {{v1}}', params: V1, preconditions: { urlPattern: `${origin}/` }, steps: open() }] },
+        ],
+      };
+      const emitted = await emittedFlowOf(spec);
+      const emittedLog = [...fx.log];
+      return { first, second, published, replayLog, emitted, emittedLog };
+    }
+    const ids = (log: string[], kind: string) => log.filter((l) => l.startsWith(`commit:${kind}:`)).map((l) => l.slice(`commit:${kind}:`.length));
+
+    it('both runners publish the id the producer visited, and the consumer acts on it', async () => {
+      const { first, second, published, replayLog, emitted, emittedLog } = await run(false);
+      expect(first.ok, first.reason ?? '').toBe(true);
+      expect(second.ok, second.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(ids(replayLog, 'create')).toHaveLength(1);
+      expect(published).toBe(ids(replayLog, 'create')[0]);
+      expect(ids(replayLog, 'publish')).toEqual(ids(replayLog, 'create'));
+      expect(ids(emittedLog, 'create')).toHaveLength(1);
+      expect(ids(emittedLog, 'publish')).toEqual(ids(emittedLog, 'create'));
+    }, 180_000);
+
+    it('a record the producer backed out of for another is not the one published (control)', async () => {
+      const { published, replayLog, emitted, emittedLog } = await run(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      const made = ids(replayLog, 'create');
+      expect(made).toHaveLength(2);
+      expect(published).toBe(made[1]);
+      expect(ids(replayLog, 'publish')).toEqual([made[1]]);
+      const madeE = ids(emittedLog, 'create');
+      expect(madeE).toHaveLength(2);
+      expect(ids(emittedLog, 'publish')).toEqual([madeE[1]]);
+    }, 180_000);
   });
 });

@@ -8,7 +8,7 @@ import type { LocatorCandidate, RecordedEntry, RecordedInstruction, RecordedRepo
 import { rootDir } from '../shared/paths.js';
 import { escapeRe } from '../shared/text.js';
 import { carriedSteps, urlParts, urlPattern } from './compile.js';
-import { mintedShape, urlPart, urlShapeOf } from '../execution/url.js';
+import { mintedShape, originOf as urlOriginOf, routeAt, urlPart, urlShapeOf } from '../execution/url.js';
 import { idPositionPart, linkMintedParts, pathDigitPart, pathIdPart, unseenGotoParts } from './ledger.js';
 import { MIN_ID_LEN, looksLikeId, tokenPattern } from './shape.js';
 import { statedPlainly, threadStepParams } from './rethread.js';
@@ -139,6 +139,15 @@ export interface FlowStep {
    * run on and every `evidenced()` guard starts working with no new case.
    */
   urlVariance?: string[];
+  /**
+   * The url outputs this step minted from a url it VISITED but did not end on,
+   * each with the route it sits on (execution/url.ts routeAt): the runners
+   * publish `url.<label>` from the last url of the step on that route when the
+   * end url has no part there (visitedUrlPart). ghost fwgh14's 02-create: the
+   * editor's autosave routed to `#/editor/post/<id>`, the step went back to the
+   * posts list, and 03-open's post id was exported as n1's literal.
+   */
+  urlRoutes?: Record<string, string>;
 }
 
 /**
@@ -559,6 +568,31 @@ export function buildFlow(
         }
       }
     }
+    // ...and a part the step VISITED but did not end on (rule A, ghost fwgh14):
+    // the LAST url of the step carrying a label the end url does not carry at
+    // all, minted by the same guards, with the route it sat on. The end url
+    // always wins: a label it carries is never minted from anywhere else.
+    const routes: Record<string, string> = {};
+    if (g.endUrl) {
+      const endLabels = new Set(urlParts(g.endUrl).map((p) => p.label));
+      const lastAt = new Map<string, { value: string; url: string }>();
+      for (const s of g.steps) {
+        const visited = s.diff?.url;
+        if (!visited || (urlOriginOf(visited) ?? '') !== (urlOriginOf(g.endUrl) ?? '')) continue;
+        for (const part of urlParts(visited)) if (!endLabels.has(part.label)) lastAt.set(part.label, { value: part.value, url: visited });
+      }
+      for (const [label, at] of lastAt) {
+        const part = { label, value: at.value };
+        const output = `url.${label}`;
+        if (startParts.has(part.value) || !referencablePart(part, opts.runSpecific)) continue;
+        if (produced.some((p) => p.value === part.value) || varEntries.some(([, v]) => v === part.value)) continue;
+        if (minted.some((m) => m.output === output || m.value === part.value)) continue;
+        const route = routeAt(at.url, label);
+        if (!route) continue;
+        minted.push({ stepId: id, output, value: part.value });
+        routes[output] = route;
+      }
+    }
     produced.push(...minted);
     // A minted url part is a RECORDED value of this step, not only a source
     // for other steps' references. Without that, `noteOutputEvidence` had
@@ -571,6 +605,7 @@ export function buildFlow(
     // agreement is recorded and never used — see `RunSpecific`.
     const step = steps[steps.length - 1];
     if (g.endUrl) step.route = urlPattern(g.endUrl, new Map(), { query: false });
+    if (Object.keys(routes).length) step.urlRoutes = routes;
     for (const m of minted) {
       if (!(m.output in step.recorded)) step.recorded = { ...step.recorded, [m.output]: m.value };
     }

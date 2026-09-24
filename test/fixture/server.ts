@@ -1086,6 +1086,38 @@ document.getElementById('save').addEventListener('click', () => {
 </body></html>`;
 
 /**
+ * A hash-routed editor (round 60, ghost fwgh14): "New post" mints a post and
+ * routes to '#/editor/post/<id>' (Ghost's autosave does the same), "Posts"
+ * routes back to the list, and a step that went back ends on '#/posts'.
+ * Opening '#/editor/post/<id>' directly shows "Post <id>" and a Publish that
+ * posts commit:publish:<id>. Every create posts commit:create:<id>.
+ */
+const HASH_POSTS = `<!doctype html><html><head><meta charset="utf-8"><title>Posts</title></head><body>
+<main id="view"></main>
+<script>
+const view = document.getElementById('view');
+const render = () => {
+  const at = '#/editor/post/';
+  const m = location.hash.startsWith(at) ? [location.hash, location.hash.slice(at.length)] : null;
+  if (m) {
+    view.innerHTML = '<h1></h1><button id="publish" type="button">Publish</button> <a href="#/posts">Posts</a>';
+    view.querySelector('h1').textContent = 'Post ' + m[1];
+    view.querySelector('#publish').onclick = () => fetch('/commit/publish/' + m[1], { method: 'POST' });
+  } else {
+    view.innerHTML = '<h1>Posts</h1><button id="new" type="button">New post</button>';
+    view.querySelector('#new').onclick = () => {
+      const id = Array.from(crypto.getRandomValues(new Uint8Array(8)), (b) => b.toString(16).padStart(2, '0')).join('');
+      fetch('/commit/create/' + id, { method: 'POST' });
+      location.hash = '#/editor/post/' + id;
+    };
+  }
+};
+window.addEventListener('hashchange', render);
+render();
+</script>
+</body></html>`;
+
+/**
  * A part row and its cost field (round 51, repairdesk fwrd84 05-edit): Save
  * posts `/commit/cost/<value>` and redraws the row with the saved cost and
  * its price (cost × 1.25). `/price?stuck=1` is the same form whose Save
@@ -1846,6 +1878,7 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
       if (url === '/picker' || url.startsWith('/picker?')) return html(PICKER(url.includes('open=1')));
       if (url === '/price' || url === '/price?stuck=1') return html(PRICE(url.endsWith('stuck=1')));
       if (url === '/imagelink') return html(IMAGE_LINK);
+      if (url === '/hashposts') return html(HASH_POSTS);
       if (url.startsWith('/row-save/')) return html(ROW_SAVE(tail('/row-save/')));
       if (url === '/typed-amount' || url === '/typed-amount?sticky=1') return html(TYPED_AMOUNT(url.endsWith('sticky=1')));
       if (url === '/hover-menu') return html(HOVER_MENU);

@@ -407,6 +407,57 @@ export function urlParts(url: string): { label: string; value: string }[] {
  * runners. urlParts itself still enumerates hash state only, so nothing that
  * walks every part starts seeing query values.
  */
+/**
+ * The ROUTE a labelled part sits on: the url's origin and every path and
+ * hash-route segment before it (all of them, for a `q.<key>` label) — never
+ * the part's own value. Two urls with the same route at a label address the
+ * same kind of record there (`#/editor/post/<id>`), which is how a part a step
+ * VISITED is told apart from the same label on another page. Null when the url
+ * has no part at `label`.
+ */
+export function routeAt(url: string, label: string): string | null {
+  const parts = urlParts(url).filter((p) => !p.label.startsWith('q.'));
+  const origin = originOf(url);
+  if (!origin) return null;
+  let before: { label: string; value: string }[];
+  if (label.startsWith('q.')) {
+    if (urlPart(url, label) === undefined) return null;
+    before = parts;
+  } else {
+    const at = parts.findIndex((p) => p.label === label);
+    if (at < 0) return null;
+    before = parts.slice(0, at);
+  }
+  return [origin, ...before.map((p) => `${p.label}=${p.value}`)].join(' ');
+}
+
+/**
+ * The value a step publishes at `label` — rule A, round 60, ghost fwgh14.
+ *
+ * Its END url's part, whenever the end url carries one: a step's end state is
+ * what later steps start from, and an output a step has always published does
+ * not change. Otherwise, when the flow recorded the ROUTE the part was minted
+ * on (FlowStep.urlRoutes, routeAt), the part of the LAST url the step visited
+ * on that route. fwgh14's 02-create typed its post into Ghost's editor, whose
+ * autosave routed to `#/editor/post/<id>`, then went back to the posts list:
+ * the id was the step's, and nothing published it. Last, so a record the step
+ * opened and backed out of for another is never the one published.
+ *
+ * `visited` is the step's url trail (browser.ts urlTrail), in order. Both
+ * runners call this: the daemon's flow runner and the artifact's step body.
+ */
+export function visitedUrlPart(visited: readonly string[], endUrl: string, label: string, route: string | undefined): string | undefined {
+  const end = urlPart(endUrl, label);
+  if (end) return end;
+  if (!route) return undefined;
+  for (let i = visited.length - 1; i >= 0; i--) {
+    if (routeAt(visited[i], label) !== route) continue;
+    const value = urlPart(visited[i], label);
+    if (value) return value;
+  }
+  return undefined;
+}
+
 export function urlPart(url: string, label: string): string | undefined {
   const hit = urlParts(url).find((p) => p.label === label)?.value;
   if (hit !== undefined || !label.startsWith('q.')) return hit;

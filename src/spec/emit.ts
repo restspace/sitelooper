@@ -3746,8 +3746,15 @@ function consumedUrlRefs(spec: SpecFlow): Map<string, string[]> {
   return new Map([...wanted].map(([id, outs]) => [id, [...outs].sort()]));
 }
 
-/** The lines that publish one step's end-url outputs, or none. */
-function urlOutputLines(stepId: string, outs: string[] | undefined): string[] {
+/**
+ * The lines that publish one step's end-url outputs, or none. An output the
+ * step minted from a url it VISITED (SpecStep.urlRoutes, fwgh14) is published
+ * through the shared visitedUrlPart over the step's url trail — its end url's
+ * part when there is one, else the last url on the recorded route — as the
+ * daemon's flow runner publishes it (server.ts captureUrlOutputs); the trail
+ * is started at the top of the body (urlTrailLines).
+ */
+function urlOutputLines(stepId: string, outs: string[] | undefined, routes?: Record<string, string>): string[] {
   if (!outs?.length) return [];
   const lines = ['// Later steps refer to this step by where it left the browser, so publish its'];
   lines.push('// end url the way the flow runner does (urlOutputs / consumedUrlOutputs in');
@@ -3755,6 +3762,7 @@ function urlOutputLines(stepId: string, outs: string[] | undefined): string[] {
   for (const out of outs) {
     const key = `${stepId}.${out}`;
     if (out === 'url') lines.push(`outputs[${q(key)}] = page.url();`);
+    else if (routes?.[out]) lines.push(`outputs[${q(key)}] = visitedUrlPart(trail.urls, page.url(), ${q(out.slice('url.'.length))}, ${q(routes[out])}) ?? '';`);
     // No urlBefore: nothing here acted, so the wait is simply for the part to
     // be there at all — an SPA can update its url a beat after the page itself
     // settles, which is what consumedUrlOutputs waits out.
@@ -3846,8 +3854,16 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
       }
       const templated = reportTemplateLines(step, ctx, consumed);
       if (templated.length) lines.push('', ...templated);
-      const published = urlOutputLines(step.id, urlRefs.get(step.id));
+      const routes = step.urlRoutes;
+      const consumedRoutes = (urlRefs.get(step.id) ?? []).some((out) => routes?.[out]);
+      const published = urlOutputLines(step.id, urlRefs.get(step.id), routes);
       if (published.length) lines.push('', ...published);
+      // The url trail a mid-step url output is published from, kept from the
+      // top of the body as the flow runner keeps it (server.ts urlTrail).
+      if (consumedRoutes) {
+        lines.unshift("// The urls this step visits: a url output it minted mid-step is published from them (fwgh14).", 'const trail = urlTrail(page);', '');
+        lines.push('trail.stop();');
+      }
       // The one piece of state a body keeps between its steps: a recorded
       // dialog that did not open (see expectationLines), consulted by every
       // later step before it resolves — as runOneStep keeps it.

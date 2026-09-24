@@ -563,6 +563,13 @@ export function variantStart(
   entries: RecordedEntry[],
   variantOf: string | undefined,
   slots: Map<string, string> = new Map(),
+  /**
+   * The variant's first KEPT step, when the caller knows it: the walk then
+   * goes up to it, past every recorded step ahead of it, not only the ones
+   * replayed through another skill — a recovery compile also drops the step
+   * that stopped the replay (rule C, ghost fwgh14).
+   */
+  firstKept?: RecordedStep,
 ): { url: string; fingerprint?: number[]; startText?: string; startTextComplete?: boolean; dropped: number } {
   const head = entries.find((e): e is RecordedInstruction => e.k === 'instruction');
   const steps = entries.filter((e): e is RecordedStep => e.k === 'step');
@@ -574,8 +581,9 @@ export function variantStart(
   };
   let dropped = 0;
   if (!variantOf) return { ...at, dropped };
-  for (const step of steps) {
-    if (!step.via || step.via.skill === variantOf) break;
+  const until = firstKept ? steps.findIndex((s) => sameRecordedStep(s, firstKept)) : -1;
+  for (const [i, step] of steps.entries()) {
+    if (until >= 0 ? i >= until : !step.via || step.via.skill === variantOf) break;
     dropped++;
     if (step.effect && step.effect.kind !== 'navigate' && step.afterUrl) {
       at = { url: step.afterUrl, ...(step.fingerprintAfter ? { fingerprint: step.fingerprintAfter } : {}) };
@@ -595,6 +603,37 @@ export function variantStart(
     }
   }
   return { ...at, dropped };
+}
+
+/** The same recorded step, whether or not a transform copied it (a copy keeps its tool, args, via and diff). */
+function sameRecordedStep(a: RecordedStep, b: RecordedStep): boolean {
+  if (a === b) return true;
+  return (
+    a.tool === b.tool &&
+    JSON.stringify(a.args) === JSON.stringify(b.args) &&
+    JSON.stringify(a.via ?? null) === JSON.stringify(b.via ?? null) &&
+    (a.diff?.url ?? '') === (b.diff?.url ?? '')
+  );
+}
+
+/**
+ * Rule B (ghost fwgh14): the replayed step that stopped a replay DID the
+ * step's work when it is an action on the page (not an addressed navigation,
+ * goto or back), it had an effect (it moved the url, or added lines), and the
+ * recovery's next gesture — a step of the recovery's own, not another replayed
+ * one — ran on the very url it landed on, with only observations between.
+ */
+function landedWhereRecoveryContinued(kept: readonly RecordedStep[], at: number, startUrl: string | undefined): boolean {
+  const failed = kept[at];
+  if (!failed || failed.tool === 'goto' || failed.tool === 'back' || !failed.diff?.url) return false;
+  const before = kept.slice(0, at).reverse().find((s) => s.diff?.url)?.diff?.url ?? startUrl ?? '';
+  const effect = failed.diff.url !== before || failed.diff.added.length > 0;
+  if (!effect) return false;
+  // Observations move nothing, so the next gesture runs on the url the step
+  // landed on; that gesture must be the recovery's own, and act THERE — a
+  // goto or back as the recovery's first move abandons the page instead.
+  const next = kept.slice(at + 1).find((s) => !['read', 'read_all', 'wait_for'].includes(s.tool));
+  return Boolean(next && !next.via && next.tool !== 'goto' && next.tool !== 'back');
 }
 
 /** One recorded segment: the steps that ran on one page template. */
@@ -683,7 +722,20 @@ export function compileSkills(input: CompileInput): Skill[] {
       const next = kept.slice(at + 1).find((s) => !['read', 'read_all', 'wait_for'].includes(s.tool));
       if (next?.tool === 'click' && !next.via && sameControl(failed, next)) pressedAgain.add(next);
     }
-    kept = kept.filter((s) => !(s.via?.skill === stopped.skill && s.via.step === stopped.step));
+    // ...and unless its ACTION did the step's work: it landed on a page (it
+    // moved the url or added something) and the recovery's next gesture ran on
+    // exactly that page, so the recovery continued from where the step left it
+    // and only its gate refused it. ghost fwgh14-n2 03-open: s_9433ad's click
+    // on the post opened n2's own post and its url gate refused it for not
+    // being n1's (a frozen id); dropping the click left n2's variant s_a63811
+    // starting with an editor control gated on the posts list, and n3 healed
+    // it onto Ghost's Settings nav (22 turns). Kept, its expectation is
+    // compiled from THIS recording like any step's, re-slotted. An addressed
+    // navigation (goto, back) is never kept: its target is what was wrong
+    // (fwsi7's goto /hardware/4, the recording's record).
+    if (!(failed && landedWhereRecoveryContinued(kept, at, startUrl))) {
+      kept = kept.filter((s) => !(s.via?.skill === stopped.skill && s.via.step === stopped.step));
+    }
   }
   kept = sourcelessGoto(kept, input, recordingNotes);
   if (!kept.length) return [];
@@ -734,7 +786,10 @@ export function compileSkills(input: CompileInput): Skill[] {
   // `/login` (the instruction's start) with a first step that clicks a
   // project in the signed-in projects list — a precondition no page it can
   // run on satisfies, and the compiled artifact then ran it on the login form.
-  const start = variantStart(input.entries, input.variantOf, slots);
+  // A variant is gated on the page its FIRST KEPT step ran on (rule C, ghost
+  // fwgh14): walked past every recorded step ahead of it — the ones replayed
+  // through another skill, and the stopped step a recovery compile dropped.
+  const start = variantStart(input.entries, input.variantOf, slots, input.variantOf ? kept[0] : undefined);
   const beginsAt = start.dropped ? start : { url: startUrl, fingerprint: head?.fingerprint, startText: head?.startText, startTextComplete: head?.startTextComplete };
 
   // Split at page-template seams. A step that navigated (diff.url) to a url
