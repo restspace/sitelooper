@@ -352,13 +352,22 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
   async function emittedFlowOf(spec: SpecFlow, vars: Record<string, string> = {}): Promise<Outcome> {
     const mod = await moduleOf(spec);
     const session = new BrowserSession({ session: `parity-flow-${Date.now()}`, persist: false });
+    // The artifact's warnings, as emittedOf keeps them.
+    const warnings: string[] = [];
+    const log = console.log;
+    console.log = (...args: unknown[]) => {
+      const line = args.map(String).join(' ');
+      if (line.startsWith('[sitelooper warn] ')) warnings.push(line.slice('[sitelooper warn] '.length));
+      log(...args);
+    };
     try {
       const page = await session.getPage();
       const outputs = await mod.runFlow(page, vars, { startUrl: mod.FLOW.startUrl });
-      return { ok: true, reason: null, outputs: outputs as Record<string, string> };
+      return { ok: true, reason: null, outputs: outputs as Record<string, string>, warnings };
     } catch (err) {
-      return { ok: false, reason: err instanceof Error ? err.message : String(err), outputs: {}, echoed: [] };
+      return { ok: false, reason: err instanceof Error ? err.message : String(err), outputs: {}, echoed: [], warnings };
     } finally {
+      console.log = log;
       await session.close();
     }
   }
@@ -2864,6 +2873,83 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(emitted.ok, emitted.reason ?? '').toBe(true);
       // ...and the daemon says the line went unchecked rather than staying silent
       expect((replay.warnings ?? []).join(' ')).toContain('could not fill');
+    }, 120_000);
+
+    /**
+     * odoo fwod85 05-open (round 59): the flow binds NOTHING to a declared
+     * slot — v10 was dropped at export — and only a recorded expectation names
+     * it (`- cell "{{v10}}"`, usedIn []). Its origin (`output:i4:…`) says the
+     * recorded example is run 1's value of something every run makes afresh.
+     * Daemon replay refused the pin outright ("missing params: v10"); the
+     * artifact inlined the example and checked run 1's value. One verdict now
+     * (slotActs): no step acts by it, so both run, drop the line with a
+     * warning, still judge the fillable line beside it, and save this run's
+     * value — and where a step DOES act by such a slot, both refuse before any
+     * mutation (the artifact at compile, as `unbound-slot`).
+     */
+    const originBound = (usedIn: number[]): Record<string, SkillParam> => ({
+      v1: { example: 'Gamma', usedIn: [2], known: true },
+      v2: { example: 'Order 41', usedIn, known: true, binding: 'output:i1:order' },
+    });
+    const unboundFlow = (steps: SkillStep[], params: Record<string, SkillParam>): SpecFlow => ({
+      version: 1,
+      name: 'parity-unbound',
+      origin,
+      startUrl: `${origin}/`,
+      vars: [],
+      steps: [
+        {
+          id: '01-pick',
+          instruction: 'pick project Beta',
+          params: { v1: 'Beta' },
+          outputs: [],
+          segments: [{ id: 's_project', template: 'pick project {{v1}} on {{v2}}', params, preconditions: { urlPattern: `${origin}/project/:id` }, steps }],
+        },
+      ],
+    });
+
+    it('both runners run a procedure whose expectation-only slot the flow never bound, and say the line went unchecked', async () => {
+      const steps = projectSteps('open');
+      steps[1] = { ...steps[1], expect: { addedContains: ['- combobox "Project": {{v1}}', '- heading "{{v2}}"'] } };
+      const params = originBound([]);
+      const consumer: Skill = { ...skillOf(steps), id: 's_project', template: 'pick project {{v1}} on {{v2}}', params, preconditions: { urlPattern: `${origin}/project/:id` } };
+      const spec = unboundFlow(steps, params);
+      expect(emitFlowFile(spec, { tier: 'plain' }).diagnostics.filter((d) => d.code === 'unbound-slot')).toEqual([]);
+
+      reset(0);
+      const replay = await replayOf(consumer, { v1: 'Beta' });
+      const replayLog = [...fx.log];
+      reset(0);
+      const emitted = await emittedFlowOf(spec);
+      const emittedLog = [...fx.log];
+
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replayLog.filter((l) => l.startsWith('save:'))).toEqual(['save:Beta']);
+      expect(emittedLog.filter((l) => l.startsWith('save:'))).toEqual(['save:Beta']);
+      // never silent: the daemon names the unbound param in its warnings (the
+      // step record carries them), and both say the line was not checked
+      expect((replay.warnings ?? []).join(' ')).toMatch(/param v2 .*unbound/);
+      expect((replay.warnings ?? []).join(' ')).toContain('could not fill');
+      expect((emitted.warnings ?? []).join(' ')).toContain('could not fill');
+    }, 120_000);
+
+    it('neither runner acts when a slot a step types by has an origin and no binding', async () => {
+      const steps = projectSteps('open');
+      steps[1] = { ...steps[1], args: { target: '@e1', option: '{{v2}}' } };
+      const params = originBound([2]);
+      const consumer: Skill = { ...skillOf(steps), id: 's_project', template: 'pick project {{v1}} on {{v2}}', params, preconditions: { urlPattern: `${origin}/project/:id` } };
+      const spec = unboundFlow(steps, params);
+
+      reset(0);
+      const replay = await replayOf(consumer, { v1: 'Beta' });
+      const replayLog = [...fx.log];
+      expect(replay.ok).toBe(false);
+      expect(replay.reason ?? '').toMatch(/missing params: v2/);
+      expect(replayLog.filter((l) => l.startsWith('save:'))).toEqual([]);
+      // the artifact has no model to hand the step to: the compile refuses
+      const found = emitFlowFile(spec, { tier: 'plain' }).diagnostics.filter((d) => d.code === 'unbound-slot');
+      expect(found.map((d) => [d.severity, d.step])).toEqual([['error', '01-pick']]);
     }, 120_000);
 
     /**

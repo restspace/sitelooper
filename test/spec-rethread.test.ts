@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { alignSlots, rethreadParams, statedPlainly } from '../src/spec/rethread.js';
+import { alignSlots, rethreadParams, statedPlainly } from '../src/skills/rethread.js';
 
 // The exact strings from the published odoo flow fwod34, step 06-open: the
 // pin was adopted during a replay, so its params froze that run's concrete

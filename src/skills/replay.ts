@@ -40,7 +40,7 @@ import {
   type LineDialect,
   type PageObservation,
 } from '../execution/snapshot.js';
-import { dismissalAlreadyInEffect, effectExpectation, expectedChangesVerdict, liveLines, namesDialogControl } from '../execution/expect.js';
+import { dismissalAlreadyInEffect, effectExpectation, expectedChangesVerdict, liveLines, namesDialogControl, slotActs } from '../execution/expect.js';
 // The observation dialect and the content-expectation rules live in the
 // shared execution modules, where a compiled artifact embeds them too.
 // Re-exported so this module's callers need not know which owns the source.
@@ -96,6 +96,14 @@ export interface ReplayOptions {
    * call it — a stray tab a replayed click opens does not move the replay.
    */
   follow?: (page: Page) => void;
+  /**
+   * The procedure chain from this segment on (this one first), for the one
+   * question a missing param asks: does a step of it act by that slot
+   * (slotActs)? A slot unused here but typed by a later segment must refuse
+   * the chain before its first step, not strand it part-way. Absent: this
+   * segment alone.
+   */
+  chain?: ReadonlyArray<Pick<Skill, 'params' | 'preconditions'>>;
   /**
    * Inline healing for a step whose whole chain missed (site B of notes/PLAN-jev.md).
    * Per call, so a test supplies its own; the daemon registers one for the
@@ -510,11 +518,25 @@ export async function replaySkill(
     return res;
   }
 
+  // A missing param refuses the procedure only when a step ACTS by it
+  // (slotActs — the rule the compiled artifact applies to the same slot, and
+  // the daemon's own consumption gate to a missing reference). One that only
+  // the template, the report or a recorded expectation names is run without:
+  // each line carrying it is dropped with a warning at check time
+  // (unfilledSlot), and the replay says so up front, in its own warnings, so
+  // the step's record shows which checks this run could not make. fwod85
+  // 05-open: s_6a1629's v10 sat in the Save step's `- cell "{{v10}}"` only;
+  // the artifact ran and passed, both daemon replays refused the pin.
   const missing = Object.keys(skill.params).filter((p) => !(p in params) || params[p] === '');
-  if (missing.length) {
+  const chain = opts.chain?.length ? opts.chain : [skill];
+  const acting = missing.filter((p) => slotActs(chain, p));
+  if (acting.length) {
     res.refused = true;
-    res.reason = `missing params: ${missing.map((m) => `${m} (e.g. ${JSON.stringify(skill.params[m].example)})`).join(', ')} — nothing was run`;
+    res.reason = `missing params: ${acting.map((m) => `${m} (e.g. ${JSON.stringify(skill.params[m].example)})`).join(', ')} — nothing was run`;
     return res;
+  }
+  for (const m of missing) {
+    res.warnings.push(`param ${m} (e.g. ${JSON.stringify(skill.params[m].example)}) is unbound — no step acts by it, so the procedure runs and every recorded line naming {{${m}}} goes unchecked this run`);
   }
 
   // The segment's gate — where it starts, and whose record it is — runs

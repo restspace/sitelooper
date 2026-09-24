@@ -10,7 +10,8 @@ import { urlPattern as compiledUrlPattern, carryOpener, dropAbsentReadLocators, 
 import type { DriftTicket } from '../skills/repair.js';
 import type { Page } from 'playwright-core';
 import { agentGesturesOutsideReplay, bindSkill, canAdoptPin, decideRepin, instructionEntry, learnFromInstruction, matchTemplate, pinCarriesFailedStep, pinEndsElsewhere, pinStartsElsewhere, pinStatus, publishedOutputs, replayReport, selectCandidates } from '../skills/learn.js';
-import { buildFlow, consumedReportedOutputs, consumedUrlOutputs, ignorableRefs, jsonLeaves, lintFlowRefs, lintUnpublishedOutputs, listFlows, liveReadsFor, liveReadsForRecovery, loadFlow, loadFlowFile, lookupOutput, mutatingIntent, noteOutputEvidence, pruneUnsourcedOutputs, recoveryRoute, remapParams, resolveInstruction, resolveStepParams, softResolveInstruction, saveFlow, staleInstructionIds, taskConstants, textMints, unbankedMutations, unreportedOutputs, urlOutputs, varyingValues, type RunSpecific } from '../skills/flow.js';
+import { threadStepParams } from '../skills/rethread.js';
+import { buildFlow, consumedReportedOutputs, consumedUrlOutputs, ignorableRefs, jsonLeaves, lintFlowRefs, lintUnboundParams, lintUnpublishedOutputs, listFlows, liveReadsFor, liveReadsForRecovery, loadFlow, loadFlowFile, lookupOutput, mutatingIntent, noteOutputEvidence, pruneUnsourcedOutputs, recoveryRoute, remapParams, resolveInstruction, resolveStepParams, softResolveInstruction, saveFlow, staleInstructionIds, taskConstants, textMints, unbankedMutations, unreportedOutputs, urlOutputs, varyingValues, type RunSpecific } from '../skills/flow.js';
 import { applyRelabelToEntries, applyRelabelToSkills, relabelCases, requestRelabelPlan, runValueKeyRenames } from '../skills/relabel.js';
 import { goalSatisfied, renderChainStop } from '../skills/replay.js';
 import { drainDrift, llmProposer, recordCandidateEvidence } from '../skills/repair.js';
@@ -1209,6 +1210,9 @@ ${describeLeaks(leaks.slice(0, 6))}`);
         const sk = store.get(id);
         return sk ? Object.fromEntries(Object.entries(sk.params).flatMap(([k, p]) => (p.binding ? [[k, p.binding]] : []))) : null;
       },
+      // The pinned skill itself: the export binds its slots against the
+      // referenced instruction too (threadStepParams, fwod85).
+      pinned: (id) => store.get(id) ?? null,
       // Empty for a fresh recording. Populated when this export follows a run
       // of an existing flow (runFlow seeds the ledger), which is exactly when
       // there is a second run's worth of evidence to build on.
@@ -1347,7 +1351,7 @@ ${describeLeaks(leaks.slice(0, 6))}`);
       if (!refChain.length) return false;
       return !ignorableRefs([ref], step, refChain).includes(ref);
     };
-    const warnings = [...lintFlowRefs(flow, publishedOutputsOf, actsOnRef), ...lintUnpublishedOutputs(flow, publishedOutputsOf, chainTailOf)];
+    const warnings = [...lintFlowRefs(flow, publishedOutputsOf, actsOnRef), ...lintUnpublishedOutputs(flow, publishedOutputsOf, chainTailOf), ...lintUnboundParams(flow, (id) => store.get(id) ?? null)];
     // Phase 2 of PLAN-provenance: report anything of this run's that survived
     // into the flow. WARN for now — the ledger's coverage is what is being
     // measured, and a false alarm must not block an export.
@@ -1474,6 +1478,19 @@ ${describeLeaks(certain.slice(0, 30))}${certain.length > 30 ? `\n  … and ${cer
     const { flow, file: flowFile } = loaded;
     const missingVars = flow.vars.filter((v) => !(v in varsIn));
     if (missingVars.length) throw new Error(`flow "${flow.name}" needs --var for: ${missingVars.join(', ')}`);
+
+    // Each pinned step's params threaded against its own instruction — the
+    // same threadStepParams the compiled artifact is built through (spec ir),
+    // so a flow written before the export threaded them (fwod85's 05-open: v9
+    // a truncated literal, v10 absent) runs the same on both sides.
+    for (const step of flow.steps) {
+      const pinned = step.skill ? this.browser.learn?.get(step.skill) : null;
+      const threaded = threadStepParams(step, pinned);
+      if (threaded.params && threaded.params !== step.params && (Object.keys(threaded.rebound).length || Object.keys(threaded.filled).length)) {
+        step.params = threaded.params;
+        for (const w of threaded.warnings) opts.progress(`[flow ${flow.name}] ${w}`);
+      }
+    }
 
     // Hand the ledger the values earlier runs of THIS flow watched CHANGE,
     // before it banks anything. From here on each is kinded an identifier

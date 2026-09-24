@@ -512,13 +512,12 @@ export function selectCandidates(
  * indices (capture group i+1 in `bindSkill`'s pattern), not slot names, because
  * a slot may appear more than once and only some of its occurrences abut.
  *
- * `alignSlots` (src/spec/rethread.ts:151-161) applies this same rule, and that
+ * `alignSlots` (src/skills/rethread.ts) applies this same rule, and that
  * module's doc states the principle it comes from: adjacent slots are an
- * ambiguity "left alone and reported, never guessed at". The predicate is
- * restated here rather than imported because alignSlots answers a different
- * question — it DISCARDS the captured text of an adjacent slot, which is
- * exactly the text this path must re-split — and src/skills does not otherwise
- * depend on src/spec.
+ * ambiguity "left alone and reported, never guessed at". It splits a run only
+ * on the evidence `resolveAdjacentRun` treats as a hard requirement — a slot a
+ * non-adjacent occurrence already placed — because it aligns against an
+ * instruction whose values are references, where no recorded example applies.
  */
 function adjacentSlotRuns(squashedTemplate: string): number[][] {
   const spans = [...squashedTemplate.matchAll(/\{\{v\d+\}\}/g)];
