@@ -1,0 +1,40 @@
+{
+  "arm": "spec",
+  "runid": "fwgh12-spec",
+  "target": "ghost",
+  "flow": "fwgh12.json",
+  "flowName": "fwgh12",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwgh12-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwgh12-spec-spec-tmp/fwgh12.flow.ts",
+  "specFile": "bench/results/fwgh12-spec-spec-tmp/fwgh12.spec.ts",
+  "wallMs": 65221,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwgh12",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 61727,
+      "error": "Error: 04-open s_414d80/1: the recorded page change did not appear\n\n04-open s_414d80/1: the recorded page change did not appear\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeNull\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"after step 04-open s_414d80/1 none of the 4 recorded page change(s) appeared (e.g. \\\"- heading \\\\\\\"Seed: Welcome to the bench\\\\\\\"\\\") — the step ran but did not have its recorded effect\"\u001b[39m\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate",
+      "drift": [
+        "[sitelooper drift] 02-create s_5ce353/3 target: primary getByText('This bench post was created by run fwgh12-spec.', { exact: true }) missed; used #2 locator('div:nth-of-type(1) > div > div:nth-of-type(1) > div > p > span') (#1 ambiguous)",
+        "[sitelooper drift] 03-open s_9946a4/18 target: primary getByText('fwgh12-spec', { exact: true }) missed; used #2 locator('div > div:nth-of-type(1) > div > div:nth-of-type(1) > div > p') (#1 absent)"
+      ]
+    }
+  ],
+  "drift": [
+    "[sitelooper drift] 02-create s_5ce353/3 target: primary getByText('This bench post was created by run fwgh12-spec.', { exact: true }) missed; used #2 locator('div:nth-of-type(1) > div > div:nth-of-type(1) > div > p > span') (#1 ambiguous)",
+    "[sitelooper drift] 03-open s_9946a4/18 target: primary getByText('fwgh12-spec', { exact: true }) missed; used #2 locator('div > div:nth-of-type(1) > div > div:nth-of-type(1) > div > p') (#1 absent)"
+  ],
+  "driftCount": 2,
+  "logTail": "5ce353/3 target: primary getByText('This bench post was created by run fwgh12-spec.', { exact: true }) missed; used #2 locator('div:nth-of-type(1) > div > div:nth-of-type(1) > div > p > span') (#1 ambiguous)\n[sitelooper step] 02-create\n[sitelooper warn] step 03-open s_9946a4/6: none of the 1 expected page change(s) appeared in the step diff (found on the page instead)\n[sitelooper warn] 03-open s_9946a4/8: read 'tag_chip_shown' returned a value the skill itself set/selected ('Bench News') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper warn] 03-open s_9946a4/9: read 'custom_excerpt_shown' returned a value the skill itself set/selected ('Bench post for run fwgh12-spec.') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper warn] 03-open s_9946a4/10: read 'publish_date_shown' returned a value the skill itself set/selected ('2026-09-01') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper drift] 03-open s_9946a4/18 target: primary getByText('fwgh12-spec', { exact: true }) missed; used #2 locator('div > div:nth-of-type(1) > div > div:nth-of-type(1) > div > p') (#1 absent)\n[sitelooper step] 03-open\n  ✘  1 fwgh12.spec.ts:9:1 › fwgh12 (1.0m)\n\n\n  1) fwgh12.spec.ts:9:1 › fwgh12 ───────────────────────────────────────────────────────────────────\n\n    Error: 04-open s_414d80/1: the recorded page change did not appear\n\n    04-open s_414d80/1: the recorded page change did not appear\n\n    expect(received).toBeNull()\n\n    Received: \"after step 04-open s_414d80/1 none of the 4 recorded page change(s) appeared (e.g. \\\"- heading \\\\\\\"Seed: Welcome to the bench\\\\\\\"\\\") — the step ran but did not have its recorded effect\"\n\n    Call Log:\n    - Timeout 5000ms exceeded while waiting on the predicate\n\n       at fwgh12.flow.ts:11444\n\n      11442 |       { timeout: EXPECT_WAIT_MS, message: `${ctx.tag}: the recorded page change did not appear` },\n      11443 |     )\n    > 11444 |     .toBeNull();\n            |      ^\n      11445 |   for (const warning of last.warnings) console.log(`[sitelooper warn] ${warning}`);\n      11446 |   if (last.unobserved) console.log(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);\n      11447 |   return last;\n        at expectChanges (/home/user/sitelooper/bench/results/fwgh12-spec-spec-tmp/fwgh12.flow.ts:11444:6)\n        at Object.verify (/home/user/sitelooper/bench/results/fwgh12-spec-spec-tmp/fwgh12.flow.ts:13687:32)\n        at runStepLifecycle (/home/user/sitelooper/bench/results/fwgh12-spec-spec-tmp/fwgh12.flow.ts:7991:24)\n        at Object.04-open (/home/user/sitelooper/bench/results/fwgh12-spec-spec-tmp/fwgh12.flow.ts:13652:5)\n        at /home/user/sitelooper/bench/results/fwgh12-spec-spec-tmp/fwgh12.flow.ts:14346:7\n        at runFlow (/home/user/sitelooper/bench/results/fwgh12-spec-spec-tmp/fwgh12.flow.ts:14345:5)\n        at /home/user/sitelooper/bench/results/fwgh12-spec-spec-tmp/fwgh12.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    [sitelooper drift] 02-create s_5ce353/3 target: primary getByText('This bench post was created by run fwgh12-spec.', { exact: true }) missed; used #2 locator('div:nth-of-type(1) > div > div:nth-of-type(1) > div > p > span') (#1 ambiguous)\n    [sitelooper drift] 03-open s_9946a4/18 target: primary getByT...\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/fwgh12-fwgh12/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/fwgh12-fwgh12/error-context.md\n\n  1 failed\n    fwgh12.spec.ts:9:1 › fwgh12 ────────────────────────────────────────────────────────────────────\n"
+}

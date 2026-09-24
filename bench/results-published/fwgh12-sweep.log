@@ -1,0 +1,130 @@
+
+[sweep] run 1/3: fwgh12-n1 (store: /home/user/sitelooper/bench/results/fwgh12-skills)
+[harness] ghost: defaulting APP_URL
+[harness] ghost: defaulting APP_EMAIL
+[harness] ghost: defaulting APP_PASSWORD
+[reset] ghost: no posts to delete
+[harness] ghost responded 200 at http://127.0.0.1:8099/
+stopped: fwgh12-n1
+  flow "fwgh12" saved: 5 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwgh12.json
+  warning: note: dropped 3 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: note: 01-open no longer publishes published_seed_post_count — no replay reads it from the page and the recording showed no line to read
+  warning: note: 03-open no longer publishes publish_time_shown, date_picker_value_before_change, date_picker_time_before_change — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-open no longer publishes publish_time_shown_in_settings, post_id — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 05-verify's instruction asks to report body_paragraph_occurrence_count, runid_occurrences_in_body, runid_occurrences_on_page, and no replay can publish them: nothing in its procedure reads them from the page, so export dropped them — re-record the step so the value is read, not only reported
+  warning: note: 05-verify no longer publishes public_tag_href, public_publish_date — no replay reads them from the page and the recording showed no line to read
+  warning: note: 01-open: added a read for post_1_status to s_bd68c0 (page.getByRole('link', { name: 'Published', exact: true }); seen on the next instruction's start page)
+  warning: note: 01-open: added a read for post_2_status to s_bd68c0 (page.getByRole('link', { name: 'Published', exact: true }); seen on the next instruction's start page)
+  warning: note: 01-open: added a read for post_3_status to s_bd68c0 (page.getByRole('link', { name: 'Published', exact: true }); seen on the next instruction's start page)
+  warning: warning: 154 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.origin: "127.0.0.1" (output) in "http://127.0.0.1:8099"
+  flow.startUrl: "127.0.0.1" (output) in "http://127.0.0.1:8099/ghost/"
+  flow.steps[0].instruction: "admin@bench.local" (output) in "Open http://127.0.0.1:8099/ghost/ in the browser. If a sign-in form appears, sign in with email admin@bench.local and password {{env:APP_PASSWORD}} — type that "
+  flow.steps[0].instruction: "127.0.0.1" (output) in "Open http://127.0.0.1:8099/ghost/ in the browser. If a sign-in form appears, sign in with email admin@bench.local and password {{env:APP_PASSWORD}} — type that "
+  flow.steps[0].params.v1: "127.0.0.1" (output) in "http://127.0.0.1:8099/ghost/"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwgh12-n1 stop=completed
+turns=6 wall=262.0s
+commands=5 cmdTime=209.6s cmdBytes=9178 timeouts=0
+orchestrator in=12023 cw=0 cr=13440 out=3942
+inner prompt=1073662 cached=987392 completion=13995
+spend=$0.0622 maxUsd=3
+learn: A_n=0 replayed=0/5 full=0 repaired=0 compiled=5 variants=0
+-> /home/user/sitelooper/bench/results/fwgh12-n1-sitelooper-result.json
+
+fwgh12-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — fwgh12-n1-bench-post, body includes runid=true
+  obj 3: PASS — tags=Bench News (bench-news), want only the seeded Bench News (bench-news)
+  obj 4: PASS — custom excerpt="Bench post for run fwgh12-n1."
+  obj 5: PASS — status=published, visibility=public
+  obj 6: PASS — published_at=2026-09-01T00:00:00.000Z, want 2026-09-01
+  obj 7: PASS — slug fwgh12-n1-bench-post reported
+
+[sweep] run 2/3: fwgh12-n2 (replay flow fwgh12, no orchestrator)
+[reset] ghost: deleted 1 post(s) (earlier runs' and non-seed)
+[sweep] fwgh12-n2: 4 drift ticket(s) → fwgh12-n2-drift.json
+
+fwgh12-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — fwgh12-n2-bench-post, body includes runid=true
+  obj 3: PASS — tags=Bench News (bench-news), want only the seeded Bench News (bench-news)
+  obj 4: PASS — custom excerpt="Bench post for run fwgh12-n2."
+  obj 5: PASS — status=published, visibility=public
+  obj 6: PASS — published_at=2026-09-01T00:00:00.000Z, want 2026-09-01
+  obj 7: PASS — slug fwgh12-n2-bench-post reported
+
+[sweep] run 3/3: fwgh12-n3 (replay flow fwgh12, no orchestrator)
+[reset] ghost: deleted 1 post(s) (earlier runs' and non-seed)
+[sweep] fwgh12-n3: 4 drift ticket(s) → fwgh12-n3-drift.json
+
+fwgh12-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — fwgh12-n3-bench-post, body includes runid=true
+  obj 3: PASS — tags=Bench News (bench-news), want only the seeded Bench News (bench-news)
+  obj 4: PASS — custom excerpt="Bench post for run fwgh12-n3."
+  obj 5: PASS — status=published, visibility=public
+  obj 6: PASS — published_at=2026-09-01T00:00:00.000Z, want 2026-09-01
+  obj 7: PASS — slug fwgh12-n3-bench-post reported
+
+Learning sweep fwgh12 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwgh12-n1' │ '7/7'    │ 'completed' │ 6     │ 5    │ 0.0622    │ 0   │ '0/5'        │ 262    │
+│ 1       │ 2 │ 'fwgh12-n2' │ '7/7'    │ 'success'   │ 8     │ 5    │ 0.0049    │ 0.8 │ '5/5 (flow)' │ 95     │
+│ 2       │ 3 │ 'fwgh12-n3' │ '7/7'    │ 'success'   │ 7     │ 5    │ 0.0034    │ 0.8 │ '5/5 (flow)' │ 87     │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8099
+  s_304623  validated    4 steps  3/3 (100%)
+           In the Ghost admin, open the draft post titled "{{v1}}" in the editor and publish it: click the Publish button…
+  s_3e8046  validated    2 steps  3/3 (100%)
+           In the Ghost admin at http://127.0.0.1:8099/ghost/, create a new post with the exact title "{{v2}}". In the po…
+  s_48168b  validated    2 steps  3/3 (100%)
+           In the Ghost admin at http://127.0.0.1:8099/ghost/, create a new post with the exact title "{{v2}}". In the po…
+  s_5ce353  validated    5 steps  3/3 (100%)
+           In the Ghost admin at http://127.0.0.1:8099/ghost/, create a new post with the exact title "{{v2}}". In the po…
+  s_9946a4  validated   18 steps  3/3 (100%)
+           In the Ghost admin, open the draft post titled "{{v1}}" in the editor, then open its settings panel (the gear …
+  s_a540ce  validated    7 steps  3/3 (100%)
+           Verify the published Ghost post publicly. Open the public site page {{v5}} in the browser (not the admin) and …
+  s_b7af9f  validated    1 steps  3/3 (100%)
+           Verify the published Ghost post publicly. Open the public site page {{v5}} in the browser (not the admin) and …
+  s_bd68c0  validated   10 steps  3/3 (100%)
+           Open {{v1}} in the browser. If a sign-in form appears, sign in with email {{v2}} and password {{v3}} — type th…
+  s_cd09de  validated    4 steps  3/3 (100%)
+           In the Ghost admin at http://127.0.0.1:8099/ghost/, create a new post with the exact title "{{v2}}". In the po…
+  s_cd37ed  demoted      4 steps  1/3 (33%)
+           In the Ghost admin, open the draft post titled "{{v1}}" in the editor and publish it: click the Publish button…
+  s_d855c0  validated    1 steps  3/3 (100%)
+           Open {{v1}} in the browser. If a sign-in form appears, sign in with email {{v2}} and password {{v3}} — type th…
+  s_e51b37  validated    3 steps  3/3 (100%)
+           Open {{v1}} in the browser. If a sign-in form appears, sign in with email {{v2}} and password {{v3}} — type th…
+  s_f87580  validated    1 steps  3/3 (100%)
+           In the Ghost admin at http://127.0.0.1:8099/ghost/, create a new post with the exact title "{{v2}}". In the po…
+  s_fa5541  validated    1 steps  3/3 (100%)
+           Open {{v1}} in the browser. If a sign-in form appears, sign in with email {{v2}} and password {{v3}} — type th…
+  s_1fa864  provisional  3 steps  1/1 (100%)  variant of s_cd37ed
+           In the Ghost admin, open the draft post titled "{{v1}}" in the editor and publish it: click the Publish button…
+  s_2b7a45  provisional  8 steps  1/1 (100%)  variant of s_cd37ed
+           In the Ghost admin, open the draft post titled "{{v1}}" in the editor and publish it: click the Publish button…
+  s_33f147  provisional  2 steps  1/1 (100%)
+           In the Ghost admin, open the draft post titled "{{v1}}" in the editor and publish it: click the Publish button…
+  s_414d80  provisional  3 steps  1/1 (100%)
+           In the Ghost admin, open the draft post titled "{{v1}}" in the editor and publish it: click the Publish button…
+  s_416b12  provisional  9 steps  1/1 (100%)  variant of s_cd37ed
+           In the Ghost admin, open the draft post titled "{{v1}}" in the editor and publish it: click the Publish button…
+  s_459cff  provisional 10 steps  1/1 (100%)
+           In the Ghost admin, open the draft post titled "{{v1}}" in the editor and publish it: click the Publish button…
+  s_6644c9  provisional  9 steps  1/1 (100%)
+           In the Ghost admin, open the draft post titled "{{v1}}" in the editor and publish it: click the Publish button…
+  s_750716  provisional  2 steps  1/1 (100%)  variant of s_cd37ed
+           In the Ghost admin, open the draft post titled "{{v1}}" in the editor and publish it: click the Publish button…
+  s_90d92f  provisional  4 steps  1/1 (100%)
+           In the Ghost admin, open the draft post titled "{{v1}}" in the editor and publish it: click the Publish button…
+  s_a10541  provisional  8 steps  1/1 (100%)
+           In the Ghost admin, open the draft post titled "{{v1}}" in the editor and publish it: click the Publish button…
+  s_e46ad2  provisional  4 steps  1/1 (100%)
+           In the Ghost admin, open the draft post titled "{{v1}}" in the editor and publish it: click the Publish button…
+store: /home/user/sitelooper/bench/results/fwgh12-skills
+
+summary: /home/user/sitelooper/bench/results/fwgh12-sweep.json

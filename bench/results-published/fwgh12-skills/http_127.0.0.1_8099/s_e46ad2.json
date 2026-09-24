@@ -1,0 +1,223 @@
+{
+ "id": "s_e46ad2",
+ "origin": "http://127.0.0.1:8099",
+ "template": "In the Ghost admin, open the draft post titled \"{{v1}}\" in the editor and publish it: click the Publish button, then complete the confirmation flow (in the confirmation modal choose the option to publish it now / \"Publish, send it now\" — NOT schedule, since its publish date 2026-09-01 is in the past), and confirm. The post must end up published, not scheduled and not a draft. Then verify: go to the Posts → {{v3}} list and confirm the row \"{{v1}}\" appears with status {{v3}}; also open the post settings panel and report the publish date and slug shown, and report the post status shown in the editor. Report exactly what you observed.",
+ "params": {
+  "v1": {
+   "example": "fwgh12-n3 Bench Post",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:post_title"
+  },
+  "v2": {
+   "example": "fwgh12-n3",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "Published",
+   "usedIn": [],
+   "known": true,
+   "binding": "01-open.post_1_status"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8099/ghost/#/editor/post/:id"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e811"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Publish"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > section > header > section > button:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 797,
+      "y": 41,
+      "w": 78.5,
+      "h": 34,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8099/ghost/#/editor/post/:id",
+    "addedContains": [
+     "- heading \"Publish\"",
+     "- button \"Close\"",
+     "- button \"Not sent as newsletter\"",
+     "- button \"Right now\"",
+     "- button \"Continue, final review →\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_304623",
+    "step": 1
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Right now\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Right now"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div > div:nth-of-type(2) > div:nth-of-type(3) > button"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 438,
+      "w": 635.1,
+      "h": 40,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8099/ghost/#/editor/post/:id",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_304623",
+    "step": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1020"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Continue, final review →"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div > div > div:nth-of-type(3) > button"
+     },
+     {
+      "kind": "point",
+      "x": 429,
+      "y": 624,
+      "w": 217.6,
+      "h": 40,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8099/ghost/#/editor/post/:id",
+    "addedContains": [
+     "- button \"Publish post, right now\"",
+     "- button \"Back to settings\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_304623",
+    "step": 3
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Publish post, right now\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Publish post, right now"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div > div > div:nth-of-type(2) > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 425,
+      "y": 373,
+      "w": 207.5,
+      "h": 41.6,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8099/ghost/#/posts",
+    "addedContains": [
+     "- button \"Search site Ctrl+K\"",
+     "- link \"Analytics\"",
+     "- link \"Network\"",
+     "- link \"View site\"",
+     "- link \"View site in new tab\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_304623",
+    "step": 4
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-24T07:23:56.628Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_ef772e",
+  "index": 0,
+  "of": 3
+ },
+ "provenance": {
+  "session": "fwgh12-n3",
+  "instruction": "In the Ghost admin, open the draft post titled \"fwgh12-n3 Bench Post\" in the editor and publish it: click the Publish button, then complete the confirmation flow (in the confirmation modal choose the option to publish it now / \"Publish, send it now\" — NOT schedule, since its publish date 2026-09-01 is in the past), and confirm. The post must end up published, not scheduled and not a draft. Then verify: go to the Posts → Published list and confirm the row \"fwgh12-n3 Bench Post\" appears with status Published; also open the post settings panel and report the publish date and slug shown, and report the post status shown in the editor. Report exactly what you observed.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-24T07:23:56.628Z"
+ },
+ "revision": 1
+}
