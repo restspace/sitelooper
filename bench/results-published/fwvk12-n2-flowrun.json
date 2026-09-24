@@ -1,0 +1,192 @@
+{
+  "flow": "fwvk12",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_e253dc; observed seed_task_titles_1=Seed: triage inbox, seed_task_titles_2=Seed: order missing parts, seed_task_titles_3=Seed: ship repaired device, project_name=Bench Project.",
+      "values": {
+        "seed_task_titles_1": "Seed: triage inbox",
+        "seed_task_titles_2": "Seed: order missing parts",
+        "seed_task_titles_3": "Seed: ship repaired device",
+        "project_name": "Bench Project"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_4017b7: step 3: after step 3 the page did not show \"- textbox \\\"e.g. frederick\\\": admin\" as it did when recorded — the step ran but probably acted on the wrong element — the page replaced its document under this fill, so it is repeated once on the rebuilt field"
+      ]
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "The task was created (via the replayed segment, id 6) and I completed the remaining fields on its page: description \"Bench task for run fwvk12-n2\" (saved — the page showed \"Description Saved!\"), priority set to High, and due date 31 Dec 2026, 12:00:00. Nothing else was modified and the 'Seed:' tasks were untouched. On http://127.0.0.1:8096/tasks/6 the app displays the identifier BENCH-5, title \"fwvk12-n2 Bench Task\", the description, the due date and High priority — all read from the live DOM.",
+      "values": {
+        "task_url": "http://127.0.0.1:8096/tasks/6",
+        "task_identifier": "BENCH-5",
+        "task_title": "fwvk12-n2 Bench Task",
+        "task_description": "Bench task for run fwvk12-n2",
+        "due_date": "31 Dec 2026, 12:00:00",
+        "priority": "High",
+        "priority_2": "Unset\nLow\nMedium\nHigh\nUrgent\nDO NOW",
+        "ref": "fwvk12-n2"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_329439 stopped at step 1 — after step 1 none of the 1 recorded page change(s) appeared (e.g. \"- heading \\\"Description Saved!\\\"\") — the step ran but did not have its recorded effect",
+      "replayed": "0/24",
+      "repaired": false,
+      "turns": 20,
+      "unreported": [
+        "project_name",
+        "picker_year",
+        "new_task_due_badge",
+        "project_task_title_1",
+        "project_task_title_2",
+        "project_task_title_3"
+      ]
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Done. On http://127.0.0.1:8096/tasks/6 I clicked \"Add Labels\", typed \"Back\" and selected the existing suggestion \"Backend – Click or press enter to select\" (not the \"Back – Add this as new label\" option); the dropdown closed and a single chip \"Backend\" is displayed in the task's labels row. The project's Labels page (/labels) lists exactly one \"Backend\" (alongside Docs and Frontend — 3 labels total), confirming no duplicate and no new \"Back\" label was created. The task page for BENCH-5 \"fwvk12-n2 Bench Task\" continues to display High priority and due date 31 Dec 2026, 12:00:00.",
+      "values": {
+        "label_on_task_page": "Backend",
+        "task_identifier": "BENCH-5",
+        "task_title": "fwvk12-n2 Bench Task",
+        "labels_page_listing": "Backend, Docs, Frontend (one Backend only)",
+        "a": "Labels",
+        "a_2": "/labels",
+        "ref": "fwvk12-n2"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "every candidate refused — s_4c3546: not on the page this procedure starts from (expects http://127.0.0.1:8096/projects/:id/:id, browser is at http://127.0.0.1:8096/tasks/6) — nothing was run",
+      "replayed": null,
+      "repaired": false,
+      "turns": 14,
+      "unreported": [
+        "label_chip_count_on_task",
+        "due_date",
+        "priority",
+        "description",
+        "task_page_labels_text",
+        "available_label_1",
+        "available_label_2",
+        "available_label_3"
+      ]
+    },
+    {
+      "id": "04-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_3f2d71; observed label=Backend (Labels: Backend), comments_section_full_text=admin\nless than a minute ago\n\nComment for run fwvk12-n2\n\nEditDelete\n1\n2\n3\n\n\n\n\nCOMMENT, task_identifier=BENCH-5, task_title=fwvk12-n2 Bench Task, labels_area_text=Labels\nBackend, priority_selected=3, description=Bench task for run fwvk12-n2, due_date=31 Dec 2026, 12:00:00, comments_section_text=admin\nless than a minute ago\n\nComment for run fwvk12-n2\n\nEditDelete, ref=fwvk12-n2.",
+      "values": {
+        "label": "Backend (Labels: Backend)",
+        "comments_section_full_text": "admin\nless than a minute ago\n\nComment for run fwvk12-n2\n\nEditDelete\n1\n2\n3\n\n\n\n\nCOMMENT",
+        "task_identifier": "BENCH-5",
+        "task_title": "fwvk12-n2 Bench Task",
+        "labels_area_text": "Labels\nBackend",
+        "priority_selected": "3",
+        "description": "Bench task for run fwvk12-n2",
+        "due_date": "31 Dec 2026, 12:00:00",
+        "comments_section_text": "admin\nless than a minute ago\n\nComment for run fwvk12-n2\n\nEditDelete",
+        "ref": "fwvk12-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_3f2d71: step 11: read 'comment_text' returned a value the skill itself set/selected ('Comment for run fwvk12-n2') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "comment_text",
+        "priority"
+      ]
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_7432a5; observed task_identifier=BENCH-5, task_title=fwvk12-n2 Bench Task, task_description=Bench task for run fwvk12-n2, due_date=31 Dec 2026, 12:00:00, seed_task_count=3, labels_attached=Backend, comment_text=Comment for run fwvk12-n2, comment_author=admin, project_view_heading=Upcoming, seed_task_title_1=Seed: triage inbox, seed_task_title_2=Seed: order missing parts, seed_task_title_3=Seed: ship repaired device, seed_task_titles_1=Seed: triage inbox, seed_task_titles_2=Seed: order missing parts, seed_task_titles_3=Seed: ship repaired device, project_task_title_1=fwvk12-n2 Bench Task, project_task_title_2=Seed: triage inbox, project_task_title_3=Seed: order missing parts, project_task_title_4=Seed: ship repaired device, new_task_priority_badge=High, new_task_label_badge=Backend, new_task_due_badge=Due in 3 months, ref=fwvk12-n2.",
+      "values": {
+        "task_identifier": "BENCH-5",
+        "task_title": "fwvk12-n2 Bench Task",
+        "task_description": "Bench task for run fwvk12-n2",
+        "due_date": "31 Dec 2026, 12:00:00",
+        "seed_task_count": "3",
+        "labels_attached": "Backend",
+        "comment_text": "Comment for run fwvk12-n2",
+        "comment_author": "admin",
+        "project_view_heading": "Upcoming",
+        "seed_task_title_1": "Seed: triage inbox",
+        "seed_task_title_2": "Seed: order missing parts",
+        "seed_task_title_3": "Seed: ship repaired device",
+        "seed_task_titles_1": "Seed: triage inbox",
+        "seed_task_titles_2": "Seed: order missing parts",
+        "seed_task_titles_3": "Seed: ship repaired device",
+        "project_task_title_1": "fwvk12-n2 Bench Task",
+        "project_task_title_2": "Seed: triage inbox",
+        "project_task_title_3": "Seed: order missing parts",
+        "project_task_title_4": "Seed: ship repaired device",
+        "new_task_priority_badge": "High",
+        "new_task_label_badge": "Backend",
+        "new_task_due_badge": "Due in 3 months",
+        "ref": "fwvk12-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "28/28",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwvk12",
+      "step": "02-create",
+      "skill": "s_329439",
+      "similarity": 0.999,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_329439 stopped at step 1 — after step 1 none of the 1 recorded page change(s) appeared (e.g. \"- heading \\\"Description Saved!\\\"\") — the step ran but did not have its recorded effect",
+      "reason": "after step 1 none of the 1 recorded page change(s) appeared (e.g. \"- heading \\\"Description Saved!\\\"\") — the step ran but did not have its recorded effect",
+      "pageUrlPattern": "http://127.0.0.1:8096/tasks/:id",
+      "pageUrl": "http://127.0.0.1:8096/tasks/6"
+    }
+  ],
+  "wallMs": 105877,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 493878,
+    "completionTokens": 7528,
+    "cachedTokens": 450176
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 493878,
+      "completionTokens": 7528,
+      "cachedTokens": 450176
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

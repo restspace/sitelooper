@@ -1,0 +1,293 @@
+{
+ "id": "s_0f20b1",
+ "origin": "http://127.0.0.1:8096",
+ "template": "On the Vikunja task page for the task titled '{{v1}}' (at {{v3}}), attach the EXISTING label named 'Backend' to this task. Important: the label field creates a NEW label from whatever text is typed, so you must choose the existing 'Backend' label from the suggestion dropdown that appears when you type '{{v4}}' — do not just press enter on typed text if that would create a new label. Verify afterwards that the task shows the label 'Backend' and that no duplicate/new label was created (e.g. check the project's list of available labels still has only one 'Backend'). Report exactly what the task page shows for the label.",
+ "params": {
+  "v1": {
+   "example": "fwvk12-n2 Bench Task",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:task_title"
+  },
+  "v2": {
+   "example": "fwvk12-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "http://127.0.0.1:8096/tasks/6",
+   "usedIn": [],
+   "known": true,
+   "binding": "02-create.task_url"
+  },
+  "v4": {
+   "example": "Back",
+   "usedIn": [
+    2
+   ]
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8096/tasks/:id"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e494"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "main > div > div > div:nth-of-type(2) > div:nth-of-type(2) > button:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 383,
+      "w": 284,
+      "h": 34,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/tasks/:id",
+    "addedContains": [
+     "- textbox \"Type to add a label…\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "type",
+   "args": {
+    "target": "role=textbox[name=\"Type to add a label…\"]",
+    "text": "{{v4}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=textbox[name=\"Type to add a label…\"]"
+     },
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Type to add a label…"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Type to add a label…"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div > div > input"
+     },
+     {
+      "kind": "point",
+      "x": 636,
+      "y": 337,
+      "w": 582,
+      "h": 24,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/tasks/:id",
+    "addedContains": [
+     "- textbox \"Type to add a label…\": {{v4}}",
+     "- button \"{{*}} Click or press enter to select\"",
+     "- button \"{{v4}} Add this as new label\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Backend Click or press enter to select\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=button[name=\"Backend Click or press enter to select\"]"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Backend Click or press enter to select"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 636,
+      "y": 375,
+      "w": 590,
+      "h": 42,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/tasks/:id",
+    "addedContains": [
+     "- textbox \"Type to add a label…\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Open the search/quick action bar\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=button[name=\"Open the search/quick action bar\"]"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Open the search/quick action bar"
+     },
+     {
+      "kind": "css",
+      "selector": "#app > header > div:nth-of-type(2) > button"
+     },
+     {
+      "kind": "point",
+      "x": 1087,
+      "y": 32,
+      "w": 40,
+      "h": 64,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/tasks/:id",
+    "addedContains": [
+     "- textbox \"Type a command or search…\"",
+     "- button \"New task\"",
+     "- button \"New project\"",
+     "- button \"New team\"",
+     "- button \"Bench Project\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "press",
+   "args": {
+    "key": "Escape"
+   },
+   "locators": {},
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/tasks/:id",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "a[href=\"/labels\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "a[href=\"/labels\"]"
+     },
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "Labels"
+     },
+     {
+      "kind": "css",
+      "selector": "div > aside > nav:nth-of-type(1) > menu > li:nth-of-type(4) > a"
+     },
+     {
+      "kind": "point",
+      "x": 150,
+      "y": 234,
+      "w": 300,
+      "h": 44,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/labels",
+    "addedContains": [
+     "- link \"NEW LABEL\"",
+     "- heading \"Manage labels\"",
+     "- button \"Docs\"",
+     "- button \"Frontend\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 2,
+  "successes": 2,
+  "partial": 0,
+  "created": "2026-09-24T21:39:25.719Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-24T21:41:16.903Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_0dc3a2",
+  "index": 0,
+  "of": 3
+ },
+ "provenance": {
+  "session": "fwvk12-n2",
+  "instruction": "On the Vikunja task page for the task titled 'fwvk12-n2 Bench Task' (at http://127.0.0.1:8096/tasks/6), attach the EXISTING label named 'Backend' to this task. Important: the label field creates a NEW label from whatever text is typed, so you must choose the existing 'Backend' label from the suggestion dropdown that appears when you type 'Back' — do not just press enter on typed text if that would create a new label. Verify afterwards that the task shows the label 'Backend' and that no duplicate/new label was created (e.g. check the project's list of available labels still has only one 'Backend'). Report exactly what the task page shows for the label.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-24T21:39:25.719Z",
+  "transforms": [
+   {
+    "name": "unfreezeExpectations",
+    "at": 2,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- textbox \\\"Type to add a label…\\\": {{v4}}\",\"- button \\\"Backend Click or press enter to select\\\"\",\"- button \\\"{{v4}} Add this as new label\\\"\"] → [\"- textbox \\\"Type to add a label…\\\": {{v4}}\",\"- button \\\"{{*}} Click or press enter to select\\\"\",\"- button \\\"{{v4}} Add this as new label\\\"\"]"
+   },
+   {
+    "name": "unfreezeExpectations",
+    "at": 6,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- link \\\"NEW LABEL\\\"\",\"- heading \\\"Manage labels\\\"\",\"- button \\\"Backend\\\"\",\"- button \\\"Docs\\\"\",\"- button \\\"Frontend\\\"\"] → [\"- link \\\"NEW LABEL\\\"\",\"- heading \\\"Manage labels\\\"\",\"- button \\\"Docs\\\"\",\"- button \\\"Frontend\\\"\"]"
+   }
+  ]
+ },
+ "revision": 2
+}
