@@ -1,0 +1,1391 @@
+{
+ "id": "s_39031d",
+ "origin": "http://127.0.0.1:8069",
+ "template": "In Odoo, open the Sales app and find the existing draft quotation with reference {{v1}} for customer '{{v2}}'. Open it for editing and change the Quantity of the FIRST order line (the one with product '{{v4}}') from 3 to 5. Leave the second line ('{{v6}}', quantity 2) unchanged. Save the quotation (still a draft, do not confirm). Then report: (a) the new Untaxed Amount shown in the totals section, and (b) the quantity and subtotal of each of the two lines as read back from the saved form. Do not wait for network idle (the app long-polls); wait for concrete page elements instead.",
+ "params": {
+  "v1": {
+   "example": "S00021",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:order_reference"
+  },
+  "v2": {
+   "example": "fwod83-n1 Bench Customer",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i1:contact_name"
+  },
+  "v3": {
+   "example": "fwod83-n1",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v4": {
+   "example": "[FURN_6666] Acoustic Bloc Screens",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:product_name"
+  },
+  "v6": {
+   "example": "[E-COM11] Cabinet with Doors",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i3:line2_new_product_name"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+  "fingerprint": [
+   0.009,
+   0.012,
+   0.003,
+   0,
+   0.006,
+   0.089,
+   0.003,
+   0.006,
+   0.009,
+   0.012,
+   0.012,
+   0,
+   0.009,
+   0.045,
+   0.03,
+   0.006,
+   0.021,
+   0.003,
+   0.024,
+   0.015,
+   0,
+   0.024,
+   0.03,
+   0.018,
+   0.006,
+   0.006,
+   0,
+   0.021,
+   0.006,
+   0.048,
+   0.012,
+   0.048,
+   0.089,
+   0.03,
+   0.006,
+   0,
+   0.015,
+   0,
+   0,
+   0.003,
+   0.012,
+   0.018,
+   0.042,
+   0.039,
+   0.012,
+   0.033,
+   0.012,
+   0.065,
+   0.042,
+   0.024,
+   0.021,
+   0.003,
+   0,
+   0.089,
+   0.006,
+   0.006,
+   0.003,
+   0.036,
+   0.021,
+   0.003,
+   0,
+   0,
+   0.012,
+   0.19,
+   0,
+   0.012,
+   0.006,
+   0.03,
+   0.018,
+   0.006,
+   0,
+   0,
+   0.012,
+   0.012,
+   0.065,
+   0.012,
+   0.015,
+   0.012,
+   0.015,
+   0,
+   0.009,
+   0.036,
+   0.065,
+   0,
+   0.027,
+   0,
+   0.024,
+   0.101,
+   0.036,
+   0.012,
+   0.048,
+   0,
+   0.009,
+   0,
+   0.071,
+   0.012,
+   0.006,
+   0.042,
+   0.009,
+   0,
+   0.039,
+   0.027,
+   0.009,
+   0.027,
+   0.036,
+   0,
+   0.033,
+   0.012,
+   0.006,
+   0.012,
+   0.003,
+   0.018,
+   0,
+   0.012,
+   0.048,
+   0.009,
+   0,
+   0,
+   0,
+   0.098,
+   0,
+   0.006,
+   0.006,
+   0.009,
+   0.021,
+   0.009,
+   0.012,
+   0.006,
+   0.006,
+   0.006,
+   0.009,
+   0.006,
+   0.045,
+   0.009,
+   0.018,
+   0.003,
+   0.003,
+   0.003,
+   0,
+   0.015,
+   0.006,
+   0.053,
+   0.024,
+   0.021,
+   0.006,
+   0.003,
+   0.006,
+   0.006,
+   0.03,
+   0.059,
+   0.048,
+   0,
+   0.059,
+   0.012,
+   0.003,
+   0.012,
+   0.012,
+   0.015,
+   0.027,
+   0.003,
+   0.012,
+   0.03,
+   0.015,
+   0.012,
+   0.012,
+   0.012,
+   0,
+   0,
+   0.012,
+   0,
+   0.006,
+   0.015,
+   0.033,
+   0.006,
+   0.003,
+   0.065,
+   0,
+   0,
+   0.006,
+   0.122,
+   0,
+   0.036,
+   0.039,
+   0.009,
+   0.006,
+   0.009,
+   0.021,
+   0.006,
+   0.018,
+   0.033,
+   0.006,
+   0.006,
+   0.009,
+   0.006,
+   0,
+   0.006,
+   0.095,
+   0.009,
+   0.024,
+   0.018,
+   0,
+   0.03,
+   0,
+   0.042,
+   0,
+   0,
+   0.003,
+   0.009,
+   0.024,
+   0,
+   0.006,
+   0.015,
+   0,
+   0.006,
+   0,
+   0,
+   0.003,
+   0.003,
+   0.006,
+   0.03,
+   0,
+   0.003,
+   0.018,
+   0.012,
+   0,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0.003,
+   0,
+   0.006,
+   0.006,
+   0.006,
+   0.018,
+   0.006,
+   0.006,
+   0.018,
+   0.015,
+   0.018,
+   0,
+   0.068,
+   0.006,
+   0.018,
+   0.009,
+   0,
+   0.006,
+   0.003,
+   0.012,
+   0.012,
+   0.006,
+   0,
+   0.175,
+   0.137,
+   0.056,
+   0.006,
+   0,
+   0.015,
+   0.033,
+   0.006,
+   0.009,
+   0.003,
+   0.003,
+   0.006,
+   0.143,
+   0.03,
+   0.08,
+   0.009,
+   0.012,
+   0.009,
+   0.009,
+   0.003,
+   0,
+   0.036,
+   0.012,
+   0.018,
+   0.006,
+   0.006,
+   0.009,
+   0.006,
+   0.024,
+   0.003,
+   0.059,
+   0.012,
+   0.006,
+   0.009,
+   0.015,
+   0.015,
+   0.015,
+   0,
+   0,
+   0.006,
+   0.006,
+   0.006,
+   0.009,
+   0,
+   0.012,
+   0.003,
+   0.059,
+   0.033,
+   0.003,
+   0,
+   0.021,
+   0.006,
+   0,
+   0.021,
+   0.006,
+   0.018,
+   0.015,
+   0.012,
+   0.012,
+   0.089,
+   0,
+   0.009,
+   0.003,
+   0,
+   0.021,
+   0.074,
+   0,
+   0.018,
+   0.009,
+   0.039,
+   0.05,
+   0,
+   0.015,
+   0,
+   0.006,
+   0.015,
+   0,
+   0.003,
+   0,
+   0.009,
+   0.012,
+   0,
+   0.021,
+   0.018,
+   0,
+   0.027,
+   0.059,
+   0,
+   0.012,
+   0,
+   0,
+   0.012,
+   0.012,
+   0.024,
+   0,
+   0.006,
+   0.012,
+   0.03,
+   0.039,
+   0.062,
+   0.003,
+   0.006,
+   0,
+   0.033,
+   0,
+   0.009,
+   0.03,
+   0.045,
+   0.045,
+   0.003,
+   0.006,
+   0.021,
+   0.053,
+   0.012,
+   0,
+   0.012,
+   0,
+   0.015,
+   0.003,
+   0.012,
+   0.006,
+   0,
+   0.006,
+   0,
+   0.003,
+   0.006,
+   0.036,
+   0.012,
+   0.006,
+   0.012,
+   0,
+   0.027,
+   0.012,
+   0.003,
+   0.048,
+   0.012,
+   0.006,
+   0.021,
+   0.03,
+   0.009,
+   0.021,
+   0.015,
+   0.009,
+   0.089,
+   0.003,
+   0.006,
+   0,
+   0.006,
+   0.003,
+   0.012,
+   0.012,
+   0.006,
+   0.009,
+   0.006,
+   0.015,
+   0,
+   0.018,
+   0.056,
+   0.015,
+   0.018,
+   0.006,
+   0,
+   0.059,
+   0.03,
+   0.036,
+   0.006,
+   0.006,
+   0.024,
+   0.012,
+   0,
+   0,
+   0.012,
+   0.045,
+   0.003,
+   0.015,
+   0.006,
+   0.003,
+   0.009,
+   0.006,
+   0.006,
+   0.003,
+   0.006,
+   0,
+   0.012,
+   0.003,
+   0.027,
+   0.003,
+   0.012,
+   0.045,
+   0,
+   0.006,
+   0.006,
+   0,
+   0.009,
+   0.039,
+   0.009,
+   0.003,
+   0,
+   0.027,
+   0.042,
+   0.098,
+   0.006,
+   0.003,
+   0.012,
+   0.012,
+   0,
+   0.003,
+   0.086,
+   0.018,
+   0,
+   0,
+   0.018,
+   0.009,
+   0,
+   0.116,
+   0.018,
+   0.665,
+   0.036,
+   0,
+   0.036,
+   0.015,
+   0.045,
+   0.003,
+   0,
+   0,
+   0.006,
+   0.006,
+   0.042,
+   0.003,
+   0,
+   0.012,
+   0.006,
+   0.033,
+   0.006,
+   0.006,
+   0.009,
+   0.033,
+   0.006,
+   0.006,
+   0.092,
+   0,
+   0,
+   0.009,
+   0.018,
+   0.068,
+   0.003,
+   0.015,
+   0.012,
+   0.015,
+   0.027,
+   0.006,
+   0.345,
+   0,
+   0.018,
+   0.018,
+   0.021,
+   0.006,
+   0.015,
+   0
+  ],
+  "requireText": [
+   "{{v1}}",
+   "{{v2}}"
+  ]
+ },
+ "goal": {
+  "requireText": [
+   "Untaxed Amount £ 1,755.00",
+   "TAX 20% £ 351.00",
+   "Total £ 2,106.00"
+  ]
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1470"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > div > div > button"
+     },
+     {
+      "kind": "point",
+      "x": 132,
+      "y": 79,
+      "w": 12,
+      "h": 17.5,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+    "addedContains": [
+     "- menu \"Print Duplicate Delete Generate a Payment Link Mark {{*}} as Sent Share\"",
+     "- button \"Print\"",
+     "- menuitem \"Duplicate\"",
+     "- menuitem \"Delete\"",
+     "- menuitem \"Generate a Payment Link\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "press",
+   "args": {
+    "key": "Escape"
+   },
+   "locators": {},
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "dblclick",
+   "args": {
+    "target": ".o_field_x2many_list .o_data_row td[name=\"product_uom_qty\"] >> nth=0"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_field_x2many_list .o_data_row td[name=\"product_uom_qty\"] >> nth=0"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 691,
+      "y": 442,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+    "addedContains": [
+     "- row \"20% £ 885.00\"",
+     "- combobox \"Type to find a product...\": {{*}}",
+     "- link \"Delete\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read_all",
+   "args": {
+    "target": ".o_field_x2many_list .o_data_row td[name=\"product_uom_qty\"] input",
+    "what": "value"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_field_x2many_list .o_data_row td[name=\"product_uom_qty\"] input"
+     },
+     {
+      "kind": "css",
+      "selector": "table > tbody > tr:nth-of-type(1) > td:nth-of-type(4) > div > input"
+     },
+     {
+      "kind": "point",
+      "x": 691,
+      "y": 440,
+      "w": 82.4,
+      "h": 21,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line1_quantity_before"
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": ".o_field_x2many_list .o_data_row td[name=\"product_uom_qty\"] input >> nth=0",
+    "value": "5"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_field_x2many_list .o_data_row td[name=\"product_uom_qty\"] input >> nth=0"
+     },
+     {
+      "kind": "css",
+      "selector": "table > tbody > tr:nth-of-type(1) > td:nth-of-type(4) > div > input"
+     },
+     {
+      "kind": "point",
+      "x": 691,
+      "y": 440,
+      "w": 82.4,
+      "h": 21,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+    "addedContains": [
+     "- row \"20% {{*}}\"",
+     "- row \"Untaxed Amount {{*}}\"",
+     "- row \"TAX 20% {{*}}\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": ".o_field_x2many_list .o_data_row input",
+    "what": "value",
+    "label": "line1_product"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_field_x2many_list .o_data_row input",
+      "nth": 0
+     }
+    ]
+   },
+   "label": "line1_product"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": ".o_field_x2many_list .o_data_row input",
+    "what": "value",
+    "label": "line1_quantity"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_field_x2many_list .o_data_row input",
+      "nth": 1
+     }
+    ]
+   },
+   "label": "line1_quantity"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": ".o_field_x2many_list .o_data_row input",
+    "what": "value",
+    "label": "line1_unit_price"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_field_x2many_list .o_data_row input",
+      "nth": 2
+     }
+    ]
+   },
+   "label": "line1_unit_price"
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1474"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Save manually"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 163,
+      "y": 79,
+      "w": 26,
+      "h": 17.5,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+    "addedContains": [
+     "- cell \"{{v4}}\"",
+     "- cell \"5{{*}}\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "status",
+    "target": ".o_statusbar_status .o_arrow_button_active, .o_statusbar_status button.active, .o_statusbar_status .o_arrow_button_current",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_statusbar_status .o_arrow_button_active, .o_statusbar_status button.active, .o_statusbar_status .o_arrow_button_current"
+     },
+     {
+      "kind": "role",
+      "role": "radio",
+      "name": "Quotation"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div > button:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 980,
+      "y": 129,
+      "w": 88.7,
+      "h": 33,
+      "role": "radio",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "status_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > h1 > div > span"
+     },
+     {
+      "kind": "point",
+      "x": 89,
+      "y": 195,
+      "w": 96.5,
+      "h": 31,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "order_reference"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "value"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "combobox",
+      "name": "Type to find a customer..."
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Type to find a customer..."
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(1) > div > div > input",
+      "nth": 0
+     },
+     {
+      "kind": "point",
+      "x": 383,
+      "y": 247,
+      "w": 409.8,
+      "h": 26,
+      "role": "combobox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "customer_name"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div > div:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 210,
+      "y": 270,
+      "w": 63.8,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "customer_city"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "tbody > tr:nth-of-type(1) > td:nth-of-type(2) > div > span > span"
+     },
+     {
+      "kind": "point",
+      "x": 169,
+      "y": 440,
+      "w": 228,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line1_product"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 691,
+      "y": 442,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line1_quantity"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(5)"
+     },
+     {
+      "kind": "point",
+      "x": 783,
+      "y": 442,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line1_unit_price"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(7)"
+     },
+     {
+      "kind": "point",
+      "x": 1179,
+      "y": 442,
+      "w": 104,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line1_subtotal"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "tbody > tr:nth-of-type(2) > td:nth-of-type(2) > div > span > span"
+     },
+     {
+      "kind": "point",
+      "x": 150,
+      "y": 480,
+      "w": 191.1,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line2_product"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(2) > td:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 691,
+      "y": 482,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line2_quantity"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(2) > td:nth-of-type(5)"
+     },
+     {
+      "kind": "point",
+      "x": 783,
+      "y": 482,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line2_unit_price"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(2) > td:nth-of-type(7)"
+     },
+     {
+      "kind": "point",
+      "x": 1179,
+      "y": 482,
+      "w": 104,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line2_subtotal"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(1) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1205,
+      "y": 621,
+      "w": 66.2,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "untaxed_amount"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(2) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1195,
+      "y": 644,
+      "w": 86,
+      "h": 21,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "tax_20"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(3) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1195,
+      "y": 669,
+      "w": 86,
+      "h": 21,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "total"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div > button:nth-of-type(3)"
+     },
+     {
+      "kind": "point",
+      "x": 1087,
+      "y": 129,
+      "w": 126.4,
+      "h": 33,
+      "role": "radio",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "statusbar_readback"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div > div:nth-of-type(1) > div > div:nth-of-type(1) > div:nth-of-type(2)",
+      "nth": 1
+     },
+     {
+      "kind": "point",
+      "x": 108,
+      "y": 71,
+      "w": 76.3,
+      "h": 33.8,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "breadcrumb_readback"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div > div > table > tbody"
+     },
+     {
+      "kind": "point",
+      "x": 1130,
+      "y": 648,
+      "w": 217.4,
+      "h": 75.3,
+      "role": null,
+      "tag": "tbody",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "totals_readback"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "",
+  "values": {
+   "order_reference": "{{v1}}",
+   "status": "Quotation (draft, not confirmed)",
+   "breadcrumb_readback": "Quotations {{v1}}",
+   "customer_name": "{{v2}}",
+   "customer_city": "Benchville",
+   "line1_product": "{{v4}}",
+   "line1_quantity_before": "3.00",
+   "line1_quantity": "5.00",
+   "line1_unit_price": "295.00",
+   "line1_subtotal": "£ 1,475.00",
+   "line1_text_readback": "{{v4}} | 5.00 | 295.00 | 20% | £ 1,475.00",
+   "line2_product": "{{v6}}",
+   "line2_quantity": "2.00",
+   "line2_unit_price": "140.00",
+   "line2_subtotal": "£ 280.00",
+   "line2_text_readback": "{{v6}} | 2.00 | 140.00 | 20% | £ 280.00",
+   "untaxed_amount": "£ 1,755.00",
+   "tax_20": "£ 351.00",
+   "total": "£ 2,106.00",
+   "totals_readback": "Untaxed Amount\t£ 1,755.00\nTAX 20%\t£ 351.00\nTotal\t£ 2,106.00",
+   "status_2": "Quotation",
+   "ref": "{{v3}}",
+   "product_code": "FURN_6666",
+   "statusbar_readback": "Quotation Sent"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-24T06:55:25.583Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-24T07:01:56.574Z"
+ },
+ "status": "validated",
+ "provenance": {
+  "session": "fwod83-n1",
+  "instruction": "In Odoo, open the Sales app and find the existing draft quotation with reference S00021 for customer 'fwod83-n1 Bench Customer'. Open it for editing and change the Quantity of the FIRST order line (the one with product '[FURN_6666] Acoustic Bloc Screens') from 3 to 5. Leave the second line ('[E-COM11] Cabinet with Doors', quantity 2) unchanged. Save the quotation (still a draft, do not confirm). Then report: (a) the new Untaxed Amount shown in the totals section, and (b) the quantity and subtotal of each of the two lines as read back from the saved form. Do not wait for network idle (the app long-polls); wait for concrete page elements instead.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-24T06:55:25.583Z",
+  "transforms": [
+   {
+    "name": "coalesceControls",
+    "at": 3,
+    "reason": "repeat of the previous press with identical args and no target of its own"
+   },
+   {
+    "name": "unfreezeExpectations",
+    "at": 1,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- menu \\\"Print Duplicate Delete Generate a Payment Link Mark Quotation as Sent Share\\\"\",\"- button \\\"Print\\\"\",\"- menuitem \\\"Duplicate\\\"\",\"- menuitem \\\"Delete\\\"\",\"- menuitem \\\"Generate a Payment Link\\\"\"] → [\"- menu \\\"Print Duplicate Delete Generate a Payment Link Mark {{*}} as Sent Share\\\"\",\"- button \\\"Print\\\"\",\"- menuitem \\\"Duplicate\\\"\",\"- menuitem \\\"Delete\\\"\",\"- menuitem \\\"Generate a Payment Link\\\"\"]"
+   },
+   {
+    "name": "unfreezeExpectations",
+    "at": 5,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- row \\\"20% £ 1,475.00\\\"\",\"- cell \\\"£ 1,475.00\\\"\",\"- row \\\"Untaxed Amount £ 1,755.00\\\"\",\"- cell \\\"£ 1,755.00\\\"\",\"- row \\\"TAX 20% £ 351.00\\\"\"] → [\"- row \\\"20% {{*}}\\\"\",\"- row \\\"Untaxed Amount {{*}}\\\"\",\"- row \\\"TAX 20% {{*}}\\\"\"]"
+   },
+   {
+    "name": "unfreezeExpectations",
+    "at": 9,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- cell \\\"{{v4}}\\\"\",\"- cell \\\"{{v4}}\\\"\",\"- cell \\\"5.00\\\"\",\"- cell \\\"295.00\\\"\"] → [\"- cell \\\"{{v4}}\\\"\",\"- cell \\\"5{{*}}\\\"\"]"
+   }
+  ]
+ },
+ "revision": 5
+}

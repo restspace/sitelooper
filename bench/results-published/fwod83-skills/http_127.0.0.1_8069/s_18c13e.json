@@ -1,0 +1,72 @@
+{
+ "id": "s_18c13e",
+ "origin": "http://127.0.0.1:8069",
+ "template": "Open {{v2}} in the browser. If a login page appears, log in with username '{{v3}}' and password '{{v4}}' (type that password text exactly as given into the password field). Then open the Contacts app and create a new contact named '{{v5}}' with its City field set to '{{v6}}'. Save the contact and report the exact Name and City values shown on the saved contact page. Note: the app long-polls and is never network-idle, so never wait for network idle; wait for concrete page elements instead.",
+ "params": {
+  "v1": {
+   "example": "fwod83-n1",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "http://127.0.0.1:8069/",
+   "usedIn": [
+    1
+   ]
+  },
+  "v3": {
+   "example": "admin",
+   "usedIn": []
+  },
+  "v4": {
+   "example": "{{env:APP_PASSWORD}}",
+   "usedIn": []
+  },
+  "v5": {
+   "example": "fwod83-n1 Bench Customer",
+   "usedIn": [],
+   "known": true
+  },
+  "v6": {
+   "example": "Benchville",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8069/"
+ },
+ "steps": [
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v2}}"
+   },
+   "locators": {}
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-24T06:52:29.254Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4,
+  "lastUsed": "2026-09-24T07:01:34.108Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_c8234a",
+  "index": 0,
+  "of": 6
+ },
+ "provenance": {
+  "session": "fwod83-n1",
+  "instruction": "Open http://127.0.0.1:8069/ in the browser. If a login page appears, log in with username 'admin' and password '{{env:APP_PASSWORD}}' (type that password text exactly as given into the password field). Then open the Contacts app and create a new contact named 'fwod83-n1 Bench Customer' with its City field set to 'Benchville'. Save the contact and report the exact Name and City values shown on the saved contact page. Note: the app long-polls and is never network-idle, so never wait for network idle; wait for concrete page elements instead.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-24T06:52:29.254Z"
+ },
+ "revision": 3
+}
