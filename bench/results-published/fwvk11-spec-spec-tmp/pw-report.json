@@ -1,0 +1,171 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwvk11-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwvk11-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwvk11-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwvk11-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwvk11-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwvk11.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwvk11-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwvk11.spec.ts",
+      "file": "fwvk11.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwvk11",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 26638,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe prosemirror/set-value (r_1ab693); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-open\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe prosemirror/set-value (r_1ab693); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-open\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in with username 'admin' and password '{{env:APP_PASSWORD}}' (type the password text exactly as given, it will be filled in automatically). Then navigate to the project named 'Bench Project' and report the titles of all tasks whose title starts with 'Seed:', exactly as displayed. Do not modify anything.",
+                      "duration": 5520
+                    },
+                    {
+                      "title": "02-open: In the project 'Bench Project' (currently open at /projects/{{01-signin.url.p1}}/5), create a new task with the title '{{runid}} Bench Task'. Add a description containing the text '{{runid}}' (e.g. 'Bench task created for run {{runid}}'). Set the due date to 2026-12-31. Set the priority to 'High'. Then open the task's detail page and report: the task title, the description text, the due date, the priority, and the task identifier exactly as the app displays it (Vikunja shows it as BENCH-<number> for this project). Do not touch the tasks whose titles start with 'Seed:'.",
+                      "duration": 11273
+                    },
+                    {
+                      "title": "03-open: On the task detail page for the task titled '{{runid}} Bench Task' (currently open at /tasks/{{02-open.url.p1}}), add the EXISTING label named 'Backend' to the task. Important: the label field creates a NEW label from whatever text is typed, so you must select the existing 'Backend' label from the suggestion/autocomplete dropdown that appears when you type 'Backend' — do not create a new label. After adding, verify the task shows the label 'Backend' and report the labels shown on the task. Do not change any other field.",
+                      "duration": 3771
+                    },
+                    {
+                      "title": "04-open: On the task detail page for the task titled '{{runid}} Bench Task' (currently open at /tasks/{{02-open.url.p1}}), add a comment to the task whose text includes '{{runid}}' (e.g. 'Comment for run {{runid}}'). Submit the comment, then verify it appears in the task's comments section and report the comment text exactly as displayed. Do not change any other field.",
+                      "duration": 3398
+                    },
+                    {
+                      "title": "05-open: Open the task detail page for the task titled '{{runid}} Bench Task' in project 'Bench Project' (at /tasks/{{02-open.url.p1}}). Reload the page and report, from the live page: (1) the task identifier exactly as displayed (BENCH-<number>), (2) the task title, (3) the description text, (4) the due date, (5) the priority, (6) the labels shown on the task, and (7) the text of any comments. Read only, do not modify anything.",
+                      "duration": 1996
+                    }
+                  ],
+                  "startTime": "2026-09-24T16:44:02.863Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "01ef786ad90e9032d284-f4e9a4f750a12a56eb7b",
+          "file": "fwvk11.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-24T16:44:01.251Z",
+    "duration": 28417.443,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
