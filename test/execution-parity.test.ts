@@ -3850,6 +3850,67 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     }, 240_000);
   });
 
+  describe('a picker click whose target went with the picker its entry opened (round 59, fwsi10 03-create)', () => {
+    /**
+     * snipeit fwsi10-n1 03-create filled the purchase date (opening the date
+     * picker) and clicked the day, which only closed the picker. n2 and n3
+     * found no picker at that click and stopped. Compiled from such a
+     * recording, both runners now click the day when the picker is showing
+     * and skip the click, saying so, when it is not.
+     */
+    const pickerSteps = (url: string): SkillStep[] => {
+      const cal = ['- cell "Select Month"', '- cell "Su"', '- cell "Mo"'];
+      const entries: RecordedEntry[] = [
+        { k: 'instruction', text: 'set the purchase date and go on', url },
+        { k: 'step', tool: 'goto', args: { url }, locators: {}, diff: { url, alerts: [], added: [], dialect: 2 } },
+        {
+          k: 'step',
+          tool: 'fill',
+          args: { target: '#date', value: '2026-03-15' },
+          locators: { target: { expr: 'x', verified: true, raw: '#date', chain: [{ kind: 'css', selector: '#date' }] } },
+          diff: { url, alerts: [], added: ['- textbox "Purchase Date": 2026-03-15', ...cal], dialect: 2 },
+        },
+        {
+          k: 'step',
+          tool: 'click',
+          args: { target: 'td.day:has-text("15")' },
+          locators: { target: { expr: 'x', verified: true, raw: 'td.day:has-text("15")', chain: [{ kind: 'css', selector: 'td.day:has-text("15")' }] } },
+          diff: { url, alerts: [], added: [], removed: cal, dialect: 2 },
+        },
+        {
+          k: 'step',
+          tool: 'click',
+          args: { target: '#next' },
+          locators: { target: { expr: 'x', verified: true, raw: '#next', chain: [{ kind: 'role', role: 'button', name: 'Next' }] } },
+          diff: { url, alerts: [], added: [], dialect: 2 },
+        },
+      ];
+      return compileSkills({ entries, instruction: 'set the purchase date and go on', report: { status: 'success', summary: 'ok' }, session: 's' }).flatMap((sk) => sk.steps);
+    };
+
+    it('both runners click the day when the picker shows, and skip it when the picker is shut', async () => {
+      const compiled = pickerSteps(`${origin}/picker?open=1`);
+      const day = compiled.find((st) => st.args.target === 'td.day:has-text("15")')!;
+      expect(day.expect?.removedContains).toEqual(['- cell "Select Month"', '- cell "Su"', '- cell "Mo"']);
+      expect(day.expect?.removalRequired).toBeUndefined();
+      const at = (url: string) => compiled.map((st) => (st.tool === 'goto' ? { ...st, args: { url } } : st));
+
+      const open = await both(at(`${origin}/picker?open=1`), 0);
+      expect(open.replay.ok, open.replay.reason ?? '').toBe(true);
+      expect(open.emitted.ok, open.emitted.reason ?? '').toBe(true);
+      await new Promise((r) => setTimeout(r, 300));
+      expect(open.replayLog).toEqual(['commit:day:15', 'commit:next:go']);
+      expect(open.emittedLog).toEqual(['commit:day:15', 'commit:next:go']);
+
+      const shut = await both(at(`${origin}/picker`), 0);
+      expect(shut.replay.ok, shut.replay.reason ?? '').toBe(true);
+      expect(shut.emitted.ok, shut.emitted.reason ?? '').toBe(true);
+      await new Promise((r) => setTimeout(r, 300));
+      expect(shut.replayLog, 'replay clicked into a picker that was shut').toEqual(['commit:next:go']);
+      expect(shut.emittedLog, 'the artifact clicked into a picker that was shut').toEqual(['commit:next:go']);
+    }, 240_000);
+  });
+
   describe('a click whose whole recorded effect was a removal (round 56, fwvk8 02-create)', () => {
     /**
      * vikunja fwvk8-n1 02-create's FILTERS click closed the filter popup

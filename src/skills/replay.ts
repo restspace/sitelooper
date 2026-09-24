@@ -1019,6 +1019,21 @@ export async function replaySkill(
           return 'skipped';
         }
       }
+      // A HIDE whose target sat INSIDE what it closes (snipeit fwsi10 03-create's
+      // day in the date picker its fill opened, compile.ts entryPopup): with the
+      // picker shut the target cannot resolve, and the page showing none of the
+      // lines it was recorded removing is the state it was recorded producing.
+      // The shared hideBefore decides, as for a hide whose target did resolve;
+      // a REQUIRED removal is still a stop, and falls through to the miss.
+      const hiddenMiss = step.contexts?.target?.frame?.length ? [] : hideEffectLines(step);
+      if (hiddenMiss.length && !step.expect?.removalRequired) {
+        const gone = await hideBefore(page, hiddenMiss, false, params, tag, dialectOf(step));
+        if (gone.skip) {
+          res.warnings.push(`step ${tag}: its target is gone with what this click was recorded removing (${clip(hiddenMiss[0], 60)}), and none of that is on the page — skipped as already in effect`);
+          res.lines.push(`${head} → skipped (already in effect)`);
+          return 'skipped';
+        }
+      }
       // Navigation by recorded destination (PLAN-replay-v2 "order of
       // application", rung 3). A navigation step's recorded EVIDENCE includes
       // where it landed; the clicked affordance (a recents list, a shortcut —
