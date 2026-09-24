@@ -55,7 +55,8 @@ function cases(limit) {
   for (const f of fs.readdirSync(dir).filter((x) => x.endsWith('.jsonl')).sort()) {
     const app = f.startsWith('fwod') ? 'odoo' : f.startsWith('fwgr') ? 'grafana' : 'repairdesk';
     const L = fs.readFileSync(path.join(dir, f), 'utf8').split(/\r?\n/).filter(Boolean)
-      .flatMap((l) => { try { return [JSON.parse(l)]; } catch { return []; } });
+      .flatMap((l) => { try { return [JSON.parse(l)]; } catch { return []; } })
+      .filter((e) => !(e.k === 'step' && e.failed)); // a failed action (RecordedStep.failed) is evidence, never a gesture
     let cur = null;
     for (const e of L) {
       if (e.k === 'instruction') cur = { app, run: f.replace('-script.jsonl', ''), instruction: e.text ?? '', steps: [] };

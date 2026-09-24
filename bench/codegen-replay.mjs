@@ -151,7 +151,7 @@ for (const e of lines) {
     body.push('', `// instruction: ${swapRunid(e.text).replace(/\r?\n/g, ' ').slice(0, 160)}`);
     continue;
   }
-  if (e.k !== 'step') continue;
+  if (e.k !== 'step' || e.failed) continue; // a failed action (RecordedStep.failed) is evidence, never a gesture
   stepIndex++;
   const line = emit({ ...e, i: stepIndex });
   if (line === null) {

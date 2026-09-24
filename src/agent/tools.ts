@@ -21,6 +21,7 @@ import { controlFromTarget, siteModel } from '../skills/sitemap.js';
 import { settleDom, settlePage } from '../daemon/settle.js';
 import { fingerprintPage } from '../daemon/fingerprint.js';
 import { isRecordable, type StepDiff } from '../daemon/recorder.js';
+import { diffTotals, settleEvidence, stepFailure, type StepEvidence } from '../daemon/step-evidence.js';
 import { contractWeakening } from '../skills/contract.js';
 import { urlPattern as compiledUrlPattern } from '../skills/compile.js';
 import { renderReplay, replaySkill, type ReplayResult } from '../skills/replay.js';
@@ -739,6 +740,10 @@ async function runStep(
   // what the agent's state diff is taken after, too.
   const actionPage = STATE_CHANGING.has(name) ? (page ?? (await session.getPage().catch(() => null))) : null;
   let obs: ActionObservation | null = null;
+  // When the action went out, and whether the recorder took it: a step that
+  // throws before commit is recorded as FAILED (stage 0 evidence, never a gesture).
+  let dispatchAt: number | undefined;
+  let committed = false;
   try {
     // Secrets ({{env:NAME}}) resolve HERE and only here — after the recorder
     // captured the marker-bearing args above, immediately before the browser
@@ -756,6 +761,7 @@ async function runStep(
           expect: opts.expect,
         })
       : null;
+    dispatchAt = Date.now();
     let result = scrubSecrets(await dispatch(session, name, live, screenshotDir, signal, opts.resolved, obs));
     // A secret typed into a PASSWORD field: that field's own line is where an
     // ambiguous secret (a value some non-credential variable holds too) may be
@@ -781,6 +787,13 @@ async function runStep(
     // compiler cut a segment boundary at a page the procedure was only passing
     // through. Both are the observation's url wait now (urlHeldStill inside it).
     const verdict: SettleVerdict | null = obs ? await obs.settle() : null;
+    const settledAt = Date.now();
+    // What the recorder knew and used to drop (daemon/step-evidence.ts): the
+    // uncapped diff counts, and the removals the diff itself keeps only for a
+    // dialog or an add-less step. Never read by compile, export or replay.
+    let totals: StepEvidence['totals'];
+    let removedAll: string[] | undefined;
+    let capturedAt: number | undefined;
     // A link whose navigation had still not committed when the settle ran out
     // (action.ts LINK_NAV_WAIT_MS) is said to the model, because the page it
     // sees next is the old one. fwop2-n1's agent found the url unmoved, clicked
@@ -801,7 +814,9 @@ note: this link points to ${verdict.link.href}, and its navigation had not commi
     if (wantDiff && !before) captureFailed = true;
     if (wantDiff && before) {
       const after = verdict ? await captureSignature(page!) : await settledSignature(page!);
+      capturedAt = Date.now();
       if (after) {
+        totals = diffTotals(before.lines, after.lines);
         // Recorded in CURRENT_DIALECT (the signature's lines), and tagged so:
         // compile carries the tag onto the step's expectation, and every runner
         // renders the live page in the dialect the expectation was written in.
@@ -811,6 +826,7 @@ note: this link points to ${verdict.link.href}, and its navigation had not commi
         // evidence. Every other removal would be store weight nothing reads.
         const removed = removedLines(before.lines, after.lines) ?? [];
         const added = addedLines(before.lines, after.lines) ?? [];
+        removedAll = scrubSecretsDeep(removed);
         diff = scrubSecretsDeep({
           url: after.url,
           alerts: after.alerts.filter((a) => !before.alerts.includes(a)),
@@ -849,8 +865,19 @@ note: this link points to ${verdict.link.href}, and its navigation had not commi
     if (context.effect && context.effect.kind !== 'navigate' && context.afterPage) {
       fingerprintAfter = (await fingerprintPage(context.afterPage)) ?? undefined;
     }
+    const evidence: StepEvidence | undefined = pending
+      ? {
+          at: { d: dispatchAt ?? settledAt, s: settledAt, ...(capturedAt !== undefined ? { c: capturedAt } : {}) },
+          ...(verdict ? { settle: settleEvidence(verdict) } : {}),
+          ...(captureFailed ? { captureFailed: true as const } : {}),
+          ...(totals ? { totals } : {}),
+          ...(removedAll?.length && !diff?.removed ? { removed: removedAll } : {}),
+        }
+      : undefined;
+    committed = true;
     recorder?.commit(pending, result, {
       diff,
+      ...(evidence ? { obs: evidence } : {}),
       via: opts.via,
       fingerprintAfter,
       ...(context.page !== undefined ? { page: context.page } : {}),
@@ -864,6 +891,11 @@ note: this link points to ${verdict.link.href}, and its navigation had not commi
       ...(verdict ? { outcome: verdict.outcome, settled: true as const } : {}),
       ...(verdict?.link ? { link: verdict.link } : {}),
     };
+  } catch (err) {
+    // A failed action is evidence, not a gesture: on disk as `failed: true`,
+    // out of every read of the take (ScriptRecorder.fail).
+    if (!committed && pending && recorder) recorder.fail(pending, stepFailure(err), { at: { d: dispatchAt ?? Date.now() } });
+    throw err;
   } finally {
     obs?.cancel();
     if (watchPopup) page!.off('popup', onPopup);
