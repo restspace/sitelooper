@@ -1,0 +1,122 @@
+
+[sweep] run 1/3: fwod85-n1 (store: /home/user/sitelooper/bench/results/fwod85-skills)
+[harness] odoo: defaulting APP_URL
+[harness] odoo: defaulting APP_EMAIL
+[harness] odoo: defaulting APP_PASSWORD
+[reset] odoo: no leftover bench customers
+[harness] odoo responded 303 at http://127.0.0.1:8069/
+stopped: fwod85-n1
+  flow "fwod85" saved: 8 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwod85.json
+  warning: note: 8 goal/report value(s) carrying a value this run made were slotted or dropped:
+  s_579da7.reportTemplate.summary dropped (narrates a value this run made)
+  s_691487.reportTemplate.summary slotted "21" → {{v6}}
+  s_6a1629.reportTemplate.summary slotted "21" → {{v12}}
+  s_8a8e8a.reportTemplate.summary slotted "21" → {{v8}}
+  s_aa0459.reportTemplate.summary dropped (narrates a value this run made)
+  s_d7b28e.reportTemplate.values.contact_url slotted "44" → {{v4}}
+  s_d7b28e.reportTemplate.values.order_url dropped (recorded literal of a value this run made)
+  s_d7b28e.reportTemplate.summary dropped (narrates a value this run made)
+  warning: warning: 08-open's instruction asks to report order_status_label, and only a recorded literal backs it: no read in its procedure publishes it, so a replay reports it only if the page it ends on shows that exact text — re-record the step so the value is read where it is shown
+  warning: note: 01-signin no longer publishes login_used — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-create no longer publishes record_url — no replay reads it from the page and the recording showed no line to read
+  warning: note: 03-create no longer publishes order_line_count, untaxed_amount_displayed, record_url, product_code — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-open no longer publishes line1, line2_taxes, product_code — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-open no longer publishes line1, line2_unchanged, product_code — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-open no longer publishes confirm_button_status, dialog_shown — no replay reads them from the page and the recording showed no line to read
+  warning: note: 07-open no longer publishes verified_after_reload — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 08-open's instruction asks to report order_line_1, order_line_2, untaxed_amount_in_totals, and no replay can publish them: nothing in its procedure reads them from the page, so export dropped them — re-record the step so the value is read, not only reported
+  warning: note: 08-open no longer publishes order_line_count, order_url, changes_made, product_code — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 191 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "admin" (output) in "Sign in to Odoo: on the login page at http://127.0.0.1:8069/web/login, type admin into the Email/Login field, type the literal text {{env:APP_PASSWORD}} into th"
+  flow.steps[1].instruction: "Benchville" (output) in "In Odoo, create a new contact (customer) with Name exactly '{{runid}} Bench Customer' and City exactly 'Benchville'. Go to the Contacts app (or Sales > Customer"
+  flow.steps[2].instruction: "Unit Price" (output) in "In Odoo, create a new quotation in the Sales app: go to Sales > Orders > Quotations, click New. In the Customer field (an autocomplete dropdown), type '{{runid}"
+  flow.steps[2].instruction: "Quantity" (output) in "In Odoo, create a new quotation in the Sales app: go to Sales > Orders > Quotations, click New. In the Customer field (an autocomplete dropdown), type '{{runid}"
+  flow.steps[3].instruction: "Unit Price" (output) in "In Odoo, open the existing quotation with reference {{03-create.quotation_reference}} (Sales > Orders > Quotations, find {{03-create.quotation_reference}} for c"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwod85-n1 stop=completed
+turns=10 wall=467.9s
+commands=9 cmdTime=421.8s cmdBytes=11593 timeouts=0
+orchestrator in=6927 cw=0 cr=42944 out=5481
+inner prompt=2666121 cached=2471040 completion=30414
+spend=$0.1003 maxUsd=3
+learn: A_n=0 replayed=0/8 full=0 repaired=0 compiled=8 variants=0
+-> /home/user/sitelooper/bench/results/fwod85-n1-sitelooper-result.json
+
+fwod85-n1: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00021
+
+[sweep] run 2/3: fwod85-n2 (replay flow fwod85, no orchestrator)
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+[sweep] fwod85-n2: 1 drift ticket(s) → fwod85-n2-drift.json
+
+fwod85-n2: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00022
+
+[sweep] run 3/3: fwod85-n3 (replay flow fwod85, no orchestrator)
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+
+fwod85-n3: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00023
+
+Learning sweep fwod85 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwod85-n1' │ '6/6'    │ 'completed' │ 10    │ 9    │ 0.1003    │ 0    │ '0/8'        │ 468    │
+│ 1       │ 2 │ 'fwod85-n2' │ '6/6'    │ 'success'   │ 4     │ 8    │ 0.0045    │ 0.88 │ '8/8 (flow)' │ 92     │
+│ 2       │ 3 │ 'fwod85-n3' │ '6/6'    │ 'success'   │ 10    │ 8    │ 0.0051    │ 0.88 │ '8/8 (flow)' │ 95     │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8069
+  s_250210  validated    3 steps  3/3 (100%)
+           Final verification in Odoo, two checks, no changes to make: (1) Open the contact named '{{v1}}' (Contacts app)…
+  s_266e7c  validated    1 steps  3/3 (100%)
+           In Odoo, create a new quotation in the Sales app: go to Sales > Orders > Quotations, click New. In the Custome…
+  s_5549de  validated    3 steps  3/3 (100%)
+           In Odoo, create a new contact (customer) with Name exactly '{{v1}} Bench Customer' and City exactly 'Benchvill…
+  s_56dfed  validated    2 steps  3/3 (100%)
+           In Odoo, create a new quotation in the Sales app: go to Sales > Orders > Quotations, click New. In the Custome…
+  s_579da7  validated    5 steps  3/3 (100%)
+           In Odoo, create a new contact (customer) with Name exactly '{{v1}} Bench Customer' and City exactly 'Benchvill…
+  s_691487  validated   14 steps  3/3 (100%)
+           In Odoo, open the sales order with reference {{v1}} (Sales > Orders > Orders, customer '{{v2}}', currently in …
+  s_764d70  validated    7 steps  3/3 (100%)
+           In Odoo, create a new contact (customer) with Name exactly '{{v1}} Bench Customer' and City exactly 'Benchvill…
+  s_8a8e8a  validated   10 steps  3/3 (100%)
+           In Odoo, open the existing quotation with reference {{v1}} (Sales > Orders > Quotations, customer '{{v3}}', cu…
+  s_906fa0  validated    3 steps  3/3 (100%)
+           Sign in to Odoo: on the login page at http://127.0.0.1:8069/web/login, type admin into the Email/Login field, …
+  s_aa0459  validated   17 steps  3/3 (100%)
+           In Odoo, create a new quotation in the Sales app: go to Sales > Orders > Quotations, click New. In the Custome…
+  s_ab6563  validated   22 steps  3/3 (100%)
+           In Odoo, open the existing quotation with reference {{v1}} (Sales > Orders > Quotations, find {{v1}} for custo…
+  s_d1adf5  validated    8 steps  3/3 (100%)
+           In Odoo, create a new quotation in the Sales app: go to Sales > Orders > Quotations, click New. In the Custome…
+  s_d7b28e  validated    3 steps  3/3 (100%)
+           Final verification in Odoo, two checks, no changes to make: (1) Open the contact named '{{v1}}' (Contacts app)…
+  s_f5e179  validated    6 steps  3/3 (100%)
+           Sign in to Odoo: on the login page at http://127.0.0.1:8069/web/login, type admin into the Email/Login field, …
+  s_fad5ac  validated    1 steps  3/3 (100%)
+           In Odoo, create a new contact (customer) with Name exactly '{{v1}} Bench Customer' and City exactly 'Benchvill…
+  s_6a1629  validated   16 steps  2/2 (100%)
+           In Odoo, open the existing quotation with reference {{v1}} (Sales > Orders > Quotations, customer '{{v2}}'). I…
+  s_306d41  provisional 24 steps  1/1 (100%)
+           In Odoo, open the existing quotation with reference {{v1}} (Sales > Orders > Quotations, customer '{{v2}}'). I…
+store: /home/user/sitelooper/bench/results/fwod85-skills
+
+summary: /home/user/sitelooper/bench/results/fwod85-sweep.json
