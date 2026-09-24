@@ -1,6 +1,6 @@
 import type { Flow } from '../skills/flow.js';
 import { mutates, selectCandidates } from '../skills/learn.js';
-import { rethreadParams } from './rethread.js';
+import { threadStepParams } from '../skills/rethread.js';
 import { diagnosticLine, rerecordFix, rerecordAction, type Diagnostic } from './diagnostics.js';
 import { LEAKED_STEP } from './rerecord.js';
 import { SKILL_CONTRACT, pageEffectDemoted, stepsCarryContext, type Skill, type SkillParam, type SkillStep, type SkillStore } from '../skills/store.js';
@@ -484,10 +484,13 @@ export function flowToSpec(
     }
     // A literal binding on a step whose instruction threads references is
     // replay debt (an adoption froze that run's values into the pin): align
-    // the pinned template against the instruction and rebind what it can.
+    // the pinned template against the instruction and rebind what it can —
+    // and fill a declared slot the flow left out where a reference stands at
+    // it. The same threadStepParams daemon runFlow applies before it binds,
+    // so neither runner repairs a flow the other runs as written (fwod85).
     if (skill) {
-      const threaded = rethreadParams(step.id, step.instruction, skill.template, params);
-      params = threaded.params;
+      const threaded = threadStepParams({ id: step.id, instruction: step.instruction, params }, skill);
+      params = threaded.params ?? params;
       for (const line of threaded.warnings) {
         // A rebind is news, not a problem; only an UNTHREADED literal is one.
         const stuck = line.includes('could not be rethreaded');

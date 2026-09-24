@@ -1,6 +1,6 @@
 import type { BrowserProfile } from '../execution/browser.js';
 import { isMutatingAction } from '../execution/lifecycle.js';
-import { popupItem } from '../execution/expect.js';
+import { popupItem, slotActs } from '../execution/expect.js';
 import type { Skill, SkillStep } from './store.js';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -11,7 +11,7 @@ import { urlParts, urlPattern } from './compile.js';
 import { mintedShape, urlPart, urlShapeOf } from '../execution/url.js';
 import { idPositionPart, linkMintedParts, pathDigitPart, pathIdPart, unseenGotoParts } from './ledger.js';
 import { MIN_ID_LEN, looksLikeId, tokenPattern } from './shape.js';
-import { statedPlainly } from '../spec/rethread.js';
+import { statedPlainly, threadStepParams } from './rethread.js';
 
 /**
  * A flow is the resolved path a session took: the instructions the caller
@@ -372,6 +372,14 @@ export function buildFlow(
      */
     origins?: (skillId: string) => Record<string, string> | null;
     /**
+     * Given a skill id, the pinned skill itself (its template and declared
+     * slots). With it the export binds through `threadStepParams` — the
+     * template aligned against the REFERENCED instruction — and a declared
+     * slot still unbound after that is written by its recorded origin
+     * (`originOf`), or left out for `lintUnboundParams` to name. fwod85.
+     */
+    pinned?: (skillId: string) => Pick<Skill, 'id' | 'template' | 'params'> | null;
+    /**
      * Which values earlier runs demonstrated are run-specific (see
      * `RunSpecific`). Absent on a first recording, which is the point: run 1
      * has nothing to consult and falls back to position and shape.
@@ -451,6 +459,24 @@ export function buildFlow(
             }
           }
           params[k] = rv;
+        }
+      }
+      // The template read over the REFERENCED instruction, where a slot's
+      // value is a reference that carries no words of its own: fwod85 05-open's
+      // "[E-COM11] Cabinet with Doors" held the template's separator " with ",
+      // so the raw reading above truncated v9 and dropped v10. A slot sitting
+      // on a reference takes it; plain-text slots keep the raw reading.
+      const pinned = opts.pinned?.(g.report.skill);
+      if (pinned && params) {
+        params = threadStepParams({ id, instruction: text, params }, pinned).params ?? params;
+        // ...and a declared slot neither reading placed is written by its
+        // recorded origin when this flow can name it. Else it stays out, and
+        // lintUnboundParams says so at export rather than replay refusing it
+        // on every run.
+        for (const [slot, p] of Object.entries(pinned.params)) {
+          if (params[slot]) continue;
+          const ref = p.binding ? originOf(p.binding, byLedger, produced, opts.vars) : null;
+          if (ref) params[slot] = ref;
         }
       }
     }
@@ -2549,6 +2575,56 @@ interface Produced {
  * to an instruction that is not a step (dropped, merged) or that minted
  * something else falls back to value matching, as before.
  */
+/**
+ * The flow reference a recorded origin names, with no value to match: for a
+ * declared slot the template could not place at all (fwod85's v10, whose
+ * `output:i4:line2_quantity` is 04-open's `line2_quantity`). Only an origin
+ * this flow can name — a step that published that output, a url part an
+ * earlier step minted, a declared var — never a guess.
+ */
+export function originOf(
+  binding: string,
+  byLedger: ReadonlyMap<string, string>,
+  produced: readonly Pick<Produced, 'stepId' | 'output'>[],
+  vars: Record<string, string>,
+): string | null {
+  const v = /^var:(.+)$/.exec(binding);
+  if (v) return v[1] in vars ? `{{${v[1]}}}` : null;
+  const m = /^(output|url):([^:]+):(.+)$/.exec(binding);
+  if (!m) return null;
+  const stepId = byLedger.get(m[2]) ?? ([...byLedger.values()].includes(m[2]) ? m[2] : undefined);
+  if (!stepId) return null;
+  const output = m[1] === 'url' ? `url.${m[3]}` : m[3];
+  return produced.some((p) => p.stepId === stepId && p.output === output) ? `{{${stepId}.${output}}}` : null;
+}
+
+/**
+ * Every declared slot of a step's pinned skill the flow binds nothing to.
+ *
+ * Replay refuses a pin with an unbound slot a step acts by, and runs one that
+ * only an expectation names with that line unchecked (slotActs) — either way
+ * the flow is short a binding it should carry, and the export is where there
+ * is still somebody to tell. fwod85 exported 05-open without v10 and nobody
+ * heard about it until both replays fell back to the model.
+ */
+export function lintUnboundParams(flow: Flow, pinnedOf: (skillId: string) => Pick<Skill, 'id' | 'params'> | null): string[] {
+  const warnings: string[] = [];
+  for (const step of flow.steps) {
+    if (!step.skill || !step.params) continue;
+    const sk = pinnedOf(step.skill);
+    if (!sk) continue;
+    const unbound = Object.keys(sk.params).filter((slot) => !step.params![slot]);
+    if (!unbound.length) continue;
+    const one = unbound.length === 1;
+    warnings.push(
+      `${step.id}: ${sk.id} declares ${unbound.map((s) => `${s} (e.g. ${JSON.stringify(sk.params[s].example)}${sk.params[s].binding ? `, origin ${sk.params[s].binding}` : ''})`).join(', ')} but the flow binds nothing to ${one ? 'it' : 'them'} — ` +
+        `no reference stands at ${one ? 'its' : 'their'} place in the instruction and no step of this flow publishes ${one ? 'its' : 'their'} origin; ` +
+        `a replay refuses the pin if a step acts by ${one ? 'it' : 'one'}, and otherwise leaves the lines naming ${one ? 'it' : 'them'} unchecked.`,
+    );
+  }
+  return warnings;
+}
+
 function originRef(binding: string, value: string, byLedger: ReadonlyMap<string, string>, produced: readonly Produced[]): string | null {
   const m = /^url:([^:]+):(.+)$/.exec(binding);
   if (!m) return null;
@@ -2804,9 +2880,11 @@ function recordedRef(ref: string, steps: FlowStep[]): string | undefined {
  *
  * This is the daemon half of one rule: the compile-time twin is `usedSlot`
  * (src/spec/emit.ts), which has always done `step.segments.some(…)` and whose
- * comment calls itself "the port of ignorableRefs". The two must stay tied —
- * change one, change the other, or the daemon and the artifact disagree about
- * whether a step may act with an unresolved reference in its slots.
+ * comment calls itself "the port of ignorableRefs". Both now ask the one
+ * shared predicate, `slotActs` (src/execution/expect.ts) — replay's refusal
+ * of a missing param asks it too — so the daemon and the artifact cannot
+ * disagree about whether a step may act with an unresolved reference in its
+ * slots.
  */
 export function ignorableRefs(
   missing: string[],
@@ -2814,14 +2892,9 @@ export function ignorableRefs(
   chain: ReadonlyArray<Pick<StandInSegment, 'params' | 'preconditions'>>,
 ): string[] {
   if (!chain.length) return [];
-  const needed = new Set<string>();
-  for (const seg of chain) {
-    for (const [name, p] of Object.entries(seg.params)) if (p.usedIn.length) needed.add(name);
-    for (const marker of seg.preconditions?.requireText ?? []) for (const m of marker.matchAll(/\{\{(v\d+)\}\}/g)) needed.add(m[1]);
-  }
   return [...new Set(missing)].filter((ref) => {
     const token = `{{${ref}}}`;
-    return !Object.entries(step.params ?? {}).some(([name, tmpl]) => needed.has(name) && tmpl.includes(token));
+    return !Object.entries(step.params ?? {}).some(([name, tmpl]) => tmpl.includes(token) && slotActs(chain, name));
   });
 }
 
@@ -2858,7 +2931,7 @@ export function ignorableRefs(
  *    step's incidental read, the flow could not name that read, the re-pin
  *    was refused, and the flow stayed on a pin the store had already
  *    superseded. Same rule as the compile side's `statedPlainly`
- *    (spec/rethread.ts): a value carrying a run-scoped bound value (the
+ *    (skills/rethread.ts): a value carrying a run-scoped bound value (the
  *    runid) is never "stated plainly".
  *  - `self`: the step being re-pinned. No origin naming it (by id, or by the
  *    ledger index it ran under) is an origin for its own slots.

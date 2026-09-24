@@ -29,7 +29,7 @@ import { segmentGate } from '../execution/gates.js';
  */
 import { EXECUTION_MODULES, executionClosure } from './runtime-source.js';
 import { candidateExpr, type LocatorCandidate } from '../daemon/recorder.js';
-import { DIALOG_LINE, SLOT_LINE, TRANSIENT_LINE } from '../execution/expect.js';
+import { DIALOG_LINE, SLOT_LINE, TRANSIENT_LINE, slotActs } from '../execution/expect.js';
 import { identityFields } from '../execution/resolve.js';
 import { originOf } from '../execution/url.js';
 import { describeFramePath, stepEffect } from '../execution/context.js';
@@ -3455,8 +3455,8 @@ function refExpr(ref: string, vars: Set<string>, by?: string): string {
 /**
  * Can a missing value in this slot change what the step DOES?
  *
- * The port of `ignorableRefs` (src/skills/flow.ts:1083), derived from the same
- * two facts it reads: a slot some recorded step types or locates by
+ * The shared `slotActs` (src/execution/expect.ts), which `ignorableRefs`
+ * (src/skills/flow.ts) and replay's missing-param refusal also ask. Two facts: a slot some recorded step types or locates by
  * (`SkillParam.usedIn`), or one naming the record the procedure must find (a
  * `{{vN}}` inside `preconditions.requireText`). Everything else — a tag the
  * instruction mentions for context, a price quoted from the recording —
@@ -3465,11 +3465,7 @@ function refExpr(ref: string, vars: Set<string>, by?: string): string {
  * no step used.
  */
 function usedSlot(step: SpecStep, slot: string): boolean {
-  return step.segments.some(
-    (s) =>
-      (s.params[slot]?.usedIn.length ?? 0) > 0 ||
-      (s.preconditions.requireText ?? []).some((marker) => marker.includes(`{{${slot}}}`)),
-  );
+  return slotActs(step.segments, slot);
 }
 
 /**
@@ -3650,6 +3646,35 @@ function callArgs(step: SpecStep, slots: string[], vars: Set<string>, warnings: 
     }
     const example = step.segments.map((s) => s.params[slot]?.example).find((e) => typeof e === 'string');
     if (example === undefined) return `${slot}: ''`;
+    // A slot with a recorded ORIGIN came from another step or a var: its
+    // recorded example is run 1's value of something every run makes afresh,
+    // so it is never inlined. Left unbound — not passed at all, exactly as
+    // daemon replay leaves the param absent (replay.ts, slotActs): a slot no
+    // step acts by keeps its marker, and every line naming it is dropped with
+    // a warning at check time (unfilledSlot) — never '', which a line like
+    // `- cell "{{v10}}"` would fill to `- cell ""` and drop silently as naming
+    // nothing. One a step acts by refuses the compile — replay refuses the same pin
+    // and hands the step to the model, and the artifact has no model. fwod85
+    // 05-open: v10 (`output:i4:line2_quantity`) was inlined as "2.00" and the
+    // artifact passed while both replays refused.
+    const origin = step.segments.map((s) => s.params[slot]?.binding).find((b) => typeof b === 'string' && b);
+    if (origin) {
+      if (usedSlot(step, slot)) {
+        diagnostics.push({
+          code: 'unbound-slot',
+          step: step.id,
+          what: `slot ${slot} (origin ${origin}) has no flow binding, and ${step.id}'s procedure acts by it`,
+          why: `the flow binds nothing to ${slot}, and its recorded example ${JSON.stringify(example)} is run 1's value of ${origin}, not this run's. Daemon replay refuses this pin for the same missing param and hands the step to the model; a compiled artifact has no model to hand it to.`,
+          fix: `re-export or re-record the flow so ${step.id} binds ${slot} (\`sitelooper rerecord <flow file> ${step.id}\`)`,
+          action: { command: 'rerecord', args: [step.id], step: step.id },
+          severity: 'error',
+          line: `step ${step.id} slot ${slot} (origin ${origin}) has no flow binding and a step acts by it`,
+        });
+      } else {
+        warnings.push(`${step.id}: slot ${slot} (origin ${origin}) has no flow binding — left unbound, lines naming it are not checked`);
+      }
+      return null;
+    }
     // No flow binding: the recording's own value is the only one there is,
     // and inlining it silently is how a replay comes to work the recorded
     // run's record. Emitted, but the caller is told.

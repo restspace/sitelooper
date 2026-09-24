@@ -553,6 +553,14 @@ async function executeSkill(
     replaySkill(skill, params, {
       page,
       signal,
+      // The chain from this segment on: a slot a LATER segment types refuses
+      // here, before anything runs (slotActs).
+      chain: skill.seq
+        ? store
+            .list(skill.origin)
+            .filter((s) => s.seq?.chain === skill.seq!.chain && (s.seq?.index ?? 0) >= skill.seq!.index)
+            .sort((a, b) => (a.seq?.index ?? 0) - (b.seq?.index ?? 0))
+        : [skill],
       follow: (next) => session.repin(next),
       exec: async (tool, stepArgs, resolved, via, action) => runStep(session, tool, stepArgs, screenshotDir, signal, { resolved, via, expect: action?.expect }),
     }),

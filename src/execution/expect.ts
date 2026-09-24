@@ -76,6 +76,36 @@ export function unfilledSlot(line: string): boolean {
 }
 
 /**
+ * Can a missing value in this slot change what the procedure DOES?
+ *
+ * Yes when some segment of the chain types or locates by it (`usedIn`, the
+ * steps whose args or locators carry it), or when it names the record the
+ * procedure must find (a `{{vN}}` inside `preconditions.requireText`).
+ * Otherwise only the template, the report and recorded expectations carry it
+ * — and a line this run cannot fill is dropped with a warning (unfilledSlot),
+ * so its absence is no reason to refuse the procedure.
+ *
+ * ONE predicate for three readers that used to disagree: replay's refusal of
+ * missing params (replay.ts), the daemon's consumption gate (flow.ts
+ * ignorableRefs) and the compile's `usedSlot` (emit.ts). odoo fwod85: s_6a1629
+ * declared v10 only for the Save step's `- cell "{{v10}}"`; the flow bound
+ * nothing to it, the artifact ran and dropped the line, and both daemon
+ * replays refused the pin outright ("missing params: v10").
+ */
+export function slotActs(
+  chain: ReadonlyArray<{
+    params: Readonly<Record<string, { usedIn?: readonly number[] } | undefined>>;
+    preconditions?: { requireText?: readonly string[] } | null;
+  }>,
+  slot: string,
+): boolean {
+  const marker = `{{${slot}}}`;
+  return chain.some(
+    (seg) => (seg.params[slot]?.usedIn?.length ?? 0) > 0 || (seg.preconditions?.requireText ?? []).some((text) => text.includes(marker)),
+  );
+}
+
+/**
  * A recorded line whose slot this run bound to NOTHING. The compiled artifact
  * spells an unpublished reference as '' (`outputs[ref] ?? ''`, emit.ts), where
  * the daemon leaves the param absent — and url.ts's `unfilled`, gates.ts's
