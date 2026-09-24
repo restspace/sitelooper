@@ -1,0 +1,187 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwrd89-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwrd89-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwrd89-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwrd89-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwrd89-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwrd89.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwrd89-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwrd89.spec.ts",
+      "file": "fwrd89.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwrd89",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 30179,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-add s_44774c/8: read 'part_name' returned a value the skill itself set/selected ('fwrd89-spec RD Part A') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-add s_44774c/14: read 'part_row_text_1' returned a value the skill itself set/selected ('fwrd89-spec RD Part A') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-add\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-add s_44774c/8: read 'part_name' returned a value the skill itself set/selected ('fwrd89-spec RD Part B') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-add s_44774c/14: read 'part_row_text_1' returned a value the skill itself set/selected ('fwrd89-spec RD Part B') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-add\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-edit\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 05-set s_efa852/15 target: primary getByText('fwrd89-spec', { exact: true }) missed; used #2 getByTestId('ticket-title') (#1 absent)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-set\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-delete\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:4180/, sign in with email bench@example.com and password exactly the text {{env:APP_PASSWORD}} (it gets filled in when typed), and then create a ticket titled '{{runid}} RD Bench Ticket' (fill any required fields as needed). Report what was created.",
+                      "duration": 6643
+                    },
+                    {
+                      "title": "02-add: On ticket '{{runid}} RD Bench Ticket' ({{01-open.ticket_reference}}), add a part named '{{runid}} RD Part A' with cost 100 and markup 25, and report the price the app computes for it.",
+                      "duration": 4256
+                    },
+                    {
+                      "title": "03-add: On ticket '{{runid}} RD Bench Ticket' ({{01-open.ticket_reference}}), add a second part named '{{runid}} RD Part B' with cost 200 and markup 25, and report the price the app computes for it.",
+                      "duration": 4241
+                    },
+                    {
+                      "title": "04-edit: On ticket '{{runid}} RD Bench Ticket' ({{01-open.ticket_reference}}), edit part '{{runid}} RD Part A' to change its cost from 100 to 150 (keep markup 25) and report the price the app computes afterwards for that part and the new ticket total.",
+                      "duration": 2071
+                    },
+                    {
+                      "title": "05-set: On ticket '{{runid}} RD Bench Ticket' ({{01-open.ticket_reference}}), set the ticket status to 'Ready'. The app enforces preconditions before accepting that status — discover what they are, satisfy them, and report exactly what was required. Verify the final status is Ready.",
+                      "duration": 6478
+                    },
+                    {
+                      "title": "06-delete: On ticket '{{runid}} RD Bench Ticket' ({{01-open.ticket_reference}}): delete both parts ('{{runid}} RD Part A' and '{{runid}} RD Part B'), then archive the ticket so nothing from it is left active. Confirm each deletion and the archive (report confirmation text and final ticket state/status).",
+                      "duration": 5405
+                    }
+                  ],
+                  "startTime": "2026-09-24T06:44:30.397Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": "W3NpdGVsb29wZXIgZHJpZnRdIDA1LXNldCBzX2VmYTg1Mi8xNSB0YXJnZXQ6IHByaW1hcnkgZ2V0QnlUZXh0KCdmd3JkODktc3BlYycsIHsgZXhhY3Q6IHRydWUgfSkgbWlzc2VkOyB1c2VkICMyIGdldEJ5VGVzdElkKCd0aWNrZXQtdGl0bGUnKSAoIzEgYWJzZW50KQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "96ea7ee525014ec6b32a-54dcd4075816255b7f82",
+          "file": "fwrd89.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-24T06:44:28.450Z",
+    "duration": 32365.767000000003,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

@@ -1,0 +1,68 @@
+{
+ "id": "s_c5b922",
+ "origin": "http://127.0.0.1:4180",
+ "template": "Open {{v2}}, sign in with email {{v3}} and password exactly the text {{v4}} (it gets filled in when typed), and then create a ticket titled '{{v5}}' (fill any required fields as needed). Report what was created.",
+ "params": {
+  "v1": {
+   "example": "fwrd89-n1",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "http://127.0.0.1:4180/",
+   "usedIn": [
+    1
+   ]
+  },
+  "v3": {
+   "example": "bench@example.com",
+   "usedIn": []
+  },
+  "v4": {
+   "example": "{{env:APP_PASSWORD}}",
+   "usedIn": []
+  },
+  "v5": {
+   "example": "fwrd89-n1 RD Bench Ticket",
+   "usedIn": [],
+   "known": true
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:4180/"
+ },
+ "steps": [
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v2}}"
+   },
+   "locators": {}
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-24T06:40:58.826Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4,
+  "lastUsed": "2026-09-24T06:43:41.757Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_f3b3b6",
+  "index": 0,
+  "of": 4
+ },
+ "provenance": {
+  "session": "fwrd89-n1",
+  "instruction": "Open http://127.0.0.1:4180/, sign in with email bench@example.com and password exactly the text {{env:APP_PASSWORD}} (it gets filled in when typed), and then create a ticket titled 'fwrd89-n1 RD Bench Ticket' (fill any required fields as needed). Report what was created.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-24T06:40:58.826Z"
+ },
+ "revision": 3
+}
