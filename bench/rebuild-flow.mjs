@@ -56,7 +56,7 @@ const { carryOpener, compileSkills } = await import(dist('skills/compile.js'));
 const { RunLedger, bindingKey } = await import(dist('skills/ledger.js'));
 const { urlParts } = await import(dist('execution/url.js'));
 const { backfillReadValues, flattenComposedValues, promoteLabelledReads, unnamedReadValues } = await import(dist('agent/report.js'));
-const { selectionReadBack } = await import(dist('daemon/recorder.js'));
+const { parseScript, selectionReadBack } = await import(dist('daemon/recorder.js'));
 
 const argv = process.argv.slice(2);
 const arg = (name, dflt) => (argv.includes(name) ? argv[argv.indexOf(name) + 1] : dflt);
@@ -88,18 +88,13 @@ function sessions() {
     .map((f) => ({ runid: f.slice(0, -'-script.jsonl'.length), file: path.join(dir, f) }));
 }
 
+/**
+ * The recording as the daemon reads it (recorder.ts parseScript): a step
+ * recorded for a FAILED action is evidence only, never a gesture, so it is left
+ * out here exactly as ScriptRecorder leaves it out of every read of a take.
+ */
 function readEntries(file) {
-  return fs
-    .readFileSync(file, 'utf8')
-    .split(/\r?\n/)
-    .filter(Boolean)
-    .flatMap((l) => {
-      try {
-        return [JSON.parse(l)];
-      } catch {
-        return [];
-      }
-    });
+  return parseScript(fs.readFileSync(file, 'utf8').replace(/\r\n/g, '\n')).entries;
 }
 
 /**

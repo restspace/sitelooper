@@ -122,7 +122,8 @@ for (const file of files) {
     .readFileSync(file, 'utf8')
     .split('\n')
     .filter(Boolean)
-    .map((l) => JSON.parse(l));
+    .map((l) => JSON.parse(l))
+    .filter((e) => !(e.k === 'step' && e.failed)); // a failed action (RecordedStep.failed) is evidence, never a gesture
   let open = null;
   for (const e of entries) {
     if (e.k === 'instruction') {

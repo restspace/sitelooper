@@ -40,7 +40,9 @@ describe('the recorder keeps what an eval returned, as evalResult only', () => {
     rec.commit(mk('eval', { expression: "[...document.querySelectorAll('a')].map(a => a.href)" }), HREF);
     rec.commit(mk('read', { target: '@e1', what: 'text' }), '"seen"');
     rec.commit(mk('click', { target: '@e1' }), 'clicked');
-    expect(rec.entries).toEqual([
+    // seq/t are recorder stage 0's stamps (step-evidence.ts), not this test's subject.
+    const unstamped = rec.entries.map(({ seq: _s, t: _t, ...rest }) => rest);
+    expect(unstamped).toEqual([
       { ...mk('eval', { expression: "[...document.querySelectorAll('a')].map(a => a.href)" }), evalResult: HREF },
       { ...mk('read', { target: '@e1', what: 'text' }), result: '"seen"' },
       mk('click', { target: '@e1' }),

@@ -177,7 +177,8 @@ describe('ScriptRecorder persistence', () => {
 
     const reloaded = new ScriptRecorder('persist');
     expect(reloaded.entries).toHaveLength(2);
-    expect(reloaded.entries[0]).toEqual({ k: 'instruction', text: 'do the thing' });
+    // Every entry also carries its running seq and write time (stage 0 evidence).
+    expect(reloaded.entries[0]).toMatchObject({ k: 'instruction', text: 'do the thing', seq: 0 });
     expect(generateScript(reloaded.entries, { session: 'persist' })).toContain(
       "await page.getByTestId('x').click();",
     );
@@ -191,7 +192,7 @@ describe('ScriptRecorder persistence', () => {
     const rec = new ScriptRecorder('torn');
     rec.beginInstruction('first');
     fs.appendFileSync(path.join(tmpHome, 'sessions', 'torn', 'script.jsonl'), '{"k":"step","too');
-    expect(new ScriptRecorder('torn').entries).toEqual([{ k: 'instruction', text: 'first' }]);
+    expect(new ScriptRecorder('torn').entries).toMatchObject([{ k: 'instruction', text: 'first' }]);
   });
 
   it('only keeps the tool result for tools whose output becomes an assertion', () => {
@@ -199,10 +200,11 @@ describe('ScriptRecorder persistence', () => {
     const mk = (tool: string) => ({ k: 'step' as const, tool, args: { target: '@e1' }, locators: {} });
     rec.commit(mk('read'), '"seen"');
     rec.commit(mk('click'), 'clicked');
-    expect(rec.entries).toEqual([
+    expect(rec.entries).toMatchObject([
       { k: 'step', tool: 'read', args: { target: '@e1' }, locators: {}, result: '"seen"' },
       { k: 'step', tool: 'click', args: { target: '@e1' }, locators: {} },
     ]);
+    expect('result' in rec.entries[1]).toBe(false);
   });
 });
 

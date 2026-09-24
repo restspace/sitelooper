@@ -257,7 +257,8 @@ if (has('--corpus')) {
   const dis = { p: [0, 0, 0], l: [0, 0, 0] };
   const rate = (v, n) => [pct(v[0], n), pct(v[1], n), pct(v[2], n)];
   for (const f of files) {
-    const entries = fs.readFileSync(path.join(dir, f), 'utf8').trim().split('\n').map((l) => JSON.parse(l));
+    const entries = fs.readFileSync(path.join(dir, f), 'utf8').trim().split('\n').map((l) => JSON.parse(l))
+      .filter((e) => !(e.k === 'step' && e.failed)); // a failed action (RecordedStep.failed) is evidence, never a gesture
     const runid = f.replace('-script.jsonl', '');
     const slots = approximateSlots(entries);
     const pairs = triage.threadingDecisions(triage.recordedValues(entries, { runid }), triage.recordedTexts(entries));
