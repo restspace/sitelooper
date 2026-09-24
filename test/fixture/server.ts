@@ -971,8 +971,17 @@ const PARTS = `<!doctype html><html><head><meta charset="utf-8"><title>Ticket</t
  * sidebar does. What is applied survives a reload (sessionStorage); what is
  * pending does not. `?escape=0`: Escape does not shut it (Gitea's picker on
  * fwgt11's replays). `?stuck=1`: the Labels click does not shut it either.
+ * `?furniture=1` (round 61): a `link "bug"` outside the picker from the start
+ * (a nav link that merely shares the name), for the applied-pick control.
+ *
+ * Escape and focus: whether Escape shuts Gitea's picker depends on where focus
+ * is, not on the picker. fwgt11's untargeted Escape (focus on the page) left
+ * it open on the replays; fwgt12-n1 entry 64, an Escape pressed IN the filter
+ * input, shut it (its obs removed the listbox). `escape=0` models the first
+ * case only.
  */
-const LABEL_PICKER = (mode: { escape: boolean; stuck: boolean }) => `<!doctype html><html><head><meta charset="utf-8"><title>Issue</title></head><body>
+const LABEL_PICKER = (mode: { escape: boolean; stuck: boolean; furniture: boolean }) => `<!doctype html><html><head><meta charset="utf-8"><title>Issue</title></head><body>
+${mode.furniture ? '<nav><a href="/wiki/bug">bug</a></nav>' : ''}
 <h1>Issue #4</h1>
 <div id="labels" role="combobox" aria-label="Labels" aria-expanded="false" tabindex="0">Labels</div>
 <div id="menu" role="listbox" aria-label="Label choices" hidden>
@@ -1907,7 +1916,7 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
       if (url === '/stamp') return html(STAMP);
       if (url === '/hash') return html(HASH);
       if (url.startsWith('/menu/')) return html(MENU(tail('/menu/')));
-      if (url === '/labels-picker' || url.startsWith('/labels-picker?')) return html(LABEL_PICKER({ escape: !url.includes('escape=0'), stuck: url.includes('stuck=1') }));
+      if (url === '/labels-picker' || url.startsWith('/labels-picker?')) return html(LABEL_PICKER({ escape: !url.includes('escape=0'), stuck: url.includes('stuck=1'), furniture: url.includes('furniture=1') }));
       if (url === '/create/form') return html(CREATE);
       if (url === '/hopper') return html(HOPPER);
       if (url.startsWith('/hop/')) {

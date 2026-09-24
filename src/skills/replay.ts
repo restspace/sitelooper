@@ -25,7 +25,7 @@ import {
 import { isRefTarget } from '../daemon/refs.js';
 import { settleDom } from '../daemon/settle.js';
 import { TRANSIENT_LINE, fillParams, fillParamsDeep, urlMatches, urlPart, urlPattern } from './compile.js';
-import { countScopes, countedNothing, flattenRead, liveAlerts, liveAlertsObserved, observedNothing, resolveForRead, scopedRead, takeRead, type ObservedAlerts } from '../execution/observe.js';
+import { countScopes, countedNothing, flattenRead, liveAlerts, liveAlertsObserved, observedNothing, resolveForRead, scopeSetBy, scopedReadLanded, takeRead, type ObservedAlerts } from '../execution/observe.js';
 import {
   addedLines,
   alertsComplete,
@@ -49,7 +49,7 @@ export { consequentialExpectations, isEchoLine } from '../execution/expect.js';
 import { candidateNames, echoAt, echoVerdict, markActed, noteCommit, noteInteraction, setsSomething } from '../execution/echo.js';
 import { documentOf, fillLost, guardedTyping, noteFill, rearmStandingFills, restoreStandingFills, standingFills, standingFillsLost } from '../execution/refill.js';
 import { hasTotpMarker, resolveSecrets, resolveSecretsAsync } from '../shared/secrets.js';
-import { closeBeforeReopen, hideBefore, hideEffectLines, hideVerdict, pressHadNoEffect, toggleAlreadyShown, toggleEffectLines } from '../execution/toggle.js';
+import { appliedPickCandidates, closeBeforeReopen, isNavigation, pickAlreadyApplied, pickBaseline, hideBefore, hideEffectLines, hideVerdict, pressHadNoEffect, toggleAlreadyShown, toggleEffectLines } from '../execution/toggle.js';
 import { mayNavigateToDestination, navigateToDestination, textHeldElsewhere } from '../execution/recover.js';
 import { CONTEXT_CONTRACT, contractOf, contractVerdict, isVerified, originOf, stepsCarryContext, type Skill, type SkillStep } from './store.js';
 import { armPageEffect, describeFramePath, pageIndexVerdict, rootFor, stepEffect, type Root } from '../execution/context.js';
@@ -768,6 +768,14 @@ export async function replaySkill(
   // stepsRun) and returns how it went; a 'stop' has already set failedAt/reason.
   // `tag` labels the step for humans (e.g. "5" or, inside a loop, "9.2.1");
   // `failIndex` is the top-level step number recorded in failedAt on a stop.
+  // The applied-pick rule's candidates and the page this segment started on
+  // (execution/toggle.ts, gitea fwgt12 03-set): taken before the first step
+  // that is not a navigation, and again after each navigation — the page a
+  // goto lands on is a new start — only for a procedure with a candidate.
+  const pickSteps = appliedPickCandidates(skill.steps);
+  let pickStart: string[] | null | undefined;
+  let pickStale = true;
+
   const runStepBody = async (
     step: SkillStep,
     tag: string,
@@ -777,6 +785,14 @@ export async function replaySkill(
     /** Loop-body cursor: which match an ambiguous per-record locator should act on (see resolveChain). */
     ambiguousNth?: number,
   ): Promise<'ran' | 'skipped' | 'stop'> => {
+    // The applied-pick baseline, ahead of everything this step does — where
+    // the artifact takes it, before the step's settle.
+    const topLevel = pickSteps.size > 0 && skill.steps.includes(step);
+    if (topLevel && isNavigation(step.tool)) pickStale = true;
+    else if (topLevel && pickStale) {
+      pickStart = await pickBaseline(page);
+      pickStale = false;
+    }
     const args = fillParamsDeep(step.args, params) as Record<string, unknown>;
     // A slot the run could not fill "asks for no particular value" — the
     // reading every marker gate here already takes (markersBound,
@@ -854,6 +870,16 @@ export async function replaySkill(
     // expectation stops it. read_all also legitimately matches many elements,
     // so its target need not be unique.
     const isRead = isReadAction(step.tool);
+
+    // A popup item this run already applied (the shared pickAlreadyApplied,
+    // gitea fwgt12 s_f54a5a step 9): clicking it again would un-tick it.
+    const pick = pickSteps.get(skill.steps.indexOf(step));
+    if (pick && (await pickAlreadyApplied(page, pick.role, fillParams(pick.name, params), pickStart ?? null))) {
+      const shown = `- ${pick.role} ${JSON.stringify(fillParams(pick.name, params))}`;
+      res.warnings.push(`step ${tag}: ${shown} shows inside the popup and outside it, where this run's own pick and close put it — a click would un-tick it; skipped as already in effect`);
+      res.lines.push(`${head} → skipped (already applied by this run)`);
+      return 'skipped';
+    }
 
     // Resolve every target through its chain before touching the page.
     const resolved: Record<string, Locator> = {};
@@ -1239,8 +1265,16 @@ export async function replaySkill(
             // …and a read scoped by a slot (skills/readscope.ts) publishes only
             // what this run's record shows (observe.ts scopedRead, fwrd87).
             const slot = (name: unknown) => (typeof name === 'string' ? params[name] : undefined);
-            return scopedRead(decodeRead(result), { frame: args.frame, slotFrame: args.slotFrame, mark: slot(args.frameMark), within: slot(args.scopedBy) });
+            // …and one that proves a value this procedure SET did not land is a
+            // failed step, not a skipped read (scopedReadLanded, gitea fwgt12).
+            return scopedReadLanded(decodeRead(result), { frame: args.frame, slotFrame: args.slotFrame, mark: slot(args.frameMark), within: slot(args.scopedBy) }, resolved.target ?? null, { set: scopeSetBy(skill.steps, step.args.scopedBy), what: String(args.what ?? 'text') });
           });
+          if (!taken.ok && taken.lost) {
+            res.failedAt = failIndex;
+            res.reason = taken.message;
+            res.lines.push(`${head} → FAILED: ${taken.message}`);
+            return { status: 'stopped' };
+          }
           if (!taken.ok) {
             if (step.label) {
               readsSkipped++;

@@ -177,3 +177,99 @@ export async function closeBeforeReopen(page: Page, lines: string[], d: LineDial
     ? `the popup this opener was recorded re-opening from closed (${line}) is still showing after a closing click — the recording shut it before re-opening, and going on would carry its pending selection past the point it was committed`
     : `could not confirm the popup this opener was recorded re-opening from closed (${line}) went after a closing click — the page could not be read whole — so its pending selection may not have been committed`;
 }
+
+/**
+ * The APPLIED-PICK rule both execution targets share (round 61, gitea fwgt12
+ * 03-set). A multi-select picker's item is a toggle: s_f54a5a clicked "bug"
+ * in the Labels picker (steps 1-3), the picker shut and committed (7), it was
+ * opened again (8), and step 9 clicked "bug" once more — recorded (n2's
+ * recovery) with `link "bug"` UNIQUE on the page: "bug" was not applied then.
+ * Which way steps 1-7 leave "bug" is timing (n1 and the artifact: applied;
+ * n2 and n3: not). Where they applied it, step 9 found `link "bug"` twice —
+ * the menu item and the label now in the sidebar — fell to its point, and
+ * un-ticked it: the artifact committed priority-high alone.
+ *
+ * So a click is skipped as already in effect only with this run's own
+ * evidence that what it would tick is applied:
+ *   - statically (appliedPickCandidates): the step clicks a role+name its
+ *     recording resolved uniquely (the primary is that role candidate, no
+ *     nth); an EARLIER click of this segment named the same role+name; and a
+ *     popup opener ran between them — the picker was shut (a commit) and
+ *     opened again;
+ *   - at replay (pickAlreadyApplied): that role+name now shows both INSIDE a
+ *     popup (the item) and OUTSIDE every popup, and its line was not on the
+ *     page when this segment started (pickBaseline) — the outside element is
+ *     what this run's own pick and close put there, not page furniture that
+ *     shares the name.
+ * Anything else clicks, as before.
+ */
+
+/** A step as the applied-pick rule reads it (SkillStep, structurally). */
+export interface PickStep {
+  tool: string;
+  locators?: { target?: readonly { kind: string; role?: string; name?: string; nth?: number }[] };
+  expect?: { addedContains?: readonly string[] };
+}
+
+const POPUP_OPEN_LINE = /^-?\s*(dialog|alertdialog|menu|menubar|listbox)\b/;
+
+/** The role+name a click names first, when its primary candidate is a role candidate without an nth (recorded unique). */
+function uniqueRolePick(step: PickStep): { role: string; name: string } | null {
+  if (step.tool !== 'click') return null;
+  const primary = step.locators?.target?.[0];
+  if (!primary || primary.kind !== 'role' || !primary.role || !primary.name || primary.nth !== undefined) return null;
+  return { role: primary.role, name: primary.name };
+}
+
+/** Steps eligible for the applied-pick skip, by index, with the role+name (unfilled) each would tick. */
+export function appliedPickCandidates(steps: readonly PickStep[]): Map<number, { role: string; name: string }> {
+  const out = new Map<number, { role: string; name: string }>();
+  const opens = (s: PickStep) => s.tool === 'click' && (s.expect?.addedContains ?? []).some((l) => POPUP_OPEN_LINE.test(l));
+  const names = (s: PickStep, role: string, name: string) =>
+    s.tool === 'click' && (s.locators?.target ?? []).some((c) => c.kind === 'role' && c.role === role && c.name === name);
+  steps.forEach((step, i) => {
+    const pick = uniqueRolePick(step);
+    if (!pick) return;
+    let reopened = false;
+    for (let k = i - 1; k >= 0; k--) {
+      if (reopened && names(steps[k], pick.role, pick.name)) {
+        out.set(i, pick);
+        return;
+      }
+      if (opens(steps[k])) reopened = true;
+    }
+  });
+  return out;
+}
+
+/** A step that lands on another document: the applied-pick baseline is taken again after it. */
+export function isNavigation(tool: string): boolean {
+  return tool === 'goto' || tool === 'back';
+}
+
+/** The page's lines as this segment starts (and after each navigation), for pickAlreadyApplied; null when unread. */
+export async function pickBaseline(page: Page): Promise<string[] | null> {
+  return (await captureLines(page, 2))?.lines ?? null;
+}
+
+/** Whether `role`+`name` shows inside a popup and outside every popup, and was not on the segment's starting page. */
+export async function pickAlreadyApplied(page: Page, role: string, name: string, baseline: readonly string[] | null): Promise<boolean> {
+  if (!baseline || !name || name.includes('{{')) return false;
+  const line = `- ${role} ${JSON.stringify(name)}`;
+  if (baseline.some((l) => l.trim() === line || l.trim().startsWith(`${line}:`) || l.trim().startsWith(`${line} [`))) return false;
+  const all = page.getByRole(role as Parameters<Page['getByRole']>[0], { name, exact: true });
+  const count = Math.min(await all.count().catch(() => 0), 12);
+  if (count < 2) return false;
+  let inside = 0;
+  let outside = 0;
+  for (let i = 0; i < count; i++) {
+    const el = all.nth(i);
+    if (!(await el.isVisible().catch(() => false))) continue;
+    const inPopup = await el
+      .evaluate((node) => Boolean((node as Element).closest('[role="listbox"], [role="menu"], [role="menubar"], [role="dialog"], [role="alertdialog"]')))
+      .catch(() => null);
+    if (inPopup === true) inside++;
+    else if (inPopup === false) outside++;
+  }
+  return inside >= 1 && outside >= 1;
+}

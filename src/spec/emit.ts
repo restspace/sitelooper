@@ -3,10 +3,10 @@ import { DEFAULT_BROWSER_PROFILE, isNavigatingAction, type BrowserProfile } from
 import { setsSomething } from '../execution/echo.js';
 import { standingFillRole } from '../execution/refill.js';
 import { DEFAULT_ACTION_TIMEOUT_MS } from '../execution/browser.js';
-import { hideEffectLines, toggleEffectLines } from '../execution/toggle.js';
+import { appliedPickCandidates, hideEffectLines, isNavigation, toggleEffectLines } from '../execution/toggle.js';
 import { derivesFromParams, givenPartialReason, givenWarning, reportNeedsPage, templateMarkers, templateSource, typedSlots, typedWarning } from '../execution/report.js';
 import { askedOutputs } from '../daemon/step-verdict.js';
-import { observedNothing } from '../execution/observe.js';
+import { observedNothing, scopeSetBy } from '../execution/observe.js';
 import { segmentGate } from '../execution/gates.js';
 /**
  * The IR as `@playwright/test` source (Tier 2: no sitelooper runtime).
@@ -874,6 +874,8 @@ const HELPERS: { token: string; source: string[] }[] = [
       '  lastReadHit = hit.locator;',
       '  const taken = await takeRead(() => read(hit.locator));',
       '  if (taken.ok) return taken.value;',
+      '  // A read proving what the step set did not land fails the step (scopedReadLanded, gitea fwgt12).',
+      '  if (taken.lost) throw new Error(`${where}: ${taken.message}`);',
       '  skippedReads.push(where);',
       '  console.log(`[sitelooper skip] ${where}: read errored (${taken.message}) — value left empty`);',
       "  return '';",
@@ -1386,6 +1388,12 @@ interface Ctx {
    */
   echoes?: string;
   echoUsed?: boolean;
+  /** This segment's steps, for rules that read the whole procedure (scopeSetBy). */
+  segmentSteps?: readonly SkillStep[];
+  /** The applied-pick rule's candidates in this segment (execution/toggle.ts), by 0-based step index. */
+  appliedPicks?: Map<number, { role: string; name: string }>;
+  /** The variable holding this segment's starting page lines, when it has an applied-pick candidate. */
+  pickStart?: string;
   /**
    * A line of the body named `typedCommitted`, the step's set of typed slots a
    * commit showed (expect.ts committedSlots), which its report classifies by
@@ -2639,6 +2647,17 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
   // resolved, another recorded candidate may already show the text (textHeldOrThrow).
   const heldText = step.tool === 'wait_for' && (args.state === 'text_contains' || args.state === 'text_equals') && typeof args.text === 'string' && args.text.trim();
   const observations = heldText ? `observations${ctx.picks + 1}` : undefined;
+  // A popup item this run already applied (the shared pickAlreadyApplied,
+  // gitea fwgt12 s_f54a5a step 9): asked before the pick, as replay asks it.
+  const appliedPick = ctx.appliedPicks?.get(index - 1);
+  if (appliedPick && ctx.pickStart) {
+    out.push(
+      `if (await pickAlreadyApplied(page, ${q(appliedPick.role)}, ${src(appliedPick.name)}, ${ctx.pickStart})) {`,
+      `  console.log(${q(`[sitelooper skip] ${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}: ${appliedPick.role} already applied by this run's own pick and close — click skipped`)});`,
+      "  return { status: 'skipped' };",
+      '}',
+    );
+  }
   const target = actionTarget(step, 'target', ctx, out, observations);
   const actionAt = out.length;
   if (!target) {
@@ -2966,7 +2985,9 @@ function readLines(step: SkillStep, ctx: Ctx): string[] {
   ];
   const read = readable
     ? slotFrame || frameMark || scopedBy
-      ? `async (loc: Locator) => scopedRead(await ${take}, { ${scope.join(', ')} })`
+      ? scopedBy && scopeSetBy(ctx.segmentSteps ?? [], step.args?.scopedBy)
+        ? `async (loc: Locator) => scopedReadLanded(await ${take}, { ${scope.join(', ')} }, loc, { set: true, what: ${q(what)} })`
+        : `async (loc: Locator) => scopedRead(await ${take}, { ${scope.join(', ')} })`
       : valueFrame
         ? `async (loc: Locator) => framedRead(await ${take}, ${src(valueFrame)})`
         : `(loc: Locator) => ${take}`
@@ -3377,7 +3398,18 @@ function emitSegment(segment: SpecSegment, ctx: Ctx): string[] {
   // asks the same shared segmentGate (src/execution/gates.ts); a rule only one
   // runner applies is the class of defect the parity harness exists to catch.
   const gate = segmentGate(segment.steps);
+  ctx.segmentSteps = segment.steps;
+  ctx.appliedPicks = appliedPickCandidates(segment.steps);
+  ctx.pickStart = ctx.appliedPicks.size ? `pickStart${ctx.segments}` : undefined;
+  // The applied-pick rule's starting page, taken before the first step as
+  // replay takes it (gitea fwgt12 03-set).
+  if (ctx.pickStart) out.push(`let ${ctx.pickStart}: string[] | null = null;`);
   for (const [i, step] of segment.steps.entries()) {
+    // …taken before the first step that is not a navigation and again after
+    // each navigation, where replay takes it.
+    if (ctx.pickStart && !isNavigation(step.tool) && (i === 0 || isNavigation(segment.steps[i - 1].tool))) {
+      out.push(`${ctx.pickStart} = await pickBaseline(page);`);
+    }
     if (i + 1 === gate.at) out.push('', ...segmentGateLines(segment, ctx, gate.afterNavigation));
     out.push('');
     const lines = step.tool === 'loop' ? emitLoop(step, segment, i + 1, ctx) : emitSkillStep(step, segment, i + 1, ctx);
