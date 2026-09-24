@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import type { LocatorCandidate } from '../daemon/recorder.js';
-import type { PageEffect, TargetContext } from '../execution/context.js';
+import { stepEffect, type PageEffect, type TargetContext } from '../execution/context.js';
 import { rootDir } from '../shared/paths.js';
 
 /**
@@ -1166,7 +1166,14 @@ export class SkillStore {
         // diagnostic has to be able to say how many of the demoting stops the
         // flow recovered from.
         if (outcome.instructionSucceeded) st.recoveredStops = (st.recoveredStops ?? 0) + 1;
-        if (outcome.harmlessStop && outcome.instructionSucceeded) {
+        // Never harmless at a step that carries a PAGE EFFECT (a popup, a close,
+        // a tab switch): later steps' procedures were recorded on the page it
+        // opens. fwsi9 s_24e7fd stopped twice at step 3, a modifier_click whose
+        // popup never opened; the recovery finished the step both times, the
+        // stops were "harmless", and every later step's pin refused ("recorded
+        // on page 1 … procedure is on page 0 of 2").
+        const atEffect = Boolean(at && skill.steps[at - 1] && stepEffect(skill.steps[at - 1]));
+        if (outcome.harmlessStop && outcome.instructionSucceeded && !atEffect) {
           st.harmlessStops = (st.harmlessStops ?? 0) + 1;
         } else {
           if (st.lastFailedAt === at) skill.status = 'demoted';
@@ -1185,6 +1192,21 @@ export class SkillStore {
       return original;
     });
   }
+}
+
+/**
+ * A skill banked BEFORE page-effect stops became strikes (see recordOutcome)
+ * that has two or more stops at a step carrying a page effect: read as
+ * demoted, as recordOutcome would now have left it. fwsi9's published
+ * s_24e7fd: failedAtStep {3: 2}, harmlessStops 2, step 3 a popup. Evidence
+ * from the store's own counts and the step's recorded effect.
+ */
+export function pageEffectDemoted(skill: Skill): boolean {
+  if (skill.status === 'demoted') return true;
+  return Object.entries(skill.stats.failedAtStep ?? {}).some(([at, n]) => {
+    const step = skill.steps[Number(at) - 1];
+    return n >= 2 && Boolean(step && stepEffect(step));
+  });
 }
 
 export function newSkillId(origin: string, template: string, created: string): string {

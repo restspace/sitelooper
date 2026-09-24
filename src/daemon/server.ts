@@ -1521,6 +1521,77 @@ ${describeLeaks(certain.slice(0, 30))}${certain.length > 30 ? `\n  … and ${cer
      */
     const ledgerSteps = new Map<string, { id: string; outputs: readonly string[] }>();
 
+    /**
+     * Pin a re-pin decision onto a step: its slots bound by ORIGIN (see
+     * remapParams below), the synthesized reads a later step needs added.
+     * Null when a record-identifying slot has no origin to rebind from.
+     * Shared by the in-loop decision and the end-of-run re-judgement.
+     */
+    const applyRepin = async (
+      step: (typeof flow.steps)[number],
+      candidate: Skill,
+      decision: { skill: string; graduated: boolean },
+      incumbent: string,
+      evidence: Record<string, unknown>,
+    ): Promise<{ skill: string; params: Record<string, string> } | null> => {
+      // The new skill's slots are named and numbered its own way: bind
+      // them by ORIGIN (see remapParams). A record-identifying slot with
+      // no origin would replay as the learning run's literal — rpat2
+      // named a live run's items after an earlier run that way — so
+      // such a re-pin is refused and the incumbent keeps the step.
+      // A skill another step already pins (a shared read-only check)
+      // carries that step's flow bindings: inherit them for slots the
+      // store recorded no origin for.
+      const sibling = flow.steps.find((st) => st.id !== step.id && st.skill === candidate.id && st.params);
+      // An origin is only an origin if this flow can name it: a slot bound
+      // to `output:i2:…` records a ledger instruction index, not a step of
+      // this flow, and nothing publishes `i2.*` (fwgr47). `ledgerSteps`
+      // says which step ran as `i2` this run, so an index whose step
+      // publishes the output is named after all; and a literal the step's
+      // instruction states in plain words is the instruction's to supply,
+      // whatever origin the recording happened to bank it under (fwgr50:
+      // `bench` read at i3, stated by 04-open; the refused re-pin left the
+      // flow on a superseded pin and the compile refused).
+      const remap = remapParams(
+        candidate,
+        sibling?.params ?? {},
+        flow.steps.map((st) => st.id),
+        { instruction: step.instruction, ledgerSteps, self: step.id },
+      );
+      if (remap.unbound.length) {
+        opts.progress(`[flow ${flow.name}] ${step.id}: not re-pinning ${candidate.id} — slot(s) ${remap.unbound.join(', ')} identify the record but carry no origin to rebind from`);
+        return null;
+      }
+      pendingPins.set(step.id, decision.skill);
+      // The pin now names a skill a recovery compiled, which carries
+      // only the reads the model issued: every value a LATER step
+      // references gets a synthesized read on the chain's tail, as the
+      // export gives a recording's skill (flow.ts liveReadsForRecovery).
+      await this.readsForRepinned(flow, step, decision.skill, evidence, opts.progress);
+      if (decision.graduated) {
+        graduated.add(step.id);
+        opts.progress(`[flow ${flow.name}] ${step.id}: adopted step graduated — pinned ${decision.skill} (${candidate.status}), shedding model-first replay`);
+      } else if (incumbent !== 'validated' && incumbent !== 'provisional') {
+        opts.progress(`[flow ${flow.name}] ${step.id}: pinned ${decision.skill} (${candidate.status}) — the step's pin was ${incumbent}`);
+      }
+      return { skill: decision.skill, params: remap.params };
+    };
+    /**
+     * Re-pins refused ONLY because the candidate ends where the next step's
+     * pin, as it stood then, does not start (pinEndsElsewhere). Re-judged after
+     * the loop against the next step's pin as it stands at the END of the run,
+     * this run's own re-pins included: fwsi9-n3's 04-report variant chain
+     * s_9df3b0 replayed 14/14 and was refused against 05-open's s_72aa4e,
+     * and 05-open was re-pinned to s_d005fc later in that same run.
+     */
+    const deferredPins: Array<{
+      step: (typeof flow.steps)[number];
+      candidate: Skill;
+      decision: { skill: string; graduated: boolean };
+      incumbent: string;
+      evidence: Record<string, unknown>;
+    }> = [];
+
     // Set by a step that recovered on the model: a recovery can end
     // "successfully" yet leave a blocking dialog open (rpod1-r2: an earlier
     // recovery left an email composer and an Edit dialog behind, and 06-open
@@ -2028,7 +2099,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
         // app constant.
         const candidate = candidateId ? (this.browser.learn.get(candidateId) ?? null) : null;
         const mintedLeaks = candidate ? navigationLeaks(scanForLeaks(candidate, this.ledger, candidate.id), ledgerStep) : [];
-        const decision = decideRepin({
+        const repinInput: Parameters<typeof decideRepin>[0] = {
           step,
           reportStatus: judged.report.status,
           outcome,
@@ -2040,7 +2111,8 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
           startsElsewhere: candidateId ? pinStartsElsewhere(this.browser.learn, candidateId, instructionEntry(recoveryEntries)?.url) : null,
           endsElsewhere: candidateId ? pinEndsElsewhere(this.browser.learn, candidateId, flow.steps[flow.steps.findIndex((st) => st.id === step.id) + 1]?.skill) : null,
           failedStep: candidateId ? pinCarriesFailedStep(this.browser.learn, candidateId) : null,
-        });
+        };
+        const decision = decideRepin(repinInput);
         // Refusing the pin is not enough: replay selects candidates from the
         // store by track record, not only the pin. fwod46-n2's recovery
         // learned `goto …&id=22` (n2's own order), was not pinned, and n3
@@ -2053,49 +2125,20 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
           opts.progress(`[flow ${flow.name}] ${step.id}: demoted ${candidate.id} — its navigation carries an identifier this run made (${mintedLeaks.slice(0, 3).join(', ')})`);
         }
         if (decision && 'refused' in decision) {
-          opts.progress(`[flow ${flow.name}] ${step.id}: ${decision.refused}`);
-        } else if (decision && candidate) {
-          // The new skill's slots are named and numbered its own way: bind
-          // them by ORIGIN (see remapParams). A record-identifying slot with
-          // no origin would replay as the learning run's literal — rpat2
-          // named a live run's items after an earlier run that way — so
-          // such a re-pin is refused and the incumbent keeps the step.
-          // A skill another step already pins (a shared read-only check)
-          // carries that step's flow bindings: inherit them for slots the
-          // store recorded no origin for.
-          const sibling = flow.steps.find((st) => st.id !== step.id && st.skill === candidate.id && st.params);
-          // An origin is only an origin if this flow can name it: a slot bound
-          // to `output:i2:…` records a ledger instruction index, not a step of
-          // this flow, and nothing publishes `i2.*` (fwgr47). `ledgerSteps`
-          // says which step ran as `i2` this run, so an index whose step
-          // publishes the output is named after all; and a literal the step's
-          // instruction states in plain words is the instruction's to supply,
-          // whatever origin the recording happened to bank it under (fwgr50:
-          // `bench` read at i3, stated by 04-open; the refused re-pin left the
-          // flow on a superseded pin and the compile refused).
-          const remap = remapParams(
-            candidate,
-            sibling?.params ?? {},
-            flow.steps.map((st) => st.id),
-            { instruction: step.instruction, ledgerSteps, self: step.id },
-          );
-          if (remap.unbound.length) {
-            opts.progress(`[flow ${flow.name}] ${step.id}: not re-pinning ${candidate.id} — slot(s) ${remap.unbound.join(', ')} identify the record but carry no origin to rebind from`);
+          // Refused only for where it ends, judged against the next step's pin
+          // as it stands NOW: re-judged at the end of the run (deferredPins).
+          const otherwise = repinInput.endsElsewhere ? decideRepin({ ...repinInput, endsElsewhere: null }) : null;
+          if (otherwise && !('refused' in otherwise) && candidate) {
+            deferredPins.push({ step, candidate, decision: otherwise, incumbent, evidence: result.report.evidence?.values ?? {} });
+            opts.progress(`[flow ${flow.name}] ${step.id}: ${decision.refused} — re-judged against the next step's pin at the end of this run`);
           } else {
-            repinned = decision.skill;
-            repinParams = remap.params;
-            pendingPins.set(step.id, decision.skill);
-            // The pin now names a skill a recovery compiled, which carries
-            // only the reads the model issued: every value a LATER step
-            // references gets a synthesized read on the chain's tail, as the
-            // export gives a recording's skill (flow.ts liveReadsForRecovery).
-            await this.readsForRepinned(flow, step, decision.skill, result.report.evidence?.values ?? {}, opts.progress);
-            if (decision.graduated) {
-              graduated.add(step.id);
-              opts.progress(`[flow ${flow.name}] ${step.id}: adopted step graduated — pinned ${decision.skill} (${candidate.status}), shedding model-first replay`);
-            } else if (incumbent !== 'validated' && incumbent !== 'provisional') {
-              opts.progress(`[flow ${flow.name}] ${step.id}: pinned ${decision.skill} (${candidate.status}) — the step's pin was ${incumbent}`);
-            }
+            opts.progress(`[flow ${flow.name}] ${step.id}: ${decision.refused}`);
+          }
+        } else if (decision && candidate) {
+          const applied = await applyRepin(step, candidate, decision, incumbent, result.report.evidence?.values ?? {});
+          if (applied) {
+            repinned = applied.skill;
+            repinParams = applied.params;
           }
         }
       }
@@ -2305,6 +2348,27 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       }
       // A recovery may have left a dialog open; sweep it at the next boundary.
       prevRecovered = recovered;
+    }
+
+    // Deferred re-pins (see deferredPins): the next step's pin as it stands
+    // now, this run's re-pins included. A step the run never reached keeps
+    // its pin; so does one whose next pin still starts elsewhere.
+    for (const d of deferredPins) {
+      const r = stepResults.find((x) => x.id === d.step.id);
+      if (!r || r.repinned || !this.browser.learn) continue;
+      const next = flow.steps[flow.steps.findIndex((st) => st.id === d.step.id) + 1];
+      const nextPin = next ? (pendingPins.get(next.id) ?? next.skill) : undefined;
+      const why = pinEndsElsewhere(this.browser.learn, d.candidate.id, nextPin);
+      if (why) {
+        opts.progress(`[flow ${flow.name}] ${d.step.id}: not re-pinning ${d.candidate.id} — ${why}`);
+        continue;
+      }
+      const applied = await applyRepin(d.step, d.candidate, d.decision, d.incumbent, d.evidence);
+      if (applied) {
+        r.repinned = applied.skill;
+        r.repinParams = applied.params;
+        opts.progress(`[flow ${flow.name}] ${d.step.id}: re-pinned ${applied.skill} — it ends where the next step's pin (${nextPin ?? 'none'}) now starts`);
+      }
     }
 
     // Re-pin any repaired steps so the flow file itself gets cheaper next run.

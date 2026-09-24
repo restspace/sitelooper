@@ -5616,6 +5616,157 @@
   }
  },
  {
+  "run": "fwsi9",
+  "replay": "n3",
+  "green": false,
+  "step": "02-find",
+  "instruction": "Go to Assets -> Asset List and find all assets whose name starts with 'Seed:'. For each, report its name and asset tag exactly as displayed in the list. Use search/pagination as needed to capture all of them. Do not modify anything.",
+  "candidates": [
+   "asset_list_url",
+   "total_rows_unfiltered",
+   "seed_asset_count",
+   "seed_asset_tag_1",
+   "seed_asset_tag_2",
+   "seed_asset_tag_3",
+   "seed_asset_name_1",
+   "seed_asset_name_2",
+   "seed_asset_name_3",
+   "assets"
+  ],
+  "pruned": [
+   "assets"
+  ],
+  "published": [
+   "matching_row_count",
+   "asset_1_1",
+   "asset_1_2",
+   "asset_2_1",
+   "asset_2_2",
+   "asset_3_1",
+   "asset_3_2"
+  ],
+  "recorded": {
+   "asset_list_url": "http://127.0.0.1:8098/hardware?page=1&size=20&order=asc&sort=created_at&search=",
+   "total_rows_unfiltered": "Showing 1 to 3 of 3 rows",
+   "seed_asset_count": "3",
+   "seed_asset_tag_1": "SEED-0001",
+   "seed_asset_tag_2": "SEED-0002",
+   "seed_asset_tag_3": "SEED-0003",
+   "seed_asset_name_1": "Seed: Reception Laptop",
+   "seed_asset_name_2": "Seed: Training Laptop",
+   "seed_asset_name_3": "Seed: Spare Laptop",
+   "assets": "[object Object], [object Object], [object Object]"
+  }
+ },
+ {
+  "run": "fwsi9",
+  "replay": "n3",
+  "green": false,
+  "step": "04-report",
+  "instruction": "On the asset page for asset tag {{03-create.asset_tag}} ({{03-create.url}}), use the Check Out action to check the asset out to the user 'Bench Assignee' (select the user from the searchable dropdown's suggestion list, not just typed). In the Notes field of the checkout, enter the text: 'Checked out for bench run {{runid}}'. Complete the checkout and report the confirmation message shown, the assignee displayed on the asset page, the note text shown, and the asset's current status label as displayed on the asset page.",
+  "candidates": [
+   "assignee_displayed",
+   "assigned_user_select_id",
+   "note_text_shown",
+   "status_label_displayed",
+   "checkouts_count",
+   "last_checkout",
+   "history_row",
+   "asset_page_url",
+   "checkout_url",
+   "assigned_user_displayed",
+   "asset_tag",
+   "bench_run_ref",
+   "confirmation_message",
+   "assignee_link"
+  ],
+  "pruned": [
+   "confirmation_message",
+   "assignee_link"
+  ],
+  "published": [
+   "asset_url",
+   "assignee_displayed_on_asset_page",
+   "ref",
+   "asset_tag",
+   "checkout_note_text",
+   "history_tbody_tr_nth_chi",
+   "history_tbody_tr_nth_chi_2"
+  ],
+  "recorded": {
+   "assignee_displayed": "Bench Assignee",
+   "assigned_user_select_id": "2",
+   "note_text_shown": "Checked out for bench run fwsi9-n1",
+   "status_label_displayed": "Ready to Deploy (meta-status badge: Deployed)",
+   "checkouts_count": "1",
+   "last_checkout": "2026-09-24 28 seconds ago",
+   "history_row": "2026-09-24 07:21 AM | Bench Admin | checkout | fwsi9-n1 Bench Asset #BA-00004 - Bench Laptop Model | Bench Assignee | Checked out for bench run fwsi9-n1",
+   "asset_page_url": "http://127.0.0.1:8098/hardware/4",
+   "checkout_url": "http://127.0.0.1:8098/hardware/4/checkout",
+   "assigned_user_displayed": "×\nBench Assignee (bench-assignee)",
+   "asset_tag": "BA-00004",
+   "bench_run_ref": "fwsi9-n1",
+   "confirmation_message": "Success: Asset checked out successfully.",
+   "assignee_link": "http://127.0.0.1:8098/users/2 (bench-assignee)"
+  }
+ },
+ {
+  "run": "fwsi9",
+  "replay": "n3",
+  "green": false,
+  "step": "05-open",
+  "instruction": "Open {{03-create.url}} and verify, reporting exactly what the page displays for each of: (1) the asset tag, (2) the asset name, (3) the model, (4) the status label, (5) the default location, (6) the purchase date, (7) the user it is checked out to, and (8) the note text on the checkout shown in the history/checkouts section. Read-only, do not change anything.",
+  "candidates": [
+   "asset_tag",
+   "asset_name",
+   "status_label",
+   "purchase_date",
+   "last_checkout",
+   "checkouts_count",
+   "checkout_note_in_history",
+   "history_row_checkout",
+   "page_title",
+   "verified_page_url",
+   "model",
+   "default_location",
+   "checked_out_to_user",
+   "bench_run_ref"
+  ],
+  "pruned": [
+   "model",
+   "default_location",
+   "checked_out_to_user",
+   "bench_run_ref"
+  ],
+  "published": [
+   "ref",
+   "asset_tag",
+   "asset_name",
+   "model",
+   "default_location",
+   "checkout_note_in_history",
+   "page_heading",
+   "last_checkout",
+   "checked_out_to_user"
+  ],
+  "recorded": {
+   "asset_tag": "BA-00004",
+   "asset_name": "fwsi9-n1 Bench Asset",
+   "status_label": "Ready to Deploy (with grey meta-status badge \"Deployed\")",
+   "purchase_date": "Purchased 2026-03-15 - 6 months 1 week ago",
+   "last_checkout": "2026-09-24 28 seconds ago",
+   "checkouts_count": "1",
+   "checkout_note_in_history": "Checked out for bench run fwsi9-n1",
+   "history_row_checkout": "2026-09-24 07:21 AM | Bench Admin | checkout | fwsi9-n1 Bench Asset #BA-00004 - Bench Laptop Model | Bench Assignee | Notes: Checked out for bench run fwsi9-n1 | Current Location: [id: 1] Bench Office",
+   "page_title": "View Asset BA-00004 :: Bench Assets",
+   "verified_page_url": "http://127.0.0.1:8098/hardware/4",
+   "model": "Bench Laptop Model (link to /models/1)",
+   "default_location": "Bench Office (link to /locations/1)",
+   "checked_out_to_user": "Bench Assignee (link to /users/2)",
+   "bench_run_ref": "fwsi9-n1"
+  }
+ },
+ {
   "run": "fwvk7",
   "replay": "n2",
   "green": true,

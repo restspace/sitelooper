@@ -1,0 +1,111 @@
+{
+ "id": "s_4e6f28",
+ "origin": "http://127.0.0.1:8098",
+ "template": "On the asset page for asset tag {{v1}} ({{v2}}), use the Check Out action to check the asset out to the user '{{v4}}' (select the user from the searchable dropdown's suggestion list, not just typed). In the Notes field of the checkout, enter the text: '{{v5}}'. Complete the checkout and report the confirmation message shown, the assignee displayed on the asset page, the note text shown, and the asset's current status label as displayed on the asset page.",
+ "params": {
+  "v1": {
+   "example": "BA-00005",
+   "usedIn": [],
+   "known": true,
+   "binding": "03-create.asset_tag"
+  },
+  "v2": {
+   "example": "http://127.0.0.1:8098/hardware/5",
+   "usedIn": [
+    1
+   ],
+   "known": true,
+   "binding": "03-create.url"
+  },
+  "v3": {
+   "example": "fwsi9-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v4": {
+   "example": "Bench Assignee",
+   "usedIn": []
+  },
+  "v5": {
+   "example": "Checked out for bench run fwsi9-n2",
+   "usedIn": [],
+   "known": true
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8098/hardware/:id"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "a[href=\"{{v2}}/checkout\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "a[href=\"{{v2}}/checkout\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "a[data-title=\"Checkout\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div > div:nth-of-type(1) > div > a:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1017,
+      "y": 142,
+      "w": 37,
+      "h": 30,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "page": 0,
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8098/hardware/:id/checkout",
+    "addedContains": [
+     "- heading \"Assets {{v3}} Bench Asset #{{v1}} - Bench Laptop Model Checkout Asset\"",
+     "- link \"{{v3}} Bench Asset #{{v1}} - Bench Laptop Model\"",
+     "- heading \"Asset Tag {{v1}}\"",
+     "- textbox \"name\": {{*}}",
+     "- combobox \"status_id\": {{*}}"
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "contract": 3,
+ "stats": {
+  "uses": 2,
+  "successes": 2,
+  "partial": 0,
+  "created": "2026-09-24T07:26:36.960Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 3,
+  "lastUsed": "2026-09-24T07:29:51.233Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_9df3b0",
+  "index": 0,
+  "of": 5
+ },
+ "variantOf": "s_a90093",
+ "provenance": {
+  "session": "fwsi9-n2",
+  "instruction": "On the asset page for asset tag BA-00005 (http://127.0.0.1:8098/hardware/5), use the Check Out action to check the asset out to the user 'Bench Assignee' (select the user from the searchable dropdown's suggestion list, not just typed). In the Notes field of the checkout, enter the text: 'Checked out for bench run fwsi9-n2'. Complete the checkout and report the confirmation message shown, the assignee displayed on the asset page, the note text shown, and the asset's current status label as displayed on the asset page.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-24T07:26:36.960Z"
+ },
+ "revision": 2
+}

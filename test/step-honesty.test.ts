@@ -118,6 +118,16 @@ describe('round 56: fwop11, fwrd88 and fwkb40', () => {
   });
 });
 
+/** Round 57, Snipe-IT fwsi9 (10 n2/n3 steps): no step is partial; the re-pin fixes of round 57 change no verdict. */
+const STEPS57 = JSON.parse(fs.readFileSync(path.join(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1')), 'fixture', 'round57-steps.json'), 'utf8')) as Round54Step[];
+
+describe('round 57: fwsi9', () => {
+  it('flags no step', () => {
+    expect(STEPS57.length).toBe(10);
+    expect(STEPS57.filter((s) => verdict(s).length)).toEqual([]);
+  });
+});
+
 describe('item 12: a recovery whose last gesture never went through (fwop10-n2 02-create)', () => {
   const step = () => STEPS.find((s) => s.run === 'fwop10' && s.replay === 'n2' && s.step === '02-create')!;
 

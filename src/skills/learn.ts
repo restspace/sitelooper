@@ -7,7 +7,8 @@ import { landedOnRecordedPage } from '../execution/gates.js';
 import type { Page } from 'playwright-core';
 import { derivesFromParams, observedSummary, referenceValue, reportNeedsPage, shownForReport, templateSource, templateValue, unshownLiterals } from '../execution/report.js';
 import { ComponentStore, learnRecipes } from './components.js';
-import { contractOf, isVerified, successRate, type Skill, type SkillStore } from './store.js';
+import { contractOf, isVerified, pageEffectDemoted, successRate, type Skill, type SkillStore } from './store.js';
+export { pageEffectDemoted } from './store.js';
 
 export interface LearnedRecord {
   /** A new skill was stored (the first segment, when the compile split). */
@@ -403,9 +404,11 @@ export function sameChainProcedure(a: Skill, b: Skill, skills: Skill[]): boolean
  */
 export function pinStatus(skills: Skill[], pinned: Skill | null | undefined): Skill['status'] | 'missing' {
   if (!pinned) return 'missing';
-  if (!pinned.seq) return pinned.status;
+  // pageEffectDemoted: a stop at a popup/tab step banked as "harmless" before
+  // it became a strike still demotes (fwsi9 s_24e7fd).
+  if (!pinned.seq) return pageEffectDemoted(pinned) ? 'demoted' : pinned.status;
   const chain = skills.filter((s) => s.seq?.chain === pinned.seq!.chain);
-  return chain.some((s) => s.status === 'demoted') ? 'demoted' : pinned.status;
+  return chain.some((s) => pageEffectDemoted(s)) ? 'demoted' : pinned.status;
 }
 
 export function selectCandidates(
@@ -1300,15 +1303,44 @@ export function pinEndsElsewhere(store: SkillStore, candidateId: string, nextPin
   const tail = cand.seq ? members(cand).reduce((a, b) => ((b.seq?.index ?? 0) > (a.seq?.index ?? 0) ? b : a), cand) : cand;
   const head = next.seq ? (members(next).find((m) => m.seq?.index === 0) ?? next) : next;
   if (head.steps[0]?.tool === 'goto') return null;
+  // A next pin that is itself demoted will not run as it stands, so where it
+  // starts decides nothing (fwsi9-n3: 04-report's good variant was refused
+  // against 05-open's unrunnable s_72aa4e, and 05-open was re-pinned later in
+  // the same run). The flow runner re-asks this against the next step's pin
+  // as it stands at the END of the run (server.ts deferredPins).
+  if (pinStatus(store.list(next.origin), next) === 'demoted') return null;
   const start = head.preconditions.urlPattern;
   const end = [...tail.steps].reverse().find((s) => s.expect?.urlPattern)?.expect?.urlPattern ?? tail.preconditions.urlPattern;
-  if (!start || !end || routeOf(start) === routeOf(end)) return null;
+  const byFragment = routesByFragment(store, cand.origin);
+  if (!start || !end || routeOf(start, byFragment) === routeOf(end, byFragment)) return null;
   return `its procedure ends on ${end} (${tail.id}), and the next step's procedure (${head.id}) starts on ${start} without navigating there: it would leave the next step on the wrong page`;
 }
 
-/** A url pattern as a route: every slot marker and `:id` read as the same "some record" position. */
-function routeOf(pattern: string): string {
-  return pattern.replace(/\{\{[^{}]*\}\}|:id\b/g, '*');
+/**
+ * A url pattern as a route: every slot marker and `:id` read as the same
+ * "some record" position — and, on an app that does not route by fragment,
+ * the fragment dropped: Snipe-IT's `/hardware/:id#history` is the History tab
+ * of `/hardware/:id`, one page (fwsi9-n3 04-report).
+ */
+function routeOf(pattern: string, byFragment: boolean): string {
+  const route = pattern.replace(/\{\{[^{}]*\}\}|:id\b/g, '*');
+  return byFragment ? route : route.replace(/#.*$/, '');
+}
+
+/**
+ * Whether an origin ROUTES by fragment, by its own recorded urls: some stored
+ * pattern's fragment carries a path (`#Opportunity/view/:id`, `#/posts`) or
+ * state (`#action=9&cids=1`) — EspoCRM, Ghost and Odoo do; a bare `#history`
+ * anchor is not evidence of either. Provenance, not the fragment's look:
+ * fwec4's `#Opportunity` list and `#Opportunity/view/:id` stay two routes
+ * because the same store records the latter.
+ */
+function routesByFragment(store: SkillStore, origin: string): boolean {
+  const patterns = store.list(origin).flatMap((s) => [s.preconditions.urlPattern, ...s.steps.map((st) => st.expect?.urlPattern)]);
+  return patterns.some((p) => {
+    const hash = typeof p === 'string' ? p.indexOf('#') : -1;
+    return hash >= 0 && /[/=]/.test(p!.slice(hash + 1));
+  });
 }
 
 export function instructionEntry(entries: RecordedEntry[]): RecordedInstruction | undefined {

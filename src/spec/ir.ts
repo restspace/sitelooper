@@ -3,7 +3,7 @@ import { mutates, selectCandidates } from '../skills/learn.js';
 import { rethreadParams } from './rethread.js';
 import { diagnosticLine, rerecordFix, rerecordAction, type Diagnostic } from './diagnostics.js';
 import { LEAKED_STEP } from './rerecord.js';
-import { SKILL_CONTRACT, stepsCarryContext, type Skill, type SkillParam, type SkillStep, type SkillStore } from '../skills/store.js';
+import { SKILL_CONTRACT, pageEffectDemoted, stepsCarryContext, type Skill, type SkillParam, type SkillStep, type SkillStore } from '../skills/store.js';
 import { seedRecipes, snapshotRecipes, type ComponentStore } from '../skills/components.js';
 import type { RecipeSnapshot } from '../execution/recipes.js';
 import { FINGERPRINT_DIMS } from '../execution/fingerprint.js';
@@ -263,6 +263,11 @@ function demotionWhy(skill: Skill): string {
     );
   }
   if (st.lastFailedAt !== undefined) parts.push(`the demotion was two consecutive failures at step ${st.lastFailedAt}`);
+  // A store banked before page-effect stops became strikes (pageEffectDemoted):
+  // say which step, and why a recovered stop there still counts.
+  if (skill.status !== 'demoted' && worst) {
+    parts.push(`step ${worst[0]} opens or switches the page (a popup or tab) that later steps' procedures were recorded on, so a stop there is a strike even when the step recovered`);
+  }
   if (st.lastUsed) parts.push(`last used ${st.lastUsed}`);
   return `${parts.join('; ')}.`;
 }
@@ -462,7 +467,9 @@ export function flowToSpec(
       // skill's fingerprint (toSegment), and the artifact measures it exactly
       // as replay does. Only a lifted file that predates the vector has a
       // segment it cannot measure (carryFingerprints, and the emitter).
-      if (member.status === 'demoted') {
+      // pageEffectDemoted: stops at a popup/tab step banked as "harmless"
+      // before they became strikes (fwsi9 s_24e7fd) demote it here too.
+      if (pageEffectDemoted(member)) {
         diagnostics.push({
           code: 'demoted-pin',
           step: step.id,
