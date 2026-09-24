@@ -4656,6 +4656,58 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     }, 240_000);
   });
 
+  /**
+   * Round 59, openproject fwop13 01-signin (n1 lines 11-16): the recording
+   * clicked the Bench Project link twice and saw neither click do anything,
+   * listed the tabs, and navigated with a goto. Compiled with both clicks, the
+   * first navigated on replay and the second, on the project page (whose
+   * breadcrumb carries the same link), stopped both runners on its recorded
+   * url, /projects. Compiled from the same shape, both runners must reach
+   * the project page and open its work packages.
+   */
+  describe('link clicks the recording saw do nothing, replaced by a goto (round 59, fwop13)', () => {
+    it('both runners replay the goto, not the stranded second click', async () => {
+      const link = [{ kind: 'css' as const, selector: 'a[href="/proj/bench"]' }, { kind: 'role' as const, role: 'link', name: 'Bench Project' }];
+      const LIST = `${origin}/proj-list`;
+      const PAGE = `${origin}/proj/bench`;
+      const step = (tool: string, args: Record<string, unknown>, chain: LocatorCandidate[], extra: Partial<RecordedStep> = {}): RecordedStep => ({
+        k: 'step',
+        tool,
+        args,
+        locators: chain.length ? { target: { expr: 'x', verified: true, raw: String(args.target ?? ''), chain } } : {},
+        ...extra,
+      });
+      const entries: RecordedEntry[] = [
+        { k: 'instruction', text: 'open the Bench Project and its work packages', url: LIST },
+        step('click', { target: 'a[href="/proj/bench"]' }, link, { diff: { url: LIST, alerts: [], added: [], dialect: 2 } }),
+        step('read', { label: 'current_url', what: 'url' }, [], { result: JSON.stringify(LIST) }),
+        step('wait_for', { target: 'a[href="/proj/bench"]', state: 'visible' }, link),
+        step('click', { target: 'a[href="/proj/bench"]' }, link, { diff: { url: LIST, alerts: [], added: [], dialect: 2 } }),
+        step('tabs', {}, []),
+        step('goto', { url: PAGE }, [], { diff: { url: PAGE, alerts: [], added: ['- heading "Overview"', '- button "Work packages"'], dialect: 2 } }),
+        step('click', { target: '@e9' }, [{ kind: 'role', role: 'button', name: 'Work packages' }], { diff: { url: PAGE, alerts: [], added: [], dialect: 2 } }),
+      ];
+      const compiled = compileSkills({ entries, instruction: 'open the Bench Project and its work packages', report: { status: 'success', summary: 'ok' }, session: 's' });
+      const steps = compiled.flatMap((sk) => sk.steps);
+      const all: SkillStep[] = [{ tool: 'goto', args: { url: LIST }, locators: {} }, ...steps];
+      const skill: Skill = { ...skillOf(all), id: 's_inert_links', template: 's_inert_links' };
+      const spec: SpecFlow = {
+        version: 2,
+        name: 'parity-inert-links',
+        origin,
+        startUrl: `${origin}/`,
+        vars: [],
+        steps: [{ id: '01-open', instruction: 'open', params: {}, outputs: [], segments: [{ id: 's_inert_links', template: 's_inert_links', params: {}, preconditions: { urlPattern: `${origin}/` }, steps: all }] }],
+      };
+      const { replay, emitted, replayLog, emittedLog } = await bothOf(skill, spec, {});
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      await new Promise((r) => setTimeout(r, 300));
+      expect(replayLog).toEqual(['commit:wp:open']);
+      expect(emittedLog).toEqual(['commit:wp:open']);
+    }, 240_000);
+  });
+
   describe('step effects', () => {
     /**
      * Cell 1. `/stamp`: Stamp's recorded effect is `- button "Revert"`, a plain
