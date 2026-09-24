@@ -29,6 +29,15 @@
  * values by design: fwgr68, fwkb39, fwrd87 and fwvk7 all have such steps and
  * all were green in round 54. A skipped read is different: nothing was
  * observed at all.
+ *
+ * But only of a fact the instruction ASKED for (askedOutputs, round 56's rule).
+ * EspoCRM fwec11 01-signin was asked to "confirm you are signed in and report
+ * what page you land on"; its recording read a `page_title` off the footer's
+ * "EspoCRM, Inc." link, and when no replay found that link both n2 and n3
+ * ended partial with every verifier green. A skipped read of an output nobody
+ * asked for stays what it is — a warning on the step and a drift ticket —
+ * while fwsi7 05-open's `checked_out_to_user`, which "the user it is checked
+ * out to" asks for, is still partial.
  */
 
 export interface StepVerdictInput {
@@ -44,6 +53,12 @@ export interface StepVerdictInput {
   declaredOutputs: readonly string[];
   /** The values the step reported. */
   values: Record<string, unknown>;
+  /**
+   * The step's instruction. When given, a skipped read counts only for an
+   * output it explicitly asks to report (askedOutputs); without it, every
+   * declared output counts, as before round 59.
+   */
+  instruction?: string;
 }
 
 /**
@@ -60,7 +75,7 @@ export function partialReasons(input: StepVerdictInput): string[] {
     );
   }
   if (!input.recovered && input.skippedReads?.length) {
-    const declared = new Set(input.declaredOutputs);
+    const declared = new Set(input.instruction === undefined ? input.declaredOutputs : askedOutputs(input.instruction, input.declaredOutputs));
     const missed = [...new Set(input.skippedReads)].filter((label) => declared.has(label) && !(label in input.values));
     for (const label of missed) {
       reasons.push(`the procedure's read of ${label}, an output this step reports, was skipped (nothing matched on the page), so ${label} went unreported`);
@@ -179,4 +194,63 @@ function answeredAsParts(joined: unknown, published: readonly string[], recorded
     return !/[\p{L}\p{N}]/u.test(before) && !/[\p{L}\p{N}]/u.test(after);
   });
   return parts.length >= 2;
+}
+
+/**
+ * Asked outputs a step's procedure can publish only from a recorded LITERAL
+ * in its report template: no read in the chain carries the output's label, and
+ * the template's value holds no slot. A replay publishes such a value only when
+ * the page it ends on shows that exact text (the round-53 withholding), so a
+ * value the recording read on an earlier page, or took from an eval, is never
+ * published — every replay claims the step without it.
+ *
+ * Gitea fwgt10 01-open: asked for "the exact titles of all OPEN issues"; chain
+ * s_e270d0 has no read for open_issue_titles, s_2ea0ba's template carries it as
+ * "#1 Seed: triage inbox, …", and the chain ends on the search page. Export's
+ * round-56 warning named only PRUNED asked outputs, and this one was declared.
+ * Names only; `chain` is the pinned procedure's segments, in order.
+ */
+export function literalOnlyAsks(
+  instruction: string,
+  outputs: readonly string[],
+  chain: readonly { steps: readonly { label?: string; body?: readonly unknown[] }[]; reportTemplate?: { values?: Record<string, string> } }[],
+): string[] {
+  const read = new Set<string>();
+  const walk = (steps: readonly { label?: string; body?: readonly unknown[] }[]): void => {
+    for (const s of steps) {
+      if (s.label) read.add(s.label);
+      if (s.body) walk(s.body as typeof steps);
+    }
+  };
+  for (const member of chain) walk(member.steps);
+  const templated = new Map<string, string>();
+  for (const member of chain) for (const [k, v] of Object.entries(member.reportTemplate?.values ?? {})) templated.set(k, v);
+  return askedOutputs(instruction, outputs).filter((o) => {
+    if (read.has(o)) return false;
+    const literal = templated.get(o);
+    return typeof literal === 'string' && literal.trim() !== '' && !/\{\{[^}]*\}\}/.test(literal);
+  });
+}
+
+/**
+ * What a zero-model success published no value for, of what its instruction
+ * asked: unansweredAsks over the step's outputs (declared and pruned) against
+ * what it reported and read, plus every asked output its pinned chain can
+ * publish only from a template literal (literalOnlyAsks) that the report does
+ * not carry — named whatever the replay's reads published. fwgt10-n2/n3 01-open
+ * published nothing for open_issue_titles and its `unanswered` named only
+ * bench_issue_exists; this backstop does not depend on the read-key set.
+ */
+export function unansweredForStep(input: {
+  instruction: string;
+  outputs: readonly string[];
+  pruned: readonly string[];
+  reported: Record<string, unknown>;
+  published: readonly string[];
+  recorded: Readonly<Record<string, unknown>>;
+  chain: Parameters<typeof literalOnlyAsks>[2];
+}): string[] {
+  const asked = unansweredAsks(input.instruction, [...input.outputs, ...input.pruned], [...Object.keys(input.reported), ...input.published], input.recorded);
+  const literal = literalOnlyAsks(input.instruction, input.outputs, input.chain).filter((o) => !(o in input.reported));
+  return [...new Set([...asked, ...literal])];
 }

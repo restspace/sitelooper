@@ -153,6 +153,84 @@ ${['Backlog', 'Ready', 'Work in progress', 'Done'].map((c, i) => `<td class="boa
  * with a `.field[data-name]` each, and a Stream entry narrating the save
  * that repeats the stage (`espo.stage`, reset to "Negotiation").
  */
+/**
+ * Round 59, EspoCRM fwec11 01-signin: a sign-in form whose Log in replaces it
+ * with the app, whose user menu then shows the signed-in user's DISPLAY name —
+ * "Admin" for the typed username "admin". Plus the controls an echo IS about:
+ * a time picker whose opener shows the option chosen (grafana's picker), a
+ * summary line repeating it elsewhere on the page, and an Excerpt textbox
+ * (ghost fwgh13). The document title is the app's (`signin.title`).
+ */
+const SIGNIN = (title: string) => `<!doctype html><html><head><meta charset="utf-8"><title>${title}</title></head><body>
+<div id="app"><form id="login" onsubmit="return false">
+<label for="user">Username</label><input id="user">
+<label for="pass">Password</label><input id="pass" type="password">
+<button id="go" type="button">Log in</button></form></div>
+<footer id="footer"><p>© 2026 <a href="#">EspoCRM, Inc.</a></p></footer>
+<script>
+document.getElementById('go').addEventListener('click', () => {
+  const who = document.getElementById('user').value;
+  document.getElementById('app').innerHTML =
+    '<nav><a id="menu" href="#" role="button" aria-label="Menu"></a><ul id="user-menu" hidden><li><a href="#"><span class="name">' +
+    who.charAt(0).toUpperCase() + who.slice(1) + '</span></a></li><li><a href="#">Log Out</a></li></ul></nav>' +
+    '<div class="picker"><button id="range" type="button">Last 1 hour</button><ul id="ranges" hidden><li><button type="button" class="opt">Last 6 hours</button></li></ul></div>' +
+    '<p>Range: <span id="summary">Last 1 hour</span></p>' +
+    '<label for="excerpt">Excerpt</label><input id="excerpt">';
+  document.getElementById('menu').addEventListener('click', (e) => { e.preventDefault(); document.getElementById('user-menu').hidden = false; });
+  document.getElementById('range').addEventListener('click', () => { document.getElementById('ranges').hidden = false; });
+  document.querySelector('#ranges .opt').addEventListener('click', (e) => {
+    document.getElementById('range').textContent = e.target.textContent;
+    document.getElementById('summary').textContent = e.target.textContent;
+    document.getElementById('ranges').hidden = true;
+  });
+});
+</script>
+</body></html>`;
+
+/**
+ * Round 59's echo cases side by side (echoAt): a field an app RE-RENDERS
+ * (the same field, a new node); a combobox whose display span shows the
+ * option chosen from its listbox; a live preview mirroring a textarea with no
+ * save; and a part name that a Save commits into a table row.
+ */
+const ECHO_LAB = `<!doctype html><html><head><meta charset="utf-8"><title>Echo lab</title></head><body>
+<div id="a"><label>Title <input id="title"></label> <button id="rerender" type="button">Re-render</button></div>
+<div class="field"><input id="fruit2" role="combobox" aria-label="Fruit" aria-controls="fruit-list" autocomplete="off"><span id="chosen"></span></div>
+<ul id="fruit-list" role="listbox" hidden><li role="option">banana split</li><li role="option">cherry pie</li></ul>
+<textarea id="md" aria-label="Markdown"></textarea>
+<div id="preview"></div>
+<form id="parts" onsubmit="return false"><label>Part name <input id="part"></label> <button id="save" type="button">Save</button></form>
+<table><tbody id="rows"></tbody></table>
+<script>
+document.getElementById('rerender').addEventListener('click', () => {
+  const old = document.getElementById('title');
+  const fresh = document.createElement('input');
+  fresh.id = 'title';
+  fresh.value = old.value;
+  old.replaceWith(fresh);
+});
+const fruit = document.getElementById('fruit2');
+const list = document.getElementById('fruit-list');
+fruit.addEventListener('click', () => { list.hidden = false; });
+for (const li of list.querySelectorAll('li')) li.addEventListener('click', () => {
+  fruit.value = li.textContent;
+  document.getElementById('chosen').textContent = li.textContent;
+  list.hidden = true;
+});
+const md = document.getElementById('md');
+md.addEventListener('input', () => { document.getElementById('preview').textContent = md.value; });
+document.getElementById('save').addEventListener('click', () => {
+  const part = document.getElementById('part');
+  const row = document.createElement('tr');
+  const cell = document.createElement('td');
+  cell.textContent = part.value;
+  row.appendChild(cell);
+  document.getElementById('rows').appendChild(row);
+  part.value = '';
+});
+</script>
+</body></html>`;
+
 const ESPO_DETAIL = (stage: string) => `<!doctype html><html><head><meta charset="utf-8"><title>Opportunity</title></head><body>
 <h3><span>Bench Opportunity</span></h3>
 <div class="record"><div class="row">
@@ -957,6 +1035,34 @@ document.getElementById('add').addEventListener('click', () => fetch('/commit/ad
 </body></html>`;
 
 /**
+ * A date field whose picker the entry opens (round 59, snipeit fwsi10
+ * 03-create): a calendar table; clicking a day sets the field, posts
+ * `/commit/day/<n>` and takes the calendar OUT of the document, as
+ * bootstrap-datepicker detaches its picker; Next posts `/commit/next/go`.
+ * `/picker` starts with no picker and the field already holding the date (a
+ * replay whose picker closed after its fill); `/picker?open=1` with it open.
+ */
+const PICKER = (open: boolean) => `<!doctype html><html><head><meta charset="utf-8"><title>Picker</title></head><body>
+<h1>New asset</h1>
+<label for="date">Purchase Date</label><input id="date" value="${open ? '' : '2026-03-15'}">
+${open ? `<div id="cal"><table class="datepicker-days"><tbody>
+<tr><th>March 2026</th></tr>
+<tr><td>Select Month</td></tr>
+<tr><td>Su</td><td>Mo</td></tr>
+<tr><td class="day">15</td><td class="day">16</td></tr>
+</tbody></table></div>` : ''}
+<button id="next" type="button">Next</button>
+<script>
+document.querySelectorAll('td.day').forEach((td) => td.addEventListener('click', async () => {
+  document.getElementById('date').value = '2026-03-' + td.textContent;
+  document.getElementById('cal').remove();
+  await fetch('/commit/day/' + td.textContent, { method: 'POST' });
+}));
+document.getElementById('next').addEventListener('click', () => fetch('/commit/next/go', { method: 'POST' }));
+</script>
+</body></html>`;
+
+/**
  * A modal form (round 56): its Save posts `/commit/save/<title>` and closes
  * the form, recording nothing but the form going. The Save button stands
  * OUTSIDE the form container, so it resolves whether the form is open or
@@ -1233,6 +1339,25 @@ const OPENER_PLAIN = `<!doctype html><html><head><meta charset="utf-8"><title>Op
 <a id="open" href="/popup/child">Open approval</a>
 </body></html>`;
 
+/**
+ * A project list and a project page (round 59, openproject fwop13 01-signin):
+ * the project page carries the same link to itself (a breadcrumb), so a
+ * second click on it from there goes nowhere. "Work packages" posts
+ * `commit:wp:open`.
+ */
+const PROJ_LIST = `<!doctype html><html><head><meta charset="utf-8"><title>Projects</title></head><body>
+<h1>Projects</h1>
+<a id="bench" href="/proj/bench">Bench Project</a>
+</body></html>`;
+const PROJ_PAGE = `<!doctype html><html><head><meta charset="utf-8"><title>Bench Project</title></head><body>
+<nav><a href="/proj/bench">Bench Project</a></nav>
+<h1>Overview</h1>
+<button id="wp" type="button">Work packages</button>
+<script>
+document.getElementById('wp').addEventListener('click', () => fetch('/commit/wp/open', { method: 'POST' }));
+</script>
+</body></html>`;
+
 const POPUP_CHILD = `<!doctype html><html><head><meta charset="utf-8"><title>Approval</title></head><body>
 <h1>Approve order</h1>
 <button type="button" id="approve">Approve</button>
@@ -1329,6 +1454,8 @@ export interface FixtureServer {
   board: { card: number };
   /** The EspoCRM fixture's stage (/espo); reset() restores "Negotiation". */
   espo: { stage: string };
+  /** The sign-in fixture's document title (/signin); reset() restores "EspoCRM". */
+  signin: { title: string };
   /** Reset state for a new test/case: `n` fresh items, empty log, faults cleared. */
   reset(n: number): void;
   faults: {
@@ -1357,6 +1484,7 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
   const listing = { date: '2026-09-23' };
   const board = { card: 4 };
   const espo = { stage: 'Negotiation' };
+  const signin = { title: 'EspoCRM' };
 
   function take<K extends Fault['kind']>(kind: K, req?: http.IncomingMessage): Extract<Fault, { kind: K }> | undefined {
     for (const f of pending) {
@@ -1386,6 +1514,16 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
     if (url === '/') {
       res.writeHead(200, { 'content-type': 'text/html' });
       res.end(PAGE);
+      return;
+    }
+    if (url === '/echo-lab') {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end(ECHO_LAB);
+      return;
+    }
+    if (url === '/signin') {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end(SIGNIN(signin.title));
       return;
     }
     if (url === '/espo') {
@@ -1612,6 +1750,7 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
       if (url === '/ignored' || url === '/ignored?dead=1') return html(IGNORED(url.endsWith('dead=1')));
       if (url === '/modal' || url === '/modal?open=1') return html(MODAL(url.endsWith('open=1')));
       if (url === '/filters' || url.startsWith('/filters?')) return html(FILTERS(url.includes('open=1'), url.includes('stuck=1')));
+      if (url === '/picker' || url.startsWith('/picker?')) return html(PICKER(url.includes('open=1')));
       if (url === '/price' || url === '/price?stuck=1') return html(PRICE(url.endsWith('stuck=1')));
       if (url === '/imagelink') return html(IMAGE_LINK);
       if (url === '/typed-amount' || url === '/typed-amount?sticky=1') return html(TYPED_AMOUNT(url.endsWith('sticky=1')));
@@ -1633,6 +1772,8 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
       if (url === '/frames/renamed' || url === '/frames?renamed=1') return html(FRAMES(true));
       if (url === '/frames/inner' || url === '/frames/moved') return html(FRAME_INNER);
       if (url === '/opener') return html(OPENER);
+      if (url === '/proj-list') return html(PROJ_LIST);
+      if (url === '/proj/bench') return html(PROJ_PAGE);
       if (url === '/opener-plain') return html(OPENER_PLAIN);
       if (url === '/popup/child') return html(POPUP_CHILD);
       if (url.startsWith('/stall/')) {
@@ -1734,6 +1875,7 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
     listing,
     board,
     espo,
+    signin,
     reset(n: number) {
       items = Array.from({ length: n }, (_, i) => `Item ${i + 1}`);
       log = [];
@@ -1741,6 +1883,7 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
       listing.date = '2026-09-23';
       board.card = 4;
       espo.stage = 'Negotiation';
+      signin.title = 'EspoCRM';
     },
     faults: {
       delay(ms, opts = {}) {

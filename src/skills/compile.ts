@@ -7,6 +7,7 @@ import { linkMintedParts, occursAsToken, replaceAsToken, unseenGotoParts } from 
 import { WILDCARD, escapeRe, identityRe, maskVolatile } from '../shared/text.js';
 import { CREDENTIAL_KEY, fillParamsDeep, queryPairs, safeDecode, urlParts, urlShapeOf } from '../execution/url.js';
 import { contextsEqual, framesEqual, stepEffect } from '../execution/context.js';
+import { MAX_ADDED_LINES as MAX_DIFF_LINES } from '../execution/snapshot.js';
 import { hideEffectLines } from '../execution/toggle.js';
 import { collapseTogglePairs, dropSupersededSets, sameControl } from './toggles.js';
 import { locatingSlots, scopeReadBySlot } from './readscope.js';
@@ -546,6 +547,11 @@ export function compileSkills(input: CompileInput): Skill[] {
   const recordingNotes: TransformNote[] = [];
   const replayable = dropSupersededSets(collapseTogglePairs(expandListReads(dropEvalAssignedCandidates(creditUncreditedPopups(steps, recordingNotes), recordingNotes), reportValues))).filter((step) => {
     if (step.tool === 'screenshot' || step.tool === 'eval') return false;
+    // A bare tab listing (`tabs` with no switch_to) is the agent looking, like
+    // a screenshot: it changes nothing and publishes nothing. openproject
+    // fwop13 01-signin's `tabs {}` sat between two inert link clicks and the
+    // goto that replaced them, and kept both clicks in s_d1e9fe (see observesOnly).
+    if (step.tool === 'tabs' && typeof step.args.switch_to !== 'number') return false;
     if (step.tool === 'read' || step.tool === 'read_all') {
       return step.args.target === '(read-back)' || Boolean(readLabel(step, reportValues));
     }
@@ -610,6 +616,18 @@ export function compileSkills(input: CompileInput): Skill[] {
   const runValues = Object.values(input.knownValues ?? {})
     .map((v) => String(v ?? '').trim())
     .filter((v) => v.length >= 3 && !constants.has(v));
+  /**
+   * Values the TASK states and the procedure ENTERED — a slot the run did not
+   * make that a fill, type or select typed — and the task's constants, for
+   * stableFirst's Rule B. Entered, not merely named: an instruction naming
+   * `/hardware/4` states a record's address, not an input, and a record id
+   * must keep demoting a locator that carries it.
+   */
+  const madeByRun = new Set(Object.values(input.knownValues ?? {}).map((v) => String(v ?? '').trim()));
+  const entered = new Set(
+    steps.flatMap((s) => (s.tool === 'fill' || s.tool === 'type' || s.tool === 'select' ? [s.args.value, s.args.text, s.args.option] : [])).filter((v): v is string => typeof v === 'string').map((v) => v.trim()),
+  );
+  const stated = [...[...slots.values()].filter((v) => entered.has(v.trim()) && !madeByRun.has(v.trim())), ...constants];
   // …and so it STARTS where its first kept step did, not where the
   // instruction began: the steps dropped ahead of it moved the page. fwop2's
   // 01-signin replayed its chain's sign-in and welcome-dialog segments, the
@@ -757,7 +775,7 @@ export function compileSkills(input: CompileInput): Skill[] {
         // running tally decides — see recordCandidateEvidence.
         const usable = filled.filter((c) => !stranded(c, runValues));
         const ranked = [...usable].sort((a, b) => Number(bookmarked(a)) - Number(bookmarked(b)));
-        const kept = stableFirst(ranked.length ? ranked : filled);
+        const kept = stableFirst(ranked.length ? ranked : filled, stated);
         // A READ that lost its anchor and can now only be found BY POSITION
         // must not publish. fwrd16-n3 is the cost of the alternative: the
         // read fell back to `tbody > tr:nth-of-type(1) > td`, resolved
@@ -802,7 +820,10 @@ export function compileSkills(input: CompileInput): Skill[] {
       // one (odoo's "44", repair-desk's "t15") is otherwise reduced to `:id`
       // before the {{dN}} marker can land, and the minting step then carries
       // no reference to what it minted — so `derived` could not find it.
-      const expect = expectationFor(step, new Map([...textSlots, ...mintedHere]));
+      const prevKept = kept[g - 1];
+      const popupHide = Boolean(prevKept && entryPopup(step.diff?.removed ?? [], prevKept.tool, prevKept.diff, prevKept.args));
+      const expect = expectationFor(step, new Map([...textSlots, ...mintedHere]), popupHide);
+      if (popupHide) entryPopupHides.add(out);
       if (expect) out.expect = substituteDeep(expect, mintedHere) as StepExpectation;
       // A text mint with no origin to bind is the recording's record all the
       // same: a wildcard, never its literal (textMintSlots).
@@ -814,7 +835,7 @@ export function compileSkills(input: CompileInput): Skill[] {
       // must not advertise the value either — publishedOutputs reads `label`,
       // and a promised output that never arrives sends later steps to
       // recovery with the reference blank.
-      const targetless = step.tool === 'read' && step.args.what === 'url';
+      const targetless = step.tool === 'read' && (step.args.what === 'url' || step.args.what === 'title');
       if (label && (targetless || Object.values(locators).some((chain) => chain.length))) out.label = label;
       if (step.via) out.via = step.via;
       // Args and locators are use; expectations are NOT. Counting them (f24bdf9)
@@ -1999,6 +2020,31 @@ function positional(c: LocatorCandidate): boolean {
   return c.kind === 'css' || c.kind === 'point' || c.nth !== undefined;
 }
 
+/**
+ * Export's strip (server.ts stripLeakedCandidates): the chain less every
+ * candidate `stranded` by one of the ledger's run values — with a BACKSTOP.
+ * The last NAMED candidate (a role, text, label or scoped name) is never
+ * stripped for values only their SHAPE called run values (`evidence: false`,
+ * ledger basis `shape`) when everything left would be positional or
+ * bookmarked (css paths, points, ids that read as counters). odoo
+ * fwod84-n1's pick of `option "[FURN_7777] Office Chair"` lost its name to a
+ * shape guess and kept only `#autocomplete_0_2`, Odoo's render counter, and
+ * a point; n2 missed it. A value with evidence behind it (a url position, a
+ * declared var, a change a later run watched) strips as before, and a chain
+ * is never emptied.
+ */
+export function stripRunValueCandidates(chain: LocatorCandidate[], runValues: readonly { value: string; evidence: boolean }[]): LocatorCandidate[] {
+  const all = runValues.map((r) => r.value);
+  const strong = runValues.filter((r) => r.evidence).map((r) => r.value);
+  const kept = chain.filter((c) => !stranded(c, all));
+  if (!kept.length) return chain;
+  const named = (c: LocatorCandidate) => c.kind === 'role' || c.kind === 'text' || c.kind === 'label' || c.kind === 'scoped';
+  if (kept.some((c) => named(c) || !(positional(c) || bookmarked(c)))) return kept;
+  const rescued = chain.filter((c) => named(c) && stranded(c, all) && !stranded(c, strong));
+  if (!rescued.length) return kept;
+  return chain.filter((c) => kept.includes(c) || rescued.includes(c));
+}
+
 export function stranded(c: LocatorCandidate, runValues: string[]): boolean {
   const fields: string[] = [];
   if (c.kind === 'scoped') fields.push(c.hasText);
@@ -2335,7 +2381,7 @@ export function typedValues(step: RecordedStep, slots: Map<string, string>): str
     .filter((v) => v.length > 0);
 }
 
-function expectationFor(step: RecordedStep, slots: Map<string, string>): StepExpectation | undefined {
+function expectationFor(step: RecordedStep, slots: Map<string, string>, popupHide = false): StepExpectation | undefined {
   // A navigation's diff is its LANDING — the next segment's start url,
   // fingerprint and startText — not an effect to assert: none of it becomes
   // an expectation, exactly as when goto/back were never diffed.
@@ -2394,7 +2440,10 @@ function expectationFor(step: RecordedStep, slots: Map<string, string>): StepExp
   // value is never dialog chrome. fwod74's configurator Cancel took away the
   // dialog AND the order line it had half-added (`- row "£ 0.00"`, the product
   // combobox showing {{v4}}): that step undid work, it did not merely dismiss.
-  const consequential = removed.some((l) => RECORD_LINE.test(l) || SLOT_LINE.test(l));
+  // ...except the picker the step before it opened by entering a value
+  // (entryPopup, Rule A): its rows and cells are a calendar's, not records
+  // (snipeit fwsi10 03-create's day click).
+  const consequential = !popupHide && removed.some((l) => RECORD_LINE.test(l) || SLOT_LINE.test(l));
   // ...and, since round 56, what a CLICK took off the page when that was its
   // whole effect, dialog or not: vikunja fwvk8-n1 02-create's FILTERS click
   // closed the filter popup (added [], removed its search box and buttons),
@@ -2952,19 +3001,30 @@ function firstUrl(steps: RecordedStep[]): string | undefined {
  * element on the next run. They stay in the chain as a last resort; the
  * semantic candidates (role+name, label, text — now parameterised) go first.
  */
-export function stableFirst(chain: LocatorCandidate[]): LocatorCandidate[] {
+export function stableFirst(chain: LocatorCandidate[], stated: readonly string[] = []): LocatorCandidate[] {
+  // Rule B (round 59): digits the TASK states are no record's id, whatever
+  // their shape. snipeit fwsi10 03-create's day click was recorded as
+  // `.datepicker-days td.day…:has-text("15")` and text "15" — the day of the
+  // purchase date 2026-03-15 the instruction states (slot v3) — and both were
+  // ranked behind the positional `…tr:nth-of-type(3) > td:nth-of-type(1)`,
+  // because "15" reads like an id. The pieces of every stated value (split at
+  // its punctuation) are taken out of a candidate before its shape is judged;
+  // a value the run MADE is never among them (the caller passes slots it did
+  // not bank, and the task's constants), so a record's id still demotes.
+  const pieces = [...new Set(stated.flatMap((v) => String(v ?? '').split(/[\s\-/:.,]+/)).filter((p) => p && /\d/.test(p)))];
+  const unstated = (text: string): string => pieces.reduce((t, p) => replaceAsToken(t, p, ''), text);
   const volatile = (c: LocatorCandidate): boolean => {
     // Where it was is the last resort by definition: behind every name and
     // every path. fwgr27's store had it second, ahead of the anchored path.
     if (c.kind === 'point') return true;
     // The same test as `bookmarked`, extended to css paths.
     if (c.kind === 'testid' || c.kind === 'id' || c.kind === 'css') {
-      const text = c.kind === 'testid' ? c.value : c.selector;
+      const text = unstated(c.kind === 'testid' ? c.value : c.selector);
       return skeleton(text) !== text;
     }
     // A name that is nothing but an id ("RD-1017") names a record, not a
     // control: the same element next run will carry a different one.
-    const name = c.kind === 'role' ? c.name : c.kind === 'text' ? c.text : '';
+    const name = unstated(c.kind === 'role' ? c.name : c.kind === 'text' ? c.text : '');
     return Boolean(name) && !name.includes('{{') && digitDominant(name, 'ordering');
   };
   const stable = chain.filter((c) => !volatile(c));
@@ -3108,6 +3168,10 @@ function markRequiredRemovals(steps: SkillStep[], diffOf: (step: SkillStep) => S
     if (!hideEffectLines(step).length) return;
     const removed = diffOf(step)?.removed ?? [];
     if (!removed.length) return;
+    // The picker the step before it opened by typing (entryPopup): the entry
+    // already wrote the value, so the popup being shut is the state reached,
+    // not a failure (snipeit fwsi10 03-create).
+    if (entryPopupHides.has(step)) return;
     const lines = new Set(removed.map((l) => l.trim()));
     const elements = new Set(removed.map(element));
     const earlier = steps.slice(0, i);
@@ -3116,6 +3180,61 @@ function markRequiredRemovals(steps: SkillStep[], diffOf: (step: SkillStep) => S
     if (opened || filled) step.expect = { ...step.expect, removalRequired: true };
   });
   return steps;
+}
+
+/**
+ * Rule A (round 59): the lines a click took away are the popup the step right
+ * before it opened by ENTERING a value — a date picker or suggestion list a
+ * fill or type raised. Every removed line is one that step's own recorded diff
+ * added; where the two recorded lists were cut at the recorder's cap
+ * (MAX_DIFF_LINES), the lines the entry's list could not hold may only be the
+ * trailing ones, as both lists are in page order.
+ *
+ * snipeit fwsi10 03-create: #35 filled #purchase_date "2026-03-15" and its
+ * diff added the calendar; #36 clicked the day "15", added nothing and removed
+ * exactly that calendar (its one extra line, `- cell "7"`, is past #35's cap);
+ * #37 read the field back as the value #35 had typed. The click chose what the
+ * entry had already written, so its whole effect was the picker closing. Such
+ * a click is a HIDE whose removal is not required (markRequiredRemovals) and
+ * whose rows and cells are the picker's, not records (expectationFor): both
+ * runners click it when the picker is showing — a popup left open may cover
+ * the next target — and skip it, saying so, when it is not
+ * (execution/toggle.ts hideEffectLines). A pick that changed the field shows
+ * the new value among its added lines, so it is no hide and always replays.
+ */
+function entryPopup(removed: readonly string[], prevTool: string, prevDiff: StepDiff | undefined, prevArgs: Record<string, unknown> = {}): boolean {
+  if ((prevTool !== 'fill' && prevTool !== 'type') || !removed.length) return false;
+  const added = prevDiff?.added ?? [];
+  // The entry WROTE its value into a field, and that field outlived the click:
+  // its line (`- textbox "…": 2026-03-15`) is among the entry's additions and
+  // not among the click's removals. An ng-select search box the option click
+  // takes away with its list (openproject fwop11/12) was a query, not the
+  // value; its option click is the selection and always replays.
+  const typed = String(prevArgs.value ?? prevArgs.text ?? '').trim();
+  const valueLines = typed ? added.filter((l) => l.trim().endsWith(`: ${typed}`)) : [];
+  if (!valueLines.length || valueLines.some((l) => removed.some((r) => r.trim() === l.trim()))) return false;
+  const had = new Set(added.map((l) => l.trim()));
+  const miss = removed.findIndex((l) => !had.has(l.trim()));
+  if (miss < 0) return true;
+  return miss > 0 && added.length >= MAX_DIFF_LINES && removed.slice(miss).every((l) => !had.has(l.trim()));
+}
+
+/** The compiled clicks entryPopup judged (identity, as recordedDiffs): markRequiredRemovals never requires their removal. */
+const entryPopupHides = new WeakSet<SkillStep>();
+
+/**
+ * A step that only LOOKS at the page: a read, a wait, or a bare tab listing
+ * (`tabs` with no switch_to). The one definition the scans for abandoned
+ * clicks step over (abandonedLinkClick, repeatOf): openproject fwop13's
+ * `tabs {}` between an inert link click and the goto that replaced it ended
+ * abandonedLinkClick's scan, and s_d1e9fe kept a click that stranded every
+ * replay (round 59). Compile drops a bare tab listing anyway; this still
+ * names it, so a step list that kept one (a variant's, a test's) reads the
+ * same.
+ */
+export function observesOnly(step: SkillStep): boolean {
+  if (step.tool === 'read' || step.tool === 'read_all' || step.tool === 'wait_for') return true;
+  return step.tool === 'tabs' && typeof step.args?.switch_to !== 'number';
 }
 
 /** A click's primary locator — the first candidate it was recorded with — as a comparable key. */
@@ -3206,10 +3325,10 @@ function repeatOf(steps: readonly SkillStep[], i: number, diffOf?: (step: SkillS
       const moved = Boolean(e?.urlPattern && before && e.urlPattern !== before);
       if (!(moved || s.mints || e?.addedContains?.length || e?.alertContains)) return null;
       if (!removalUndoneBetween(steps, i, j, diffOf)) return null;
-      const fieldWork = steps.slice(i + 1, j).some((b) => !['read', 'read_all', 'wait_for'].includes(b.tool));
+      const fieldWork = steps.slice(i + 1, j).some((b) => !observesOnly(b));
       return { j, fieldWork };
     }
-    if (['fill', 'type', 'press', 'read', 'read_all', 'wait_for'].includes(s.tool)) continue;
+    if (['fill', 'type', 'press'].includes(s.tool) || observesOnly(s)) continue;
     const k = primaryLocator(s);
     if (s.tool === 'click' && consequenceFree(steps, j, diffOf) && k && fieldTargets.has(k)) continue;
     return null;
@@ -3283,7 +3402,7 @@ function abandonedLinkClick(steps: readonly SkillStep[], i: number): number | nu
   for (let j = i + 1; j < steps.length; j++) {
     const s = steps[j];
     if (s.tool === 'goto') return j;
-    if (s.tool === 'read' || s.tool === 'read_all' || s.tool === 'wait_for') continue;
+    if (observesOnly(s)) continue;
     if (inert(j)) continue;
     return null;
   }

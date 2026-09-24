@@ -4,9 +4,9 @@ import path from 'node:path';
 import { AnthropicProvider, OpenAICompatProvider, resolveProviderConfig, type Provider } from '../agent/llm.js';
 import { buildSystemOne, resolveSystemOneConfig, type SystemOne } from '../agent/system-one.js';
 import { runEscalatingInstruction, type InstructionResult, type LoopActor, type SkillRecord } from '../agent/loop.js';
-import { askedOutputs, partialReasons, unansweredAsks } from './step-verdict.js';
+import { askedOutputs, literalOnlyAsks, partialReasons, unansweredForStep } from './step-verdict.js';
 import { executeTool } from '../agent/tools.js';
-import { urlPattern as compiledUrlPattern, carryOpener, dropAbsentReadLocators, dropDeadReadLocators, fillParams, markReadsProven, stranded, urlMatches, urlParts } from '../skills/compile.js';
+import { urlPattern as compiledUrlPattern, carryOpener, dropAbsentReadLocators, dropDeadReadLocators, fillParams, markReadsProven, stranded, stripRunValueCandidates, urlMatches, urlParts } from '../skills/compile.js';
 import type { DriftTicket } from '../skills/repair.js';
 import type { Page } from 'playwright-core';
 import { agentGesturesOutsideReplay, bindSkill, canAdoptPin, decideRepin, instructionEntry, learnFromInstruction, matchTemplate, pinCarriesFailedStep, pinEndsElsewhere, pinStartsElsewhere, pinStatus, publishedOutputs, replayReport, selectCandidates } from '../skills/learn.js';
@@ -186,10 +186,16 @@ ${describeLeaks(leaks.slice(0, 6))}`);
     // Identifiers only, as `fatal` already insists: a reported status word
     // ("Ready") is banked as text, and stripping every candidate whose name
     // contains it ("Mark Ready") weakened chains permanently in the store.
+    // ...less the task's constants, as compile's runValues are: a value the
+    // app OFFERED before the run picked and reported it (flow.ts
+    // taskConstants; odoo fwod84-n1's FURN_7777) is catalog data. Each value
+    // carries whether evidence, not only its shape, made it an identifier —
+    // the backstop in stripRunValueCandidates reads it.
+    const constants = new Set(this.taskConstants());
     const runValues = this.ledger
       .all()
-      .filter((e) => e.kind === 'identifier' && e.value.length >= 3)
-      .map((e) => e.value);
+      .filter((e) => e.kind === 'identifier' && e.value.length >= 3 && !constants.has(e.value))
+      .map((e) => ({ value: e.value, evidence: e.basis !== 'shape' }));
     if (!runValues.length) return 0;
     let removed = 0;
     for (const skill of this.sessionSkills(flow, store)) {
@@ -197,8 +203,8 @@ ${describeLeaks(leaks.slice(0, 6))}`);
       const walk = (steps: Skill['steps']): void => {
         for (const step of steps) {
           for (const [key, chain] of Object.entries(step.locators ?? {}) as [string, LocatorCandidate[]][]) {
-            const kept = chain.filter((c) => !stranded(c, runValues));
-            if (!kept.length || kept.length === chain.length) continue;
+            const kept = stripRunValueCandidates(chain, runValues);
+            if (kept.length === chain.length) continue;
             removed += chain.length - kept.length;
             step.locators[key] = kept;
             touched = true;
@@ -1404,6 +1410,22 @@ ${describeLeaks(certain.slice(0, 30))}${certain.length > 30 ? `\n  … and ${cer
         );
       }
     }
+    // …nor kept as a recorded literal no read supports (fwgt10 01-open's
+    // open_issue_titles): a replay publishes it only when the page it ends on
+    // shows that exact text, so it is as good as dropped. See literalOnlyAsks.
+    for (const step of flow.steps.slice().reverse()) {
+      if (!step.skill || step.adopted) continue;
+      const pinned = store.get(step.skill);
+      if (!pinned) continue;
+      const chain = pinned.seq ? store.list(pinned.origin).filter((s) => s.seq?.chain === pinned.seq!.chain).sort((a, b) => a.seq!.index - b.seq!.index) : [pinned];
+      const literal = literalOnlyAsks(step.instruction, step.outputs, chain);
+      if (literal.length) {
+        warnings.unshift(
+          `warning: ${step.id}'s instruction asks to report ${literal.join(', ')}, and only a recorded literal backs ${literal.length === 1 ? 'it' : 'them'}: ` +
+            `no read in its procedure publishes ${literal.length === 1 ? 'it' : 'them'}, so a replay reports ${literal.length === 1 ? 'it' : 'them'} only if the page it ends on shows that exact text — re-record the step so the value is read where it is shown`,
+        );
+      }
+    }
     if (slotted.length) warnings.unshift(`note: ${slotted.length} goal/report value(s) carrying a value this run made were slotted or dropped:\n${slotted.map((s) => `  ${s}`).join('\n')}`);
     if (stripped) warnings.unshift(`note: dropped ${stripped} locator candidate(s) carrying a value this run minted (known only by export time)`);
     // Loudest of all, so first: a quarantined step is the one thing in this
@@ -1942,6 +1964,8 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
         skippedReads: result.skill?.skippedReads,
         declaredOutputs: step.outputs,
         values: result.report.evidence?.values ?? {},
+        // Only an ASKED output's skipped read makes the step partial (fwec11 01-signin).
+        instruction: step.instruction,
       });
       const judged: InstructionResult = partial.length ? { ...result, report: { ...result.report, status: 'failure' } } : result;
       for (const why of partial) opts.progress(`[flow ${flow.name}] ${step.id}: PARTIAL — ${why}`);
@@ -2298,14 +2322,26 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       // fwsi8 01-signin's asset names). Said on the step, not a verdict: see
       // step-verdict.ts for the green steps a verdict would fail. Echo-reads
       // (result.published) answer; an output export pruned is still asked.
+      // …and an asked output the pinned procedure can publish ONLY from a
+      // recorded template literal, when this replay's report does not carry it
+      // (step-verdict.ts unansweredForStep; fwgt10-n2/n3 01-open).
+      const pinnedChain = (() => {
+        const store = this.browser.learn;
+        const pinned = step.skill && store ? store.get(step.skill) : null;
+        if (!store || !pinned) return [];
+        return pinned.seq ? store.list(pinned.origin).filter((m) => m.seq?.chain === pinned.seq!.chain).sort((x, y) => x.seq!.index - y.seq!.index) : [pinned];
+      })();
       const unanswered =
         !recovered && result.report.status === 'success'
-          ? unansweredAsks(
-              step.instruction,
-              [...step.outputs, ...((flow.pruned ?? []).find((p) => p.stepId === step.id)?.outputs ?? [])],
-              [...Object.keys(values), ...Object.keys(result.published ?? {})],
-              step.recorded ?? {},
-            )
+          ? unansweredForStep({
+              instruction: step.instruction,
+              outputs: step.outputs,
+              pruned: (flow.pruned ?? []).find((p) => p.stepId === step.id)?.outputs ?? [],
+              reported: values,
+              published: Object.keys(result.published ?? {}),
+              recorded: step.recorded ?? {},
+              chain: pinnedChain,
+            })
           : [];
       if (unanswered.length) opts.progress(`[flow ${flow.name}] ${step.id}: its instruction asks to report ${unanswered.join(', ')}, and this replay published no value for ${unanswered.length === 1 ? 'it' : 'them'}`);
       stepResults.push({

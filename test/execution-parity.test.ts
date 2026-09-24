@@ -38,7 +38,7 @@ import { replayReport } from '../src/skills/learn.js';
 import { consumedReportedOutputs, ignorableRefs, resolveInstruction, resolveStepParams, type FlowStep } from '../src/skills/flow.js';
 import type { Skill, SkillParam, SkillStep } from '../src/skills/store.js';
 import type { LocatorCandidate, RecordedEntry, RecordedStep } from '../src/daemon/recorder.js';
-import { captureReadBack, coreReadBack, selectionReadBack, visibleTextsWithin } from '../src/daemon/recorder.js';
+import { captureReadBack, coreReadBack, selectionReadBack, titleReadBack, visibleTextsWithin } from '../src/daemon/recorder.js';
 import { pinPart } from '../src/agent/readback.js';
 import { flattenContainedComposite, flattenProvenComposite, planContainedParts, type Report } from '../src/agent/report.js';
 import { compileSkills } from '../src/skills/compile.js';
@@ -3850,6 +3850,67 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     }, 240_000);
   });
 
+  describe('a picker click whose target went with the picker its entry opened (round 59, fwsi10 03-create)', () => {
+    /**
+     * snipeit fwsi10-n1 03-create filled the purchase date (opening the date
+     * picker) and clicked the day, which only closed the picker. n2 and n3
+     * found no picker at that click and stopped. Compiled from such a
+     * recording, both runners now click the day when the picker is showing
+     * and skip the click, saying so, when it is not.
+     */
+    const pickerSteps = (url: string): SkillStep[] => {
+      const cal = ['- cell "Select Month"', '- cell "Su"', '- cell "Mo"'];
+      const entries: RecordedEntry[] = [
+        { k: 'instruction', text: 'set the purchase date and go on', url },
+        { k: 'step', tool: 'goto', args: { url }, locators: {}, diff: { url, alerts: [], added: [], dialect: 2 } },
+        {
+          k: 'step',
+          tool: 'fill',
+          args: { target: '#date', value: '2026-03-15' },
+          locators: { target: { expr: 'x', verified: true, raw: '#date', chain: [{ kind: 'css', selector: '#date' }] } },
+          diff: { url, alerts: [], added: ['- textbox "Purchase Date": 2026-03-15', ...cal], dialect: 2 },
+        },
+        {
+          k: 'step',
+          tool: 'click',
+          args: { target: 'td.day:has-text("15")' },
+          locators: { target: { expr: 'x', verified: true, raw: 'td.day:has-text("15")', chain: [{ kind: 'css', selector: 'td.day:has-text("15")' }] } },
+          diff: { url, alerts: [], added: [], removed: cal, dialect: 2 },
+        },
+        {
+          k: 'step',
+          tool: 'click',
+          args: { target: '#next' },
+          locators: { target: { expr: 'x', verified: true, raw: '#next', chain: [{ kind: 'role', role: 'button', name: 'Next' }] } },
+          diff: { url, alerts: [], added: [], dialect: 2 },
+        },
+      ];
+      return compileSkills({ entries, instruction: 'set the purchase date and go on', report: { status: 'success', summary: 'ok' }, session: 's' }).flatMap((sk) => sk.steps);
+    };
+
+    it('both runners click the day when the picker shows, and skip it when the picker is shut', async () => {
+      const compiled = pickerSteps(`${origin}/picker?open=1`);
+      const day = compiled.find((st) => st.args.target === 'td.day:has-text("15")')!;
+      expect(day.expect?.removedContains).toEqual(['- cell "Select Month"', '- cell "Su"', '- cell "Mo"']);
+      expect(day.expect?.removalRequired).toBeUndefined();
+      const at = (url: string) => compiled.map((st) => (st.tool === 'goto' ? { ...st, args: { url } } : st));
+
+      const open = await both(at(`${origin}/picker?open=1`), 0);
+      expect(open.replay.ok, open.replay.reason ?? '').toBe(true);
+      expect(open.emitted.ok, open.emitted.reason ?? '').toBe(true);
+      await new Promise((r) => setTimeout(r, 300));
+      expect(open.replayLog).toEqual(['commit:day:15', 'commit:next:go']);
+      expect(open.emittedLog).toEqual(['commit:day:15', 'commit:next:go']);
+
+      const shut = await both(at(`${origin}/picker`), 0);
+      expect(shut.replay.ok, shut.replay.reason ?? '').toBe(true);
+      expect(shut.emitted.ok, shut.emitted.reason ?? '').toBe(true);
+      await new Promise((r) => setTimeout(r, 300));
+      expect(shut.replayLog, 'replay clicked into a picker that was shut').toEqual(['commit:next:go']);
+      expect(shut.emittedLog, 'the artifact clicked into a picker that was shut').toEqual(['commit:next:go']);
+    }, 240_000);
+  });
+
   describe('a click whose whole recorded effect was a removal (round 56, fwvk8 02-create)', () => {
     /**
      * vikunja fwvk8-n1 02-create's FILTERS click closed the filter popup
@@ -4028,6 +4089,113 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
         expect(emitted.outputs[`01-clear.${key}`]?.replace(/\s+/g, ' ').trim()).toBe(want);
       }
     }, 120_000);
+  });
+
+  /**
+   * Round 59, EspoCRM fwec11 01-signin (s_6e8936): the procedure typed
+   * "admin" into Username, logged in, opened the user menu and read the
+   * signed-in user's DISPLAY name, "Admin". The echo ledger compared text only
+   * (echoKey folds case), so both runners dropped it as a value "the skill
+   * itself set". The Username field was gone by then: nothing the procedure
+   * set was still showing it. A text-equal read is OBSERVED only when its
+   * element is not the control (nor its widget) AND something committed the
+   * value since the set (echoAt): here the form was submitted and removed.
+   * Grafana's picker opener after "Last 6 hours", the summary line mirroring
+   * it with no save, and ghost fwgh13's Excerpt textbox stay echoes.
+   *
+   * And a title read (round 59: n1's page_title was pinned to the footer's
+   * "EspoCRM, Inc." by containment): both runners publish the live
+   * document.title.
+   */
+  describe('echo is what an acted-on control still shows; the title is read as the title (fwec11)', () => {
+    const at = (selector: string): LocatorCandidate[] => [{ kind: 'css', selector }];
+    const steps = (): SkillStep[] => [
+      { tool: 'goto', args: { url: `${origin}/signin` }, locators: {} },
+      { tool: 'fill', args: { target: '@e1', value: 'admin' }, locators: { target: at('#user') } },
+      { tool: 'fill', args: { target: '@e2', value: 'bench-pass' }, locators: { target: at('#pass') } },
+      { tool: 'click', args: { target: '@e3' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Log in' }] } },
+      { tool: 'click', args: { target: '@e4' }, locators: { target: at('#menu') } },
+      { tool: 'read', args: { target: '(read-back)', what: 'text' }, label: 'signed_in_user', locators: { target: at('#user-menu .name') } },
+      { tool: 'click', args: { target: '@e5' }, locators: { target: at('#range') } },
+      { tool: 'click', args: { target: '@e6' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Last 6 hours' }] } },
+      { tool: 'read', args: { target: '(read-back)', what: 'text' }, label: 'time_range', locators: { target: at('#range') } },
+      { tool: 'read', args: { target: '(read-back)', what: 'text' }, label: 'summary_range', locators: { target: at('#summary') } },
+      { tool: 'fill', args: { target: '@e7', value: 'Bench excerpt for this run' }, locators: { target: at('#excerpt') } },
+      { tool: 'read', args: { target: '(read-back)', what: 'value' }, label: 'custom_excerpt', locators: { target: at('#excerpt') } },
+      { tool: 'read', args: { what: 'title' }, label: 'page_title', locators: {} },
+    ];
+
+    it('both runners publish the display name as observed, and keep the picker, its live summary and the textbox as echoes', async () => {
+      const { replay, emitted } = await both(steps(), 0);
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      const want = { signed_in_user: 'Admin', time_range: 'Last 6 hours', summary_range: 'Last 6 hours', custom_excerpt: 'Bench excerpt for this run', page_title: 'EspoCRM' };
+      for (const [key, value] of Object.entries(want)) {
+        expect(replay.outputs[key], `replay ${key}`).toBe(value);
+        expect(emitted.outputs[`01-clear.${key}`], `artifact ${key}`).toBe(value);
+      }
+      expect([...(replay.echoed ?? [])].sort()).toEqual(['custom_excerpt', 'summary_range', 'time_range']);
+      expect([...(emitted.echoed ?? [])].sort()).toEqual(['custom_excerpt', 'summary_range', 'time_range']);
+    }, 120_000);
+
+    /**
+     * What must STAY an echo, and what a commit makes observed: a re-rendered
+     * field (the same field, a new node, found again by its locator); a
+     * combobox's display span after its option was picked (the span is the
+     * combobox's own widget); a live preview mirroring a textarea with no
+     * save. And a part name a Save committed into a row: observed.
+     */
+    it('both runners keep a re-rendered field, a combobox display and a live preview as echoes, and observe a saved row', async () => {
+      const lab: SkillStep[] = [
+        { tool: 'goto', args: { url: `${origin}/echo-lab` }, locators: {} },
+        { tool: 'fill', args: { target: '@e1', value: 'Bench title text' }, locators: { target: at('#title') } },
+        { tool: 'click', args: { target: '@e2' }, locators: { target: at('#rerender') } },
+        { tool: 'read', args: { target: '(read-back)', what: 'value' }, label: 'title_value', locators: { target: at('#title') } },
+        { tool: 'click', args: { target: '@e3' }, locators: { target: at('#fruit2') } },
+        { tool: 'click', args: { target: '@e4' }, locators: { target: [{ kind: 'role', role: 'option', name: 'banana split' }] } },
+        { tool: 'read', args: { target: '(read-back)', what: 'text' }, label: 'chosen', locators: { target: at('#chosen') } },
+        { tool: 'fill', args: { target: '@e5', value: 'preview text here' }, locators: { target: at('#md') } },
+        { tool: 'read', args: { target: '(read-back)', what: 'text' }, label: 'preview', locators: { target: at('#preview') } },
+        { tool: 'fill', args: { target: '@e6', value: 'Widget alpha' }, locators: { target: at('#part') } },
+        { tool: 'click', args: { target: '@e7' }, locators: { target: at('#save') }, expect: { addedContains: ['- cell "Widget alpha"'], lineDialect: 2 } },
+        { tool: 'read', args: { target: '(read-back)', what: 'text' }, label: 'saved_part', locators: { target: at('#rows td') } },
+      ];
+      const { replay, emitted } = await both(lab, 0);
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      const want = { title_value: 'Bench title text', chosen: 'banana split', preview: 'preview text here', saved_part: 'Widget alpha' };
+      for (const [key, value] of Object.entries(want)) {
+        expect(replay.outputs[key], `replay ${key}`).toBe(value);
+        expect(emitted.outputs[`01-clear.${key}`], `artifact ${key}`).toBe(value);
+      }
+      expect([...(replay.echoed ?? [])].sort()).toEqual(['chosen', 'preview', 'title_value']);
+      expect([...(emitted.echoed ?? [])].sort()).toEqual(['chosen', 'preview', 'title_value']);
+    }, 120_000);
+
+    it('both runners read the live document title, not the recording’s', async () => {
+      reset(0);
+      fx.signin.title = 'EspoCRM Home';
+      const replay = await replayOf(skillOf(steps()));
+      reset(0);
+      fx.signin.title = 'EspoCRM Home';
+      const emitted = await emittedOf(specOf(steps()));
+      expect(replay.outputs.page_title).toBe('EspoCRM Home');
+      expect(emitted.outputs['01-clear.page_title']).toBe('EspoCRM Home');
+    }, 120_000);
+
+    it('records a reported value equal to the document title as a title read, not a pin on text that contains it', async () => {
+      reset(0);
+      const session = new BrowserSession({ session: `parity-title-${Date.now()}`, persist: false });
+      try {
+        const page = await session.getPage();
+        await page.goto(`${origin}/signin`);
+        const step = await titleReadBack(page, 'EspoCRM', 'page_title');
+        expect(step).toMatchObject({ tool: 'read', args: { what: 'title' }, label: 'page_title', result: JSON.stringify('EspoCRM') });
+        expect(await titleReadBack(page, 'EspoCRM, Inc.', 'vendor')).toBeNull();
+      } finally {
+        await session.close();
+      }
+    }, 60_000);
   });
 
   describe('echo reads', () => {
@@ -4592,6 +4760,58 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       await new Promise((r) => setTimeout(r, 300));
       expect(replayLog).toEqual(['approve', 'after']);
       expect(emittedLog).toEqual(['approve', 'after']);
+    }, 240_000);
+  });
+
+  /**
+   * Round 59, openproject fwop13 01-signin (n1 lines 11-16): the recording
+   * clicked the Bench Project link twice and saw neither click do anything,
+   * listed the tabs, and navigated with a goto. Compiled with both clicks, the
+   * first navigated on replay and the second, on the project page (whose
+   * breadcrumb carries the same link), stopped both runners on its recorded
+   * url, /projects. Compiled from the same shape, both runners must reach
+   * the project page and open its work packages.
+   */
+  describe('link clicks the recording saw do nothing, replaced by a goto (round 59, fwop13)', () => {
+    it('both runners replay the goto, not the stranded second click', async () => {
+      const link = [{ kind: 'css' as const, selector: 'a[href="/proj/bench"]' }, { kind: 'role' as const, role: 'link', name: 'Bench Project' }];
+      const LIST = `${origin}/proj-list`;
+      const PAGE = `${origin}/proj/bench`;
+      const step = (tool: string, args: Record<string, unknown>, chain: LocatorCandidate[], extra: Partial<RecordedStep> = {}): RecordedStep => ({
+        k: 'step',
+        tool,
+        args,
+        locators: chain.length ? { target: { expr: 'x', verified: true, raw: String(args.target ?? ''), chain } } : {},
+        ...extra,
+      });
+      const entries: RecordedEntry[] = [
+        { k: 'instruction', text: 'open the Bench Project and its work packages', url: LIST },
+        step('click', { target: 'a[href="/proj/bench"]' }, link, { diff: { url: LIST, alerts: [], added: [], dialect: 2 } }),
+        step('read', { label: 'current_url', what: 'url' }, [], { result: JSON.stringify(LIST) }),
+        step('wait_for', { target: 'a[href="/proj/bench"]', state: 'visible' }, link),
+        step('click', { target: 'a[href="/proj/bench"]' }, link, { diff: { url: LIST, alerts: [], added: [], dialect: 2 } }),
+        step('tabs', {}, []),
+        step('goto', { url: PAGE }, [], { diff: { url: PAGE, alerts: [], added: ['- heading "Overview"', '- button "Work packages"'], dialect: 2 } }),
+        step('click', { target: '@e9' }, [{ kind: 'role', role: 'button', name: 'Work packages' }], { diff: { url: PAGE, alerts: [], added: [], dialect: 2 } }),
+      ];
+      const compiled = compileSkills({ entries, instruction: 'open the Bench Project and its work packages', report: { status: 'success', summary: 'ok' }, session: 's' });
+      const steps = compiled.flatMap((sk) => sk.steps);
+      const all: SkillStep[] = [{ tool: 'goto', args: { url: LIST }, locators: {} }, ...steps];
+      const skill: Skill = { ...skillOf(all), id: 's_inert_links', template: 's_inert_links' };
+      const spec: SpecFlow = {
+        version: 2,
+        name: 'parity-inert-links',
+        origin,
+        startUrl: `${origin}/`,
+        vars: [],
+        steps: [{ id: '01-open', instruction: 'open', params: {}, outputs: [], segments: [{ id: 's_inert_links', template: 's_inert_links', params: {}, preconditions: { urlPattern: `${origin}/` }, steps: all }] }],
+      };
+      const { replay, emitted, replayLog, emittedLog } = await bothOf(skill, spec, {});
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      await new Promise((r) => setTimeout(r, 300));
+      expect(replayLog).toEqual(['commit:wp:open']);
+      expect(emittedLog).toEqual(['commit:wp:open']);
     }, 240_000);
   });
 
@@ -5398,6 +5618,25 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(emitted.outputs['01-clear.rows']).toBe('0');
       expect(replay.outputs.row_texts ?? '').toBe('');
       expect(emitted.outputs['01-clear.row_texts'] ?? '').toBe('');
+    }, 120_000);
+
+    it('both runners publish "0" for a count of a selector list whose every member counts across the page (fwgt10)', async () => {
+      // round 59: s_2ea0ba step 1, `read_all ".issue-title, .issue-title-link"
+      // what:count`, matched nothing on Gitea's list and was skipped on every
+      // replay; a member with a container of its own still names nothing.
+      const steps: SkillStep[] = [
+        { tool: 'goto', args: { url: `${origin}/counts` }, locators: {} },
+        status,
+        count('titles', [{ kind: 'css', selector: '.issue-title, .issue-title-link' }]),
+        count('mixed', [{ kind: 'css', selector: '.issue-title, #list > li.none' }]),
+      ];
+      const { replay, emitted } = await both(steps, 0);
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replay.outputs.titles).toBe('0');
+      expect(emitted.outputs['01-clear.titles']).toBe('0');
+      expect(replay.outputs.mixed ?? '').toBe('');
+      expect(emitted.outputs['01-clear.mixed'] ?? '').toBe('');
     }, 120_000);
 
     it('both runners still skip a count whose container never rendered', async () => {
