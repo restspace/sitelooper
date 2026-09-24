@@ -1,0 +1,201 @@
+{
+  "flow": "fwod84",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_ae80c5; observed record_id=45, initial_page_url=http://127.0.0.1:8069/web/login, contact_name=fwod84-n2 Bench Customer, city=Benchville, ref=fwod84-n2.",
+      "values": {
+        "record_id": "45",
+        "initial_page_url": "http://127.0.0.1:8069/web/login",
+        "contact_name": "fwod84-n2 Bench Customer",
+        "city": "Benchville",
+        "ref": "fwod84-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_68ce74; observed sale_order_id=22, ref=fwod84-n2, quotation_reference=S00022, customer_name=fwod84-n2 Bench Customer, customer_city=Benchville, product_name=[FURN_6666] Acoustic Bloc Screens, quantity=3.00, tax_rate=20%, tax_amount=£ 177.00, total=£ 1,062.00, line1_unit_price_raw=295.00, unit_price=295.00, total_label=Total, total_pounds_part=£ 1, total_pence_part=062.00, status=Quotation, untaxed_amount_label=Untaxed Amount\t£ 885.00.",
+      "values": {
+        "sale_order_id": "22",
+        "ref": "fwod84-n2",
+        "quotation_reference": "S00022",
+        "customer_name": "fwod84-n2 Bench Customer",
+        "customer_city": "Benchville",
+        "product_name": "[FURN_6666] Acoustic Bloc Screens",
+        "quantity": "3.00",
+        "tax_rate": "20%",
+        "tax_amount": "£ 177.00",
+        "total": "£ 1,062.00",
+        "line1_unit_price_raw": "295.00",
+        "unit_price": "295.00",
+        "total_label": "Total",
+        "total_pounds_part": "£ 1",
+        "total_pence_part": "062.00",
+        "status": "Quotation",
+        "untaxed_amount_label": "Untaxed Amount\t£ 885.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "24/24",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "Quotation S00022 (fwod84-n2 Bench Customer) was already open; a replay of skill s_cdd6d9 had already committed a second order line, so I continued from that state instead of adding another. I set that second line's quantity to 2 (the product \"Chair floor protection\" had been picked via the product dropdown and the unit price 12.00 was auto-filled by the app) and saved the quotation. The saved form's totals block now reads Untaxed Amount £ 909.00, TAX 20% £ 181.80, Total £ 1,090.80, and both lines are present: [FURN_6666] Acoustic Bloc Screens qty 3.00 @ 295.00 (line total £ 885.00) and Chair floor protection qty 2.00 @ 12.00 (line total £ 24.00).",
+      "values": {
+        "quotation_reference": "S00022",
+        "customer_name": "fwod84-n2 Bench Customer",
+        "product_added": "Chair floor protection",
+        "added_quantity": "2.00",
+        "added_unit_price": "12.00",
+        "added_line_amount": "£ 24.00",
+        "new_untaxed_amount": "£ 909.00",
+        "tax_20": "£ 181.80",
+        "total": "£ 1,090.80",
+        "line1_product": "[FURN_6666] Acoustic Bloc Screens",
+        "line1_quantity": "3.00",
+        "line1_unit_price": "295.00",
+        "line1_amount": "£ 885.00",
+        "status": "Quotation",
+        "totals_block": "Untaxed Amount\t£ 909.00\nTAX 20%\t\n£ 181.80\n\nTotal\t£ 1,090.80",
+        "ref": "fwod84-n2",
+        "ref_2": "FURN_6666"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_cdd6d9 stopped at step 3 — no element matched any known locator for target (tried 3: page.locator('#autocomplete_0_2'), page.locator('#autocomplete_0_2'), elementAt(176, 568) /* option */)",
+      "replayed": "2/21",
+      "repaired": false,
+      "turns": 7,
+      "unreported": [
+        "untaxed_amount",
+        "line_count",
+        "line1_quantity_raw",
+        "line1_unit_price_raw",
+        "line1_tax_rate_raw",
+        "line1_amount_raw",
+        "untaxed_amount_label",
+        "total_label",
+        "added_unit_price_raw"
+      ]
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_2745fb; observed quotation_reference=S00022, line1_product=[FURN_6666] Acoustic Bloc Screens, line1_quantity=5.00, line1_unit_price=295.00, line1_amount=£ 1,475.00, line2_product=Chair floor protection, line2_quantity=2.00, line2_amount=£ 24.00, untaxed_amount=£ 1,499.00, tax_20=£ 299.80, total=£ 1,798.80, line1_amount_raw=£ 1,475.00, line2_amount_raw=£ 24.00, untaxed_amount_label=Untaxed Amount\t£ 1,499.00, total_label=Total\t£ 1,798.80.",
+      "values": {
+        "quotation_reference": "S00022",
+        "line1_product": "[FURN_6666] Acoustic Bloc Screens",
+        "line1_quantity": "5.00",
+        "line1_unit_price": "295.00",
+        "line1_amount": "£ 1,475.00",
+        "line2_product": "Chair floor protection",
+        "line2_quantity": "2.00",
+        "line2_amount": "£ 24.00",
+        "untaxed_amount": "£ 1,499.00",
+        "tax_20": "£ 299.80",
+        "total": "£ 1,798.80",
+        "line1_amount_raw": "£ 1,475.00",
+        "line2_amount_raw": "£ 24.00",
+        "untaxed_amount_label": "Untaxed Amount\t£ 1,499.00",
+        "total_label": "Total\t£ 1,798.80"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "19/19",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-report",
+      "status": "success",
+      "summary": "Replayed stored procedure s_446fac; observed order_reference=S00022, customer=fwod84-n2 Bench Customer, untaxed_amount=£ 1,499.00, total=£ 1,798.80, status_badge=Sales Order.",
+      "values": {
+        "order_reference": "S00022",
+        "customer": "fwod84-n2 Bench Customer",
+        "untaxed_amount": "£ 1,499.00",
+        "total": "£ 1,798.80",
+        "status_badge": "Sales Order"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "06-report",
+      "status": "success",
+      "summary": "Replayed stored procedure s_70b5b8; observed statusbar_state_sales_order=Sales Order, statusbar_state_quotation_sent=Quotation Sent, statusbar_state_quotation=Quotation, order_reference=S00022, customer=fwod84-n2 Bench Customer, untaxed_amount=£ 1,499.00, ref=fwod84-n2, status_after_cancel=Cancelled.",
+      "values": {
+        "statusbar_state_sales_order": "Sales Order",
+        "statusbar_state_quotation_sent": "Quotation Sent",
+        "statusbar_state_quotation": "Quotation",
+        "order_reference": "S00022",
+        "customer": "fwod84-n2 Bench Customer",
+        "untaxed_amount": "£ 1,499.00",
+        "ref": "fwod84-n2",
+        "status_after_cancel": "Cancelled"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 6,
+  "total": 6,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwod84",
+      "step": "03-open",
+      "skill": "s_cdd6d9",
+      "atStep": "3",
+      "key": "target",
+      "similarity": 1.002,
+      "missedLocator": "page.locator('#autocomplete_0_2')",
+      "fallbackUsed": null,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22"
+    }
+  ],
+  "wallMs": 63699,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 94491,
+    "completionTokens": 2837,
+    "cachedTokens": 80640
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 94491,
+      "completionTokens": 2837,
+      "cachedTokens": 80640
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

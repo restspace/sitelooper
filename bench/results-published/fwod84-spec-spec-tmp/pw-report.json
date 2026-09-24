@@ -1,0 +1,178 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwod84-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwod84-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwod84-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwod84-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwod84-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwod84.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwod84-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwod84.spec.ts",
+      "file": "fwod84.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwod84",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 35150,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper recipe] filled via recipe aria-combobox/set-value (r_01a317); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe aria-combobox/set-value (r_01a317); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-report\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-report\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in to Odoo 17 at http://127.0.0.1:8069/ with login admin and password {{env:APP_PASSWORD}} (type that literal text). Then in Contacts, create a new customer named '{{runid}} Bench Customer' with City set to Benchville. Verify the contact card shows that name and city and report them.",
+                      "duration": 10621
+                    },
+                    {
+                      "title": "02-create: In Odoo Sales, create a new quotation for customer '{{runid}} Bench Customer' (choose from the customer autocomplete dropdown). Add exactly ONE order line: pick any product from the catalogue via the product dropdown, quantity 3. Save, and report the product name chosen, the unit price the app filled in, and the Untaxed Amount computed.",
+                      "duration": 9036
+                    },
+                    {
+                      "title": "03-open: Open the quotation {{02-create.quotation_reference}} in Odoo Sales (the one for {{runid}} Bench Customer). Add a SECOND order line with a DIFFERENT product (choose via product dropdown), quantity 2. Save and report the product name chosen and the new Untaxed Amount shown in the totals block.",
+                      "duration": 4901
+                    },
+                    {
+                      "title": "04-open: Open quotation {{02-create.quotation_reference}} in Odoo Sales and change the FIRST line's (Acoustic Bloc Screens) quantity from 3 to 5. Save and report the new Untaxed Amount in the totals block.",
+                      "duration": 3824
+                    },
+                    {
+                      "title": "05-report: Confirm quotation {{02-create.quotation_reference}} in Odoo Sales so it becomes a sales order. Report the order reference (name) and the status badge the app now shows on the form.",
+                      "duration": 1238
+                    },
+                    {
+                      "title": "06-report: Cancel sales order {{02-create.quotation_reference}} in Odoo Sales (use the Cancel action). Report the status the form shows after cancelling.",
+                      "duration": 4995
+                    }
+                  ],
+                  "startTime": "2026-09-24T12:14:43.886Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "5b9d065fb5f4d77e6db6-84d7e1b63898b1c42857",
+          "file": "fwod84.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-24T12:14:42.272Z",
+    "duration": 36918.753,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
