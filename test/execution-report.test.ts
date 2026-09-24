@@ -28,11 +28,14 @@ describe('templateValue', () => {
   it('is exactly what the daemon’s zero-model report keeps', () => {
     const skill = { id: 's_t', params: {}, steps: [], reportTemplate: { summary: 'created {{v2}}', values: { title: '{{v2}}', literal: 'RD-1017', empty: '{{v3}}', read: '{{v2}}' } } } as unknown as Skill;
     const params = { v2: 'fwgh4-n2 Bench Post', v3: '' };
-    const report = synthesizeReport(skill, params, { read: 'live value' });
+    // The page shows the title: a value made only of params publishes only
+    // where this run observed it (round 60, fwgt11 07-add).
+    const shown = ['fwgh4-n2 Bench Post'];
+    const report = synthesizeReport(skill, params, { read: 'live value' }, shown);
     expect(report.evidence?.values).toEqual({ title: 'fwgh4-n2 Bench Post', read: 'live value' });
     for (const [k, v] of Object.entries(skill.reportTemplate!.values)) {
       if (k === 'read') continue;
-      expect(report.evidence?.values?.[k] ?? null).toBe(templateValue(v, params));
+      expect(report.evidence?.values?.[k] ?? null).toBe(templateValue(v, params, shown, { given: { typed: [], live: ['live value'] } }));
     }
   });
 });
@@ -114,8 +117,9 @@ describe('fwrd86: a template value publishes only the text this run observed', (
     const skill = { ...deleteSkill, reportTemplate: { summary: '', values: { title: '{{v4}} RD Bench Ticket', row: '{{v1}} | {{v2}}' } } } as unknown as Skill;
     const report = synthesizeReport(skill, params, {}, nextDay);
     expect(report.evidence?.values).toEqual({ title: 'fwrd86-n2 RD Bench Ticket', row: 'RD-1016 | Ready' });
-    // No page, no observation: the literal is withheld, the pure fill is not.
-    expect(synthesizeReport(skill, params, {}, null).evidence?.values).toEqual({ row: 'RD-1016 | Ready' });
+    // No page, no observation: the literal is withheld, and since round 60
+    // (fwgt11 07-add) so is the pure fill — no page, read or typed value shows it.
+    expect(synthesizeReport(skill, params, {}, null).evidence?.values).toEqual({});
   });
 
   // s_93ead3 (01-signin) templates `ticket_created: "2026-09-23"` beside a
@@ -159,7 +163,7 @@ describe('fwrd86: a template value publishes only the text this run observed', (
   // carried ticket_title from the template's "{{v4}}". The artifact never did.
   it('keeps an echo out of the report: the template does not refill what the guard dropped', () => {
     const signin = { id: 's_93ead3', params: {}, steps: [], reportTemplate: { summary: '', values: { ticket_title: '{{v4}}', ticket_status: '{{v5}}' } } } as unknown as Skill;
-    const r = synthesizeReport(signin, { v4: 'fwrd86-n2 RD Bench Ticket', v5: 'Draft' }, {}, null, { withhold: ['ticket_title'] });
+    const r = synthesizeReport(signin, { v4: 'fwrd86-n2 RD Bench Ticket', v5: 'Draft' }, {}, ['fwrd86-n2 RD Bench Ticket', 'Status Draft'], { withhold: ['ticket_title'] });
     expect(r.evidence?.values).toEqual({ ticket_status: 'Draft' });
   });
 });

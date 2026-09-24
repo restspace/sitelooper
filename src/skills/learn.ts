@@ -5,7 +5,7 @@ import type { RecordedEntry, RecordedInstruction } from '../daemon/recorder.js';
 import { compileSkills, escapeRe, fillParams, samePageContexts, sameProcedure, urlMatches, urlPattern, variantStart } from './compile.js';
 import { landedOnRecordedPage } from '../execution/gates.js';
 import type { Page } from 'playwright-core';
-import { derivesFromParams, observedSummary, referenceValue, reportNeedsPage, shownForReport, templateSource, templateValue, unshownLiterals } from '../execution/report.js';
+import { derivesFromParams, observedSummary, referenceValue, reportNeedsPage, shownForReport, templateSource, templateValue, typedSlots, unobservedGiven, unshownLiterals, type GivenEvidence } from '../execution/report.js';
 import { ComponentStore, learnRecipes } from './components.js';
 import { contractOf, isVerified, pageEffectDemoted, successRate, type Skill, type SkillStore } from './store.js';
 export { pageEffectDemoted } from './store.js';
@@ -807,6 +807,13 @@ export interface ReportOptions {
   withhold?: readonly string[];
   /** This run's instruction: the caller's own words, observed for the summary (observedSummary). */
   instruction?: string;
+  /**
+   * The segments this replay walked, in order (default: the skill alone). A
+   * slot any of them TYPED keeps today's rule; any other slot of a value
+   * made only of params must be observed (round 60, fwgt11 07-add: the
+   * comment s_3db36f filled is published by s_c8e15e's template).
+   */
+  chain?: readonly Skill[];
 }
 
 /** What a zero-model replay reports, and what a later step's reference may use beyond it. */
@@ -816,6 +823,12 @@ export interface ReplayReport {
   withheld: string[];
   /** Summary clauses dropped as unobserved or stale (observedSummary). */
   unobservedProse: string[];
+  /**
+   * Template keys made only of params that this run never observed — no page
+   * line, read or typed value shows them — withheld as given, not observed
+   * (round 60, fwgt11 07-add's issue_content_right_a_it: "bug").
+   */
+  given: string[];
   /**
    * For a later step's REFERENCE only, never the report: each template key
    * not reported whose referenceValue this run can supply (a one-slot value's
@@ -833,9 +846,24 @@ function synthesize(skill: Skill, params: Record<string, string>, liveValues: Re
   /** Values withheld because this run's page did not show their recorded text. */
   const unshown: string[] = [];
   let omitted = 0;
+  /** Values withheld as given, not observed (round 60). */
+  const given: string[] = [];
+  // What this run observed besides the page: the slots its chain typed and
+  // the values its reads returned — the artifact's reportGiven.
+  const evidence: GivenEvidence = { typed: typedSlots((opts.chain ?? [skill]).flatMap((s) => s.steps)), live: Object.values(liveValues) };
   for (const [k, v] of Object.entries(template.values)) {
     if (k in liveValues) continue; // a live read wins outright, below
     if (withhold.has(k)) continue; // the echo guard's to drop, not the template's to refill
+    // A value made only of params publishes only where this run observed it
+    // (src/execution/report.ts withheldAsGiven, the artifact's check too):
+    // fwgt11 07-add's "{{v7}}" published "bug" beside a live "priority-high".
+    const unobserved = templateValue(v, params, shown) !== null ? unobservedGiven(v, params, shown, evidence) : [];
+    if (unobserved.length) {
+      // The given value is what the prose must not state either.
+      stale.push(...unobserved.map((slot) => params[slot]));
+      given.push(k);
+      continue;
+    }
     // The shared rule (src/execution/report.ts templateValue), which a
     // compiled artifact applies to the same template (fwgh4 03-open).
     const kept = templateValue(v, params, shown);
@@ -970,10 +998,10 @@ function synthesize(skill: Skill, params: Record<string, string>, liveValues: Re
   const report: Report = {
     status: 'success',
     summary: clean || `Replayed stored procedure ${skill.id} (${skill.steps.length} steps).`,
-    details: `Replayed stored procedure ${skill.id} without the model. Reported values are live read-backs or your own parameters; ${omitted ? `${omitted} recorded value(s) that could not be re-observed were omitted` : 'no stale values were carried over'}${unshown.length ? `; withheld ${unshown.join(', ')}, whose recorded text this run's page did not show` : ''}.`,
+    details: `Replayed stored procedure ${skill.id} without the model. Reported values are live read-backs or your own parameters; ${omitted ? `${omitted} recorded value(s) that could not be re-observed were omitted` : 'no stale values were carried over'}${unshown.length ? `; withheld ${unshown.join(', ')}, whose recorded text this run's page did not show` : ''}${given.length ? `; withheld ${given.join(', ')}, given as parameters but not observed on this run` : ''}.`,
     evidence: { values },
   };
-  return { report, withheld: unshown, unobservedProse: prose.dropped, references };
+  return { report, withheld: unshown, unobservedProse: prose.dropped, references, given };
 }
 
 /**
@@ -997,7 +1025,9 @@ export async function replayReport(
   let shown: string[] | null = null;
   // The summary's words are observed on the page too (observedSummary), so
   // prose is reason enough to look.
-  if (reportNeedsPage(pending) || reportNeedsPage([skill.reportTemplate?.summary ?? ''])) {
+  // A param-only value the chain did not type is observed on the page too (round 60).
+  const typed = typedSlots((opts.chain ?? [skill]).flatMap((s) => s.steps));
+  if (reportNeedsPage(pending, typed) || reportNeedsPage([skill.reportTemplate?.summary ?? ''])) {
     try {
       shown = await shownForReport(await getPage());
     } catch {

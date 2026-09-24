@@ -115,6 +115,25 @@ const TICKETS = (total: number, date: string) => `<!doctype html><html><head><me
 </body></html>`;
 
 /**
+ * A Gitea issue page's sidebar (round 60, fwgt11 07-add): the labels the
+ * issue carries are the app's STATE (`issue.labels`), and the label picker's
+ * menu, hidden until opened, lists every label the repository has. fwgt11's
+ * n2 issue carried priority-high alone while the flow's instruction still
+ * named "bug".
+ */
+const GITEA_ISSUE = (labels: readonly string[]) => `<!doctype html><html><head><meta charset="utf-8"><title>Issue #5</title></head><body>
+<h1 id="issue-title">fwgt11-n2 Bench Issue <span>#5</span></h1>
+<div class="issue-content-right">
+<div class="labels"><span>Labels</span>
+${labels.map((l) => `<a class="item" href="/issues?labels=${encodeURIComponent(l)}">${l}</a>`).join('\n')}
+</div>
+<div class="menu" style="display:none">${['bug', 'priority-high', 'wontfix'].map((l) => `<div class="item" data-value="${l}">${l}</div>`).join('')}</div>
+<div><span>Milestone</span> <a href="/milestone/1">Bench Milestone</a></div>
+</div>
+<p id="comment">Comment for run fwgt11-n2.</p>
+</body></html>`;
+
+/**
  * An issue list the way Gitea renders one (fwgt8): the title and the `#n`
  * number are separate elements, a pagination link shows a bare "1", and a
  * hidden row carries text no visitor sees.
@@ -1494,6 +1513,8 @@ export interface FixtureServer {
   espo: { stage: string };
   /** The sign-in fixture's document title (/signin); reset() restores "EspoCRM". */
   signin: { title: string };
+  /** The Gitea issue fixture's labels (/gitea-issue); reset() restores the recording's, bug and priority-high. */
+  issue: { labels: string[] };
   /** Reset state for a new test/case: `n` fresh items, empty log, faults cleared. */
   reset(n: number): void;
   faults: {
@@ -1523,6 +1544,7 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
   const board = { card: 4 };
   const espo = { stage: 'Negotiation' };
   const signin = { title: 'EspoCRM' };
+  const issue = { labels: ['bug', 'priority-high'] };
 
   function take<K extends Fault['kind']>(kind: K, req?: http.IncomingMessage): Extract<Fault, { kind: K }> | undefined {
     for (const f of pending) {
@@ -1577,6 +1599,11 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
     if (url === '/issue-list' || url === '/asset-table') {
       res.writeHead(200, { 'content-type': 'text/html' });
       res.end(url === '/issue-list' ? ISSUE_LIST : ASSET_TABLE);
+      return;
+    }
+    if (url === '/gitea-issue') {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end(GITEA_ISSUE(issue.labels));
       return;
     }
     if (url === '/tickets') {
@@ -1915,6 +1942,7 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
     board,
     espo,
     signin,
+    issue,
     reset(n: number) {
       items = Array.from({ length: n }, (_, i) => `Item ${i + 1}`);
       log = [];
@@ -1923,6 +1951,7 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
       board.card = 4;
       espo.stage = 'Negotiation';
       signin.title = 'EspoCRM';
+      issue.labels = ['bug', 'priority-high'];
     },
     faults: {
       delay(ms, opts = {}) {

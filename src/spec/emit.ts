@@ -4,7 +4,8 @@ import { setsSomething } from '../execution/echo.js';
 import { standingFillRole } from '../execution/refill.js';
 import { DEFAULT_ACTION_TIMEOUT_MS } from '../execution/browser.js';
 import { hideEffectLines, toggleEffectLines } from '../execution/toggle.js';
-import { derivesFromParams, reportNeedsPage, templateMarkers, templateSource } from '../execution/report.js';
+import { derivesFromParams, givenPartialReason, givenWarning, reportNeedsPage, templateMarkers, templateSource, typedSlots } from '../execution/report.js';
+import { askedOutputs } from '../daemon/step-verdict.js';
 import { observedNothing } from '../execution/observe.js';
 import { segmentGate } from '../execution/gates.js';
 /**
@@ -3176,7 +3177,10 @@ function satisfiedGuard(step: SpecStep, ctx: Ctx, consumed: ReadonlySet<string> 
   for (const [label, value] of templated) {
     noteSlots(value, ctx);
     const fn = consumed.has(label) ? 'referenceValue' : 'templateValue';
-    out.push(`  { const value = ${fn}(${q(value)}, p, satisfiedShown, { literal: true }); if (value !== null) outputs[${q(`${step.id}.${label}`)}] = value; }`);
+    // Nothing ran, so nothing was typed or read: a param-only value stands on
+    // this page alone (round 60, fwgt11), as the daemon's guard asks it.
+    const given = fn === 'templateValue' ? ', given: { typed: [], live: [] }' : '';
+    out.push(`  { const value = ${fn}(${q(value)}, p, satisfiedShown, { literal: true${given} }); if (value !== null) outputs[${q(`${step.id}.${label}`)}] = value; }`);
   }
   out.push('  return;', '}');
   return out;
@@ -3205,15 +3209,38 @@ function reportTemplateLines(step: SpecStep, ctx: Ctx, consumed: ReadonlySet<str
   // Recorded text around a slot publishes only where this page shows it
   // (fwrd86 06-delete: "Created: 2026-09-23"), so the page is looked at once,
   // after the last segment — where the daemon looks, after the chain.
-  const needsPage = reportNeedsPage(entries.map(([, template]) => template));
+  //
+  // A value made only of params is published only where this run observed it
+  // (round 60, fwgt11 07-add: "{{v7}}" published "bug" beside a live
+  // labels_shown of "priority-high"): the page shows it, a read of the step
+  // returned it, or the step's procedure typed it — every segment's fills, as
+  // the daemon counts its chain's (typedSlots).
+  const typed = typedSlots(step.segments.flatMap((segment) => segment.steps));
+  const needsPage = reportNeedsPage(
+    entries.map(([, template]) => template),
+    typed,
+  );
   if (needsPage) out.push('const reportShown = await shownForReport(page).catch(() => null);');
+  const shown = needsPage ? 'reportShown' : 'null';
+  // What the step's own reads returned, echoes aside: the daemon's confident values.
+  out.push(
+    `const reportGiven = { typed: ${JSON.stringify(typed)}, live: Object.entries(outputs).filter(([k, v]) => k.startsWith(${q(`${step.id}.`)}) && typeof v === 'string' && !run.echoed.includes(k)).map(([, v]) => v as string) };`,
+  );
+  // Asked for by the instruction (step-verdict.ts askedOutputs, as the flow
+  // runner's partialReasons asks it): withheld, the step is partial.
+  const asked = new Set(askedOutputs(step.instruction, step.outputs ?? []));
   for (const [label, template] of entries) {
     noteSlots(template, ctx);
     const key = q(`${step.id}.${label}`);
     // A consumed key falls back to its one slot (referenceValue): a later
-    // step's reference, never a finding — the daemon banks the same.
-    const fn = consumed.has(label) ? 'referenceValue' : 'templateValue';
-    out.push(`{ const value = ${fn}(${q(template)}, p, ${needsPage ? 'reportShown' : 'null'}); if (value !== null && outputs[${key}] === undefined) outputs[${key}] = value; }`);
+    // step's reference, never a finding — the daemon banks the same, and
+    // still says the report withheld it.
+    const value = consumed.has(label) ? `referenceValue(${q(template)}, p, ${shown})` : `templateValue(${q(template)}, p, ${shown}, { given: reportGiven })`;
+    const said = [`logWarning(${q(`${step.id}: ${givenWarning(label)}`)});`];
+    if (asked.has(label)) said.push(`logWarning(${q(`${step.id}: PARTIAL — ${givenPartialReason(label)}`)});`);
+    out.push(
+      `if (outputs[${key}] === undefined) { if (withheldAsGiven(${q(template)}, p, ${shown}, reportGiven)) { ${said.join(' ')} } const value = ${value}; if (value !== null) outputs[${key}] = value; }`,
+    );
   }
   return out;
 }
