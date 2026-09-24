@@ -50,11 +50,20 @@ async function resetGrafana() {
   const base = (process.env.APP_URL || 'http://127.0.0.1:3000/').replace(/\/$/, '');
   const auth =
     'Basic ' + Buffer.from(`${process.env.APP_EMAIL || 'admin'}:${process.env.APP_PASSWORD || 'admin'}`).toString('base64');
-  // Everything the task creates carries the `bench` tag, and provisioned
-  // dashboards refuse API deletion, so this can only remove benchmark debris.
-  const res = await fetch(`${base}/api/search?tag=bench&type=dash-db`, { headers: { authorization: auth } });
-  if (!res.ok) throw new Error(`grafana search failed: ${res.status}`);
-  const hits = await res.json();
+  // Everything the task finishes creating carries the `bench` tag, and
+  // provisioned dashboards refuse API deletion, so this can only remove
+  // benchmark debris. A run that dies after the save but before the tag is
+  // added leaves an UNTAGGED `<RUNID> Bench Dashboard`: fwgr70's first spec
+  // attempt did, and its retry (same runid) then found Save disabled on the
+  // duplicate title. So also match the task's own title shape.
+  const search = async (q) => {
+    const r = await fetch(`${base}/api/search?${q}&type=dash-db`, { headers: { authorization: auth } });
+    if (!r.ok) throw new Error(`grafana search failed: ${r.status}`);
+    return r.json();
+  };
+  const tagged = await search('tag=bench');
+  const titled = (await search(`query=${encodeURIComponent('Bench Dashboard')}`)).filter((h) => / Bench Dashboard$/.test(h.title ?? ''));
+  const hits = [...new Map([...tagged, ...titled].map((h) => [h.uid, h])).values()];
   for (const h of hits) {
     const del = await fetch(`${base}/api/dashboards/uid/${h.uid}`, { method: 'DELETE', headers: { authorization: auth } });
     log(`grafana: deleted leftover dashboard "${h.title}" (${del.status})`);
