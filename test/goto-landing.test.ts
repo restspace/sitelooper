@@ -174,3 +174,60 @@ describe('6. a sourceless goto is never stored as a literal (fwsi7 s_5dcb48)', (
     expect(gotos(skills).length).toBe(1);
   });
 });
+
+describe('phase A: what an eval returned never counts as shown (fwsi7 #36 with its evalResult)', () => {
+  // The recorder now keeps what an eval returned (RecordedStep.evalResult).
+  // #36's eval returned the "Click here to view" href. Nothing the replay runs
+  // produces it, so the goto at #37 must stay the landing it is, 02-create
+  // must still mint 4, and compile must still refuse to store a literal goto.
+  const withEvalResult = (): RecordedEntry[] => {
+    const e = load();
+    (line(e, 36) as RecordedStep).evalResult = '["http://127.0.0.1:8098/hardware/4"]';
+    (line(e, 38) as RecordedStep).evalResult = JSON.stringify('Asset Tag BA-00004\nStatus Ready to Deploy\nhttp://127.0.0.1:8098/hardware/4');
+    return e;
+  };
+  const flowOf = (e: RecordedEntry[]) =>
+    buildFlow(e, {
+      name: 'fwsi7',
+      origin: ORIGIN,
+      startUrl: `${ORIGIN}/`,
+      vars: { runid: 'fwsi7-n1' },
+      session: 'fwsi7-n1',
+      bind: (id) => (id === 's_d5098a' ? { v3: 'BA-00004', v4: '4' } : null),
+      origins: (id) => (id === 's_d5098a' ? { v4: 'url:i2:p1' } : null),
+    })!;
+
+  it('#37 is still a landing on the unseen 4', () => {
+    const e = withEvalResult();
+    expect((line(e, 36) as RecordedStep).evalResult).toContain('/hardware/4');
+    expect(unseenGotoParts(String((line(e, 37) as RecordedStep).args.url), e.slice(0, 36))).toEqual([{ label: 'p1', value: '4' }]);
+  });
+
+  it('the flow is the same with and without it', () => {
+    const plain = flowOf(load());
+    const withResult = flowOf(withEvalResult());
+    expect(withResult.steps.find((s) => s.id === '02-create')!.recorded['url.p1']).toBe('4');
+    expect(withResult.steps).toEqual(plain.steps);
+  });
+
+  it('02-create compiles to the same skills, with no goto and no evalResult', () => {
+    const compileOf = (e: RecordedEntry[]) => {
+      const own = e.slice(20, 43);
+      const report = line(e, 44) as Extract<RecordedEntry, { k: 'report' }>;
+      return compileSkills({
+        entries: own,
+        instruction: (own[0] as Extract<RecordedEntry, { k: 'instruction' }>).text,
+        report: { status: 'success', summary: report.summary, evidence: { values: report.values ?? {} } },
+        session: 'fwsi7-n1',
+        knownValues: { 'var:runid': 'fwsi7-n1' },
+        before: e.slice(0, 20),
+        now: '2026-09-24T00:00:00.000Z',
+      });
+    };
+    const plain = compileOf(load());
+    const withResult = compileOf(withEvalResult());
+    expect(JSON.stringify(withResult)).toBe(JSON.stringify(plain));
+    expect(JSON.stringify(withResult)).not.toContain('evalResult');
+    expect(withResult.flatMap((s) => s.steps).filter((s) => s.tool === 'goto')).toEqual([]);
+  });
+});
