@@ -1161,6 +1161,34 @@ const HELPERS: { token: string; source: string[] }[] = [
       '}',
     ],
   },
+  {
+    token: 'await hideGoneSkip(',
+    source: [
+      '/**',
+      ' * Is this a hide whose target went with what it closes — already in effect?',
+      ' *',
+      " * WHICH REPLAY RULE THIS MIRRORS. runOneStep, on a target that did not",
+      ' * resolve in its window: a click whose whole recorded effect was taking lines',
+      ' * off the page, with its removal not required, is skipped when none of those',
+      ' * lines is on the page (the shared hideBefore). snipeit fwsi10 03-create: the',
+      ' * day in the date picker its fill opened. Waits the same window for a visible',
+      ' * target first; a target that shows up is acted on by the pick below.',
+      ' */',
+      'async function hideGoneSkip(page: Page, candidates: Locator[], lines: string[], p: Record<string, string>, where: string, dialect: LineDialect = 1): Promise<boolean> {',
+      '  for (let waited = 0; ; waited += RESOLVE_POLL_MS) {',
+      '    for (const candidate of candidates) {',
+      '      const n = await candidate.count().catch(() => 0);',
+      '      for (let i = 0; i < Math.min(n, 5); i++) if (await candidate.nth(i).isVisible().catch(() => false)) return false;',
+      '    }',
+      '    if (waited >= RESOLVE_WAIT_MS) break;',
+      '    await page.waitForTimeout(RESOLVE_POLL_MS);',
+      '  }',
+      '  if (!(await hideBefore(page, lines, false, p, where, dialect)).skip) return false;',
+      '  console.log(`[sitelooper skip] ${where}: its target is gone with what this click removes, and none of that is on the page — skipped as already in effect`);',
+      '  return true;',
+      '}',
+    ],
+  },
 ];
 
 /**
@@ -1761,6 +1789,25 @@ function dismissalLines(step: SkillStep, chain: LocatorCandidate[], ctx: Ctx): s
   ];
 }
 
+/**
+ * The already-in-effect guard for a HIDE whose target sits inside what it
+ * closes (hideGoneSkip, over the shared hideBefore) — replay's runOneStep asks
+ * it on a target that did not resolve: snipeit fwsi10 03-create's day click in
+ * the date picker its fill opened (compile.ts entryPopup). Nothing for a step
+ * that is no hide, or whose removal is required.
+ */
+function hideGoneLines(step: SkillStep, chain: LocatorCandidate[], ctx: Ctx): string[] {
+  const lines = hideEffectLines(step);
+  if (!lines.length || step.expect?.removalRequired || isReadAction(step.tool)) return [];
+  const { sources } = candidateSources(chain, { slot: slotAsParam });
+  if (!sources.length) return [];
+  noteSlots(lines, ctx);
+  const where = `${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`;
+  return [
+    `if (await hideGoneSkip(page, [${sources.join(', ')}], [${lines.map(q).join(', ')}], p, ${q(where)}${step.expect?.lineDialect === 2 ? ', 2' : ''})) return { status: 'skipped' };`,
+  ];
+}
+
 function actionTarget(step: SkillStep, key: 'target' | 'source', ctx: Ctx, out: string[], hoist?: string): string | null {
   const chain = step.locators?.[key] ?? [];
   if (!chain.length) return null;
@@ -1787,7 +1834,7 @@ function actionTarget(step: SkillStep, key: 'target' | 'source', ctx: Ctx, out: 
   if (hoist) out.push(`const ${hoist}: CandidateObservation[] = [`, ...open, '];');
   const list = (head: string) => (candidates ? [`${head}${candidates}, ${where}, `] : [`${head}[`, ...open, `], ${where}, `]);
   const note = ctx.note ? `, ${q(ctx.note)}` : '';
-  if (key === 'target' && root === 'page' && !ctx.loopSink) out.push(...dismissalLines(step, chain, ctx));
+  if (key === 'target' && root === 'page' && !ctx.loopSink) out.push(...dismissalLines(step, chain, ctx), ...hideGoneLines(step, chain, ctx));
   const destPattern = step.expect?.urlPattern;
   if (key === 'target' && destPattern && (step.tool === 'click' || step.tool === 'dblclick') && !ctx.loopSink) {
     // Replay's navigation fallback (the shared recover.ts): a missed

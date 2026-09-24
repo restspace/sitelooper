@@ -957,6 +957,34 @@ document.getElementById('add').addEventListener('click', () => fetch('/commit/ad
 </body></html>`;
 
 /**
+ * A date field whose picker the entry opens (round 59, snipeit fwsi10
+ * 03-create): a calendar table; clicking a day sets the field, posts
+ * `/commit/day/<n>` and takes the calendar OUT of the document, as
+ * bootstrap-datepicker detaches its picker; Next posts `/commit/next/go`.
+ * `/picker` starts with no picker and the field already holding the date (a
+ * replay whose picker closed after its fill); `/picker?open=1` with it open.
+ */
+const PICKER = (open: boolean) => `<!doctype html><html><head><meta charset="utf-8"><title>Picker</title></head><body>
+<h1>New asset</h1>
+<label for="date">Purchase Date</label><input id="date" value="${open ? '' : '2026-03-15'}">
+${open ? `<div id="cal"><table class="datepicker-days"><tbody>
+<tr><th>March 2026</th></tr>
+<tr><td>Select Month</td></tr>
+<tr><td>Su</td><td>Mo</td></tr>
+<tr><td class="day">15</td><td class="day">16</td></tr>
+</tbody></table></div>` : ''}
+<button id="next" type="button">Next</button>
+<script>
+document.querySelectorAll('td.day').forEach((td) => td.addEventListener('click', async () => {
+  document.getElementById('date').value = '2026-03-' + td.textContent;
+  document.getElementById('cal').remove();
+  await fetch('/commit/day/' + td.textContent, { method: 'POST' });
+}));
+document.getElementById('next').addEventListener('click', () => fetch('/commit/next/go', { method: 'POST' }));
+</script>
+</body></html>`;
+
+/**
  * A modal form (round 56): its Save posts `/commit/save/<title>` and closes
  * the form, recording nothing but the form going. The Save button stands
  * OUTSIDE the form container, so it resolves whether the form is open or
@@ -1612,6 +1640,7 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
       if (url === '/ignored' || url === '/ignored?dead=1') return html(IGNORED(url.endsWith('dead=1')));
       if (url === '/modal' || url === '/modal?open=1') return html(MODAL(url.endsWith('open=1')));
       if (url === '/filters' || url.startsWith('/filters?')) return html(FILTERS(url.includes('open=1'), url.includes('stuck=1')));
+      if (url === '/picker' || url.startsWith('/picker?')) return html(PICKER(url.includes('open=1')));
       if (url === '/price' || url === '/price?stuck=1') return html(PRICE(url.endsWith('stuck=1')));
       if (url === '/imagelink') return html(IMAGE_LINK);
       if (url === '/typed-amount' || url === '/typed-amount?sticky=1') return html(TYPED_AMOUNT(url.endsWith('sticky=1')));
