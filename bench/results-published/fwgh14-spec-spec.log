@@ -1,0 +1,48 @@
+
+Running 1 test using 1 worker
+
+  ✘  1 fwgh14.spec.ts:9:1 › fwgh14 (13.5s)
+
+
+  1) fwgh14.spec.ts:9:1 › fwgh14 › 01-open: Open http://127.0.0.1:8099/ghost/ and sign in with email admin@bench.local and password {{env:APP_PASSWORD}} — type the password into the password field exactly as that literal text, braces and all, character for character; the environment fills in the real value as it is typed. Do not try any other password. After signing in, go to the Posts area and report the exact titles of every published post whose title starts with Seed: exactly as shown on screen. Also report the current date if the admin UI displays it anywhere. 
+
+    Error: 01-open s_b84a4b/4: the recorded page change did not appear
+
+    01-open s_b84a4b/4: the recorded page change did not appear
+
+    expect(received).toBeNull()
+
+    Received: "after step 01-open s_b84a4b/4 none of the 1 recorded page change(s) appeared (e.g. \"- link \\\"{{*}} By Bench Admin in Bench Guides - {{*}} Published\\\"\") — the step ran but did not have its recorded effect"
+
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+
+       at fwgh14.flow.ts:11747
+
+      11745 |       { timeout: EXPECT_WAIT_MS, message: `${ctx.tag}: the recorded page change did not appear` },
+      11746 |     )
+    > 11747 |     .toBeNull();
+            |      ^
+      11748 |   for (const warning of last.warnings) console.log(`[sitelooper warn] ${warning}`);
+      11749 |   if (last.unobserved) console.log(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);
+      11750 |   return last;
+        at expectChanges (/home/user/sitelooper/bench/results/fwgh14-spec-spec-tmp/fwgh14.flow.ts:11747:6)
+        at Object.verify (/home/user/sitelooper/bench/results/fwgh14-spec-spec-tmp/fwgh14.flow.ts:12182:32)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwgh14-spec-spec-tmp/fwgh14.flow.ts:8010:24)
+        at Object.01-open (/home/user/sitelooper/bench/results/fwgh14-spec-spec-tmp/fwgh14.flow.ts:12148:5)
+        at /home/user/sitelooper/bench/results/fwgh14-spec-spec-tmp/fwgh14.flow.ts:14709:7
+        at runFlow (/home/user/sitelooper/bench/results/fwgh14-spec-spec-tmp/fwgh14.flow.ts:14708:5)
+        at /home/user/sitelooper/bench/results/fwgh14-spec-spec-tmp/fwgh14.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwgh14-fwgh14/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwgh14-fwgh14/error-context.md
+
+  1 failed
+    fwgh14.spec.ts:9:1 › fwgh14 ────────────────────────────────────────────────────────────────────

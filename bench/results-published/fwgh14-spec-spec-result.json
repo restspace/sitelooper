@@ -1,0 +1,34 @@
+{
+  "arm": "spec",
+  "runid": "fwgh14-spec",
+  "target": "ghost",
+  "flow": "fwgh14.json",
+  "flowName": "fwgh14",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwgh14-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwgh14-spec-spec-tmp/fwgh14.flow.ts",
+  "specFile": "bench/results/fwgh14-spec-spec-tmp/fwgh14.spec.ts",
+  "wallMs": 17174,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwgh14",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 13471,
+      "error": "Error: 01-open s_b84a4b/4: the recorded page change did not appear\n\n01-open s_b84a4b/4: the recorded page change did not appear\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeNull\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"after step 01-open s_b84a4b/4 none of the 1 recorded page change(s) appeared (e.g. \\\"- link \\\\\\\"{{*}} By Bench Admin in Bench Guides - {{*}} Published\\\\\\\"\\\") — the step ran but did not have its recorded effect\"\u001b[39m\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "logTail": "\nRunning 1 test using 1 worker\n\n  ✘  1 fwgh14.spec.ts:9:1 › fwgh14 (13.5s)\n\n\n  1) fwgh14.spec.ts:9:1 › fwgh14 › 01-open: Open http://127.0.0.1:8099/ghost/ and sign in with email admin@bench.local and password {{env:APP_PASSWORD}} — type the password into the password field exactly as that literal text, braces and all, character for character; the environment fills in the real value as it is typed. Do not try any other password. After signing in, go to the Posts area and report the exact titles of every published post whose title starts with Seed: exactly as shown on screen. Also report the current date if the admin UI displays it anywhere. \n\n    Error: 01-open s_b84a4b/4: the recorded page change did not appear\n\n    01-open s_b84a4b/4: the recorded page change did not appear\n\n    expect(received).toBeNull()\n\n    Received: \"after step 01-open s_b84a4b/4 none of the 1 recorded page change(s) appeared (e.g. \\\"- link \\\\\\\"{{*}} By Bench Admin in Bench Guides - {{*}} Published\\\\\\\"\\\") — the step ran but did not have its recorded effect\"\n\n    Call Log:\n    - Timeout 5000ms exceeded while waiting on the predicate\n\n       at fwgh14.flow.ts:11747\n\n      11745 |       { timeout: EXPECT_WAIT_MS, message: `${ctx.tag}: the recorded page change did not appear` },\n      11746 |     )\n    > 11747 |     .toBeNull();\n            |      ^\n      11748 |   for (const warning of last.warnings) console.log(`[sitelooper warn] ${warning}`);\n      11749 |   if (last.unobserved) console.log(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);\n      11750 |   return last;\n        at expectChanges (/home/user/sitelooper/bench/results/fwgh14-spec-spec-tmp/fwgh14.flow.ts:11747:6)\n        at Object.verify (/home/user/sitelooper/bench/results/fwgh14-spec-spec-tmp/fwgh14.flow.ts:12182:32)\n        at runStepLifecycle (/home/user/sitelooper/bench/results/fwgh14-spec-spec-tmp/fwgh14.flow.ts:8010:24)\n        at Object.01-open (/home/user/sitelooper/bench/results/fwgh14-spec-spec-tmp/fwgh14.flow.ts:12148:5)\n        at /home/user/sitelooper/bench/results/fwgh14-spec-spec-tmp/fwgh14.flow.ts:14709:7\n        at runFlow (/home/user/sitelooper/bench/results/fwgh14-spec-spec-tmp/fwgh14.flow.ts:14708:5)\n        at /home/user/sitelooper/bench/results/fwgh14-spec-spec-tmp/fwgh14.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/fwgh14-fwgh14/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/fwgh14-fwgh14/error-context.md\n\n  1 failed\n    fwgh14.spec.ts:9:1 › fwgh14 ────────────────────────────────────────────────────────────────────\n"
+}

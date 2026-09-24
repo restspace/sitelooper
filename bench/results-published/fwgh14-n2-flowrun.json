@@ -1,0 +1,207 @@
+{
+  "flow": "fwgh14",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_f91411; observed h3_gh_content_entry_titl=Seed: Welcome to the bench, h3_gh_content_entry_titl_2=Seed: Release notes for September, h3_gh_content_entry_titl_3=Seed: House style guide.",
+      "values": {
+        "h3_gh_content_entry_titl": "Seed: Welcome to the bench",
+        "h3_gh_content_entry_titl_2": "Seed: Release notes for September",
+        "h3_gh_content_entry_titl_3": "Seed: House style guide"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "19/19",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_b84a4b: step 4: none of the 1 expected page change(s) appeared in the step diff (found on the page instead)"
+      ]
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_21df81; observed post_author_byline=By Bench Admin - a few seconds ago, post_status=Draft, run_id=fwgh14-n2.",
+      "values": {
+        "post_author_byline": "By Bench Admin - a few seconds ago",
+        "post_status": "Draft",
+        "run_id": "fwgh14-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_dc71da: step 2: wait_for text_contains timed out after 10000ms (last: text=\"\"); the text was already showing in fallback #2 page.locator('section > header > div > div > span > div')"
+      ]
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "Opened the existing draft 'fwgh14-n2 Bench Post' in the Ghost editor (already the active tab), opened its Post settings panel and applied all three changes, then closed the panel; the post re-saved and the header shows 'Draft - Saved'. Verified by re-opening the settings panel afterwards: exactly one tag chip reading 'Bench News' (the existing tag was chosen from the suggestion list — the similar 'Bench Newsletter' was not picked), excerpt 'Excerpt for bench post fwgh14-n2.', publish date 2026-09-01 (the pre-existing value was 2026-09-24, so this is a past date), and URL slug 'fwgh14-n2-bench-post'. The post remains a Draft, not published. Note: the pre-run skill replay failed its first step against a different post URL; I continued from the current editor and made all changes there.",
+      "values": {
+        "tag_chip_text": "Bench News",
+        "tag_count": "1 (only 'Bench News'; no other tags present)",
+        "custom_excerpt": "Excerpt for bench post fwgh14-n2.",
+        "publish_date_shown": "2026-09-01",
+        "publish_time_shown": "16:51 UTC",
+        "url_slug": "fwgh14-n2-bench-post",
+        "post_url_paragraph": "127.0.0.1:8099/fwgh14-n2-bench-post/",
+        "post_title": "fwgh14-n2 Bench Post",
+        "post_status": "Draft - Saved",
+        "publish_date_before_change": "2026-09-24",
+        "post_id": "6ab55506050a19000152eac7",
+        "ref": "fwgh14-n2"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_9433ad stopped at step 1 — after step 1 expected url http://127.0.0.1:8099/ghost/#/editor/post/6ab55426050a19000152eab7 but browser is at http://127.0.0.1:8099/ghost#/editor/post/6ab55506050a19000152eac7",
+      "replayed": "0/1",
+      "repaired": false,
+      "turns": 18,
+      "warnings": [
+        "s_9433ad: step 1: primary locator did not resolve; used fallback #2 page.locator('section > section > div:nth-of-type(1) > div:nth-of-type(1) > li > a')"
+      ],
+      "unreported": [
+        "publish_date",
+        "post_editor_url",
+        "tag_chip",
+        "run_id",
+        "post_slug"
+      ]
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_e7d51e; observed run_id=fwgh14-n2, public_post_title=fwgh14-n2 Bench Post, post_slug=fwgh14-n2-bench-post, public_post_excerpt=Excerpt for bench post fwgh14-n2., public_post_body_paragraph=This bench post was created by run fwgh14-n2 for verification purposes..",
+      "values": {
+        "run_id": "fwgh14-n2",
+        "public_post_title": "fwgh14-n2 Bench Post",
+        "post_slug": "fwgh14-n2-bench-post",
+        "public_post_excerpt": "Excerpt for bench post fwgh14-n2.",
+        "public_post_body_paragraph": "This bench post was created by run fwgh14-n2 for verification purposes."
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_80f109: step 1: primary locator did not resolve; used fallback #2 page.locator('div > div > section > header > section > button:nth-of-type(2)')"
+      ]
+    },
+    {
+      "id": "05-report",
+      "status": "success",
+      "summary": "Verification only.",
+      "values": {
+        "h3_gh_content_entry_titl": "Seed: Welcome to the bench",
+        "h3_gh_content_entry_titl_2": "Seed: Release notes for September",
+        "h3_gh_content_entry_titl_3": "Seed: House style guide",
+        "published_post_title": "fwgh14-n2 Bench Post",
+        "post_slug": "fwgh14-n2-bench-post",
+        "body_paragraph_text": "This bench post was created by run fwgh14-n2 for verification purposes.",
+        "host_address": "127.0.0.1",
+        "run_id": "fwgh14-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_d325cc: step 6: primary locator did not resolve; used fallback #2 page.locator('div > div:nth-of-type(1) > div > div:nth-of-type(1) > div > p')"
+      ]
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "repinned": 0,
+  "drift": 4,
+  "driftTickets": [
+    {
+      "flow": "fwgh14",
+      "step": "02-create",
+      "skill": "s_dc71da",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.getByText('Saving...', { exact: true })",
+      "fallbackUsed": "page.locator('section > header > div > div > span > div')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8099/ghost/#/posts",
+      "pageUrl": "http://127.0.0.1:8099/ghost/#/posts"
+    },
+    {
+      "flow": "fwgh14",
+      "step": "03-open",
+      "skill": "s_9433ad",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.locator('[data-testid=\"posts-list-item\"] a')",
+      "fallbackUsed": "page.locator('section > section > div:nth-of-type(1) > div:nth-of-type(1) > li > a')",
+      "fallbackIndex": 1,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8099/ghost/#/editor/post/:id",
+      "pageUrl": "http://127.0.0.1:8099/ghost/#/editor/post/6ab55506050a19000152eac7"
+    },
+    {
+      "flow": "fwgh14",
+      "step": "04-open",
+      "skill": "s_80f109",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.998,
+      "missedLocator": "page.getByRole('button', { name: 'Publish ⌘ ⇧ P', exact: true })",
+      "fallbackUsed": "page.locator('div > div > section > header > section > button:nth-of-type(2)')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8099/ghost/#/editor/post/:id",
+      "pageUrl": "http://127.0.0.1:8099/ghost/#/editor/post/6ab55506050a19000152eac7"
+    },
+    {
+      "flow": "fwgh14",
+      "step": "05-report",
+      "skill": "s_d325cc",
+      "atStep": "6",
+      "key": "target",
+      "similarity": 0.998,
+      "missedLocator": "page.getByText('fwgh14-n2', { exact: true })",
+      "fallbackUsed": "page.locator('div > div:nth-of-type(1) > div > div:nth-of-type(1) > div > p')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8099/ghost/#/editor/post/:id",
+      "pageUrl": "http://127.0.0.1:8099/ghost/#/editor/post/6ab55506050a19000152eac7"
+    }
+  ],
+  "wallMs": 108100,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 232896,
+    "completionTokens": 4345,
+    "cachedTokens": 212608
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 232896,
+      "completionTokens": 4345,
+      "cachedTokens": 212608
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

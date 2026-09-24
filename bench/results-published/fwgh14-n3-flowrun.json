@@ -1,0 +1,431 @@
+{
+  "flow": "fwgh14",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_f91411; observed h3_gh_content_entry_titl=Seed: Welcome to the bench, h3_gh_content_entry_titl_2=Seed: Release notes for September, h3_gh_content_entry_titl_3=Seed: House style guide.",
+      "values": {
+        "h3_gh_content_entry_titl": "Seed: Welcome to the bench",
+        "h3_gh_content_entry_titl_2": "Seed: Release notes for September",
+        "h3_gh_content_entry_titl_3": "Seed: House style guide"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "19/19",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_b84a4b: step 4: none of the 1 expected page change(s) appeared in the step diff (found on the page instead)"
+      ]
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_21df81; observed post_author_byline=By Bench Admin - a few seconds ago, post_status=Draft, run_id=fwgh14-n3.",
+      "values": {
+        "post_author_byline": "By Bench Admin - a few seconds ago",
+        "post_status": "Draft",
+        "run_id": "fwgh14-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_dc71da: step 2: wait_for text_contains timed out after 10000ms (last: text=\"\"); the text was already showing in fallback #2 page.locator('section > header > div > div > span > div')"
+      ]
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "Opened the existing draft 'fwgh14-n3 Bench Post' in the Ghost editor and, in its post-settings panel, added the existing tag 'Bench News' (chip reads exactly \"Bench News\"; 'Bench Newsletter' remained a separate unrelated suggestion, so the correct tag was chosen), set a custom excerpt containing the runid, and set the publish date to 2026-09-01. Then closed the settings panel; the post auto-saved and its admin status reads \"Draft - Saved\". All values were read back from the live settings panel after the changes.",
+      "values": {
+        "post_title": "fwgh14-n3 Bench Post",
+        "body_paragraph": "This bench post was created by run fwgh14-n3 for verification purposes.",
+        "tag_chip": "Bench News",
+        "custom_excerpt": "Excerpt for bench post fwgh14-n3.",
+        "publish_date": "2026-09-01",
+        "publish_time": "16:53 UTC",
+        "post_url_slug": "fwgh14-n3-bench-post",
+        "post_status": "Draft - Saved",
+        "editor_url": "http://127.0.0.1:8099/ghost/#/editor/post/6ab55576050a19000152ead7",
+        "ref": "fwgh14-n3"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_a63811 stopped at step 1 — after step 1 expected url http://127.0.0.1:8099/ghost/#/editor/post/:id but browser is at http://127.0.0.1:8099/ghost#/settings",
+      "replayed": "0/1",
+      "repaired": false,
+      "turns": 22,
+      "warnings": [
+        "s_a63811: step 1: no element matched any known locator for target (tried 4: page.getByTestId('settings-menu-toggle'), page.getByRole('button', { name: 'Settings', exact: true }), page.locator('#ember-app > div:nth-of-type(1) > div > main > div > button'), …); healed inline: the step ran on page.getByRole('link', { name: 'Settings', exact: true }), proposed from the live page (nothing in the recorded chain resolved)",
+        "s_a63811: step 1: the inline heal page.getByRole('link', { name: 'Settings', exact: true }) ran and the step's own checks then refused it — treat that locator as known-wrong"
+      ],
+      "unreported": [
+        "post_editor_url",
+        "run_id",
+        "post_id",
+        "post_slug"
+      ]
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_e7d51e; observed run_id=fwgh14-n3, public_post_title=fwgh14-n3 Bench Post, post_slug=fwgh14-n3-bench-post, public_post_excerpt=Excerpt for bench post fwgh14-n3., public_post_body_paragraph=This bench post was created by run fwgh14-n3 for verification purposes..",
+      "values": {
+        "run_id": "fwgh14-n3",
+        "public_post_title": "fwgh14-n3 Bench Post",
+        "post_slug": "fwgh14-n3-bench-post",
+        "public_post_excerpt": "Excerpt for bench post fwgh14-n3.",
+        "public_post_body_paragraph": "This bench post was created by run fwgh14-n3 for verification purposes."
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_80f109: step 1: primary locator did not resolve; used fallback #2 page.locator('div > div > section > header > section > button:nth-of-type(2)')"
+      ]
+    },
+    {
+      "id": "05-report",
+      "status": "success",
+      "summary": "Verification only.",
+      "values": {
+        "h3_gh_content_entry_titl": "Seed: Welcome to the bench",
+        "h3_gh_content_entry_titl_2": "Seed: Release notes for September",
+        "h3_gh_content_entry_titl_3": "Seed: House style guide",
+        "published_post_title": "fwgh14-n3 Bench Post",
+        "post_slug": "fwgh14-n3-bench-post",
+        "body_paragraph_text": "This bench post was created by run fwgh14-n3 for verification purposes.",
+        "host_address": "127.0.0.1",
+        "run_id": "fwgh14-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_d325cc: step 6: primary locator did not resolve; used fallback #2 page.locator('div > div:nth-of-type(1) > div > div:nth-of-type(1) > div > p')"
+      ]
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "repinned": 0,
+  "drift": 4,
+  "driftTickets": [
+    {
+      "flow": "fwgh14",
+      "step": "02-create",
+      "skill": "s_dc71da",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.getByText('Saving...', { exact: true })",
+      "fallbackUsed": "page.locator('section > header > div > div > span > div')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8099/ghost/#/posts",
+      "pageUrl": "http://127.0.0.1:8099/ghost/#/posts"
+    },
+    {
+      "flow": "fwgh14",
+      "step": "03-open",
+      "skill": "s_a63811",
+      "atStep": "1",
+      "key": "target",
+      "similarity": null,
+      "missedLocator": "page.getByTestId('settings-menu-toggle')",
+      "fallbackUsed": "page.getByRole('link', { name: 'Settings', exact: true })",
+      "recovered": true,
+      "healed": true,
+      "proposal": {
+        "kind": "role",
+        "role": "link",
+        "name": "Settings"
+      },
+      "rows": [
+        {
+          "tag": "div",
+          "role": "navigation",
+          "id": ":r0:",
+          "text": "Bench BlogSearch siteCtrl+KAnalyticsNetworkView sitePostsDra"
+        },
+        {
+          "tag": "button",
+          "text": "Search siteCtrl+K"
+        },
+        {
+          "tag": "a",
+          "text": "Analytics"
+        },
+        {
+          "tag": "a",
+          "text": "Network"
+        },
+        {
+          "tag": "a",
+          "text": "View site"
+        },
+        {
+          "tag": "a",
+          "label": "View site in new tab"
+        },
+        {
+          "tag": "button",
+          "label": "Toggle post views"
+        },
+        {
+          "tag": "a",
+          "text": "Posts"
+        },
+        {
+          "tag": "a",
+          "label": "Create new post"
+        },
+        {
+          "tag": "a",
+          "text": "Drafts"
+        },
+        {
+          "tag": "a",
+          "text": "Scheduled"
+        },
+        {
+          "tag": "a",
+          "text": "Published"
+        },
+        {
+          "tag": "a",
+          "text": "Pages"
+        },
+        {
+          "tag": "a",
+          "text": "Tags"
+        },
+        {
+          "tag": "a",
+          "text": "Members"
+        },
+        {
+          "tag": "a",
+          "text": "Comments"
+        },
+        {
+          "tag": "a",
+          "text": "Settings"
+        },
+        {
+          "tag": "a",
+          "text": "Help"
+        },
+        {
+          "tag": "button",
+          "id": "radix-:r11:",
+          "label": "User menu",
+          "text": "Bench Adminadmin@bench.local",
+          "type": "button"
+        },
+        {
+          "tag": "a",
+          "id": "ember3",
+          "text": "Skip to main content"
+        },
+        {
+          "tag": "a",
+          "id": "ember89",
+          "text": "Posts"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "label": "Type filter",
+          "text": "All posts"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "label": "Visibility filter",
+          "text": "All access"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "label": "Author filter",
+          "text": "All authors"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "label": "Tag filter",
+          "text": "All tags"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "label": "Sort filter",
+          "text": "Newest first"
+        },
+        {
+          "tag": "a",
+          "id": "ember100",
+          "text": "New post"
+        },
+        {
+          "tag": "div",
+          "role": "menuitem",
+          "text": "fwgh14-n3 Bench Post By Bench Admin - a few seconds ago Draf"
+        },
+        {
+          "tag": "a",
+          "id": "ember101",
+          "text": "fwgh14-n3 Bench Post By Bench Admin - a few seconds ago Draf"
+        },
+        {
+          "tag": "a",
+          "id": "ember102",
+          "text": "Go to Editor.pen_svg__a{fill:none;stroke:currentColor;stroke"
+        },
+        {
+          "tag": "div",
+          "role": "menuitem",
+          "text": "Seed: Welcome to the bench By Bench Admin in Bench Guides - "
+        },
+        {
+          "tag": "a",
+          "id": "ember103",
+          "text": "Seed: Welcome to the bench By Bench Admin in Bench Guides - "
+        },
+        {
+          "tag": "a",
+          "text": "New members Free 0 0"
+        },
+        {
+          "tag": "a",
+          "text": "Go to Analytics"
+        },
+        {
+          "tag": "div",
+          "role": "menuitem",
+          "text": "Seed: Release notes for September By Bench Admin in Bench Gu"
+        },
+        {
+          "tag": "a",
+          "id": "ember104",
+          "text": "Seed: Release notes for September By Bench Admin in Bench Gu"
+        },
+        {
+          "tag": "a",
+          "text": "New members Free 0 0"
+        },
+        {
+          "tag": "a",
+          "text": "Go to Analytics"
+        },
+        {
+          "tag": "div",
+          "role": "menuitem",
+          "text": "Seed: House style guide By Bench Admin in Bench Guides - 8 m"
+        },
+        {
+          "tag": "a",
+          "id": "ember105",
+          "text": "Seed: House style guide By Bench Admin in Bench Guides - 8 m"
+        },
+        {
+          "tag": "a",
+          "text": "New members Free 0 0"
+        },
+        {
+          "tag": "a",
+          "text": "Go to Analytics"
+        },
+        {
+          "tag": "div",
+          "role": "menu",
+          "text": "Add a tag Change access .trash_svg__a{fill:none;stroke:curre"
+        },
+        {
+          "tag": "button",
+          "text": "Add a tag",
+          "type": "button"
+        },
+        {
+          "tag": "button",
+          "text": "Change access",
+          "type": "button"
+        },
+        {
+          "tag": "button",
+          "text": ".trash_svg__a{fill:none;stroke:currentColor;stroke-linecap:r",
+          "type": "button"
+        },
+        {
+          "tag": "section",
+          "label": "Notifications alt+T"
+        }
+      ],
+      "pageUrlPattern": "http://127.0.0.1:8099/ghost/#/settings",
+      "pageUrl": "http://127.0.0.1:8099/ghost/#/settings"
+    },
+    {
+      "flow": "fwgh14",
+      "step": "04-open",
+      "skill": "s_80f109",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.998,
+      "missedLocator": "page.getByRole('button', { name: 'Publish ⌘ ⇧ P', exact: true })",
+      "fallbackUsed": "page.locator('div > div > section > header > section > button:nth-of-type(2)')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8099/ghost/#/editor/post/:id",
+      "pageUrl": "http://127.0.0.1:8099/ghost/#/editor/post/6ab55576050a19000152ead7"
+    },
+    {
+      "flow": "fwgh14",
+      "step": "05-report",
+      "skill": "s_d325cc",
+      "atStep": "6",
+      "key": "target",
+      "similarity": 0.998,
+      "missedLocator": "page.getByText('fwgh14-n3', { exact: true })",
+      "fallbackUsed": "page.locator('div > div:nth-of-type(1) > div > div:nth-of-type(1) > div > p')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8099/ghost/#/editor/post/:id",
+      "pageUrl": "http://127.0.0.1:8099/ghost/#/editor/post/6ab55576050a19000152ead7"
+    }
+  ],
+  "wallMs": 125173,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 263522,
+    "completionTokens": 6865,
+    "cachedTokens": 244352
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 263522,
+      "completionTokens": 6865,
+      "cachedTokens": 244352
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
