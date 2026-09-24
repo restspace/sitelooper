@@ -70,6 +70,8 @@ export interface SpecStep {
   outputs: string[];
   /** The converged procedure: the skill's segments in seq order; empty when the step has no skill. */
   segments: SpecSegment[];
+  /** FlowStep.urlRoutes: url outputs minted from a url the step visited but did not end on, with their routes (fwgh14). */
+  urlRoutes?: Record<string, string>;
 }
 
 /** A Skill minus what the spec does not need to carry: stats, status, provenance.model. */
@@ -512,6 +514,7 @@ export function flowToSpec(
       params,
       outputs: step.outputs ?? [],
       segments,
+      ...(step.urlRoutes && Object.keys(step.urlRoutes).length ? { urlRoutes: step.urlRoutes } : {}),
     });
   }
 

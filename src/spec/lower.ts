@@ -97,6 +97,7 @@ function toFlowStep(spec: SpecFlow, step: SpecStep, now: string, skills: Skill[]
     params: step.params,
     outputs: step.outputs,
     recorded: {},
+    ...(step.urlRoutes ? { urlRoutes: step.urlRoutes } : {}),
   };
   if (segSkills.length) flowStep.skill = segSkills[0].id;
   return flowStep;

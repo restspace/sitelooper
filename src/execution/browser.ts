@@ -15,6 +15,41 @@ import type { Locator, Page } from 'playwright-core';
 export const DEFAULT_ACTION_TIMEOUT_MS = 30_000;
 
 /**
+ * The urls a page's main frame shows while a flow step runs, in order — its
+ * url trail, for url outputs the step publishes from a url it VISITED but did
+ * not end on (url.ts visitedUrlPart; ghost fwgh14's editor autosave routed to
+ * `#/editor/post/<id>` before the step went back to the posts list). Same-
+ * document navigations (a hash route, pushState) count: Playwright reports them
+ * as frame navigations too. Both runners keep one per flow step; `stop()`
+ * detaches the listener.
+ */
+export function urlTrail(page: Page): { urls: string[]; stop(): void } {
+  const urls: string[] = [];
+  const note = (url: string) => {
+    if (url && urls[urls.length - 1] !== url) urls.push(url);
+  };
+  try {
+    note(page.url());
+  } catch {
+    /* a page that cannot say where it is starts an empty trail */
+  }
+  const onNavigated = (frame: { url(): string }) => {
+    try {
+      if (frame === (page.mainFrame() as unknown)) note(frame.url());
+    } catch {
+      /* a detached frame adds nothing */
+    }
+  };
+  page.on('framenavigated', onNavigated);
+  return {
+    urls,
+    stop: () => {
+      page.off('framenavigated', onNavigated);
+    },
+  };
+}
+
+/**
  * What is known about an action once it has been attempted (notes/ROBUSTNESS.md
  * finding 2). The four are different facts, and every caller that decides
  * whether something may be tried again needs to tell them apart:

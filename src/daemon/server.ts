@@ -38,7 +38,8 @@ import { encodeFrame, LineDecoder, type CommandName, type FlowStepResult, type F
 import { aliasLegacyEnv, ensureSessionDir, socketPath, validateSessionName } from '../shared/paths.js';
 import { literalCredentialsIn, markLiteralCredentials } from '../shared/secrets.js';
 import { BrowserSession } from './browser.js';
-import { DEFAULT_BROWSER_PROFILE } from '../execution/browser.js';
+import { DEFAULT_BROWSER_PROFILE, urlTrail } from '../execution/browser.js';
+import { visitedUrlPart } from '../execution/url.js';
 import { observedChange } from '../execution/lifecycle.js';
 import { referenceValue, shownForReport, templateValue } from '../execution/report.js';
 import { startPageSettled } from '../execution/action.js';
@@ -1641,8 +1642,12 @@ ${describeLeaks(certain.slice(0, 30))}${certain.length > 30 ? `\n  … and ${cer
     // replay ends where the recording ended — at rest — so only a recovery
     // needs the boundary swept.
     let prevRecovered = false;
+    /** The running step's url trail, for the url outputs it minted mid-step (FlowStep.urlRoutes, fwgh14). */
+    let trail: ReturnType<typeof urlTrail> | null = null;
 
     for (const step of flow.steps) {
+      trail?.stop();
+      trail = null;
       if (opts.signal.aborted) {
         stepResults.push({ id: step.id, status: 'blocked', reason: 'run stopped', recovered: false });
         halted = true;
@@ -1665,6 +1670,15 @@ ${describeLeaks(certain.slice(0, 30))}${certain.length > 30 ? `\n  … and ${cer
         }
       }
       prevRecovered = false;
+      // A step that minted a url output mid-step keeps its url trail from here
+      // (FlowStep.urlRoutes; the artifact's step body keeps the same).
+      if (step.urlRoutes) {
+        try {
+          trail = urlTrail(await this.browser.getPage());
+        } catch {
+          trail = null;
+        }
+      }
       const pinned = step.skill ? (this.browser.learn?.get(step.skill) ?? null) : null;
       // The pin's whole segment chain, computed once: a replay runs EVERY
       // segment with the same params, so both questions asked below — what
@@ -1795,7 +1809,7 @@ ${describeLeaks(certain.slice(0, 30))}${certain.length > 30 ? `\n  … and ${cer
           // {{step.output}} reference threads through a step that ran nothing.
           const stepOutputs: Record<string, string> = { ...referenced, ...values };
           try {
-            const urlOuts = await captureUrlOutputs(await this.browser.getPage(), wantedUrlOuts.get(step.id), step.id, this.runSpecific);
+            const urlOuts = await captureUrlOutputs(await this.browser.getPage(), wantedUrlOuts.get(step.id), step.id, this.runSpecific, trail?.urls, step.urlRoutes);
             for (const [key, value] of Object.entries(urlOuts)) if (!(key in stepOutputs)) stepOutputs[key] = value;
           } catch {
             /* browser gone — nothing to bind */
@@ -2234,7 +2248,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       try {
         // A model-driven end state has no reason to carry the recorded url
         // shape, so a recovered step does not wait for the consumed parts.
-        const urlOuts = await captureUrlOutputs(await this.browser.getPage(), recovered ? undefined : wantedUrlOuts.get(step.id), step.id, this.runSpecific);
+        const urlOuts = await captureUrlOutputs(await this.browser.getPage(), recovered ? undefined : wantedUrlOuts.get(step.id), step.id, this.runSpecific, trail?.urls, step.urlRoutes);
         for (const [key, value] of Object.entries(urlOuts)) {
           if (!(key in stepOutputs)) stepOutputs[key] = value;
         }
@@ -2405,6 +2419,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       // A recovery may have left a dialog open; sweep it at the next boundary.
       prevRecovered = recovered;
     }
+    trail?.stop();
 
     // Deferred re-pins (see deferredPins): the next step's pin as it stands
     // now, this run's re-pins included. A step the run never reached keeps
@@ -2883,13 +2898,34 @@ const URL_OUTPUT_POLL_MS = 500;
  * {{03-open.url.q.id}} to a snapshot taken before Odoo's hash gained the
  * freshly minted id.
  */
-async function captureUrlOutputs(page: Page, wanted: Set<string> | undefined, stepId: string, runSpecific?: RunSpecific): Promise<Record<string, string>> {
-  let urlOuts = urlOutputs(page.url(), runSpecific, wanted);
-  if (!wanted?.size) return urlOuts;
+export async function captureUrlOutputs(
+  page: Page,
+  wanted: Set<string> | undefined,
+  stepId: string,
+  runSpecific?: RunSpecific,
+  visited?: readonly string[],
+  routes?: Record<string, string>,
+): Promise<Record<string, string>> {
+  // A part the step minted from a url it VISITED (FlowStep.urlRoutes): its end
+  // url's part when there is one, else the last url of the trail on the
+  // recorded route — the shared visitedUrlPart, which the artifact calls too.
+  // Never waited for: the end url is not where it lives.
+  const fromTrail = (out: Record<string, string>, url: string): Record<string, string> => {
+    for (const [key, route] of Object.entries(routes ?? {})) {
+      if (key in out || !key.startsWith('url.')) continue;
+      const value = visitedUrlPart(visited ?? [], url, key.slice('url.'.length), route);
+      if (value) out[key] = value;
+    }
+    return out;
+  };
+  const waitFor = wanted ? new Set([...wanted].filter((k) => !(routes && k in routes))) : undefined;
+  let urlOuts = fromTrail(urlOutputs(page.url(), runSpecific, wanted), page.url());
+  if (!waitFor?.size) return urlOuts;
+  wanted = waitFor;
   const deadline = Date.now() + URL_OUTPUT_WAIT_MS;
   const arrived = (url: string) => {
-    urlOuts = urlOutputs(url, runSpecific, wanted);
-    return [...wanted].every((k) => k in urlOuts);
+    urlOuts = fromTrail(urlOutputs(url, runSpecific, wanted), url);
+    return [...wanted!].every((k) => k in urlOuts);
   };
   while (!arrived(page.url()) && Date.now() < deadline) {
     // Wait on the url event, not on a clock: a route that lands 30ms after
@@ -2900,7 +2936,7 @@ async function captureUrlOutputs(page: Page, wanted: Set<string> | undefined, st
       .waitForURL((u) => arrived(u.toString()), { timeout: Math.min(URL_OUTPUT_POLL_MS, Math.max(1, deadline - Date.now())) })
       .catch(() => {});
   }
-  const missing = [...wanted].filter((k) => !(k in urlOuts));
+  const missing = [...wanted!].filter((k) => !(k in urlOuts));
   if (missing.length) console.error(`[flow] ${stepId}: url output(s) never appeared: ${missing.join(', ')} (url: ${page.url().slice(0, 160)})`);
   return urlOuts;
 }
