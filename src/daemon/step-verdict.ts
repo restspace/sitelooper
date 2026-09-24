@@ -29,6 +29,15 @@
  * values by design: fwgr68, fwkb39, fwrd87 and fwvk7 all have such steps and
  * all were green in round 54. A skipped read is different: nothing was
  * observed at all.
+ *
+ * But only of a fact the instruction ASKED for (askedOutputs, round 56's rule).
+ * EspoCRM fwec11 01-signin was asked to "confirm you are signed in and report
+ * what page you land on"; its recording read a `page_title` off the footer's
+ * "EspoCRM, Inc." link, and when no replay found that link both n2 and n3
+ * ended partial with every verifier green. A skipped read of an output nobody
+ * asked for stays what it is — a warning on the step and a drift ticket —
+ * while fwsi7 05-open's `checked_out_to_user`, which "the user it is checked
+ * out to" asks for, is still partial.
  */
 
 export interface StepVerdictInput {
@@ -44,6 +53,12 @@ export interface StepVerdictInput {
   declaredOutputs: readonly string[];
   /** The values the step reported. */
   values: Record<string, unknown>;
+  /**
+   * The step's instruction. When given, a skipped read counts only for an
+   * output it explicitly asks to report (askedOutputs); without it, every
+   * declared output counts, as before round 59.
+   */
+  instruction?: string;
 }
 
 /**
@@ -60,7 +75,7 @@ export function partialReasons(input: StepVerdictInput): string[] {
     );
   }
   if (!input.recovered && input.skippedReads?.length) {
-    const declared = new Set(input.declaredOutputs);
+    const declared = new Set(input.instruction === undefined ? input.declaredOutputs : askedOutputs(input.instruction, input.declaredOutputs));
     const missed = [...new Set(input.skippedReads)].filter((label) => declared.has(label) && !(label in input.values));
     for (const label of missed) {
       reasons.push(`the procedure's read of ${label}, an output this step reports, was skipped (nothing matched on the page), so ${label} went unreported`);

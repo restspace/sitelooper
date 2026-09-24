@@ -1392,6 +1392,8 @@ async function dispatch(
       // address is often the only durable handle on it (the grafana flow
       // could name every panel yet had no way to publish the dashboard uid).
       if (args.what === 'url') return JSON.stringify(page.url());
+      // The document title, likewise: no element shows it (round 59, fwec11 01-signin).
+      if (args.what === 'title') return JSON.stringify((await page.title()).trim());
       if (typeof args.target !== 'string' || !args.target.trim()) throw new Error(`read ${String(args.what)} needs a target (only what=url reads without one)`);
       const loc = t();
       // `count` asks HOW MANY, so plural is the answer, not an error.

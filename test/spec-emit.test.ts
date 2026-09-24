@@ -585,6 +585,8 @@ describe('step bodies', () => {
       `const hit${n} = await pick(page, [`,
       `{ locator: page.locator('${selector}'), index: 0, structural: false, kind: 'id', carries: JSON.stringify({ kind: 'id', selector: '${selector}' }) },`,
       `], '01-do s_test1/${n} target', { stayOnOrigin: originOf(page.url()) ?? undefined, waitMs: RESOLVE_WAIT_MS }, { drift: run.drift });`,
+      // the acted-on element, for the echo rule (the shared markActed, round 59)
+      `await markActed(page, hit${n}.locator, typed1, [], 's_test1/${n}');`,
       // the action's observation begins just before it dispatches (the shared beginAction)
       `obs${n} = beginAction(page, { deadlineMs: ACTION_DEADLINE_MS, navigating: true });`,
       `await click(hit${n}.locator, { obs: obs${n} }).catch(actionFailed);`,

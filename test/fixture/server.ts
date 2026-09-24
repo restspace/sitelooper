@@ -153,6 +153,84 @@ ${['Backlog', 'Ready', 'Work in progress', 'Done'].map((c, i) => `<td class="boa
  * with a `.field[data-name]` each, and a Stream entry narrating the save
  * that repeats the stage (`espo.stage`, reset to "Negotiation").
  */
+/**
+ * Round 59, EspoCRM fwec11 01-signin: a sign-in form whose Log in replaces it
+ * with the app, whose user menu then shows the signed-in user's DISPLAY name —
+ * "Admin" for the typed username "admin". Plus the controls an echo IS about:
+ * a time picker whose opener shows the option chosen (grafana's picker), a
+ * summary line repeating it elsewhere on the page, and an Excerpt textbox
+ * (ghost fwgh13). The document title is the app's (`signin.title`).
+ */
+const SIGNIN = (title: string) => `<!doctype html><html><head><meta charset="utf-8"><title>${title}</title></head><body>
+<div id="app"><form id="login" onsubmit="return false">
+<label for="user">Username</label><input id="user">
+<label for="pass">Password</label><input id="pass" type="password">
+<button id="go" type="button">Log in</button></form></div>
+<footer id="footer"><p>© 2026 <a href="#">EspoCRM, Inc.</a></p></footer>
+<script>
+document.getElementById('go').addEventListener('click', () => {
+  const who = document.getElementById('user').value;
+  document.getElementById('app').innerHTML =
+    '<nav><a id="menu" href="#" role="button" aria-label="Menu"></a><ul id="user-menu" hidden><li><a href="#"><span class="name">' +
+    who.charAt(0).toUpperCase() + who.slice(1) + '</span></a></li><li><a href="#">Log Out</a></li></ul></nav>' +
+    '<div class="picker"><button id="range" type="button">Last 1 hour</button><ul id="ranges" hidden><li><button type="button" class="opt">Last 6 hours</button></li></ul></div>' +
+    '<p>Range: <span id="summary">Last 1 hour</span></p>' +
+    '<label for="excerpt">Excerpt</label><input id="excerpt">';
+  document.getElementById('menu').addEventListener('click', (e) => { e.preventDefault(); document.getElementById('user-menu').hidden = false; });
+  document.getElementById('range').addEventListener('click', () => { document.getElementById('ranges').hidden = false; });
+  document.querySelector('#ranges .opt').addEventListener('click', (e) => {
+    document.getElementById('range').textContent = e.target.textContent;
+    document.getElementById('summary').textContent = e.target.textContent;
+    document.getElementById('ranges').hidden = true;
+  });
+});
+</script>
+</body></html>`;
+
+/**
+ * Round 59's echo cases side by side (echoAt): a field an app RE-RENDERS
+ * (the same field, a new node); a combobox whose display span shows the
+ * option chosen from its listbox; a live preview mirroring a textarea with no
+ * save; and a part name that a Save commits into a table row.
+ */
+const ECHO_LAB = `<!doctype html><html><head><meta charset="utf-8"><title>Echo lab</title></head><body>
+<div id="a"><label>Title <input id="title"></label> <button id="rerender" type="button">Re-render</button></div>
+<div class="field"><input id="fruit2" role="combobox" aria-label="Fruit" aria-controls="fruit-list" autocomplete="off"><span id="chosen"></span></div>
+<ul id="fruit-list" role="listbox" hidden><li role="option">banana split</li><li role="option">cherry pie</li></ul>
+<textarea id="md" aria-label="Markdown"></textarea>
+<div id="preview"></div>
+<form id="parts" onsubmit="return false"><label>Part name <input id="part"></label> <button id="save" type="button">Save</button></form>
+<table><tbody id="rows"></tbody></table>
+<script>
+document.getElementById('rerender').addEventListener('click', () => {
+  const old = document.getElementById('title');
+  const fresh = document.createElement('input');
+  fresh.id = 'title';
+  fresh.value = old.value;
+  old.replaceWith(fresh);
+});
+const fruit = document.getElementById('fruit2');
+const list = document.getElementById('fruit-list');
+fruit.addEventListener('click', () => { list.hidden = false; });
+for (const li of list.querySelectorAll('li')) li.addEventListener('click', () => {
+  fruit.value = li.textContent;
+  document.getElementById('chosen').textContent = li.textContent;
+  list.hidden = true;
+});
+const md = document.getElementById('md');
+md.addEventListener('input', () => { document.getElementById('preview').textContent = md.value; });
+document.getElementById('save').addEventListener('click', () => {
+  const part = document.getElementById('part');
+  const row = document.createElement('tr');
+  const cell = document.createElement('td');
+  cell.textContent = part.value;
+  row.appendChild(cell);
+  document.getElementById('rows').appendChild(row);
+  part.value = '';
+});
+</script>
+</body></html>`;
+
 const ESPO_DETAIL = (stage: string) => `<!doctype html><html><head><meta charset="utf-8"><title>Opportunity</title></head><body>
 <h3><span>Bench Opportunity</span></h3>
 <div class="record"><div class="row">
@@ -1329,6 +1407,8 @@ export interface FixtureServer {
   board: { card: number };
   /** The EspoCRM fixture's stage (/espo); reset() restores "Negotiation". */
   espo: { stage: string };
+  /** The sign-in fixture's document title (/signin); reset() restores "EspoCRM". */
+  signin: { title: string };
   /** Reset state for a new test/case: `n` fresh items, empty log, faults cleared. */
   reset(n: number): void;
   faults: {
@@ -1357,6 +1437,7 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
   const listing = { date: '2026-09-23' };
   const board = { card: 4 };
   const espo = { stage: 'Negotiation' };
+  const signin = { title: 'EspoCRM' };
 
   function take<K extends Fault['kind']>(kind: K, req?: http.IncomingMessage): Extract<Fault, { kind: K }> | undefined {
     for (const f of pending) {
@@ -1386,6 +1467,16 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
     if (url === '/') {
       res.writeHead(200, { 'content-type': 'text/html' });
       res.end(PAGE);
+      return;
+    }
+    if (url === '/echo-lab') {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end(ECHO_LAB);
+      return;
+    }
+    if (url === '/signin') {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end(SIGNIN(signin.title));
       return;
     }
     if (url === '/espo') {
@@ -1734,6 +1825,7 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
     listing,
     board,
     espo,
+    signin,
     reset(n: number) {
       items = Array.from({ length: n }, (_, i) => `Item ${i + 1}`);
       log = [];
@@ -1741,6 +1833,7 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
       listing.date = '2026-09-23';
       board.card = 4;
       espo.stage = 'Negotiation';
+      signin.title = 'EspoCRM';
     },
     faults: {
       delay(ms, opts = {}) {

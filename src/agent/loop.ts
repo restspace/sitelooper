@@ -13,7 +13,7 @@ import { siteModel } from '../skills/sitemap.js';
 import { buildSystemPrompt } from './prompt.js';
 import { admitsIncompletion, artefactKeys, backfillReadValues, flattenComposedValues, flattenContainedComposite, flattenProvenComposite, mergeReportValues, namingAskMessage, positionDatumKeys, promoteLabelledReads, publishProseIdentifiers, unnamedReadValues, validateReport, type Report } from './report.js';
 import { executeTool, toolDefsFor, type ToolExecution } from './tools.js';
-import { captureReadBack, captureReadBackAt, coreReadBack, savedSelectionReadBack, selectionReadBack, setIdentityHints, visibleTextsWithin } from '../daemon/recorder.js';
+import { captureReadBack, captureReadBackAt, coreReadBack, savedSelectionReadBack, selectionReadBack, setIdentityHints, titleReadBack, visibleTextsWithin } from '../daemon/recorder.js';
 import { describeOutcome, pinPart, sourceReadBacks, type ReadBackDecider, type ReadBackTarget } from './readback.js';
 
 /** Tools that change the page URL, staleing every existing snapshot's refs. */
@@ -615,6 +615,14 @@ export async function runInstruction(
             const step = await captureReadBack(page, value, name);
             if (step) {
               browser.script.addStep(step);
+              continue;
+            }
+            // The document title, read as the title — never pinned by
+            // containment to text that happens to include it (EspoCRM fwec11
+            // page_title and the footer's "EspoCRM, Inc."). See titleReadBack.
+            const titled = await titleReadBack(page, value, name).catch(() => null);
+            if (titled) {
+              browser.script.addStep(titled);
               continue;
             }
             // The procedure's own selection (odoo fwod82's product): the
