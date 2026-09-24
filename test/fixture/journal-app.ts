@@ -99,9 +99,9 @@ export async function startJournalApp(): Promise<{ url: string; close: () => Pro
     let body = '';
     req.on('data', (c) => (body += c));
     req.on('end', () => {
-      if (u.pathname === '/') return send('text/html', FORM(u.searchParams.get('poll') === '1'));
+      if (u.pathname === '/') return send('text/html; charset=utf-8', FORM(u.searchParams.get('poll') === '1'));
       if (u.pathname === '/search') return send('text/html', SEARCH);
-      if (u.pathname === '/picker') return send('text/html', PICKER);
+      if (u.pathname === '/picker') return send('text/html; charset=utf-8', PICKER);
       if (u.pathname === '/flash') return send('text/html', FLASH);
       if (u.pathname === '/overlay') return send('text/html', OVERLAY);
       if (u.pathname === '/popup') return send('text/html', POPUP);

@@ -23,6 +23,7 @@ import { fingerprintPage } from '../daemon/fingerprint.js';
 import { isRecordable, type StepDiff } from '../daemon/recorder.js';
 import { diffTotals, settleEvidence, stepFailure, type StepEvidence } from '../daemon/step-evidence.js';
 import { splitForStep, windowKindOf, type StepJournal } from '../daemon/journal.js';
+import { feedbackLines, feedbackText, journalFeedbackOn } from '../daemon/journal-feedback.js';
 import { contractWeakening } from '../skills/contract.js';
 import { urlPattern as compiledUrlPattern } from '../skills/compile.js';
 import { renderReplay, replaySkill, type ReplayResult } from '../skills/replay.js';
@@ -932,6 +933,11 @@ note: this link points to ${verdict.link.href}, and its navigation had not commi
       ...(context.page !== undefined ? { page: context.page } : {}),
       ...(context.effect ? { effect: context.effect, afterUrl: context.afterPage?.url() } : {}),
     });
+    // Stage 4, behind SITELOOPER_JOURNAL_FEEDBACK=on: the journal's facts about
+    // this gesture, told to the model after the recording took the result.
+    if (journaled && journal && journalFeedbackOn() && windowKindOf(name) === 'gesture') {
+      result += feedbackText(feedbackLines(name, jw, journaled.ev ?? [], journal.inFlight(dispatchAt ?? settledAt, settledAt)));
+    }
     return {
       result,
       diff,

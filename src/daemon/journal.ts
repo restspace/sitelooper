@@ -319,6 +319,11 @@ export class Journal {
     job.catch(() => {}).finally(() => delete e._open);
   }
 
+  /** Requests started in [from, to] that have not answered yet (held for a later collect). */
+  inFlight(from: number, to: number): number {
+    return this.pending.filter((e) => e.k === 'req' && e._open && e.t >= from - 20 && e.t <= to).length;
+  }
+
   /** Open a window: the span a tool's action (or the daemon's own work) ran in. */
   open(kind: WindowKind, tool: string, input = false): number {
     const w = this.nextW++;
