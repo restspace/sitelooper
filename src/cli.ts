@@ -120,6 +120,8 @@ Global options:
       Pass the marker exactly, in SINGLE quotes (do 'sign in with {{env:APP_PASSWORD}}'), never $NAME: a shell
       expands $NAME inside double quotes and the secret itself is recorded. A "$0" arrives as the shell's
       name ("total /bin/sh.00"), so an argument or --stdin text that holds one is refused (--allow-shell-path overrides).
+  Vision (off by default): SITELOOPER_VISION=on (or config set vision on) shows the model its screenshots,
+      only if its model takes images; SITELOOPER_VISION_AUTO=on also attaches one after each state-changing action.
   Project defaults: sitelooper.config.json (nearest ancestor); CLI flags override them.
 
 Exit codes: 0 success ? 1 agent/recording failure ? 2 unavailable/invalid input
@@ -567,7 +569,7 @@ async function main(): Promise<void> {
   }
   if (command === 'config' && positional[0] === 'set') {
     const [, key, value] = positional;
-    if (!key || value === undefined) fail('usage: config set <provider|model|fallbackModel|baseUrl|apiKey|jev|jevApiKey|jevModel> <value>', 2);
+    if (!key || value === undefined) fail('usage: config set <provider|model|fallbackModel|baseUrl|apiKey|jev|jevApiKey|jevModel|vision|visionAuto> <value>', 2);
     const merged = writeGlobalConfig({ [key]: value });
     const shown = { ...merged, ...(merged.apiKey ? { apiKey: '***' } : {}), ...(merged.jevApiKey ? { jevApiKey: '***' } : {}) };
     console.log(`${globalConfigPath()}: ${JSON.stringify(shown)}`);

@@ -21,6 +21,7 @@ import { controlFromTarget, siteModel } from '../skills/sitemap.js';
 import { settleDom, settlePage } from '../daemon/settle.js';
 import { fingerprintPage } from '../daemon/fingerprint.js';
 import { isRecordable, type StepDiff } from '../daemon/recorder.js';
+import { imageForResult, visionSettings, type VisionSettings } from './vision.js';
 import { diffTotals, settleEvidence, stepFailure, type StepEvidence } from '../daemon/step-evidence.js';
 import { contractWeakening } from '../skills/contract.js';
 import { urlPattern as compiledUrlPattern } from '../skills/compile.js';
@@ -443,6 +444,8 @@ export interface ToolExecution {
    * of almost exactly 13s whose turn row could not say which step stalled.
    */
   stepMs?: Array<{ tool: string; ms: number; ok: boolean }>;
+  /** Vision only: ids of images to show the model with this result (vision.ts). */
+  images?: string[];
   /** Present for run_skill: what the replay did, for the loop's accounting. */
   replay?: ReplayResult;
   /**
@@ -460,9 +463,15 @@ export interface ToolExecution {
 }
 
 /** Tool definitions for a session: run_skill only exists when a skill store is attached. */
-export function toolDefsFor(session: BrowserSession): ToolDef[] {
-  return session.learn ? TOOL_DEFS : TOOL_DEFS.filter((t) => t.name !== 'run_skill');
+export function toolDefsFor(session: BrowserSession, vision: Pick<VisionSettings, 'on'> = { on: false }): ToolDef[] {
+  const defs = session.learn ? TOOL_DEFS : TOOL_DEFS.filter((t) => t.name !== 'run_skill');
+  // Vision off: the very same definitions, byte for byte.
+  return vision.on ? defs.map((t) => (t.name === 'screenshot' ? { ...t, description: VISION_SCREENSHOT_DESCRIPTION } : t)) : defs;
 }
+
+/** The screenshot tool as a model with vision on sees it (vision.ts). */
+export const VISION_SCREENSHOT_DESCRIPTION =
+  'Save a screenshot to disk and return its path; you are also shown the image (the visible viewport, scaled down). Use it to check what the page looks like when a snapshot does not settle it — layout, a chart, an icon, whether something is visibly open or selected. Only your most recent screenshots stay visible; say in words what you saw if you will need it later.';
 
 /**
  * Execute one tool call against the live browser session. Always returns a
@@ -505,9 +514,14 @@ export async function executeTool(
         site.transition(before.url, controlFromTarget(target, refHint(diffing, target)), after);
       }
     }
+    // Vision (off by default): the screenshot the model asked for, or with
+    // SITELOOPER_VISION_AUTO a small one after each state-changing action.
+    // Never recorded: the recorder has filed this step already.
+    const shown = await visionFor(session, name, result);
     return {
-      result: truncate(withEmptyReadHint(name, args, result) + scrubSecrets(observed.note) + landed + dialogNote(session), TOOL_RESULT_BUDGET + 8200),
+      result: truncate(withEmptyReadHint(name, args, result) + scrubSecrets(observed.note) + landed + dialogNote(session), TOOL_RESULT_BUDGET + 8200) + shown.note,
       isError: false,
+      ...(shown.images ? { images: shown.images } : {}),
       snapshotIncluded: observed.snapshotIncluded || Boolean(landed),
       ...(outcome ? { outcome } : {}),
     };
@@ -539,6 +553,20 @@ export function withEmptyReadHint(name: string, args: Record<string, unknown>, r
     `[] — 0 elements match ${JSON.stringify(String(args.target ?? ''))}. A class name is a guess: take a snapshot (full:true shows static text) and target what it shows, ` +
     `or target by role or text (role=link[name=/…/], a:has-text("…")). Do not switch to eval for it: an eval's result is never replayed.`
   );
+}
+
+/** What vision attaches to a tool result, when it is on; nothing at all when it is off. */
+async function visionFor(session: BrowserSession, name: string, result: string): Promise<{ images?: string[]; note: string }> {
+  const settings = visionSettings();
+  const asked = settings.on && name === 'screenshot';
+  const auto = settings.auto && STATE_CHANGING.has(name);
+  if (!asked && !auto) return { note: '' };
+  const page = await session.getPage().catch(() => null);
+  if (!page) return { note: '' };
+  const label = asked ? (/^screenshot saved: (.+)$/m.exec(result)?.[1] ?? 'screenshot') : `after ${name}`;
+  const shot = await imageForResult(page, label, { maxWidth: asked ? settings.maxWidth : settings.autoMaxWidth, quality: settings.quality });
+  if (shot.id) return { images: [shot.id], note: asked ? '\n[image attached below]' : '\n[screenshot after this action attached below]' };
+  return { note: shot.note ? `\n${shot.note}` : '' };
 }
 
 /**

@@ -13,6 +13,7 @@ import { siteModel } from '../skills/sitemap.js';
 import { buildSystemPrompt } from './prompt.js';
 import { admitsIncompletion, artefactKeys, backfillReadValues, flattenComposedValues, flattenContainedComposite, flattenProvenComposite, mergeReportValues, namingAskMessage, positionDatumKeys, promoteLabelledReads, publishProseIdentifiers, unnamedReadValues, validateReport, type Report } from './report.js';
 import { executeTool, toolDefsFor, type ToolExecution } from './tools.js';
+import { visionSettings } from './vision.js';
 import { captureReadBack, captureReadBackAt, coreReadBack, savedSelectionReadBack, selectionReadBack, setIdentityHints, shownReadBack, titleReadBack, visibleTextsWithin } from '../daemon/recorder.js';
 import { describeOutcome, pinPart, sourceReadBacks, type ReadBackDecider, type ReadBackTarget } from './readback.js';
 
@@ -489,7 +490,7 @@ export async function runInstruction(
   );
 
   const system: ChatMessage = { role: 'system', content: buildSystemPrompt(state) };
-  const toolDefs = toolDefsFor(browser);
+  const toolDefs = toolDefsFor(browser, visionSettings());
 
   /** Resume advice differs sharply depending on whether anything actually ran. */
   const resumeHint = () =>
@@ -1243,7 +1244,7 @@ export async function runInstruction(
       }
       const evidence = await evidenceAfter(call.name, execution);
       if (evidence) state.recordTrace({ turn, tool: '(evidence)', args: { after: call.name }, ok: true, result: evidence.slice(0, TRACE_RESULT_CHARS) });
-      state.messages.push({ role: 'tool', tool_call_id: call.id, content: execution.result + evidence });
+      state.messages.push({ role: 'tool', tool_call_id: call.id, content: execution.result + evidence, ...(execution.images?.length ? { images: execution.images } : {}) });
       accountActions(skill, call.name, call.args, execution);
 
       // The same gesture cycle producing the same page response, over and
