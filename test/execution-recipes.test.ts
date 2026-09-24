@@ -7,6 +7,7 @@ vi.mock('../src/execution/browser.js', () => ({
   reactSafeFill: vi.fn().mockResolvedValue(undefined),
   reactSafeSelect: vi.fn().mockResolvedValue(['opt-1']),
   actionFailure: (_outcome: string, _reason: string, message: string) => new Error(message),
+  DEFAULT_ACTION_TIMEOUT_MS: 30_000,
 }));
 
 import { reactSafeFill, reactSafeSelect, settleDom } from '../src/execution/browser.js';

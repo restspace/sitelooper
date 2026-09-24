@@ -1213,7 +1213,7 @@ export class SkillStore {
  */
 export function pageEffectDemoted(skill: Skill): boolean {
   if (skill.status === 'demoted') return true;
-  return Object.entries(skill.stats.failedAtStep ?? {}).some(([at, n]) => {
+  return Object.entries(skill.stats?.failedAtStep ?? {}).some(([at, n]) => {
     const step = skill.steps[Number(at) - 1];
     return n >= 2 && Boolean(step && stepEffect(step));
   });
