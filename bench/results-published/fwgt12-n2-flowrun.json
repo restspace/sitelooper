@@ -1,0 +1,279 @@
+{
+  "flow": "fwgt12",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_8fa30f; observed initial_url=http://127.0.0.1:8095/, closed_issue_count=0, open_issue_count=3, seed_issue_1_1=Seed: ship repaired device, seed_issue_1_number=#3, seed_issue_2_1=Seed: order missing parts, seed_issue_2_number=#2, seed_issue_3_1=Seed: triage inbox, seed_issue_3_number=#1.",
+      "values": {
+        "initial_url": "http://127.0.0.1:8095/",
+        "closed_issue_count": "0",
+        "open_issue_count": "3",
+        "seed_issue_1_1": "Seed: ship repaired device",
+        "seed_issue_1_number": "#3",
+        "seed_issue_2_1": "Seed: order missing parts",
+        "seed_issue_2_number": "#2",
+        "seed_issue_3_1": "Seed: triage inbox",
+        "seed_issue_3_number": "#1"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_98c924; observed issue_url=http://127.0.0.1:8095/bench/bench-repo/issues/5, run_id=fwgt12-n2, issue_number=#5, issue_title=fwgt12-n2 Bench Issue, issue_page_heading=fwgt12-n2 Bench Issue #5, description_shown=This is the fwgt12-n2 bench issue for testing..",
+      "values": {
+        "issue_url": "http://127.0.0.1:8095/bench/bench-repo/issues/5",
+        "run_id": "fwgt12-n2",
+        "issue_number": "#5",
+        "issue_title": "fwgt12-n2 Bench Issue",
+        "issue_page_heading": "fwgt12-n2 Bench Issue #5",
+        "description_shown": "This is the fwgt12-n2 bench issue for testing."
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-set",
+      "status": "success",
+      "summary": "Continued from the partially-replayed procedure on issue #5. The Labels picker had \"bug\" and the client-side selection already held both labels, but the sidebar still showed \"No labels\" (not yet submitted). I clicked the \"priority-high\" item in the open picker, then clicked outside to close it — which triggered the sidebar update. The sidebar label list now shows exactly \"bug\" and \"priority-high\". After a full page reload, the live DOM's sidebar labels list still contains exactly those two links ([\"bug\",\"priority-high\"]), and the raw server response for /bench/bench-repo/issues/5 contains the timeline event \"added bug priority-high\", confirming the labels were applied server-side, not just ticked in the menu.",
+      "values": {
+        "issue_number": "#5",
+        "issue_title": "fwgt12-n2 Bench Issue",
+        "label_count": "2",
+        "labels_displayed_on_issue_page_1": "bug",
+        "labels_displayed_on_issue_page_2": "priority-high",
+        "current_url": "http://127.0.0.1:8095/bench/bench-repo/issues/5",
+        "labels_displayed_after_c": "bug\npriority-high"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_d9d738 stopped at step 9 — after step 9 the page did not show \"- combobox \\\"Labels Clear labels bug documentation enhancement priority-high\\\"\" / \"- listbox \\\"Clear labels bug documentation enhancement priority-high\\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "replayed": "8/28",
+      "repaired": false,
+      "turns": 20,
+      "unreported": [
+        "priority_high_item_class",
+        "bug_item_class",
+        "label_1_name",
+        "label_2_name"
+      ]
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_e960c8; observed run_id=fwgt12-n2, issue_page_url=http://127.0.0.1:8095/bench/bench-repo/issues/5, issue_number=#5, issue_title=fwgt12-n2 Bench Issue, assignee_user_id=3, sidebar_assignee_display_2=(Bench Assignee), assignee_displayed_on_page=bench-assignee\n(Bench Assignee), assignee_full_name=Bench Assignee.",
+      "values": {
+        "run_id": "fwgt12-n2",
+        "issue_page_url": "http://127.0.0.1:8095/bench/bench-repo/issues/5",
+        "issue_number": "#5",
+        "issue_title": "fwgt12-n2 Bench Issue",
+        "assignee_user_id": "3",
+        "sidebar_assignee_display_2": "(Bench Assignee)",
+        "assignee_displayed_on_page": "bench-assignee\n(Bench Assignee)",
+        "assignee_full_name": "Bench Assignee"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_e960c8: step 2: primary locator did not resolve; used fallback #2 elementAt(1098, 718) /* link */",
+        "s_e960c8: step 4: primary locator did not resolve; used fallback #3 page.locator('#issue-title-display > h1')",
+        "s_e960c8: step 7: skipped read — no element matched any known locator for target (tried 2: page.locator('#issuecomment-3 > span:nth-of-type(2) > a'), elementAt(214, 474) /* link */)",
+        "s_e960c8: step 9: skipped read — no element matched any known locator for target (tried 2: page.locator('#issuecomment-3 > span:nth-of-type(2) > a'), elementAt(214, 474) /* link */)"
+      ],
+      "unreported": [
+        "assignee_username",
+        "sidebar_assignee_display_1"
+      ]
+    },
+    {
+      "id": "05-set",
+      "status": "success",
+      "summary": "Replayed stored procedure s_bf7ad5; observed run_id=fwgt12-n2, milestone_displayed_on_page=Bench Milestone, issue_number=#5, issue_title=fwgt12-n2 Bench Issue.",
+      "values": {
+        "run_id": "fwgt12-n2",
+        "milestone_displayed_on_page": "Bench Milestone",
+        "issue_number": "#5",
+        "issue_title": "fwgt12-n2 Bench Issue"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "06-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_771a6d; observed comment_id=issuecomment-12, run_id=fwgt12-n2, issue_number=#5, issue_title=fwgt12-n2 Bench Issue, issue_state_after=Open, comment_displayed_text=Comment for run fwgt12-n2..",
+      "values": {
+        "comment_id": "issuecomment-12",
+        "run_id": "fwgt12-n2",
+        "issue_number": "#5",
+        "issue_title": "fwgt12-n2 Bench Issue",
+        "issue_state_after": "Open",
+        "comment_displayed_text": "Comment for run fwgt12-n2."
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "server_comment_html"
+      ]
+    },
+    {
+      "id": "07-change",
+      "status": "success",
+      "summary": "Replayed stored procedure s_efb38b; observed issue_heading=fwgt12-n2 Bench Issue #5, milestone_sidebar=Bench Milestone, sidebar_assignees=bench-assignee (Bench Assignee), issue_description=This is the fwgt12-n2 bench issue for testing., comment_text=Comment for run fwgt12-n2., label_1=bug, label_2=priority-high, assignee_username_link=bench-assignee, issue_state=open, open_issue_title_1=fwgt12-n2 Bench Issue, open_issue_title_2=Seed: ship repaired device, open_issue_title_3=Seed: order missing parts, open_issue_title_4=Seed: triage inbox, run_id=fwgt12-n2.",
+      "values": {
+        "issue_heading": "fwgt12-n2 Bench Issue #5",
+        "milestone_sidebar": "Bench Milestone",
+        "sidebar_assignees": "bench-assignee (Bench Assignee)",
+        "issue_description": "This is the fwgt12-n2 bench issue for testing.",
+        "comment_text": "Comment for run fwgt12-n2.",
+        "label_1": "bug",
+        "label_2": "priority-high",
+        "assignee_username_link": "bench-assignee",
+        "issue_state": "open",
+        "open_issue_title_1": "fwgt12-n2 Bench Issue",
+        "open_issue_title_2": "Seed: ship repaired device",
+        "open_issue_title_3": "Seed: order missing parts",
+        "open_issue_title_4": "Seed: triage inbox",
+        "run_id": "fwgt12-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_c55944: step 1: primary locator did not resolve; used fallback #2 page.locator('#issue-title-display > h1')"
+      ]
+    }
+  ],
+  "passed": 7,
+  "total": 7,
+  "repinned": 0,
+  "drift": 6,
+  "driftTickets": [
+    {
+      "flow": "fwgt12",
+      "step": "03-set",
+      "skill": "s_d9d738",
+      "similarity": 1.002,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_d9d738 stopped at step 9 — after step 9 the page did not show \"- combobox \\\"Labels Clear labels bug documentation enhancement priority-high\\\"\" / \"- listbox \\\"Clear labels bug documentation enhancement priority-high\\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "reason": "after step 9 the page did not show \"- combobox \\\"Labels Clear labels bug documentation enhancement priority-high\\\"\" / \"- listbox \\\"Clear labels bug documentation enhancement priority-high\\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    },
+    {
+      "flow": "fwgt12",
+      "step": "04-open",
+      "skill": "s_e960c8",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.locator('#_aria_dropdown_menu_85 > div:nth-of-type(2) > a:nth-of-type(2)')",
+      "fallbackUsed": "elementAt(1098, 718) /* link */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    },
+    {
+      "flow": "fwgt12",
+      "step": "04-open",
+      "skill": "s_e960c8",
+      "atStep": "4",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.getByRole('heading', { name: 'fwgt12-n2 Bench Issue #4', exact: true })",
+      "fallbackUsed": "page.locator('#issue-title-display > h1')",
+      "fallbackIndex": 2,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    },
+    {
+      "flow": "fwgt12",
+      "step": "04-open",
+      "skill": "s_e960c8",
+      "atStep": "7",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.locator('#issuecomment-3 > span:nth-of-type(2) > a')",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    },
+    {
+      "flow": "fwgt12",
+      "step": "04-open",
+      "skill": "s_e960c8",
+      "atStep": "9",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.locator('#issuecomment-3 > span:nth-of-type(2) > a')",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    },
+    {
+      "flow": "fwgt12",
+      "step": "07-change",
+      "skill": "s_c55944",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByRole('heading', { name: 'fwgt12-n2 Bench Issue #4', exact: true })",
+      "fallbackUsed": "page.locator('#issue-title-display > h1')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues?state=open",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues?state=open"
+    }
+  ],
+  "wallMs": 147943,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 346582,
+    "completionTokens": 8450,
+    "cachedTokens": 314496
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 346582,
+      "completionTokens": 8450,
+      "cachedTokens": 314496
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

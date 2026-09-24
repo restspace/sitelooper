@@ -1,0 +1,106 @@
+{
+ "id": "s_47cb10",
+ "origin": "http://127.0.0.1:8095",
+ "template": "Sign in to the Gitea instance at {{v1}} with username {{v2}} and password {{v3}} (type the password text exactly as given, including the braces). Then navigate to the repository bench/bench-repo, open its Issues list filtered to open issues, and report the titles of all open issues whose title starts with 'Seed:', exactly as displayed.",
+ "params": {
+  "v1": {
+   "example": "http://127.0.0.1:8095/",
+   "usedIn": [
+    2
+   ]
+  },
+  "v2": {
+   "example": "admin",
+   "usedIn": []
+  },
+  "v3": {
+   "example": "{{env:APP_PASSWORD}}",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8095/"
+ },
+ "steps": [
+  {
+   "tool": "read",
+   "args": {
+    "what": "url"
+   },
+   "locators": {},
+   "label": "initial_url"
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e10"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "Sign In"
+     },
+     {
+      "kind": "css",
+      "selector": "#navbar > div:nth-of-type(2) > a"
+     },
+     {
+      "kind": "point",
+      "x": 1223,
+      "y": 25,
+      "w": 93.5,
+      "h": 36,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/user/login",
+    "addedContains": [
+     "- heading \"Sign In\"",
+     "- textbox \"Username or Email Address\"",
+     "- link \"Forgot password?\"",
+     "- textbox \"Password\"",
+     "- checkbox \"Remember This Device\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-24T21:34:15.169Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4,
+  "lastUsed": "2026-09-24T21:48:28.061Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_7dcd84",
+  "index": 0,
+  "of": 4
+ },
+ "provenance": {
+  "session": "fwgt12-n1",
+  "instruction": "Sign in to the Gitea instance at http://127.0.0.1:8095/ with username admin and password {{env:APP_PASSWORD}} (type the password text exactly as given, including the braces). Then navigate to the repository bench/bench-repo, open its Issues list filtered to open issues, and report the titles of all open issues whose title starts with 'Seed:', exactly as displayed.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-24T21:34:15.169Z"
+ },
+ "revision": 3
+}
