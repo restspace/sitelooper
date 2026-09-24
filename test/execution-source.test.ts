@@ -150,7 +150,7 @@ describe('standalone execution source', () => {
     expect(source).toContain('const recipeBook = snapshotBook(RECIPES);');
     expect(source.indexOf('// Shared execution source: recipes.ts.')).toBeLessThan(source.indexOf('const recipeBook = snapshotBook(RECIPES);'));
     expect(source).toContain('const attempt = await fillWithRecipe(loc.page(), loc, value, recipeBook);');
-    expect(source).toMatch(/await type\(hit\d+\.locator, 'typed ' \+ \(await totpCode\(process\.env\['TEST_TOTP'\], 'TEST_TOTP'\)\), \{ delay: 5 \}\)\.catch\(actionFailed\);/);
+    expect(source).toMatch(/async \(\) => await type\(hit\d+\.locator, 'typed ' \+ \(await totpCode\(process\.env\['TEST_TOTP'\], 'TEST_TOTP'\)\), \{ delay: 5 \}\)\)\.catch\(actionFailed\);/);
     expect(source).toContain('const attempt = await typeWithRecipe(loc.page(), loc, text, recipeBook, { timeout: TYPE_TIMEOUT_MS, delay: opts.delay ?? TYPE_DELAY_MS });');
     expect(source).toMatch(/await select\(hit\d+\.locator, 'Option', '17'\)\.catch\(actionFailed\);/);
     // ...and every state-changing action observed from just before it dispatches (the shared action module).

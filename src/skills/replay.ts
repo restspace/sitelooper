@@ -47,7 +47,7 @@ import { dismissalAlreadyInEffect, effectExpectation, expectedChangesVerdict, li
 export { lineShows, type LineShowsOptions } from '../execution/snapshot.js';
 export { consequentialExpectations, isEchoLine } from '../execution/expect.js';
 import { candidateNames, echoVerdict, noteInteraction, setsSomething } from '../execution/echo.js';
-import { documentOf, fillLost, noteFill, rearmStandingFills, restoreStandingFills, standingFills, standingFillsLost } from '../execution/refill.js';
+import { documentOf, fillLost, guardedTyping, noteFill, rearmStandingFills, restoreStandingFills, standingFills, standingFillsLost } from '../execution/refill.js';
 import { hasTotpMarker, resolveSecrets, resolveSecretsAsync } from '../shared/secrets.js';
 import { hideBefore, hideEffectLines, hideVerdict, toggleAlreadyShown, toggleEffectLines } from '../execution/toggle.js';
 import { mayNavigateToDestination, navigateToDestination, textHeldElsewhere } from '../execution/recover.js';
@@ -1191,7 +1191,16 @@ export async function replaySkill(
           // The step's expected effect is what its action observation polls for
           // (effect-verified), in the step's own line dialect.
           const expect = effectExpectation(page, step.expect?.addedContains, params, dialectOf(step));
-          const value = await opts.exec(step.tool, args, resolved, { skill: skill.id, step: failIndex }, expect ? { expect } : undefined);
+          const dispatch = () => opts.exec(step.tool, args, resolved, { skill: skill.id, step: failIndex }, expect ? { expect } : undefined);
+          // A `type` never lands on a copy of its own value, and a typed or
+          // filled field holding its value twice over stops (the shared
+          // guardedTyping, which the artifact calls around its own dispatch;
+          // espocrm fwec10 saved 1,250,012,500 for 12500).
+          const typed = step.tool === 'type' ? args.text : step.tool === 'fill' ? args.value : undefined;
+          const value =
+            typeof typed === 'string' && resolved.target
+              ? await guardedTyping(standing, resolved.target, typed, step.tool, (w) => res.warnings.push(`step ${tag}: ${w}`), dispatch)
+              : await dispatch();
           if (value.outcome) res.outcome = value.outcome;
           const landed = await landing();
           if (landed && 'error' in landed) {

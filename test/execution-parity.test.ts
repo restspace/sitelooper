@@ -4314,6 +4314,29 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     }, 240_000);
 
     /**
+     * Round 57, snipe-it fwsi9 step 12: the recording Ctrl+clicked a profile
+     * link, saved a popup effect, and went on in the new tab. A tab opened
+     * that way has no opener, so no `popup` event reaches the page: replay
+     * said "none opened within 5000ms" with two pages open, and everything
+     * after ran stranded on page 0. Both runners must take the one page that
+     * appeared, as the recorder credited it (tools.ts pageContextOf).
+     */
+    it('both runners follow the tab a Ctrl+click opened, which has no opener', async () => {
+      const steps: SkillStep[] = [
+        { tool: 'goto', args: { url: `${origin}/opener-plain` }, locators: {} },
+        { tool: 'modifier_click', args: { target: '@e1', modifiers: ['Control'] }, locators: { target: role('Open approval', 'link') }, effect: { kind: 'popup' } },
+        { tool: 'click', args: { target: '@e2' }, locators: { target: role('Approve') }, page: 1 },
+      ];
+      const flow = contextProcedure('s_ctrl_popup', steps);
+      const { replay, emitted, replayLog, emittedLog } = await bothOf(flow.skill, flow.spec, {});
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      await new Promise((r) => setTimeout(r, 300));
+      expect(replayLog).toEqual(['approve']);
+      expect(emittedLog).toEqual(['approve']);
+    }, 240_000);
+
+    /**
      * ghost fwgh6-n1 step 63: the tab its click opened arrived after the
      * capture, so the recording wrote no popup effect, only the later steps'
      * `page: 1`. Compile credits the popup to the click (creditUncreditedPopups),
@@ -5282,5 +5305,52 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(replayMs, 'the daemon waited out a hover that was only a probe').toBeLessThan(BOUND_MS);
       expect(emitted.ms, 'the artifact waited out a hover that was only a probe').toBeLessThan(BOUND_MS);
     }, 180_000);
+  });
+
+  /**
+   * Round 57, espocrm fwec10: s_7d6b2f fills Amount (step 2), an account
+   * choice empties it, and the recording TYPES the amount again (step 18,
+   * which carries no page expectation). On replay the standing-fill check put
+   * the amount back before the next click, and the type appended onto it: the
+   * app saved 1,250,012,500 for 12500, with every runner reporting success.
+   */
+  describe('a value typed onto its own restored copy (round 57, fwec10)', () => {
+    const amount = [{ kind: 'label' as const, label: 'Amount' }];
+    const steps = (mode: '' | '?sticky=1'): SkillStep[] => [
+      { tool: 'goto', args: { url: `${origin}/typed-amount${mode}` }, locators: {} },
+      { tool: 'fill', args: { target: '@e1', value: '{{v1}}' }, locators: { target: amount } },
+      { tool: 'type', args: { target: '@e2', text: 'Bench Account' }, locators: { target: [{ kind: 'label', label: 'Account' }] } },
+      { tool: 'click', args: { target: '@e3' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Pick' }] } },
+      { tool: 'type', args: { target: '@e1', text: '{{v1}}' }, locators: { target: amount } },
+      { tool: 'click', args: { target: '@e4' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Save' }] } },
+    ];
+    const run = (mode: '' | '?sticky=1') => {
+      const params: Record<string, SkillParam> = { v1: { example: '12500', usedIn: [2, 5] } };
+      const skill: Skill = { ...skillOf(steps(mode)), params };
+      const base = specOf(steps(mode));
+      const spec: SpecFlow = { ...base, steps: [{ ...base.steps[0], params: { v1: '12500' }, segments: [{ ...base.steps[0].segments[0], params }] }] };
+      return bothOf(skill, spec, { v1: '12500' });
+    };
+
+    it('both runners save the value once, clearing the restored copy before typing it', async () => {
+      const { replay, emitted, replayLog, emittedLog } = await run('');
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replayLog).toEqual(['commit:opportunity:12500']);
+      expect(emittedLog).toEqual(['commit:opportunity:12500']);
+      for (const warnings of [replay.warnings, emitted.warnings]) {
+        expect(warnings?.some((w) => /already held the value this type enters/.test(w)), JSON.stringify(warnings)).toBe(true);
+      }
+    }, 120_000);
+
+    it('both runners stop, and save nothing, when the field ends up holding its value twice', async () => {
+      const { replay, emitted, replayLog, emittedLog } = await run('?sticky=1');
+      expect(replay.ok).toBe(false);
+      expect(emitted.ok).toBe(false);
+      expect(replay.reason).toMatch(/holds the value it was given twice over \("1250012500" for "12500"\)/);
+      expect(emitted.reason).toMatch(/holds the value it was given twice over \("1250012500" for "12500"\)/);
+      expect(replayLog).toEqual([]);
+      expect(emittedLog).toEqual([]);
+    }, 120_000);
   });
 });

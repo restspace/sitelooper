@@ -325,3 +325,107 @@ export async function fillLost(page: Page, before: number | null, url: string): 
   const doc = await documentOf(page);
   return doc !== null && doc !== before && page.url() === url;
 }
+
+/**
+ * A VALUE TYPED ONTO ITS OWN RESTORED COPY (round 57, espocrm fwec10). n1
+ * filled Amount "12500", choosing the account then emptied the field, and the
+ * model typed the amount again — so s_7d6b2f fills it at step 2 AND types it
+ * at step 18. On replay the standing-fill check refilled the emptied field
+ * before the next click, and step 18's `type` (keys, which never clear)
+ * APPENDED: the app saved 1,250,012,500, both replays and the compiled run
+ * reported success, and only the external verifier saw it.
+ *
+ * guardedTyping wraps a recorded `type` or `fill`, the same in both runners:
+ *  - ahead of a `type`, the field is cleared when it already holds the value
+ *    about to be typed (sameValue: keys typed onto their own value can only
+ *    double it), or when this segment filled that very element (the ledger,
+ *    standing or taken by the last submit — the recording typed the whole
+ *    value into what the app had left empty);
+ *  - after either, the field's resulting value is judged (valueDoubled): a
+ *    field holding the given value twice over is stopped, never saved.
+ * Only a plain input or textarea is asked, and a value carrying a `{{…}}`
+ * marker (a secret, a one-time code) is never compared: the runners hold it
+ * in different forms. `warn` is told when a field was cleared.
+ */
+export async function guardedTyping<T>(
+  ledger: StandingFills | null,
+  locator: Locator,
+  value: string,
+  tool: string,
+  warn: (warning: string) => void,
+  dispatch: () => Promise<T>,
+): Promise<T> {
+  const comparable = value !== '' && !value.includes('{{');
+  if (tool === 'type' && comparable) {
+    const held = await inputValueNow(locator);
+    if (held) {
+      const own = sameValue(held, value);
+      const filledHere = !own && ledger !== null && (await filledBy(ledger, locator));
+      if (own || filledHere) {
+        await locator.fill('', { timeout: DEFAULT_ACTION_TIMEOUT_MS });
+        warn(
+          own
+            ? 'the field already held the value this type enters (restored after the recording saw it emptied), so it was cleared first rather than typed onto'
+            : 'this procedure filled the field earlier, so it was cleared before typing, as the recording typed into it empty',
+        );
+      }
+    }
+  }
+  const result = await dispatch();
+  if (comparable && (tool === 'type' || tool === 'fill')) {
+    const doubled = await valueDoubled(locator, value);
+    if (doubled) throw new Error(doubled);
+  }
+  return result;
+}
+
+/** Whether a fill this segment made (standing, or taken by the last submit) was of this very element. */
+async function filledBy(ledger: StandingFills, locator: Locator): Promise<boolean> {
+  const fills = [...ledger.fills, ...(ledger.submitted?.fills ?? [])];
+  for (const fill of fills) {
+    try {
+      if ((await fill.locator.count()) !== 1) continue;
+      const other = await fill.locator.elementHandle({ timeout: STANDING_FILL_PROBE_MS });
+      if (!other) continue;
+      const same = await locator.evaluate((el, o) => el === o, other, { timeout: STANDING_FILL_PROBE_MS });
+      await other.dispose();
+      if (same) return true;
+    } catch {
+      // a fill whose field is gone is no evidence either way
+    }
+  }
+  return false;
+}
+
+/**
+ * The stop for a field that holds the value it was given TWICE over: the
+ * value's letters and digits occur twice in what the field shows, where the
+ * value itself holds them once ("1,250,012,500" for "12500"). Null when the
+ * field is not a plain input or textarea, is a password field, or holds the
+ * value once, in whatever formatting the page gives it.
+ */
+export async function valueDoubled(locator: Locator, value: string): Promise<string | null> {
+  const alnum = (t: string) => t.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '');
+  const want = alnum(value);
+  if (!want) return null;
+  let held: string | null;
+  try {
+    if ((await locator.count()) !== 1) return null;
+    held = await locator.evaluate(
+      (el) => (el.tagName === 'TEXTAREA' || (el.tagName === 'INPUT' && (el as HTMLInputElement).type !== 'password') ? (el as HTMLInputElement).value : null),
+      undefined,
+      { timeout: STANDING_FILL_PROBE_MS },
+    );
+  } catch {
+    return null;
+  }
+  if (!held) return null;
+  const count = (text: string) => {
+    let n = 0;
+    for (let at = text.indexOf(want); at >= 0; at = text.indexOf(want, at + want.length)) n++;
+    return n;
+  };
+  if (count(alnum(held)) < 2) return null;
+  const show = (t: string) => (t.length > 40 ? `${t.slice(0, 40)}…` : t);
+  return `the field holds the value it was given twice over (${JSON.stringify(show(held))} for ${JSON.stringify(show(value))}) — it was typed onto a copy already there, and is not saved`;
+}

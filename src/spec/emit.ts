@@ -2548,15 +2548,22 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
       break;
     }
     case 'fill':
-      // Through the inlined helper, never `locator.fill`: see its comment.
-      out.push(`await fill(${target}, ${actSrc(str('value'))});`);
-      break;
     case 'type': {
-      // Through the inlined helper, never `pressSequentially` alone: a recorded
-      // `type` into an editor or an aria-combobox is recipe-driven in the
-      // daemon, and was the one action the artifact drove past the recipe.
-      const delay = num('delay_ms');
-      out.push(`await type(${target}, ${actSrc(str('text'))}${delay === undefined ? '' : `, { delay: ${delay} }`});`);
+      // Through the inlined helpers, never `locator.fill` or `pressSequentially`
+      // alone: a recorded `type` into an editor or an aria-combobox is
+      // recipe-driven in the daemon, and was the one action the artifact drove
+      // past the recipe. Both inside the shared guardedTyping replay wraps its
+      // own dispatch in: a `type` never lands on a copy of its own value, and a
+      // field left holding its value twice over stops (espocrm fwec10).
+      const key = step.tool === 'fill' ? 'value' : 'text';
+      const delay = step.tool === 'type' ? num('delay_ms') : undefined;
+      const call =
+        step.tool === 'fill'
+          ? `fill(${target}, ${actSrc(str('value'))})`
+          : `type(${target}, ${actSrc(str('text'))}${delay === undefined ? '' : `, { delay: ${delay} }`})`;
+      if (ctx.standing) ctx.standingUsed = true;
+      const where = `${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}: `;
+      out.push(`await guardedTyping(${ctx.standing ?? 'null'}, ${target}, ${src(str(key))}, ${q(step.tool)}, (w) => logWarning(${q(where)} + w), async () => await ${call});`);
       break;
     }
     case 'press':
