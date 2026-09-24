@@ -177,6 +177,19 @@ describe('textMints: a record number the run minted as page text (fwrd85)', () =
     expect(textMints(recording)).toEqual(['RD-1015']);
   });
 
+  it('is not undone by what an eval returned before the save (phase A: evalResult is not a sighting)', () => {
+    // flow.ts shownBefore searched the whole serialised step, so an eval's
+    // returned text, which no replay produces, would have counted as the page
+    // showing RD-1015 before the save and cancelled the mint.
+    const probe: RecordedStep = { ...step('eval', { expression: "[...document.querySelectorAll('td')].map(c => c.innerText)" }), evalResult: '["RD-1014","RD-1015"]' };
+    const withProbe = [...signin, create[0], probe, ...create.slice(1), ...open, ...reportEntries];
+    expect(textMints(withProbe)).toEqual(['RD-1015']);
+    // A buildFlow over it threads exactly what it threads without the probe.
+    const opts = { name: 'fwrd85', origin: ORIGIN, startUrl: `${ORIGIN}/`, vars: { runid: 'fwrd85-n1' }, session: 'fwrd85-n1' };
+    const refs = (e: RecordedEntry[]) => buildFlow(e, opts)!.steps.map((s) => [s.id, s.instruction, s.params]);
+    expect(refs(withProbe)).toEqual(refs(recording));
+  });
+
   it('does not mark a seed ref first shown by a page the sign-in crossed to, nor a price no instruction names', () => {
     // RD-1014 appears first on the sign-in's landing; named later, it is
     // still the list's seed record.

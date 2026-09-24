@@ -988,7 +988,9 @@ function shownBefore(entries: readonly RecordedEntry[], at: number, value: strin
     const e = entries[k];
     if (e.k === 'report' && (hit(e.summary) || Object.values(e.values ?? {}).some(hit))) return true;
     if (e.k === 'instruction' && page(e)) return true;
-    if (e.k === 'step' && hit(JSON.stringify(e))) return true;
+    // What an eval RETURNED is no sighting: no replay runs it (phase A,
+    // RecordedStep.evalResult). Everything else the step recorded is.
+    if (e.k === 'step' && hit(JSON.stringify(e.evalResult === undefined ? e : { ...e, evalResult: undefined }))) return true;
   }
   const own = entries[at];
   return own.k === 'instruction' && page(own);

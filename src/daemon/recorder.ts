@@ -13,6 +13,7 @@ import { isRefTarget, refHint, refOf, resolveTarget } from './refs.js';
 import { tagComponent } from '../skills/components.js';
 import { GENERATED_ID_HEX_RUN, skeleton } from '../skills/shape.js';
 import { flattenContainedComposite, type Report } from '../agent/report.js';
+import { evalResultForRecord } from './eval-result.js';
 
 /**
  * One way of finding an element, in a form that can be rebuilt into a Locator
@@ -285,6 +286,14 @@ export interface RecordedStep {
    * /hardware/4` was the saved asset's "Click here to view" link).
    */
   linkedFrom?: LocatorExpr;
+  /**
+   * For an `eval`: what it returned, bounded and credential-free
+   * (eval-result.ts evalResultForRecord). Audit evidence ONLY — what the model
+   * learned by a step no replay runs. It is deliberately not `result`: ledger
+   * shownIn, flow shownBefore/textMints and the read-back cascade read that,
+   * and an eval's answer is no source a replay has (fwsi7's href).
+   */
+  evalResult?: string;
   /** Set by compile (collapseTogglePairs), never by the recorder: see SkillStep.toggle. */
   toggle?: true;
   /** Set by compile (carryOpener), never by the recorder: see SkillStep.closedBefore. */
@@ -719,7 +728,7 @@ export class ScriptRecorder {
       ...(extra.effect ? { effect: extra.effect } : {}),
       ...(extra.afterUrl ? { afterUrl: extra.afterUrl } : {}),
     };
-    this.append(RESULT_TOOLS.has(step.tool) ? { ...entry, result } : entry);
+    this.append(RESULT_TOOLS.has(step.tool) ? { ...entry, result } : step.tool === 'eval' ? { ...entry, evalResult: evalResultForRecord(result) } : entry);
   }
 }
 

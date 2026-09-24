@@ -41,6 +41,7 @@ import {
   type RerecordRun,
 } from './spec/rerecord.js';
 import os from 'node:os';
+import { shellExpansionRefusal } from './shared/shell-expansion.js';
 
 const USAGE = `sitelooper ? author browser tests with an agent; run compiled tests with Playwright
 
@@ -117,7 +118,8 @@ Global options:
       anthropic; pick one with SITELOOPER_PROVIDER. doctor says which is in use and why.
   Credentials: use {{env:NAME}} in instructions ({{totp:NAME}} for a one-time code from a TOTP seed); set NAME before starting the session.
       Pass the marker exactly, in SINGLE quotes (do 'sign in with {{env:APP_PASSWORD}}'), never $NAME: a shell
-      expands $NAME inside double quotes and the secret itself is recorded.
+      expands $NAME inside double quotes and the secret itself is recorded. A "$0" arrives as the shell's
+      name ("total /bin/sh.00"), so an argument or --stdin text that holds one is refused (--allow-shell-path overrides).
   Project defaults: sitelooper.config.json (nearest ancestor); CLI flags override them.
 
 Exit codes: 0 success ? 1 agent/recording failure ? 2 unavailable/invalid input
@@ -175,6 +177,7 @@ function parseArgv(argv: string[]): ParsedArgs {
    */
   const booleanFlags = new Set([
     'all',
+    'allow-shell-path',
     'append',
     'clear',
     'dry-run',
@@ -516,15 +519,22 @@ async function main(): Promise<void> {
   const onProgress = verbose || flags.has('progress') ? (m: string) => console.error(`  · ${m}`) : undefined;
 
   if (flags.has('force')) fail('--force was split: use --allow-demoted to permit a demoted pin, or --overwrite-spec to replace your spec', 2);
+  let instructionText: string | undefined;
   if (flags.has('instruction-file') || flags.has('stdin')) {
     if (!['do', 'rerecord'].includes(command)) fail('--instruction-file and --stdin are supported by do and rerecord', 2);
     if (flags.has('instruction-file') && flags.has('stdin')) fail('choose --instruction-file or --stdin', 2);
     if ((command === 'do' && positional.length) || flags.has('instruction')) fail('supply the instruction only once', 2);
     const instruction = fs.readFileSync(flags.has('stdin') ? 0 : String(flags.get('instruction-file')), 'utf8').trim();
     if (!instruction) fail('instruction input is empty', 2);
+    instructionText = instruction;
     if (command === 'do') positional.push(instruction);
     else flags.set('instruction', instruction);
   }
+  // A shell's `$0` in any argument or in the instruction text: fwrd85's
+  // "total $0.00" in double quotes was recorded as "total /bin/sh.00". Every
+  // command, before anything runs or is recorded; see shared/shell-expansion.ts.
+  const shellRefusal = flags.has('allow-shell-path') ? null : shellExpansionRefusal(process.argv.slice(2), instructionText);
+  if (shellRefusal) fail(shellRefusal, 2);
 
   // Commands that don't need (or must not start) a daemon:
   if (command === 'init') {
