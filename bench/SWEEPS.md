@@ -250,3 +250,22 @@ alongside round 57's first batch. Corpus: 0 status changes against r55.
   (`unanswered`) and an export warning, not a verdict.
 - **runners** — a count read that matches nothing, with its scope on the page, publishes "0"; a fill whose
   document was replaced under its own check is refilled once.
+
+Main re-verified (verify-round56d, 1a464d5, Chromium revision 1228 installed and used): 2334 main /
+2520 browser / 140 parity, 0 failures; corpus 0 status changes. The round-56c run's one parity failure
+("both runners bound a navigation that never completes") was chromium-1194 on the box, not the code.
+
+## Round 57 (2aa57e8): third ten-app confirmation, two batches of five — 5/10 green
+
+| round | runid | commit | app | verified | replay model-free | compiled | green | notes |
+|---|---|---|---|---|---|---|---|---|
+| 57 | fwrd89 | 2aa57e8 | rd | 6/6 ×3 | yes | pass 6/6 | **yes** | unanswered: 06-delete final_status |
+| 57 | fwod83 | 2aa57e8 | od | 6/6 ×3 | yes | pass 6/6 | **yes** | first odoo green since round 49; the selection-as-source fix held (no unsourced-ref) |
+| 57 | fwop12 | 2aa57e8 | op | 7/7 ×3 | yes | pass 5/7+2 n/a | **yes** | no false partial |
+| 57 | fwvk9 | 2aa57e8 | vk | 7/7 ×3 | yes | pass 5/7+2 n/a | **yes** | round 56's hide-click and refill fixes held (was 48/42 turns) |
+| 57 | fwgt9 | 2aa57e8 | gt | 7/7 ×3 | yes | pass 5/7+2 n/a | **yes** | several unanswered asks the objectives don't score |
+| 57 | fwgr70 | 2aa57e8 | gr | 6/6 ×3 | yes | FAIL 1/6 | no | the artifact's hover has no timeout: syntheticHover's bare `locator.hover()` gets the library's 30s default in the daemon but Playwright Test's unbounded actionTimeout in the artifact; hung on a never-actionable panel-menu button until the 300s budget. The retry then met the first attempt's untagged dashboard (reset fixed db11c08) |
+| 57 | fwkb41 | 2aa57e8 | kb | 6/6, 5/6, 5/6 | yes | pass 4/6+2 n/a | no | obj 1 columns: captureReadBack counts NON-rendered matches and Kanboard renders each column title twice (header + hidden collapsed list), so the composite never pins — pruned in every kanboard flow since fwkb18. Also new_task_numeric_id "4" shown only as "#4" and as task_id=4 (idPositionPart admits only `id`) |
+| 57 | fwec10 | 2aa57e8 | ec | 7/7, 6/7, 6/7 | yes | pass 4/7 | no | unanswered 02-create stage; diagnosis pending |
+| 57 | fwgh12 | 2aa57e8 | gh | 7/7 ×3 | no: 8 / 7 turns | FAIL | no | green in round 56; diagnosis pending |
+| 57 | fwsi9 | 2aa57e8 | si | 7/7 ×3 | no: 67 / 42 turns | refused | no | diagnosis pending |
