@@ -1,0 +1,82 @@
+
+[sweep] run 1/3: fwvk10-n1 (store: /home/user/sitelooper/bench/results/fwvk10-skills)
+[harness] vikunja: defaulting APP_URL
+[harness] vikunja: defaulting APP_EMAIL
+[harness] vikunja: defaulting APP_PASSWORD
+[reset] vikunja: no leftover bench tasks
+[harness] vikunja responded 200 at http://127.0.0.1:8096/
+stopped: fwvk10-n1
+  flow "fwvk10" saved: 2 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwvk10.json
+  warning: note: 01-signin no longer publishes seed_task_count — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 20 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "Bench Project" (output) in "Sign in with username admin and password exactly the text {{env:APP_PASSWORD}} (type that literal string, it gets substituted when typed). Then open the project"
+  flow.steps[0].instruction: "admin" (output) in "Sign in with username admin and password exactly the text {{env:APP_PASSWORD}} (type that literal string, it gets substituted when typed). Then open the project"
+  flow.steps[0].params.v1: "admin" (output) in "admin"
+  flow.steps[1].instruction: "Bench Project" (output) in "In project Bench Project, create a new task titled exactly '{{runid}} Bench Task' with description containing '{{runid}}'. Set its due date to 2026-12-31, prior"
+  flow.steps[1].instruction: "High" (output) in "In project Bench Project, create a new task titled exactly '{{runid}} Bench Task' with description containing '{{runid}}'. Set its due date to 2026-12-31, prior"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwvk10-n1 stop=completed
+turns=4 wall=180.1s
+commands=3 cmdTime=170.7s cmdBytes=2121 timeouts=0
+orchestrator in=3232 cw=0 cr=8256 out=472
+inner prompt=965016 cached=907136 completion=14183
+spend=$0.0288 maxUsd=3
+learn: A_n=0 replayed=0/2 full=0 repaired=0 compiled=2 variants=0
+-> /home/user/sitelooper/bench/results/fwvk10-n1-sitelooper-result.json
+
+fwvk10-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — project=Bench Project, description includes runid=true
+  obj 3: PASS — due date=2026-12-31T12:00:00Z, want 2026-12-31
+  obj 4: PASS — priority=3 (want 3 = High)
+  obj 5: PASS — labels=Backend#1; seeded Backend is #1
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — identifier BENCH-4 reported
+
+[sweep] run 2/3: fwvk10-n2 (replay flow fwvk10, no orchestrator)
+[reset] vikunja: deleted 1 leftover bench task(s)
+[reset] vikunja: re-created "Seed: ship repaired device" as BENCH-4 so the next task is BENCH-5
+
+fwvk10-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — project=Bench Project, description includes runid=true
+  obj 3: PASS — due date=2026-12-31T12:00:00Z, want 2026-12-31
+  obj 4: PASS — priority=3 (want 3 = High)
+  obj 5: PASS — labels=Backend#1; seeded Backend is #1
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — identifier BENCH-5 reported
+
+[sweep] run 3/3: fwvk10-n3 (replay flow fwvk10, no orchestrator)
+[reset] vikunja: deleted 1 leftover bench task(s)
+[reset] vikunja: re-created "Seed: ship repaired device" as BENCH-5 so the next task is BENCH-6
+
+fwvk10-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — project=Bench Project, description includes runid=true
+  obj 3: PASS — due date=2026-12-31T12:00:00Z, want 2026-12-31
+  obj 4: PASS — priority=3 (want 3 = High)
+  obj 5: PASS — labels=Backend#1; seeded Backend is #1
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — identifier BENCH-6 reported
+
+Learning sweep fwvk10 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwvk10-n1' │ '7/7'    │ 'completed' │ 4     │ 3    │ 0.0288    │ 0   │ '0/2'        │ 180    │
+│ 1       │ 2 │ 'fwvk10-n2' │ '7/7'    │ 'success'   │ 0     │ 2    │ 0         │ 1   │ '2/2 (flow)' │ 28     │
+│ 2       │ 3 │ 'fwvk10-n3' │ '7/7'    │ 'success'   │ 0     │ 2    │ 0         │ 1   │ '2/2 (flow)' │ 28     │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8096
+  s_33d5b2  validated    3 steps  3/3 (100%)
+           Sign in with username {{v1}} and password exactly the text {{v2}} (type that literal string, it gets substitut…
+  s_604c81  validated    7 steps  3/3 (100%)
+           Sign in with username {{v1}} and password exactly the text {{v2}} (type that literal string, it gets substitut…
+  s_7711de  validated   32 steps  3/3 (100%)
+           In project {{v1}}, create a new task titled exactly '{{v3}}' with description containing '{{v2}}'. Set its due…
+  s_7f9d84  validated    1 steps  3/3 (100%)
+           Sign in with username {{v1}} and password exactly the text {{v2}} (type that literal string, it gets substitut…
+  s_e9233e  validated    3 steps  3/3 (100%)
+           In project {{v1}}, create a new task titled exactly '{{v3}}' with description containing '{{v2}}'. Set its due…
+store: /home/user/sitelooper/bench/results/fwvk10-skills
+
+summary: /home/user/sitelooper/bench/results/fwvk10-sweep.json

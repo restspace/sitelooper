@@ -1,0 +1,188 @@
+{
+  "name": "fwvk10",
+  "origin": "http://127.0.0.1:8096",
+  "startUrl": "http://127.0.0.1:8096/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in with username admin and password exactly the text {{env:APP_PASSWORD}} (type that literal string, it gets substituted when typed). Then open the project Bench Project, list the titles of tasks whose title starts with 'Seed:' exactly as shown, and report them.",
+      "skill": "s_33d5b2",
+      "params": {
+        "v1": "admin",
+        "v2": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "project",
+        "seed_task_titles_1",
+        "seed_task_titles_2",
+        "seed_task_titles_3"
+      ],
+      "recorded": {
+        "project": "Bench Project",
+        "seed_task_count": "3",
+        "seed_task_titles_1": "Seed: triage inbox",
+        "seed_task_titles_2": "Seed: order missing parts",
+        "seed_task_titles_3": "Seed: ship repaired device",
+        "url": "http://127.0.0.1:8096/projects/2/5",
+        "url.p1": "2",
+        "url.p2": "5"
+      },
+      "route": "http://127.0.0.1:8096/projects/:id/:id",
+      "outputEvidence": {
+        "project": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_task_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "seed_task_titles_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_task_titles_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_task_titles_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.p1": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.p2": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "In project Bench Project, create a new task titled exactly '{{runid}} Bench Task' with description containing '{{runid}}'. Set its due date to 2026-12-31, priority to High, and attach the EXISTING label 'Backend' (choose from suggestions, do not create a new one). Then add a comment on the task containing the text '{{runid}}'. Finally open the task's detail page and report: the title, the task identifier shown as BENCH-<number>, the due date, the priority, the attached label, and the comment text.",
+      "skill": "s_e9233e",
+      "params": {
+        "v1": "Bench Project",
+        "v3": "{{runid}} Bench Task",
+        "v2": "{{runid}}",
+        "v4": "31",
+        "v5": "High",
+        "v6": "Backend"
+      },
+      "outputs": [
+        "title",
+        "identifier",
+        "priority",
+        "label",
+        "description",
+        "comment",
+        "comment_author",
+        "task_detail_url",
+        "due_date_picker_label",
+        "run_ref",
+        "due_date"
+      ],
+      "recorded": {
+        "title": "fwvk10-n1 Bench Task",
+        "identifier": "BENCH-4",
+        "priority": "High",
+        "label": "Backend (existing, chosen from suggestions)",
+        "description": "fwvk10-n1 task description",
+        "comment": "fwvk10-n1 comment on this task",
+        "comment_author": "admin",
+        "task_detail_url": "http://127.0.0.1:8096/tasks/4",
+        "due_date_picker_label": "December 31, 2026",
+        "run_ref": "fwvk10-n1",
+        "due_date": "31 Dec 2026, 12:00:00",
+        "url": "http://127.0.0.1:8096/tasks/4",
+        "url.p1": "4"
+      },
+      "route": "http://127.0.0.1:8096/tasks/:id",
+      "outputEvidence": {
+        "title": {
+          "same": 0,
+          "differed": 1
+        },
+        "identifier": {
+          "same": 0,
+          "differed": 1
+        },
+        "priority": {
+          "same": 1,
+          "differed": 0
+        },
+        "label": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "description": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_author": {
+          "same": 1,
+          "differed": 0
+        },
+        "task_detail_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "due_date_picker_label": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "run_ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "due_date": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.p1": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwvk10-n1",
+    "created": "2026-09-24T12:27:03.831Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "seed_task_count"
+      ]
+    }
+  ]
+}
