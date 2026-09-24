@@ -745,9 +745,53 @@ export function taskConstants(
     if (value.length < 2 || out.has(value) || runSpecific?.(value)) continue;
     if (varValues.some((v) => replaceToken(value, v, ' ') !== value)) continue;
     const at = firstStatedAt(entries, value, entries.length);
-    if (at >= 0 && !reportedBefore(entries, at, value)) out.add(value);
+    if ((at >= 0 && !reportedBefore(entries, at, value)) || offeredBeforeReported(entries, value)) out.add(value);
   }
   return out;
+}
+
+/** Roles whose line lists a CHOICE the app offers: an item in an open list. */
+const OFFERED_ROLE = /^-\s*(option|menuitem|menuitemradio|menuitemcheckbox)\s+"((?:[^"\\]|\\.)*)"/;
+
+/**
+ * The OFFERED arm of taskConstants: the app LISTED the value as a choice (an
+ * option or menu item line in a recorded step's added lines), a later click
+ * of the recording picked that very item (its target names the line), and
+ * both came before any report carried the value. The run chose it from what
+ * the app offered; it did not make it.
+ *
+ * odoo fwod84-n1 03-open typed "Chair" into the product combobox, the app
+ * listed `- option "[FURN_7777] Office Chair"` (n1 line 51), the step picked
+ * it (line 52), and only the report at line 75 carried `ref_2: "FURN_7777"`.
+ * The ledger filed FURN_7777 as a run-made identifier by its shape, export's
+ * strip deleted the pick's role candidate, and the click was left with Odoo's
+ * render-counter id `#autocomplete_0_2` — which n2 missed. A record the run
+ * CREATED stays the run's: repairdesk's RD-1015 is reported by the create
+ * before any list offers it (fwrd12l, fwrd22l).
+ */
+function offeredBeforeReported(entries: readonly RecordedEntry[], value: string): boolean {
+  const lower = value.toLowerCase();
+  const carries = (s: string) => replaceToken(s.toLowerCase(), lower, ' ') !== s.toLowerCase();
+  const offered = new Set<string>();
+  for (const e of entries) {
+    if (e.k === 'report') {
+      if ((e.summary && carries(e.summary)) || Object.values(e.values ?? {}).some((v) => typeof v === 'string' && carries(v))) return false;
+      continue;
+    }
+    if (e.k !== 'step') continue;
+    // A pick of an item the app offered earlier: the click names that line.
+    if (e.tool === 'click' && offered.size) {
+      for (const c of e.locators?.target?.chain ?? []) {
+        const name = c.kind === 'role' ? c.name : c.kind === 'text' ? c.text : undefined;
+        if (name && offered.has(name.trim()) && carries(name)) return true;
+      }
+    }
+    for (const line of e.diff?.added ?? []) {
+      const m = OFFERED_ROLE.exec(line.trim());
+      if (m && carries(m[2])) offered.add(m[2].replace(/\\"/g, '"').trim());
+    }
+  }
+  return false;
 }
 
 /**

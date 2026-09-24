@@ -6,7 +6,7 @@ import { buildSystemOne, resolveSystemOneConfig, type SystemOne } from '../agent
 import { runEscalatingInstruction, type InstructionResult, type LoopActor, type SkillRecord } from '../agent/loop.js';
 import { askedOutputs, partialReasons, unansweredAsks } from './step-verdict.js';
 import { executeTool } from '../agent/tools.js';
-import { urlPattern as compiledUrlPattern, carryOpener, dropAbsentReadLocators, dropDeadReadLocators, fillParams, markReadsProven, stranded, urlMatches, urlParts } from '../skills/compile.js';
+import { urlPattern as compiledUrlPattern, carryOpener, dropAbsentReadLocators, dropDeadReadLocators, fillParams, markReadsProven, stranded, stripRunValueCandidates, urlMatches, urlParts } from '../skills/compile.js';
 import type { DriftTicket } from '../skills/repair.js';
 import type { Page } from 'playwright-core';
 import { agentGesturesOutsideReplay, bindSkill, canAdoptPin, decideRepin, instructionEntry, learnFromInstruction, matchTemplate, pinCarriesFailedStep, pinEndsElsewhere, pinStartsElsewhere, pinStatus, publishedOutputs, replayReport, selectCandidates } from '../skills/learn.js';
@@ -186,10 +186,16 @@ ${describeLeaks(leaks.slice(0, 6))}`);
     // Identifiers only, as `fatal` already insists: a reported status word
     // ("Ready") is banked as text, and stripping every candidate whose name
     // contains it ("Mark Ready") weakened chains permanently in the store.
+    // ...less the task's constants, as compile's runValues are: a value the
+    // app OFFERED before the run picked and reported it (flow.ts
+    // taskConstants; odoo fwod84-n1's FURN_7777) is catalog data. Each value
+    // carries whether evidence, not only its shape, made it an identifier —
+    // the backstop in stripRunValueCandidates reads it.
+    const constants = new Set(this.taskConstants());
     const runValues = this.ledger
       .all()
-      .filter((e) => e.kind === 'identifier' && e.value.length >= 3)
-      .map((e) => e.value);
+      .filter((e) => e.kind === 'identifier' && e.value.length >= 3 && !constants.has(e.value))
+      .map((e) => ({ value: e.value, evidence: e.basis !== 'shape' }));
     if (!runValues.length) return 0;
     let removed = 0;
     for (const skill of this.sessionSkills(flow, store)) {
@@ -197,8 +203,8 @@ ${describeLeaks(leaks.slice(0, 6))}`);
       const walk = (steps: Skill['steps']): void => {
         for (const step of steps) {
           for (const [key, chain] of Object.entries(step.locators ?? {}) as [string, LocatorCandidate[]][]) {
-            const kept = chain.filter((c) => !stranded(c, runValues));
-            if (!kept.length || kept.length === chain.length) continue;
+            const kept = stripRunValueCandidates(chain, runValues);
+            if (kept.length === chain.length) continue;
             removed += chain.length - kept.length;
             step.locators[key] = kept;
             touched = true;
