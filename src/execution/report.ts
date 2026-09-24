@@ -108,7 +108,8 @@ export function templateValue(
   const filled = fillParams(template, params);
   if (!filled || /\{\{/.test(filled)) return null;
   if (unshownLiterals(template, shown).length) return null;
-  if (opts.given && unobservedGiven(template, params, shown, opts.given).length) return null;
+  // With the run's evidence, the one classification decides (classifyReportValue).
+  if (opts.given) return classifyReportValue(template, params, shown, opts.given, { literal: opts.literal }).value;
   return filled;
 }
 
@@ -126,9 +127,9 @@ export function templateValue(
  * observed it: its words stand in one line of the page the step settled on
  * (shownForReport — the url included, so an id used only in the url is
  * observed there), or in a value a read of this run returned. A slot the
- * procedure TYPED (a setting step's `value`/`text` names it) keeps today's
- * rule: what the run put on the page is the echo rules' to judge, not this
- * one's. Otherwise the value is withheld, and said to be given, not observed.
+ * procedure TYPED (a setting step's `value`/`text` names it) is not this
+ * rule's: classifyReportValue (below) holds it to a commit (phase B). Otherwise
+ * the value is withheld, and said to be given, not observed.
  *
  * "Where the recording's read-back would look" has no recorded location for a
  * value no step reads, so the page's lines are where it looks; the page is
@@ -140,6 +141,82 @@ export function templateValue(
 export interface GivenEvidence {
   typed: readonly string[];
   live: readonly string[];
+  /**
+   * The typed slots a commit showed on THIS run (expect.ts committedSlots: a
+   * line the click's own diff added, not a control's, not a popup item).
+   * Absent means none.
+   */
+  committed?: readonly string[];
+}
+
+/*
+ * WHAT A RUN TYPED IS NOT WHAT IT OBSERVED (phase B provenance, stage 1). The
+ * given rule above used to exempt a slot the procedure typed — "the echo
+ * rules' to judge" — but the echo rules only ever see READS, so a report value
+ * made of a typed slot (`entered_title: "{{v1}}"`) published the caller's own
+ * param with no page, read or commit check, in both runners. The census
+ * (bench/provenance-census.mjs, 308 published runs) found 389 stored template
+ * values carrying a typed slot; a hard effect line after the typing covered
+ * only 121, and among the rest were sign-in passwords published as findings
+ * (fwrd78, fwrd79, fwrd83: `password: "bench-pass-1234"`).
+ *
+ * So a typed slot is reported only where this run COMMITTED it — a click's own
+ * diff showed it outside its control (GivenEvidence.committed) — or a read of
+ * this run that was not an echo returned it. Otherwise the value is an ECHO of
+ * the run's own typing: withheld from the report, still given to a later
+ * step's reference, as an echoed read is. Not partial: echoes are not a
+ * failure of the step (step-verdict.ts, round 55), only not a finding.
+ */
+
+/** How a report value stands on this run: the one classification both runners publish by. */
+export type ReportClass = 'observed' | 'committed' | 'echo' | 'given' | 'withheld';
+
+export interface ReportVerdict {
+  /** The value published as a finding, or null. */
+  value: string | null;
+  class: ReportClass;
+  /** For `echo` and `given`: the slots this run did not observe. */
+  slots: string[];
+}
+
+/**
+ * THE classification of one report-template value on this run, shared by the
+ * daemon (learn.ts synthesize, server.ts's already-satisfied guard) and the
+ * artifact (emit.ts reportTemplateLines, satisfiedGuard):
+ *  - withheld: nothing to publish (templateValue: a recorded literal, an
+ *    unbound or empty slot, recorded text the page does not show);
+ *  - echo: a slot this run typed that nothing committed and no read returned;
+ *  - given: a param-only value's slot this run never observed (round 60);
+ *  - committed: every typed slot committed (or read back outside its control);
+ *  - observed: no typed slot, and everything else stands on this run's page or reads.
+ */
+export function classifyReportValue(
+  template: string,
+  params: Record<string, string>,
+  shown: readonly string[] | null | undefined,
+  evidence: GivenEvidence,
+  opts: { literal?: boolean } = {},
+): ReportVerdict {
+  const whole = templateValue(template, params, shown, opts);
+  if (whole === null) return { value: null, class: 'withheld', slots: [] };
+  const typed = new Set(evidence.typed);
+  const committed = new Set(evidence.committed ?? []);
+  const live = evidence.live.map((line) => ` ${wordRun(line)} `);
+  const typedHere = templateMarkers(template).filter((m) => m.startsWith('v') && typed.has(m));
+  const open = typedHere.filter((slot) => {
+    if (committed.has(slot)) return false;
+    const run = wordRun(params[slot] ?? '');
+    return run !== '' && !live.some((line) => line.includes(` ${run} `));
+  });
+  if (open.length) return { value: null, class: 'echo', slots: open };
+  const given = unobservedGiven(template, params, shown, evidence);
+  if (given.length) return { value: null, class: 'given', slots: given };
+  return { value: whole, class: typedHere.length ? 'committed' : 'observed', slots: [] };
+}
+
+/** The warning both runners give for a report value withheld as an echo of the run's own typing. */
+export function typedWarning(key: string): string {
+  return `report value ${key} is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)`;
 }
 
 /** A step the typed-slot walk reads: its tool, its args, and a loop's body. */

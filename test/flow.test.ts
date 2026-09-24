@@ -164,9 +164,13 @@ describe('synthesizeReport honesty', () => {
     session: 's',
   })!;
 
-  it('keeps parameter-derived and live values, drops stale recorded literals', () => {
-    // no live reads: only the parameter-derived `part` survives; ticket/price were recorded literals → dropped
-    const r = synthesizeReport(skill, { v1: 'q9 RD Part B' }, {});
+  it('keeps committed parameter-derived and live values, drops stale recorded literals', () => {
+    // no live reads: ticket/price were recorded literals → dropped. `part` is
+    // the value the procedure TYPED (v1): reported only where this run
+    // committed it (phase B provenance, stage 1) — typed alone, it is an echo.
+    const typed = synthesizeReport(skill, { v1: 'q9 RD Part B' }, {});
+    expect(typed.evidence!.values).toEqual({});
+    const r = synthesizeReport(skill, { v1: 'q9 RD Part B' }, {}, null, { committed: ['v1'] });
     expect(r.evidence!.values).toEqual({ part: 'q9 RD Part B' });
     expect(r.summary).not.toContain('RD-1017');
     expect(r.summary).not.toContain('125.00');
@@ -174,7 +178,7 @@ describe('synthesizeReport honesty', () => {
   });
 
   it('a live read-back overrides and is reported verbatim', () => {
-    const r = synthesizeReport(skill, { v1: 'q9 RD Part B' }, { price: '375.00', ticket: 'RD-1099' });
+    const r = synthesizeReport(skill, { v1: 'q9 RD Part B' }, { price: '375.00', ticket: 'RD-1099' }, null, { committed: ['v1'] });
     expect(r.evidence!.values).toMatchObject({ part: 'q9 RD Part B', price: '375.00', ticket: 'RD-1099' });
   });
 

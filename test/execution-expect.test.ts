@@ -60,7 +60,7 @@ describe('expectedChangesVerdict', () => {
     const nameOnly = await expectedChangesVerdict(recorded, p, ctx({ tool: 'select' }), seen([], ['- combobox "Project"']));
     expect(nameOnly.stop).toMatch(/did not show/);
     // in the diff
-    expect(await expectedChangesVerdict(recorded, p, ctx({ tool: 'select' }), seen(['- combobox "Project": Beta'], []))).toEqual({ warnings: [], confirmed: true });
+    expect(await expectedChangesVerdict(recorded, p, ctx({ tool: 'select' }), seen(['- combobox "Project": Beta'], []))).toEqual({ warnings: [], confirmed: true, inDiff: ['- combobox "Project": {{v1}}'] });
     // or on the live page, when the diff missed it (filling a field with the value it already held)
     expect(await expectedChangesVerdict(recorded, p, ctx({ tool: 'select' }), seen([], ['- combobox "Project": Beta']))).toEqual({ warnings: [] });
     // whitespace-insensitive, as lineShows is
@@ -71,7 +71,7 @@ describe('expectedChangesVerdict', () => {
   it('passes a recorded relative time that has aged, and does not count a line it empties', async () => {
     const recorded = ['- link "{{*}} By Bench Admin in Bench Guides - 1 minute ago {{*}}"'];
     const aged = ['- link "Seed: House style guide By Bench Admin in Bench Guides - 16 minutes ago Published"'];
-    expect(await expectedChangesVerdict(recorded, {}, ctx(), seen(aged, aged))).toEqual({ warnings: [], confirmed: true });
+    expect(await expectedChangesVerdict(recorded, {}, ctx(), seen(aged, aged))).toEqual({ warnings: [], confirmed: true, inDiff: recorded });
     expect((await expectedChangesVerdict(recorded, {}, ctx(), seen([], ['- link "Seed: House style guide By Bench Editor"']))).stop).toMatch(/did not/);
     // a line that was nothing but the time identifies no element: not looked for
     expect(await expectedChangesVerdict(['- cell "just now"'], {}, ctx(), seen([], []))).toEqual({ warnings: [] });
@@ -87,7 +87,7 @@ describe('expectedChangesVerdict', () => {
 
   it('checks the plain group in the diff, then on the live page with a warning, and stops when it is nowhere', async () => {
     const recorded = ['- heading "Saved"', '- button "Undo"'];
-    expect(await expectedChangesVerdict(recorded, {}, ctx(), seen(['- button "Undo"'], []))).toEqual({ warnings: [], confirmed: true });
+    expect(await expectedChangesVerdict(recorded, {}, ctx(), seen(['- button "Undo"'], []))).toEqual({ warnings: [], confirmed: true, inDiff: ['- button "Undo"'] });
     const onPage = await expectedChangesVerdict(recorded, {}, ctx(), seen([], ['- heading "Saved"']));
     expect(onPage.stop).toBeUndefined();
     expect(onPage.warnings).toEqual(['step 3: none of the 2 expected page change(s) appeared in the step diff (found on the page instead)']);
@@ -173,9 +173,9 @@ describe('expectedChangesVerdict', () => {
     const positional = await expectedChangesVerdict(recorded, p, ctx({ tool: 'fill', value: 'My Title', positionalResolution: true }), echoOnly);
     expect(positional.stop).toBe('after step 3 the page did not show "- heading \\"My Title\\"" as it did when recorded — the step ran but probably acted on the wrong element');
     // named: the echo is evidence
-    expect(await expectedChangesVerdict(recorded, p, ctx({ tool: 'fill', value: 'My Title', positionalResolution: false }), echoOnly)).toEqual({ warnings: [], confirmed: true });
+    expect(await expectedChangesVerdict(recorded, p, ctx({ tool: 'fill', value: 'My Title', positionalResolution: false }), echoOnly)).toEqual({ warnings: [], confirmed: true, inDiff: ['- textbox "": {{v1}}'] });
     // positional but no value (a click that resolved by position): nothing to filter by
-    expect(await expectedChangesVerdict(recorded, p, ctx({ positionalResolution: true }), echoOnly)).toEqual({ warnings: [], confirmed: true });
+    expect(await expectedChangesVerdict(recorded, p, ctx({ positionalResolution: true }), echoOnly)).toEqual({ warnings: [], confirmed: true, inDiff: ['- textbox "": {{v1}}'] });
     // positional with only the echo recorded: the old gate stands, and it says so
     const lone = await expectedChangesVerdict(['- textbox "": {{v1}}'], p, ctx({ tool: 'fill', value: 'My Title', positionalResolution: true }), echoOnly);
     expect(lone.stop).toBeUndefined();
@@ -205,7 +205,7 @@ describe('expectedChangesVerdict', () => {
     expect(absent.absentDialog).toEqual({ name: 'Discard changes?', lines: recorded });
     expect(absent.warnings).toEqual(['step 5: the recorded dialog "Discard changes?" did not open — conditional UI, treated as absent; steps that name one of its controls will be skipped']);
     // it opened: an ordinary pass
-    expect(await expectedChangesVerdict(recorded, {}, ctx(), seen(['- dialog "Discard changes?"', '- button "Discard"'], []))).toEqual({ warnings: [], confirmed: true });
+    expect(await expectedChangesVerdict(recorded, {}, ctx(), seen(['- dialog "Discard changes?"', '- button "Discard"'], []))).toEqual({ warnings: [], confirmed: true, inDiff: ['- dialog "Discard changes?"', '- button "Discard"'] });
     // only a PLAIN dialog line is conditional UI: one carrying this run's value is hard, and its absence stops
     const hard = await expectedChangesVerdict(['- dialog "Edit {{v1}}"'], { v1: 'Widget A' }, ctx(), seen([], []));
     expect(hard.stop).toMatch(/did not show "- dialog \\"Edit Widget A\\""/);
@@ -285,7 +285,7 @@ describe('expectedChangesVerdict', () => {
   it('reads the diff first: a change that landed in the diff needs no live look', async () => {
     let looked = 0;
     const obs: ChangeObservation = { added: ['- heading "Widget A"'], live: async () => { looked++; return { lines: [], complete: true }; } };
-    expect(await expectedChangesVerdict(['- heading "{{v1}}"'], { v1: 'Widget A' }, ctx(), obs)).toEqual({ warnings: [], confirmed: true });
+    expect(await expectedChangesVerdict(['- heading "{{v1}}"'], { v1: 'Widget A' }, ctx(), obs)).toEqual({ warnings: [], confirmed: true, inDiff: ['- heading "{{v1}}"'] });
     expect(looked).toBe(0);
   });
 });

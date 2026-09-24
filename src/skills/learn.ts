@@ -5,7 +5,7 @@ import type { RecordedEntry, RecordedInstruction } from '../daemon/recorder.js';
 import { compileSkills, escapeRe, fillParams, samePageContexts, sameProcedure, urlMatches, urlPattern, variantStart } from './compile.js';
 import { landedOnRecordedPage } from '../execution/gates.js';
 import type { Page } from 'playwright-core';
-import { derivesFromParams, observedSummary, referenceValue, reportNeedsPage, shownForReport, templateSource, templateValue, typedSlots, unobservedGiven, unshownLiterals, type GivenEvidence } from '../execution/report.js';
+import { classifyReportValue, derivesFromParams, observedSummary, referenceValue, reportNeedsPage, shownForReport, templateSource, templateValue, typedSlots, unshownLiterals, type GivenEvidence } from '../execution/report.js';
 import { ComponentStore, learnRecipes } from './components.js';
 import { contractOf, isVerified, pageEffectDemoted, successRate, type Skill, type SkillStore } from './store.js';
 export { pageEffectDemoted } from './store.js';
@@ -814,6 +814,12 @@ export interface ReportOptions {
    * comment s_3db36f filled is published by s_c8e15e's template).
    */
   chain?: readonly Skill[];
+  /**
+   * The typed slots a commit showed on this run (ReplayResult.committed, every
+   * segment of the chain): a slot the chain typed is reported only where one
+   * did, or a read returned it (phase B provenance, stage 1).
+   */
+  committed?: readonly string[];
 }
 
 /** What a zero-model replay reports, and what a later step's reference may use beyond it. */
@@ -829,6 +835,13 @@ export interface ReplayReport {
    * (round 60, fwgt11 07-add's issue_content_right_a_it: "bug").
    */
   given: string[];
+  /**
+   * Template keys carrying a slot the chain typed that nothing on this run
+   * committed or read back: echoes of the run's own typing, withheld from the
+   * report and still given to a later step's reference (phase B provenance,
+   * stage 1; execution/report.ts classifyReportValue).
+   */
+  typed: string[];
   /**
    * For a later step's REFERENCE only, never the report: each template key
    * not reported whose referenceValue this run can supply (a one-slot value's
@@ -850,18 +863,22 @@ function synthesize(skill: Skill, params: Record<string, string>, liveValues: Re
   const given: string[] = [];
   // What this run observed besides the page: the slots its chain typed and
   // the values its reads returned — the artifact's reportGiven.
-  const evidence: GivenEvidence = { typed: typedSlots((opts.chain ?? [skill]).flatMap((s) => s.steps)), live: Object.values(liveValues) };
+  const evidence: GivenEvidence = { typed: typedSlots((opts.chain ?? [skill]).flatMap((s) => s.steps)), live: Object.values(liveValues), committed: opts.committed ?? [] };
+  /** Values withheld as echoes of this run's own typing (phase B). */
+  const typedEchoes: string[] = [];
   for (const [k, v] of Object.entries(template.values)) {
     if (k in liveValues) continue; // a live read wins outright, below
     if (withhold.has(k)) continue; // the echo guard's to drop, not the template's to refill
     // A value made only of params publishes only where this run observed it
     // (src/execution/report.ts withheldAsGiven, the artifact's check too):
     // fwgt11 07-add's "{{v7}}" published "bug" beside a live "priority-high".
-    const unobserved = templateValue(v, params, shown) !== null ? unobservedGiven(v, params, shown, evidence) : [];
-    if (unobserved.length) {
-      // The given value is what the prose must not state either.
-      stale.push(...unobserved.map((slot) => params[slot]));
-      given.push(k);
+    // A value carrying a slot the chain typed publishes only where this run
+    // committed it (phase B): the same classifyReportValue the artifact asks.
+    const verdict = classifyReportValue(v, params, shown, evidence);
+    if (verdict.class === 'given' || verdict.class === 'echo') {
+      // The given or typed value is what the prose must not state either.
+      stale.push(...verdict.slots.map((slot) => params[slot]));
+      (verdict.class === 'given' ? given : typedEchoes).push(k);
       continue;
     }
     // The shared rule (src/execution/report.ts templateValue), which a
@@ -1001,7 +1018,7 @@ function synthesize(skill: Skill, params: Record<string, string>, liveValues: Re
     details: `Replayed stored procedure ${skill.id} without the model. Reported values are live read-backs or your own parameters; ${omitted ? `${omitted} recorded value(s) that could not be re-observed were omitted` : 'no stale values were carried over'}${unshown.length ? `; withheld ${unshown.join(', ')}, whose recorded text this run's page did not show` : ''}${given.length ? `; withheld ${given.join(', ')}, given as parameters but not observed on this run` : ''}.`,
     evidence: { values },
   };
-  return { report, withheld: unshown, unobservedProse: prose.dropped, references, given };
+  return { report, withheld: unshown, unobservedProse: prose.dropped, references, given, typed: typedEchoes };
 }
 
 /**

@@ -1848,7 +1848,12 @@ describe('zero-model template match', () => {
   });
   it('synthesises a report from live read-backs, never from the stored value', () => {
     const skill = compileSkill({ entries: recording(), instruction: INSTRUCTION, report, session: 's' })!;
-    const r = synthesizeReport(skill, { v1: 'z9 RD Part B', v2: '300', v3: '40' }, { partPrice: '375.00' });
+    // partName is the name the procedure TYPED (v1): reported only where this
+    // run committed it (phase B provenance, stage 1), as the Save's row did.
+    const typedOnly = synthesizeReport(skill, { v1: 'z9 RD Part B', v2: '300', v3: '40' }, { partPrice: '375.00' });
+    expect(typedOnly.evidence?.values).toEqual({ partPrice: '375.00' });
+    expect(typedOnly.summary).not.toContain('z9 RD Part B');
+    const r = synthesizeReport(skill, { v1: 'z9 RD Part B', v2: '300', v3: '40' }, { partPrice: '375.00' }, null, { committed: ['v1'] });
     expect(r.status).toBe('success');
     expect(r.evidence?.values).toEqual({ partName: 'z9 RD Part B', partPrice: '375.00' });
     expect(r.summary).toContain('z9 RD Part B');

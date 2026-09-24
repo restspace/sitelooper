@@ -40,7 +40,7 @@ import {
   type LineDialect,
   type PageObservation,
 } from '../execution/snapshot.js';
-import { dismissalAlreadyInEffect, effectExpectation, expectedChangesVerdict, liveLines, namesDialogControl, slotActs } from '../execution/expect.js';
+import { committedSlots, dismissalAlreadyInEffect, effectExpectation, expectedChangesVerdict, liveLines, namesDialogControl, slotActs } from '../execution/expect.js';
 // The observation dialect and the content-expectation rules live in the
 // shared execution modules, where a compiled artifact embeds them too.
 // Re-exported so this module's callers need not know which owns the source.
@@ -306,6 +306,13 @@ export interface ReplayResult {
    */
   echoedValues: string[];
   /**
+   * The typed `{{vN}}` slots a commit showed on this replay: a click or press
+   * whose OWN diff added a recorded line carrying the slot, outside its control
+   * (expect.ts committedSlots). A report value made of a slot the chain typed
+   * is published only where one did (phase B provenance, stage 1).
+   */
+  committed?: string[];
+  /**
    * Labels of labelled reads this replay SKIPPED — no element matched, or the
    * read errored — so their values were never observed. Unlike an echo (a
    * value seen, only not confident), nothing was read at all: the flow runner
@@ -442,6 +449,7 @@ export async function replaySkill(
     stepsTotal: skill.steps.length,
     values: {},
     echoedValues: [],
+    committed: [],
     lines: [],
     warnings: [],
     unobserved: [],
@@ -1190,6 +1198,8 @@ export async function replaySkill(
     let navAlerts: StepGateInput['navAlerts'];
     /** The verification stopped at the url gate (expectedUrl), the one failure a lost submit is repeated on. */
     let urlStopped = false;
+    /** The recorded lines this step's own diff added, from its effect gate (commits are judged on them). */
+    let inDiff: string[] = [];
     /** The document a fill ran in, read ahead of its dispatch (refill.ts fillLost). */
     let docBefore: number | null = null;
     const navigates = NAV_ALERT_TOOLS.has(step.tool);
@@ -1383,6 +1393,7 @@ export async function replaySkill(
           const verdict = await gate({ page, step, tag, failIndex, args, params, outcome, isRead, positionalResolution, effectConfirmed, navAlerts, navigatedToStale });
           if (!verdict) continue;
           if (verdict.confirmed) effectConfirmed = true;
+          if (verdict.inDiff) inDiff = verdict.inDiff;
           // What this step watched vary is this replay's evidence from here on
           // (retargetNavigation), whether or not the step went on to stop.
           if (verdict.volatile) volatileUrl.push(...verdict.volatile);
@@ -1472,10 +1483,15 @@ export async function replaySkill(
       res.lines.push(`${head} → ${key} = ${clip(outcome.result, MAX_LINE)}`);
     } else {
       res.lines.push(`${head} → ${clip(outcome.result.split('\n')[0], MAX_LINE)}`);
-      // A click whose recorded effect added lines: a later read of a value one
-      // of them shows was committed by it (echoAt's rule b — a Save adding the row).
-      if (['click', 'dblclick', 'press'].includes(step.tool) && step.expect?.addedContains?.length) {
-        noteCommit(interacted, step.expect.addedContains.filter((l) => !TRANSIENT_LINE.test(l)).map((l) => fillParams(l, params)), tag);
+      // A click whose effect THIS run's diff showed: a later read of a value
+      // one of its lines shows was committed by it (echoAt's rule b — a Save
+      // adding the row), and a typed slot a line carries is committed for the
+      // report (committedSlots). The recorded lines alone are no evidence
+      // (phase B provenance, stage 1): a Save that did nothing still "showed"
+      // a live preview's text that was on the page before it.
+      if (['click', 'dblclick', 'press'].includes(step.tool) && inDiff.length) {
+        noteCommit(interacted, liveLines(inDiff, params), tag);
+        for (const slot of committedSlots(step.tool, inDiff)) if (!res.committed!.includes(slot)) res.committed!.push(slot);
       }
       // The ledger refills with what the field was GIVEN: a `{{env:NAME}}`
       // secret resolved (the fill just dispatched with it, so it resolves), or
@@ -1692,6 +1708,8 @@ interface StepVerdict {
   unobserved?: true;
   /** The recorded page changes appeared in the step's diff (expect.ts ChangeVerdict.confirmed). */
   confirmed?: true;
+  /** The recorded lines this step's own diff added (expect.ts ChangeVerdict.inDiff): what a commit is judged on. */
+  inDiff?: string[];
   /** Url positions this step watched vary, which a later navigation of this replay may retarget by. */
   volatile?: readonly UrlSegDiff[];
 }
@@ -1819,7 +1837,7 @@ const expectedChanges: StepGate = async ({ outcome, step, params, tag, args, pag
     { tag, tool: step.tool, value: typeof args.value === 'string' ? args.value : undefined, positionalResolution },
     { added: outcome.captureFailed ? null : added, live: () => captureLines(page, d) },
   );
-  return verdict.stop || verdict.unobserved || verdict.absentDialog || verdict.confirmed || verdict.warnings.length ? verdict : null;
+  return verdict.stop || verdict.unobserved || verdict.absentDialog || verdict.confirmed || verdict.inDiff || verdict.warnings.length ? verdict : null;
 };
 
 /**
