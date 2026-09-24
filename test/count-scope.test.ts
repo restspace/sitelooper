@@ -33,6 +33,16 @@ describe('countScopes (fwrd88)', () => {
     expect(countScopes([{ kind: 'scoped', container: 'tr', hasText: 'Part B', selector: 'td' }])).toEqual([{ selector: 'tr', hasText: 'Part B' }]);
   });
 
+  it('scopes a selector list whose every member counts across the page (fwgt10 s_2ea0ba step 1)', () => {
+    // round 59: `read_all ".issue-title, .issue-title-link" what:count` matched
+    // nothing on Gitea's list and was skipped on every replay — a list of bare
+    // compounds is a union counted across the root, as each member alone is.
+    expect(countScopes([{ kind: 'css', selector: '.issue-title, .issue-title-link' }])).toEqual(['root']);
+    expect(countScopes([{ kind: 'css', selector: 'role=alert, [role="status"]' }])).toEqual(['root']);
+    // a member with a container of its own still names nothing (round 56's rule)
+    expect(countScopes([{ kind: 'css', selector: '.issue-title, ul.parts li' }])).toBeNull();
+  });
+
   it('leaves points out, and names nothing for a selector list or an unknown kind', () => {
     expect(countScopes([{ kind: 'css', selector: 'role=alert' }, { kind: 'point' }])).toEqual(['root']);
     expect(countScopes([{ kind: 'css', selector: '.a li, .b li' }])).toBeNull();

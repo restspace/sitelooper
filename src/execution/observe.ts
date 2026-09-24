@@ -243,6 +243,31 @@ export type CountScope = 'root' | { selector: string; hasText?: string };
  * parentheses and quotes. `'root'` for a single compound (`#list`, `li.row`),
  * null for a selector list — a `,` at top level scopes nothing in particular.
  */
+/** A css selector list's members, split at its top-level commas (brackets, parentheses and quotes respected); one member when it is no list. */
+function selectorListMembers(selector: string): string[] {
+  const out: string[] = [];
+  let depth = 0;
+  let quote = '';
+  let from = 0;
+  for (let i = 0; i < selector.length; i++) {
+    const ch = selector[i];
+    if (quote) {
+      if (ch === '\\') i++;
+      else if (ch === quote) quote = '';
+      continue;
+    }
+    if (ch === '"' || ch === "'") quote = ch;
+    else if (ch === '[' || ch === '(') depth++;
+    else if (ch === ']' || ch === ')') depth--;
+    else if (depth === 0 && ch === ',') {
+      out.push(selector.slice(from, i).trim());
+      from = i + 1;
+    }
+  }
+  out.push(selector.slice(from).trim());
+  return out.filter(Boolean);
+}
+
 function cssContainer(selector: string): CountScope | null {
   let depth = 0;
   let quote = '';
@@ -299,6 +324,17 @@ export function countScopes(chain: readonly { kind: string; selector?: string; c
       }
       const only = segments[0];
       if (/^[a-z][\w-]*=/i.test(only) || only.startsWith('/') || only.startsWith('(')) {
+        out.push('root');
+        continue;
+      }
+      // A selector LIST is a union: counted across the page when every member
+      // is (fwgt10 s_2ea0ba step 1, `.issue-title, .issue-title-link`,
+      // skipped on every replay); a member with a container of its own still
+      // names nothing — which container would have to be present is not one
+      // question.
+      const members = selectorListMembers(only);
+      if (members.length > 1) {
+        if (!members.every((m) => cssContainer(m) === 'root')) return null;
         out.push('root');
         continue;
       }

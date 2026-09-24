@@ -5620,6 +5620,25 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(emitted.outputs['01-clear.row_texts'] ?? '').toBe('');
     }, 120_000);
 
+    it('both runners publish "0" for a count of a selector list whose every member counts across the page (fwgt10)', async () => {
+      // round 59: s_2ea0ba step 1, `read_all ".issue-title, .issue-title-link"
+      // what:count`, matched nothing on Gitea's list and was skipped on every
+      // replay; a member with a container of its own still names nothing.
+      const steps: SkillStep[] = [
+        { tool: 'goto', args: { url: `${origin}/counts` }, locators: {} },
+        status,
+        count('titles', [{ kind: 'css', selector: '.issue-title, .issue-title-link' }]),
+        count('mixed', [{ kind: 'css', selector: '.issue-title, #list > li.none' }]),
+      ];
+      const { replay, emitted } = await both(steps, 0);
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replay.outputs.titles).toBe('0');
+      expect(emitted.outputs['01-clear.titles']).toBe('0');
+      expect(replay.outputs.mixed ?? '').toBe('');
+      expect(emitted.outputs['01-clear.mixed'] ?? '').toBe('');
+    }, 120_000);
+
     it('both runners still skip a count whose container never rendered', async () => {
       const steps: SkillStep[] = [
         { tool: 'goto', args: { url: `${origin}/counts?nolist=1` }, locators: {} },

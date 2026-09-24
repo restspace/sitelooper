@@ -4,7 +4,7 @@ import path from 'node:path';
 import { AnthropicProvider, OpenAICompatProvider, resolveProviderConfig, type Provider } from '../agent/llm.js';
 import { buildSystemOne, resolveSystemOneConfig, type SystemOne } from '../agent/system-one.js';
 import { runEscalatingInstruction, type InstructionResult, type LoopActor, type SkillRecord } from '../agent/loop.js';
-import { askedOutputs, partialReasons, unansweredAsks } from './step-verdict.js';
+import { askedOutputs, literalOnlyAsks, partialReasons, unansweredForStep } from './step-verdict.js';
 import { executeTool } from '../agent/tools.js';
 import { urlPattern as compiledUrlPattern, carryOpener, dropAbsentReadLocators, dropDeadReadLocators, fillParams, markReadsProven, stranded, stripRunValueCandidates, urlMatches, urlParts } from '../skills/compile.js';
 import type { DriftTicket } from '../skills/repair.js';
@@ -1410,6 +1410,22 @@ ${describeLeaks(certain.slice(0, 30))}${certain.length > 30 ? `\n  … and ${cer
         );
       }
     }
+    // …nor kept as a recorded literal no read supports (fwgt10 01-open's
+    // open_issue_titles): a replay publishes it only when the page it ends on
+    // shows that exact text, so it is as good as dropped. See literalOnlyAsks.
+    for (const step of flow.steps.slice().reverse()) {
+      if (!step.skill || step.adopted) continue;
+      const pinned = store.get(step.skill);
+      if (!pinned) continue;
+      const chain = pinned.seq ? store.list(pinned.origin).filter((s) => s.seq?.chain === pinned.seq!.chain).sort((a, b) => a.seq!.index - b.seq!.index) : [pinned];
+      const literal = literalOnlyAsks(step.instruction, step.outputs, chain);
+      if (literal.length) {
+        warnings.unshift(
+          `warning: ${step.id}'s instruction asks to report ${literal.join(', ')}, and only a recorded literal backs ${literal.length === 1 ? 'it' : 'them'}: ` +
+            `no read in its procedure publishes ${literal.length === 1 ? 'it' : 'them'}, so a replay reports ${literal.length === 1 ? 'it' : 'them'} only if the page it ends on shows that exact text — re-record the step so the value is read where it is shown`,
+        );
+      }
+    }
     if (slotted.length) warnings.unshift(`note: ${slotted.length} goal/report value(s) carrying a value this run made were slotted or dropped:\n${slotted.map((s) => `  ${s}`).join('\n')}`);
     if (stripped) warnings.unshift(`note: dropped ${stripped} locator candidate(s) carrying a value this run minted (known only by export time)`);
     // Loudest of all, so first: a quarantined step is the one thing in this
@@ -2306,14 +2322,26 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       // fwsi8 01-signin's asset names). Said on the step, not a verdict: see
       // step-verdict.ts for the green steps a verdict would fail. Echo-reads
       // (result.published) answer; an output export pruned is still asked.
+      // …and an asked output the pinned procedure can publish ONLY from a
+      // recorded template literal, when this replay's report does not carry it
+      // (step-verdict.ts unansweredForStep; fwgt10-n2/n3 01-open).
+      const pinnedChain = (() => {
+        const store = this.browser.learn;
+        const pinned = step.skill && store ? store.get(step.skill) : null;
+        if (!store || !pinned) return [];
+        return pinned.seq ? store.list(pinned.origin).filter((m) => m.seq?.chain === pinned.seq!.chain).sort((x, y) => x.seq!.index - y.seq!.index) : [pinned];
+      })();
       const unanswered =
         !recovered && result.report.status === 'success'
-          ? unansweredAsks(
-              step.instruction,
-              [...step.outputs, ...((flow.pruned ?? []).find((p) => p.stepId === step.id)?.outputs ?? [])],
-              [...Object.keys(values), ...Object.keys(result.published ?? {})],
-              step.recorded ?? {},
-            )
+          ? unansweredForStep({
+              instruction: step.instruction,
+              outputs: step.outputs,
+              pruned: (flow.pruned ?? []).find((p) => p.stepId === step.id)?.outputs ?? [],
+              reported: values,
+              published: Object.keys(result.published ?? {}),
+              recorded: step.recorded ?? {},
+              chain: pinnedChain,
+            })
           : [];
       if (unanswered.length) opts.progress(`[flow ${flow.name}] ${step.id}: its instruction asks to report ${unanswered.join(', ')}, and this replay published no value for ${unanswered.length === 1 ? 'it' : 'them'}`);
       stepResults.push({

@@ -12,6 +12,7 @@ import { foldValue } from '../skills/flow.js';
 import { isRefTarget, refHint, refOf, resolveTarget } from './refs.js';
 import { tagComponent } from '../skills/components.js';
 import { GENERATED_ID_HEX_RUN, skeleton } from '../skills/shape.js';
+import { flattenContainedComposite, type Report } from '../agent/report.js';
 
 /**
  * One way of finding an element, in a form that can be rebuilt into a Locator
@@ -1288,6 +1289,72 @@ export function selectionReadBack(steps: readonly RecordedStep[], value: string,
         },
       };
     }
+  }
+  return null;
+}
+
+/**
+ * A COMPOSITE value read where the recording SHOWED it — round 56's split
+ * (flattenContainedComposite), asked of a recorded step's diff when the page
+ * the report was made on no longer shows the value.
+ *
+ * Gitea fwgt10 01-open: n1 reported `open_issue_titles: "#1 Seed: triage
+ * inbox, #2 Seed: order missing parts, #3 Seed: ship repaired device"`. Its
+ * reads of the list came back empty on that Gitea build, it took the titles
+ * with an `eval` (compile drops evals), and it reported from the search page
+ * it went to next. The read-back looks only at the live page, which shows no
+ * titles: nothing read them, the skill carried them as a template literal,
+ * and both replays withheld it (obj 1 FAIL). Step 12's diff — the second
+ * visit to /issues — added `- link "Seed: triage inbox"`, `- link "#1"` … for
+ * all three.
+ *
+ * Newest step first, the first whose ADDED lines account for every word of
+ * the value (planContainedParts, over those lines' names) wins; each part
+ * must be the name of exactly one added line there, and is read by that
+ * role and name. The reads go right after that step (the caller's
+ * insertStepAfter), where compile keeps them ahead of the navigation away.
+ * On success the report's composite gives way to its parts, as round 56
+ * commits a split. A value some ONE line shows whole is left to the live
+ * read-back: located by its own recorded text it would miss on every run
+ * whose value differs. Provenance only: the recorded diff and the report.
+ */
+export async function shownReadBack(
+  steps: readonly RecordedStep[],
+  report: Report,
+  key: string,
+  instruction: string,
+): Promise<{ after: RecordedStep; reads: RecordedStep[]; names: string[] } | null> {
+  const raw = report.evidence?.values?.[key];
+  if (typeof raw !== 'string' || !raw.trim()) return null;
+  const line = /^- ([\w-]+) ("(?:[^"\\]|\\.)*")/;
+  for (let i = steps.length - 1; i >= 0; i--) {
+    const step = steps[i];
+    const shown: { role: string; name: string }[] = [];
+    for (const l of step.diff?.added ?? []) {
+      const m = line.exec(l.trim());
+      if (!m) continue;
+      try {
+        shown.push({ role: m[1], name: String(JSON.parse(m[2])).replace(/\s+/g, ' ').trim() });
+      } catch {
+        // an unparseable name shows nothing
+      }
+    }
+    if (shown.length < 2) continue;
+    const pin = async (text: string, label: string): Promise<RecordedStep | null> => {
+      const hits = shown.filter((s) => s.name === text);
+      if (hits.length !== 1) return null;
+      const own: LocatorCandidate = { kind: 'role', role: hits[0].role, name: hits[0].name };
+      return {
+        k: 'step',
+        tool: 'read',
+        args: { target: '(read-back)', what: 'text' },
+        locators: { target: { expr: candidateExpr(own), verified: true, raw: '(read-back)', chain: [own] } },
+        result: JSON.stringify(text),
+        label,
+      };
+    };
+    const { names, pinned } = await flattenContainedComposite(report, key, shown.map((s) => s.name), instruction, pin);
+    if (names.length) return { after: step, reads: pinned, names };
   }
   return null;
 }
