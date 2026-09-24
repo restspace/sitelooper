@@ -1,0 +1,447 @@
+{
+  "name": "fwop14",
+  "origin": "http://127.0.0.1:8090",
+  "startUrl": "http://127.0.0.1:8090/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to OpenProject at http://127.0.0.1:8090/ with username admin and password {{env:APP_PASSWORD}} (type that exact literal text as the password). Then open the project 'Bench Project', list its work packages, and report the subjects of all work packages whose subject starts with 'Seed:', exactly as shown.",
+      "skill": "s_453496",
+      "params": {
+        "v1": "http://127.0.0.1:8090/",
+        "v2": "admin",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "projects_list_url",
+        "project",
+        "work_package_ids_seed_triage_inbox",
+        "work_package_ids_seed_order_missing_parts",
+        "work_package_ids_seed_ship_repaired_devic",
+        "seed_subjects_1",
+        "seed_subjects_2",
+        "seed_subjects_3"
+      ],
+      "recorded": {
+        "projects_list_url": "http://127.0.0.1:8090/projects",
+        "project": "Bench Project",
+        "work_package_count": "3",
+        "work_package_ids_seed_triage_inbox": "38",
+        "work_package_ids_seed_order_missing_parts": "39",
+        "work_package_ids_seed_ship_repaired_devic": "40",
+        "seed_subjects_1": "Seed: triage inbox",
+        "seed_subjects_2": "Seed: order missing parts",
+        "seed_subjects_3": "Seed: ship repaired device",
+        "url": "http://127.0.0.1:8090/projects/bench-project/work_packages"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages",
+      "outputEvidence": {
+        "projects_list_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "project": {
+          "same": 1,
+          "differed": 0
+        },
+        "work_package_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "work_package_ids_seed_triage_inbox": {
+          "same": 1,
+          "differed": 0
+        },
+        "work_package_ids_seed_order_missing_parts": {
+          "same": 1,
+          "differed": 0
+        },
+        "work_package_ids_seed_ship_repaired_devic": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_subjects_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_subjects_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_subjects_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "In the project 'Bench Project', create a new work package of type 'Task' with subject exactly '{{runid}} Bench Work Package' and a description that includes the text '{{runid}}' (e.g. 'Bench work package for run {{runid}}'). Save it, then report the work package's numeric ID exactly as the app displays it (OpenProject shows it as #<number>) and confirm the subject and description shown on its page.",
+      "skill": "s_f6ce38",
+      "params": {
+        "v1": "Bench Project",
+        "v3": "{{runid}} Bench Work Package",
+        "v2": "{{runid}}",
+        "v4": "Bench work package for run {{runid}}"
+      },
+      "outputs": [
+        "work_package_id_display",
+        "numeric_id",
+        "subject_verified",
+        "description_verified",
+        "project",
+        "creation_alert",
+        "run_id"
+      ],
+      "recorded": {
+        "work_package_id_display": "#41",
+        "numeric_id": "41",
+        "subject_verified": "fwop14-n1 Bench Work Package",
+        "description_verified": "Bench work package for run fwop14-n1",
+        "type": "Task",
+        "project": "Bench Project",
+        "creation_alert": "Successful creation.",
+        "run_id": "fwop14-n1",
+        "url": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/41/overview?query_props=%7B%22c%22%3A%5B%22id%22%2C%22subject%22%2C%22type%22%2C%22status%22%2C%22assignee%22%2C%22priority%22%5D%2C%22hi%22%3Atrue%2C%22g%22%3A%22%22%2C%22is%22%3Atrue%2C%22tv%22%3Afalse%2C%22hla%22%3A%5B%22status%22%2C%22priority%22%2C%22dueDate%22%5D%2C%22t%22%3A%22id%3Aasc%22%2C%22f%22%3A%5B%5D%2C%22ts%22%3A%22PT0S%22%2C%22pp%22%3A20%2C%22pa%22%3A1%7D",
+        "url.p4": "41"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "outputEvidence": {
+        "work_package_id_display": {
+          "same": 0,
+          "differed": 1
+        },
+        "numeric_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "subject_verified": {
+          "same": 0,
+          "differed": 1
+        },
+        "description_verified": {
+          "same": 0,
+          "differed": 1
+        },
+        "type": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "project": {
+          "same": 1,
+          "differed": 0
+        },
+        "creation_alert": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "run_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.p4": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "03-edit",
+      "instruction": "On the work package page for work package {{02-create.work_package_id_display}} ('{{runid}} Bench Work Package') in Bench Project, edit these fields in place: set the assignee to the user 'Bench Assignee' (it is an autocomplete — actually pick the 'Bench Assignee' option from its dropdown, do not just type the name), set the status to 'In progress', and set the finish date to 2026-12-31. Each field saves on its own without a page-level Save button. Then report the values shown on the page for assignee, status and finish date.",
+      "skill": "s_108d52",
+      "params": {
+        "v1": "{{02-create.work_package_id_display}}",
+        "v3": "{{runid}} Bench Work Package",
+        "v5": "Bench Project",
+        "v6": "2026-12-31",
+        "v4": "{{runid}}"
+      },
+      "outputs": [
+        "work_package_id",
+        "assignee",
+        "status",
+        "finish_date_entered",
+        "finish_date_displayed",
+        "date_field_full",
+        "run_id"
+      ],
+      "recorded": {
+        "work_package_id": "#41",
+        "assignee": "Bench Assignee",
+        "status": "In progress",
+        "finish_date_entered": "2026-12-31",
+        "finish_date_displayed": "12/31/2026",
+        "date_field_full": "no start date - 12/31/2026",
+        "run_id": "fwop14-n1"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "urlVariance": [
+        "41",
+        "42"
+      ],
+      "outputEvidence": {
+        "work_package_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "assignee": {
+          "same": 1,
+          "differed": 0
+        },
+        "status": {
+          "same": 1,
+          "differed": 0
+        },
+        "finish_date_entered": {
+          "same": 1,
+          "differed": 0
+        },
+        "finish_date_displayed": {
+          "same": 1,
+          "differed": 0
+        },
+        "date_field_full": {
+          "same": 1,
+          "differed": 0
+        },
+        "run_id": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "04-add",
+      "instruction": "On the work package page for work package {{02-create.work_package_id_display}} ('{{runid}} Bench Work Package') in Bench Project, add a comment whose text includes '{{runid}}' (e.g. 'Comment for run {{runid}}'). Submit the comment, then report the comment text as it appears on the page.",
+      "skill": "s_cf64c4",
+      "params": {
+        "v1": "{{02-create.work_package_id_display}}",
+        "v3": "{{runid}} Bench Work Package",
+        "v5": "Bench Project",
+        "v4": "{{runid}}",
+        "v6": "Comment for run {{runid}}"
+      },
+      "outputs": [
+        "work_package_id",
+        "comment_text_posted",
+        "comment_text_shown",
+        "comment_html",
+        "run_id"
+      ],
+      "recorded": {
+        "work_package_id": "#41",
+        "comment_text_posted": "Comment for run fwop14-n1",
+        "comment_text_shown": "Comment for run fwop14-n1",
+        "comment_html": "<p class=\"op-uc-p\">Comment for run fwop14-n1</p>",
+        "run_id": "fwop14-n1",
+        "url": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/41/activity?query_props=%7B%22c%22%3A%5B%22id%22%2C%22subject%22%2C%22type%22%2C%22status%22%2C%22assignee%22%2C%22priority%22%5D%2C%22hi%22%3Atrue%2C%22g%22%3A%22%22%2C%22is%22%3Atrue%2C%22tv%22%3Afalse%2C%22hla%22%3A%5B%22status%22%2C%22priority%22%2C%22dueDate%22%5D%2C%22t%22%3A%22id%3Aasc%22%2C%22f%22%3A%5B%5D%2C%22ts%22%3A%22PT0S%22%2C%22pp%22%3A20%2C%22pa%22%3A1%7D"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/activity",
+      "urlVariance": [
+        "41",
+        "42"
+      ],
+      "outputEvidence": {
+        "work_package_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_text_posted": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_text_shown": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_html": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "run_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "05-open",
+      "instruction": "Final verification, read-only: open work package {{02-create.work_package_id_display}} ('{{runid}} Bench Work Package') in Bench Project and report exactly what the page shows for: subject, type, description, assignee, status, finish date, and the comment text in the activity. Then go to the Bench Project work packages list and report the subjects of all work packages whose subject starts with 'Seed:'. Do not change anything.",
+      "skill": "s_c96481",
+      "params": {
+        "v1": "{{02-create.work_package_id_display}}",
+        "v3": "{{runid}} Bench Work Package",
+        "v5": "Bench Project",
+        "v4": "{{runid}}"
+      },
+      "outputs": [
+        "work_package_id",
+        "subject",
+        "description",
+        "assignee",
+        "status",
+        "comment_text",
+        "seed_ids_seed_triage_inbox",
+        "seed_ids_seed_order_missing_parts",
+        "seed_ids_seed_ship_repaired_devic",
+        "run_id",
+        "seed_subjects_1",
+        "seed_subjects_2",
+        "seed_subjects_3"
+      ],
+      "recorded": {
+        "work_package_id": "#41",
+        "subject": "fwop14-n1 Bench Work Package",
+        "type": "Task",
+        "description": "Bench work package for run fwop14-n1",
+        "assignee": "Bench Assignee",
+        "status": "In progress",
+        "finish_date": "12/31/2026",
+        "date_field_full": "no start date - 12/31/2026",
+        "comment_text": "Comment for run fwop14-n1",
+        "total_work_packages": "4 (1 - 4/4, only page)",
+        "seed_ids_seed_triage_inbox": "38",
+        "seed_ids_seed_order_missing_parts": "39",
+        "seed_ids_seed_ship_repaired_devic": "40",
+        "run_id": "fwop14-n1",
+        "seed_subjects_1": "Seed: triage inbox",
+        "seed_subjects_2": "Seed: order missing parts",
+        "seed_subjects_3": "Seed: ship repaired device"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages",
+      "urlVariance": [
+        "41",
+        "42"
+      ],
+      "outputEvidence": {
+        "work_package_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "subject": {
+          "same": 0,
+          "differed": 1
+        },
+        "type": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "description": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "assignee": {
+          "same": 1,
+          "differed": 0
+        },
+        "status": {
+          "same": 1,
+          "differed": 0
+        },
+        "finish_date": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "date_field_full": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "comment_text": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "total_work_packages": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "seed_ids_seed_triage_inbox": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_ids_seed_order_missing_parts": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_ids_seed_ship_repaired_devic": {
+          "same": 1,
+          "differed": 0
+        },
+        "run_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "seed_subjects_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_subjects_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_subjects_3": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwop14-n1",
+    "created": "2026-09-24T16:09:36.460Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "work_package_count"
+      ]
+    },
+    {
+      "stepId": "02-create",
+      "outputs": [
+        "type"
+      ]
+    },
+    {
+      "stepId": "05-open",
+      "outputs": [
+        "type",
+        "finish_date",
+        "date_field_full",
+        "total_work_packages"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "arm": "spec",
+  "runid": "fwop14-spec",
+  "target": "openproject",
+  "flow": "fwop14.json",
+  "flowName": "fwop14",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwop14-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwop14-spec-spec-tmp/fwop14.flow.ts",
+  "specFile": "bench/results/fwop14-spec-spec-tmp/fwop14.spec.ts",
+  "wallMs": 39715,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwop14",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 36113,
+      "error": "Error: 02-create s_459e98/3: the recorded page change did not appear\n\n02-create s_459e98/3: the recorded page change did not appear\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeNull\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"after step 02-create s_459e98/3 the page did not show \\\"- row \\\\\\\"44 Work package leaf at level 0. fwop14-spec Bench Work Package TASK New - Normal\\\\\\\"\\\" as it did when recorded — the step ran but probably acted on the wrong element\"\u001b[39m\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "logTail": "\nRunning 1 test using 1 worker\n\n[sitelooper skip] 01-signin s_99aafe/1: closes the dialog \"Welcome to OpenProject, Bench Admin\" with \"Close\", which is not open — already in effect\n[sitelooper step] 01-signin\n[sitelooper warn] 02-create s_f6ce38/2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear\n[sitelooper warn] 02-create s_459e98/1: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear\n[sitelooper recipe] filled via recipe contenteditable/set-value (r_7b1e49); value verified on the component\n[sitelooper warn] 02-create s_459e98/2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear\n  ✘  1 fwop14.spec.ts:9:1 › fwop14 (36.1s)\n\n\n  1) fwop14.spec.ts:9:1 › fwop14 › 02-create: In the project 'Bench Project', create a new work package of type 'Task' with subject exactly '{{runid}} Bench Work Package' and a description that includes the text '{{runid}}' (e.g. 'Bench work package for run {{runid}}'). Save it, then report the work package's numeric ID exactly as the app displays it (OpenProject shows it as #<number>) and confirm the subject and description shown on its page. \n\n    Error: 02-create s_459e98/3: the recorded page change did not appear\n\n    02-create s_459e98/3: the recorded page change did not appear\n\n    expect(received).toBeNull()\n\n    Received: \"after step 02-create s_459e98/3 the page did not show \\\"- row \\\\\\\"44 Work package leaf at level 0. fwop14-spec Bench Work Package TASK New - Normal\\\\\\\"\\\" as it did when recorded — the step ran but probably acted on the wrong element\"\n\n    Call Log:\n    - Timeout 5000ms exceeded while waiting on the predicate\n\n       at fwop14.flow.ts:11567\n\n      11565 |       { timeout: EXPECT_WAIT_MS, message: `${ctx.tag}: the recorded page change did not appear` },\n      11566 |     )\n    > 11567 |     .toBeNull();\n            |      ^\n      11568 |   for (const warning of last.warnings) console.log(`[sitelooper warn] ${warning}`);\n      11569 |   if (last.unobserved) console.log(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);\n      11570 |   return last;\n        at expectChanges (/home/user/sitelooper/bench/results/fwop14-spec-spec-tmp/fwop14.flow.ts:11567:6)\n        at Object.verify (/home/user/sitelooper/bench/results/fwop14-spec-spec-tmp/fwop14.flow.ts:12740:36)\n        at runStepLifecycle (/home/user/sitelooper/bench/results/fwop14-spec-spec-tmp/fwop14.flow.ts:7713:24)\n        at Object.02-create (/home/user/sitelooper/bench/results/fwop14-spec-spec-tmp/fwop14.flow.ts:12694:9)\n        at /home/user/sitelooper/bench/results/fwop14-spec-spec-tmp/fwop14.flow.ts:14326:7\n        at runFlow (/home/user/sitelooper/bench/results/fwop14-spec-spec-tmp/fwop14.flow.ts:14325:5)\n        at /home/user/sitelooper/bench/results/fwop14-spec-spec-tmp/fwop14.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/fwop14-fwop14/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/fwop14-fwop14/error-context.md\n\n  1 failed\n    fwop14.spec.ts:9:1 › fwop14 ────────────────────────────────────────────────────────────────────\n"
+}

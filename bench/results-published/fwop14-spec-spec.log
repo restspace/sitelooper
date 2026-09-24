@@ -1,0 +1,54 @@
+
+Running 1 test using 1 worker
+
+[sitelooper skip] 01-signin s_99aafe/1: closes the dialog "Welcome to OpenProject, Bench Admin" with "Close", which is not open — already in effect
+[sitelooper step] 01-signin
+[sitelooper warn] 02-create s_f6ce38/2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear
+[sitelooper warn] 02-create s_459e98/1: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear
+[sitelooper recipe] filled via recipe contenteditable/set-value (r_7b1e49); value verified on the component
+[sitelooper warn] 02-create s_459e98/2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear
+  ✘  1 fwop14.spec.ts:9:1 › fwop14 (35.4s)
+
+
+  1) fwop14.spec.ts:9:1 › fwop14 › 02-create: In the project 'Bench Project', create a new work package of type 'Task' with subject exactly '{{runid}} Bench Work Package' and a description that includes the text '{{runid}}' (e.g. 'Bench work package for run {{runid}}'). Save it, then report the work package's numeric ID exactly as the app displays it (OpenProject shows it as #<number>) and confirm the subject and description shown on its page. 
+
+    Error: 02-create s_459e98/3: the recorded page change did not appear
+
+    02-create s_459e98/3: the recorded page change did not appear
+
+    expect(received).toBeNull()
+
+    Received: "after step 02-create s_459e98/3 the page did not show \"- row \\\"45 Work package leaf at level 0. fwop14-spec Bench Work Package TASK New - Normal\\\"\" as it did when recorded — the step ran but probably acted on the wrong element"
+
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+
+       at fwop14.flow.ts:11567
+
+      11565 |       { timeout: EXPECT_WAIT_MS, message: `${ctx.tag}: the recorded page change did not appear` },
+      11566 |     )
+    > 11567 |     .toBeNull();
+            |      ^
+      11568 |   for (const warning of last.warnings) console.log(`[sitelooper warn] ${warning}`);
+      11569 |   if (last.unobserved) console.log(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);
+      11570 |   return last;
+        at expectChanges (/home/user/sitelooper/bench/results/fwop14-spec-spec-tmp/fwop14.flow.ts:11567:6)
+        at Object.verify (/home/user/sitelooper/bench/results/fwop14-spec-spec-tmp/fwop14.flow.ts:12740:36)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwop14-spec-spec-tmp/fwop14.flow.ts:7713:24)
+        at Object.02-create (/home/user/sitelooper/bench/results/fwop14-spec-spec-tmp/fwop14.flow.ts:12694:9)
+        at /home/user/sitelooper/bench/results/fwop14-spec-spec-tmp/fwop14.flow.ts:14326:7
+        at runFlow (/home/user/sitelooper/bench/results/fwop14-spec-spec-tmp/fwop14.flow.ts:14325:5)
+        at /home/user/sitelooper/bench/results/fwop14-spec-spec-tmp/fwop14.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwop14-fwop14/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwop14-fwop14/error-context.md
+
+  1 failed
+    fwop14.spec.ts:9:1 › fwop14 ────────────────────────────────────────────────────────────────────
