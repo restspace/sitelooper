@@ -52,6 +52,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { APP_DEFAULTS } from './app-defaults.mjs';
 import { resetTarget } from './app-reset.mjs';
+import { publishFailureEvidence } from './spec-evidence.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.dirname(here);
@@ -342,6 +343,11 @@ function flattenTests(suite, acc = []) {
   return acc;
 }
 const tests = report ? flattenTests(report) : [];
+// A failing test's error-context.md and screenshot live under the tmp dir's
+// test-results/, which the repo's .gitignore drops from every results branch
+// (fwop14): published beside the result JSON instead (bench/spec-evidence.mjs).
+const evidence = publishFailureEvidence(report, outDir, tag).map((f) => path.basename(f));
+for (const f of evidence) console.log(`[spec-replay] failure evidence: ${f}`);
 const drift = tests.flatMap((t) => t.drift);
 const stats = report?.stats ?? {
   total: tests.length,
@@ -374,6 +380,7 @@ const result = {
   tests,
   drift,
   driftCount: drift.length,
+  ...(evidence.length ? { evidence } : {}),
   logTail: runOut.slice(-4000),
 };
 fs.writeFileSync(path.join(outDir, `${tag}-spec-result.json`), JSON.stringify(result, null, 2));

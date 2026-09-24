@@ -1061,7 +1061,14 @@ const HELPERS: { token: string; source: string[] }[] = [
       ' * HARD, the rest are a plain group; either is looked for first in the lines',
       ' * this step ADDED (capturePageLines before and after, diffed as the recorder',
       ' * diffs its signatures) and then on the live page, as WHOLE snapshot lines:',
-      ' * role, name, state, and the value after the colon. An earlier cut of this',
+      ' * role, name, state, and the value after the colon. The AFTER capture is',
+      ' * `linesAfter`, taken in the settle phase the moment the action settled —',
+      " * where tools.ts runStep takes the daemon's — not a fresh one here, after the",
+      ' * url wait: openproject fwop14 02-create s_459e98/3 saved, showed the new row',
+      ' * as it settled, routed to the record and re-rendered the row, and the',
+      ' * artifact, looking only after its url wait, stopped on a line the daemon had',
+      ' * seen (n2, n3 passed). With no settle capture each poll captures afresh.',
+      ' * An earlier cut of this',
       ' * file rebuilt each recorded line as a Playwright locator and asserted it',
       ' * visible, which never looked past the name — `- combobox "Project": {{v1}}`',
       ' * passed on any visible Project combobox whatever it showed. Polled for',
@@ -1081,13 +1088,14 @@ const HELPERS: { token: string; source: string[] }[] = [
       '  ctx: { tag: string; tool: string; value?: string; positionalResolution: boolean },',
       '  linesBefore: string[] | null,',
       '  dialect: LineDialect = 1,',
+      '  linesAfter: string[] | null = null,',
       '): Promise<ChangeVerdict> {',
       '  let last: ChangeVerdict = { warnings: [] };',
       '  await expect',
       '    .poll(',
       '      async () => {',
       '        last = await expectedChangesVerdict(recorded, p, ctx, {',
-      '          added: addedLines(linesBefore, await capturePageLines(page, dialect)),',
+      '          added: addedLines(linesBefore, linesAfter ?? (await capturePageLines(page, dialect))),',
       '          live: () => captureLines(page, dialect),',
       '        });',
       '        return last.stop ?? null;',
@@ -1546,11 +1554,12 @@ function originSource(step: SkillStep): string {
  * replay does, and reads the WHOLE line — a slot in the value after the colon
  * is checked, where the locator union this replaced only ever found the name.
  *
- * `linesBefore` is the pre-action capture emitSkillStep takes in `prepare`.
+ * `linesBefore` is the pre-action capture emitSkillStep takes in `prepare`,
+ * `linesAfter` the one it takes in `settle` as the action settles (fwop14).
  * A recorded dialog that did not open comes back as `absentDialog`, which the
  * body remembers for the steps that were going to act inside it.
  */
-function expectationLines(step: SkillStep, ctx: Ctx, out: string[], linesBefore: string): string | null {
+function expectationLines(step: SkillStep, ctx: Ctx, out: string[], linesBefore: string, linesAfter: string): string | null {
   const recorded = recordedChanges(step);
   if (!recorded.length) return null;
   noteSlots(recorded, ctx);
@@ -1560,7 +1569,7 @@ function expectationLines(step: SkillStep, ctx: Ctx, out: string[], linesBefore:
   // time (replay's own per-step flag), not a compile-time guess over the chain.
   const call =
     `await expectChanges(page, [${recorded.map(q).join(', ')}], p, ` +
-    `{ tag: ${q(where)}, tool: ${q(step.tool)}${value}, positionalResolution: ${ctx.positional ?? 'false'} }, ${linesBefore}${dialectArg(step)})`;
+    `{ tag: ${q(where)}, tool: ${q(step.tool)}${value}, positionalResolution: ${ctx.positional ?? 'false'} }, ${linesBefore}, ${step.expect?.lineDialect === 2 ? 2 : 1}, ${linesAfter})`;
   out.push("// The step's recorded page changes, judged by the daemon's own effect gate (see expectChanges):");
   for (const line of recorded) out.push(`//   ${commentSafe(line)}`);
   // Only a plain `- dialog "…"` line can leave a dialog absent (the verdict's
@@ -2229,7 +2238,11 @@ function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number,
   // in `prepare`, after the settle, in the same dialect it will judge by.
   // A click marked to press again (repeatIfNoEffect) needs the pre-action lines too: its no-effect test diffs them.
   const linesBefore = recordedChanges(step).length || (step.tool === 'click' && step.repeatIfNoEffect) ? `linesBefore${ctx.urls}` : null;
-  const changes = linesBefore ? expectationLines(step, ctx, checks, linesBefore) : null;
+  // ...and the lines AFTER it, captured as the action settles (fwop14): the
+  // page the daemon's diff is taken from, before the alert settle, the bind's
+  // url wait and the url gate move it on.
+  const linesAfter = linesBefore && recordedChanges(step).length ? `linesAfter${ctx.urls}` : null;
+  const changes = linesBefore && linesAfter ? expectationLines(step, ctx, checks, linesBefore, linesAfter) : null;
   // Replay's expectedRemovals gate, after the page changes and before the
   // alerts: a hide whose lines all survive the click did not have its effect.
   const hidden = hideEffectLines(step);
@@ -2278,6 +2291,7 @@ function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number,
     `let ${urlBefore} = '';`,
     ...(alerts ? [`let ${alerts}: string[] = [];`, `let ${alertsAfter}: ObservedAlerts | null = null;`] : []),
     ...(linesBefore ? [`let ${linesBefore}: string[] | null = null;`] : []),
+    ...(linesAfter ? [`let ${linesAfter}: string[] | null = null;`] : []),
     ...(nav ? [`let ${nav}: NavigationTarget = { url: '' };`] : []),
     ...(positional ? [`let ${positional} = false;`] : []),
     ...(refill ? [`let ${refill.doc}: number | null = null;`] : []),
@@ -2308,6 +2322,9 @@ function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number,
     ...(observed
       ? [`    if (${observed}) await ${observed}.settle();`, `    else if (page.url() !== ${urlBefore}) await settle(page);`]
       : [`    if (page.url() !== ${urlBefore}) await settle(page);`]),
+    // The page-change observation too, first: the capture tools.ts runStep
+    // takes the moment the action settled, which the daemon's diff is (fwop14).
+    ...(linesAfter ? [`    ${linesAfter} = await capturePageLines(page${dialectArg(step)});`] : []),
     // The alert observation belongs to the settle phase, not to verify:
     // taken right after the action has settled, before the url wait.
     ...(alerts ? [`    ${alertsAfter} = await settledAlerts(page${dialectArg(step)});`] : []),

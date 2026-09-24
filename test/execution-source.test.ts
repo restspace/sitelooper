@@ -121,7 +121,7 @@ describe('standalone execution source', () => {
     expect(source).toContain('linesBefore2 = await capturePageLines(page);');
     // ...with positional resolution reported by the resolution itself, not guessed at compile time.
     expect(source).toContain(
-      "const changes2 = await expectChanges(page, ['- dialog \"Options\"', '- button \"Apply\"', '- combobox \"Project\": {{v1}}'], p, { tag: '01-actions s_runtime/2', tool: 'click', positionalResolution: positional2 }, linesBefore2);",
+      "const changes2 = await expectChanges(page, ['- dialog \"Options\"', '- button \"Apply\"', '- combobox \"Project\": {{v1}}'], p, { tag: '01-actions s_runtime/2', tool: 'click', positionalResolution: positional2 }, linesBefore2, 1, linesAfter2);",
     );
     expect(source).toContain('absentDialog = changes2.absentDialog ?? null;');
     expect(source).toContain('positional2 = positional2 || hit1.structural || hit1.nth !== undefined;');
