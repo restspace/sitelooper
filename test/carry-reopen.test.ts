@@ -89,7 +89,7 @@ describe('unbankedMutations counts only what no procedure carried (fwgt11 04-set
 });
 
 describe('the compiled procedure (fwgt11 04-set)', () => {
-  it('begins with the first opening and the tick of "bug", and records the re-open as a popup already showing', async () => {
+  it('begins with the first opening and the tick of "bug", and marks the re-open closedBefore', async () => {
     const { compileSkills } = await import('../src/skills/compile.js');
     const entries = load();
     const report = entries[AT(157)] as Extract<RecordedEntry, { k: 'report' }>;
@@ -108,5 +108,19 @@ describe('the compiled procedure (fwgt11 04-set)', () => {
     expect(tick.args.target).toBe('.issue-content-right .ui.dropdown.full-width.active.visible .menu .item[data-value="1"]');
     expect(reopen.args.target).toBe('@e392');
     expect(listbox(reopen.expect?.addedContains)).toEqual(listbox(open.expect?.addedContains));
+    // 98's diff ADDED the listbox 89 had added: the picker was shut when it
+    // was clicked, so the re-open shuts a showing picker first (closedBefore)
+    expect(reopen.closedBefore).toBe(true);
+    expect(skill.steps.filter((st) => st.closedBefore)).toEqual([reopen]);
+  });
+});
+
+describe('closedBefore needs the recorded evidence (fwgt11 04-set)', () => {
+  it('marks nothing when the carry starts at the latest opener (the tick did not take effect)', () => {
+    const entries = load();
+    const reopen = entries[AT(98)] as RecordedStep;
+    reopen.diff!.added = [...reopen.diff!.added!, '- link "bug"'];
+    const out = carryOpener(entries.slice(0, THIRD), entries.slice(THIRD, LAST));
+    expect(out.filter((e) => e.k === 'step' && e.closedBefore)).toEqual([]);
   });
 });

@@ -166,7 +166,34 @@ const POPUP_LINE = /^-?\s*(dialog|alertdialog|menu|menubar|listbox|tooltip)\b/;
 export function carryOpener(before: readonly RecordedEntry[], entries: RecordedEntry[]): RecordedEntry[] {
   const carried = carriedSteps(before, entries);
   if (!carried.length) return entries;
-  return [entries[0], ...carried.map(({ via: _via, result: _result, ...step }) => step), ...entries.slice(1)];
+  const reopens = closedReopens(carried);
+  return [
+    entries[0],
+    ...carried.map(({ via: _via, result: _result, ...step }, i): RecordedStep => (reopens.has(i) ? { ...step, closedBefore: true } : step)),
+    ...entries.slice(1),
+  ];
+}
+
+/**
+ * The carried openers whose recorded diff shows the popup was CLOSED just
+ * before them: a click after an earlier carried opening of the same popup
+ * that ADDED a popup line that opening had added (a line a diff adds was not
+ * on the page it started from). gitea fwgt11-n1 04-set: 98 added
+ * `- listbox "Clear labels bug …"`, as 89 had — the picker 89 opened had
+ * shut, unrecorded, and with it Gitea committed the tick at 90. A replay
+ * finds that picker still open (nothing it replays shut it), so it must shut
+ * it, not skip the re-open as already showing (SkillStep.closedBefore).
+ */
+function closedReopens(carried: readonly RecordedStep[]): Set<number> {
+  const popupOf = (s: RecordedStep) => (s.tool === 'click' ? (s.diff?.added ?? []).filter((l) => POPUP_LINE.test(l)).map((l) => l.trim()) : []);
+  const out = new Set<number>();
+  const opened = new Set<string>();
+  carried.forEach((s, i) => {
+    const lines = popupOf(s);
+    if (lines.some((l) => opened.has(l))) out.add(i);
+    for (const l of lines) opened.add(l);
+  });
+  return out;
 }
 
 /**
@@ -873,6 +900,7 @@ export function compileSkills(input: CompileInput): Skill[] {
       if (Object.keys(contexts).length) out.contexts = contexts;
       if (step.page !== undefined) out.page = step.page;
       if (step.toggle) out.toggle = true;
+      if (step.closedBefore && step.tool === 'click') out.closedBefore = true;
       if (pressedAgain.has(step)) out.repeatIfNoEffect = true;
       if (step.effect) {
         out.effect =

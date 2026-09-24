@@ -314,6 +314,19 @@ export interface SkillStep {
    * a build that ignores it presses once, as before.
    */
   repeatIfNoEffect?: true;
+  /**
+   * A popup opener carried from a dead instruction whose RECORDED diff shows
+   * the popup was closed just before it (compile.ts carryOpener: its diff
+   * added the popup line the dead instruction's earlier opening had added).
+   * gitea fwgt11-n1 04-set: the picker opened at 89 and ticked "bug" shut
+   * unrecorded — which is when Gitea commits — and 98 opened it again. Both
+   * runners close a showing popup first, by clicking this opener (the shared
+   * execution/toggle.ts closeBeforeReopen), check that it went, then click as
+   * recorded; the "already showing, click skipped" rule never fires for it,
+   * and a close that does not close is a stop. Optional: a build that ignores
+   * it skips the re-open as already showing, as before.
+   */
+  closedBefore?: true;
   expect?: StepExpectation;
   /** For read/read_all steps: which report value this read supplied, if any. */
   label?: string;

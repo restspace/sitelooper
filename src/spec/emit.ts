@@ -1643,13 +1643,28 @@ function noteSlots(value: unknown, ctx: Ctx): void {
  * resolves is a stop in both runners, and a guard that swallowed the miss
  * would report skipped-and-green where the daemon reports a stop.
  */
-function wrapAlreadyInEffect(step: SkillStep, ctx: Ctx, out: string[], actionAt: number): void {
+function wrapAlreadyInEffect(step: SkillStep, ctx: Ctx, out: string[], actionAt: number, target: string): void {
   const opener = openerExpectations(step);
   if (!opener.length) {
     wrapToggle(step, ctx, out, actionAt);
     return;
   }
   noteSlots(opener, ctx);
+  if (step.closedBefore) {
+    // SkillStep.closedBefore (gitea fwgt11 04-set): the recording shut this
+    // popup before re-opening it, so it is shut first when it shows — by
+    // clicking this very opener — checked gone, and then clicked as recorded;
+    // never skipped (the shared closeBeforeReopen, as replay runs it).
+    out.splice(
+      actionAt,
+      0,
+      '// The recording shut this popup before re-opening it (SkillStep.closedBefore): shut it',
+      '// first if it shows, prove it went, then click as recorded — never skipped as already showing:',
+      ...opener.map((l) => `//   ${commentSafe(l)}`),
+      `{ const closedFirst = await closeBeforeReopen(page, liveLines([${opener.map(q).join(', ')}], p), ${step.expect?.lineDialect === 2 ? 2 : 1}, () => click(${target})); if (closedFirst) throw new Error(closedFirst); }`,
+    );
+    return;
+  }
   const where = `${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`;
   const acted = out
     .splice(actionAt)
@@ -2777,7 +2792,7 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
   if (ctx.landing) {
     out.splice(actionAt, 0, `${ctx.landing} = await armPageEffect(page, ${JSON.stringify(stepEffect(step))}, ${q(`${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`)});`);
   }
-  wrapAlreadyInEffect(step, ctx, out, actionAt);
+  wrapAlreadyInEffect(step, ctx, out, actionAt, target);
   // A flagged step's `pick` carries the note in its own throw (actionTarget),
   // but the ACTION after it can fail too — a click that timed out on what
   // resolved says only that Playwright waited — and that failure must say

@@ -49,7 +49,7 @@ export { consequentialExpectations, isEchoLine } from '../execution/expect.js';
 import { candidateNames, echoAt, echoVerdict, markActed, noteCommit, noteInteraction, setsSomething } from '../execution/echo.js';
 import { documentOf, fillLost, guardedTyping, noteFill, rearmStandingFills, restoreStandingFills, standingFills, standingFillsLost } from '../execution/refill.js';
 import { hasTotpMarker, resolveSecrets, resolveSecretsAsync } from '../shared/secrets.js';
-import { hideBefore, hideEffectLines, hideVerdict, pressHadNoEffect, toggleAlreadyShown, toggleEffectLines } from '../execution/toggle.js';
+import { closeBeforeReopen, hideBefore, hideEffectLines, hideVerdict, pressHadNoEffect, toggleAlreadyShown, toggleEffectLines } from '../execution/toggle.js';
 import { mayNavigateToDestination, navigateToDestination, textHeldElsewhere } from '../execution/recover.js';
 import { CONTEXT_CONTRACT, contractOf, contractVerdict, isVerified, originOf, stepsCarryContext, type Skill, type SkillStep } from './store.js';
 import { armPageEffect, describeFramePath, pageIndexVerdict, rootFor, stepEffect, type Root } from '../execution/context.js';
@@ -1123,10 +1123,24 @@ export async function replaySkill(
     // replay. Skipped as already in effect. Only popup lines count: a
     // re-usable effect (another row of textboxes) must still be produced.
     const opener = openerLines(step, params);
+    // …except an opener the recording shows re-opening a popup that had SHUT
+    // (SkillStep.closedBefore, gitea fwgt11 04-set): closed first by clicking
+    // it, checked gone, then clicked as recorded — the shared
+    // closeBeforeReopen, which the artifact runs too. Never skipped.
+    if (step.closedBefore && opener.length) {
+      const stop = await closeBeforeReopen(page, opener, dialectOf(step), () => opts.exec(step.tool, args, resolved, { skill: skill.id, step: failIndex }));
+      if (stop) {
+        res.failedAt = failIndex;
+        res.reason = stop;
+        res.lines.push(`${head} → FAILED: ${stop}`);
+        return 'stop';
+      }
+      res.lines.push(`${head} → re-opens a popup the recording shut first: shut if showing, then clicked`);
+    }
     // Asked in the step's own line dialect; only a match skips — a look that
     // could not cover the page clicks, which is the direction this guard
     // already leans (a wrong skip loses the step everything after needs).
-    if (opener.length && (await presentOnPage(page, opener, {}, dialectOf(step)))) {
+    else if (opener.length && (await presentOnPage(page, opener, {}, dialectOf(step)))) {
       res.warnings.push(`step ${tag}: the recorded effect (${clip(opener[0], 60)}) is already showing — a click would toggle it away; skipped as already in effect`);
       res.lines.push(`${head} → skipped (already in effect)`);
       return 'skipped';

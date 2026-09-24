@@ -933,9 +933,11 @@ const PARTS = `<!doctype html><html><head><meta charset="utf-8"><title>Ticket</t
  * in the pending selection; shutting the picker (the Labels click again, or
  * Escape) posts `commit:labels:<applied, comma-joined>` when the selection
  * changed and lists the applied labels as links beside it, as Gitea's
- * sidebar does.
+ * sidebar does. What is applied survives a reload (sessionStorage); what is
+ * pending does not. `?escape=0`: Escape does not shut it (Gitea's picker on
+ * fwgt11's replays). `?stuck=1`: the Labels click does not shut it either.
  */
-const LABEL_PICKER = `<!doctype html><html><head><meta charset="utf-8"><title>Issue</title></head><body>
+const LABEL_PICKER = (mode: { escape: boolean; stuck: boolean }) => `<!doctype html><html><head><meta charset="utf-8"><title>Issue</title></head><body>
 <h1>Issue #4</h1>
 <div id="labels" role="combobox" aria-label="Labels" aria-expanded="false" tabindex="0">Labels</div>
 <div id="menu" role="listbox" aria-label="Label choices" hidden>
@@ -945,10 +947,12 @@ const LABEL_PICKER = `<!doctype html><html><head><meta charset="utf-8"><title>Is
 <div id="applied"></div>
 <script>
 const names = { 1: 'bug', 2: 'priority-high' };
-let applied = [];
+let applied = JSON.parse(sessionStorage.getItem('applied') || '[]');
 let pending = new Set();
 const menu = document.getElementById('menu');
 const box = document.getElementById('labels');
+const render = () => { document.getElementById('applied').innerHTML = applied.map((v) => '<a href="/issues?labels=' + v + '">' + names[v] + '</a>').join(' '); };
+render();
 function shut() {
   if (menu.hidden) return;
   menu.hidden = true;
@@ -956,11 +960,12 @@ function shut() {
   const next = [...pending].sort();
   if (next.join(',') === applied.join(',')) return;
   applied = next;
+  sessionStorage.setItem('applied', JSON.stringify(applied));
   fetch('/commit/labels/' + encodeURIComponent(applied.map((v) => names[v]).join(',')), { method: 'POST' });
-  document.getElementById('applied').innerHTML = applied.map((v) => '<a href="/issues?labels=' + v + '">' + names[v] + '</a>').join(' ');
+  render();
 }
 box.addEventListener('click', () => {
-  if (!menu.hidden) return shut();
+  if (!menu.hidden) { if (${mode.stuck ? 'false' : 'true'}) shut(); return; }
   pending = new Set(applied);
   menu.hidden = false;
   box.setAttribute('aria-expanded', 'true');
@@ -972,7 +977,7 @@ menu.addEventListener('click', (e) => {
   const v = a.dataset.value;
   if (pending.has(v)) pending.delete(v); else pending.add(v);
 });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') shut(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && ${mode.escape ? 'true' : 'false'}) shut(); });
 </script>
 </body></html>`;
 
@@ -1827,7 +1832,7 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
       if (url === '/stamp') return html(STAMP);
       if (url === '/hash') return html(HASH);
       if (url.startsWith('/menu/')) return html(MENU(tail('/menu/')));
-      if (url === '/labels-picker') return html(LABEL_PICKER);
+      if (url === '/labels-picker' || url.startsWith('/labels-picker?')) return html(LABEL_PICKER({ escape: !url.includes('escape=0'), stuck: url.includes('stuck=1') }));
       if (url === '/create/form') return html(CREATE);
       if (url === '/hopper') return html(HOPPER);
       if (url.startsWith('/hop/')) {

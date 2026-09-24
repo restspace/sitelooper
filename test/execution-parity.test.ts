@@ -5026,57 +5026,94 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     }, 180_000);
 
     /**
-     * Round 60, gitea fwgt11-n1 04-set, through compileSkills and carryOpener.
+     * Round 60, gitea fwgt11-n1 04-set, through carryOpener and compileSkills.
      * A dead instruction opened the Labels picker and ticked "bug"; the picker
      * shut unrecorded (the app commits on close); its resume opened it again,
-     * and that diff offered every item but `link "bug"` — applied by then. The
-     * next instruction ticked "priority-high" and pressed Escape. Carried from
-     * the FIRST opening, both runners open, tick bug, skip the re-open as
-     * already showing, tick priority-high, and the Escape commits both. The
-     * control is the same recording whose re-open still offered "bug" (the
-     * tick came to nothing): only the re-open is carried, and both runners
-     * commit priority-high alone, as today.
+     * and that diff added the listbox again — it had been shut — and offered
+     * every item but `link "bug"`, applied by then. The next instruction
+     * ticked "priority-high" and pressed Escape (and, in `reload`, went on as
+     * fwgt11's did: reloaded the issue, opened the picker, ticked
+     * priority-high and shut it). Carried from the FIRST opening, the re-open
+     * is `closedBefore`: both runners shut the showing picker first (which
+     * commits "bug"), prove it went, and open it again as recorded
+     * (execution/toggle.ts closeBeforeReopen).
      */
-    it('both runners commit both labels once a picker the dead instruction opened twice is carried from its first opening (fwgt11)', async () => {
-      const url = `${origin}/labels-picker`;
+    const labelsRecording = (url: string, o: { tookEffect: boolean; reload: boolean }) => {
       const T = "Use the Labels picker to set exactly 'bug' and 'priority-high'.";
-      const diff = (added: string[]) => ({ url, alerts: [], added, dialect: 2 as const });
+      const diff = (added: string[], removed: string[] = []) => ({ url, alerts: [], added, removed, dialect: 2 as const });
       const choices = '- listbox "Label choices"';
-      const opener = (added: string[]): RecordedStep => ({ k: 'step', tool: 'click', args: { target: '@e1' }, locators: { target: { expr: 'x', verified: true, raw: '@e1', chain: [{ kind: 'css', selector: '#labels' }, { kind: 'role', role: 'combobox', name: 'Labels' }] } }, diff: diff(added) });
+      const opener = (added: string[], removed: string[] = []): RecordedStep => ({ k: 'step', tool: 'click', args: { target: '@e1' }, locators: { target: { expr: 'x', verified: true, raw: '@e1', chain: [{ kind: 'css', selector: '#labels' }, { kind: 'role', role: 'combobox', name: 'Labels' }] } }, diff: diff(added, removed) });
       const item = (value: string, name: string): RecordedStep => ({ k: 'step', tool: 'click', args: { target: '@e2' }, locators: { target: { expr: 'x', verified: true, raw: '@e2', chain: [{ kind: 'css', selector: `#menu a[data-value="${value}"]` }, { kind: 'role', role: 'link', name }] } }, diff: diff([]) });
-      const recording = (tookEffect: boolean) => {
-        const before: RecordedEntry[] = [
-          { k: 'instruction', text: T, url },
-          opener([choices, '- link "bug"', '- link "priority-high"']),
-          item('1', 'bug'),
-          { k: 'report', status: 'blocked', summary: 'the picker did not apply the labels', values: {} },
-          { k: 'instruction', text: T, url, resume: true },
-          opener(tookEffect ? [choices, '- link "priority-high"'] : [choices, '- link "bug"', '- link "priority-high"']),
-        ];
-        const own: RecordedEntry[] = [
-          { k: 'instruction', text: T, url, startText: `- heading "Issue #4"\n- combobox "Labels"\n${choices}\n- link "bug"\n- link "priority-high"`, startDialect: 2 },
-          item('2', 'priority-high'),
-          { k: 'step', tool: 'press', args: { key: 'Escape' }, locators: {}, diff: diff(['- link "priority-high"']) },
-        ];
-        return carryOpener(before, own);
-      };
-      const run = async (tookEffect: boolean) => {
-        const report: Report = { status: 'success', summary: 'labels set', evidence: { values: {} } };
-        const [skill] = compileSkills({ entries: recording(tookEffect), instruction: T, report, session: 'parity', knownValues: {} });
-        return both([{ tool: 'goto', args: { url }, locators: {} }, ...skill.steps], 0);
-      };
+      const before: RecordedEntry[] = [
+        { k: 'instruction', text: T, url },
+        opener([choices, '- link "bug"', '- link "priority-high"']),
+        item('1', 'bug'),
+        { k: 'report', status: 'blocked', summary: 'the picker did not apply the labels', values: {} },
+        { k: 'instruction', text: T, url, resume: true },
+        opener(o.tookEffect ? [choices, '- link "priority-high"'] : [choices, '- link "bug"', '- link "priority-high"']),
+      ];
+      const own: RecordedEntry[] = [
+        { k: 'instruction', text: T, url, startText: `- heading "Issue #4"\n- combobox "Labels"\n${choices}\n- link "bug"\n- link "priority-high"`, startDialect: 2 },
+        item('2', 'priority-high'),
+        { k: 'step', tool: 'press', args: { key: 'Escape' }, locators: {}, diff: diff([]) },
+        ...(o.reload
+          ? [
+            { k: 'step', tool: 'goto', args: { url }, locators: {}, diff: diff(['- link "bug"']) } as RecordedStep,
+            opener([choices, '- link "priority-high"']),
+            item('2', 'priority-high'),
+            opener([], [choices]),
+          ]
+          : []),
+      ];
+      return { entries: carryOpener(before, own), T };
+    };
+    const labelsRun = async (url: string, o: { tookEffect: boolean; reload: boolean }) => {
+      const { entries, T } = labelsRecording(url, o);
+      const report: Report = { status: 'success', summary: 'labels set', evidence: { values: {} } };
+      const [skill] = compileSkills({ entries, instruction: T, report, session: 'parity', knownValues: {} });
+      return { skill, ...(await both([{ tool: 'goto', args: { url }, locators: {} }, ...skill.steps], 0)) };
+    };
 
-      const fixed = await run(true);
+    it('both runners shut a picker the recording shut before re-opening it, and commit the carried tick (fwgt11)', async () => {
+      const fixed = await labelsRun(`${origin}/labels-picker`, { tookEffect: true, reload: false });
+      expect(fixed.skill.steps.filter((s) => s.closedBefore)).toHaveLength(1);
       expect(fixed.replay.ok, fixed.replay.reason ?? '').toBe(true);
       expect(fixed.emitted.ok, fixed.emitted.reason ?? '').toBe(true);
-      expect(fixed.replayLog, 'replay must commit the carried tick with the recorded one').toEqual(['commit:labels:bug,priority-high']);
-      expect(fixed.emittedLog, 'the artifact must commit the carried tick with the recorded one').toEqual(['commit:labels:bug,priority-high']);
+      expect(fixed.replayLog, 'replay must commit the carried tick before re-opening').toEqual(['commit:labels:bug', 'commit:labels:bug,priority-high']);
+      expect(fixed.emittedLog, 'the artifact must commit the carried tick before re-opening').toEqual(['commit:labels:bug', 'commit:labels:bug,priority-high']);
 
-      const control = await run(false);
+      // The control: the re-open still offered "bug" (the tick came to
+      // nothing), so only the re-open is carried, with no closedBefore, and
+      // both runners behave as before: open, tick priority-high, Escape.
+      const control = await labelsRun(`${origin}/labels-picker`, { tookEffect: false, reload: false });
+      expect(control.skill.steps.filter((s) => s.closedBefore)).toHaveLength(0);
       expect(control.replay.ok, control.replay.reason ?? '').toBe(true);
       expect(control.emitted.ok, control.emitted.reason ?? '').toBe(true);
       expect(control.replayLog).toEqual(['commit:labels:priority-high']);
       expect(control.emittedLog).toEqual(['commit:labels:priority-high']);
+    }, 240_000);
+
+    it('both runners commit bug,priority-high where Escape does not shut the picker and a reload follows, as on fwgt11\'s replays', async () => {
+      // Gitea's picker on fwgt11-n2/n3 stayed open through the recorded Escape
+      // (the artifact then skipped a later re-open as "already showing"), and
+      // the procedure reloads the issue before its final close. Skipping the
+      // carried re-open kept "bug" pending until that reload dropped it.
+      const run = await labelsRun(`${origin}/labels-picker?escape=0`, { tookEffect: true, reload: true });
+      expect(run.replay.ok, run.replay.reason ?? '').toBe(true);
+      expect(run.emitted.ok, run.emitted.reason ?? '').toBe(true);
+      expect(run.replayLog).toEqual(['commit:labels:bug', 'commit:labels:bug,priority-high']);
+      expect(run.emittedLog).toEqual(['commit:labels:bug', 'commit:labels:bug,priority-high']);
+    }, 240_000);
+
+    it('both runners stop, never skip, when the closing click does not shut the picker', async () => {
+      const run = await labelsRun(`${origin}/labels-picker?escape=0&stuck=1`, { tookEffect: true, reload: false });
+      expect(run.replayLog, 'replay must not commit past a pending tick').toEqual([]);
+      expect(run.emittedLog, 'the artifact must not commit past a pending tick').toEqual([]);
+      expect(run.replay.ok).toBe(false);
+      expect(run.emitted.ok).toBe(false);
+      const said = /still showing after a closing click/;
+      expect(run.replay.reason).toMatch(said);
+      expect(run.emitted.reason).toMatch(said);
     }, 180_000);
 
     it('both runners stop, not skip, a toggle whose target no longer resolves although its popup is showing', async () => {

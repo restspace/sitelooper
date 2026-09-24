@@ -287,6 +287,8 @@ export interface RecordedStep {
   linkedFrom?: LocatorExpr;
   /** Set by compile (collapseTogglePairs), never by the recorder: see SkillStep.toggle. */
   toggle?: true;
+  /** Set by compile (carryOpener), never by the recorder: see SkillStep.closedBefore. */
+  closedBefore?: true;
   /** The recognized component the target sits inside, for recipe compilation. */
   component?: { family: string; rel: string };
   /**
