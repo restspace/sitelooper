@@ -295,3 +295,45 @@ Corpus 0 status changes against r56.
 - **honesty** — a stop at a page-effect step is a real strike (s_24e7fd now demoted); a bare fragment
   like `#history` is the same route unless the app routes by fragment; a re-pin refused only for where
   it ends is re-judged after the next step's re-pin.
+
+## Round 58 (a6a3857): fourth ten-app confirmation, two batches of five — 4/10 green
+
+Main at ebfa26a/a6a3857, cloud-verified as verify-round57b on Chromium 1228: 0 failures, 148/148
+parity, corpus 0 changes. Batch 1's od/kb/op hit Docker Hub 429s and were re-fired; op and gt then
+went idle mid-run (the routine ended its turn with the sweep in the background) and were re-fired.
+
+| round | runid | commit | app | verified | replay model-free | compiled | green | notes |
+|---|---|---|---|---|---|---|---|---|
+| 58 | fwrd90 | a6a3857 | rd | 6/6 ×3 | yes | pass | **yes** | |
+| 58 | fwkb42 | a6a3857 | kb | 6/6 ×3 | yes | pass 4/6+2 n/a | **yes** | round 57's hidden-duplicate column pin held |
+| 58 | fwvk10 | a6a3857 | vk | 7/7 ×3 | yes | pass 5/7+2 n/a | **yes** | |
+| 58 | fwgh13 | a6a3857 | gh | 7/7 ×3 | yes | pass 5/7+2 n/a | **yes** | round 57's repeatIfNoEffect held (was 8/7 turns) |
+| 58 | fwod84 | a6a3857 | od | 6/6 ×3 | no: 7 / 0 turns | pass 6/6 | no | export's stripLeakedCandidates dropped the option `[FURN_7777] Office Chair`: the ledger filed the catalog code FURN_7777 (reported by 03-open) as a run-made identifier by its shape; only the render-counter `#autocomplete_0_2` was left |
+| 58 | fwsi10 | a6a3857 | si | 7/7 ×3 | no: 23 / 29 turns | pass 5/7+2 n/a | no | n1 clicked the date picker's "15" after typing the date: a click whose only effect was closing the calendar the fill opened; on replay the calendar was not open. Positional css also led the chain (stableFirst by shape). n2's recovery was the first strike, so n3 repeated it |
+| 58 | fwec11 | a6a3857 | ec | 7/7 ×3 | yes, but 01-signin partial | pass 5/7+2 n/a | no | the skipped read `page_title` (n1 pinned "EspoCRM" inside the footer's "EspoCRM, Inc.") made the step partial though no instruction asked for it; the echo rule matched the user menu "Admin" to the typed login "admin" by text alone |
+| 58 | fwop13 | a6a3857 | op | 7/7 ×3 | no: 13 / 8 turns | FAIL | no | n1 clicked Bench Project twice (no effect), listed tabs, then goto'd; the bare `tabs {}` ended abandonedLinkClick's scan, so both clicks were kept and the second stranded every run, the artifact included. Not demoted: n3's stop recovered by navigation only (harmless, fwod49/51) |
+| 58 | fwgt10 | a6a3857 | gt | 7/7, 6/7, 6/7 | yes | pass 5/7+2 n/a | no | obj 1: n1 took the seed issue titles by `eval` (its reads of `.issue-title` matched nothing on this build), so no compiled read produces them; the template literal was withheld (round 53) on the search page. The runtime `unanswered` missed it; a comma-list count read of nothing was skipped, not "0" |
+| 58 | fwgr71 | a6a3857 | gr | 5/6 ×3 | yes | pass 3/6+2 n/a | no | not an engine defect: the recording model rewrote "auto-refresh 1m" as the Settings intervals list (timepicker.refresh_intervals) and never selected 1m; replays reproduce it faithfully. Task left as is |
+
+## Round 59 fixes (fix/round59)
+
+Five branches off a6a3857, merged: ids 58c3c48, landing 8169849, runners 42b07e5, report 19461e7,
+honesty 143bd5b.
+
+- **ids (fwod84)** — a value the recording saw OFFERED (an option/menu line a later click picked) before
+  any report carried it is app data, a task constant, in compile and in export's strip alike; export's
+  strip never removes the last named candidate for a shape-only value when only positional ones remain.
+- **landing (fwsi10)** — a click whose only recorded effect removed the popup the preceding fill/type
+  opened, with the typed value still in the field, is a hide whose removal is not required: both runners
+  skip it (logged) when its target is gone with that popup. stableFirst discounts digits that come from a
+  task constant or an entered slot value (a record id in the path still demotes).
+- **runners (fwop13)** — one `observesOnly` definition (read, read_all, wait_for, a bare tab listing) for
+  abandonedLinkClick and repeatOf; a bare `tabs` listing is dropped at compile like a screenshot.
+- **report (fwec11)** — echo is element-scoped: a text-equal read is observed only if it is outside the
+  acted-on control and its widget (found by locator, so a re-render is still the control) AND something
+  committed the value in between (navigation, url change, the control detached, a click whose recorded
+  effect shows the value). A skipped read is partial only for an asked output. A reported value equal to
+  document.title is recorded as a title read.
+- **honesty (fwgt10)** — a composite no read produces gets read-backs anchored at the step whose recorded
+  diff shows its parts; export warns for an asked output held only by an unsupported template literal and
+  the runtime `unanswered` includes it; a count of a comma selector list counts across the page.
