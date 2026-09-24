@@ -1233,6 +1233,25 @@ const OPENER_PLAIN = `<!doctype html><html><head><meta charset="utf-8"><title>Op
 <a id="open" href="/popup/child">Open approval</a>
 </body></html>`;
 
+/**
+ * A project list and a project page (round 59, openproject fwop13 01-signin):
+ * the project page carries the same link to itself (a breadcrumb), so a
+ * second click on it from there goes nowhere. "Work packages" posts
+ * `commit:wp:open`.
+ */
+const PROJ_LIST = `<!doctype html><html><head><meta charset="utf-8"><title>Projects</title></head><body>
+<h1>Projects</h1>
+<a id="bench" href="/proj/bench">Bench Project</a>
+</body></html>`;
+const PROJ_PAGE = `<!doctype html><html><head><meta charset="utf-8"><title>Bench Project</title></head><body>
+<nav><a href="/proj/bench">Bench Project</a></nav>
+<h1>Overview</h1>
+<button id="wp" type="button">Work packages</button>
+<script>
+document.getElementById('wp').addEventListener('click', () => fetch('/commit/wp/open', { method: 'POST' }));
+</script>
+</body></html>`;
+
 const POPUP_CHILD = `<!doctype html><html><head><meta charset="utf-8"><title>Approval</title></head><body>
 <h1>Approve order</h1>
 <button type="button" id="approve">Approve</button>
@@ -1633,6 +1652,8 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
       if (url === '/frames/renamed' || url === '/frames?renamed=1') return html(FRAMES(true));
       if (url === '/frames/inner' || url === '/frames/moved') return html(FRAME_INNER);
       if (url === '/opener') return html(OPENER);
+      if (url === '/proj-list') return html(PROJ_LIST);
+      if (url === '/proj/bench') return html(PROJ_PAGE);
       if (url === '/opener-plain') return html(OPENER_PLAIN);
       if (url === '/popup/child') return html(POPUP_CHILD);
       if (url.startsWith('/stall/')) {

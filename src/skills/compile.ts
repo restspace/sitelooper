@@ -546,6 +546,11 @@ export function compileSkills(input: CompileInput): Skill[] {
   const recordingNotes: TransformNote[] = [];
   const replayable = dropSupersededSets(collapseTogglePairs(expandListReads(dropEvalAssignedCandidates(creditUncreditedPopups(steps, recordingNotes), recordingNotes), reportValues))).filter((step) => {
     if (step.tool === 'screenshot' || step.tool === 'eval') return false;
+    // A bare tab listing (`tabs` with no switch_to) is the agent looking, like
+    // a screenshot: it changes nothing and publishes nothing. openproject
+    // fwop13 01-signin's `tabs {}` sat between two inert link clicks and the
+    // goto that replaced them, and kept both clicks in s_d1e9fe (see observesOnly).
+    if (step.tool === 'tabs' && typeof step.args.switch_to !== 'number') return false;
     if (step.tool === 'read' || step.tool === 'read_all') {
       return step.args.target === '(read-back)' || Boolean(readLabel(step, reportValues));
     }
@@ -3118,6 +3123,21 @@ function markRequiredRemovals(steps: SkillStep[], diffOf: (step: SkillStep) => S
   return steps;
 }
 
+/**
+ * A step that only LOOKS at the page: a read, a wait, or a bare tab listing
+ * (`tabs` with no switch_to). The one definition the scans for abandoned
+ * clicks step over (abandonedLinkClick, repeatOf): openproject fwop13's
+ * `tabs {}` between an inert link click and the goto that replaced it ended
+ * abandonedLinkClick's scan, and s_d1e9fe kept a click that stranded every
+ * replay (round 59). Compile drops a bare tab listing anyway; this still
+ * names it, so a step list that kept one (a variant's, a test's) reads the
+ * same.
+ */
+export function observesOnly(step: SkillStep): boolean {
+  if (step.tool === 'read' || step.tool === 'read_all' || step.tool === 'wait_for') return true;
+  return step.tool === 'tabs' && typeof step.args?.switch_to !== 'number';
+}
+
 /** A click's primary locator — the first candidate it was recorded with — as a comparable key. */
 function primaryLocator(step: SkillStep): string | null {
   const first = step.locators.target?.[0];
@@ -3206,10 +3226,10 @@ function repeatOf(steps: readonly SkillStep[], i: number, diffOf?: (step: SkillS
       const moved = Boolean(e?.urlPattern && before && e.urlPattern !== before);
       if (!(moved || s.mints || e?.addedContains?.length || e?.alertContains)) return null;
       if (!removalUndoneBetween(steps, i, j, diffOf)) return null;
-      const fieldWork = steps.slice(i + 1, j).some((b) => !['read', 'read_all', 'wait_for'].includes(b.tool));
+      const fieldWork = steps.slice(i + 1, j).some((b) => !observesOnly(b));
       return { j, fieldWork };
     }
-    if (['fill', 'type', 'press', 'read', 'read_all', 'wait_for'].includes(s.tool)) continue;
+    if (['fill', 'type', 'press'].includes(s.tool) || observesOnly(s)) continue;
     const k = primaryLocator(s);
     if (s.tool === 'click' && consequenceFree(steps, j, diffOf) && k && fieldTargets.has(k)) continue;
     return null;
@@ -3283,7 +3303,7 @@ function abandonedLinkClick(steps: readonly SkillStep[], i: number): number | nu
   for (let j = i + 1; j < steps.length; j++) {
     const s = steps[j];
     if (s.tool === 'goto') return j;
-    if (s.tool === 'read' || s.tool === 'read_all' || s.tool === 'wait_for') continue;
+    if (observesOnly(s)) continue;
     if (inert(j)) continue;
     return null;
   }
