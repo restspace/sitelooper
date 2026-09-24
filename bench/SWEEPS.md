@@ -269,3 +269,29 @@ Main re-verified (verify-round56d, 1a464d5, Chromium revision 1228 installed and
 | 57 | fwec10 | 2aa57e8 | ec | 7/7, 6/7, 6/7 | yes | pass 4/7 | no | **SILENT WRONG DATA**: obj 4 "amount=1250012500" is the persisted record. Choosing the account emptied Amount, so n1 re-typed it; replay's restoreStandingFills refilled it, then the recorded `type` (pressSequentially, never clears) APPENDED. Both replays and the compiled run reported success, drift 0. Also: stage never read (captureReadBack refused a match duplicated in the Stream) |
 | 57 | fwgh12 | 2aa57e8 | gh | 7/7 ×3 | no: 8 / 7 turns | FAIL | no | Ghost ignores the first click on "Published" after publishing; n1 clicked twice with only reads between, and abandonedRepeatClick (round 43) dropped the first as a failed attempt. Identical at e48d1a1 and 2aa57e8 |
 | 57 | fwsi9 | 2aa57e8 | si | 7/7 ×3 | no: 67 / 42 turns | refused | no | n1 Ctrl+clicked a link into a new tab: the recorder credits an opener-less new page as the popup, but armPageEffect waits only for the `popup` event, so replay stopped at 01 and every later step (recorded on page 1) was stranded. The page-effect stop counted as harmless; pinEndsElsewhere treated a `#history` anchor as another route and refused a good re-pin, so compile hit a demoted pin |
+
+## Round 57 fixes (7fe711b, merged to main)
+
+Cloud verify of 4bd2d93 on Chromium 1228: 148/148 parity; 3 failures in the main and browser suites,
+from two interactions of the merged groups: `pageEffectDemoted` read `skill.stats.failedAtStep` on a
+skill with no stats (a real crash path through pinStatus), and a test mock of browser.js lacked the
+new DEFAULT_ACTION_TIMEOUT_MS. Fixed in 7fe711b (optional chaining; the mock constant); the three tests
+pass locally. Merged on that basis; main is re-verified in the cloud alongside round 58 batch 1.
+Corpus 0 status changes against r56.
+
+- **runners** — **EspoCRM's silent wrong amount**: a `type` clears a field already holding its value or
+  filled earlier in the segment, and a field left holding its value twice stops the step (nothing is
+  saved). The artifact's hover is bounded (3s probe) and the emitted runFlow sets the daemon's 30s
+  defaults; 16 unbounded Locator calls got explicit timeouts, and a type-checked guard fails on new ones.
+  An opener-less new tab (Ctrl+click) is the popup, as the recorder already judged.
+- **ids** — a click the app ignored once, with only reads between it and its repeat, is kept once and
+  marked `repeatIfNoEffect`: both runners press again only when the first press changed nothing.
+- **report** — composite parts pin through the rendered-only code tier (hidden duplicate column titles);
+  an id reported without its affix ("4" of "#4") is read at its core when unambiguous; an ambiguous match
+  inside a field the key names wins (EspoCRM stage vs its Stream copy); a `[data-value]` option pick is
+  read back from the saved field.
+- **landing** — a query-string id (`task_id=4`) is minted when the step's own mutation added the element
+  that reached it; odoo's menu_id stays out (0 of 1309).
+- **honesty** — a stop at a page-effect step is a real strike (s_24e7fd now demoted); a bare fragment
+  like `#history` is the same route unless the app routes by fragment; a re-pin refused only for where
+  it ends is re-judged after the next step's re-pin.
