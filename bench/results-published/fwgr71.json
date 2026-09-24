@@ -1,0 +1,390 @@
+{
+  "name": "fwgr71",
+  "origin": "http://127.0.0.1:3000",
+  "startUrl": "http://127.0.0.1:3000",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to Grafana at http://127.0.0.1:3000 with username admin and password {{env:APP_PASSWORD}} (type that password text exactly). Then open the provisioned dashboard named 'Service health' and report the titles of all its panels exactly as shown.",
+      "skill": "s_a6858c",
+      "params": {
+        "v1": "http://127.0.0.1:3000",
+        "v2": "admin",
+        "v3": "{{env:APP_PASSWORD}}",
+        "v4": "Service health"
+      },
+      "outputs": [
+        "dashboard_title",
+        "initial_page_url",
+        "organizational_folder",
+        "login_username",
+        "panel_title_request_rate",
+        "panel_title_error_count",
+        "panel_title_latency_by_endpoint",
+        "panel_titles_1",
+        "panel_titles_2",
+        "panel_titles_3"
+      ],
+      "recorded": {
+        "dashboard_title": "Service Health",
+        "dashboard_uid": "bench-service-health",
+        "dashboard_url_slug": "service-health",
+        "initial_page_url": "about:blank",
+        "organizational_folder": "Bench",
+        "panel_count": "3",
+        "grafana_version": "11.3.0",
+        "login_username": "admin",
+        "panel_title_request_rate": "Request rate",
+        "panel_title_error_count": "Error count",
+        "panel_title_latency_by_endpoint": "Latency by endpoint",
+        "panel_titles_1": "Request rate",
+        "panel_titles_2": "Error count",
+        "panel_titles_3": "Latency by endpoint",
+        "url": "http://127.0.0.1:3000/d/bench-service-health/service-health?from=now-6h&to=now&timezone=browser"
+      },
+      "route": "http://127.0.0.1:3000/d/bench-service-health/service-health",
+      "outputEvidence": {
+        "dashboard_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "dashboard_uid": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "dashboard_url_slug": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "initial_page_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "organizational_folder": {
+          "same": 1,
+          "differed": 0
+        },
+        "panel_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "grafana_version": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "login_username": {
+          "same": 1,
+          "differed": 0
+        },
+        "panel_title_request_rate": {
+          "same": 1,
+          "differed": 0
+        },
+        "panel_title_error_count": {
+          "same": 1,
+          "differed": 0
+        },
+        "panel_title_latency_by_endpoint": {
+          "same": 1,
+          "differed": 0
+        },
+        "panel_titles_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "panel_titles_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "panel_titles_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "Create a NEW dashboard titled '{{runid}} {{01-signin.organizational_folder}} Dashboard' containing a Stat panel titled '{{runid}} Availability' whose query uses the TestData data source (e.g. scenario: Random Walk). Add the panel, then SAVE the dashboard (title must be set in the save dialog) and verify it persists. Report the dashboard URL from the browser page URL after saving.",
+      "skill": "s_754eb9",
+      "params": {
+        "v3": "{{runid}} {{01-signin.organizational_folder}} Dashboard",
+        "v4": "{{runid}} Availability",
+        "v1": "{{runid}}",
+        "v2": "{{01-signin.organizational_folder}}"
+      },
+      "outputs": [
+        "dashboard_title",
+        "dashboard_uid",
+        "dashboard_url_slug",
+        "dashboard_url",
+        "folder",
+        "panel_title",
+        "panel_rendered_value_after_reload",
+        "save_dialog_title_field_value",
+        "dashboards_list_row",
+        "bench_folder_row",
+        "dashboard_breadcrumb",
+        "bench_ref",
+        "breadcrumb_after_reopen_1",
+        "breadcrumb_after_reopen_2",
+        "breadcrumb_after_reopen_3"
+      ],
+      "recorded": {
+        "dashboard_title": "fwgr71-n1 Bench Dashboard",
+        "dashboard_uid": "efz7k3zis3hmoc",
+        "dashboard_url_slug": "fwgr71-n1-bench-dashboard",
+        "dashboard_url": "http://127.0.0.1:3000/d/efz7k3zis3hmoc/fwgr71-n1-bench-dashboard?from=now-6h&to=now&timezone=browser",
+        "folder": "Dashboards (root; no folder in breadcrumb)",
+        "panel_count": "1",
+        "panel_title": "fwgr71-n1 Availability",
+        "panel_type": "stat",
+        "panel_datasource": "TestData",
+        "panel_scenario": "Random Walk",
+        "panel_rendered_value_after_reload": "0.718",
+        "save_dialog_title_field_value": "fwgr71-n1 Bench Dashboard",
+        "dashboards_list_row": "fwgr71-n1 Bench Dashboard",
+        "bench_folder_row": "Bench",
+        "dashboard_breadcrumb": "Home\nDashboards\nfwgr71-n1 Bench Dashboard",
+        "bench_ref": "fwgr71-n1",
+        "breadcrumb_after_reopen_1": "Home",
+        "breadcrumb_after_reopen_2": "Dashboards",
+        "breadcrumb_after_reopen_3": "fwgr71-n1 Bench Dashboard",
+        "url": "http://127.0.0.1:3000/d/efz7k3zis3hmoc/fwgr71-n1-bench-dashboard?from=now-6h&to=now&timezone=browser",
+        "url.p1": "efz7k3zis3hmoc",
+        "url.p2": "fwgr71-n1-bench-dashboard"
+      },
+      "route": "http://127.0.0.1:3000/d/efz7k3zis3hmoc/:id"
+    },
+    {
+      "id": "03-open",
+      "instruction": "On the existing dashboard '{{runid}} {{01-signin.organizational_folder}} Dashboard' (open http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard), add a Text panel titled '{{runid}} Notes' whose text content includes '{{runid}}'. Apply the panel, then save the dashboard and verify persistence on reload. Report the panel title and its content as shown on the saved dashboard.",
+      "skill": "s_1662c9",
+      "params": {
+        "v1": "{{runid}} {{01-signin.organizational_folder}} Dashboard",
+        "v4": "{{02-create.url.p1}}",
+        "v5": "{{02-create.url.p2}}",
+        "v6": "Text",
+        "v7": "{{runid}} Notes",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "dashboard_title",
+        "dashboard_uid",
+        "panel_title",
+        "availability_stat_value_after_reload",
+        "verified_via",
+        "dashboard_url",
+        "bench_ref",
+        "panel_content_paragraphs_1",
+        "panel_content_paragraphs_2",
+        "panels_after_reload_1",
+        "panels_after_reload_2"
+      ],
+      "recorded": {
+        "dashboard_title": "fwgr71-n1 Bench Dashboard",
+        "dashboard_uid": "efz7k3zis3hmoc",
+        "panel_title": "fwgr71-n1 Notes",
+        "panel_content_contains_fwgr71n1": "true",
+        "availability_stat_value_after_reload": "72.7",
+        "verified_via": "hard reload of dashboard URL, live DOM read of panel regions and headings",
+        "dashboard_url": "http://127.0.0.1:3000/d/efz7k3zis3hmoc/fwgr71-n1-bench-dashboard?from=now-6h&to=now&timezone=browser",
+        "bench_ref": "fwgr71-n1",
+        "panel_content_paragraphs_1": "fwgr71-n1 Notes",
+        "panel_content_paragraphs_2": "Notes for the fwgr71-n1 bench dashboard.",
+        "panels_after_reload_1": "fwgr71-n1 Notes",
+        "panels_after_reload_2": "fwgr71-n1 Availability"
+      },
+      "route": "http://127.0.0.1:3000/d/efz7k3zis3hmoc/:id"
+    },
+    {
+      "id": "04-set",
+      "instruction": "On the saved dashboard at http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard, set the dashboard tag to 'bench' (via dashboard settings or the save dialog's tags field) and set the time range to the last 6 hours. IMPORTANT: when saving, tick 'Update default time range' in the save dialog so the 6h range is persisted. Save, then hard-reload and verify: the 'bench' tag is visible (e.g. in dashboard settings or search) and the saved default time range is Last 6 hours (check dashboard settings > time range, not just the top-bar picker). Report what you verified.",
+      "skill": "s_a498af",
+      "params": {
+        "v4": "http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard",
+        "v1": "{{02-create.url.p1}}",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "dashboard_title",
+        "dashboard_uid",
+        "settings_general_tag_pill",
+        "time_picker_on_clean_url_load",
+        "json_model_tail",
+        "json_model_middle",
+        "find_now6h_result",
+        "bench_ref",
+        "panels_after_reload_1",
+        "panels_after_reload_2"
+      ],
+      "recorded": {
+        "dashboard_title": "fwgr71-n1 Bench Dashboard",
+        "dashboard_uid": "efz7k3zis3hmoc",
+        "dashboard_version_after_save": "3",
+        "settings_general_tag_pill": "bench, removable via Remove \"bench\" tag button",
+        "time_picker_on_clean_url_load": "Last 6 hours",
+        "update_default_time_range_checkbox": "ticked before Save",
+        "json_model_saved_time_from": "now-6h",
+        "json_model_saved_time_to": "now",
+        "json_model_tags_1": "bench",
+        "json_model_tail": "},\n  \"timepicker\": {},\n  \"timezone\": \"browser\",\n  \"title\": \"fwgr71-n1 Bench Dashboard\",\n  \"uid\": \"efz7k3zis3hmoc\",\n  \"version\": 3,\n  \"weekStart\": \"\"\n}",
+        "json_model_middle": "},\n      \"id\": 1,\n      \"options\": {\n        \"colorMode\": \"value\",\n        \"graphMode\": \"area\",\n        \"justifyMode\": \"auto\",\n        \"orientation\": \"auto\",\n        \"percentChangeColorMode\": \"standard\",\n        \"reduceOptions\": {\n          \"calcs\": [",
+        "find_now6h_result": "No results",
+        "monaco_editor_view_line": "\"tags\": [",
+        "monaco_editor_view_line_2": "\"bench\"",
+        "monaco_editor_view_line_3": "\"time\": {",
+        "monaco_editor_view_line_4": "\"from\": \"now-6h\",",
+        "monaco_editor_view_line_5": "\"to\": \"now\"",
+        "bench_ref": "fwgr71-n1",
+        "panels_after_reload_1": "fwgr71-n1 Notes",
+        "panels_after_reload_2": "fwgr71-n1 Availability"
+      },
+      "route": "http://127.0.0.1:3000/d/efz7k3zis3hmoc/:id",
+      "urlVariance": [
+        "fwgr71-n1-bench-dashboard",
+        "fwgr71-n2-bench-dashboard"
+      ]
+    },
+    {
+      "id": "05-set",
+      "instruction": "On the dashboard at http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard, set the auto-refresh interval to '1m' via Dashboard settings > Auto refresh (add/select 1m so the refresh picker offers 1m as the interval), then save the dashboard. Verify persistence via the saved JSON model (refresh_intervals should include '1m') after a hard reload, and report the final dashboard URL as shown in the browser's page URL.",
+      "skill": "s_9c6b16",
+      "params": {
+        "v4": "http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard",
+        "v1": "{{02-create.url.p1}}",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "auto_refresh_intervals_set",
+        "dashboard_title",
+        "dashboard_uid",
+        "final_dashboard_url",
+        "refresh_picker_options",
+        "json_model_current_tail",
+        "auto_refresh_value_before",
+        "json_model_full",
+        "bench_ref",
+        "panels_1",
+        "panels_2"
+      ],
+      "recorded": {
+        "auto_refresh_intervals_set": "5s,10s,30s,1m,2m,5m,15m,30m,1h,2h,1d",
+        "dashboard_title": "fwgr71-n1 Bench Dashboard",
+        "dashboard_uid": "efz7k3zis3hmoc",
+        "final_dashboard_url": "http://127.0.0.1:3000/d/efz7k3zis3hmoc/fwgr71-n1-bench-dashboard?from=now-6h&to=now&timezone=browser",
+        "json_model_refresh_intervals": "5s, 10s, 30s, 1m, 2m, 5m, 15m, 30m, 1h, 2h, 1d",
+        "json_model_refresh_intervals_includes_1m": "true",
+        "json_model_tags": "bench",
+        "json_model_version_after_save": "4",
+        "json_model_version_before": "3",
+        "refresh_picker_offers_1m": "true",
+        "refresh_picker_options": "Off Auto 5s 10s 30s 1m 2m 5m 15m 30m 1h 2h 1d",
+        "json_model_time_from": "now-6h",
+        "json_model_time_to": "now",
+        "json_model_current_tail": "},\n  \"timepicker\": {},\n  \"timezone\": \"browser\",\n  \"title\": \"fwgr71-n1 Bench Dashboard\",\n  \"uid\": \"efz7k3zis3hmoc\",\n  \"version\": 3,\n  \"weekStart\": \"\"\n}",
+        "auto_refresh_value_before": "5s,10s,30s,1m,5m,15m,30m,1h,2h,1d",
+        "json_model_full": "{\n  \"annotations\": {\n    \"list\": [\n      {\n        \"builtIn\": 1,\n        \"datasource\": {\n          \"type\": \"grafana\",\n          \"uid\": \"-- Grafana --\"\n        },\n        \"enable\": true,",
+        "monaco_editor_view_line": "\"timepicker\": {",
+        "monaco_editor_view_line_2": "\"refresh_intervals\": [",
+        "monaco_editor_view_line_3": "\"5s\",",
+        "monaco_editor_view_line_4": "\"10s\",",
+        "monaco_editor_view_line_5": "\"30s\",",
+        "monaco_editor_view_line_6": "\"1m\",",
+        "monaco_editor_view_line_7": "\"2m\",",
+        "monaco_editor_view_line_8": "\"5m\",",
+        "bench_ref": "fwgr71-n1",
+        "panels_1": "fwgr71-n1 Notes",
+        "panels_2": "fwgr71-n1 Availability"
+      },
+      "route": "http://127.0.0.1:3000/d/efz7k3zis3hmoc/:id",
+      "urlVariance": [
+        "fwgr71-n1-bench-dashboard",
+        "fwgr71-n2-bench-dashboard"
+      ]
+    }
+  ],
+  "provenance": {
+    "session": "fwgr71-n1",
+    "created": "2026-09-24T09:54:29.011Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "dashboard_uid",
+        "dashboard_url_slug",
+        "panel_count",
+        "grafana_version"
+      ]
+    },
+    {
+      "stepId": "02-create",
+      "outputs": [
+        "panel_count",
+        "panel_type",
+        "panel_datasource",
+        "panel_scenario"
+      ]
+    },
+    {
+      "stepId": "03-open",
+      "outputs": [
+        "panel_content_contains_fwgr71n1"
+      ]
+    },
+    {
+      "stepId": "04-set",
+      "outputs": [
+        "dashboard_version_after_save",
+        "update_default_time_range_checkbox",
+        "json_model_saved_time_from",
+        "json_model_saved_time_to",
+        "json_model_tags_1",
+        "monaco_editor_view_line",
+        "monaco_editor_view_line_2",
+        "monaco_editor_view_line_3",
+        "monaco_editor_view_line_4",
+        "monaco_editor_view_line_5"
+      ]
+    },
+    {
+      "stepId": "05-set",
+      "outputs": [
+        "json_model_refresh_intervals",
+        "json_model_refresh_intervals_includes_1m",
+        "json_model_tags",
+        "json_model_version_after_save",
+        "json_model_version_before",
+        "refresh_picker_offers_1m",
+        "json_model_time_from",
+        "json_model_time_to",
+        "monaco_editor_view_line",
+        "monaco_editor_view_line_2",
+        "monaco_editor_view_line_3",
+        "monaco_editor_view_line_4",
+        "monaco_editor_view_line_5",
+        "monaco_editor_view_line_6",
+        "monaco_editor_view_line_7",
+        "monaco_editor_view_line_8"
+      ]
+    }
+  ]
+}
