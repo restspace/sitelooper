@@ -1,0 +1,112 @@
+{
+  "flow": "fwec12",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-login",
+      "status": "success",
+      "summary": "Replayed stored procedure s_c38711; observed initial_page_url=http://127.0.0.1:8097/, opportunity_1=Seed: training package, opportunity_2=Seed: pilot expansion, opportunity_3=Seed: annual support renewal.",
+      "values": {
+        "initial_page_url": "http://127.0.0.1:8097/",
+        "opportunity_1": "Seed: training package",
+        "opportunity_2": "Seed: pilot expansion",
+        "opportunity_3": "Seed: annual support renewal"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Name: fwec12-n3 Bench Opportunity; Account: Bench Account; Assigned User: Bench Assignee; Stage: Negotiation; Amount: $12,500.00; Close Date: Dec 31 2026.",
+      "unanswered": [
+        "close_date",
+        "account_id",
+        "assignee_id"
+      ],
+      "values": {
+        "record_id": "6ab55c2ce4abe4f06",
+        "name": "fwec12-n3 Bench Opportunity",
+        "account": "Bench Account",
+        "stage": "Negotiation",
+        "amount": "$12,500.00",
+        "description": "fwec12-n3",
+        "assignee": "Bench Assignee"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "36/36",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_8af753: step 6: 2 field(s) this procedure filled were empty again before this click (the page rebuilt its form, or dropped the value when the field lost focus, after the fills were checked) — refilled once",
+        "s_8af753: step 14: 2 field(s) this procedure filled were empty again before this press (the page rebuilt its form, or dropped the value when the field lost focus, after the fills were checked); 1 of them kept only a value typed key by key — refilled once",
+        "s_8af753: step 17: the field already held the value this type enters (restored after the recording saw it emptied), so it was cleared first rather than typed onto",
+        "s_da8a2b: step 13: primary locator did not resolve; used fallback #2 page.locator('div:nth-of-type(1) > div > div > div:nth-of-type(1) > div > a').nth(3)"
+      ],
+      "unreported": [
+        "close_date"
+      ]
+    },
+    {
+      "id": "03-find",
+      "status": "success",
+      "summary": "Replayed stored procedure s_9cc2a7; observed record_id=6ab55c2ce4abe4f06, run_identifier=fwec12-n3, post_time=17:21, stream_heading=Stream.",
+      "values": {
+        "record_id": "6ab55c2ce4abe4f06",
+        "run_identifier": "fwec12-n3",
+        "post_time": "17:21",
+        "stream_heading": "Stream"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_9cc2a7: step 4: read 'post_text' returned a value the skill itself set/selected ('Created for run fwec12-n3') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "post_text"
+      ]
+    }
+  ],
+  "passed": 3,
+  "total": 3,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwec12",
+      "step": "02-create",
+      "skill": "s_da8a2b",
+      "atStep": "13",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByText('Bench Assignee', { exact: true })",
+      "fallbackUsed": "page.locator('div:nth-of-type(1) > div > div > div:nth-of-type(1) > div > a').nth(3)",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8097/#Opportunity/view/6ab55c2ce4abe4f06",
+      "pageUrl": "http://127.0.0.1:8097/#Opportunity/view/6ab55c2ce4abe4f06"
+    }
+  ],
+  "wallMs": 95851,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

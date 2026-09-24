@@ -1,0 +1,268 @@
+{
+  "name": "fwec12",
+  "origin": "http://127.0.0.1:8097",
+  "startUrl": "http://127.0.0.1:8097/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-login",
+      "instruction": "Log in to EspoCRM at http://127.0.0.1:8097/ with username admin and password {{env:APP_PASSWORD}} (type that literal text exactly; it gets filled in). Then go to Opportunities, find the opportunities whose names start with 'Seed:', and report their exact names.",
+      "skill": "s_d1c0a6",
+      "params": {
+        "v1": "http://127.0.0.1:8097/",
+        "v2": "admin",
+        "v3": "{{env:APP_PASSWORD}}",
+        "v4": "Seed:"
+      },
+      "outputs": [
+        "opportunity_1",
+        "opportunity_2",
+        "opportunity_3",
+        "initial_page_url"
+      ],
+      "recorded": {
+        "matching_opportunities_count": "3",
+        "opportunity_1": "Seed: training package",
+        "opportunity_1_id": "6ab55a55ced86d0ac",
+        "opportunity_2": "Seed: pilot expansion",
+        "opportunity_2_id": "6ab55a55893b4ef7f",
+        "opportunity_3": "Seed: annual support renewal",
+        "opportunity_3_id": "6ab55a55428eefe53",
+        "list_total": "1-3/3",
+        "initial_page_url": "about:blank",
+        "url": "http://127.0.0.1:8097/#Opportunity"
+      },
+      "route": "http://127.0.0.1:8097/#Opportunity",
+      "outputEvidence": {
+        "matching_opportunities_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "opportunity_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "opportunity_1_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "opportunity_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "opportunity_2_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "opportunity_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "opportunity_3_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "list_total": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "initial_page_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "In EspoCRM, create a new Opportunity with name '{{runid}} Bench Opportunity'. Set: account = 'Bench Account' (a link field — pick the record from the suggestions/select dialog so it is actually linked, not just typed), assigned user = 'Bench Assignee' (also a link field — choose the actual user record), stage = 'Negotiation', amount = 12500, close date = 2026-12-31, and description containing the text '{{runid}}'. Save the record, then open it and report the values shown on its page for name, account, assignee, stage, amount, close date, and the record ID from the address bar (the #Opportunity/view/<id> part).",
+      "skill": "s_cdf02e",
+      "params": {
+        "v2": "{{runid}} Bench Opportunity",
+        "v3": "Bench Account",
+        "v4": "Bench Assignee",
+        "v5": "12500",
+        "v6": "2026-12-31",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "record_id",
+        "name",
+        "account",
+        "assignee",
+        "stage",
+        "amount",
+        "close_date",
+        "description"
+      ],
+      "recorded": {
+        "record_id": "6ab55b3616555c747",
+        "name": "fwec12-n1 Bench Opportunity",
+        "account": "Bench Account",
+        "account_id": "6ab55a5238b3333f5",
+        "assignee": "Bench Assignee",
+        "assignee_id": "6ab55a53982ccfc8f",
+        "stage": "Negotiation",
+        "amount": "$12,500.00",
+        "close_date": "2026-12-31 (page displays Dec 31)",
+        "description": "fwec12-n1",
+        "url": "http://127.0.0.1:8097/#Opportunity/view/6ab55b3616555c747",
+        "url.h2": "6ab55b3616555c747"
+      },
+      "route": "http://127.0.0.1:8097/#Opportunity/view/:id",
+      "outputEvidence": {
+        "record_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "name": {
+          "same": 0,
+          "differed": 1
+        },
+        "account": {
+          "same": 1,
+          "differed": 0
+        },
+        "account_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "assignee": {
+          "same": 1,
+          "differed": 0
+        },
+        "assignee_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "stage": {
+          "same": 1,
+          "differed": 0
+        },
+        "amount": {
+          "same": 1,
+          "differed": 0
+        },
+        "close_date": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "description": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.h2": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "03-find",
+      "instruction": "On the opportunity record at #Opportunity/view/{{02-create.url.h2}} ({{runid}} Bench Opportunity), find the Stream panel and post a new message there whose text includes '{{runid}}' (e.g. 'Created for run {{runid}}'). Submit the post and verify it appears in the stream, then report the post text.",
+      "skill": "s_9cc2a7",
+      "params": {
+        "v1": "{{02-create.url.h2}}",
+        "v2": "{{runid}} Bench Opportunity",
+        "v3": "{{runid}}",
+        "v4": "Created for run {{runid}}"
+      },
+      "outputs": [
+        "record_id",
+        "post_text",
+        "post_time",
+        "stream_heading",
+        "run_identifier"
+      ],
+      "recorded": {
+        "record_id": "6ab55b3616555c747",
+        "post_text": "Created for run fwec12-n1",
+        "post_author": "Admin",
+        "post_time": "17:18",
+        "stream_heading": "Stream",
+        "run_identifier": "fwec12-n1"
+      },
+      "route": "http://127.0.0.1:8097/#Opportunity/view/:id",
+      "outputEvidence": {
+        "record_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "post_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "post_author": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "post_time": {
+          "same": 0,
+          "differed": 1
+        },
+        "stream_heading": {
+          "same": 1,
+          "differed": 0
+        },
+        "run_identifier": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwec12-n1",
+    "created": "2026-09-24T17:18:32.232Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-login",
+      "outputs": [
+        "matching_opportunities_count",
+        "opportunity_1_id",
+        "opportunity_2_id",
+        "opportunity_3_id",
+        "list_total"
+      ]
+    },
+    {
+      "stepId": "02-create",
+      "outputs": [
+        "account_id",
+        "assignee_id"
+      ]
+    },
+    {
+      "stepId": "03-find",
+      "outputs": [
+        "post_author"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,254 @@
+{
+ "id": "s_d1c0a6",
+ "origin": "http://127.0.0.1:8097",
+ "template": "Log in to EspoCRM at {{v1}} with username {{v2}} and password {{v3}} (type that literal text exactly; it gets filled in). Then go to Opportunities, find the opportunities whose names start with '{{v4}}', and report their exact names.",
+ "params": {
+  "v1": {
+   "example": "http://127.0.0.1:8097/",
+   "usedIn": [
+    2
+   ]
+  },
+  "v2": {
+   "example": "admin",
+   "usedIn": [
+    3
+   ]
+  },
+  "v3": {
+   "example": "{{env:APP_PASSWORD}}",
+   "usedIn": [
+    4
+   ]
+  },
+  "v4": {
+   "example": "Seed:",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8097/"
+ },
+ "steps": [
+  {
+   "tool": "read",
+   "args": {
+    "what": "url"
+   },
+   "locators": {},
+   "label": "initial_page_url"
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e13",
+    "value": "{{v2}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Username"
+     },
+     {
+      "kind": "label",
+      "label": "Username"
+     },
+     {
+      "kind": "id",
+      "selector": "#field-userName"
+     },
+     {
+      "kind": "css",
+      "selector": "#field-userName"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 262,
+      "w": 370,
+      "h": 36,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8097/",
+    "addedContains": [
+     "- textbox \"Username\": {{v2}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e17",
+    "value": "{{v3}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Password"
+     },
+     {
+      "kind": "label",
+      "label": "Password"
+     },
+     {
+      "kind": "id",
+      "selector": "#field-password"
+     },
+     {
+      "kind": "css",
+      "selector": "#field-password"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 334,
+      "w": 370,
+      "h": 36,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8097/",
+    "addedContains": [
+     "- textbox \"Password\": {{v3}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "button:has-text(\"Log in\")"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "button:has-text(\"Log in\")"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Log in"
+     },
+     {
+      "kind": "id",
+      "selector": "#btn-login"
+     },
+     {
+      "kind": "css",
+      "selector": "#btn-login"
+     },
+     {
+      "kind": "point",
+      "x": 495,
+      "y": 386,
+      "w": 80,
+      "h": 36,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8097/",
+    "addedContains": [
+     "- searchbox \"Search\"",
+     "- button \"Last Viewed\"",
+     "- button \"Create\"",
+     "- button \"Notifications\"",
+     "- button \"Menu\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e51"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "a[href=\"#Opportunity\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(1) > ul > li:nth-of-type(6) > a"
+     },
+     {
+      "kind": "point",
+      "x": 25,
+      "y": 289,
+      "w": 50,
+      "h": 40,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8097/#Opportunity",
+    "addedContains": [
+     "- heading \"Opportunities\"",
+     "- link \"Ctrl+Space\"",
+     "- button \"Filter\"",
+     "- button \"Search\"",
+     "- button \"Reset\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-24T17:15:27.380Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4,
+  "lastUsed": "2026-09-24T17:20:32.774Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_0abf89",
+  "index": 0,
+  "of": 2
+ },
+ "provenance": {
+  "session": "fwec12-n1",
+  "instruction": "Log in to EspoCRM at http://127.0.0.1:8097/ with username admin and password {{env:APP_PASSWORD}} (type that literal text exactly; it gets filled in). Then go to Opportunities, find the opportunities whose names start with 'Seed:', and report their exact names.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-24T17:15:27.380Z"
+ },
+ "revision": 3
+}
