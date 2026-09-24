@@ -1,5 +1,5 @@
 import type { Locator, Page } from 'playwright-core';
-import { reactSafeFill, settleDom } from './browser.js';
+import { DEFAULT_ACTION_TIMEOUT_MS, reactSafeFill, settleDom } from './browser.js';
 
 /**
  * STANDING FILLS, the rule both execution targets share: the values a
@@ -199,7 +199,7 @@ async function typeInto(locator: Locator, value: string): Promise<void> {
   await locator.click({ timeout: STANDING_FILL_PROBE_MS * 5 });
   await locator.page().keyboard.press('ControlOrMeta+a');
   await locator.page().keyboard.press('Backspace');
-  await locator.pressSequentially(value, { delay: 20 });
+  await locator.pressSequentially(value, { delay: 20, timeout: DEFAULT_ACTION_TIMEOUT_MS });
 }
 
 /**

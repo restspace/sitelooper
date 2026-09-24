@@ -357,3 +357,114 @@ describe('standalone execution source', () => {
     expect(() => parseExecutionSource('gate', "import { x } from './gate.js';\n")).toThrow(/imports itself/);
   });
 });
+
+/**
+ * Round 57, grafana fwgr70: a shared-execution call that WAITS on a locator
+ * (an actionability check, an evaluate waiting for its element) with no
+ * timeout of its own leans on the page's default, which is 30s in the daemon
+ * and 0 (unbounded) under Playwright Test — syntheticHover's bare `hover()`
+ * hung the compiled run for 300s. So every such call in src/execution passes
+ * its bound explicitly (browser.ts DEFAULT_ACTION_TIMEOUT_MS, or a tighter
+ * one).
+ *
+ * Found by the type checker, not by text: a call whose receiver's type is
+ * Playwright's Locator, to a method that waits, with its options argument
+ * either an object literal carrying `timeout` or a value whose type REQUIRES
+ * one. Comments and strings never match.
+ */
+describe('shared execution calls bound their own waits (fwgr70)', () => {
+  /** Locator methods that wait for their element, and the index of their options argument. */
+  const OPTIONS_AT: Record<string, number> = {
+    hover: 0, click: 0, dblclick: 0, tap: 0, check: 0, uncheck: 0, setChecked: 1, fill: 1, clear: 0, press: 1, pressSequentially: 1, type: 1,
+    selectOption: 1, selectText: 0, focus: 0, blur: 0, waitFor: 0, innerText: 0, innerHTML: 0, textContent: 0, inputValue: 0, getAttribute: 1,
+    evaluate: 2, evaluateHandle: 2, dispatchEvent: 2, scrollIntoViewIfNeeded: 0, boundingBox: 0, elementHandle: 0, setInputFiles: 1, dragTo: 1,
+    screenshot: 0, isChecked: 0, isEditable: 0, isEnabled: 0,
+  };
+  /**
+   * A bare call a documented default covers, as `file:function:method`, with
+   * why. Empty: every wait in the shared code is bounded where it is made.
+   */
+  const COVERED: Record<string, string> = {};
+
+  function unboundedCalls(): string[] {
+    const dir = path.resolve('src/execution');
+    const files = fs.readdirSync(dir).filter((f) => f.endsWith('.ts')).map((f) => path.join(dir, f));
+    const program = ts.createProgram(files, {
+      target: ts.ScriptTarget.ES2022,
+      module: ts.ModuleKind.NodeNext,
+      moduleResolution: ts.ModuleResolutionKind.NodeNext,
+      strict: true,
+      skipLibCheck: true,
+      lib: ['lib.es2022.d.ts', 'lib.dom.d.ts'],
+    });
+    const checker = program.getTypeChecker();
+    const requiresTimeout = (node: ts.Expression): boolean => {
+      const prop = checker.getTypeAtLocation(node).getProperty('timeout');
+      return !!prop && !(prop.flags & ts.SymbolFlags.Optional);
+    };
+    const bounded = (arg: ts.Expression | undefined): boolean => {
+      if (!arg) return false;
+      if (ts.isObjectLiteralExpression(arg)) {
+        return arg.properties.some(
+          (p) => (p.name !== undefined && (ts.isIdentifier(p.name) || ts.isStringLiteral(p.name)) && p.name.text === 'timeout') || (ts.isSpreadAssignment(p) && requiresTimeout(p.expression)),
+        );
+      }
+      return requiresTimeout(arg);
+    };
+    const found: string[] = [];
+    let locators = 0;
+    for (const sf of program.getSourceFiles()) {
+      if (!files.includes(path.resolve(sf.fileName))) continue;
+      const visit = (node: ts.Node): void => {
+        if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression) && node.expression.name.text in OPTIONS_AT) {
+          const method = node.expression.name.text;
+          const receiver = checker.getTypeAtLocation(node.expression.expression);
+          if ((receiver.getSymbol() ?? receiver.aliasSymbol)?.getName() === 'Locator') {
+            locators++;
+            if (!bounded(node.arguments[OPTIONS_AT[method]])) {
+              let fn: ts.Node | undefined = node.parent;
+              while (fn && !ts.isFunctionDeclaration(fn)) fn = fn.parent;
+              const key = `${path.basename(sf.fileName)}:${(fn as ts.FunctionDeclaration | undefined)?.name?.text ?? '(module)'}:${method}`;
+              if (!(key in COVERED)) found.push(`${key} (line ${sf.getLineAndCharacterOfPosition(node.getStart()).line + 1})`);
+            }
+          }
+        }
+        ts.forEachChild(node, visit);
+      };
+      visit(sf);
+    }
+    // The scan must be seeing Locator calls at all, or an empty list proves nothing.
+    if (locators < 20) found.push(`only ${locators} Locator calls found — the type check is not resolving playwright-core`);
+    return found;
+  }
+
+  it('passes an explicit timeout on every waiting Locator call', () => {
+    expect(unboundedCalls()).toEqual([]);
+  }, 120_000);
+
+  it('the emitted runFlow gives the page the daemon’s default timeouts', () => {
+    const { source } = emitFlowFile(
+      {
+        version: 1,
+        name: 'timeouts',
+        origin: 'http://app.test',
+        startUrl: 'http://app.test/',
+        vars: [],
+        steps: [
+          {
+            id: '01-hover',
+            instruction: 'hover',
+            params: {},
+            outputs: [],
+            segments: [{ id: 's_h', template: 'hover', params: {}, preconditions: { urlPattern: 'http://app.test/' }, steps: [{ tool: 'hover', args: { target: '@e1' }, locators: { target: [{ kind: 'id', selector: '#menu' }] } }] }],
+          },
+        ],
+      },
+      { tier: 'plain' },
+    );
+    const body = source.slice(source.indexOf('export async function runFlow('));
+    expect(body).toContain('page.setDefaultTimeout(30000);');
+    expect(body).toContain('page.setDefaultNavigationTimeout(30000);');
+    expect(body.indexOf('page.setDefaultTimeout(')).toBeLessThan(body.indexOf('await page.goto('));
+  });
+});

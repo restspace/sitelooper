@@ -1,5 +1,5 @@
 import type { Locator, Page } from 'playwright-core';
-import { settleDom } from './browser.js';
+import { DEFAULT_ACTION_TIMEOUT_MS, settleDom } from './browser.js';
 import { markPoint, type PointGeometry } from './point.js';
 
 /**
@@ -251,7 +251,7 @@ async function leavesOrigin(locator: Locator, origin: string | undefined): Promi
       } catch {
         return false;
       }
-    }, origin);
+    }, origin, { timeout: DEFAULT_ACTION_TIMEOUT_MS });
   } catch {
     return false;
   }
@@ -267,7 +267,7 @@ async function leavesOrigin(locator: Locator, origin: string | undefined): Promi
 async function plausible(page: Page, locator: Locator, recorded: PointGeometry | null): Promise<boolean> {
   if (!recorded) return true;
   try {
-    const box = await locator.first().boundingBox();
+    const box = await locator.first().boundingBox({ timeout: DEFAULT_ACTION_TIMEOUT_MS });
     if (!box) return true; // nothing to measure — let the other guards judge
     const scroll = await page.evaluate(() => ({ x: window.scrollX, y: window.scrollY }));
     const cx = box.x + box.width / 2 + scroll.x;

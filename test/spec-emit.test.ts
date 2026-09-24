@@ -2612,7 +2612,7 @@ describe('a click that an overlay intercepts', () => {
     expect(out).toContain("input.dispatchEvent(new Event('input', { bubbles: true }));");
     expect(out).toContain("input.dispatchEvent(new Event('change', { bubbles: true }));");
     // and the same fallback for a widget with no native value setter
-    expect(out).toContain('    await locator.fill(value);');
+    expect(out).toContain('    await locator.fill(value, { timeout: DEFAULT_ACTION_TIMEOUT_MS });');
     expect(syntaxErrors(out)).toEqual([]);
   });
 

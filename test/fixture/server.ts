@@ -833,6 +833,29 @@ ${list ? '<section id="panel"><ul id="list"></ul></section>' : ''}
 </body></html>`;
 
 /**
+ * A panel whose menu button the app shows only once the panel is hovered
+ * (round 57, grafana fwgr70 02-create s_2712e5/5): the button is
+ * `visibility: hidden` until a mouseover reaches the panel, so a real hover
+ * on the button itself never becomes actionable. Clicking the shown button
+ * opens the menu and posts `commit:menu:open`.
+ */
+const HOVER_MENU = `<!doctype html><html><head><meta charset="utf-8"><title>Dashboard</title></head><body>
+<h1>Dashboard</h1>
+<div id="panel" style="padding: 24px; border: 1px solid #999; width: 300px"><span>CPU panel</span>
+<button id="menu" type="button" aria-label="Menu for CPU panel" style="visibility: hidden">&#8942;</button></div>
+<ul id="items" role="menu" hidden><li role="menuitem">Edit</li></ul>
+<script>
+const panel = document.getElementById('panel');
+const menu = document.getElementById('menu');
+panel.addEventListener('mouseover', () => { menu.style.visibility = 'visible'; });
+menu.addEventListener('click', () => {
+  document.getElementById('items').hidden = false;
+  fetch('/commit/menu/open', { method: 'POST' });
+});
+</script>
+</body></html>`;
+
+/**
  * A part row and its cost field (round 51, repairdesk fwrd84 05-edit): Save
  * posts `/commit/cost/<value>` and redraws the row with the saved cost and
  * its price (cost × 1.25). `/price?stuck=1` is the same form whose Save
@@ -1481,6 +1504,7 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
       if (url === '/filters' || url.startsWith('/filters?')) return html(FILTERS(url.includes('open=1'), url.includes('stuck=1')));
       if (url === '/price' || url === '/price?stuck=1') return html(PRICE(url.endsWith('stuck=1')));
       if (url === '/imagelink') return html(IMAGE_LINK);
+      if (url === '/hover-menu') return html(HOVER_MENU);
       if (url === '/counts' || url === '/counts?nolist=1') return html(COUNTS(!url.endsWith('nolist=1')));
       if (url === '/transform') return html(TRANSFORM);
       if (url === '/board') return html(BOARD);

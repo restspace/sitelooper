@@ -3,6 +3,18 @@ import type { Locator, Page } from 'playwright-core';
 /** Browser execution shared by replay and the standalone spec bundle. */
 
 /**
+ * The bound on every actionability call the shared execution code makes
+ * without a tighter one of its own: playwright-core's library default, the
+ * one the daemon's pages have always run under. Said explicitly, because the
+ * compiled artifact runs under Playwright Test, whose actionTimeout and
+ * navigationTimeout default to 0 — unbounded — so a call that leaned on the
+ * library default waited forever there (fwgr70). The emitted runFlow also sets
+ * it as the page's default (spec/emit.ts), for whatever the embedded code
+ * does not bound itself; test/execution-source.test.ts refuses a new bare call.
+ */
+export const DEFAULT_ACTION_TIMEOUT_MS = 30_000;
+
+/**
  * What is known about an action once it has been attempted (notes/ROBUSTNESS.md
  * finding 2). The four are different facts, and every caller that decides
  * whether something may be tried again needs to tell them apart:
@@ -413,12 +425,16 @@ export async function fireWhenAttached(loc: Locator, opts: ClickOpts, label = 'c
  */
 export async function reactSafeFill(locator: Locator, value: string): Promise<void> {
   await locator.waitFor({ state: 'visible', timeout: 10_000 });
-  const what = await locator.evaluate((el) => {
-    const typed = (n: Element | null | undefined) => n?.tagName === 'INPUT' || n?.tagName === 'TEXTAREA';
-    if (typed(el) || (el as HTMLElement).isContentEditable) return null;
-    if (typed(el.closest('label')?.control)) return null;
-    return `<${el.tagName.toLowerCase()}>`;
-  });
+  const what = await locator.evaluate(
+    (el) => {
+      const typed = (n: Element | null | undefined) => n?.tagName === 'INPUT' || n?.tagName === 'TEXTAREA';
+      if (typed(el) || (el as HTMLElement).isContentEditable) return null;
+      if (typed(el.closest('label')?.control)) return null;
+      return `<${el.tagName.toLowerCase()}>`;
+    },
+    undefined,
+    { timeout: DEFAULT_ACTION_TIMEOUT_MS },
+  );
   if (what) {
     throw actionFailure(
       'not-dispatched',
@@ -426,30 +442,34 @@ export async function reactSafeFill(locator: Locator, value: string): Promise<vo
       `fill: the target is a ${what}, not a field that can be filled (an input, a textarea or a contenteditable) — nothing was clicked or typed; click it, or fill the field it opens`,
     );
   }
-  await locator.scrollIntoViewIfNeeded().catch(() => {});
+  await locator.scrollIntoViewIfNeeded({ timeout: DEFAULT_ACTION_TIMEOUT_MS }).catch(() => {});
   await locator.click({ timeout: 5_000 }).catch(() => {}); // focus; some widgets need it
-  const handled = await locator.evaluate((el, val) => {
-    const input = el as HTMLInputElement | HTMLTextAreaElement;
-    if (!('value' in input)) return false;
-    const proto =
-      input instanceof HTMLTextAreaElement
-        ? HTMLTextAreaElement.prototype
-        : input instanceof HTMLInputElement
-          ? HTMLInputElement.prototype
-          : null;
-    if (!proto) return false;
-    const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
-    if (!setter) return false;
-    setter.call(input, ''); // clear-then-set: number inputs otherwise append
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-    setter.call(input, val);
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-    input.dispatchEvent(new Event('change', { bubbles: true }));
-    return true;
-  }, value);
+  const handled = await locator.evaluate(
+    (el, val) => {
+      const input = el as HTMLInputElement | HTMLTextAreaElement;
+      if (!('value' in input)) return false;
+      const proto =
+        input instanceof HTMLTextAreaElement
+          ? HTMLTextAreaElement.prototype
+          : input instanceof HTMLInputElement
+            ? HTMLInputElement.prototype
+            : null;
+      if (!proto) return false;
+      const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
+      if (!setter) return false;
+      setter.call(input, ''); // clear-then-set: number inputs otherwise append
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      setter.call(input, val);
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+      return true;
+    },
+    value,
+    { timeout: DEFAULT_ACTION_TIMEOUT_MS },
+  );
   if (!handled) {
     // contenteditable or non-standard widget — fall back to Playwright fill
-    await locator.fill(value);
+    await locator.fill(value, { timeout: DEFAULT_ACTION_TIMEOUT_MS });
   }
 }
 
@@ -473,13 +493,15 @@ export async function reactSafeSelect(locator: Locator, value: string, fallbackV
         return null;
       },
       [value, fallbackValue ?? ''] as [string, string],
+      { timeout: DEFAULT_ACTION_TIMEOUT_MS },
     )
     .catch(() => null);
-  if (present === 'fallback') return locator.selectOption(fallbackValue!);
-  if (present === 'value') return locator.selectOption(value);
-  const result = await locator.selectOption({ label: value }).catch(() => null);
+  const timeout = DEFAULT_ACTION_TIMEOUT_MS;
+  if (present === 'fallback') return locator.selectOption(fallbackValue!, { timeout });
+  if (present === 'value') return locator.selectOption(value, { timeout });
+  const result = await locator.selectOption({ label: value }, { timeout }).catch(() => null);
   if (result) return result;
-  return locator.selectOption(value); // fall back to value/index matching
+  return locator.selectOption(value, { timeout }); // fall back to value/index matching
 }
 
 /**
@@ -487,13 +509,26 @@ export async function reactSafeSelect(locator: Locator, value: string, fallbackV
  * off mouseenter rather than CSS :hover.
  */
 export async function syntheticHover(locator: Locator): Promise<void> {
-  await locator.hover().catch(() => {});
-  await locator.evaluate((el) => {
-    for (const type of ['pointerover', 'mouseover', 'mouseenter', 'mousemove']) {
-      el.dispatchEvent(new MouseEvent(type, { bubbles: type !== 'mouseenter' }));
-    }
-  });
+  // A PROBE, bounded: the synthetic events below are what does the work, and
+  // a real hover on a control the app only shows once its parent is hovered
+  // (grafana's panel-menu button) never becomes actionable. Unbounded, it
+  // waited out the page's default timeout — 30s in the daemon, and FOREVER in
+  // the compiled artifact, whose Playwright Test actionTimeout is 0 (fwgr70
+  // 02-create s_2712e5/5 hung until the test's 300s budget).
+  await locator.hover({ timeout: HOVER_PROBE_MS }).catch(() => {});
+  await locator.evaluate(
+    (el) => {
+      for (const type of ['pointerover', 'mouseover', 'mouseenter', 'mousemove']) {
+        el.dispatchEvent(new MouseEvent(type, { bubbles: type !== 'mouseenter' }));
+      }
+    },
+    undefined,
+    { timeout: DEFAULT_ACTION_TIMEOUT_MS },
+  );
 }
+
+/** How long syntheticHover's real hover may try before the synthetic events take over (fwgr70). */
+export const HOVER_PROBE_MS = 3_000;
 
 /**
  * Tools whose effect may be a navigation the app performs on the answer to a
